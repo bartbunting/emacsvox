@@ -168,11 +168,18 @@ Interactive PREFIX arg means toggle the global default value. ")
 
 ;;;  Advice comint:
 
-(defadvice comint-delete-output (after emacspeak pre act comp)
+
+(defun ems--comint-delete-output-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
+
+
+(advice-add 'comint-delete-output :after
+	    #'ems--comint-delete-output-after)
+
+
+
 (cl-loop
  for f in
  '(comint-history-isearch-backward comint-history-isearch-backward-regexp)
@@ -186,43 +193,63 @@ Interactive PREFIX arg means toggle the global default value. ")
          (emacspeak-icon 'select-object)
          (emacspeak-speak-line 1))))))
 
-(defadvice comint-clear-buffer (after emacspeak pre act comp)
+
+(defun ems--comint-clear-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
 
-(defadvice comint-magic-space (around emacspeak pre act comp)
+
+(advice-add 'comint-clear-buffer :after
+	    #'ems--comint-clear-buffer-after)
+
+
+
+
+
+(defun ems--comint-magic-space-around (orig-fun &rest args)
   "Speak word or completion."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced
-     (let ((orig (point))
-           (count (ad-get-arg 0)))
-       (setq count (or count 1))
-       ad-do-it
-       (cond
-        ((= (point) (+ count orig))
-         (save-excursion
-           (forward-word -1)
-           (emacspeak-speak-word)))
-        (t
-         (emacspeak-icon 'complete)
-         (emacspeak-speak-region
-          (comint-line-beginning-position) (point)))))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced
+       (let ((orig (point)) (count (ad-get-arg 0)))
+	 (setq count (or count 1)) (apply orig-fun args)
+	 (cond
+	  ((= (point) (+ count orig))
+	   (save-excursion (forward-word -1) (emacspeak-speak-word)))
+	  (t (emacspeak-icon 'complete)
+	     (emacspeak-speak-region (comint-line-beginning-position)
+				     (point)))))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice comint-insert-previous-argument (around emacspeak pre act comp)
+
+(advice-add 'comint-magic-space :around
+	    #'ems--comint-magic-space-around)
+
+
+
+
+
+(defun ems--comint-insert-previous-argument-around
+    (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    (let ((orig (point)))
-      ad-do-it
-      (emacspeak-speak-region orig (point))
-      (emacspeak-icon 'yank-object)))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((orig (point)))
+	(apply orig-fun args) (emacspeak-speak-region orig (point))
+	(emacspeak-icon 'yank-object)))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'comint-insert-previous-argument :around
+	    #'ems--comint-insert-previous-argument-around)
+
+
+
 
 ;; Customize comint:
 
@@ -248,36 +275,63 @@ Interactive PREFIX arg means toggle the global default value. ")
   (cons 're-search-forward
         'emacspeak-pronounce-uuid)))
 
-(defadvice shell-dirstack-message (around emacspeak pre act comp)
+
+(defun ems--shell-dirstack-message-around (orig-fun &rest args)
   "Silence messages"
-  (ems-with-messages-silenced
-   ad-do-it))
+  (ems-with-messages-silenced (apply orig-fun args)))
 
-(defadvice comint-delchar-or-maybe-eof (around emacspeak pre act comp)
+
+(advice-add 'shell-dirstack-message :around
+	    #'ems--shell-dirstack-message-around)
+
+
+
+
+
+(defun ems--comint-delchar-or-maybe-eof-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
+  (let ((result (apply orig-fun args)))
     (cond
-     ((= (point) (point-max))
-      (message "Sending EOF to comint process"))
-     (t (dtk-tone-deletion)
-        (emacspeak-speak-char t)))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+     ((ems-interactive-p)
+      (cond
+       ((= (point) (point-max))
+	(message "Sending EOF to comint process"))
+       (t (dtk-tone-deletion) (emacspeak-speak-char t)))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice comint-send-eof (before emacspeak pre act comp)
+
+(advice-add 'comint-delchar-or-maybe-eof :around
+	    #'ems--comint-delchar-or-maybe-eof-around)
+
+
+
+
+
+(defun ems--comint-send-eof-before (&rest _)
   "Announce what we are doing."
-  (when (ems-interactive-p)
-    (message "Sending EOF to subprocess")))
+  (when (ems-interactive-p) (message "Sending EOF to subprocess")))
 
-(defadvice comint-accumulate (before emacspeak pre act comp)
+
+(advice-add 'comint-send-eof :before #'ems--comint-send-eof-before)
+
+
+
+
+
+(defun ems--comint-accumulate-before (&rest _)
   "Speak the accumulateed line."
   (when (ems-interactive-p)
     (save-excursion
-      (comint-bol)
-      (emacspeak-icon 'select-object)
+      (comint-bol) (emacspeak-icon 'select-object)
       (emacspeak-speak-line 1))))
+
+
+(advice-add 'comint-accumulate :before #'ems--comint-accumulate-before)
+
+
+
 (cl-loop
  for f in
  '(
@@ -293,236 +347,405 @@ Interactive PREFIX arg means toggle the global default value. ")
          (emacspeak-speak-line 1))
        (emacspeak-icon 'select-object)))))
 
-(defadvice shell-forward-command (after emacspeak pre act comp)
+
+(defun ems--shell-forward-command-after (&rest _)
   "Speak  line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'item))))
+      (emacspeak-speak-line) (emacspeak-icon 'item))))
 
-(defadvice shell-backward-command (after emacspeak pre act comp)
+
+(advice-add 'shell-forward-command :after
+	    #'ems--shell-forward-command-after)
+
+
+
+
+
+(defun ems--shell-backward-command-after (&rest _)
   "Speak  line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'item))))
+      (emacspeak-speak-line) (emacspeak-icon 'item))))
 
-(defadvice comint-show-output (after emacspeak pre act comp)
+
+(advice-add 'shell-backward-command :after
+	    #'ems--shell-backward-command-after)
+
+
+
+
+
+(defun ems--comint-show-output-after (&rest _)
   "Speak  line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
       (emacspeak-icon 'large-movement)
       (emacspeak-speak-region (point) (mark)))))
 
-(defadvice comint-show-maximum-output (after emacspeak pre act comp)
+
+(advice-add 'comint-show-output :after #'ems--comint-show-output-after)
+
+
+
+
+
+(defun ems--comint-show-maximum-output-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'scroll))))
+      (emacspeak-speak-line) (emacspeak-icon 'scroll))))
 
-(defadvice comint-bol-or-process-mark (after emacspeak pre act comp)
+
+(advice-add 'comint-show-maximum-output :after
+	    #'ems--comint-show-maximum-output-after)
+
+
+
+
+
+(defun ems--comint-bol-or-process-mark-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'select-object))))
+      (emacspeak-speak-line) (emacspeak-icon 'select-object))))
 
-(defadvice comint-copy-old-input (after emacspeak pre act comp)
+
+(advice-add 'comint-bol-or-process-mark :after
+	    #'ems--comint-bol-or-process-mark-after)
+
+
+
+
+
+(defun ems--comint-copy-old-input-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-speak-line)))
 
-(defadvice comint-output-filter (around emacspeak pre act comp)
-  "Make comint speak its output.
-Try not to speak the shell prompt,
-instead, always play an auditory icon when the shell prompt is displayed."
-  (let ((monitor emacspeak-comint-output-monitor)
-        (buffer (process-buffer (ad-get-arg 0)))
-        (output (ad-get-arg 1)))
-    ad-do-it
-    (with-current-buffer buffer
-      (when
-          (and
-           (not  (string-match "^\r" output)) ;;; skip invisible output 
-           comint-last-output-start
-           (or monitor (eq (window-buffer) buffer)))
-        (let ((prompt-p
-               (save-excursion
-                 (goto-char comint-last-output-start)
-                 (or (looking-at shell-prompt-pattern)
-                     (looking-at comint-prompt-regexp)))))
-          (cond
-           ( (and emacspeak-comint-autospeak (not prompt-p))
-             (dtk-speak output))
-           ( prompt-p
-             (when emacspeak-comint-autospeak
-               (emacspeak-icon 'item))))))
-      ad-return-value)))
 
-(defadvice comint-dynamic-list-completions (around emacspeak pre act comp)
+(advice-add 'comint-copy-old-input :after
+	    #'ems--comint-copy-old-input-after)
+
+
+
+
+
+(defun ems--comint-output-filter-around (orig-fun &rest args)
+  "Make comint speak its output.\nTry not to speak the shell prompt,\ninstead, always play an auditory icon when the shell prompt is displayed."
+  (let ((result (apply orig-fun args)))
+    (let
+	((monitor emacspeak-comint-output-monitor)
+	 (buffer (process-buffer (ad-get-arg 0)))
+	 (output (ad-get-arg 1)))
+      (apply orig-fun args)
+      (with-current-buffer buffer
+	(when
+	    (and (not (string-match "^" output))
+		 comint-last-output-start
+		 (or monitor (eq (window-buffer) buffer)))
+	  (let
+	      ((prompt-p
+		(save-excursion
+		  (goto-char comint-last-output-start)
+		  (or (looking-at shell-prompt-pattern)
+		      (looking-at comint-prompt-regexp)))))
+	    (cond
+	     ((and emacspeak-comint-autospeak (not prompt-p))
+	      (dtk-speak output))
+	     (prompt-p
+	      (when emacspeak-comint-autospeak (emacspeak-icon 'item))))))
+	result))
+    result))
+
+
+(advice-add 'comint-output-filter :around
+	    #'ems--comint-output-filter-around)
+
+
+
+
+
+(defun ems--comint-dynamic-list-completions-around
+    (orig-fun &rest args)
   "Replacing default with keyboard friendly completer"
-  (let ((completions (sort (ad-get-arg 0) 'string-lessp))
-        (_common (ad-get-arg 1)))
+  (let
+      ((completions (sort (ad-get-arg 0) 'string-lessp))
+       (_common (ad-get-arg 1)))
     (with-output-to-temp-buffer "*Completions*"
       (display-completion-list completions))
-    (when nil ad-do-it)                 ; to silence byte-compiler
+    (when nil (apply orig-fun args))
     (with-current-buffer (get-buffer "*Completions*")
       (set (make-local-variable 'comint-displayed-dynamic-completions)
-           completions))
+	   completions))
     (next-completion 1)
-    (dtk-speak
-     (buffer-substring (point) (point-max)))))
+    (dtk-speak (buffer-substring (point) (point-max)))))
 
-(defadvice comint-dynamic-complete (around emacspeak pre act comp)
+
+(advice-add 'comint-dynamic-list-completions :around
+	    #'ems--comint-dynamic-list-completions-around)
+
+
+
+
+
+(defun ems--comint-dynamic-complete-around (orig-fun &rest args)
   "Say what you completed."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced
-     (let ((prior (save-excursion (skip-syntax-backward "^ >") (point))))
-       ad-do-it
-       (if (> (point) prior)
-           (tts-with-punctuations
-            'all
-            (emacspeak-icon 'complete)
-            (dtk-speak (buffer-substring prior (point))))
-         (emacspeak-speak-completions-if-available)))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced
+       (let
+	   ((prior
+	     (save-excursion (skip-syntax-backward "^ >") (point))))
+	 (apply orig-fun args)
+	 (if (> (point) prior)
+	     (tts-with-punctuations 'all (emacspeak-icon 'complete)
+				    (dtk-speak
+				     (buffer-substring prior (point))))
+	   (emacspeak-speak-completions-if-available)))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice comint-next-input (after emacspeak pre act comp)
+
+(advice-add 'comint-dynamic-complete :around
+	    #'ems--comint-dynamic-complete-around)
+
+
+
+
+
+(defun ems--comint-next-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
-    (tts-with-punctuations
-     'all
-     (save-excursion
-       (goto-char (comint-line-beginning-position))
-       (emacspeak-speak-line 1)))
+    (tts-with-punctuations 'all
+			   (save-excursion
+			     (goto-char
+			      (comint-line-beginning-position))
+			     (emacspeak-speak-line 1)))
     (emacspeak-icon 'item)))
 
-(defadvice comint-next-matching-input (after emacspeak pre act comp)
+
+(advice-add 'comint-next-input :after #'ems--comint-next-input-after)
+
+
+
+
+
+(defun ems--comint-next-matching-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
-    (tts-with-punctuations
-     'all
-     (save-excursion
-       (goto-char (comint-line-beginning-position))
-       (emacspeak-speak-line 1)))
+    (tts-with-punctuations 'all
+			   (save-excursion
+			     (goto-char
+			      (comint-line-beginning-position))
+			     (emacspeak-speak-line 1)))
     (emacspeak-icon 'item)))
 
-(defadvice comint-previous-input (after emacspeak pre act comp)
+
+(advice-add 'comint-next-matching-input :after
+	    #'ems--comint-next-matching-input-after)
+
+
+
+
+
+(defun ems--comint-previous-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
-    (tts-with-punctuations
-     'all
-     (save-excursion
-       (goto-char (comint-line-beginning-position))
-       (emacspeak-speak-line 1)))
+    (tts-with-punctuations 'all
+			   (save-excursion
+			     (goto-char
+			      (comint-line-beginning-position))
+			     (emacspeak-speak-line 1)))
     (emacspeak-icon 'item)))
 
-(defadvice comint-previous-matching-input (after emacspeak pre act comp)
+
+(advice-add 'comint-previous-input :after
+	    #'ems--comint-previous-input-after)
+
+
+
+
+
+(defun ems--comint-previous-matching-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
-    (tts-with-punctuations
-     'all
-     (save-excursion
-       (goto-char (comint-line-beginning-position))
-       (emacspeak-speak-line 1)))
+    (tts-with-punctuations 'all
+			   (save-excursion
+			     (goto-char
+			      (comint-line-beginning-position))
+			     (emacspeak-speak-line 1)))
     (emacspeak-icon 'item)))
 
-(defadvice comint-send-input (after emacspeak pre act comp)
+
+(advice-add 'comint-previous-matching-input :after
+	    #'ems--comint-previous-matching-input-after)
+
+
+
+
+
+(defun ems--comint-send-input-after (&rest _)
   "Flush any ongoing speech."
-  (when (ems-interactive-p)
-    (dtk-stop 'all)
-    (emacspeak-icon 'more)))
+  (when (ems-interactive-p) (dtk-stop 'all) (emacspeak-icon 'more)))
 
-(defadvice comint-previous-prompt (after emacspeak pre act comp)
+
+(advice-add 'comint-send-input :after #'ems--comint-send-input-after)
+
+
+
+
+
+(defun ems--comint-previous-prompt-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'item)
-    (if (eolp)
-        (emacspeak-speak-line)
-      (emacspeak-speak-line 1))))
+    (if (eolp) (emacspeak-speak-line) (emacspeak-speak-line 1))))
 
-(defadvice comint-next-prompt (after emacspeak pre act comp)
+
+(advice-add 'comint-previous-prompt :after
+	    #'ems--comint-previous-prompt-after)
+
+
+
+
+
+(defun ems--comint-next-prompt-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'item)
-    (if (eolp)
-        (emacspeak-speak-line)
-      (emacspeak-speak-line 1))))
+    (if (eolp) (emacspeak-speak-line) (emacspeak-speak-line 1))))
 
-(defadvice comint-get-next-from-history (after emacspeak pre act comp)
+
+(advice-add 'comint-next-prompt :after #'ems--comint-next-prompt-after)
+
+
+
+
+
+(defun ems--comint-get-next-from-history-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'item)
-    (save-excursion
-      (comint-bol)
-      (emacspeak-speak-line 1))))
+    (save-excursion (comint-bol) (emacspeak-speak-line 1))))
 
-(defadvice comint-dynamic-list-input-ring (around emacspeak pre act comp)
+
+(advice-add 'comint-get-next-from-history :after
+	    #'ems--comint-get-next-from-history-after)
+
+
+
+
+
+(defun ems--comint-dynamic-list-input-ring-around
+    (orig-fun &rest args)
   "List  the buffer's input history."
-  (cond
-   ((ems-interactive-p)
-    (if (or (not (ring-p comint-input-ring))
-            (ring-empty-p comint-input-ring))
-        (message "No history")
-      (let ((history nil)
-            (history-buffer " *Input History*")
-            (index (1- (ring-length comint-input-ring))))
-        ;; We have to build up a list ourselves from the ring vector.
-        (while (>= index 0)
-          (setq history (cons (ring-ref comint-input-ring index) history)
-                index (1- index)))
-        ;; Change "completion" to "history reference"
-        ;; to make the display accurate.
-        (with-output-to-temp-buffer history-buffer
-          (display-completion-list history)
-          (switch-to-buffer history-buffer)
-          (forward-line 3)
-          (while (search-backward "completion" nil 'move)
-            (replace-match "history reference")))
-        (emacspeak-icon 'help)
-        (next-completion 1)
-        (dtk-speak (emacspeak-get-current-completion)))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (if
+	  (or (not (ring-p comint-input-ring))
+	      (ring-empty-p comint-input-ring))
+	  (message "No history")
+	(let
+	    ((history nil) (history-buffer " *Input History*")
+	     (index (1- (ring-length comint-input-ring))))
+	  (while (>= index 0)
+	    (setq history
+		  (cons (ring-ref comint-input-ring index) history)
+		  index (1- index)))
+	  (with-output-to-temp-buffer history-buffer
+	    (display-completion-list history)
+	    (switch-to-buffer history-buffer) (forward-line 3)
+	    (while (search-backward "completion" nil 'move)
+	      (replace-match "history reference")))
+	  (emacspeak-icon 'help) (next-completion 1)
+	  (dtk-speak (emacspeak-get-current-completion)))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice comint-kill-output (after emacspeak pre act comp)
+
+(advice-add 'comint-dynamic-list-input-ring :around
+	    #'ems--comint-dynamic-list-input-ring-around)
+
+
+
+
+
+(defun ems--comint-kill-output-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (message "Nuked output of last command ")))
 
-(defadvice comint-quit-subjob (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Sent quit signal to subjob ")))
 
-(defadvice comint-stop-subjob (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Stopped the subjob")))
+(advice-add 'comint-kill-output :after #'ems--comint-kill-output-after)
 
-(defadvice comint-interrupt-subjob (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Interrupted the subjob")))
 
-(defadvice comint-kill-input (before emacspeak pre act comp)
+
+
+
+(defun ems--comint-quit-subjob-after (&rest _)
+  "speak."
+  (when (ems-interactive-p) (message "Sent quit signal to subjob ")))
+
+
+(advice-add 'comint-quit-subjob :after #'ems--comint-quit-subjob-after)
+
+
+
+
+
+(defun ems--comint-stop-subjob-after (&rest _)
+  "speak." (when (ems-interactive-p) (message "Stopped the subjob")))
+
+
+(advice-add 'comint-stop-subjob :after #'ems--comint-stop-subjob-after)
+
+
+
+
+
+(defun ems--comint-interrupt-subjob-after (&rest _)
+  "speak."
+  (when (ems-interactive-p) (message "Interrupted the subjob")))
+
+
+(advice-add 'comint-interrupt-subjob :after
+	    #'ems--comint-interrupt-subjob-after)
+
+
+
+
+
+(defun ems--comint-kill-input-before (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
-    (let ((pmark (process-mark (get-buffer-process (current-buffer)))))
+    (let
+	((pmark (process-mark (get-buffer-process (current-buffer)))))
       (when (> (point) (marker-position pmark))
-        (emacspeak-speak-region pmark (point))))))
+	(emacspeak-speak-region pmark (point))))))
 
-(defadvice comint-dynamic-list-filename-completions
-    (after emacspeak pre act comp)
+
+(advice-add 'comint-kill-input :before #'ems--comint-kill-input-before)
+
+
+
+
+
+(defun ems--comint-dynamic-list-filename-completions-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-speak-completions-if-available)))
+
+
+(advice-add 'comint-dynamic-list-filename-completions :after
+	    #'ems--comint-dynamic-list-filename-completions-after)
+
+
+
 
 ;;; dirtrack-procfs:
 
