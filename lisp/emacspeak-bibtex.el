@@ -47,57 +47,106 @@
 
 ;;;  Advice navigation commands
 
-(defadvice bibtex-next-field (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-find-text (after emacspeak pre act comp)
+(defun ems--bibtex-next-field-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice end-of-bibtex-entry (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)
-    ))
 
-(defadvice beginning-of-bibtex-entry (after emacspeak pre act comp)
+(advice-add 'bibtex-next-field :after #'ems--bibtex-next-field-after)
+
+
+
+
+
+(defun ems--bibtex-find-text-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)
-    ))
+    (emacspeak-icon 'button) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-find-text :after #'ems--bibtex-find-text-after)
+
+
+
+
+
+(defun ems--end-of-bibtex-entry-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'end-of-bibtex-entry :after
+	    #'ems--end-of-bibtex-entry-after)
+
+
+
+
+
+(defun ems--beginning-of-bibtex-entry-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'beginning-of-bibtex-entry :after
+	    #'ems--beginning-of-bibtex-entry-after)
+
+
+
 
 ;;;  Advice record editing commands
 
-(defadvice bibtex-remove-OPT (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-empty-field (after emacspeak pre act comp)
+(defun ems--bibtex-remove-OPT-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'button) (emacspeak-speak-line)))
 
-(defadvice bibtex-kill-optional-field (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-clean-entry (after emacspeak pre act comp)
+(advice-add 'bibtex-remove-OPT :after #'ems--bibtex-remove-OPT-after)
+
+
+
+
+
+(defun ems--bibtex-empty-field-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (message "Cleaned up entry")))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-empty-field :after #'ems--bibtex-empty-field-after)
+
+
+
+
+
+(defun ems--bibtex-kill-optional-field-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-kill-optional-field :after
+	    #'ems--bibtex-kill-optional-field-after)
+
+
+
+
+
+(defun ems--bibtex-clean-entry-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'task-done) (message "Cleaned up entry")))
+
+
+(advice-add 'bibtex-clean-entry :after #'ems--bibtex-clean-entry-after)
+
+
+
 
 ;;;   advice record creation
 
@@ -118,95 +167,189 @@
                                         ;        bibtex-Book
                                         ;        bibtex-Article)
 
-(defadvice bibtex-Unpublished  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-string  (after emacspeak pre act comp)
+(defun ems--bibtex-Unpublished-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice bibtex-TechReport  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-preamble  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+(advice-add 'bibtex-Unpublished :after #'ems--bibtex-Unpublished-after)
 
-(defadvice bibtex-Proceedings  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-PhdThesis  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-Misc  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-MastersThesis  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-Manual  (after emacspeak pre act comp)
+(defun ems--bibtex-string-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice bibtex-InProceedings  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-InCollection  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+(advice-add 'bibtex-string :after #'ems--bibtex-string-after)
 
-(defadvice bibtex-InBook  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-InProceedings  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-Book  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bibtex-Article  (after emacspeak pre act comp)
+
+(defun ems--bibtex-TechReport-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-TechReport :after #'ems--bibtex-TechReport-after)
+
+
+
+
+
+(defun ems--bibtex-preamble-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-preamble :after #'ems--bibtex-preamble-after)
+
+
+
+
+
+(defun ems--bibtex-Proceedings-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-Proceedings :after #'ems--bibtex-Proceedings-after)
+
+
+
+
+
+(defun ems--bibtex-PhdThesis-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-PhdThesis :after #'ems--bibtex-PhdThesis-after)
+
+
+
+
+
+(defun ems--bibtex-Misc-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-Misc :after #'ems--bibtex-Misc-after)
+
+
+
+
+
+(defun ems--bibtex-MastersThesis-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-MastersThesis :after
+	    #'ems--bibtex-MastersThesis-after)
+
+
+
+
+
+(defun ems--bibtex-Manual-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-Manual :after #'ems--bibtex-Manual-after)
+
+
+
+
+
+(defun ems--bibtex-InProceedings-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-InProceedings :after
+	    #'ems--bibtex-InProceedings-after)
+
+
+
+
+
+(defun ems--bibtex-InCollection-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-InCollection :after
+	    #'ems--bibtex-InCollection-after)
+
+
+
+
+
+(defun ems--bibtex-InBook-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-InBook :after #'ems--bibtex-InBook-after)
+
+
+
+
+
+(defun ems--bibtex-InProceedings-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-InProceedings :after
+	    #'ems--bibtex-InProceedings-after)
+
+
+
+
+
+(defun ems--bibtex-Book-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-Book :after #'ems--bibtex-Book-after)
+
+
+
+
+
+(defun ems--bibtex-Article-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bibtex-Article :after #'ems--bibtex-Article-after)
+
+
+
 
 (provide  'emacspeak-bibtex)
 

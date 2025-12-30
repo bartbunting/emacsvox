@@ -79,136 +79,284 @@
        (emacspeak-speak-mode-line)
        (emacspeak-icon 'close-object)))))
 
-(defadvice message-goto-to (after emacspeak pre act comp)
+
+(defun ems--message-goto-to-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-summary (after emacspeak pre act comp)
+
+(advice-add 'message-goto-to :after #'ems--message-goto-to-after)
+
+
+
+
+
+(defun ems--message-goto-summary-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-subject (after emacspeak pre act comp)
+
+(advice-add 'message-goto-summary :after
+	    #'ems--message-goto-summary-after)
+
+
+
+
+
+(defun ems--message-goto-subject-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-cc (after emacspeak pre act comp)
+
+(advice-add 'message-goto-subject :after
+	    #'ems--message-goto-subject-after)
+
+
+
+
+
+(defun ems--message-goto-cc-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-bcc (after emacspeak pre act comp)
+
+(advice-add 'message-goto-cc :after #'ems--message-goto-cc-after)
+
+
+
+
+
+(defun ems--message-goto-bcc-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-fcc (after emacspeak pre act comp)
+
+(advice-add 'message-goto-bcc :after #'ems--message-goto-bcc-after)
+
+
+
+
+
+(defun ems--message-goto-fcc-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-keywords (after emacspeak pre act comp)
+
+(advice-add 'message-goto-fcc :after #'ems--message-goto-fcc-after)
+
+
+
+
+
+(defun ems--message-goto-keywords-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-newsgroups (after emacspeak pre act comp)
+
+(advice-add 'message-goto-keywords :after
+	    #'ems--message-goto-keywords-after)
+
+
+
+
+
+(defun ems--message-goto-newsgroups-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-followup-to (after emacspeak pre act comp)
+
+(advice-add 'message-goto-newsgroups :after
+	    #'ems--message-goto-newsgroups-after)
+
+
+
+
+
+(defun ems--message-goto-followup-to-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-reply-to (after emacspeak pre act comp)
+
+(advice-add 'message-goto-followup-to :after
+	    #'ems--message-goto-followup-to-after)
+
+
+
+
+
+(defun ems--message-goto-reply-to-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-body (after emacspeak pre act comp)
+
+(advice-add 'message-goto-reply-to :after
+	    #'ems--message-goto-reply-to-after)
+
+
+
+
+
+(defun ems--message-goto-body-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (message "Beginning of message body")))
 
-(defadvice message-goto-signature (after emacspeak pre act comp)
+
+(advice-add 'message-goto-body :after #'ems--message-goto-body-after)
+
+
+
+
+
+(defun ems--message-goto-signature-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-distribution (after emacspeak pre act comp)
+
+(advice-add 'message-goto-signature :after
+	    #'ems--message-goto-signature-after)
+
+
+
+
+
+(defun ems--message-goto-distribution-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-insert-citation-line (after emacspeak pre act comp)
+
+(advice-add 'message-goto-distribution :after
+	    #'ems--message-goto-distribution-after)
+
+
+
+
+
+(defun ems--message-insert-citation-line-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-insert-to (after emacspeak pre act comp)
+
+(advice-add 'message-insert-citation-line :after
+	    #'ems--message-insert-citation-line-after)
+
+
+
+
+
+(defun ems--message-insert-to-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-insert-signature (after emacspeak pre act comp)
+
+(advice-add 'message-insert-to :after #'ems--message-insert-to-after)
+
+
+
+
+
+(defun ems--message-insert-signature-after (&rest _)
+  "speak" (when (ems-interactive-p) (message "Signed the article.")))
+
+
+(advice-add 'message-insert-signature :after
+	    #'ems--message-insert-signature-after)
+
+
+
+
+
+(defun ems--message-insert-newsgroups-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (message "Signed the article.")))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-insert-newsgroups (after emacspeak pre act comp)
+
+(advice-add 'message-insert-newsgroups :after
+	    #'ems--message-insert-newsgroups-after)
+
+
+
+
+
+(defun ems--message-insert-courtesy-copy-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-insert-courtesy-copy (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
 
-(defadvice message-beginning-of-line (before emacspeak pre act comp)
+(advice-add 'message-insert-courtesy-copy :after
+	    #'ems--message-insert-courtesy-copy-after)
+
+
+
+
+
+(defun ems--message-beginning-of-line-before (&rest _)
   "Stop speech first."
-  (when (ems-interactive-p) (dtk-stop 'all)
-        (emacspeak-icon 'select-object)
-        (dtk-speak "beginning of line")))
+  (when (ems-interactive-p)
+    (dtk-stop 'all) (emacspeak-icon 'select-object)
+    (dtk-speak "beginning of line")))
 
-(defadvice message-goto-from (after emacspeak pre act comp)
+
+(advice-add 'message-beginning-of-line :before
+	    #'ems--message-beginning-of-line-before)
+
+
+
+
+
+(defun ems--message-goto-from-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-goto-mail-followup-to (after emacspeak pre act comp)
+
+(advice-add 'message-goto-from :after #'ems--message-goto-from-after)
+
+
+
+
+
+(defun ems--message-goto-mail-followup-to-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice message-newline-and-reformat (after emacspeak pre act comp)
+
+(advice-add 'message-goto-mail-followup-to :after
+	    #'ems--message-goto-mail-followup-to-after)
+
+
+
+
+
+(defun ems--message-newline-and-reformat-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "newline and reformat")))
+    (emacspeak-icon 'fill-object) (message "newline and reformat")))
+
+
+(advice-add 'message-newline-and-reformat :after
+	    #'ems--message-newline-and-reformat-after)
+
+
+
 
 (add-hook 'message-mode-hook
           #'emacspeak-pronounce-refresh-pronunciations)

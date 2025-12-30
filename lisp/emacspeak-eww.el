@@ -584,13 +584,23 @@ Safari/537.36"
 ;; Advice note: Setting ad-return-value in one arm of the cond
 ;; appears to perculate to both arms.
 
-(defadvice url-http-user-agent-string (around emacspeak pre act comp)
+
+(defun ems--url-http-user-agent-string-around (orig-fun &rest args)
   "Masquerade response"
-  ad-do-it
-  (cond
-   (emacspeak-eww-masquerade
-    (setq ad-return-value emacspeak-eww-masquerade-as))
-   (t (setq ad-return-value "User-Agent: URL/Emacs \r\n"))))
+  (let ((result (apply orig-fun args)))
+    (apply orig-fun args)
+    (cond
+     (emacspeak-eww-masquerade
+      (setq result emacspeak-eww-masquerade-as))
+     (t (setq result "User-Agent: URL/Emacs \n")))
+    result))
+
+
+(advice-add 'url-http-user-agent-string :around
+	    #'ems--url-http-user-agent-string-around)
+
+
+
 
 (defcustom emacspeak-eww-inhibit-images nil
   "Turn this on to avoid rendering images."
@@ -828,45 +838,38 @@ are available are cued by an auditory icon on the header line."
 
 ;; Check cache if URL already open, otherwise cache.
 
-(defadvice eww-reload (around emacspeak pre act comp)
-  "Check buffer local settings for feed buffers.
-If buffer was result of displaying a feed, reload feed.
-If we came from a url-template, reload that template.
-Retain previously set punctuations  mode."
-  (add-hook
-   'emacspeak-eww-post-hook
-   'emacspeak-eww-post-render-actions)
+
+(defun ems--eww-reload-around (orig-fun &rest args)
+  "Check buffer local settings for feed buffers.\nIf buffer was result of displaying a feed, reload feed.\nIf we came from a url-template, reload that template.\nRetain previously set punctuations  mode."
+  (add-hook 'emacspeak-eww-post-hook
+	    'emacspeak-eww-post-render-actions)
   (cond
-   ((and (eww-current-url)
-         emacspeak-eww-feed
-         emacspeak-eww-style)
-                                        ; this is a displayed feed
-    (let ((r dtk-speech-rate)
-          (u (eww-current-url))
-          (s emacspeak-eww-style))
+   ((and (eww-current-url) emacspeak-eww-feed emacspeak-eww-style)
+    (let
+	((r dtk-speech-rate) (u (eww-current-url))
+	 (s emacspeak-eww-style))
       (kill-buffer)
-      (add-hook
-       'emacspeak-eww-post-hook
-       #'(lambda ()
-           (dtk-set-punctuations 'all)
-           (dtk-set-rate r))
-       'at-end)
+      (add-hook 'emacspeak-eww-post-hook
+		#'(lambda nil (dtk-set-punctuations 'all)
+		    (dtk-set-rate r))
+		'at-end)
       (emacspeak-feeds-feed-display u s 'speak)))
    ((and (eww-current-url) emacspeak-eww-url-template)
-                                        ; this is a url template
-    (let
-        ((n emacspeak-eww-url-template)
-         (r dtk-speech-rate))
-      (add-hook
-       'emacspeak-eww-post-hook
-       #'(lambda nil
-           (dtk-set-punctuations 'all)
-           (dtk-set-rate r))
-       'at-end)
+    (let ((n emacspeak-eww-url-template) (r dtk-speech-rate))
+      (add-hook 'emacspeak-eww-post-hook
+		#'(lambda nil (dtk-set-punctuations 'all)
+		    (dtk-set-rate r))
+		'at-end)
       (kill-buffer)
-      (emacspeak-url-template-open (emacspeak-url-template-get  n))))
-   (t ad-do-it
-      (sox-sin .5 "%-2:%-1""fade h .1 .5 .4 gain -8 "))))
+      (emacspeak-url-template-open (emacspeak-url-template-get n))))
+   (t (apply orig-fun args)
+      (sox-sin 0.5 "%-2:%-1" "fade h .1 .5 .4 gain -8 "))))
+
+
+(advice-add 'eww-reload :around #'ems--eww-reload-around)
+
+
+
 
 (cl-loop
  for f in
@@ -899,34 +902,77 @@ Retain previously set punctuations  mode."
 
 (add-hook 'eww-after-render-hook 'emacspeak-eww-after-render-hook)
 
-(defadvice eww-add-bookmark (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
 
-(defadvice eww-beginning-of-text (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)))
+(defun ems--eww-add-bookmark-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
 
-(defadvice eww-end-of-text(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
 
-(defadvice eww-bookmark-browse (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+(advice-add 'eww-add-bookmark :after #'ems--eww-add-bookmark-after)
 
-(defadvice eww-bookmark-kill (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
 
-(defadvice eww-bookmark-yank(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'yank-object)))
 
-(defadvice eww-list-bookmarks(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(defun ems--eww-beginning-of-text-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'large-movement)))
+
+
+(advice-add 'eww-beginning-of-text :after
+	    #'ems--eww-beginning-of-text-after)
+
+
+
+
+
+(defun ems--eww-end-of-text-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'eww-end-of-text :after #'ems--eww-end-of-text-after)
+
+
+
+
+
+(defun ems--eww-bookmark-browse-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'eww-bookmark-browse :after
+	    #'ems--eww-bookmark-browse-after)
+
+
+
+
+
+(defun ems--eww-bookmark-kill-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
+
+
+(advice-add 'eww-bookmark-kill :after #'ems--eww-bookmark-kill-after)
+
+
+
+
+
+(defun ems--eww-bookmark-yank-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'yank-object)))
+
+
+(advice-add 'eww-bookmark-yank :after #'ems--eww-bookmark-yank-after)
+
+
+
+
+
+(defun ems--eww-list-bookmarks-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'eww-list-bookmarks :after #'ems--eww-list-bookmarks-after)
+
+
+
 
 (cl-loop
  for f in
@@ -938,9 +984,15 @@ Retain previously set punctuations  mode."
      (when (ems-interactive-p) (emacspeak-icon 'select-object))
      (emacspeak-speak-line))))
 
-(defadvice eww-quit(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+(defun ems--eww-quit-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'eww-quit :after #'ems--eww-quit-after)
+
+
+
 
 (cl-loop
  for f in
@@ -988,19 +1040,25 @@ Retain previously set punctuations  mode."
 
 ;; Handle emacspeak-we-url-executor
 
-(defadvice eww-follow-link (around emacspeak pre act comp)
+
+(defun ems--eww-follow-link-around (orig-fun &rest args)
   "Respect emacspeak-we-url-executor if set."
   (cl-declare (special emacspeak-we-url-executor))
   (emacspeak-icon 'button)
   (let ((emacspeak-eww-masquerade t))
     (cond
-     ((and (ems-interactive-p)
-           (functionp emacspeak-we-url-executor)
-           (y-or-n-p "Use custom executor? "))
+     ((and (ems-interactive-p) (functionp emacspeak-we-url-executor)
+	   (y-or-n-p "Use custom executor? "))
       (let ((url (get-text-property (point) 'shr-url)))
-        (unless url (error "No URL  under point"))
-        (funcall emacspeak-we-url-executor url)))
-     (t ad-do-it))))
+	(unless url (error "No URL  under point"))
+	(funcall emacspeak-we-url-executor url)))
+     (t (apply orig-fun args)))))
+
+
+(advice-add 'eww-follow-link :around #'ems--eww-follow-link-around)
+
+
+
 
 ;;;  web-pre-process
 
@@ -1052,17 +1110,25 @@ Note that the Web browser should reset this hook after using it.")
 
 ;;;  xslt transform on request:
 
-(defadvice eww-display-html (before emacspeak pre act comp)
+
+(defun ems--eww-display-html-before (&rest _)
   "Apply XSLT transform if requested."
-  (cl-declare (special emacspeak-eww-pre-process-hook
-                       emacspeak-we-xsl-transform emacspeak-we-xsl-p))
+  (cl-declare
+   (special emacspeak-eww-pre-process-hook emacspeak-we-xsl-transform
+	    emacspeak-we-xsl-p))
   (save-excursion
     (cond
-     (emacspeak-eww-pre-process-hook (emacspeak-eww-run-pre-process-hook))
+     (emacspeak-eww-pre-process-hook
+      (emacspeak-eww-run-pre-process-hook))
      ((and emacspeak-we-xsl-p emacspeak-we-xsl-transform)
-      (emacspeak-xslt-region
-       emacspeak-we-xsl-transform (point) (point-max)
-       emacspeak-we-xsl-params)))))
+      (emacspeak-xslt-region emacspeak-we-xsl-transform (point)
+			     (point-max) emacspeak-we-xsl-params)))))
+
+
+(advice-add 'eww-display-html :before #'ems--eww-display-html-before)
+
+
+
 
 ;;;  DOM Structure In Rendered Buffer:
 
@@ -1102,18 +1168,31 @@ Note that the Web browser should reset this hook after using it.")
   (shr-ensure-newline))
 
 ;;;  Advice readable
-(defadvice eww-readable (around emacspeak pre act comp)
+
+(defun ems--eww-readable-around (orig-fun &rest args)
   "Speak contents."
   (let ((inhibit-read-only t))
-    ad-do-it
-    (emacspeak-icon 'open-object)
+    (apply orig-fun args) (emacspeak-icon 'open-object)
     (emacspeak-speak-buffer)))
+
+
+(advice-add 'eww-readable :around #'ems--eww-readable-around)
+
+
+
 
 ;;;   Customize image loading:
 
-(defadvice eww-display-image (around emacspeak pre act comp)
+
+(defun ems--eww-display-image-around (orig-fun &rest args)
   "Image inhibition"
-  (unless emacspeak-eww-inhibit-images ad-do-it))
+  (unless emacspeak-eww-inhibit-images (apply orig-fun args)))
+
+
+(advice-add 'eww-display-image :around #'ems--eww-display-image-around)
+
+
+
 
 ;;;  element, class, role, id caches:
 
@@ -1122,10 +1201,17 @@ Note that the Web browser should reset this hook after using it.")
 
 ;; Mark cache to be dirty if we restore history:
 
-(defadvice eww-restore-history (after emacspeak pre act comp)
-  "mark cache dirty."
-  (setq emacspeak-eww-cache-updated nil)
+
+(defun ems--eww-restore-history-after (&rest _)
+  "mark cache dirty." (setq emacspeak-eww-cache-updated nil)
   (emacspeak-eww-prepare-eww))
+
+
+(advice-add 'eww-restore-history :after
+	    #'ems--eww-restore-history-after)
+
+
+
 
 (defvar-local eww-id-cache nil
   "Cache of id values. Is buffer-local.")
@@ -1984,31 +2070,52 @@ The %s is automatically spoken if there is no user activity."
          (ad-set-arg 0 (emacspeak-google-canonicalize-result-url
                         u))))))))
 
-(defadvice shr-copy-url (around emacspeak pre act comp)
-  "Canonicalize Google URLs"
-  (ems-with-messages-silenced
-    ad-do-it
-    (when (ems-interactive-p)
-      (emacspeak-icon 'delete-object)
-      (let ((u (car kill-ring)))
-        (when
-            (and u (stringp u)
-                 (string-prefix-p (emacspeak-google-result-url-prefix) u))
-          (kill-new  (emacspeak-google-canonicalize-result-url u))))
-      (emacspeak-speak-current-kill))))
 
-(defadvice shr-maybe-probe-and-copy-url (around emacspeak pre act comp)
+(defun ems--shr-copy-url-around (orig-fun &rest args)
   "Canonicalize Google URLs"
-  (ems-with-messages-silenced
-    ad-do-it
-    (when (ems-interactive-p)
-      (emacspeak-icon 'delete-object)
-      (let ((u (car kill-ring)))
-        (when
-            (and u (stringp u)
-                 (string-prefix-p (emacspeak-google-result-url-prefix) u))
-          (kill-new  (emacspeak-google-canonicalize-result-url u))))
-      (emacspeak-speak-current-kill))))
+  (ems-with-messages-silenced (apply orig-fun args)
+			      (when (ems-interactive-p)
+				(emacspeak-icon 'delete-object)
+				(let ((u (car kill-ring)))
+				  (when
+				      (and u (stringp u)
+					   (string-prefix-p
+					    (emacspeak-google-result-url-prefix)
+					    u))
+				    (kill-new
+				     (emacspeak-google-canonicalize-result-url
+				      u))))
+				(emacspeak-speak-current-kill))))
+
+
+(advice-add 'shr-copy-url :around #'ems--shr-copy-url-around)
+
+
+
+
+
+(defun ems--shr-maybe-probe-and-copy-url-around (orig-fun &rest args)
+  "Canonicalize Google URLs"
+  (ems-with-messages-silenced (apply orig-fun args)
+			      (when (ems-interactive-p)
+				(emacspeak-icon 'delete-object)
+				(let ((u (car kill-ring)))
+				  (when
+				      (and u (stringp u)
+					   (string-prefix-p
+					    (emacspeak-google-result-url-prefix)
+					    u))
+				    (kill-new
+				     (emacspeak-google-canonicalize-result-url
+				      u))))
+				(emacspeak-speak-current-kill))))
+
+
+(advice-add 'shr-maybe-probe-and-copy-url :around
+	    #'ems--shr-maybe-probe-and-copy-url-around)
+
+
+
 
 ;;;  Speech-enable EWW buffer list:
 
@@ -2021,24 +2128,42 @@ The %s is automatically spoken if there is no user activity."
         (dtk-speak (buffer-name buffer))
       (message "Can't find an EWW buffer for this line. "))))
 
-(defadvice eww-list-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-eww-speak-buffer-line)))
 
-(defadvice eww-buffer-kill (after emacspeak pre act comp)
+(defun ems--eww-list-buffers-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-eww-speak-buffer-line)))
+    (emacspeak-icon 'open-object) (emacspeak-eww-speak-buffer-line)))
 
-(defadvice eww-buffer-select (after emacspeak pre act comp)
+
+(advice-add 'eww-list-buffers :after #'ems--eww-list-buffers-after)
+
+
+
+
+
+(defun ems--eww-buffer-kill-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)
+    (emacspeak-icon 'close-object) (emacspeak-eww-speak-buffer-line)))
+
+
+(advice-add 'eww-buffer-kill :after #'ems--eww-buffer-kill-after)
+
+
+
+
+
+(defun ems--eww-buffer-select-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)
     (emacspeak-icon 'open-object)))
+
+
+(advice-add 'eww-buffer-select :after #'ems--eww-buffer-select-after)
+
+
+
 
 (cl-loop
  for f in
@@ -2070,14 +2195,21 @@ The %s is automatically spoken if there is no user activity."
 ;; eww-browse-with-external-browser. Below, we advice
 ;; eww-browse-with-external-browser to use emacspeak-m-player
 ;; instead.
-(defadvice eww-browse-with-external-browser(around emacspeak pre act comp)
+
+(defun ems--eww-browse-with-external-browser-around
+    (orig-fun &rest args)
   "Use our m-player integration."
-  (let* ((url (or (ad-get-arg 0) ""))
-         (case-fold-search t)
-         (media-p (string-match emacspeak-media-extensions url)))
-    (cond
-     (media-p (emacspeak-m-player url))
-     (t ad-do-it))))
+  (let*
+      ((url (or (ad-get-arg 0) "")) (case-fold-search t)
+       (media-p (string-match emacspeak-media-extensions url)))
+    (cond (media-p (emacspeak-m-player url)) (t (apply orig-fun args)))))
+
+
+(advice-add 'eww-browse-with-external-browser :around
+	    #'ems--eww-browse-with-external-browser-around)
+
+
+
 
 ;;;  eww-marks:
 
@@ -2423,21 +2555,25 @@ with an interactive prefix arg. "
 ;; other negatives.
 ;; Overlays may avoid this problem.
 
-(defadvice shr-tag-table-1 (around emacspeak pre act comp)
-  "Cache pointer to table dom as a text property,
-and add relevant properties to the rendered region."
-  (let ((table-dom (ad-get-arg 0))
-        (start (point)))
-    ad-do-it
-    (unless (get-text-property start 'table-dom)
-      (add-text-properties
-       start (point)
-       (list
-        'auditory-icon 'fill-object
-        'table-start start
-        'table-end (1-  (point))
-        'table-dom table-dom)))
-    ad-return-value))
+
+(defun ems--shr-tag-table-1-around (orig-fun &rest args)
+  "Cache pointer to table dom as a text property,\nand add relevant properties to the rendered region."
+  (let ((result (apply orig-fun args)))
+    (let ((table-dom (ad-get-arg 0)) (start (point)))
+      (apply orig-fun args)
+      (unless (get-text-property start 'table-dom)
+	(add-text-properties start (point)
+			     (list 'auditory-icon 'fill-object
+				   'table-start start 'table-end
+				   (1- (point)) 'table-dom table-dom)))
+      result)
+    result))
+
+
+(advice-add 'shr-tag-table-1 :around #'ems--shr-tag-table-1-around)
+
+
+
 
 (defvar-local emacspeak-eww-table-cell 0
   "Track current table cell to enable table navigation.
@@ -2594,15 +2730,22 @@ With interactive prefix arg, move to the start of the table."
 
 ;;; Dive Into DOM: div
 
-(defadvice shr-tag-div (around eww-dom pre act comp)
+
+(defun ems--shr-tag-div-around (orig-fun &rest args)
   "Persist dom to the div node as a text property."
-  (let ((start (point)))
-    ad-do-it
-    (unless (get-text-property start 'eww-dom)
-      (put-text-property
-       start (point)
-       'eww-dom (ad-get-arg 0)))
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let ((start (point)))
+      (apply orig-fun args)
+      (unless (get-text-property start 'eww-dom)
+	(put-text-property start (point) 'eww-dom (ad-get-arg 0)))
+      result)
+    result))
+
+
+(advice-add 'shr-tag-div :around #'ems--shr-tag-div-around)
+
+
+
 
 (defun emacspeak-eww-dive-into-div ()
   "Focus on current div by rendering it in a new buffer."

@@ -188,11 +188,18 @@
        (emacspeak-icon 'paragraph)
        (emacspeak-speak-paragraph)))))
 
-(defadvice org-cycle-list-bullet (after emacspeak pre act comp)
+
+(defun ems--org-cycle-list-bullet-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'item) (emacspeak-speak-line)))
+
+
+(advice-add 'org-cycle-list-bullet :after
+	    #'ems--org-cycle-list-bullet-after)
+
+
+
 
 (defcustom emacspeak-org-table-after-movement-function
   #'emacspeak-org-table-speak-current-element
@@ -231,25 +238,44 @@
          (when (ems-interactive-p)
            (emacspeak-speak-line))))))))
 
-(defadvice org-overview (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Showing top-level overview.")))
 
-(defadvice org-content (after emacspeak pre act comp)
+(defun ems--org-overview-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
-    (message "Showing table of contents.")))
+  (when (ems-interactive-p) (message "Showing top-level overview.")))
 
-(defadvice org-tree-to-indirect-buffer(after emacspeak pre act comp)
+
+(advice-add 'org-overview :after #'ems--org-overview-after)
+
+
+
+
+
+(defun ems--org-content-after (&rest _)
+  "speak."
+  (when (ems-interactive-p) (message "Showing table of contents.")))
+
+
+(advice-add 'org-content :after #'ems--org-content-after)
+
+
+
+
+
+(defun ems--org-tree-to-indirect-buffer-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (message "Cloned %s"
-             (with-current-buffer org-last-indirect-buffer
-               (goto-char (point-min))
-               (buffer-substring
-                (line-beginning-position)
-                (line-end-position))))))
+	     (with-current-buffer org-last-indirect-buffer
+	       (goto-char (point-min))
+	       (buffer-substring (line-beginning-position)
+				 (line-end-position))))))
+
+
+(advice-add 'org-tree-to-indirect-buffer :after
+	    #'ems--org-tree-to-indirect-buffer-after)
+
+
+
 
 ;;;  Header insertion and relocation
 
@@ -272,15 +298,21 @@
        (emacspeak-speak-line)
        (emacspeak-icon 'open-object)))))
 
-(defadvice org-delete-char (around emacspeak pre act comp)
+
+(defun ems--org-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone-deletion)
-    (emacspeak-speak-char t)
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (dtk-tone-deletion) (emacspeak-speak-char t)
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'org-delete-char :around #'ems--org-delete-char-around)
+
+
+
 
 ;;;  cut and paste:
 
@@ -300,19 +332,33 @@
 
 ;;;  completion:
 
-(defadvice org-complete (around emacspeak pre act comp)
+
+(defun ems--org-complete-around (orig-fun &rest args)
   "Say what you completed."
-  (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-        (dtk-stop-immediately t))
-    ad-do-it
-    (if (> (point) prior)
-        (tts-with-punctuations
-         'all
-         (if (> (length (emacspeak-get-minibuffer-contents)) 0)
-             (dtk-speak (emacspeak-get-minibuffer-contents))
-           (emacspeak-speak-line)))
-      (emacspeak-speak-completions-if-available))
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let
+	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+	 (dtk-stop-immediately t))
+      (apply orig-fun args)
+      (if (> (point) prior)
+	  (tts-with-punctuations 'all
+				 (if
+				     (>
+				      (length
+				       (emacspeak-get-minibuffer-contents))
+				      0)
+				     (dtk-speak
+				      (emacspeak-get-minibuffer-contents))
+				   (emacspeak-speak-line)))
+	(emacspeak-speak-completions-if-available))
+      result)
+    result))
+
+
+(advice-add 'org-complete :around #'ems--org-complete-around)
+
+
+
 
 ;;;  toggles:
 
@@ -353,10 +399,17 @@
                (emacspeak-icon 'select-object)
                (dtk-speak org-last-changed-timestamp)))))
 
-(defadvice org-eval-in-calendar (after emacspeak pre act comp)
-  "Speak what is returned."
-  (cl-declare (special org-ans2))
+
+(defun ems--org-eval-in-calendar-after (&rest _)
+  "Speak what is returned." (cl-declare (special org-ans2))
   (dtk-speak org-ans2))
+
+
+(advice-add 'org-eval-in-calendar :after
+	    #'ems--org-eval-in-calendar-after)
+
+
+
 
 ;;;  Agenda:
 
@@ -399,35 +452,51 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-line)))))
 
-(defadvice org-agenda (after emacspeak pre act comp)
+
+(defun ems--org-agenda-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'org-agenda :after #'ems--org-agenda-after)
+
+
+
 
 ;;;  tables:
 
 ;;;  table minor mode:
 
-(defadvice orgtbl-mode (after emacspeak pre act comp)
-  "speak."
-  (cl-declare (special orgtbl-mode))
+
+(defun ems--orgtbl-mode-after (&rest _)
+  "speak." (cl-declare (special orgtbl-mode))
   (when (ems-interactive-p)
     (emacspeak-icon (if orgtbl-mode 'on 'off))
-    (message "Turned %s org table mode."
-             (if orgtbl-mode 'on 'off))))
+    (message "Turned %s org table mode." (if orgtbl-mode 'on 'off))))
+
+
+(advice-add 'orgtbl-mode :after #'ems--orgtbl-mode-after)
+
+
+
 
 ;;;  deleting chars:
 
-(defadvice org-return (after emacspeak pre act comp)
+
+(defun ems--org-return-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (cond
      ((org-at-table-p 'any)
       (funcall emacspeak-org-table-after-movement-function))
-     (t
-      (emacspeak-speak-line)
-      (emacspeak-icon 'select-object)))))
+     (t (emacspeak-speak-line) (emacspeak-icon 'select-object)))))
+
+
+(advice-add 'org-return :after #'ems--org-return-after)
+
+
+
 
 ;;;  Keymap update:
 
@@ -494,18 +563,32 @@
 (add-hook 'org-mode-hook #'emacspeak-org-mode-setup)
 
 ;; advice end-of-line here to call org specific action
-(defadvice end-of-line (after emacspeak-org pre act comp)
+
+(defun ems--end-of-line-after (&rest _)
   "Call org specific actions in org mode."
-  (when (and (ems-interactive-p)
-             (eq major-mode 'org-mode)
-             (fboundp 'org-end-of-line))
+  (when
+      (and (ems-interactive-p) (eq major-mode 'org-mode)
+	   (fboundp 'org-end-of-line))
     (org-end-of-line)))
 
-(defadvice org-toggle-checkbox (after emacspeak pre act comp)
+
+(advice-add 'end-of-line :after #'ems--end-of-line-after)
+
+
+
+
+
+(defun ems--org-toggle-checkbox-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'button) (emacspeak-speak-line)))
+
+
+(advice-add 'org-toggle-checkbox :after
+	    #'ems--org-toggle-checkbox-after)
+
+
+
 
 ;;;  fix misc commands:
 
@@ -522,17 +605,30 @@
      (when (ems-interactive-p) (emacspeak-speak-line)
            (emacspeak-icon 'select-object)))))
 
-(defadvice org-beginning-of-line (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'left)))
 
-(defadvice org-end-of-line (after emacspeak pre act comp)
+(defun ems--org-beginning-of-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'right)))
+    (emacspeak-speak-line) (emacspeak-icon 'left)))
+
+
+(advice-add 'org-beginning-of-line :after
+	    #'ems--org-beginning-of-line-after)
+
+
+
+
+
+(defun ems--org-end-of-line-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'right)))
+
+
+(advice-add 'org-end-of-line :after #'ems--org-end-of-line-after)
+
+
+
 
 ;;;  global input wizard
 
@@ -543,24 +639,50 @@
 
 ;;;  org capture
 
-(defadvice org-capture-goto-last-stored (after emacspeak pre act comp)
+
+(defun ems--org-capture-goto-last-stored-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice org-capture-goto-target (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'large-movement)
-  (emacspeak-speak-line))
 
-(defadvice org-capture-finalize (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'save-object))
+(advice-add 'org-capture-goto-last-stored :after
+	    #'ems--org-capture-goto-last-stored-after)
 
-(defadvice org-capture-kill (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'close-object))
+
+
+
+
+(defun ems--org-capture-goto-target-after (&rest _)
+  "speak." (emacspeak-icon 'large-movement) (emacspeak-speak-line))
+
+
+(advice-add 'org-capture-goto-target :after
+	    #'ems--org-capture-goto-target-after)
+
+
+
+
+
+(defun ems--org-capture-finalize-after (&rest _)
+  "speak." (emacspeak-icon 'save-object))
+
+
+(advice-add 'org-capture-finalize :after
+	    #'ems--org-capture-finalize-after)
+
+
+
+
+
+(defun ems--org-capture-kill-after (&rest _)
+  "speak." (emacspeak-icon 'close-object))
+
+
+(advice-add 'org-capture-kill :after #'ems--org-capture-kill-after)
+
+
+
 
 (defun emacspeak-org-table-speak-current-element ()
   "echoes current table element"
@@ -683,23 +805,27 @@ arg just opens the file"
 (declare-function emacspeak-eww-current-title "emacspeak-eww" nil)
 
 ;;;  Speech-enable export prompt:
-(defadvice org-export--dispatch-action (before emacspeak pre act comp)
+
+(defun ems--org-export--dispatch-action-before (&rest _)
   "Speak prompt intelligently."
-  (let ((prompt (ad-get-arg 0))
-        (entries (ad-get-arg 2))
-        (first-key (ad-get-arg 4))
-        (choices nil))
+  (let
+      ((prompt (ad-get-arg 0)) (entries (ad-get-arg 2))
+       (first-key (ad-get-arg 4)) (choices nil))
     (setq choices
-          (cond
-           ((null first-key) entries)
-           (t                           ;third  is cl-caddr
-            (cl-caddr (assoc first-key entries)))))
+	  (cond ((null first-key) entries)
+		(t (cl-caddr (assoc first-key entries)))))
     (dtk-notify
      (mapconcat
-      #'(lambda (e)
-          (format "%c: %s\n" (cl-first e) (cl-second e)))
+      #'(lambda (e) (format "%c: %s\n" (cl-first e) (cl-second e)))
       choices "\n"))
     (sit-for 5)))
+
+
+(advice-add 'org-export--dispatch-action :before
+	    #'ems--org-export--dispatch-action-before)
+
+
+
 
 ;;;  Preview HTML With EWW:
 
@@ -733,20 +859,31 @@ arg just opens the file"
 
 ;;;  Fillers:
 
-(defadvice org-fill-paragraph (after emacspeak pre act comp)
+
+(defun ems--org-fill-paragraph-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "Filled current paragraph")))
+    (emacspeak-icon 'fill-object) (message "Filled current paragraph")))
 
-(defadvice org-todo (after emacspeak pre act comp)
+
+(advice-add 'org-fill-paragraph :after #'ems--org-fill-paragraph-after)
+
+
+
+
+
+(defun ems--org-todo-after (&rest _)
   "speak when changing the state of a TODO item."
   (when (ems-interactive-p)
     (emacspeak-icon 'button)
     (let ((state (org-get-todo-state)))
-      (if (null state)
-          (message "State unset")
-        (message state)))))
+      (if (null state) (message "State unset") (message state)))))
+
+
+(advice-add 'org-todo :after #'ems--org-todo-after)
+
+
+
 
 ;;; TVR: Conveniences
 
@@ -805,11 +942,18 @@ arg just opens the file"
 
 ;;; md export:
 
-(defadvice org-md-export-as-markdown (after emacspeak pre act comp)
+
+(defun ems--org-md-export-as-markdown-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'task-done) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'org-md-export-as-markdown :after
+	    #'ems--org-md-export-as-markdown-after)
+
+
+
 
 ;;; Amark:
 
@@ -920,10 +1064,16 @@ Press `y' to play to next amark."
      (emacspeak-icon 'save-object)
      (emacspeak-speak-message-again)))
 
-(defadvice org-export-to-file (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'save-object)
+
+(defun ems--org-export-to-file-after (&rest _)
+  "speak." (emacspeak-icon 'save-object)
   (dtk-notify (format "Wrote %s" (ad-get-arg 1))))
+
+
+(advice-add 'org-export-to-file :after #'ems--org-export-to-file-after)
+
+
+
 
 (provide 'emacspeak-org)
 ;;;  end of file

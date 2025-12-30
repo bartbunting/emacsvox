@@ -48,136 +48,287 @@
 ;;; Code:
 
 ;;;   bookmarks
-(defadvice bookmark-set (after emacspeak pre act comp)
+
+(defun ems--bookmark-set-after (&rest _)
   "Announce yourself."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (message "Set bookmark ")))
+    (emacspeak-icon 'mark-object) (message "Set bookmark ")))
 
-(defadvice bookmark-yank-word (after emacspeak pre act comp)
+
+(advice-add 'bookmark-set :after #'ems--bookmark-set-after)
+
+
+
+
+
+(defun ems--bookmark-yank-word-after (&rest _)
   "Speak what has been yanked so far"
   (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-speak-line)))
 
-(defadvice bookmark-insert-current-bookmark (after emacspeak pre act comp)
+
+(advice-add 'bookmark-yank-word :after #'ems--bookmark-yank-word-after)
+
+
+
+
+
+(defun ems--bookmark-insert-current-bookmark-after (&rest _)
   "Speak what has been yanked so far"
   (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-speak-line)))
 
-(defadvice bookmark-insert-current-file-name (after emacspeak pre act comp)
+
+(advice-add 'bookmark-insert-current-bookmark :after
+	    #'ems--bookmark-insert-current-bookmark-after)
+
+
+
+
+
+(defun ems--bookmark-insert-current-file-name-after (&rest _)
   "Speak what has been yanked so far"
   (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-speak-line)))
 
-(defadvice  bookmark-jump (after emacspeak pre act comp)
+
+(advice-add 'bookmark-insert-current-file-name :after
+	    #'ems--bookmark-insert-current-file-name-after)
+
+
+
+
+
+(defun ems--bookmark-jump-after (&rest _)
   "Announce what happened."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-jump :after #'ems--bookmark-jump-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-list-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (switch-to-buffer "*Bookmark List*")
     (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-list (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (switch-to-buffer "*Bookmark List*")
-    (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-this-window (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'open-object)))
-(defadvice bookmark-bmenu-select (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
-(defadvice bookmark-bmenu-delete-backwards (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+(advice-add 'bookmark-bmenu-list :after
+	    #'ems--bookmark-bmenu-list-after)
 
-(defadvice bookmark-bmenu-1-window (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-2-window (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-switch-other-window (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-edit-annotation (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice bookmark-bmenu-delete (after emacspeak pre act comp)
+(defun ems--bookmark-bmenu-this-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-speak-line) (emacspeak-icon 'open-object)))
 
-(defadvice bookmark-bmenu-unmark (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'deselect-object)
-    (emacspeak-speak-line)
-    ))
 
-(defadvice bookmark-bmenu-edit-annotation (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
-(defadvice bookmark-send-edited-annotation (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-line)))
+(advice-add 'bookmark-bmenu-this-window :after
+	    #'ems--bookmark-bmenu-this-window-after)
 
-(defadvice bookmark-bmenu-show-annotation (after emacspeak pre act comp)
+
+
+
+(defun ems--bookmark-bmenu-select-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-other-window)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-show-all-annotations (after emacspeak pre act comp)
+
+(advice-add 'bookmark-bmenu-select :after
+	    #'ems--bookmark-bmenu-select-after)
+
+
+
+
+(defun ems--bookmark-bmenu-delete-backwards-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-delete-backwards :after
+	    #'ems--bookmark-bmenu-delete-backwards-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-1-window-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-1-window :after
+	    #'ems--bookmark-bmenu-1-window-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-2-window-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-2-window :after
+	    #'ems--bookmark-bmenu-2-window-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-switch-other-window-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-switch-other-window :after
+	    #'ems--bookmark-bmenu-switch-other-window-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-edit-annotation-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'bookmark-bmenu-edit-annotation :after
+	    #'ems--bookmark-bmenu-edit-annotation-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-delete-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-delete :after
+	    #'ems--bookmark-bmenu-delete-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-unmark-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'deselect-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-unmark :after
+	    #'ems--bookmark-bmenu-unmark-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-edit-annotation-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'bookmark-bmenu-edit-annotation :after
+	    #'ems--bookmark-bmenu-edit-annotation-after)
+
+
+
+
+(defun ems--bookmark-send-edited-annotation-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'task-done) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-send-edited-annotation :after
+	    #'ems--bookmark-send-edited-annotation-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-show-annotation-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-other-window)))
+
+
+(advice-add 'bookmark-bmenu-show-annotation :after
+	    #'ems--bookmark-bmenu-show-annotation-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-show-all-annotations-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Displayed all annotations in other window")))
 
-(defadvice bookmark-bmenu-mark (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-speak-line)))
 
-(defadvice bookmark-bmenu-quit  (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+(advice-add 'bookmark-bmenu-show-all-annotations :after
+	    #'ems--bookmark-bmenu-show-all-annotations-after)
 
-(defadvice bookmark-bmenu-backup-unmark (after emacspeak pre act comp)
+
+
+
+
+(defun ems--bookmark-bmenu-mark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'deselect-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'mark-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-mark :after
+	    #'ems--bookmark-bmenu-mark-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-quit-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'bookmark-bmenu-quit :after
+	    #'ems--bookmark-bmenu-quit-after)
+
+
+
+
+
+(defun ems--bookmark-bmenu-backup-unmark-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'deselect-object) (emacspeak-speak-line)))
+
+
+(advice-add 'bookmark-bmenu-backup-unmark :after
+	    #'ems--bookmark-bmenu-backup-unmark-after)
+
+
+
 
 (provide 'emacspeak-bookmark)
 ;;;  end of file 

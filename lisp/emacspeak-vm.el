@@ -92,35 +92,66 @@ Note that some badly formed mime messages  cause trouble."
 
 ;;;  Advice completions
 
-(defadvice vm-minibuffer-complete-word (around emacspeak pre act comp)
-  "Say what you completed."
-  (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-        (dtk-stop-immediately t))
-    (emacspeak-kill-buffer-carefully "*Completions*")
-    ad-do-it
-    (if (> (point) prior)
-        (tts-with-punctuations
-         'all
-         (if (> (length (emacspeak-get-minibuffer-contents)) 0)
-             (dtk-speak (emacspeak-get-minibuffer-contents))
-           (emacspeak-speak-line)))
-      (emacspeak-speak-completions-if-available))
-    ad-return-value))
 
-(defadvice vm-minibuffer-complete-word-and-exit (around emacspeak pre act comp)
+(defun ems--vm-minibuffer-complete-word-around (orig-fun &rest args)
   "Say what you completed."
-  (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-        (dtk-stop-immediately t))
-    (emacspeak-kill-buffer-carefully "*Completions*")
-    ad-do-it
-    (if (> (point) prior)
-        (tts-with-punctuations
-         'all
-         (if (> (length (emacspeak-get-minibuffer-contents)) 0)
-             (dtk-speak (emacspeak-get-minibuffer-contents))
-           (emacspeak-speak-line)))
-      (emacspeak-speak-completions-if-available))
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let
+	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+	 (dtk-stop-immediately t))
+      (emacspeak-kill-buffer-carefully "*Completions*")
+      (apply orig-fun args)
+      (if (> (point) prior)
+	  (tts-with-punctuations 'all
+				 (if
+				     (>
+				      (length
+				       (emacspeak-get-minibuffer-contents))
+				      0)
+				     (dtk-speak
+				      (emacspeak-get-minibuffer-contents))
+				   (emacspeak-speak-line)))
+	(emacspeak-speak-completions-if-available))
+      result)
+    result))
+
+
+(advice-add 'vm-minibuffer-complete-word :around
+	    #'ems--vm-minibuffer-complete-word-around)
+
+
+
+
+
+(defun ems--vm-minibuffer-complete-word-and-exit-around
+    (orig-fun &rest args)
+  "Say what you completed."
+  (let ((result (apply orig-fun args)))
+    (let
+	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+	 (dtk-stop-immediately t))
+      (emacspeak-kill-buffer-carefully "*Completions*")
+      (apply orig-fun args)
+      (if (> (point) prior)
+	  (tts-with-punctuations 'all
+				 (if
+				     (>
+				      (length
+				       (emacspeak-get-minibuffer-contents))
+				      0)
+				     (dtk-speak
+				      (emacspeak-get-minibuffer-contents))
+				   (emacspeak-speak-line)))
+	(emacspeak-speak-completions-if-available))
+      result)
+    result))
+
+
+(advice-add 'vm-minibuffer-complete-word-and-exit :around
+	    #'ems--vm-minibuffer-complete-word-and-exit-around)
+
+
+
 
 ;;;   Helper functions:
 
@@ -264,27 +295,41 @@ that has been forwarded multiple times."
   (re-search-forward "^ *Subject:" nil t)
   (emacspeak-speak-line))
 
-(defadvice vm-scroll-forward (after emacspeak pre act comp)
-  "Produce auditory feedback.
-Then speak the screenful. "
-  (when (ems-interactive-p)
-    (emacspeak-icon 'scroll)
-    (save-excursion
-      (let ((start  (point))
-            (window (get-buffer-window (current-buffer))))
-        (forward-line (window-height window))
-        (emacspeak-speak-region start (point))))))
 
-(defadvice vm-scroll-backward (after emacspeak pre act comp)
-  "Produce auditory feedback.
-Then speak the screenful. "
+(defun ems--vm-scroll-forward-after (&rest _)
+  "Produce auditory feedback.\nThen speak the screenful. "
   (when (ems-interactive-p)
     (emacspeak-icon 'scroll)
     (save-excursion
-      (let ((start  (point))
-            (window (get-buffer-window (current-buffer))))
-        (forward-line(-  (window-height window)))
-        (emacspeak-speak-region start (point))))))
+      (let
+	  ((start (point))
+	   (window (get-buffer-window (current-buffer))))
+	(forward-line (window-height window))
+	(emacspeak-speak-region start (point))))))
+
+
+(advice-add 'vm-scroll-forward :after #'ems--vm-scroll-forward-after)
+
+
+
+
+
+(defun ems--vm-scroll-backward-after (&rest _)
+  "Produce auditory feedback.\nThen speak the screenful. "
+  (when (ems-interactive-p)
+    (emacspeak-icon 'scroll)
+    (save-excursion
+      (let
+	  ((start (point))
+	   (window (get-buffer-window (current-buffer))))
+	(forward-line (- (window-height window)))
+	(emacspeak-speak-region start (point))))))
+
+
+(advice-add 'vm-scroll-backward :after #'ems--vm-scroll-backward-after)
+
+
+
 (defun emacspeak-vm-browse-message ()
   "Browse an email message --read it paragraph at a time. "
   (interactive)
@@ -292,78 +337,137 @@ Then speak the screenful. "
 
 ;;;   deleting and killing
 
-(defadvice vm-delete-message (after emacspeak pre act comp)
+
+(defun ems--vm-delete-message-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (message "Message discarded.")))
+    (emacspeak-icon 'delete-object) (message "Message discarded.")))
 
-(defadvice vm-undelete-message (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Message recovered.")))
 
-(defadvice vm-kill-subject (after emacspeak pre act comp)
+(advice-add 'vm-delete-message :after #'ems--vm-delete-message-after)
+
+
+
+
+
+(defun ems--vm-undelete-message-after (&rest _)
+  "speak." (when (ems-interactive-p) (message "Message recovered.")))
+
+
+(advice-add 'vm-undelete-message :after
+	    #'ems--vm-undelete-message-after)
+
+
+
+
+
+(defun ems--vm-kill-subject-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (call-interactively 'vm-next-message)))
 
+
+(advice-add 'vm-kill-subject :after #'ems--vm-kill-subject-after)
+
+
+
+
 ;;;   Sending mail:
 
-(defadvice vm-forward-message (around emacspeak pre act comp)
-  "Provide aural feedback."
-  (cond
-   ((ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Forwarding message")
-    ad-do-it
-    (emacspeak-speak-line)
-    (save-excursion
-      (search-forward "--text follows this line--")
-      (insert "\n\n")))
-   (t
-    ad-do-it))
-  ad-return-value)
 
-(defadvice vm-reply (after emacspeak pre act comp)
+(defun ems--vm-forward-message-around (orig-fun &rest args)
   "Provide aural feedback."
-  (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)))
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (emacspeak-icon 'open-object)
+      (message "Forwarding message") (apply orig-fun args)
+      (emacspeak-speak-line)
+      (save-excursion
+	(search-forward "--text follows this line--") (insert "\n\n")))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice vm-followup (after emacspeak pre act comp)
+
+(advice-add 'vm-forward-message :around
+	    #'ems--vm-forward-message-around)
+
+
+
+
+
+(defun ems--vm-reply-after (&rest _)
   "Provide aural feedback."
-  (when (ems-interactive-p)
-    (message "Folluwing up")
-    (emacspeak-speak-mode-line)))
+  (when (ems-interactive-p) (emacspeak-speak-mode-line)))
 
-(defadvice vm-reply-include-text (after emacspeak pre act comp)
-  "Provide aural feedback."
-  (when (ems-interactive-p)
-    ;; Insert whitespace to delimit quoted text
-    (save-excursion
-      (insert "\n\n"))
-    (emacspeak-speak-mode-line)))
 
-(defadvice vm-followup-include-text (after emacspeak pre act comp)
+(advice-add 'vm-reply :after #'ems--vm-reply-after)
+
+
+
+
+
+(defun ems--vm-followup-after (&rest _)
   "Provide aural feedback."
   (when (ems-interactive-p)
-    ;; Delimit cited text
-    (save-excursion
-      (insert "\n\n"))
-    (message "Following up")
+    (message "Folluwing up") (emacspeak-speak-mode-line)))
+
+
+(advice-add 'vm-followup :after #'ems--vm-followup-after)
+
+
+
+
+
+(defun ems--vm-reply-include-text-after (&rest _)
+  "Provide aural feedback."
+  (when (ems-interactive-p)
+    (save-excursion (insert "\n\n")) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'vm-reply-include-text :after
+	    #'ems--vm-reply-include-text-after)
+
+
+
+
+
+(defun ems--vm-followup-include-text-after (&rest _)
+  "Provide aural feedback."
+  (when (ems-interactive-p)
+    (save-excursion (insert "\n\n")) (message "Following up")
     (emacspeak-speak-mode-line)))
 
-(defadvice vm-mail-send (after emacspeak pre act comp)
+
+(advice-add 'vm-followup-include-text :after
+	    #'ems--vm-followup-include-text-after)
+
+
+
+
+
+(defun ems--vm-mail-send-after (&rest _)
   "Provide auditory context"
-  (when  (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'close-object)))
+  (when (ems-interactive-p)
+    (emacspeak-speak-mode-line) (emacspeak-icon 'close-object)))
 
-(defadvice vm-mail-send-and-exit (after emacspeak pre act comp)
+
+(advice-add 'vm-mail-send :after #'ems--vm-mail-send-after)
+
+
+
+
+
+(defun ems--vm-mail-send-and-exit-after (&rest _)
   "Provide auditory context"
-  (when  (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
+  (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'vm-mail-send-and-exit :after
+	    #'ems--vm-mail-send-and-exit-after)
+
+
+
 
 (cl-loop
  for f in
@@ -379,13 +483,19 @@ Then speak the screenful. "
 
 ;;;  quitting
 
-(defadvice vm-quit (after emacspeak pre act comp)
+
+(defun ems--vm-quit-after (&rest _)
   "Provide an auditory icon if requested"
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (dtk-stop)
+    (emacspeak-icon 'close-object) (dtk-stop)
     (with-current-buffer (window-buffer (selected-window))
       (emacspeak-speak-mode-line))))
+
+
+(advice-add 'vm-quit :after #'ems--vm-quit-after)
+
+
+
 
 ;;;  catching up on folders
 
@@ -422,76 +532,123 @@ Then speak the screenful. "
   )
 
 ;;;  advise searching:
-(defadvice vm-isearch-forward (around emacspeak pre act comp)
-  "speak"
-  (cl-declare (special vm-message-pointer))
-  (cond
-   ((ems-interactive-p)
-    (let ((orig (point)))
-      ad-do-it
-      (cond
-       ((not (= orig (point)))
-        (emacspeak-icon 'search-hit)
-        (emacspeak-speak-line))
-       (t (emacspeak-icon 'search-miss)))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice vm-isearch-backward (around emacspeak pre act comp)
+(defun ems--vm-isearch-forward-around (orig-fun &rest args)
   "speak"
-  (cl-declare (special vm-message-pointer))
-  (cond
-   ((ems-interactive-p)
-    (let ((orig (point)))
-      ad-do-it
-      (cond
-       ((not (= orig (point)))
-        (emacspeak-icon 'search-hit)
-        (emacspeak-speak-line))
-       (t (emacspeak-icon 'search-miss)))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special vm-message-pointer))
+    (cond
+     ((ems-interactive-p)
+      (let ((orig (point)))
+	(apply orig-fun args)
+	(cond
+	 ((not (= orig (point))) (emacspeak-icon 'search-hit)
+	  (emacspeak-speak-line))
+	 (t (emacspeak-icon 'search-miss)))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'vm-isearch-forward :around
+	    #'ems--vm-isearch-forward-around)
+
+
+
+
+
+(defun ems--vm-isearch-backward-around (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special vm-message-pointer))
+    (cond
+     ((ems-interactive-p)
+      (let ((orig (point)))
+	(apply orig-fun args)
+	(cond
+	 ((not (= orig (point))) (emacspeak-icon 'search-hit)
+	  (emacspeak-speak-line))
+	 (t (emacspeak-icon 'search-miss)))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'vm-isearch-backward :around
+	    #'ems--vm-isearch-backward-around)
+
+
+
 
 ;;;   silence mime parsing in vm 6.0 and above
 
-(defadvice vm-mime-parse-entity (around emacspeak pre act comp)
-  (ems-with-messages-silenced
-   ad-do-it))
 
-(defadvice vm-decode-mime-message (around emacspeak pre act comp)
-  (ems-with-messages-silenced
-   ad-do-it))
+(defun ems--vm-mime-parse-entity-around (orig-fun &rest args)
+  (ems-with-messages-silenced (apply orig-fun args)))
 
-(defadvice vm-mime-run-display-function-at-point (around emacspeak pre act comp)
-  "speak.
-Leave point at front of decoded attachment."
-  (cond
-   ((ems-interactive-p)
-    (let ((orig (point)))
-      ad-do-it
-      (goto-char orig)
-      (message "Decoded attachment")))
-   (t ad-do-it))
-  ad-return-value)
+
+(advice-add 'vm-mime-parse-entity :around
+	    #'ems--vm-mime-parse-entity-around)
+
+
+
+
+
+(defun ems--vm-decode-mime-message-around (orig-fun &rest args)
+  (ems-with-messages-silenced (apply orig-fun args)))
+
+
+(advice-add 'vm-decode-mime-message :around
+	    #'ems--vm-decode-mime-message-around)
+
+
+
+
+
+(defun ems--vm-mime-run-display-function-at-point-around
+    (orig-fun &rest args)
+  "speak.\nLeave point at front of decoded attachment."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((orig (point)))
+	(apply orig-fun args) (goto-char orig)
+	(message "Decoded attachment")))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'vm-mime-run-display-function-at-point :around
+	    #'ems--vm-mime-run-display-function-at-point-around)
+
+
+
 
 ;;;  silence unnecessary chatter
 
-(defadvice vm-emit-eom-blurb (around emacspeak pre act comp)
-  "Stop chattering"
-  (ems-with-messages-silenced
-   ad-do-it))
+
+(defun ems--vm-emit-eom-blurb-around (orig-fun &rest args)
+  "Stop chattering" (ems-with-messages-silenced (apply orig-fun args)))
+
+
+(advice-add 'vm-emit-eom-blurb :around #'ems--vm-emit-eom-blurb-around)
+
+
+
 
 ;;;  advice password prompt
 
-(defadvice vm-read-password(before emacspeak pre act comp)
+
+(defun ems--vm-read-password-before (&rest _)
   "Speak the prompt"
-  (let ((prompt (ad-get-arg 0))
-        (confirm (ad-get-arg 1)))
+  (let ((prompt (ad-get-arg 0)) (confirm (ad-get-arg 1)))
     (emacspeak-icon 'open-object)
     (dtk-speak
-     (format "%s %s"
-             prompt
-             (if confirm "Confirm by retyping" "")))))
+     (format "%s %s" prompt (if confirm "Confirm by retyping" "")))))
+
+
+(advice-add 'vm-read-password :before #'ems--vm-read-password-before)
+
+
+
 
 ;;;  setup presentation buffer correctly
 
@@ -536,15 +693,28 @@ Leave point at front of decoded attachment."
 
 ;;;   misc
 
-(defadvice vm (around emacspeak pre act comp)
+
+(defun ems--vm-around (orig-fun &rest args)
   "Silence chatter."
   (let ((emacspeak-speak-messages nil))
-    ad-do-it
-    (emacspeak-vm-mode-line)))
+    (apply orig-fun args) (emacspeak-vm-mode-line)))
 
-(defadvice vm-count-messages-in-file (around emacspeak pre act comp)
-  (ad-set-arg 1 'quiet)
-  ad-do-it)
+
+(advice-add 'vm :around #'ems--vm-around)
+
+
+
+
+
+(defun ems--vm-count-messages-in-file-around (orig-fun &rest args)
+  (ad-set-arg 1 'quiet) (apply orig-fun args))
+
+
+(advice-add 'vm-count-messages-in-file :around
+	    #'ems--vm-count-messages-in-file-around)
+
+
+
 
 ;;;   button motion in vm
 

@@ -55,166 +55,306 @@
   (emacspeak-speak-line))
 
 ;;;   advice interactive commands 
-(defadvice calculator (around emacspeak pre act comp)
-  "Fix while waiting for a bug-fix in Emacs."
-  (cond
-   ((ems-interactive-p)
-    (let ((header-line-format nil))
-      ad-do-it))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice calculator (after emacspeak pre act comp)
+(defun ems--calculator-around (orig-fun &rest args)
+  "Fix while waiting for a bug-fix in Emacs."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((header-line-format nil)) (apply orig-fun args)))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator :around #'ems--calculator-around)
+
+
+
+
+
+(defun ems--calculator-after (&rest _)
   "Speech enable calculator."
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Welcome to the pocket calculator.")))
 
-(defadvice calculator-digit (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice calculator-exp (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
+(advice-add 'calculator :after #'ems--calculator-after)
 
-(defadvice calculator-op (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    ad-do-it
-    (emacspeak-icon 'select-object)
-    (emacspeak-calculator-summarize))
-   (t ad-do-it))
-  ad-return-value)
-(defadvice calculator-op-or-exp (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
-(defadvice calculator-open-paren (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice calculator-close-paren (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice calculator-saved-up (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    ad-do-it
-    (emacspeak-icon 'select-object)
-    (emacspeak-calculator-summarize))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice calculator-saved-down (around emacspeak pre act comp)
-  "Speak the digit."
-  (cond
-   ((ems-interactive-p)
-    ad-do-it
-    (emacspeak-icon 'select-object)
-    (emacspeak-calculator-summarize))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice calculator-save-on-list (after emacspeak pre act
-                                          comp)
+(defun ems--calculator-digit-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-digit :around #'ems--calculator-digit-around)
+
+
+
+
+
+(defun ems--calculator-exp-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-exp :around #'ems--calculator-exp-around)
+
+
+
+
+
+(defun ems--calculator-op-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (apply orig-fun args)
+      (emacspeak-icon 'select-object) (emacspeak-calculator-summarize))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-op :around #'ems--calculator-op-around)
+
+
+
+
+(defun ems--calculator-op-or-exp-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-op-or-exp :around
+	    #'ems--calculator-op-or-exp-around)
+
+
+
+
+(defun ems--calculator-open-paren-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-open-paren :around
+	    #'ems--calculator-open-paren-around)
+
+
+
+
+
+(defun ems--calculator-close-paren-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-close-paren :around
+	    #'ems--calculator-close-paren-around)
+
+
+
+
+
+(defun ems--calculator-saved-up-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (apply orig-fun args)
+      (emacspeak-icon 'select-object) (emacspeak-calculator-summarize))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-saved-up :around
+	    #'ems--calculator-saved-up-around)
+
+
+
+
+
+(defun ems--calculator-saved-down-around (orig-fun &rest args)
+  "Speak the digit."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (apply orig-fun args)
+      (emacspeak-icon 'select-object) (emacspeak-calculator-summarize))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'calculator-saved-down :around
+	    #'ems--calculator-saved-down-around)
+
+
+
+
+
+(defun ems--calculator-save-on-list-after (&rest _)
   "Provide speech feedback"
   (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)
-    (emacspeak-calculator-summarize)))
+    (emacspeak-icon 'save-object) (emacspeak-calculator-summarize)))
 
-(defadvice calculator-clear-saved (after emacspeak pre act
-                                         comp)
+
+(advice-add 'calculator-save-on-list :after
+	    #'ems--calculator-save-on-list-after)
+
+
+
+
+
+(defun ems--calculator-clear-saved-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-calculator-summarize)))
+    (emacspeak-icon 'delete-object) (emacspeak-calculator-summarize)))
 
-(defadvice calculator-enter (after emacspeak pre act comp)
+
+(advice-add 'calculator-clear-saved :after
+	    #'ems--calculator-clear-saved-after)
+
+
+
+
+
+(defun ems--calculator-enter-after (&rest _)
   "Provide speech feedback"
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-calculator-summarize)))
+    (emacspeak-icon 'select-object) (emacspeak-calculator-summarize)))
 
-(defadvice calculator-backspace (around emacspeak pre act comp)
+
+(advice-add 'calculator-enter :after #'ems--calculator-enter-after)
+
+
+
+
+
+(defun ems--calculator-backspace-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone 500 100 'force)
-    (emacspeak-speak-this-char (preceding-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (dtk-tone 500 100 'force)
+      (emacspeak-speak-this-char (preceding-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice calculator-clear (after emacspeak pre act
-                                   comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-calculator-summarize)))
-(defadvice calculator-copy (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-current-kill 1)))
 
-(defadvice calculator-paste (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)))
+(advice-add 'calculator-backspace :around
+	    #'ems--calculator-backspace-around)
 
-(defadvice calculator-get-register (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-calculator-summarize)))
-(defadvice calculator-quit (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
-(defadvice calculator-save-and-quit (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice calculator-update-display (after emacspeak pre
-                                            act comp)
-  "Speak the updated  display. "
-  (emacspeak-speak-line))
+
+
+
+(defun ems--calculator-clear-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'delete-object) (emacspeak-calculator-summarize)))
+
+
+(advice-add 'calculator-clear :after #'ems--calculator-clear-after)
+
+
+
+
+(defun ems--calculator-copy-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'delete-object) (emacspeak-speak-current-kill 1)))
+
+
+(advice-add 'calculator-copy :after #'ems--calculator-copy-after)
+
+
+
+
+
+(defun ems--calculator-paste-after (&rest _)
+  "speak" (when (ems-interactive-p) (emacspeak-icon 'yank-object)))
+
+
+(advice-add 'calculator-paste :after #'ems--calculator-paste-after)
+
+
+
+
+
+(defun ems--calculator-get-register-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'yank-object) (emacspeak-calculator-summarize)))
+
+
+(advice-add 'calculator-get-register :after
+	    #'ems--calculator-get-register-after)
+
+
+
+
+(defun ems--calculator-quit-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'calculator-quit :after #'ems--calculator-quit-after)
+
+
+
+
+(defun ems--calculator-save-and-quit-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'calculator-save-and-quit :after
+	    #'ems--calculator-save-and-quit-after)
+
+
+
+
+
+(defun ems--calculator-update-display-after (&rest _)
+  "Speak the updated  display. " (emacspeak-speak-line))
+
+
+(advice-add 'calculator-update-display :after
+	    #'ems--calculator-update-display-after)
+
+
+
 
 ;;;   keys 
 (cl-declaim (special calculator-mode-map))

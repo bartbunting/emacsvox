@@ -996,29 +996,44 @@ activity within the filter window."
 (defvar eterm-current-personality nil
   "Current personality for eterm. ")
 
-(defadvice term (before emacspeak pre act comp)
-  "Single window please!"
-  (delete-other-windows))
 
-(defadvice ansi-term (before emacspeak pre act comp)
-  "Single window please!"
-  (delete-other-windows))
+(defun ems--term-before (&rest _)
+  "Single window please!" (delete-other-windows))
 
-(defadvice term-mode   (after emacspeak pre act comp)
-  "Customize eterm to work with Emacspeak.
-Additional commands provided by emacspeak under eterm are
-available with the prefix emacspeak-eterm-prefix and are listed below:
-\\{emacspeak-eterm-keymap}"
+
+(advice-add 'term :before #'ems--term-before)
+
+
+
+
+
+(defun ems--ansi-term-before (&rest _)
+  "Single window please!" (delete-other-windows))
+
+
+(advice-add 'ansi-term :before #'ems--ansi-term-before)
+
+
+
+
+
+(defun ems--term-mode-after (&rest _)
+  "Customize eterm to work with Emacspeak.\nAdditional commands provided by emacspeak under eterm are\navailable with the prefix emacspeak-eterm-prefix and are listed below:\n\\{emacspeak-eterm-keymap}"
   (cl-declare (special emacspeak-eterm-pointer emacspeak-eterm-marker))
-  (emacspeak-eterm-setup-keys)
-  (emacspeak-eterm-setup-raw-keys)
+  (emacspeak-eterm-setup-keys) (emacspeak-eterm-setup-raw-keys)
   (make-local-variable 'eterm-current-personality)
   (setq eterm-current-personality emacspeak-eterm-default-personality)
   (modify-syntax-entry 10 ">")
   (make-local-variable 'emacspeak-eterm-pointer)
-  (setq emacspeak-eterm-pointer  (copy-marker (point)))
+  (setq emacspeak-eterm-pointer (copy-marker (point)))
   (make-local-variable 'emacspeak-eterm-marker)
-  (setq emacspeak-eterm-marker  (copy-marker (point))))
+  (setq emacspeak-eterm-marker (copy-marker (point))))
+
+
+(advice-add 'term-mode :after #'ems--term-mode-after)
+
+
+
 
 (defvar emacspeak-eterm-row nil
   "Record the eterm row last spoken")
@@ -1062,92 +1077,84 @@ Use emacspeak-eterm-toggle-pointer-mode bound to
    (cons (term-current-column) (term-current-row))
    window))
 
-(defadvice  term-emulate-terminal (around emacspeak pre act compile)
-  "Record position, emulate, then speak what happened.
-Also keep track of terminal highlighting etc.  Feedback is
-limited to current window If a `current window` is set (see
-command emacspeak-eterm-set-filter-window bound to
-\\[emacspeak-eterm-set-filter-window].  How output is spoken
-depends on whether the terminal is in character or line mode.
 
-When in character mode, output is spoken like off a real
-terminal.  When in line mode, behavior resembles that of comint
-mode; i.e. you hear the output if emacspeak-eterm-autospeak is t.
-Do not set this variable by hand: See command
-emacspeak-toggle-eterm-autospeak bound to
-\\[emacspeak-toggle-eterm-autospeak]"
-  (cl-declare (special
-               emacspeak-eterm-row emacspeak-eterm-column
-               eterm-line-mode eterm-char-mode
-               emacspeak-eterm-filter-window emacspeak-eterm-pointer-mode
-               emacspeak-eterm-autospeak))
+(defun ems--term-emulate-terminal-around (orig-fun &rest args)
+  "Record position, emulate, then speak what happened.\nAlso keep track of terminal highlighting etc.  Feedback is\nlimited to current window If a `current window` is set (see\ncommand emacspeak-eterm-set-filter-window bound to\n\\[emacspeak-eterm-set-filter-window].  How output is spoken\ndepends on whether the terminal is in character or line mode.\n\nWhen in character mode, output is spoken like off a real\nterminal.  When in line mode, behavior resembles that of comint\nmode; i.e. you hear the output if emacspeak-eterm-autospeak is t.\nDo not set this variable by hand: See command\nemacspeak-toggle-eterm-autospeak bound to\n\\[emacspeak-toggle-eterm-autospeak]"
+  (cl-declare
+   (special emacspeak-eterm-row emacspeak-eterm-column eterm-line-mode
+	    eterm-char-mode emacspeak-eterm-filter-window
+	    emacspeak-eterm-pointer-mode emacspeak-eterm-autospeak))
   (when (process-live-p (ad-get-arg 0))
-    (let ((emacspeak-eterm-window
-           (get-buffer-window (process-buffer (ad-get-arg 0))))
-          (emacspeak-eterm-row (term-current-row))
-          (emacspeak-eterm-column (term-current-column))
-          (current-char (preceding-char))
-          (new-row nil)
-          (new-column nil)
-          (old-point (point))
-          (dtk-stop-immediately (not eterm-line-mode))
-          (inhibit-read-only  t))
-      ad-do-it
-      (setq new-row (term-current-row)
-            new-column (term-current-column))
-      (when                        ; do something if in active area
-          (and
-           emacspeak-eterm-autospeak
-           (window-live-p emacspeak-eterm-window)
-           (or
-            (not emacspeak-eterm-focus-window)
-            (emacspeak-eterm-activity-window  emacspeak-eterm-focus-window)
-            (emacspeak-eterm-activity-window  emacspeak-eterm-filter-window)))
-        (cond
-         ((and eterm-char-mode
-               emacspeak-eterm-filter-window
-               (not (and (emacspeak-eterm-coordinate-within-window-p
-                          (cons new-column new-row)
-                          emacspeak-eterm-filter-window)
-                         (emacspeak-eterm-coordinate-within-window-p
-                          (cons (term-current-column) (term-current-row))
-                          emacspeak-eterm-filter-window)))) nil)
-         ((and  eterm-line-mode
-                emacspeak-eterm-autospeak)
-          (setq dtk-stop-immediately nil)
-          (condition-case nil
-              (emacspeak-speak-region
-               (1- old-point)
-               (1- (point)))
-            (error nil)))
-         (emacspeak-eterm-focus-window
-          (emacspeak-eterm-speak-window emacspeak-eterm-focus-window))
-         ((and (or (eq last-command-event 127) ; xterm/console sends 127
-                   (eq last-command-event 'backspace)) ; X sends 'backspace
-               (= new-row emacspeak-eterm-row)
-               (= -1 (- new-column emacspeak-eterm-column))
-               current-char)              ;you backspaced?
-          (emacspeak-speak-this-char current-char)
-          (delete-char  1)
-          (dtk-tone-deletion))
-         ((and (= new-row emacspeak-eterm-row)
-               (= 1 (- new-column emacspeak-eterm-column))) ; inserted a char:
-          (if (eq 32 last-command-event)
-              (save-excursion
-                (backward-char 2)
-                (emacspeak-speak-word nil))
-            (emacspeak-speak-this-char (preceding-char))))
-         ((and (= new-row emacspeak-eterm-row)
-               (= 1 (abs(- new-column emacspeak-eterm-column))))
-          (emacspeak-speak-this-char (following-char)))
-         ((= emacspeak-eterm-row new-row)
-          (if (= 32 (following-char))
-              (save-excursion (forward-char 1)
-                              (emacspeak-speak-word))
-            (emacspeak-speak-word)))
-         (t (emacspeak-speak-line)))
-        (when (and (not  emacspeak-eterm-pointer-mode) emacspeak-eterm-pointer)
-          (emacspeak-eterm-pointer-to-cursor))))))
+    (let
+	((emacspeak-eterm-window
+	  (get-buffer-window (process-buffer (ad-get-arg 0))))
+	 (emacspeak-eterm-row (term-current-row))
+	 (emacspeak-eterm-column (term-current-column))
+	 (current-char (preceding-char)) (new-row nil)
+	 (new-column nil) (old-point (point))
+	 (dtk-stop-immediately (not eterm-line-mode))
+	 (inhibit-read-only t))
+      (apply orig-fun args)
+      (setq new-row (term-current-row) new-column
+	    (term-current-column))
+      (when
+	  (and emacspeak-eterm-autospeak
+	       (window-live-p emacspeak-eterm-window)
+	       (or (not emacspeak-eterm-focus-window)
+		   (emacspeak-eterm-activity-window
+		    emacspeak-eterm-focus-window)
+		   (emacspeak-eterm-activity-window
+		    emacspeak-eterm-filter-window)))
+	(cond
+	 ((and eterm-char-mode emacspeak-eterm-filter-window
+	       (not
+		(and
+		 (emacspeak-eterm-coordinate-within-window-p
+		  (cons new-column new-row)
+		  emacspeak-eterm-filter-window)
+		 (emacspeak-eterm-coordinate-within-window-p
+		  (cons (term-current-column) (term-current-row))
+		  emacspeak-eterm-filter-window))))
+	  nil)
+	 ((and eterm-line-mode emacspeak-eterm-autospeak)
+	  (setq dtk-stop-immediately nil)
+	  (condition-case nil
+	      (emacspeak-speak-region (1- old-point) (1- (point)))
+	    (error nil)))
+	 (emacspeak-eterm-focus-window
+	  (emacspeak-eterm-speak-window emacspeak-eterm-focus-window))
+	 ((and
+	   (or (eq last-command-event 127)
+	       (eq last-command-event 'backspace))
+	   (= new-row emacspeak-eterm-row)
+	   (= -1 (- new-column emacspeak-eterm-column)) current-char)
+	  (emacspeak-speak-this-char current-char) (delete-char 1)
+	  (dtk-tone-deletion))
+	 ((and (= new-row emacspeak-eterm-row)
+	       (= 1 (- new-column emacspeak-eterm-column)))
+	  (if (eq 32 last-command-event)
+	      (save-excursion
+		(backward-char 2) (emacspeak-speak-word nil))
+	    (emacspeak-speak-this-char (preceding-char))))
+	 ((and (= new-row emacspeak-eterm-row)
+	       (= 1 (abs (- new-column emacspeak-eterm-column))))
+	  (emacspeak-speak-this-char (following-char)))
+	 ((= emacspeak-eterm-row new-row)
+	  (if (= 32 (following-char))
+	      (save-excursion (forward-char 1) (emacspeak-speak-word))
+	    (emacspeak-speak-word)))
+	 (t (emacspeak-speak-line)))
+	(when
+	    (and (not emacspeak-eterm-pointer-mode)
+		 emacspeak-eterm-pointer)
+	  (emacspeak-eterm-pointer-to-cursor))))))
+
+
+(advice-add 'term-emulate-terminal :around
+	    #'ems--term-emulate-terminal-around)
+
+
+
 
 (ems-generate-switcher 'emacspeak-eterm-toggle-pointer-mode
                        'emacspeak-eterm-pointer-mode
@@ -1157,119 +1164,224 @@ When emacspeak eterm is in pointer mode, the eterm read pointer
 stays where it is rather than automatically moving to the terminal cursor when
 there is terminal activity.")
 
-(defadvice term-dynamic-complete (around emacspeak pre act comp)
+
+(defun ems--term-dynamic-complete-around (orig-fun &rest args)
   "Speak the completion. "
-  (cl-declare (special emacspeak-eterm-row term-current-row))
-  (let  ((saved-point (point)))
-    ad-do-it
-    (unless (= saved-point (point))
-      (emacspeak-speak-region saved-point (point)))
-    ad-return-value)
-  )
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special emacspeak-eterm-row term-current-row))
+    (let ((saved-point (point)))
+      (apply orig-fun args)
+      (unless (= saved-point (point))
+	(emacspeak-speak-region saved-point (point)))
+      result)
+    result))
+
+
+(advice-add 'term-dynamic-complete :around
+	    #'ems--term-dynamic-complete-around)
+
+
+
 (voice-setup-add-map
  '(
    (term-underline voice-brighten-medium)
    ))
-(defadvice term-line-mode (after emacspeak pre act comp)
+
+(defun ems--term-line-mode-after (&rest _)
   "Announce that you entered line mode. "
   (make-local-variable 'eterm-line-mode)
-  (setq mode-line-process
-        '("line"))
-  (setq eterm-char-mode nil
-        eterm-line-mode t)
-  (when (ems-interactive-p)
-    (dtk-speak "Terminal line mode ")))
+  (setq mode-line-process '("line"))
+  (setq eterm-char-mode nil eterm-line-mode t)
+  (when (ems-interactive-p) (dtk-speak "Terminal line mode ")))
 
-(defadvice term-char-mode (after emacspeak pre act comp)
+
+(advice-add 'term-line-mode :after #'ems--term-line-mode-after)
+
+
+
+
+
+(defun ems--term-char-mode-after (&rest _)
   "Announce you entered character mode. "
-  (setq mode-line-process
-        '("char"))
-  (setq eterm-char-mode t
-        eterm-line-mode nil)
+  (setq mode-line-process '("char"))
+  (setq eterm-char-mode t eterm-line-mode nil)
   (emacspeak-eterm-setup-raw-keys)
-  (when (ems-interactive-p)
-    (dtk-speak "Terminal character mode ")))
+  (when (ems-interactive-p) (dtk-speak "Terminal character mode ")))
+
+
+(advice-add 'term-char-mode :after #'ems--term-char-mode-after)
+
+
+
 
 ;;;   Advice term functions 
 
-(defadvice term-next-input (after emacspeak pre act comp)
-  "Speak the line. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice term-next-matching-input (after emacspeak pre act comp)
-  "Speak the line. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+(defun ems--term-next-input-after (&rest _)
+  "Speak the line. " (when (ems-interactive-p) (emacspeak-speak-line)))
 
-(defadvice term-previous-input (after emacspeak pre act comp)
-  "Speak the line. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice term-previous-matching-input (after emacspeak pre act comp)
-  "Speak the line. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+(advice-add 'term-next-input :after #'ems--term-next-input-after)
 
-(defadvice term-send-input (after emacspeak pre act comp)
-  "Flush any ongoing speech"
-  (when (ems-interactive-p)
-    (dtk-stop)))
 
-(defadvice term-previous-prompt (after emacspeak pre act comp)
+
+
+
+(defun ems--term-next-matching-input-after (&rest _)
+  "Speak the line. " (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'term-next-matching-input :after
+	    #'ems--term-next-matching-input-after)
+
+
+
+
+
+(defun ems--term-previous-input-after (&rest _)
+  "Speak the line. " (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'term-previous-input :after
+	    #'ems--term-previous-input-after)
+
+
+
+
+
+(defun ems--term-previous-matching-input-after (&rest _)
+  "Speak the line. " (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'term-previous-matching-input :after
+	    #'ems--term-previous-matching-input-after)
+
+
+
+
+
+(defun ems--term-send-input-after (&rest _)
+  "Flush any ongoing speech" (when (ems-interactive-p) (dtk-stop)))
+
+
+(advice-add 'term-send-input :after #'ems--term-send-input-after)
+
+
+
+
+
+(defun ems--term-previous-prompt-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'item)
-    (if (eolp)
-        (emacspeak-speak-line)
-      (emacspeak-speak-line 1))))
+    (if (eolp) (emacspeak-speak-line) (emacspeak-speak-line 1))))
 
-(defadvice term-next-prompt (after emacspeak pre act comp)
+
+(advice-add 'term-previous-prompt :after
+	    #'ems--term-previous-prompt-after)
+
+
+
+
+
+(defun ems--term-next-prompt-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'item)
-    (if (eolp)
-        (emacspeak-speak-line)
-      (emacspeak-speak-line 1))))
-(defadvice term-dynamic-list-input-ring (after emacspeak pre act comp)
+    (if (eolp) (emacspeak-speak-line) (emacspeak-speak-line 1))))
+
+
+(advice-add 'term-next-prompt :after #'ems--term-next-prompt-after)
+
+
+
+
+(defun ems--term-dynamic-list-input-ring-after (&rest _)
   "speak"
-  (message  "Switch to the other window to browse the input history "))
+  (message "Switch to the other window to browse the input history "))
 
-(defadvice term-kill-output (after emacspeak pre act comp)
+
+(advice-add 'term-dynamic-list-input-ring :after
+	    #'ems--term-dynamic-list-input-ring-after)
+
+
+
+
+
+(defun ems--term-kill-output-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (message "Nuked output of last command ")))
 
-(defadvice term-quit-subjob (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (message "Sent quit signal to subjob ")))
 
-(defadvice term-stop-subjob (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (message "Stopped the subjob")))
+(advice-add 'term-kill-output :after #'ems--term-kill-output-after)
 
-(defadvice term-interrupt-subjob (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (message "Interrupted  the subjob")))
 
-(defadvice term-kill-input (before emacspeak pre act comp)
+
+
+
+(defun ems--term-quit-subjob-after (&rest _)
+  "speak"
+  (when (ems-interactive-p) (message "Sent quit signal to subjob ")))
+
+
+(advice-add 'term-quit-subjob :after #'ems--term-quit-subjob-after)
+
+
+
+
+
+(defun ems--term-stop-subjob-after (&rest _)
+  "speak" (when (ems-interactive-p) (message "Stopped the subjob")))
+
+
+(advice-add 'term-stop-subjob :after #'ems--term-stop-subjob-after)
+
+
+
+
+
+(defun ems--term-interrupt-subjob-after (&rest _)
+  "speak"
+  (when (ems-interactive-p) (message "Interrupted  the subjob")))
+
+
+(advice-add 'term-interrupt-subjob :after
+	    #'ems--term-interrupt-subjob-after)
+
+
+
+
+
+(defun ems--term-kill-input-before (&rest _)
   "Speak"
   (when (ems-interactive-p)
-    (let ((pmark (process-mark (get-buffer-process (current-buffer)))))
-      (when  (> (point) (marker-position pmark))
-        (emacspeak-icon 'delete-object)
-        (emacspeak-speak-region  pmark (point))))))
+    (let
+	((pmark (process-mark (get-buffer-process (current-buffer)))))
+      (when (> (point) (marker-position pmark))
+	(emacspeak-icon 'delete-object)
+	(emacspeak-speak-region pmark (point))))))
 
-(defadvice term-dynamic-list-filename-completions (after emacspeak pre act comp)
+
+(advice-add 'term-kill-input :before #'ems--term-kill-input-before)
+
+
+
+
+
+(defun ems--term-dynamic-list-filename-completions-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (message "Switch to the completions window to browse the possible
-completions for filename at point")))
+    (message
+     "Switch to the completions window to browse the possible\ncompletions for filename at point")))
+
+
+(advice-add 'term-dynamic-list-filename-completions :after
+	    #'ems--term-dynamic-list-filename-completions-after)
+
+
+
 
 (provide 'emacspeak-eterm)
 
