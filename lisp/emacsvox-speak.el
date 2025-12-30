@@ -176,9 +176,7 @@ current local  value to the result.")
 See  command emacsvox-toggle-word-echo bound to
 \\[emacsvox-toggle-word-echo].
 Speech flushes as you type."
-  (cl-declare (special last-command-event
-                       emacsvox-character-echo emacsvox-word-echo))
-  (when buffer-read-only (dtk-speak "Buffer is read-only. "))
+    (when buffer-read-only (dtk-speak "Buffer is read-only. "))
   (when
       (and (eq (preceding-char) last-command-event) ; Sanity check.
            (not executing-kbd-macro)
@@ -256,9 +254,7 @@ message area.  You can use command
 
 (defun emacsvox-notifications-truncate ()
   "Trim notifications cache."
-  (cl-declare (special emacsvox-notifications-buffer
-                       emacsvox-notifications-max))
-  (with-current-buffer emacsvox-notifications-buffer
+    (with-current-buffer emacsvox-notifications-buffer
     (let ((lines (count-lines (point-min) (point-max)))
           (inhibit-read-only t))
       (when (> lines emacsvox-notifications-max)
@@ -552,19 +548,14 @@ emacsvox-speak-filter-table)\n" k v)))
 (defun emacsvox-speak-persist-filter-settings ()
   "Persist emacsvox filter settings for future sessions."
   (interactive)
-  (cl-declare (special emacsvox-speak-filter-persistent-store
-                       emacsvox-speak-filter-table))
-  (emacsvox--persist-variable
+    (emacsvox--persist-variable
    'emacsvox-speak-filter-table
    emacsvox-speak-filter-persistent-store))
 
 (defun emacsvox-speak-load-filter-settings ()
   "Load emacsvox filter settings."
   (interactive)
-  (cl-declare (special emacsvox-speak-filter-persistent-store
-                       emacsvox-speak-filter-table
-                       emacsvox-speak-filters-loaded-p))
-  (unless emacsvox-speak-filters-loaded-p
+    (unless emacsvox-speak-filters-loaded-p
     ;; `ems--fastload' is defined in `emacsvox-preamble' which requires
     ;; us, so we can't require it at top-level.
     (require 'emacsvox-preamble)
@@ -614,7 +605,7 @@ the sense of the filter. "
 ;;; Match Parens:
 (defun emacsvox-speak-matching-paren ()
   "Speak matched paren with context."
-  (when-let ((there (cl-fourth (show-paren--default))))
+  (when-let* ((there (cl-fourth (show-paren--default))))
     (save-excursion
         (goto-char there)
         (dtk-speak
@@ -637,9 +628,7 @@ the sense of the filter. "
 (defun emacsvox-speak-region (start end)
   "Speak region bounded by start and end. "
   (interactive "r")
-  (cl-declare (special emacsvox-speak-voice-annotated-paragraphs
-                       ems--large-text-size))
-  (let ((inhibit-modification-hooks t)
+    (let ((inhibit-modification-hooks t)
         (deactivate-mark nil))
     (when (and
            (< (abs (- start end )) ems--large-text-size)
@@ -842,7 +831,7 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
   (interactive)
   (let (
         (disp
-         (if-let
+         (if-let*
              ((disp (get-char-property (point) 'display)))
              (prin1-to-string disp)
            "No display properties here"))
@@ -1169,9 +1158,7 @@ Negative prefix arg will read from start of current paragraph to point. "
 With prefix ARG, speaks the rest of the buffer from point.
 Negative prefix arg speaks from start of buffer to point. "
   (interactive "P")
-  (cl-declare (special emacsvox-speak-voice-annotated-paragraphs
-                       ems--large-text-size))
-  (when
+    (when
       (and
        (< (buffer-size) ems--large-text-size)
        (not emacsvox-speak-voice-annotated-paragraphs))
@@ -1214,7 +1201,7 @@ Useful to listen to a buffer without switching  contexts."
   "Speak help buffer if one present. "
   (interactive )
   (emacsvox-icon 'help)
-  (if-let ((help-buffer (get-buffer "*Help*")))
+  (if-let* ((help-buffer (get-buffer "*Help*")))
       (with-current-buffer help-buffer
         (or (window-live-p (get-buffer-window help-buffer))
             (display-buffer help-buffer))
@@ -1279,9 +1266,7 @@ arrived mail."
 
 (defun emacsvox-mail-alert-user-p (f)
   "Predicate to check if we need to play an alert for the specified spool."
-  (cl-declare (special emacsvox-mail-last-alerted-time
-                       emacsvox-mail-alert-interval))
-  (let* ((mod-time (emacsvox-mail-get-last-mail-arrival-time f))
+    (let* ((mod-time (emacsvox-mail-get-last-mail-arrival-time f))
          (size (emacsvox-get-file-size f))
          (result
           (and (> size 0)
@@ -1432,14 +1417,7 @@ which-func without turning that mode on.  "
 Speaks header-line if that is set when called non-interactively.
 Interactive prefix arg speaks buffer info."
   (interactive "P")
-  (cl-declare (special mode-name major-mode vc-mode
-                       emacsvox-comint-autospeak
-                       global-visual-line-mode visual-line-mode
-                       mode-line-process header-line-format
-                       global-mode-string outline-minor-mode
-                       folding-mode column-number-mode line-number-mode
-                       emacsvox-mail-alert mode-line-format))
-  (with-current-buffer (window-buffer (selected-window))
+    (with-current-buffer (window-buffer (selected-window))
     (dtk-stop)
     (force-mode-line-update)
     (when
@@ -1583,9 +1561,7 @@ Displays name of current buffer.")
 (defun emacsvox-speak-header-line ()
   "Speak header line if set."
   (interactive)
-  (cl-declare (special header-line-format
-                       emacsvox-speak-time-brief-format))
-  (cond
+    (cond
    (header-line-format
     (let ((window-count (length (window-list))))
       (emacsvox-icon 'item)
@@ -1600,9 +1576,7 @@ Displays name of current buffer.")
 (defun emacsvox-toggle-header-line ()
   "Toggle Emacsvox's default header line."
   (interactive)
-  (cl-declare (special emacsvox-header-line-format
-                       header-line-format))
-  (if header-line-format
+    (if header-line-format
       (setq header-line-format nil)
     (setq header-line-format emacsvox-header-line-format))
   (emacsvox-icon (if header-line-format 'on 'off))
@@ -1677,9 +1651,7 @@ Optional second arg `set' sets the TZ environment variable as well."
           (read-file-name-completion-ignore-case t))
       (read-file-name "Timezone: " emacsvox-speak-zoneinfo-directory))
     current-prefix-arg))
-  (cl-declare (special emacsvox-speak-time-format
-                       ido-case-fold emacsvox-speak-zoneinfo-directory))
-  (when (and set
+    (when (and set
              (= 16 (car set)))
     ;; two interactive prefixes from caller
     (setenv "TZ" zone))
@@ -1924,7 +1896,7 @@ location of the mark is indicated by an aural highlight. "
 (defun emacsvox-speak-face-forward ()
   "Property search for face --- see \\[text-property-search-forward]"
   (interactive)
-  (when-let
+  (when-let*
       ((match
         (funcall-interactively
          #'text-property-search-forward
@@ -1935,7 +1907,7 @@ location of the mark is indicated by an aural highlight. "
 (defun emacsvox-speak-face-backward ()
   "Property search for face at point see \\[text-property-search-backward]"
   (interactive)
-  (when-let
+  (when-let*
       ((match
         (funcall-interactively
          #'text-property-search-backward
