@@ -221,10 +221,12 @@
 (defvar ems--interactive-fn-name nil
   "Holds name of function being called interactively.")
 
-(defadvice funcall-interactively (around emacspeak  pre act comp)
+(defun ems--funcall-interactively-around (orig-fun func &rest args)
   "Record name of interactive function being called."
-  (let ((ems--interactive-fn-name (ad-get-arg 0)))
-    ad-do-it))
+  (let ((ems--interactive-fn-name func))
+    (apply orig-fun func args)))
+
+(advice-add 'funcall-interactively :around #'ems--funcall-interactively-around)
 
 ;; Beware: Advice on defadvice
 (advice-add 'defadvice :around #'ems--generate-interactive-check)
