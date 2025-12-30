@@ -227,36 +227,23 @@ Returns an advice-add form."
   "Convert a single defadvice FORM to advice-add equivalent.
 Returns a list of forms (defun + advice-add), or nil if should skip."
   (condition-case err
-      (progn
-        (message "DEBUG: Converting form for %s" (nth 1 form))
-        (let* ((parsed (progn
-                         (message "DEBUG: Parsing...")
-                         (ems--parse-defadvice form)))
-               (complexity (progn
-                             (message "DEBUG: Classifying complexity...")
-                             (ems--classify-complexity parsed)))
-               (defun-form (progn
-                             (message "DEBUG: Generating defun...")
-                             (ems--generate-advice-function parsed)))
-               (advice-add-form (progn
-                                  (message "DEBUG: Generating advice-add...")
-                                  (ems--generate-advice-add parsed))))
+      (let* ((parsed (ems--parse-defadvice form))
+             (complexity (ems--classify-complexity parsed))
+             (defun-form (ems--generate-advice-function parsed))
+             (advice-add-form (ems--generate-advice-add parsed)))
 
-          ;; Add to manual review if complex
-          (when (eq complexity 'complex)
-            (push (list :function (plist-get parsed :function)
-                        :class (plist-get parsed :class)
-                        :reason "Complex pattern requiring manual review")
-                  ems-manual-review-items))
+        ;; Add to manual review if complex
+        (when (eq complexity 'complex)
+          (push (list :function (plist-get parsed :function)
+                      :class (plist-get parsed :class)
+                      :reason "Complex pattern requiring manual review")
+                ems-manual-review-items))
 
-          (message "DEBUG: Success!")
-          ;; Return both forms
-          (list defun-form advice-add-form)))
+        ;; Return both forms
+        (list defun-form advice-add-form))
 
     (error
-     (message "DEBUG: Error during conversion: %s" (error-message-string err))
-     (message "DEBUG: Error data: %S" err)
-     (push (list :form form :error (error-message-string err) :error-data err)
+     (push (list :form form :error (error-message-string err))
            ems-manual-review-items)
      nil)))
 
@@ -265,13 +252,16 @@ Returns a list of forms (defun + advice-add), or nil if should skip."
 (defun ems--format-elisp-form (form &optional indent)
   "Format elisp FORM as a string with proper indentation.
 INDENT is the current indentation level (default 0)."
-  (let ((indent (or indent 0)))
-    (with-temp-buffer
-      (emacs-lisp-mode)
-      (insert (prin1-to-string form))
-      (goto-char (point-min))
-      (indent-sexp)
-      (buffer-string))))
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (let ((print-level nil)
+          (print-length nil))
+      (pp form (current-buffer)))
+    (goto-char (point-min))
+    ;; Clean up extra blank lines that pp sometimes adds
+    (while (re-search-forward "\n\n+" nil t)
+      (replace-match "\n"))
+    (buffer-string)))
 
 ;;; File Processing
 
