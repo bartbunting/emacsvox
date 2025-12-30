@@ -1,13 +1,13 @@
 ;;; extra-muggles.el --- Additional Hydras -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
 ;; Description:  Speech-enable MUGGLES An Emacs Interface to muggles
-;; Keywords: Emacspeak,  Audio Desktop muggles
+;; Keywords: Emacsvox,  Audio Desktop muggles
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:
@@ -38,14 +38,14 @@
 
 ;;; Commentary:
 
-;; MUGGLES ==  Emacspeak spells for power-users.
+;; MUGGLES ==  Emacsvox spells for power-users.
 ;; These are extra hydras that I dont use very often,
-;; And are being moved here from emacspeak-muggles to save time at
+;; And are being moved here from emacsvox-muggles to save time at
 ;; startup.
 ;; 
 ;; This module implements no new functionality --- contrast with
-;; emacspeak-wizards.  Instead, it uses package hydra to provide
-;; convenience key-bindings that access existing Emacspeak
+;; emacsvox-wizards.  Instead, it uses package hydra to provide
+;; convenience key-bindings that access existing Emacsvox
 ;; functionality.
 ;; You need to install package Hydra first:
 ;; @samp{M-x package-install  hydra}.
@@ -64,19 +64,19 @@
 ;; @item  org-mode structure nav: @kbd{C-c C-SPC}  Navigation  for org-mode.
 ;; @item View-Mode: @kbd{C-. v} Temporarily behave like view-mode.
 ;; @item SmartParens: @kbd{C-c ,} Smart Parens
-;; @item m-player: @kbd{s-m} Emacspeak-M-Player Commands
-;; @item m-player: @kbd{s-;} Emacspeak-M-Player muggle
-;; @item pianobar: @kbd{s-'} Emacspeak-M-pianobar Commands
+;; @item m-player: @kbd{s-m} Emacsvox-M-Player Commands
+;; @item m-player: @kbd{s-;} Emacsvox-M-Player muggle
+;; @item pianobar: @kbd{s-'} Emacsvox-M-pianobar Commands
 ;; @item origami: C-, / Origami   bindings.
 ;; @item outliner: <C-c .> Bindings from outline-minor-mode.
 ;; @item Info-Summary: <?> in Info Info Summary Muggle
 ;; @item Vuiet Explorer: @kbd{C-; v} Vuiet Music Explorer and Player
 ;; @end itemize
 
-;; Emacspeak automatically speaks Hydra hints when displayed.
+;; Emacsvox automatically speaks Hydra hints when displayed.
 ;; To silence all Hydra hints, set hydra-is-helpful to nil.  To
 ;; temporarily silence speaking of Hydra hints, Muggles can bind
-;; command @code{emacspeak-hydra-toggle-talkative}.  As an
+;; command @code{emacsvox-hydra-toggle-talkative}.  As an
 ;; example, Muggle @samp{ViewMode} binds @code{s} to this command.
 
 ;;; Code:
@@ -85,18 +85,18 @@
 
 (eval-when-compile (require 'cl-lib))
 (cl-declaim  (optimize  (safety 0) (speed 3)))
-(require 'emacspeak-preamble)
-(require 'emacspeak-dired)
+(require 'emacsvox-preamble)
+(require 'emacsvox-dired)
 (require 'hydra)
-(require 'emacspeak-hydra)
+(require 'emacsvox-hydra)
 (require 'org)
-(require 'emacspeak-outline)
-(require 'emacspeak-m-player)
+(require 'emacsvox-outline)
+(require 'emacsvox-m-player)
 (require 'view)
 (require 'smartparens "smartparens" 'no-error)
 (eval-when-compile
   (setq byte-compile-warnings '(not docstrings))
-  (require 'emacspeak-hydra)
+  (require 'emacsvox-hydra)
   
   (require 'vuiet nil 'no-error)
   (require 'hydra "hydra" 'no-error))
@@ -111,12 +111,12 @@
 ;; activated keymap remains active until the user presses a key that
 ;; is not bound in that keymap.  Inspired by the Hydra package.
 
-(defun emacspeak-muggles-generate (k-map)
+(defun emacsvox-muggles-generate (k-map)
   "Generate a Muggle from specified k-map.
 Argument `k-map' is a symbol  that names a keymap."
   (unless (and (symbolp k-map) (boundp k-map) (keymapp (symbol-value k-map)))
     (error "%s is not a keymap." k-map))
-  (let ((cmd-name (intern (format "emacspeak-muggles-%s-cmd" k-map)))
+  (let ((cmd-name (intern (format "emacsvox-muggles-%s-cmd" k-map)))
         (doc-string (format "Temporarily use keymap %s" k-map)))
     (eval
      `(defun ,cmd-name ()
@@ -129,72 +129,72 @@ Argument `k-map' is a symbol  that names a keymap."
             (setq key (read-key-sequence "Key: ")
                   cmd (lookup-key ,k-map key)))
           (call-interactively (lookup-key (current-global-map) key))
-          (emacspeak-icon 'close-object))))))
+          (emacsvox-icon 'close-object))))))
 
 ;; Create a command to invoke our media player map:
 
 (global-set-key
  (kbd "s-m")
- (emacspeak-muggles-generate 'emacspeak-m-player-mode-map))
+ (emacsvox-muggles-generate 'emacsvox-m-player-mode-map))
 
 ;; Create one for pianobar
 (when (featurep 'pianobar)
   (global-set-key
    (kbd "s-'")
-   (emacspeak-muggles-generate 'pianobar-key-map)))
+   (emacsvox-muggles-generate 'pianobar-key-map)))
 
 ;;;  Media Player:
 
-(declare-function emacspeak-amark-save "emacspeak-muggles" t)
+(declare-function emacsvox-amark-save "emacsvox-muggles" t)
 (global-set-key
  (kbd "s-;")
- (defhydra emacspeak-muggles-m-player
-           (:body-pre (emacspeak-hydra-body-pre "Media Player")
-                      :pre emacspeak-hydra-pre :post emacspeak-hydra-post)
-           (";" emacspeak-m-player)
-           ("+" emacspeak-m-player-volume-up)
-           ("," emacspeak-m-player-backward-10s)
-           ("%" emacspeak-m-player-display-percent)
-           ("-" emacspeak-m-player-volume-down)
-           ("." emacspeak-m-player-forward-10s)
-           ("<" emacspeak-m-player-backward-1min)
-           ("<down>" emacspeak-m-player-forward-1min)
-           ("<left>" emacspeak-m-player-backward-10s)
-           ("<next>" emacspeak-m-player-forward-10min)
-           ("<prior>" emacspeak-m-player-backward-10min)
-           ("<right>" emacspeak-m-player-forward-10s)
-           ("<up>" emacspeak-m-player-backward-1min)
-           ("=" emacspeak-m-player-volume-up)
-           (">" emacspeak-m-player-forward-1min)
-           ("C" emacspeak-m-player-clear-filters)
-           ("DEL" emacspeak-m-player-reset-speed)
-           ("Q" emacspeak-m-player-quit "quit")
-           ("R" emacspeak-m-player-edit-reverb)
-           ("S" emacspeak-amark-save)
-           ("SPC" emacspeak-m-player-pause)
-           ("[" emacspeak-m-player-slower)
-           ("]" emacspeak-m-player-faster)
-           ("a" emacspeak-m-player-amark-add)
-           ("b" emacspeak-m-player-balance)
-           ("c" emacspeak-m-player-slave-command)
-           ("d" emacspeak-m-player-delete-filter)
-           ("e" emacspeak-m-player-add-equalizer)
-           ("f" emacspeak-m-player-add-filter)
-           ("g" emacspeak-m-player-seek-absolute)
-           ("j" emacspeak-m-player-amark-jump)
-           ("l" emacspeak-m-player-get-length)
-           ("m" emacspeak-m-player-mode-line)
-           ("n" emacspeak-m-player-next-track)
-           ("p" emacspeak-m-player-previous-track)
+ (defhydra emacsvox-muggles-m-player
+           (:body-pre (emacsvox-hydra-body-pre "Media Player")
+                      :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
+           (";" emacsvox-m-player)
+           ("+" emacsvox-m-player-volume-up)
+           ("," emacsvox-m-player-backward-10s)
+           ("%" emacsvox-m-player-display-percent)
+           ("-" emacsvox-m-player-volume-down)
+           ("." emacsvox-m-player-forward-10s)
+           ("<" emacsvox-m-player-backward-1min)
+           ("<down>" emacsvox-m-player-forward-1min)
+           ("<left>" emacsvox-m-player-backward-10s)
+           ("<next>" emacsvox-m-player-forward-10min)
+           ("<prior>" emacsvox-m-player-backward-10min)
+           ("<right>" emacsvox-m-player-forward-10s)
+           ("<up>" emacsvox-m-player-backward-1min)
+           ("=" emacsvox-m-player-volume-up)
+           (">" emacsvox-m-player-forward-1min)
+           ("C" emacsvox-m-player-clear-filters)
+           ("DEL" emacsvox-m-player-reset-speed)
+           ("Q" emacsvox-m-player-quit "quit")
+           ("R" emacsvox-m-player-edit-reverb)
+           ("S" emacsvox-amark-save)
+           ("SPC" emacsvox-m-player-pause)
+           ("[" emacsvox-m-player-slower)
+           ("]" emacsvox-m-player-faster)
+           ("a" emacsvox-m-player-amark-add)
+           ("b" emacsvox-m-player-balance)
+           ("c" emacsvox-m-player-slave-command)
+           ("d" emacsvox-m-player-delete-filter)
+           ("e" emacsvox-m-player-add-equalizer)
+           ("f" emacsvox-m-player-add-filter)
+           ("g" emacsvox-m-player-seek-absolute)
+           ("j" emacsvox-m-player-amark-jump)
+           ("l" emacsvox-m-player-get-length)
+           ("m" emacsvox-m-player-mode-line)
+           ("n" emacsvox-m-player-next-track)
+           ("p" emacsvox-m-player-previous-track)
            ("q" bury-buffer)
-           ("r" emacspeak-m-player-seek-relative)
-           ("s" emacspeak-m-player-scale-speed)
-           ("u" emacspeak-m-player-url)
-           ("v" emacspeak-m-player-volume-change)
-           ("(" emacspeak-m-player-left-channel)
-           (")" emacspeak-m-player-right-channel)
-           ("{" emacspeak-m-player-half-speed)
-           ("}" emacspeak-m-player-double-speed)
+           ("r" emacsvox-m-player-seek-relative)
+           ("s" emacsvox-m-player-scale-speed)
+           ("u" emacsvox-m-player-url)
+           ("v" emacsvox-m-player-volume-change)
+           ("(" emacsvox-m-player-left-channel)
+           (")" emacsvox-m-player-right-channel)
+           ("{" emacsvox-m-player-half-speed)
+           ("}" emacsvox-m-player-double-speed)
            ))
 
 ;;;  Outliner:
@@ -202,12 +202,12 @@ Argument `k-map' is a symbol  that names a keymap."
 ;; Cloned from Hydra Wiki:
 (global-set-key
  (kbd "C-. o")
- (defhydra emacspeak-muggles-outliner
+ (defhydra emacsvox-muggles-outliner
            (:body-pre
             (progn
               (outline-minor-mode 1)
-              (emacspeak-hydra-body-pre "Outline Navigation"))
-            :pre emacspeak-hydra-pre :post emacspeak-hydra-post
+              (emacsvox-hydra-body-pre "Outline Navigation"))
+            :pre emacsvox-hydra-pre :post emacsvox-hydra-post
             :color pink :hint nil)
            "
 ^Hide^             ^Show^           ^Move
@@ -220,7 +220,7 @@ _l_: leaves        _s_: subtree     _b_: backward same level
 _d_: subtree
 
 "
-           ("?" (emacspeak-hydra-self-help "emacspeak-muggles-outliner"))
+           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-outliner"))
            ;; Hide
            ("q" outline-hide-sublevels)
            ("t" outline-hide-body)
@@ -246,13 +246,13 @@ _d_: subtree
 
 ;; Taken from Hydra wiki and customized to taste:
 (define-key Info-mode-map (kbd "?")
-            (defhydra emacspeak-muggles-info-summary
+            (defhydra emacsvox-muggles-info-summary
                       (
                        :color blue :hint nil
-                       :body-pre (emacspeak-hydra-body-pre "Info Summary")
+                       :body-pre (emacsvox-hydra-body-pre "Info Summary")
                        :pre
-                       emacspeak-hydra-pre
-                       :post emacspeak-hydra-post)
+                       emacsvox-hydra-pre
+                       :post emacsvox-hydra-post)
                       "info mode"
                       ("]"   Info-forward-node)
                       ("["   Info-backward-node)
@@ -313,15 +313,15 @@ _d_: subtree
 
 (global-set-key
  (kbd "C-, /")
- (defhydra emacspeak-origami
+ (defhydra emacsvox-origami
            (:color red
                    :body-pre
                    (progn
                      (origami-mode 1)
-                     (emacspeak-hydra-body-pre "Origami")
-                     (emacspeak-hydra-toggle-talkative))
+                     (emacsvox-hydra-body-pre "Origami")
+                     (emacsvox-hydra-toggle-talkative))
                    :hint nil
-                   :pre emacspeak-hydra-pre :post emacspeak-hydra-post)
+                   :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
            "
     _o_pen node    _n_ext fold       toggle _f_orward
     _c_lose node   _p_revious fold   toggle _a_ll
@@ -335,13 +335,13 @@ _d_: subtree
 
 ;;;  Muggles Autoload Wizard:
 
-(defvar emacspeak-muggles-pattern
-  "emacspeak-muggles-.*/body$"
+(defvar emacsvox-muggles-pattern
+  "emacsvox-muggles-.*/body$"
   "Pattern matching muggles we are interested in.")
 
-(defun emacspeak-muggles-enumerate ()
+(defun emacsvox-muggles-enumerate ()
   "Enumerate all interactive muggles."
-  (cl-declare (special emacspeak-muggles-pattern))
+  (cl-declare (special emacsvox-muggles-pattern))
   (let ((result nil))
     (mapatoms
      #'(lambda (s)
@@ -349,18 +349,18 @@ _d_: subtree
            (when
                (and
                 (commandp s)
-                (string-match emacspeak-muggles-pattern  name))
+                (string-match emacsvox-muggles-pattern  name))
              (push s result)))))
     result))
 
-(defun emacspeak-muggles-generate-autoloads ()
+(defun emacsvox-muggles-generate-autoloads ()
   "Generate autoload lines for all defined muggles.
 Also generates global keybindings if any."
-  (let ((muggles (emacspeak-muggles-enumerate))
+  (let ((muggles (emacsvox-muggles-enumerate))
         (buff
          (find-file-noselect
-          (expand-file-name "emacspeak-muggles-autoloads.el"
-                            emacspeak-lisp-directory))))
+          (expand-file-name "emacsvox-muggles-autoloads.el"
+                            emacsvox-lisp-directory))))
     (with-current-buffer buff
       (erase-buffer)
       (insert ";;; Auto Generated: Do Not Hand Edit.\n\n")
@@ -368,10 +368,10 @@ Also generates global keybindings if any."
        for m in muggles do
        (let ((key  (where-is-internal m nil 'first)))
          (insert
-          (format "(autoload '%s \"emacspeak-muggles\" \"%s\" t)\n" m m))
+          (format "(autoload '%s \"emacsvox-muggles\" \"%s\" t)\n" m m))
          (when key 
            (insert (format "(global-set-key %s '%s)\n" key m)))))
-      (insert "\n(provide 'emacspeak-muggles-autoloads)\n")
+      (insert "\n(provide 'emacsvox-muggles-autoloads)\n")
       (save-buffer))
     (message "Generated autoloads for muggles.")))
 
@@ -379,13 +379,13 @@ Also generates global keybindings if any."
 
 (global-set-key
  (kbd "C-c ,")
- (defhydra emacspeak-muggles-smartparens
+ (defhydra emacsvox-muggles-smartparens
            (:body-pre
             (progn
-              (when hydra-is-helpful (emacspeak-hydra-toggle-talkative))
-              (emacspeak-hydra-body-pre "SmartParens"))
-            :pre emacspeak-hydra-pre
-            :post emacspeak-hydra-post)
+              (when hydra-is-helpful (emacsvox-hydra-toggle-talkative))
+              (emacsvox-hydra-body-pre "SmartParens"))
+            :pre emacsvox-hydra-pre
+            :post emacsvox-hydra-post)
            "Smart Parens"
            ("'" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "'")))  
            ("(" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "(")))  
@@ -393,7 +393,7 @@ Also generates global keybindings if any."
            ("<left>" sp-forward-barf-sexp)  
            ("<right>" sp-forward-slurp-sexp)  
            ("<up>" sp-splice-sexp-killing-backward)  
-           ("?" (emacspeak-hydra-self-help "emacspeak-muggles-smartparens"))
+           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-smartparens"))
            ("C-<left>" sp-backward-barf-sexp)  
            ("C-<right>" sp-backward-slurp-sexp)
            ("R" sp-splice-sexp)  
@@ -421,15 +421,15 @@ Also generates global keybindings if any."
 (global-set-key
  (kbd
   "C-. v")
- (defhydra emacspeak-muggles-view
+ (defhydra emacsvox-muggles-view
            (:body-pre
             (progn
-              (emacspeak-hydra-toggle-talkative)
-              (emacspeak-hydra-body-pre "View"))
+              (emacsvox-hydra-toggle-talkative)
+              (emacsvox-hydra-body-pre "View"))
             :hint nil
-            :pre emacspeak-hydra-pre :post emacspeak-hydra-post)
+            :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
            "View Mode"
-           ("?" (emacspeak-hydra-self-help "emacspeak-muggles-view"))
+           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-view"))
            ("$" set-selective-display)
            ("%"  View-goto-percent)
            ("'" register-to-point)
@@ -445,20 +445,20 @@ Also generates global keybindings if any."
            ("A"beginning-of-defun)
            ("DEL" View-scroll-page-backward)
            ("E"end-of-defun)
-           ("J" (emacspeak-hide-or-expose-block 'all))
+           ("J" (emacsvox-hide-or-expose-block 'all))
            ("SPC" View-scroll-page-forward)
            ("[" backward-page)
            ("\\" View-search-regexp-backward)
            ("]" forward-page)
            ("a" move-beginning-of-line)
            ("b" backward-word)
-           ("c" emacspeak-speak-char)
+           ("c" emacsvox-speak-char)
            ("d" View-scroll-half-page-forward)
            ("e" move-end-of-line)
            ("f" forward-word)
            ("g" goto-line)
            ("h" backward-char)
-           ("i" emacspeak-speak-mode-line)
+           ("i" emacsvox-speak-mode-line)
            ("j" next-line)
            ("k" previous-line)
            ("l" forward-char)
@@ -467,10 +467,10 @@ Also generates global keybindings if any."
            ("p" View-search-last-regexp-backward)
            ("q" nil "quit")
            ("r" copy-to-register)
-           ("s" emacspeak-hydra-toggle-talkative)
+           ("s" emacsvox-hydra-toggle-talkative)
            ("t" (recenter 0))
            ("u" View-scroll-half-page-backward)
-           ("w"emacspeak-speak-word)
+           ("w"emacsvox-speak-word)
            ("x" exchange-point-and-mark)
            ("y" kill-ring-save)
            ("{" backward-paragraph)
@@ -479,17 +479,17 @@ Also generates global keybindings if any."
 
 ;;; Vuiet:
 
-(declare-function emacspeak-vuiet-track-info "emacspeak-vuiet" nil)
+(declare-function emacsvox-vuiet-track-info "emacsvox-vuiet" nil)
 (when (locate-library "vuiet")
   (with-no-warnings
     (global-set-key
      (kbd "C-; v")
-     (defhydra emacspeak-muggles-vuiet
+     (defhydra emacsvox-muggles-vuiet
                (:body-pre
                 (progn
-                  (when hydra-is-helpful (emacspeak-hydra-toggle-talkative))
-                  (emacspeak-hydra-body-pre "Vuiet  Explorer"))
-                :pre emacspeak-hydra-pre :post emacspeak-hydra-post)
+                  (when hydra-is-helpful (emacsvox-hydra-toggle-talkative))
+                  (emacsvox-hydra-body-pre "Vuiet  Explorer"))
+                :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
                (";" vuiet-playing-track-lyrics)
                ("=" vuiet-player-volume-inc)
                ("-" vuiet-player-volume-dec)
@@ -501,7 +501,7 @@ Also generates global keybindings if any."
                ("L" vuiet-playing-artist-lastfm-page)
                ("SPC" vuiet-play-pause)
                ("a" vuiet-artist-info)
-               ("i" emacspeak-vuiet-track-info)
+               ("i" emacsvox-vuiet-track-info)
                ("l" vuiet-love-track)
                ("n" vuiet-next)
                ("p" vuiet-play-artist)
@@ -517,19 +517,19 @@ Also generates global keybindings if any."
   (define-key
    org-mode-map
    (kbd "C-c C-SPC")
-   (defhydra emacspeak-muggles-org-nav
+   (defhydra emacsvox-muggles-org-nav
              (:body-pre
               (progn
-                (emacspeak-hydra-toggle-talkative)
-                (emacspeak-hydra-body-pre "OrgNavView"))
+                (emacsvox-hydra-toggle-talkative)
+                (emacsvox-hydra-body-pre "OrgNavView"))
               :hint nil
-              :pre emacspeak-hydra-pre :post emacspeak-hydra-post
+              :pre emacsvox-hydra-pre :post emacsvox-hydra-post
               :color red :columns 3)
              "Org Mode Navigate "
-             ("?" (emacspeak-hydra-self-help "emacspeak-muggles-org-nav"))
-             ("SPC" emacspeak-outline-speak-this-heading  "Speak this section")
-             ("n" emacspeak-outline-speak-next-heading  "next heading")
-             ("p" emacspeak-outline-speak-previous-heading "prev heading")
+             ("?" (emacsvox-hydra-self-help "emacsvox-muggles-org-nav"))
+             ("SPC" emacsvox-outline-speak-this-heading  "Speak this section")
+             ("n" emacsvox-outline-speak-next-heading  "next heading")
+             ("p" emacsvox-outline-speak-previous-heading "prev heading")
              ("f" org-forward-heading-same-level "next heading at same level")
              ("b" org-backward-heading-same-level "prev heading at same level")
              ("u" outline-up-heading "up heading")

@@ -1,12 +1,12 @@
 # $Author: tv.raman.tv $
-# Description:  Makefile for Emacspeak
-# Keywords: Emacspeak,  TTS,Makefile
+# Description:  Makefile for Emacsvox
+# Keywords: Emacsvox,  TTS,Makefile
 ###  LCD Entry:
 
 # LCD Archive Entry:
-# emacspeak| T. V. Raman |raman@cs.cornell.edu
+# emacsvox| T. V. Raman |raman@cs.cornell.edu
 # A speech interface to Emacs |
-# Location https://github.com/tvraman/emacspeak
+# Location https://github.com/tvraman/emacsvox
 #
 
 ###  Copyright:
@@ -38,15 +38,15 @@ MAKE=make
 MAKEFLAGS=--no-print-directory
 README = README
 
-###   User level targets emacspeak   outloud espeak 
+###   User level targets emacsvox   outloud espeak 
 
-emacspeak: config 
+emacsvox: config 
 	@cd lisp && $(MAKE) $(MAKEFLAGS)
 	@make   $(README)
 	@chmod 644 $(README)
 	@echo "See the NEWS file for a  summary of new features — Control e cap n in Emacs"
-	@echo "See Emacspeak Customizations for customizations — control e cap C in Emacs"
-	@echo  "Read the Emacspeak Manual — Control e TAB in Emacs"
+	@echo "See Emacsvox Customizations for customizations — control e cap C in Emacs"
+	@echo  "Read the Emacsvox Manual — Control e TAB in Emacs"
 	@make install
 
 swiftmac:
@@ -66,7 +66,7 @@ dtk:
 GITVERSION=$(shell git show HEAD | head -1  | cut -b 8- )
 README: 
 	@rm -f README
-	@echo "Emacspeak  Revision $(GITVERSION)" > $(README)
+	@echo "Emacsvox  Revision $(GITVERSION)" > $(README)
 	@echo "This release requires Emacs 29.1 or later."  > $(README)
 	@echo "Distribution created by `whoami` at `date`" >> $(README)
 	@echo "Unpack the  distribution And type make config " >> $(README)
@@ -74,7 +74,7 @@ README:
 EXCLUDES=-X .excludes --exclude-backups
 dist:
 	make ${README}
-	tar cvf  emacspeak.tar $(EXCLUDES) .
+	tar cvf  emacsvox.tar $(EXCLUDES) .
 
 ###  User level target--  config
 
@@ -84,7 +84,7 @@ config:
 
 ###   complete build
 
-all: emacspeak
+all: emacsvox
 
 q:
 	make clean
@@ -97,7 +97,7 @@ q:
 i:
 	cd info && make && git ci docs || true
 	cd info && make man
-	cd ../gh-pages-emacspeak  && make && git ci docs || true
+	cd ../gh-pages-emacsvox  && make && git ci docs || true
 
 ###   user level target-- clean
 
@@ -113,15 +113,15 @@ release: #supply LABEL=NN.NN
 	git tag -a -s ${LABEL} -m "Tagging release with ${LABEL}"
 	git push --tags
 	$(MAKE) dist
-	mkdir emacspeak-${LABEL}; \
-cd emacspeak-${LABEL} ;\
-	tar xvf ../emacspeak.tar ; \
-	rm -f ../emacspeak.tar ; \
+	mkdir emacsvox-${LABEL}; \
+cd emacsvox-${LABEL} ;\
+	tar xvf ../emacsvox.tar ; \
+	rm -f ../emacsvox.tar ; \
 cd .. ;\
-	tar cvfj emacspeak-${LABEL}.tar.bz2 emacspeak-$(LABEL); \
-	/bin/rm -rf emacspeak-${LABEL} ;\
-	echo "Prepared release in emacspeak-${LABEL}.tar.bz2"
-	./utils/emacspeak-ghr ${LABEL} "emacspeak-${LABEL}.tar.bz2"
+	tar cvfj emacsvox-${LABEL}.tar.bz2 emacsvox-$(LABEL); \
+	/bin/rm -rf emacsvox-${LABEL} ;\
+	echo "Prepared release in emacsvox-${LABEL}.tar.bz2"
+	./utils/emacsvox-ghr ${LABEL} "emacsvox-${LABEL}.tar.bz2"
 
 ### Install: 
 
@@ -129,15 +129,15 @@ install:
 	@echo "This release requires Emacs 31 or later."
 	@echo "You need SoX installed to play OGG and WAV files."
 	@echo "You need curl installed for some Internet features."
-	@echo "To run  this Emacspeak build, add this  line to the top of your .emacs:"
-	@echo "(load-file \"`pwd`/lisp/emacspeak-setup.el\")"
+	@echo "To run  this Emacsvox build, add this  line to the top of your .emacs:"
+	@echo "(load-file \"`pwd`/lisp/emacsvox-setup.el\")"
 	@echo "    Type make  <engine> [dtk, outloud,  espeak, swiftmac] to build TTS server. "
 	@echo "Package maintainers: see   etc/install.org	 for instructions."
 
 ### Worktree:
 # Usage make wk TAG=tag
 wk:
-	git worktree add ../${TAG}-emacspeak ${TAG}
+	git worktree add ../${TAG}-emacsvox ${TAG}
 
 ###  end of file
 

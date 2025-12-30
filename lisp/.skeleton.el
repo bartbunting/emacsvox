@@ -1,10 +1,10 @@
-;;; emacspeak-<skeleton>.el --- Speech-enable <SKELETON>  -*- lexical-binding: t; -*-
+;;; emacsvox-<skeleton>.el --- Speech-enable <SKELETON>  -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
-;; Keywords: Emacspeak,  Audio Desktop <skeleton>
+;; Keywords: Emacsvox,  Audio Desktop <skeleton>
 ;;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |raman@cs.cornell.edu
+;; emacsvox| T. V. Raman |raman@cs.cornell.edu
 ;; A speech interface to Emacs |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;;;   Copyright:
 
 ;; Copyright (C) 1995 -- 2022, T. V. Raman
@@ -37,12 +37,12 @@
 
 (eval-when-compile  (require 'cl-lib))
 (cl-declaim  (optimize  (safety 0) (speed 3)))
-(require 'emacspeak-preamble)
+(require 'emacsvox-preamble)
 
 ;;;  Map Faces:
 
 (let ((print-length 0)
-      (faces (emacspeak-wizards-enumerate-unmapped-faces "^<skeleton>"))
+      (faces (emacsvox-wizards-enumerate-unmapped-faces "^<skeleton>"))
       (start (point)))
   (insert "\n\n(voice-setup-add-map \n'(\n")
   (cl-loop for f in faces do 
@@ -58,7 +58,7 @@
 
 (let ((print-length nil)
       (start (point))
-      (commands (emacspeak-wizards-enumerate-uncovered-commands "^<skeleton>")))
+      (commands (emacsvox-wizards-enumerate-uncovered-commands "^<skeleton>")))
   (insert "'(\n")
   (cl-loop for c in commands do (insert (format "%s\n" c)))
   (insert ")\n")
@@ -68,5 +68,5 @@
   (goto-char (search-forward "("))
   (indent-pp-sexp))
 
-(provide 'emacspeak-<skeleton>)
+(provide 'emacsvox-<skeleton>)
 ;;;  end of file

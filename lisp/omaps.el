@@ -9,7 +9,7 @@
 ;; An emacs interface to Reader|
 ;;
 ;;  $Revision: 1.30 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; License: GPL
 ;;
 

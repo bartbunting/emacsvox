@@ -10,7 +10,7 @@
 ;; An emacs interface to Reader|
 ;; 
 ;;  $Revision: 1.30 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; License: GPL
 ;; 
 
@@ -127,12 +127,12 @@
 
 (defvar gmaps-locations-loaded-p nil
   "Record if Locations cache  is loaded.")
-(defvar emacspeak-user-directory)
+(defvar emacsvox-user-directory)
 
 (defvar gmaps-locations-file
-  (expand-file-name "gmaps-locations" emacspeak-user-directory)
+  (expand-file-name "gmaps-locations" emacsvox-user-directory)
   "File where we save Locations.")
-(declare-function emacspeak-icon "emacspeak-sounds" (icon))
+(declare-function emacsvox-icon "emacsvox-sounds" (icon))
 
 (defun gmaps-locations-save ()
   "Save GMaps Locations."
@@ -151,8 +151,8 @@
       (save-buffer))
     (when (called-interactively-p 'interactive)
       (message "Saved GMaps Locations."))
-    (when (featurep 'emacspeak)
-      (emacspeak-icon 'save-object))))
+    (when (featurep 'emacsvox)
+      (emacsvox-icon 'save-object))))
 
 ;;;  Maps Geo-Coding and Reverse Geo-Coding:
 
@@ -194,7 +194,7 @@ Optional argument `raw-p' returns raw JSON  object."
   (let ((result
          (g-json-get-result
           (format "%s --max-time 5 --connect-timeout 3 %s '%s'"
-                  emacspeak-curl g-curl-options
+                  emacsvox-curl g-curl-options
                   (gmaps-reverse-geocoder-url
                    (format "%s,%s"
                            (g-json-get 'lat lat-long)
@@ -228,7 +228,7 @@ Optional argument `raw-p' returns raw JSON  object."
   "Postal Code --- automatically set by reverse geocoding gmaps-my-address")
 
 (declare-function
- emacspeak-calendar-setup-sunrise-sunset  "emacspeak-calendar" nil)
+ emacsvox-calendar-setup-sunrise-sunset  "emacsvox-calendar" nil)
 ;;;###autoload
 (defcustom gmaps-my-address
   nil
@@ -298,7 +298,7 @@ Parameter `key' is the API  key."
 
 (define-derived-mode gmaps-mode special-mode
   "Google Maps Interaction"
-  "A Google Maps front-end for the Emacspeak desktop."
+  "A Google Maps front-end for the Emacsvox desktop."
   (let ((start (point))
         (inhibit-read-only t))
     (setq buffer-undo-list  t)
@@ -958,7 +958,7 @@ Place details need to have been expanded first."
        (insert "</ol>")
        (g-html-string  (buffer-string))))
     (set-mark (point))
-    (emacspeak-icon 'task-done)
+    (emacsvox-icon 'task-done)
     (goto-char start)
     (message (format "Inserted %d reviews"  (length reviews)))))
 

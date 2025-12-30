@@ -1,0 +1,118 @@
+;;; emacsvox-deadgrep.el --- Speech-enable DEADGREP -*- lexical-binding: t; -*-
+;; $Author: tv.raman.tv $
+;; Description:  Speech-enable DEADGREP An Emacs Interface to deadgrep
+;; Keywords: Emacsvox,  Audio Desktop deadgrep
+;;;   LCD Archive entry:
+
+;; LCD Archive Entry:
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
+;; A speech interface to Emacs |
+;; 
+;;  $Revision: 4532 $ |
+;; Location https://github.com/tvraman/emacsvox
+;; 
+
+;;;   Copyright:
+;; Copyright (C) 1995 -- 2007, 2011, T. V. Raman
+;; Copyright (c) 1994, 1995 by Digital Equipment Corporation.
+;; All Rights Reserved.
+;; 
+;; This file is not part of GNU Emacs, but the same permissions apply.
+;; 
+;; GNU Emacs is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;; 
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNDEADGREP FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;; 
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; Commentary:
+;; DEADGREP ==  Front-end to ripgrep.
+
+;;; Code:
+
+;;   Required modules:
+
+(eval-when-compile (require 'cl-lib))
+(cl-declaim  (optimize  (safety 0) (speed 3)))
+(require 'emacsvox-preamble)
+
+;;;  Map Faces:
+
+(voice-setup-add-map
+ '(
+   (deadgrep-filename-face voice-smoothen)
+   (deadgrep-match-face voice-animate)
+   (deadgrep-meta-face voice-annotate)
+   (deadgrep-regexp-metachar-face voice-lighten)
+   (deadgrep-search-term-face voice-bolden)))
+
+;;;  Interactive Commands:
+
+
+(defun ems--deadgrep-toggle-file-results-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacsvox-speak-line)
+    (emacsvox-icon
+     (if (get-text-property (1+ (line-end-position)) 'invisible) 'off
+       'on))))
+
+
+(advice-add 'deadgrep-toggle-file-results :after
+	    #'ems--deadgrep-toggle-file-results-after)
+
+
+
+
+
+(defun ems--deadgrep-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacsvox-speak-mode-line)))
+
+
+(advice-add 'deadgrep :after #'ems--deadgrep-after)
+
+
+
+
+(cl-loop
+ for f in 
+ '(deadgrep-visit-result-other-window deadgrep-visit-result )
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-icon 'select-object)
+       (emacsvox-speak-line)
+       (emacsvox-icon 'open-object)))))
+
+(cl-loop
+ for f in 
+ '(
+   deadgrep-forward-match deadgrep-forward
+   deadgrep-backward-match deadgrep-backward
+   deadgrep-forward-filename deadgrep-backward-filename)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (let ((emacsvox-show-point t))
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line))))))
+
+(provide 'emacsvox-deadgrep)
+;;;  end of file
+

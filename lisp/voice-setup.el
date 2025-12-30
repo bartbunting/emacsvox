@@ -1,14 +1,14 @@
 ;;; voice-setup.el --- Setup voices for voice-lock  -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
-;; Description:  Voice lock mode for Emacspeak
+;; Description:  Voice lock mode for Emacsvox
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4672 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:
@@ -63,7 +63,7 @@
 ;; structure needs to be mapped to device dependent codes to produce
 ;; the desired effect.  This module forms a bridge between emacs
 ;; packages    that wish to implement audio formatting
-;; and Emacspeak's TTS module.  Emacspeak produces voice
+;; and Emacsvox's TTS module.  Emacsvox produces voice
 ;; change effects by examining the value of text-property
 ;; 'personality', as well as the face/font at point.
 ;; 
@@ -73,18 +73,18 @@
 ;; output by calling function voice-from-acss with
 ;; a "speech-style" --a structure as defined in this module and get
 ;; back a symbol that they assign to the value of property
-;; 'personality.  Emacspeak's rendering engine then does the needful
+;; 'personality.  Emacsvox's rendering engine then does the needful
 ;; at the time speech is produced.  Function
 ;; voice-from-acss does the following: Takes as
 ;; input a "speech style" (1) Computes a symbol that will be used to
-;; refer to this specific speech style.  (2) Examines emacspeak's
+;; refer to this specific speech style.  (2) Examines emacsvox's
 ;; internal voice table to see if this speech style has a voice
 ;; already defined.  If so it returns immediately.  Otherwise, it
 ;; does the additional work of defining a -voice for future use.  See
 ;; its use in this module to see how voices are defined independent
 ;; of a given TTS engine.  How faces map to voices: TTS engine
 ;; specific modules e.g., dectalk-voices.el and outloud-voices.el map
-;; ACSS dimensions to engine-specific codes.  Emacspeak modules use
+;; ACSS dimensions to engine-specific codes.  Emacsvox modules use
 ;; voice-setup-add-map when defining face->personality mappings.  For
 ;; use from other modules.
 
@@ -101,11 +101,11 @@
 
 (defgroup voice-fonts nil
   "Voices"
-  :group 'emacspeak)
+  :group 'emacsvox)
 
 ;;; Configure:
 
-;; This configures Emacspeak for the TTS engine used at start.
+;; This configures Emacsvox for the TTS engine used at start.
 ;; Subsequent switches to other engines  causes that engine to get
 ;; configured --- see the various tts-engine startup  commands, e.g.,
 ;; outloud, dectalk, espeak.
@@ -233,7 +233,7 @@ Define a voice for it if needed, then return the symbol."
            (set-default sym val)))))
 
 ;;;  new light-weight voice lock
-(declare-function emacspeak-icon "emacspeak-sounds" (icon))
+(declare-function emacsvox-icon "emacsvox-sounds" (icon))
 
 
 (define-minor-mode voice-lock-mode
@@ -242,7 +242,7 @@ Define a voice for it if needed, then return the symbol."
   :keymap nil
   (when (called-interactively-p 'interactive)
     (let ((state (if voice-lock-mode 'on 'off)))
-      (emacspeak-icon state))))
+      (emacsvox-icon state))))
 
 (defun voice-lock-mode--turn-on ()
   "Turn on Voice Lock mode ."
@@ -256,7 +256,7 @@ Define a voice for it if needed, then return the symbol."
   :group 'voice-lock
   (when (called-interactively-p 'interactive)
     (let ((state (if global-voice-lock-mode 'on 'off)))
-      (emacspeak-icon state)))
+      (emacsvox-icon state)))
   )
 
 ;; Install ourselves:
@@ -294,12 +294,12 @@ Define a voice for it if needed, then return the symbol."
       (voice-setup-set-voice-for-face f  orig) ; restore orig
       (remhash f voice-setup-local-map)        ; clean cache
       (message "Made face %s audible." f)
-      (emacspeak-icon 'item))
+      (emacsvox-icon 'item))
      (t
       (voice-setup-set-voice-for-face f  'inaudible) ; update
       (puthash f personality voice-setup-local-map)  ; cache
       (message "Silenced face %s" f)
-      (emacspeak-icon 'close-object)))))
+      (emacsvox-icon 'close-object)))))
 
 (provide 'voice-setup)
 ;;;  end of file

@@ -1,16 +1,16 @@
 ;;; dom-addons.el --- dom.el addons  -*- lexical-binding: t; -*-
 ;; $Id: dom-addons.el 4797 2007-07-16 23:31:22Z tv.raman.tv $
 ;; $Author: tv.raman.tv $
-;; Description:  Emacspeak dom addons
-;; Keywords: Emacspeak,  Audio Desktop DOM Addons
+;; Description:  Emacsvox dom addons
+;; Keywords: Emacsvox,  Audio Desktop DOM Addons
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:

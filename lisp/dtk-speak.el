@@ -6,11 +6,11 @@
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;;
 ;;  $Revision: 4670 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;;
 
 ;;;   Copyright:
@@ -52,10 +52,10 @@
 
 ;;;  Forward Declarations:
 
-(declare-function ems--fastload "emacspeak-preamble" (file))
+(declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
-(declare-function emacspeak-icon "emacspeak-sounds.el" (icon))
-(declare-function emacspeak-queue-icon "emacspeak-sounds.el" (icon))
+(declare-function emacsvox-icon "emacsvox-sounds.el" (icon))
+(declare-function emacsvox-queue-icon "emacsvox-sounds.el" (icon))
 
 (defvar dtk-program
   (or
@@ -231,7 +231,7 @@ mac for MAC TTS (default on Mac)")
 
 (defgroup tts nil
   "TTS." ;; ¿¿I guess this is shorthand for "Thou art Totally Screwed"??
-  :group 'emacspeak
+  :group 'emacsvox
   :prefix "dtk-")
 
 (defvar-local tts-strip-octals nil
@@ -335,18 +335,18 @@ bound to \\[dtk-toggle-caps].")
 
 ;;;  helper: apply pronunciations
 
-;; moved here from the emacspeak-pronounce module for efficient
+;; moved here from the emacsvox-pronounce module for efficient
 ;;compilation
 
 ;; Helper: like replace-match but preserves existing face or apply
 ;; 'match for pronunciation
 
 (defsubst tts-replace-match (replace)
-  (cl-declare (special emacspeak-pronounce-personality))
+  (cl-declare (special emacsvox-pronounce-personality))
   (let* ((start (match-beginning 0))
          (face
           (or
-           (get-text-property start 'face) emacspeak-pronounce-personality)))
+           (get-text-property start 'face) emacsvox-pronounce-personality)))
     (replace-match replace t t)
     (when face (put-text-property start (point) 'face face))))
 
@@ -777,10 +777,10 @@ Argument COMPLEMENT  is the complement of separator."
 (defun dtk-audio-format (start end)
   "Format and speak text from `start' to `end'. "
   (cl-declare (special voice-lock-mode dtk-speaker-process
-                       tts-default-voice emacspeak-use-icons))
-  (when (and emacspeak-use-icons
+                       tts-default-voice emacsvox-use-icons))
+  (when (and emacsvox-use-icons
              (get-text-property start 'auditory-icon))
-    (emacspeak-queue-icon (get-text-property start 'auditory-icon)))
+    (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
   (dtk-interp-queue-code (tts-voice-reset-code))
   (when-let ((pause  (get-text-property start 'pause))
              (dtk-interp-silence pause)))
@@ -866,7 +866,7 @@ this pattern if previously added.    "
        (t (setq ,switch (not ,switch))))
       (dtk-interp-sync)
       (when (called-interactively-p 'interactive)
-        (emacspeak-icon (if ,switch 'on 'off))
+        (emacsvox-icon (if ,switch 'on 'off))
         (message
          (format "Turned %s %s  %s."
                  (if ,switch "on" "off")
@@ -941,16 +941,16 @@ the speech rate.  Call when on a non-blank line to preview the effectt"
             ((or ?+ ?=) dtk-speech-rate-step)
             (?- (- dtk-speech-rate-step))
             (_ dtk-speech-rate-step))))
-    (emacspeak-icon 'repeat-start)
+    (emacsvox-icon 'repeat-start)
     (dtk-set-rate (+ dtk-speech-rate  step))
-    (emacspeak-speak-line)
-    (emacspeak-icon (if (cl-minusp step) 'left 'right))
+    (emacsvox-speak-line)
+    (emacsvox-icon (if (cl-minusp step) 'left 'right))
     (set-transient-map
      (let ((map (make-sparse-keymap)))
        (dolist (key '("=" "+" "-")) ;; = is often unshifted +.
          (define-key map key (lambda () (interactive) (dtk-rate-adjust ))))
        map)
-     t (lambda nil (emacspeak-icon 'repeat-end))
+     t (lambda nil (emacsvox-icon 'repeat-end))
      (format "%s: Repeat with %%k" dtk-speech-rate))))
 
 (defun dtk-set-character-scale (factor &optional prefix)
@@ -1064,7 +1064,7 @@ Interactive PREFIX arg makes the new setting global."
    ((eq 'some dtk-punctuation-mode)
     (dtk-set-punctuations-to-all prefix)))
   (when (called-interactively-p 'interactive)
-    (emacspeak-icon 'button)
+    (emacsvox-icon 'button)
     (message "set punctuation mode to %s %s"
              dtk-punctuation-mode
              (if prefix "" "locally"))))
@@ -1086,7 +1086,7 @@ Interactive PREFIX arg makes the new setting global."
 
 (defvar dtk-stop-immediately t
   "If t, speech stopped immediately when new speech received.
-Emacspeak sets this to nil if the current message being spoken is too
+Emacsvox sets this to nil if the current message being spoken is too
 important to be interrupted.")
 
 (defvar dtk-speaker-process nil
@@ -1104,11 +1104,11 @@ Set by \\[dtk-set-punctuations].")
 
 (defun tts-setup-servers-alist ()
   "Read servers/.servers"
-  (cl-declare (special emacspeak-servers-directory dtk-servers-alist))
+  (cl-declare (special emacsvox-servers-directory dtk-servers-alist))
   (let ((result nil)
         (servers
          (find-file-noselect
-          (expand-file-name ".servers" emacspeak-servers-directory)))
+          (expand-file-name ".servers" emacsvox-servers-directory)))
         (this nil))
     (with-current-buffer servers
       (goto-char (point-min))
@@ -1434,7 +1434,7 @@ Set by \\[dtk-set-punctuations].")
      (or dtk-servers-alist (tts-setup-servers-alist))
      nil t)))
   (cl-declare (special dtk-program dtk-servers-alist
-                       emacspeak-servers-directory))
+                       emacsvox-servers-directory))
   (setq dtk-program program)
   (ems--fastload "voice-setup")
   (dtk-initialize))
@@ -1455,7 +1455,7 @@ Set by \\[dtk-set-punctuations].")
   (interactive)
   (cl-declare (special dtk-cloud-server))
   (dtk-select-server dtk-cloud-server)
-  (setq emacspeak-play-program nil)
+  (setq emacsvox-play-program nil)
   (dtk-initialize)
   (when (tts-multistream-p dtk-cloud-server)
     (dtk-notify-initialize)))
@@ -1477,7 +1477,7 @@ Set by \\[dtk-set-punctuations].")
 
 (defun dtk-local-server (program &optional prompt-port)
   "Select and start an local speech server interactively. Local server
-lets Emacspeak on a remote host connect back via SSH port forwarding
+lets Emacsvox on a remote host connect back via SSH port forwarding
 for instance. Argument PROGRAM specifies the speech server
 program. Port defaults to dtk-local-server-port"
   (interactive
@@ -1492,17 +1492,17 @@ program. Port defaults to dtk-local-server-port"
      dtk-program)
     current-prefix-arg))
   (cl-declare (special dtk-servers-alist dtk-local-server-port
-                       dtk-local-server-process emacspeak-servers-directory))
+                       dtk-local-server-process emacsvox-servers-directory))
   (setq
    dtk-local-server-process
    (start-process
     "LocalTTS"
     "localTTS*"
-    (expand-file-name dtk-speech-server-program emacspeak-servers-directory)
+    (expand-file-name dtk-speech-server-program emacsvox-servers-directory)
     (if prompt-port
         (read-from-minibuffer "Port:" "3333")
       dtk-local-server-port)
-    (expand-file-name program emacspeak-servers-directory))))
+    (expand-file-name program emacsvox-servers-directory))))
 
 ;;;   initialize the speech process
 (defconst dtk-pamixer (executable-find "pamixer") "pamixer")
@@ -1521,10 +1521,10 @@ For swiftmac, set this to `left' or `right'."
 ;; Helper: dtk-make-process:
 (defun dtk-make-process (name)
   "Make a  TTS process called name."
-  (cl-declare (special dtk-program  emacspeak-servers-directory))
+  (cl-declare (special dtk-program  emacsvox-servers-directory))
   (let ((process-connection-type nil)
         (default-directory (expand-file-name "~/"))
-        (program (expand-file-name dtk-program emacspeak-servers-directory))
+        (program (expand-file-name dtk-program emacsvox-servers-directory))
         (process nil))
     (setq process
           (start-process name nil program))
@@ -1544,7 +1544,7 @@ For swiftmac, set this to `left' or `right'."
     (setq dtk-speaker-process new)
     (when (tts-multistream-p dtk-program) (dtk-notify-initialize))
     (when (string-match "cloud" dtk-program) ; we'll serve icons.
-      (setq emacspeak-play-program nil))
+      (setq emacsvox-play-program nil))
     ;; `voice-setup' requires us, so we can't require it at top-level.
     (require 'voice-setup)
     (voice-setup)))
@@ -1626,13 +1626,13 @@ unless   `dtk-quiet' is set to t. "
                dtk-yank-excluded-properties
                dtk-speaker-process dtk-stop-immediately
                tts-strip-octals
-               emacspeak-use-icons
+               emacsvox-use-icons
                dtk-speech-rate dtk-speak-nonprinting-chars
                dtk-quiet dtk-chunk-separator-syntax
                inhibit-modification-hooks
                voice-lock-mode dtk-punctuation-mode
                dtk-split-caps
-               emacspeak-pronounce-table
+               emacsvox-pronounce-table
                selective-display))
   ;; ensure text is a  string
   (unless (stringp text) (when text (setq text (format "%s" text))))
@@ -1651,7 +1651,7 @@ unless   `dtk-quiet' is set to t. "
     (when selective-display
       (let ((ctrl-m (string-match "\015" text)))
         (and ctrl-m (setq text (substring text 0 ctrl-m))
-             (emacspeak-icon 'ellipses))))
+             (emacsvox-icon 'ellipses))))
     (let (                              ;snapshot relevant state
           (orig-mode major-mode)
           (char-alias  char-property-alias-alist)
@@ -1660,8 +1660,8 @@ unless   `dtk-quiet' is set to t. "
           (inhibit-modification-hooks t)
           (invisibility-spec buffer-invisibility-spec)
           (syntax-table (syntax-table))
-          (pron-table emacspeak-pronounce-table)
-          (pron-personality emacspeak-pronounce-personality)
+          (pron-table emacsvox-pronounce-table)
+          (pron-personality emacsvox-pronounce-personality)
           (chunk-sep dtk-chunk-separator-syntax)
           (inherit-speak-nonprinting-chars dtk-speak-nonprinting-chars)
           (inherit-strip-octals tts-strip-octals)
@@ -1684,8 +1684,8 @@ unless   `dtk-quiet' is set to t. "
         (setq                           ; mirror snapshot
          yank-excluded-properties dtk-yank-excluded-properties
          char-property-alias-alist  char-alias
-         emacspeak-pronounce-table pron-table
-         emacspeak-pronounce-personality pron-personality
+         emacsvox-pronounce-table pron-table
+         emacsvox-pronounce-personality pron-personality
          buffer-invisibility-spec invisibility-spec
          dtk-chunk-separator-syntax chunk-sep
          dtk-speech-rate speech-rate
@@ -1726,8 +1726,8 @@ unless   `dtk-quiet' is set to t. "
   "Evaluate body  after temporarily silencing messages."
   (declare (indent 0) (debug t))
   `(progn
-     (defvar emacspeak-speak-messages)
-     (let ((emacspeak-speak-messages nil)
+     (defvar emacsvox-speak-messages)
+     (let ((emacsvox-speak-messages nil)
            (inhibit-message t))
        ,@body)))
 
@@ -1810,14 +1810,14 @@ grouping"
   " Applies func to text with dtk-speaker-process set to notification stream."
   (let ((dtk-speaker-process (dtk-notify-process)))
     (funcall func text)))
-(declare-function emacspeak-log-notification "emacspeak-speak" (text))
+(declare-function emacsvox-log-notification "emacsvox-speak" (text))
 
 (defun dtk-notify (text &optional dont-log)
   "Speak text on notification stream.
 Notification is logged in the notifications buffer unless `dont-log' is T. "
-  (cl-declare (special dtk-speaker-process emacspeak-last-message))
-  (unless dont-log (emacspeak-log-notification text))
-  (setq emacspeak-last-message text)
+  (cl-declare (special dtk-speaker-process emacsvox-last-message))
+  (unless dont-log (emacsvox-log-notification text))
+  (setq emacsvox-last-message text)
   (cond
    ((dtk-notify-process)                ; we have a live notifier
     (dtk-notify-apply #'dtk-speak text))
@@ -1828,7 +1828,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   "Play icon  on notification stream. "
   (cond
    ((dtk-notify-process)                ; we have a live notifier
-    (dtk-notify-apply #'emacspeak-icon icon))))
+    (dtk-notify-apply #'emacsvox-icon icon))))
 
 (defun dtk-notify-initialize ()
   "Initialize notification TTS stream."
@@ -1857,7 +1857,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 ;;;  Header: Lukas
 
 ;; Copyright 2007, 2011 Lukas Loehrer
-;; TVR: Integrated into Emacspeak July 6, 2008
+;; TVR: Integrated into Emacsvox July 6, 2008
 ;; Using patch from Lukas.
 ;;
 ;; Author: Lukas Loehrer <loehrerl |at| gmx.net>

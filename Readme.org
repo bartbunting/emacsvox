@@ -1,6 +1,6 @@
 [[file:logo.png]]
 
-* Emacspeak --- The Complete Audio Desktop
+* Emacsvox --- The Complete Audio Desktop
 
-  - [[https://emacspeak.blogspot.com][blog]]
+  - [[https://emacsvox.blogspot.com][blog]]
   - [[https://tvraman.github.io][T. V. Raman]]

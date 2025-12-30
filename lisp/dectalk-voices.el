@@ -6,11 +6,11 @@
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:
@@ -46,7 +46,7 @@
 ;;  required modules
 
 (eval-when-compile (require 'cl-lib))
-(require 'emacspeak-preamble)
+(require 'emacsvox-preamble)
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 
 ;;;  Customizations:

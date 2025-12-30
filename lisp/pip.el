@@ -1,11 +1,11 @@
 ;;; pip --- Interface To Piper TTS -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
-;; Keywords: Emacspeak,  Audio Desktop Piper TTS
+;; Keywords: Emacsvox,  Audio Desktop Piper TTS
 ;;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |raman@cs.cornell.edu
+;; emacsvox| T. V. Raman |raman@cs.cornell.edu
 ;; A speech interface to Emacs |
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;;;   Copyright:
 
 ;; Copyright (C) 1995 -- 2022, T. V. Raman
@@ -46,7 +46,7 @@
 ;; the voice models.
 ;; @item @code{M-x pip-speak} to speak.  @item At present
 ;; @code{piper} is not suitable for use as a primary TTS engine for
-;; Emacspeak, given its high latency.
+;; Emacsvox, given its high latency.
 ;; @item However it might be
 ;; interesting to use it for lower-priority speech where quality
 ;; trumps latency.

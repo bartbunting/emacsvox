@@ -10,7 +10,7 @@
 ;; An emacs interface to Reader|
 ;; 
 ;;  $Revision: 1.30 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; License: GPL
 ;; 
 
@@ -57,7 +57,7 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(require 'emacspeak-preamble)
+(require 'emacsvox-preamble)
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (with-suppressed-warnings ((obsolete nnir)) (require 'nnir))
 (require 'gnus-group)
@@ -147,8 +147,8 @@ See https://support.google.com/mail/answer/7190?hl=en for syntax.
       (gnus-group-read-ephemeral-search-group
        nil                              ; no parse
        `(nnir-specs (nnir-query-spec (query ,q))))
-      (emacspeak-icon 'open-object)
-      (emacspeak-speak-mode-line))
+      (emacsvox-icon 'open-object)
+      (emacsvox-speak-mode-line))
      (t (error "Not on a group.")))))
 
 (provide 'gm-nnir)

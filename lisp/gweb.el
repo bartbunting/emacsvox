@@ -10,7 +10,7 @@
 ;; An emacs interface to Reader|
 ;; 
 ;;  $Revision: 1.30 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; License: GPL
 ;; 
 
@@ -65,7 +65,7 @@
 
 ;;;  Variables
 
-(defvar gweb-referer "http://emacspeak.sf.net"
+(defvar gweb-referer "http://emacsvox.sf.net"
   "Referer URL to send to the API.")
 (defvar gweb-history nil
   "History of Google Search queries.")
@@ -145,11 +145,11 @@ Uses corpus found in gweb-completion-corpus"
 
 (defun gweb-google-autocomplete (&optional prompt)
   "Autocomplete using Google Search corpus."
-  (cl-declare (special  emacspeak-google-query))
+  (cl-declare (special  emacsvox-google-query))
   (dtk-stop 'all)
   (let ((gweb-completion-corpus ""))
     (setq
-     emacspeak-google-query
+     emacsvox-google-query
      (gweb--autocomplete-helper (or prompt "Google: ")))))
 
 (defun gweb-youtube-autocomplete (&optional prompt)
@@ -165,12 +165,12 @@ Uses corpus found in gweb-completion-corpus"
  for f in
  '(ido-complete-space minibuffer-complete-word) do
  (eval
-  `(defadvice ,f (around emacspeak pre act comp)
+  `(defadvice ,f (around emacsvox pre act comp)
      "Fix up ido-complete-space for use with Google autocomplete."
      (cond
       (gweb-completion-flag (insert-char ?\ ))
       (t ad-do-it))
-     (emacspeak-speak-word)
+     (emacsvox-speak-word)
      ad-return-value)))
 
 (provide 'gweb)

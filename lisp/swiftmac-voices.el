@@ -6,11 +6,11 @@
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:
@@ -46,7 +46,7 @@
 ;;  Required modules: 
 
 (eval-when-compile (require 'cl-lib))
-(require 'emacspeak-preamble)           ;For `ems--fastload'.
+(require 'emacsvox-preamble)           ;For `ems--fastload'.
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 
 ;;; swiftmac:
@@ -295,7 +295,7 @@ and TABLE gives the values along that dimension."
   (dtk-unicode-update-untouched-charsets
    '(ascii latin-iso8859-1 latin-iso8859-15 latin-iso8859-9
            eight-bit-graphic))
-  (setq emacspeak-play-program nil))
+  (setq emacsvox-play-program nil))
 
 ;;;  tts-env for Mac:
 

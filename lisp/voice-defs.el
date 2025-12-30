@@ -1,14 +1,14 @@
 ;;; voice-defs.el --- Define voices for voice-lock  -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
-;; Description:  Voice Definitions for Emacspeak
+;; Description:  Voice Definitions for Emacsvox
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4672 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:

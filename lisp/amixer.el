@@ -41,11 +41,11 @@
 ;;;  required Modules
 
 (eval-when-compile (require 'cl-lib))
-(require 'emacspeak-preamble)
+(require 'emacsvox-preamble)
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 
 ;; forward decl:
-(defvar emacspeak-speak-messages)
+(defvar emacsvox-speak-messages)
 
 (defconst amixer-alsactl  (executable-find "alsactl") "AlsaCtl program")
 
@@ -63,7 +63,7 @@
 (defun amixer-populate-settings (control)
   "Populate control with its settings information."
   (let ((fields nil)
-        (emacspeak-speak-messages nil)
+        (emacsvox-speak-messages nil)
         (slots nil)
         (current nil))
     (with-temp-buffer
@@ -106,14 +106,14 @@
 
 (defun amixer-build-db ()
   "Create a database of amixer controls and their settings."
-  (cl-declare (special amixer-db  emacspeak-amixer))
-  (unless emacspeak-amixer (error "You dont have a standard amixer."))
+  (cl-declare (special amixer-db  emacsvox-amixer))
+  (unless emacsvox-amixer (error "You dont have a standard amixer."))
   (let (
         (message-log-max nil)
         (controls nil)
         (fields nil)
         (slots nil)
-        (emacspeak-speak-messages nil))
+        (emacsvox-speak-messages nil))
     (with-temp-buffer
       (shell-command
        (format
@@ -154,7 +154,7 @@
 (defun amixer-get-enumerated-values(control)
   "Return list of enumerated values."
   (let ((values nil)
-        (emacspeak-speak-messages nil))
+        (emacsvox-speak-messages nil))
     (with-temp-buffer
       (shell-command
        (format
@@ -219,7 +219,7 @@ to  ~/.emacs.d ")
   "ALSA settings.
 Interactive prefix arg refreshes cache."
   (interactive "P")
-  (cl-declare (special amixer-db amixer-alsactl-config-file emacspeak-amixer))
+  (cl-declare (special amixer-db amixer-alsactl-config-file emacsvox-amixer))
   (unless amixer-alsactl-config-file (amixer-alsactl-setup))
   (when (or refresh (null amixer-db))
     (amixer-build-db))
@@ -255,7 +255,7 @@ Interactive prefix arg refreshes cache."
         (amixer-control-setting control))
        update)
       (start-process
-       "AMixer" "*Debug*"  emacspeak-amixer
+       "AMixer" "*Debug*"  emacsvox-amixer
        "cset"
        (format "numid=%s" (amixer-control-numid control))
        update)
@@ -267,7 +267,7 @@ Interactive prefix arg refreshes cache."
 (defun amixer-query (&optional refresh)
   "Show setting for specified control."
   (interactive "P")
-  (cl-declare (special amixer-db amixer-alsactl-config-file emacspeak-amixer))
+  (cl-declare (special amixer-db amixer-alsactl-config-file emacsvox-amixer))
   (unless amixer-alsactl-config-file (amixer-alsactl-setup))
   (when (or refresh (null amixer-db))
     (amixer-build-db))
@@ -305,7 +305,7 @@ Interactive prefix arg refreshes cache."
      "AlsaCtl" nil amixer-alsactl
      "-f"amixer-alsactl-config-file
      "store")
-    (emacspeak-icon 'task-done)
+    (emacsvox-icon 'task-done)
     (message "Persisted amixer state to %s."
              amixer-alsactl-config-file)))
 
@@ -313,40 +313,40 @@ Interactive prefix arg refreshes cache."
 (defcustom amixer-volume-step 1
   "Step-size for volume change."
   :type 'integer
-  :group 'emacspeak)
+  :group 'emacsvox)
 
 (defun amixer-volume-up (&optional prompt)
   "Raise Master volume by amixer-volume-step.
 Interactive prefix arg `PROMPT' reads percentage as a number"
   (interactive "P")
   (cl-declare (special amixer-volume-step))
-  (let ((emacspeak-speak-messages nil)
+  (let ((emacsvox-speak-messages nil)
         (inhibit-message t))
     (shell-command
      (format "%s set 'Master' '%d%%+'"
-             emacspeak-amixer
+             emacsvox-amixer
              (if prompt
                  (read-number "Volume Step:")
                amixer-volume-step)))
     (amixer-build-db)
     (dtk-notify (ems--show-current-volume))
-    (emacspeak-icon 'right)))
+    (emacsvox-icon 'right)))
 
 (defun amixer-volume-down (&optional prompt)
   "Lower Master volume by amixer-volume-step.
 Interactive prefix arg `PROMPT' reads percentage as a number"
   (interactive "P")
   (cl-declare (special amixer-volume-step))
-  (let ((emacspeak-speak-messages nil)
+  (let ((emacsvox-speak-messages nil)
         (inhibit-message t))
     (shell-command
      (format "%s set 'Master' '%d%%-'"
-             emacspeak-amixer
+             emacsvox-amixer
              (if prompt
                  (read-number "Volume Step:")
                amixer-volume-step)))
     (amixer-build-db)
-    (emacspeak-icon 'left)
+    (emacsvox-icon 'left)
     (dtk-notify (ems--show-current-volume))))
 
 ;;;###autoload
@@ -357,7 +357,7 @@ of 3 and 4 lower or raise volume."
   (interactive )
   (cl-declare (special ems--vol-cmd))
   (let ((key (event-basic-type last-command-event)))
-    (emacspeak-icon 'repeat-start)
+    (emacsvox-icon 'repeat-start)
     (cl-case key
       (?3 (call-interactively 'amixer-volume-down))
       (?4 (call-interactively 'amixer-volume-up)))
@@ -366,7 +366,7 @@ of 3 and 4 lower or raise volume."
        (dolist (key '("3" "4"))
          (define-key map key (lambda () (interactive) (amixer-volume-adjust ))))
        map)
-     t (lambda nil (emacspeak-icon 'repeat-end))
+     t (lambda nil (emacsvox-icon 'repeat-end))
      (concat
       (propertize
        (string-trim (shell-command-to-string ems--vol-cmd))

@@ -1,15 +1,15 @@
 ;;; sox-gen.el --- Binaural Beats And More Using SoX -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
 ;; Description:  collection of SoX  sound generators including Binaural Beats
-;; Keywords: Emacspeak,  Audio Desktop sox
+;; Keywords: Emacsvox,  Audio Desktop sox
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:
@@ -40,7 +40,7 @@
 ;;; Commentary:
 
 ;; Provides binaural audio along with pre-defined themes.
-;; This module can be used independent of Emacspeak.
+;; This module can be used independent of Emacsvox.
 
 ;; @subsection Binaural Beats  Using SoX
 ;; 
@@ -293,7 +293,7 @@ Param `beat-spec-list' is a list of `(carrier beat) tuples."
                      nil 'must-match)
     (timer-duration (read-from-minibuffer "Duration: "))))
   (sox--binaural-play duration (sox-binaural-get-effect name))
-  (emacspeak-pip (format "%s: %s" name (sox--format-seconds duration))))
+  (emacsvox-pip (format "%s: %s" name (sox--format-seconds duration))))
 
 (defun sox-slide-binaural (name-1 name-2 duration)
   "Play specified binaural slide from `name-1' to `name-2'."
@@ -310,7 +310,7 @@ Param `beat-spec-list' is a list of `(carrier beat) tuples."
     (run-with-timer
      dur nil
      #'(lambda (n1 n2  d)
-         (emacspeak-pip (format "%s  to %s %s" n1 n2 (sox--format-seconds d)))
+         (emacsvox-pip (format "%s  to %s %s" n1 n2 (sox--format-seconds d)))
          (sox--binaural-play  d slide))
      name-1 name-2 slope)
     (run-with-timer
@@ -395,7 +395,7 @@ binaural beat to another."
   (cl-declare (special sox-binaural-slider-scale))
   (let ((start 0)
         (dur-scale (sox--theme-duration-scale theme duration)))
-    (emacspeak-pip
+    (emacsvox-pip
      (sox--format-seconds (sox--theme-compute-length theme dur-scale)))
     (cl-loop
      for beat in theme
@@ -416,7 +416,7 @@ binaural beat to another."
          (run-with-timer                ; start  at slider-start
           slider-start nil              ; no repeat
           #'(lambda (this that len)
-              (emacspeak-pip
+              (emacsvox-pip
                (format "%s to %s %s" this that (sox--format-seconds len)))
               (sox--binaural-play
                len

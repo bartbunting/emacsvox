@@ -1,15 +1,15 @@
 ;;; sox.el --- An Audio Work-Bench -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
 ;; Description:  Speech-enable SOX An Emacs Interface to sox
-;; Keywords: Emacspeak,  Audio Desktop sox
+;; Keywords: Emacsvox,  Audio Desktop sox
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; 
 
 ;;;   Copyright:
@@ -51,7 +51,7 @@
 ;; This module provides support for ladspa effects using module ladspa.el.
 ;; To use ladspa effects with SoX, you need a relatively new build of Sox;
 ;; The stock SoX that is package for Debian/Ubuntu  does not always work.
-;; This module can be used independent of Emacspeak.
+;; This module can be used independent of Emacsvox.
 ;;; Code:
 
 ;;   Required modules:
@@ -63,8 +63,8 @@
 ;;;  Customizations:
 
 (defgroup sox nil
-  "Audio workbench for the Emacspeak Audio Desktop."
-  :group 'emacspeak
+  "Audio workbench for the Emacsvox Audio Desktop."
+  :group 'emacsvox
   :group 'applications)
 
 ;;;  Define Special Mode
@@ -131,7 +131,7 @@
 
 (define-derived-mode sox-mode special-mode
   "Interactively manipulate audio files."
-  "An audio workbench for the Emacspeak desktop."
+  "An audio workbench for the Emacsvox desktop."
   (cl-declare (special sox-context))
   (setq sox-context (make-sox-context))
   (sox-redraw sox-context)
@@ -459,15 +459,15 @@ and return a suitable effect structure." name)
  nil)
 
 (provide 'sox)
-;;;  Add Emacspeak Support
+;;;  Add Emacsvox Support
 
 
 (cl-declaim  (optimize  (safety 0) (speed 3)))
-(require 'emacspeak-preamble)
+(require 'emacsvox-preamble)
 
 
 (defun ems--sox-open-file-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacspeak-icon 'select-object)))
+  "speak." (when (ems-interactive-p) (emacsvox-icon 'select-object)))
 
 
 (advice-add 'sox-open-file :after #'ems--sox-open-file-after)
@@ -477,7 +477,7 @@ and return a suitable effect structure." name)
 
 
 (defun ems--sox-refresh-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
 
 (advice-add 'sox-refresh :after #'ems--sox-refresh-after)
@@ -487,7 +487,7 @@ and return a suitable effect structure." name)
 
 
 (defun ems--sox-delete-effect-at-point-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
+  "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
 
 
 (advice-add 'sox-delete-effect-at-point :after
@@ -495,7 +495,7 @@ and return a suitable effect structure." name)
 
 
 
-(provide 'emacspeak-sox)
+(provide 'emacsvox-sox)
 
 ;;;  end of file
 

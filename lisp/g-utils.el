@@ -10,7 +10,7 @@
 ;; An emacs interface to Google Services|
 ;; 
 ;;  $Revision: 1.14 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/tvraman/emacsvox
 ;; License: GPL
 ;; 
 
@@ -56,9 +56,9 @@
 
 (eval-when-compile (require 'cl-lib))
 (cl-declaim  (optimize  (safety 0) (speed 3)))
-(require 'emacspeak-preamble)
+(require 'emacsvox-preamble)
 (require 'json)
-(unless emacspeak-curl (warn "This module will not work without Curl."))
+(unless emacsvox-curl (warn "This module will not work without Curl."))
 ;;;  Customizations:
 
 (defvar g-scratch-buffer" *g scratch*"
@@ -146,10 +146,10 @@ Customize this to live on your local disk."
 
 (defun g-xsl-transform-region (start end xsl)
   "Replace region by result of transforming via XSL."
-  (cl-declare (special emacspeak-xslt))
+  (cl-declare (special emacsvox-xslt))
   (call-process-region
    start end
-   emacspeak-xslt
+   emacsvox-xslt
    t t nil
    xsl
    "-"))
@@ -269,13 +269,13 @@ references, poor-man's xpath."
 (defun g-json-from-url (url)
   "Return JSON read from URL."
   (g-json-get-result
-   (format "%s  %s '%s'" emacspeak-curl g-curl-options url)))
+   (format "%s  %s '%s'" emacsvox-curl g-curl-options url)))
 
 (defun g-display-result (command style)
   "Display result retrieved by command using specified style.
 Typically, content is pulled using Curl , converted to HTML using style  and
   previewed via `g-html-handler'."
-  (cl-declare (special emacspeak-xslt g-html-handler))
+  (cl-declare (special emacsvox-xslt g-html-handler))
   (g-using-scratch
    (call-process shell-file-name nil t
                  nil shell-command-switch
@@ -288,7 +288,7 @@ Typically, content is pulled using Curl , converted to HTML using style  and
   "Display XML buffer  using specified style.
 XML  is transformed via style
   and previewed via `g-html-handler'."
-  (cl-declare (special emacspeak-xslt g-html-handler))
+  (cl-declare (special emacsvox-xslt g-html-handler))
   (with-current-buffer buffer
     (when style
       (g-xsl-transform-region (point-min) (point-max) style))
