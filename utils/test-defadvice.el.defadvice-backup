@@ -1,0 +1,29 @@
+;;; test-defadvice.el --- Test file for conversion -*- lexical-binding: t; -*-
+
+;; Test case 1: Simple :after advice
+(defadvice calendar-forward-day (after emacspeak pre act comp)
+  "Speak the date."
+  (when (ems-interactive-p)
+    (emacspeak-calendar-speak-date)
+    (emacspeak-icon 'select-object)))
+
+;; Test case 2: Simple :before advice
+(defadvice some-function (before emacspeak pre act comp)
+  "Icon before action."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object)))
+
+;; Test case 3: Simple :around with ad-do-it
+(defadvice perform-replace (around emacspeak pre act comp)
+  "Silence help."
+  (ems-with-messages-silenced ad-do-it))
+
+;; Test case 4: :after with ad-get-arg
+(defadvice mark-visible-calendar-date (after emacspeak pre act comp)
+  "Use voice locking to mark date."
+  (let ((date (ad-get-arg 0)))
+    (when (calendar-date-is-valid-p date)
+      (message "Marked: %s" date))))
+
+(provide 'test-defadvice)
+;;; test-defadvice.el ends here
