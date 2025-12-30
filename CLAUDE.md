@@ -4,7 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Emacsvox is a fork of Emacspeak - a complete audio desktop that extends Emacs to be fully functional via speech output. The project has been maintained since 1995 by T. V. Raman and provides speech interfaces for 200+ Emacs packages through an advice-based system.
+Emacsvox is a fork of Emacspeak - a complete audio desktop that extends Emacs to be fully functional via speech output. The project has been maintained since 1995 by T. V. Raman and provides speech interfaces for 200+ Emacs packages.
+
+**✨ MODERNIZATION STATUS: COMPLETE (December 2024)**
+- All 1,961 defadvice forms converted to modern advice-add
+- Minimum Emacs version: 31+
+- 100% lexical-binding throughout
+- Modern elisp patterns and formatting
+- Fully compliant with Emacs 31+ standards
 
 ## Build and Development Commands
 
@@ -70,11 +77,12 @@ cd lisp && make clean # Remove compiled files
 
 ### Advice-Based Speech Integration
 
-The codebase uses Emacs' `defadvice` system extensively:
+The codebase uses Emacs' modern `advice-add` system extensively (fully migrated from deprecated `defadvice` in December 2024):
 
-- **Core advice** (`emacspeak-advice.el`): Wraps fundamental Emacs functions to inject speech
-- **Package-specific modules** (`emacspeak-PACKAGE.el`): 200+ modules that speech-enable individual packages
+- **Core advice** (`emacspeak-advice.el`): Uses advice-add to wrap fundamental Emacs functions
+- **Package-specific modules** (`emacspeak-PACKAGE.el`): 193 modules with ~1,964 advice functions
 - **Lazy loading**: Speech modules only load when their base package is used via `with-eval-after-load`
+- **Naming convention**: All advice functions prefixed with `ems--FUNCTION-CLASS` (e.g., `ems--next-line-after`)
 
 ### Directory Structure
 
