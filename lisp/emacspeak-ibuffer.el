@@ -66,526 +66,1085 @@
 
 ;;;  speech enable interactive commands 
 
-(defadvice ibuffer (after emacspeak pre act comp)
+
+(defun ems--ibuffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-other-window (after emacspeak pre act comp)
+
+(advice-add 'ibuffer :after #'ems--ibuffer-after)
+
+
+
+
+
+(defun ems--ibuffer-other-window-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-list-buffers (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-other-window :after
+	    #'ems--ibuffer-other-window-after)
+
+
+
+
+
+(defun ems--ibuffer-list-buffers-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-update (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-list-buffers :after
+	    #'ems--ibuffer-list-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-update-after (&rest _)
+  "speak."
+  (when (ems-interactive-p) (emacspeak-icon 'modified-object)))
+
+
+(advice-add 'ibuffer-update :after #'ems--ibuffer-update-after)
+
+
+
+
+
+(defun ems--ibuffer-customize-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'modified-object)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-customize (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-bury-buffer (around emacspeak pre act comp)
+(advice-add 'ibuffer-customize :after #'ems--ibuffer-customize-after)
+
+
+
+
+
+(defun ems--ibuffer-bury-buffer-around (orig-fun &rest args)
   "speak."
   (let ((buf (ibuffer-current-buffer t)))
     (when (ems-interactive-p)
-      ad-do-it
-      (emacspeak-icon 'select-object)
+      (apply orig-fun args) (emacspeak-icon 'select-object)
       (message "Buried buffer %s" buf))))
 
-(defadvice ibuffer-quit (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-bury-buffer :around
+	    #'ems--ibuffer-bury-buffer-around)
+
+
+
+
+
+(defun ems--ibuffer-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-backward-line (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-quit :after #'ems--ibuffer-quit-after)
+
+
+
+
+
+(defun ems--ibuffer-backward-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ibuffer-summarize-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-ibuffer-summarize-line) (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-forward-line (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-backward-line :after
+	    #'ems--ibuffer-backward-line-after)
+
+
+
+
+
+(defun ems--ibuffer-forward-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ibuffer-summarize-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-ibuffer-summarize-line) (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-backward-filter-group (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-forward-line :after
+	    #'ems--ibuffer-forward-line-after)
+
+
+
+
+
+(defun ems--ibuffer-backward-filter-group-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ibuffer-summarize-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-ibuffer-summarize-line) (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-forward-filter-group (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-backward-filter-group :after
+	    #'ems--ibuffer-backward-filter-group-after)
+
+
+
+
+
+(defun ems--ibuffer-forward-filter-group-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ibuffer-summarize-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-ibuffer-summarize-line) (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-backwards-next-marked (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-forward-filter-group :after
+	    #'ems--ibuffer-forward-filter-group-after)
+
+
+
+
+
+(defun ems--ibuffer-backwards-next-marked-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ibuffer-summarize-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-ibuffer-summarize-line) (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-forward-next-marked (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-backwards-next-marked :after
+	    #'ems--ibuffer-backwards-next-marked-after)
+
+
+
+
+
+(defun ems--ibuffer-forward-next-marked-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ibuffer-summarize-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-ibuffer-summarize-line) (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-visit-buffer (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-forward-next-marked :after
+	    #'ems--ibuffer-forward-next-marked-after)
+
+
+
+
+
+(defun ems--ibuffer-visit-buffer-after (&rest _)
   "Provide spoken status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-visit-buffer-1-window (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-visit-buffer :after
+	    #'ems--ibuffer-visit-buffer-after)
+
+
+
+
+
+(defun ems--ibuffer-visit-buffer-1-window-after (&rest _)
   "Provide spoken status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-visit-buffer-other-window (after emacspeak pre act
-                                                    comp)
+
+(advice-add 'ibuffer-visit-buffer-1-window :after
+	    #'ems--ibuffer-visit-buffer-1-window-after)
+
+
+
+
+
+(defun ems--ibuffer-visit-buffer-other-window-after (&rest _)
   "Provide spoken status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-visit-buffer-other-window-noselect (after emacspeak 
-                                                             pre act comp)
+
+(advice-add 'ibuffer-visit-buffer-other-window :after
+	    #'ems--ibuffer-visit-buffer-other-window-after)
+
+
+
+
+
+(defun ems--ibuffer-visit-buffer-other-window-noselect-after (&rest _)
   "Provide spoken status information."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (dtk-speak "Opened buffer in other window.")))
 
-(defadvice ibuffer-visit-buffer-other-frame (after emacspeak pre act
-                                                   comp)
+
+(advice-add 'ibuffer-visit-buffer-other-window-noselect :after
+	    #'ems--ibuffer-visit-buffer-other-window-noselect-after)
+
+
+
+
+
+(defun ems--ibuffer-visit-buffer-other-frame-after (&rest _)
   "Provide spoken status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-diff-with-file (after emacspeak pre act
-                                         comp)
+
+(advice-add 'ibuffer-visit-buffer-other-frame :after
+	    #'ems--ibuffer-visit-buffer-other-frame-after)
+
+
+
+
+
+(defun ems--ibuffer-diff-with-file-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (message "Displayed differences in other window.")
     (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-limit-disable (after emacspeak pre act
-                                        comp)
+
+(advice-add 'ibuffer-diff-with-file :after
+	    #'ems--ibuffer-diff-with-file-after)
+
+
+
+
+
+(defun ems--ibuffer-limit-disable-after (&rest _)
+  "Speak status information."
+  (when (ems-interactive-p) (message "Disabled limiting.")))
+
+
+(advice-add 'ibuffer-limit-disable :after
+	    #'ems--ibuffer-limit-disable-after)
+
+
+
+
+
+(defun ems--ibuffer-do-view-after (&rest _)
   "Speak status information."
   (when (ems-interactive-p)
-    (message "Disabled limiting.")))
+    (emacspeak-icon 'task-done) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-do-view (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-do-view :after #'ems--ibuffer-do-view-after)
+
+
+
+
+
+(defun ems--ibuffer-do-view-horizontally-after (&rest _)
   "Speak status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'task-done) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-do-view-horizontally (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-do-view-horizontally :after
+	    #'ems--ibuffer-do-view-horizontally-after)
+
+
+
+
+
+(defun ems--ibuffer-do-view-other-frame-after (&rest _)
   "Speak status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'task-done) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-do-view-other-frame (after emacspeak pre act comp)
-  "Speak status information."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-do-save (after emacspeak pre act comp)
+(advice-add 'ibuffer-do-view-other-frame :after
+	    #'ems--ibuffer-do-view-other-frame-after)
+
+
+
+
+
+(defun ems--ibuffer-do-save-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (message "Saving marked buffers.")
-    (emacspeak-icon 'save-object)))
+    (message "Saving marked buffers.") (emacspeak-icon 'save-object)))
 
-(defadvice  ibuffer-occur-goto-occurence (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-do-save :after #'ems--ibuffer-do-save-after)
+
+
+
+
+
+(defun ems--ibuffer-occur-goto-occurence-after (&rest _)
   "Speak line that becomes current."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
-(defadvice  ibuffer-occur-display-occurence (after emacspeak pre act comp)
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'ibuffer-occur-goto-occurence :after
+	    #'ems--ibuffer-occur-goto-occurence-after)
+
+
+
+
+(defun ems--ibuffer-occur-display-occurence-after (&rest _)
   "Speak line that becomes current."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-speak-line) (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-mark-forward (after emacspeak pre act
-                                       comp)
+
+(advice-add 'ibuffer-occur-display-occurence :after
+	    #'ems--ibuffer-occur-display-occurence-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-forward-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-unmark-forward (after emacspeak pre act
-                                         comp)
+
+(advice-add 'ibuffer-mark-forward :after
+	    #'ems--ibuffer-mark-forward-after)
+
+
+
+
+
+(defun ems--ibuffer-unmark-forward-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'deselect-object)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-unmark-backward (after emacspeak pre act
-                                          comp)
+
+(advice-add 'ibuffer-unmark-forward :after
+	    #'ems--ibuffer-unmark-forward-after)
+
+
+
+
+
+(defun ems--ibuffer-unmark-backward-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'deselect-object)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-unmark-all (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-unmark-backward :after
+	    #'ems--ibuffer-unmark-backward-after)
+
+
+
+
+
+(defun ems--ibuffer-unmark-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'deselect-object)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-toggle-marks (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)))
 
-(defadvice ibuffer-mark-for-delete (after emacspeak pre act comp)
+(advice-add 'ibuffer-unmark-all :after #'ems--ibuffer-unmark-all-after)
+
+
+
+
+
+(defun ems--ibuffer-toggle-marks-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'ibuffer-toggle-marks :after
+	    #'ems--ibuffer-toggle-marks-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-for-delete-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-mark-for-delete-backwards (after emacspeak 
-                                                    pre act comp)
+
+(advice-add 'ibuffer-mark-for-delete :after
+	    #'ems--ibuffer-mark-for-delete-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-for-delete-backwards-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-interactive-filter-by-mode (after emacspeak 
-                                                     pre act comp)
+
+(advice-add 'ibuffer-mark-for-delete-backwards :after
+	    #'ems--ibuffer-mark-for-delete-backwards-after)
+
+
+
+
+
+(defun ems--ibuffer-interactive-filter-by-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'modified-object)
-    (dtk-speak 
-     (concat "Filtered by "
-             (format "%s" 
-                     ;; the following returns a string,, how to remove
-                     ;; the parens?
-                     ibuffer-filtering-qualifiers)))))
+    (dtk-speak
+     (concat "Filtered by " (format "%s" ibuffer-filtering-qualifiers)))))
 
-(defadvice ibuffer-recompile-formats (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-interactive-filter-by-mode :after
+	    #'ems--ibuffer-interactive-filter-by-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-recompile-formats-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Recompiled formats")))
+    (emacspeak-icon 'task-done) (dtk-speak "Recompiled formats")))
 
-(defadvice ibuffer-switch-format  (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-recompile-formats :after
+	    #'ems--ibuffer-recompile-formats-after)
+
+
+
+
+
+(defun ems--ibuffer-switch-format-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Switched formats")))
+    (emacspeak-icon 'task-done) (dtk-speak "Switched formats")))
 
-(defadvice ibuffer-toggle-filter-group (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-switch-format :after
+	    #'ems--ibuffer-switch-format-after)
+
+
+
+
+
+(defun ems--ibuffer-toggle-filter-group-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (let ((name (get-text-property (point) 'ibuffer-filter-group-name)))
+    (let
+	((name (get-text-property (point) 'ibuffer-filter-group-name)))
       (emacspeak-icon 'modified-object)
-      (dtk-speak 
-       (concat "Toggled group " 
-               (format "%s" name))))))
+      (dtk-speak (concat "Toggled group " (format "%s" name))))))
 
-(defadvice ibuffer-do-shell-command-pipe-replace (after emacspeak 
-                                                        pre act comp)
+
+(advice-add 'ibuffer-toggle-filter-group :after
+	    #'ems--ibuffer-toggle-filter-group-after)
+
+
+
+
+
+(defun ems--ibuffer-do-shell-command-pipe-replace-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-do-shell-command-pipe-replace :after
+	    #'ems--ibuffer-do-shell-command-pipe-replace-after)
+
+
+
+
+
+(defun ems--ibuffer-do-shell-command-pipe-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-do-shell-command-pipe :after
+	    #'ems--ibuffer-do-shell-command-pipe-after)
+
+
+
+
+
+(defun ems--ibuffer-do-shell-command-file-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-do-shell-command-file :after
+	    #'ems--ibuffer-do-shell-command-file-after)
+
+
+
+
+
+(defun ems--ibuffer-do-rename-uniquely-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-do-rename-uniquely :after
+	    #'ems--ibuffer-do-rename-uniquely-after)
+
+
+
+
+
+(defun ems--ibuffer-do-replace-regexp-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-do-replace-regexp :after
+	    #'ems--ibuffer-do-replace-regexp-after)
+
+
+
+
+
+(defun ems--ibuffer-filters-to-filter-group-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Group added.")))
 
-(defadvice ibuffer-do-shell-command-pipe (after emacspeak 
-                                                pre act comp)
+
+(advice-add 'ibuffer-filters-to-filter-group :after
+	    #'ems--ibuffer-filters-to-filter-group-after)
+
+
+
+
+
+(defun ems--ibuffer-set-filter-groups-by-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Filtered by major mode.")))
 
-(defadvice ibuffer-do-shell-command-file (after emacspeak 
-                                                pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-do-rename-uniquely (after emacspeak 
-                                             pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+(advice-add 'ibuffer-set-filter-groups-by-mode :after
+	    #'ems--ibuffer-set-filter-groups-by-mode-after)
 
-(defadvice ibuffer-do-replace-regexp (after emacspeak 
-                                            pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-filters-to-filter-group (after emacspeak 
-                                                  pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Group added.")))
 
-(defadvice ibuffer-set-filter-groups-by-mode (after emacspeak 
-                                                    pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Filtered by major mode.")))
 
-(defadvice ibuffer-pop-filter-group (around emacspeak pre act comp)
+
+(defun ems--ibuffer-pop-filter-group-around (orig-fun &rest args)
   "speak."
   (when (ems-interactive-p)
     (let ((name (car (car ibuffer-filter-groups))))
-      ad-do-it
-      (emacspeak-icon 'task-done)
-      (dtk-speak 
-       (concat "Popped group " 
-               (format "%s" name))))))
+      (apply orig-fun args) (emacspeak-icon 'task-done)
+      (dtk-speak (concat "Popped group " (format "%s" name))))))
 
-(defadvice ibuffer-clear-filter-groups (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-pop-filter-group :around
+	    #'ems--ibuffer-pop-filter-group-around)
+
+
+
+
+
+(defun ems--ibuffer-clear-filter-groups-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'task-done)
     (dtk-speak "Cleared all filter groups.")))
 
-(defadvice ibuffer-jump-to-filter-group (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-clear-filter-groups :after
+	    #'ems--ibuffer-clear-filter-groups-after)
+
+
+
+
+
+(defun ems--ibuffer-jump-to-filter-group-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-kill-filter-group (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-jump-to-filter-group :after
+	    #'ems--ibuffer-jump-to-filter-group-after)
+
+
+
+
+
+(defun ems--ibuffer-kill-filter-group-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
-    ;; name is a variable in scope in the advised function
     (dtk-speak (format "Killed %s group." name))))
 
-(defadvice ibuffer-yank-filter-group (around emacspeak pre act comp)
+
+(advice-add 'ibuffer-kill-filter-group :after
+	    #'ems--ibuffer-kill-filter-group-after)
+
+
+
+
+
+(defun ems--ibuffer-yank-filter-group-around (orig-fun &rest args)
   "speak"
   (when (ems-interactive-p)
     (let ((name (car (car ibuffer-filter-group-kill-ring))))
-      (emacspeak-icon 'yank-object)
-      ad-do-it
+      (emacspeak-icon 'yank-object) (apply orig-fun args)
       (dtk-speak (format "Yanked %s group." name)))))
 
-(defadvice ibuffer-filter-disable (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-yank-filter-group :around
+	    #'ems--ibuffer-yank-filter-group-around)
+
+
+
+
+
+(defun ems--ibuffer-filter-disable-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Disabled all filters.")))
+    (emacspeak-icon 'task-done) (dtk-speak "Disabled all filters.")))
 
-(defadvice ibuffer-filter-by-mode (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-filter-disable :after
+	    #'ems--ibuffer-filter-disable-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-mode :after
+	    #'ems--ibuffer-filter-by-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-used-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-used-mode :after
+	    #'ems--ibuffer-filter-by-used-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-name-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-name :after
+	    #'ems--ibuffer-filter-by-name-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-filename-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-filename :after
+	    #'ems--ibuffer-filter-by-filename-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-size-gt-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-size-gt :after
+	    #'ems--ibuffer-filter-by-size-gt-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-size-lt-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-size-lt :after
+	    #'ems--ibuffer-filter-by-size-lt-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-content-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-content :after
+	    #'ems--ibuffer-filter-by-content-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-predicate-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-predicate :after
+	    #'ems--ibuffer-filter-by-predicate-after)
+
+
+
+
+
+(defun ems--ibuffer-filter-by-predicate-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-filter-by-predicate :after
+	    #'ems--ibuffer-filter-by-predicate-after)
+
+
+
+
+
+(defun ems--ibuffer-toggle-sorting-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-toggle-sorting-mode :after
+	    #'ems--ibuffer-toggle-sorting-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-toggle-sorting-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-toggle-sorting-mode :after
+	    #'ems--ibuffer-toggle-sorting-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-invert-sorting-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'ibuffer-invert-sorting :after
+	    #'ems--ibuffer-invert-sorting-after)
+
+
+
+
+
+(defun ems--ibuffer-do-sort-by-major-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Sorted by major mode.")))
 
-(defadvice ibuffer-filter-by-used-mode (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-do-sort-by-major-mode :after
+	    #'ems--ibuffer-do-sort-by-major-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-do-sort-by-alphabetic-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Sorted alphabetically.")))
 
-(defadvice ibuffer-filter-by-name (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-do-sort-by-alphabetic :after
+	    #'ems--ibuffer-do-sort-by-alphabetic-after)
+
+
+
+
+
+(defun ems--ibuffer-do-sort-by-size-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Sorted by size.")))
 
-(defadvice ibuffer-filter-by-filename (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-do-sort-by-size :after
+	    #'ems--ibuffer-do-sort-by-size-after)
+
+
+
+
+
+(defun ems--ibuffer-bs-show-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice ibuffer-filter-by-size-gt (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-bs-show :after #'ems--ibuffer-bs-show-after)
+
+
+
+
+
+(defun ems--ibuffer-bs-toggle-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Toggled show all.")))
 
-(defadvice ibuffer-filter-by-size-lt (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-bs-toggle-all :after
+	    #'ems--ibuffer-bs-toggle-all-after)
+
+
+
+
+
+(defun ems--ibuffer-add-to-tmp-hide-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Buffer hidden.")))
 
-(defadvice ibuffer-filter-by-content (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-add-to-tmp-hide :after
+	    #'ems--ibuffer-add-to-tmp-hide-after)
+
+
+
+
+
+(defun ems--ibuffer-add-to-tmp-show-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'task-done) (dtk-speak "Buffer added.")))
 
-(defadvice ibuffer-filter-by-predicate (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-filter-by-predicate (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+(advice-add 'ibuffer-add-to-tmp-show :after
+	    #'ems--ibuffer-add-to-tmp-show-after)
 
-(defadvice ibuffer-toggle-sorting-mode (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-toggle-sorting-mode (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-invert-sorting (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-do-sort-by-major-mode (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Sorted by major mode.")))
 
-(defadvice ibuffer-do-sort-by-alphabetic (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Sorted alphabetically.")))
+(defun ems--ibuffer-do-kill-lines-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-do-sort-by-size (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Sorted by size.")))
 
-(defadvice ibuffer-bs-show (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+(advice-add 'ibuffer-do-kill-lines :after
+	    #'ems--ibuffer-do-kill-lines-after)
 
-(defadvice ibuffer-bs-toggle-all (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Toggled show all.")))
 
-(defadvice ibuffer-add-to-tmp-hide (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Buffer hidden.")))
 
-(defadvice ibuffer-add-to-tmp-show (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Buffer added.")))
 
-(defadvice ibuffer-do-kill-lines (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice ibuffer-jump-to-buffer (after emacspeak pre act comp)
+(defun ems--ibuffer-jump-to-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ibuffer-speak-buffer-line)))
 
-(defadvice ibuffer-copy-filename-as-kill (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-jump-to-buffer :after
+	    #'ems--ibuffer-jump-to-buffer-after)
+
+
+
+
+
+(defun ems--ibuffer-copy-filename-as-kill-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Buffer added.")))
+    (emacspeak-icon 'task-done) (dtk-speak "Buffer added.")))
 
-(defadvice ibuffer-copy-filename-as-kill (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-copy-filename-as-kill :after
+	    #'ems--ibuffer-copy-filename-as-kill-after)
+
+
+
+
+
+(defun ems--ibuffer-copy-filename-as-kill-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
-    (dtk-speak (format "copied %s filenames." (ibuffer-count-marked-lines)))))
+    (dtk-speak
+     (format "copied %s filenames." (ibuffer-count-marked-lines)))))
 
-(defadvice ibuffer-mark-by-name-regexp (after emacspeak pre act comp)
+
+(advice-add 'ibuffer-copy-filename-as-kill :after
+	    #'ems--ibuffer-copy-filename-as-kill-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-by-name-regexp-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-by-name-regexp :after
+	    #'ems--ibuffer-mark-by-name-regexp-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-by-mode-regexp-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-by-mode-regexp :after
+	    #'ems--ibuffer-mark-by-mode-regexp-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-by-file-name-regexp-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-by-file-name-regexp :after
+	    #'ems--ibuffer-mark-by-file-name-regexp-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-by-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-by-mode :after
+	    #'ems--ibuffer-mark-by-mode-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-modified-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-modified-buffers :after
+	    #'ems--ibuffer-mark-modified-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-unsaved-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-unsaved-buffers :after
+	    #'ems--ibuffer-mark-unsaved-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-dissociated-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-dissociated-buffers :after
+	    #'ems--ibuffer-mark-dissociated-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-help-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-help-buffers :after
+	    #'ems--ibuffer-mark-help-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-compressed-file-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-compressed-file-buffers :after
+	    #'ems--ibuffer-mark-compressed-file-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-old-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-old-buffers :after
+	    #'ems--ibuffer-mark-old-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-special-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-special-buffers :after
+	    #'ems--ibuffer-mark-special-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-read-only-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-read-only-buffers :after
+	    #'ems--ibuffer-mark-read-only-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-mark-dired-buffers-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'ibuffer-mark-dired-buffers :after
+	    #'ems--ibuffer-mark-dired-buffers-after)
+
+
+
+
+
+(defun ems--ibuffer-pop-filter-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
 
-(defadvice ibuffer-mark-by-mode-regexp (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
 
-(defadvice ibuffer-mark-by-file-name-regexp (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
+(advice-add 'ibuffer-pop-filter :after #'ems--ibuffer-pop-filter-after)
 
-(defadvice ibuffer-mark-by-mode (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
 
-(defadvice ibuffer-mark-modified-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
 
-(defadvice ibuffer-mark-unsaved-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-dissociated-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-help-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-compressed-file-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-old-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-special-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-read-only-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-mark-dired-buffers (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)))
-
-(defadvice ibuffer-pop-filter (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
 
 (provide 'emacspeak-ibuffer)
 ;;;  end of file
