@@ -113,7 +113,7 @@ Use `emacsvox-toggle-icons' bound to
   "Toggle use of auditory icons.
 Optional interactive PREFIX arg toggles global value."
   (interactive "P")
-  (cl-declare (special emacsvox-use-icons))
+  
   (setq  emacsvox-use-icons (not emacsvox-use-icons))
   (when prefix (setq-default emacsvox-use-icons emacsvox-use-icons))
   (when (called-interactively-p 'interactive)
@@ -124,7 +124,7 @@ Optional interactive PREFIX arg toggles global value."
 
 (defun emacsvox-icon (icon)
   "Produce an auditory ICON."
-  (cl-declare (special emacsvox-use-icons emacsvox-play-program))
+  
   (when emacsvox-use-icons
     (if   (null emacsvox-play-program) ; serve icon
         (emacsvox-serve-icon icon)
@@ -148,19 +148,19 @@ Value is a string, a fully qualified filename. ")
 
 (defsubst emacsvox-sounds-cache-put (sound file)
   "Map  sound to file."
-  (cl-declare (special emacsvox-sounds-cache))
+  
   (puthash sound file emacsvox-sounds-cache))
 
 (defsubst emacsvox-sounds-cache-get (sound )
   "Return file that is mapped to sound."
-  (cl-declare (special emacsvox-sounds-cache))
+  
   (gethash sound emacsvox-sounds-cache ; or default to button
            (gethash 'button emacsvox-sounds-cache)))
 
 (defun emacsvox-sounds-resource (icon)
   "Return  resource, either a fully qualified file name or an
 icon-name, as string."
-  (cl-declare (special emacsvox-sounds-cache))
+  
   (let ((f (emacsvox-sounds-cache-get icon)))
     (cond
      ((null emacsvox-play-program) f)
@@ -208,7 +208,7 @@ It is called  to cache sounds in our theme and prompts directories."
       "Theme: " '("3d" "chimes")
       nil 'must-match nil nil "chimes")
      emacsvox-sounds-dir)))
-  (cl-declare (special emacsvox-play-program emacsvox-sounds-dir))
+  
   (setq theme (or theme (expand-file-name "chimes" emacsvox-sounds-dir)))
   (emacsvox-sounds-cache-prompts)
   (emacsvox-sounds-cache-rebuild theme)
@@ -256,7 +256,7 @@ None: For systems that rely on the speech server playing the icon."
 Used by TTS layer to play icons that are found as text property
 `auditory-icon' on text being spoken.
 This is a private function and  might go away."
-  (cl-declare (special dtk-speaker-process))
+  
   (process-send-string
    dtk-speaker-process
    (format "a %s\n" (emacsvox-sounds-resource icon))))
@@ -264,7 +264,7 @@ This is a private function and  might go away."
 ;;;;   serve an auditory icon
 (defun emacsvox-serve-icon (icon)
   "Serve auditory icon ICON."
-  (cl-declare (special dtk-speaker-process))
+  
   (process-send-string
    dtk-speaker-process
    (format "p %s\n" (emacsvox-sounds-cache-get icon))))
@@ -278,7 +278,7 @@ This is a private function and  might go away."
   "Produce auditory icon ICON using a local player.
 Linux: Pipewire and Pulse: pactl.
 without Pipewire/Pulse: play from sox."
-  (cl-declare (special emacsvox-play-program ems--play-args))
+  
   (let ((process-connection-type nil))
     (start-process
      "Play" nil emacsvox-play-program ems--play-args

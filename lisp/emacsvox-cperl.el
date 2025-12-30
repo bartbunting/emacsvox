@@ -76,7 +76,7 @@
 (defun ems--cperl-linefeed-around (orig-fun &rest args)
   "Speak the previous line if line echo is on. \n  See command \\[emacsvox-toggle-line-echo].\nOtherwise cue user to the line just created. "
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-line-echo))
+    
     (cond
      ((ems-interactive-p)
       (cond (emacsvox-line-echo (emacsvox-speak-line))

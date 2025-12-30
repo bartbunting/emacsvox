@@ -120,7 +120,7 @@
 
 
 (defun ems--transient-toggle-common-after (&rest _)
-  "speak." (cl-declare (special transient-show-common-commands))
+  "speak." 
   (when (ems-interactive-p)
     (dtk-stop 'all)
     (emacsvox-icon (if transient-show-common-commands 'on 'off))))
@@ -182,7 +182,7 @@
 (define-derived-mode emacsvox-transient-mode special-mode
   "Browse current transient choices"
   "emacsvox integration with Transient."
-  (cl-declare (special transient-sticky-map))
+  
   (use-local-map transient-sticky-map)
   (local-set-key (kbd "M-n") 'emacsvox-transient-next-section)
   (local-set-key (kbd "M-p") 'emacsvox-transient-previous-section)
@@ -211,7 +211,7 @@
 (defun ems--transient-suspend-around (orig-fun &rest args)
   "Pop to *Transient-emacsvox* buffer where the message emitted by\nthe transient can be browsed.\nPress `r' to resume the suspended transient."
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-transient-cache))
+    
     (cond
      ((ems-interactive-p)
       (let
@@ -263,7 +263,7 @@
 
 (defun emacsvox-transient-post-hook ()
   "Actions to execute after transient is done."
-  (cl-declare (special transient--stack))
+  
   (unless transient--stack
     (dtk-stop 'all)
     (emacsvox-icon 'task-done)

@@ -194,7 +194,7 @@ Full List Of Keybindings:
 
 (defun emacsvox-table-synchronize-display ()
   "Bring visual display in sync with internal representation"
-  (cl-declare (special emacsvox-table ems--positions))
+  
   (let ((row (emacsvox-table-current-row emacsvox-table))
         (column (emacsvox-table-current-column emacsvox-table))
         (width (frame-width)))
@@ -212,7 +212,7 @@ Full List Of Keybindings:
 (defun  emacsvox-table-speak-coordinates ()
   "Speak current table coordinates."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (message "Row %s Column %s"
            (emacsvox-table-current-row emacsvox-table)
@@ -221,7 +221,7 @@ Full List Of Keybindings:
 (defun  emacsvox-table-speak-dimensions ()
   "Speak current table dimensions."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (message "%s by %s table"
            (emacsvox-table-num-rows emacsvox-table)
@@ -230,7 +230,7 @@ Full List Of Keybindings:
 (defun emacsvox-table-speak-current-element ()
   "Speak current table element"
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (message
    (format "%s" (emacsvox-table-current-element emacsvox-table))))
@@ -238,7 +238,7 @@ Full List Of Keybindings:
 (defun emacsvox-table-speak-row-header-and-element ()
   "Speak  row header and table element"
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (let ((element (emacsvox-table-current-element emacsvox-table))
         (head
@@ -255,7 +255,7 @@ Full List Of Keybindings:
 (defun emacsvox-table-speak-column-header-and-element ()
   "Speak  column header and table element"
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (let ((head
          (format
@@ -280,7 +280,7 @@ Full List Of Keybindings:
 (defun emacsvox-table-speak-both-headers-and-element ()
   "Speak  both row and column header and table element"
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (let ((element (emacsvox-table-current-element emacsvox-table))
         (col-head
@@ -308,7 +308,7 @@ Full List Of Keybindings:
                                                     row-head-p
                                                     col-head-p)
   "Return table element. Optional args specify  if we return any headers."
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (let ((col-head nil)
         (row-head nil))
@@ -380,7 +380,7 @@ Full List Of Keybindings:
   "Speaks a table row after applying a specified row filter.
 Optional prefix arg prompts for a new filter."
   (interactive "P")
-  (cl-declare (special emacsvox-table-speak-row-filter emacsvox-table))
+  
   (and emacsvox-table-speak-row-filter
        (push emacsvox-table-speak-row-filter minibuffer-default))
   (unless (and  emacsvox-table-speak-row-filter
@@ -463,7 +463,7 @@ Optional prefix arg prompts for a new filter."
 
 (defun emacsvox-table-point-motion-hook (old new)
   "Bring internal representation in sync with visual display"
-  (cl-declare (special emacsvox-table))
+  
   (condition-case nil
       (emacsvox-table-goto-cell
        emacsvox-table
@@ -493,7 +493,7 @@ Optional prefix arg prompts for a new filter."
 ;;;###autoload
 (defun emacsvox-table-prepare-table-buffer (table buffer)
   "Prepare tabular data."
-  (cl-declare (special emacsvox-table ems--positions))
+  
   (with-current-buffer buffer
     (emacsvox-table-mode)
     (let ((i 0)
@@ -546,7 +546,7 @@ CalTrain schedules.  Execute command `describe-mode' bound to
 \\[describe-mode] in a buffer that is in emacsvox table mode to read
 the documentation on the table browser."
   (interactive "FEnter filename containing table data: ")
-  (cl-declare (special ems--positions))
+  
   (let ((buffer (get-buffer-create (format  "*%s*"
                                             (file-name-nondirectory filename))))
         (data nil)
@@ -644,7 +644,7 @@ The processed  data is  presented using emacsvox table navigation. "
   (interactive "sURL:\nP")
   (unless (or buffer-name (stringp buffer-name))
     (setq buffer-name "CSV Data Table"))
-  (cl-declare (special emacsvox-curl g-curl-options))
+  
   (url-retrieve url #'emacsvox-table-render-csv-url  (list buffer-name)))
 
 ;;;  Processing a region of tabular data
@@ -660,7 +660,7 @@ table elements")
   "Interactively select the kind of automatic speech to produce when
 browsing table elements"
   (interactive)
-  (cl-declare (special emacsvox-table-speak-element))
+  
   (message emacsvox-table-select-automatic-speaking-method-prompt)
   (let ((key (read-char)))
     (setq emacsvox-table-speak-element
@@ -687,7 +687,7 @@ browsing table elements"
 (defun emacsvox-table-next-row (&optional count)
   "Move to the next row if possible"
   (interactive "p")
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (setq count (or count 1))
   (emacsvox-table-move-down emacsvox-table count)
@@ -697,7 +697,7 @@ browsing table elements"
 (defun emacsvox-table-previous-row (&optional count)
   "Move to the previous row if possible"
   (interactive "p")
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (setq count (or count 1))
   (emacsvox-table-move-up emacsvox-table count)
@@ -707,7 +707,7 @@ browsing table elements"
 (defun emacsvox-table-next-column (&optional count)
   "Move to the next column if possible"
   (interactive "p")
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (setq count (or count 1))
   (emacsvox-table-move-right emacsvox-table count)
@@ -717,7 +717,7 @@ browsing table elements"
 (defun emacsvox-table-previous-column (&optional count)
   "Move to the previous column  if possible"
   (interactive "p")
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (setq count (or count 1))
   (emacsvox-table-move-left emacsvox-table count)
@@ -727,7 +727,7 @@ browsing table elements"
 (defun emacsvox-table-goto (row column)
   "Prompt for a table cell coordinates and jump to it."
   (interactive "nRow:\nNColumn:")
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (emacsvox-table-goto-cell emacsvox-table row column)
   (emacsvox-table-synchronize-display)
@@ -737,7 +737,7 @@ browsing table elements"
 (defun emacsvox-table-goto-top ()
   "Goes to the top of the current column."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (emacsvox-table-goto-cell
    emacsvox-table
@@ -749,7 +749,7 @@ browsing table elements"
 (defun emacsvox-table-goto-bottom ()
   "Goes to the bottom of the current column."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (emacsvox-table-goto-cell
    emacsvox-table
@@ -764,7 +764,7 @@ browsing table elements"
 (defun emacsvox-table-goto-left ()
   "Goes to the left of the current row."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (emacsvox-table-goto-cell
    emacsvox-table
@@ -776,7 +776,7 @@ browsing table elements"
 (defun emacsvox-table-goto-right ()
   "Goes to the right of the current row."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (emacsvox-table-goto-cell
    emacsvox-table
@@ -794,7 +794,7 @@ row or column to search and pattern to look for.    If there is a match, makes
 the matching cell current. When called from a program, `what' can
   be either `row' or `column'."
   (interactive "P")
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (message "Search   in: r row c column")
   (let* ((row (emacsvox-table-current-row emacsvox-table))
@@ -846,7 +846,7 @@ the matching cell current. When called from a program, `what' can
 row or column to search and pattern to look for.  If there is a
 match, makes the matching row or column current."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (message
    "Search headers : r row c column")
@@ -894,7 +894,7 @@ match, makes the matching row or column current."
 (defun emacsvox-table-copy-current-element-to-kill-ring ()
   "Copy current table element to kill ring."
   (interactive)
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (kill-new  (emacsvox-table-current-element emacsvox-table))
   (when (called-interactively-p 'interactive) 
@@ -903,7 +903,7 @@ match, makes the matching row or column current."
 (defun emacsvox-table-copy-current-element-to-register (register)
   "Copy current table element to specified register."
   (interactive (list (register-read-with-preview "Copy to register: ")))
-  (cl-declare (special emacsvox-table))
+  
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (set-register register (emacsvox-table-current-element
                           emacsvox-table))
@@ -935,11 +935,11 @@ match, makes the matching row or column current."
 table markup.")
 
 (defun emacsvox-table-markup-set-table (mode markup)
-  (cl-declare (special emacsvox-table-markup-table))
+  
   (setf  (gethash mode emacsvox-table-markup-table) markup))
 
 (defun emacsvox-table-markup-get-table (mode)
-  (cl-declare (special emacsvox-table-markup-table))
+  
   (or (gethash mode emacsvox-table-markup-table)
       (gethash 'fundamental-mode emacsvox-table-markup-table)))
 
@@ -1018,7 +1018,7 @@ table markup.")
   "Copy table in current buffer to the table clipboard.
 Current buffer must be in emacsvox-table mode."
   (interactive)
-  (cl-declare (special emacsvox-table-clipboard emacsvox-table))
+  
   (cl-assert (eq   major-mode 'emacsvox-table-mode)  nil "Not in table mode.")
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
   (setq emacsvox-table-clipboard emacsvox-table)
@@ -1029,7 +1029,7 @@ Current buffer must be in emacsvox-table mode."
 Use the major  mode of this buffer to  decide what kind of table
 markup to use."
   (interactive)
-  (cl-declare (special emacsvox-table-clipboard))
+  
   (let ((mode  major-mode)
         (markup nil)
         (table (emacsvox-table-elements emacsvox-table-clipboard))
@@ -1128,7 +1128,7 @@ markup to use."
   "Generates a key for current context.
 The key is used when persisting out the filter setting for
 future  use."
-  (cl-declare (special  major-mode))
+  
   (or (buffer-file-name)
       (format "%s:%s" (buffer-name) major-mode)))
 
@@ -1137,12 +1137,12 @@ future  use."
 
 (defun emacsvox-table-ui-filter-set (key filter)
   "Map filter to key."
-  (cl-declare (special emacsvox-table-ui-filter-table))
+  
   (setf (gethash key emacsvox-table-ui-filter-table) filter))
 
 (defun emacsvox-table-ui-filter-get (key)
   "Lookup key and return corresponding filter. "
-  (cl-declare (special emacsvox-table-ui-filter-table))
+  
   (gethash key emacsvox-table-ui-filter-table))
 
 (defun emacsvox-table-ui-filter-load (file)
@@ -1166,7 +1166,7 @@ future  use."
     (read-file-name "Save table-ui-filter settings  to file: "
                     emacsvox-user-directory
                     ".table-ui-filter")))
-  (cl-declare (special emacsvox-user-directory))
+  
   (let ((buffer (find-file-noselect
                  (expand-file-name file
                                    emacsvox-user-directory))))

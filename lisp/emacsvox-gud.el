@@ -50,7 +50,7 @@
 
 (defun ems--gud-display-line-after (&rest _)
   "Speak the error line"
-  (cl-declare (special gud-overlay-arrow-position))
+  
   (let ((marker gud-overlay-arrow-position))
     (emacsvox-icon 'large-movement)
     (and marker (marker-buffer marker) (marker-position marker)

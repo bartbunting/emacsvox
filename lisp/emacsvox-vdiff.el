@@ -201,7 +201,7 @@
 (eval-after-load
     "vdiff"
   `(progn
-     (cl-declare (special vdiff-mode-prefix-map vdiff-mode-map))
+     
      (define-key vdiff-mode-prefix-map "h" 'vdiff-hydra/body)
      (define-key vdiff-mode-map (kbd "C-c") vdiff-mode-prefix-map)
      (define-key vdiff-mode-prefix-map   " " 'emacsvox-vdiff-speak-this-hunk)

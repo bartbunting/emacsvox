@@ -241,7 +241,7 @@
 (defun ems--rmail-next-labeled-message-around (orig-fun &rest args)
   "speak"
   (let ((result (apply orig-fun args)))
-    (cl-declare (special rmail-current-message))
+    
     (cond
      ((ems-interactive-p)
       (let ((original rmail-current-message))
@@ -359,7 +359,7 @@
 (defun emacsvox-rmail-summarize-current-message ()
   "Summarize current message"
   (interactive)
-  (cl-declare (special rmail-current-message))
+  
   (emacsvox-rmail-summarize-message rmail-current-message))
 (defun  emacsvox-rmail-speak-current-message-labels ()
   "Speak labels of current message"

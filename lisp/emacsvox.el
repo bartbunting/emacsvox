@@ -98,7 +98,7 @@ the Emacsvox desktop.")
   (add-hook 'doc-view-mode-hook #'doc-view-open-text))
 
 (with-eval-after-load "gptel"
-  (cl-declare (special gptel-post-response-functions))
+  
   (add-hook
    'gptel-post-stream-hook
    #'(lambda nil (emacsvox-icon 'tick-tick)))
@@ -333,7 +333,7 @@ the Emacsvox desktop.")
 ;;;###autoload
 (defsubst emacsvox-setup-programming-mode ()
   "Setup programming mode."
-  (cl-declare (special dtk-split-caps emacsvox-audio-indentation dtk-caps))
+  
   (dtk-set-punctuations 'all)
   (or dtk-split-caps (dtk-toggle-split-caps))
   (or dtk-caps (dtk-toggle-caps))
@@ -344,7 +344,7 @@ the Emacsvox desktop.")
   "Setup programming modes."
   (add-hook 'prog-mode-hook #'emacsvox-setup-programming-mode)
   (with-eval-after-load "generic-x"
-    (cl-declare (special generic-extras-enable-list))
+    
     (mapc
      #'(lambda (hook)
          (add-hook hook #'emacsvox-setup-programming-mode ))
@@ -367,7 +367,7 @@ This cannot be set via custom; set this in your startup file before
 
 (defsubst emacsvox-easter-egg ()
   "Easter Egg"
-  (cl-declare (special emacsvox-play))
+  
   (let ((f (expand-file-name "ai/01-gemini.ogg" emacsvox-etc-directory)))
     (when
         (and

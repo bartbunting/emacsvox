@@ -85,7 +85,7 @@ Returns a string with appropriate personality."
 
 (defun emacsvox-widget-help-echo (w)
   "Return help-echo with appropriate personality."
-  (cl-declare (special voice-animate))
+  
   (let ((inhibit-read-only t)
         (h (widget-get w :help-echo))
         (help nil))
@@ -720,7 +720,7 @@ widget before summarizing."
 
 (defun emacsvox-widget-create-voice-selector ()
   "Create a suitable voice selector widget."
-  (cl-declare (special dectalk-voice-table))
+  
   (let ((w
          (widget-create 'voice
                         :tag "voices")))

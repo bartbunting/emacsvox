@@ -91,7 +91,7 @@
 (defun emacsvox-sdcv-update-dictionary-list ()
   "Update sdcv dictionary lists if necessary by examining
 /usr/share/sdcv/dict"
-  (cl-declare (special sdcv-dictionary-simple-list))
+  
   (let ((installed
          (json-parse-string
           (shell-command-to-string "sdcv -jnl ")
@@ -103,7 +103,7 @@
 
 (defun emacsvox-sdcv-setup ()
   "Setup Emacsvox for SDCV."
-  (cl-declare (special sdcv-mode-map))
+  
   (emacsvox-sdcv-update-dictionary-list)
   (cl-loop
    for binding in

@@ -64,7 +64,7 @@
 ;;;   functions:
 (defun emacsvox-calendar-sort-diary-entries ()
   "Sort entries in diary entries list."
-  (cl-declare (special diary-entries-list))
+  
   (when(and  (boundp 'diary-entries-list)
              diary-entries-list)
     (setq diary-entries-list
@@ -449,7 +449,7 @@
 (defun ems--calendar-read-around (orig-fun &rest args)
   "Record what was read"
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-calendar-user-input))
+    
     (apply orig-fun args) (setq emacsvox-calendar-user-input result)
     result))
 
@@ -602,7 +602,7 @@
 
 (defun emacsvox-calendar-setup()
   "Set up appropriate bindings for calendar"
-  (cl-declare (special calendar-buffer calendar-mode-map emacsvox-prefix))
+  
   (save-current-buffer
     (set-buffer calendar-buffer)
     (local-unset-key emacsvox-prefix)
@@ -634,7 +634,7 @@
 
 (defun emacsvox-appt-delete-display ()
   "Function to delete appointment message"
-  (cl-declare (special appt-buffer-name))
+  
   (and (get-buffer appt-buffer-name)
        (save-current-buffer
          (set-buffer appt-buffer-name)
@@ -649,7 +649,7 @@
 (defun emacsvox-appt-repeat-announcement ()
   "Speaks the most recently displayed appointment message if any."
   (interactive)
-  (cl-declare (special appt-buffer-name))
+  
   (let  ((appt-buffer (get-buffer appt-buffer-name)))
     (cond
      (appt-buffer
@@ -694,7 +694,7 @@ To use, configure variable gmaps-my-address via M-x customize-variable."
 
 (defun ems--calendar-sunrise-sunset-around (orig-fun &rest args)
   "Like calendar's sunrise-sunset, but speaks location intelligently."
-  (cl-declare (special gmaps-my-address))
+  
   (cond
    ((and (boundp 'gmaps-my-address) gmaps-my-address
 	 (ems-interactive-p))

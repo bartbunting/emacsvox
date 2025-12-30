@@ -149,7 +149,7 @@
 
 
 (defun ems--bsh-after (&rest _)
-  "speak" (cl-declare (special emacsvox-comint-autospeak))
+  "speak" 
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object)
     (setq emacsvox-comint-autospeak nil) (emacsvox-speak-mode-line)))
@@ -162,7 +162,7 @@
 
 
 (defun ems--jdee-run-after (&rest _)
-  "speak" (cl-declare (special emacsvox-comint-autospeak))
+  "speak" 
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object)
     (setq emacsvox-comint-autospeak nil) (emacsvox-speak-mode-line)))
@@ -472,7 +472,7 @@
 (defun ems--jdee-xref-next-caller-around (orig-fun &rest args)
   "Speak line we jumped to.\nIf we are on the last call, do nothing."
   (let ((result (apply orig-fun args)))
-    (cl-declare (special jdee-xref-stack))
+    
     (cond
      ((and (ems-interactive-p) (car jdee-xref-stack))
       (apply orig-fun args) (emacsvox-icon 'large-movement)

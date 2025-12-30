@@ -64,7 +64,7 @@
 
 (defun emacsvox-proced-update-fields ()
   "Updates cache of field-name .column-positions alist."
-  (cl-declare (special proced-header-line emacsvox-proced-fields))
+  
   (let ((positions nil)
         (next nil)
         (header proced-header-line)
@@ -101,12 +101,12 @@
 
 (defun emacsvox-proced-field-to-position (field)
   "Return column position of this field."
-  (cl-declare (special emacsvox-proced-fields))
+  
   (cdr (assoc-string field emacsvox-proced-fields)))
 
 (defun emacsvox-proced-position-to-field (pos)
   "Return field  for this position."
-  (cl-declare (special emacsvox-proced-fields))
+  
   (let ((fields emacsvox-proced-fields)
         (field nil)
         (range nil)
@@ -171,7 +171,7 @@
 (defun emacsvox-proced-next-field ()
   "Navigate to next field."
   (interactive)
-  (cl-declare (special emacsvox-proced-fields))
+  
   (let ((tabs emacsvox-proced-fields))
     (while
         (and tabs
@@ -190,7 +190,7 @@
 (defun emacsvox-proced-previous-field ()
   "Navigate to previous field."
   (interactive)
-  (cl-declare (special emacsvox-proced-fields))
+  
   (let ((tabs emacsvox-proced-fields)
         (target nil))
     (forward-char -1)
@@ -222,7 +222,7 @@
          (cdr (assoc (get-text-property (point) 'proced-pid)
                      proced-process-alist)))
         nil t nil)))))
-  (cl-declare (special proced-process-alist))
+  
   (let ((value
          (cdr
           (assoc
@@ -233,7 +233,7 @@
 
 (defun emacsvox-proced-add-keys ()
   "Add additional keybindings for emacsvox."
-  (cl-declare (special proced-mode-map))
+  
   (define-key proced-mode-map "a" 'emacsvox-proced-speak-args)
   (define-key proced-mode-map "n" 'emacsvox-proced-next-line)
   (define-key proced-mode-map "p" 'emacsvox-proced-previous-line)
@@ -251,7 +251,7 @@
 
 (defun emacsvox-proced-update-process-cache ()
   "Updated display cache "
-  (cl-declare (special emacsvox-proced-process-cache))
+  
   (let ((cache nil))
     (save-excursion
       (goto-char (point-min))
@@ -272,7 +272,7 @@
     (completing-read
      "Jump to process: "
      emacsvox-proced-process-cache)))
-  (cl-declare (special emacsvox-proced-process-cache))
+  
   (let ((pos (cl-position name  emacsvox-proced-process-cache
                           :test #'string-equal)))
     (cond

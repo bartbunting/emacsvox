@@ -256,7 +256,7 @@ with broken NCX files."
 
 (defun emacsvox-calibredb-setup ()
   "Setup Emacsvox for Calibredb."
-  (cl-declare (special calibredb-search-mode-map))
+  
   (define-key calibredb-search-mode-map "E" 'emacsvox-calibredb-epub-eww))
 
 (add-hook 'calibredb-search-mode-hook 'emacsvox-calibredb-setup)

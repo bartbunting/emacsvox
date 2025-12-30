@@ -56,7 +56,7 @@
 ;; Play an auditory icon as you display the prompt
 (defun emacsvox-eshell-prompt-function ()
   "Play auditory icon for prompt."
-  (cl-declare (special eshell-last-command-status))
+  
   (cond
    ((= 0 eshell-last-command-status)
     (emacsvox-icon 'item))

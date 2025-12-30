@@ -76,7 +76,7 @@
 
 (defun emacsvox-speak-adjust-clause-boundaries ()
   "Adjust clause boundaries so that newlines dont delimit clauses."
-  (cl-declare (special dtk-chunk-separator-syntax))
+  
   (setq dtk-chunk-separator-syntax ".)$\""))
 ;;; Helper: Read URL
 
@@ -100,7 +100,7 @@
 
 (defun ems--subdirs-recursively (d)
   "Recursive list of  subdirs"
-  (cl-declare (special ems--subdirs-filter))
+  
   (let ((result (list d))
         (subdirs (ems--subdirs d)))
     (cond
@@ -216,7 +216,7 @@ message area.  You can use command
 (defun emacsvox-shell-command (command)
   "Run shell command COMMANDAND speak its output."
   (interactive "sCommand:")
-  (cl-declare (special default-directory))
+  
   (let ((directory default-directory)
         (output (get-buffer-create "*Emacsvox Shell Command*")))
     (with-current-buffer output
@@ -245,7 +245,7 @@ message area.  You can use command
 (defun emacsvox-view-notifications ()
   "Display notifications."
   (interactive)
-  (cl-declare (special emacsvox-notifications-buffer))
+  
   (unless (buffer-live-p emacsvox-notifications-buffer)
     (setq emacsvox-notifications-buffer (emacsvox--notifications-init)))
   (emacsvox-icon 'open-object)
@@ -268,7 +268,7 @@ message area.  You can use command
 
 (defun emacsvox-log-notification (text)
   "Log a notification in our notifications buffer."
-  (cl-declare (special emacsvox-notifications-buffer))
+  
   (unless (buffer-live-p emacsvox-notifications-buffer)
     (setq emacsvox-notifications-buffer (emacsvox--notifications-init)))
   (with-current-buffer emacsvox-notifications-buffer
@@ -387,9 +387,6 @@ Argument BODY specifies forms to execute."
 Here, paragraph is taken to mean a chunk of text preceded by a blank line.
 Useful to do this before you listen to an entire buffer."
   (interactive)
-  (cl-declare (special
-               emacsvox-speak-paragraph-personality
-               emacsvox-speak-voice-annotated-paragraphs))
   (when
       (and  emacsvox-speak-paragraph-personality
             (null emacsvox-speak-voice-annotated-paragraphs)) ; memoized
@@ -503,7 +500,7 @@ current local  value to the result.")
 
 (defun emacsvox-speak-line-apply-column-filter (line &optional invert)
   "Apply column filter."
-  (cl-declare (special emacsvox-speak-line-column-filter))
+  
   (let ((filter emacsvox-speak-line-column-filter)
         (l (length line))
         (pair nil)
@@ -539,7 +536,7 @@ emacsvox-speak-filter-table)\n" k v)))
 
 (defun emacsvox-speak-lookup-persistent-filter (key)
   "Lookup a filter setting we may have persisted."
-  (cl-declare (special emacsvox-speak-filter-table))
+  
   (or
    (gethash
     (if (symbolp key) key (intern key))
@@ -548,7 +545,7 @@ emacsvox-speak-filter-table)\n" k v)))
 
 (defun emacsvox-speak-set-persistent-filter (key value)
   "Persist filter setting for future use."
-  (cl-declare (special emacsvox-speak-filter-table))
+  
   (setf (gethash (intern key) emacsvox-speak-filter-table)
         value))
 
@@ -727,15 +724,6 @@ before-string, or after-string) is indicated with auditory icon
 `left', `right', or `more' as appropriate.  These can then be
 spoken using command \\[emacsvox-speak-overlay-properties]."
   (interactive "P")
-  (cl-declare (special
-               voice-animate voice-indent linum-mode
-               dtk-punctuation-mode dtk-cleanup-repeats
-               emacsvox-speak-line-invert-filter
-               emacsvox-speak-blank-line-regexp
-               ems--speak-max-length emacsvox-show-point
-               emacsvox-decoration-rule emacsvox-horizontal-rule
-               emacsvox-unspeakable-rule
-               emacsvox-audio-indentation))
   (dtk-stop 'all)
   (when (listp arg) (setq arg (car arg)))
   (let* ((inhibit-field-text-motion t)
@@ -875,7 +863,7 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
   "Speaks current visual line.
 Cues the start of a physical line with auditory icon `left'."
   (interactive)
-  (cl-declare (special  emacsvox-show-point))
+  
   (let ((inhibit-field-text-motion t)
         (inhibit-read-only t)
         (start nil)
@@ -905,7 +893,7 @@ Local to each buffer.  Used to decide if we  spell or speak the word. ")
 
 (defun emacsvox-speak-spell-word (word)
   "Spell WORD."
-  (cl-declare (special voice-animate))
+  
   (let ((result "")
         (char-string ""))
     (cl-loop for char across word
@@ -934,7 +922,7 @@ Negative prefix arg speaks from start of word to point.
 If executed  on the same buffer position a second time, the word is
 spelled out  instead of being spoken."
   (interactive "P")
-  (cl-declare (special emacsvox-speak-last-spoken-word-position))
+  
   (when (listp arg) (setq arg (car arg)))
   (save-excursion
     (let ((orig (point))
@@ -1036,7 +1024,7 @@ spelled out  instead of being spoken."
 (defun emacsvox-get-phonetic-string (char)
   "Return the phonetic string for this CHAR or its upper case equivalent.
 char is assumed to be one of a--z."
-  (cl-declare (special emacsvox-char-to-phonetic-table))
+  
   (let ((char-string (char-to-string char)))
     (or (cdr
          (assoc char-string emacsvox-char-to-phonetic-table))
@@ -1310,7 +1298,7 @@ arrived mail."
 
 (defun emacsvox-mail-alert-user ()
   "Alerts user about the arrival of new mail."
-  (cl-declare (special emacsvox-mail-spool-file))
+  
   (when (and emacsvox-mail-spool-file
              (emacsvox-mail-alert-user-p emacsvox-mail-spool-file))
     (emacsvox-icon 'new-mail)))
@@ -1547,7 +1535,7 @@ Interactive prefix arg speaks buffer info."
 
 (defsubst ems--show-current-volume ()
   "volume display in minor-mode-line"
-  (cl-declare (special ems--vol-cmd))
+  
   (propertize
    (format " %s " (string-trim (shell-command-to-string ems--vol-cmd)))
    'personality 'voice-bolden))
@@ -1560,7 +1548,7 @@ Interactive prefix arg speaks buffer info."
 Optional interactive prefix arg `log-msg' logs spoken info to
 *Messages*."
   (interactive "P")
-  (cl-declare (special minor-mode-alist ems--vol-cmd))
+  
   (let* ((emacsvox-speak-show-volume ems--vol-cmd)
          (info (format-mode-line minor-mode-alist)))
     (when log-msg (ems--log-message info))
@@ -1708,7 +1696,7 @@ Optional second arg `set' sets the TZ environment variable as well."
 (defun emacsvox-speak-brief-time ()
   "Time in brief"
   (interactive)
-  (cl-declare (special emacsvox-speak-time-brief-format))
+  
   (emacsvox-icon 'tick-tick)
   (emacsvox-pip (format-time-string emacsvox-speak-time-brief-format)))
 
@@ -1719,7 +1707,7 @@ Optional interactive prefix arg `C-u'invokes world clock.
 Timezone is specified using minibuffer completion.
 Second interactive prefix sets clock to new timezone."
   (interactive "P")
-  (cl-declare (special emacsvox-speak-time-format))
+  
   (emacsvox-icon 'time)
   (cond
    (world (call-interactively 'emacsvox-speak-world-clock))
@@ -1763,7 +1751,7 @@ Second interactive prefix sets clock to new timezone."
   "Speaks time value specified as seconds  since epoch."
   (interactive
    (list (read-minibuffer "Seconds: " (word-at-point))))
-  (cl-declare (special emacsvox-speak-time-format))
+  
   (message
    (format-time-string
     emacsvox-speak-time-format (seconds-to-time seconds))))
@@ -2017,7 +2005,7 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
 (defun emacsvox-speak-next-field ()
   "Move to and speak next field."
   (interactive)
-  (cl-declare (special inhibit-field-text-motion))
+  
   (let ((inhibit-field-text-motion t))
     (when
         (goto-char (next-single-property-change (point) 'field))
@@ -2026,7 +2014,7 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
 (defun emacsvox-speak-previous-field ()
   "Move to previous field and speak it."
   (interactive)
-  (cl-declare (special inhibit-field-text-motion))
+  
   (let ((inhibit-field-text-motion t))
     (when
         (goto-char (previous-single-property-change (point) 'field))
@@ -2052,7 +2040,7 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
   "Speak the last message from Emacs once again.
 The message is also placed in the kill ring for convenient yanking "
   (interactive "P")
-  (cl-declare (special emacsvox-last-message))
+  
   (when  (and emacsvox-last-message (called-interactively-p 'interactive))
     (kill-new emacsvox-last-message))
   (cond
@@ -2179,7 +2167,7 @@ Numeric prefix arg COUNT specifies number of lines to move."
 Speaks entire window irrespective of point.  Semantics of `other'
 is the same as for the Emacs builtin `other-window'."
   (interactive "P")
-  (cl-declare (special last-input-event))
+  
   (let* ((window
           (cond
            ((not (called-interactively-p 'interactive)) arg)
@@ -2341,7 +2329,7 @@ Argument O specifies overlay."
 (defun emacsvox-switch-to-reference-buffer ()
   "Switch back to buffer that generated completions."
   (interactive)
-  (cl-declare (special completion-reference-buffer))
+  
   (if completion-reference-buffer
       (switch-to-buffer completion-reference-buffer)
     (error "Reference buffer not found."))
@@ -2354,7 +2342,7 @@ Argument O specifies overlay."
 typed. If no such group exists, then we try to search for that
 char, or dont move. "
   (interactive)
-  (cl-declare (special last-input-event))
+  
   (let ((pattern
          (format
           "[ \t\n]%s%c"
@@ -2397,7 +2385,7 @@ char, or dont move. "
 
 (defun emacsvox-mark-speak-mark-line ()
   "Helper to speak line containing mark."
-  (cl-declare (special voice-animate))
+  
   (emacsvox-icon 'mark-object)
   (ems-set-personality-temporarily (point) (1+ (point))
                                    voice-animate
@@ -2407,7 +2395,7 @@ char, or dont move. "
   "Cycle backward through the mark ring.
 To cycle forward, use pop-to-mark-command bound to \\[pop-to-mark-command] "
   (interactive)
-  (cl-declare (special mark-ring))
+  
   (unless mark-ring (error "Mark ring is empty."))
   (let ((target (elt mark-ring (1- (length mark-ring)))))
     (when target
@@ -2450,7 +2438,7 @@ This is typically used to load up settings that are specific to
 an electronic book consisting of many files in the same
 directory."
   (interactive "DDirectory")
-  (cl-declare (special emacsvox-speak-directory-settings default-directory))
+  
   (unless dir (setq dir default-directory))
   (ems-with-messages-silenced
    (let ((emacsvox-speak-messages nil)
@@ -2479,7 +2467,7 @@ directory."
 streams. Runs `emacsvox-silence-hook' which can be used to
 configure which media players get silenced or paused/resumed."
   (interactive)
-  (cl-declare (special emacsvox-silence-hook))
+  
   (dtk-stop 'all)
   (run-hooks 'emacsvox-silence-hook))
 
@@ -2530,7 +2518,7 @@ This function is sensitive to calendar mode when prompting."
 (defun emacsvox-open-info ()
   "Open Emacsvox Info Manual."
   (interactive)
-  (cl-declare (special emacsvox-info-directory))
+  
   (funcall-interactively
    #'info
    (expand-file-name "emacsvox.info" emacsvox-info-directory)
@@ -2572,7 +2560,7 @@ Arranges for `VAR' to be restored when `file' is loaded."
 Use interactive prefix arg to get coordinate positions of the
 displayed buffers."
   (interactive "P")
-  (cl-declare (special voice-animate voice-bolden))
+  
   (let* ((window-list (window-list))
          (count (length window-list))
          (windows nil)
@@ -2648,7 +2636,7 @@ but quickly switch to a window by name."
 
 (defun emacsvox-repeat-check-hook ()
   "Play appropriate repeat icon."
-  (cl-declare (special repeat-in-progress emacsvox-repeat-was-active))
+  
   (cond
    ((and repeat-in-progress (not emacsvox-repeat-was-active))
     (setq emacsvox-repeat-was-active t)
@@ -2665,7 +2653,7 @@ but quickly switch to a window by name."
 
 (defsubst emacsvox-repeat-mode-hook ()
   "Add or remove emacsvox-repeat-check-hook from post-command-hook"
-  (cl-declare (special repeat-mode))
+  
   (cond
    (repeat-mode
     (add-hook 'post-command-hook 'emacsvox-repeat-check-hook 'at-end))
@@ -2762,7 +2750,7 @@ o other-window
 p emacsvox-cycle-to-previous-buffer
 "
   (interactive )
-  (cl-declare (special emacsvox-buffer-select-help))
+  
   (let ((key (event-basic-type last-command-event)))
     (emacsvox-icon 'repeat-active)
     (cl-case key
@@ -2820,7 +2808,7 @@ Filters out loopback for convenience."
 Use `,' and `.' to continuously decrease/increase `selective-display'.
  If not specified, `arg' defaults to current-column."
   (interactive "P")
-  (cl-declare (special selective-display))
+  
   (setq selective-display
         (if arg (prefix-numeric-value arg) (current-column)))
   (let ((key (event-basic-type last-command-event)))
@@ -2870,7 +2858,7 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
 (defun emacsvox-submit-bug ()
   "Function to submit a bug to the Emacsvox list"
   (interactive)
-  (cl-declare (special (reporter-prompt-for-summary-p t)))
+  )
   (require 'reporter)
   (when
       (yes-or-no-p "Are you sure you want to submit a bug report? ")

@@ -65,7 +65,7 @@
 
 (defun emacsvox-xslt-read ()
   "Read XSLT transformation name from minibuffer."
-  (cl-declare (special emacsvox-xslt-directory emacsvox-we-xsl-transform))
+  
   (expand-file-name
    (read-file-name "XSL Transformation: "
                    emacsvox-xslt-directory
@@ -87,12 +87,12 @@ This is useful when handling bad HTML.")
   "Execute body with XSL turned off."
   (declare (indent 1) (debug t))
   `(progn
-     (cl-declare (special emacsvox-we-xsl-p))
+     
      (when emacsvox-we-xsl-p
        (setq emacsvox-we-xsl-p nil)
        (add-hook 'emacsvox-eww-post-hook
                  #'(lambda ()
-                     (cl-declare (special emacsvox-we-xsl-p))
+                     
                      (setq emacsvox-we-xsl-p t))
                  'append))
      ,@body))
@@ -173,7 +173,7 @@ pipeline. Argument `specs' is a list of elements of the form `(xsl params)'."
 (defun emacsvox-xslt-run (xsl &optional start end)
   "Run xslt on region, and return output filtered by sort -u.
 Region defaults to entire buffer."
-  (cl-declare (special emacsvox-xslt emacsvox-xslt-options))
+  
   (or start (setq start (point-min)))
   (or end (setq end (point-max)))
   (let ((coding-system-for-read 'utf-8)
@@ -345,7 +345,7 @@ and return the results in a newly created buffer. "
 
 (defun emacsvox-xslt-unescape-charent (start end)
   "Clean up charents in XML."
-  (cl-declare (special emacsvox-xslt-charent-alist))
+  
   (cl-loop for entry in emacsvox-xslt-charent-alist
            do
            (let ((entity (car  entry))
@@ -363,7 +363,7 @@ and return the results in a newly created buffer. "
    (list
     (read-file-name "Style File: " emacsvox-xslt-directory)
     (read-file-name "File:")))
-  (cl-declare (special emacsvox-xslt-directory))
+  
   (with-temp-buffer
     (let ((browse-url-browser-function  'eww-browse-url)
           (coding-system-for-read 'utf-8)
@@ -382,7 +382,7 @@ and return the results in a newly created buffer. "
 (defun emacsvox-xslt-view-rss-file (file)
   "View RSS file."
   (interactive "fRSS File:")
-  (cl-declare (special emacsvox-rss-xsl))
+  
   (funcall-interactively
    'emacsvox-xslt-view-file
    emacsvox-rss-xsl file))
@@ -391,7 +391,7 @@ and return the results in a newly created buffer. "
 (defun emacsvox-xslt-view-atom-file (file)
   "View Atom file."
   (interactive "fAtom File:")
-  (cl-declare (special emacsvox-atom-xsl))
+  
   (funcall-interactively
    'emacsvox-xslt-view-file
    emacsvox-atom-xsl file))
@@ -404,7 +404,7 @@ and return the results in a newly created buffer. "
     (expand-file-name
      (read-file-name "XSL Transformation: "))
     (ems--read-url)))
-  (cl-declare (special emacsvox-xslt-options))
+  
   (add-hook
    'emacsvox-eww-pre-process-hook
    (emacsvox-xslt-make-xsl-transformer style))

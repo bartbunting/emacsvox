@@ -4,14 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Emacsvox is a fork of Emacspeak - a complete audio desktop that extends Emacs to be fully functional via speech output. The project has been maintained since 1995 by T. V. Raman and provides speech interfaces for 200+ Emacs packages.
+Emacsvox is a modernized fork of Emacspeak - the complete audio desktop that extends Emacs to be fully functional via speech output. Originally created in 1995 by T. V. Raman, Emacsvox provides speech interfaces for 200+ Emacs packages.
 
 **✨ MODERNIZATION STATUS: COMPLETE (December 2024)**
+- Project renamed from Emacspeak to Emacsvox
 - All 1,961 defadvice forms converted to modern advice-add
 - Minimum Emacs version: 31+
 - 100% lexical-binding throughout
 - Modern elisp patterns and formatting
 - Fully compliant with Emacs 31+ standards
+- Consistent code formatting across all 245 elisp files
 
 ## Build and Development Commands
 

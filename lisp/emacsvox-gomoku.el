@@ -53,7 +53,7 @@
 (defun gomoku-point-x ()
   (gomoku-index-to-x (gomoku-point-square)))
 (defun emacsvox-gomoku-cell-value (row column)
-  (cl-declare (special gomoku-board))
+  
   (aref  gomoku-board
          (gomoku-xy-to-index column row)))
 
@@ -83,7 +83,7 @@
 (defun emacsvox-gomoku-show-current-row ()
   "Aurally display current row"
   (interactive)
-  (cl-declare (special gomoku-board-width))
+  
   (let ((row (gomoku-point-y))
         (values nil))
     (setq values
@@ -99,7 +99,7 @@
 (defun emacsvox-gomoku-show-current-column ()
   "Aurally display current column"
   (interactive)
-  (cl-declare (special gomoku-board-height))
+  
   (let ((column (gomoku-point-x))
         (values nil))
     (setq values
@@ -193,7 +193,7 @@
 (defun emacsvox-gomoku-speak-emacs-previous-move ()
   "Speak emacs' previous move"
   (interactive)
-  (cl-declare (special gomoku-game-history))
+  
   (let ((square (car (cl-first gomoku-game-history))))
     (message "I last played on square %s %s"
              (gomoku-index-to-y square)
@@ -202,7 +202,7 @@
 (defun emacsvox-gomoku-speak-humans-previous-move ()
   "Speak human' previous move"
   (interactive)
-  (cl-declare (special gomoku-game-history))
+  
   (let ((square (car (cl-second gomoku-game-history))))
     (message "You last played on square %s %s"
              (gomoku-index-to-y square)
@@ -211,7 +211,7 @@
 (defun emacsvox-gomoku-speak-number-of-moves ()
   "Speak number of moves so far"
   (interactive)
-  (cl-declare (special gomoku-number-of-moves))
+  
   (message "%s moves in this game"
            gomoku-number-of-moves))
 
@@ -292,7 +292,7 @@
 
 (defun emacsvox-gomoku-setup-keys ()
   "Add additional keybindings"
-  (cl-declare (special gomoku-mode-map))
+  
   (cl-loop
    for key in (where-is-internal 'backward-char (list gomoku-mode-map))
    do

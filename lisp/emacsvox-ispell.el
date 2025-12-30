@@ -157,7 +157,7 @@ many available corrections."
 (defun ems--ispell-word-around (orig-fun &rest args)
   "Produce auditory icons for ispell."
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-last-message))
+    
     (cond
      ((ems-interactive-p)
       (let ((dtk-stop-immediately t))

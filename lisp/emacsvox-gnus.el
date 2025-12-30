@@ -692,7 +692,7 @@ instead you hear only the first screenful."
 
 (defun ems--gnus-summary-kill-same-subject-and-select-after (&rest _)
   "Speak the subject and speak the first screenful.\nProduce an auditory icon\nindicating the article is being opened."
-  (cl-declare (special gnus-article-buffer))
+  
   (when (ems-interactive-p)
     (emacsvox-gnus-summary-speak-subject) (sit-for 2)
     (emacsvox-icon 'open-object)
@@ -860,7 +860,7 @@ instead you hear only the first screenful."
 
 
 (defun ems--gnus-summary-next-page-after (&rest _)
-  "Speak the next pageful " (cl-declare (special gnus-article-buffer))
+  "Speak the next pageful " 
   (dtk-stop 'all) (emacsvox-icon 'scroll)
   (with-current-buffer gnus-article-buffer
     (let
@@ -880,7 +880,7 @@ instead you hear only the first screenful."
 
 (defun ems--gnus-summary-prev-page-after (&rest _)
   "Speak the previous  pageful "
-  (cl-declare (special gnus-article-buffer)) (dtk-stop 'all)
+   (dtk-stop 'all)
   (emacsvox-icon 'scroll)
   (save-current-buffer
     (set-buffer gnus-article-buffer)
@@ -900,7 +900,7 @@ instead you hear only the first screenful."
 
 
 (defun ems--gnus-summary-beginning-of-article-after (&rest _)
-  "Speak the first line. " (cl-declare (special gnus-article-buffer))
+  "Speak the first line. " 
   (save-current-buffer
     (set-buffer gnus-article-buffer) (emacsvox-speak-line)))
 
@@ -913,7 +913,7 @@ instead you hear only the first screenful."
 
 
 (defun ems--gnus-summary-end-of-article-after (&rest _)
-  "Speak the first line. " (cl-declare (special gnus-article-buffer))
+  "Speak the first line. " 
   (save-current-buffer
     (set-buffer gnus-article-buffer) (emacsvox-speak-line)))
 

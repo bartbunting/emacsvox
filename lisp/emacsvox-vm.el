@@ -83,7 +83,7 @@ Note that some badly formed mime messages  cause trouble."
 
 (defun emacsvox-vm-mode-setup ()
   "Setup function placed on vm-mode-hook by Emacsvox."
-  (cl-declare (special  dtk-punctuation-mode dtk-caps))
+  
   (setq dtk-punctuation-mode 'all))
 
 ;;;  inline helpers
@@ -163,7 +163,7 @@ Note that some badly formed mime messages  cause trouble."
 (defun emacsvox-vm-yank-header ()
   "Yank specified header into kill ring."
   (interactive)
-  (cl-declare (special vm-message-pointer))
+  
   (cond
    (vm-message-pointer
     (dtk-stop 'all)
@@ -200,9 +200,6 @@ Note that some badly formed mime messages  cause trouble."
 
 (defun emacsvox-vm-summarize-message ()
   "Summarize the current vm message. "
-  (cl-declare (special
-               vm-message-pointer 
-               vm-presentation-buffer  emacsvox-vm-headers-strip-octals))
   (when vm-message-pointer
     (let*  ((message (car vm-message-pointer))
             (number (emacsvox-vm-number-of  message))
@@ -245,7 +242,7 @@ Note that some badly formed mime messages  cause trouble."
 (defun emacsvox-vm-speak-labels ()
   "Speak a message's labels"
   (interactive)
-  (cl-declare (special vm-message-pointer))
+  
   (when vm-message-pointer
     (message "Labels: %s"
              (vm-labels-of (car vm-message-pointer)))))
@@ -502,7 +499,7 @@ that has been forwarded multiple times."
 (defun emacsvox-vm-catch-up-all-messages ()
   "Mark all messages in folder to be deleted. Use with caution."
   (interactive)
-  (cl-declare (special vm-ml-highest-message-number))
+  
   (vm-goto-message 1)
   (vm-delete-message
    (read vm-ml-highest-message-number))
@@ -536,7 +533,7 @@ that has been forwarded multiple times."
 (defun ems--vm-isearch-forward-around (orig-fun &rest args)
   "speak"
   (let ((result (apply orig-fun args)))
-    (cl-declare (special vm-message-pointer))
+    
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
@@ -559,7 +556,7 @@ that has been forwarded multiple times."
 (defun ems--vm-isearch-backward-around (orig-fun &rest args)
   "speak"
   (let ((result (apply orig-fun args)))
-    (cl-declare (special vm-message-pointer))
+    
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
@@ -780,19 +777,6 @@ that has been forwarded multiple times."
 
 (defun emacsvox-vm-use-raman-settings ()
   "Customization settings for VM used by the author of Emacsvox."
-  (cl-declare (special
-               emacsvox-vm-demote-html-attachments
-               emacsvox-vm-promote-html-attachments
-               vm-mime-charset-converter-alist vm-mime-default-face-charsets
-               vm-frame-per-folder vm-frame-per-composition
-               vm-frame-per-edit vm-frame-per-help
-               vm-frame-per-summary vm-index-file-suffix
-               vm-crash-box vm-primary-inbox vm-folder-directory
-               vm-forwarding-subject-format vm-startup-with-summary
-               vm-inhibit-startup-message vm-visible-headers
-               vm-delete-after-saving vm-url-browser
-               vm-confirm-new-folders vm-mime-alternative-select-method
-               vm-mime-text/html-handler vm-move-after-deleting))
   (setq vm-mime-text/html-handler'emacs-w3m  )
   (setq vm-mime-alternative-select-method emacsvox-vm-demote-html-attachments)
   (setq vm-mime-charset-converter-alist
@@ -861,7 +845,7 @@ text using pdftotext."
 
 (defun emacsvox-vm-add-mime-converter (converter)
   "Helper to add a converter specification."
-  (cl-declare (special vm-mime-type-converter-alist))
+  
   (unless
       (cl-find-if
        #'(lambda  (i)

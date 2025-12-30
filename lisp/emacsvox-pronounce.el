@@ -98,13 +98,13 @@ Keys are either filenames, directory names, or major mode names.
 Values are alists containing string.pronunciation pairs.")
 
 (defun emacsvox-pronounce-set-dictionary (key pr-alist)
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (when (stringp key)
     (setq key (intern key)))
   (setf (gethash key emacsvox-pronounce-dictionaries) pr-alist))
 
 (defun emacsvox-pronounce-get-dictionary (key)
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (when (stringp key) (setq key (intern key)))
   (gethash key emacsvox-pronounce-dictionaries))
 
@@ -115,7 +115,7 @@ Pronunciation can be a string or a cons-pair.
 If it is a string, that string is the new pronunciation.
 A cons-pair of the form (matcher . func) results  in 
 the match  being passed to the func which returns  the new pronunciation."
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (let* ((dict (emacsvox-pronounce-get-dictionary key))
          (entry (and dict (assoc string dict))))
     (cond
@@ -137,7 +137,7 @@ the match  being passed to the func which returns  the new pronunciation."
 
 (defun emacsvox-pronounce-add-local-entry (string pronunciation)
   "Add  pronunciation for current buffer. "
-  (cl-declare (special emacsvox-pronounce-table))
+  
   (unless emacsvox-pronounce-table
     (setq emacsvox-pronounce-table (emacsvox-pronounce-compose-table)))
   (puthash string pronunciation emacsvox-pronounce-table)
@@ -259,7 +259,7 @@ the match  being passed to the func which returns  the new pronunciation."
 (defun emacsvox-pronounce-toggle-voice ()
   "Toggle use of pronunciation personality."
   (interactive )
-  (cl-declare (special emacsvox-pronounce-personality))
+  
   (cond
    (emacsvox-pronounce-personality
     (setq emacsvox-pronounce-personality nil))
@@ -283,7 +283,7 @@ the match  being passed to the func which returns  the new pronunciation."
 (defun emacsvox-pronounce-save-dictionaries ()
   "Saves  pronunciation dictionaries."
   (interactive)
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (let* ((coding-system-for-write 'utf-8)
          (print-level nil)
          (print-length nil)
@@ -335,7 +335,7 @@ Default is emacsvox-pronounce-dictionaries-file."
 (defun emacsvox-pronounce-clear ()
   "Clear all current pronunciation dictionaries."
   (interactive)
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (when (yes-or-no-p
          "Do you really want to nuke all currently defined dictionaries?")
     (setq emacsvox-pronounce-dictionaries (make-hash-table))
@@ -380,7 +380,7 @@ Default is emacsvox-pronounce-dictionaries-file."
 (defun emacsvox-pronounce-get-key ()
   "Collect key from user.
 Returns a pair of the form (key-type . key)."
-  (cl-declare (special emacsvox-pronounce-keys))
+  
   (let ((key nil)
         (key-type
          (read
@@ -417,7 +417,7 @@ Returns a pair of the form (key-type . key)."
 Default term to define is delimited by region.
 First loads any persistent dictionaries if not already loaded."
   (interactive)
-  (cl-declare (special emacsvox-pronounce-dictionaries-loaded))
+  
   (let ((word nil)
         (pronunciation nil)
         (key-pair (emacsvox-pronounce-get-key)))
@@ -445,7 +445,7 @@ First loads any persistent dictionaries if not already loaded."
 Default term to define is delimited by region.
 First loads any persistent dictionaries if not already loaded."
   (interactive)
-  (cl-declare (special emacsvox-pronounce-dictionaries-loaded))
+  
   (let ((word nil)
         (pronunciation nil)
         (key-pair(emacsvox-pronounce-get-key)))
@@ -477,7 +477,7 @@ First loads any persistent dictionaries if not already loaded."
 (defun emacsvox-pronounce-toggle-dictionaries (&optional state)
   "Toggle  pronunciation dictionaries. "
   (interactive "P")
-  (cl-declare (special emacsvox-pronounce-table))
+  
   (unless state (setq state (not emacsvox-pronounce-table))) ; toggle
   (cond
    (state
@@ -490,7 +490,7 @@ First loads any persistent dictionaries if not already loaded."
 (defun emacsvox-pronounce-refresh-pronunciations ()
   "Refresh pronunciation table for current buffer. "
   (interactive)
-  (cl-declare (special emacsvox-pronounce-table))
+  
   (cond
    ((not (boundp 'emacsvox-pronounce-table)) ;first time
     (set (make-local-variable 'emacsvox-pronounce-table)
@@ -568,7 +568,7 @@ First loads any persistent dictionaries if not already loaded."
 
 (defun emacsvox-pronounce-edit-generate-pronunciation-editor (key)
   "Edit dictionary for given key"
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (unless emacsvox-pronounce-table
     (emacsvox-pronounce-toggle-dictionaries))
   (let ((value (gethash key emacsvox-pronounce-dictionaries))
@@ -606,7 +606,7 @@ First loads any persistent dictionaries if not already loaded."
 (defun emacsvox-pronounce-edit-generate-callback (field-name)
   "Generate a callback for use in the pronunciation editor widget."
   `(lambda (widget &rest ignore)
-     (cl-declare (special emacsvox-pronounce-dictionaries))
+     
      (let ((value (widget-value widget)))
        (setf
         (gethash
@@ -634,7 +634,7 @@ specified pronunciation dictionary key."
                        nil
                        'keys
                        (car keys)))))
-  (cl-declare (special emacsvox-pronounce-dictionaries))
+  
   (emacsvox-pronounce-edit-generate-pronunciation-editor
    (intern key)))
 
@@ -647,7 +647,7 @@ specified pronunciation dictionary key."
 (defun emacsvox-pronounce-dispatch ()
   "Pronounce Frontend"
   (interactive)
-  (cl-declare (special emacsvox-pronounce-help))
+  
   (message emacsvox-pronounce-help)
   (let ((event (read-char)))
     (cl-case event
@@ -784,7 +784,7 @@ with Git among other things."
 
 (defun emacsvox-pronounce-uuid (uuid)
   "Return pronunciation for human-readable UUID."
-  (cl-declare (special emacsvox-pronounce-uuid-pattern))
+  
   (when (and (= 36 (length uuid))
              (string-match emacsvox-pronounce-uuid-pattern uuid))
     (format "uid: %s..%s "
@@ -815,7 +815,7 @@ Value returned is compatible with `encode-time'."
 
 (defun emacsvox-speak-decode-rfc-3339-datetime (rfc-3339)
   "Return a speakable string description."
-  (cl-declare (special emacsvox-speak-time-format))
+  
   (let ((year (read (substring rfc-3339 0 4)))
         (month (read (substring rfc-3339 5 7)))
         (day (read (substring rfc-3339 8 10)))
@@ -836,7 +836,7 @@ Value returned is compatible with `encode-time'."
 
 (defun emacsvox-pronounce-decode-iso-datetime (iso)
   "Return a speakable string description."
-  (cl-declare (special emacsvox-speak-time-format))
+  
   (let ((year (read (substring iso 0 4)))
         (month (read (substring iso 4 6)))
         (day (read (substring iso 6 8)))
@@ -891,7 +891,7 @@ Value returned is compatible with `encode-time'."
 
 (defun emacsvox-pronounce-decode-rfc-3339-datetime (rfc-3339)
   "Return a speakable string description."
-  (cl-declare (special emacsvox-speak-time-format))
+  
   (let ((year (read (substring rfc-3339 0 4)))
         (month (read (substring rfc-3339 5 7)))
         (day (read (substring rfc-3339 8 10)))

@@ -64,7 +64,7 @@
 
 (defun emacsvox-feeds-cache-feeds (&optional feeds)
   "Cache feeds in  `feeds' in a hash table."
-  (cl-declare (special emacsvox-feeds))
+  
   (or feeds (setq feeds emacsvox-feeds))
   (cl-loop
    for f in feeds
@@ -118,7 +118,7 @@ The feed list is persisted to file saved-feeds on exit."
 
 (defun emacsvox-feeds-added-p (feed-url)
   "Check if this feed has been added before."
-  (cl-declare (special emacsvox-feeds-feeds-table))
+  
   (gethash feed-url emacsvox-feeds-feeds-table))
 
 ;;;###autoload
@@ -132,7 +132,7 @@ The feed list is persisted to file saved-feeds on exit."
       (?a 'atom)
       (?o 'opml)
       (?r 'rss))))
-  (cl-declare (special emacsvox-feeds))
+  
   (let ((found (emacsvox-feeds-added-p url)))
     (cond
      (found (message "Feed already present  as %s" (cl-first found)))
@@ -144,7 +144,7 @@ The feed list is persisted to file saved-feeds on exit."
   "Delete specified feed from our feed store."
   (interactive
    (list (completing-read "Delete:" (mapcar #'cl-first emacsvox-feeds))))
-  (cl-declare (special emacsvox-feeds))
+  
   (setq emacsvox-feeds
         (cl-remove-if
          #'(lambda (f) (string= title (cl-first f)))
@@ -178,7 +178,7 @@ Archiving is useful when synchronizing feeds across multiple machines."
   "Restore list of subscribed fees from  personal resource directory.
 Archiving is useful when synchronizing feeds across multiple machines."
   (interactive)
-  (cl-declare (special emacsvox-feeds-archive-file emacsvox-feeds))
+  
   (unless (file-exists-p emacsvox-feeds-archive-file)
     (user-error "No archived feeds to restore. "))
   (with-current-buffer (find-file-noselect emacsvox-feeds-archive-file)
@@ -193,7 +193,7 @@ This directly updates emacsvox-feeds from the archive, rather
 than adding those entries to the current set of subscribed
 feeds."
   (interactive)
-  (cl-declare (special emacsvox-feeds-archive-file emacsvox-feeds))
+  
   (unless (file-exists-p emacsvox-feeds-archive-file)
     (error "No archived feeds to restore. "))
   (let ((buffer (find-file-noselect emacsvox-feeds-archive-file)))
@@ -218,9 +218,6 @@ feeds."
 
 (defun emacsvox-feeds-render  (_status feed-url style   speak)
   "Render the result of asynchronously retrieving feed-url."
-  (cl-declare (special
-               eww-data  eww-current-url
-               emacsvox-eww-feed emacsvox-eww-style))
   (let ((inhibit-read-only t)
         (browse-url-browser-function  'eww-browse-url)
         (data-buffer (current-buffer))
@@ -252,7 +249,7 @@ feeds."
 (defun emacsvox-feeds-rss-display (feed-url)
   "Display RSS feed."
   (interactive (list (ems--read-url)))
-  (cl-declare (special emacsvox-rss-xsl))
+  
   (emacsvox-icon 'open-object)
   (emacsvox-feeds-feed-display feed-url emacsvox-rss-xsl 'speak))
 
@@ -260,7 +257,7 @@ feeds."
 (defun emacsvox-feeds-opml-display (feed-url)
   "Display OPML feed."
   (interactive (list (ems--read-url)))
-  (cl-declare (special emacsvox-opml-xsl))
+  
   (emacsvox-feeds-feed-display feed-url emacsvox-opml-xsl 'speak))
 
 ;;;###autoload
@@ -279,7 +276,7 @@ feeds."
 (defun emacsvox-feeds-atom-display (feed-url)
   "Display ATOM feed."
   (interactive (list (ems--read-url)))
-  (cl-declare (special emacsvox-atom-xsl))
+  
   (emacsvox-icon 'open-object)
   (emacsvox-feeds-feed-display feed-url emacsvox-atom-xsl 'speak))
 

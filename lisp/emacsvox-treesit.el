@@ -74,7 +74,7 @@
 (defun emacsvox-treesit-inspect ()
   "If inspect-mode is on, speak current node."
   (interactive)
-  (cl-declare (special treesit--inspect-name))
+  
   (cond
    (treesit-inspect-mode (message (format-mode-line treesit--inspect-name)))
    ((y-or-n-p "Turn on treesitter inspector?")

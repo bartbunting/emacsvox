@@ -214,7 +214,7 @@
 (defun emacsvox-tar-speak-file-date()
   "Speak date of file current entry "
   (interactive)
-  (cl-declare (special emacsvox-speak-time-format))
+  
   (unless (eq major-mode 'tar-mode)
     (error "This command should be called only in tar mode"))
   (let ((entry (tar-current-descriptor)))
@@ -228,7 +228,7 @@
 
 (defun emacsvox-tar-setup-keys ()
   "Setup emacsvox keys for tar mode"
-  (cl-declare (special tar-mode-map))
+  
   (define-key tar-mode-map "z" 'emacsvox-tar-speak-file-size)
   (define-key tar-mode-map "/" 'emacsvox-tar-speak-file-permissions)
   (define-key tar-mode-map "c" 'emacsvox-tar-speak-file-date)

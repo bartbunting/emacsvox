@@ -101,7 +101,7 @@ switch to a screen-saver soundscape."
 (defun emacsvox-screen-saver ()
   "Launch Emacsvox screen-saver.
 Initialize screen-saver buffer  if needed, and switch to  it."
-  (cl-declare (special emacsvox-screen-saver-saved-conf))
+  
   (setq emacsvox-screen-saver-saved-conf (current-window-configuration))
   (let ((buffer (get-buffer-create "*Emacsvox Screen Saver*")))
     (with-current-buffer buffer (emacsvox-screen-saver-mode))
@@ -114,7 +114,7 @@ Initialize screen-saver buffer  if needed, and switch to  it."
 (defun emacsvox-dbus-nm-connected ()
   "Announce  network manager connection.
 Startup  apps that need the network."
-  (cl-declare (special emacsvox-speak-network-interfaces-list))
+  
   (setq emacsvox-speak-network-interfaces-list
         (ems--get-active-network-interfaces))
   (emacsvox-pip (format "%s. Network up. " (ems--get-essid)))
@@ -123,7 +123,7 @@ Startup  apps that need the network."
 (defun emacsvox-dbus-nm-disconnected ()
   "Announce  network manager disconnection.
 Stop apps that use the network."
-  (cl-declare (special emacsvox-speak-network-interfaces-list))
+  
   (setq emacsvox-speak-network-interfaces-list
         (mapcar #'car (network-interface-list)))
   (emacsvox-icon 'network-down)
@@ -193,7 +193,7 @@ signal registration objects."
 (defun emacsvox-dbus-sleep-enable()
   "Enable integration with Login1. Does nothing if already enabled."
   (interactive)
-  (cl-declare (special emacsvox-dbus-sleep-registration))
+  
   (unless emacsvox-dbus-sleep-registration
     (setq emacsvox-dbus-sleep-registration (emacsvox-dbus-sleep-register))))
 
@@ -202,7 +202,7 @@ signal registration objects."
   "Disable integration with login1 daemon. Does nothing if
 already disabled."
   (interactive)
-  (cl-declare (special emacsvox-dbus-sleep-registration))
+  
   (while emacsvox-dbus-sleep-registration
     (dbus-unregister-object (car emacsvox-dbus-sleep-registration))
     (setq emacsvox-dbus-sleep-registration
@@ -210,7 +210,7 @@ already disabled."
 
 (defun emacsvox-dbus-sleep ()
   "Emacsvox  hook for -sleep signal from Login1."
-  (cl-declare (special dtk-quiet))
+  
   (let ((dtk-quiet t))
     (ems-with-messages-silenced
      (emacsvox-dbus-screensaver-check)
@@ -230,7 +230,7 @@ already disabled."
 (defun emacsvox-orca-toggle ()
   "Toggle state of orca."
   (interactive)
-  (cl-declare (special emacsvox-orca-handle))
+  
   (cond
    (emacsvox-orca-handle
     (delete-process emacsvox-orca-handle)
@@ -239,7 +239,7 @@ already disabled."
 
 (defun emacsvox-dbus-resume ()
   "Emacsvox hook for Login1-resume."
-  (cl-declare (special amixer-alsactl-config-file ))
+  
   (ems-with-messages-silenced
     (tts-restart)
     (emacsvox-icon 'waking-up)
@@ -285,7 +285,7 @@ already disabled."
 (defun emacsvox-dbus-udisks-enable()
   "Enable integration with UDisks2. Does nothing if already enabled."
   (interactive)
-  (cl-declare (special emacsvox-dbus-udisks-registration))
+  
   (unless emacsvox-dbus-udisks-registration
     (setq emacsvox-dbus-udisks-registration
           (emacsvox-dbus-udisks-register))))
@@ -295,7 +295,7 @@ already disabled."
   "Disable integration with UDisks2 daemon. Does nothing if
 already disabled."
   (interactive)
-  (cl-declare (special emacsvox-dbus-udisks-registration))
+  
   (while emacsvox-dbus-udisks-registration
     (dbus-unregister-object (car emacsvox-dbus-udisks-registration))
     (setq emacsvox-dbus-udisks-registration
@@ -334,7 +334,7 @@ already disabled."
 (defun emacsvox-dbus-upower-enable()
   "Enable integration with UPower. Does nothing if already enabled."
   (interactive)
-  (cl-declare (special emacsvox-dbus-upower-registration))
+  
   (unless emacsvox-dbus-upower-registration
     (setq emacsvox-dbus-upower-registration
           (emacsvox-dbus-upower-register))))
@@ -344,7 +344,7 @@ already disabled."
   "Disable integration with UPower daemon. Does nothing if
 already disabled."
   (interactive)
-  (cl-declare (special emacsvox-dbus-upower-registration))
+  
   (while emacsvox-dbus-upower-registration
     (dbus-unregister-object (car emacsvox-dbus-upower-registration))
     (setq emacsvox-dbus-upower-registration
@@ -398,7 +398,7 @@ already disabled."
 
 (defun emacsvox-dbus-unwatch-screen-lock ()
   "De-Register a handler to watch screen lock/unlock."
-  (cl-declare (special emacsvox-dbus-screen-lock-handle))
+  
   (dbus-unregister-object emacsvox-dbus-screen-lock-handle)
   (setq emacsvox-dbus-screen-lock-handle nil))
 

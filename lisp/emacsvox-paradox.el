@@ -91,7 +91,7 @@
 
 (defun emacsvox-paradox-mode-hook ()
   "Emacsvox setup hook for paradox-mode."
-  (cl-declare (special paradox-menu-mode-map))
+  
   (define-key paradox-menu-mode-map " " 'emacsvox-paradox-summarize-line)
   (emacsvox-pronounce-add-local-entry
    emacsvox-pronounce-date-yyyymmdd-pattern

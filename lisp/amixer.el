@@ -106,7 +106,7 @@
 
 (defun amixer-build-db ()
   "Create a database of amixer controls and their settings."
-  (cl-declare (special amixer-db  emacsvox-amixer))
+  
   (unless emacsvox-amixer (error "You dont have a standard amixer."))
   (let (
         (message-log-max nil)
@@ -186,7 +186,7 @@ to  ~/.emacs.d ")
 
 (defun amixer-alsactl-setup ()
   "Set up alsactl sound state."
-  (cl-declare (special amixer-alsactl-config-file))
+  
   (setq
    amixer-alsactl-config-file
    (let ((sys-alsa "/var/lib/alsa/asound.state")
@@ -199,7 +199,7 @@ to  ~/.emacs.d ")
 
 (defun amixer-restore (&optional conf-file)
   "Reset Alsa."
-  (cl-declare (special amixer-alsactl))
+  
   (if conf-file
       (start-process
        "AlsaCtl" nil amixer-alsactl
@@ -219,7 +219,7 @@ to  ~/.emacs.d ")
   "ALSA settings.
 Interactive prefix arg refreshes cache."
   (interactive "P")
-  (cl-declare (special amixer-db amixer-alsactl-config-file emacsvox-amixer))
+  
   (unless amixer-alsactl-config-file (amixer-alsactl-setup))
   (when (or refresh (null amixer-db))
     (amixer-build-db))
@@ -267,7 +267,7 @@ Interactive prefix arg refreshes cache."
 (defun amixer-query (&optional refresh)
   "Show setting for specified control."
   (interactive "P")
-  (cl-declare (special amixer-db amixer-alsactl-config-file emacsvox-amixer))
+  
   (unless amixer-alsactl-config-file (amixer-alsactl-setup))
   (when (or refresh (null amixer-db))
     (amixer-build-db))
@@ -287,7 +287,7 @@ Interactive prefix arg refreshes cache."
 
 (defun amixer-get (name)
   "Return setting for specified control."
-  (cl-declare (special amixer-db amixer-alsactl-config-file  ))
+  
   (unless amixer-alsactl-config-file (amixer-alsactl-setup))
   (when  (null amixer-db) (amixer-build-db))
   (let ((control (cdr (assoc name amixer-db))))
@@ -298,7 +298,7 @@ Interactive prefix arg refreshes cache."
 (defun amixer-store()
   "Persist  amixer."
   (interactive)
-  (cl-declare (special  amixer-alsactl-config-file amixer-alsactl))
+  
   (unless amixer-alsactl-config-file (amixer-alsactl-setup))
   (when amixer-alsactl-config-file
     (start-process
@@ -319,7 +319,7 @@ Interactive prefix arg refreshes cache."
   "Raise Master volume by amixer-volume-step.
 Interactive prefix arg `PROMPT' reads percentage as a number"
   (interactive "P")
-  (cl-declare (special amixer-volume-step))
+  
   (let ((emacsvox-speak-messages nil)
         (inhibit-message t))
     (shell-command
@@ -336,7 +336,7 @@ Interactive prefix arg `PROMPT' reads percentage as a number"
   "Lower Master volume by amixer-volume-step.
 Interactive prefix arg `PROMPT' reads percentage as a number"
   (interactive "P")
-  (cl-declare (special amixer-volume-step))
+  
   (let ((emacsvox-speak-messages nil)
         (inhibit-message t))
     (shell-command
@@ -355,7 +355,7 @@ Interactive prefix arg `PROMPT' reads percentage as a number"
 Press C-e 3 to lower volume; C-e 4 to increase it. Subsequent presses
 of 3 and 4 lower or raise volume."
   (interactive )
-  (cl-declare (special ems--vol-cmd))
+  
   (let ((key (event-basic-type last-command-event)))
     (emacsvox-icon 'repeat-start)
     (cl-case key

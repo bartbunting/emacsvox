@@ -62,7 +62,7 @@
 
 
 (defun ems--view-mode-after (&rest _)
-  "Announce what happened" (cl-declare (special view-mode-map))
+  "Announce what happened" 
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object)
     (if view-mode
@@ -194,7 +194,7 @@ View-scroll-page-backward-set-page-size View-scroll-page-forward-set-page-size
 
 (defun emacsvox-view-setup-keys()
   "Setup emacsvox convenience keys"
-  (cl-declare (special view-mode-map))
+  
   (cl-loop
    for  b in
    '(

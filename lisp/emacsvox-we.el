@@ -84,7 +84,7 @@ useful in jumping directly to the printer friendly version of an
 article for example.  Optional interactive prefix arg prompts for
 a rewrite rule even if one is already defined."
   (interactive "P")
-  (cl-declare (special emacsvox-we-url-rewrite-rule))
+  
   (emacsvox-eww-browser-check)
   (let ((url (funcall emacsvox-eww-url-at-point))
         (redirect nil))
@@ -109,7 +109,7 @@ a rewrite rule even if one is already defined."
 (defun emacsvox-we-url-expand-and-execute (&optional prefix)
   "Applies buffer-specific URL expander/executor function."
   (interactive "P")
-  (cl-declare (special emacsvox-we-url-executor))
+  
   (emacsvox-eww-browser-check)
   (let ((url (funcall emacsvox-eww-url-at-point)))
     (unless url (error "Not on a link."))
@@ -182,7 +182,7 @@ Default is to apply sort-tables.")
 (defun emacsvox-we-xslt-select (xsl)
   "Select XSL transformation applied to Web pages before they are displayed ."
   (interactive (list (emacsvox-xslt-read)))
-  (cl-declare (special emacsvox-we-xsl-transform))
+  
   (setq emacsvox-we-xsl-transform xsl)
   (when (called-interactively-p 'interactive)
     (emacsvox-icon 'select-object)
@@ -193,7 +193,7 @@ Default is to apply sort-tables.")
 (defun emacsvox-we-xsl-toggle ()
   "Toggle  application of XSL transformations."
   (interactive)
-  (cl-declare (special emacsvox-we-xsl-p))
+  
   (setq emacsvox-we-xsl-p (not emacsvox-we-xsl-p))
   (when (called-interactively-p 'interactive)
     (emacsvox-icon
@@ -230,7 +230,7 @@ Default is to apply sort-tables.")
 (defun emacsvox-we-toggle-xsl-keep-result ()
   "Toggle xsl keep result flag."
   (interactive)
-  (cl-declare (special emacsvox-we-xsl-keep-result))
+  
   (setq emacsvox-we-xsl-keep-result
         (not emacsvox-we-xsl-keep-result))
   (when (called-interactively-p 'interactive)
@@ -266,7 +266,7 @@ from Web page -- default is the current page being viewed."
   "Apply a pipeline of filters specified in `specs', a list.
 Each filter is a list of the form
  `(xsl-stylesheet-name xpath)'."
-  (cl-declare (special emacsvox-we-filters-rename-buffer))
+  
   (when emacsvox-we-filters-rename-buffer
     (emacsvox-we-rename-buffer (format "Pipeline filtered ")))
   (add-hook
@@ -284,7 +284,7 @@ Each filter is a list of the form
     (read-from-minibuffer "XPath: ")
     (ems--read-url)
     (called-interactively-p 'interactive)))
-  (cl-declare (special emacsvox-we-xsl-junk))
+  
   (let ((params (emacsvox-xslt-params-from-xpath  path url)))
     (emacsvox-we-rename-buffer (format "Filtered %s" path))
     (when speak (emacsvox-eww-autospeak))
@@ -476,7 +476,7 @@ Tables are specified by containing  match pattern
      'emacsvox-eww-post-hook
      (eval
       `#'(lambda nil
-           (cl-declare (special  emacsvox-we-buffer-class-cache))
+           
            (setq emacsvox-we-buffer-class-cache
                  ',(copy-sequence values)))))
     (kill-buffer content)))
@@ -500,7 +500,7 @@ Tables are specified by containing  match pattern
      'emacsvox-eww-post-hook
      (eval
       `#'(lambda nil
-           (cl-declare (special  emacsvox-we-buffer-id-cache))
+           
            (setq emacsvox-we-buffer-id-cache
                  ',(copy-sequence values)))))
     (kill-buffer content)))
@@ -524,7 +524,7 @@ Tables are specified by containing  match pattern
      'emacsvox-eww-post-hook
      (eval
       `#'(lambda nil
-           (cl-declare (special  emacsvox-we-buffer-role-cache))
+           
            (setq emacsvox-we-buffer-role-cache
                  ',(copy-sequence values)))))
     (kill-buffer content)))
@@ -730,8 +730,6 @@ used as well."
              "article"))))
     (ems--read-url)
     current-prefix-arg))
-  (cl-declare (special
-               emacsvox-we-class-filter emacsvox-we-url-rewrite-rule))
   (let ((redirect nil))
     (when emacsvox-we-url-rewrite-rule
       (setq redirect
@@ -827,11 +825,6 @@ XPath can be set locally for a buffer, and overridden with an
 interactive prefix arg. If there is a known rewrite url rule, that is
 used as well."
   (interactive "P")
-  (cl-declare (special
-               emacsvox-we-xpath-filter
-               emacsvox-we-recent-xpath-filter
-               emacsvox-we-xpath-history
-               emacsvox-we-url-rewrite-rule))
   (emacsvox-eww-browser-check)
   (let ((url (funcall emacsvox-eww-url-at-point))
         (redirect nil))
@@ -879,11 +872,6 @@ Class can be set locally for a buffer, and overridden with an
 interactive prefix arg. If there is a known rewrite url rule, that is
 used as well."
   (interactive "P")
-  (cl-declare (special
-               emacsvox-we-class-filter
-               emacsvox-we-recent-class-filter
-               emacsvox-we-class-history
-               emacsvox-we-url-rewrite-rule))
   (emacsvox-eww-browser-check)
   (let ((url (funcall emacsvox-eww-url-at-point))
         (redirect nil))

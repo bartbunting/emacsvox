@@ -96,7 +96,7 @@
 (eval-after-load
     "github-explorer"
   `(progn
-     (cl-declare (special github-explorer-mode-map))
+     
      (define-key github-explorer-mode-map "p" 'emacsvox-gh-explorer-previous)
      (define-key github-explorer-mode-map "n" 'emacsvox-gh-explorer-next))
   )

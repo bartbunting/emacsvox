@@ -234,7 +234,7 @@
 
 (defun emacsvox-exwm-mode-hook ()
   "EXWM Setup For Emacsvox"
-  (cl-declare (special emacsvox-prefix ))
+  
   (define-key exwm-mode-map emacsvox-prefix 'emacsvox-keymap)
   (define-key exwm-mode-map  emacsvox-prefix 'emacsvox-keymap)
   (define-key exwm-mode-map

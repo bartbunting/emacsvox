@@ -200,7 +200,7 @@
 
 (defun emacsvox-js2-hook ()
   "Hook to setup emacsvox."
-  (cl-declare (special js2-mode-map))
+  
   (define-key js2-mode-map "\C-e" 'emacsvox-keymap)
   (define-key js2-mode-map "\C-ee" 'js2-end-of-line)
   (when (locate-library "js2-imenu-extras")

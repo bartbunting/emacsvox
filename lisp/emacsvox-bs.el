@@ -54,7 +54,7 @@
 (defun emacsvox-bs-speak-buffer-line ()
   "Speak information about this buffer"
   (interactive)
-  (cl-declare (special list-buffers-directory))
+  
   (unless (eq major-mode 'bs-mode)
     (error "This command can only be used in buffer menus"))
   (let((buffer (bs--current-buffer)))

@@ -89,7 +89,7 @@
 
 (defun emacsvox-lispy-setup ()
   "Setup emacsvox for use with lispy"
-  (cl-declare (special lispy-mode-map))
+  
   (when (bound-and-true-p lispy-mode-map)
     (define-key lispy-mode-map (kbd "C-e") 'emacsvox-keymap)))
 

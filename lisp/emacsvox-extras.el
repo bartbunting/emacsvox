@@ -99,7 +99,7 @@
 (defun emacsvox-wizards-midi-using-m-score (midi-file)
   "Play midi file using mscore from musescore package."
   (interactive "fMidi File:")
-  (cl-declare (special emacsvox-wizards-media-pipe))
+  
   (cl-assert (executable-find "mscore") t "Install mscore first")
   (or (file-exists-p emacsvox-wizards-media-pipe)
       (shell-command (format "mknod %s p"
@@ -123,7 +123,7 @@
   "Add autoload cookies to file f.
 Default is to add autoload cookies to current file."
   (interactive)
-  (cl-declare (special emacsvox-autoload-cookie-pattern))
+  
   (or f (setq f (buffer-file-name)))
   (let ((buffer (find-file-noselect f))
         (count 0))
@@ -244,14 +244,14 @@ Sample text to use comes from variable
   `ems--wizards-sampler-text "
   (interactive (list (and current-prefix-arg
                           (read-string "List faces matching regexp: "))))
-  (cl-declare (special ems--wizards-sampler-text))
+  
   (let ((list-faces-sample-text ems--wizards-sampler-text))
     (list-faces-display pattern)
     (message "Displayed voice-face mappings in other window.")))
 
 (defun voice-setup-show-rogue-faces ()
   "Return list of voices that map to non-existent faces."
-  (cl-declare (special voice-setup-face-voice-table))
+  
   (cl-loop for f being the hash-keys of voice-setup-face-voice-table
            unless (facep f) collect f))
 
@@ -290,7 +290,7 @@ Interactive  arguments specify filename pattern and search pattern."
    (list
     (expand-file-name
      (read-file-name "Enter name of POD file: "))))
-  (cl-declare (special pod2man-program))
+  
   (require 'man)
   (let* ((pod2man-args (concat filename " | nroff -man "))
          (bufname (concat "Man " filename))
@@ -334,7 +334,7 @@ Interactive  arguments specify filename pattern and search pattern."
 
 (defun emacsvox-annotate-get-annotation ()
   "Pop up a temporary buffer and collect the annotation."
-  (cl-declare (special emacsvox-annotate-edit-buffer))
+  
   (let ((annotation nil))
     (pop-to-buffer
      (get-buffer-create emacsvox-annotate-edit-buffer))
@@ -354,7 +354,7 @@ buffer even if one is already set.
 Annotation is entered in a temporary buffer and the
 annotation is inserted into the working buffer when complete."
   (interactive "P")
-  (cl-declare (special emacsvox-annotate-working-buffer))
+  
   (when (or reset
             (null emacsvox-annotate-working-buffer))
     (setq emacsvox-annotate-working-buffer
@@ -421,7 +421,7 @@ information between different Emacs sessions."
 dis a convenient way of sharing information between independent
 Emacsvox sessions running on  different machines. "
   (interactive "r\nP")
-  (cl-declare (special emacsvox-user-directory emacsvox-clipfile-file))
+  
   (let ((clip (buffer-substring-no-properties start end))
         (clipboard-file
          (if prompt
@@ -447,7 +447,7 @@ Emacsvox sessions running on  different machines. "
 (defun emacsvox-clipfile-paste (&optional paste-table)
   "Yank contents of the Emacsvox clipboard at point. "
   (interactive "P")
-  (cl-declare (special emacsvox-user-directory emacsvox-clipfile-file))
+  
   (let ((start (point))
         (clipboard-file emacsvox-clipfile-file))
     (cond

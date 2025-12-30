@@ -1,0 +1,740 @@
+;;; emacsvox-calendar.el --- Speech enable Calendar -*- lexical-binding: t; -*-
+;;
+;; $Author: tv.raman.tv $
+;; Description:  Emacsvox extensions to speech enable the calendar.
+;; Keywords: Emacsvox, Calendar, Spoken Output
+;;;   LCD Archive entry:
+
+;; LCD Archive Entry:
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
+;; A speech interface to Emacs |
+;; 
+;;  $Revision: 4532 $ |
+;; Location https://github.com/tvraman/emacsvox
+;; 
+
+;;;   Copyright:
+;; Copyright (C) 1995 -- 2024, T. V. Raman
+;; Copyright (c) 1994, 1995 by Digital Equipment Corporation.
+;; All Rights Reserved.
+;; 
+;; This file is not part of GNU Emacs, but the same permissions apply.
+;; 
+;; GNU Emacs is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;; 
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;; 
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+;; This module speech enables the Emacs Calendar.  Speech enabling is
+;; not the same as speaking the screen: This is an excellent example
+;; of the advantages of speech-enabled interaction.
+;;; Code:
+
+;;  required modules
+;;; Code:
+(cl-declaim  (optimize  (safety 0) (speed 3)))
+(require 'emacsvox-preamble)
+(require 'calendar)
+(require 'solar)
+(require 'g-utils)
+(require 'appt)
+
+;;;   personalities
+(voice-setup-add-map
+ '(
+   (calendar-today voice-bolden)
+   (holiday voice-brighten-extra)
+   (diary voice-bolden)
+   ))
+
+(defvar emacsvox-calendar-mark-personality voice-bolden
+  "Personality to use when showing marked calendar entries.")
+
+;;;   functions:
+(defun emacsvox-calendar-sort-diary-entries ()
+  "Sort entries in diary entries list."
+  (cl-declare (special diary-entries-list))
+  (when(and  (boundp 'diary-entries-list)
+             diary-entries-list)
+    (setq diary-entries-list
+          (sort  diary-entries-list
+                 #'(lambda (a b)
+                     (string-lessp (cadr a) (cadr b)))))))
+
+(defun emacsvox-calendar-entry-marked-p()
+  "Check if diary entry is marked. "
+  (memq 'diary
+        (delq nil
+              (mapcar
+               #'(lambda (overlay)
+                   (overlay-get overlay 'face))
+               (overlays-at (point))))))
+
+(defun emacsvox-calendar-speak-date()
+  "Speak the date under point when called in Calendar Mode. "
+  (interactive)
+  (let ((date (calendar-date-string (calendar-cursor-to-date t))))
+    (tts-with-punctuations
+     'some
+     (cond
+      ((emacsvox-calendar-entry-marked-p)
+       (dtk-speak-using-voice emacsvox-calendar-mark-personality date))
+      (t (dtk-speak date))))))
+
+;;;   Advice:
+
+(defun ems--calendar-exchange-point-and-mark-after (&rest _)
+  "Speak date under point"
+  (when (ems-interactive-p)
+    (emacsvox-icon 'large-movement) (emacsvox-calendar-speak-date)))
+
+
+(advice-add 'calendar-exchange-point-and-mark :after
+	    #'ems--calendar-exchange-point-and-mark-after)
+
+
+
+
+
+(defun ems--calendar-set-mark-after (&rest _)
+  "Speak date under point"
+  (when (ems-interactive-p)
+    (emacsvox-icon 'mark-object) (emacsvox-calendar-speak-date)))
+
+
+(advice-add 'calendar-set-mark :after #'ems--calendar-set-mark-after)
+
+
+
+
+(add-hook 'calendar-mode-hook
+          'emacsvox-calendar-setup)
+
+(cl-loop for f in
+         '(fancy-diary-display simple-diary-display
+                               diary-list-entries)
+         do
+         (eval
+          `(defadvice ,f (around emacsvox pre act com)
+             "Silence messages."
+             (let ((emacsvox-speak-messages (not (ems-interactive-p))))
+               ad-do-it))))
+
+
+(defun ems--view-diary-entries-after (&rest _)
+  "Speak the diary entries."
+  (when (ems-interactive-p)
+    (ems-with-messages-silenced
+     (cond
+      ((buffer-live-p (get-buffer "*Fancy Diary Entries*"))
+       (save-current-buffer
+	 (set-buffer "*Fancy Diary Entries*")
+	 (tts-with-punctuations "some" (emacsvox-speak-buffer))))
+      (t (dtk-speak "No diary entries."))))))
+
+
+(advice-add 'view-diary-entries :after #'ems--view-diary-entries-after)
+
+
+
+
+
+(defun ems--mark-visible-calendar-date-after (&rest _)
+  "Use voice locking to mark date. "
+  (let ((date (ad-get-arg 0)))
+    (if (calendar-date-is-valid-p date)
+	(save-current-buffer
+	  (set-buffer calendar-buffer)
+	  (calendar-cursor-to-visible-date date)
+	  (with-silent-modifications
+	    (put-text-property (1- (point)) (1+ (point)) 'personality
+			       emacsvox-calendar-mark-personality))))))
+
+
+(advice-add 'mark-visible-calendar-date :after
+	    #'ems--mark-visible-calendar-date-after)
+
+
+
+
+(defvar emacsvox-calendar-mode-line-format
+  '((calendar-date-string (calendar-current-date))  "Calendar")
+  "Mode line format for calendar  with Emacsvox.")
+
+(defvar emacsvox-calendar-header-line-format
+  '((:eval (calendar-date-string (calendar-cursor-to-date t))))
+  "Header line used by Emacsvox in calendar.")
+
+(cl-declaim (special calendar-mode-line-format))
+(setq calendar-mode-line-format
+      emacsvox-calendar-mode-line-format)
+
+
+(defun ems--calendar-after (&rest _)
+  "Announce yourself."
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object)
+    (when emacsvox-use-header-line
+      (setq header-line-format
+	    '((:eval
+	       (calendar-date-string (calendar-cursor-to-date t))))))
+    (setq calendar-mode-line-format
+	  emacsvox-calendar-mode-line-format)
+    (tts-with-punctuations 'some (emacsvox-speak-mode-line))))
+
+
+(advice-add 'calendar :after #'ems--calendar-after)
+
+
+
+
+
+(defun ems--calendar-goto-date-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p) (emacsvox-calendar-speak-date))
+  (emacsvox-icon 'select-object))
+
+
+(advice-add 'calendar-goto-date :after #'ems--calendar-goto-date-after)
+
+
+
+
+
+(defun ems--calendar-goto-today-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p) (emacsvox-calendar-speak-date))
+  (emacsvox-icon 'select-object))
+
+
+(advice-add 'calendar-goto-today :after
+	    #'ems--calendar-goto-today-after)
+
+
+
+
+
+(defun ems--calendar-backward-day-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'select-object)))
+
+
+(advice-add 'calendar-backward-day :after
+	    #'ems--calendar-backward-day-after)
+
+
+
+
+
+(defun ems--calendar-forward-day-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'select-object)))
+
+
+(advice-add 'calendar-forward-day :after
+	    #'ems--calendar-forward-day-after)
+
+
+
+
+
+(defun ems--calendar-backward-week-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'paragraph)))
+
+
+(advice-add 'calendar-backward-week :after
+	    #'ems--calendar-backward-week-after)
+
+
+
+
+
+(defun ems--calendar-forward-week-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'paragraph)))
+
+
+(advice-add 'calendar-forward-week :after
+	    #'ems--calendar-forward-week-after)
+
+
+
+
+
+(defun ems--calendar-backward-month-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'section)))
+
+
+(advice-add 'calendar-backward-month :after
+	    #'ems--calendar-backward-month-after)
+
+
+
+
+
+(defun ems--calendar-forward-month-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'section)))
+
+
+(advice-add 'calendar-forward-month :after
+	    #'ems--calendar-forward-month-after)
+
+
+
+
+
+(defun ems--calendar-backward-year-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'large-movement)))
+
+
+(advice-add 'calendar-backward-year :after
+	    #'ems--calendar-backward-year-after)
+
+
+
+
+
+(defun ems--calendar-forward-year-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'large-movement)))
+
+
+(advice-add 'calendar-forward-year :after
+	    #'ems--calendar-forward-year-after)
+
+
+
+
+
+(defun ems--calendar-beginning-of-week-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'paragraph)))
+
+
+(advice-add 'calendar-beginning-of-week :after
+	    #'ems--calendar-beginning-of-week-after)
+
+
+
+
+
+(defun ems--calendar-beginning-of-month-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'section)))
+
+
+(advice-add 'calendar-beginning-of-month :after
+	    #'ems--calendar-beginning-of-month-after)
+
+
+
+
+
+(defun ems--calendar-beginning-of-year-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'large-movement)))
+
+
+(advice-add 'calendar-beginning-of-year :after
+	    #'ems--calendar-beginning-of-year-after)
+
+
+
+
+
+(defun ems--calendar-end-of-week-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'paragraph)))
+
+
+(advice-add 'calendar-end-of-week :after
+	    #'ems--calendar-end-of-week-after)
+
+
+
+
+
+(defun ems--calendar-end-of-month-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'section)))
+
+
+(advice-add 'calendar-end-of-month :after
+	    #'ems--calendar-end-of-month-after)
+
+
+
+
+
+(defun ems--calendar-end-of-year-after (&rest _)
+  "Speak the date. "
+  (when (ems-interactive-p)
+    (emacsvox-calendar-speak-date) (emacsvox-icon 'large-movement)))
+
+
+(advice-add 'calendar-end-of-year :after
+	    #'ems--calendar-end-of-year-after)
+
+
+
+(cl-loop for f in
+         '(exit-calendar calendar-exit calendar-quit)
+         do
+         (eval
+          `(defadvice ,f (after emacsvox pre act comp)
+             "Speak modeline. "
+             (when (ems-interactive-p)
+               (emacsvox-icon 'close-object)
+               (emacsvox-speak-mode-line)))))
+
+
+(defun ems--insert-block-diary-entry-before (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (let*
+	((cursor (calendar-cursor-to-date t))
+	 (mark
+	  (or (car calendar-mark-ring)
+	      (error "No mark set in this buffer")))
+	 (start) (end))
+      (if
+	  (< (calendar-absolute-from-gregorian mark)
+	     (calendar-absolute-from-gregorian cursor))
+	  (setq start mark end cursor)
+	(setq start cursor end mark))
+      (emacsvox-icon 'open-object)
+      (message "Block diary entry from  %s to %s"
+	       (calendar-date-string start nil t)
+	       (calendar-date-string end nil t)))))
+
+
+(advice-add 'insert-block-diary-entry :before
+	    #'ems--insert-block-diary-entry-before)
+
+
+
+
+(defvar emacsvox-calendar-user-input nil
+  "Records last user input to calendar")
+
+
+(defun ems--calendar-read-around (orig-fun &rest args)
+  "Record what was read"
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special emacsvox-calendar-user-input))
+    (apply orig-fun args) (setq emacsvox-calendar-user-input result)
+    result))
+
+
+(advice-add 'calendar-read :around #'ems--calendar-read-around)
+
+
+
+
+(defun ems--insert-anniversary-diary-entry-before (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object)
+    (message "Anniversary entry for %s"
+	     (calendar-date-string (calendar-cursor-to-date)))))
+
+
+(advice-add 'insert-anniversary-diary-entry :before
+	    #'ems--insert-anniversary-diary-entry-before)
+
+
+
+
+
+(defun ems--insert-cyclic-diary-entry-after (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object)
+    (message "Insert cyclic diary entry that repeats every\n%s days"
+	     emacsvox-calendar-user-input)))
+
+
+(advice-add 'insert-cyclic-diary-entry :after
+	    #'ems--insert-cyclic-diary-entry-after)
+
+
+
+
+
+(defun ems--insert-diary-entry-after (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+
+
+(advice-add 'insert-diary-entry :after #'ems--insert-diary-entry-after)
+
+
+
+
+
+(defun ems--insert-weekly-diary-entry-before (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object)
+    (message "Weekly diary entry for %s"
+	     (calendar-day-name (calendar-cursor-to-date t)))))
+
+
+(advice-add 'insert-weekly-diary-entry :before
+	    #'ems--insert-weekly-diary-entry-before)
+
+
+
+
+
+(defun ems--insert-yearly-diary-entry-before (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object)
+    (message "Yearly diary entry for %s %s"
+	     (calendar-month-name
+	      (cl-first (calendar-cursor-to-date t)))
+	     (cl-second (calendar-cursor-to-date t)))))
+
+
+(advice-add 'insert-yearly-diary-entry :before
+	    #'ems--insert-yearly-diary-entry-before)
+
+
+
+
+
+(defun ems--insert-monthly-diary-entry-before (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object)
+    (message "Monthly diary entry for %s"
+	     (cl-second (calendar-cursor-to-date t)))))
+
+
+(advice-add 'insert-monthly-diary-entry :before
+	    #'ems--insert-monthly-diary-entry-before)
+
+
+
+
+
+(defun ems--calendar-cursor-holidays-after (&rest _)
+  "Speak the displayed holidays"
+  (when (ems-interactive-p) (emacsvox-speak-message-again)))
+
+
+(advice-add 'calendar-cursor-holidays :after
+	    #'ems--calendar-cursor-holidays-after)
+
+
+
+
+
+(defun ems--mark-diary-entries-around (orig-fun &rest args)
+  "Silence messages."
+  (let ((result (apply orig-fun args)))
+    (ems-with-messages-silenced (apply orig-fun args) result) result))
+
+
+(advice-add 'mark-diary-entries :around
+	    #'ems--mark-diary-entries-around)
+
+
+
+
+;;;  Global sunrise/sunset wizard:
+
+(defun emacsvox-calendar-sunrise-sunset (address &optional arg)
+  "Display sunrise/sunset for specified address."
+  (interactive
+   (list
+    (read-from-minibuffer "Address: ")
+    current-prefix-arg))
+  (cl-declare (special calendar-standard-time-zone-name
+                       calendar-longitude calendar-latitude))
+  (let* ((geo (gmaps-address-geocode address))
+         (calendar-latitude (g-json-get 'lat geo))
+         (calendar-longitude (g-json-get 'lng geo))
+         (calendar-time-zone
+          (solar-get-number
+           "Enter difference from Coordinated Universal Time (in minutes): "))
+         (calendar-standard-time-zone-name
+          (cond ((zerop calendar-time-zone) "UTC")
+                ((< calendar-time-zone 0)
+                 (format "UTC%dmin" calendar-time-zone))
+                (t (format "UTC+%dmin" calendar-time-zone))))
+         (date (if arg (calendar-read-date) (calendar-current-date)))
+         (date-string (calendar-date-string date t))
+         (time-string (solar-sunrise-sunset-string date)))
+    (message "%s: %s at %s" date-string time-string address)))
+
+;;;   keymap
+
+(defun emacsvox-calendar-setup()
+  "Set up appropriate bindings for calendar"
+  (cl-declare (special calendar-buffer calendar-mode-map emacsvox-prefix))
+  (save-current-buffer
+    (set-buffer calendar-buffer)
+    (local-unset-key emacsvox-prefix)
+    (define-key calendar-mode-map (kbd "gG") 'emacsvox-google-search-before)
+    (define-key calendar-mode-map (kbd "gg") 'emacsvox-google-search-after)
+    (define-key calendar-mode-map "v" 'view-diary-entries)
+    (define-key calendar-mode-map "\M-s" 'emacsvox-calendar-sunrise-sunset)
+    (define-key calendar-mode-map  "\C-e." 'emacsvox-calendar-speak-date)
+    (define-key calendar-mode-map  "\C-ee"
+                'calendar-end-of-week)))
+
+(define-key calendar-mode-map (kbd "gy") 'emacsvox-empv-yt-after)
+(define-key calendar-mode-map (kbd "gY") 'emacsvox-empv-yt-before)
+;;;   Appointments:
+
+;;;  take over and speak the appointment
+
+;; For the present, we just take over and speak the appointment.
+
+(cl-declaim (special appt-display-duration))
+(setq appt-display-duration 90)
+
+(defun emacsvox-appt-speak-appointment (minutes-left new-time message)
+  "Speak the appointment in addition to  displaying it visually."
+  (emacsvox-icon 'alarm)
+  (message "You have an appointment in %s minutes. %s"
+           minutes-left message)
+  (appt-disp-window minutes-left new-time  message))
+
+(defun emacsvox-appt-delete-display ()
+  "Function to delete appointment message"
+  (cl-declare (special appt-buffer-name))
+  (and (get-buffer appt-buffer-name)
+       (save-current-buffer
+         (set-buffer appt-buffer-name)
+         (erase-buffer))))
+
+(cl-declaim (special appt-delete-window
+                     appt-disp-window-function))
+
+(setq appt-disp-window-function 'emacsvox-appt-speak-appointment)
+(setq appt-delete-window 'emacsvox-appt-delete-display)
+
+(defun emacsvox-appt-repeat-announcement ()
+  "Speaks the most recently displayed appointment message if any."
+  (interactive)
+  (cl-declare (special appt-buffer-name))
+  (let  ((appt-buffer (get-buffer appt-buffer-name)))
+    (cond
+     (appt-buffer
+      (save-current-buffer
+        (set-buffer  appt-buffer)
+        (if (= (point-min) (point-max))
+            (message  "No appointments are currently displayed")
+          (dtk-speak (buffer-string)))))
+     (t (message "You have no appointments ")))))
+
+
+(defun ems--appt-add-after (&rest _)
+  "Confirm that the alarm got set."
+  (when (ems-interactive-p)
+    (let ((time (ad-get-arg 0)) (message (ad-get-arg 1)))
+      (message "Set alarm %s at %s" message time))))
+
+
+(advice-add 'appt-add :after #'ems--appt-add-after)
+
+
+
+
+;;;  Use GWeb if available for configuring sunrise/sunset coords
+
+(defun emacsvox-calendar-setup-sunrise-sunset ()
+  "Set up geo-coordinates using Google Maps reverse geocoding.
+To use, configure variable gmaps-my-address via M-x customize-variable."
+  (interactive)
+  (cl-declare (special  gmaps-my-address gmaps-my-location
+                        calendar-latitude calendar-longitude))
+  (cond
+   ((null gmaps-my-location)
+    (message "First customize gmaps-my-address."))
+   (t
+    (setq
+     calendar-latitude
+     (g-json-get 'lat (gmaps-address-geocode gmaps-my-address))
+     calendar-longitude
+     (g-json-get 'lng (gmaps-address-geocode gmaps-my-address))))))
+
+
+(defun ems--calendar-sunrise-sunset-around (orig-fun &rest args)
+  "Like calendar's sunrise-sunset, but speaks location intelligently."
+  (cl-declare (special gmaps-my-address))
+  (cond
+   ((and (boundp 'gmaps-my-address) gmaps-my-address
+	 (ems-interactive-p))
+    (let ((date (calendar-cursor-to-date t)))
+      (message "%s at %s"
+	       (solar-sunrise-sunset-string date 'nolocation)
+	       gmaps-my-address)))
+   (t (apply orig-fun args))))
+
+
+(advice-add 'calendar-sunrise-sunset :around
+	    #'ems--calendar-sunrise-sunset-around)
+
+
+
+
+;;;  Lunar Phases
+
+(cl-loop for f in
+         '(calendar-lunar-phases lunar-phases phases-of-moon)
+         do
+         (eval
+          `(defadvice ,f (after emacsvox pre act comp)
+             "speak."
+             (when (ems-interactive-p)
+               (with-current-buffer lunar-phases-buffer
+                 (emacsvox-icon 'open-object)
+                 (emacsvox-speak-buffer))))))
+
+(cl-loop for f in
+         '(holidays calendar-list-holidays)
+         do
+         (eval
+          `(defadvice ,f (after emacsvox pre act comp)
+             "speak."
+             (when (ems-interactive-p)
+               (with-current-buffer holiday-buffer
+                 (emacsvox-icon 'open-object)
+                 (emacsvox-speak-buffer))))))
+
+(provide 'emacsvox-calendar)
+;;;  emacs local variables
+

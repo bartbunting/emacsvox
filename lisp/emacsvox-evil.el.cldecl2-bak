@@ -1,0 +1,388 @@
+;;; emacsvox-evil.el --- Speech-enable EVIL  -*- lexical-binding: t; -*-
+;; $Author: tv.raman.tv $
+;; Description:  Speech-enable EVIL An Emacs Interface to evil
+;; Keywords: Emacsvox,  Audio Desktop evil
+;;;   LCD Archive entry:
+
+;; LCD Archive Entry:
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
+;; A speech interface to Emacs |
+;; 
+;;  $Revision: 4532 $ |
+;; Location https://github.com/tvraman/emacsvox
+;; 
+
+;;;   Copyright:
+;; Copyright (C) 1995 -- 2007, 2011, T. V. Raman
+;; Copyright (c) 1994, 1995 by Digital Equipment Corporation.
+;; All Rights Reserved.
+;; 
+;; This file is not part of GNU Emacs, but the same permissions apply.
+;; 
+;; GNU Emacs is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;; 
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNEVIL FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;; 
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; Commentary:
+;; EVIL ==  VIM In Emacs
+;; This is work-in-progress and is not complete.
+;;; Code:
+
+;;   Required modules:
+
+(eval-when-compile (require 'cl-lib))
+(cl-declaim  (optimize  (safety 0) (speed 3)))
+(require 'emacsvox-preamble)
+
+;;;  Map Faces:
+
+(voice-setup-add-map
+ '(
+   (evil-ex-commands voice-bolden)
+   (evil-ex-info voice-monotone-extra)
+   (evil-ex-lazy-highlight voice-animate)
+   (evil-ex-search voice-bolden-and-animate)
+   (evil-ex-substitute-matches voice-lighten)
+   (evil-ex-substitute-replacement voice-smoothen)))
+
+;;;  Interactive Commands:
+
+;;;  Switching Buffers:
+
+(cl-loop
+ for f in
+ '(evil-next-buffer evil-prev-buffer)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-speak-mode-line)))))
+
+;;;  Structured  Motion:
+
+(cl-loop
+ for f in
+ '(
+   evil-beginning-of-line evil-end-of-line
+   evil-ret evil-window-top)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-icon 'select-object)
+       (emacsvox-speak-line)))))
+
+;; we want the next set to be a little less noisy and not play
+;; auditory icons when they execute
+(cl-loop
+ for f in
+ '(evil-next-line evil-previous-line)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-speak-line)))))
+
+;; read visual lines when moving in visual lines 
+(cl-loop
+ for f in
+ '(evil-next-visual-line evil-previous-visual-line)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-speak-visual-line)))))
+
+(cl-loop
+ for f in
+ '(
+   evil-goto-mark evil-goto-mark-line
+   evil-goto-definition evil-goto-first-line evil-goto-line
+   evil-forward-section-begin evil-forward-section-end
+   evil-backward-paragraph evil-forward-paragraph
+   evil-backward-section-begin evil-backward-section-end
+   evil-previous-open-paren evil-previous-match evil-next-match
+   evil-next-line-first-non-blank evil-next-line-1-first-non-blank
+   evil-next-close-paren evil-last-non-blank
+   evil-jump-backward evil-jump-forward evil-jump-to-tag
+   evil-forward-sentence-begin evil-first-non-blank
+   evil-backward-sentence-begin)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (let ((emacsvox-show-point t))
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line))))))
+
+(cl-loop
+ for f in
+ '(evil-scroll-down evil-scroll-up)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-icon 'large-movement)
+       (emacsvox-speak-current-window)))))
+
+;;;  Word Motion
+
+(cl-loop
+ for f in
+ '(
+   evil-backward-word-begin evil-backward-word-end
+   evil-forward-word-begin evil-forward-word-end)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "speak."
+     (when (ems-interactive-p)
+       (emacsvox-speak-word)))))
+
+;;;  Char Motion :
+
+
+(defun ems--evil-backward-char-after (&rest _)
+  "Speak char."
+  (when (ems-interactive-p)
+    (emacsvox-speak-this-char (following-char))))
+
+
+(advice-add 'evil-backward-char :after #'ems--evil-backward-char-after)
+
+
+
+
+
+(defun ems--evil-forward-char-after (&rest _)
+  "Speak char."
+  (when (ems-interactive-p)
+    (emacsvox-speak-this-char (following-char))))
+
+
+(advice-add 'evil-forward-char :after #'ems--evil-forward-char-after)
+
+
+
+
+;;;  Deletion:
+
+
+(defun ems--evil-delete-char-before (&rest _)
+  "Speak char we are deleting."
+  (when (ems-interactive-p)
+    (emacsvox-speak-char t) (dtk-tone-deletion)))
+
+
+(advice-add 'evil-delete-char :before #'ems--evil-delete-char-before)
+
+
+
+
+
+(defun ems--evil-delete-backward-char-before (&rest _)
+  "Speak char we are deleting."
+  (when (ems-interactive-p)
+    (emacsvox-speak-this-char (preceding-char)) (dtk-tone-deletion)))
+
+
+(advice-add 'evil-delete-backward-char :before
+	    #'ems--evil-delete-backward-char-before)
+
+
+
+
+
+(defun ems--evil-delete-line-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (dtk-speak "Deleted to end of line.")
+    (emacsvox-icon 'delete-object)))
+
+
+(advice-add 'evil-delete-line :after #'ems--evil-delete-line-after)
+
+
+
+
+
+(defun ems--evil-delete-before (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-region (ad-get-arg 0) (ad-get-arg 1))))
+
+
+(advice-add 'evil-delete :before #'ems--evil-delete-before)
+
+
+
+
+;;;  Searching:
+(cl-loop
+ for f in
+ '(evil-search-next evil-search-previous)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "Speak line with point highlighted."
+     (when (ems-interactive-p)
+       (let ((emacsvox-show-point t))
+         (emacsvox-speak-line)
+         (emacsvox-icon 'search-hit))))))
+
+;;;  Completion:
+
+(cl-loop
+ for f in
+ '(evil-complete-next evil-complete-previous)
+ do
+ (eval
+  `(defadvice ,f (around emacsvox pre act comp)
+     "Speak what was completed."
+     (cond
+      ((ems-interactive-p)
+       (let ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
+         (ems-with-messages-silenced
+          ad-do-it
+          (emacsvox-icon 'complete)
+          (if (< orig (point))
+              (dtk-speak (buffer-substring orig (point)))
+            (dtk-speak (word-at-point))))))
+      (t ad-do-it))
+     ad-return-value)))
+
+(cl-loop
+ for f in
+ '(evil-complete-next-line evil-complete-previous-line)
+ do
+ (eval
+  `(defadvice ,f (after emacsvox pre act comp)
+     "Speak completed line."
+     (when (ems-interactive-p)
+       (let ((emacsvox-show-point t))
+         (emacsvox-icon 'complete)
+         (emacsvox-speak-line))))))
+
+;;;  Marks:
+
+(defun ems--evil-set-marker-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacsvox-icon 'mark-object)
+    (let ((emacsvox-show-point t))
+      (emacsvox-speak-line)
+      (dtk-notify (format "Marker %c" (ad-get-arg 0))))))
+
+
+(advice-add 'evil-set-marker :after #'ems--evil-set-marker-after)
+
+
+
+
+;;;  Update keymaps:
+
+(defun emacsvox-evil-fix-emacsvox-prefix (keymap)
+  "Move original evil command on C-e to C-e e."
+  (when (keymapp keymap)
+    (let ((orig (lookup-key keymap emacsvox-prefix)))
+      (when orig
+        (define-key keymap emacsvox-prefix  'emacsvox-keymap)
+        (define-key keymap (concat emacsvox-prefix "e") orig)
+        (define-key keymap (concat emacsvox-prefix emacsvox-prefix) orig)))))
+
+(cl-declaim (special
+             evil-normal-state-map evil-insert-state-map
+             evil-visual-state-map evil-replace-state-map
+             evil-operator-state-map evil-motion-state-map
+             evil-evilified-state-map))
+
+(eval-after-load
+    "evil-maps"
+  `(progn
+     (mapc
+      #'emacsvox-evil-fix-emacsvox-prefix
+      (list
+       evil-normal-state-map evil-insert-state-map
+       evil-visual-state-map evil-replace-state-map
+       evil-operator-state-map evil-motion-state-map))
+     (emacsvox-keymap-recover-eol)))
+
+(eval-after-load
+    "evil-evilified-state"
+  `(progn
+     (mapc
+      #'emacsvox-evil-fix-emacsvox-prefix
+      (list
+       evil-evilified-state-map))
+     (emacsvox-keymap-recover-eol)))
+
+;;;  State Hooks:
+
+(defun  emacsvox-evil-state-change-hook  ()
+  "State change feedback."
+  (when (and evil-previous-state evil-next-state
+             (not (eq evil-previous-state evil-next-state)))
+    (emacsvox-icon 'select-object)
+    (dtk-notify
+     (format "Changing state from %s to %s"
+             evil-previous-state evil-next-state))))
+
+(cl-loop
+ for hook in
+ '(
+   evil-normal-state-exit-hook evil-insert-state-exit-hook
+   evil-visual-state-exit-hook evil-replace-state-exit-hook
+   evil-operator-state-exit-hook evil-motion-state-exit-hook)
+ do
+ (add-hook hook #'emacsvox-evil-state-change-hook))
+
+(defun ems--evil-exit-emacs-state-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacsvox-icon 'open-object) (dtk-notify "Leaving Emacs state.")))
+
+
+(advice-add 'evil-exit-emacs-state :after
+	    #'ems--evil-exit-emacs-state-after)
+
+
+
+
+;;;  Additional Commands:
+
+(declare-function evil-mode "evil-core" (&optional flag))
+
+(defun emacsvox-evil-toggle-evil ()
+  "Interactively toggle evil-mode."
+  (interactive)
+  (cl-assert (locate-library "evil") nil "I see no evil!")
+  (require 'evil)
+  (evil-mode (if evil-mode -1 1))
+  (emacsvox-icon (if evil-mode 'on 'off))
+  (message "Turned %s evil-mode"
+           (if evil-mode "on" "off")))
+
+(provide 'emacsvox-evil)
+;;;  end of file
+

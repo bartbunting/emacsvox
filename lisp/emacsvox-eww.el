@@ -500,7 +500,7 @@
   `(defun
        ,(intern (format "emacsvox-eww-current-%s" name)) ()
      , (format "Return eww-current-%s." name)
-     (cl-declare (special eww-data))
+     
      (plist-get eww-data
                 ,(intern (format ":%s" name)))))
  (eval
@@ -538,14 +538,14 @@
 (add-hook
  'eww-mode-hook
  #'(lambda ()
-     (cl-declare (special outline- outline-search-function))
+     
      (outline-minor-mode)
      (emacsvox-pronounce-toggle-dictionaries t)))
 
 (defun emacsvox-eww-shr-outline-toggle ()
   "Toggle between shr and native outliner."
   (interactive)
-  (cl-declare (special outline-regexp outline-level outline-search-function))
+  
   (cond
    (outline-search-function             ;turn off emacs 30 version:
     (setq-local outline-regexp "^ *[•0-9]+\\.? "
@@ -566,7 +566,7 @@
 (defun emacsvox-eww-masquerade ()
   "Toggle masquerade."
   (interactive)
-  (cl-declare (special emacsvox-eww-masquerade))
+  
   (setq emacsvox-eww-masquerade (not emacsvox-eww-masquerade))
   (message "Turned %s masquerade"
            (if emacsvox-eww-masquerade "on" "off"))
@@ -613,13 +613,6 @@ Safari/537.36"
 
 (defun emacsvox-eww-setup ()
   "Setup keymaps etc."
-  (cl-declare (special
-               eww-header-line-format
-               shr-external-rendering-functions emacsvox-eww-filter-renderers
-               eww-mode-map eww-link-keymap eww-text-map
-               shr-inhibit-images emacsvox-eww-inhibit-images
-               emacsvox-pronounce-xml-ns
-               emacsvox-eww-masquerade))
   (setq eww-header-line-format "%t ")
   (emacsvox-pronounce-augment 'eww-mode emacsvox-pronounce-xml-ns)
   (emacsvox-pronounce-add-dictionary-entry
@@ -730,9 +723,6 @@ interactive prefix arg `playlist-p' treats link as a playlist.  A
 second interactive prefix arg adds mplayer option
 -allow-dangerous-playlist-parsing"
   (interactive "P")
-  (cl-declare (special
-               emacsvox-m-player-media-history
-               emacsvox-eww-url-at-point))
   (let ((url (browse-url-url-at-point)))
     (cl-assert (stringp url) t "No URL under point." )
     (kill-new url)
@@ -746,7 +736,7 @@ second interactive prefix arg adds mplayer option
 
 (defun emacsvox-eww-prepare-eww ()
   "Ensure that we are in an EWW buffer."
-  (cl-declare (special major-mode  emacsvox-eww-cache-updated))
+  
   (unless (eq major-mode 'eww-mode) (error "Not in EWW buffer."))
   (unless (emacsvox-eww-current-dom) (error "No DOM!"))
   (unless emacsvox-eww-cache-updated
@@ -886,7 +876,7 @@ are available are cued by an auditory icon on the header line."
 
 (defun emacsvox-eww-after-render-hook ()
   "Setup Emacsvox for rendered buffer. "
-  (cl-declare (special  emacsvox-eww-post-hook))
+  
   (let ((title (emacsvox-eww-current-title))
         (alt (dom-alternate-links (emacsvox-eww-current-dom))))
     (when (= 0 (length title))
@@ -1015,7 +1005,7 @@ are available are cued by an auditory icon on the header line."
  (eval
   `(defadvice ,f (after emacsvox pre act comp)
      "speak."
-     (cl-declare (special emacsvox-eww-a-speaker))
+     
      (when (ems-interactive-p)
        (let ((host
               (condition-case nil
@@ -1043,7 +1033,7 @@ are available are cued by an auditory icon on the header line."
 
 (defun ems--eww-follow-link-around (orig-fun &rest args)
   "Respect emacsvox-we-url-executor if set."
-  (cl-declare (special emacsvox-we-url-executor))
+  
   (emacsvox-icon 'button)
   (let ((emacsvox-eww-masquerade t))
     (cond
@@ -1068,7 +1058,7 @@ are available are cued by an auditory icon on the header line."
   (add-hook
    'emacsvox-eww-post-hook
    #'(lambda nil
-       (cl-declare (special emacsvox-we-xpath-filter))
+       
        (setq emacsvox-we-xpath-filter
              emacsvox-we-paragraphs-xpath-filter)
        (dtk-set-punctuations-to-some)
@@ -1081,7 +1071,7 @@ are available are cued by an auditory icon on the header line."
 
 (defun emacsvox-eww-run-pre-process-hook (&rest _ignore)
   "Run web pre process hook."
-  (cl-declare (special emacsvox-eww-pre-process-hook))
+  
   (when     emacsvox-eww-pre-process-hook
     (condition-case
         nil
@@ -1099,7 +1089,7 @@ Note that the Web browser should reset this hook after using it.")
 
 (defun emacsvox-eww-run-post-process-hook (&rest _ignore)
   "Run web post process hook."
-  (cl-declare (special emacsvox-eww-post-hook))
+  
   (when     emacsvox-eww-post-hook
     (condition-case nil
         (let ((inhibit-read-only t))
@@ -1235,10 +1225,6 @@ Note that the Web browser should reset this hook after using it.")
 
 (defun eww-update-cache (dom)
   "Update element, role, class and id cache."
-  (cl-declare (special
-               emacsvox-eww-el-cache eww-id-cache
-               eww-property-cache eww-itemprop-cache
-               eww-role-cache eww-class-cache emacsvox-eww-cache-updated))
   (when (listp dom)                     ; build cache
     (let ((id (dom-attr dom 'id))
           (class (dom-attr dom 'class))
@@ -1268,7 +1254,7 @@ Note that the Web browser should reset this hook after using it.")
 
 (defun emacsvox-eww-tag-audio (dom)
   "Tag audio , then render."
-  (cl-declare (special emacsvox-eww-audio-keymap))
+  
   (let ((start (point)))
     (shr-tag-audio dom)
     (add-text-properties
@@ -1280,7 +1266,7 @@ Note that the Web browser should reset this hook after using it.")
 
 (defun emacsvox-eww-tag-video (dom)
   "Tag video tag, then render."
-  (cl-declare (special emacsvox-eww-audio-keymap))
+  
   (let ((start (point)))
     (shr-tag-video dom)
     (add-text-properties
@@ -1456,7 +1442,7 @@ for use as a DOM filter."
 
 (defun emacsvox-eww-read-id ()
   "Return id value read from minibuffer."
-  (cl-declare (special eww-id-cache))
+  
   (unless eww-id-cache (error "No id to filter."))
   (let ((value (completing-read "Value: " eww-id-cache nil 'must-match)))
     (unless (zerop (length value)) value)))
@@ -1557,7 +1543,7 @@ Optional interactive arg `multi' prompts for multiple classes."
 
 (defun emacsvox-eww-read-class ()
   "Return class value read from minibuffer."
-  (cl-declare (special eww-class-cache))
+  
   (unless eww-class-cache (error "No class to filter."))
   (let ((value (completing-read "Value: " eww-class-cache nil 'must-match)))
     (unless (zerop (length value)) value)))
@@ -1598,21 +1584,21 @@ Optional interactive arg `multi' prompts for multiple classes."
 
 (defun emacsvox-eww-read-role ()
   "Return role value read from minibuffer."
-  (cl-declare (special eww-role-cache))
+  
   (unless eww-role-cache (error "No role to filter."))
   (let ((value (completing-read "Value: " eww-role-cache nil 'must-match)))
     (unless (zerop (length value)) value)))
 
 (defun emacsvox-eww-read-prop ()
   "Return property value read from minibuffer."
-  (cl-declare (special eww-property-cache))
+  
   (unless eww-property-cache (error "No property to filter."))
   (let ((value (completing-read "Value: " eww-property-cache nil 'must-match)))
     (unless (zerop (length value)) value)))
 
 (defun emacsvox-eww-read-itemprop ()
   "Return itemprop value read from minibuffer."
-  (cl-declare (special eww-itemprop-cache))
+  
   (unless eww-itemprop-cache (error "No itemprop to filter."))
   (let ((value (completing-read "Value: " eww-itemprop-cache nil 'must-match)))
     (unless (zerop (length value)) value)))
@@ -1636,7 +1622,7 @@ Optional interactive arg `multi' prompts for multiple classes."
   "Display DOM filtered by specified  nodes not passing   role=value test.
 Optional interactive arg `multi' prompts for multiple classes."
   (interactive "P")
-  (cl-declare (special  emacsvox-eww-shr-renderers))
+  
   (emacsvox-eww-prepare-eww)
   (let ((dom
          (eww-dom-remove-if
@@ -1672,7 +1658,7 @@ Optional interactive arg `multi' prompts for multiple classes."
   "Display DOM filtered by specified  nodes not passing   property=value test.
 Optional interactive arg `multi' prompts for multiple classes."
   (interactive "P")
-  (cl-declare (special  emacsvox-eww-shr-renderers))
+  
   (emacsvox-eww-prepare-eww)
   (let ((dom
          (eww-dom-remove-if
@@ -1708,7 +1694,7 @@ Optional interactive arg `multi' prompts for multiple classes."
   "Display DOM filtered by specified  nodes not passing   itemprop=value test.
 Optional interactive arg `multi' prompts for multiple classes."
   (interactive "P")
-  (cl-declare (special  emacsvox-eww-shr-renderers))
+  
   (emacsvox-eww-prepare-eww)
   (let ((dom
          (eww-dom-remove-if
@@ -1726,7 +1712,7 @@ Optional interactive arg `multi' prompts for multiple classes."
         dom (eww-current-url))))))
 (defun emacsvox-eww-read-element ()
   "Return element  value read from minibuffer."
-  (cl-declare (special emacsvox-eww-el-cache))
+  
   (let ((value
          (completing-read "Value: " emacsvox-eww-el-cache nil 'must-match)))
     (unless (zerop (length value)) (intern value))))
@@ -1767,7 +1753,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
       (emacsvox-eww-read-element)
       (read-from-minibuffer "Text:")
       current-prefix-arg)))
-  (cl-declare (special eww-current-url))
+  
   (let ((dom (dom-by-tag  (emacsvox-eww-current-dom) element))
         (transform (if reverse 'nreverse 'identity)))
     (cond
@@ -1804,7 +1790,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
 (defun emacsvox-eww-restore ()
   "Restore buffer to pre-filtered canonical state."
   (interactive)
-  (cl-declare (special eww-history eww-history-position))
+  
   (eww-restore-history(elt eww-history eww-history-position))
   (emacsvox-speak-header-line)
   (emacsvox-icon 'open-object))
@@ -1937,7 +1923,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
 (defun emacsvox-eww-next-element-from-history ()
   "Uses element navigation history to decide where we jump."
   (interactive)
-  (cl-declare (special emacsvox-eww-el-nav-history))
+  
   (cond
    (emacsvox-eww-el-nav-history
     (funcall-interactively #'emacsvox-eww-next-element
@@ -1947,7 +1933,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
 (defun emacsvox-eww-previous-element-from-history ()
   "Uses element navigation history to decide where we jump."
   (interactive)
-  (cl-declare (special emacsvox-eww-el-nav-history))
+  
   (cond
    (emacsvox-eww-el-nav-history
     (funcall-interactively #'emacsvox-eww-previous-element
@@ -1992,7 +1978,7 @@ Prompts if content at point is enclosed by multiple elements."
 (defun emacsvox-eww-speak-this-element ()
   "Speak current ."
   (interactive)
-  (cl-declare (special emacsvox-eww-el-nav-history))
+  
   (cl-assert emacsvox-eww-el-nav-history t "No element here")
   (let  ((start
           (next-single-property-change (point) emacsvox-eww-el-nav-history)))
@@ -2024,7 +2010,7 @@ Second interactive prefix arg toggles default value of this flag.
 The %s is automatically spoken if there is no user activity."
        f f f)
      (interactive "P")
-     (cl-declare (special emacsvox-eww-autospeak))
+     
      (let ((s (intern ,(format "%s" f))))
        (when (memq s '(h1 h2 h3 h4 h))
          (emacsvox-icon 'section))
@@ -2044,7 +2030,7 @@ See user option `emacsvox-eww-autospeak' on how to reverse this behavior.
 The %s is automatically spoken if there is no user activity."
               f f f)
      (interactive "P")
-     (cl-declare (special emacsvox-eww-autospeak))
+     
      (let ((s (intern ,(format "%s" f))))
        (when (memq s '(h1 h2 h3 h4 h))
          (emacsvox-icon 'section))
@@ -2229,7 +2215,7 @@ The %s is automatically spoken if there is no user activity."
 (defun emacsvox-eww-marks-load ()
   "Load saved marks."
   (interactive)
-  (cl-declare (special emacsvox-eww-marks emacsvox-eww-marks-file))
+  
   (when (file-exists-p emacsvox-eww-marks-file)
     (ems--fastload emacsvox-eww-marks-file)
     emacsvox-eww-marks))
@@ -2253,10 +2239,6 @@ into `notes'.`m"
      (let ((input (read-from-minibuffer "Mark: " nil nil nil nil "current")))
        (if (zerop (length input))
            "current" input)))))
-  (cl-declare (special
-               emacsvox-bookshare-directory
-               org-stored-links emacsvox-eww-marks
-               emacsvox-epub-this-epub emacsvox-bookshare-this-book))
   (let ((bm
          (make-emacsvox-eww-mark
           :name name
@@ -2320,7 +2302,7 @@ into `notes'.`m"
 (defun emacsvox-eww-delete-mark (name)
   "Interactively delete a mark with name `name' at current position."
   (interactive "sMark Name: ")
-  (cl-declare (special emacsvox-eww-marks))
+  
   (remhash name emacsvox-eww-marks)
   (emacsvox-eww-marks-save)
   (emacsvox-icon 'delete-object)
@@ -2339,7 +2321,7 @@ arg `delete', delete that mark instead."
         (error "No Emacsvox EWW Marks found."))
       (completing-read "Mark: " emacsvox-eww-marks))
     current-prefix-arg))
-  (cl-declare (special emacsvox-eww-marks))
+  
   (cond
    (delete (emacsvox-eww-delete-mark name)
            (emacsvox-icon 'delete-object))
@@ -2379,7 +2361,7 @@ arg `delete', delete that mark instead."
 (defun emacsvox-eww-marks-save ()
   "Save Emacsvox EWW marks."
   (interactive)
-  (cl-declare (special emacsvox-eww-marks-file emacsvox-eww-marks))
+  
   (when (hash-table-p emacsvox-eww-marks)
     (emacsvox--persist-variable 'emacsvox-eww-marks
                                  emacsvox-eww-marks-file)))
@@ -2402,7 +2384,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
 (defun emacsvox-eww-marks-browse ()
   "List EWW Marks as actionable buttons."
   (interactive)
-  (cl-declare (special emacsvox-eww-marks))
+  
   (let ((buffer (get-buffer-create "EWW Marks"))
         (inhibit-read-only t))
     (with-current-buffer buffer
@@ -2424,7 +2406,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
 (defun emacsvox-eww-reading-settings  ()
   "Setup speech-rate, punctuation and split-caps for reading prose."
   (interactive)
-  (cl-declare (special dtk-speech-rate-base dtk-speech-rate-step))
+  
   (dtk-set-rate (+ dtk-speech-rate-base (* dtk-speech-rate-step  3)))
   (dtk-set-punctuations 'all)
   (when dtk-split-caps(dtk-toggle-split-caps))
@@ -2440,7 +2422,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
 (defun emacsvox-eww-shell-cmd-on-url-at-point (&optional prompt)
   "Run specified shell command on URL at point. "
   (interactive "P")
-  (cl-declare (special emacsvox-eww-url-shell-commands))
+  
   (let ((url
          (or (shr-url-at-point nil)
              (browse-url-url-at-point)))
@@ -2461,12 +2443,12 @@ via command `org-insert-link' bound to \\[org-insert-link]."
 
 (defsubst emacsvox-eww-smart-tabs-put (key url)
   " Add a  `URL'tou our smart tabs cache. "
-  (cl-declare (special emacsvox-eww-smart-tabs))
+  
   (puthash key url emacsvox-eww-smart-tabs))
 
 (defsubst emacsvox-eww-smart-tabs-get (key)
   "Retrieve URL stored in `KEY'"
-  (cl-declare (special emacsvox-eww-smart-tabs))
+  
   (gethash key  emacsvox-eww-smart-tabs))
 
 (defun emacsvox-eww-smart-tabs-add (char url )
@@ -2475,7 +2457,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
    (list
     (read-char-exclusive "Tab:")
     (read-from-minibuffer "URL:")))
-  (cl-declare (special emacsvox-eww-smart-tabs))
+  
   (emacsvox-eww-smart-tabs-put char url)
   (emacsvox-icon 'close-object))
 
@@ -2488,7 +2470,7 @@ with an interactive prefix arg. "
    (list
     (read-char-exclusive "EWWTab:")
     current-prefix-arg))
-  (cl-declare (special emacsvox-eww-smart-tabs))
+  
   (unless
       (and
        (bound-and-true-p emacsvox-eww-smart-tabs)
@@ -2519,7 +2501,7 @@ with an interactive prefix arg. "
 (defun emacsvox-eww-smart-tabs-load ()
   "Load our smart tabsfrom a file."
   (interactive)
-  (cl-declare (special emacsvox-user-directory))
+  
   (when
       (file-exists-p
        (expand-file-name "smart-eww-tabs" emacsvox-user-directory))
@@ -2626,7 +2608,7 @@ Value is specified as a position in the list of table cells.")
 (defsubst emacsvox-eww-table-speak-cell ()
   "Speak current cell."
   (interactive)
-  (cl-declare (special emacsvox-eww-table-cell))
+  
   (dtk-speak
    (dom-node-as-text
     (elt (emacsvox-eww-table-cells) emacsvox-eww-table-cell))))
@@ -2635,7 +2617,7 @@ Value is specified as a position in the list of table cells.")
   "Speak  cell after moving to previous row.
  Optional interactive prefix arg moves to start of table."
   (interactive "P")
-  (cl-declare (special emacsvox-eww-table-cell))
+  
   (emacsvox-eww-browser-check)
   (cond
    (prefix
@@ -2656,7 +2638,7 @@ Value is specified as a position in the list of table cells.")
   "Speak  cell after moving to next row.
  Optional interactive prefix arg moves to end of table."
   (interactive "P")
-  (cl-declare (special emacsvox-eww-table-cell))
+  
   (emacsvox-eww-browser-check)
   (cond
    (prefix
@@ -2679,7 +2661,7 @@ Value is specified as a position in the list of table cells.")
   "Speak next cell after making it current.
 Interactive prefix arg moves to the last cell in the table."
   (interactive "P")
-  (cl-declare (special emacsvox-eww-table-cell))
+  
   (emacsvox-eww-browser-check)
   (cl-assert
    (< (1+ emacsvox-eww-table-cell) (length (emacsvox-eww-table-cells)))
@@ -2701,7 +2683,7 @@ Interactive prefix arg moves to the last cell in the table."
   "Speak previous cell after making it current.
 With interactive prefix arg, move to the start of the table."
   (interactive "P")
-  (cl-declare (special emacsvox-eww-table-cell))
+  
   (emacsvox-eww-browser-check)
   (when  (zerop emacsvox-eww-table-cell  ) (error  "On first cell."))
   (cond
@@ -2773,7 +2755,7 @@ With interactive prefix arg, move to the start of the table."
   (interactive
    (list (car (browse-url-interactive-arg "Media URL: ")))
    eww-mode)
-  (cl-declare (special emacsvox-ytdl ))
+  
   (cl-assert emacsvox-ytdl t "Install youtube-dl first.")
   (let ((dir (funcall eww-download-directory)))
     (access-file dir "Cannot download here")

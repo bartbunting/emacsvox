@@ -124,7 +124,7 @@
 
 (defun emacsvox-tabulated-list-setup ()
   "Setup Emacsvox"
-  (cl-declare (special tabulated-list-mode-map))
+  
   (cl-loop
    for b in
    '(

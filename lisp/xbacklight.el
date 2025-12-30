@@ -53,7 +53,7 @@
 (defun xbacklight-get ()
   "Get  brightness level."
   (interactive)
-  (cl-declare (special xbacklight-cmd))
+  
   (when xbacklight-cmd
     (let ((value (shell-command-to-string (format "%s -get " xbacklight-cmd))))
       (cond
@@ -66,7 +66,7 @@
 (defun xbacklight-set (brightness)
   "Set brightness."
   (interactive "sBrightness: ")
-  (cl-declare (special xbacklight-cmd))
+  
   (when xbacklight-cmd
     (start-process "XBacklight" nil xbacklight-cmd "-set" brightness)))
 

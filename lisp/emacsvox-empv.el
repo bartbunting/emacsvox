@@ -253,7 +253,7 @@
 (defun emacsvox-empv-play-last ()
   "Play most recently played URL."
   (interactive )
-  (cl-declare (special emacsvox-empv-history))
+  
   (emacsvox-empv-play-url (cl-first emacsvox-empv-history)))
 
 (declare-function emacsvox-media-local-resource "emacsvox-empv" t)
@@ -270,7 +270,7 @@ If already playing, then read an empv key and invoke its command."
     (unless (and empv--process (process-live-p empv--process))
       (emacsvox-media-read-resource current-prefix-arg))
     current-prefix-arg))
-  (cl-declare (special  empv--process ))
+  
   (cond
    ((null file)                         ; we're already playing
     (call-interactively
@@ -520,7 +520,7 @@ Filter is of the  form name=arg-1:arg-2:..."
     (completing-read   "Filter:"
                        emacsvox-empv-filters nil nil nil
                        'emacsvox-empv-filter-history)))
-  (cl-declare (special emacsvox-empv-filter-history))
+  
   (cl-pushnew filter emacsvox-empv-filter-history :test #'string=)
   (empv--send-command (list "af" "toggle" filter)))
 
@@ -547,7 +547,7 @@ The default value is suitable for classical instrumental music."
 (defun emacsvox-empv-toggle-custom ()
   "Toggle our custom filters."
   (interactive)
-  (cl-declare (special emacsvox-empv-custom-filters))
+  
   (when emacsvox-empv-custom-filters
     (mapc
      #'(lambda (filter) (empv--send-command (list "af" "toggle" filter)))

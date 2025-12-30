@@ -169,12 +169,12 @@ Define a voice for it if needed, then return the symbol."
 
 (defsubst voice-setup-set-voice-for-face (face voice)
   "Map face  to  voice."
-  (cl-declare (special  voice-setup-face-voice-table))
+  
   (setf (gethash face voice-setup-face-voice-table) voice))
 
 (defsubst voice-setup-get-voice-for-face (face)
   "Return face to  voice."
-  (cl-declare (special  voice-setup-face-voice-table))
+  
   (gethash face voice-setup-face-voice-table))
 
 (defun voice-setup-add-map (fv-alist)
@@ -283,7 +283,7 @@ Define a voice for it if needed, then return the symbol."
 (defun voice-setup-toggle-silence-personality ()
   "Toggle audibility of personality under point  . "
   (interactive)
-  (cl-declare (special voice-setup-local-map))
+  
   (let* ((face (get-text-property (point) 'face))
          (f (if (listp face)   (cl-first face)face))
          (personality (voice-setup-get-voice-for-face f))

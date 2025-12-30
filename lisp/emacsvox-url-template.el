@@ -111,13 +111,13 @@
 
 (defun emacsvox-url-template-set (key ut)
   "Add specified template to key. "
-  (cl-declare (special emacsvox-url-template-table))
+  
   (setf (gethash (downcase key) emacsvox-url-template-table) ut))
 
 ;;;###autoload
 (defun emacsvox-url-template-get (key)
   "Lookup key and return corresponding template. "
-  (cl-declare (special emacsvox-url-template-table))
+  
   (gethash (downcase key) emacsvox-url-template-table))
 
 ;;;  define resources
@@ -141,7 +141,7 @@ fetcher Unless specified, browse-url retrieves URL.
  that is called with the URI to retrieve.
 documentation Documents this template resource.
 dont-url-encode if true then url arguments are not url-encoded "
-  (cl-declare (special emacsvox-url-template-table))
+  
   (emacsvox-url-template-set
    name
    (emacsvox-url-template-constructor
@@ -170,7 +170,7 @@ dont-url-encode if true then url arguments are not url-encoded "
   (interactive
    (list
     (read-file-name "Save URL templates to: " emacsvox-user-directory)))
-  (cl-declare (special emacsvox-user-directory))
+  
   (let ((print-level nil)
         (print-length nil)
         (buffer (find-file-noselect
@@ -212,7 +212,7 @@ with duplicates removed when saving as a list of string."
 
 (defsubst emacsvox-stock-tickers ()
   "Return emacsvox-stock-tickers as a CSV string."
-  (cl-declare (special emacsvox-stock-tickers))
+  
   (mapconcat #'identity emacsvox-stock-tickers ","))
 
 ;;;  amazon
@@ -503,7 +503,7 @@ c  (cl-declare
 
 (defun ems--ut-quotes-cleanup ()
   "Clean up stock quotes buffer."
-  (cl-declare (special emacsvox-eww-a-speaker))
+  
   (let ((inhibit-read-only t))
     (mapc
      #'(lambda (s) (flush-lines s (point-min) (point-max)))
@@ -577,7 +577,7 @@ c  (cl-declare
  "https://cnn.com/business"
  nil
  #'(lambda nil
-     (cl-declare (special emacsvox-we-url-executor))
+     
      (eww-display-dom-by-element 'h2)
      (setq
       emacsvox-we-url-executor 'emacsvox-url-template-cnn-content))
@@ -812,7 +812,7 @@ the result at point."
 ;;;###autoload
 (defun emacsvox-url-template-open (ut)
   "Fetch resource identified by URL template."
-  (cl-declare (special emacsvox-eww-post-hook))
+  
   (let ((read-process-output-max (* 1024 1024))
         (fetcher (or (emacsvox-url-template-fetcher ut) 'browse-url))
         (url (emacsvox-url-template-url ut))
@@ -841,7 +841,7 @@ the result at point."
 to specified name for use as a callback."
   (eval
    `#'(lambda ()
-        (cl-declare (special emacsvox-eww-url-template))
+        
         (setq emacsvox-eww-url-template ',name))))
 
 ;;;###autoload
@@ -870,7 +870,7 @@ Optional interactive prefix arg displays documentation for specified resource."
 Use Emacs completion to obtain a list of available
 resources."
   (interactive)
-  (cl-declare (special emacsvox-url-template-table))
+  
   (let ((completion-ignore-case t)
         (name nil))
     (setq name
@@ -882,7 +882,7 @@ resources."
 
 (defun emacsvox-url-template-generate-texinfo-documentation (buffer)
   "Generates texinfo section documenting all defined URL templates."
-  (cl-declare (special emacsvox-url-template-table))
+  
   (with-current-buffer buffer
     (insert
      "@node URL Templates \n@section URL Templates\n\n")
@@ -973,7 +973,7 @@ Each URL template carries out the following steps:
           "collection/page/1/sort/s/srch/%s/local/0")
  (list "Search For: ")
  #'(lambda nil
-     (cl-declare (special emacsvox-we-url-executor))
+     
      (setq emacsvox-we-url-executor
            #'emacsvox-url-template-nls-add-to-wishlist)
      (emacsvox-speak-mode-line))
@@ -988,7 +988,7 @@ Each URL template carries out the following steps:
  "https://nlsbard.loc.gov/nlsbardprod/wishlist/collection/page/1/sort/rch"
  nil
  #'(lambda nil
-     (cl-declare (special emacsvox-we-url-executor))
+     
      (setq emacsvox-we-url-executor
            #'emacsvox-url-template-nls-add-to-wishlist)
      (emacsvox-speak-mode-line))
@@ -1006,7 +1006,7 @@ template."
   "nlsbardprod/search/most_popular/page/1/sort/s/srch/most_popular/local/0")
  nil
  #'(lambda nil
-     (cl-declare (special emacsvox-we-url-executor))
+     
      (setq emacsvox-we-url-executor
            #'emacsvox-url-template-nls-add-to-wishlist)
      (emacsvox-speak-mode-line))
@@ -1022,7 +1022,7 @@ template."
  "https://nlsbard.loc.gov/mainpage/srch_recentlyadded"
  nil
  #'(lambda nil
-     (cl-declare (special emacsvox-we-url-executor))
+     
      (setq emacsvox-we-url-executor
            #'emacsvox-url-template-nls-add-to-wishlist)
      (emacsvox-speak-mode-line))

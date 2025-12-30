@@ -78,7 +78,7 @@
   "FilterText mode"
   "Major mode for FilterText interaction. \n\n
 \\{emacsvox-filtertext-mode-map}")
-(cl-declare (special emacsvox-filtertext-mode-map))
+
 (define-key emacsvox-filtertext-mode-map "=" 'keep-lines)
 (define-key emacsvox-filtertext-mode-map "^" 'flush-lines)
 (define-key emacsvox-filtertext-mode-map "r"
@@ -110,7 +110,7 @@
 (defun emacsvox-filtertext-revert ()
   "Revert to original text."
   (interactive)
-  (cl-declare (special emacsvox-filtertext-info))
+  
   (unless (eq  major-mode 'emacsvox-filtertext-mode)
     (error "Not in filter text mode."))
   (when emacsvox-filtertext-info

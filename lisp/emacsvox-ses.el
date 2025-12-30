@@ -62,14 +62,14 @@
 
 (defun emacsvox-ses-current-cell-value ()
   "Return current cell value."
-  (cl-declare (special ses--named-cell-hashmap ses--cells))
+  
   (ses-cell-value
    (car (ses-sym-rowcol (emacsvox-ses-current-cell-symbol)))
    (cdr (ses-sym-rowcol (emacsvox-ses-current-cell-symbol)))))
 
 (defun emacsvox-ses-get-cell-value-by-name (cell-name)
   "Return current  value of cell specified by name."
-  (cl-declare (special ses--named-cell-hashmap ses--cells))
+  
   (ses-cell-value
    
    (car (ses-sym-rowcol cell-name))
@@ -132,7 +132,7 @@
 
 (defun emacsvox-ses-setup ()
   "Setup SES for use with emacsvox."
-  (cl-declare (special ses-mode-map))
+  
   )
 
 

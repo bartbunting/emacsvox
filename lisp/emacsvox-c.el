@@ -382,7 +382,7 @@ and their meanings. ")
 (defun emacsvox-c-speak-semantics ()
   "Speak the C semantics of this line. "
   (interactive)
-  (cl-declare (special emacsvox-c-syntactic-table))
+  
   (let  ((semantics (mapcar 'car (c-guess-basic-syntax)))
          (description ""))
     (setq description

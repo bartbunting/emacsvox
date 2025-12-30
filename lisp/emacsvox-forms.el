@@ -57,7 +57,7 @@ speak the first field")
 (defun emacsvox-forms-summarize-current-record ()
   "Summarize current record"
   (interactive)
-  (cl-declare (special emacsvox-forms-current-record-summarizer))
+  
   (funcall emacsvox-forms-current-record-summarizer))
 
 (defun emacsvox-forms-summarize-current-position ()

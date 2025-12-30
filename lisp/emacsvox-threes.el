@@ -101,7 +101,7 @@
 
 (defun emacsvox-threes-get-rows-max ()
   "Return max for each row."
-  (cl-declare (special threes-cells))
+  
   (mapcar #'(lambda (r) (apply #'max   r)) threes-cells))
 
 ;;;  Helpers:
@@ -112,7 +112,7 @@
   `(defun  ,(intern  (format "emacsvox-threes-%s" i)) ()
      "Set next tile."
      (interactive)
-     (cl-declare (special threes-next-number))
+     
      (setq threes-next-number ,i)
      (emacsvox-threes-speak-board))))
 
@@ -129,7 +129,7 @@
 (defun emacsvox-threes-speak-board ()
   "Speak the board."
   (interactive)
-  (cl-declare (special threes-cells threes-next-number threes-game-over-p ))
+  
   (when threes-game-over-p (emacsvox-icon 'alarm))
   (emacsvox-threes-sox-gen threes-next-number)
   (let ((cells (apply #'append (copy-sequence threes-cells)))
@@ -142,7 +142,7 @@
 (defun emacsvox-threes-speak-empty-count ()
   "Speak number of cells that are non-empty."
   (interactive)
-  (cl-declare (special threes-cells))
+  
   (dtk-speak
    (format " %d zeros"
            (apply #'+
@@ -158,13 +158,13 @@
 (defun emacsvox-threes-speak-transposed-board ()
   "Speak the board by columns."
   (interactive)
-  (cl-declare (special threes-cells))
+  
   (dtk-speak-list   (threes-cells-transpose threes-cells) 4)
   (emacsvox-icon 'progress))
 
 (defun emacsvox-threes-setup ()
   "Set up additional key-bindings."
-  (cl-declare (special threes-mode-map))
+  
   (define-key threes-mode-map "1" 'emacsvox-threes-1)
   (define-key threes-mode-map "0" 'emacsvox-threes-0)
   (define-key threes-mode-map "2" 'emacsvox-threes-2)
@@ -240,7 +240,7 @@
 (defun emacsvox-threes-push-state ()
   "Push current game state on stack."
   (interactive)
-  (cl-declare (special emacsvox-threes-game-stack threes-cells))
+  
   (push
    (make-emacsvox-threes-game-state
     :board (copy-sequence threes-cells))
@@ -273,7 +273,7 @@
          (format "Stack: %s New? "
                  (length emacsvox-threes-game-stack))
          (/ (length emacsvox-threes-game-stack) 2))))))
-  (cl-declare (special emacsvox-threes-game-stack))
+  
   (setq emacsvox-threes-game-stack
         (butlast emacsvox-threes-game-stack
                  (- (length emacsvox-threes-game-stack) drop)))
@@ -293,7 +293,7 @@
 Optional interactive prefix arg prompts for a file.
 Note that the file is overwritten silently."
   (interactive "P")
-  (cl-declare (special emacsvox-threes-game-file emacsvox-threes-game-stack))
+  
   (with-temp-buffer
     (let ((file
            (if prompt

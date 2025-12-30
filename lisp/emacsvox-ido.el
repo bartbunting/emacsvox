@@ -179,7 +179,7 @@
 
 
 (defun ems--ido-toggle-ignore-after (&rest _)
-  "speak." (cl-declare (special ido-ignore-files))
+  "speak." 
   (when (ems-interactive-p)
     (emacsvox-icon (if ido-ignore-files 'on 'off))
     (dtk-speak
@@ -283,7 +283,7 @@
 
 (defun emacsvox-ido-keys ()
   "Setup additional  keybindings within ido."
-  (cl-declare (special ido-common-completion-map))
+  
   (when (boundp 'ido-common-completion-map)
     (define-key  ido-common-completion-map
                  (kbd "C-z") 'emacsvox-z-keymap)

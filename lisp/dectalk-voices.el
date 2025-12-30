@@ -99,12 +99,12 @@
 
 (defun dectalk-define-voice (name command-string)
   "Map voice name to command-string."
-  (cl-declare (special dectalk-voice-table))
+  
   (puthash  name command-string  dectalk-voice-table))
 
 (defun dectalk-get-voice-command (name)
   "Retrieve command string for  voice NAME."
-  (cl-declare (special dectalk-voice-table))
+  
   (cond
    ((listp name)
     (mapconcat #'dectalk-get-voice-command name " "))
@@ -113,7 +113,7 @@
 
 (defsubst dectalk-voice-defined-p (name)
   "Check if there is a voice named NAME defined."
-  (cl-declare (special dectalk-voice-table))
+  
   (gethash name dectalk-voice-table))
 
 ;;;  voice definitions
@@ -130,7 +130,7 @@
 
 (defun dectalk-set-family-code (name code)
   "Set control code for voice family NAME  to CODE."
-  (cl-declare (special dectalk-family-table))
+  
   (when (stringp name)
     (setq name (intern name)))
   (setq dectalk-family-table
@@ -139,7 +139,7 @@
 
 (defun dectalk-get-family-code (name)
   "Get control code for voice family NAME."
-  (cl-declare (special dectalk-family-table))
+  
   (when (stringp name)
     (setq name (intern name)))
   (or (cadr (assq  name dectalk-family-table))
@@ -156,13 +156,13 @@
   "Set up voice FAMILY.
 Argument DIMENSION is the dimension being set,
 and TABLE gives the values along that dimension."
-  (cl-declare (special dectalk-css-code-tables))
+  
   (let ((key (intern (format "%s-%s" family dimension))))
     (puthash  key table dectalk-css-code-tables)))
 
 (defun dectalk-css-get-code-table (family dimension)
   "Retrieve table of values for  FAMILY and DIMENSION."
-  (cl-declare (special dectalk-css-code-tables))
+  
   (let ((key (intern (format "%s-%s" family dimension))))
     (gethash key dectalk-css-code-tables)))
 

@@ -1,0 +1,734 @@
+;;; emacsvox-widget.el --- Speech enable widgets -*- lexical-binding: t; -*-
+;;
+;; $Author: tv.raman.tv $ 
+;; Description: Emacsvox extensions to widgets
+;; Keywords:emacsvox, audio interface to emacs customized widgets
+;;;   LCD Archive entry: 
+
+;; LCD Archive Entry:
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
+;; A speech interface to Emacs |
+;; 
+;;  $Revision: 4532 $ | 
+;; Location https://github.com/tvraman/emacsvox
+;; 
+
+;;;   Copyright:
+;; Copyright (C) 1995 -- 2024, T. V. Raman 
+;; Copyright (c) 1995 by T. V. Raman  
+;; All Rights Reserved. 
+;; 
+;; This file is not part of GNU Emacs, but the same permissions apply.
+;; 
+;; GNU Emacs is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;; 
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;; 
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+
+;;;   Introduction
+
+;;; Commentary:
+
+;; This module implements the necessary extensions to provide talking
+;; widgets.
+
+;;  required modules 
+
+;;; Code:
+
+(eval-when-compile (require 'cl-lib))
+(cl-declaim  (optimize  (safety 0) (speed 3)))
+(require 'emacsvox-preamble)
+(require 'voice-setup)
+(require 'wid-edit)
+
+;;;   Customize global behavior
+
+(voice-setup-add-map
+ '(
+   (widget-field voice-smoothen)
+   (widget-single-line-field voice-smoothen)
+   (widget-button voice-bolden)
+   (widget-button-pressed voice-bolden-extra)
+   (widget-documentation voice-monotone-extra)
+   (widget-inactive voice-smoothen)
+   ))
+
+(cl-declaim (special widget-menu-minibuffer-flag))
+(setq  widget-menu-minibuffer-flag t)
+
+;;;   helpers 
+
+(defun emacsvox-widget-label (w)
+  "Construct a label for a widget.
+Returns a string with appropriate personality."
+  (let ((inhibit-read-only t)
+        (type   (widget-type w))
+        (tag (widget-get w :tag)))
+    (setq tag     
+          (format " %s "
+                  (or tag type)))
+    (put-text-property 0 (length tag)
+                       'personality 'emacsvox-widget-button-personality tag)
+    tag))
+
+(defun emacsvox-widget-help-echo (w)
+  "Return help-echo with appropriate personality."
+  (cl-declare (special voice-animate))
+  (let ((inhibit-read-only t)
+        (h (widget-get w :help-echo))
+        (help nil))
+    (setq help
+          (cond
+           ((and h
+                 (symbolp h)
+                 (fboundp h))
+            (widget-apply w :help-echo))
+           ((and h (stringp h)) h)
+           (t nil)))
+    (when help
+      (put-text-property 0 (length help)
+                         'personality voice-animate help)
+      help)))
+
+;;;   define summarizer
+
+(defun emacsvox-widget-help ()
+  "Speak help for widget under point."
+  (interactive)
+  (let* ((w (widget-at (point)))
+         (tag (widget-get w :tag))
+         (type (widget-type w))
+         (help-echo (when w (widget-get w :help-echo)))
+         (p (widget-get w :parent))
+         (parent-help (when  p (widget-get  p :help-echo))))
+    (cond
+     (help-echo (message help-echo))
+     (parent-help (message " %s to %s "
+                           (or tag type)
+                           parent-help))
+     (w (message (format " %s " type)))
+     (t (message " Not on a widget. ")))))
+
+(defun emacsvox-widget-summarize-parent ()
+  "Summarize parent of widget at point."
+  (interactive)
+  (let* ((w (widget-at (point)))
+         (p (when w (widget-get w :parent))))
+    (cond
+     (p (emacsvox-widget-summarize p))
+     (t (message "Widget at point has no parent")))))
+
+;; Find summarizer for a specific widget type and dispatch.
+
+(defun emacsvox-widget-summarize(widget)
+  "Summarize specified widget."
+  (ems-with-messages-silenced
+   (let ((emacsvox-help (widget-get widget :emacsvox-help)))
+     (cond
+      ((and emacsvox-help
+            (fboundp emacsvox-help))
+       (dtk-speak  (funcall emacsvox-help widget)))
+      (t (dtk-speak (current-message)))))))
+
+;;;  advice activators 
+
+;;;   widget specific summarizers  --as per Per's suggestion
+
+;;;   default
+
+(defun emacsvox-widget-default-summarize (widget)
+  "Fall back summarizer for all widgets"
+  (let* ((inhibit-read-only t)
+         (label (emacsvox-widget-label widget))
+         (help-echo (emacsvox-widget-help-echo widget))
+         (v  (widget-value widget))
+         (value
+          (cond
+           ((null v) nil)
+           (t (prin1-to-string v 'no-escape)))))
+    (when  value
+      (put-text-property 0 (length value)
+                         'personality voice-bolden value))
+    (concat label
+            help-echo
+            value)))
+
+(widget-put (get 'default 'widget-type)
+            :emacsvox-help 'emacsvox-widget-default-summarize)
+
+;;;  editable field
+
+(defun emacsvox-widget-help-editable-field (widget)
+  "Summarize an editable field"
+  (let* ((v  (widget-value widget))
+         (value (when v
+                  (format " %s " v)))
+         (help-echo (emacsvox-widget-help-echo widget))
+         (label (emacsvox-widget-label widget)))
+    (concat label
+            help-echo
+            value)))
+
+(widget-put (get 'editable-field 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-editable-field)
+
+;;;  item 
+
+(defun emacsvox-widget-help-item (widget)
+  "Summarize an   item"
+  (let* ((value  (widget-value widget))
+         (label (emacsvox-widget-label widget))
+         (help-echo (emacsvox-widget-help-echo widget)))
+    (concat label
+            help-echo
+            (when value (format " %s " value)))))
+
+(widget-put (get 'item 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-item)
+
+;;;  visibility 
+
+(defun emacsvox-widget-help-visibility (widget)
+  "Summarize visibility widget"
+  (let* ((value (widget-value widget))
+         (help-echo (emacsvox-widget-help-echo widget))
+         (label (emacsvox-widget-label widget)))
+    (if value
+        (emacsvox-icon 'open-object)
+      (emacsvox-icon 'close-object))
+    (concat
+     label
+     (or  help-echo
+          (if value " hide  " " show  ")))))
+
+(widget-put (get 'visibility 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-visibility)
+
+;;;   push button 
+
+(defun emacsvox-widget-help-push-button (widget)
+  "Summarize a push button."
+  (let* ((label (emacsvox-widget-label widget))
+         (help-echo (emacsvox-widget-help-echo widget))
+         (context-widget (widget-get widget :widget))
+         (context
+          (when  context-widget
+            (widget-apply context-widget
+                          :emacsvox-help))))
+    (concat label
+            help-echo
+            context)))
+
+(widget-put (get 'push-button 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-push-button)
+
+;;;   link 
+
+(defun emacsvox-widget-help-link (widget)
+  "Summarize a link"
+  (let ((value   (widget-get widget :value)))
+    (format "link to %s"
+            (or value ""))))
+
+(widget-put (get 'link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-link)
+
+;;;   info-link 
+
+(defun emacsvox-widget-help-info-link (widget)
+  "Summarize an info  link"
+  (let ((value (widget-get widget :value)))
+    (format "Online help  %s"
+            (or value ""))))
+
+(widget-put (get 'info-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-info-link)
+
+;;;   url-link 
+
+(defun emacsvox-widget-help-url-link (widget)
+  "Summarize a WWW    link"
+  (let ((value (widget-get widget :value))
+        (tag (widget-get widget :tag)))
+    (format "URL %s %s"
+            (or tag "")
+            (or value ""))))
+
+(widget-put (get 'url-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-url-link)
+
+;;;   variable-link 
+
+(defun emacsvox-widget-help-variable-link (widget)
+  "Summarize a     link to a variable."
+  (let ((value (widget-get widget :value)))
+    (format "WWW link   %s"
+            (or value ""))))
+
+(widget-put (get 'variable-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-variable-link)
+
+;;;   function-link 
+
+(defun emacsvox-widget-help-function-link (widget)
+  "Summarize a     link to a function."
+  (let ((value (widget-get widget :value)))
+    (format "Display documentation for %s" value)))
+
+(widget-put (get 'function-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-function-link)
+
+;;;   file-link 
+
+(defun emacsvox-widget-help-file-link (widget)
+  "Summarize a     link to a file."
+  (let ((value (widget-get widget :value))
+        (tag (widget-get widget :tag)))
+    (format "File link %s    %s"
+            (or tag "")
+            value)))
+
+(widget-put (get 'file-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-file-link)
+
+;;;   emacs-library-link 
+
+(defun emacsvox-widget-help-emacs-library-link (widget)
+  "Summarize a     link to an Emacs Library.."
+  (let ((value (widget-get widget :value))
+        (tag (widget-get widget :tag)))
+    (format "Emacs library  link   %s %s"
+            (or tag "")
+            value)))
+
+(widget-put (get 'emacs-library-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-emacs-library-link)
+
+;;;   emacs-commentary-link 
+
+(defun emacsvox-widget-help-emacs-commentary-link (widget)
+  "Summarize a     link to a emacs commentary section.."
+  (let ((value (widget-get widget :value))
+        (tag (widget-get widget :tag)))
+    (format "Commentary  link   %s %s"
+            (or tag "")
+            value)))
+
+(widget-put (get 'emacs-commentary-link 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-emacs-commentary-link)
+
+;;;   menu choice 
+
+(defun emacsvox-widget-help-menu-choice  (widget)
+  "Summarize a pull down list"
+  (let* ((label (emacsvox-widget-label widget))
+         (value (format " %s " (widget-get widget :value)))
+         (child (car (widget-get widget :children))))
+    (concat label
+            " is "
+            (if child
+                (widget-apply child :emacsvox-help)
+              value))))
+
+(widget-put (get 'menu-choice 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-menu-choice)
+
+;;;   toggle   
+
+(defun emacsvox-widget-help-toggle (widget)
+  "Summarize a toggle."
+  (let* (
+         (help-echo
+          (emacsvox-widget-help-echo widget))
+         (label (emacsvox-widget-label widget))
+         (value (widget-value widget)))
+    (concat label
+            help-echo
+            (if value " is on "
+              " is off "))))
+
+(widget-put (get 'toggle 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-toggle)
+
+;;;   checklist
+
+(defun emacsvox-widget-help-checklist  (widget)
+  "Summarize a check list"
+  (let* ((inhibit-read-only t)
+         (label (emacsvox-widget-label widget))
+         (value (widget-value widget))
+         (selections (cond
+                      (value (prin1-to-string value))
+                      (t " no items  "))))
+    (put-text-property 0  (length selections)
+                       'personality voice-bolden selections)
+    (concat label
+            " has "
+            selections 
+            " checked ")))
+
+(widget-put (get 'checklist 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-checklist)
+
+;;;  choice-item
+
+(defun emacsvox-widget-help-choice-item (widget)
+  "Summarize a choice item"
+  (let ((value  (widget-value widget))
+        (label (emacsvox-widget-label widget))
+        (help-echo (emacsvox-widget-help-echo widget)))
+    (concat  label
+             help-echo
+             (when value (format " %s " value))
+             " is "
+             (widget-apply (widget-get widget :parent)
+                           :emacsvox-help))))
+
+(widget-put (get 'choice-item 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-choice-item)
+
+;;;  checkbox
+
+(defun emacsvox-widget-help-checkbox (widget)
+  "Summarize a checkbox"
+  (let* ((value (widget-value widget))
+                                        ;sibling has the label
+         (sibling (widget-get-sibling widget))
+         (label (if sibling
+                    (emacsvox-widget-label sibling)
+                  (emacsvox-widget-label widget))))
+    (concat 
+     label 
+     (if value "checked" "unchecked"))))
+
+(widget-put (get 'checkbox 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-checkbox)
+
+;;;  radio-button
+
+(defun emacsvox-widget-help-radio-button (widget)
+  "Summarize a radio button"
+  (let* ((value (widget-value widget))
+         (sibling (widget-get-sibling widget))
+         (label (if sibling
+                    (emacsvox-widget-label sibling)
+                  (emacsvox-widget-label widget))))
+    (concat label
+            " is "
+            (if value
+                " pressed "
+              " not pressed "))))
+
+(widget-put (get 'radio-button 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-radio-button)
+
+;;;  radio-button-choice
+
+(defun emacsvox-widget-help-radio-button-choice  (widget)
+  "Summarize a radio group "
+  (let* ((inhibit-read-only t)
+         (value (widget-value widget))
+         (label (emacsvox-widget-label widget))
+         (choice (widget-get widget :choice))
+         (selected
+          (cond
+           (choice (widget-get choice :tag))
+           (t (if value 
+                  (prin1-to-string value)
+                " no item ")))))
+    (put-text-property 0  (length selected)
+                       'personality voice-bolden selected)
+    (concat label
+            " is "
+            selected)))
+
+(widget-put (get 'radio-button-choice 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-radio-button-choice)
+
+;;;  editable-list
+
+(defun emacsvox-widget-help-editable-list (widget)
+  "Summarize a editable list"
+  (let ((inhibit-read-only t)
+        (value (prin1-to-string (widget-value widget)))
+        (label (emacsvox-widget-label widget))
+        (help-echo (emacsvox-widget-help-echo widget)))
+    (when value
+      (put-text-property 0 (length value)
+                         'personality voice-bolden value))
+    (concat label
+            help-echo
+            (or value ""))))
+
+(widget-put (get 'editable-list 'widget-type)
+            :emacsvox-help 'emacsvox-widget-help-editable-list)
+
+;;;   Widget motion
+
+;; avoid redundant message speech output
+
+(defun ems--widget-echo-help-around (orig-fun &rest args)
+  (let ((result (apply orig-fun args)))
+    (ems-with-messages-silenced (apply orig-fun args) result) result))
+
+
+(advice-add 'widget-echo-help :around #'ems--widget-echo-help-around)
+
+
+
+
+(defun ems--widget-beginning-of-line-after (&rest _)
+  "speak"
+  (cond
+   ((ems-interactive-p)
+    (let ((widget (widget-at (point))))
+      ad-do-it (emacsvox-icon 'select-object)
+      (message "Moved to start of text field %s"
+	       (if widget (widget-value widget) ""))))
+   (t ad-do-it))
+  ad-return-value)
+
+
+(advice-add 'widget-beginning-of-line :after
+	    #'ems--widget-beginning-of-line-after)
+
+
+
+
+
+(defun ems--widget-end-of-line-around (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((widget (widget-at (point))))
+	(apply orig-fun args) (emacsvox-icon 'select-object)
+	(message "Moved to end of text field %s"
+		 (if widget (widget-value widget) ""))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'widget-end-of-line :around
+	    #'ems--widget-end-of-line-around)
+
+
+
+
+
+(defun ems--widget-forward-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacsvox-icon 'item)
+    (emacsvox-widget-summarize (widget-at (point)))))
+
+
+(advice-add 'widget-forward :after #'ems--widget-forward-after)
+
+
+
+
+
+(defun ems--widget-backward-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacsvox-icon 'item)
+    (emacsvox-widget-summarize (widget-at (point)))))
+
+
+(advice-add 'widget-backward :after #'ems--widget-backward-after)
+
+
+
+
+
+(defun ems--widget-kill-line-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacsvox-icon 'delete-object) (emacsvox-speak-current-kill 0)
+    (dtk-tone-deletion)))
+
+
+(advice-add 'widget-kill-line :after #'ems--widget-kill-line-after)
+
+
+
+
+;;;   activating widgets:
+;; forward declaration:
+
+
+(defun ems--widget-button-press-around (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (let ((inhibit-read-only t) (widget (widget-at (ad-get-arg 0))))
+      (cond
+       (widget
+	(let ((pos (ad-get-arg 0)) (old-position (point)))
+	  (cond
+	   ((and (eq major-mode 'eww-mode)
+		 (bound-and-true-p emacsvox-we-url-executor)
+		 (functionp emacsvox-we-url-executor))
+	    (emacsvox-icon 'button)
+	    (call-interactively 'emacsvox-we-url-expand-and-execute))
+	   (t (apply orig-fun args)
+	      (cond
+	       ((= old-position (point)) (emacsvox-icon 'button)
+		(emacsvox-widget-summarize (widget-at pos)))
+	       (t (emacsvox-icon 'large-movement)
+		  (or (emacsvox-widget-summarize (widget-at (point)))
+		      (emacsvox-speak-line))))))))
+       (t (apply orig-fun args)))
+      result)
+    result))
+
+
+(advice-add 'widget-button-press :around
+	    #'ems--widget-button-press-around)
+
+
+
+
+;;;   Interactively summarize a widget and its parents.
+
+(defun emacsvox-widget-summarize-widget-under-point (&optional level)
+  "Summarize a widget if any under point.
+Optional interactive prefix specifies how many levels to go up from current
+widget before summarizing."
+  (interactive "P")
+  (let ((widget (widget-at (point))))
+    (when(and widget  level)
+      (cl-loop for i from 1 to level
+               do
+               (setq widget (widget-get  widget :parent))))
+    (cond
+     (widget (emacsvox-widget-summarize widget))
+     (t (message "No widget under point")))))
+
+(defun emacsvox-widget-browse-widget-interactively ()
+  "Allows you to browse a widget"
+  (interactive)
+  (let ((level nil)
+        (key nil)
+        (continue t))
+    (emacsvox-widget-summarize-widget-under-point)
+    (while  continue
+      (setq key (read-char))
+      (cond
+       ((= key ?q) (setq continue nil)
+        (message "exiting widget browser"))
+       ((= key ?.) nil)
+       ((= key ?u)
+        (if (numberp level)
+            (cl-incf level)
+          (setq level 1)))
+       ((= key ?d)
+        (if (> level  0)
+            (cl-decf level)
+          (message "Leaf widget")))
+       (t (read-key-sequence "Press any key to continue")))
+      (emacsvox-widget-summarize-widget-under-point level))))
+
+;;;  work around widget problems
+
+
+(defun ems--widget-convert-text-around (orig-fun &rest args)
+  "Protect value of personality if set originally"
+  (let
+      ((inhibit-read-only t) (start (ad-get-arg 1))
+       (end (ad-get-arg 2)) (orig nil))
+    (setq orig (get-text-property start 'personality))
+    (apply orig-fun args)
+    (and orig (put-text-property start end 'personality orig))))
+
+
+(advice-add 'widget-convert-text :around
+	    #'ems--widget-convert-text-around)
+
+
+
+
+;;;  update widget related keymaps so we dont loose the
+;;emacsvox prefix 
+
+
+(defun ems--widget-setup-after (&rest _)
+  "Update widget keymaps."
+  (cl-declare
+   (special emacsvox-prefix widget-field-keymap widget-text-keymap))
+  (cl-loop for map in '(widget-field-keymap widget-text-keymap) do
+	   (when (keymapp map)
+	     (define-key map emacsvox-prefix 'emacsvox-keymap)
+	     (define-key map
+			 (concat emacsvox-prefix emacsvox-prefix)
+			 'widget-end-of-line)
+	     (define-key map "\350" 'emacsvox-widget-help)
+	     (define-key map "\360" 'emacsvox-widget-summarize-parent)
+	     (define-key map "\215"
+			 'emacsvox-widget-update-from-minibuffer))))
+
+
+(advice-add 'widget-setup :after #'ems--widget-setup-after)
+
+
+
+
+;;;  augment widgets 
+
+(defun emacsvox-widget-update-from-minibuffer (pos)
+  "Sets widget at `pos' by invoking its prompter."
+  (interactive "d")
+  (let ((w (widget-at pos)))
+    (widget-value-set w
+                      (widget-apply w
+                                    :prompt-value
+                                    (widget-get w :tag)
+                                    (widget-value w)
+                                    nil))
+    (widget-setup)
+    (widget-apply w :notify)
+    (emacsvox-widget-summarize w)))
+
+(cl-declaim (special widget-keymap
+                     widget-field-keymap
+                     widget-text-keymap))
+
+;;;  voice widgets 
+
+(define-widget 'voice  'menu-choice
+  "Widget for selecting a voice.")
+
+(define-widget 'personality 'item
+  "Individual voice in a voice selector.")
+
+;; We rely on dectalk-voice-table as our default voice table.
+;; Names defined in this --- and other voice tables --- are
+;; generic --and  not device specific.
+;; 
+
+(defun emacsvox-widget-create-voice-selector ()
+  "Create a suitable voice selector widget."
+  (cl-declare (special dectalk-voice-table))
+  (let ((w
+         (widget-create 'voice
+                        :tag "voices")))
+    (widget-put w :args 
+                (cl-loop for key being the hash-keys of dectalk-voice-table 
+                         collect
+                         (list 'personality :value key)))
+    w))
+
+(provide  'emacsvox-widget)
+

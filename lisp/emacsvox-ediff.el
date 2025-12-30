@@ -103,7 +103,7 @@
 
 
 (defsubst emacsvox-ediff-control-panel ()
-  (cl-declare (special emacsvox-ediff-control-buffer))
+  
   emacsvox-ediff-control-buffer)
 
 (defun emacsvox-ediff-difference-a-overlay (n)
@@ -172,7 +172,7 @@
 (add-hook
  'ediff-startup-hook
  #'(lambda ()
-     (cl-declare (special ediff-mode-map voice-lock-mode))
+     
      (setq voice-lock-mode t
            ediff-window-setup-function 'ediff-setup-windows-plain)
      (define-key

@@ -91,14 +91,14 @@
 (defun emacsvox-hangman-speak-statistics ()
   "Speak statistics."
   (interactive)
-  (cl-declare (special hm-win-statistics))
+  
   (message "         Games won: %d    Games Lost: %d"
            (aref hm-win-statistics 0)
            (aref hm-win-statistics 1)))
 
 (defun emacsvox-hangman-setup-pronunciations ()
   "Setup pronunciation dictionaries."
-  (cl-declare (special emacsvox-pronounce-table))
+  
   (emacsvox-pronounce-add-dictionary-entry 'hm-mode "_" ".")
   (when (or (not (boundp 'emacsvox-pronounce-table))
             (not emacsvox-pronounce-table))

@@ -71,7 +71,7 @@ turned on where needed."
   "Toggle comint autospeak.
 Interactive PREFIX arg means toggle  global default value. "
   (interactive "P")
-  (cl-declare (special emacsvox-comint-autospeak ))
+  
   (cond
    (prefix
     (setq-default
@@ -116,12 +116,6 @@ Interactive PREFIX arg means toggle the global default value. ")
 ;;;###autoload
 (defun emacsvox-comint-speech-setup ()
   "Speech setup."
-  (cl-declare (special
-               emacsvox-speak-time-brief-format
-               comint-mode-map
-               emacsvox-pronounce-sha-checksum-pattern
-               emacsvox-pronounce-date-mm-dd-yyyy-pattern
-               header-line-format emacsvox-use-header-line))
   (setq buffer-undo-list  t)
   (define-key comint-mode-map "\C-o" 'switch-to-completions)
   (when emacsvox-use-header-line
@@ -755,7 +749,7 @@ Interactive PREFIX arg means toggle the global default value. ")
 (defun emacsvox-shell-dirtrack-procfs (str)
   "Directory tracking using /proc.
 /proc/pid/cwd is a symlink to working directory."
-  (cl-declare (special comint-prompt-regexp))
+  
   (prog1
       str
     (when (string-match comint-prompt-regexp str)

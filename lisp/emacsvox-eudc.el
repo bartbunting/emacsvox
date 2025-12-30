@@ -109,7 +109,7 @@
 
 (defun ems--eudc-query-form-after (&rest _)
   "Attach emacsvox help to all EUDC widgets.\nSummarize the form to welcome the user. "
-  (cl-declare (special eudc-server))
+  
   (emacsvox-eudc-widgets-add-emacsvox-help)
   (emacsvox-icon 'open-object)
   (let

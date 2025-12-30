@@ -124,7 +124,7 @@
   "Displays specified infolet.
 Infolets use the same structure as mode-line-format and header-line-format.
 Generates auditory and visual display."
-  (cl-declare (special header-line-format))
+  
   (setq header-line-format infolet)
   (dtk-speak (format-mode-line header-line-format))
   (emacsvox-icon 'progress))
@@ -206,7 +206,7 @@ Newly found headlines are inserted into the ring within our feedstore."
 
 (defun emacsvox-webspace-headlines-populate ()
   "populate fs with headlines from all feeds."
-  (cl-declare (special emacsvox-webspace-headlines))
+  
   (dotimes (_i (length (emacsvox-webspace-fs-feeds
                         emacsvox-webspace-headlines)))
     (condition-case nil
@@ -216,7 +216,7 @@ Newly found headlines are inserted into the ring within our feedstore."
 
 (defun emacsvox-webspace-headlines-refresh ()
   "Update headlines."
-  (cl-declare (special emacsvox-webspace-headlines))
+  
   (with-local-quit
     (emacsvox-webspace-headlines-fetch
      (emacsvox-webspace-fs-next emacsvox-webspace-headlines)))
@@ -227,7 +227,7 @@ Newly found headlines are inserted into the ring within our feedstore."
   "Setup news updates.
 Updated headlines found in emacsvox-webspace-headlines."
   (interactive)
-  (cl-declare (special emacsvox-webspace-headlines))
+  
   (let ((timer nil)
         (slow-timer nil))
     (setq timer
@@ -244,7 +244,7 @@ Updated headlines found in emacsvox-webspace-headlines."
 
 (defun emacsvox-webspace-next-headline ()
   "Return next headline to display."
-  (cl-declare (special emacsvox-webspace-headlines))
+  
   (let ((titles (emacsvox-webspace-fs-titles emacsvox-webspace-headlines)))
     (cond
      ((ring-empty-p titles)
@@ -362,7 +362,7 @@ Updated headlines found in emacsvox-webspace-headlines."
   "Display Feed Reader Feed list in a WebSpace buffer.
 Optional interactive prefix arg forces a refresh."
   (interactive "P")
-  (cl-declare (special emacsvox-webspace-reader-buffer))
+  
   (when (or refresh
             (not (buffer-live-p (get-buffer
                                  emacsvox-webspace-reader-buffer))))
@@ -373,7 +373,7 @@ Optional interactive prefix arg forces a refresh."
   (emacsvox-icon 'open-object))
 (defun emacsvox-webspace-feed-reader-create ()
   "Prepare Reader buffer."
-  (cl-declare (special emacsvox-feeds emacsvox-webspace-reader-buffer))
+  
   (with-current-buffer (get-buffer-create emacsvox-webspace-reader-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)

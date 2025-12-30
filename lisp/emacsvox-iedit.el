@@ -74,7 +74,7 @@
 
 
 (defun ems--iedit-mode-after (&rest _)
-  "speak." (cl-declare (special iedit-mode))
+  "speak." 
   (when (ems-interactive-p) (emacsvox-icon (if iedit-mode 'on 'off))))
 
 

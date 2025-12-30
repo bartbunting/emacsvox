@@ -61,7 +61,7 @@
 (defun emacsvox-hydra-toggle-talkative ()
   "Toggle hydra-is-helpful"
   (interactive)
-  (cl-declare (special hydra-is-helpful))
+  
   (setq hydra-is-helpful (not hydra-is-helpful))
   (emacsvox-icon (if hydra-is-helpful 'on 'off)))
 
@@ -101,7 +101,7 @@
 
 
 (defun ems--lv-message-after (&rest _)
-  "speak." (cl-declare (special ems--lv-cache)) (emacsvox-icon 'help)
+  "speak."  (emacsvox-icon 'help)
   (with-current-buffer (window-buffer (lv-window))
     (setq ems--lv-cache (buffer-substring (point-min) (point-max)))
     (emacsvox-speak-buffer)))

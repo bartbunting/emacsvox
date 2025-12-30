@@ -85,12 +85,12 @@ The string can set any voice parameter.")
   "Define a SwiftMac  voice named NAME.
 This voice will be set   by sending the string
 COMMAND-STRING to the TTS engine."
-  (cl-declare (special swiftmac-voice-table))
+  
   (puthash name command-string swiftmac-voice-table))
 
 (defun swiftmac-get-voice-command-internal  (name)
   "Retrieve command string for  voice NAME."
-  (cl-declare (special swiftmac-voice-table))
+  
   (cond
    ((listp name)
     (mapconcat #'swiftmac-get-voice-command name " "))
@@ -103,7 +103,7 @@ COMMAND-STRING to the TTS engine."
 
 (defun swiftmac-voice-defined-p (name)
   "Check if there is a voice named NAME defined."
-  (cl-declare (special swiftmac-voice-table))
+  
   (gethash name swiftmac-voice-table))
 
 ;;;  voice definitions
@@ -132,13 +132,13 @@ Values are vectors holding the control codes for the 10 settings.")
   "Set up voice FAMILY.
 Argument DIMENSION is the dimension being set,
 and TABLE gives the values along that dimension."
-  (cl-declare (special swiftmac-css-code-tables))
+  
   (let ((key (intern (format "%s-%s" family dimension))))
     (puthash key table swiftmac-css-code-tables)))
 
 (defun swiftmac-css-get-code-table (family dimension)
   "Retrieve table of values for specified FAMILY and DIMENSION."
-  (cl-declare (special swiftmac-css-code-tables))
+  
   (let ((key (intern (format "%s-%s" family dimension))))
     (gethash key swiftmac-css-code-tables)))
 

@@ -80,13 +80,13 @@
 
 (defsubst emacsvox-amark-names ()
   "Return list of  amark names."
-  (cl-declare (special emacsvox-amark-list))
+  
   (cl-loop for a in emacsvox-amark-list collect (emacsvox-amark-name a)))
 
 (defun emacsvox-amark-find (name)
   "Return matching AMark if found in buffer-local AMark list."
   (interactive (list (completing-read "Name: " (emacsvox-amark-names))))
-  (cl-declare (special emacsvox-amark-list))
+  
   (cl-find name emacsvox-amark-list
            :test #'string= :key #'emacsvox-amark-name))
 
@@ -95,7 +95,7 @@
 bookmarks in audio content. If there is an existing amark of the
 given name, it is updated with path and position."
   (interactive "fPath\nsName\nnPosition")
-  (cl-declare (special emacsvox-amark-list))
+  
   (let ((amark (emacsvox-amark-find name)))
     (when (and path (not (zerop (length path))))
       (cond
@@ -113,7 +113,7 @@ given name, it is updated with path and position."
 (defun emacsvox-amark-save ()
   "Save buffer-local AMarks in  currently playing directory."
   (interactive)
-  (cl-declare (special  emacsvox-amark-file))
+  
   (let ((l  emacsvox-amark-list)
         (print-length nil)
         (buff (find-file-noselect (expand-file-name emacsvox-amark-file))))
@@ -172,7 +172,7 @@ given name, it is updated with path and position."
 
 (defun emacsvox-amark-delete (amark)
   "Delete Amark and save."
-  (cl-declare (special emacsvox-amark-list))
+  
   (setq emacsvox-amark-list (remove amark emacsvox-amark-list))
   (emacsvox-icon 'delete-object)
   (emacsvox-amark-save)
@@ -183,7 +183,7 @@ given name, it is updated with path and position."
 
 (defun emacsvox-amark-play (amark)
   "Play amark using m-player."
-  (cl-declare (special emacsvox-m-player-options))
+  
   (let ((f (expand-file-name (emacsvox-amark-path  amark) default-directory))
         (emacsvox-m-player-options
          (append
@@ -226,14 +226,14 @@ Maps command \\[emacsvox-m-player] across elements of the amarks
   while media is already playing. Here, attempting to play the next
   item while the current item is playing produces the prompt."
   (interactive)
-  (cl-declare (special emacsvox-amark-list))
+  
   (when (and emacsvox-amark-list (listp emacsvox-amark-list))
     (mapc #'emacsvox-amark-play emacsvox-amark-list)))
 
 (defun emacsvox-amark-browse ()
   "Browse   amarks  in current directory using `emacsvox-amark-mode'."
   (interactive)
-  (cl-declare (special emacsvox-amark-list))
+  
   (let ((amarks (or (emacsvox-amark-load) (error "No Amarks here")))
         (buff (get-buffer-create "*Amarks Browser"))
         (inhibit-read-only t))

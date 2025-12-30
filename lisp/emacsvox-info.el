@@ -89,7 +89,7 @@ node -- speak the entire node."
 
 (defun emacsvox-info-visit-node()
   "Apply requested action upon visiting a node."
-  (cl-declare (special emacsvox-info-select-node-speak-chunk))
+  
   (emacsvox-icon 'open-object)
   (cond
    ((eq emacsvox-info-select-node-speak-chunk 'screenfull)

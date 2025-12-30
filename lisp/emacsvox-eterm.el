@@ -187,7 +187,7 @@ Useful when eterm is in review mode.")
 
 ;; nuke term cache info
 (defun emacsvox-eterm-nuke-cached-info ()
-  (cl-declare (special term-current-row term-current-column))
+  
   (setq term-current-row nil
         term-current-column nil))
 
@@ -199,7 +199,7 @@ Useful when eterm is in review mode.")
 Execute end of line if
 in a non eterm buffer if executed via C-e C-e"
   (interactive)
-  (cl-declare (special last-input-event))
+  
   (cond
    ((or (eq major-mode 'term-mode)
         (eq major-mode 'tshell-mode))
@@ -218,7 +218,7 @@ in a non eterm buffer if executed via C-e C-e"
 (defun emacsvox-eterm-speak-pointer ()
   "Speak current pointer position."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (let ((coordinates (emacsvox-eterm-position-to-coordinates
                       (marker-position emacsvox-eterm-pointer))))
     (message
@@ -230,7 +230,7 @@ in a non eterm buffer if executed via C-e C-e"
 Optional prefix arg FLAG causes region above
 the Emacsvox pointer to be spoken."
   (interactive "P")
-  (cl-declare (special term-home-marker emacsvox-eterm-pointer))
+  
   (if flag
       (emacsvox-speak-region term-home-marker  emacsvox-eterm-pointer)
     (emacsvox-speak-region  emacsvox-eterm-pointer (point-max))))
@@ -245,7 +245,7 @@ the Emacsvox pointer to be spoken."
 (defun emacsvox-eterm-speak-pointer-line ()
   "Speak the line the pointer is on."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
     (emacsvox-speak-line)))
@@ -253,7 +253,7 @@ the Emacsvox pointer to be spoken."
 (defun emacsvox-eterm-speak-pointer-word ()
   "Speak the word  the pointer is on."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
     (emacsvox-speak-word nil)))
@@ -262,7 +262,7 @@ the Emacsvox pointer to be spoken."
   "Speak char under eterm pointer.
 Pronounces character phonetically unless  called with a PREFIX arg."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
     (emacsvox-speak-char prefix)))
@@ -272,7 +272,7 @@ Pronounces character phonetically unless  called with a PREFIX arg."
 (defun emacsvox-eterm-pointer-to-cursor ()
   "Move the pointer to the cursor."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (set-marker emacsvox-eterm-pointer (point))
   (when (called-interactively-p 'interactive)
     (emacsvox-icon 'large-movement)
@@ -281,7 +281,7 @@ Pronounces character phonetically unless  called with a PREFIX arg."
 (defun emacsvox-eterm-pointer-to-top ()
   "Move the pointer to the top of the screen."
   (interactive)
-  (cl-declare (special term-home-marker emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char term-home-marker)
     (set-marker emacsvox-eterm-pointer (point))
@@ -292,7 +292,7 @@ Pronounces character phonetically unless  called with a PREFIX arg."
 (defun emacsvox-eterm-pointer-to-bottom  ()
   "Move the pointer to the bottom  of the screen."
   (interactive)
-  (cl-declare (special  emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char (point-max))
     (set-marker emacsvox-eterm-pointer (point))
@@ -321,7 +321,7 @@ Argument COUNT .specifies number of lines by which to move."
   "Move the pointer down a line.
 Argument COUNT specifies number of lines by which to move."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (setq count (or count 1))
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
@@ -337,7 +337,7 @@ Argument COUNT specifies number of lines by which to move."
   "Move the pointer left.
 Argument COUNT specifies number of columns by which to move."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (setq count (or count 1))
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
@@ -351,7 +351,7 @@ Argument COUNT specifies number of columns by which to move."
   "Move the pointer right.
 Argument COUNT specifies number of columns by which to move."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (setq count (or count 1))
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
@@ -364,7 +364,7 @@ Argument COUNT specifies number of columns by which to move."
 (defun emacsvox-eterm-pointer-to-right-edge ()
   "Move the pointer to the right edge."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
     (end-of-line)
@@ -377,7 +377,7 @@ Argument COUNT specifies number of columns by which to move."
 (defun emacsvox-eterm-pointer-to-left-edge ()
   "Move the pointer to the right edge."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
     (forward-line 0)
@@ -392,7 +392,7 @@ Argument COUNT specifies number of columns by which to move."
 Interactive numeric prefix arg specifies number of words to move.
 Argument COUNT specifies number of words by which to move."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (setq count (or count 1))
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
@@ -408,7 +408,7 @@ Argument COUNT specifies number of words by which to move."
 Interactive numeric prefix arg specifies number of words to move.
 Argument COUNT specifies number of words by which to move."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (setq count (or count 1))
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
@@ -484,7 +484,7 @@ If found, the Emacsvox pointer is left at the hit. "
 This allows you to move between highlighted regions of the screen.
 Optional argument COUNT specifies how many changes to skip."
   (interactive "p")
-  (cl-declare (special emacsvox-eterm-pointer))
+  
   (setq count (or count 1))
   (let ((current (dtk-get-style emacsvox-eterm-pointer))
         (found nil))
@@ -503,7 +503,7 @@ Optional argument COUNT specifies how many changes to skip."
 This allows you to move between highlighted regions of the screen.
 Optional argument COUNT specifies how many changes to skip."
   (interactive "p")
-  (cl-declare (special emacsvox-eterm-pointer term-home-marker))
+  
   (setq count (or count 1))
   (let ((current (dtk-get-style emacsvox-eterm-pointer))
         (found nil))
@@ -673,7 +673,7 @@ Argument ID specifies the window."
   "Translate screen COORDINATES to buffer position.
 This translate  screen coordinates specified
 as a cons cell (column .  row) to a buffer position in the eterm buffer"
-  (cl-declare (special term-home-marker))
+  
   (let ((column (car coordinates))
         (row (cdr coordinates)))
     (save-excursion
@@ -688,7 +688,7 @@ as a cons cell (column .  row) to a buffer position in the eterm buffer"
 ;; returns a cons cell (column . row)
 (defun emacsvox-eterm-position-to-coordinates (pos)
   "Translate a buffer POS in the eterm buffer to screen coordinates."
-  (cl-declare (special term-home-marker))
+  
   (save-excursion
     (save-restriction
       (narrow-to-region term-home-marker (point-max))
@@ -705,7 +705,7 @@ as a cons cell (column .  row) to a buffer position in the eterm buffer"
 (defun emacsvox-eterm-return-window-contents (eterm-window)
   "Return  the contents of a window as a string.
 Argument ETERM-WINDOW specifies a predefined eterm window."
-  (cl-declare (special term-home-marker))
+  
   (let ((start nil)
         (end nil)
         (right-stretch (emacsvox-eterm-window-right-stretch eterm-window))
@@ -909,7 +909,7 @@ what eterm starts up with).
 Setting the focus window results in emacsvox  monitoring screen
 and speaking that window upon seeing screen activity."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-focus-window))
+  
   (let  ((window-id nil))
     (cond
      (flag (setq emacsvox-eterm-focus-window nil)
@@ -943,7 +943,7 @@ what eterm starts up with).
 Setting the filter window results in emacsvox  only monitoring screen
 activity within the filter window."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-filter-window))
+  
   (let  ((window-id nil))
     (cond
      (flag (setq emacsvox-eterm-filter-window nil)
@@ -964,7 +964,7 @@ activity within the filter window."
 (defun emacsvox-eterm-toggle-focus-window ()
   "Toggle active state of focus window."
   (interactive)
-  (cl-declare (special emacsvox-eterm-focus-window))
+  
   (if emacsvox-eterm-focus-window
       (setq emacsvox-eterm-focus-window nil)
     (setq emacsvox-eterm-focus-window 1))
@@ -975,7 +975,7 @@ activity within the filter window."
 (defun emacsvox-eterm-toggle-filter-window ()
   "Toggle active state of filter window."
   (interactive)
-  (cl-declare (special emacsvox-eterm-filter-window))
+  
   (if emacsvox-eterm-filter-window
       (setq emacsvox-eterm-filter-window nil)
     (setq emacsvox-eterm-filter-window 1))
@@ -1019,7 +1019,7 @@ activity within the filter window."
 
 (defun ems--term-mode-after (&rest _)
   "Customize eterm to work with Emacsvox.\nAdditional commands provided by emacsvox under eterm are\navailable with the prefix emacsvox-eterm-prefix and are listed below:\n\\{emacsvox-eterm-keymap}"
-  (cl-declare (special emacsvox-eterm-pointer emacsvox-eterm-marker))
+  
   (emacsvox-eterm-setup-keys) (emacsvox-eterm-setup-raw-keys)
   (make-local-variable 'eterm-current-personality)
   (setq eterm-current-personality emacsvox-eterm-default-personality)
@@ -1168,7 +1168,7 @@ there is terminal activity.")
 (defun ems--term-dynamic-complete-around (orig-fun &rest args)
   "Speak the completion. "
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-eterm-row term-current-row))
+    
     (let ((saved-point (point)))
       (apply orig-fun args)
       (unless (= saved-point (point))

@@ -341,7 +341,7 @@ _d_: subtree
 
 (defun emacsvox-muggles-enumerate ()
   "Enumerate all interactive muggles."
-  (cl-declare (special emacsvox-muggles-pattern))
+  
   (let ((result nil))
     (mapatoms
      #'(lambda (s)

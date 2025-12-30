@@ -279,7 +279,7 @@
 (defun emacsvox-outline-speak-heading (what direction)
   "Function used by all interactive section speaking
 commands. "
-  (cl-declare (special emacsvox-outline-query-before-speaking))
+  
   (let ((start nil)
         (end nil))
     (funcall what  direction)

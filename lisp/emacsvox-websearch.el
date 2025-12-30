@@ -102,7 +102,7 @@
 LOCATOR is a string to search for in the results page.
 SPEAKER is a function to call to speak relevant information.
 ARGS specifies additional arguments to SPEAKER if any."
-  (cl-declare (special emacsvox-eww-post-hook))
+  
   (add-hook
    'emacsvox-eww-post-hook
    (eval
@@ -168,9 +168,6 @@ ARGS specifies additional arguments to SPEAKER if any."
 `flag' prompts for additional search options. Second interactive
 prefix arg is equivalent to hitting the I'm Feeling Lucky button on Google. "
   (interactive (list (gweb-google-autocomplete) current-prefix-arg))
-  (cl-declare (special
-               emacsvox-google-query emacsvox-google-toolbelt
-               ems--google-filter emacsvox-websearch-google-options))
   (setq emacsvox-google-toolbelt nil)
   (let ((toolbelt (emacsvox-google-toolbelt))
         (search-url nil)
@@ -247,11 +244,6 @@ Optional prefix arg prompts for toolbelt options."
 Optional prefix arg prompts for toolbelt options."
   (interactive
    (list (gweb-google-autocomplete "WFGoogle: ") current-prefix-arg))
-  (cl-declare (special
-               emacsvox-eww-masquerade
-               ems--google-filter
-               emacsvox-websearch-wf-google
-               emacsvox-google-toolbelt))
   (setq emacsvox-google-toolbelt nil)
   (let ((emacsvox-eww-masquerade t)
         (toolbelt (emacsvox-google-toolbelt)))
@@ -288,7 +280,7 @@ Optional prefix arg prompts for toolbelt options."
 (defun emacsvox-websearch-google-search-in-date-range ()
   "Use this from inside the calendar to do Google date-range searches."
   (interactive)
-  (cl-declare (special calendar-mark-ring))
+  
   (let ((query (emacsvox-websearch-read "Google for: "))
         (from (read (calendar-astro-date-string (calendar-cursor-to-date t))))
         (to

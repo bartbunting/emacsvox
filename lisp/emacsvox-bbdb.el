@@ -201,7 +201,7 @@
 (defun ems--bbdb-complete-name-around (orig-fun &rest args)
   "Speak"
   (let ((result (apply orig-fun args)))
-    (cl-declare (special completion-reference-buffer))
+    
     (cond
      ((ems-interactive-p)
       (let

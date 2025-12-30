@@ -93,7 +93,7 @@ server."
 
 
 (defun ems--erc-mode-after (&rest _)
-  "Turn on voice lock mode." (cl-declare (special voice-lock-mode))
+  "Turn on voice lock mode." 
   (emacsvox-pronounce-refresh-pronunciations)
   (setq voice-lock-mode t))
 
@@ -181,7 +181,7 @@ Optional interactive prefix  arg defines a pronunciation that
    (list
     (emacsvox-erc-read-person "Add ")
     current-prefix-arg))
-  (cl-declare (special emacsvox-erc-people-to-monitor))
+  
   (unless (eq major-mode 'erc-mode)
     (error "Not in an ERC buffer."))
   (cl-pushnew name emacsvox-erc-people-to-monitor :test #'string-equal)
@@ -197,7 +197,7 @@ Optional interactive prefix  arg defines a pronunciation that
   (interactive
    (list
     (emacsvox-erc-read-person "Delete ")))
-  (cl-declare (special emacsvox-erc-people-to-monitor))
+  
   (unless (eq major-mode 'erc-mode)
     (error "Not in an ERC buffer."))
   (setq emacsvox-erc-people-to-monitor

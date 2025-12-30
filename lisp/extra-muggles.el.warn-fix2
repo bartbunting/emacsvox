@@ -1,0 +1,542 @@
+;;; extra-muggles.el --- Additional Hydras -*- lexical-binding: t; -*-
+;; $Author: tv.raman.tv $
+;; Description:  Speech-enable MUGGLES An Emacs Interface to muggles
+;; Keywords: Emacsvox,  Audio Desktop muggles
+;;;   LCD Archive entry:
+
+;; LCD Archive Entry:
+;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
+;; A speech interface to Emacs |
+;; Location https://github.com/tvraman/emacsvox
+;; 
+
+;;;   Copyright:
+
+;; Copyright (C) 1995 -- 2007, 2011, T. V. Raman
+;; Copyright (c) 1994, 1995 by Digital Equipment Corporation.
+;; All Rights Reserved.
+;; 
+;; This file is not part of GNU Emacs, but the same permissions apply.
+;; 
+;; GNU Emacs is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+;; 
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNMUGGLES FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;; 
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; Commentary:
+
+;; MUGGLES ==  Emacsvox spells for power-users.
+;; These are extra hydras that I dont use very often,
+;; And are being moved here from emacsvox-muggles to save time at
+;; startup.
+;; 
+;; This module implements no new functionality --- contrast with
+;; emacsvox-wizards.  Instead, it uses package hydra to provide
+;; convenience key-bindings that access existing Emacsvox
+;; functionality.
+;; You need to install package Hydra first:
+;; @samp{M-x package-install  hydra}.
+
+;; Note that on newer versions of Emacs, loading this module will
+;; attempt to automatically install package hydra if it is not found.
+;; @subsection Using Hydras
+;; See the high-level documentation for the Hydra package by executing
+;; @kbd {C-h C-j } hydra @kbd{RET}.
+;; The documentation in this section uses the same terminology as
+;; shown in the hydra package documentation.
+
+;; @subsection Extra Muggles
+
+;; @itemize
+;; @item  org-mode structure nav: @kbd{C-c C-SPC}  Navigation  for org-mode.
+;; @item View-Mode: @kbd{C-. v} Temporarily behave like view-mode.
+;; @item SmartParens: @kbd{C-c ,} Smart Parens
+;; @item m-player: @kbd{s-m} Emacsvox-M-Player Commands
+;; @item m-player: @kbd{s-;} Emacsvox-M-Player muggle
+;; @item pianobar: @kbd{s-'} Emacsvox-M-pianobar Commands
+;; @item origami: C-, / Origami   bindings.
+;; @item outliner: <C-c .> Bindings from outline-minor-mode.
+;; @item Info-Summary: <?> in Info Info Summary Muggle
+;; @item Vuiet Explorer: @kbd{C-; v} Vuiet Music Explorer and Player
+;; @end itemize
+
+;; Emacsvox automatically speaks Hydra hints when displayed.
+;; To silence all Hydra hints, set hydra-is-helpful to nil.  To
+;; temporarily silence speaking of Hydra hints, Muggles can bind
+;; command @code{emacsvox-hydra-toggle-talkative}.  As an
+;; example, Muggle @samp{ViewMode} binds @code{s} to this command.
+
+;;; Code:
+
+;;   Required modules:
+
+(eval-when-compile (require 'cl-lib))
+(cl-declaim  (optimize  (safety 0) (speed 3)))
+(require 'emacsvox-preamble)
+(require 'emacsvox-dired)
+(require 'hydra)
+(require 'emacsvox-hydra)
+(require 'org)
+(require 'emacsvox-outline)
+(require 'emacsvox-m-player)
+(require 'view)
+(require 'smartparens "smartparens" 'no-error)
+(eval-when-compile
+  (setq byte-compile-warnings '(not docstrings))
+  (require 'emacsvox-hydra)
+  
+  (require 'vuiet nil 'no-error)
+  (require 'hydra "hydra" 'no-error))
+(require 'eww)
+(with-no-warnings (require 'origami "origami" 'no-error))
+
+;;;  Generate Muggles From Keymaps:
+
+;; Generate A Muggle: Take a name of a keymap (symbol) And generate an
+;; interactive command that can be bound to a key.  Invoking that
+;; command temporarily activates the previously supplied keymap.  That
+;; activated keymap remains active until the user presses a key that
+;; is not bound in that keymap.  Inspired by the Hydra package.
+
+(defun emacsvox-muggles-generate (k-map)
+  "Generate a Muggle from specified k-map.
+Argument `k-map' is a symbol  that names a keymap."
+  (unless (and (symbolp k-map) (boundp k-map) (keymapp (symbol-value k-map)))
+    (error "%s is not a keymap." k-map))
+  (let ((cmd-name (intern (format "emacsvox-muggles-%s-cmd" k-map)))
+        (doc-string (format "Temporarily use keymap %s" k-map)))
+    (eval
+     `(defun ,cmd-name ()
+        ,doc-string
+        (interactive)
+        (let* ((key (read-key-sequence "Key: "))
+               (cmd (lookup-key ,k-map key)))
+          (while (commandp cmd)
+            (call-interactively cmd)
+            (setq key (read-key-sequence "Key: ")
+                  cmd (lookup-key ,k-map key)))
+          (call-interactively (lookup-key (current-global-map) key))
+          (emacsvox-icon 'close-object))))))
+
+;; Create a command to invoke our media player map:
+
+(global-set-key
+ (kbd "s-m")
+ (emacsvox-muggles-generate 'emacsvox-m-player-mode-map))
+
+;; Create one for pianobar
+(when (featurep 'pianobar)
+  (global-set-key
+   (kbd "s-'")
+   (emacsvox-muggles-generate 'pianobar-key-map)))
+
+;;;  Media Player:
+
+(declare-function emacsvox-amark-save "emacsvox-muggles" t)
+(global-set-key
+ (kbd "s-;")
+ (defhydra emacsvox-muggles-m-player
+           (:body-pre (emacsvox-hydra-body-pre "Media Player")
+                      :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
+           (";" emacsvox-m-player)
+           ("+" emacsvox-m-player-volume-up)
+           ("," emacsvox-m-player-backward-10s)
+           ("%" emacsvox-m-player-display-percent)
+           ("-" emacsvox-m-player-volume-down)
+           ("." emacsvox-m-player-forward-10s)
+           ("<" emacsvox-m-player-backward-1min)
+           ("<down>" emacsvox-m-player-forward-1min)
+           ("<left>" emacsvox-m-player-backward-10s)
+           ("<next>" emacsvox-m-player-forward-10min)
+           ("<prior>" emacsvox-m-player-backward-10min)
+           ("<right>" emacsvox-m-player-forward-10s)
+           ("<up>" emacsvox-m-player-backward-1min)
+           ("=" emacsvox-m-player-volume-up)
+           (">" emacsvox-m-player-forward-1min)
+           ("C" emacsvox-m-player-clear-filters)
+           ("DEL" emacsvox-m-player-reset-speed)
+           ("Q" emacsvox-m-player-quit "quit")
+           ("R" emacsvox-m-player-edit-reverb)
+           ("S" emacsvox-amark-save)
+           ("SPC" emacsvox-m-player-pause)
+           ("[" emacsvox-m-player-slower)
+           ("]" emacsvox-m-player-faster)
+           ("a" emacsvox-m-player-amark-add)
+           ("b" emacsvox-m-player-balance)
+           ("c" emacsvox-m-player-slave-command)
+           ("d" emacsvox-m-player-delete-filter)
+           ("e" emacsvox-m-player-add-equalizer)
+           ("f" emacsvox-m-player-add-filter)
+           ("g" emacsvox-m-player-seek-absolute)
+           ("j" emacsvox-m-player-amark-jump)
+           ("l" emacsvox-m-player-get-length)
+           ("m" emacsvox-m-player-mode-line)
+           ("n" emacsvox-m-player-next-track)
+           ("p" emacsvox-m-player-previous-track)
+           ("q" bury-buffer)
+           ("r" emacsvox-m-player-seek-relative)
+           ("s" emacsvox-m-player-scale-speed)
+           ("u" emacsvox-m-player-url)
+           ("v" emacsvox-m-player-volume-change)
+           ("(" emacsvox-m-player-left-channel)
+           (")" emacsvox-m-player-right-channel)
+           ("{" emacsvox-m-player-half-speed)
+           ("}" emacsvox-m-player-double-speed)
+           ))
+
+;;;  Outliner:
+
+;; Cloned from Hydra Wiki:
+(global-set-key
+ (kbd "C-. o")
+ (defhydra emacsvox-muggles-outliner
+           (:body-pre
+            (progn
+              (outline-minor-mode 1)
+              (emacsvox-hydra-body-pre "Outline Navigation"))
+            :pre emacsvox-hydra-pre :post emacsvox-hydra-post
+            :color pink :hint nil)
+           "
+^Hide^             ^Show^           ^Move
+^^^^^^------------------------------------------------------
+_q_: sublevels     _a_: all         _u_: up
+_t_: body          _e_: entry       _n_: next visible
+_o_: other         _i_: children    _p_: previous visible
+_c_: entry         _k_: branches    _f_: forward same level
+_l_: leaves        _s_: subtree     _b_: backward same level
+_d_: subtree
+
+"
+           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-outliner"))
+           ;; Hide
+           ("q" outline-hide-sublevels)
+           ("t" outline-hide-body)
+           ("o" outline-hide-other)             ; Hide other branches
+           ("c" outline-hide-entry)             ; Hide this entry's body
+           ("l" outline-hide-leaves)
+           ("d" outline-hide-subtree)
+           ;; Show
+           ("a" outline-show-all)               ; Show (expand) everything
+           ("e" outline-show-entry)             ; Show this heading's body
+           ("i" outline-show-children) 
+           ("k" outline-show-branches)
+           ("s" outline-show-subtree)
+           ;; Move
+           ("u" outline-up-heading)               ; Up
+           ("n" outline-next-visible-heading)     ; Next
+           ("p" outline-previous-visible-heading) ; Previous
+           ("f" outline-forward-same-level)       ; Forward - same level
+           ("b" outline-backward-same-level)      ; Backward - same level
+           ("z" nil "leave")))
+
+;;;  Info Summary:
+
+;; Taken from Hydra wiki and customized to taste:
+(define-key Info-mode-map (kbd "?")
+            (defhydra emacsvox-muggles-info-summary
+                      (
+                       :color blue :hint nil
+                       :body-pre (emacsvox-hydra-body-pre "Info Summary")
+                       :pre
+                       emacsvox-hydra-pre
+                       :post emacsvox-hydra-post)
+                      "info mode"
+                      ("]"   Info-forward-node)
+                      ("["   Info-backward-node)
+                      ("n"   Info-next)
+                      ("p"   Info-prev)
+                      ("s"   Info-search)
+                      ("S"   Info-search-case-sensitively)
+
+                      ("l"   Info-history-back)
+                      ("r"   Info-history-forward)
+                      ("H"   Info-history)
+                      ("t"   Info-top-node)
+                      ("<"   Info-top-node)
+                      (">"   Info-final-node)
+
+                      ("u"   Info-up)
+                      ("^"   Info-up)
+                      ("m"   Info-menu)
+                      ("g"   Info-goto-node)
+                      ("b"   beginning-of-buffer)
+                      ("e"   end-of-buffer)
+
+                      ("f"   Info-follow-reference)
+                      ("i"   Info-index)
+                      (","   Info-index-next)
+                      ("I"   Info-virtual-index)
+
+                      ("T"   Info-toc)
+                      ("d"   Info-directory)
+                      ("c"   Info-copy-current-node-name)
+                      ("C"   clone-buffer)
+                      ("a"   info-apropos)
+
+                      ("1"   Info-nth-menu-item)
+                      ("2"   Info-nth-menu-item)
+                      ("3"   Info-nth-menu-item)
+                      ("4"   Info-nth-menu-item)
+                      ("5"   Info-nth-menu-item)
+                      ("6"   Info-nth-menu-item)
+                      ("7"   Info-nth-menu-item)
+                      ("8"   Info-nth-menu-item)
+                      ("9"   Info-nth-menu-item)
+
+                      ("?"   Info-summary "Info summary")
+                      ("h"   Info-help "Info help")
+                      ("q"   quit-window "Info exit")
+                      ("C-g" nil "cancel" :color blue)))
+
+;;;  origami:
+
+(declare-function origami-open-node "origami" (buffer point))
+(declare-function origami-close-node "origami" (buffer point))
+(declare-function origami-next-fold "origami" (buffer point))
+(declare-function origami-previous-fold "origami" (buffer point))
+(declare-function origami-forward-toggle-node "origami" (buffer point))
+(declare-function origami-toggle-all-nodes "origami" (buffer))
+(declare-function origami-mode "origami" (&optional arg))
+
+(global-set-key
+ (kbd "C-, /")
+ (defhydra emacsvox-origami
+           (:color red
+                   :body-pre
+                   (progn
+                     (origami-mode 1)
+                     (emacsvox-hydra-body-pre "Origami")
+                     (emacsvox-hydra-toggle-talkative))
+                   :hint nil
+                   :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
+           "
+    _o_pen node    _n_ext fold       toggle _f_orward
+    _c_lose node   _p_revious fold   toggle _a_ll
+    "
+           ("o" origami-open-node)
+           ("c" origami-close-node)
+           ("n" origami-next-fold)
+           ("p" origami-previous-fold)
+           ("f" origami-forward-toggle-node)
+           ("a" origami-toggle-all-nodes)))
+
+;;;  Muggles Autoload Wizard:
+
+(defvar emacsvox-muggles-pattern
+  "emacsvox-muggles-.*/body$"
+  "Pattern matching muggles we are interested in.")
+
+(defun emacsvox-muggles-enumerate ()
+  "Enumerate all interactive muggles."
+  (cl-declare (special emacsvox-muggles-pattern))
+  (let ((result nil))
+    (mapatoms
+     #'(lambda (s)
+         (let ((name (symbol-name s)))
+           (when
+               (and
+                (commandp s)
+                (string-match emacsvox-muggles-pattern  name))
+             (push s result)))))
+    result))
+
+(defun emacsvox-muggles-generate-autoloads ()
+  "Generate autoload lines for all defined muggles.
+Also generates global keybindings if any."
+  (let ((muggles (emacsvox-muggles-enumerate))
+        (buff
+         (find-file-noselect
+          (expand-file-name "emacsvox-muggles-autoloads.el"
+                            emacsvox-lisp-directory))))
+    (with-current-buffer buff
+      (erase-buffer)
+      (insert ";;; Auto Generated: Do Not Hand Edit.\n\n")
+      (cl-loop
+       for m in muggles do
+       (let ((key  (where-is-internal m nil 'first)))
+         (insert
+          (format "(autoload '%s \"emacsvox-muggles\" \"%s\" t)\n" m m))
+         (when key 
+           (insert (format "(global-set-key %s '%s)\n" key m)))))
+      (insert "\n(provide 'emacsvox-muggles-autoloads)\n")
+      (save-buffer))
+    (message "Generated autoloads for muggles.")))
+
+;;;  smartParens:
+
+(global-set-key
+ (kbd "C-c ,")
+ (defhydra emacsvox-muggles-smartparens
+           (:body-pre
+            (progn
+              (when hydra-is-helpful (emacsvox-hydra-toggle-talkative))
+              (emacsvox-hydra-body-pre "SmartParens"))
+            :pre emacsvox-hydra-pre
+            :post emacsvox-hydra-post)
+           "Smart Parens"
+           ("'" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "'")))  
+           ("(" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "(")))  
+           ("<down>" sp-splice-sexp-killing-forward)  
+           ("<left>" sp-forward-barf-sexp)  
+           ("<right>" sp-forward-slurp-sexp)  
+           ("<up>" sp-splice-sexp-killing-backward)  
+           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-smartparens"))
+           ("C-<left>" sp-backward-barf-sexp)  
+           ("C-<right>" sp-backward-slurp-sexp)
+           ("R" sp-splice-sexp)  
+           ("\"" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "\"")))  
+           ("a" beginning-of-defun)
+           ("b" sp-backward-sexp)  
+           ("c" sp-convolute-sexp)  
+           ("d" sp-down-sexp)  
+           ("e" end-of-defun)
+           ("f" sp-forward-sexp)  
+           ("i" sp-indent-defun)  
+           ("j" sp-join-sexp)  
+           ("k" sp-kill-sexp)  
+           ("n" sp-next-sexp)  
+           ("p" sp-previous-sexp)  
+           ("r" sp-splice-sexp-killing-around)  
+           ("s" sp-split-sexp)  
+           ("t" sp-transpose-sexp)  
+           ("u" sp-backward-up-sexp)  
+           ("w" sp-copy-sexp)  
+           ("{" #'(lambda (_) (interactive "P") (sp-wrap-with-pair "{")))))
+
+;;;   View Mode:
+
+(global-set-key
+ (kbd
+  "C-. v")
+ (defhydra emacsvox-muggles-view
+           (:body-pre
+            (progn
+              (emacsvox-hydra-toggle-talkative)
+              (emacsvox-hydra-body-pre "View"))
+            :hint nil
+            :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
+           "View Mode"
+           ("?" (emacsvox-hydra-self-help "emacsvox-muggles-view"))
+           ("$" set-selective-display)
+           ("%"  View-goto-percent)
+           ("'" register-to-point)
+           ("(" backward-sexp)
+           (")" forward-sexp)
+           ("." set-mark-command)
+           ("/" View-search-regexp-forward)
+           ("<" beginning-of-buffer)
+           ("<return>" nil "quit")
+           ("=" what-line)
+           (">" end-of-buffer)
+           ("@" View-back-to-mark)
+           ("A"beginning-of-defun)
+           ("DEL" View-scroll-page-backward)
+           ("E"end-of-defun)
+           ("J" (emacsvox-hide-or-expose-block 'all))
+           ("SPC" View-scroll-page-forward)
+           ("[" backward-page)
+           ("\\" View-search-regexp-backward)
+           ("]" forward-page)
+           ("a" move-beginning-of-line)
+           ("b" backward-word)
+           ("c" emacsvox-speak-char)
+           ("d" View-scroll-half-page-forward)
+           ("e" move-end-of-line)
+           ("f" forward-word)
+           ("g" goto-line)
+           ("h" backward-char)
+           ("i" emacsvox-speak-mode-line)
+           ("j" next-line)
+           ("k" previous-line)
+           ("l" forward-char)
+           ("m" point-to-register)
+           ("n" View-search-last-regexp-forward)
+           ("p" View-search-last-regexp-backward)
+           ("q" nil "quit")
+           ("r" copy-to-register)
+           ("s" emacsvox-hydra-toggle-talkative)
+           ("t" (recenter 0))
+           ("u" View-scroll-half-page-backward)
+           ("w"emacsvox-speak-word)
+           ("x" exchange-point-and-mark)
+           ("y" kill-ring-save)
+           ("{" backward-paragraph)
+           ("}" forward-paragraph)
+           ))
+
+;;; Vuiet:
+
+(declare-function emacsvox-vuiet-track-info "emacsvox-vuiet" nil)
+(when (locate-library "vuiet")
+  (with-no-warnings
+    (global-set-key
+     (kbd "C-; v")
+     (defhydra emacsvox-muggles-vuiet
+               (:body-pre
+                (progn
+                  (when hydra-is-helpful (emacsvox-hydra-toggle-talkative))
+                  (emacsvox-hydra-body-pre "Vuiet  Explorer"))
+                :pre emacsvox-hydra-pre :post emacsvox-hydra-post)
+               (";" vuiet-playing-track-lyrics)
+               ("=" vuiet-player-volume-inc)
+               ("-" vuiet-player-volume-dec)
+               ("A" vuiet-play-artist-loved-tracks)
+               ("'" vuiet-play-loved-tracks)
+               ("," vuiet-seek-backward)
+               ("." vuiet-seek-forward)
+               ("C-s" vuiet-artist-info-search)
+               ("L" vuiet-playing-artist-lastfm-page)
+               ("SPC" vuiet-play-pause)
+               ("a" vuiet-artist-info)
+               ("i" emacsvox-vuiet-track-info)
+               ("l" vuiet-love-track)
+               ("n" vuiet-next)
+               ("p" vuiet-play-artist)
+               ("r" vuiet-replay)
+               ("s" vuiet-stop)
+               ("t" vuiet-play-track)
+               ("u" vuiet-unlove-track)))))
+
+;;;  Org Mode Structure Navigation:
+
+(with-eval-after-load "org"
+  (cl-declaim (special org-mode-map))
+  (define-key
+   org-mode-map
+   (kbd "C-c C-SPC")
+   (defhydra emacsvox-muggles-org-nav
+             (:body-pre
+              (progn
+                (emacsvox-hydra-toggle-talkative)
+                (emacsvox-hydra-body-pre "OrgNavView"))
+              :hint nil
+              :pre emacsvox-hydra-pre :post emacsvox-hydra-post
+              :color red :columns 3)
+             "Org Mode Navigate "
+             ("?" (emacsvox-hydra-self-help "emacsvox-muggles-org-nav"))
+             ("SPC" emacsvox-outline-speak-this-heading  "Speak this section")
+             ("n" emacsvox-outline-speak-next-heading  "next heading")
+             ("p" emacsvox-outline-speak-previous-heading "prev heading")
+             ("f" org-forward-heading-same-level "next heading at same level")
+             ("b" org-backward-heading-same-level "prev heading at same level")
+             ("u" outline-up-heading "up heading")
+             ("g" org-goto "goto" :exit t))))
+
+(provide 'extra-muggles)
+;;;  end of file
+
+;; byte-compile-warnings: (docstring noruntime )
+

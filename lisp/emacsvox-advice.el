@@ -803,9 +803,6 @@ When on a close delimiter, speak matching delimiter after a small delay. "
  (eval
   `(defadvice ,f (around emacsvox pre act comp)
      "Speak message. Duplicates will not be spoken."
-     (cl-declare (special
-                  emacsvox-last-message inhibit-message
-                  ems--message-filter emacsvox-speak-messages))
      (let ((m nil)
            (o minibuffer-message-overlay))
        ad-do-it
@@ -856,7 +853,7 @@ When on a close delimiter, speak matching delimiter after a small delay. "
    'eldoc-highlight-function-argument 'voice-bolden))
 
 (defun ems--ange-ftp-process-handle-hash-around (orig-fun &rest args)
-  "Jibber intelligently." (cl-declare (special ange-ftp-last-percent))
+  "Jibber intelligently." 
   (ems-with-messages-silenced (apply orig-fun args)
                               (emacsvox-icon 'progress)
                               (dtk-speak
@@ -882,7 +879,7 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 
 (defun emacsvox-fancy-error-handler (data _ caller)
   "Custom error handler."
-  (cl-declare (special ems--error-limit))
+  
   (cl-declare (special ems--last-error-msg
                        ems--lazy-error-time))
   (let ((m (error-message-string data))
@@ -1175,7 +1172,7 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 ;; guess the vc version number from the variable used in minor mode alist
 (defun emacsvox-vc-get-version-id ()
   "Return VC version id."
-  (cl-declare (special vc-mode))
+  
   (let ((id vc-mode))
     (cond
      ((and vc-mode
@@ -1664,7 +1661,7 @@ Indicate change of selection with an auditory icon
      "Speak the previous line if line echo is on.
 See command \\[emacsvox-toggle-line-echo]. Otherwise cue the user to
 the newly created  line."
-     (cl-declare (special emacsvox-line-echo))
+     
      (when (ems-interactive-p)
        (if emacsvox-line-echo
            (emacsvox-read-previous-line)
@@ -1703,7 +1700,7 @@ the newly created  line."
 (defun ems--call-last-kbd-macro-around (orig-fun &rest args)
   "Speak."
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-use-icons))
+    
     (cond
      ((ems-interactive-p)
       (ems-with-messages-silenced
@@ -1929,7 +1926,7 @@ the newly created  line."
 
 (defun ems--help-form-show-after (&rest _)
   "Speak displayed help form."
-  (cl-declare (special emacsvox--help-char-helpbuf))
+  
   (when (buffer-live-p (get-buffer emacsvox--help-char-helpbuf))
     (with-current-buffer emacsvox--help-char-helpbuf
       (goto-char (point-min)) (emacsvox-speak-buffer))))
@@ -3014,7 +3011,7 @@ Produce an auditory icon if possible."
 (defun ems--ielm-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (cl-declare (special ielm-working-buffer))
+    
     (setq header-line-format
           '((:eval
              (concat
@@ -3112,7 +3109,7 @@ Produce an auditory icon if possible."
        (emacsvox-speak-line)))))
 
 (defun ems--rectangle-mark-mode-after (&rest _)
-  "speak." (cl-declare (special rectangle-mark-mode))
+  "speak." 
   (when (ems-interactive-p)
     (dtk-notify
      (format "Turned %s rectangle mark mode"

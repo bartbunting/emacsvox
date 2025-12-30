@@ -749,7 +749,7 @@
 
 (defun emacsvox-keymap-recover-eol ()
   "Recover EOL ."
-  (cl-declare (special emacsvox-prefix))
+  
   (global-set-key (concat emacsvox-prefix "e") 'move-end-of-line)
   (global-set-key (concat emacsvox-prefix emacsvox-prefix) 'move-end-of-line))
 (add-hook 'after-change-major-mode-hook  'emacsvox-keymap-recover-eol)

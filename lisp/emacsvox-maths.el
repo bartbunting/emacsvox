@@ -133,13 +133,13 @@ install.")
   "Map of handlers for parsing Maths Server output.")
 (defun emacsvox-maths-handler-set (name handler)
   "Set up handler for name `name'."
-  (cl-declare (special emacsvox-maths-handler-table))
+  
   (puthash name handler emacsvox-maths-handler-table))
 
 (defun emacsvox-maths-handler-get (name)
   "Return handler  for name `name'.
 Throw error if no handler defined."
-  (cl-declare (special emacsvox-maths-handler-table))
+  
   (or (gethash name emacsvox-maths-handler-table)
       (error "No handler defined for %s" name)))
 
@@ -154,7 +154,7 @@ Throw error if no handler defined."
 
 (defun emacsvox-maths-handle-string (string)
   "Handle plain, unannotated string."
-  (cl-declare (special emacsvox-maths))
+  
   (with-current-buffer (emacsvox-maths-output emacsvox-maths)
     (let ((start (point)))
       (insert (format "%s\n" string))
@@ -175,7 +175,7 @@ Otherwise, Examine head of sexp, and applies associated handler to the tail."
 
 (defun emacsvox-maths-handle-exp (contents)
   "Handle top-level exp returned from Maths Server."
-  (cl-declare (special emacsvox-maths))
+  
   (with-current-buffer (emacsvox-maths-output emacsvox-maths)
     (goto-char (point-max))
     (let ((inhibit-read-only  t)
@@ -203,7 +203,7 @@ Otherwise, Examine head of sexp, and applies associated handler to the tail."
 
 (defun emacsvox-maths-apply-pause (start)
   "Apply pause."
-  (cl-declare (special emacsvox-maths))
+  
   (let ((pause (emacsvox-maths-pause emacsvox-maths)))
     (when pause
       (save-excursion
@@ -217,7 +217,7 @@ Otherwise, Examine head of sexp, and applies associated handler to the tail."
 (defun emacsvox-maths-handle-text (contents)
   "Handle body of annotated text from Maths Server.
 Expected: ((acss) string)."
-  (cl-declare (special emacsvox-maths))
+  
   (cl-assert (listp contents) t "%s is not a list. " contents)
   (let ((acss (cl-first contents))
         (string (cl-second contents))
@@ -232,7 +232,7 @@ Expected: ((acss) string)."
 
 (defun emacsvox-maths-handle-pause (ms)
   "Handle Pause value."
-  (cl-declare (special emacsvox-maths))
+  
   (cl-assert (numberp ms) t "%s is not a number. " ms)
   (cond
    ((null (emacsvox-maths-pause emacsvox-maths))
@@ -283,7 +283,7 @@ incomplete parse, that is expected to be caught by the caller."
   "Handle process output from Node math-server.
 All complete chunks of output are consumed. Partial output is
 left for next run."
-  (cl-declare (special emacsvox-maths))
+  
   (with-current-buffer (process-buffer proc)
     (let ((moving (= (point) (process-mark proc))))
       (save-excursion
@@ -345,7 +345,7 @@ left for next run."
 (defun emacsvox-maths-shutdown ()
   "Shutdown client and server processes."
   (interactive)
-  (cl-declare (special emacsvox-maths))
+  
   (when (process-live-p (emacsvox-maths-client-process emacsvox-maths))
     (delete-process (emacsvox-maths-client-process emacsvox-maths)))
   (when (process-live-p (emacsvox-maths-server-process emacsvox-maths))
@@ -360,7 +360,7 @@ left for next run."
 (defun emacsvox-maths-flush-output ()
   "Flush client buffer if things go out of sync."
   (interactive)
-  (cl-declare (special emacsvox-maths))
+  
   (when
       (process-live-p (emacsvox-maths-client-process emacsvox-maths))
     (with-current-buffer
@@ -371,7 +371,7 @@ left for next run."
 
 (defun emacsvox-maths-ensure-server ()
   "Start up Maths Server bridge if not already running."
-  (cl-declare (special emacsvox-maths))
+  
   (unless
       (and emacsvox-maths
            (process-live-p (emacsvox-maths-server-process emacsvox-maths))
@@ -392,7 +392,7 @@ left for next run."
 (defun emacsvox-maths-guess-calc ()
   "Guess expression to speak in calc buffers.
 Set calc-language to tex to use this feature."
-  (cl-declare (special calc-last-kill))
+  
   (cl-assert (eq major-mode 'calc-mode) nil "This is not a Calc buffer.")
   (calc-kill 1 'no-delete)
   (substring (car calc-last-kill) 2))
@@ -412,7 +412,7 @@ Set calc-language to tex to use this feature."
 
 (defun emacsvox-maths-guess-tex ()
   "Extract math content around point."
-  (cl-declare (special texmathp-why))
+  
   (cl-assert (require 'texmathp) nil "Install package auctex to get texmathp")
   (when (texmathp)
     (let ((delimiter (car texmathp-why))
@@ -457,7 +457,7 @@ Set calc-language to tex to use this feature."
 
 (defun emacsvox-maths-guess-input ()
   "Examine current mode, text around point etc. to guess Math content to read."
-  (cl-declare (special emacsvox-maths))
+  
   (unless emacsvox-maths (emacsvox-maths-start))
   (setf
    (emacsvox-maths-input emacsvox-maths)
@@ -485,7 +485,7 @@ Set calc-language to tex to use this feature."
 (defun emacsvox-maths-enter-guess ()
   "Send the guessed  LaTeX expression to Maths server. "
   (interactive)
-  (cl-declare (special emacsvox-maths))
+  
   (emacsvox-maths-ensure-server)        
   (emacsvox-maths-guess-input)         ;guess based on context
   (process-send-string
@@ -497,7 +497,7 @@ Set calc-language to tex to use this feature."
   "Send a LaTeX expression to Maths server,
  guess  based on context. "
   (interactive (list (emacsvox-maths-guess-input)))
-  (cl-declare (special emacsvox-maths))
+  
   (emacsvox-maths-ensure-server)
   (when (or (null latex) (string= "" latex))
     (setq latex (read-from-minibuffer "Enter expression:")))
@@ -514,7 +514,7 @@ Set calc-language to tex to use this feature."
   `(defun ,(intern (format "emacsvox-maths-%s" move)) ()
      ,(format "Move %s in current Math expression. (auto-generated)" move)
      (interactive)
-     (cl-declare (special emacsvox-maths))
+     
      (process-send-string
       (emacsvox-maths-client-process emacsvox-maths)
       ,(format "%s:\n" move)))))
@@ -559,7 +559,7 @@ Emacs online help facility to look up help on these commands.
 (defun emacsvox-maths-switch-to-output ()
   "Switch to output buffer."
   (interactive)
-  (cl-declare (special emacsvox-maths))
+  
   (funcall-interactively
    #'pop-to-buffer (emacsvox-maths-output emacsvox-maths)))
 

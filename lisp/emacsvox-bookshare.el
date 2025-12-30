@@ -203,7 +203,7 @@ Optional argument `noauth' says no user auth needed."
 
 (defun emacsvox-bookshare-page-rest-endpoint ()
   "Generate REST endpoint for the next page of results."
-  (cl-declare (special emacsvox-bookshare-last-action-uri))
+  
   (unless emacsvox-bookshare-last-action-uri
     (error "No query to  page!"))
   (let ((root
@@ -226,7 +226,7 @@ Optional argument `noauth' says no user auth needed."
 
 (defun emacsvox-bookshare-destruct-rest-url (url)
   "Return operator and operand used to construct this REST end-point."
-  (cl-declare (special emacsvox-bookshare-api-base))
+  
   (let* ((start (length emacsvox-bookshare-api-base))
          (end (string-match "for/" url)))
     (nthcdr 2
@@ -237,8 +237,6 @@ Optional argument `noauth' says no user auth needed."
   "Return  URL  end point for content download.
 Argument id specifies content. Argument fmt = 0 for Braille, 1
    for Daisy, 3 for epub-3,6 for audio."
-  (cl-declare (special
-               emacsvox-bookshare-api-base emacsvox-bookshare-user-id))
   (format "%s/%s/%s?api_key=%s"
           emacsvox-bookshare-api-base
           (format "download/content/%s/version/%s" id fmt)
@@ -247,7 +245,7 @@ Argument id specifies content. Argument fmt = 0 for Braille, 1
 
 (defun emacsvox-bookshare-get-result (command)
   "Run command and return its output."
-  (cl-declare (special shell-file-name shell-command-switch))
+  
   (g-using-scratch
    (call-process shell-file-name nil t
                  nil shell-command-switch
@@ -266,7 +264,7 @@ Bookshare docs.")
 (defun emacsvox-bookshare-api-call (operation operand &optional no-auth)
   "Make a Bookshare API  call and get the result.
 Optional argument `no-auth' says we dont need a user auth."
-  (cl-declare (special emacsvox-bookshare-last-action-uri))
+  
   (setq emacsvox-bookshare-last-action-uri
         (emacsvox-bookshare-rest-endpoint operation operand no-auth))
   (emacsvox-bookshare-get-result
@@ -279,7 +277,7 @@ Optional argument `no-auth' says we dont need a user auth."
 (defun emacsvox-bookshare-get-more-results ()
   "Get next page of results for last query."
   (interactive)
-  (cl-declare (special emacsvox-bookshare-last-action-uri))
+  
   (setq emacsvox-bookshare-last-action-uri
         (emacsvox-bookshare-page-rest-endpoint))
   (emacsvox-bookshare-get-result
@@ -290,7 +288,7 @@ Optional argument `no-auth' says we dont need a user auth."
 
 (defun emacsvox-bookshare-generate-target (author title &optional fmt)
   "Generate a suitable filename target."
-  (cl-declare (special emacsvox-bookshare-downloads-directory))
+  
   (expand-file-name
    (replace-regexp-in-string
     "[ _&'\":();]+" "-"
@@ -302,7 +300,7 @@ Optional argument `no-auth' says we dont need a user auth."
 
 (defun emacsvox-bookshare-generate-directory (author title)
   "Generate name of unpack directory."
-  (cl-declare (special emacsvox-bookshare-directory))
+  
   (expand-file-name
    (replace-regexp-in-string
     "[ _&'\":();]+" "-"
@@ -322,7 +320,7 @@ Optional argument `no-auth' says we dont need a user auth."
 
 (defun emacsvox-bookshare-categories ()
   "Return memoized list of categories."
-  (cl-declare (special emacsvox-bookshare-categories))
+  
   (or
    emacsvox-bookshare-categories
    (setq
@@ -518,12 +516,12 @@ Optional interactive prefix arg prompts for a category to use as a filter."
 
 (defun emacsvox-bookshare-action-set (action handler)
   "Set up action handler."
-  (cl-declare (special emacsvox-bookshare-action-table))
+  
   (setf (gethash action emacsvox-bookshare-action-table) handler))
 
 (defun emacsvox-bookshare-action-get (action)
   "Retrieve action handler."
-  (cl-declare (special emacsvox-bookshare-action-table))
+  
   (or (gethash action emacsvox-bookshare-action-table)
       (error "No handler defined for action %s" action)))
 
@@ -595,12 +593,12 @@ b Browse
 
 (defun emacsvox-bookshare-handler-set (element handler)
   "Set up element handler."
-  (cl-declare (special emacsvox-bookshare-handler-table))
+  
   (setf (gethash element emacsvox-bookshare-handler-table) handler))
 
 (defun emacsvox-bookshare-handler-get (element)
   "Retrieve action handler."
-  (cl-declare (special emacsvox-bookshare-handler-table))
+  
   (let ((handler (gethash element emacsvox-bookshare-handler-table)))
     (if (fboundp handler) handler 'emacsvox-bookshare-recurse)))
 
@@ -657,7 +655,7 @@ b Browse
 
 (defun emacsvox-bookshare-messages-handler (messages)
   "Handle messages element."
-  (cl-declare (special emacsvox-bookshare-last-action-uri))
+  
   (let ((start (point)))
     (mapc #'insert(dom-text   (dom-child-by-tag messages 'string)))
     (insert "\t")
@@ -674,7 +672,7 @@ b Browse
 
 (defun emacsvox-bookshare-status-code-handler (status-code)
   "Handlestatus-code element."
-  (cl-declare (special emacsvox-bookshare-last-action-uri))
+  
   (let ((start (point)))
     (message "Status-Code: %s" (dom-text    status-code))
     (insert "Status Code: ")
@@ -773,7 +771,7 @@ b Browse
 
 (defun emacsvox-bookshare-metadata-handler (metadata)
   "Handle metadata element."
-  (cl-declare (special emacsvox-bookshare-metadata-filtered-elements))
+  
   (let* ((children (dom-children metadata))
          (available (dom-by-tag metadata 'download-format))
          (display
@@ -829,7 +827,7 @@ b Browse
 
 (defun emacsvox-bookshare-define-keys ()
   "Define keys for  Bookshare Interaction."
-  (cl-declare (special emacsvox-bookshare-mode-map))
+  
   (cl-loop for k in
            '(
              ("e" emacsvox-bookshare-eww)
@@ -869,7 +867,7 @@ b Browse
 (defun emacsvox-bookshare ()
   "Bookshare  Interaction."
   (interactive)
-  (cl-declare (special emacsvox-bookshare-interaction-buffer))
+  
   (let ((buffer (get-buffer emacsvox-bookshare-interaction-buffer)))
     (cond
      ((buffer-live-p buffer)
@@ -1147,7 +1145,7 @@ Make sure it's downloaded and unpacked first."
       (add-hook
        'emacsvox-eww-post-hook
        #'(lambda ()
-           (cl-declare (special emacsvox-we-url-executor))
+           
            (setq emacsvox-we-url-executor 'emacsvox-bookshare-url-executor)
            (emacsvox-speak-mode-line)
            (emacsvox-icon 'open-object)))
@@ -1160,7 +1158,7 @@ Make sure it's downloaded and unpacked first."
 (defun emacsvox-bookshare-extract-xml (url)
   "Extract content referred to by link under point, and return an XML buffer."
   (interactive "sURL: ")
-  (cl-declare (special  emacsvox-we-xsl-filter))
+  
   (let ((fields (split-string url "#"))
         (id nil)
         (url nil))
@@ -1189,7 +1187,7 @@ Make sure it's downloaded and unpacked first."
 (defun emacsvox-bookshare-view-page-range (url)
   "Play pages in specified page range from URL."
   (interactive "sURL:")
-  (cl-declare (special emacsvox-bookshare-browser-function))
+  
   (let* ((start (read-from-minibuffer "Start Page: "))
          (end (read-from-minibuffer "End Page: "))
          (result
@@ -1217,7 +1215,7 @@ Make sure it's downloaded and unpacked first."
                            (when (eq major-mode 'dired-mode)
                              (dired-get-filename))
                            emacsvox-bookshare-directory))))
-  (cl-declare (special emacsvox-bookshare-directory))
+  
   (let* ((xsl (emacsvox-bookshare-xslt directory)))
     (emacsvox-xslt-view-file
      xsl
@@ -1235,12 +1233,12 @@ Make sure it's downloaded and unpacked first."
                            (when (eq major-mode 'dired-mode)
                              (dired-get-filename))
                            emacsvox-bookshare-directory))))
-  (cl-declare (special emacsvox-bookshare-directory))
+  
   (let* ((xsl (emacsvox-bookshare-toc-xslt)))
     (add-hook
      'emacsvox-eww-post-hook
      #'(lambda ()
-         (cl-declare (special emacsvox-we-url-executor))
+         
          (setq emacsvox-we-url-executor 'emacsvox-bookshare-url-executor)))
     (emacsvox-xslt-view-file
      xsl
@@ -1263,7 +1261,7 @@ Useful for fulltext search in a book."
                                (when (eq major-mode 'dired-mode)
                                  (dired-get-filename))
                                emacsvox-bookshare-directory)))))
-  (cl-declare (special emacsvox-xslt))
+  
   (cl-declare (special emacsvox-bookshare-html-to-text-command
                        emacsvox-bookshare-directory))
   (let ((xsl (emacsvox-bookshare-xslt directory))

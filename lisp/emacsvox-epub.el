@@ -206,7 +206,7 @@
 ;; Helper: dom from file in archive
 (defsubst emacsvox-epub-dom-from-archive (epub-file file &optional xml-p)
   "Return DOM from specified file in epub archive."
-  (cl-declare (special emacsvox-epub-unzip))
+  
   (with-temp-buffer
     (setq buffer-undo-list  t)
     (shell-command
@@ -232,7 +232,7 @@
 
 (defun emacsvox-epub-do-toc (file)
   "Return location of .ncx file within epub archive."
-  (cl-declare (special emacsvox-epub-toc-command))
+  
   (let ((result
          (shell-command-to-string (format emacsvox-epub-toc-command  file))))
     (cond
@@ -241,7 +241,7 @@
 
 (defun emacsvox-epub-get-contents (epub element)
   "Return buffer containing contents of element from epub."
-  (cl-declare (special emacsvox-epub-scratch))
+  
   (unless   (emacsvox-epub-p epub) (error "Not an EPub object."))
   (unless (member element (emacsvox-epub-ls epub))
     (error "Element not found in EPub. "))
@@ -289,7 +289,7 @@
 
 (defun emacsvox-epub-do-opf (file)
   "Return location of .opf file within epub archive."
-  (cl-declare (special emacsvox-epub-opf-command))
+  
   (substring
    (shell-command-to-string (format emacsvox-epub-opf-command file))
    0 -1))
@@ -300,7 +300,7 @@
 
 (defun emacsvox-epub-do-ls (file)
   "Return sorted list of files in an epub archive."
-  (cl-declare (special emacsvox-epub-ls-command))
+  
   (split-string
    (shell-command-to-string (format emacsvox-epub-ls-command file))))
 
@@ -360,7 +360,7 @@
 
 (defun emacsvox-epub-browse-content (epub element _ffragment &optional style)
   "Browse content in specified element of EPub."
-  (cl-declare (special emacsvox-we-xsl-p))
+  
   (unless   (emacsvox-epub-p epub) (error "Invalid epub"))
   (let ((base (emacsvox-epub-base epub))
         (content nil)
@@ -394,7 +394,7 @@ Useful if table of contents in toc.ncx is empty."
      (or
       (get-text-property (point) 'epub)
       (read-file-name "EPub File: ")))))
-  (cl-declare (special emacsvox-epub-scratch))
+  
   (let ((files (emacsvox-epub-html epub)))
     (with-current-buffer (get-buffer-create emacsvox-epub-scratch)
       (erase-buffer)
@@ -420,7 +420,7 @@ Useful if table of contents in toc.ncx is empty."
 
 (defun emacsvox-epub-browse-toc (epub)
   "Browse table of contents from an EPub."
-  (cl-declare (special epub-toc-xsl))
+  
   (unless   (emacsvox-epub-p epub) (error "Invalid epub"))
   (let ((toc (emacsvox-epub-toc epub)))
     (emacsvox-epub-browse-content epub toc nil epub-toc-xsl)))
@@ -499,7 +499,7 @@ Useful if table of contents in toc.ncx is empty."
 Optional interactive prefix arg author-first prints author at the
   left."
   (interactive "P")
-  (cl-declare (special  emacsvox-epub-db))
+  
   (let ((inhibit-read-only t)
         (formatter (if author-first
                        #'emacsvox-epub-insert-author-title
@@ -617,7 +617,7 @@ Letters do not insert themselves; instead, they are commands.
 
 (defun emacsvox-epub-find-epubs-in-directory (directory)
   "Return a list of all epub files under directory dir."
-  (cl-declare (special emacsvox-epub-find))
+  
   (with-temp-buffer
     (call-process emacsvox-epub-find
                   nil t nil
@@ -632,7 +632,7 @@ Letters do not insert themselves; instead, they are commands.
   "Saves current bookshelf to  specified name.
 Interactive prefix arg `overwrite' will overwrite existing file."
   (interactive "sBookshelf Name: \nP")
-  (cl-declare (special emacsvox-epub-bookshelf-directory))
+  
   (setq name (format "%s.bsf" name))
   (let ((bookshelf
          (expand-file-name ".bookshelf.bsf" emacsvox-epub-library-directory))
@@ -645,7 +645,7 @@ Interactive prefix arg `overwrite' will overwrite existing file."
   "Add EPubs found in specified directory to the bookshelf.
 Interactive prefix arg searches recursively in directory."
   (interactive "DAdd books from Directory: \nP")
-  (cl-declare (special emacsvox-epub-db-file emacsvox-epub-db))
+  
   (let ((updated 0)
         (filename nil))
     (cl-loop
@@ -671,7 +671,7 @@ Interactive prefix arg searches recursively in directory."
 (defun emacsvox-epub-bookshelf-add-epub (epub-file)
   "Add epub file to current bookshelf."
   (interactive "fAdd Book: ")
-  (cl-declare (special  emacsvox-epub-db))
+  
   (let* ((filename (shell-quote-argument (expand-file-name epub-file)))
          
          (epub (emacsvox-epub-make-epub filename))
@@ -688,7 +688,7 @@ Interactive prefix arg searches recursively in directory."
 (defun emacsvox-epub-bookshelf-open-epub (epub-file)
   "Open epub file and add it to current bookshelf."
   (interactive "fAdd Book: ")
-  (cl-declare (special  emacsvox-epub-db))
+  
   (let* ((filename (shell-quote-argument epub-file))
          (epub (emacsvox-epub-make-epub filename))
          (title (emacsvox-epub-title epub))
@@ -705,7 +705,7 @@ Interactive prefix arg searches recursively in directory."
   "Remove EPubs found in specified directory from the bookshelf.
 Interactive prefix arg searches recursively in directory."
   (interactive "DRemove Directory: \nP")
-  (cl-declare (special emacsvox-epub-db-file emacsvox-epub-db))
+  
   (let ((updated 0)
         (filename nil))
     (cl-loop
@@ -727,7 +727,7 @@ Interactive prefix arg searches recursively in directory."
   "Remove the book on current line from this bookshelf.
 No book files are deleted."
   (interactive)
-  (cl-declare (special  emacsvox-epub-db))
+  
   (let ((epub (get-text-property (point) 'epub))
         (orig (point)))
     (when epub
@@ -741,7 +741,7 @@ No book files are deleted."
 (defun emacsvox-epub-bookshelf-clear ()
   "Clear all books from bookshelf."
   (interactive)
-  (cl-declare (special emacsvox-epub-db))
+  
   (when
       (or (not (called-interactively-p 'interactive))
           (y-or-n-p "Clear bookshelf?"))
@@ -755,7 +755,7 @@ No book files are deleted."
 (defun emacsvox-epub-bookshelf-save ()
   "Save bookshelf metadata."
   (interactive)
-  (cl-declare (special emacsvox-epub-db-file))
+  
   (let ((buff (find-file-noselect emacsvox-epub-db-file))
         (emacsvox-speak-messages nil)
         (print-length  nil)
@@ -773,7 +773,7 @@ No book files are deleted."
 (defun emacsvox-epub-bookshelf-load ()
   "Load bookshelf metadata from disk."
   (interactive)
-  (cl-declare (special emacsvox-epub-db emacsvox-epub-db-file))
+  
   (when (file-exists-p emacsvox-epub-db-file)
     (let ((buffer (find-file-noselect emacsvox-epub-db-file)))
       (with-current-buffer buffer
@@ -789,7 +789,7 @@ No book files are deleted."
                     (expand-file-name emacsvox-epub-bookshelf-directory)
                     nil t nil
                     #'(lambda (s) (string-match "\\.bsf\\'" s)))))
-  (cl-declare (special emacsvox-epub-db))
+  
   (let ((buffer (find-file-noselect bookshelf))
         (bookshelf-name  (substring (file-name-nondirectory bookshelf) 0 -4)))
     (with-current-buffer buffer
@@ -921,7 +921,7 @@ to find Epubs  having full viewability.")
 (defun emacsvox-epub-google (query)
   "Search for Epubs from Google Books."
   (interactive "sGoogle Books Query: ")
-  (cl-declare (special emacsvox-epub-google-search-template))
+  
   (emacsvox-feeds-atom-display
    (format emacsvox-epub-google-search-template
            (url-hexify-string query))))
@@ -1106,7 +1106,7 @@ Searches for matches in both  Title and Author."
 
 (defun emacsvox-epub-calibre-get-results (query)
   "Execute query against Calibre DB, and return parsed results."
-  (cl-declare (special emacsvox-epub-calibre-db emacsvox-epub-sqlite))
+  
   (let ((fields nil)
         (result nil)
         (calibre (get-buffer-create " *Calibre Results *")))
@@ -1234,7 +1234,7 @@ Letters do not insert themselves; instead, they are commands.
 (defun emacsvox-epub-calibre-results ()
   "Show most recent Calibre search results."
   (interactive)
-  (cl-declare (special emacsvox-epub-calibre-results))
+  
   (let ((inhibit-read-only  t)
         (buffer (get-buffer-create "*Calibre Results*"))
         (start nil))
@@ -1266,7 +1266,7 @@ Letters do not insert themselves; instead, they are commands.
 ;;;  Locate epub using Locate:
 (defun emacsvox-epub-locate-epubs (pattern)
   "Locate epub files using locate."  (interactive "sSearch Pattern: ")
-  (cl-declare (special locate-command locate-make-command-line))
+  
   (let ((locate-make-command-line #'(lambda (s) (list locate-command "-i" s))))
     (locate-with-filter pattern "\\.epub\\'")))
 

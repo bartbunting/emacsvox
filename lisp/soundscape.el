@@ -148,7 +148,7 @@ Defaults specify alsa as the output and set master volume"
 
 (defun soundscape-catalog-add-entry()
   "Add catalog entry from current line."
-  (cl-declare (special soundscape--missing-packages))
+  
   (let ((name nil)
         (scape nil)
         (package nil)
@@ -164,7 +164,7 @@ Defaults specify alsa as the output and set master volume"
      (t (push scape soundscape--missing-packages)))))
 (defun soundscape-catalog (&optional refresh)
   "Return catalog of installed Soundscapes, initialize if necessary."
-  (cl-declare (special soundscape--catalog soundscape-list))
+  
   (when (null (file-exists-p soundscape-list))
     (error "Soundscape Catalog missing."))
   (cond
@@ -228,7 +228,7 @@ Default is to return NullAgent if name not found."
    (list
     (let ((completion-ignore-case t))
       (completing-read "Stop: " (hash-table-keys soundscape-processes)))))
-  (cl-declare (special soundscape-processes))
+  
   (let ((proc (gethash scape soundscape-processes)))
     (when (process-live-p proc) (delete-process proc))
     (remhash  scape soundscape-processes)))
@@ -236,7 +236,7 @@ Default is to return NullAgent if name not found."
 (defun soundscape-kill ()
   "Stop all running soundscapes."
   (interactive)
-  (cl-declare (special soundscape-processes))
+  
   (mapc  #'soundscape-stop (hash-table-keys soundscape-processes))
   (message "Stopped all soundscapes."))
 
@@ -246,7 +246,7 @@ Default is to return NullAgent if name not found."
 
 (defun soundscape-current ()
   "Return names of currently running scapes."
-  (cl-declare (special soundscape--scapes))
+  
   (propertize
    (concat
     " "
@@ -372,14 +372,14 @@ Optional interactive prefix arg `prompt-mode' prompts for the mode."
 
 (defun soundscape-sentinel (proc _state)
   "Delete remote control end point on exit."
-  (cl-declare (special soundscape--remote))
+  
   (unless (process-live-p  proc)
     (when (file-exists-p soundscape--remote)
       (delete-file soundscape--remote))))
 
 (defun soundscape-kill-emacs-hook ()
   "Clean up remote control end-points."
-  (cl-declare (special soundscape--remote))
+  
   (when (file-exists-p soundscape--remote) (delete-file soundscape--remote)))
 
 (add-hook 'kill-emacs-hook #'soundscape-kill-emacs-hook)
@@ -392,7 +392,7 @@ Optional interactive prefix arg `prompt-mode' prompts for the mode."
 
 (defun soundscape-lookup-position (name)
   "Return position in soundscape-default-theme."
-  (cl-declare (special soundscape-default-theme))
+  
   (format "%s"
           (cl-position-if
            #'(lambda (pair)
@@ -472,7 +472,7 @@ Optional interactive prefix arg restarts the listener."
                                (mapcar #'car soundscape-default-theme)))
         (when (> (length name) 0) (push name result)))
       result)))
-  (cl-declare (special soundscape-remote-nc))
+  
   (unless (process-live-p soundscape-listener-process) (soundscape-listener))
   (unless (process-live-p soundscape-remote-control)
     (when (and (process-live-p soundscape-listener-process)
@@ -498,7 +498,7 @@ Do not set this by hand, use command \\[soundscape-toggle].")
 (defun soundscape-sync (mode &optional force)
   "Activate  Soundscapes for  this mode.
 Optional interactive prefix arg `force' skips optimization checks."
-  (cl-declare (special soundscape--scapes))
+  
   (let ((scapes (soundscape-for-mode mode)))
     (when (or force (not   (equal scapes soundscape--scapes)))
       (setq soundscape--scapes scapes)
@@ -510,7 +510,7 @@ Optional interactive prefix arg `force' skips optimization checks."
 
 (defun soundscape-update ()
   "Function to update Soundscape automatically."
-  (cl-declare (special  soundscape--last-mode))
+  
   (unless
       (or
        (eq major-mode soundscape--last-mode)
@@ -523,7 +523,7 @@ Optional interactive prefix arg `force' skips optimization checks."
 
 (defun soundscape-tickle ()
   "Function to unconditionally update Soundscape automatically."
-  (cl-declare (special  soundscape--last-mode))
+  
   (setq soundscape--last-mode major-mode)
   (soundscape-sync major-mode 'force))
 
@@ -611,7 +611,7 @@ The  is then saved to soundscape-device for future use."
 (defun soundscape-theme ()
   "Shows default theme in a special buffer."
   (interactive)
-  (cl-declare (special soundscape-default-theme soundscape-base))
+  
   (let ((buffer (get-buffer-create "*Soundscape Theme*"))
         (inhibit-read-only  t))
     (with-current-buffer buffer

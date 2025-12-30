@@ -71,7 +71,7 @@
 (defun emacsvox-list-buffers-speak-buffer-line ()
   "Speak information about this buffer"
   (interactive)
-  (cl-declare (special list-buffers-directory dtk-stop-immediately))
+  
   (unless (eq major-mode 'Buffer-menu-mode)
     (error "This command can be used only in buffer menus"))
   (let((buffer (Buffer-menu-buffer t)))
@@ -128,7 +128,7 @@
 
 (defun ems--list-buffers-after (&rest _)
   "Select the window displaying buffer-menu,\nand set up additional Emacsvox bindings."
-  (cl-declare (special Buffer-menu-mode-map))
+  
   (when (ems-interactive-p)
     (select-window ad-return-value) (tabulated-list-next-column 3)
     (define-key Buffer-menu-mode-map ","

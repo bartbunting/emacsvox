@@ -127,7 +127,7 @@
 
 (defun ems--mp-send (command)
   "Dispatch command to m-player."
-  (cl-declare (special emacsvox-m-player-process))
+  
   (with-current-buffer (process-buffer emacsvox-m-player-process)
     (erase-buffer)
     (process-send-string
@@ -144,7 +144,7 @@ This is set to nil when playing Internet  streams.")
 (defun emacsvox-m-player-mode-line ()
   "Mode-line for M-Player buffers."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (dtk-notify
    (cond
     ((eq 'run (process-status emacsvox-m-player-process))
@@ -176,7 +176,7 @@ Reset immediately after being used.")
     (or
      (dired-get-filename  nil t)
      (read-file-name "MP3 File:"))))
-  (cl-declare (special emacsvox-media-dynamic-playlist))
+  
   (cond
    ((file-directory-p file)
     (cl-loop
@@ -198,7 +198,7 @@ Reset immediately after being used.")
 
 (defun ems--dynamic-playlist-duration ()
   "Return duration of dynamic playlist."
-  (cl-declare (special emacsvox-media-dynamic-playlist))
+  
   (cl-assert emacsvox-media-dynamic-playlist t "No dynamic playlist")
   (ems-with-messages-silenced
    (let* ((result nil)
@@ -285,7 +285,7 @@ Controls media playback when already playing.
 
 \\{emacsvox-m-player-mode-map}"
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (cond
    ((and emacsvox-m-player-process
          (eq 'run (process-status emacsvox-m-player-process))
@@ -297,7 +297,7 @@ Controls media playback when already playing.
 (defun emacsvox-m-player-pop-to-player ()
   "Pop to m-player buffer."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (unless (process-live-p emacsvox-m-player-process)
     (emacsvox-multimedia))
   (funcall-interactively
@@ -314,7 +314,7 @@ Controls media playback when already playing.
 
 (defsubst emacsvox-m-player-playlist-p (resource)
   "Check if specified resource matches a playlist type."
-  (cl-declare (special emacsvox-playlist-pattern))
+  
   (string-match emacsvox-playlist-pattern resource))
 
 (defun emacsvox-m-player-bind-hotkey (directory key)
@@ -377,7 +377,7 @@ plays result as a directory." directory)
   "Call emacsvox-m-player on  URL.
 URL fragment specifies optional start position."
   (interactive (list (car (browse-url-interactive-arg "Media URL: "))))
-  (cl-declare (special emacsvox-m-player-options))
+  
   (ems-with-messages-silenced
    (cl-multiple-value-bind
        (link offset ) (split-string url "#")
@@ -391,7 +391,7 @@ URL fragment specifies optional start position."
 
 (defsubst emacsvox-m-player-directory-files (directory)
   "Return media files in directory. "
-  (cl-declare (special emacsvox-media-extensions))
+  
   (let ((case-fold-search t))
     (directory-files-recursively directory emacsvox-media-extensions)))
 
@@ -409,7 +409,7 @@ URL fragment specifies optional start position."
   emacsvox-m-player-directory using completion over all
 subfiles.  Interactive prefix arg causes it to read a directory
 rather than completing over all subfiles."
-  (cl-declare (special default-directory))
+  
   (let ((completion-ignore-case t)
         (case-fold-search t))
     (cond
@@ -452,7 +452,7 @@ If a dynamic playlist exists, just use it."
 
 (defun emacsvox-m-player-data-refresh ()
   "Populate metadata fields from current  stream."
-  (cl-declare (special ems--media-data))
+  
   (with-current-buffer (process-buffer emacsvox-m-player-process)
     (cl-loop
      for  f in
@@ -521,16 +521,6 @@ dynamic playlist. "
    (list
     (emacsvox-media-read-resource current-prefix-arg)
     current-prefix-arg))
-  (cl-declare (special
-               emacsvox-m-player-paused emacsvox-m-player-resource
-               emacsvox-media-dynamic-playlist 
-               emacsvox-m-player-hotkey-p
-               emacsvox-m-player-directory
-               emacsvox-media-directory-regexp
-               emacsvox-media-shortcuts emacsvox-m-player-process
-               emacsvox-mplayer emacsvox-m-player-options
-               emacsvox-m-player-url emacsvox-m-player-url-p
-               emacsvox-m-player-custom-filters))
   (when
       (and emacsvox-m-player-process
            (eq 'run (process-status emacsvox-m-player-process))
@@ -630,8 +620,6 @@ dynamic playlist. "
   "Add af resample=48000,hrtf to startup options.
 This will work if the soundcard is set to 48000."
   (interactive)
-  (cl-declare (special
-               emacsvox-m-player-options emacsvox-m-player-hrtf-options))
   (let ((emacsvox-m-player-options
          (append emacsvox-m-player-options
                  emacsvox-m-player-hrtf-options)))
@@ -641,7 +629,7 @@ This will work if the soundcard is set to 48000."
 (defun emacsvox-m-player-shuffle ()
   "M-Player with shuffle turned on."
   (interactive)
-  (cl-declare (special emacsvox-m-player-options))
+  
   (let ((emacsvox-m-player-options
          (append emacsvox-m-player-options (list "-shuffle"))))
     (call-interactively #'emacsvox-m-player)))
@@ -651,7 +639,7 @@ This will work if the soundcard is set to 48000."
   "M-Player with repeat indefinitely  turned on.
 Interactive prefix `raw' reads a raw URL."
   (interactive "P")
-  (cl-declare (special emacsvox-m-player-options))
+  
   (let ((emacsvox-m-player-options
          (append emacsvox-m-player-options (list "-loop" "0"))))
     (cond
@@ -666,7 +654,7 @@ Interactive prefix `raw' reads a raw URL."
 (defun emacsvox-m-player-command-list ()
   "Return MPlayer slave command table, populating it if
 necessary."
-  (cl-declare (special emacsvox-m-player-command-list))
+  
   (cond
    (emacsvox-m-player-command-list emacsvox-m-player-command-list)
    (t
@@ -686,7 +674,7 @@ necessary."
 (defun emacsvox-m-player-toggle-extrastereo ()
   "Toggle application of extrastereo filter to all streams."
   (interactive )
-  (cl-declare (special emacsvox-m-player-custom-filters))
+  
   (cond
    ((member "extrastereo" emacsvox-m-player-custom-filters)
     (setq
@@ -702,7 +690,7 @@ necessary."
 
 (defun emacsvox-m-player-get-position ()
   "Return list (position filename length)  to use as an amark. "
-  (cl-declare (special emacsvox-m-player-process))
+  
   (with-current-buffer (process-buffer emacsvox-m-player-process)
     ;; try accept-process-output instead of
     ;; dispatching  command twice to avoid flakiness in mplayer
@@ -867,7 +855,7 @@ The time position can also be specified as HH:MM:SS."
 (defun emacsvox-m-player-pause ()
   "Pause or unpause."
   (interactive)
-  (cl-declare (special emacsvox-m-player-paused))
+  
   (dtk-stop 'all)
   (ems--mp-send "pause")
   (setq emacsvox-m-player-paused (not emacsvox-m-player-paused)))
@@ -878,9 +866,6 @@ The time position can also be specified as HH:MM:SS."
 (defun emacsvox-m-player-quit ()
   "Quit."
   (interactive)
-  (cl-declare (special
-               emacsvox-amark-list ems--m-player-mark
-               emacsvox-m-player-url emacsvox-m-player-process))
   (repeat-exit)
   (let ((kill-buffer-query-functions nil)
         (emacsvox-speak-messages nil))
@@ -942,7 +927,7 @@ The time position can also be specified as HH:MM:SS."
 (defun emacsvox-m-player-volume-change (value)
   "Set volume."
   (interactive"sChange Volume to:")
-  (cl-declare (special emacsvox-m-player-active-filters))
+  
   (cl-pushnew "volume" emacsvox-m-player-active-filters :test #'string=)
   (ems--mp-send
    (format "volume %s, 1" value)))
@@ -1035,7 +1020,7 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
 (defun emacsvox-m-player-show-pos ()
   "Display current position in track."
   (interactive)
-  (cl-declare (special emacsvox-m-player-display-cmd))
+  
   (let ((fields nil)
         (result (ems--mp-send emacsvox-m-player-display-cmd)))
     (when result
@@ -1167,7 +1152,7 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
 (defun emacsvox-m-player-rem-history (url)
   "Remove URL from media history"
   (interactive (list (ems--read-url)))
-  (cl-declare (special emacsvox-m-player-media-history))
+  
   (setq emacsvox-m-player-media-history
         (cl-remove-if
          #'(lambda(u) (string= u url))
@@ -1181,7 +1166,7 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
   "Play media from the front of media-history.
    Interactive prefix arg invokes media history browser."
   (interactive "P")
-  (cl-declare (special emacsvox-m-player-media-history))
+  
   (cond
    ((and prefix emacsvox-m-player-media-history) 
     (call-interactively 'emacsvox-m-player-browse-history))
@@ -1206,9 +1191,6 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
 (defun emacsvox-m-player-browse-history ()
   "Create a  media history browser from media-history."
   (interactive )
-  (cl-declare (special
-               emacsvox-m-player-history-map
-               emacsvox-m-player-media-history))
   (with-temp-buffer
     (insert "<html>\n
 <head><title>Emacsvox Media History</title></head>\n
@@ -1274,7 +1256,7 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
 
 (defsubst ems--eq-preset-get (name)
   "Return vector of numbers for specified preset."
-  (cl-declare (special  ems--eq-presets))
+  
   (cdr (assoc name ems--eq-presets)))
 
 (defconst emacsvox-m-player-equalizer (make-vector 10 0)
@@ -1297,7 +1279,7 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
   "Manipulate values in  vector using minibuffer.
 Applies  the resulting value at each step."
   (interactive)
-  (cl-declare (special emacsvox-m-player-equalizer-bands))
+  
   (let ((column 0)
         (key nil)
         (result  (mapconcat #'number-to-string v  ":"))
@@ -1378,10 +1360,7 @@ flat classical club dance full-bass full-bass-and-treble
      "MPlayer Equalizer Preset:"
      ems--eq-presets
      nil 'must-match)))
-  (cl-declare (special emacsvox-m-player-active-filters))
-  (cl-declare (special
-               ems--eq-presets
-               emacsvox-m-player-equalizer))
+  
   (let ((result nil)
         (p (ems--eq-preset-get name)))
     (setq emacsvox-m-player-equalizer p)
@@ -1496,7 +1475,7 @@ flat classical club dance full-bass full-bass-and-treble
 (defun emacsvox-m-player-volume-set (&optional arg)
   "Set Volume in steps from 1 to 9."
   (interactive "P")
-  (cl-declare (special last-input-event))
+  
   (let ((vol-step
          (cond
           ((not (called-interactively-p 'interactive)) arg)
@@ -1527,7 +1506,7 @@ flat classical club dance full-bass full-bass-and-treble
 (defun emacsvox-m-player-pause-or-resume ()
   "Pause/resume if m-player is running. For use  in
 emacsvox-silence-hook."
-  (cl-declare (special emacsvox-m-player-process))
+  
   (when (and emacsvox-m-player-process
              (eq 'run (process-status emacsvox-m-player-process)))
     (emacsvox-m-player-pause)))
@@ -1554,7 +1533,7 @@ As the default, use current position."
 (defun emacsvox-m-player-store-link ()
   "Store an org-link to currently playing stream at current position."
   (interactive)
-  (cl-declare (special emacsvox-m-player-url org-stored-links))
+  
   (when emacsvox-m-player-url
     (cl-pushnew
      `(
@@ -1571,7 +1550,7 @@ As the default, use current position."
 (defun emacsvox-m-player-amark-jump ()
   "Jump to AMark."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (with-current-buffer
       (process-buffer emacsvox-m-player-process)
     (let ((amark (call-interactively #'emacsvox-amark-find)))
@@ -1596,7 +1575,7 @@ As the default, use current position."
   You need to use mplayer built with ladspa support, and have package
   tap-reverb already installed."
   (interactive)
-  (cl-declare (special emacsvox-m-player-reverb-filter))
+  
   (let ((ladspa(or  (getenv "LADSPA_PATH")
                     "/usr/lib/ladspa"))
         (filter nil)
@@ -1808,7 +1787,7 @@ to play  tracks."
   "Persists  m-player process instance by renaming its buffer.
 Optional interactive prefix arg prompts for name to use for  player."
   (interactive "P")
-  (cl-declare (special  emacsvox-m-player-process))
+  
   (when (process-live-p emacsvox-m-player-process)
     (with-current-buffer  (process-buffer emacsvox-m-player-process)
       (set (make-local-variable 'emacsvox-m-player-process)
@@ -1828,7 +1807,7 @@ Optional interactive prefix arg prompts for name to use for  player."
   "Restore emacsvox-m-player-process from current buffer.
 Check first if current buffer is in emacsvox-m-player-mode."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (unless (eq major-mode 'emacsvox-m-player-mode)
     (error "This is not an MPlayer buffer."))
   (let ((proc
@@ -1850,7 +1829,7 @@ Check first if current buffer is in emacsvox-m-player-mode."
 (defun emacsvox-m-player-pan ()
   "Pan from left to right   and back  one step at a time."
   (interactive)
-  (cl-declare (special emacsvox-m-player-panner emacsvox-m-player-process))
+  
   (unless (process-live-p emacsvox-m-player-process) (error "No   player."))
   (let* ((this (abs  (/ emacsvox-m-player-panner 10.0)))
          (pan (format "%.1f:%.1f" (- 1  this)  this)))
@@ -1875,7 +1854,7 @@ Check first if current buffer is in emacsvox-m-player-mode."
 Copies  invocation string to kill-ring so it can be added easily to
 our pre-defined filters if appropriate."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (unless (eq major-mode 'ladspa-mode) (error "This is not a Ladspa buffer"))
   (unless (get-text-property (point) 'ladspa)
     (error "No Ladspa Plugin here."))
@@ -1900,7 +1879,7 @@ our pre-defined filters if appropriate."
 (defun emacsvox-m-player-delete-ladspa ()
   "Delete plugin from  running MPlayer."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process))
+  
   (unless (eq major-mode 'ladspa-mode) (error "This is not a Ladspa buffer"))
   (unless (process-live-p emacsvox-m-player-process)
     (error "No running MPlayer."))
@@ -1937,7 +1916,7 @@ our pre-defined filters if appropriate."
 (defun emacsvox-m-player-set-clip-end    ()
   "Set end of clip mark."
   (interactive )
-  (cl-declare (special clip-end))
+  
   (setq clip-end
         (read-number
          "End time: "

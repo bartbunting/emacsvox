@@ -54,7 +54,7 @@
   "Map base fonts to voices.
 Useful in voiceifying rich text."
   (interactive "r")
-  (cl-declare (special emacsvox-enriched-font-faces-to-voiceify))
+  
   (set (make-local-variable 'voice-lock-mode) t)
   (with-silent-modifications
     (save-excursion

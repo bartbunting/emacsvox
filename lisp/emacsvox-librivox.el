@@ -100,7 +100,7 @@
 
 (defun emacsvox-librivox-audiobooks-uri (pattern  offset)
   "Search URI for audiobooks."
-  (cl-declare (special emacsvox-librivox-api-base))
+  
   (concat
    emacsvox-librivox-api-base
    (format "audiobooks?offset=%s&limit=%s&format=json&"
@@ -114,7 +114,7 @@
 
 (defun emacsvox-librivox-audiotracks-base (pattern)
   "Base URI for audiotracks."
-  (cl-declare (special emacsvox-librivox-api-base))
+  
   (concat emacsvox-librivox-api-base "audiotracks?format=json&" pattern))
 
 ;; Simple Authors API:
@@ -124,7 +124,7 @@
 
 (defun emacsvox-librivox-authors-base ()
   "Base URI for authors."
-  (cl-declare (special emacsvox-librivox-api-base))
+  
   (concat emacsvox-librivox-api-base "authors"))
 
 ;;;  Search Commands:
@@ -198,7 +198,7 @@ Argument `pattern' is of the form:
 `title=pattern' Search by title.
 ^all Browse books.
 Optional arg `offset' (default 0) is used for getting more results."
-  (cl-declare (special  emacsvox-librivox-results-limit))
+  
   (or offset (setq offset 0))
   (let* ((title
           (format
@@ -217,7 +217,7 @@ Optional arg `offset' (default 0) is used for getting more results."
       (add-hook
        'emacsvox-eww-post-hook
        #'(lambda ()
-           (cl-declare (special emacsvox-we-url-executor))
+           
            (setq emacsvox-we-url-executor 'emacsvox-librivox-play)))
       (emacsvox-librivox--render title books offset))))
 
@@ -280,7 +280,7 @@ Optional prefix arg `offset' prompts for offset."
     (let ((completion-ignore-case t))
       (completing-read "Genre: " emacsvox-librivox-genre-list))
     current-prefix-arg))
-  (cl-declare (special emacsvox-librivox-genre-list))
+  
   (when offset (setq offset (read-number "Offset: ")))
   (emacsvox-librivox-search
    (format "genre=%s"
@@ -333,7 +333,7 @@ more results."
 
 (defun emacsvox-librivox-ensure-cache ()
   "Create LIBRIVOX cache directory if needed."
-  (cl-declare (special emacsvox-librivox-local-cache))
+  
   (unless (file-exists-p emacsvox-librivox-local-cache)
     (make-directory  emacsvox-librivox-local-cache 'parents)))
 

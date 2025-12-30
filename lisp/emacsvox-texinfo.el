@@ -52,7 +52,7 @@
 
 (defun emacsvox-texinfo-mode-hook ()
   "Setup Emacsvox extensions"
-  (cl-declare (special dtk-split-caps))
+  
   (dtk-set-punctuations 'all)
   (or dtk-split-caps
       (dtk-toggle-split-caps))

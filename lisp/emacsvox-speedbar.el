@@ -238,7 +238,7 @@ An automatically updating speedbar consumes resources.")
 (defun emacsvox-speedbar-goto-speedbar ()
   "Switch to the speedbar"
   (interactive)
-  (cl-declare (special emacsvox-speedbar-disable-updates))
+  
   (unless (get-buffer " SPEEDBAR")
     (speedbar-frame-mode))
   (pop-to-buffer (get-buffer " SPEEDBAR"))

@@ -459,7 +459,7 @@
 (defun ems--py-process-filter-around (orig-fun &rest args)
   "Make comint in Python speak its output. "
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-comint-autospeak))
+    
     (let ((prior (point)) (dtk-stop-immediately nil))
       (apply orig-fun args)
       (when

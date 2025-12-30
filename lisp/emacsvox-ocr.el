@@ -171,7 +171,7 @@ will be placed."
 
 (defun emacsvox-ocr-get-text-name ()
   "Return name of current text document."
-  (cl-declare (special emacsvox-ocr-document-name))
+  
   (format "%s.text" emacsvox-ocr-document-name))
 
 (defun emacsvox-ocr-get-image-name (extension)
@@ -213,7 +213,7 @@ will be placed."
 
 (defun emacsvox-ocr-update-mode-line()
   "Update mode line for OCR mode."
-  (cl-declare (special mode-line-format))
+  
   (setq mode-line-format
         (emacsvox-ocr-get-mode-line-format)))
 
@@ -610,7 +610,7 @@ correctly by themselves."
 (defun emacsvox-ocr-open-working-directory ()
   "Launch dired on OCR working directory."
   (interactive)
-  (cl-declare (special emacsvox-ocr-working-directory))
+  
   (switch-to-buffer
    (dired-noselect emacsvox-ocr-working-directory))
   (emacsvox-icon 'open-object)
@@ -664,7 +664,7 @@ correctly by themselves."
 
 (defun emacsvox-ocr-goto-page (page)
   "Move to specified page."
-  (cl-declare (special emacsvox-ocr-page-positions))
+  
   (goto-char
    (aref emacsvox-ocr-page-positions page))
   (emacsvox-ocr-update-mode-line)
@@ -720,7 +720,7 @@ Setting persists for current Emacs session."
     (read-from-minibuffer
      "Scan image settings:"
      emacsvox-ocr-scan-image-options)))
-  (cl-declare (special emacsvox-ocr-scan-image-options))
+  
   (setq emacsvox-ocr-scan-image-options setting))
 
 (defun emacsvox-ocr-set-compress-image-options  (setting)
@@ -732,7 +732,7 @@ Setting persists for current Emacs session."
     (read-from-minibuffer
      "Image compression settings: "
      emacsvox-ocr-compress-image-options)))
-  (cl-declare (special emacsvox-ocr-compress-image-options))
+  
   (setq emacsvox-ocr-compress-image-options setting))
 
 (provide 'emacsvox-ocr)

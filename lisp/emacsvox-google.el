@@ -119,7 +119,7 @@
 
 (defun emacsvox-google-toolbelt ()
   "Returns buffer-local toolbelt or a a newly initialized toolbelt."
-  (cl-declare (special emacsvox-google-toolbelt))
+  
   (or emacsvox-google-toolbelt
       (setq
        emacsvox-google-toolbelt
@@ -327,7 +327,7 @@
 
 (defun emacsvox-google-cache-query(query)
   "Setup post process hook to cache google query when rendered."
-  (cl-declare (special emacsvox-google-query))
+  
   (let ((cache
          (eval
           `#'(lambda nil
@@ -336,7 +336,7 @@
 
 (defun emacsvox-google-cache-toolbelt(belt)
   "Setup post process hook to cache google toolbelt when rendered."
-  (cl-declare (special emacsvox-google-toolbelt))
+  
   (let ((cache
          (eval
           `#'(lambda nil
@@ -382,7 +382,7 @@ current page."
    (list
     (read-from-minibuffer "URL:"
                           (eww-current-url))))
-  (cl-declare (special emacsvox-google-related-uri))
+  
   (emacsvox-we-extract-by-id
    "res"
    (format
@@ -442,7 +442,7 @@ current page."
 
 (defun emacsvox-google-toolbelt-names ()
   "Return memoized cache of names."
-  (cl-declare (special emacsvox-google-toolbelt-names))
+  
   (or emacsvox-google-toolbelt-names
       (setq emacsvox-google-toolbelt-names
             (cl-loop
@@ -480,7 +480,7 @@ current page."
 (defun emacsvox-google-open-link ()
   "Open Google link under point."
   (interactive)
-  (cl-declare (special ems--websearch-google-filter))
+  
   (let ((url (shr-url-at-point nil)))
     (cl-assert url t "No link under point.")
     (add-hook
@@ -506,13 +506,13 @@ current page."
 (defun emacsvox-google-sign-in ()
   "Sign in to Google."
   (interactive)
-  (cl-declare (special emacsvox-google-sign-in-url))
+  
   (browse-url emacsvox-google-sign-in-url))
 
 (defun emacsvox-google-sign-out ()
   "Sign out to Google."
   (interactive)
-  (cl-declare (special emacsvox-google-sign-out-url))
+  
   (browse-url emacsvox-google-sign-out-url))
 
 ;;;   keymap
@@ -626,10 +626,6 @@ which becomes buffer-local."
    (list
     (read-from-minibuffer "Text: ")
     current-prefix-arg))
-  (cl-declare (special
-               emacsvox-mpv
-               emacsvox-google-tts-default-language
-               emacsvox-google-tts-rest-uri ))
   (when current-prefix-arg
     (unless (stringp lang)
       (setq lang
@@ -729,7 +725,7 @@ Use default voice for buffer."
 
 (defun emacsvox-google-kg-id-uri (id)
   "Return URL for KG Search by id."
-  (cl-declare (special emacsvox-google-kg-rest-end-point))
+  
   (format
    emacsvox-google-kg-rest-end-point
    "ids"
@@ -739,7 +735,7 @@ Use default voice for buffer."
 
 (defun emacsvox-google-kg-query-uri (query &optional limit)
   "Return URL for KG Search."
-  (cl-declare (special emacsvox-google-kg-rest-end-point))
+  
   (or limit (setq limit 5))
   (format
    emacsvox-google-kg-rest-end-point

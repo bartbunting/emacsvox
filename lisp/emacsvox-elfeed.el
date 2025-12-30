@@ -155,7 +155,7 @@
 
 (defun emacsvox-elfeed-entry-at-point ()
   "Return entry at point."
-  (cl-declare (special  elfeed-search--offset elfeed-search-entries))
+  
   (let ((index  (- (line-number-at-pos (point)) elfeed-search--offset)))
     (cond
      ((>= index 0) (nth index elfeed-search-entries))
@@ -194,7 +194,7 @@
 (defun emacsvox-elfeed-filter-entry-at-point ()
   "Display current article after filtering."
   (interactive)
-  (cl-declare (special emacsvox-we-recent-xpath-filter))
+  
   (let* ((entry (emacsvox-elfeed-entry-at-point))
          (link(elfeed-entry-link entry)))
     (when (string=  "" emacsvox-we-recent-xpath-filter)
@@ -231,7 +231,7 @@
 
 (defun ems--elfeed-search-mode-after (&rest _)
   "Set up Emacsvox commands."
-  (cl-declare (special elfeed-search-mode-map goal-column))
+  
   (setq goal-column 11)
   (define-key elfeed-search-mode-map "n" 'emacsvox-elfeed-next-entry)
   (define-key elfeed-search-mode-map "p"

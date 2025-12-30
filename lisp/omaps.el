@@ -68,14 +68,14 @@
 
 (defun omaps-geocoder-url (address)
   "Return URL   for geocoding address."
-  (cl-declare (special omaps-geocoder-base ))
+  
   (format "%s/search?q=%s&format=json&extratags=1"
           omaps-geocoder-base
           (g-url-encode address)))
 
 (defun omaps-reverse-geocoder-url (location)
   "Return URL   for reverse geocoding location."
-  (cl-declare (special omaps-geocoder-base))
+  
   (format "%s/reverse?lat=%s&lon=%s&format=json"
           omaps-geocoder-base
           (cdr (assoc 'lat location))

@@ -88,7 +88,7 @@
 
 (defun emacsvox-pianobar-current-song  ()
   "Return current song."
-  (cl-declare (special pianobar-current-song))
+  
   (ansi-color-apply
    (substring pianobar-current-song
               (+ 2 (string-match "|>" pianobar-current-song)))))
@@ -236,7 +236,7 @@ If electric mode is on, keystrokes invoke pianobar commands directly."
 (defun emacsvox-pianobar  ()
   "Start or control Emacsvox Pianobar player."
   (interactive)
-  (cl-declare (special pianobar-buffer emacsvox-comint-autospeak))
+  
   (cond
    ((and  (buffer-live-p (get-buffer pianobar-buffer))
           (processp (get-buffer-process pianobar-buffer))
@@ -263,7 +263,7 @@ If electric mode is on, keystrokes invoke pianobar commands directly."
 (defun emacsvox-pianobar-command (key)
   "Invoke Pianobar  commands."
   (interactive (list (read-key-sequence "Pianobar Key: ")))
-  (cl-declare (special pianobar-key-map))
+  
   (cond
    ((and (stringp key)
          (string= "'" key))
@@ -283,7 +283,7 @@ If electric mode is on, keystrokes invoke pianobar commands directly."
 (defun emacsvox-pianobar-switch-to-preset ()
   "Switch to one of the  presets."
   (interactive)
-  (cl-declare (special last-input-event emacsvox-pianobar-current-preset))
+  
   (let ((preset last-input-event))
     (setq emacsvox-pianobar-current-preset
           (cond
@@ -297,8 +297,6 @@ If electric mode is on, keystrokes invoke pianobar commands directly."
 (defun emacsvox-pianobar-next-preset ()
   "Switch to next preset."
   (interactive)
-  (cl-declare (special
-               emacsvox-pianobar-current-preset emacsvox-pianobar-max-preset))
   (when (= emacsvox-pianobar-max-preset emacsvox-pianobar-current-preset)
     (setq emacsvox-pianobar-current-preset -1))
   (setq emacsvox-pianobar-current-preset
@@ -308,8 +306,6 @@ If electric mode is on, keystrokes invoke pianobar commands directly."
 (defun emacsvox-pianobar-previous-preset ()
   "Switch to previous preset."
   (interactive)
-  (cl-declare (special
-               emacsvox-pianobar-current-preset emacsvox-pianobar-max-preset))
   (when (zerop emacsvox-pianobar-current-preset)
     (setq emacsvox-pianobar-current-preset (1+ emacsvox-pianobar-max-preset)))
   (setq emacsvox-pianobar-current-preset

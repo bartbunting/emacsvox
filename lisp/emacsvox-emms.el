@@ -234,7 +234,7 @@
 (defun emacsvox-emms-pause-or-resume ()
   "Pause/resume if emms is running. For use  in
 emacsvox-silence-hook."
-  (cl-declare (special emms-player-playing-p))
+  
   (when (and (boundp 'emms-player-playing-p)
              (not (null emms-player-playing-p)))
     (emms-player-pause)))

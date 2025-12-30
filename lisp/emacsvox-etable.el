@@ -53,7 +53,7 @@
 
 (defun ems--table--make-cell-map-after (&rest _)
   "Set up emacsvox for table.el"
-  (cl-declare (special table-cell-map))
+  
   (when table-cell-map
     (cl-loop for k in
 	     (where-is-internal 'emacsvox-self-insert-command
@@ -149,7 +149,7 @@
 
 (defun ems--*table--cell-newline-before (&rest _)
   "Speak the previous line if line echo is on.\nSee command \\[emacsvox-toggle-line-echo].  Otherwise cue the user to\nthe newly created blank line."
-  (cl-declare (special emacsvox-line-echo))
+  
   (when (ems-interactive-p)
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
@@ -168,7 +168,7 @@
     (orig-fun &rest args)
   "Speak the previous line if line echo is on.\nSee command \\[emacsvox-toggle-line-echo].\nOtherwise cue user to the line just created."
   (let ((result (apply orig-fun args)))
-    (cl-declare (special emacsvox-line-echo))
+    
     (cond
      ((ems-interactive-p)
       (cond (emacsvox-line-echo (emacsvox-speak-line))

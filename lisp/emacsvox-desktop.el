@@ -53,7 +53,7 @@
   "Preserve: Dont kill this buffer when clearing desktop."
   (interactive
    (list (read-buffer "Preserve Buffer: " (current-buffer) t)))
-  (cl-declare (special  desktop-clear-preserve-buffers))
+  
   (cl-pushnew buffer desktop-clear-preserve-buffers)
   (message "Preserving %s for this session." buffer))
 

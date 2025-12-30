@@ -401,7 +401,7 @@
 
 
 (defun ems--org-eval-in-calendar-after (&rest _)
-  "Speak what is returned." (cl-declare (special org-ans2))
+  "Speak what is returned." 
   (dtk-speak org-ans2))
 
 
@@ -470,7 +470,7 @@
 
 
 (defun ems--orgtbl-mode-after (&rest _)
-  "speak." (cl-declare (special orgtbl-mode))
+  "speak." 
   (when (ems-interactive-p)
     (emacsvox-icon (if orgtbl-mode 'on 'off))
     (message "Turned %s org table mode." (if orgtbl-mode 'on 'off))))
@@ -502,7 +502,7 @@
 
 (defun emacsvox-org-update-keys ()
   "Update keys in org mode."
-  (cl-declare (special  org-mode-map))
+  
   (cl-loop
    for k in
    '(
@@ -531,7 +531,7 @@
 
 (defun emacsvox-org-mode-setup ()
   "Placed on org-mode-hook to do Emacsvox setup."
-  (cl-declare (special org-mode-map org-multi-keymap ))
+  
   (emacsvox-org-update-keys)
   (cl-loop
    for b in  

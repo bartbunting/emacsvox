@@ -134,7 +134,7 @@
 ;;; keymap setup:
 (defun emacsvox-syslog-setup ()
   "Setup keybindings."
-  (cl-declare (special syslog-mode-map))
+  
   (define-key syslog-mode-map ","  'emacsvox-speak-previous-field)
   (define-key syslog-mode-map "."  'emacsvox-speak-next-field))
 
