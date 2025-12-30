@@ -126,7 +126,7 @@ cd .. ;\
 ### Install: 
 
 install:
-	@echo "This release requires Emacs 29.1 or later."
+	@echo "This release requires Emacs 31 or later."
 	@echo "You need SoX installed to play OGG and WAV files."
 	@echo "You need curl installed for some Internet features."
 	@echo "To run  this Emacspeak build, add this  line to the top of your .emacs:"

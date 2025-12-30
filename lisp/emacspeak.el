@@ -4,7 +4,7 @@
 ;; Description:  Emacspeak: A speech interface to Emacs
 ;; Keywords: Emacspeak, Speech, Dectalk,
 ;; Version: 55.0
-;; Package-Requires: ((emacs "26") (hydra "0.5"))
+;; Package-Requires: ((emacs "31") (hydra "0.5"))
 ;;;   LCD Archive entry:
 ;; LCD Archive Entry:
 ;; emacspeak| T. V. Raman |tv.raman.tv@gmail.com
