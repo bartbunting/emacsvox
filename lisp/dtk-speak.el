@@ -2009,15 +2009,22 @@ dtk-unicode-untouched-charsets."
 (defvar dtk-unicode-cache (make-hash-table)
   "Cache for unicode data lookups.")
 
-(defadvice describe-char-unicode-data (around emacspeak pre act comp)
+
+(defun ems--describe-char-unicode-data-around (orig-fun char &rest args)
   "Cache result."
-  (let* ((char (ad-get-arg 0))
-         (result (gethash char dtk-unicode-cache 'not-found)))
+  (let ((result (gethash char dtk-unicode-cache 'not-found)))
     (if (eq result 'not-found)
-        (progn
-          ad-do-it
-          (puthash char ad-return-value dtk-unicode-cache))
-      (setq ad-return-value result))))
+        (let ((ret (apply orig-fun char args)))
+          (puthash char ret dtk-unicode-cache)
+          ret)
+      result)))
+
+
+(advice-add 'describe-char-unicode-data :around
+	    #'ems--describe-char-unicode-data-around)
+
+
+
 
 (defun dtk-unicode-name-for-char (char)
   "Return unicode name for character CHAR. "
