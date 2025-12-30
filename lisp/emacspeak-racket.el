@@ -104,12 +104,18 @@
        (emacspeak-speak-line)
        (emacspeak-icon 'large-movement)))))
 
-(defadvice racket-describe (after emacspeak pre act comp)
+
+(defun ems--racket-describe-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'help)
-    (with-current-buffer "*Racket Describe*"
-      (emacspeak-speak-buffer))))
+    (with-current-buffer "*Racket Describe*" (emacspeak-speak-buffer))))
+
+
+(advice-add 'racket-describe :after #'ems--racket-describe-after)
+
+
+
 
 (provide 'emacspeak-racket)
 ;;;  end of file

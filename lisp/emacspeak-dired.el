@@ -85,25 +85,45 @@ If in locate-mode, speak full pathname."
 
 ;;;   advice:
 
-(defadvice dired-sort-toggle-or-edit (around emacspeak pre act comp)
+
+(defun ems--dired-sort-toggle-or-edit-around (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced ad-do-it)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-mode-line))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args))
+      (emacspeak-icon 'task-done) (emacspeak-speak-mode-line))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice dired-query (before emacspeak pre act comp)
-  "Produce auditory icon."
-  (emacspeak-icon 'ask-short-question))
 
-(defadvice dired-quit (after emacspeak pre act comp)
+(advice-add 'dired-sort-toggle-or-edit :around
+	    #'ems--dired-sort-toggle-or-edit-around)
+
+
+
+
+
+(defun ems--dired-query-before (&rest _)
+  "Produce auditory icon." (emacspeak-icon 'ask-short-question))
+
+
+(advice-add 'dired-query :before #'ems--dired-query-before)
+
+
+
+
+
+(defun ems--dired-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'dired-quit :after #'ems--dired-quit-after)
+
+
+
 
 (defun emacspeak-dired-initialize ()
   "Set up emacspeak dired."
@@ -122,17 +142,24 @@ If in locate-mode, speak full pathname."
        (emacspeak-icon 'open-object)
        (emacspeak-speak-mode-line)))))
 
-(defadvice dired-find-file  (around  emacspeak pre act comp)
+
+(defun ems--dired-find-file-around (orig-fun &rest args)
   "Produce an auditory icon."
-  (cond
-   ((ems-interactive-p)
-    (let ((directory-p (file-directory-p (dired-get-filename t t))))
-      ad-do-it
-      (when directory-p (emacspeak-dired-label-fields))
-      (emacspeak-speak-mode-line)
-      (emacspeak-icon 'open-object)))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((directory-p (file-directory-p (dired-get-filename t t))))
+	(apply orig-fun args)
+	(when directory-p (emacspeak-dired-label-fields))
+	(emacspeak-speak-mode-line) (emacspeak-icon 'open-object)))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'dired-find-file :around #'ems--dired-find-file-around)
+
+
+
 
 (cl-loop
  for  f in
@@ -170,23 +197,42 @@ If in locate-mode, speak full pathname."
 ;; We speak the line moved to, and indicate the state change
 ;; with an auditory icon.
 
-(defadvice dired-mark (after emacspeak pre act comp)
+
+(defun ems--dired-mark-after (&rest _)
   "Produce an auditory icon."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-dired-speak-line)))
+    (emacspeak-icon 'mark-object) (emacspeak-dired-speak-line)))
 
-(defadvice dired-flag-file-deletion (after emacspeak pre act comp)
+
+(advice-add 'dired-mark :after #'ems--dired-mark-after)
+
+
+
+
+
+(defun ems--dired-flag-file-deletion-after (&rest _)
   "Produce an auditory icon indicating that a file was marked for deletion."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-dired-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-dired-speak-line)))
 
-(defadvice dired-unmark (after emacspeak pre act comp)
+
+(advice-add 'dired-flag-file-deletion :after
+	    #'ems--dired-flag-file-deletion-after)
+
+
+
+
+
+(defun ems--dired-unmark-after (&rest _)
   "Give speech feedback. Also provide an auditory icon."
   (when (ems-interactive-p)
-    (emacspeak-icon 'deselect-object)
-    (emacspeak-dired-speak-line)))
+    (emacspeak-icon 'deselect-object) (emacspeak-dired-speak-line)))
+
+
+(advice-add 'dired-unmark :after #'ems--dired-unmark-after)
+
+
+
 
 ;;;   labeling fields in the dired buffer:
 

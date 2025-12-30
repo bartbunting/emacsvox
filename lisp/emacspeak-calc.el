@@ -50,43 +50,74 @@
 (require 'emacspeak-preamble)
 
 ;;;   advice calc interaction 
-(defadvice calc-dispatch (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)))
 
-(defadvice calc-quit (after emacspeak pre act comp)
+(defun ems--calc-dispatch-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'calc-dispatch :after #'ems--calc-dispatch-after)
+
+
+
+
+
+(defun ems--calc-quit-after (&rest _)
   "Announce the buffer that becomes current when calc is quit."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'calc-quit :after #'ems--calc-quit-after)
+
+
+
 
 ;;;   speak output 
 
-(defadvice calc-call-last-kbd-macro (around emacspeak pre act comp)
+
+(defun ems--calc-call-last-kbd-macro-around (orig-fun &rest args)
   "Speak."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced ad-do-it)
-    (tts-with-punctuations 'all
-                           (emacspeak-read-previous-line))
-    (emacspeak-icon 'task-done))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args))
+      (tts-with-punctuations 'all (emacspeak-read-previous-line))
+      (emacspeak-icon 'task-done))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice  calc-do (around emacspeak pre act comp)
-  "Speak previous line of output."
-  (ems-with-messages-silenced ad-do-it)
-  (tts-with-punctuations
-   'all
-   (emacspeak-read-previous-line)
-   (emacspeak-icon 'select-object))
-  ad-return-value)
 
-(defadvice  calc-trail-here (after emacspeak pre act comp)
+(advice-add 'calc-call-last-kbd-macro :around
+	    #'ems--calc-call-last-kbd-macro-around)
+
+
+
+
+
+(defun ems--calc-do-around (orig-fun &rest args)
   "Speak previous line of output."
-  (emacspeak-speak-line)
+  (let ((result (apply orig-fun args)))
+    (ems-with-messages-silenced (apply orig-fun args))
+    (tts-with-punctuations 'all (emacspeak-read-previous-line)
+			   (emacspeak-icon 'select-object))
+    result))
+
+
+(advice-add 'calc-do :around #'ems--calc-do-around)
+
+
+
+
+
+(defun ems--calc-trail-here-after (&rest _)
+  "Speak previous line of output." (emacspeak-speak-line)
   (emacspeak-icon 'select-object))
+
+
+(advice-add 'calc-trail-here :after #'ems--calc-trail-here-after)
+
+
+
 
 (provide 'emacspeak-calc)
 

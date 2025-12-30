@@ -50,22 +50,40 @@
 
 ;;;  advice
 
-(defadvice mspools-show (after emacspeak pre act comp)
+
+(defun ems--mspools-show-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice mspools-quit (after emacspeak pre act comp)
+
+(advice-add 'mspools-show :after #'ems--mspools-show-after)
+
+
+
+
+
+(defun ems--mspools-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice mspools-revert-buffer (after emacspeak pre act comp)
-  "speak"
-  (emacspeak-icon 'select-object)
-  (emacspeak-speak-line))
+
+(advice-add 'mspools-quit :after #'ems--mspools-quit-after)
+
+
+
+
+
+(defun ems--mspools-revert-buffer-after (&rest _)
+  "speak" (emacspeak-icon 'select-object) (emacspeak-speak-line))
+
+
+(advice-add 'mspools-revert-buffer :after
+	    #'ems--mspools-revert-buffer-after)
+
+
+
 
 ;;; Smarter Spool-Size:
 ;; Smarter sppol-size compute functions.

@@ -75,35 +75,68 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice flycheck-list-errors (after emacspeak pre act comp)
+
+(defun ems--flycheck-list-errors-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'task-done)
     (dtk-speak "Displayed error listing in other window.")))
 
-(defadvice flycheck-buffer (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Checking buffer.")))
 
-(defadvice flycheck-clear (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Cleared errors")))
+(advice-add 'flycheck-list-errors :after
+	    #'ems--flycheck-list-errors-after)
 
-(defadvice flycheck-compile (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Compiling buffer")))
 
-(defadvice flycheck-error-list-refresh (after emacspeak pre act comp)
+
+
+
+(defun ems--flycheck-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (dtk-speak "Refreshed errors")))
+    (emacspeak-icon 'task-done) (dtk-speak "Checking buffer.")))
+
+
+(advice-add 'flycheck-buffer :after #'ems--flycheck-buffer-after)
+
+
+
+
+
+(defun ems--flycheck-clear-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'task-done) (dtk-speak "Cleared errors")))
+
+
+(advice-add 'flycheck-clear :after #'ems--flycheck-clear-after)
+
+
+
+
+
+(defun ems--flycheck-compile-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'task-done) (dtk-speak "Compiling buffer")))
+
+
+(advice-add 'flycheck-compile :after #'ems--flycheck-compile-after)
+
+
+
+
+
+(defun ems--flycheck-error-list-refresh-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'task-done) (dtk-speak "Refreshed errors")))
+
+
+(advice-add 'flycheck-error-list-refresh :after
+	    #'ems--flycheck-error-list-refresh-after)
+
+
+
 
 (provide 'emacspeak-flycheck)
 ;;; emacspeak-flycheck ends here

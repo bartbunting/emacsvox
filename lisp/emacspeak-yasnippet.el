@@ -67,11 +67,17 @@
        (emacspeak-icon 'select-object)
        (emacspeak-speak-line)))))
 
-(defadvice yas-insert-snippet (after emacspeak pre act comp)
+
+(defun ems--yas-insert-snippet-after (&rest _)
   "Speak inserted template."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'yas-insert-snippet :after #'ems--yas-insert-snippet-after)
+
+
+
 
 (provide 'emacspeak-yasnippet)
 ;;;  end of file

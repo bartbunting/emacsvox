@@ -74,19 +74,31 @@
    ))
 
 ;;;  Advice new interactive commands:
-(defadvice js2-jump-to-definition (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (let ((emacspeak-show-point  t))
-      (emacspeak-icon 'large-movement)
-      (emacspeak-speak-line))
-    ))
 
-(defadvice js2-mark-defun  (after emacspeak pre act comp)
+(defun ems--js2-jump-to-definition-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-speak-line)))
+    (let ((emacspeak-show-point t))
+      (emacspeak-icon 'large-movement) (emacspeak-speak-line))))
+
+
+(advice-add 'js2-jump-to-definition :after
+	    #'ems--js2-jump-to-definition-after)
+
+
+
+
+
+(defun ems--js2-mark-defun-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'mark-object) (emacspeak-speak-line)))
+
+
+(advice-add 'js2-mark-defun :after #'ems--js2-mark-defun-after)
+
+
+
 
 (cl-loop for f in
          '(js2-mode-forward-sexp js2-mode-backward-sibling js2-next-error)
@@ -158,17 +170,31 @@
        (message "Toggled %s"
                 ,(substring (symbol-name f)
                             (length "js2-mode-toggle-")))))))
-(defadvice js2-narrow-to-defun (after emacspeak pre act comp)
+
+(defun ems--js2-narrow-to-defun-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (message "Narrowed to current function.")))
 
-(defadvice js2-next-error (after emacspeak pre act comp)
+
+(advice-add 'js2-narrow-to-defun :after
+	    #'ems--js2-narrow-to-defun-after)
+
+
+
+
+
+(defun ems--js2-next-error-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'js2-next-error :after #'ems--js2-next-error-after)
+
+
+
 
 ;;;  js2-mode hook
 

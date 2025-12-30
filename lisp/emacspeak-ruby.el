@@ -70,29 +70,51 @@
 
 ;;;  Advice insertion and electric:
 
-(defadvice ruby-insert-end (after emacspeak pre act comp)
+
+(defun ems--ruby-insert-end-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
-    (save-excursion
-      (ruby-beginning-of-block)
-      (emacspeak-speak-line))))
+    (save-excursion (ruby-beginning-of-block) (emacspeak-speak-line))))
 
-(defadvice ruby-reindent-then-newline-and-indent (after emacspeak pre act comp)
+
+(advice-add 'ruby-insert-end :after #'ems--ruby-insert-end-after)
+
+
+
+
+
+(defun ems--ruby-reindent-then-newline-and-indent-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'ruby-reindent-then-newline-and-indent :after
+	    #'ems--ruby-reindent-then-newline-and-indent-after)
+
+
+
+
+
+(defun ems--ruby-indent-line-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'ruby-indent-line :after #'ems--ruby-indent-line-after)
+
+
+
+
+
+(defun ems--ruby-indent-exp-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+    (emacspeak-speak-line) (emacspeak-icon 'fill-object)))
 
-(defadvice ruby-indent-line (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice ruby-indent-exp (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'fill-object)))
+(advice-add 'ruby-indent-exp :after #'ems--ruby-indent-exp-after)
+
+
+
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook
              (memq 'emacspeak-post-self-insert-hook post-self-insert-hook))

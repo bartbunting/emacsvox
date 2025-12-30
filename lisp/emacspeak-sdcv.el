@@ -113,11 +113,17 @@
    do
    (emacspeak-keymap-update sdcv-mode-map binding)))
 
-(defadvice sdcv-quit (after emacspeak pre act comp)
+
+(defun ems--sdcv-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'sdcv-quit :after #'ems--sdcv-quit-after)
+
+
+
 (when (bound-and-true-p sdcv-mode-map)
   (emacspeak-sdcv-setup))
 

@@ -58,40 +58,78 @@
   yaml-narrow-to-block-literal
   )
 
-(defadvice yaml-indent-line (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice yaml-mode (after emacspeak pre act comp)
+(defun ems--yaml-indent-line-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'yaml-indent-line :after #'ems--yaml-indent-line-after)
+
+
+
+
+
+(defun ems--yaml-mode-after (&rest _)
   "speak."
   (unless emacspeak-audio-indentation
     (emacspeak-toggle-audio-indentation)))
 
-(defadvice yaml-fill-paragraph (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)))
 
-(defadvice yaml-electric-backspace (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone-deletion)
-    (emacspeak-speak-this-char (preceding-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+(advice-add 'yaml-mode :after #'ems--yaml-mode-after)
 
-(defadvice yaml-electric-bar-and-angle (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice yaml-electric-dash-and-dot (after emacspeak pre act comp)
+
+
+
+(defun ems--yaml-fill-paragraph-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'fill-object)))
+
+
+(advice-add 'yaml-fill-paragraph :after
+	    #'ems--yaml-fill-paragraph-after)
+
+
+
+
+
+(defun ems--yaml-electric-backspace-around (orig-fun &rest args)
   "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (dtk-tone-deletion)
+      (emacspeak-speak-this-char (preceding-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'yaml-electric-backspace :around
+	    #'ems--yaml-electric-backspace-around)
+
+
+
+
+
+(defun ems--yaml-electric-bar-and-angle-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'yaml-electric-bar-and-angle :after
+	    #'ems--yaml-electric-bar-and-angle-after)
+
+
+
+
+
+(defun ems--yaml-electric-dash-and-dot-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'yaml-electric-dash-and-dot :after
+	    #'ems--yaml-electric-dash-and-dot-after)
+
+
+
 
 (provide 'emacspeak-yaml)
 ;;;  end of file

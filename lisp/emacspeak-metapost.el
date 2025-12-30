@@ -50,106 +50,195 @@
 
 ;;;   completion
 
-(defadvice meta-complete-symbol (around emacspeak pre act comp)
+
+(defun ems--meta-complete-symbol-around (orig-fun &rest args)
   "Say what you completed."
-  (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-        (dtk-stop-immediately dtk-stop-immediately))
-    (when dtk-stop-immediately (dtk-stop))
-    ad-do-it
-    (when (> (point) prior)
-      (setq dtk-stop-immediately nil)
-      (tts-with-punctuations 'all
-        (dtk-speak (buffer-substring prior (point)))))
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let
+	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+	 (dtk-stop-immediately dtk-stop-immediately))
+      (when dtk-stop-immediately (dtk-stop)) (apply orig-fun args)
+      (when (> (point) prior)
+	(setq dtk-stop-immediately nil)
+	(tts-with-punctuations 'all
+			       (dtk-speak
+				(buffer-substring prior (point)))))
+      result)
+    result))
+
+
+(advice-add 'meta-complete-symbol :around
+	    #'ems--meta-complete-symbol-around)
+
+
+
 
 ;;;  indentation
 
-(defadvice meta-indent-line (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice meta-fill-paragraph (after emacspeak pre act comp)
+(defun ems--meta-indent-line-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'meta-indent-line :after #'ems--meta-indent-line-after)
+
+
+
+
+
+(defun ems--meta-fill-paragraph-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "Filled current paragraph")))
+    (emacspeak-icon 'fill-object) (message "Filled current paragraph")))
+
+
+(advice-add 'meta-fill-paragraph :after
+	    #'ems--meta-fill-paragraph-after)
+
+
+
 
 ;;;   navigation
-(defadvice  meta-beginning-of-defun (after emacspeak pre act comp)
-  "Speak the line."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
 
-(defadvice  meta-end-of-defun (after emacspeak pre act comp)
+(defun ems--meta-beginning-of-defun-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'meta-beginning-of-defun :after
+	    #'ems--meta-beginning-of-defun-after)
+
+
+
+
+
+(defun ems--meta-end-of-defun-after (&rest _)
+  "Speak the line."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'meta-end-of-defun :after #'ems--meta-end-of-defun-after)
+
+
+
 
 ;;;   commenting etc
 
-(defadvice meta-comment-region (after emacspeak pre act comp)
+
+(defun ems--meta-comment-region-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (let ((prefix-arg (ad-get-arg 2)))
       (message "%s region containing %s lines"
-               (if (and prefix-arg
-                        (< prefix-arg 0))
-                   "Uncommented"
-                 "Commented")
-               (count-lines (point) (mark 'force))))))
+	       (if (and prefix-arg (< prefix-arg 0)) "Uncommented"
+		 "Commented")
+	       (count-lines (point) (mark 'force))))))
 
-(defadvice meta-comment-defun (after emacspeak pre act comp)
+
+(advice-add 'meta-comment-region :after
+	    #'ems--meta-comment-region-after)
+
+
+
+
+
+(defun ems--meta-comment-defun-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (let ((prefix-arg (ad-get-arg 2)))
       (message "%s environment containing %s lines"
-               (if  prefix-arg
-                   "Uncommented"
-                 "Commented")
-               (count-lines (point) (mark 'force))))))
+	       (if prefix-arg "Uncommented" "Commented")
+	       (count-lines (point) (mark 'force))))))
 
-(defadvice meta-uncomment-defun (after emacspeak pre act comp)
+
+(advice-add 'meta-comment-defun :after #'ems--meta-comment-defun-after)
+
+
+
+
+
+(defun ems--meta-uncomment-defun-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (message "Uncommented environment containing %s lines"
-             (count-lines (point) (mark 'force)))))
+	     (count-lines (point) (mark 'force)))))
 
-(defadvice meta-uncomment-region (after emacspeak pre act comp)
+
+(advice-add 'meta-uncomment-defun :after
+	    #'ems--meta-uncomment-defun-after)
+
+
+
+
+
+(defun ems--meta-uncomment-region-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (message "Uncommented  region containing %s lines"
-             (count-lines (point) (mark 'force)))))
+	     (count-lines (point) (mark 'force)))))
 
-(defadvice meta-indent-region (after emacspeak pre act comp)
+
+(advice-add 'meta-uncomment-region :after
+	    #'ems--meta-uncomment-region-after)
+
+
+
+
+
+(defun ems--meta-indent-region-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'fill-object)
     (message "Indented  region containing %s lines"
-             (count-lines (point) (mark 'force)))))
+	     (count-lines (point) (mark 'force)))))
 
-(defadvice meta-indent-buffer (after emacspeak pre act comp)
+
+(advice-add 'meta-indent-region :after #'ems--meta-indent-region-after)
+
+
+
+
+
+(defun ems--meta-indent-buffer-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'fill-object)
     (message "Indented  buffer containing %s lines"
-             (count-lines (point-min) (point-max 'force)))))
+	     (count-lines (point-min) (point-max 'force)))))
 
-(defadvice meta-mark-defun (after emacspeak pre act comp)
+
+(advice-add 'meta-indent-buffer :after #'ems--meta-indent-buffer-after)
+
+
+
+
+
+(defun ems--meta-mark-defun-after (&rest _)
   "Produce an auditory icon if possible."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (message "Marked function containing %s lines"
-             (count-lines (point)
-                          (mark 'force)))))
+	     (count-lines (point) (mark 'force)))))
 
-(defadvice meta-indent-defun (after emacspeak pre act comp)
+
+(advice-add 'meta-mark-defun :after #'ems--meta-mark-defun-after)
+
+
+
+
+
+(defun ems--meta-indent-defun-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "Indented current defun. ")))
+    (emacspeak-icon 'fill-object) (message "Indented current defun. ")))
+
+
+(advice-add 'meta-indent-defun :after #'ems--meta-indent-defun-after)
+
+
+
 
 (provide 'emacspeak-metapost)
 ;;;  end of file

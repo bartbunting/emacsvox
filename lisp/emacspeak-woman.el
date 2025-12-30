@@ -63,17 +63,30 @@
 
 ;;;  Advice interactive functions
 
-(defadvice WoMan-next-manpage(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice WoMan-previous-manpage(after emacspeak pre act comp)
+(defun ems--WoMan-next-manpage-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'WoMan-next-manpage :after #'ems--WoMan-next-manpage-after)
+
+
+
+
+
+(defun ems--WoMan-previous-manpage-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'WoMan-previous-manpage :after
+	    #'ems--WoMan-previous-manpage-after)
+
+
+
 
 (provide 'emacspeak-woman)
 ;;;  end of file

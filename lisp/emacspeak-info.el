@@ -117,51 +117,90 @@ node -- speak the entire node."
 emacspeak-info-select-node-speak-chunk"
      (when (ems-interactive-p) (emacspeak-info-visit-node)))))
 
-(defadvice Info-search (after emacspeak pre act comp)
+
+(defun ems--Info-search-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'search-hit)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'search-hit) (emacspeak-speak-line)))
 
-(defadvice Info-scroll-up (after emacspeak pre act comp)
+
+(advice-add 'Info-search :after #'ems--Info-search-after)
+
+
+
+
+
+(defun ems--Info-scroll-up-after (&rest _)
   "Speak the screenful."
   (when (ems-interactive-p)
     (emacspeak-icon 'scroll)
-    (let ((start  (point))
-          (window (get-buffer-window (current-buffer))))
+    (let
+	((start (point)) (window (get-buffer-window (current-buffer))))
       (save-excursion
-        (forward-line (window-height window))
-        (emacspeak-speak-region start (point))))))
+	(forward-line (window-height window))
+	(emacspeak-speak-region start (point))))))
 
-(defadvice Info-scroll-down (after emacspeak pre act comp)
+
+(advice-add 'Info-scroll-up :after #'ems--Info-scroll-up-after)
+
+
+
+
+
+(defun ems--Info-scroll-down-after (&rest _)
   "Speak the screenful."
   (when (ems-interactive-p)
     (emacspeak-icon 'scroll)
-    (let ((start  (point))
-          (window (get-buffer-window (current-buffer))))
+    (let
+	((start (point)) (window (get-buffer-window (current-buffer))))
       (save-excursion
-        (forward-line (window-height window))
-        (emacspeak-speak-region start (point))))))
+	(forward-line (window-height window))
+	(emacspeak-speak-region start (point))))))
 
-(defadvice Info-exit (after emacspeak pre act comp)
-  "Play an auditory icon to close info,
-and then cue the next selected buffer."
+
+(advice-add 'Info-scroll-down :after #'ems--Info-scroll-down-after)
+
+
+
+
+
+(defun ems--Info-exit-after (&rest _)
+  "Play an auditory icon to close info,\nand then cue the next selected buffer."
   (when (ems-interactive-p)
-    (dtk-stop 'all)
-    (emacspeak-icon 'close-object)
+    (dtk-stop 'all) (emacspeak-icon 'close-object)
     (emacspeak-speak-mode-line)))
 
-(defadvice Info-next-reference (after emacspeak pre act comp)
-  "Speak the line. "
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
 
-(defadvice Info-prev-reference (after emacspeak pre act comp)
+(advice-add 'Info-exit :after #'ems--Info-exit-after)
+
+
+
+
+
+(defun ems--Info-next-reference-after (&rest _)
   "Speak the line. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'Info-next-reference :after
+	    #'ems--Info-next-reference-after)
+
+
+
+
+
+(defun ems--Info-prev-reference-after (&rest _)
+  "Speak the line. "
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'Info-prev-reference :after
+	    #'ems--Info-prev-reference-after)
+
+
+
 
 ;;;###autoload
 (defun emacspeak-info-wizard (node-spec)

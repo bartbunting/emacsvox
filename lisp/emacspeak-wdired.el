@@ -60,50 +60,97 @@
                (emacspeak-icon 'select-object)
                (emacspeak-dired-speak-line)))))
 
-(defadvice wdired-upcase-word (after emacspeak pre act comp)
-  "Speak."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'some
-                           (dtk-speak "upper cased file name. "))))
-(defadvice wdired-capitalize-word (after emacspeak pre act comp)
-  "Speak."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'some
-                           (dtk-speak "Capitalized file name. "))))
-(defadvice wdired-downcase-word (after emacspeak pre act comp)
-  "Speak."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'some
-                           (dtk-speak "Down cased file
-  name. "))))
 
-(defadvice wdired-toggle-bit (after emacspeak pre act comp)
+(defun ems--wdired-upcase-word-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (dtk-speak "Toggled permission bit.")))
+    (tts-with-punctuations 'some (dtk-speak "upper cased file name. "))))
 
-(defadvice wdired-abort-changes (after emacspeak pre act comp)
+
+(advice-add 'wdired-upcase-word :after #'ems--wdired-upcase-word-after)
+
+
+
+
+(defun ems--wdired-capitalize-word-after (&rest _)
+  "Speak."
+  (when (ems-interactive-p)
+    (tts-with-punctuations 'some (dtk-speak "Capitalized file name. "))))
+
+
+(advice-add 'wdired-capitalize-word :after
+	    #'ems--wdired-capitalize-word-after)
+
+
+
+
+(defun ems--wdired-downcase-word-after (&rest _)
+  "Speak."
+  (when (ems-interactive-p)
+    (tts-with-punctuations 'some
+			   (dtk-speak "Down cased file\n  name. "))))
+
+
+(advice-add 'wdired-downcase-word :after
+	    #'ems--wdired-downcase-word-after)
+
+
+
+
+
+(defun ems--wdired-toggle-bit-after (&rest _)
+  "Speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'button) (dtk-speak "Toggled permission bit.")))
+
+
+(advice-add 'wdired-toggle-bit :after #'ems--wdired-toggle-bit-after)
+
+
+
+
+
+(defun ems--wdired-abort-changes-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
-    (tts-with-punctuations 'some
-                           (dtk-speak "Cancelling  changes. "))))
+    (tts-with-punctuations 'some (dtk-speak "Cancelling  changes. "))))
 
-(defadvice wdired-finish-edit (after emacspeak pre act comp)
+
+(advice-add 'wdired-abort-changes :after
+	    #'ems--wdired-abort-changes-after)
+
+
+
+
+
+(defun ems--wdired-finish-edit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'save-object)
-    (tts-with-punctuations 'some
-                           (dtk-speak "Committed changes. "))))
+    (tts-with-punctuations 'some (dtk-speak "Committed changes. "))))
 
-(defadvice wdired-change-to-wdired-mode (after emacspeak pre act
-                                               comp)
+
+(advice-add 'wdired-finish-edit :after #'ems--wdired-finish-edit-after)
+
+
+
+
+
+(defun ems--wdired-change-to-wdired-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (tts-with-punctuations 'some
-                           (dtk-speak "Entering writeable dir ed mode. "))))
+			   (dtk-speak
+			    "Entering writeable dir ed mode. "))))
+
+
+(advice-add 'wdired-change-to-wdired-mode :after
+	    #'ems--wdired-change-to-wdired-mode-after)
+
+
+
 
 (provide 'emacspeak-wdired)
 ;;;  end of file

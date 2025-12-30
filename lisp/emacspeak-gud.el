@@ -47,18 +47,22 @@
 
 ;;;   Advise key helpers:
 
-(defadvice gud-display-line (after emacspeak pre act comp)
+
+(defun ems--gud-display-line-after (&rest _)
   "Speak the error line"
   (cl-declare (special gud-overlay-arrow-position))
   (let ((marker gud-overlay-arrow-position))
     (emacspeak-icon 'large-movement)
-    (and marker
-         (marker-buffer marker)
-         (marker-position marker)
-         (save-current-buffer
-           (set-buffer (marker-buffer marker))
-           (goto-char (marker-position marker))
-           (emacspeak-speak-line)))))
+    (and marker (marker-buffer marker) (marker-position marker)
+	 (save-current-buffer
+	   (set-buffer (marker-buffer marker))
+	   (goto-char (marker-position marker)) (emacspeak-speak-line)))))
+
+
+(advice-add 'gud-display-line :after #'ems--gud-display-line-after)
+
+
+
 
 (cl-loop
  for f in

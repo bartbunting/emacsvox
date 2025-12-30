@@ -148,35 +148,67 @@
        (dtk-stop 'all)
        (emacspeak-icon 'button)))))
 
-(defadvice empv-lyrics-display-mode (after emacspeak pre act comp)
+
+(defun ems--empv-lyrics-display-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'empv-lyrics-display-mode :after
+	    #'ems--empv-lyrics-display-mode-after)
+
+
+
+
+
+
+(defun ems--empv-youtube-results-play-current-before (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'button)))
+
+
+(advice-add 'empv-youtube-results-play-current :before
+	    #'ems--empv-youtube-results-play-current-before)
+
+
+
+
+
+(defun ems--empv-youtube-results-inspect-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'empv-youtube-results-inspect :after
+	    #'ems--empv-youtube-results-inspect-after)
+
+
+
+
+
+(defun ems--empv-youtube-tabulated-before (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'button)))
+
+
+(advice-add 'empv-youtube-tabulated :before
+	    #'ems--empv-youtube-tabulated-before)
+
+
+
+
+
+(defun ems--empv-exit-after (&rest _)
+  "Icon." (repeat-exit)
+  (when (ems-interactive-p)
+    (dtk-stop 'all) (emacspeak-icon 'close-object)
     (emacspeak-speak-mode-line)))
 
 
-(defadvice empv-youtube-results-play-current (before emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'button)))
+(advice-add 'empv-exit :after #'ems--empv-exit-after)
 
-(defadvice empv-youtube-results-inspect (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice empv-youtube-tabulated (before emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'button)))
 
-(defadvice empv-exit (after emacspeak pre act comp)
-  "Icon."
-  (repeat-exit)
-  (when (ems-interactive-p)
-    (dtk-stop 'all)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
 
 ;;; Additional Commands:
 
@@ -199,16 +231,24 @@
   (add-to-history 'emacspeak-empv-history url emacspeak-empv-history-max)
   (empv-play url))
 
-(defadvice empv-play (before emacspeak pre act comp)
+
+(defun ems--empv-play-before (&rest _)
   "Record history."
-  (cl-declare (special emacspeak-empv-history-max
-                       emacspeak-empv-history))
+  (cl-declare
+   (special emacspeak-empv-history-max emacspeak-empv-history))
   (let ((url (ad-get-arg 0)))
     (when
-        (and url (stringp url)
-             (string-prefix-p (emacspeak-google-result-url-prefix) url))
-      (setq url  (emacspeak-google-canonicalize-result-url url)))
-    (add-to-history 'emacspeak-empv-history url emacspeak-empv-history-max)))
+	(and url (stringp url)
+	     (string-prefix-p (emacspeak-google-result-url-prefix) url))
+      (setq url (emacspeak-google-canonicalize-result-url url)))
+    (add-to-history 'emacspeak-empv-history url
+		    emacspeak-empv-history-max)))
+
+
+(advice-add 'empv-play :before #'ems--empv-play-before)
+
+
+
 
 (defun emacspeak-empv-play-last ()
   "Play most recently played URL."
@@ -355,24 +395,42 @@ If already playing, then read an empv key and invoke its command."
   (emacspeak-icon 'select-object)
   (message (cdr (assq 'title (empv-youtube-results--current-item)))))
 
-(defadvice empv-youtube-results-copy-current (after emacspeak pre act comp)
+
+(defun ems--empv-youtube-results-copy-current-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'yank-object)
     (message (current-kill 0 'dont-move))))
 
 
-(defadvice empv--youtube-tabulated-entries-append (after emacspeak pre act comp)
+(advice-add 'empv-youtube-results-copy-current :after
+	    #'ems--empv-youtube-results-copy-current-after)
+
+
+
+
+
+
+(defun ems--empv--youtube-tabulated-entries-append-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'scroll)
     (dtk-notify
-     (format
-      "%s: %s results"
-      (cdr
-       (assoc 'title
-              (cl-first (empv--yt-search-results empv--last-youtube-search ))))
-      (length (empv--yt-search-results empv--last-youtube-search ))))))
+     (format "%s: %s results"
+	     (cdr
+	      (assoc 'title
+		     (cl-first
+		      (empv--yt-search-results
+		       empv--last-youtube-search))))
+	     (length
+	      (empv--yt-search-results empv--last-youtube-search))))))
+
+
+(advice-add 'empv--youtube-tabulated-entries-append :after
+	    #'ems--empv--youtube-tabulated-entries-append-after)
+
+
+
 
 (defun emacspeak-empv-setup ()
   "Emacspeak setup for empv."

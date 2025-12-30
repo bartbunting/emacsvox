@@ -108,17 +108,29 @@ Useful in voiceifying rich text."
 
 ;;;  advice enriched to automatically map faces to voices
 
-(defadvice enriched-decode (after emacspeak pre act comp)
-  "Map faces to voices. "
-  (let ((start (ad-get-arg 0))
-        (end (ad-get-arg 1)))
-    (emacspeak-enriched-voiceify-faces start end)
-    ad-return-value))
 
-(defadvice enriched-mode (after emacspeak pre act comp)
+(defun ems--enriched-decode-after (&rest _)
+  "Map faces to voices. "
+  (let ((start (ad-get-arg 0)) (end (ad-get-arg 1)))
+    (emacspeak-enriched-voiceify-faces start end) ad-return-value))
+
+
+(advice-add 'enriched-decode :after #'ems--enriched-decode-after)
+
+
+
+
+
+(defun ems--enriched-mode-after (&rest _)
   "Map faces to voices. "
   (emacspeak-enriched-voiceify-faces (point-min) (point-max))
   ad-return-value)
+
+
+(advice-add 'enriched-mode :after #'ems--enriched-mode-after)
+
+
+
 
 ;;;  hooks
 (add-hook 'enriched-mode-hook

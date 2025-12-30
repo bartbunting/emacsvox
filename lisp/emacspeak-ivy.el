@@ -113,16 +113,27 @@
        (emacspeak-ivy-speak-selection)
        (emacspeak-icon 'select-object)))))
 
-(defadvice ivy--exhibit (after emacspeak pre act comp)
-  "Speak updated Ivy list."
-  (emacspeak-ivy-speak-selection)
-  (sit-for 5)
-  (emacspeak-speak-rest-of-buffer))
 
-(defadvice ivy-read (before emacspeak pre act comp)
-  "Speak prompt"
-  (emacspeak-icon 'open-object)
+(defun ems--ivy--exhibit-after (&rest _)
+  "Speak updated Ivy list." (emacspeak-ivy-speak-selection)
+  (sit-for 5) (emacspeak-speak-rest-of-buffer))
+
+
+(advice-add 'ivy--exhibit :after #'ems--ivy--exhibit-after)
+
+
+
+
+
+(defun ems--ivy-read-before (&rest _)
+  "Speak prompt" (emacspeak-icon 'open-object)
   (dtk-speak (ad-get-arg 0)))
+
+
+(advice-add 'ivy-read :before #'ems--ivy-read-before)
+
+
+
 
 (provide 'emacspeak-ivy)
 ;;;  end of file

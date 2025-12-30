@@ -74,10 +74,17 @@
 
 ;;;  Interactive Commands:
 
-(defadvice tab-bar-switch-to-tab (after emacspeak pre act comp)
+
+(defun ems--tab-bar-switch-to-tab-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
-    (emacspeak-tab-bar-speak-tab-name)))
+  (when (ems-interactive-p) (emacspeak-tab-bar-speak-tab-name)))
+
+
+(advice-add 'tab-bar-switch-to-tab :after
+	    #'ems--tab-bar-switch-to-tab-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -118,11 +125,19 @@
        (emacspeak-icon 'open-object)
        (emacspeak-tab-bar-speak-tab-name)))))
 
-(defadvice tab-bar-close-tab-by-name (after emacspeak pre act comp)
+
+(defun ems--tab-bar-close-tab-by-name-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (dtk-speak (message "Closed tab %s" (ad-get-arg  0)))
+    (dtk-speak (message "Closed tab %s" (ad-get-arg 0)))
     (emacspeak-icon 'close-object)))
+
+
+(advice-add 'tab-bar-close-tab-by-name :after
+	    #'ems--tab-bar-close-tab-by-name-after)
+
+
+
 
 ;;; tab-list commands:
 
@@ -136,10 +151,16 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'open-object)))))
 
-(defadvice tab-bar-list-execute (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+
+(defun ems--tab-bar-list-execute-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'tab-bar-list-execute :after
+	    #'ems--tab-bar-list-execute-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -152,11 +173,18 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice tab-bar-list-unmark (after emacspeak pre act comp)
+
+(defun ems--tab-bar-list-unmark-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'unmark-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'unmark-object) (emacspeak-speak-line)))
+
+
+(advice-add 'tab-bar-list-unmark :after
+	    #'ems--tab-bar-list-unmark-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -169,11 +197,18 @@
        (emacspeak-icon 'delete-object)
        (emacspeak-speak-line)))))
 
-(defadvice tab-bar-list-select (after emacspeak pre act comp)
+
+(defun ems--tab-bar-list-select-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'tab-bar-list-select :after
+	    #'ems--tab-bar-list-select-after)
+
+
+
 
 (provide 'emacspeak-tab-bar)
 ;;;  end of file

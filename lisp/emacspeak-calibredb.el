@@ -165,11 +165,18 @@
   calibredb-yank-dispatch
   )
 
-(defadvice calibredb-toggle-view-at-point (after emacspeak pre act comp)
+
+(defun ems--calibredb-toggle-view-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'calibredb-toggle-view-at-point :after
+	    #'ems--calibredb-toggle-view-at-point-after)
+
+
+
 
 (cl-loop
  for f in
@@ -182,18 +189,31 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-predefined-window 1)))))
 
-(defadvice calibredb-search-refresh-and-clear-filter
-    (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice calibredb-search-quit (after emacspeak pre act comp)
+(defun ems--calibredb-search-refresh-and-clear-filter-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'calibredb-search-refresh-and-clear-filter :after
+	    #'ems--calibredb-search-refresh-and-clear-filter-after)
+
+
+
+
+
+(defun ems--calibredb-search-quit-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'calibredb-search-quit :after
+	    #'ems--calibredb-search-quit-after)
+
+
+
 
 (cl-loop
  for f in
@@ -206,11 +226,17 @@
        (emacspeak-icon 'select-object)
        (emacspeak-speak-line)))))
 
-(defadvice calibredb (after emacspeak pre act comp)
+
+(defun ems--calibredb-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'calibredb :after #'ems--calibredb-after)
+
+
+
 
 ;;; Emacspeak Commands:
 

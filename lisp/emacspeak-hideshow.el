@@ -49,57 +49,106 @@
 
 ;;;  speech enable interactive commands 
 
-(defadvice hs-hide-all (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (message "Hid all blocks.")))
-(defadvice hs-show-all (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Exposed all blocks.")))
 
-(defadvice hs-hide-block (after emacspeak pre act comp)
+(defun ems--hs-hide-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (message "Hid current block.")))
+    (emacspeak-icon 'close-object) (message "Hid all blocks.")))
 
-(defadvice hs-show-block (after emacspeak pre act comp)
+
+(advice-add 'hs-hide-all :after #'ems--hs-hide-all-after)
+
+
+
+
+(defun ems--hs-show-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Exposed current  block.")))
+    (emacspeak-icon 'open-object) (message "Exposed all blocks.")))
 
-(defadvice hs-show-region (after emacspeak pre act comp)
+
+(advice-add 'hs-show-all :after #'ems--hs-show-all-after)
+
+
+
+
+
+(defun ems--hs-hide-block-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Exposed region.")))
+    (emacspeak-icon 'close-object) (message "Hid current block.")))
 
-(defadvice hs-hide-level (after emacspeak pre act comp)
+
+(advice-add 'hs-hide-block :after #'ems--hs-hide-block-after)
+
+
+
+
+
+(defun ems--hs-show-block-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (message "Exposed current  block.")))
+
+
+(advice-add 'hs-show-block :after #'ems--hs-show-block-after)
+
+
+
+
+
+(defun ems--hs-show-region-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (message "Exposed region.")))
+
+
+(advice-add 'hs-show-region :after #'ems--hs-show-region-after)
+
+
+
+
+
+(defun ems--hs-hide-level-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid all blocks below specified level.")))
 
-(defadvice hs-toggle-hiding (after emacspeak pre act comp)
+
+(advice-add 'hs-hide-level :after #'ems--hs-hide-level-after)
+
+
+
+
+
+(defun ems--hs-toggle-hiding-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (cond
-     ((hs-already-hidden-p)
-      (emacspeak-icon 'close-object)
+     ((hs-already-hidden-p) (emacspeak-icon 'close-object)
       (message "Hid block"))
-     (t
-      (emacspeak-icon 'open-object)
-      (message "Exposed block")))))
+     (t (emacspeak-icon 'open-object) (message "Exposed block")))))
 
-(defadvice hs-hide-initial-comment-block (after emacspeak pre act comp)
+
+(advice-add 'hs-toggle-hiding :after #'ems--hs-toggle-hiding-after)
+
+
+
+
+
+(defun ems--hs-hide-initial-comment-block-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid initial comment block.")))
+
+
+(advice-add 'hs-hide-initial-comment-block :after
+	    #'ems--hs-hide-initial-comment-block-after)
+
+
+
 
 (provide 'emacspeak-hideshow)
 ;;;  end of file

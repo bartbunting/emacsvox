@@ -148,40 +148,69 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice geiser-repl-exit (after emacspeak pre act comp)
+
+(defun ems--geiser-repl-exit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
 
-(defadvice geiser-repl-import-module(around emacspeak pre act comp)
+
+(advice-add 'geiser-repl-exit :after #'ems--geiser-repl-exit-after)
+
+
+
+
+
+(defun ems--geiser-repl-import-module-around (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-icon 'task-done)
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-icon 'task-done)
+	(emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice geiser-repl--maybe-send(around emacspeak pre act comp)
+
+(advice-add 'geiser-repl-import-module :around
+	    #'ems--geiser-repl-import-module-around)
+
+
+
+
+
+(defun ems--geiser-repl--maybe-send-around (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-icon 'close-object)
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-icon 'close-object)
+	(emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice geiser-repl--doc-module (after emacspeak pre act comp)
+
+(advice-add 'geiser-repl--maybe-send :around
+	    #'ems--geiser-repl--maybe-send-around)
+
+
+
+
+
+(defun ems--geiser-repl--doc-module-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (with-current-buffer (window-buffer (selected-window))
-      (emacspeak-icon 'open-object)
-      (emacspeak-speak-buffer))))
+      (emacspeak-icon 'open-object) (emacspeak-speak-buffer))))
+
+
+(advice-add 'geiser-repl--doc-module :after
+	    #'ems--geiser-repl--doc-module-after)
+
+
+
 
 (cl-loop
  for f in

@@ -245,29 +245,48 @@
        (emacspeak-icon 'select-object)
        (emacspeak-gomoku-speak-square)))))
 
-(defadvice gomoku-emacs-plays (after emacspeak pre act comp)
-  "Tell me where you played"
-  (emacspeak-icon 'mark-object)
+
+(defun ems--gomoku-emacs-plays-after (&rest _)
+  "Tell me where you played" (emacspeak-icon 'mark-object)
   (emacspeak-gomoku-speak-square))
 
-(defadvice gomoku-terminate-game (around emacspeak pre act comp)
-  "speak"
-  (cl-declare (special emacspeak-last-message
-                       gomoku-number-of-moves))
-  (let((result (ad-get-arg 0)))
-    ad-do-it
-    (dtk-speak
-     (format "%s in %s moves  %s "
-             result
-             gomoku-number-of-moves
-             emacspeak-last-message))
-    (sit-for 2))
-  ad-return-value)
 
-(defadvice gomoku (after emacspeak pre act comp)
+(advice-add 'gomoku-emacs-plays :after #'ems--gomoku-emacs-plays-after)
+
+
+
+
+
+(defun ems--gomoku-terminate-game-around (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (cl-declare
+     (special emacspeak-last-message gomoku-number-of-moves))
+    (let ((result (ad-get-arg 0)))
+      (apply orig-fun args)
+      (dtk-speak
+       (format "%s in %s moves  %s " result gomoku-number-of-moves
+	       emacspeak-last-message))
+      (sit-for 2))
+    result))
+
+
+(advice-add 'gomoku-terminate-game :around
+	    #'ems--gomoku-terminate-game-around)
+
+
+
+
+
+(defun ems--gomoku-after (&rest _)
   "Speech enable gomoku"
-  (when (ems-interactive-p)
-    (emacspeak-gomoku-setup-keys)))
+  (when (ems-interactive-p) (emacspeak-gomoku-setup-keys)))
+
+
+(advice-add 'gomoku :after #'ems--gomoku-after)
+
+
+
 
 ;;;  keybindings
 

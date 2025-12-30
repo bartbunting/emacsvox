@@ -59,22 +59,40 @@
 
 ;;;   desktop
 
-(defadvice desktop-clear (after emacspeak pre act comp)
+
+(defun ems--desktop-clear-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (dtk-notify "cleared desktop")
+    (emacspeak-speak-mode-line) (dtk-notify "cleared desktop")
     (emacspeak-icon 'delete-object)))
 
-(defadvice desktop-save (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)))
 
-(defadvice desktop-lazy-create-buffer (around emacspeak pre act
-                                              comp)
+(advice-add 'desktop-clear :after #'ems--desktop-clear-after)
+
+
+
+
+
+(defun ems--desktop-save-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'save-object)))
+
+
+(advice-add 'desktop-save :after #'ems--desktop-save-after)
+
+
+
+
+
+(defun ems--desktop-lazy-create-buffer-around (orig-fun &rest args)
   "Silence messages."
-  (ems-with-messages-silenced ad-do-it))
+  (ems-with-messages-silenced (apply orig-fun args)))
+
+
+(advice-add 'desktop-lazy-create-buffer :around
+	    #'ems--desktop-lazy-create-buffer-around)
+
+
+
 
 (provide 'emacspeak-desktop)
 ;;;  end of file

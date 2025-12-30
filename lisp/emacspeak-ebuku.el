@@ -58,13 +58,26 @@
 ;; in fond memory of the past:
 ;; See obsolete emacspeak-fix-interactive in our attic.
 
-(defadvice ebuku-search (before emacspeak pre act pro comp)
-  "Advice prompt to speak"
-  (interactive (list (read-char "n,l,r,t"))))
 
-(defadvice ebuku--search-helper (before emacspeak pre act comp)
-  "Avoid exclude to speed up interaction.."
-  (ad-set-arg 3 ""))
+(defun ems--ebuku-search-before (&rest _)
+  "Advice prompt to speak" (interactive (list (read-char "n,l,r,t"))))
+
+
+(advice-add 'ebuku-search :before #'ems--ebuku-search-before)
+
+
+
+
+
+(defun ems--ebuku--search-helper-before (&rest _)
+  "Avoid exclude to speed up interaction.." (ad-set-arg 3 ""))
+
+
+(advice-add 'ebuku--search-helper :before
+	    #'ems--ebuku--search-helper-before)
+
+
+
 
 (cl-loop
  for f in
@@ -83,17 +96,31 @@
          (forward-word 2)
          (dtk-notify (word-at-point)))))))
 
-(defadvice ebuku-show-all (after emacspeak pre act comp)
+
+(defun ems--ebuku-show-all-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
-    (dtk-speak "Showing all bookmarks")))
+  (when (ems-interactive-p) (dtk-speak "Showing all bookmarks")))
 
 
-(defadvice ebuku-toggle-results-limit (after emacspeak pre act comp)
+(advice-add 'ebuku-show-all :after #'ems--ebuku-show-all-after)
+
+
+
+
+
+
+(defun ems--ebuku-toggle-results-limit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Results limit: %s" ebuku-results-limit)
     (emacspeak-icon 'button)))
+
+
+(advice-add 'ebuku-toggle-results-limit :after
+	    #'ems--ebuku-toggle-results-limit-after)
+
+
+
 
 
 
@@ -108,15 +135,27 @@
        (emacspeak-icon 'select-object)
        (emacspeak-read-previous-line)))))
 
-(defadvice ebuku-open-url (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-icon 'button)))
 
-(defadvice ebuku (after emacspeak pre act comp)
+(defun ems--ebuku-open-url-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'button)))
+
+
+(advice-add 'ebuku-open-url :after #'ems--ebuku-open-url-after)
+
+
+
+
+
+(defun ems--ebuku-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'open-object)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'ebuku :after #'ems--ebuku-after)
+
+
+
 
 ;;; Additional Keybindings:
 

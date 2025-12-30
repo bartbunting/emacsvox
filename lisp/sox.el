@@ -465,20 +465,36 @@ and return a suitable effect structure." name)
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacspeak-preamble)
 
-(defadvice sox-open-file(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)))
 
-(defadvice sox-refresh (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+(defun ems--sox-open-file-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'select-object)))
 
-(defadvice sox-delete-effect-at-point (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)))
+
+(advice-add 'sox-open-file :after #'ems--sox-open-file-after)
+
+
+
+
+
+(defun ems--sox-refresh-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'sox-refresh :after #'ems--sox-refresh-after)
+
+
+
+
+
+(defun ems--sox-delete-effect-at-point-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
+
+
+(advice-add 'sox-delete-effect-at-point :after
+	    #'ems--sox-delete-effect-at-point-after)
+
+
+
 (provide 'emacspeak-sox)
 
 ;;;  end of file

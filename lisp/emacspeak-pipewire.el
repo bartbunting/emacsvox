@@ -61,12 +61,18 @@
 
 ;;; Interactive Commands:
 
-(defadvice pipewire (after emacspeak pre act comp)
+
+(defun ems--pipewire-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-toggle-audio-indentation)
-    (emacspeak-icon 'open-object)
+    (emacspeak-toggle-audio-indentation) (emacspeak-icon 'open-object)
     (emacspeak-speak-mode-line)))
+
+
+(advice-add 'pipewire :after #'ems--pipewire-after)
+
+
+
 
 (cl-loop
  for f in 

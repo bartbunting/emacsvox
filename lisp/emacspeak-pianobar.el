@@ -93,9 +93,17 @@
    (substring pianobar-current-song
               (+ 2 (string-match "|>" pianobar-current-song)))))
 
-(defadvice pianobar-currently-playing (around emacspeak pre act comp)
+
+(defun ems--pianobar-currently-playing-around (orig-fun &rest args)
   "Override with our own notifier."
-  (message  (emacspeak-pianobar-current-song)))
+  (message (emacspeak-pianobar-current-song)))
+
+
+(advice-add 'pianobar-currently-playing :around
+	    #'ems--pianobar-currently-playing-around)
+
+
+
 
 ;;;  Advice Interactive Commands:
 
@@ -110,37 +118,45 @@
   "Increase volume"
   (interactive)
   (pianobar-send-string ")\n"))
-(defadvice pianobar (after emacspeak pre act comp)
+
+(defun ems--pianobar-after (&rest _)
   "speak."
   (with-current-buffer pianobar-buffer
-    (define-key pianobar-key-map "l"
-                'pianobar-love-current-song)
+    (define-key pianobar-key-map "l" 'pianobar-love-current-song)
     (define-key pianobar-key-map "t"
-                'emacspeak-pianobar-electric-mode-toggle)
-    (define-key pianobar-key-map (kbd "RET") 'emacspeak-pianobar-send-raw)
+		'emacspeak-pianobar-electric-mode-toggle)
+    (define-key pianobar-key-map (kbd "RET")
+		'emacspeak-pianobar-send-raw)
     (define-key pianobar-key-map [right] 'pianobar-next-song)
     (dotimes (i 10)
-      (define-key pianobar-key-map
-                  (format "%s" i)   'emacspeak-pianobar-switch-to-preset))
+      (define-key pianobar-key-map (format "%s" i)
+		  'emacspeak-pianobar-switch-to-preset))
     (dotimes (i 25)
-      (define-key pianobar-key-map
-                  (format "%c" (+ i 65))
-                  'emacspeak-pianobar-switch-to-preset))
-    (define-key  pianobar-key-map [up] 'emacspeak-pianobar-previous-preset)
-    (define-key  pianobar-key-map [down] 'emacspeak-pianobar-next-preset)
-    (define-key  pianobar-key-map "," 'emacspeak-pianobar-previous-preset)
-    (define-key  pianobar-key-map "." 'emacspeak-pianobar-next-preset)
-    (define-key  pianobar-key-map "<" 'emacspeak-pianobar-previous-preset)
-    (define-key  pianobar-key-map">" 'emacspeak-pianobar-next-preset)
-    (define-key pianobar-key-map "("
-                'emacspeak-pianobar-volume-down)
-    (define-key pianobar-key-map [prior] 'emacspeak-pianobar-volume-down)
+      (define-key pianobar-key-map (format "%c" (+ i 65))
+		  'emacspeak-pianobar-switch-to-preset))
+    (define-key pianobar-key-map [up]
+		'emacspeak-pianobar-previous-preset)
+    (define-key pianobar-key-map [down]
+		'emacspeak-pianobar-next-preset)
+    (define-key pianobar-key-map ","
+		'emacspeak-pianobar-previous-preset)
+    (define-key pianobar-key-map "." 'emacspeak-pianobar-next-preset)
+    (define-key pianobar-key-map "<"
+		'emacspeak-pianobar-previous-preset)
+    (define-key pianobar-key-map ">" 'emacspeak-pianobar-next-preset)
+    (define-key pianobar-key-map "(" 'emacspeak-pianobar-volume-down)
+    (define-key pianobar-key-map [prior]
+		'emacspeak-pianobar-volume-down)
     (define-key pianobar-key-map ")" 'emacspeak-pianobar-volume-up)
     (define-key pianobar-key-map [next] 'emacspeak-pianobar-volume-up)
-    (use-local-map pianobar-key-map)
-    (emacspeak-speak-mode-line)
-    (bury-buffer)
-    (emacspeak-icon 'open-object)))
+    (use-local-map pianobar-key-map) (emacspeak-speak-mode-line)
+    (bury-buffer) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'pianobar :after #'ems--pianobar-after)
+
+
+
 
 ;; Advice all actions to play a pre-auditory icon
 
@@ -165,22 +181,32 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'item)))))
 
-(defadvice pianobar-window-toggle (after emacspeak pre act comp)
+
+(defun ems--pianobar-window-toggle-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (let ((state (get-buffer-window pianobar-buffer)))
       (cond
-       (state
-        (emacspeak-icon'open-object)
-        (dtk-speak "Displayed pianobar"))
-       (t
-        (emacspeak-icon'close-object)
-        (dtk-speak "Hid Pianobar "))))))
+       (state (emacspeak-icon 'open-object)
+	      (dtk-speak "Displayed pianobar"))
+       (t (emacspeak-icon 'close-object) (dtk-speak "Hid Pianobar "))))))
 
-(defadvice pianobar-quit (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
+
+(advice-add 'pianobar-window-toggle :after
+	    #'ems--pianobar-window-toggle-after)
+
+
+
+
+
+(defun ems--pianobar-quit-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'pianobar-quit :after #'ems--pianobar-quit-after)
+
+
+
 
 ;;;  emacspeak-pianobar
 

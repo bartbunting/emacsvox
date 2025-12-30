@@ -53,39 +53,72 @@
 
 ;;;  Advice commands
 
-(defadvice winring-jump-to-configuration(after emacspeak pre
-                                               act comp)
+
+(defun ems--winring-jump-to-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-describe-tapestry winring-name)))
 
-(defadvice winring-next-configuration(after emacspeak pre
-                                            act comp)
+
+(advice-add 'winring-jump-to-configuration :after
+	    #'ems--winring-jump-to-configuration-after)
+
+
+
+
+
+(defun ems--winring-next-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-describe-tapestry winring-name)))
 
-(defadvice winring-prev-configuration(after emacspeak pre
-                                            act comp)
+
+(advice-add 'winring-next-configuration :after
+	    #'ems--winring-next-configuration-after)
+
+
+
+
+
+(defun ems--winring-prev-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-describe-tapestry winring-name)))
 
-(defadvice winring-new-configuration(after emacspeak pre
-                                           act comp)
+
+(advice-add 'winring-prev-configuration :after
+	    #'ems--winring-prev-configuration-after)
+
+
+
+
+
+(defun ems--winring-new-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
-(defadvice winring-delete-configuration(after emacspeak pre
-                                              act comp)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'winring-new-configuration :after
+	    #'ems--winring-new-configuration-after)
+
+
+
+
+(defun ems--winring-delete-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'winring-delete-configuration :after
+	    #'ems--winring-delete-configuration-after)
+
+
+
 
 (provide 'emacspeak-winring)
 ;;;  end of file 

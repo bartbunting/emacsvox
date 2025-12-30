@@ -50,90 +50,154 @@
 
 ;;;  advice
 
-(defadvice makefile-next-dependency (after emacspeak pre act
-                                           comp)
+
+(defun ems--makefile-next-dependency-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'large-movement))))
+      (emacspeak-speak-line) (emacspeak-icon 'large-movement))))
 
-(defadvice makefile-browser-next-line (after emacspeak pre act
-                                             comp)
+
+(advice-add 'makefile-next-dependency :after
+	    #'ems--makefile-next-dependency-after)
+
+
+
+
+
+(defun ems--makefile-browser-next-line-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
 
-(defadvice makefile-browser-previous-line (after emacspeak pre act
-                                                 comp)
+
+(advice-add 'makefile-browser-next-line :after
+	    #'ems--makefile-browser-next-line-after)
+
+
+
+
+
+(defun ems--makefile-browser-previous-line-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
 
-(defadvice makefile-previous-dependency (after emacspeak pre act comp)
+
+(advice-add 'makefile-browser-previous-line :after
+	    #'ems--makefile-browser-previous-line-after)
+
+
+
+
+
+(defun ems--makefile-previous-dependency-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'large-movement))))
+      (emacspeak-speak-line) (emacspeak-icon 'large-movement))))
 
-(defadvice makefile-complete (around emacspeak pre act comp)
+
+(advice-add 'makefile-previous-dependency :after
+	    #'ems--makefile-previous-dependency-after)
+
+
+
+
+
+(defun ems--makefile-complete-around (orig-fun &rest args)
   "Speak what we completed"
-  (cond
-   ((ems-interactive-p)
-    (let ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
-      ad-do-it
-      (emacspeak-speak-region orig (point))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let
+	  ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
+	(apply orig-fun args) (emacspeak-speak-region orig (point))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice makefile-backslash-region (after emacspeak pre
-                                            act comp)
+
+(advice-add 'makefile-complete :around #'ems--makefile-complete-around)
+
+
+
+
+
+(defun ems--makefile-backslash-region-after (&rest _)
   "Speak how many lines we backslashed"
   (when (ems-interactive-p)
     (message "Backslashed region containing %s lines"
-             (count-lines (region-beginning)
-                          (region-end)))
+	     (count-lines (region-beginning) (region-end)))
     (emacspeak-icon 'select-object)))
 
-(defadvice makefile-browser-quit (after emacspeak pre act
-                                        comp)
+
+(advice-add 'makefile-backslash-region :after
+	    #'ems--makefile-backslash-region-after)
+
+
+
+
+
+(defun ems--makefile-browser-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'close-object)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'close-object)))
 
-(defadvice makefile-switch-to-browser (after emacspeak pre
-                                             act comp)
+
+(advice-add 'makefile-browser-quit :after
+	    #'ems--makefile-browser-quit-after)
+
+
+
+
+
+(defun ems--makefile-switch-to-browser-after (&rest _)
   "Provide status information"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice makefile-browser-toggle (around emacspeak pre act comp)
+
+(advice-add 'makefile-switch-to-browser :after
+	    #'ems--makefile-switch-to-browser-after)
+
+
+
+
+
+(defun ems--makefile-browser-toggle-around (orig-fun &rest args)
   "Speak what happened"
-  (cond
-   ((ems-interactive-p)
-    (let  ((this-line (max
-                       (count-lines (point-min) (point))
-                       1))
-           (state nil))
-      ad-do-it
-      (setq state
-            (makefile-browser-get-state-for-line this-line))
-      (emacspeak-icon (if state 'on 'off))
-      (emacspeak-speak-line)))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let
+	  ((this-line (max (count-lines (point-min) (point)) 1))
+	   (state nil))
+	(apply orig-fun args)
+	(setq state (makefile-browser-get-state-for-line this-line))
+	(emacspeak-icon (if state 'on 'off)) (emacspeak-speak-line)))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice makefile-browser-insert-selection (after emacspeak pre act comp)
+
+(advice-add 'makefile-browser-toggle :around
+	    #'ems--makefile-browser-toggle-around)
+
+
+
+
+
+(defun ems--makefile-browser-insert-selection-after (&rest _)
   "Provide status message"
   (when (ems-interactive-p)
-    (message
-     "Inserted selections into client  %s"
-     (buffer-name makefile-browser-client))))
+    (message "Inserted selections into client  %s"
+	     (buffer-name makefile-browser-client))))
+
+
+(advice-add 'makefile-browser-insert-selection :after
+	    #'ems--makefile-browser-insert-selection-after)
+
+
+
 
 ;;;  personalities 
 

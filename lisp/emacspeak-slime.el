@@ -103,23 +103,41 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
-(defadvice slime-info (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (emacspeak-speak-buffer)))
 
-(defadvice slime-selector (after emacspeak pre act comp)
+(defun ems--slime-info-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'help) (emacspeak-speak-buffer)))
 
-(defadvice slime-scratch (after emacspeak pre act comp)
+
+(advice-add 'slime-info :after #'ems--slime-info-after)
+
+
+
+
+
+(defun ems--slime-selector-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'slime-selector :after #'ems--slime-selector-after)
+
+
+
+
+
+(defun ems--slime-scratch-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'slime-scratch :after #'ems--slime-scratch-after)
+
+
+
 (add-hook
  'slime-repl-mode-hook
  'emacspeak-pronounce-refresh-pronunciations)
@@ -232,10 +250,15 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'task-done)))))
 
-(defadvice slime-repl-inspect (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)))
+
+(defun ems--slime-repl-inspect-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'slime-repl-inspect :after #'ems--slime-repl-inspect-after)
+
+
+
 (cl-loop
  for f in
  '(slime-list-repl-short-cuts slime-repl-shortcut-help
@@ -294,28 +317,57 @@
 
 ;;;  Inspector:
 
-(defadvice slime-inspector-pop (after emacspeak pre act comp)
+
+(defun ems--slime-inspector-pop-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
 
-(defadvice slime-inspector-pprint (after emacspeak pre act comp)
+
+(advice-add 'slime-inspector-pop :after
+	    #'ems--slime-inspector-pop-after)
+
+
+
+
+
+(defun ems--slime-inspector-pprint-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak "Pretty printed description in other window.")
     (emacspeak-icon 'open-object)))
 
-(defadvice slime-inspector-quit (after emacspeak pre act comp)
+
+(advice-add 'slime-inspector-pprint :after
+	    #'ems--slime-inspector-pprint-after)
+
+
+
+
+
+(defun ems--slime-inspector-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
-(defadvice slime-inspector-toggle-verbose (after emacspeak pre act comp)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'slime-inspector-quit :after
+	    #'ems--slime-inspector-quit-after)
+
+
+
+
+(defun ems--slime-inspector-toggle-verbose-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'button) (emacspeak-speak-line)))
+
+
+(advice-add 'slime-inspector-toggle-verbose :after
+	    #'ems--slime-inspector-toggle-verbose-after)
+
+
+
 (cl-loop
  for f in
  '(slime-inspector-next-inspectable-object

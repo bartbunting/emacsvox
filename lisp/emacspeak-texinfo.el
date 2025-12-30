@@ -63,33 +63,57 @@
 
 ;;;  advice
 
-(defadvice texinfo-insert-@end (after emacspeak pre act
-                                      comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
 
-(defadvice TeXinfo-insert-environment (after emacspeak pre act
-                                             comp)
+(defun ems--texinfo-insert-@end-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
 
-(defadvice texinfo-insert-@item (after emacspeak pre act
-                                       comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (emacspeak-speak-line)))
 
-(defadvice texinfo-insert-@node (after emacspeak pre act
-                                       comp)
+(advice-add 'texinfo-insert-@end :after
+	    #'ems--texinfo-insert-@end-after)
+
+
+
+
+
+(defun ems--TeXinfo-insert-environment-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'TeXinfo-insert-environment :after
+	    #'ems--TeXinfo-insert-environment-after)
+
+
+
+
+
+(defun ems--texinfo-insert-@item-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'item) (emacspeak-speak-line)))
+
+
+(advice-add 'texinfo-insert-@item :after
+	    #'ems--texinfo-insert-@item-after)
+
+
+
+
+
+(defun ems--texinfo-insert-@node-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'texinfo-insert-@node :after
+	    #'ems--texinfo-insert-@node-after)
+
+
+
 
 (provide 'emacspeak-texinfo)
 ;;;  end of file 

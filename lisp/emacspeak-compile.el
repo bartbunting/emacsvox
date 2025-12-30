@@ -100,18 +100,30 @@
 
 ;;;  advise process filter and sentinels
 
-(defadvice compile (after emacspeak pre act comp)
+
+(defun ems--compile-after (&rest _)
   "provide auditory confirmation"
   (when (ems-interactive-p)
-    (message "Launched compilation")
-    (emacspeak-icon 'task-done)))
+    (message "Launched compilation") (emacspeak-icon 'task-done)))
 
-(defadvice  compilation-sentinel (after emacspeak pre act comp)
-  "speak"
-  (emacspeak-icon 'task-done)
-  (message "process %s %s"
-           (process-name  (ad-get-arg 0))
-           (ad-get-arg 1)))
+
+(advice-add 'compile :after #'ems--compile-after)
+
+
+
+
+
+(defun ems--compilation-sentinel-after (&rest _)
+  "speak" (emacspeak-icon 'task-done)
+  (message "process %s %s" (process-name (ad-get-arg 0))
+	   (ad-get-arg 1)))
+
+
+(advice-add 'compilation-sentinel :after
+	    #'ems--compilation-sentinel-after)
+
+
+
 
 (provide 'emacspeak-compile)
 

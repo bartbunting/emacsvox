@@ -108,35 +108,68 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'task-done)
        (emacspeak-speak-line)))))
-(defadvice rst-toc (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice rst-toc-mode-goto-section (after emacspeak pre act comp)
+(defun ems--rst-toc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice rst-toc-quit-window (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice rst-force-fill-paragraph (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (emacspeak-speak-mode-line)))
+(advice-add 'rst-toc :after #'ems--rst-toc-after)
 
-(defadvice rst-mark-section   (after emacspeak pre act comp)
+
+
+
+
+(defun ems--rst-toc-mode-goto-section-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'rst-toc-mode-goto-section :after
+	    #'ems--rst-toc-mode-goto-section-after)
+
+
+
+
+
+(defun ems--rst-toc-quit-window-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'rst-toc-quit-window :after
+	    #'ems--rst-toc-quit-window-after)
+
+
+
+
+
+(defun ems--rst-force-fill-paragraph-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'fill-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'rst-force-fill-paragraph :after
+	    #'ems--rst-force-fill-paragraph-after)
+
+
+
+
+
+(defun ems--rst-mark-section-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'mark-object) (emacspeak-speak-line)))
+
+
+(advice-add 'rst-mark-section :after #'ems--rst-mark-section-after)
+
+
+
 (cl-loop
  for f in
  '(

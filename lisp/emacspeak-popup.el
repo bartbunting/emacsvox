@@ -69,18 +69,30 @@
   (let ((msg (elt (popup-list popup) (popup-cursor popup))))
     (message msg)))
 
-(defadvice popup-menu-event-loop (around emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'open-object)
-  (emacspeak-popup-speak-item (ad-get-arg 0))
-  ad-do-it
+
+(defun ems--popup-menu-event-loop-around (orig-fun &rest args)
+  "speak." (emacspeak-icon 'open-object)
+  (emacspeak-popup-speak-item (ad-get-arg 0)) (apply orig-fun args)
   (emacspeak-icon 'close-object))
 
-(defadvice popup-menu-read-key-sequence (before emacspeak pre act comp)
+
+(advice-add 'popup-menu-event-loop :around
+	    #'ems--popup-menu-event-loop-around)
+
+
+
+
+
+(defun ems--popup-menu-read-key-sequence-before (&rest _)
   "Speak our prompt."
-  (when (sit-for 2)
-    (dtk-speak (or (ad-get-arg 1)
-                   "Menu:"))))
+  (when (sit-for 2) (dtk-speak (or (ad-get-arg 1) "Menu:"))))
+
+
+(advice-add 'popup-menu-read-key-sequence :before
+	    #'ems--popup-menu-read-key-sequence-before)
+
+
+
 
 (cl-loop
  for f in
@@ -99,13 +111,19 @@
   `(defadvice ,f (after emacspeak pre act comp)
      (emacspeak-icon 'scroll)
      (emacspeak-popup-speak-item (ad-get-arg 0)))))
-(defadvice popup-menu-show-help (after emacspeak pre act comp)
+
+(defun ems--popup-menu-show-help-after (&rest _)
   "Speak help if available."
   (let ((doc (popup-item-documentation item)))
     (emacspeak-icon 'help)
-    (if doc
-        (dtk-speak doc)
-      (dtk-speak "helpless"))))
+    (if doc (dtk-speak doc) (dtk-speak "helpless"))))
+
+
+(advice-add 'popup-menu-show-help :after
+	    #'ems--popup-menu-show-help-after)
+
+
+
 
 ;;;  Augment popup keymap:
 

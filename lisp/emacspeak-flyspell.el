@@ -79,37 +79,71 @@ fly spell checking."
 
 ;;;  advice
 
-(defadvice flyspell-buffer (around emacspeak pre act comp)
-  "Silence icon."
-  (let ((emacspeak-use-icons nil)) ad-do-it))
 
-(defadvice flyspell-region (around emacspeak pre act comp)
+(defun ems--flyspell-buffer-around (orig-fun &rest args)
   "Silence icon."
-  (let ((emacspeak-use-icons nil)) ad-do-it))
+  (let ((emacspeak-use-icons nil)) (apply orig-fun args)))
 
-(defadvice flyspell-auto-correct-word (around emacspeak pre act comp)
+
+(advice-add 'flyspell-buffer :around #'ems--flyspell-buffer-around)
+
+
+
+
+
+(defun ems--flyspell-region-around (orig-fun &rest args)
+  "Silence icon."
+  (let ((emacspeak-use-icons nil)) (apply orig-fun args)))
+
+
+(advice-add 'flyspell-region :around #'ems--flyspell-region-around)
+
+
+
+
+
+(defun ems--flyspell-auto-correct-word-around (orig-fun &rest args)
   "Speak the correction we inserted."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced
-      ad-do-it
-      (dtk-speak (car (flyspell-get-word nil)))
-      (when (sit-for 1)
-        (dtk-notify (cl-second flyspell-auto-correct-ring)))
-      (when (sit-for 1) (emacspeak-speak-message-again))
-      (emacspeak-icon 'select-object)))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args)
+				  (dtk-speak
+				   (car (flyspell-get-word nil)))
+				  (when (sit-for 1)
+				    (dtk-notify
+				     (cl-second
+				      flyspell-auto-correct-ring)))
+				  (when (sit-for 1)
+				    (emacspeak-speak-message-again))
+				  (emacspeak-icon 'select-object)))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice flyspell-unhighlight-at (before emacspeak pre act comp)
+
+(advice-add 'flyspell-auto-correct-word :around
+	    #'ems--flyspell-auto-correct-word-around)
+
+
+
+
+
+(defun ems--flyspell-unhighlight-at-before (&rest _)
   "handle highlight/unhighlight."
-  (let ((overlay-list (overlays-at (ad-get-arg 0)))
-        (o nil))
+  (let ((overlay-list (overlays-at (ad-get-arg 0))) (o nil))
     (while overlay-list
       (setq o (car overlay-list))
       (when (flyspell-overlay-p o)
-        (put-text-property (overlay-start o) (overlay-end o) 'personality nil))
+	(put-text-property (overlay-start o) (overlay-end o)
+			   'personality nil))
       (setq overlay-list (cdr overlay-list)))))
+
+
+(advice-add 'flyspell-unhighlight-at :before
+	    #'ems--flyspell-unhighlight-at-before)
+
+
+
 
 (add-hook
  'flyspell-incorrect-hook
@@ -149,9 +183,16 @@ fly spell checking."
      (when (ems-interactive-p)
        (dtk-speak (car (flyspell-get-word nil)))))))
 
-(defadvice flyspell-goto-next-error (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p) (emacspeak-speak-line)))
+
+(defun ems--flyspell-goto-next-error-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'flyspell-goto-next-error :after
+	    #'ems--flyspell-goto-next-error-after)
+
+
+
 
 (provide 'emacspeak-flyspell)
 ;;;  emacs local variables

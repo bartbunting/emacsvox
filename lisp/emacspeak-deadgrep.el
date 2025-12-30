@@ -60,17 +60,31 @@
 
 ;;;  Interactive Commands:
 
-(defadvice deadgrep-toggle-file-results (after emacspeak pre act comp)
+
+(defun ems--deadgrep-toggle-file-results-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-speak-line)
     (emacspeak-icon
-     (if (get-text-property (1+ (line-end-position)) 'invisible) 'off 'on))))
+     (if (get-text-property (1+ (line-end-position)) 'invisible) 'off
+       'on))))
 
-(defadvice deadgrep (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)))
+
+(advice-add 'deadgrep-toggle-file-results :after
+	    #'ems--deadgrep-toggle-file-results-after)
+
+
+
+
+
+(defun ems--deadgrep-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'deadgrep :after #'ems--deadgrep-after)
+
+
+
 
 (cl-loop
  for f in 

@@ -56,18 +56,31 @@
 
 ;;;  speech enable interactive commands 
 
-(defadvice eudc-move-to-next-record (after emacspeak pre act comp)
-  "speak. "
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
 
-(defadvice eudc-move-to-previous-record (after emacspeak pre act
-                                               comp)
+(defun ems--eudc-move-to-next-record-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'eudc-move-to-next-record :after
+	    #'ems--eudc-move-to-next-record-after)
+
+
+
+
+
+(defun ems--eudc-move-to-previous-record-after (&rest _)
+  "speak. "
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'eudc-move-to-previous-record :after
+	    #'ems--eudc-move-to-previous-record-after)
+
+
+
 
 ;;;  speech enable  eudc widgets 
 
@@ -93,21 +106,25 @@
                     'emacspeak-eudc-widget-help)
         (forward-line 1)))))
 
-(defadvice eudc-query-form (after emacspeak pre act comp)
-  "Attach emacspeak help to all EUDC widgets.
-Summarize the form to welcome the user. "
+
+(defun ems--eudc-query-form-after (&rest _)
+  "Attach emacspeak help to all EUDC widgets.\nSummarize the form to welcome the user. "
   (cl-declare (special eudc-server))
   (emacspeak-eudc-widgets-add-emacspeak-help)
   (emacspeak-icon 'open-object)
-  (let((server (propertize "Server " 'personality voice-smoothen))
+  (let
+      ((server (propertize "Server " 'personality voice-smoothen))
        (host eudc-server))
-    (dtk-speak 
-     (concat server 
-             " " 
-             host 
-             " " 
-             (when (widget-at (point))
-               (emacspeak-eudc-widget-help (widget-at (point))))))))
+    (dtk-speak
+     (concat server " " host " "
+	     (when (widget-at (point))
+	       (emacspeak-eudc-widget-help (widget-at (point))))))))
+
+
+(advice-add 'eudc-query-form :after #'ems--eudc-query-form-after)
+
+
+
 
 ;;;  additional interactive commands 
 
@@ -140,19 +157,27 @@ Summarize the form to welcome the user. "
   voice-animate
   "Personality t use for voiceifying attribute values. ")
 
-(defadvice eudc-print-attribute-value (around emacspeak pre
-                                              act comp)
+
+(defun ems--eudc-print-attribute-value-around (orig-fun &rest args)
   "voiceify attribute values"
-  (cond
-   ((not emacspeak-eudc-attribute-value-personality)
-    ad-do-it)
-   (t (let ((start (point)))
-        ad-do-it
-        (with-silent-modifications
-          (put-text-property start (point)
-                             'personality
-                             emacspeak-eudc-attribute-value-personality)))))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((not emacspeak-eudc-attribute-value-personality)
+      (apply orig-fun args))
+     (t
+      (let ((start (point)))
+	(apply orig-fun args)
+	(with-silent-modifications
+	  (put-text-property start (point) 'personality
+			     emacspeak-eudc-attribute-value-personality)))))
+    result))
+
+
+(advice-add 'eudc-print-attribute-value :around
+	    #'ems--eudc-print-attribute-value-around)
+
+
+
 
 (provide 'emacspeak-eudc)
 ;;;  end of file

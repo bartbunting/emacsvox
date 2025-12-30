@@ -99,18 +99,28 @@
 
 (voice-setup-set-voice-for-face 'lv-separator  'inaudible)
 
-(defadvice lv-message (after emacspeak pre act comp)
-  "speak."
-  (cl-declare (special ems--lv-cache))
-  (emacspeak-icon 'help)
+
+(defun ems--lv-message-after (&rest _)
+  "speak." (cl-declare (special ems--lv-cache)) (emacspeak-icon 'help)
   (with-current-buffer (window-buffer (lv-window))
     (setq ems--lv-cache (buffer-substring (point-min) (point-max)))
     (emacspeak-speak-buffer)))
 
-(defadvice lv-delete-window (after emacspeak pre act comp)
-  "speak."
-  (dtk-stop 'all)
-  (emacspeak-icon 'delete-object))
+
+(advice-add 'lv-message :after #'ems--lv-message-after)
+
+
+
+
+
+(defun ems--lv-delete-window-after (&rest _)
+  "speak." (dtk-stop 'all) (emacspeak-icon 'delete-object))
+
+
+(advice-add 'lv-delete-window :after #'ems--lv-delete-window-after)
+
+
+
 
 (provide 'emacspeak-hydra)
 ;;;  end of file

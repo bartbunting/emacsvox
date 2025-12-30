@@ -77,79 +77,155 @@ Default list includes some TclX keywords. ")
 
 ;;;   Advice electric insertion to talk:
 
-(defadvice tcl-electric-hash (after emacspeak pre act comp)
+
+(defun ems--tcl-electric-hash-after (&rest _)
   "Speak what you inserted."
   (when (ems-interactive-p)
     (emacspeak-speak-this-char last-input-event)))
 
-(defadvice tcl-electric-char (after emacspeak pre act comp)
+
+(advice-add 'tcl-electric-hash :after #'ems--tcl-electric-hash-after)
+
+
+
+
+
+(defun ems--tcl-electric-char-after (&rest _)
   "Speak what you inserted."
   (when (ems-interactive-p)
     (emacspeak-speak-this-char last-input-event)))
 
-(defadvice tcl-electric-brace (after emacspeak pre act comp)
+
+(advice-add 'tcl-electric-char :after #'ems--tcl-electric-char-after)
+
+
+
+
+
+(defun ems--tcl-electric-brace-after (&rest _)
   "Speak what you inserted."
   (when (ems-interactive-p)
     (emacspeak-speak-this-char last-input-event)))
+
+
+(advice-add 'tcl-electric-brace :after #'ems--tcl-electric-brace-after)
+
+
+
 
 ;;;   Actions in the tcl mode buffer:
 
-(defadvice switch-to-tcl (before emacspeak pre act comp)
+
+(defun ems--switch-to-tcl-before (&rest _)
   "Announce yourself."
   (when (ems-interactive-p)
     (message "Switching to the Inferior TCL buffer")))
 
-(defadvice tcl-eval-region (after emacspeak  pre act comp)
-  "Announce what you did."
-  (when (ems-interactive-p)
-    (message "Evaluating contents of region")))
 
-(defadvice tcl-eval-defun (after emacspeak pre act comp)
+(advice-add 'switch-to-tcl :before #'ems--switch-to-tcl-before)
+
+
+
+
+
+(defun ems--tcl-eval-region-after (&rest _)
+  "Announce what you did."
+  (when (ems-interactive-p) (message "Evaluating contents of region")))
+
+
+(advice-add 'tcl-eval-region :after #'ems--tcl-eval-region-after)
+
+
+
+
+
+(defun ems--tcl-eval-defun-after (&rest _)
   "Announce what you did"
   (when (ems-interactive-p)
-    (let* ((start nil)
-           (proc-line
-            (save-excursion
-              (tcl-beginning-of-defun)
-              (setq start (point))
-              (end-of-line)
-              (buffer-substring start (point)))))
+    (let*
+	((start nil)
+	 (proc-line
+	  (save-excursion
+	    (tcl-beginning-of-defun) (setq start (point))
+	    (end-of-line) (buffer-substring start (point)))))
       (message "Evaluated  %s" proc-line))))
 
-(defadvice tcl-help-on-word (after emacspeak pre act comp)
+
+(advice-add 'tcl-eval-defun :after #'ems--tcl-eval-defun-after)
+
+
+
+
+
+(defun ems--tcl-help-on-word-after (&rest _)
   "Speak  the help."
   (when (ems-interactive-p)
     (emacspeak-icon 'help)
-    (with-current-buffer "*Tcl help*"      (emacspeak-speak-buffer))))
+    (with-current-buffer "*Tcl help*" (emacspeak-speak-buffer))))
+
+
+(advice-add 'tcl-help-on-word :after #'ems--tcl-help-on-word-after)
+
+
+
 
 ;;;   Program structure:
 
-(defadvice tcl-mark-defun (after emacspeak pre act comp)
+
+(defun ems--tcl-mark-defun-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (message "Marked procedure")))
+    (emacspeak-icon 'mark-object) (message "Marked procedure")))
 
-(defadvice tcl-beginning-of-defun (after emacspeak pre act comp)
+
+(advice-add 'tcl-mark-defun :after #'ems--tcl-mark-defun-after)
+
+
+
+
+
+(defun ems--tcl-beginning-of-defun-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'paragraph)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'paragraph) (emacspeak-speak-line)))
 
-(defadvice tcl-end-of-defun (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'paragraph)))
 
-(defadvice indent-tcl-exp (after emacspeak pre act comp)
+(advice-add 'tcl-beginning-of-defun :after
+	    #'ems--tcl-beginning-of-defun-after)
+
+
+
+
+
+(defun ems--tcl-end-of-defun-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'paragraph)))
+
+
+(advice-add 'tcl-end-of-defun :after #'ems--tcl-end-of-defun-after)
+
+
+
+
+
+(defun ems--indent-tcl-exp-after (&rest _)
   "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)))
+  (when (ems-interactive-p) (emacspeak-icon 'fill-object)))
 
-(defadvice tcl-indent-line (after emacspeak pre act comp)
-  "Speak the line"
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+
+(advice-add 'indent-tcl-exp :after #'ems--indent-tcl-exp-after)
+
+
+
+
+
+(defun ems--tcl-indent-line-after (&rest _)
+  "Speak the line" (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'tcl-indent-line :after #'ems--tcl-indent-line-after)
+
+
+
 
 (provide  'emacspeak-tcl)
 

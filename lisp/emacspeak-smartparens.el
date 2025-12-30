@@ -68,46 +68,81 @@
 
 ;;;  Advice low-level helpers:
 
-(defadvice sp--pair-overlay-create (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'item))
 
-(defadvice sp-wrap--initialize (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'select-object))
+(defun ems--sp--pair-overlay-create-after (&rest _)
+  "speak." (emacspeak-icon 'item))
+
+
+(advice-add 'sp--pair-overlay-create :after
+	    #'ems--sp--pair-overlay-create-after)
+
+
+
+
+
+(defun ems--sp-wrap--initialize-after (&rest _)
+  "speak." (emacspeak-icon 'select-object))
+
+
+(advice-add 'sp-wrap--initialize :after
+	    #'ems--sp-wrap--initialize-after)
+
+
+
 
 ;;;  Navigators And Modifiers:
 
-(defadvice sp-backward-delete-char (around emacspeak pre act comp)
-  "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-this-char (preceding-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice sp-forward-delete-char (around emacspeak pre act comp)
+(defun ems--sp-backward-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-char t)
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (emacspeak-icon 'delete-object)
+      (emacspeak-speak-this-char (preceding-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice sp-backward-kill-word (before emacspeak pre act comp)
+
+(advice-add 'sp-backward-delete-char :around
+	    #'ems--sp-backward-delete-char-around)
+
+
+
+
+
+(defun ems--sp-forward-delete-char-around (orig-fun &rest args)
+  "Speak character you're deleting."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (emacspeak-icon 'delete-object)
+      (emacspeak-speak-char t) (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'sp-forward-delete-char :around
+	    #'ems--sp-forward-delete-char-around)
+
+
+
+
+
+(defun ems--sp-backward-kill-word-before (&rest _)
   "Speak word before killing it."
   (when (ems-interactive-p)
     (when dtk-stop-immediately (dtk-stop 'all))
-    (let ((start (point))
-          (dtk-stop-immediately nil))
+    (let ((start (point)) (dtk-stop-immediately nil))
       (save-excursion
-        (forward-word -1)
-        (emacspeak-icon 'delete-object)
-        (emacspeak-speak-region (point) start)))))
+	(forward-word -1) (emacspeak-icon 'delete-object)
+	(emacspeak-speak-region (point) start)))))
+
+
+(advice-add 'sp-backward-kill-word :before
+	    #'ems--sp-backward-kill-word-before)
+
+
+
 
 (cl-loop
  for f in

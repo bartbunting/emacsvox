@@ -145,23 +145,40 @@
 (defvar emacspeak-solitaire-autoshow nil
   "T means rows and columns are toned as we move")
 
-(defadvice solitaire-left (after emacspeak pre act comp)
+
+(defun ems--solitaire-left-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((dtk-stop-immediately nil))
       (emacspeak-icon 'select-object)
-      (and emacspeak-solitaire-autoshow (emacspeak-solitaire-show-column))
+      (and emacspeak-solitaire-autoshow
+	   (emacspeak-solitaire-show-column))
       (emacspeak-solitaire-speak-coordinates))))
 
-(defadvice solitaire-right (after emacspeak pre act comp)
+
+(advice-add 'solitaire-left :after #'ems--solitaire-left-after)
+
+
+
+
+
+(defun ems--solitaire-right-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((dtk-stop-immediately nil))
       (emacspeak-icon 'select-object)
-      (and emacspeak-solitaire-autoshow  (emacspeak-solitaire-show-column))
+      (and emacspeak-solitaire-autoshow
+	   (emacspeak-solitaire-show-column))
       (emacspeak-solitaire-speak-coordinates))))
 
-(defadvice solitaire-up (after emacspeak pre act comp)
+
+(advice-add 'solitaire-right :after #'ems--solitaire-right-after)
+
+
+
+
+
+(defun ems--solitaire-up-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((dtk-stop-immediately nil))
@@ -169,7 +186,14 @@
       (and emacspeak-solitaire-autoshow (emacspeak-solitaire-show-row))
       (emacspeak-solitaire-speak-coordinates))))
 
-(defadvice solitaire-down (after emacspeak pre act comp)
+
+(advice-add 'solitaire-up :after #'ems--solitaire-up-after)
+
+
+
+
+
+(defun ems--solitaire-down-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((dtk-stop-immediately nil))
@@ -177,16 +201,36 @@
       (and emacspeak-solitaire-autoshow (emacspeak-solitaire-show-row))
       (emacspeak-solitaire-speak-coordinates))))
 
-(defadvice solitaire-center-point (after emacspeak pre act comp)
+
+(advice-add 'solitaire-down :after #'ems--solitaire-down-after)
+
+
+
+
+
+(defun ems--solitaire-center-point-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-solitaire-speak-coordinates)))
 
-(defadvice solitaire-move (after emacspeak pre act comp)
-  "speak"
-  (emacspeak-icon 'item)
+
+(advice-add 'solitaire-center-point :after
+	    #'ems--solitaire-center-point-after)
+
+
+
+
+
+(defun ems--solitaire-move-after (&rest _)
+  "speak" (emacspeak-icon 'item)
   (emacspeak-solitaire-speak-coordinates))
+
+
+(advice-add 'solitaire-move :after #'ems--solitaire-move-after)
+
+
+
 
 (defun emacspeak-solitaire-setup()
   "Emacspeak provides an auditory interface to the solitaire game.
@@ -210,11 +254,17 @@ emacspeak-solitaire-speak-coordinates"
 (add-hook
  'solitaire-mode-hook
  #'emacspeak-solitaire-setup)
-(defadvice solitaire-quit (after emacspeak pre act comp)
+
+(defun ems--solitaire-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'task-done) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'solitaire-quit :after #'ems--solitaire-quit-after)
+
+
+
 
 ;;;   add keybindings
 

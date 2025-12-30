@@ -58,56 +58,110 @@
    (t (emacspeak-speak-line))))
 
 ;;;  Advice
-(defadvice tar-quit (after emacspeak pre act comp)
+
+(defun ems--tar-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice tar-next-line (after emacspeak pre act comp)
-  "Speak"
-  (when (ems-interactive-p)
-    (emacspeak-tar-speak-line)))
 
-(defadvice tar-previous-line (after emacspeak pre act comp)
-  "Speak"
-  (when (ems-interactive-p)
-    (emacspeak-tar-speak-line)))
+(advice-add 'tar-quit :after #'ems--tar-quit-after)
 
-(defadvice tar-flag-deleted (after emacspeak pre act comp)
+
+
+
+
+(defun ems--tar-next-line-after (&rest _)
+  "Speak" (when (ems-interactive-p) (emacspeak-tar-speak-line)))
+
+
+(advice-add 'tar-next-line :after #'ems--tar-next-line-after)
+
+
+
+
+
+(defun ems--tar-previous-line-after (&rest _)
+  "Speak" (when (ems-interactive-p) (emacspeak-tar-speak-line)))
+
+
+(advice-add 'tar-previous-line :after #'ems--tar-previous-line-after)
+
+
+
+
+
+(defun ems--tar-flag-deleted-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-tar-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-tar-speak-line)))
 
-(defadvice tar-unflag (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-tar-speak-line)))
-(defadvice tar-unflag-backwards (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-tar-speak-line)))
 
-(defadvice tar-extract (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+(advice-add 'tar-flag-deleted :after #'ems--tar-flag-deleted-after)
 
-(defadvice tar-extract-other-window (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice tar-view (after emacspeak pre act comp)
+
+
+
+(defun ems--tar-unflag-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-tar-speak-line)))
+
+
+(advice-add 'tar-unflag :after #'ems--tar-unflag-after)
+
+
+
+
+(defun ems--tar-unflag-backwards-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'yank-object) (emacspeak-tar-speak-line)))
+
+
+(advice-add 'tar-unflag-backwards :after
+	    #'ems--tar-unflag-backwards-after)
+
+
+
+
+
+(defun ems--tar-extract-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'tar-extract :after #'ems--tar-extract-after)
+
+
+
+
+
+(defun ems--tar-extract-other-window-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'tar-extract-other-window :after
+	    #'ems--tar-extract-other-window-after)
+
+
+
+
+
+(defun ems--tar-view-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'tar-view :after #'ems--tar-view-after)
+
+
+
 
 ;;;  additional interactive commands
 

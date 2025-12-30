@@ -69,12 +69,20 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice racer-describe (after emacspeak pre act comp)
+
+(defun ems--racer-describe-after (&rest _)
   "speak."
-  (when (and  (ems-interactive-p)
-              (buffer-live-p (get-buffer "*Racer Help*")))
+  (when
+      (and (ems-interactive-p)
+	   (buffer-live-p (get-buffer "*Racer Help*")))
     (emacspeak-icon 'help-object)
     (with-current-buffer "*Racer Help*" (emacspeak-speak-buffer))))
+
+
+(advice-add 'racer-describe :after #'ems--racer-describe-after)
+
+
+
 
 (provide 'emacspeak-racer)
 ;;;  end of file

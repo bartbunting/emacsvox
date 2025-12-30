@@ -121,16 +121,29 @@
        (emacspeak-icon 'task-done)
        (emacspeak-vdiff-speak-this-hunk)))))
 
-(defadvice vdiff-switch-buffer (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice vdiff-refine-all-hunks (after emacspeak pre act comp)
+(defun ems--vdiff-switch-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'vdiff-switch-buffer :after
+	    #'ems--vdiff-switch-buffer-after)
+
+
+
+
+
+(defun ems--vdiff-refine-all-hunks-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'vdiff-refine-all-hunks :after
+	    #'ems--vdiff-refine-all-hunks-after)
+
+
+
 (cl-loop
  for f in
  '(vdiff-buffers vdiff-buffers3 vdiff-magit-compare

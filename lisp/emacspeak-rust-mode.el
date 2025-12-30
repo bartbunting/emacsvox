@@ -70,38 +70,72 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'task-done))))) 
 
-(defadvice rust-dbg-wrap-or-unwrap (after emacspeak pre act comp)
+
+(defun ems--rust-dbg-wrap-or-unwrap-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'task-done) (emacspeak-speak-line)))
 
-(defadvice rust-format-buffer (after emacspeak pre act comp)
+
+(advice-add 'rust-dbg-wrap-or-unwrap :after
+	    #'ems--rust-dbg-wrap-or-unwrap-after)
+
+
+
+
+
+(defun ems--rust-format-buffer-after (&rest _)
   "speak."
   (cond
    ((buffer-live-p (get-buffer rust-rustfmt-buffername))
     (emacspeak-icon 'open-object))
-   
    (t (emacspeak-icon 'task-done))))
 
-(defadvice rust-goto-format-problem (after emacspeak pre act comp)
+
+(advice-add 'rust-format-buffer :after #'ems--rust-format-buffer-after)
+
+
+
+
+
+(defun ems--rust-goto-format-problem-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'large-movement))))
+      (emacspeak-speak-line) (emacspeak-icon 'large-movement))))
 
-(defadvice rust-enable-format-on-save (after emacspeak pre act comp)
+
+(advice-add 'rust-goto-format-problem :after
+	    #'ems--rust-goto-format-problem-after)
+
+
+
+
+
+(defun ems--rust-enable-format-on-save-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'on)
-    (message "Enabled format on save")))
+    (emacspeak-icon 'on) (message "Enabled format on save")))
 
-(defadvice rust-disable-format-on-save (after emacspeak pre act comp)
+
+(advice-add 'rust-enable-format-on-save :after
+	    #'ems--rust-enable-format-on-save-after)
+
+
+
+
+
+(defun ems--rust-disable-format-on-save-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'off)
-    (message "Disabled format on save")))
+    (emacspeak-icon 'off) (message "Disabled format on save")))
+
+
+(advice-add 'rust-disable-format-on-save :after
+	    #'ems--rust-disable-format-on-save-after)
+
+
+
 
 (cl-loop
  for f in

@@ -50,20 +50,35 @@
 
 ;;;  Interactive Commands:
 
-(defadvice vuiet-stop (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
 
-(defadvice vuiet-love-track (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-notify "loved track")))
+(defun ems--vuiet-stop-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'close-object)))
 
-(defadvice vuiet-unlove-track (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-notify "UnLoved track")))
+
+(advice-add 'vuiet-stop :after #'ems--vuiet-stop-after)
+
+
+
+
+
+(defun ems--vuiet-love-track-after (&rest _)
+  "speak." (when (ems-interactive-p) (dtk-notify "loved track")))
+
+
+(advice-add 'vuiet-love-track :after #'ems--vuiet-love-track-after)
+
+
+
+
+
+(defun ems--vuiet-unlove-track-after (&rest _)
+  "speak." (when (ems-interactive-p) (dtk-notify "UnLoved track")))
+
+
+(advice-add 'vuiet-unlove-track :after #'ems--vuiet-unlove-track-after)
+
+
+
 
 (cl-loop
  for f in 

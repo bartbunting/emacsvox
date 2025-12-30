@@ -61,16 +61,27 @@
      (when (ems-interactive-p)
        (emacspeak-speak-char t)))))
 
-(defadvice folding-goto-line (after emacspeak pre act comp)
-  "Speak the line. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice folding-mode (after emacspeak pre act comp)
+(defun ems--folding-goto-line-after (&rest _)
+  "Speak the line. " (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'folding-goto-line :after #'ems--folding-goto-line-after)
+
+
+
+
+
+(defun ems--folding-mode-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'button) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'folding-mode :after #'ems--folding-mode-after)
+
+
+
 
 (cl-loop
  for f in
@@ -113,11 +124,19 @@ Then speak the  line."
        (emacspeak-icon'open-object)
        (emacspeak-speak-line)))))
 
-(defadvice folding-fold-region (after emacspeak pre act comp)
+
+(defun ems--folding-fold-region-after (&rest _)
   "Produce an auditory icon. "
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Specify a meaningful name for the new fold ")))
+
+
+(advice-add 'folding-fold-region :after
+	    #'ems--folding-fold-region-after)
+
+
+
 
 (cl-loop
  for f in 

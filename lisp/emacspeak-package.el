@@ -121,16 +121,31 @@
 
 ;;;  Managing packages:
 
-(defadvice package-menu-describe-package (after emacspeak pre act comp)
-  "Speak displayed description."
-  (when  (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (emacspeak-speak-help)))
 
-(defadvice package-menu-execute(around emacspeak pre act comp)
+(defun ems--package-menu-describe-package-after (&rest _)
+  "Speak displayed description."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'help) (emacspeak-speak-help)))
+
+
+(advice-add 'package-menu-describe-package :after
+	    #'ems--package-menu-describe-package-after)
+
+
+
+
+
+(defun ems--package-menu-execute-around (orig-fun &rest args)
   "Silence messages while installing packages. "
-  (ems-with-messages-silenced ad-do-it)
+  (ems-with-messages-silenced (apply orig-fun args))
   (emacspeak-speak-message-again))
+
+
+(advice-add 'package-menu-execute :around
+	    #'ems--package-menu-execute-around)
+
+
+
 
 (cl-loop
  for f in
@@ -147,12 +162,20 @@
 
 ;;;  Advice Upgrade:
 
-(defadvice package-menu-mark-upgrades (after emacspeak pre act comp)
+
+(defun ems--package-menu-mark-upgrades-after (&rest _)
   "Speak list of packages we marked for upgrading."
   (when (ems-interactive-p)
     (let ((upgrades (package-menu--find-upgrades)))
       (when upgrades
-        (dtk-notify (format "%s" (mapcar #'car upgrades)))))))
+	(dtk-notify (format "%s" (mapcar #'car upgrades)))))))
+
+
+(advice-add 'package-menu-mark-upgrades :after
+	    #'ems--package-menu-mark-upgrades-after)
+
+
+
 
 (provide 'emacspeak-package)
 ;;;  end of file

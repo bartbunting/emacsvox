@@ -67,11 +67,17 @@
 
 ;;;  Advice indium-backend.el:
 
-(defadvice indium-quit (after emacspeak pre act comp)
+
+(defun ems--indium-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'indium-quit :after #'ems--indium-quit-after)
+
+
+
 
 (cl-loop
  for f in
@@ -85,10 +91,16 @@
 
 ;;;  Advice indium-chrome.el
 
-(defadvice indium-connect-to-chrome (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+
+(defun ems--indium-connect-to-chrome-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'indium-connect-to-chrome :after
+	    #'ems--indium-connect-to-chrome-after)
+
+
+
 
 ;;;  Advice indium-debugger.el
 
@@ -115,13 +127,19 @@
 
 ;;;  Advice indium-repl.el
 
-(defadvice indium-repl-return (after emacspeak pre act comp)
+
+(defun ems--indium-repl-return-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (save-excursion
-      (forward-line -1)
-      (emacspeak-speak-line)
+      (forward-line -1) (emacspeak-speak-line)
       (emacspeak-icon 'close-object))))
+
+
+(advice-add 'indium-repl-return :after #'ems--indium-repl-return-after)
+
+
+
 
 (cl-loop
  for f in 

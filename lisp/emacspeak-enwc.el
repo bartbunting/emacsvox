@@ -73,11 +73,17 @@
   enwc-toggle-wired
   )
 
-(defadvice enwc (after emacspeak pre act comp)
+
+(defun ems--enwc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'enwc :after #'ems--enwc-after)
+
+
+
 
 (cl-loop
  for f in 

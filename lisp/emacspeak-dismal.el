@@ -363,17 +363,29 @@ Checked by emacspeak specific dis-mode-hooks entry.")
 ;;;   Advice some commands. 
 
 ;;;  customize for use with html helper mode
-(defadvice dis-html-dump-file (around emacspeak pre act comp)
-  "Sets html-helper-build-new-buffer to nil first so we dont
-end up building a template page first."
 
-  (let ((html-helper-build-new-buffer nil)) ad-do-it))
+(defun ems--dis-html-dump-file-around (orig-fun &rest args)
+  "Sets html-helper-build-new-buffer to nil first so we dont\nend up building a template page first."
+  (let ((html-helper-build-new-buffer nil)) (apply orig-fun args)))
 
-(defadvice dis-html-dump-range (around emacspeak pre act comp)
-  "Sets html-helper-build-new-buffer to nil first so we dont
-end up building a template page first."
 
-  (let ((html-helper-build-new-buffer nil)) ad-do-it))
+(advice-add 'dis-html-dump-file :around
+	    #'ems--dis-html-dump-file-around)
+
+
+
+
+
+(defun ems--dis-html-dump-range-around (orig-fun &rest args)
+  "Sets html-helper-build-new-buffer to nil first so we dont\nend up building a template page first."
+  (let ((html-helper-build-new-buffer nil)) (apply orig-fun args)))
+
+
+(advice-add 'dis-html-dump-range :around
+	    #'ems--dis-html-dump-range-around)
+
+
+
 
 (provide  'emacspeak-dismal)
 

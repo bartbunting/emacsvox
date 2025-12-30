@@ -141,32 +141,51 @@
 
 ;;;  Advice interactive commands
 
-(defadvice nxml-electric-slash (around emacspeak pre act comp)
-  "Speak."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))
-      (when (= (preceding-char) ?>)
-        (emacspeak-icon 'close-object))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice nxml-complete (around emacspeak pre act comp)
+(defun ems--nxml-electric-slash-around (orig-fun &rest args)
   "Speak."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
-(defadvice nxml-insert-xml-declaration (after emacspeak pre act
-                                              comp)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))
+	(when (= (preceding-char) 62) (emacspeak-icon 'close-object))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'nxml-electric-slash :around
+	    #'ems--nxml-electric-slash-around)
+
+
+
+
+
+(defun ems--nxml-complete-around (orig-fun &rest args)
   "Speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args) (emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'nxml-complete :around #'ems--nxml-complete-around)
+
+
+
+
+(defun ems--nxml-insert-xml-declaration-after (&rest _)
+  "Speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'nxml-insert-xml-declaration :after
+	    #'ems--nxml-insert-xml-declaration-after)
+
+
+
 (cl-loop for f in 
          '(nxml-backward-up-element
            nxml-forward-balanced-item

@@ -63,23 +63,42 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice lua-start-process(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice lua-kill-process(after emacspeak pre act comp)
+(defun ems--lua-start-process-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice lua-search-documentation(after emacspeak pre act comp)
+
+(advice-add 'lua-start-process :after #'ems--lua-start-process-after)
+
+
+
+
+
+(defun ems--lua-kill-process-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'lua-kill-process :after #'ems--lua-kill-process-after)
+
+
+
+
+
+(defun ems--lua-search-documentation-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'lua-search-documentation :after
+	    #'ems--lua-search-documentation-after)
+
+
+
 
 (cl-loop
  for f in
@@ -93,11 +112,18 @@
                 (when (ems-interactive-p)
                   (emacspeak-icon 'task-done)))))
 
-(defadvice lua-show-process-buffer(after emacspeak pre act comp)
+
+(defun ems--lua-show-process-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'lua-show-process-buffer :after
+	    #'ems--lua-show-process-buffer-after)
+
+
+
 
 (provide 'emacspeak-lua)
 ;;;  end of file

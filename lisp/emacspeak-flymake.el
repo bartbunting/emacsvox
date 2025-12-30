@@ -70,10 +70,15 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice flymake-compile (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+
+(defun ems--flymake-compile-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'flymake-compile :after #'ems--flymake-compile-after)
+
+
+
 
 (provide 'emacspeak-flymake)
 ;;;  end of file

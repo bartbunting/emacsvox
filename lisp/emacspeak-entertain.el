@@ -52,13 +52,16 @@
 
 ;;;  doctar
 
-(defadvice doctor-txtype (after emacspeak pre act comp)
+
+(defun ems--doctor-txtype-after (&rest _)
   (dtk-speak
-   (mapconcat
-    #'(lambda (s)
-        (format "%s" s))
-    (ad-get-arg 0)
-    " ")))
+   (mapconcat #'(lambda (s) (format "%s" s)) (ad-get-arg 0) " ")))
+
+
+(advice-add 'doctor-txtype :after #'ems--doctor-txtype-after)
+
+
+
 
 ;;;  mpuz
 (voice-setup-add-map
@@ -101,10 +104,16 @@
             (not emacspeak-pronounce-table))
     (emacspeak-pronounce-toggle-dictionaries)))
 
-(defadvice hm-self-guess-char (after emacspeak pre act comp)
+
+(defun ems--hm-self-guess-char-after (&rest _)
   "Speak the char."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)))
+  (when (ems-interactive-p) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'hm-self-guess-char :after #'ems--hm-self-guess-char-after)
+
+
+
 
 (defun emacspeak-hangman-speak-guess ()
   "Speak current guessed string. "
@@ -121,11 +130,18 @@
               (length string)
               (downcase string))))
 
-(defadvice hangman (after emacspeak pre act comp)
+
+(defun ems--hangman-after (&rest _)
   "Speech enable hangman."
   (when (ems-interactive-p)
     (emacspeak-hangman-setup-pronunciations)
     (emacspeak-icon 'open-object)))
+
+
+(advice-add 'hangman :after #'ems--hangman-after)
+
+
+
 (cl-declaim (special hm-map))
 (when (boundp 'hm-map)
   (cl-declaim (special hm-map))

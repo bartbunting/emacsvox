@@ -94,23 +94,46 @@
 
 ;;;  Advice Interactive Commands:
 
-(defadvice company-complete-selection (before emacspeak pre act comp)
+
+(defun ems--company-complete-selection-before (&rest _)
   "Speak the selection."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (dtk-speak (ems-company-current))))
-(defadvice company-complete-number (after emacspeak pre act com)
-  "Speak what we completed."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (dtk-speak (ems-company-current))))
 
-(defadvice company-show-doc-buffer (before emacspeak pre act comp)
+
+(advice-add 'company-complete-selection :before
+	    #'ems--company-complete-selection-before)
+
+
+
+
+(defun ems--company-complete-number-after (&rest _)
+  "Speak what we completed."
+  (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'company-complete-number :after
+	    #'ems--company-complete-number-after)
+
+
+
+
+
+(defun ems--company-show-doc-buffer-before (&rest _)
   "Speak."
-  (let* ((selected (nth company-selection company-candidates))
-         (doc-buffer (or (company-call-backend 'doc-buffer selected)
-                         (error "No documentation available"))))
-                                        ;(emacspeak-icon 'help)
+  (let*
+      ((selected (nth company-selection company-candidates))
+       (doc-buffer
+	(or (company-call-backend 'doc-buffer selected)
+	    (error "No documentation available"))))
     (with-current-buffer doc-buffer (dtk-speak (buffer-string)))))
+
+
+(advice-add 'company-show-doc-buffer :before
+	    #'ems--company-show-doc-buffer-before)
+
+
+
 
 ;;;  Company Setup For Emacspeak:
 

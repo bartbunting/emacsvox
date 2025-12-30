@@ -54,83 +54,166 @@
 
 ;; speech-enable cmuscheme 
 
-(defadvice inferior-scheme-mode (after emacspeak pre act
-                                       comp)
+
+(defun ems--inferior-scheme-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'task-done)
     (message "Welcome to inferior scheme mode.")))
 
-(defadvice run-scheme (after emacspeak pre act comp)
+
+(advice-add 'inferior-scheme-mode :after
+	    #'ems--inferior-scheme-mode-after)
+
+
+
+
+
+(defun ems--run-scheme-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'task-done)
-    (message "Launched scheme %s"
-             (ad-get-arg 0))))
+    (message "Launched scheme %s" (ad-get-arg 0))))
 
-(defadvice scheme-send-region (after emacspeak pre act comp)
+
+(advice-add 'run-scheme :after #'ems--run-scheme-after)
+
+
+
+
+
+(defun ems--scheme-send-region-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Sent %s lines to scheme. "
-             (count-lines (region-beginning)
-                          (region-end)))))
+	     (count-lines (region-beginning) (region-end)))))
 
-(defadvice scheme-send-definition (after emacspeak pre act comp)
+
+(advice-add 'scheme-send-region :after #'ems--scheme-send-region-after)
+
+
+
+
+
+(defun ems--scheme-send-definition-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Sent definition   to scheme. ")))
 
-(defadvice scheme-send-last-sexp (after emacspeak pre act comp)
+
+(advice-add 'scheme-send-definition :after
+	    #'ems--scheme-send-definition-after)
+
+
+
+
+
+(defun ems--scheme-send-last-sexp-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Sent last sexp  to scheme. ")))
 
-(defadvice scheme-compile-region (after emacspeak pre act comp)
+
+(advice-add 'scheme-send-last-sexp :after
+	    #'ems--scheme-send-last-sexp-after)
+
+
+
+
+
+(defun ems--scheme-compile-region-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Compiling  %s lines to scheme. "
-             (count-lines (region-beginning)
-                          (region-end)))))
+	     (count-lines (region-beginning) (region-end)))))
 
-(defadvice scheme-compile-definition (after emacspeak pre act comp)
+
+(advice-add 'scheme-compile-region :after
+	    #'ems--scheme-compile-region-after)
+
+
+
+
+
+(defun ems--scheme-compile-definition-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Compiled definition  to scheme. ")))
 
-(defadvice switch-to-scheme  (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice scheme-send-region-and-go (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+(advice-add 'scheme-compile-definition :after
+	    #'ems--scheme-compile-definition-after)
 
-(defadvice scheme-send-definition-and-go (after emacspeak pre act comp)
+
+
+
+
+(defun ems--switch-to-scheme-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'switch-to-scheme :after #'ems--switch-to-scheme-after)
+
+
+
+
+
+(defun ems--scheme-send-region-and-go-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'scheme-send-region-and-go :after
+	    #'ems--scheme-send-region-and-go-after)
+
+
+
+
+
+(defun ems--scheme-send-definition-and-go-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'scheme-send-definition-and-go :after
+	    #'ems--scheme-send-definition-and-go-after)
+
+
+
+
+(defun ems--scheme-load-file-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
-(defadvice scheme-load-file (after emacspeak pre act comp)
+    (message "loaded scheme file %s" (ad-get-arg 0))))
+
+
+(advice-add 'scheme-load-file :after #'ems--scheme-load-file-after)
+
+
+
+
+(defun ems--scheme-compile-file-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
-    (message "loaded scheme file %s"
-             (ad-get-arg 0))))
-(defadvice scheme-compile-file (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (message "Compiled scheme file %s"
-             (ad-get-arg 0))))
+    (message "Compiled scheme file %s" (ad-get-arg 0))))
+
+
+(advice-add 'scheme-compile-file :after
+	    #'ems--scheme-compile-file-after)
+
+
+
 
 (provide 'emacspeak-cmuscheme)
 ;;;  end of file

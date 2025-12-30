@@ -55,17 +55,28 @@
 
 ;;;  Fix error when loading images on the console:
 
-(defadvice xkcd-insert-image (around emacspeak pre act comp)
-  "no-Op on console"
-  (cond
-   ((not window-system) t)
-   (t ad-do-it)))
 
-(defadvice xkcd-kill-buffer (after emacspeak pre act comp)
+(defun ems--xkcd-insert-image-around (orig-fun &rest args)
+  "no-Op on console"
+  (cond ((not window-system) t) (t (apply orig-fun args))))
+
+
+(advice-add 'xkcd-insert-image :around #'ems--xkcd-insert-image-around)
+
+
+
+
+
+(defun ems--xkcd-kill-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'xkcd-kill-buffer :after #'ems--xkcd-kill-buffer-after)
+
+
+
 
 (defvar xkcd-transcript nil
   "Cache current transcript.")
@@ -79,27 +90,37 @@
    (cdr 
     (assoc 'transcript (json-read-from-string (xkcd-get-json "" xkcd-cur))))))
 
-(defadvice xkcd-get (after emacspeak first pre act comp)
+
+(defun ems--xkcd-get-after (&rest _)
   "Insert cached transcript in xkcd-transcript."
   (let ((inhibit-read-only t))
-    (emacspeak-xkcd-get-current-transcript)
-    (goto-char (point-max))
-    (insert xkcd-alt)
-    (insert "\n")
-    (insert 
-     (format "Transcript: %s" 
-             (if (zerop (length xkcd-transcript))
-                 "Not available yet."
-               xkcd-transcript)))
-    (goto-char (point-min))
-    (emacspeak-icon 'open-object)
+    (emacspeak-xkcd-get-current-transcript) (goto-char (point-max))
+    (insert xkcd-alt) (insert "\n")
+    (insert
+     (format "Transcript: %s"
+	     (if (zerop (length xkcd-transcript)) "Not available yet."
+	       xkcd-transcript)))
+    (goto-char (point-min)) (emacspeak-icon 'open-object)
     (emacspeak-speak-buffer)))
+
+
+(advice-add 'xkcd-get :after #'ems--xkcd-get-after)
+
+
+
 ;;;  Advice browse-url-default-browser:
 
-(defadvice browse-url-default-browser (around emacspeak pre act comp)
+
+(defun ems--browse-url-default-browser-around (orig-fun &rest args)
   "Use Emacs browser --- rather than an external browser."
-  (when nil ad-do-it) ; to silence byte-compiler 
-  (eww-browse-url (ad-get-arg 0)))
+  (when nil (apply orig-fun args)) (eww-browse-url (ad-get-arg 0)))
+
+
+(advice-add 'browse-url-default-browser :around
+	    #'ems--browse-url-default-browser-around)
+
+
+
 
 (defun emacspeak-xkcd-open-explanation-browser ()
   "Open explanation of current xkcd in default browser"

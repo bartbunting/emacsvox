@@ -54,60 +54,105 @@
 
 ;;;  advice
 
-(defadvice sqlplus-execute-command (after emacspeak pre act comp)
+
+(defun ems--sqlplus-execute-command-after (&rest _)
   "speak and place point at the start of the output."
   (when (ems-interactive-p)
-    (emacspeak-icon 'scroll)
-    (sqlplus-back-command 2)
-    (forward-line 1)
+    (emacspeak-icon 'scroll) (sqlplus-back-command 2) (forward-line 1)
     (emacspeak-speak-line)))
 
-(defadvice sqlplus-back-command (after emacspeak pre act comp)
+
+(advice-add 'sqlplus-execute-command :after
+	    #'ems--sqlplus-execute-command-after)
+
+
+
+
+
+(defun ems--sqlplus-back-command-after (&rest _)
   "Move prompt appropriately,  and speak the line."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (forward-line 1)
+    (emacspeak-icon 'large-movement) (forward-line 1)
     (emacspeak-speak-line)))
 
-(defadvice sqlplus-forward-command (after emacspeak pre act
-                                          comp)
+
+(advice-add 'sqlplus-back-command :after
+	    #'ems--sqlplus-back-command-after)
+
+
+
+
+
+(defun ems--sqlplus-forward-command-after (&rest _)
   "Move prompt appropriately,  and speak the line."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (forward-line 1)
+    (emacspeak-icon 'large-movement) (forward-line 1)
     (emacspeak-speak-line)))
 
-(defadvice sqlplus-next-command (after emacspeak pre act comp)
+
+(advice-add 'sqlplus-forward-command :after
+	    #'ems--sqlplus-forward-command-after)
+
+
+
+
+
+(defun ems--sqlplus-next-command-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
 
-(defadvice sqlplus-previous-command (after emacspeak pre act comp)
+
+(advice-add 'sqlplus-next-command :after
+	    #'ems--sqlplus-next-command-after)
+
+
+
+
+
+(defun ems--sqlplus-previous-command-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
 
-(defadvice sql-send-region (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    ad-do-it
-    (emacspeak-icon 'mark-object))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice sql-send-buffer (around emacspeak pre act comp)
+(advice-add 'sqlplus-previous-command :after
+	    #'ems--sqlplus-previous-command-after)
+
+
+
+
+
+(defun ems--sql-send-region-around (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    ad-do-it
-    (emacspeak-icon 'mark-object))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (emacspeak-icon 'select-object)
+      (apply orig-fun args) (emacspeak-icon 'mark-object))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'sql-send-region :around #'ems--sql-send-region-around)
+
+
+
+
+
+(defun ems--sql-send-buffer-around (orig-fun &rest args)
+  "speak."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (emacspeak-icon 'select-object)
+      (apply orig-fun args) (emacspeak-icon 'mark-object))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'sql-send-buffer :around #'ems--sql-send-buffer-around)
+
+
+
 
 (provide 'emacspeak-sql)
 

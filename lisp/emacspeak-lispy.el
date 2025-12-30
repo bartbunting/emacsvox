@@ -130,47 +130,88 @@ Indicate  no movement if we did not move."
       (t ad-do-it))
      ad-return-value)))
 
-(defadvice lispy-move-beginning-of-line (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'left)))
 
-(defadvice lispy-move-beginning-of-line (after emacspeak pre act comp)
+(defun ems--lispy-move-beginning-of-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'right)))
+    (emacspeak-speak-line) (emacspeak-icon 'left)))
+
+
+(advice-add 'lispy-move-beginning-of-line :after
+	    #'ems--lispy-move-beginning-of-line-after)
+
+
+
+
+
+(defun ems--lispy-move-beginning-of-line-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'right)))
+
+
+(advice-add 'lispy-move-beginning-of-line :after
+	    #'ems--lispy-move-beginning-of-line-after)
+
+
+
 
 ;;; Advice Insertions:
 
-(defadvice lispy-clone (after emacspeak pre act comp)
+
+(defun ems--lispy-clone-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-sexp)
-    (emacspeak-icon 'yank-object)))
+    (emacspeak-speak-sexp) (emacspeak-icon 'yank-object)))
 
-(defadvice lispy-comment (after emacspeak pre act comp)
+
+(advice-add 'lispy-clone :after #'ems--lispy-clone-after)
+
+
+
+
+
+(defun ems--lispy-comment-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (cond
-     ((use-region-p)(emacspeak-speak-region (region-beginning) (region-end)))
+     ((use-region-p)
+      (emacspeak-speak-region (region-beginning) (region-end)))
      (t (emacspeak-speak-line)))))
 
-(defadvice lispy-backtick (after emacspeak pre act comp)
+
+(advice-add 'lispy-comment :after #'ems--lispy-comment-after)
+
+
+
+
+
+(defun ems--lispy-backtick-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (let ((emacspeak-show-point t))
-      (emacspeak-speak-line))))
+    (let ((emacspeak-show-point t)) (emacspeak-speak-line))))
 
-(defadvice lispy-tick (after emacspeak pre act comp)
+
+(advice-add 'lispy-backtick :after #'ems--lispy-backtick-after)
+
+
+
+
+
+(defun ems--lispy-tick-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (cond
      ((region-active-p)
       (emacspeak-speak-region (region-beginning) (region-end)))
      (t (emacspeak-speak-line)))))
+
+
+(advice-add 'lispy-tick :after #'ems--lispy-tick-after)
+
+
+
 
 (cl-loop
  for f in
@@ -225,18 +266,31 @@ Indicate  no movement if we did not move."
        (emacspeak-icon 'mark-object)
        (emacspeak-speak-region (region-beginning) (region-end))))))
 
-(defadvice lispy-mark-symbol (after emacspeak pre act comp)
+
+(defun ems--lispy-mark-symbol-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
-    (emacspeak-speak-region  (region-beginning) (region-end))))
+    (emacspeak-speak-region (region-beginning) (region-end))))
+
+
+(advice-add 'lispy-mark-symbol :after #'ems--lispy-mark-symbol-after)
+
+
+
 
 ;;; Advice WhiteSpace Manipulation:
-(defadvice lispy-fill (after emacspeak pre act comp)
+
+(defun ems--lispy-fill-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'fill-object) (emacspeak-speak-line)))
+
+
+(advice-add 'lispy-fill :after #'ems--lispy-fill-after)
+
+
+
 
 (cl-loop
  for f in
@@ -249,20 +303,34 @@ Indicate  no movement if we did not move."
        (let ((emacspeak-show-point t))
          (emacspeak-speak-line))))))
 
-(defadvice lispy-tab (after emacspeak pre act comp)
+
+(defun ems--lispy-tab-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'fill-object)
     (when (buffer-modified-p) (emacspeak-icon 'modified-object))
     (emacspeak-speak-line)))
 
+
+(advice-add 'lispy-tab :after #'ems--lispy-tab-after)
+
+
+
+
 ;;; Advice Kill/Yank:
-(defadvice lispy-new-copy (after emacspeak pre act comp)
+
+(defun ems--lispy-new-copy-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (message "region containing %s chars copied to kill ring "
-             (length (current-kill 0)))))
+	     (length (current-kill 0)))))
+
+
+(advice-add 'lispy-new-copy :after #'ems--lispy-new-copy-after)
+
+
+
 
 (cl-loop
  for f in
@@ -276,63 +344,105 @@ Indicate  no movement if we did not move."
        (emacspeak-icon 'delete-object)
        (dtk-speak (current-kill 0 nil))))))
 
-(defadvice lispy-yank (after emacspeak pre act comp)
+
+(defun ems--lispy-yank-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'yank-object)
     (emacspeak-speak-region (region-beginning) (region-end))))
 
-(defadvice lispy-delete-backward(around emacspeak pre act comp)
+
+(advice-add 'lispy-yank :after #'ems--lispy-yank-after)
+
+
+
+
+
+(defun ems--lispy-delete-backward-around (orig-fun &rest args)
   "speak."
   (cond
-   ((ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-this-char (preceding-char))
+   ((ems-interactive-p) (emacspeak-icon 'delete-object)
+    (emacspeak-speak-this-char (preceding-char)) ad-do-it)
+   (t ad-do-it)))
+
+
+(advice-add 'lispy-delete-backward :around
+	    #'ems--lispy-delete-backward-around)
+
+
+
+
+
+(defun ems--lispy-delete-around (orig-fun &rest args)
+  "speak."
+  (cond
+   ((ems-interactive-p) (dtk-tone-deletion) (emacspeak-speak-char t)
     ad-do-it)
    (t ad-do-it)))
 
-(defadvice lispy-delete (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone-deletion)
-    (emacspeak-speak-char t)
-    ad-do-it)
-   (t ad-do-it)))
+
+(advice-add 'lispy-delete :around #'ems--lispy-delete-around)
+
+
+
 
 ;;; Advice Help:
 
-(defadvice lispy-describe-inline (after emacspeak pre act comp)
+
+(defun ems--lispy-describe-inline-after (&rest _)
   "speak."
   (when
-      (and
-       (ems-interactive-p)
-       (buffer-live-p (get-buffer "*lispy-help*"))
-       (window-live-p (get-buffer-window "*lispy-help*")))
-    (with-current-buffer  "*lispy-help*"
-      (emacspeak-icon 'help)
-      (emacspeak-speak-buffer))))
+      (and (ems-interactive-p)
+	   (buffer-live-p (get-buffer "*lispy-help*"))
+	   (window-live-p (get-buffer-window "*lispy-help*")))
+    (with-current-buffer "*lispy-help*"
+      (emacspeak-icon 'help) (emacspeak-speak-buffer))))
 
-(defadvice lispy--show (before emacspeak   pre act comp)
-  "speak."
-  (emacspeak-icon 'help)
-  (dtk-speak (ad-get-arg 0)))
+
+(advice-add 'lispy-describe-inline :after
+	    #'ems--lispy-describe-inline-after)
+
+
+
+
+
+(defun ems--lispy--show-before (&rest _)
+  "speak." (emacspeak-icon 'help) (dtk-speak (ad-get-arg 0)))
+
+
+(advice-add 'lispy--show :before #'ems--lispy--show-before)
+
+
+
 
 ;;; Advice Outliner:
 
-(defadvice lispy-narrow (after emacspeak pre act comp)
+
+(defun ems--lispy-narrow-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (message "Narrowed editing region to %s lines"
-             (count-lines (region-beginning)
-                          (region-end)))))
+	     (count-lines (region-beginning) (region-end)))))
 
-(defadvice lispy-widen (after emacspeak pre act comp)
+
+(advice-add 'lispy-narrow :after #'ems--lispy-narrow-after)
+
+
+
+
+
+(defun ems--lispy-widen-after (&rest _)
   "Announce yourself."
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "You can now edit the entire buffer ")))
+
+
+(advice-add 'lispy-widen :after #'ems--lispy-widen-after)
+
+
+
 
 (cl-loop
  for f in

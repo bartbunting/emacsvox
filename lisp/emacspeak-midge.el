@@ -60,106 +60,212 @@
 
 ;;;  Speech enable interactive commands.
 
-(defadvice midge-indent-line(after emacspeak pre act comp)
+
+(defun ems--midge-indent-line-after (&rest _)
   "Speak line after indenting it."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice midge-close-bracket(after emacspeak pre act comp)
+
+(advice-add 'midge-indent-line :after #'ems--midge-indent-line-after)
+
+
+
+
+
+(defun ems--midge-close-bracket-after (&rest _)
   "Speak closing delimiter we inserted"
   (when (ems-interactive-p)
     (emacspeak-speak-this-char last-input-event)))
 
-(defadvice midge-head-block(after emacspeak pre act comp)
+
+(advice-add 'midge-close-bracket :after
+	    #'ems--midge-close-bracket-after)
+
+
+
+
+
+(defun ems--midge-head-block-after (&rest _)
   "Announce insertion of head block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Started head section")))
+    (emacspeak-icon 'open-object) (message "Started head section")))
 
-(defadvice midge-body-block(after emacspeak pre act comp)
+
+(advice-add 'midge-head-block :after #'ems--midge-head-block-after)
+
+
+
+
+
+(defun ems--midge-body-block-after (&rest _)
   "Announce insertion of body block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Started body section")))
+    (emacspeak-icon 'open-object) (message "Started body section")))
 
-(defadvice midge-repeat-block(after emacspeak pre act comp)
+
+(advice-add 'midge-body-block :after #'ems--midge-body-block-after)
+
+
+
+
+
+(defun ems--midge-repeat-block-after (&rest _)
   "Announce insertion of repeat block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Started repeat block")))
+    (emacspeak-icon 'open-object) (message "Started repeat block")))
 
-(defadvice midge-choose-block(after emacspeak pre act comp)
+
+(advice-add 'midge-repeat-block :after #'ems--midge-repeat-block-after)
+
+
+
+
+
+(defun ems--midge-choose-block-after (&rest _)
   "Announce insertion of choose block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Started choose block")))
+    (emacspeak-icon 'open-object) (message "Started choose block")))
 
-(defadvice midge-bend-block(after emacspeak pre act comp)
+
+(advice-add 'midge-choose-block :after #'ems--midge-choose-block-after)
+
+
+
+
+
+(defun ems--midge-bend-block-after (&rest _)
   "Announce insertion of bend block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Started bend block")))
+    (emacspeak-icon 'open-object) (message "Started bend block")))
 
-(defadvice midge-define-block(after emacspeak pre act comp)
+
+(advice-add 'midge-bend-block :after #'ems--midge-bend-block-after)
+
+
+
+
+
+(defun ems--midge-define-block-after (&rest _)
   "Announce insertion of define block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Started define block")))
+    (emacspeak-icon 'open-object) (message "Started define block")))
 
-(defadvice midge-repeat-line(after emacspeak pre act comp)
+
+(advice-add 'midge-define-block :after #'ems--midge-define-block-after)
+
+
+
+
+
+(defun ems--midge-repeat-line-after (&rest _)
   "Announce insertion of repeat block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice midge-bend-line(after emacspeak pre act comp)
+
+(advice-add 'midge-repeat-line :after #'ems--midge-repeat-line-after)
+
+
+
+
+
+(defun ems--midge-bend-line-after (&rest _)
   "Announce insertion of bend block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice midge-define-line(after emacspeak pre act comp)
+
+(advice-add 'midge-bend-line :after #'ems--midge-bend-line-after)
+
+
+
+
+
+(defun ems--midge-define-line-after (&rest _)
   "Announce insertion of define block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice midge-choose-line(after emacspeak pre act comp)
+
+(advice-add 'midge-define-line :after #'ems--midge-define-line-after)
+
+
+
+
+
+(defun ems--midge-choose-line-after (&rest _)
   "Announce insertion of choose block"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice midge-compile(after emacspeak pre act comp)
+
+(advice-add 'midge-choose-line :after #'ems--midge-choose-line-after)
+
+
+
+
+
+(defun ems--midge-compile-after (&rest _)
   "Produce auditory icon."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-message-again)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-message-again)))
 
-(defadvice midge-compile-debug(after emacspeak pre act comp)
-  "Produce auditory icon."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice midge-compile-verbose(after emacspeak pre act comp)
-  "Produce auditory icon."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+(advice-add 'midge-compile :after #'ems--midge-compile-after)
 
-(defadvice midge-compile-ask(after emacspeak pre act comp)
+
+
+
+
+(defun ems--midge-compile-debug-after (&rest _)
   "Produce auditory icon."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+  (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'midge-compile-debug :after
+	    #'ems--midge-compile-debug-after)
+
+
+
+
+
+(defun ems--midge-compile-verbose-after (&rest _)
+  "Produce auditory icon."
+  (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'midge-compile-verbose :after
+	    #'ems--midge-compile-verbose-after)
+
+
+
+
+
+(defun ems--midge-compile-ask-after (&rest _)
+  "Produce auditory icon."
+  (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'midge-compile-ask :after #'ems--midge-compile-ask-after)
+
+
+
 
 ;;;  midge-mode-hook
 
 (defvar midge-mode-hook nil
   "midge setup hook")
 
-(defadvice midge-mode (after emacspeak pre act comp)
-  "Run midge-mode-hook"
-  (run-hooks 'midge-mode-hook))
+
+(defun ems--midge-mode-after (&rest _)
+  "Run midge-mode-hook" (run-hooks 'midge-mode-hook))
+
+
+(advice-add 'midge-mode :after #'ems--midge-mode-after)
+
+
+
 
 (provide 'emacspeak-midge)
 ;;;  end of file

@@ -135,23 +135,45 @@
   (cl-declare (special ses-mode-map))
   )
 
-(defadvice ses-forward-or-insert (after emacspeak pre act comp)
+
+(defun ems--ses-forward-or-insert-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ses-summarize-current-cell)))
 
-(defadvice ses-recalculate-cell (after emacspeak pre act comp)
+
+(advice-add 'ses-forward-or-insert :after
+	    #'ems--ses-forward-or-insert-after)
+
+
+
+
+
+(defun ems--ses-recalculate-cell-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ses-summarize-current-cell)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-ses-summarize-current-cell) (emacspeak-icon 'task-done)))
 
-(defadvice ses-jump (after emacspeak pre act comp)
+
+(advice-add 'ses-recalculate-cell :after
+	    #'ems--ses-recalculate-cell-after)
+
+
+
+
+
+(defun ems--ses-jump-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ses-summarize-current-cell)))
+
+
+(advice-add 'ses-jump :after #'ems--ses-jump-after)
+
+
+
 
 ;;;  Setup:
 

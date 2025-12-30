@@ -80,11 +80,18 @@
        (message "Displayed cross-reference.")
        (emacspeak-icon 'select-object)))))
 
-(defadvice xref-find-references (after emacspeak pre act comp)
+
+(defun ems--xref-find-references-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-speak-line) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'xref-find-references :after
+	    #'ems--xref-find-references-after)
+
+
+
 
 (provide 'emacspeak-xref)
 ;;;  end of file

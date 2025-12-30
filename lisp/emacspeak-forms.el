@@ -111,91 +111,160 @@ Assumes that point is at the front of a field value."
        (emacspeak-icon 'search-hit)
        (emacspeak-speak-line)))))
 
-(defadvice forms-next-record (after emacspeak pre act comp)
+
+(defun ems--forms-next-record-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
-    (goto-char (next-single-property-change 
-                (point)
-                'read-only
-                (current-buffer)
-                (point-max)))
+    (goto-char
+     (next-single-property-change (point) 'read-only (current-buffer)
+				  (point-max)))
     (emacspeak-forms-summarize-current-record)))
 
-(defadvice forms-prev-record (after emacspeak pre act comp)
+
+(advice-add 'forms-next-record :after #'ems--forms-next-record-after)
+
+
+
+
+
+(defun ems--forms-prev-record-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
-    (goto-char (next-single-property-change 
-                (point)
-                'read-only
-                (current-buffer)
-                (point-max)))
+    (goto-char
+     (next-single-property-change (point) 'read-only (current-buffer)
+				  (point-max)))
     (emacspeak-forms-summarize-current-record)))
 
-(defadvice forms-first-record (after emacspeak pre act comp)
+
+(advice-add 'forms-prev-record :after #'ems--forms-prev-record-after)
+
+
+
+
+
+(defun ems--forms-first-record-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-forms-summarize-current-record)))
 
-(defadvice forms-last-record (after emacspeak pre act comp)
+
+(advice-add 'forms-first-record :after #'ems--forms-first-record-after)
+
+
+
+
+
+(defun ems--forms-last-record-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-forms-summarize-current-record)))
 
-(defadvice forms-jump-record (after emacspeak pre act comp)
+
+(advice-add 'forms-last-record :after #'ems--forms-last-record-after)
+
+
+
+
+
+(defun ems--forms-jump-record-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-forms-summarize-current-record)))
 
-(defadvice forms-search (after emacspeak pre act comp)
+
+(advice-add 'forms-jump-record :after #'ems--forms-jump-record-after)
+
+
+
+
+
+(defun ems--forms-search-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'search-hit)
     (emacspeak-forms-summarize-current-record)))
 
-(defadvice forms-exit (after emacspeak pre act comp)
+
+(advice-add 'forms-search :after #'ems--forms-search-after)
+
+
+
+
+
+(defun ems--forms-exit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice forms-next-field (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    ad-do-it
-    (emacspeak-icon 'large-movement)
-    (emacspeak-forms-speak-field))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice forms-prev-field (after emacspeak pre act comp)
+(advice-add 'forms-exit :after #'ems--forms-exit-after)
+
+
+
+
+
+(defun ems--forms-next-field-around (orig-fun &rest args)
   "speak."
-  
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (apply orig-fun args)
+      (emacspeak-icon 'large-movement) (emacspeak-forms-speak-field))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'forms-next-field :around #'ems--forms-next-field-around)
+
+
+
+
+
+(defun ems--forms-prev-field-after (&rest _)
+  "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-forms-speak-field)))   
+    (emacspeak-icon 'large-movement) (emacspeak-forms-speak-field)))
 
-(defadvice forms-kill-record (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    ))
 
-(defadvice forms-insert-record (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    ))
+(advice-add 'forms-prev-field :after #'ems--forms-prev-field-after)
 
-(defadvice forms-save-buffer (after emacspeak pre act comp)
-  "speak."
-  (when  (ems-interactive-p)
-    (emacspeak-icon 'save-object)))
+
+   
+
+
+(defun ems--forms-kill-record-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
+
+
+(advice-add 'forms-kill-record :after #'ems--forms-kill-record-after)
+
+
+
+
+
+(defun ems--forms-insert-record-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'forms-insert-record :after
+	    #'ems--forms-insert-record-after)
+
+
+
+
+
+(defun ems--forms-save-buffer-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'save-object)))
+
+
+(advice-add 'forms-save-buffer :after #'ems--forms-save-buffer-after)
+
+
+
 
 ;;;  smart filters
 

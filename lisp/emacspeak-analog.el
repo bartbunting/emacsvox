@@ -54,23 +54,41 @@
 (autoload 'analog-get-entry-property "analog")
 
 ;;;  advice interactive commands
-(defadvice analog (after emacspeak pre act comp)
+
+(defun ems--analog-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-analog-update-edit-keys)
+    (emacspeak-icon 'open-object) (emacspeak-analog-update-edit-keys)
     (emacspeak-speak-mode-line)))
 
-(defadvice analog-quit (after emacspeak pre act comp)
+
+(advice-add 'analog :after #'ems--analog-after)
+
+
+
+
+
+(defun ems--analog-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
-(defadvice analog-bury-buffer (after emacspeak pre act comp)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'analog-quit :after #'ems--analog-quit-after)
+
+
+
+
+(defun ems--analog-bury-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'analog-bury-buffer :after #'ems--analog-bury-buffer-after)
+
+
+
 
 (cl-loop for command in
          '(analog-next-group

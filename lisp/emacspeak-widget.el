@@ -478,84 +478,128 @@ Returns a string with appropriate personality."
 ;;;   Widget motion
 
 ;; avoid redundant message speech output
-(defadvice widget-echo-help (around emacspeak pre act comp)
-  (ems-with-messages-silenced
-   ad-do-it
-   ad-return-value))
-(defadvice widget-beginning-of-line (after emacspeak pre act comp)
+
+(defun ems--widget-echo-help-around (orig-fun &rest args)
+  (let ((result (apply orig-fun args)))
+    (ems-with-messages-silenced (apply orig-fun args) result) result))
+
+
+(advice-add 'widget-echo-help :around #'ems--widget-echo-help-around)
+
+
+
+
+(defun ems--widget-beginning-of-line-after (&rest _)
   "speak"
   (cond
    ((ems-interactive-p)
     (let ((widget (widget-at (point))))
-      ad-do-it
-      (emacspeak-icon 'select-object)
+      ad-do-it (emacspeak-icon 'select-object)
       (message "Moved to start of text field %s"
-               (if widget
-                   (widget-value widget)
-                 ""))))
+	       (if widget (widget-value widget) ""))))
    (t ad-do-it))
   ad-return-value)
 
-(defadvice widget-end-of-line (around emacspeak pre act comp)
-  "speak"
-  (cond
-   ((ems-interactive-p)
-    (let ((widget (widget-at (point))))
-      ad-do-it
-      (emacspeak-icon 'select-object)
-      (message "Moved to end of text field %s"
-               (if widget
-                   (widget-value widget)
-                 ""))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice widget-forward (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (emacspeak-widget-summarize (widget-at  (point)))))
+(advice-add 'widget-beginning-of-line :after
+	    #'ems--widget-beginning-of-line-after)
 
-(defadvice widget-backward (after emacspeak pre act comp)
+
+
+
+
+(defun ems--widget-end-of-line-around (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((widget (widget-at (point))))
+	(apply orig-fun args) (emacspeak-icon 'select-object)
+	(message "Moved to end of text field %s"
+		 (if widget (widget-value widget) ""))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'widget-end-of-line :around
+	    #'ems--widget-end-of-line-around)
+
+
+
+
+
+(defun ems--widget-forward-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'item)
     (emacspeak-widget-summarize (widget-at (point)))))
 
-(defadvice widget-kill-line (after emacspeak pre act comp)
+
+(advice-add 'widget-forward :after #'ems--widget-forward-after)
+
+
+
+
+
+(defun ems--widget-backward-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-current-kill 0)
+    (emacspeak-icon 'item)
+    (emacspeak-widget-summarize (widget-at (point)))))
+
+
+(advice-add 'widget-backward :after #'ems--widget-backward-after)
+
+
+
+
+
+(defun ems--widget-kill-line-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'delete-object) (emacspeak-speak-current-kill 0)
     (dtk-tone-deletion)))
+
+
+(advice-add 'widget-kill-line :after #'ems--widget-kill-line-after)
+
+
+
 
 ;;;   activating widgets:
 ;; forward declaration:
 
-(defadvice widget-button-press (around emacspeak pre act comp)
+
+(defun ems--widget-button-press-around (orig-fun &rest args)
   "speak"
-  (let ((inhibit-read-only t)
-        (widget (widget-at (ad-get-arg 0))))
-    (cond
-     (widget                            ; First record some state:
-      (let ((pos (ad-get-arg 0))
-            (old-position (point)))
-        (cond
-         ((and (eq major-mode 'eww-mode)
-               (bound-and-true-p emacspeak-we-url-executor)
-               (functionp emacspeak-we-url-executor))
-          (emacspeak-icon 'button)
-          (call-interactively 'emacspeak-we-url-expand-and-execute))
-         (t ad-do-it
-            (cond
-             ((= old-position (point))  ;did not move
-              (emacspeak-icon 'button)
-              (emacspeak-widget-summarize (widget-at pos)))
-             (t  (emacspeak-icon 'large-movement)
-                 (or (emacspeak-widget-summarize (widget-at (point)))
-                     (emacspeak-speak-line))))))))
-     (t ad-do-it))
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let ((inhibit-read-only t) (widget (widget-at (ad-get-arg 0))))
+      (cond
+       (widget
+	(let ((pos (ad-get-arg 0)) (old-position (point)))
+	  (cond
+	   ((and (eq major-mode 'eww-mode)
+		 (bound-and-true-p emacspeak-we-url-executor)
+		 (functionp emacspeak-we-url-executor))
+	    (emacspeak-icon 'button)
+	    (call-interactively 'emacspeak-we-url-expand-and-execute))
+	   (t (apply orig-fun args)
+	      (cond
+	       ((= old-position (point)) (emacspeak-icon 'button)
+		(emacspeak-widget-summarize (widget-at pos)))
+	       (t (emacspeak-icon 'large-movement)
+		  (or (emacspeak-widget-summarize (widget-at (point)))
+		      (emacspeak-speak-line))))))))
+       (t (apply orig-fun args)))
+      result)
+    result))
+
+
+(advice-add 'widget-button-press :around
+	    #'ems--widget-button-press-around)
+
+
+
 
 ;;;   Interactively summarize a widget and its parents.
 
@@ -599,37 +643,47 @@ widget before summarizing."
 
 ;;;  work around widget problems
 
-(defadvice widget-convert-text (around emacspeak pre act comp)
+
+(defun ems--widget-convert-text-around (orig-fun &rest args)
   "Protect value of personality if set originally"
-  (let ((inhibit-read-only t)
-        (start (ad-get-arg 1))
-        (end (ad-get-arg 2))
-        (orig nil))
+  (let
+      ((inhibit-read-only t) (start (ad-get-arg 1))
+       (end (ad-get-arg 2)) (orig nil))
     (setq orig (get-text-property start 'personality))
-    ad-do-it 
-    (and orig 
-         (put-text-property start end 
-                            'personality orig))))
+    (apply orig-fun args)
+    (and orig (put-text-property start end 'personality orig))))
+
+
+(advice-add 'widget-convert-text :around
+	    #'ems--widget-convert-text-around)
+
+
+
 
 ;;;  update widget related keymaps so we dont loose the
 ;;emacspeak prefix 
 
-(defadvice widget-setup (after emacspeak pre act comp)
+
+(defun ems--widget-setup-after (&rest _)
   "Update widget keymaps."
-  (cl-declare (special emacspeak-prefix
-                       widget-field-keymap widget-text-keymap))
-  (cl-loop
-   for map in
-   '(widget-field-keymap widget-text-keymap)
-   do
-   (when  (keymapp map)
-     (define-key map  emacspeak-prefix 'emacspeak-keymap)
-     (define-key map
-                 (concat emacspeak-prefix emacspeak-prefix)
-                 'widget-end-of-line)
-     (define-key map "\M-h" 'emacspeak-widget-help)
-     (define-key map "\M-p" 'emacspeak-widget-summarize-parent)
-     (define-key map "\M-\C-m" 'emacspeak-widget-update-from-minibuffer))))
+  (cl-declare
+   (special emacspeak-prefix widget-field-keymap widget-text-keymap))
+  (cl-loop for map in '(widget-field-keymap widget-text-keymap) do
+	   (when (keymapp map)
+	     (define-key map emacspeak-prefix 'emacspeak-keymap)
+	     (define-key map
+			 (concat emacspeak-prefix emacspeak-prefix)
+			 'widget-end-of-line)
+	     (define-key map "\350" 'emacspeak-widget-help)
+	     (define-key map "\360" 'emacspeak-widget-summarize-parent)
+	     (define-key map "\215"
+			 'emacspeak-widget-update-from-minibuffer))))
+
+
+(advice-add 'widget-setup :after #'ems--widget-setup-after)
+
+
+
 
 ;;;  augment widgets 
 

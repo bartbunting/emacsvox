@@ -215,23 +215,44 @@
        (emacspeak-speak-line)
        (emacspeak-icon 'select-object)))))
 
-(defadvice cider-repl-switch-to-other(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'select-object)))
-(defadvice cider-repl-set-ns (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
 
-(defadvice cider-repl-toggle-pretty-printing (after emacspeak pre act comp)
+(defun ems--cider-repl-switch-to-other-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-speak-mode-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'cider-repl-switch-to-other :after
+	    #'ems--cider-repl-switch-to-other-after)
+
+
+
+
+(defun ems--cider-repl-set-ns-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'cider-repl-set-ns :after #'ems--cider-repl-set-ns-after)
+
+
+
+
+
+(defun ems--cider-repl-toggle-pretty-printing-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon (f cider-repl-use-pretty-printing 'on 'off))
     (message "Turned  %s pretty printing."
-             (if cider-repl-use-pretty-printing 'on 'off))))
+	     (if cider-repl-use-pretty-printing 'on 'off))))
+
+
+(advice-add 'cider-repl-toggle-pretty-printing :after
+	    #'ems--cider-repl-toggle-pretty-printing-after)
+
+
+
 
 ;;;  find:
 
@@ -257,28 +278,56 @@
          (emacspeak-icon 'close-object)
          (emacspeak-speak-mode-line))))))
 
-(defadvice cider-connections-goto-connection (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'open-object)))
 
-(defadvice cider-connect (after emacspeak pre act comp)
+(defun ems--cider-connections-goto-connection-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'open-object)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'open-object)))
 
-(defadvice  cider-close-nrepl-session(after emacspeak pre act comp)
+
+(advice-add 'cider-connections-goto-connection :after
+	    #'ems--cider-connections-goto-connection-after)
+
+
+
+
+
+(defun ems--cider-connect-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (message "Closed Repl Session")))
-(defadvice cider-close-ancillary-buffers (after emacspeak pre act comp)
+    (emacspeak-speak-mode-line) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'cider-connect :after #'ems--cider-connect-after)
+
+
+
+
+
+(defun ems--cider-close-nrepl-session-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (message "Closed Repl Session")))
+
+
+(advice-add 'cider-close-nrepl-session :after
+	    #'ems--cider-close-nrepl-session-after)
+
+
+
+
+(defun ems--cider-close-ancillary-buffers-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Closed ancillary buffers")))
+
+
+(advice-add 'cider-close-ancillary-buffers :after
+	    #'ems--cider-close-ancillary-buffers-after)
+
+
+
 (cl-loop
  for f in
  '(cider-describe-nrepl-session cider-connection-browser

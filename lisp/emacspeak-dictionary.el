@@ -48,60 +48,129 @@
 ;;; Code:
 
 ;;;  Advice interactive commands to speak.
-(defadvice dictionary (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
-(defadvice dictionary-close (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
-(defadvice dictionary-select-dictionary (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (message "Selected dictionary")))
-(defadvice dictionary-select-strategy (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (message "Selected strategy")))
 
-(defadvice dictionary-search (after emacspeak pre act comp)
+(defun ems--dictionary-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'search-hit)
-    (emacspeak-speak-line)))
-(defadvice dictionary-lookup-definition (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'search-hit)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice dictionary-match-words (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'search-hit)
-    (emacspeak-speak-line)))
 
-(defadvice dictionary-previous (after emacspeak pre act comp)
+(advice-add 'dictionary :after #'ems--dictionary-after)
+
+
+
+
+(defun ems--dictionary-close-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
-(defadvice dictionary-prev-link (after emacspeak pre act comp)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'dictionary-close :after #'ems--dictionary-close-after)
+
+
+
+
+(defun ems--dictionary-select-dictionary-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (message "Selected dictionary")))
+
+
+(advice-add 'dictionary-select-dictionary :after
+	    #'ems--dictionary-select-dictionary-after)
+
+
+
+
+(defun ems--dictionary-select-strategy-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (message "Selected strategy")))
+
+
+(advice-add 'dictionary-select-strategy :after
+	    #'ems--dictionary-select-strategy-after)
+
+
+
+
+
+(defun ems--dictionary-search-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'search-hit) (emacspeak-speak-line)))
+
+
+(advice-add 'dictionary-search :after #'ems--dictionary-search-after)
+
+
+
+
+(defun ems--dictionary-lookup-definition-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'search-hit) (emacspeak-speak-line)))
+
+
+(advice-add 'dictionary-lookup-definition :after
+	    #'ems--dictionary-lookup-definition-after)
+
+
+
+
+
+(defun ems--dictionary-match-words-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'search-hit) (emacspeak-speak-line)))
+
+
+(advice-add 'dictionary-match-words :after
+	    #'ems--dictionary-match-words-after)
+
+
+
+
+
+(defun ems--dictionary-previous-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'dictionary-previous :after
+	    #'ems--dictionary-previous-after)
+
+
+
+
+(defun ems--dictionary-prev-link-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-speak-range 'link-function)))
 
-(defadvice dictionary-next-link (after emacspeak pre act comp)
+
+(advice-add 'dictionary-prev-link :after
+	    #'ems--dictionary-prev-link-after)
+
+
+
+
+
+(defun ems--dictionary-next-link-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-speak-range 'link-function)))
+
+
+(advice-add 'dictionary-next-link :after
+	    #'ems--dictionary-next-link-after)
+
+
+
 
 (provide 'emacspeak-dictionary)
 ;;;  end of file

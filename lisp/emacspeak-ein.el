@@ -150,11 +150,17 @@
        (emacspeak-speak-line)
        (emacspeak-icon 'large-movement)))))
 
-(defadvice ein:tb-show-km (after emacspeak pre act comp)
+
+(defun ems--ein:tb-show-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'ein:tb-show-km :after #'ems--ein:tb-show-km-after)
+
+
+
 
 ;;; pytools:
 
@@ -249,24 +255,44 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-line)))))
 
-(defadvice ein:worksheet-move-cell-up-km (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak "Moved cell up")
-    (emacspeak-icon 'large-movement)
-    ))
 
-(defadvice ein:worksheet-move-cell-down-km (after emacspeak pre act comp)
+(defun ems--ein:worksheet-move-cell-up-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (dtk-speak "Moved cell down")
-    (emacspeak-icon 'large-movement)))
+    (dtk-speak "Moved cell up") (emacspeak-icon 'large-movement)))
 
-(defadvice ein:worksheet-yank-cell (after emacspeak pre act comp)
+
+(advice-add 'ein:worksheet-move-cell-up-km :after
+	    #'ems--ein:worksheet-move-cell-up-km-after)
+
+
+
+
+
+(defun ems--ein:worksheet-move-cell-down-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-ein-speak-current-cell)
-    (emacspeak-icon 'yank-object)))
+    (dtk-speak "Moved cell down") (emacspeak-icon 'large-movement)))
+
+
+(advice-add 'ein:worksheet-move-cell-down-km :after
+	    #'ems--ein:worksheet-move-cell-down-km-after)
+
+
+
+
+
+(defun ems--ein:worksheet-yank-cell-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-ein-speak-current-cell) (emacspeak-icon 'yank-object)))
+
+
+(advice-add 'ein:worksheet-yank-cell :after
+	    #'ems--ein:worksheet-yank-cell-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -284,17 +310,31 @@
           (format "%s output"
                   (if state "Hid" "Showing"))))))))
 
-(defadvice ein:worksheet-split-cell-at-point (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
 
-(defadvice ein:worksheet-merge-cell (after emacspeak pre act comp)
+(defun ems--ein:worksheet-split-cell-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'ein:worksheet-split-cell-at-point :after
+	    #'ems--ein:worksheet-split-cell-at-point-after)
+
+
+
+
+
+(defun ems--ein:worksheet-merge-cell-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
+
+
+(advice-add 'ein:worksheet-merge-cell :after
+	    #'ems--ein:worksheet-merge-cell-after)
+
+
+
 
 ;;; Notebooks:
 
@@ -330,17 +370,31 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-mode-line)))))
 
-(defadvice ein:notebook-jump-to-opened-notebook (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice ein:notebook-close-km (after emacspeak pre act comp)
+(defun ems--ein:notebook-jump-to-opened-notebook-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'ein:notebook-jump-to-opened-notebook :after
+	    #'ems--ein:notebook-jump-to-opened-notebook-after)
+
+
+
+
+
+(defun ems--ein:notebook-close-km-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'ein:notebook-close-km :after
+	    #'ems--ein:notebook-close-km-after)
+
+
+
 
 ;;; Notebooklists:
 

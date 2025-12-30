@@ -54,12 +54,19 @@
 
 ;;;  Interactive Commands:
 
-(defadvice eglot-help-at-point (after emacspeak pre act comp)
+
+(defun ems--eglot-help-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'help)
-    (with-current-buffer eglot--help-buffer
-      (emacspeak-speak-buffer))))
+    (with-current-buffer eglot--help-buffer (emacspeak-speak-buffer))))
+
+
+(advice-add 'eglot-help-at-point :after
+	    #'ems--eglot-help-at-point-after)
+
+
+
 
 (cl-loop
  for f in 

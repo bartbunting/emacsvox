@@ -86,11 +86,17 @@
        (emacspeak-icon 'scroll)
        (emacspeak-speak-line)))))
 
-(defadvice journalctl-quit (after emacspeak pre act comp)
+
+(defun ems--journalctl-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'journalctl-quit :after #'ems--journalctl-quit-after)
+
+
+
 
 (provide 'emacspeak-journalctl)
 ;;;  end of file

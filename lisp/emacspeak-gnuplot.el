@@ -55,85 +55,163 @@
 
 ;;;  advice interactive commands
 
-(defadvice gnuplot-send-region-to-gnuplot (after emacspeak pre act comp)
-  "Speak status."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-other-window)))
 
-(defadvice gnuplot-send-line-to-gnuplot (after emacspeak pre act comp)
+(defun ems--gnuplot-send-region-to-gnuplot-after (&rest _)
   "Speak status."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-other-window)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-other-window)))
 
-(defadvice gnuplot-send-line-and-forward (after emacspeak pre act comp)
-  "Speak status."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-other-window)))
 
-(defadvice gnuplot-send-buffer-to-gnuplot (after emacspeak pre act comp)
-  "Speak status."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-other-window)))
-(defadvice gnuplot-send-file-to-gnuplot (after emacspeak pre act comp)
-  "Speak status."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-other-window )))
+(advice-add 'gnuplot-send-region-to-gnuplot :after
+	    #'ems--gnuplot-send-region-to-gnuplot-after)
 
-(defadvice gnuplot-delchar-or-maybe-eof (around emacspeak pre act comp)
+
+
+
+
+(defun ems--gnuplot-send-line-to-gnuplot-after (&rest _)
+  "Speak status."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-other-window)))
+
+
+(advice-add 'gnuplot-send-line-to-gnuplot :after
+	    #'ems--gnuplot-send-line-to-gnuplot-after)
+
+
+
+
+
+(defun ems--gnuplot-send-line-and-forward-after (&rest _)
+  "Speak status."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-other-window)))
+
+
+(advice-add 'gnuplot-send-line-and-forward :after
+	    #'ems--gnuplot-send-line-and-forward-after)
+
+
+
+
+
+(defun ems--gnuplot-send-buffer-to-gnuplot-after (&rest _)
+  "Speak status."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-other-window)))
+
+
+(advice-add 'gnuplot-send-buffer-to-gnuplot :after
+	    #'ems--gnuplot-send-buffer-to-gnuplot-after)
+
+
+
+
+(defun ems--gnuplot-send-file-to-gnuplot-after (&rest _)
+  "Speak status."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-other-window)))
+
+
+(advice-add 'gnuplot-send-file-to-gnuplot :after
+	    #'ems--gnuplot-send-file-to-gnuplot-after)
+
+
+
+
+
+(defun ems--gnuplot-delchar-or-maybe-eof-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
+  (let ((result (apply orig-fun args)))
     (cond
-     ((= (point) (point-max))
-      (message "Sending EOF to comint process"))
-     (t (dtk-tone 500 100 'force)
-        (emacspeak-speak-char t)))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+     ((ems-interactive-p)
+      (cond
+       ((= (point) (point-max))
+	(message "Sending EOF to comint process"))
+       (t (dtk-tone 500 100 'force) (emacspeak-speak-char t)))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice gnuplot-kill-gnuplot-buffer (after emacspeak pre
-                                              act comp)
+
+(advice-add 'gnuplot-delchar-or-maybe-eof :around
+	    #'ems--gnuplot-delchar-or-maybe-eof-around)
+
+
+
+
+
+(defun ems--gnuplot-kill-gnuplot-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice gnuplot-show-gnuplot-buffer (after emacspeak pre
-                                              act comp)
+
+(advice-add 'gnuplot-kill-gnuplot-buffer :after
+	    #'ems--gnuplot-kill-gnuplot-buffer-after)
+
+
+
+
+
+(defun ems--gnuplot-show-gnuplot-buffer-after (&rest _)
   "Speak status."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
 
-(defadvice gnuplot-complete-keyword (around emacspeak pre act comp)
+
+(advice-add 'gnuplot-show-gnuplot-buffer :after
+	    #'ems--gnuplot-show-gnuplot-buffer-after)
+
+
+
+
+
+(defun ems--gnuplot-complete-keyword-around (orig-fun &rest args)
   "Say what you completed."
-  (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-        (dtk-stop-immediately dtk-stop-immediately))
-    (when dtk-stop-immediately (dtk-stop))
-    ad-do-it
-    (when (> (point) prior)
-      (setq dtk-stop-immediately nil)
-      (dtk-speak (buffer-substring prior (point))))
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let
+	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+	 (dtk-stop-immediately dtk-stop-immediately))
+      (when dtk-stop-immediately (dtk-stop)) (apply orig-fun args)
+      (when (> (point) prior)
+	(setq dtk-stop-immediately nil)
+	(dtk-speak (buffer-substring prior (point))))
+      result)
+    result))
 
-(defadvice gnuplot-indent-line (after emacspeak pre act
-                                      comp)
+
+(advice-add 'gnuplot-complete-keyword :around
+	    #'ems--gnuplot-complete-keyword-around)
+
+
+
+
+
+(defun ems--gnuplot-indent-line-after (&rest _)
   "Speak line we idnented."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice gnuplot-negate-option (after emacspeak pre act comp)
+
+(advice-add 'gnuplot-indent-line :after
+	    #'ems--gnuplot-indent-line-after)
+
+
+
+
+
+(defun ems--gnuplot-negate-option-after (&rest _)
   "Speak line we negated."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'gnuplot-negate-option :after
+	    #'ems--gnuplot-negate-option-after)
+
+
+
 
 (add-hook 'gnuplot-mode-hook
           #'(lambda nil

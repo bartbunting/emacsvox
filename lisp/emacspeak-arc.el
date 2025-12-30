@@ -63,56 +63,112 @@
 
 ;;;  Advice
 
-(defadvice archive-mark (after emacspeak pre act comp)
+
+(defun ems--archive-mark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-archive-speak-line)))
+    (emacspeak-icon 'mark-object) (emacspeak-archive-speak-line)))
 
-(defadvice archive-next-line (after emacspeak pre act comp)
-  "Speak"
-  (when (ems-interactive-p)
-    (emacspeak-archive-speak-line)))
 
-(defadvice archive-previous-line (after emacspeak pre act comp)
-  "Speak"
-  (when (ems-interactive-p)
-    (emacspeak-archive-speak-line)))
+(advice-add 'archive-mark :after #'ems--archive-mark-after)
 
-(defadvice archive-flag-deleted (after emacspeak pre act comp)
+
+
+
+
+(defun ems--archive-next-line-after (&rest _)
+  "Speak" (when (ems-interactive-p) (emacspeak-archive-speak-line)))
+
+
+(advice-add 'archive-next-line :after #'ems--archive-next-line-after)
+
+
+
+
+
+(defun ems--archive-previous-line-after (&rest _)
+  "Speak" (when (ems-interactive-p) (emacspeak-archive-speak-line)))
+
+
+(advice-add 'archive-previous-line :after
+	    #'ems--archive-previous-line-after)
+
+
+
+
+
+(defun ems--archive-flag-deleted-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-archive-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-archive-speak-line)))
 
-(defadvice archive-unflag (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-archive-speak-line)))
-(defadvice archive-unflag-backwards (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-archive-speak-line)))
 
-(defadvice archive-extract (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+(advice-add 'archive-flag-deleted :after
+	    #'ems--archive-flag-deleted-after)
 
-(defadvice archive-extract-other-window (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice archive-view (after emacspeak pre act comp)
+
+
+
+(defun ems--archive-unflag-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-archive-speak-line)))
+
+
+(advice-add 'archive-unflag :after #'ems--archive-unflag-after)
+
+
+
+
+(defun ems--archive-unflag-backwards-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'yank-object) (emacspeak-archive-speak-line)))
+
+
+(advice-add 'archive-unflag-backwards :after
+	    #'ems--archive-unflag-backwards-after)
+
+
+
+
+
+(defun ems--archive-extract-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'archive-extract :after #'ems--archive-extract-after)
+
+
+
+
+
+(defun ems--archive-extract-other-window-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'archive-extract-other-window :after
+	    #'ems--archive-extract-other-window-after)
+
+
+
+
+
+(defun ems--archive-view-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'archive-view :after #'ems--archive-view-after)
+
+
+
 
 ;;;  interactive commands
 

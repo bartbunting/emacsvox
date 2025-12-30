@@ -196,10 +196,16 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice haskell-cabal-mode (after emacspeak pre act comp)
+
+(defun ems--haskell-cabal-mode-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
-    (emacspeak-setup-programming-mode)))
+  (when (ems-interactive-p) (emacspeak-setup-programming-mode)))
+
+
+(advice-add 'haskell-cabal-mode :after #'ems--haskell-cabal-mode-after)
+
+
+
 
 ;;; haskell-debugger:
 

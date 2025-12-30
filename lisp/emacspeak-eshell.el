@@ -79,16 +79,20 @@
 
 ;;;   Advice top-level EShell
 
-(defadvice eshell (after emacspeak pre act comp)
-  "Announce switching to shell mode.
-Provide an auditory icon if possible."
+
+(defun ems--eshell-after (&rest _)
+  "Announce switching to shell mode.\nProvide an auditory icon if possible."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (dtk-set-punctuations 'all)
-    (or dtk-split-caps
-        (dtk-toggle-split-caps))
+    (emacspeak-icon 'open-object) (dtk-set-punctuations 'all)
+    (or dtk-split-caps (dtk-toggle-split-caps))
     (emacspeak-pronounce-refresh-pronunciations)
     (emacspeak-speak-line)))
+
+
+(advice-add 'eshell :after #'ems--eshell-after)
+
+
+
 
 ;;;  advice em-hist
 
@@ -169,79 +173,137 @@ personalities.")
                (emacspeak-icon 'select-object)
                (emacspeak-speak-line)))))
 
-(defadvice eshell-insert-process (after emacspeak pre
-                                        act comp)
+
+(defun ems--eshell-insert-process-after (&rest _)
   "Speak output."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
+
+
+(advice-add 'eshell-insert-process :after
+	    #'ems--eshell-insert-process-after)
+
+
+
 
 ;;;  advice esh-mode
 
-(defadvice eshell-delchar-or-maybe-eof (around emacspeak pre act comp)
+
+(defun ems--eshell-delchar-or-maybe-eof-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
+  (let ((result (apply orig-fun args)))
     (cond
-     ((= (point) (point-max))
-      (message "Sending EOF to comint process"))
-     (t (dtk-tone 500 100 'force)
-        (emacspeak-speak-char t)))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+     ((ems-interactive-p)
+      (cond
+       ((= (point) (point-max))
+	(message "Sending EOF to comint process"))
+       (t (dtk-tone 500 100 'force) (emacspeak-speak-char t)))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice eshell-delete-backward-char (around emacspeak pre act comp)
+
+(advice-add 'eshell-delchar-or-maybe-eof :around
+	    #'ems--eshell-delchar-or-maybe-eof-around)
+
+
+
+
+
+(defun ems--eshell-delete-backward-char-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone 500 100 'force)
-    (emacspeak-speak-this-char (preceding-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (dtk-tone 500 100 'force)
+      (emacspeak-speak-this-char (preceding-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice eshell-show-output (after emacspeak pre act comp)
+
+(advice-add 'eshell-delete-backward-char :around
+	    #'ems--eshell-delete-backward-char-around)
+
+
+
+
+
+(defun ems--eshell-show-output-after (&rest _)
   "Speak output."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
       (emacspeak-icon 'large-movement)
       (emacspeak-speak-region (point) (mark)))))
-(defadvice eshell-mark-output (after emacspeak pre act comp)
+
+
+(advice-add 'eshell-show-output :after #'ems--eshell-show-output-after)
+
+
+
+
+(defun ems--eshell-mark-output-after (&rest _)
   "Speak output."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
-      (emacspeak-icon 'mark-object)
-      (emacspeak-speak-line))))
-(defadvice eshell-kill-output (after emacspeak pre act comp)
+      (emacspeak-icon 'mark-object) (emacspeak-speak-line))))
+
+
+(advice-add 'eshell-mark-output :after #'ems--eshell-mark-output-after)
+
+
+
+
+(defun ems--eshell-kill-output-after (&rest _)
   "Produce auditory feedback."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (message "Flushed output")))
+    (emacspeak-icon 'delete-object) (message "Flushed output")))
 
-(defadvice eshell-kill-input (before emacspeak pre act comp)
+
+(advice-add 'eshell-kill-output :after #'ems--eshell-kill-output-after)
+
+
+
+
+
+(defun ems--eshell-kill-input-before (&rest _)
   "Speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
 
-(defadvice eshell-toggle (after emacspeak pre act comp)
+
+(advice-add 'eshell-kill-input :before #'ems--eshell-kill-input-before)
+
+
+
+
+
+(defun ems--eshell-toggle-after (&rest _)
   "Provide spoken context feedback."
   (when (ems-interactive-p)
     (cond
-     ((eq major-mode 'eshell-mode)
-      (emacspeak-setup-programming-mode)
+     ((eq major-mode 'eshell-mode) (emacspeak-setup-programming-mode)
       (emacspeak-speak-line))
      (t (emacspeak-speak-mode-line)))
     (emacspeak-icon 'select-object)))
-(defadvice eshell-toggle-cd (after emacspeak pre act comp)
+
+
+(advice-add 'eshell-toggle :after #'ems--eshell-toggle-after)
+
+
+
+
+(defun ems--eshell-toggle-cd-after (&rest _)
   "Provide spoken context feedback."
   (when (ems-interactive-p)
-    (cond
-     ((eq major-mode 'eshell-mode)
-      (emacspeak-speak-line))
-     (t (emacspeak-speak-mode-line)))
+    (cond ((eq major-mode 'eshell-mode) (emacspeak-speak-line))
+	  (t (emacspeak-speak-mode-line)))
     (emacspeak-icon 'select-object)))
+
+
+(advice-add 'eshell-toggle-cd :after #'ems--eshell-toggle-cd-after)
+
+
+
 
 ;;; Additional Commands To Enable: 
 
@@ -276,24 +338,34 @@ personalities.")
           (emacspeak-speak-completions-if-available))
         ad-return-value)))))
 
-(defadvice eshell-copy-old-input (after emacspeak pre act comp)
+
+(defun ems--eshell-copy-old-input-after (&rest _)
   "Speak what was inserted."
   (when (ems-interactive-p)
-    (let ((start
-           (save-excursion
-             (eshell-bol)
-             (point))))
+    (let ((start (save-excursion (eshell-bol) (point))))
       (emacspeak-icon 'yank-object)
       (emacspeak-speak-region start (point)))))
-(defadvice eshell-get-next-from-history (after emacspeak pre act comp)
+
+
+(advice-add 'eshell-copy-old-input :after
+	    #'ems--eshell-copy-old-input-after)
+
+
+
+
+(defun ems--eshell-get-next-from-history-after (&rest _)
   "Speak what was inserted."
   (when (ems-interactive-p)
-    (let ((start
-           (save-excursion
-             (eshell-bol)
-             (point))))
+    (let ((start (save-excursion (eshell-bol) (point))))
       (emacspeak-icon 'yank-object)
       (emacspeak-speak-region start (point)))))
+
+
+(advice-add 'eshell-get-next-from-history :after
+	    #'ems--eshell-get-next-from-history-after)
+
+
+
 
 (provide 'emacspeak-eshell)
 ;;;  end of file

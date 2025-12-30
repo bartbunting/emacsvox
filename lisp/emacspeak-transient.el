@@ -118,19 +118,31 @@
 
 ;;;  Advice Interactive Commands:
 
-(defadvice transient-toggle-common (after emacspeak pre act comp)
-  "speak."
-  (cl-declare (special transient-show-common-commands))
-  (when (ems-interactive-p)
-    (dtk-stop 'all)
-    (emacspeak-icon
-     (if transient-show-common-commands 'on 'off))))
 
-(defadvice transient-resume (after emacspeak pre act comp)
-  "speak."
+(defun ems--transient-toggle-common-after (&rest _)
+  "speak." (cl-declare (special transient-show-common-commands))
   (when (ems-interactive-p)
     (dtk-stop 'all)
-    (emacspeak-icon 'open-object)))
+    (emacspeak-icon (if transient-show-common-commands 'on 'off))))
+
+
+(advice-add 'transient-toggle-common :after
+	    #'ems--transient-toggle-common-after)
+
+
+
+
+
+(defun ems--transient-resume-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (dtk-stop 'all) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'transient-resume :after #'ems--transient-resume-after)
+
+
+
 
 (cl-loop
  for f in
@@ -180,36 +192,45 @@
 (defvar emacspeak-transient-cache nil
   "Cache of the last Transient buffer contents.")
 
-(defadvice transient--show (after emacspeak pre act comp)
+
+(defun ems--transient--show-after (&rest _)
   "Speak and set up cache."
   (when (window-live-p transient--window)
     (with-current-buffer (window-buffer transient--window)
       (setq emacspeak-transient-cache
-            (buffer-substring (point-min)  (point-max)))
-      (emacspeak-speak-line)
-      (emacspeak-icon 'open-object))))
+	    (buffer-substring (point-min) (point-max)))
+      (emacspeak-speak-line) (emacspeak-icon 'open-object))))
 
-(defadvice transient-suspend (around emacspeak pre act comp)
-  "Pop to *Transient-emacspeak* buffer where the message emitted by
-the transient can be browsed.
-Press `r' to resume the suspended transient."
-  (cl-declare (special emacspeak-transient-cache))
-  (cond
-   ((ems-interactive-p)
-    (let ((buff (get-buffer-create "*Transient-Emacspeak*"))
-          (inhibit-read-only t))
-      ad-do-it
-      (emacspeak-icon 'close-object)
-      (with-current-buffer buff
-        (erase-buffer)
-        (insert "r to resume, C-g to quit.\n\n")
-        (insert emacspeak-transient-cache)
-        (goto-char (point-min))
-        (emacspeak-transient-mode))
-      (switch-to-buffer buff)
-      (emacspeak-speak-mode-line)))
-   (t ad-do-it))
-  ad-return-value)
+
+(advice-add 'transient--show :after #'ems--transient--show-after)
+
+
+
+
+
+(defun ems--transient-suspend-around (orig-fun &rest args)
+  "Pop to *Transient-emacspeak* buffer where the message emitted by\nthe transient can be browsed.\nPress `r' to resume the suspended transient."
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special emacspeak-transient-cache))
+    (cond
+     ((ems-interactive-p)
+      (let
+	  ((buff (get-buffer-create "*Transient-Emacspeak*"))
+	   (inhibit-read-only t))
+	(apply orig-fun args) (emacspeak-icon 'close-object)
+	(with-current-buffer buff
+	  (erase-buffer) (insert "r to resume, C-g to quit.\n\n")
+	  (insert emacspeak-transient-cache) (goto-char (point-min))
+	  (emacspeak-transient-mode))
+	(switch-to-buffer buff) (emacspeak-speak-mode-line)))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'transient-suspend :around #'ems--transient-suspend-around)
+
+
+
 
 ;;; section nav:
 

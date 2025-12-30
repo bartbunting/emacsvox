@@ -79,138 +79,280 @@
 ;;;   Advice some commands.
 ;;;   buffer selection
 
-(defadvice rmail-quit(after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice rmail-bury(after emacspeak pre act comp)
+(defun ems--rmail-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
-(defadvice rmail (after emacspeak pre act comp)
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'rmail-quit :after #'ems--rmail-quit-after)
+
+
+
+
+
+(defun ems--rmail-bury-after (&rest _)
+  "speak"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'rmail-bury :after #'ems--rmail-bury-after)
+
+
+
+
+(defun ems--rmail-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-current-message)))
 
-(defadvice rmail-expunge-and-save (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)))
+
+(advice-add 'rmail :after #'ems--rmail-after)
+
+
+
+
+
+(defun ems--rmail-expunge-and-save-after (&rest _)
+  "speak" (when (ems-interactive-p) (emacspeak-icon 'save-object)))
+
+
+(advice-add 'rmail-expunge-and-save :after
+	    #'ems--rmail-expunge-and-save-after)
+
+
+
 
 ;;;   message navigation
 
-(defadvice rmail-beginning-of-message (after emacspeak pre act comp)
+
+(defun ems--rmail-beginning-of-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'rmail-beginning-of-message :after
+	    #'ems--rmail-beginning-of-message-after)
+
+
+
 
 ;;;   folder navigation
 
-(defadvice rmail-first-message (after emacspeak pre act comp)
+
+(defun ems--rmail-first-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
 
-(defadvice rmail-first-unseen-message (after emacspeak pre act comp)
+
+(advice-add 'rmail-first-message :after
+	    #'ems--rmail-first-message-after)
+
+
+
+
+
+(defun ems--rmail-first-unseen-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
 
-(defadvice rmail-last-message (after emacspeak pre act comp)
+
+(advice-add 'rmail-first-unseen-message :after
+	    #'ems--rmail-first-unseen-message-after)
+
+
+
+
+
+(defun ems--rmail-last-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
 
-(defadvice rmail-next-undeleted-message (after emacspeak pre act comp)
+
+(advice-add 'rmail-last-message :after #'ems--rmail-last-message-after)
+
+
+
+
+
+(defun ems--rmail-next-undeleted-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
 
-(defadvice rmail-next-message (after emacspeak pre act comp)
+
+(advice-add 'rmail-next-undeleted-message :after
+	    #'ems--rmail-next-undeleted-message-after)
+
+
+
+
+
+(defun ems--rmail-next-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
 
-(defadvice rmail-previous-undeleted-message (after emacspeak pre act comp)
+
+(advice-add 'rmail-next-message :after #'ems--rmail-next-message-after)
+
+
+
+
+
+(defun ems--rmail-previous-undeleted-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
-(defadvice rmail-previous-message (after emacspeak pre act comp)
+
+
+(advice-add 'rmail-previous-undeleted-message :after
+	    #'ems--rmail-previous-undeleted-message-after)
+
+
+
+
+(defun ems--rmail-previous-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-message rmail-current-message)))
-(defadvice rmail-next-labeled-message (around emacspeak pre act comp)
-  "speak"
-  (cl-declare (special rmail-current-message))
-  (cond
-   ((ems-interactive-p)
-    (let ((original rmail-current-message))
-      ad-do-it
-      (cond
-       ((not (= original rmail-current-message))
-        (emacspeak-icon 'select-object)
-        (emacspeak-rmail-summarize-message rmail-current-message))
-       (t (emacspeak-icon 'search-miss)))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice rmail-previous-labeled-message (around emacspeak pre act comp)
-  "speak"
-  (cond
-   ((ems-interactive-p)
-    (let ((original rmail-current-message))
-      ad-do-it
-      (cond
-       ((not (= original rmail-current-message))
-        (emacspeak-icon 'select-object)
-        (emacspeak-rmail-summarize-message rmail-current-message))
-       (t (emacspeak-icon 'search-miss)))))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice rmail-show-message (after emacspeak pre act comp)
+(advice-add 'rmail-previous-message :after
+	    #'ems--rmail-previous-message-after)
+
+
+
+
+(defun ems--rmail-next-labeled-message-around (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special rmail-current-message))
+    (cond
+     ((ems-interactive-p)
+      (let ((original rmail-current-message))
+	(apply orig-fun args)
+	(cond
+	 ((not (= original rmail-current-message))
+	  (emacspeak-icon 'select-object)
+	  (emacspeak-rmail-summarize-message rmail-current-message))
+	 (t (emacspeak-icon 'search-miss)))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'rmail-next-labeled-message :around
+	    #'ems--rmail-next-labeled-message-around)
+
+
+
+
+
+(defun ems--rmail-previous-labeled-message-around
+    (orig-fun &rest args)
+  "speak"
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((original rmail-current-message))
+	(apply orig-fun args)
+	(cond
+	 ((not (= original rmail-current-message))
+	  (emacspeak-icon 'select-object)
+	  (emacspeak-rmail-summarize-message rmail-current-message))
+	 (t (emacspeak-icon 'search-miss)))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'rmail-previous-labeled-message :around
+	    #'ems--rmail-previous-labeled-message-around)
+
+
+
+
+
+(defun ems--rmail-show-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
-    (emacspeak-rmail-summarize-message rmail-current-message)))  
+    (emacspeak-rmail-summarize-message rmail-current-message)))
+
+
+(advice-add 'rmail-show-message :after #'ems--rmail-show-message-after)
+
+
+  
 
 ;;;  delete and undelete messages
 
-(defadvice rmail-undelete-previous-message (after emacspeak pre act
-                                                  comp)
+
+(defun ems--rmail-undelete-previous-message-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-rmail-summarize-current-message)))
-(defadvice rmail-delete-message (after emacspeak pre act comp)
+
+
+(advice-add 'rmail-undelete-previous-message :after
+	    #'ems--rmail-undelete-previous-message-after)
+
+
+
+
+(defun ems--rmail-delete-message-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (message "Message discarded.")))
+    (emacspeak-icon 'delete-object) (message "Message discarded.")))
 
-(defadvice rmail-delete-forward (after emacspeak pre act comp)
+
+(advice-add 'rmail-delete-message :after
+	    #'ems--rmail-delete-message-after)
+
+
+
+
+
+(defun ems--rmail-delete-forward-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (emacspeak-rmail-summarize-current-message)))
 
-(defadvice rmail-delete-backward (after emacspeak pre act comp)
+
+(advice-add 'rmail-delete-forward :after
+	    #'ems--rmail-delete-forward-after)
+
+
+
+
+
+(defun ems--rmail-delete-backward-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
-    (emacspeak-rmail-summarize-current-message)))  
+    (emacspeak-rmail-summarize-current-message)))
+
+
+(advice-add 'rmail-delete-backward :after
+	    #'ems--rmail-delete-backward-after)
+
+
+  
 
 ;;;   Additional interactive commands
 

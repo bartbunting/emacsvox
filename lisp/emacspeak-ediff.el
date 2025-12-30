@@ -91,8 +91,16 @@
   "Holds the control buffer for the most recent ediff")
 ;; Please tell me what control buffer you're using--
 
-(defadvice ediff-setup-control-buffer (after emacspeak pre act comp)
+
+(defun ems--ediff-setup-control-buffer-after (&rest _)
   (setq emacspeak-ediff-control-buffer (ad-get-arg 0)))
+
+
+(advice-add 'ediff-setup-control-buffer :after
+	    #'ems--ediff-setup-control-buffer-after)
+
+
+
 
 (defsubst emacspeak-ediff-control-panel ()
   (cl-declare (special emacspeak-ediff-control-buffer))
@@ -212,96 +220,202 @@
 
 ;;;  Advice:
 
-(defadvice ediff-toggle-help (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'help)))
 
-(defadvice ediff-next-difference (after emacspeak pre act comp)
+(defun ems--ediff-toggle-help-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'help)))
+
+
+(advice-add 'ediff-toggle-help :after #'ems--ediff-toggle-help-after)
+
+
+
+
+
+(defun ems--ediff-next-difference-after (&rest _)
   "Speak the difference interactively."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ediff-speak-current-difference)))
 
-(defadvice ediff-previous-difference (after emacspeak pre act comp)
+
+(advice-add 'ediff-next-difference :after
+	    #'ems--ediff-next-difference-after)
+
+
+
+
+
+(defun ems--ediff-previous-difference-after (&rest _)
   "Speak the difference interactively."
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ediff-speak-current-difference)))
 
-(defadvice ediff-status-info (after emacspeak pre act comp)
+
+(advice-add 'ediff-previous-difference :after
+	    #'ems--ediff-previous-difference-after)
+
+
+
+
+
+(defun ems--ediff-status-info-after (&rest _)
   "Speak the status information"
   (when (ems-interactive-p)
     (save-current-buffer
-      (set-buffer " *ediff-info*")
-      (emacspeak-speak-buffer))))
+      (set-buffer " *ediff-info*") (emacspeak-speak-buffer))))
 
-(defadvice ediff-scroll-up (after emacspeak pre act comp)
+
+(advice-add 'ediff-status-info :after #'ems--ediff-status-info-after)
+
+
+
+
+
+(defun ems--ediff-scroll-up-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'scroll)
-    (message "Scrolled up buffers A and B")))
+    (emacspeak-icon 'scroll) (message "Scrolled up buffers A and B")))
 
-(defadvice ediff-scroll-down (after emacspeak pre act comp)
+
+(advice-add 'ediff-scroll-up :after #'ems--ediff-scroll-up-after)
+
+
+
+
+
+(defun ems--ediff-scroll-down-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'scroll)
-    (message "Scrolled down buffers A and B")))
+    (emacspeak-icon 'scroll) (message "Scrolled down buffers A and B")))
 
-(defadvice ediff-toggle-split (after emacspeak pre act comp)
+
+(advice-add 'ediff-scroll-down :after #'ems--ediff-scroll-down-after)
+
+
+
+
+
+(defun ems--ediff-toggle-split-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (if (eq ediff-split-window-function 'split-window-vertically)
-        (message "Split ediff windows vertically")
+	(message "Split ediff windows vertically")
       (message "Split ediff windows horizontally"))))
 
-(defadvice ediff-recenter (after emacspeak pre act comp)
+
+(advice-add 'ediff-toggle-split :after #'ems--ediff-toggle-split-after)
+
+
+
+
+
+(defun ems--ediff-recenter-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Refreshed the ediff display")))
 
-(defadvice ediff-jump-to-difference (after emacspeak pre act comp)
+
+(advice-add 'ediff-recenter :after #'ems--ediff-recenter-after)
+
+
+
+
+
+(defun ems--ediff-jump-to-difference-after (&rest _)
   "Speak the difference you jumped to"
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ediff-speak-current-difference)))
 
-(defadvice ediff-jump-to-difference-at-point (after emacspeak pre act comp)
+
+(advice-add 'ediff-jump-to-difference :after
+	    #'ems--ediff-jump-to-difference-after)
+
+
+
+
+
+(defun ems--ediff-jump-to-difference-at-point-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
     (emacspeak-ediff-speak-current-difference)))
 
+
+(advice-add 'ediff-jump-to-difference-at-point :after
+	    #'ems--ediff-jump-to-difference-at-point-after)
+
+
+
+
 ;; advice meta panel
-(defadvice ediff-previous-meta-item (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
-(defadvice ediff-next-meta-item (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
 
-(defadvice ediff-registry-action (after emacspeak pre act comp)
+(defun ems--ediff-previous-meta-item-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'open-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
 
-(defadvice ediff-show-registry (after emacspeak pre act comp)
+
+(advice-add 'ediff-previous-meta-item :after
+	    #'ems--ediff-previous-meta-item-after)
+
+
+
+
+(defun ems--ediff-next-meta-item-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'ediff-next-meta-item :after
+	    #'ems--ediff-next-meta-item-after)
+
+
+
+
+
+(defun ems--ediff-registry-action-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-speak-mode-line) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'ediff-registry-action :after
+	    #'ems--ediff-registry-action-after)
+
+
+
+
+
+(defun ems--ediff-show-registry-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Welcome to the Ediff registry")))
 
-(defadvice ediff-toggle-filename-truncation (after emacspeak pre act comp)
+
+(advice-add 'ediff-show-registry :after
+	    #'ems--ediff-show-registry-after)
+
+
+
+
+
+(defun ems--ediff-toggle-filename-truncation-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "turned %s file name truncation in Ediff registry"
-             ediff-meta-truncate-filenames)))
+	     ediff-meta-truncate-filenames)))
+
+
+(advice-add 'ediff-toggle-filename-truncation :after
+	    #'ems--ediff-toggle-filename-truncation-after)
+
+
+
 
 ;;; Hooks:
 

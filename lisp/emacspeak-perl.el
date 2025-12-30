@@ -56,22 +56,41 @@
 
 ;;;   Program structure:
 
-(defadvice mark-perl-function (after emacspeak pre act comp)
+
+(defun ems--mark-perl-function-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (message "Marked procedure")))
+    (emacspeak-icon 'mark-object) (message "Marked procedure")))
 
-(defadvice perl-beginning-of-function (after emacspeak pre act comp)
+
+(advice-add 'mark-perl-function :after #'ems--mark-perl-function-after)
+
+
+
+
+
+(defun ems--perl-beginning-of-function-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice perl-end-of-function (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)))
+
+(advice-add 'perl-beginning-of-function :after
+	    #'ems--perl-beginning-of-function-after)
+
+
+
+
+
+(defun ems--perl-end-of-function-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'large-movement)))
+
+
+(advice-add 'perl-end-of-function :after
+	    #'ems--perl-end-of-function-after)
+
+
+
 
 (provide  'emacspeak-perl)
 

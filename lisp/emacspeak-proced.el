@@ -283,29 +283,54 @@
 
 ;;;  Advice interactive commands:
 
-(defadvice proced-mark (before emacspeak pre act comp)
+
+(defun ems--proced-mark-before (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-proced-speak-this-field)))
+    (emacspeak-icon 'mark-object) (emacspeak-proced-speak-this-field)))
 
-(defadvice proced-unmark (before emacspeak pre act comp)
+
+(advice-add 'proced-mark :before #'ems--proced-mark-before)
+
+
+
+
+
+(defun ems--proced-unmark-before (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'deselect-object)
     (emacspeak-proced-speak-this-field)))
 
-(defadvice proced-mark-all (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Marked all processes. ")
-    (emacspeak-icon 'mark-object)))
 
-(defadvice proced-unmark-all (after emacspeak pre act comp)
+(advice-add 'proced-unmark :before #'ems--proced-unmark-before)
+
+
+
+
+
+(defun ems--proced-mark-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (message "Removed all marks. ")
-    (emacspeak-icon 'deselect-object)))
+    (message "Marked all processes. ") (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'proced-mark-all :after #'ems--proced-mark-all-after)
+
+
+
+
+
+(defun ems--proced-unmark-all-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (message "Removed all marks. ") (emacspeak-icon 'deselect-object)))
+
+
+(advice-add 'proced-unmark-all :after #'ems--proced-unmark-all-after)
+
+
+
 
 (cl-loop
  for f in

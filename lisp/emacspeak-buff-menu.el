@@ -125,129 +125,264 @@
   (forward-line  (* -1 count))
   (emacspeak-list-buffers-speak-buffer-line))
 
-(defadvice list-buffers (after emacspeak pre act comp)
-  "Select the window displaying buffer-menu,
-and set up additional Emacspeak bindings."
+
+(defun ems--list-buffers-after (&rest _)
+  "Select the window displaying buffer-menu,\nand set up additional Emacspeak bindings."
   (cl-declare (special Buffer-menu-mode-map))
   (when (ems-interactive-p)
-    (select-window  ad-return-value)
-    (tabulated-list-next-column 3)
-    (define-key Buffer-menu-mode-map "," 'emacspeak-list-buffers-speak-name)
+    (select-window ad-return-value) (tabulated-list-next-column 3)
+    (define-key Buffer-menu-mode-map ","
+		'emacspeak-list-buffers-speak-name)
     (define-key Buffer-menu-mode-map "l"
-                'emacspeak-list-buffers-speak-buffer-line)
-    (define-key Buffer-menu-mode-map "n" 'emacspeak-list-buffers-next-line)
-    (define-key Buffer-menu-mode-map "p" 'emacspeak-list-buffers-previous-line)
+		'emacspeak-list-buffers-speak-buffer-line)
+    (define-key Buffer-menu-mode-map "n"
+		'emacspeak-list-buffers-next-line)
+    (define-key Buffer-menu-mode-map "p"
+		'emacspeak-list-buffers-previous-line)
     (emacspeak-list-buffers-speak-buffer-line)
     (emacspeak-icon 'open-object)))
 
-(defadvice buffer-menu (after emacspeak pre act comp)
+
+(advice-add 'list-buffers :after #'ems--list-buffers-after)
+
+
+
+
+
+(defun ems--buffer-menu-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'task-done)
     (message "Displayed list of buffers in other window")))
 
+
+(advice-add 'buffer-menu :after #'ems--buffer-menu-after)
+
+
+
+
 ;;;   buffer manipulation commands 
-(defadvice Buffer-menu-bury (after emacspeak pre act comp)
+
+(defun ems--Buffer-menu-bury-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-delete-backwards (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-bury :after #'ems--Buffer-menu-bury-after)
+
+
+
+
+
+(defun ems--Buffer-menu-delete-backwards-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-delete (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-delete-backwards :after
+	    #'ems--Buffer-menu-delete-backwards-after)
+
+
+
+
+
+(defun ems--Buffer-menu-delete-after (&rest _)
   "Provide spoken and auditory feedback."
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-mark (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-delete :after #'ems--Buffer-menu-delete-after)
+
+
+
+
+
+(defun ems--Buffer-menu-mark-after (&rest _)
   "Provide spoken and auditory feedback."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-quit (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-mark :after #'ems--Buffer-menu-mark-after)
+
+
+
+
+
+(defun ems--Buffer-menu-quit-after (&rest _)
   "Speak the modeline of the newly visible buffer."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice Buffer-menu-save (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-quit :after #'ems--Buffer-menu-quit-after)
+
+
+
+
+
+(defun ems--Buffer-menu-save-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'save-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-select (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-save :after #'ems--Buffer-menu-save-after)
+
+
+
+
+
+(defun ems--Buffer-menu-select-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
 
-(defadvice Buffer-menu-unmark (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-select :after #'ems--Buffer-menu-select-after)
+
+
+
+
+
+(defun ems--Buffer-menu-unmark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'deselect-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-backup-unmark (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-unmark :after #'ems--Buffer-menu-unmark-after)
+
+
+
+
+
+(defun ems--Buffer-menu-backup-unmark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'deselect-object)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-execute (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice Buffer-menu-toggle-read-only (after emacspeak pre act comp)
+(advice-add 'Buffer-menu-backup-unmark :after
+	    #'ems--Buffer-menu-backup-unmark-after)
+
+
+
+
+
+(defun ems--Buffer-menu-execute-after (&rest _)
+  "speak" (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'Buffer-menu-execute :after
+	    #'ems--Buffer-menu-execute-after)
+
+
+
+
+
+(defun ems--Buffer-menu-toggle-read-only-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-list-buffers-speak-buffer-line)))
 
-(defadvice Buffer-menu-not-modified (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-toggle-read-only :after
+	    #'ems--Buffer-menu-toggle-read-only-after)
+
+
+
+
+
+(defun ems--Buffer-menu-not-modified-after (&rest _)
   "speak "
   (when (ems-interactive-p)
     (emacspeak-list-buffers-speak-buffer-line)
-    (if (ad-get-arg 0)
-        (emacspeak-icon 'modified-object)
+    (if (ad-get-arg 0) (emacspeak-icon 'modified-object)
       (emacspeak-icon 'unmodified-object))))
 
-(defadvice Buffer-menu-visit-tags-table (before emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-not-modified :after
+	    #'ems--Buffer-menu-not-modified-after)
+
+
+
+
+
+(defun ems--Buffer-menu-visit-tags-table-before (&rest _)
   "speak"
   (when (ems-interactive-p)
     (message "Visiting tags table on current line")))
 
+
+(advice-add 'Buffer-menu-visit-tags-table :before
+	    #'ems--Buffer-menu-visit-tags-table-before)
+
+
+
+
 ;;;   display buffers 
 
-(defadvice Buffer-menu-1-window (after emacspeak pre act comp)
-  "Announce the newly selected buffer."
-  (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'select-object)))
 
-(defadvice Buffer-menu-2-window (after emacspeak pre act comp)
+(defun ems--Buffer-menu-1-window-after (&rest _)
   "Announce the newly selected buffer."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'select-object)))
 
-(defadvice Buffer-menu-this-window (after emacspeak pre act comp)
+
+(advice-add 'Buffer-menu-1-window :after
+	    #'ems--Buffer-menu-1-window-after)
+
+
+
+
+
+(defun ems--Buffer-menu-2-window-after (&rest _)
   "Announce the newly selected buffer."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'select-object)))
-(defadvice Buffer-menu-other-window (after emacspeak pre act comp)
+    (emacspeak-speak-mode-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'Buffer-menu-2-window :after
+	    #'ems--Buffer-menu-2-window-after)
+
+
+
+
+
+(defun ems--Buffer-menu-this-window-after (&rest _)
+  "Announce the newly selected buffer."
+  (when (ems-interactive-p)
+    (emacspeak-speak-mode-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'Buffer-menu-this-window :after
+	    #'ems--Buffer-menu-this-window-after)
+
+
+
+
+(defun ems--Buffer-menu-other-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'Buffer-menu-other-window :after
+	    #'ems--Buffer-menu-other-window-after)
+
+
+
 
 (provide 'emacspeak-buff-menu)
 ;;;  end of file 

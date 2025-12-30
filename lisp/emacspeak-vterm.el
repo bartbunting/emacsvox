@@ -73,25 +73,43 @@
 
 ;;;  Interactive Commands:
 
-(defadvice vterm-clear (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-vterm-snapshot)
-  (when (ems-interactive-p)
-    (emacspeak-icon 'scroll)
-    (message "Cleared screen")))
 
-(defadvice vterm-clear-scrollback (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-vterm-snapshot)
+(defun ems--vterm-clear-after (&rest _)
+  "speak." (emacspeak-vterm-snapshot)
   (when (ems-interactive-p)
-    (emacspeak-icon 'scroll)
-    (message "Cleared scrollback")))
+    (emacspeak-icon 'scroll) (message "Cleared screen")))
 
-(defadvice vterm-copy-mode-done (after emacspeak pre act comp)
+
+(advice-add 'vterm-clear :after #'ems--vterm-clear-after)
+
+
+
+
+
+(defun ems--vterm-clear-scrollback-after (&rest _)
+  "speak." (emacspeak-vterm-snapshot)
+  (when (ems-interactive-p)
+    (emacspeak-icon 'scroll) (message "Cleared scrollback")))
+
+
+(advice-add 'vterm-clear-scrollback :after
+	    #'ems--vterm-clear-scrollback-after)
+
+
+
+
+
+(defun ems--vterm-copy-mode-done-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
+
+
+(advice-add 'vterm-copy-mode-done :after
+	    #'ems--vterm-copy-mode-done-after)
+
+
+
 
 (with-eval-after-load "vterm"
   (cl-declaim (special vterm-mode-map vterm-copy-mode-map))
@@ -99,12 +117,17 @@
               'emacspeak-keymap)
   (define-key vterm-copy-mode-map (kbd "C-e") 'emacspeak-keymap))
 
-(defadvice vterm (after emacspeak pre act comp)
-  "speak."
 
+(defun ems--vterm-after (&rest _)
+  "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'vterm :after #'ems--vterm-after)
+
+
+
 
 (cl-loop
  for f in
@@ -117,15 +140,28 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice vterm-reset-cursor-point (after emacspeak pre act comp)
+
+(defun ems--vterm-reset-cursor-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-line)))
 
-(defadvice vterm-send-return (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-vterm-snapshot))
+
+(advice-add 'vterm-reset-cursor-point :after
+	    #'ems--vterm-reset-cursor-point-after)
+
+
+
+
+
+(defun ems--vterm-send-return-after (&rest _)
+  "speak." (emacspeak-vterm-snapshot))
+
+
+(advice-add 'vterm-send-return :after #'ems--vterm-send-return-after)
+
+
+
 
 (cl-loop
  for f in
@@ -171,57 +207,68 @@
         ems--vterm-char (preceding-char))
   )
 
-(defadvice vterm--flush-output (before emacspeak pre act comp)
+
+(defun ems--vterm--flush-output-before (&rest _)
   "Cache state before input event is processed."
   (emacspeak-vterm-snapshot))
+
+
+(advice-add 'vterm--flush-output :before
+	    #'ems--vterm--flush-output-before)
+
+
+
 
 ;; speech-enable term update loop, using previously cached state.
 (defvar emacspeak-vterm-debug nil
   "Debug flag")
 
-(defadvice vterm--redraw (after emacspeak pre act comp)
+
+(defun ems--vterm--redraw-after (&rest _)
   "Speech-enable term emulation."
-  (let ((current-char ems--vterm-char)
-        (opoint ems--vterm-opoint)
-        (row ems--vterm-row)
-        (column ems--vterm-column)
-        (new-row (1+ (count-lines (point-min) (point))))
-        (new-column (current-column)))
-    (ems-with-messages-silenced ;;; debug output
-     (message
-      "Event: %c r: %d c: %d new-row: %d new-col: %d char: %c"
-      last-command-event row column
-      new-row new-column current-char))
+  (let
+      ((current-char ems--vterm-char) (opoint ems--vterm-opoint)
+       (row ems--vterm-row) (column ems--vterm-column)
+       (new-row (1+ (count-lines (point-min) (point))))
+       (new-column (current-column)))
+    (ems-with-messages-silenced
+     (message "Event: %c r: %d c: %d new-row: %d new-col: %d char: %c"
+	      last-command-event row column new-row new-column
+	      current-char))
     (cond
-     ((and ;;; backspace or 127
-       (memq  last-command-event    '(127 backspace))
-       (= new-row row) (= -1 (- new-column column)))
-      (dtk-tone-deletion)
-      (emacspeak-speak-this-char current-char))
-     ((and
-       (= new-row row) (= 1 (- new-column column))) ;;; char insert
+     ((and (memq last-command-event '(127 backspace)) (= new-row row)
+	   (= -1 (- new-column column)))
+      (dtk-tone-deletion) (emacspeak-speak-this-char current-char))
+     ((and (= new-row row) (= 1 (- new-column column)))
       (ems-with-messages-silenced (message "char insert"))
-      (if (eq 32 last-command-event) ;;; word echo 
-          (save-excursion (backward-char 2) (emacspeak-speak-word nil))
-        (emacspeak-speak-this-char (preceding-char))))
-     ((and
-       (= new-row row) (= 1 (abs(- new-column column))))
+      (if (eq 32 last-command-event)
+	  (save-excursion
+	    (backward-char 2) (emacspeak-speak-word nil))
+	(emacspeak-speak-this-char (preceding-char))))
+     ((and (= new-row row) (= 1 (abs (- new-column column))))
       (ems-with-messages-silenced (message "horizontal char motion"))
       (emacspeak-speak-this-char (following-char)))
      ((= row new-row)
       (ems-with-messages-silenced (message "left/right motion"))
-      (if (= 32 (following-char)) ;;; vi word nav
-          (save-excursion (forward-char 1) (emacspeak-speak-word))
-        (emacspeak-speak-word)))
+      (if (= 32 (following-char))
+	  (save-excursion (forward-char 1) (emacspeak-speak-word))
+	(emacspeak-speak-word)))
      (t
       (if emacspeak-comint-autospeak
-          (let ((dtk-stop-immediately  nil))
-            (dtk-speak
-             (string-trim
-              (ansi-color-filter-apply
-               (save-excursion
-                 (beginning-of-line) (buffer-substring (1+ opoint) (point)))))))
-        (emacspeak-speak-line))))))
+	  (let ((dtk-stop-immediately nil))
+	    (dtk-speak
+	     (string-trim
+	      (ansi-color-filter-apply
+	       (save-excursion
+		 (beginning-of-line)
+		 (buffer-substring (1+ opoint) (point)))))))
+	(emacspeak-speak-line))))))
+
+
+(advice-add 'vterm--redraw :after #'ems--vterm--redraw-after)
+
+
+
 
 (provide 'emacspeak-vterm)
 ;;;  end of file

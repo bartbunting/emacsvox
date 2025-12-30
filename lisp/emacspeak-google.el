@@ -538,11 +538,17 @@ current page."
 
 ;;;  Advice GMaps:
 
-(defadvice gmaps (after emacspeak pre act comp)
+
+(defun ems--gmaps-after (&rest _)
   "Provide  auditory feedback."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'gmaps :after #'ems--gmaps-after)
+
+
+
 (cl-loop for f in
          '(gmaps-driving-directions
            gmaps-bicycling-directions
@@ -556,28 +562,50 @@ current page."
                (emacspeak-icon 'task-done)
                (emacspeak-speak-rest-of-buffer)))))
 
-(defadvice gmaps-set-current-location (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-header-line)))
 
-(defadvice gmaps-set-current-radius (after emacspeak pre act comp)
+(defun ems--gmaps-set-current-location-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-header-line)))
+
+
+(advice-add 'gmaps-set-current-location :after
+	    #'ems--gmaps-set-current-location-after)
+
+
+
+
+
+(defun ems--gmaps-set-current-radius-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Radius set to %s. " gmaps-current-radius)))
 
-(defadvice gmaps-place-details (around emacspeak pre act comp)
+
+(advice-add 'gmaps-set-current-radius :after
+	    #'ems--gmaps-set-current-radius-after)
+
+
+
+
+
+(defun ems--gmaps-place-details-around (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    ad-do-it
-    (emacspeak-speak-region  (point)
-                             (or
-                              (next-single-property-change
-                               (point) 'place-details)
-                              (point-max))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (apply orig-fun args)
+      (emacspeak-speak-region (point)
+			      (or
+			       (next-single-property-change (point)
+							    'place-details)
+			       (point-max))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'gmaps-place-details :around
+	    #'ems--gmaps-place-details-around)
+
+
+
 
 ;;;  TTS:
 

@@ -120,10 +120,16 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'task-done)))))
 
-(defadvice elfeed (after emacspeak pre act  comp)
+
+(defun ems--elfeed-after (&rest _)
   "Emacspeak setup."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)))
+  (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'elfeed :after #'ems--elfeed-after)
+
+
+
 (cl-loop
  for f in
  '(elfeed-kill-buffer  elfeed-search-quit-window)
@@ -135,10 +141,15 @@
        (emacspeak-icon 'close-object)
        (emacspeak-speak-mode-line)))))
 
-(defadvice elfeed-search-yank (after emacspeak pre act  comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)))
+
+(defun ems--elfeed-search-yank-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'yank-object)))
+
+
+(advice-add 'elfeed-search-yank :after #'ems--elfeed-search-yank-after)
+
+
+
 
 ;;;  Helpers:
 
@@ -217,19 +228,28 @@
 
 ;;;  Set things up
 
-(defadvice elfeed-search-mode (after emacspeak pre act comp)
+
+(defun ems--elfeed-search-mode-after (&rest _)
   "Set up Emacspeak commands."
   (cl-declare (special elfeed-search-mode-map goal-column))
-  (setq goal-column 11)                 ; place point on entry title
+  (setq goal-column 11)
   (define-key elfeed-search-mode-map "n" 'emacspeak-elfeed-next-entry)
-  (define-key elfeed-search-mode-map "p" 'emacspeak-elfeed-previous-entry)
-  (define-key elfeed-search-mode-map
-              "." 'emacspeak-elfeed-filter-entry-at-point)
-  (define-key elfeed-search-mode-map
-              [right] 'emacspeak-elfeed-filter-entry-at-point)
-  (define-key elfeed-search-mode-map "e" 'emacspeak-elfeed-eww-entry-at-point)
-  (define-key elfeed-search-mode-map
-              " "'emacspeak-elfeed-speak-entry-at-point))
+  (define-key elfeed-search-mode-map "p"
+	      'emacspeak-elfeed-previous-entry)
+  (define-key elfeed-search-mode-map "."
+	      'emacspeak-elfeed-filter-entry-at-point)
+  (define-key elfeed-search-mode-map [right]
+	      'emacspeak-elfeed-filter-entry-at-point)
+  (define-key elfeed-search-mode-map "e"
+	      'emacspeak-elfeed-eww-entry-at-point)
+  (define-key elfeed-search-mode-map " "
+	      'emacspeak-elfeed-speak-entry-at-point))
+
+
+(advice-add 'elfeed-search-mode :after #'ems--elfeed-search-mode-after)
+
+
+
 
 (provide 'emacspeak-elfeed)
 ;;;  end of file

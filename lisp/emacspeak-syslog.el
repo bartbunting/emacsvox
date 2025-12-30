@@ -65,31 +65,57 @@
 
 ;;;  Interactive Commands:
 
-(defadvice syslog-whois-reverse-lookup (after emacspeak pre act comp)
+
+(defun ems--syslog-whois-reverse-lookup-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-audit 'task-done)
-    (message "Displayed WhoIs data in other window.")
-    ))
+    (message "Displayed WhoIs data in other window.")))
 
-(defadvice syslog-filter-dates (after emacspeak pre act comp)
+
+(advice-add 'syslog-whois-reverse-lookup :after
+	    #'ems--syslog-whois-reverse-lookup-after)
+
+
+
+
+
+(defun ems--syslog-filter-dates-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (forward-line -2)
-    (what-line)
-    (emacspeak-icon 'ellipses)))
+    (forward-line -2) (what-line) (emacspeak-icon 'ellipses)))
 
-(defadvice syslog-filter-lines (after emacspeak pre act comp)
+
+(advice-add 'syslog-filter-dates :after
+	    #'ems--syslog-filter-dates-after)
+
+
+
+
+
+(defun ems--syslog-filter-lines-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'ellipses)))
+    (emacspeak-speak-line) (emacspeak-icon 'ellipses)))
 
-(defadvice syslog-boot-start (after emacspeak pre act comp)
+
+(advice-add 'syslog-filter-lines :after
+	    #'ems--syslog-filter-lines-after)
+
+
+
+
+
+(defun ems--syslog-boot-start-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'syslog-boot-start :after #'ems--syslog-boot-start-after)
+
+
+
 
 (cl-loop
  for f in 

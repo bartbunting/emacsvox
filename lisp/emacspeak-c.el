@@ -56,15 +56,23 @@
 
 ;;;  advice electric deletion
 
-(defadvice c-electric-delete-forward (around emacspeak pre act comp)
+
+(defun ems--c-electric-delete-forward-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone-deletion)
-    (emacspeak-speak-this-char (following-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (dtk-tone-deletion)
+      (emacspeak-speak-this-char (following-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'c-electric-delete-forward :around
+	    #'ems--c-electric-delete-forward-around)
+
+
+
 (cl-loop
  for f in
  '(c-hungry-delete-forward c-hungry-delete-backwards c-electric-backspace)
@@ -83,81 +91,152 @@
 ;;;   advice things to speak
 ;;;   Electric chars speak
 
-(defadvice c-electric-semi&comma (after emacspeak pre act comp)
+
+(defun ems--c-electric-semi&comma-after (&rest _)
   "Speak the line when a statement is completed."
   (when (ems-interactive-p)
-    (cond
-     ((= last-input-event ?,) (dtk-speak " comma "))
-     (t (emacspeak-speak-line)))))
+    (cond ((= last-input-event 44) (dtk-speak " comma "))
+	  (t (emacspeak-speak-line)))))
 
-(defadvice c-electric-delete (before emacspeak pre act comp)
+
+(advice-add 'c-electric-semi&comma :after
+	    #'ems--c-electric-semi&comma-after)
+
+
+
+
+
+(defun ems--c-electric-delete-before (&rest _)
   "Speak char before deleting it."
   (when (ems-interactive-p)
-    (emacspeak-speak-this-char(preceding-char))
-    (dtk-tone-deletion)))
+    (emacspeak-speak-this-char (preceding-char)) (dtk-tone-deletion)))
+
+
+(advice-add 'c-electric-delete :before #'ems--c-electric-delete-before)
+
+
+
 
 ;;;   Moving across logical chunks
 
 ;; CPP directives:
 
-(defadvice c-up-conditional (after emacspeak pre act comp)
-  "Speak the line moved to."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
 
-(defadvice c-forward-conditional (after emacspeak pre act comp)
+(defun ems--c-up-conditional-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice c-backward-conditional (after emacspeak pre act comp)
+
+(advice-add 'c-up-conditional :after #'ems--c-up-conditional-after)
+
+
+
+
+
+(defun ems--c-forward-conditional-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'c-forward-conditional :after
+	    #'ems--c-forward-conditional-after)
+
+
+
+
+
+(defun ems--c-backward-conditional-after (&rest _)
+  "Speak the line moved to."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'c-backward-conditional :after
+	    #'ems--c-backward-conditional-after)
+
+
+
 
 ;; Statements
 
-(defadvice c-beginning-of-statement (after emacspeak pre act comp)
+
+(defun ems--c-beginning-of-statement-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'item) (emacspeak-speak-line)))
 
-(defadvice c-end-of-statement (after emacspeak pre act comp)
+
+(advice-add 'c-beginning-of-statement :after
+	    #'ems--c-beginning-of-statement-after)
+
+
+
+
+
+(defun ems--c-end-of-statement-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'item) (emacspeak-speak-line)))
 
-(defadvice c-mark-function (after emacspeak pre act comp)
+
+(advice-add 'c-end-of-statement :after #'ems--c-end-of-statement-after)
+
+
+
+
+
+(defun ems--c-mark-function-after (&rest _)
   "Provide spoken and auditory feedback."
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'mark-object) (emacspeak-speak-line)))
+
+
+(advice-add 'c-mark-function :after #'ems--c-mark-function-after)
+
+
+
 
 ;;;  advice program navigation
 
-(defadvice  c-beginning-of-defun (after emacspeak pre act comp)
-  "Speak the line."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'paragraph)
-    (emacspeak-speak-line)))
 
-(defadvice  c-end-of-defun (after emacspeak pre act comp)
+(defun ems--c-beginning-of-defun-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
-    (emacspeak-icon 'paragraph)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'paragraph) (emacspeak-speak-line)))
+
+
+(advice-add 'c-beginning-of-defun :after
+	    #'ems--c-beginning-of-defun-after)
+
+
+
+
+
+(defun ems--c-end-of-defun-after (&rest _)
+  "Speak the line."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'paragraph) (emacspeak-speak-line)))
+
+
+(advice-add 'c-end-of-defun :after #'ems--c-end-of-defun-after)
+
+
+
 
 ;;;   extensions  provided by c++ mode
 
-(defadvice c-scope-operator (after emacspeak pre act comp)
+
+(defun ems--c-scope-operator-after (&rest _)
   "speak what you inserted."
-  (when (ems-interactive-p)
-    (dtk-speak "colon colon")))
+  (when (ems-interactive-p) (dtk-speak "colon colon")))
+
+
+(advice-add 'c-scope-operator :after #'ems--c-scope-operator-after)
+
+
+
 
 ;;;   Some more navigation functions I define:
 
@@ -344,15 +423,26 @@ and their meanings. ")
 
 ;;;   indenting commands
 
-(defadvice c-indent-defun (after emacspeak pre act comp)
-  (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "Indented function")))
 
-(defadvice c-indent-command (after emacspeak pre act comp)
-  "speak."
+(defun ems--c-indent-defun-after (&rest _)
   (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'fill-object) (message "Indented function")))
+
+
+(advice-add 'c-indent-defun :after #'ems--c-indent-defun-after)
+
+
+
+
+
+(defun ems--c-indent-command-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'c-indent-command :after #'ems--c-indent-command-after)
+
+
+
 
 ;;;  Additional Interactive Commands:
 
@@ -368,11 +458,18 @@ and their meanings. ")
      (when (ems-interactive-p)
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
-(defadvice c-backslash-region (after emacspeak pre act comp)
+
+(defun ems--c-backslash-region-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'task-done)
     (emacspeak-speak-region (point) (mark))))
+
+
+(advice-add 'c-backslash-region :after #'ems--c-backslash-region-after)
+
+
+
 (cl-loop
  for f in
  '(c-context-line-break c-context-open-line)

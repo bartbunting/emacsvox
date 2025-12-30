@@ -52,121 +52,233 @@
 
 ;;;  advice
 
-(defadvice Custom-reset-current (after emacspeak pre act comp)
+
+(defun ems--Custom-reset-current-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (dtk-speak "Reset current")))
+    (emacspeak-icon 'item) (dtk-speak "Reset current")))
 
-(defadvice Custom-reset-saved(after emacspeak pre act comp)
+
+(advice-add 'Custom-reset-current :after
+	    #'ems--Custom-reset-current-after)
+
+
+
+
+
+(defun ems--Custom-reset-saved-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'unmodified-object)
-    (dtk-speak "Reset to saved")))
+    (emacspeak-icon 'unmodified-object) (dtk-speak "Reset to saved")))
 
-(defadvice Custom-reset-standard (after emacspeak act comp)
+
+(advice-add 'Custom-reset-saved :after #'ems--Custom-reset-saved-after)
+
+
+
+
+
+(defun ems--Custom-reset-standard-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (dtk-speak "Erase customization")))
+    (emacspeak-icon 'delete-object) (dtk-speak "Erase customization")))
 
-(defadvice Custom-set (after emacspeak pre act comp)
+
+(advice-add 'Custom-reset-standard :after
+	    #'ems--Custom-reset-standard-after)
+
+
+
+
+
+(defun ems--Custom-set-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (dtk-speak "Set for current session")))
+    (emacspeak-icon 'button) (dtk-speak "Set for current session")))
 
-(defadvice Custom-save (around emacspeak pre act comp)
+
+(advice-add 'Custom-set :after #'ems--Custom-set-after)
+
+
+
+
+
+(defun ems--Custom-save-around (orig-fun &rest args)
   "Silence messages and produce auditory feedback."
-  ad-do-it
-  (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)
-    (dtk-speak "Set and saved"))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (apply orig-fun args)
+    (when (ems-interactive-p)
+      (emacspeak-icon 'save-object) (dtk-speak "Set and saved"))
+    result))
 
-(defadvice Custom-buffer-done (after emacspeak pre act comp)
+
+(advice-add 'Custom-save :around #'ems--Custom-save-around)
+
+
+
+
+
+(defun ems--Custom-buffer-done-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
 
-(defadvice customize-save-customized (after emacspeak pre act comp)
+
+(advice-add 'Custom-buffer-done :after #'ems--Custom-buffer-done-after)
+
+
+
+
+
+(defun ems--customize-save-customized-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)
-    (message "Saved customizations.")))
+    (emacspeak-icon 'save-object) (message "Saved customizations.")))
 
-(defadvice custom-save-all (after emacspeak pre act comp)
+
+(advice-add 'customize-save-customized :after
+	    #'ems--customize-save-customized-after)
+
+
+
+
+
+(defun ems--custom-save-all-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)
-    (message "Saved customizations.")))
+    (emacspeak-icon 'save-object) (message "Saved customizations.")))
 
-(defadvice customize-save-customized (around emacspeak pre act comp)
-  "Silence speech."
-  (let ((dtk-quiet t)) ad-do-it))
 
-(defadvice custom-set (after emacspeak pre act comp)
+(advice-add 'custom-save-all :after #'ems--custom-save-all-after)
+
+
+
+
+
+(defun ems--customize-save-customized-around (orig-fun &rest args)
+  "Silence speech." (let ((dtk-quiet t)) (apply orig-fun args)))
+
+
+(advice-add 'customize-save-customized :around
+	    #'ems--customize-save-customized-around)
+
+
+
+
+
+(defun ems--custom-set-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'mark-object)
-    (message "Set all updates.")))
+    (emacspeak-icon 'mark-object) (message "Set all updates.")))
 
-(defadvice customize (after emacspeak pre act comp)
+
+(advice-add 'custom-set :after #'ems--custom-set-after)
+
+
+
+
+
+(defun ems--customize-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-custom-goto-group)
+    (emacspeak-icon 'open-object) (emacspeak-custom-goto-group)
     (emacspeak-speak-line)))
 
-(defadvice customize-group (after emacspeak pre act comp)
+
+(advice-add 'customize :after #'ems--customize-after)
+
+
+
+
+
+(defun ems--customize-group-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-custom-goto-group)
+    (emacspeak-icon 'open-object) (emacspeak-custom-goto-group)
     (emacspeak-speak-line)))
 
-(defadvice customize-browse (after emacspeak pre act comp)
+
+(advice-add 'customize-group :after #'ems--customize-group-after)
+
+
+
+
+
+(defun ems--customize-browse-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice customize-option (after emacspeak pre act comp)
+
+(advice-add 'customize-browse :after #'ems--customize-browse-after)
+
+
+
+
+
+(defun ems--customize-option-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((symbol (ad-get-arg 0)))
       (emacspeak-icon 'open-object)
       (search-forward (custom-unlispify-tag-name symbol))
-      (forward-line 0)
-      (emacspeak-speak-line))))
+      (forward-line 0) (emacspeak-speak-line))))
 
-(defadvice customize-apropos (after emacspeak pre act comp)
+
+(advice-add 'customize-option :after #'ems--customize-option-after)
+
+
+
+
+
+(defun ems--customize-apropos-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (forward-line 0)
+    (emacspeak-icon 'open-object) (forward-line 0)
     (emacspeak-speak-line)))
 
-(defadvice customize-variable (after emacspeak pre act comp)
+
+(advice-add 'customize-apropos :after #'ems--customize-apropos-after)
+
+
+
+
+
+(defun ems--customize-variable-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((symbol (ad-get-arg 0)))
       (emacspeak-icon 'open-object)
       (search-forward (custom-unlispify-tag-name symbol))
-      (forward-line 0)
-      (emacspeak-speak-line))))
+      (forward-line 0) (emacspeak-speak-line))))
 
-(defadvice Custom-goto-parent (after emacspeak pre act comp)
+
+(advice-add 'customize-variable :after #'ems--customize-variable-after)
+
+
+
+
+
+(defun ems--Custom-goto-parent-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice Custom-newline (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'button)))
+
+(advice-add 'Custom-goto-parent :after #'ems--Custom-goto-parent-after)
+
+
+
+
+
+(defun ems--Custom-newline-after (&rest _)
+  "speak" (when (ems-interactive-p) (emacspeak-icon 'button)))
+
+
+(advice-add 'Custom-newline :after #'ems--Custom-newline-after)
+
+
+
 
 ;;;  custom hook
 

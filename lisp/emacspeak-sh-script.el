@@ -50,18 +50,30 @@
 
 ;;;   advice interactive commands
 
-(defadvice sh-mode (after emacspeak pre act comp)
-  "Speech-enable sh-script editing."
-  (dtk-set-punctuations 'all)
+
+(defun ems--sh-mode-after (&rest _)
+  "Speech-enable sh-script editing." (dtk-set-punctuations 'all)
   (unless emacspeak-audio-indentation
     (emacspeak-toggle-audio-indentation))
   (emacspeak-speak-mode-line))
 
-(defadvice sh-indent-line (after emacspeak pre act comp)
+
+(advice-add 'sh-mode :after #'ems--sh-mode-after)
+
+
+
+
+
+(defun ems--sh-indent-line-after (&rest _)
   "speak to indicate indentation."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-current-column)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-current-column)))
+
+
+(advice-add 'sh-indent-line :after #'ems--sh-indent-line-after)
+
+
+
 
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook
@@ -71,33 +83,60 @@
     (when (ems-interactive-p)
       (emacspeak-speak-this-char (preceding-char)))))
 
-(defadvice sh-maybe-here-document(around emacspeak pre act comp)
+
+(defun ems--sh-maybe-here-document-around (orig-fun &rest args)
   "Spoken feedback based on what we insert."
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      ad-do-it
-      (if (= (point) (1+ start))
-          (emacspeak-speak-this-char last-input-event)
-        (message "Started a shell here  document."))))
-   (t ad-do-it))
-  ad-return-value)
-(defadvice sh-newline-and-indent (after emacspeak pre act comp)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(apply orig-fun args)
+	(if (= (point) (1+ start))
+	    (emacspeak-speak-this-char last-input-event)
+	  (message "Started a shell here  document."))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'sh-maybe-here-document :around
+	    #'ems--sh-maybe-here-document-around)
+
+
+
+
+(defun ems--sh-newline-and-indent-after (&rest _)
   "speak to indicate indentation."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
-(defadvice sh-beginning-of-command(after emacspeak pre act
-                                         comp)
+  (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'sh-newline-and-indent :after
+	    #'ems--sh-newline-and-indent-after)
+
+
+
+
+(defun ems--sh-beginning-of-command-after (&rest _)
   "Speak point moved to."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
-(defadvice sh-end-of-command(after emacspeak pre act
-                                   comp)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'sh-beginning-of-command :after
+	    #'ems--sh-beginning-of-command-after)
+
+
+
+
+(defun ems--sh-end-of-command-after (&rest _)
   "Speak point moved to."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'sh-end-of-command :after #'ems--sh-end-of-command-after)
+
+
+
 
 ;;;  advice skeleton insertion 
 (unless (and (boundp 'post-self-insert-hook)

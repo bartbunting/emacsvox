@@ -54,121 +54,202 @@
 
 ;;;   Advice electric insertion to talk:
 
-(defadvice cperl-electric-backspace (around emacspeak pre act comp)
+
+(defun ems--cperl-electric-backspace-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone 500 100 'force)
-    (emacspeak-speak-this-char (preceding-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
-
-(defadvice cperl-linefeed (around emacspeak pre act comp)
-  "Speak the previous line if line echo is on. 
-  See command \\[emacspeak-toggle-line-echo].
-Otherwise cue user to the line just created. "
-  (cl-declare (special emacspeak-line-echo))
-  (cond
-   ((ems-interactive-p)
+  (let ((result (apply orig-fun args)))
     (cond
-     (emacspeak-line-echo (emacspeak-speak-line))
-     (t
-      (dtk-speak-using-voice voice-annotate
-                             (format
-                              "indent %s"
-                              (current-column)))
-      (dtk-interp-speak)))))
-  ad-do-it
-  ad-return-value)
+     ((ems-interactive-p) (dtk-tone 500 100 'force)
+      (emacspeak-speak-this-char (preceding-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice cperl-indent-exp  (after emacspeak pre act comp)
+
+(advice-add 'cperl-electric-backspace :around
+	    #'ems--cperl-electric-backspace-around)
+
+
+
+
+
+(defun ems--cperl-linefeed-around (orig-fun &rest args)
+  "Speak the previous line if line echo is on. \n  See command \\[emacspeak-toggle-line-echo].\nOtherwise cue user to the line just created. "
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special emacspeak-line-echo))
+    (cond
+     ((ems-interactive-p)
+      (cond (emacspeak-line-echo (emacspeak-speak-line))
+	    (t
+	     (dtk-speak-using-voice voice-annotate
+				    (format "indent %s"
+					    (current-column)))
+	     (dtk-interp-speak)))))
+    (apply orig-fun args) result))
+
+
+(advice-add 'cperl-linefeed :around #'ems--cperl-linefeed-around)
+
+
+
+
+
+(defun ems--cperl-indent-exp-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'fill-object)
     (message "Indented current s expression ")))
 
+
+(advice-add 'cperl-indent-exp :after #'ems--cperl-indent-exp-after)
+
+
+
+
 ;;;  Advice info to talk:
 
-(defadvice cperl-info-on-current-command (after emacspeak pre act comp)
-  "Speak the displayed info"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (message "Displayed info in other window")))
 
-(defadvice cperl-info-on-command (after emacspeak pre act comp)
+(defun ems--cperl-info-on-current-command-after (&rest _)
   "Speak the displayed info"
   (when (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (message "Displayed help in other window.")))
+    (emacspeak-icon 'help) (message "Displayed info in other window")))
+
+
+(advice-add 'cperl-info-on-current-command :after
+	    #'ems--cperl-info-on-current-command-after)
+
+
+
+
+
+(defun ems--cperl-info-on-command-after (&rest _)
+  "Speak the displayed info"
+  (when (ems-interactive-p)
+    (emacspeak-icon 'help) (message "Displayed help in other window.")))
+
+
+(advice-add 'cperl-info-on-command :after
+	    #'ems--cperl-info-on-command-after)
+
+
+
 
 ;;;  structured editing
 
-(defadvice cperl-invert-if-unless (after emacspeak pre act
-                                         comp)
+
+(defun ems--cperl-invert-if-unless-after (&rest _)
   "Speak updated line"
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
 
-(defadvice cperl-comment-region (after emacspeak pre act comp)
+
+(advice-add 'cperl-invert-if-unless :after
+	    #'ems--cperl-invert-if-unless-after)
+
+
+
+
+
+(defun ems--cperl-comment-region-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (let ((prefix-arg (ad-get-arg 2)))
       (message "%s region containing %s lines"
-               (if (and prefix-arg
-                        (< prefix-arg 0))
-                   "Uncommented"
-                 "Commented")
-               (count-lines (point) (mark))))))
+	       (if (and prefix-arg (< prefix-arg 0)) "Uncommented"
+		 "Commented")
+	       (count-lines (point) (mark))))))
 
-(defadvice cperl-uncomment-region (after emacspeak pre act comp)
+
+(advice-add 'cperl-comment-region :after
+	    #'ems--cperl-comment-region-after)
+
+
+
+
+
+(defun ems--cperl-uncomment-region-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (let ((prefix-arg (ad-get-arg 2)))
       (message "%s region containing %s lines"
-               (if (and prefix-arg
-                        (< prefix-arg 0))
-                   "Commented"
-                 "Uncommented")
-               (count-lines (point) (mark))))))
+	       (if (and prefix-arg (< prefix-arg 0)) "Commented"
+		 "Uncommented")
+	       (count-lines (point) (mark))))))
 
-(defadvice cperl-indent-command (after emacspeak pre act
-                                       comp)
+
+(advice-add 'cperl-uncomment-region :after
+	    #'ems--cperl-uncomment-region-after)
+
+
+
+
+
+(defun ems--cperl-indent-command-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'large-movement)))
+    (emacspeak-speak-line) (emacspeak-icon 'large-movement)))
 
-(defadvice cperl-indent-region (after emacspeak pre act
-                                      comp)
+
+(advice-add 'cperl-indent-command :after
+	    #'ems--cperl-indent-command-after)
+
+
+
+
+
+(defun ems--cperl-indent-region-after (&rest _)
   "speak when done"
   (when (ems-interactive-p)
     (emacspeak-icon 'fill-object)
     (message "Filled region containing %s lines"
-             (count-lines (region-beginning)
-                          (region-end)))))
-(defadvice cperl-fill-paragraph (after emacspeak pre act comp)
+	     (count-lines (region-beginning) (region-end)))))
+
+
+(advice-add 'cperl-indent-region :after
+	    #'ems--cperl-indent-region-after)
+
+
+
+
+(defun ems--cperl-fill-paragraph-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "Filled current paragraph")))
+    (emacspeak-icon 'fill-object) (message "Filled current paragraph")))
+
+
+(advice-add 'cperl-fill-paragraph :after
+	    #'ems--cperl-fill-paragraph-after)
+
+
+
 
 ;;;   misc
 
-(defadvice cperl-switch-to-doc-buffer (after emacspeak pre
-                                             act comp)
+
+(defun ems--cperl-switch-to-doc-buffer-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'open-object)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'open-object)))
 
-(defadvice cperl-find-bad-style (after emacspeak pre act
-                                       comp)
+
+(advice-add 'cperl-switch-to-doc-buffer :after
+	    #'ems--cperl-switch-to-doc-buffer-after)
+
+
+
+
+
+(defun ems--cperl-find-bad-style-after (&rest _)
   "speak when done."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'task-done)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'cperl-find-bad-style :after
+	    #'ems--cperl-find-bad-style-after)
+
+
+
 
 ;;;  set up hooks 
 

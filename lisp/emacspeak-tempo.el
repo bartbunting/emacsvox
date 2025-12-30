@@ -60,20 +60,37 @@
 
 ;;;   Advice: 
 
-(defadvice tempo-forward-mark (after emacspeak pre act comp)
-  "Speak the line."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice tempo-backward-mark (after emacspeak pre act comp)
-  "Speak the line."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+(defun ems--tempo-forward-mark-after (&rest _)
+  "Speak the line." (when (ems-interactive-p) (emacspeak-speak-line)))
 
-(defadvice html-helper-smart-insert-item  (after emacspeak pre act comp)
-  "Speak the line."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+
+(advice-add 'tempo-forward-mark :after #'ems--tempo-forward-mark-after)
+
+
+
+
+
+(defun ems--tempo-backward-mark-after (&rest _)
+  "Speak the line." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'tempo-backward-mark :after
+	    #'ems--tempo-backward-mark-after)
+
+
+
+
+
+(defun ems--html-helper-smart-insert-item-after (&rest _)
+  "Speak the line." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'html-helper-smart-insert-item :after
+	    #'ems--html-helper-smart-insert-item-after)
+
+
+
 
 (emacspeak-pronounce-add-super 'sgml-mode 'html-helper-mode)
 

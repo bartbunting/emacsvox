@@ -59,40 +59,51 @@
 
 ;;;  Advice interactive commands
 
-(defadvice vertico-insert (around emacspeak pre act comp)
-  "speak."
-  (let* ((orig-point (point)))
-    ad-do-it
-    (emacspeak-icon 'complete)
-    (emacspeak-speak-region orig-point (point)))
-  ad-return-value)
 
-(defadvice vertico--exhibit (after emacspeak pre act comp)
+(defun ems--vertico-insert-around (orig-fun &rest args)
   "speak."
-  (cl-declare (special vertico--allow-prompt
-                       vertico--index vertico--base))
-  (let ((new-cand
-         (substring (vertico--candidate)
-                    (if (>= vertico--index 0)
-                        ;; Handle both vectico <= 0.22 and > 0.22, which have
-                        ;; different types for vercito--base
-                        ;; Remove after vertico 0.23
-                        (if (stringp vertico--base)
-                            (length vertico--base)
-                          vertico--base)
-                      0)))
-        (to-speak nil))
+  (let ((result (apply orig-fun args)))
+    (let* ((orig-point (point)))
+      (apply orig-fun args) (emacspeak-icon 'complete)
+      (emacspeak-speak-region orig-point (point)))
+    result))
+
+
+(advice-add 'vertico-insert :around #'ems--vertico-insert-around)
+
+
+
+
+
+(defun ems--vertico--exhibit-after (&rest _)
+  "speak."
+  (cl-declare
+   (special vertico--allow-prompt vertico--index vertico--base))
+  (let
+      ((new-cand
+	(substring (vertico--candidate)
+		   (if (>= vertico--index 0)
+		       (if (stringp vertico--base)
+			   (length vertico--base)
+			 vertico--base)
+		     0)))
+       (to-speak nil))
     (unless (equal emacspeak-vertico--prev-candidate new-cand)
       (setq to-speak new-cand)
-      (when (or (equal vertico--index emacspeak-vertico--prev-index)
-                (and (not (equal vertico--index -1))
-                     (equal emacspeak-vertico--prev-index -1)))
-        (emacspeak-icon 'select-object)))
-    (when to-speak
-      (dtk-speak to-speak))
-    (setq-local
-     emacspeak-vertico--prev-candidate new-cand
-     emacspeak-vertico--prev-index vertico--index)))
+      (when
+	  (or (equal vertico--index emacspeak-vertico--prev-index)
+	      (and (not (equal vertico--index -1))
+		   (equal emacspeak-vertico--prev-index -1)))
+	(emacspeak-icon 'select-object)))
+    (when to-speak (dtk-speak to-speak))
+    (setq-local emacspeak-vertico--prev-candidate new-cand
+		emacspeak-vertico--prev-index vertico--index)))
+
+
+(advice-add 'vertico--exhibit :after #'ems--vertico--exhibit-after)
+
+
+
 
 (cl-loop
  for (f icon) in

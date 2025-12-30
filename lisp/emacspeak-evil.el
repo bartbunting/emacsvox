@@ -161,41 +161,82 @@
 
 ;;;  Char Motion :
 
-(defadvice evil-backward-char (after emacspeak pre act comp)
+
+(defun ems--evil-backward-char-after (&rest _)
   "Speak char."
   (when (ems-interactive-p)
     (emacspeak-speak-this-char (following-char))))
 
-(defadvice evil-forward-char (after emacspeak pre act comp)
+
+(advice-add 'evil-backward-char :after #'ems--evil-backward-char-after)
+
+
+
+
+
+(defun ems--evil-forward-char-after (&rest _)
   "Speak char."
   (when (ems-interactive-p)
     (emacspeak-speak-this-char (following-char))))
+
+
+(advice-add 'evil-forward-char :after #'ems--evil-forward-char-after)
+
+
+
 
 ;;;  Deletion:
 
-(defadvice evil-delete-char (before emacspeak pre act comp)
+
+(defun ems--evil-delete-char-before (&rest _)
   "Speak char we are deleting."
   (when (ems-interactive-p)
-    (emacspeak-speak-char t)
-    (dtk-tone-deletion)))
+    (emacspeak-speak-char t) (dtk-tone-deletion)))
 
-(defadvice evil-delete-backward-char (before emacspeak pre act comp)
+
+(advice-add 'evil-delete-char :before #'ems--evil-delete-char-before)
+
+
+
+
+
+(defun ems--evil-delete-backward-char-before (&rest _)
   "Speak char we are deleting."
   (when (ems-interactive-p)
-    (emacspeak-speak-this-char (preceding-char))
-    (dtk-tone-deletion)))
+    (emacspeak-speak-this-char (preceding-char)) (dtk-tone-deletion)))
 
-(defadvice evil-delete-line (after emacspeak pre act comp)
+
+(advice-add 'evil-delete-backward-char :before
+	    #'ems--evil-delete-backward-char-before)
+
+
+
+
+
+(defun ems--evil-delete-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak "Deleted to end of line.")
     (emacspeak-icon 'delete-object)))
 
-(defadvice evil-delete (before emacspeak pre act comp)
+
+(advice-add 'evil-delete-line :after #'ems--evil-delete-line-after)
+
+
+
+
+
+(defun ems--evil-delete-before (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'delete-object)
     (emacspeak-speak-region (ad-get-arg 0) (ad-get-arg 1))))
+
+
+(advice-add 'evil-delete :before #'ems--evil-delete-before)
+
+
+
 
 ;;;  Searching:
 (cl-loop
@@ -244,13 +285,20 @@
          (emacspeak-speak-line))))))
 
 ;;;  Marks:
-(defadvice evil-set-marker (after emacspeak pre act comp)
+
+(defun ems--evil-set-marker-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (let ((emacspeak-show-point t))
       (emacspeak-speak-line)
       (dtk-notify (format "Marker %c" (ad-get-arg 0))))))
+
+
+(advice-add 'evil-set-marker :after #'ems--evil-set-marker-after)
+
+
+
 
 ;;;  Update keymaps:
 
@@ -310,11 +358,18 @@
    evil-operator-state-exit-hook evil-motion-state-exit-hook)
  do
  (add-hook hook #'emacspeak-evil-state-change-hook))
-(defadvice evil-exit-emacs-state (after emacspeak pre act comp)
+
+(defun ems--evil-exit-emacs-state-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (dtk-notify "Leaving Emacs state.")))
+    (emacspeak-icon 'open-object) (dtk-notify "Leaving Emacs state.")))
+
+
+(advice-add 'evil-exit-emacs-state :after
+	    #'ems--evil-exit-emacs-state-after)
+
+
+
 
 ;;;  Additional Commands:
 

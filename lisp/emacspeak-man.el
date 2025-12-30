@@ -67,77 +67,144 @@
 
 ;;;   advice interactive commands 
 
-(defadvice  Man-mode (after emacspeak pre act comp)
-  "Fixup variables paragraph-start and paragraph-separate.
-Also provide an auditory icon"
-  (setq paragraph-start "^[\011\012\014]*$"
-        paragraph-separate "^[\011\012\014]*$")
+
+(defun ems--Man-mode-after (&rest _)
+  "Fixup variables paragraph-start and paragraph-separate.\nAlso provide an auditory icon"
+  (setq paragraph-start "^[	\n\f]*$" paragraph-separate
+	"^[	\n\f]*$")
   (modify-syntax-entry 10 " ")
   (setq imenu-generic-expression
-        '((nil "\n\\([A-Z].*\\)" 1)     ; SECTION, but not TITLE
-          ("*Subsections*" "^   \\([A-Z].*\\)" 1)))
+	'((nil "\n\\([A-Z].*\\)" 1)
+	  ("*Subsections*" "^   \\([A-Z].*\\)" 1)))
   (dtk-set-punctuations 'all)
-  (emacspeak-pronounce-refresh-pronunciations)
-  (emacspeak-icon 'help))
+  (emacspeak-pronounce-refresh-pronunciations) (emacspeak-icon 'help))
 
-(defadvice   Man-goto-section  (after emacspeak pre act comp)
+
+(advice-add 'Man-mode :after #'ems--Man-mode-after)
+
+
+
+
+
+(defun ems--Man-goto-section-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'section)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'section) (emacspeak-speak-line)))
 
-(defadvice   Man-goto-page  (after emacspeak pre act comp)
+
+(advice-add 'Man-goto-section :after #'ems--Man-goto-section-after)
+
+
+
+
+
+(defun ems--Man-goto-page-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice   Man-next-manpage  (after emacspeak pre act comp)
+
+(advice-add 'Man-goto-page :after #'ems--Man-goto-page-after)
+
+
+
+
+
+(defun ems--Man-next-manpage-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice   Man-previous-manpage  (after emacspeak pre act comp)
+
+(advice-add 'Man-next-manpage :after #'ems--Man-next-manpage-after)
+
+
+
+
+
+(defun ems--Man-previous-manpage-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice Man-next-section (after emacspeak pre act comp)
+
+(advice-add 'Man-previous-manpage :after
+	    #'ems--Man-previous-manpage-after)
+
+
+
+
+
+(defun ems--Man-next-section-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'section)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'section) (emacspeak-speak-line)))
 
-(defadvice Man-previous-section (after emacspeak pre act comp)
+
+(advice-add 'Man-next-section :after #'ems--Man-next-section-after)
+
+
+
+
+
+(defun ems--Man-previous-section-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'section)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'section) (emacspeak-speak-line)))
 
-(defadvice Man-goto-see-also-section (after emacspeak pre act comp)
+
+(advice-add 'Man-previous-section :after
+	    #'ems--Man-previous-section-after)
+
+
+
+
+
+(defun ems--Man-goto-see-also-section-after (&rest _)
   "Speak the line"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice Man-quit (after emacspeak pre act comp)
+
+(advice-add 'Man-goto-see-also-section :after
+	    #'ems--Man-goto-see-also-section-after)
+
+
+
+
+
+(defun ems--Man-quit-after (&rest _)
   "Announce buffer that is current"
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice Man-kill (after emacspeak pre act comp)
+
+(advice-add 'Man-quit :after #'ems--Man-quit-after)
+
+
+
+
+
+(defun ems--Man-kill-after (&rest _)
   "Announce buffer that is current"
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice man (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)))
+
+(advice-add 'Man-kill :after #'ems--Man-kill-after)
+
+
+
+
+
+(defun ems--man-after (&rest _)
+  "speak" (when (ems-interactive-p) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'man :after #'ems--man-after)
+
+
+
 
 ;;;   Additional commands
 

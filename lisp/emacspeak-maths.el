@@ -576,17 +576,25 @@ For use on Wikipedia pages  for example."
 
 ;;;  Advice Preview:
 
-(defadvice preview-at-point (after emacspeak pre act comp)
+
+(defun ems--preview-at-point-after (&rest _)
   "Also preview using speech."
-  (when (and (ems-interactive-p)
-             emacspeak-maths
-             (process-live-p (emacspeak-maths-client-process emacspeak-maths)))
-    (let ((preview-state
-           (mapcar
-            #'(lambda (o) (overlay-get o 'preview-state))
-            (overlays-at (point)))))
-      (when (cl-some   #'identity preview-state)
-        (emacspeak-maths-enter (emacspeak-maths-guess-tex))))))
+  (when
+      (and (ems-interactive-p) emacspeak-maths
+	   (process-live-p
+	    (emacspeak-maths-client-process emacspeak-maths)))
+    (let
+	((preview-state
+	  (mapcar #'(lambda (o) (overlay-get o 'preview-state))
+		  (overlays-at (point)))))
+      (when (cl-some #'identity preview-state)
+	(emacspeak-maths-enter (emacspeak-maths-guess-tex))))))
+
+
+(advice-add 'preview-at-point :after #'ems--preview-at-point-after)
+
+
+
 
 (provide 'emacspeak-maths)
 ;;;  end of file

@@ -52,17 +52,30 @@
 
 ;;;  Advice Interactive Commands:
 
-(defadvice ciel-ci (after emacspeak pre act comp)
+
+(defun ems--ciel-ci-after (&rest _)
   "Speech-enabled by emacspeak."
   (when (ems-interactive-p)
-    (dtk-speak (car  kill-ring))
-    (emacspeak-icon 'delete-object)))
+    (dtk-speak (car kill-ring)) (emacspeak-icon 'delete-object)))
 
-(defadvice ciel-co (after emacspeak pre act comp)
+
+(advice-add 'ciel-ci :after #'ems--ciel-ci-after)
+
+
+
+
+
+(defun ems--ciel-co-after (&rest _)
   "Speech-enabled by emacspeak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
-    (dtk-speak (format "Copied: %s " (car  kill-ring)))))
+    (dtk-speak (format "Copied: %s " (car kill-ring)))))
+
+
+(advice-add 'ciel-co :after #'ems--ciel-co-after)
+
+
+
 
 (provide 'emacspeak-ciel)
 ;;;  end of file

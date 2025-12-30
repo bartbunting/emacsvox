@@ -70,29 +70,53 @@
        (emacspeak-icon 'task-done)
        (emacspeak-speak-mode-line)))))
 
-(defadvice elpy-enable (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'on)
-    (message "Enabled elpy")))
 
-(defadvice elpy-disable (after emacspeak pre act comp)
+(defun ems--elpy-enable-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'off)
-    (message "Disabled elpy")))
+    (emacspeak-icon 'on) (message "Enabled elpy")))
 
-(defadvice elpy-doc (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (message "Displayed help in other window.")))
 
-(defadvice elpy-find-file (after emacspeak pre act comp)
+(advice-add 'elpy-enable :after #'ems--elpy-enable-after)
+
+
+
+
+
+(defun ems--elpy-disable-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'off) (message "Disabled elpy")))
+
+
+(advice-add 'elpy-disable :after #'ems--elpy-disable-after)
+
+
+
+
+
+(defun ems--elpy-doc-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'help) (message "Displayed help in other window.")))
+
+
+(advice-add 'elpy-doc :after #'ems--elpy-doc-after)
+
+
+
+
+
+(defun ems--elpy-find-file-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'elpy-find-file :after #'ems--elpy-find-file-after)
+
+
+
 (cl-loop
  for f in
  '(elpy-flymake-next-error elpy-flymake-previous-error

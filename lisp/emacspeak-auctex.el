@@ -66,59 +66,108 @@
 
 ;;;   Marking structured objects:
 
-(defadvice LaTeX-fill-paragraph (after emacspeak pre act  comp)
-  "speak."
+
+(defun ems--LaTeX-fill-paragraph-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'fill-object)))
+
+
+(advice-add 'LaTeX-fill-paragraph :after
+	    #'ems--LaTeX-fill-paragraph-after)
+
+
+
+
+
+(defun ems--LaTeX-mark-section-after (&rest _)
+  "Speak the first line. \nAlso provide an auditory icon. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'mark-object)))
 
-(defadvice LaTeX-mark-section (after emacspeak pre act comp)
-  "Speak the first line. 
-Also provide an auditory icon. "
-  (when (ems-interactive-p) 
-    (emacspeak-speak-line)
-    (emacspeak-icon 'mark-object)))
 
-(defadvice LaTeX-mark-environment (after emacspeak pre act comp)
-  "Speak the first line. 
-Also provide an auditory icon. "
-  (when (ems-interactive-p) 
-    (emacspeak-speak-line)
-    (emacspeak-icon 'mark-object)))
+(advice-add 'LaTeX-mark-section :after #'ems--LaTeX-mark-section-after)
 
-(defadvice LaTeX-format-paragraph (after emacspeak pre act comp)
+
+
+
+
+(defun ems--LaTeX-mark-environment-after (&rest _)
+  "Speak the first line. \nAlso provide an auditory icon. "
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'LaTeX-mark-environment :after
+	    #'ems--LaTeX-mark-environment-after)
+
+
+
+
+
+(defun ems--LaTeX-format-paragraph-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)
-    (message "Filled current paragraph")))
-(defadvice LaTeX-format-region (around emacspeak pre act comp)
-  "Ask for confirmation.
-speak after formatting region"
-  (cond
-   ((and (ems-interactive-p)
-         (y-or-n-p "Really format region? "))
-    ad-do-it
-    (emacspeak-icon 'fill-object)
-    (message "Reformatted region"))
-   ((not (ems-interactive-p)) ad-do-it))
-  ad-return-value)
+    (emacspeak-icon 'fill-object) (message "Filled current paragraph")))
+
+
+(advice-add 'LaTeX-format-paragraph :after
+	    #'ems--LaTeX-format-paragraph-after)
+
+
+
+
+(defun ems--LaTeX-format-region-around (orig-fun &rest args)
+  "Ask for confirmation.\nspeak after formatting region"
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((and (ems-interactive-p) (y-or-n-p "Really format region? "))
+      (apply orig-fun args) (emacspeak-icon 'fill-object)
+      (message "Reformatted region"))
+     ((not (ems-interactive-p)) (apply orig-fun args)))
+    result))
+
+
+(advice-add 'LaTeX-format-region :around
+	    #'ems--LaTeX-format-region-around)
+
+
+
 
 ;;;   delimiter matching:
 
-(defadvice LaTeX-find-matching-begin (after emacspeak pre act comp)
-  "speak. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice LaTeX-find-matching-end (after emacspeak pre act comp)
-  "speak. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+(defun ems--LaTeX-find-matching-begin-after (&rest _)
+  "speak. " (when (ems-interactive-p) (emacspeak-speak-line)))
 
-(defadvice LaTeX-close-environment (after emacspeak pre act comp)
+
+(advice-add 'LaTeX-find-matching-begin :after
+	    #'ems--LaTeX-find-matching-begin-after)
+
+
+
+
+
+(defun ems--LaTeX-find-matching-end-after (&rest _)
+  "speak. " (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'LaTeX-find-matching-end :after
+	    #'ems--LaTeX-find-matching-end-after)
+
+
+
+
+
+(defun ems--LaTeX-close-environment-after (&rest _)
   "Speak the inserted line. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-read-previous-line)))
+    (emacspeak-icon 'close-object) (emacspeak-read-previous-line)))
+
+
+(advice-add 'LaTeX-close-environment :after
+	    #'ems--LaTeX-close-environment-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -137,62 +186,116 @@ speak after formatting region"
 
 ;;;   Inserting structures
 
-(defadvice TeX-newline (after emacspeak pre act comp)
+
+(defun ems--TeX-newline-after (&rest _)
   "speak to indicate indentation."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
+  (when (ems-interactive-p) (emacspeak-speak-line)))
 
-(defadvice LaTeX-insert-item (after emacspeak pre act comp)
-  "speak. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice LaTeX-environment (after emacspeak pre act comp)
-  "speak, by speaking
-the opening line of the newly inserted environment. "
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-read-previous-line)))
+(advice-add 'TeX-newline :after #'ems--TeX-newline-after)
 
-(defadvice TeX-insert-macro (around  emacspeak pre act comp)
+
+
+
+
+(defun ems--LaTeX-insert-item-after (&rest _)
+  "speak. " (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'LaTeX-insert-item :after #'ems--LaTeX-insert-item-after)
+
+
+
+
+
+(defun ems--LaTeX-environment-after (&rest _)
+  "speak, by speaking\nthe opening line of the newly inserted environment. "
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-read-previous-line)))
+
+
+(advice-add 'LaTeX-environment :after #'ems--LaTeX-environment-after)
+
+
+
+
+
+(defun ems--TeX-insert-macro-around (orig-fun &rest args)
   "Speak."
   (let ((opoint (point)))
-    ad-do-it
-    (emacspeak-speak-region opoint (point))))
+    (apply orig-fun args) (emacspeak-speak-region opoint (point))))
+
+
+(advice-add 'TeX-insert-macro :around #'ems--TeX-insert-macro-around)
+
+
+
 
 ;;;   Commenting chunks:
 
-(defadvice TeX-comment-region (after emacspeak pre act comp)
-  "Provide spoken and auditory feedback. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
 
-(defadvice TeX-un-comment (after emacspeak pre act comp)
+(defun ems--TeX-comment-region-after (&rest _)
   "Provide spoken and auditory feedback. "
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
 
-(defadvice TeX-un-comment-region (after emacspeak pre act comp)
-  "Provide spoken and auditory feedback. "
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
 
-(defadvice TeX-comment-paragraph (after emacspeak pre act comp)
+(advice-add 'TeX-comment-region :after #'ems--TeX-comment-region-after)
+
+
+
+
+
+(defun ems--TeX-un-comment-after (&rest _)
   "Provide spoken and auditory feedback. "
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'TeX-un-comment :after #'ems--TeX-un-comment-after)
+
+
+
+
+
+(defun ems--TeX-un-comment-region-after (&rest _)
+  "Provide spoken and auditory feedback. "
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'TeX-un-comment-region :after
+	    #'ems--TeX-un-comment-region-after)
+
+
+
+
+
+(defun ems--TeX-comment-paragraph-after (&rest _)
+  "Provide spoken and auditory feedback. "
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'TeX-comment-paragraph :after
+	    #'ems--TeX-comment-paragraph-after)
+
+
+
 
 ;;;   Debugging tex
 
-(defadvice TeX-next-error (after emacspeak pre act comp)
+
+(defun ems--TeX-next-error-after (&rest _)
   "Speak the error line. "
   (when (ems-interactive-p)
-    (emacspeak-icon 'item)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'item) (emacspeak-speak-line)))
+
+
+(advice-add 'TeX-next-error :after #'ems--TeX-next-error-after)
+
+
+
 
 ;;;   Hooks
 
@@ -213,17 +316,24 @@ the opening line of the newly inserted environment. "
 
 ;;;  advice font changes 
 
-(defadvice TeX-font (around emacspeak pre act comp)
+
+(defun ems--TeX-font-around (orig-fun &rest args)
   "Speak the font we inserted"
-  (cond 
-   ((ems-interactive-p)
-    (let ((orig (point)))
-      ad-do-it
-      (if (ad-get-arg 0)
-          (emacspeak-speak-line)
-        (emacspeak-speak-region orig (point)))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((orig (point)))
+	(apply orig-fun args)
+	(if (ad-get-arg 0) (emacspeak-speak-line)
+	  (emacspeak-speak-region orig (point)))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'TeX-font :around #'ems--TeX-font-around)
+
+
+
 
 ;;;  tex utils:
 

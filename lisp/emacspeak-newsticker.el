@@ -59,24 +59,49 @@
 
 ;;;  advice functions
 
-(defadvice newsticker--cache-remove (around emacspeak pre act
-                                            comp)
-  "Silence messages temporarily to avoid chatter."
-  (let ((emacspeak-speak-messages nil))
-    ad-do-it
-    ad-return-value))
 
-(defadvice newsticker-callback-enter (around emacspeak pre act
-                                             comp)
+(defun ems--newsticker--cache-remove-around (orig-fun &rest args)
   "Silence messages temporarily to avoid chatter."
-  (let ((emacspeak-speak-messages nil))
-    ad-do-it
-    ad-return-value))
-(defadvice newsticker-retrieval-tick (around emacspeak pre act comp)
+  (let ((result (apply orig-fun args)))
+    (let ((emacspeak-speak-messages nil))
+      (apply orig-fun args) result)
+    result))
+
+
+(advice-add 'newsticker--cache-remove :around
+	    #'ems--newsticker--cache-remove-around)
+
+
+
+
+
+(defun ems--newsticker-callback-enter-around (orig-fun &rest args)
   "Silence messages temporarily to avoid chatter."
-  (let ((emacspeak-speak-messages nil))
-    ad-do-it
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let ((emacspeak-speak-messages nil))
+      (apply orig-fun args) result)
+    result))
+
+
+(advice-add 'newsticker-callback-enter :around
+	    #'ems--newsticker-callback-enter-around)
+
+
+
+
+(defun ems--newsticker-retrieval-tick-around (orig-fun &rest args)
+  "Silence messages temporarily to avoid chatter."
+  (let ((result (apply orig-fun args)))
+    (let ((emacspeak-speak-messages nil))
+      (apply orig-fun args) result)
+    result))
+
+
+(advice-add 'newsticker-retrieval-tick :around
+	    #'ems--newsticker-retrieval-tick-around)
+
+
+
 
 ;;;  advice interactive commands
 

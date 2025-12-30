@@ -86,11 +86,18 @@ nil
 
 ;;;  Advice interactive commands:
 
-(defadvice jabber-switch-to-roster-buffer (after emacspeak pre act comp)
+
+(defun ems--jabber-switch-to-roster-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'jabber-switch-to-roster-buffer :after
+	    #'ems--jabber-switch-to-roster-buffer-after)
+
+
+
 
 ;;;  silence keepalive
 
@@ -111,18 +118,32 @@ nil
 
 ;;;  jabber activity:
 
-(defadvice jabber-activity-switch-to (after emacspeak pre act comp)
+
+(defun ems--jabber-activity-switch-to-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'jabber-activity-switch-to :after
+	    #'ems--jabber-activity-switch-to-after)
+
+
+
 
 ;;;  chat buffer:
 
-(defadvice jabber-chat-buffer-send (after emacspeak pre act comp)
+
+(defun ems--jabber-chat-buffer-send-after (&rest _)
   "Produce auditory icon."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
+  (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'jabber-chat-buffer-send :after
+	    #'ems--jabber-chat-buffer-send-after)
+
+
+
 
 ;;;  alerts
 
@@ -130,36 +151,70 @@ nil
   "Set to T if you want to hear presence alerts."
   :type  'boolean
   :group 'emacspeak-jabber)
-(defadvice jabber-send-default-presence (after emacspeak pre act
-                                               comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Sent default presence.")))
 
-(defadvice jabber-send-away-presence (after emacspeak pre act comp)
+(defun ems--jabber-send-default-presence-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (message "Set to be away.")))
+    (emacspeak-icon 'open-object) (message "Sent default presence.")))
 
-(defadvice jabber-send-xa-presence (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (message "Set extended  away.")))
 
-(defadvice jabber-go-to-next-jid (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+(advice-add 'jabber-send-default-presence :after
+	    #'ems--jabber-send-default-presence-after)
 
-(defadvice jabber-go-to-previous-jid (after emacspeak pre act comp)
+
+
+
+
+(defun ems--jabber-send-away-presence-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (message "Set to be away.")))
+
+
+(advice-add 'jabber-send-away-presence :after
+	    #'ems--jabber-send-away-presence-after)
+
+
+
+
+
+(defun ems--jabber-send-xa-presence-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'close-object) (message "Set extended  away.")))
+
+
+(advice-add 'jabber-send-xa-presence :after
+	    #'ems--jabber-send-xa-presence-after)
+
+
+
+
+
+(defun ems--jabber-go-to-next-jid-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'jabber-go-to-next-jid :after
+	    #'ems--jabber-go-to-next-jid-after)
+
+
+
+
+
+(defun ems--jabber-go-to-previous-jid-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
+
+
+(advice-add 'jabber-go-to-previous-jid :after
+	    #'ems--jabber-go-to-previous-jid-after)
+
+
+
 
 (defun emacspeak-jabber-presence-default-message (&rest _ignore)
   "Default presence alert used by Emacspeak.
@@ -199,17 +254,41 @@ Silently drops alerts on the floor --- Google Talk is too chatty otherwise."
   (emacspeak-icon 'select-object)
   (emacspeak-speak-line))
 
-(defadvice jabber-connect-all (after emacspeak pre act comp)
+
+(defun ems--jabber-connect-all-after (&rest _)
   "switch to roster so we give it a chance to update."
   (when (ems-interactive-p) (switch-to-buffer jabber-roster-buffer)))
 
-(defadvice jabber-roster-update (around emacspeak    pre act  comp)
-  "Make this operation a No-Op unless the roster is visible."
-  (when (get-buffer-window-list jabber-roster-buffer) ad-do-it))
 
-(defadvice jabber-display-roster (around emacspeak    pre act  comp)
+(advice-add 'jabber-connect-all :after #'ems--jabber-connect-all-after)
+
+
+
+
+
+(defun ems--jabber-roster-update-around (orig-fun &rest args)
+  "Make this operation a No-Op unless the roster is visible."
+  (when (get-buffer-window-list jabber-roster-buffer)
+    (apply orig-fun args)))
+
+
+(advice-add 'jabber-roster-update :around
+	    #'ems--jabber-roster-update-around)
+
+
+
+
+
+(defun ems--jabber-display-roster-around (orig-fun &rest args)
   "Make this operation a No-Op unless called interactively."
-  (when (ems-interactive-p) ad-do-it))
+  (when (ems-interactive-p) (apply orig-fun args)))
+
+
+(advice-add 'jabber-display-roster :around
+	    #'ems--jabber-display-roster-around)
+
+
+
 
 (add-hook 'jabber-post-connect-hook 'jabber-switch-to-roster-buffer)
 

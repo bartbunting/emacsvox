@@ -247,23 +247,43 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-mode-line)))))
 
-(defadvice notmuch-bury-or-kill-this-buffer (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice notmuch-search (after emacspeak pre act comp)
+(defun ems--notmuch-bury-or-kill-this-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice notmuch-search-show-thread (after emacspeak pre act comp)
+
+(advice-add 'notmuch-bury-or-kill-this-buffer :after
+	    #'ems--notmuch-bury-or-kill-this-buffer-after)
+
+
+
+
+
+(defun ems--notmuch-search-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'notmuch-search :after #'ems--notmuch-search-after)
+
+
+
+
+
+(defun ems--notmuch-search-show-thread-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'notmuch-search-show-thread :after
+	    #'ems--notmuch-search-show-thread-after)
+
+
+
 
 ;;; MUA:
 

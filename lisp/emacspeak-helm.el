@@ -54,12 +54,18 @@
 
 ;;;  Setup Helm Hooks:
 
-(defadvice helm-mode (after emacspeak pre act comp)
+
+(defun ems--helm-mode-after (&rest _)
   "Cue state of helm mode."
   (when (ems-interactive-p)
-    (emacspeak-icon (if helm-mode  'on 'off))
-    (message "Turned %s helm-mode"
-             (if helm-mode "on" "off"))))
+    (emacspeak-icon (if helm-mode 'on 'off))
+    (message "Turned %s helm-mode" (if helm-mode "on" "off"))))
+
+
+(advice-add 'helm-mode :after #'ems--helm-mode-after)
+
+
+
 
 (declare-function emacspeak-minibuffer-setup-hook "emacspeak-advice" nil)
 
@@ -96,30 +102,53 @@
 
 (declare-function eww-display-dom-by-id-list  "emacspeak-eww.el" (id-list))
 
-(defadvice helm-google-suggest (before emacspeak pre act comp)
+
+(defun ems--helm-google-suggest-before (&rest _)
   "setup emacspeak post-processing-hook"
-  (add-hook
-   'emacspeak-eww-post-hook
-   #'(lambda nil
-       (let  ((emacspeak-google-toolbelt (emacspeak-google-toolbelt)))
-         (eww-display-dom-by-id-list '("center_col" "rhs"))))))
+  (add-hook 'emacspeak-eww-post-hook
+	    #'(lambda nil
+		(let
+		    ((emacspeak-google-toolbelt
+		      (emacspeak-google-toolbelt)))
+		  (eww-display-dom-by-id-list '("center_col" "rhs"))))))
+
+
+(advice-add 'helm-google-suggest :before
+	    #'ems--helm-google-suggest-before)
+
+
+
 
 ;;;  Advice helm-recenter-top-bottom-other-window:
 
-(defadvice helm-recenter-top-bottom-other-window (after emacspeak pre act comp)
+
+(defun ems--helm-recenter-top-bottom-other-window-after (&rest _)
   "Speak current selection."
   (when (ems-interactive-p)
     (with-current-buffer (helm-buffer-get)
-      (emacspeak-icon 'scroll)
-      (emacspeak-speak-line))))
+      (emacspeak-icon 'scroll) (emacspeak-speak-line))))
+
+
+(advice-add 'helm-recenter-top-bottom-other-window :after
+	    #'ems--helm-recenter-top-bottom-other-window-after)
+
+
+
 
 ;;;  Advice helm-yank-selection
 
-(defadvice helm-yank-selection (after emacspeak pre act comp)
+
+(defun ems--helm-yank-selection-after (&rest _)
   "Speak minibuffer after yanking."
   (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'yank-object) (emacspeak-speak-line)))
+
+
+(advice-add 'helm-yank-selection :after
+	    #'ems--helm-yank-selection-after)
+
+
+
 
 ;;;  Support helm-help
 (add-hook

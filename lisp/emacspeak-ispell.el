@@ -75,39 +75,40 @@ many available corrections."
   :type 'number
   :group 'emacspeak-ispell)
 
-(defadvice ispell-command-loop (before emacspeak pre act comp)
-  "Speak the line containing the incorrect word.
- Then speak the possible corrections. "
-  (let ((choices  (ad-get-arg 0))
-        (line nil)
-        (pos "")
-        (start (ad-get-arg 3))
-        (end (ad-get-arg 4)))
+
+(defun ems--ispell-command-loop-before (&rest _)
+  "Speak the line containing the incorrect word.\n Then speak the possible corrections. "
+  (let
+      ((choices (ad-get-arg 0)) (line nil) (pos "")
+       (start (ad-get-arg 3)) (end (ad-get-arg 4)))
     (setq line
-          (ems-set-personality-temporarily
-           start end voice-bolden
-           (buffer-substring
-            (line-beginning-position) (line-end-position))))
+	  (ems-set-personality-temporarily start end voice-bolden
+					   (buffer-substring
+					    (line-beginning-position)
+					    (line-end-position))))
     (with-temp-buffer
-      (setq voice-lock-mode t)
-      (setq buffer-undo-list  t)
-      (dtk-set-punctuations 'all)
-      (insert line)
+      (setq voice-lock-mode t) (setq buffer-undo-list t)
+      (dtk-set-punctuations 'all) (insert line)
       (cond
        ((< (length choices) emacspeak-ispell-max-choices)
-        (cl-loop
-         for choice in choices
-         and position from 0 do
-         (setq pos
-               (propertize (format "%d" position) 'personality voice-smoothen))
-         (insert pos)
-         (insert (format " %s\n" choice))))
+	(cl-loop for choice in choices and position from 0 do
+		 (setq pos
+		       (propertize (format "%d" position) 'personality
+				   voice-smoothen))
+		 (insert pos) (insert (format " %s\n" choice))))
        (t
-        (insert (format "%s corrections available." (length choices)))))
-      (modify-syntax-entry 10 ">")
-      (dtk-speak (buffer-string)))))
+	(insert (format "%s corrections available." (length choices)))))
+      (modify-syntax-entry 10 ">") (dtk-speak (buffer-string)))))
 
-(defadvice ispell-comments-and-strings (around emacspeak pre act comp)
+
+(advice-add 'ispell-command-loop :before
+	    #'ems--ispell-command-loop-before)
+
+
+
+
+
+(defun ems--ispell-comments-and-strings-around (orig-fun &rest args)
   "Stop chatter by turning off messages"
   (cond
    ((ems-interactive-p)
@@ -116,10 +117,24 @@ many available corrections."
       (emacspeak-icon 'task-done)))
    (t ad-do-it)))
 
-(defadvice ispell-help (before emacspeak pre act comp)
+
+(advice-add 'ispell-comments-and-strings :around
+	    #'ems--ispell-comments-and-strings-around)
+
+
+
+
+
+(defun ems--ispell-help-before (&rest _)
   "Speak the help message. "
   (let ((dtk-stop-immediately nil))
     (dtk-speak (documentation 'ispell-help))))
+
+
+(advice-add 'ispell-help :before #'ems--ispell-help-before)
+
+
+
 
 ;;;   Advice top-level ispell commands:
 
@@ -138,18 +153,25 @@ many available corrections."
       (t ad-do-it))
      ad-return-value)))
 
-(defadvice ispell-word (around emacspeak pre act comp)
+
+(defun ems--ispell-word-around (orig-fun &rest args)
   "Produce auditory icons for ispell."
-  (cl-declare (special emacspeak-last-message))
-  (cond
-   ((ems-interactive-p)
-    (let ((dtk-stop-immediately t))
-      (setq emacspeak-last-message nil)
-      (ems-with-messages-silenced ad-do-it)
-      (emacspeak-speak-message-again)
-      (emacspeak-icon 'task-done)))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special emacspeak-last-message))
+    (cond
+     ((ems-interactive-p)
+      (let ((dtk-stop-immediately t))
+	(setq emacspeak-last-message nil)
+	(ems-with-messages-silenced (apply orig-fun args))
+	(emacspeak-speak-message-again) (emacspeak-icon 'task-done)))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'ispell-word :around #'ems--ispell-word-around)
+
+
+
 
 (provide 'emacspeak-ispell)
 

@@ -115,11 +115,18 @@
 
 ;;;  Advice:
 
-(defadvice paradox-quit-and-close (after emacspeak pre act comp)
+
+(defun ems--paradox-quit-and-close-after (&rest _)
   "provide auditory feedback."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'paradox-quit-and-close :after
+	    #'ems--paradox-quit-and-close-after)
+
+
+
 
 (cl-loop
  for f in
@@ -145,17 +152,31 @@
        (emacspeak-icon 'select-object)
        (emacspeak-tabulated-list-speak-cell)))))
 
-(defadvice paradox-menu-view-commit-list (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
 
-(defadvice fparadox-commit-list-visit-commit (after emacspeak pre act comp)
+(defun ems--paradox-menu-view-commit-list-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'paradox-menu-view-commit-list :after
+	    #'ems--paradox-menu-view-commit-list-after)
+
+
+
+
+
+(defun ems--fparadox-commit-list-visit-commit-after (&rest _)
+  "speak."
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'fparadox-commit-list-visit-commit :after
+	    #'ems--fparadox-commit-list-visit-commit-after)
+
+
+
 
 (provide 'emacspeak-paradox)
 ;;;  end of file

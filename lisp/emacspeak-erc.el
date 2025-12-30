@@ -91,27 +91,50 @@ server."
  'erc-mode
  emacspeak-pronounce-internet-smileys-pronunciations)
 
-(defadvice erc-mode (after emacspeak pre act comp)
-  "Turn on voice lock mode."
-  (cl-declare (special voice-lock-mode))
+
+(defun ems--erc-mode-after (&rest _)
+  "Turn on voice lock mode." (cl-declare (special voice-lock-mode))
   (emacspeak-pronounce-refresh-pronunciations)
   (setq voice-lock-mode t))
 
-(defadvice erc-select (after emacspeak pre act comp)
+
+(advice-add 'erc-mode :after #'ems--erc-mode-after)
+
+
+
+
+
+(defun ems--erc-select-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
-(defadvice erc-send-current-line (after emacspeak pre act
-                                        comp)
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'erc-select :after #'ems--erc-select-after)
+
+
+
+
+(defun ems--erc-send-current-line-after (&rest _)
   "Provide auditory icon."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)))
-(defadvice erc-send-paragraph (after emacspeak pre act
-                                     comp)
+  (when (ems-interactive-p) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'erc-send-current-line :after
+	    #'ems--erc-send-current-line-after)
+
+
+
+
+(defun ems--erc-send-paragraph-after (&rest _)
   "Provide auditory icon."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'paragraph)))
+  (when (ems-interactive-p) (emacspeak-icon 'paragraph)))
+
+
+(advice-add 'erc-send-paragraph :after #'ems--erc-send-paragraph-after)
+
+
+
 
 (provide 'emacspeak-erc)
 ;;;  monitoring chatrooms 
@@ -226,44 +249,58 @@ Interactive
 PREFIX arg means toggle the global default value, and then
 set the current local value to the result.")
 
-(defadvice erc-display-line-buffer  (after emacspeak pre act
-                                           comp)
-  "Speech-enable ERC."
-  (cl-declare (special emacspeak-erc-room-monitor
-                       emacspeak-erc-monitor-my-messages
-                       emacspeak-erc-my-nick))
-  (let ((buffer (ad-get-arg 1))
-        (case-fold-search t))
-    (with-current-buffer  buffer
-      (when (and emacspeak-erc-room-monitor
-                 emacspeak-erc-monitor-my-messages)
-        (let ((emacspeak-speak-messages nil)
-              (msg (emacspeak-erc-compute-message (ad-get-arg 0)
-                                                  buffer)))
-          (when msg
-            (emacspeak-icon 'progress)
-            (message msg)
-            (tts-with-punctuations dtk-punctuation-mode
-                                   (dtk-speak  msg))))))))
 
-(defadvice erc-display-line-1  (after emacspeak pre act comp)
+(defun ems--erc-display-line-buffer-after (&rest _)
   "Speech-enable ERC."
-  (cl-declare (special emacspeak-erc-room-monitor
-                       emacspeak-erc-monitor-my-messages
-                       emacspeak-erc-my-nick))
-  (let ((buffer (ad-get-arg 1))
-        (case-fold-search t))
+  (cl-declare
+   (special emacspeak-erc-room-monitor
+	    emacspeak-erc-monitor-my-messages emacspeak-erc-my-nick))
+  (let ((buffer (ad-get-arg 1)) (case-fold-search t))
+    (with-current-buffer buffer
+      (when
+	  (and emacspeak-erc-room-monitor
+	       emacspeak-erc-monitor-my-messages)
+	(let
+	    ((emacspeak-speak-messages nil)
+	     (msg
+	      (emacspeak-erc-compute-message (ad-get-arg 0) buffer)))
+	  (when msg
+	    (emacspeak-icon 'progress) (message msg)
+	    (tts-with-punctuations dtk-punctuation-mode
+				   (dtk-speak msg))))))))
+
+
+(advice-add 'erc-display-line-buffer :after
+	    #'ems--erc-display-line-buffer-after)
+
+
+
+
+
+(defun ems--erc-display-line-1-after (&rest _)
+  "Speech-enable ERC."
+  (cl-declare
+   (special emacspeak-erc-room-monitor
+	    emacspeak-erc-monitor-my-messages emacspeak-erc-my-nick))
+  (let ((buffer (ad-get-arg 1)) (case-fold-search t))
     (save-current-buffer
       (set-buffer buffer)
-      (when (and emacspeak-erc-room-monitor
-                 emacspeak-erc-monitor-my-messages)
-        (let ((msg (emacspeak-erc-compute-message (ad-get-arg 0)
-                                                  buffer)))
-          (when msg
-            (emacspeak-icon 'progress)
-            (message (format "%s" msg))
-            (tts-with-punctuations dtk-punctuation-mode
-                                   (dtk-speak  msg))))))))
+      (when
+	  (and emacspeak-erc-room-monitor
+	       emacspeak-erc-monitor-my-messages)
+	(let
+	    ((msg
+	      (emacspeak-erc-compute-message (ad-get-arg 0) buffer)))
+	  (when msg
+	    (emacspeak-icon 'progress) (message (format "%s" msg))
+	    (tts-with-punctuations dtk-punctuation-mode
+				   (dtk-speak msg))))))))
+
+
+(advice-add 'erc-display-line-1 :after #'ems--erc-display-line-1-after)
+
+
+
 
 (ems-generate-switcher 'emacspeak-erc-toggle-room-monitor
                        'emacspeak-erc-room-monitor
@@ -280,12 +317,20 @@ set the current local value to the result.")
 
 ;;;  silence server messages 
 
-(defadvice erc-parse-line-from-server (around emacspeak pre
-                                              act comp)
+
+(defun ems--erc-parse-line-from-server-around (orig-fun &rest args)
   "Silence server messages."
-  (let ((emacspeak-speak-messages nil))
-    ad-do-it
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let ((emacspeak-speak-messages nil))
+      (apply orig-fun args) result)
+    result))
+
+
+(advice-add 'erc-parse-line-from-server :around
+	    #'ems--erc-parse-line-from-server-around)
+
+
+
 
 ;;;  define emacspeak keys
 (cl-declaim (special erc-mode-map))

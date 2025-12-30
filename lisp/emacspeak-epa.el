@@ -95,16 +95,27 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-line))))
 
-(defadvice epa-delete-keys (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)))
 
-(defadvice epa-exit-buffer (after emacspeak pre act comp)
+(defun ems--epa-delete-keys-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
+
+
+(advice-add 'epa-delete-keys :after #'ems--epa-delete-keys-after)
+
+
+
+
+
+(defun ems--epa-exit-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'epa-exit-buffer :after #'ems--epa-exit-buffer-after)
+
+
+
 
 (cl-loop
  for f in
@@ -130,17 +141,29 @@
        (emacspeak-icon 'open-object)
        (emacspeak-speak-mode-line)))))
 
-(defadvice epa-mark-key(after emacspeak pre act comp)
-  "Produce auditory feedback."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'mark-object)))
 
-(defadvice epa-unmark-key(after emacspeak pre act comp)
+(defun ems--epa-mark-key-after (&rest _)
   "Produce auditory feedback."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'unmark-object)))
+    (emacspeak-speak-line) (emacspeak-icon 'mark-object)))
+
+
+(advice-add 'epa-mark-key :after #'ems--epa-mark-key-after)
+
+
+
+
+
+(defun ems--epa-unmark-key-after (&rest _)
+  "Produce auditory feedback."
+  (when (ems-interactive-p)
+    (emacspeak-speak-line) (emacspeak-icon 'unmark-object)))
+
+
+(advice-add 'epa-unmark-key :after #'ems--epa-unmark-key-after)
+
+
+
 
 (provide 'emacspeak-epa)
 ;;;  end of file

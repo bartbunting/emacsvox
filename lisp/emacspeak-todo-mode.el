@@ -71,16 +71,27 @@
        (emacspeak-icon 'select-object)
        (emacspeak-speak-line)))))
 
-(defadvice todo-save (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)))
 
-(defadvice todo-quit (after emacspeak pre act comp)
+(defun ems--todo-save-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'save-object)))
+
+
+(advice-add 'todo-save :after #'ems--todo-save-after)
+
+
+
+
+
+(defun ems--todo-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'todo-quit :after #'ems--todo-quit-after)
+
+
+
 
 (provide 'emacspeak-todo-mode)
 ;;;  end of file 

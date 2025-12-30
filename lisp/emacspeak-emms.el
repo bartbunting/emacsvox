@@ -107,11 +107,18 @@
                (emacspeak-speak-mode-line)
                (emacspeak-icon 'open-object)))))
 
-(defadvice emms-browser-bury-buffer (after emacspeak pre act comp)
+
+(defun ems--emms-browser-bury-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-mode-line)
-    (emacspeak-icon 'close-object)))
+    (emacspeak-speak-mode-line) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'emms-browser-bury-buffer :after
+	    #'ems--emms-browser-bury-buffer-after)
+
+
+
 
 ;;; Playlists
 (cl-loop for f in
@@ -138,23 +145,42 @@
 
 ;;;  Module emms-streaming:
 (cl-declaim (special emms-stream-mode-map))
-(defadvice emms-stream-mode (after emacspeak pre act comp)
+
+(defun ems--emms-stream-mode-after (&rest _)
   "Update keymaps."
-  (define-key emms-stream-mode-map "\C-e"
-              'emacspeak-keymap))
+  (define-key emms-stream-mode-map "" 'emacspeak-keymap))
 
-(defadvice emms-stream-delete-bookmark (after emacspeak pre act
-                                              comp)
+
+(advice-add 'emms-stream-mode :after #'ems--emms-stream-mode-after)
+
+
+
+
+
+(defun ems--emms-stream-delete-bookmark-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
 
-(defadvice emms-stream-save-bookmarks-file (after emacspeak pre act comp)
+
+(advice-add 'emms-stream-delete-bookmark :after
+	    #'ems--emms-stream-delete-bookmark-after)
+
+
+
+
+
+(defun ems--emms-stream-save-bookmarks-file-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'save-object)
-    (message "Saved stream bookmarks.")))
+    (emacspeak-icon 'save-object) (message "Saved stream bookmarks.")))
+
+
+(advice-add 'emms-stream-save-bookmarks-file :after
+	    #'ems--emms-stream-save-bookmarks-file-after)
+
+
+
 
 (cl-loop for f in
          '(emms-streams emms-stream-quit
@@ -175,18 +201,33 @@
              "speak."
              (when (ems-interactive-p)
                (emacspeak-speak-line)))))
-(defadvice emms-playlist-mode-bury-buffer (after emacspeak pre act comp)
+
+(defun ems--emms-playlist-mode-bury-buffer-after (&rest _)
   "Announce the buffer that becomes current."
   (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'select-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'emms-playlist-mode-bury-buffer :after
+	    #'ems--emms-playlist-mode-bury-buffer-after)
+
+
+
 
 ;;;  silence chatter from info
 
-(defadvice emms-info-really-initialize-track (around emacspeak pre act comp)
+
+(defun ems--emms-info-really-initialize-track-around
+    (orig-fun &rest args)
   "Silence messages."
-  (ems-with-messages-silenced
-   ad-do-it))
+  (ems-with-messages-silenced (apply orig-fun args)))
+
+
+(advice-add 'emms-info-really-initialize-track :around
+	    #'ems--emms-info-really-initialize-track-around)
+
+
+
 
 ;;;  pause/resume if needed
 

@@ -53,10 +53,15 @@
 
 ;;;  interactive programming
 
-(defadvice python-check (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+
+(defun ems--python-check-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'python-check :after #'ems--python-check-after)
+
+
+
 (cl-loop
  for f in
  '(
@@ -71,60 +76,111 @@
        (emacspeak-icon 'task-done)))))
 
 ;;;   whitespace management and indentation
-(defadvice python-indent-dedent-line (after emacspeak pre act comp)
+
+(defun ems--python-indent-dedent-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'right)))
+    (emacspeak-speak-line) (emacspeak-icon 'right)))
 
-(defadvice  python-indent-dedent-line-backspace (around emacspeak pre act comp)
+
+(advice-add 'python-indent-dedent-line :after
+	    #'ems--python-indent-dedent-line-after)
+
+
+
+
+
+(defun ems--python-indent-dedent-line-backspace-around
+    (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (let ((ws (= 32 (char-syntax (preceding-char)))))
-      (dtk-tone 500 100 'force)
-      (unless ws (emacspeak-speak-this-char (preceding-char)))
-      ad-do-it
-      (when ws (dtk-notify (format "Indent %s " (current-column))))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((ws (= 32 (char-syntax (preceding-char)))))
+	(dtk-tone 500 100 'force)
+	(unless ws (emacspeak-speak-this-char (preceding-char)))
+	(apply orig-fun args)
+	(when ws (dtk-notify (format "Indent %s " (current-column))))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice python-fill-paragraph (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)))
 
-(defadvice python-indent-shift-left (after emacspeak pre act comp)
+(advice-add 'python-indent-dedent-line-backspace :around
+	    #'ems--python-indent-dedent-line-backspace-around)
+
+
+
+
+
+(defun ems--python-fill-paragraph-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'fill-object)))
+
+
+(advice-add 'python-fill-paragraph :after
+	    #'ems--python-fill-paragraph-after)
+
+
+
+
+
+(defun ems--python-indent-shift-left-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p)
     (emacspeak-icon 'left)
     (dtk-speak
      (format "Left shifted block  containing %s lines"
-             (count-lines  (region-beginning)
-                           (region-end))))))
-(defadvice python-indent-shift-right (after emacspeak pre act comp)
+	     (count-lines (region-beginning) (region-end))))))
+
+
+(advice-add 'python-indent-shift-left :after
+	    #'ems--python-indent-shift-left-after)
+
+
+
+
+(defun ems--python-indent-shift-right-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p)
     (dtk-speak
      (format "Right shifted block  containing %s lines"
-             (count-lines  (region-beginning)
-                           (region-end))))))
-(defadvice python-indent-region (after emacspeak pre act comp)
+	     (count-lines (region-beginning) (region-end))))))
+
+
+(advice-add 'python-indent-shift-right :after
+	    #'ems--python-indent-shift-right-after)
+
+
+
+
+(defun ems--python-indent-region-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p)
     (emacspeak-icon 'right)
     (dtk-speak
      (format "Indented region   containing %s lines"
-             (count-lines  (region-beginning)
-                           (region-end))))))
+	     (count-lines (region-beginning) (region-end))))))
+
+
+(advice-add 'python-indent-region :after
+	    #'ems--python-indent-region-after)
+
+
+
 
 ;;;   buffer navigation
-(defadvice python-mark-defun (after emacspeak pre act comp)
+
+(defun ems--python-mark-defun-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'mark-object)
     (message "Marked function containing %s lines"
-             (count-lines (point) (mark 'force)))))
+	     (count-lines (point) (mark 'force)))))
+
+
+(advice-add 'python-mark-defun :after #'ems--python-mark-defun-after)
+
+
+
 
 (cl-loop
  for f in

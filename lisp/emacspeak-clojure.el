@@ -58,11 +58,18 @@
 
 ;;;  Speech-enable Editing:
 
-(defadvice clojure-toggle-keyword-string (after emacspeak pre act comp)
+
+(defun ems--clojure-toggle-keyword-string-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'button)))
+    (emacspeak-speak-line) (emacspeak-icon 'button)))
+
+
+(advice-add 'clojure-toggle-keyword-string :after
+	    #'ems--clojure-toggle-keyword-string-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -100,10 +107,15 @@
      (when (ems-interactive-p)
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
-(defadvice clojure-align (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'fill-object)))
+
+(defun ems--clojure-align-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'fill-object)))
+
+
+(advice-add 'clojure-align :after #'ems--clojure-align-after)
+
+
+
 
 (cl-loop
  for f in

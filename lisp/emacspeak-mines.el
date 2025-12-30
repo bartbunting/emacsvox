@@ -221,11 +221,17 @@ to beginning of board before searching."
     (emacspeak-mines-speak-cell)))
 
 ;;;  Advice Interactive Commands
-(defadvice mines (after emacspeak pre act comp)
+
+(defun ems--mines-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (dtk-speak "New Minesweeper game")
-    (emacspeak-icon 'open-object)))
+    (dtk-speak "New Minesweeper game") (emacspeak-icon 'open-object)))
+
+
+(advice-add 'mines :after #'ems--mines-after)
+
+
+
 
 (cl-loop
  for f in
@@ -240,29 +246,54 @@ to beginning of board before searching."
      (when (ems-interactive-p)
        (emacspeak-mines-speak-cell)))))
 
-(defadvice mines-dig (after emacspeak pre act comp)
+
+(defun ems--mines-dig-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (unless mines-game-over (emacspeak-mines-speak-cell))))
 
-(defadvice mines-flag-cell (after emacspeak pre act comp)
+
+(advice-add 'mines-dig :after #'ems--mines-dig-after)
+
+
+
+
+
+(defun ems--mines-flag-cell-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-
     (if (eq t (aref mines-grid (mines-current-pos)))
-        (emacspeak-icon 'close-object)
+	(emacspeak-icon 'close-object)
       (emacspeak-icon 'mark-object))
     (emacspeak-mines-speak-cell)))
 
-(defadvice mines-game-over (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'shutdown)))
 
-(defadvice mines-game-completed(after emacspeak pre act comp)
-  "Provide an auditory icon."
-  (emacspeak-icon 'task-done))
+(advice-add 'mines-flag-cell :after #'ems--mines-flag-cell-after)
+
+
+
+
+
+(defun ems--mines-game-over-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'shutdown)))
+
+
+(advice-add 'mines-game-over :after #'ems--mines-game-over-after)
+
+
+
+
+
+(defun ems--mines-game-completed-after (&rest _)
+  "Provide an auditory icon." (emacspeak-icon 'task-done))
+
+
+(advice-add 'mines-game-completed :after
+	    #'ems--mines-game-completed-after)
+
+
+
 
 (provide 'emacspeak-mines)
 ;;;  end of file

@@ -68,11 +68,17 @@
 
 ;;;  Advice Interactive Commands:
 
-(defadvice pydoc (after emacspeak pre act comp)
+
+(defun ems--pydoc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (emacspeak-speak-buffer)))
+    (emacspeak-icon 'help) (emacspeak-speak-buffer)))
+
+
+(advice-add 'pydoc :after #'ems--pydoc-after)
+
+
+
 
 (provide 'emacspeak-pydoc)
 ;;;  end of file

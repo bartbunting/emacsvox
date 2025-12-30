@@ -54,62 +54,118 @@
 
 ;;;  Advice interactive commands
 
-(defadvice kmacro-start-macro (before emacspeak pre act comp)
+
+(defun ems--kmacro-start-macro-before (&rest _)
   "Provide auditory icon."
-  (when  (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (message "Defining new kbd macro.")))
+  (when (ems-interactive-p)
+    (emacspeak-icon 'open-object) (message "Defining new kbd macro.")))
 
-(defadvice kmacro-start-macro-or-insert-counter (before emacspeak pre act comp)
+
+(advice-add 'kmacro-start-macro :before
+	    #'ems--kmacro-start-macro-before)
+
+
+
+
+
+(defun ems--kmacro-start-macro-or-insert-counter-before (&rest _)
   "Provide auditory icon if new macro is being defined."
-  (when (and (ems-interactive-p)
-             (not  defining-kbd-macro)
-             (not executing-kbd-macro))
-    (emacspeak-icon 'yank-object)
-    (message "Defining new kbd macro.")))
+  (when
+      (and (ems-interactive-p) (not defining-kbd-macro)
+	   (not executing-kbd-macro))
+    (emacspeak-icon 'yank-object) (message "Defining new kbd macro.")))
 
-(defadvice kmacro-end-or-call-macro (before emacspeak pre act comp)
+
+(advice-add 'kmacro-start-macro-or-insert-counter :before
+	    #'ems--kmacro-start-macro-or-insert-counter-before)
+
+
+
+
+
+(defun ems--kmacro-end-or-call-macro-before (&rest _)
   "speak about we are about to do."
   (cond
-   ((and (ems-interactive-p)
-         defining-kbd-macro)
+   ((and (ems-interactive-p) defining-kbd-macro)
     (emacspeak-icon 'close-object)
     (message "Finished defining kbd macro."))
-   (t(emacspeak-icon 'open-object)
-     (message "Calling macro."))))
+   (t (emacspeak-icon 'open-object) (message "Calling macro."))))
 
-(defadvice kmacro-end-or-call-macro-repeat (before emacspeak pre act comp)
+
+(advice-add 'kmacro-end-or-call-macro :before
+	    #'ems--kmacro-end-or-call-macro-before)
+
+
+
+
+
+(defun ems--kmacro-end-or-call-macro-repeat-before (&rest _)
   "speak about we are about to do."
   (cond
-   ((and (ems-interactive-p)
-         defining-kbd-macro)
+   ((and (ems-interactive-p) defining-kbd-macro)
     (message "Finished defining kbd macro."))
-   (t(emacspeak-icon 'select-object)
-     (message "Calling macro."))))
+   (t (emacspeak-icon 'select-object) (message "Calling macro."))))
 
-(defadvice kmacro-edit-macro-repeat (after emacspeak pre act
-                                           comp)
+
+(advice-add 'kmacro-end-or-call-macro-repeat :before
+	    #'ems--kmacro-end-or-call-macro-repeat-before)
+
+
+
+
+
+(defun ems--kmacro-edit-macro-repeat-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice kmacro-call-ring-2nd-repeat (before emacspeak pre act comp)
+
+(advice-add 'kmacro-edit-macro-repeat :after
+	    #'ems--kmacro-edit-macro-repeat-after)
+
+
+
+
+
+(defun ems--kmacro-call-ring-2nd-repeat-before (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Calling  second macro from ring.")))
 
-(defadvice kmacro-call-macro (around emacspeak pre act comp)
-  "Speech-enabled by emacspeak."
-  (let ((emacspeak-speak-messages nil))
-    ad-do-it
-    ad-return-value))
 
-(defadvice call-last-kbd-macro (around emacspeak pre act comp)
+(advice-add 'kmacro-call-ring-2nd-repeat :before
+	    #'ems--kmacro-call-ring-2nd-repeat-before)
+
+
+
+
+
+(defun ems--kmacro-call-macro-around (orig-fun &rest args)
   "Speech-enabled by emacspeak."
-  (let ((emacspeak-speak-messages t))
-    ad-do-it
-    ad-return-value))
+  (let ((result (apply orig-fun args)))
+    (let ((emacspeak-speak-messages nil))
+      (apply orig-fun args) result)
+    result))
+
+
+(advice-add 'kmacro-call-macro :around #'ems--kmacro-call-macro-around)
+
+
+
+
+
+(defun ems--call-last-kbd-macro-around (orig-fun &rest args)
+  "Speech-enabled by emacspeak."
+  (let ((result (apply orig-fun args)))
+    (let ((emacspeak-speak-messages t)) (apply orig-fun args) result)
+    result))
+
+
+(advice-add 'call-last-kbd-macro :around
+	    #'ems--call-last-kbd-macro-around)
+
+
+
 
 (provide 'emacspeak-kmacro)
 ;;;  end of file

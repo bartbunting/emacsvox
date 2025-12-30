@@ -355,26 +355,45 @@ s   Sub-square Distribution.
 
 ;;;  advice interaction:
 
-(defadvice sudoku (after emacspeak pre act comp)
-  "Speech-enable SuDoKu.
-  for details."
+
+(defun ems--sudoku-after (&rest _)
+  "Speech-enable SuDoKu.\n  for details."
   (when (ems-interactive-p)
-    (dtk-set-punctuations 'some)
-    (emacspeak-icon 'open-object)
+    (dtk-set-punctuations 'some) (emacspeak-icon 'open-object)
     (emacspeak-sudoku-speak-current-cell-value)))
+
+
+(advice-add 'sudoku :after #'ems--sudoku-after)
+
+
+
 (defvar emacspeak-sudoku-history-stack nil
   "Holds history of interesting board configurations.")
 
-(defadvice sudoku-new (after emacspeak pre act comp)
+
+(defun ems--sudoku-new-after (&rest _)
   "Reset history stack."
   (cl-declare (special emacspeak-sudoku-history-stack))
   (setq emacspeak-sudoku-history-stack nil))
 
-(defadvice sudoku-restart (after emacspeak pre act comp)
+
+(advice-add 'sudoku-new :after #'ems--sudoku-new-after)
+
+
+
+
+
+(defun ems--sudoku-restart-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (emacspeak-sudoku-speak-current-cell-value)))
+
+
+(advice-add 'sudoku-restart :after #'ems--sudoku-restart-after)
+
+
+
 
 ;;;  implement history stack:
 

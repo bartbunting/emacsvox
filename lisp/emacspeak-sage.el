@@ -103,11 +103,18 @@
       result)))
 
 ;;;  Advice Help:
-(defadvice sage-shell-help:describe-symbol (after emacspeak pre act comp)
+
+(defun ems--sage-shell-help:describe-symbol-after (&rest _)
   "speak."
   (with-current-buffer (window-buffer (selected-window))
-    (emacspeak-icon 'help)
-    (emacspeak-speak-buffer)))
+    (emacspeak-icon 'help) (emacspeak-speak-buffer)))
+
+
+(advice-add 'sage-shell-help:describe-symbol :after
+	    #'ems--sage-shell-help:describe-symbol-after)
+
+
+
 
 (cl-loop
  for f in
@@ -177,31 +184,54 @@
        (emacspeak-speak-line)))))
 
 ;;;  sage comint interaction:
-(defadvice sage-shell:list-outputs (after emacspeak pre act comp)
+
+(defun ems--sage-shell:list-outputs-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (with-current-buffer (window-buffer (selected-window))
-      (emacspeak-icon 'open-object)
-      (emacspeak-speak-line))))
+      (emacspeak-icon 'open-object) (emacspeak-speak-line))))
 
-(defadvice sage-shell:delchar-or-maybe-eof (around emacspeak pre act comp)
+
+(advice-add 'sage-shell:list-outputs :after
+	    #'ems--sage-shell:list-outputs-after)
+
+
+
+
+
+(defun ems--sage-shell:delchar-or-maybe-eof-around
+    (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
+  (let ((result (apply orig-fun args)))
     (cond
-     ((= (point) (point-max))
-      (message "Sending EOF to comint process"))
-     (t (dtk-tone-deletion)
-        (emacspeak-speak-char t)))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+     ((ems-interactive-p)
+      (cond
+       ((= (point) (point-max))
+	(message "Sending EOF to comint process"))
+       (t (dtk-tone-deletion) (emacspeak-speak-char t)))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice sage-shell:delete-output (after emacspeak pre act comp)
+
+(advice-add 'sage-shell:delchar-or-maybe-eof :around
+	    #'ems--sage-shell:delchar-or-maybe-eof-around)
+
+
+
+
+
+(defun ems--sage-shell:delete-output-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'delete-object) (emacspeak-speak-line)))
+
+
+(advice-add 'sage-shell:delete-output :after
+	    #'ems--sage-shell:delete-output-after)
+
+
+
 
 (cl-loop
  for f in
@@ -214,20 +244,34 @@
        (emacspeak-icon 'task-done)
        (emacspeak-speak-mode-line)))))
 
-(defadvice sage-shell:copy-previous-output-to-kill-ring
-    (after emacspeak pre act comp)
+
+(defun ems--sage-shell:copy-previous-output-to-kill-ring-after
+    (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'yank-object)
     (call-interactively #'emacspeak-speak-current-kill)))
 
-(defadvice sage-shell:send-input (after emacspeak pre act comp)
+
+(advice-add 'sage-shell:copy-previous-output-to-kill-ring :after
+	    #'ems--sage-shell:copy-previous-output-to-kill-ring-after)
+
+
+
+
+
+(defun ems--sage-shell:send-input-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (sit-for .01)
-    (accept-process-output)
-    (emacspeak-sage-speak-output)
-    (emacspeak-icon 'close-object)))
+    (sit-for 0.01) (accept-process-output)
+    (emacspeak-sage-speak-output) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'sage-shell:send-input :after
+	    #'ems--sage-shell:send-input-after)
+
+
+
 
 ;;;  sage sagetext:
 

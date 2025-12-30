@@ -723,69 +723,115 @@ specifies index of move, default is final index."
       msg
       (emacspeak-chess-describe-move chess-module-game chess-display-index)))))
 
-(defadvice chess-display-undo  (after emacspeak pre act comp)
+
+(defun ems--chess-display-undo-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'progress)
     (dtk-speak (emacspeak-chess-describe-move chess-module-game))))
 
-(defadvice chess-display-move-first (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced ad-do-it)
-    (emacspeak-chess-state-speaker)
-    (emacspeak-icon 'left))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice chess-display-move-backward (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced  ad-do-it)
-    (emacspeak-icon 'left)
-    (emacspeak-chess-state-speaker))
-   (t ad-do-it))
-  ad-return-value)
+(advice-add 'chess-display-undo :after #'ems--chess-display-undo-after)
 
-(defadvice chess-display-move-forward (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced ad-do-it)
-    (emacspeak-icon 'right)
-    (emacspeak-chess-state-speaker))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice chess-display-move-last (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    (ems-with-messages-silenced ad-do-it)
-    (emacspeak-icon 'right)
-    (emacspeak-chess-state-speaker))
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice chess-display-select-piece (around emacspeak pre act comp)
+
+
+(defun ems--chess-display-move-first-around (orig-fun &rest args)
   "speak."
-  (cond
-   ((ems-interactive-p)
-    (let ((square (get-text-property (point) 'chess-coord)))
-      (cond
-       ((and
-         (consp chess-display-last-selected )
-         (= (point) (car chess-display-last-selected)))
-        (message "Deselected")
-        (emacspeak-icon 'deselect-object))
-       ((null chess-display-last-selected)
-        (dtk-speak-list (emacspeak-chess-describe-square square))
-        (emacspeak-icon 'select-object)))
-      ad-do-it))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args))
+      (emacspeak-chess-state-speaker) (emacspeak-icon 'left))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'chess-display-move-first :around
+	    #'ems--chess-display-move-first-around)
+
+
+
+
+
+(defun ems--chess-display-move-backward-around (orig-fun &rest args)
+  "speak."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args))
+      (emacspeak-icon 'left) (emacspeak-chess-state-speaker))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'chess-display-move-backward :around
+	    #'ems--chess-display-move-backward-around)
+
+
+
+
+
+(defun ems--chess-display-move-forward-around (orig-fun &rest args)
+  "speak."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args))
+      (emacspeak-icon 'right) (emacspeak-chess-state-speaker))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'chess-display-move-forward :around
+	    #'ems--chess-display-move-forward-around)
+
+
+
+
+
+(defun ems--chess-display-move-last-around (orig-fun &rest args)
+  "speak."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (ems-with-messages-silenced (apply orig-fun args))
+      (emacspeak-icon 'right) (emacspeak-chess-state-speaker))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'chess-display-move-last :around
+	    #'ems--chess-display-move-last-around)
+
+
+
+
+
+(defun ems--chess-display-select-piece-around (orig-fun &rest args)
+  "speak."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((square (get-text-property (point) 'chess-coord)))
+	(cond
+	 ((and (consp chess-display-last-selected)
+	       (= (point) (car chess-display-last-selected)))
+	  (message "Deselected") (emacspeak-icon 'deselect-object))
+	 ((null chess-display-last-selected)
+	  (dtk-speak-list (emacspeak-chess-describe-square square))
+	  (emacspeak-icon 'select-object)))
+	(apply orig-fun args)))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'chess-display-select-piece :around
+	    #'ems--chess-display-select-piece-around)
+
+
+
 
 ;;; emacspeak Handler:
 

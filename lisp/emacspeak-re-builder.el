@@ -60,65 +60,119 @@
 
 ;;;  Speech-enable interactive commands.
 
-(defadvice  re-builder (after emacspeak pre act comp)
+
+(defun ems--re-builder-after (&rest _)
   "Speak status information."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
 
-(defadvice reb-quit (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
 
-(defadvice reb-next-match (after emacspeak pre act comp)
+(advice-add 're-builder :after #'ems--re-builder-after)
+
+
+
+
+
+(defun ems--reb-quit-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'reb-quit :after #'ems--reb-quit-after)
+
+
+
+
+
+(defun ems--reb-next-match-after (&rest _)
   "Speak matched line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
       (save-excursion
-        (set-buffer reb-target-buffer)
-        (emacspeak-speak-line)
-        (emacspeak-icon 'large-movement)))))
+	(set-buffer reb-target-buffer) (emacspeak-speak-line)
+	(emacspeak-icon 'large-movement)))))
 
-(defadvice reb-prev-match (after emacspeak pre act comp)
+
+(advice-add 'reb-next-match :after #'ems--reb-next-match-after)
+
+
+
+
+
+(defun ems--reb-prev-match-after (&rest _)
   "Speak matched line."
   (when (ems-interactive-p)
     (let ((emacspeak-show-point t))
       (save-excursion
-        (set-buffer reb-target-buffer)
-        (emacspeak-speak-line)
-        (emacspeak-icon 'large-movement)))))
+	(set-buffer reb-target-buffer) (emacspeak-speak-line)
+	(emacspeak-icon 'large-movement)))))
 
-(defadvice reb-toggle-case (after emacspeak pre act comp)
+
+(advice-add 'reb-prev-match :after #'ems--reb-prev-match-after)
+
+
+
+
+
+(defun ems--reb-toggle-case-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (save-excursion
       (set-buffer reb-target-buffer)
       (emacspeak-icon (if case-fold-search 'on 'off)))))
 
-(defadvice reb-copy (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'yank-object)))
 
-(defadvice reb-enter-subexp-mode (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)))
+(advice-add 'reb-toggle-case :after #'ems--reb-toggle-case-after)
 
-(defadvice reb-quit-subexp-mode (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
 
-(defadvice reb-auto-update (after emacspeak pre act comp)
+
+
+
+(defun ems--reb-copy-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'yank-object)))
+
+
+(advice-add 'reb-copy :after #'ems--reb-copy-after)
+
+
+
+
+
+(defun ems--reb-enter-subexp-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'open-object)))
+
+
+(advice-add 'reb-enter-subexp-mode :after
+	    #'ems--reb-enter-subexp-mode-after)
+
+
+
+
+
+(defun ems--reb-quit-subexp-mode-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'reb-quit-subexp-mode :after
+	    #'ems--reb-quit-subexp-mode-after)
+
+
+
+
+
+(defun ems--reb-auto-update-after (&rest _)
   "Speak after update is done."
   (when (buffer-live-p reb-target-buffer)
     (with-current-buffer reb-target-buffer
       (with-silent-modifications
-        (mapc
-         #'(lambda (o) (overlay-put o 'auditory-icon 'item))  reb-overlays))))
+	(mapc #'(lambda (o) (overlay-put o 'auditory-icon 'item))
+	      reb-overlays))))
   (emacspeak-speak-message-again))
+
+
+(advice-add 'reb-auto-update :after #'ems--reb-auto-update-after)
+
+
+
 
 (provide 'emacspeak-re-builder)
 ;;;  end of file

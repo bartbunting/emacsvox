@@ -50,102 +50,157 @@
 (require 'table )
 
 ;;;  Update command remap list.
-(defadvice table--make-cell-map(after emacspeak pre act comp)
+
+(defun ems--table--make-cell-map-after (&rest _)
   "Set up emacspeak for table.el"
   (cl-declare (special table-cell-map))
-  (when  table-cell-map
-    (cl-loop
-     for k in
-     (where-is-internal 'emacspeak-self-insert-command (list table-cell-map))
-     do
-     (define-key table-cell-map k '*table--cell-self-insert-command))
+  (when table-cell-map
     (cl-loop for k in
-             '(
-               ("S-TAB" table-backward-cell)
-               ("\C-e." emacspeak-etable-speak-cell))
-             do
-             (emacspeak-keymap-update table-cell-map k))))
+	     (where-is-internal 'emacspeak-self-insert-command
+				(list table-cell-map))
+	     do
+	     (define-key table-cell-map k
+			 '*table--cell-self-insert-command))
+    (cl-loop for k in
+	     '(("S-TAB" table-backward-cell)
+	       ("." emacspeak-etable-speak-cell))
+	     do (emacspeak-keymap-update table-cell-map k))))
+
+
+(advice-add 'table--make-cell-map :after
+	    #'ems--table--make-cell-map-after)
+
+
+
 
 ;;;  Advice edit commands
 
-(defadvice *table--cell-delete-char (around emacspeak pre act comp)
-  "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone 500 100 'force)
-    (emacspeak-speak-char t)
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
 
-(defadvice *table--cell-delete-backward-char (around emacspeak pre act comp)
+(defun ems--*table--cell-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (cond
-   ((ems-interactive-p)
-    (dtk-tone 500 100 'force)
-    (emacspeak-speak-this-char (preceding-char))
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
-
-(defadvice *table--cell-self-insert-command (after emacspeak pre act comp)
-  "Provide spoken output."
-  (when  (ems-interactive-p)
+  (let ((result (apply orig-fun args)))
     (cond
-     ((and (= 32 last-input-event)
-           emacspeak-word-echo)
-      (save-excursion
-        (let ((orig (point)))
-          (table--finish-delayed-tasks)
-          (backward-word 1)
-          (emacspeak-speak-region orig (point)))))
-     (emacspeak-character-echo
-      (dtk-stop)
-      (emacspeak-speak-this-char last-input-event)))))
+     ((ems-interactive-p) (dtk-tone 500 100 'force)
+      (emacspeak-speak-char t) (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice *table--cell-quoted-insert  (after emacspeak pre act comp)
+
+(advice-add '*table--cell-delete-char :around
+	    #'ems--*table--cell-delete-char-around)
+
+
+
+
+
+(defun ems--*table--cell-delete-backward-char-around
+    (orig-fun &rest args)
+  "Speak character you're deleting."
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p) (dtk-tone 500 100 'force)
+      (emacspeak-speak-this-char (preceding-char))
+      (apply orig-fun args))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add '*table--cell-delete-backward-char :around
+	    #'ems--*table--cell-delete-backward-char-around)
+
+
+
+
+
+(defun ems--*table--cell-self-insert-command-after (&rest _)
+  "Provide spoken output."
+  (when (ems-interactive-p)
+    (cond
+     ((and (= 32 last-input-event) emacspeak-word-echo)
+      (save-excursion
+	(let ((orig (point)))
+	  (table--finish-delayed-tasks) (backward-word 1)
+	  (emacspeak-speak-region orig (point)))))
+     (emacspeak-character-echo (dtk-stop)
+			       (emacspeak-speak-this-char
+				last-input-event)))))
+
+
+(advice-add '*table--cell-self-insert-command :after
+	    #'ems--*table--cell-self-insert-command-after)
+
+
+
+
+
+(defun ems--*table--cell-quoted-insert-after (&rest _)
   "Speak the character that was inserted."
   (when (ems-interactive-p)
     (table--finish-delayed-tasks)
     (emacspeak-speak-this-char (preceding-char))))
 
-(defadvice *table--cell-newline (before emacspeak pre act comp)
-  "Speak the previous line if line echo is on.
-See command \\[emacspeak-toggle-line-echo].  Otherwise cue the user to
-the newly created blank line."
+
+(advice-add '*table--cell-quoted-insert :after
+	    #'ems--*table--cell-quoted-insert-after)
+
+
+
+
+
+(defun ems--*table--cell-newline-before (&rest _)
+  "Speak the previous line if line echo is on.\nSee command \\[emacspeak-toggle-line-echo].  Otherwise cue the user to\nthe newly created blank line."
   (cl-declare (special emacspeak-line-echo))
   (when (ems-interactive-p)
     (table--finish-delayed-tasks)
-    (cond
-     (emacspeak-line-echo (emacspeak-speak-line))
-     (t(if dtk-stop-immediately (dtk-stop))
-       (dtk-tone 225 120 'force)))))
+    (cond (emacspeak-line-echo (emacspeak-speak-line))
+	  (t (if dtk-stop-immediately (dtk-stop))
+	     (dtk-tone 225 120 'force)))))
 
-(defadvice *table--cell-newline-and-indent (around emacspeak pre act comp)
-  "Speak the previous line if line echo is on.
-See command \\[emacspeak-toggle-line-echo].
-Otherwise cue user to the line just created."
-  (cl-declare (special emacspeak-line-echo))
-  (cond
-   ((ems-interactive-p)
-    (cond
-     (emacspeak-line-echo (emacspeak-speak-line))
-     (t (dtk-speak-using-voice voice-annotate
-                               (format
-                                "indent %s"
-                                (current-column)))
-        (dtk-interp-speak)))))
-  ad-do-it
-  ad-return-value)
 
-(defadvice *table--cell-open-line (after emacspeak pre act comp)
+(advice-add '*table--cell-newline :before
+	    #'ems--*table--cell-newline-before)
+
+
+
+
+
+(defun ems--*table--cell-newline-and-indent-around
+    (orig-fun &rest args)
+  "Speak the previous line if line echo is on.\nSee command \\[emacspeak-toggle-line-echo].\nOtherwise cue user to the line just created."
+  (let ((result (apply orig-fun args)))
+    (cl-declare (special emacspeak-line-echo))
+    (cond
+     ((ems-interactive-p)
+      (cond (emacspeak-line-echo (emacspeak-speak-line))
+	    (t
+	     (dtk-speak-using-voice voice-annotate
+				    (format "indent %s"
+					    (current-column)))
+	     (dtk-interp-speak)))))
+    (apply orig-fun args) result))
+
+
+(advice-add '*table--cell-newline-and-indent :around
+	    #'ems--*table--cell-newline-and-indent-around)
+
+
+
+
+
+(defun ems--*table--cell-open-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (let ((count (ad-get-arg 0)))
       (emacspeak-icon 'open-object)
-      (message "Opened %s blank line%s"
-               (if (= count 1) "a" count)
-               (if (= count 1) "" "s")))))
+      (message "Opened %s blank line%s" (if (= count 1) "a" count)
+	       (if (= count 1) "" "s")))))
+
+
+(advice-add '*table--cell-open-line :after
+	    #'ems--*table--cell-open-line-after)
+
+
+
 
 ;;;  speak cell contents:
 

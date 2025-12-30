@@ -78,17 +78,29 @@
                (emacspeak-icon 'large-movement)
                (emacspeak-speak-line)))))
 
-(defadvice gtags-pop-stack (after emacspeak pre act comp)
+
+(defun ems--gtags-pop-stack-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-line)))
 
-(defadvice gtags-select-mode (after emacspeak pre act comp)
+
+(advice-add 'gtags-pop-stack :after #'ems--gtags-pop-stack-after)
+
+
+
+
+
+(defun ems--gtags-select-mode-after (&rest _)
   "Provide  auditory feedback."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'gtags-select-mode :after #'ems--gtags-select-mode-after)
+
+
+
 
 (provide 'emacspeak-gtags)
 ;;;  end of file

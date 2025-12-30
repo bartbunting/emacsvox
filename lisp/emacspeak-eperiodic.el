@@ -148,55 +148,109 @@
 
 ;;;  advice interactive commands
 
-(defadvice eperiodic-find-element (after emacspeak pre act comp)
+
+(defun ems--eperiodic-find-element-after (&rest _)
   "speak."
-  (when  (ems-interactive-p)
+  (when (ems-interactive-p)
     (emacspeak-eperiodic-speak-current-element)
     (emacspeak-icon 'large-movement)))
 
-(defadvice eperiodic-previous-element (after emacspeak pre act comp)
+
+(advice-add 'eperiodic-find-element :after
+	    #'ems--eperiodic-find-element-after)
+
+
+
+
+
+(defun ems--eperiodic-previous-element-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak (emacspeak-eperiodic-name-element-at-point))
     (emacspeak-icon 'large-movement)))
 
-(defadvice eperiodic-next-element (after emacspeak pre act comp)
+
+(advice-add 'eperiodic-previous-element :after
+	    #'ems--eperiodic-previous-element-after)
+
+
+
+
+
+(defun ems--eperiodic-next-element-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak (emacspeak-eperiodic-name-element-at-point))
     (emacspeak-icon 'large-movement)))
-(defadvice eperiodic (after emacspeak pre act comp)
+
+
+(advice-add 'eperiodic-next-element :after
+	    #'ems--eperiodic-next-element-after)
+
+
+
+
+(defun ems--eperiodic-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
-(defadvice eperiodic-move (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'select-object)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
 
-(defadvice eperiodic-show-element-info (after emacspeak pre act comp)
+
+(advice-add 'eperiodic :after #'ems--eperiodic-after)
+
+
+
+
+(defun ems--eperiodic-move-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'select-object)))
+
+
+(advice-add 'eperiodic-move :after #'ems--eperiodic-move-after)
+
+
+
+
+
+(defun ems--eperiodic-show-element-info-after (&rest _)
   "Speak displayed info."
   (when (ems-interactive-p)
     (let ((b (get-buffer "*EPeriodic Element*")))
-      (unless b
-        (error "Cannot find displayed info."))
-      (save-current-buffer
-        (set-buffer b)
-        (emacspeak-speak-buffer)))))
+      (unless b (error "Cannot find displayed info."))
+      (save-current-buffer (set-buffer b) (emacspeak-speak-buffer)))))
 
-(defadvice eperiodic-bury-buffer (after emacspeak pre act comp)
+
+(advice-add 'eperiodic-show-element-info :after
+	    #'ems--eperiodic-show-element-info-after)
+
+
+
+
+
+(defun ems--eperiodic-bury-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'close-object) (emacspeak-speak-mode-line)))
 
-(defadvice eperiodic-cycle-view (after emacspeak pre act comp)
+
+(advice-add 'eperiodic-bury-buffer :after
+	    #'ems--eperiodic-bury-buffer-after)
+
+
+
+
+
+(defun ems--eperiodic-cycle-view-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
-    (message "View %s"
-             eperiodic-colour-element-function)))
+    (message "View %s" eperiodic-colour-element-function)))
+
+
+(advice-add 'eperiodic-cycle-view :after
+	    #'ems--eperiodic-cycle-view-after)
+
+
+
 
 (provide 'emacspeak-eperiodic)
 ;;;  end of file

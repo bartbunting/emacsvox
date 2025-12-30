@@ -58,11 +58,17 @@
   (emacspeak-speak-mode-line))
 
 ;;;  Speech-enable Interactive Commands:
-(defadvice projectile-vc (after emacspeak pre act comp)
+
+(defun ems--projectile-vc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'projectile-vc :after #'ems--projectile-vc-after)
+
+
+
 
 (cl-loop
  for f in
@@ -86,11 +92,18 @@
        (emacspeak-icon 'task-done)
        (emacspeak-speak-line)))))
 (add-hook 'projectile-find-file-hook 'emacspeak-projectile-file-action)
-(defadvice projectile-edit-dir-locals(after emacspeak pre act comp)
+
+(defun ems--projectile-edit-dir-locals-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-line)))
+
+
+(advice-add 'projectile-edit-dir-locals :after
+	    #'ems--projectile-edit-dir-locals-after)
+
+
+
 
 (cl-loop
  for f in

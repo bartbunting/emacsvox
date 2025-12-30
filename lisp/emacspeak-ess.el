@@ -51,20 +51,34 @@
 
 ;;;  Advice edeitor to speak
 
-(defadvice ess-indent-command(after emacspeak pre act comp)
-  "Speak the line."
-  (when (ems-interactive-p)
-    (emacspeak-speak-line)))
 
-(defadvice ess-smart-underscore (around emacspeak pre act comp)
+(defun ems--ess-indent-command-after (&rest _)
+  "Speak the line." (when (ems-interactive-p) (emacspeak-speak-line)))
+
+
+(advice-add 'ess-indent-command :after #'ems--ess-indent-command-after)
+
+
+
+
+
+(defun ems--ess-smart-underscore-around (orig-fun &rest args)
   "Speak what you inserted."
-  (cond
-   ((ems-interactive-p)
-    (let ((orig (point)))
-      ad-do-it
-      (dtk-speak (buffer-substring orig (point)))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((orig (point)))
+	(apply orig-fun args)
+	(dtk-speak (buffer-substring orig (point)))))
+     (t (apply orig-fun args)))
+    result))
+
+
+(advice-add 'ess-smart-underscore :around
+	    #'ems--ess-smart-underscore-around)
+
+
+
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook
              (memq 'emacspeak-post-self-insert-hook post-self-insert-hook))
@@ -88,18 +102,32 @@ Cue electric insertion with a tone."
                (emacspeak-icon 'large-movement)
                (emacspeak-speak-line)))))
 
-(defadvice ess-mark-function (after emacspeak pre act comp)
+
+(defun ems--ess-mark-function-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'select-object)
     (message "Marked function containing %s lines."
-             (count-lines (point) (mark)))))
+	     (count-lines (point) (mark)))))
 
-(defadvice ess-indent-exp  (after emacspeak pre act comp)
+
+(advice-add 'ess-mark-function :after #'ems--ess-mark-function-after)
+
+
+
+
+
+(defun ems--ess-indent-exp-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-icon 'fill-object)
     (message "Indented current s expression ")))
+
+
+(advice-add 'ess-indent-exp :after #'ems--ess-indent-exp-after)
+
+
+
 
 ;;;  Evaluators
 
@@ -122,12 +150,18 @@ Cue electric insertion with a tone."
               (emacspeak-icon 'select-object)))))
 
 ;;;  Switchers
-(defadvice ess-display-help-on-object(after emacspeak pre act
-                                            comp)
+
+(defun ems--ess-display-help-on-object-after (&rest _)
   "Announce help."
   (when (ems-interactive-p)
-    (emacspeak-icon 'help)
-    (message "Displayed help in other window.")))
+    (emacspeak-icon 'help) (message "Displayed help in other window.")))
+
+
+(advice-add 'ess-display-help-on-object :after
+	    #'ems--ess-display-help-on-object-after)
+
+
+
 (cl-loop for f in
          '(
            ess-switch-to-ess ess-switch-to-end-of-ESS)

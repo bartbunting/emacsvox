@@ -51,10 +51,15 @@
 
 ;;;  Interactive Commands:
 
-(defadvice debugger-continue (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
+
+(defun ems--debugger-continue-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'debugger-continue :after #'ems--debugger-continue-after)
+
+
+
 
 (cl-loop
  for f in 
@@ -67,19 +72,36 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice debugger-eval-expression (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak ad-return-value)))
 
-(defadvice debugger-list-functions (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-speak-help)))
-(defadvice debugger-quit (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'close-object)))
+(defun ems--debugger-eval-expression-after (&rest _)
+  "speak." (when (ems-interactive-p) (dtk-speak ad-return-value)))
+
+
+(advice-add 'debugger-eval-expression :after
+	    #'ems--debugger-eval-expression-after)
+
+
+
+
+
+(defun ems--debugger-list-functions-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-speak-help)))
+
+
+(advice-add 'debugger-list-functions :after
+	    #'ems--debugger-list-functions-after)
+
+
+
+
+(defun ems--debugger-quit-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'close-object)))
+
+
+(advice-add 'debugger-quit :after #'ems--debugger-quit-after)
+
+
+
 
 (provide 'emacspeak-debugger)
 ;;;  end of file

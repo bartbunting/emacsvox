@@ -72,16 +72,26 @@
 
   )
 
-(defadvice iedit-mode (after emacspeak pre act comp)
-  "speak."
-  (cl-declare (special iedit-mode))
-  (when (ems-interactive-p)
-    (emacspeak-icon (if iedit-mode 'on 'off))))
 
-(defadvice iedit-done (after emacspeak pre act comp)
-  "speak."
-  (emacspeak-icon 'close-object)
-  (message "IEdit done"))
+(defun ems--iedit-mode-after (&rest _)
+  "speak." (cl-declare (special iedit-mode))
+  (when (ems-interactive-p) (emacspeak-icon (if iedit-mode 'on 'off))))
+
+
+(advice-add 'iedit-mode :after #'ems--iedit-mode-after)
+
+
+
+
+
+(defun ems--iedit-done-after (&rest _)
+  "speak." (emacspeak-icon 'close-object) (message "IEdit done"))
+
+
+(advice-add 'iedit-done :after #'ems--iedit-done-after)
+
+
+
 
 (cl-loop
  for f in
@@ -119,12 +129,19 @@
        (emacspeak-icon 'task-done)
        (message "%s"  ,(symbol-name f))))))
 
-(defadvice iedit-show/hide-unmatched-lines (after emacspeak pre act comp)
+
+(defun ems--iedit-show/hide-unmatched-lines-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacspeak-speak-line)
-    (emacspeak-icon
-     (if iedit-unmatched-lines-invisible 'on 'off))))
+    (emacspeak-icon (if iedit-unmatched-lines-invisible 'on 'off))))
+
+
+(advice-add 'iedit-show/hide-unmatched-lines :after
+	    #'ems--iedit-show/hide-unmatched-lines-after)
+
+
+
 
 (provide 'emacspeak-iedit)
 ;;;  end of file

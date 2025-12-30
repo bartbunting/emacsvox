@@ -73,18 +73,23 @@
 
 (defvar ems--voiceify-overlays)
 
-(defadvice outline-flag-region (around emacspeak pre act comp)
+
+(defun ems--outline-flag-region-around (orig-fun &rest args)
   "Reflect hide/show via property invisible as well"
-  (let  ((ems--voiceify-overlays  nil)
-         (beg (ad-get-arg 0))
-         (end (ad-get-arg 1))
-         (inhibit-read-only t))
-    ad-do-it
-    (when (zerop beg) (setq beg (point-min)))
+  (let
+      ((ems--voiceify-overlays nil) (beg (ad-get-arg 0))
+       (end (ad-get-arg 1)) (inhibit-read-only t))
+    (apply orig-fun args) (when (zerop beg) (setq beg (point-min)))
     (with-silent-modifications
-      (put-text-property
-       beg end 'invisible
-       (if (ad-get-arg 2) 'outline nil)))))
+      (put-text-property beg end 'invisible
+			 (if (ad-get-arg 2) 'outline nil)))))
+
+
+(advice-add 'outline-flag-region :around
+	    #'ems--outline-flag-region-around)
+
+
+
 
 ;;; Misc Commands:
 
@@ -101,78 +106,170 @@
 
 ;;;   Hiding and showing subtrees
 
-(defadvice outline-show-only-headings (after emacspeak pre act comp)
+
+(defun ems--outline-show-only-headings-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid the body directly following this heading")))
 
-(defadvice outline-hide-entry (after emacspeak pre act comp)
+
+(advice-add 'outline-show-only-headings :after
+	    #'ems--outline-show-only-headings-after)
+
+
+
+
+
+(defun ems--outline-hide-entry-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid the body directly following this heading")))
 
-(defadvice outline-show-entry (after emacspeak pre act comp)
+
+(advice-add 'outline-hide-entry :after #'ems--outline-hide-entry-after)
+
+
+
+
+
+(defun ems--outline-show-entry-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Exposed body directly following current heading")))
 
-(defadvice outline-hide-body (after emacspeak pre act comp)
+
+(advice-add 'outline-show-entry :after #'ems--outline-show-entry-after)
+
+
+
+
+
+(defun ems--outline-hide-body-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid all of the buffer except for header lines")))
 
-(defadvice outline-show-all (after emacspeak pre act comp)
+
+(advice-add 'outline-hide-body :after #'ems--outline-hide-body-after)
+
+
+
+
+
+(defun ems--outline-show-all-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Exposed all text in the buffer")))
 
-(defadvice outline-hide-subtree (after emacspeak pre act comp)
+
+(advice-add 'outline-show-all :after #'ems--outline-show-all-after)
+
+
+
+
+
+(defun ems--outline-hide-subtree-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid everything at deeper levels from current heading")))
 
-(defadvice outline-hide-leaves (after emacspeak pre act comp)
+
+(advice-add 'outline-hide-subtree :after
+	    #'ems--outline-hide-subtree-after)
+
+
+
+
+
+(defun ems--outline-hide-leaves-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid all of the body at deeper levels")))
 
-(defadvice outline-show-subtree  (after emacspeak pre act comp)
+
+(advice-add 'outline-hide-leaves :after
+	    #'ems--outline-hide-leaves-after)
+
+
+
+
+
+(defun ems--outline-show-subtree-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
-    (message "Exposed everything after current heading at deeper levels")))
+    (message
+     "Exposed everything after current heading at deeper levels")))
 
-(defadvice outline-hide-sublevels (after emacspeak pre act comp)
+
+(advice-add 'outline-show-subtree :after
+	    #'ems--outline-show-subtree-after)
+
+
+
+
+
+(defun ems--outline-hide-sublevels-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
-    (message "Hid everything except the top  %s levels"
-             (ad-get-arg 0))))
+    (message "Hid everything except the top  %s levels" (ad-get-arg 0))))
 
-(defadvice outline-hide-other (after emacspeak pre act comp)
+
+(advice-add 'outline-hide-sublevels :after
+	    #'ems--outline-hide-sublevels-after)
+
+
+
+
+
+(defun ems--outline-hide-other-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'close-object)
     (message "Hid everything except current body and parent headings")))
 
-(defadvice outline-show-branches (after emacspeak pre act comp)
+
+(advice-add 'outline-hide-other :after #'ems--outline-hide-other-after)
+
+
+
+
+
+(defun ems--outline-show-branches-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
-    (message "Exposed all subheadings while leaving their bodies hidden")))
+    (message
+     "Exposed all subheadings while leaving their bodies hidden")))
 
-(defadvice outline-show-children (after emacspeak pre act comp)
+
+(advice-add 'outline-show-branches :after
+	    #'ems--outline-show-branches-after)
+
+
+
+
+
+(defun ems--outline-show-children-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (message "Exposed subheadings below current level")))
+
+
+(advice-add 'outline-show-children :after
+	    #'ems--outline-show-children-after)
+
+
+
 
 ;;;   Interactive speaking of sections
 

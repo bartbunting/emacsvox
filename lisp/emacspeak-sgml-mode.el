@@ -48,44 +48,84 @@
 
 ;;;  advice interactive commands 
 
-(defadvice sgml-skip-tag-forward (after emacspeak pre act comp)
+
+(defun ems--sgml-skip-tag-forward-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice sgml-skip-tag-backward (after emacspeak pre act comp)
+
+(advice-add 'sgml-skip-tag-forward :after
+	    #'ems--sgml-skip-tag-forward-after)
+
+
+
+
+
+(defun ems--sgml-skip-tag-backward-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'large-movement)
-    (emacspeak-speak-line)))
+    (emacspeak-icon 'large-movement) (emacspeak-speak-line)))
 
-(defadvice sgml-slash (after emacspeak pre act comp)
+
+(advice-add 'sgml-skip-tag-backward :after
+	    #'ems--sgml-skip-tag-backward-after)
+
+
+
+
+
+(defun ems--sgml-slash-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-speak-this-char (preceding-char))))
 
-(defadvice sgml-delete-tag (after emacspeak pre act comp)
-  "speak"
-  (when (ems-interactive-p)
-    (emacspeak-icon 'delete-object)))
 
-(defadvice sgml-name-char (around emacspeak pre act comp)
+(advice-add 'sgml-slash :after #'ems--sgml-slash-after)
+
+
+
+
+
+(defun ems--sgml-delete-tag-after (&rest _)
+  "speak" (when (ems-interactive-p) (emacspeak-icon 'delete-object)))
+
+
+(advice-add 'sgml-delete-tag :after #'ems--sgml-delete-tag-after)
+
+
+
+
+
+(defun ems--sgml-name-char-around (orig-fun &rest args)
   "Speak the character you typed"
-  (cond
-   ((ems-interactive-p)
-    (let ((start (point)))
-      (message "Type the char: ")
-      ad-do-it
-      (emacspeak-speak-region start (point))))
-   (t ad-do-it))
-  ad-return-value)
+  (let ((result (apply orig-fun args)))
+    (cond
+     ((ems-interactive-p)
+      (let ((start (point)))
+	(message "Type the char: ") (apply orig-fun args)
+	(emacspeak-speak-region start (point))))
+     (t (apply orig-fun args)))
+    result))
 
-(defadvice sgml-tags-invisible (after emacspeak pre act comp)
+
+(advice-add 'sgml-name-char :around #'ems--sgml-name-char-around)
+
+
+
+
+
+(defun ems--sgml-tags-invisible-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-icon 'button)
-    (dtk-speak  "Toggled display of tags")))
+    (emacspeak-icon 'button) (dtk-speak "Toggled display of tags")))
+
+
+(advice-add 'sgml-tags-invisible :after
+	    #'ems--sgml-tags-invisible-after)
+
+
+
 
 (provide  'emacspeak-sgml-mode)
 

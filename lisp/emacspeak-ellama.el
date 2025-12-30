@@ -48,10 +48,15 @@
 ;;;  Interactive Commands:
 ;; Speech-enable output handlers:
 
-(defadvice ellama-chat-done (after emacspeak pre act comp)
-  "speak."
-    (emacspeak-icon 'item)
-    (dtk-speak (ad-get-arg 0)))
+
+(defun ems--ellama-chat-done-after (&rest _)
+  "speak." (emacspeak-icon 'item) (dtk-speak (ad-get-arg 0)))
+
+
+(advice-add 'ellama-chat-done :after #'ems--ellama-chat-done-after)
+
+
+
 
 (cl-loop
  for f in 

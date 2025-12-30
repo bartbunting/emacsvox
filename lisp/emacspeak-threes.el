@@ -185,13 +185,17 @@
   (define-key threes-mode-map "f" 'threes-right)
   (define-key threes-mode-map "b" 'threes-left))
 
-(defadvice threes (after emacspeak pre act comp)
-  "speak."
-  (setq threes-game-over-p nil)
-  (random t)
+
+(defun ems--threes-after (&rest _)
+  "speak." (setq threes-game-over-p nil) (random t)
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-threes-speak-board)))
+    (emacspeak-icon 'open-object) (emacspeak-threes-speak-board)))
+
+
+(advice-add 'threes :after #'ems--threes-after)
+
+
+
 
 (declare-function threes-cells-score "threes" nil)
 (declare-function threes-cells-transpose "threes" (cells))
@@ -211,9 +215,17 @@
      (when (ems-interactive-p)
        (emacspeak-threes-speak-board)))))
 
-(defadvice threes-check-before-move (before emacspeak pre act comp)
+
+(defun ems--threes-check-before-move-before (&rest _)
   "Cache max"
   (setq emacspeak-threes-rows-max (emacspeak-threes-get-rows-max)))
+
+
+(advice-add 'threes-check-before-move :before
+	    #'ems--threes-check-before-move-before)
+
+
+
 (when (boundp 'threes-mode-map)
   (emacspeak-threes-setup))
 

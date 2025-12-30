@@ -60,16 +60,23 @@
 
 ;;;  Advise additional interactive commands:
 
-(defadvice view-mode (after emacspeak pre act comp)
-  "Announce what happened"
-  (cl-declare (special view-mode-map))
+
+(defun ems--view-mode-after (&rest _)
+  "Announce what happened" (cl-declare (special view-mode-map))
   (when (ems-interactive-p)
     (emacspeak-icon 'open-object)
     (if view-mode
-        (message "Entered view mode Press %s to exit"
-                 (key-description
-                  (where-is-internal 'View-exit view-mode-map 'firstonly)))
+	(message "Entered view mode Press %s to exit"
+		 (key-description
+		  (where-is-internal 'View-exit view-mode-map
+				     'firstonly)))
       (message "Exited view mode"))))
+
+
+(advice-add 'view-mode :after #'ems--view-mode-after)
+
+
+
 
 (cl-loop
  for f in
@@ -128,36 +135,60 @@ View-scroll-page-backward-set-page-size View-scroll-page-forward-set-page-size
        (emacspeak-icon 'scroll)
        (emacspeak-speak-windowful)))))
 
-(defadvice View-back-to-mark (after emacspeak pre act comp)
+
+(defun ems--View-back-to-mark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'large-movement)
-    (let ((emacspeak-show-point t))
-      (emacspeak-speak-line))))
+    (let ((emacspeak-show-point t)) (emacspeak-speak-line))))
 
-(defadvice View-goto-line (after emacspeak pre act comp)
+
+(advice-add 'View-back-to-mark :after #'ems--View-back-to-mark-after)
+
+
+
+
+
+(defun ems--View-goto-line-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
-    (let ((line-number
-           (format "line %s"
-                   (ad-get-arg 0))))
-      (put-text-property 0 (length line-number)
-                         'personality voice-annotate line-number)
+    (let ((line-number (format "line %s" (ad-get-arg 0))))
+      (put-text-property 0 (length line-number) 'personality
+			 voice-annotate line-number)
       (emacspeak-icon 'large-movement)
-      (dtk-speak
-       (concat line-number (ems--this-line))))))
+      (dtk-speak (concat line-number (ems--this-line))))))
 
-(defadvice View-scroll-to-buffer-end (after emacspeak pre act comp)
+
+(advice-add 'View-goto-line :after #'ems--View-goto-line-after)
+
+
+
+
+
+(defun ems--View-scroll-to-buffer-end-after (&rest _)
   "speak"
   (when (ems-interactive-p)
-    (emacspeak-speak-line)
-    (emacspeak-icon 'large-movement)))
+    (emacspeak-speak-line) (emacspeak-icon 'large-movement)))
 
-(defadvice View-goto-percent (after emacspeak pre act comp)
+
+(advice-add 'View-scroll-to-buffer-end :after
+	    #'ems--View-scroll-to-buffer-end-after)
+
+
+
+
+
+(defun ems--View-goto-percent-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacspeak-icon 'scroll)
     (dtk-speak (emacspeak-get-window-contents))))
+
+
+(advice-add 'View-goto-percent :after #'ems--View-goto-percent-after)
+
+
+
 
 ;;;  bind convenience keys
 

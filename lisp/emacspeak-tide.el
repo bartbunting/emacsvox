@@ -61,17 +61,29 @@
 
 ;;;  Interactive Commands:
 
-(defadvice tide-compile-file (after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice tide-documentation-at-point (after emacspeak pre act comp)
+(defun ems--tide-compile-file-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'tide-compile-file :after #'ems--tide-compile-file-after)
+
+
+
+
+
+(defun ems--tide-documentation-at-point-after (&rest _)
   "Speak documentation if any."
   (let ((documentation (ad-get-arg 0)))
     (when documentation
-      (dtk-speak documentation)
-      (emacspeak-icon 'help))))
+      (dtk-speak documentation) (emacspeak-icon 'help))))
+
+
+(advice-add 'tide-documentation-at-point :after
+	    #'ems--tide-documentation-at-point-after)
+
+
+
 (cl-loop
  for f in
  '(
@@ -85,16 +97,27 @@
        (emacspeak-icon 'large-movement)
        (emacspeak-speak-line)))))
 
-(defadvice tide-format(after emacspeak pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (emacspeak-icon 'task-done)))
 
-(defadvice tide-references(after emacspeak pre act comp)
+(defun ems--tide-format-after (&rest _)
+  "speak." (when (ems-interactive-p) (emacspeak-icon 'task-done)))
+
+
+(advice-add 'tide-format :after #'ems--tide-format-after)
+
+
+
+
+
+(defun ems--tide-references-after (&rest _)
   "speak."
   (when (ems-interactive-p)
-    (emacspeak-icon 'open-object)
-    (emacspeak-speak-mode-line)))
+    (emacspeak-icon 'open-object) (emacspeak-speak-mode-line)))
+
+
+(advice-add 'tide-references :after #'ems--tide-references-after)
+
+
+
 
 (provide 'emacspeak-tide)
 ;;;  end of file
