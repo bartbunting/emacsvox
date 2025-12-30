@@ -1,3 +1,5 @@
+[[file:logo.png]]
+
 * Emacspeak --- The Complete Audio Desktop
 
   - [[https://emacspeak.blogspot.com][blog]]
