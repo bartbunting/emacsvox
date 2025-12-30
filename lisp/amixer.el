@@ -197,7 +197,6 @@ to  ~/.emacs.d ")
      (unless  (file-exists-p f) (copy-file sys-alsa user-emacs-directory))
      f)))
 
-
 (defun amixer-restore (&optional conf-file)
   "Reset Alsa."
   (cl-declare (special amixer-alsactl))

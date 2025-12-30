@@ -268,12 +268,8 @@ Optional interactive prefix arg prompts for a filename."
 (defun ems--2048-insert-random-cell-after (&rest _)
   "Provide auditory icon" (emacspeak-icon 'item))
 
-
 (advice-add '2048-insert-random-cell :after
-	    #'ems--2048-insert-random-cell-after)
-
-
-
+            #'ems--2048-insert-random-cell-after)
 
 (defun emacspeak-2048-score ()
   "Show total on board."
