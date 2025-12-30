@@ -50,10 +50,7 @@
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (cl-pushnew (file-name-directory load-file-name) load-path :test #'string=)
 
-(require 'advice)
-;;; Silence byte-compiler warning re defadvice in Emacs 30 and later:
-(put 'defadvice 'byte-obsolete-info nil)
-(setq ad-redefinition-action 'accept)
+;; Note: Old defadvice infrastructure removed - now using modern advice-add throughout
 
 ;;;   Define locations:
 
