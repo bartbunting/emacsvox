@@ -1,6 +1,96 @@
 [[file:logo.png]]
 
-* Emacsvox --- The Complete Audio Desktop
+* Emacsvox
 
-  - [[https://emacsvox.blogspot.com][blog]]
+* Table of Contents
+1. [[*Emacsvox][Emacsvox]]
+2. [[*Description][Description]]
+3. [[*Quick Installation Instructions][Quick Installation Instructions]]
+4. [[*Blog and Portfolio][Blog and Portfolio]]
+5. [[*Additional Info][Additional Info]]
+
+** Description
+*Emacsvox* is a modernized fork of Emacspeak - a speech interface that helps visually impaired users work with the Emacs editor. Emacsvox turns Emacs into a complete audio desktop, giving audio feedback allowing full access to all of its features.
+
+*Modernization Status:* Fully updated for Emacs 31+ with modern elisp patterns and advice-add throughout.
+
+** Quick Installation Instructions
+
+For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.
+
+1. Obtain the Source Code:
+   - Clone the repository:
+   #+BEGIN_SRC sh
+   git clone https://github.com/robertmeta/emacsvox
+   #+END_SRC
+
+2. Change to the Emacsvox Directory:
+   #+BEGIN_SRC sh
+   cd emacsvox
+   #+END_SRC
+
+3. Configure the Sources:
+   #+BEGIN_SRC sh
+   make config
+   #+END_SRC
+
+4. Compile the Files:
+   #+BEGIN_SRC sh
+   make
+   #+END_SRC
+
+5. Install a Text-to-Speech Engine:
+   - Open Source ESpeak on Linux:
+     1. Install the ESpeak packages for your system.
+     2. Compile the Emacsvox ESpeak server:
+        #+BEGIN_SRC sh
+        cd servers/native-espeak
+        make
+        #+END_SRC
+   - ViaVoice Outloud (AKA Eloquent):
+     - Purchase this engine from the Voxin site. See [[https://voxin.oralux.net/rss.xml][Voxin Packages]] for the latest packages and [[https://voxin.oralux.net][Voxin Main Site]] for more information.
+   - Mac:
+     - You can use the built-in Mac TTS engine. Emacsvox includes a speech server for this purpose.
+
+6. Set Up the TTS Engine:
+   After installing TTS engine, set up Emacsvox by adding the following line to your shell's configuration file:
+
+   - For Bash (default on Linux or macOS before Catalina):
+     Add the following line to your `.bash_profile`:
+     #+BEGIN_SRC sh
+     export DTK_PROGRAM=<engine-name>
+     #+END_SRC
+
+   - For Zsh (default on macOS Catalina and later):
+     Add the following line to your `.zshrc` file:
+     #+BEGIN_SRC sh
+     export DTK_PROGRAM=<engine-name>
+     #+END_SRC
+
+   For example, to use ESpeak, add:
+   #+BEGIN_SRC sh
+   export DTK_PROGRAM=espeak
+   #+END_SRC
+
+7. Load Emacsvox in Your Emacs Configuration:
+   Add the following line to the top of your .emacs file:
+   #+BEGIN_SRC elisp
+   (load-file "<emacsvox-dir>/lisp/emacsvox-setup.el")
+   #+END_SRC
+   Replace <emacsvox-dir> with the directory where you unpacked the sources.
+
+** Requirements
+
+*Emacsvox requires Emacs 31 or later.*
+
+** Blog and Portfolio
+  - [[https://emacspeak.blogspot.com][Original Emacspeak blog]]
   - [[https://tvraman.github.io][T. V. Raman]]
+
+** Additional Info
+
+Emacsvox is a fork of Emacspeak, modernized for Emacs 31+ with:
+- All deprecated defadvice converted to advice-add
+- Modern elisp patterns throughout
+- Consistent code formatting
+- Full Emacs 31+ compliance
