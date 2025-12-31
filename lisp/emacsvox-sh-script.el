@@ -50,30 +50,20 @@
 
 ;;;   advice interactive commands
 
-
 (defun ems--sh-mode-after (&rest _)
   "Speech-enable sh-script editing." (dtk-set-punctuations 'all)
   (unless emacsvox-audio-indentation
     (emacsvox-toggle-audio-indentation))
   (emacsvox-speak-mode-line))
 
-
 (advice-add 'sh-mode :after #'ems--sh-mode-after)
-
-
-
-
 
 (defun ems--sh-indent-line-after (&rest _)
   "speak to indicate indentation."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-current-column)))
 
-
 (advice-add 'sh-indent-line :after #'ems--sh-indent-line-after)
-
-
-
 
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook
@@ -83,60 +73,43 @@
     (when (ems-interactive-p)
       (emacsvox-speak-this-char (preceding-char)))))
 
-
 (defun ems--sh-maybe-here-document-around (orig-fun &rest args)
   "Spoken feedback based on what we insert."
   (let ((result (apply orig-fun args)))
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args)
-	(if (= (point) (1+ start))
-	    (emacsvox-speak-this-char last-input-event)
-	  (message "Started a shell here  document."))))
+        (apply orig-fun args)
+        (if (= (point) (1+ start))
+            (emacsvox-speak-this-char last-input-event)
+          (message "Started a shell here  document."))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sh-maybe-here-document :around
-	    #'ems--sh-maybe-here-document-around)
-
-
-
+            #'ems--sh-maybe-here-document-around)
 
 (defun ems--sh-newline-and-indent-after (&rest _)
   "speak to indicate indentation."
   (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'sh-newline-and-indent :after
-	    #'ems--sh-newline-and-indent-after)
-
-
-
+            #'ems--sh-newline-and-indent-after)
 
 (defun ems--sh-beginning-of-command-after (&rest _)
   "Speak point moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'sh-beginning-of-command :after
-	    #'ems--sh-beginning-of-command-after)
-
-
-
+            #'ems--sh-beginning-of-command-after)
 
 (defun ems--sh-end-of-command-after (&rest _)
   "Speak point moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'sh-end-of-command :after #'ems--sh-end-of-command-after)
-
-
-
 
 ;;;  advice skeleton insertion 
 (unless (and (boundp 'post-self-insert-hook)

@@ -56,41 +56,26 @@
 
 ;;;   Program structure:
 
-
 (defun ems--mark-perl-function-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (message "Marked procedure")))
 
-
 (advice-add 'mark-perl-function :after #'ems--mark-perl-function-after)
-
-
-
-
 
 (defun ems--perl-beginning-of-function-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'perl-beginning-of-function :after
-	    #'ems--perl-beginning-of-function-after)
-
-
-
-
+            #'ems--perl-beginning-of-function-after)
 
 (defun ems--perl-end-of-function-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'perl-end-of-function :after
-	    #'ems--perl-end-of-function-after)
-
-
-
+            #'ems--perl-end-of-function-after)
 
 (provide  'emacsvox-perl)
 

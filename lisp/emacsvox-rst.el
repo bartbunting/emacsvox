@@ -114,61 +114,38 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'rst-toc :after #'ems--rst-toc-after)
-
-
-
-
 
 (defun ems--rst-toc-mode-goto-section-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'rst-toc-mode-goto-section :after
-	    #'ems--rst-toc-mode-goto-section-after)
-
-
-
-
+            #'ems--rst-toc-mode-goto-section-after)
 
 (defun ems--rst-toc-quit-window-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'rst-toc-quit-window :after
-	    #'ems--rst-toc-quit-window-after)
-
-
-
-
+            #'ems--rst-toc-quit-window-after)
 
 (defun ems--rst-force-fill-paragraph-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'fill-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'rst-force-fill-paragraph :after
-	    #'ems--rst-force-fill-paragraph-after)
-
-
-
-
+            #'ems--rst-force-fill-paragraph-after)
 
 (defun ems--rst-mark-section-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
 
-
 (advice-add 'rst-mark-section :after #'ems--rst-mark-section-after)
-
-
 
 (cl-loop
  for f in

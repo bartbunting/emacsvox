@@ -299,7 +299,7 @@ Each filter is a list of the form
    (list
     (or (called-interactively-p 'interactive) current-prefix-arg)))
   (emacsvox-we-extract-by-role "main"
-                                (funcall emacsvox-eww-url-at-point) speak))
+                               (funcall emacsvox-eww-url-at-point) speak))
 
 (defun emacsvox-we-extract-matching-urls (pattern url &optional speak)
   "Extracts links whose URL matches pattern."
@@ -379,7 +379,7 @@ Empty value finishes the list."
     (emacsvox-we-xslt-filter filter url speak)))
 
 (defun emacsvox-we-extract-table-by-position (pos   url
-                                                     &optional speak)
+                                                    &optional speak)
   "Extract table at specified pos.
 Default is to extract from current page."
   (interactive
@@ -394,7 +394,7 @@ Default is to extract from current page."
    speak))
 
 (defun emacsvox-we-extract-tables-by-position-list (positions url
-                                                               &optional speak)
+                                                              &optional speak)
   "Extract specified list of nested tables from a WWW page.
 Tables are specified by their position in the list
  of nested tables found in the page."
@@ -431,7 +431,7 @@ Tables are specified by their position in the list
        speak)))
 
 (defun emacsvox-we-extract-tables-by-match-list (match-list
-                                                  url &optional speak)
+                                                 url &optional speak)
   "Extract specified  tables from a WWW page.
 Tables are specified by containing  match pattern
  found in the match list."
@@ -541,9 +541,9 @@ buffer. Interactive use provides list of class values as completion."
     (or (called-interactively-p 'interactive) current-prefix-arg)))
   (let ((filter (format "//*[contains(@class,\"%s\")]" class)))
     (emacsvox-we-xslt-filter filter
-                              url
-                              (or (called-interactively-p 'interactive)
-                                  speak))))
+                             url
+                             (or (called-interactively-p 'interactive)
+                                 speak))))
 
 (defun emacsvox-we-extract-speakable (url &optional speak)
   "Extract elements having class`speakable' from HTML. "
@@ -565,9 +565,9 @@ buffer. Interactive use provides list of role values as completion."
     (or (called-interactively-p 'interactive) current-prefix-arg)))
   (let ((filter (format "//*[contains(@role,\"%s\")]" role)))
     (emacsvox-we-xslt-filter filter
-                              url
-                              (or (called-interactively-p 'interactive)
-                                  speak))))
+                             url
+                             (or (called-interactively-p 'interactive)
+                                 speak))))
 
 (defun emacsvox-we-junk-by-class (class    url &optional speak)
   "Extract elements not having specified class attribute from HTML. Extracts
@@ -581,9 +581,9 @@ buffer. Interactive use provides list of class values as completion."
     current-prefix-arg))
   (let ((filter (format "//*[contains(@class,\"%s\")]" class)))
     (emacsvox-we-xslt-junk filter
-                            url
-                            (or (called-interactively-p 'interactive)
-                                speak))))
+                           url
+                           (or (called-interactively-p 'interactive)
+                               speak))))
 
 (defun  emacsvox-we-get-id-list ()
   "Collect a list of ids by prompting repeatedly in the
@@ -622,7 +622,7 @@ Empty value finishes the list."
     result))
 
 (defun emacsvox-we-extract-by-class-list(classes   url &optional
-                                                    speak)
+                                                   speak)
   "Extract elements having class specified in list `classes' from HTML.
 Extracts specified elements from current WWW page and displays it
 in a separate buffer.  Interactive use provides list of class
@@ -644,7 +644,7 @@ values as completion. "
      url
      (or (called-interactively-p 'interactive) speak))))
 (defun emacsvox-we-junk-by-class-list(classes   url &optional
-                                                 speak)
+                                                speak)
   "Extract elements not having class specified in list `classes' from HTML.
 Extracts specified elements from current WWW page and displays it
 in a separate buffer.  Interactive use provides list of class
@@ -848,8 +848,8 @@ used as well."
        :test #'string=)
       (setq emacsvox-we-recent-xpath-filter emacsvox-we-xpath-filter))
     (emacsvox-we-xslt-filter emacsvox-we-xpath-filter
-                              (or redirect url)
-                              'speak)))
+                             (or redirect url)
+                             'speak)))
 
 (defvar emacsvox-we-class-history 
   nil

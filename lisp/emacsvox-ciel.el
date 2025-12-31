@@ -52,18 +52,12 @@
 
 ;;;  Advice Interactive Commands:
 
-
 (defun ems--ciel-ci-after (&rest _)
   "Speech-enabled by emacsvox."
   (when (ems-interactive-p)
     (dtk-speak (car kill-ring)) (emacsvox-icon 'delete-object)))
 
-
 (advice-add 'ciel-ci :after #'ems--ciel-ci-after)
-
-
-
-
 
 (defun ems--ciel-co-after (&rest _)
   "Speech-enabled by emacsvox."
@@ -71,11 +65,7 @@
     (emacsvox-icon 'mark-object)
     (dtk-speak (format "Copied: %s " (car kill-ring)))))
 
-
 (advice-add 'ciel-co :after #'ems--ciel-co-after)
-
-
-
 
 (provide 'emacsvox-ciel)
 ;;;  end of file

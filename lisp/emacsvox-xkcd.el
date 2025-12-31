@@ -55,28 +55,18 @@
 
 ;;;  Fix error when loading images on the console:
 
-
 (defun ems--xkcd-insert-image-around (orig-fun &rest args)
   "no-Op on console"
   (cond ((not window-system) t) (t (apply orig-fun args))))
 
-
 (advice-add 'xkcd-insert-image :around #'ems--xkcd-insert-image-around)
-
-
-
-
 
 (defun ems--xkcd-kill-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'xkcd-kill-buffer :after #'ems--xkcd-kill-buffer-after)
-
-
-
 
 (defvar xkcd-transcript nil
   "Cache current transcript.")
@@ -90,7 +80,6 @@
    (cdr 
     (assoc 'transcript (json-read-from-string (xkcd-get-json "" xkcd-cur))))))
 
-
 (defun ems--xkcd-get-after (&rest _)
   "Insert cached transcript in xkcd-transcript."
   (let ((inhibit-read-only t))
@@ -98,29 +87,21 @@
     (insert xkcd-alt) (insert "\n")
     (insert
      (format "Transcript: %s"
-	     (if (zerop (length xkcd-transcript)) "Not available yet."
-	       xkcd-transcript)))
+             (if (zerop (length xkcd-transcript)) "Not available yet."
+               xkcd-transcript)))
     (goto-char (point-min)) (emacsvox-icon 'open-object)
     (emacsvox-speak-buffer)))
 
-
 (advice-add 'xkcd-get :after #'ems--xkcd-get-after)
 
-
-
 ;;;  Advice browse-url-default-browser:
-
 
 (defun ems--browse-url-default-browser-around (orig-fun &rest args)
   "Use Emacs browser --- rather than an external browser."
   (when nil (apply orig-fun args)) (eww-browse-url (ad-get-arg 0)))
 
-
 (advice-add 'browse-url-default-browser :around
-	    #'ems--browse-url-default-browser-around)
-
-
-
+            #'ems--browse-url-default-browser-around)
 
 (defun emacsvox-xkcd-open-explanation-browser ()
   "Open explanation of current xkcd in default browser"

@@ -162,17 +162,13 @@ Interactive PREFIX arg means toggle the global default value. ")
 
 ;;;  Advice comint:
 
-
 (defun ems--comint-delete-output-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'comint-delete-output :after
-	    #'ems--comint-delete-output-after)
-
-
+            #'ems--comint-delete-output-after)
 
 (cl-loop
  for f in
@@ -187,19 +183,13 @@ Interactive PREFIX arg means toggle the global default value. ")
          (emacsvox-icon 'select-object)
          (emacsvox-speak-line 1))))))
 
-
 (defun ems--comint-clear-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'comint-clear-buffer :after
-	    #'ems--comint-clear-buffer-after)
-
-
-
-
+            #'ems--comint-clear-buffer-after)
 
 (defun ems--comint-magic-space-around (orig-fun &rest args)
   "Speak word or completion."
@@ -208,23 +198,18 @@ Interactive PREFIX arg means toggle the global default value. ")
      ((ems-interactive-p)
       (ems-with-messages-silenced
        (let ((orig (point)) (count (ad-get-arg 0)))
-	 (setq count (or count 1)) (apply orig-fun args)
-	 (cond
-	  ((= (point) (+ count orig))
-	   (save-excursion (forward-word -1) (emacsvox-speak-word)))
-	  (t (emacsvox-icon 'complete)
-	     (emacsvox-speak-region (comint-line-beginning-position)
-				     (point)))))))
+         (setq count (or count 1)) (apply orig-fun args)
+         (cond
+          ((= (point) (+ count orig))
+           (save-excursion (forward-word -1) (emacsvox-speak-word)))
+          (t (emacsvox-icon 'complete)
+             (emacsvox-speak-region (comint-line-beginning-position)
+                                    (point)))))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'comint-magic-space :around
-	    #'ems--comint-magic-space-around)
-
-
-
-
+            #'ems--comint-magic-space-around)
 
 (defun ems--comint-insert-previous-argument-around
     (orig-fun &rest args)
@@ -233,17 +218,13 @@ Interactive PREFIX arg means toggle the global default value. ")
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args) (emacsvox-speak-region orig (point))
-	(emacsvox-icon 'yank-object)))
+        (apply orig-fun args) (emacsvox-speak-region orig (point))
+        (emacsvox-icon 'yank-object)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'comint-insert-previous-argument :around
-	    #'ems--comint-insert-previous-argument-around)
-
-
-
+            #'ems--comint-insert-previous-argument-around)
 
 ;; Customize comint:
 
@@ -269,18 +250,12 @@ Interactive PREFIX arg means toggle the global default value. ")
   (cons 're-search-forward
         'emacsvox-pronounce-uuid)))
 
-
 (defun ems--shell-dirstack-message-around (orig-fun &rest args)
   "Silence messages"
   (ems-with-messages-silenced (apply orig-fun args)))
 
-
 (advice-add 'shell-dirstack-message :around
-	    #'ems--shell-dirstack-message-around)
-
-
-
-
+            #'ems--shell-dirstack-message-around)
 
 (defun ems--comint-delchar-or-maybe-eof-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -289,30 +264,20 @@ Interactive PREFIX arg means toggle the global default value. ")
      ((ems-interactive-p)
       (cond
        ((= (point) (point-max))
-	(message "Sending EOF to comint process"))
+        (message "Sending EOF to comint process"))
        (t (dtk-tone-deletion) (emacsvox-speak-char t)))
       (apply orig-fun args))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'comint-delchar-or-maybe-eof :around
-	    #'ems--comint-delchar-or-maybe-eof-around)
-
-
-
-
+            #'ems--comint-delchar-or-maybe-eof-around)
 
 (defun ems--comint-send-eof-before (&rest _)
   "Announce what we are doing."
   (when (ems-interactive-p) (message "Sending EOF to subprocess")))
 
-
 (advice-add 'comint-send-eof :before #'ems--comint-send-eof-before)
-
-
-
-
 
 (defun ems--comint-accumulate-before (&rest _)
   "Speak the accumulateed line."
@@ -321,10 +286,7 @@ Interactive PREFIX arg means toggle the global default value. ")
       (comint-bol) (emacsvox-icon 'select-object)
       (emacsvox-speak-line 1))))
 
-
 (advice-add 'comint-accumulate :before #'ems--comint-accumulate-before)
-
-
 
 (cl-loop
  for f in
@@ -341,20 +303,14 @@ Interactive PREFIX arg means toggle the global default value. ")
          (emacsvox-speak-line 1))
        (emacsvox-icon 'select-object)))))
 
-
 (defun ems--shell-forward-command-after (&rest _)
   "Speak  line."
   (when (ems-interactive-p)
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'item))))
 
-
 (advice-add 'shell-forward-command :after
-	    #'ems--shell-forward-command-after)
-
-
-
-
+            #'ems--shell-forward-command-after)
 
 (defun ems--shell-backward-command-after (&rest _)
   "Speak  line."
@@ -362,13 +318,8 @@ Interactive PREFIX arg means toggle the global default value. ")
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'item))))
 
-
 (advice-add 'shell-backward-command :after
-	    #'ems--shell-backward-command-after)
-
-
-
-
+            #'ems--shell-backward-command-after)
 
 (defun ems--comint-show-output-after (&rest _)
   "Speak  line."
@@ -377,12 +328,7 @@ Interactive PREFIX arg means toggle the global default value. ")
       (emacsvox-icon 'large-movement)
       (emacsvox-speak-region (point) (mark)))))
 
-
 (advice-add 'comint-show-output :after #'ems--comint-show-output-after)
-
-
-
-
 
 (defun ems--comint-show-maximum-output-after (&rest _)
   "Speak line."
@@ -390,13 +336,8 @@ Interactive PREFIX arg means toggle the global default value. ")
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'scroll))))
 
-
 (advice-add 'comint-show-maximum-output :after
-	    #'ems--comint-show-maximum-output-after)
-
-
-
-
+            #'ems--comint-show-maximum-output-after)
 
 (defun ems--comint-bol-or-process-mark-after (&rest _)
   "Speak line."
@@ -404,61 +345,46 @@ Interactive PREFIX arg means toggle the global default value. ")
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'select-object))))
 
-
 (advice-add 'comint-bol-or-process-mark :after
-	    #'ems--comint-bol-or-process-mark-after)
-
-
-
-
+            #'ems--comint-bol-or-process-mark-after)
 
 (defun ems--comint-copy-old-input-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
 
-
 (advice-add 'comint-copy-old-input :after
-	    #'ems--comint-copy-old-input-after)
-
-
-
-
+            #'ems--comint-copy-old-input-after)
 
 (defun ems--comint-output-filter-around (orig-fun &rest args)
   "Make comint speak its output.\nTry not to speak the shell prompt,\ninstead, always play an auditory icon when the shell prompt is displayed."
   (let ((result (apply orig-fun args)))
     (let
-	((monitor emacsvox-comint-output-monitor)
-	 (buffer (process-buffer (ad-get-arg 0)))
-	 (output (ad-get-arg 1)))
+        ((monitor emacsvox-comint-output-monitor)
+         (buffer (process-buffer (ad-get-arg 0)))
+         (output (ad-get-arg 1)))
       (apply orig-fun args)
       (with-current-buffer buffer
-	(when
-	    (and (not (string-match "^" output))
-		 comint-last-output-start
-		 (or monitor (eq (window-buffer) buffer)))
-	  (let
-	      ((prompt-p
-		(save-excursion
-		  (goto-char comint-last-output-start)
-		  (or (looking-at shell-prompt-pattern)
-		      (looking-at comint-prompt-regexp)))))
-	    (cond
-	     ((and emacsvox-comint-autospeak (not prompt-p))
-	      (dtk-speak output))
-	     (prompt-p
-	      (when emacsvox-comint-autospeak (emacsvox-icon 'item))))))
-	result))
+        (when
+            (and (not (string-match "^" output))
+                 comint-last-output-start
+                 (or monitor (eq (window-buffer) buffer)))
+          (let
+              ((prompt-p
+                (save-excursion
+                  (goto-char comint-last-output-start)
+                  (or (looking-at shell-prompt-pattern)
+                      (looking-at comint-prompt-regexp)))))
+            (cond
+             ((and emacsvox-comint-autospeak (not prompt-p))
+              (dtk-speak output))
+             (prompt-p
+              (when emacsvox-comint-autospeak (emacsvox-icon 'item))))))
+        result))
     result))
 
-
 (advice-add 'comint-output-filter :around
-	    #'ems--comint-output-filter-around)
-
-
-
-
+            #'ems--comint-output-filter-around)
 
 (defun ems--comint-dynamic-list-completions-around
     (orig-fun &rest args)
@@ -471,17 +397,12 @@ Interactive PREFIX arg means toggle the global default value. ")
     (when nil (apply orig-fun args))
     (with-current-buffer (get-buffer "*Completions*")
       (set (make-local-variable 'comint-displayed-dynamic-completions)
-	   completions))
+           completions))
     (next-completion 1)
     (dtk-speak (buffer-substring (point) (point-max)))))
 
-
 (advice-add 'comint-dynamic-list-completions :around
-	    #'ems--comint-dynamic-list-completions-around)
-
-
-
-
+            #'ems--comint-dynamic-list-completions-around)
 
 (defun ems--comint-dynamic-complete-around (orig-fun &rest args)
   "Say what you completed."
@@ -490,106 +411,76 @@ Interactive PREFIX arg means toggle the global default value. ")
      ((ems-interactive-p)
       (ems-with-messages-silenced
        (let
-	   ((prior
-	     (save-excursion (skip-syntax-backward "^ >") (point))))
-	 (apply orig-fun args)
-	 (if (> (point) prior)
-	     (tts-with-punctuations 'all (emacsvox-icon 'complete)
-				    (dtk-speak
-				     (buffer-substring prior (point))))
-	   (emacsvox-speak-completions-if-available)))))
+           ((prior
+             (save-excursion (skip-syntax-backward "^ >") (point))))
+         (apply orig-fun args)
+         (if (> (point) prior)
+             (tts-with-punctuations 'all (emacsvox-icon 'complete)
+                                    (dtk-speak
+                                     (buffer-substring prior (point))))
+           (emacsvox-speak-completions-if-available)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'comint-dynamic-complete :around
-	    #'ems--comint-dynamic-complete-around)
-
-
-
-
+            #'ems--comint-dynamic-complete-around)
 
 (defun ems--comint-next-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
     (tts-with-punctuations 'all
-			   (save-excursion
-			     (goto-char
-			      (comint-line-beginning-position))
-			     (emacsvox-speak-line 1)))
+                           (save-excursion
+                             (goto-char
+                              (comint-line-beginning-position))
+                             (emacsvox-speak-line 1)))
     (emacsvox-icon 'item)))
 
-
 (advice-add 'comint-next-input :after #'ems--comint-next-input-after)
-
-
-
-
 
 (defun ems--comint-next-matching-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
     (tts-with-punctuations 'all
-			   (save-excursion
-			     (goto-char
-			      (comint-line-beginning-position))
-			     (emacsvox-speak-line 1)))
+                           (save-excursion
+                             (goto-char
+                              (comint-line-beginning-position))
+                             (emacsvox-speak-line 1)))
     (emacsvox-icon 'item)))
 
-
 (advice-add 'comint-next-matching-input :after
-	    #'ems--comint-next-matching-input-after)
-
-
-
-
+            #'ems--comint-next-matching-input-after)
 
 (defun ems--comint-previous-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
     (tts-with-punctuations 'all
-			   (save-excursion
-			     (goto-char
-			      (comint-line-beginning-position))
-			     (emacsvox-speak-line 1)))
+                           (save-excursion
+                             (goto-char
+                              (comint-line-beginning-position))
+                             (emacsvox-speak-line 1)))
     (emacsvox-icon 'item)))
 
-
 (advice-add 'comint-previous-input :after
-	    #'ems--comint-previous-input-after)
-
-
-
-
+            #'ems--comint-previous-input-after)
 
 (defun ems--comint-previous-matching-input-after (&rest _)
   "Speak line."
   (when (ems-interactive-p)
     (tts-with-punctuations 'all
-			   (save-excursion
-			     (goto-char
-			      (comint-line-beginning-position))
-			     (emacsvox-speak-line 1)))
+                           (save-excursion
+                             (goto-char
+                              (comint-line-beginning-position))
+                             (emacsvox-speak-line 1)))
     (emacsvox-icon 'item)))
 
-
 (advice-add 'comint-previous-matching-input :after
-	    #'ems--comint-previous-matching-input-after)
-
-
-
-
+            #'ems--comint-previous-matching-input-after)
 
 (defun ems--comint-send-input-after (&rest _)
   "Flush any ongoing speech."
   (when (ems-interactive-p) (dtk-stop 'all) (emacsvox-icon 'more)))
 
-
 (advice-add 'comint-send-input :after #'ems--comint-send-input-after)
-
-
-
-
 
 (defun ems--comint-previous-prompt-after (&rest _)
   "Speak."
@@ -597,13 +488,8 @@ Interactive PREFIX arg means toggle the global default value. ")
     (emacsvox-icon 'item)
     (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
 
-
 (advice-add 'comint-previous-prompt :after
-	    #'ems--comint-previous-prompt-after)
-
-
-
-
+            #'ems--comint-previous-prompt-after)
 
 (defun ems--comint-next-prompt-after (&rest _)
   "Speak."
@@ -611,12 +497,7 @@ Interactive PREFIX arg means toggle the global default value. ")
     (emacsvox-icon 'item)
     (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
 
-
 (advice-add 'comint-next-prompt :after #'ems--comint-next-prompt-after)
-
-
-
-
 
 (defun ems--comint-get-next-from-history-after (&rest _)
   "speak."
@@ -624,13 +505,8 @@ Interactive PREFIX arg means toggle the global default value. ")
     (emacsvox-icon 'item)
     (save-excursion (comint-bol) (emacsvox-speak-line 1))))
 
-
 (advice-add 'comint-get-next-from-history :after
-	    #'ems--comint-get-next-from-history-after)
-
-
-
-
+            #'ems--comint-get-next-from-history-after)
 
 (defun ems--comint-dynamic-list-input-ring-around
     (orig-fun &rest args)
@@ -639,33 +515,28 @@ Interactive PREFIX arg means toggle the global default value. ")
     (cond
      ((ems-interactive-p)
       (if
-	  (or (not (ring-p comint-input-ring))
-	      (ring-empty-p comint-input-ring))
-	  (message "No history")
-	(let
-	    ((history nil) (history-buffer " *Input History*")
-	     (index (1- (ring-length comint-input-ring))))
-	  (while (>= index 0)
-	    (setq history
-		  (cons (ring-ref comint-input-ring index) history)
-		  index (1- index)))
-	  (with-output-to-temp-buffer history-buffer
-	    (display-completion-list history)
-	    (switch-to-buffer history-buffer) (forward-line 3)
-	    (while (search-backward "completion" nil 'move)
-	      (replace-match "history reference")))
-	  (emacsvox-icon 'help) (next-completion 1)
-	  (dtk-speak (emacsvox-get-current-completion)))))
+          (or (not (ring-p comint-input-ring))
+              (ring-empty-p comint-input-ring))
+          (message "No history")
+        (let
+            ((history nil) (history-buffer " *Input History*")
+             (index (1- (ring-length comint-input-ring))))
+          (while (>= index 0)
+            (setq history
+                  (cons (ring-ref comint-input-ring index) history)
+                  index (1- index)))
+          (with-output-to-temp-buffer history-buffer
+            (display-completion-list history)
+            (switch-to-buffer history-buffer) (forward-line 3)
+            (while (search-backward "completion" nil 'move)
+              (replace-match "history reference")))
+          (emacsvox-icon 'help) (next-completion 1)
+          (dtk-speak (emacsvox-get-current-completion)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'comint-dynamic-list-input-ring :around
-	    #'ems--comint-dynamic-list-input-ring-around)
-
-
-
-
+            #'ems--comint-dynamic-list-input-ring-around)
 
 (defun ems--comint-kill-output-after (&rest _)
   "speak."
@@ -673,73 +544,44 @@ Interactive PREFIX arg means toggle the global default value. ")
     (emacsvox-icon 'delete-object)
     (message "Nuked output of last command ")))
 
-
 (advice-add 'comint-kill-output :after #'ems--comint-kill-output-after)
-
-
-
-
 
 (defun ems--comint-quit-subjob-after (&rest _)
   "speak."
   (when (ems-interactive-p) (message "Sent quit signal to subjob ")))
 
-
 (advice-add 'comint-quit-subjob :after #'ems--comint-quit-subjob-after)
-
-
-
-
 
 (defun ems--comint-stop-subjob-after (&rest _)
   "speak." (when (ems-interactive-p) (message "Stopped the subjob")))
 
-
 (advice-add 'comint-stop-subjob :after #'ems--comint-stop-subjob-after)
-
-
-
-
 
 (defun ems--comint-interrupt-subjob-after (&rest _)
   "speak."
   (when (ems-interactive-p) (message "Interrupted the subjob")))
 
-
 (advice-add 'comint-interrupt-subjob :after
-	    #'ems--comint-interrupt-subjob-after)
-
-
-
-
+            #'ems--comint-interrupt-subjob-after)
 
 (defun ems--comint-kill-input-before (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object)
     (let
-	((pmark (process-mark (get-buffer-process (current-buffer)))))
+        ((pmark (process-mark (get-buffer-process (current-buffer)))))
       (when (> (point) (marker-position pmark))
-	(emacsvox-speak-region pmark (point))))))
-
+        (emacsvox-speak-region pmark (point))))))
 
 (advice-add 'comint-kill-input :before #'ems--comint-kill-input-before)
-
-
-
-
 
 (defun ems--comint-dynamic-list-filename-completions-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-completions-if-available)))
 
-
 (advice-add 'comint-dynamic-list-filename-completions :after
-	    #'ems--comint-dynamic-list-filename-completions-after)
-
-
-
+            #'ems--comint-dynamic-list-filename-completions-after)
 
 ;;; dirtrack-procfs:
 

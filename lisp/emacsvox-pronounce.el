@@ -318,7 +318,7 @@ Default is emacsvox-pronounce-dictionaries-file."
     (read-file-name
      "Load pronunciation dictionaries from file: "
      emacsvox-user-directory emacsvox-pronounce-dictionaries-file)))
-    (setq filename (or  filename  emacsvox-pronounce-dictionaries-file))
+  (setq filename (or  filename  emacsvox-pronounce-dictionaries-file))
   (when (file-exists-p filename)
     (condition-case nil
         (progn
@@ -358,7 +358,7 @@ Default is emacsvox-pronounce-dictionaries-file."
 (make-variable-buffer-local ' emacsvox-pronounce-yank-word-point)
 
 (defun emacsvox-pronounce-read-term (key)
-    (let ((default (and (mark)
+  (let ((default (and (mark)
                       (< (count-lines (region-beginning)
                                       (region-end)) 2)
                       (buffer-substring-no-properties (region-beginning)

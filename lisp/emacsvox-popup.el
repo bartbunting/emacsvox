@@ -69,30 +69,20 @@
   (let ((msg (elt (popup-list popup) (popup-cursor popup))))
     (message msg)))
 
-
 (defun ems--popup-menu-event-loop-around (orig-fun &rest args)
   "speak." (emacsvox-icon 'open-object)
   (emacsvox-popup-speak-item (ad-get-arg 0)) (apply orig-fun args)
   (emacsvox-icon 'close-object))
 
-
 (advice-add 'popup-menu-event-loop :around
-	    #'ems--popup-menu-event-loop-around)
-
-
-
-
+            #'ems--popup-menu-event-loop-around)
 
 (defun ems--popup-menu-read-key-sequence-before (&rest _)
   "Speak our prompt."
   (when (sit-for 2) (dtk-speak (or (ad-get-arg 1) "Menu:"))))
 
-
 (advice-add 'popup-menu-read-key-sequence :before
-	    #'ems--popup-menu-read-key-sequence-before)
-
-
-
+            #'ems--popup-menu-read-key-sequence-before)
 
 (cl-loop
  for f in
@@ -118,12 +108,8 @@
     (emacsvox-icon 'help)
     (if doc (dtk-speak doc) (dtk-speak "helpless"))))
 
-
 (advice-add 'popup-menu-show-help :after
-	    #'ems--popup-menu-show-help-after)
-
-
-
+            #'ems--popup-menu-show-help-after)
 
 ;;;  Augment popup keymap:
 

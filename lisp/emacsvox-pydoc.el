@@ -68,17 +68,12 @@
 
 ;;;  Advice Interactive Commands:
 
-
 (defun ems--pydoc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'help) (emacsvox-speak-buffer)))
 
-
 (advice-add 'pydoc :after #'ems--pydoc-after)
-
-
-
 
 (provide 'emacsvox-pydoc)
 ;;;  end of file

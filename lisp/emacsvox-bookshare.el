@@ -804,7 +804,6 @@ b Browse
      (format "Available: %s"
              (mapconcat #'dom-text available " ")))))
 
-
 ;;;  Generate Declarations:
 (declare-function emacsvox-bookshare-get-author    "emacsvox-bookshare" nil)
 (declare-function emacsvox-bookshare-get-title    "emacsvox-bookshare" nil)
@@ -1293,18 +1292,18 @@ Useful for fulltext search in a book."
    (list
     (or
      (emacsvox-bookshare-get-directory)
-        (when (eq major-mode 'dired-mode) (dired-get-filename))
-        (let ((completion-ignore-case t)
-              (emacsvox-speak-messages nil)
-              (read-file-name-completion-ignore-case t))
-          (completing-read
-           "Book: "
-           (ems--subdirs-recursively emacsvox-bookshare-directory)
-           #'(lambda (d)
-               (cl-some
-                #'(lambda (f) (string-match "\\.ncx$" f))
-                (directory-files d))
-               ))))))
+     (when (eq major-mode 'dired-mode) (dired-get-filename))
+     (let ((completion-ignore-case t)
+           (emacsvox-speak-messages nil)
+           (read-file-name-completion-ignore-case t))
+       (completing-read
+        "Book: "
+        (ems--subdirs-recursively emacsvox-bookshare-directory)
+        #'(lambda (d)
+            (cl-some
+             #'(lambda (f) (string-match "\\.ncx$" f))
+             (directory-files d))
+            ))))))
   (cl-declare (special eww-data
                        emacsvox-xslt emacsvox-bookshare-directory
                        emacsvox-speak-directory-settings

@@ -70,50 +70,31 @@
 
 ;;;  Advice insertion and electric:
 
-
 (defun ems--ruby-insert-end-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object)
     (save-excursion (ruby-beginning-of-block) (emacsvox-speak-line))))
 
-
 (advice-add 'ruby-insert-end :after #'ems--ruby-insert-end-after)
-
-
-
-
 
 (defun ems--ruby-reindent-then-newline-and-indent-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'ruby-reindent-then-newline-and-indent :after
-	    #'ems--ruby-reindent-then-newline-and-indent-after)
-
-
-
-
+            #'ems--ruby-reindent-then-newline-and-indent-after)
 
 (defun ems--ruby-indent-line-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'ruby-indent-line :after #'ems--ruby-indent-line-after)
-
-
-
-
 
 (defun ems--ruby-indent-exp-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'fill-object)))
 
-
 (advice-add 'ruby-indent-exp :after #'ems--ruby-indent-exp-after)
-
-
 
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook

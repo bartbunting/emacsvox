@@ -151,8 +151,6 @@ ARGS specifies additional arguments to SPEAKER if any."
   "https://www.google.com/search?q="
   "Base  URI for Google search")
 
-
-
 (defvar emacsvox-websearch-google-options nil
   "Additional options to pass to Google e.g. &xx=yy...")
 
@@ -257,7 +255,7 @@ Optional prefix arg prompts for toolbelt options."
        #'(lambda ()
            (goto-char (point-min))
            (emacsvox-eww-next-h) (search-forward "Search Tools" nil
-                                                  t)
+                                                 t)
            (dtk-stop)
            (emacsvox-eww-next-h)
            (emacsvox-speak-windowful)))

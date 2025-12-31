@@ -123,9 +123,9 @@
 ;;;  define resources
 
 (defun emacsvox-url-template-define (name template
-                                           &optional generators post-action
-                                           documentation fetcher
-                                           dont-url-encode)
+                                          &optional generators post-action
+                                          documentation fetcher
+                                          dont-url-encode)
   "Define a URL template.
 
 name Name used to identify template
@@ -242,7 +242,7 @@ with duplicates removed when saving as a list of string."
 
 (emacsvox-url-template-define
  "BBC World Service  Schedule "
-"https://www.bbc.co.uk/sounds/schedules/bbc_world_service " 
+ "https://www.bbc.co.uk/sounds/schedules/bbc_world_service " 
  nil
  #'emacsvox-eww-next-h1
  "BBC World Service Schedule")
@@ -329,8 +329,8 @@ Press `y' on Episode links to play them with MPV."
 
 (defun emacsvox-url-template-setup-content-filter ()
   "Set up content filter in displayed page."
-c  (cl-declare
-   (special emacsvox-we-xpath-filter emacsvox-we-paragraphs-xpath-filter))
+  c  (cl-declare
+      (special emacsvox-we-xpath-filter emacsvox-we-paragraphs-xpath-filter))
   (setq emacsvox-we-xpath-filter emacsvox-we-paragraphs-xpath-filter))
 ;;; AcuWeather:
 (emacsvox-url-template-define
@@ -338,11 +338,10 @@ c  (cl-declare
  "http://rss.accuweather.com/rss/liveweather_rss.asp?locCode=%s"
  (list #'(lambda nil
            (read-from-minibuffer "Location: "
-                             nil nil t nil gmaps-my-zip)))
+                                 nil nil t nil gmaps-my-zip)))
  #'emacsvox-speak-buffer
  "Weather Forecast from ACUWeather"
  #'emacsvox-feeds-rss-display)
-
 
 ;;; Basic Google:
 
@@ -356,9 +355,9 @@ c  (cl-declare
      (forward-line 2)
      (emacsvox-icon 'open-object)
      (tts-with-punctuations 'some
-       (emacsvox-speak-region
-        (point)
-        (save-excursion (forward-line 1) (line-end-position)))))
+                            (emacsvox-speak-region
+                             (point)
+                             (save-excursion (forward-line 1) (line-end-position)))))
  "Light-weight Google weather. Displays weather for your current US-ZIP Code. ")
 
 (emacsvox-url-template-define
@@ -371,9 +370,9 @@ c  (cl-declare
      (emacsvox-icon 'open-object)
      (setq header-line-format "Global Weather")
      (tts-with-punctuations 'some
-       (emacsvox-speak-region
-        (save-excursion (forward-line -1) (line-beginning-position))
-        (save-excursion (forward-line 1) (line-end-position)))))
+                            (emacsvox-speak-region
+                             (save-excursion (forward-line -1) (line-beginning-position))
+                             (save-excursion (forward-line 1) (line-end-position)))))
  "World Weather From Google")
 
 ;;;  Calendar Mobile:
@@ -496,7 +495,7 @@ c  (cl-declare
  "Yahoo Finance"
  "https://finance.yahoo.com/quote/%s/"
  (list "Ticker:")
-  'emacsvox-eww-h2
+ 'emacsvox-eww-h2
  "Yahoo Finance Stock News")
 
 ;;; CNBC Quotes
@@ -651,7 +650,7 @@ c  (cl-declare
  "Display airport conditions from the FAA."
  #'(lambda (url)
      (emacsvox-we-extract-table-by-match "Status"
-                                          url 'speak)))
+                                         url 'speak)))
 
 ;;;  wordnet
 

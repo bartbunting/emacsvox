@@ -54,18 +54,13 @@
 
 ;;;  Setup Helm Hooks:
 
-
 (defun ems--helm-mode-after (&rest _)
   "Cue state of helm mode."
   (when (ems-interactive-p)
     (emacsvox-icon (if helm-mode 'on 'off))
     (message "Turned %s helm-mode" (if helm-mode "on" "off"))))
 
-
 (advice-add 'helm-mode :after #'ems--helm-mode-after)
-
-
-
 
 (declare-function emacsvox-minibuffer-setup-hook "emacsvox-advice" nil)
 
@@ -102,25 +97,19 @@
 
 (declare-function eww-display-dom-by-id-list  "emacsvox-eww.el" (id-list))
 
-
 (defun ems--helm-google-suggest-before (&rest _)
   "setup emacsvox post-processing-hook"
   (add-hook 'emacsvox-eww-post-hook
-	    #'(lambda nil
-		(let
-		    ((emacsvox-google-toolbelt
-		      (emacsvox-google-toolbelt)))
-		  (eww-display-dom-by-id-list '("center_col" "rhs"))))))
-
+            #'(lambda nil
+                (let
+                    ((emacsvox-google-toolbelt
+                      (emacsvox-google-toolbelt)))
+                  (eww-display-dom-by-id-list '("center_col" "rhs"))))))
 
 (advice-add 'helm-google-suggest :before
-	    #'ems--helm-google-suggest-before)
-
-
-
+            #'ems--helm-google-suggest-before)
 
 ;;;  Advice helm-recenter-top-bottom-other-window:
-
 
 (defun ems--helm-recenter-top-bottom-other-window-after (&rest _)
   "Speak current selection."
@@ -128,27 +117,18 @@
     (with-current-buffer (helm-buffer-get)
       (emacsvox-icon 'scroll) (emacsvox-speak-line))))
 
-
 (advice-add 'helm-recenter-top-bottom-other-window :after
-	    #'ems--helm-recenter-top-bottom-other-window-after)
-
-
-
+            #'ems--helm-recenter-top-bottom-other-window-after)
 
 ;;;  Advice helm-yank-selection
-
 
 (defun ems--helm-yank-selection-after (&rest _)
   "Speak minibuffer after yanking."
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
 
-
 (advice-add 'helm-yank-selection :after
-	    #'ems--helm-yank-selection-after)
-
-
-
+            #'ems--helm-yank-selection-after)
 
 ;;;  Support helm-help
 (add-hook

@@ -75,68 +75,43 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--flycheck-list-errors-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done)
     (dtk-speak "Displayed error listing in other window.")))
 
-
 (advice-add 'flycheck-list-errors :after
-	    #'ems--flycheck-list-errors-after)
-
-
-
-
+            #'ems--flycheck-list-errors-after)
 
 (defun ems--flycheck-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (dtk-speak "Checking buffer.")))
 
-
 (advice-add 'flycheck-buffer :after #'ems--flycheck-buffer-after)
-
-
-
-
 
 (defun ems--flycheck-clear-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (dtk-speak "Cleared errors")))
 
-
 (advice-add 'flycheck-clear :after #'ems--flycheck-clear-after)
-
-
-
-
 
 (defun ems--flycheck-compile-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (dtk-speak "Compiling buffer")))
 
-
 (advice-add 'flycheck-compile :after #'ems--flycheck-compile-after)
-
-
-
-
 
 (defun ems--flycheck-error-list-refresh-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (dtk-speak "Refreshed errors")))
 
-
 (advice-add 'flycheck-error-list-refresh :after
-	    #'ems--flycheck-error-list-refresh-after)
-
-
-
+            #'ems--flycheck-error-list-refresh-after)
 
 (provide 'emacsvox-flycheck)
 ;;; emacsvox-flycheck ends here

@@ -106,8 +106,8 @@ vectors")
 
 (defun emacsvox-table-current-element (table)
   (emacsvox-table-this-element table 
-                                (emacsvox-table-current-row table)
-                                (emacsvox-table-current-column table)))
+                               (emacsvox-table-current-row table)
+                               (emacsvox-table-current-column table)))
 
 (defun emacsvox-table-this-row (table index)
   (aref  (emacsvox-table-elements table) index))
@@ -159,7 +159,7 @@ Calls callback once per column."
 ;;;  finders 
 
 (defun emacsvox-table-find-match-in-row (table index pattern
-                                                &optional predicate)
+                                               &optional predicate)
   "Look for next element matching pattern in  row."
   (or predicate
       (setq predicate 'equal))
@@ -179,7 +179,7 @@ Calls callback once per column."
      finally return (and found column))))
 
 (defun emacsvox-table-find-match-in-column (table index pattern
-                                                   &optional predicate)
+                                                  &optional predicate)
   "Look for element matching pattern in  column."
   (or predicate
       (setq predicate 'equal))

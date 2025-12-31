@@ -73,7 +73,6 @@
   
   )
 
-
 (defun ems--selectrum-select-current-candidate-after (&rest _)
   "speak."
   (when (ems-interactive-p)
@@ -81,24 +80,14 @@
       (dtk-speak ad-return-value))
     (emacsvox-icon 'close-object)))
 
-
 (advice-add 'selectrum-select-current-candidate :after
-	    #'ems--selectrum-select-current-candidate-after)
-
-
-
-
+            #'ems--selectrum-select-current-candidate-after)
 
 (defun ems--selectrum-submit-exact-input-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'selectrum-submit-exact-input :after
-	    #'ems--selectrum-submit-exact-input-after)
-
-
-
-
+            #'ems--selectrum-submit-exact-input-after)
 
 (defun ems--selectrum-insert-current-candidate-around
     (orig-fun &rest args)
@@ -107,17 +96,13 @@
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args) (emacsvox-icon 'complete)
-	(emacsvox-speak-region orig (point))))
+        (apply orig-fun args) (emacsvox-icon 'complete)
+        (emacsvox-speak-region orig (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'selectrum-insert-current-candidate :around
-	    #'ems--selectrum-insert-current-candidate-around)
-
-
-
+            #'ems--selectrum-insert-current-candidate-around)
 
 (cl-loop
  for f in 

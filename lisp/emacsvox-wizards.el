@@ -142,9 +142,9 @@
   (interactive)
   
   (emacsvox-xslt-without-xsl
-      (browse-url
-       (format "file:///%stips.html"
-               emacsvox-etc-directory)))
+   (browse-url
+    (format "file:///%stips.html"
+            emacsvox-etc-directory)))
   (emacsvox-icon 'help)
   (emacsvox-speak-mode-line))
 
@@ -375,14 +375,14 @@ command."
 To leave, press \\[keyboard-quit]."
   (interactive)
   (ems-with-messages-silenced
-    (let ((continue t))
-      (while continue
-        (call-interactively 'describe-key-briefly)
-        (sit-for 4)
-        (when (and (numberp last-input-event)
-                   (= last-input-event 7))
-          (setq continue nil)))
-      (message "Leaving learn mode "))))
+   (let ((continue t))
+     (while continue
+       (call-interactively 'describe-key-briefly)
+       (sit-for 4)
+       (when (and (numberp last-input-event)
+                  (= last-input-event 7))
+         (setq continue nil)))
+     (message "Leaving learn mode "))))
 
 (defun emacsvox-describe-emacsvox ()
   "Give a brief overview of emacsvox."
@@ -855,26 +855,26 @@ Ubuntu and Debian this is group `tty'.")
                        emacsvox-wizards-vc-console
                        temporary-file-directory))
   (ems-with-messages-silenced
-    (let ((command
-           (format emacsvox-wizards-vc-viewer-command
-                   console
-                   (expand-file-name
-                    (format "vc-%s.dump" console)
-                    temporary-file-directory)))
-          (buffer (get-buffer-create
-                   (format "*vc-%s*" console))))
-      (shell-command command buffer)
-      (switch-to-buffer buffer)
-      (kill-all-local-variables)
-      (insert-file-contents
-       (expand-file-name
-        (format "vc-%s.dump" console)
-        temporary-file-directory))
-      (set-buffer-modified-p nil)
-      (emacsvox-wizards-vc-view-mode)
-      (setq emacsvox-wizards-vc-console console)
-      (goto-char (point-min))
-      (when (called-interactively-p 'interactive) (emacsvox-speak-line)))))
+   (let ((command
+          (format emacsvox-wizards-vc-viewer-command
+                  console
+                  (expand-file-name
+                   (format "vc-%s.dump" console)
+                   temporary-file-directory)))
+         (buffer (get-buffer-create
+                  (format "*vc-%s*" console))))
+     (shell-command command buffer)
+     (switch-to-buffer buffer)
+     (kill-all-local-variables)
+     (insert-file-contents
+      (expand-file-name
+       (format "vc-%s.dump" console)
+       temporary-file-directory))
+     (set-buffer-modified-p nil)
+     (emacsvox-wizards-vc-view-mode)
+     (setq emacsvox-wizards-vc-console console)
+     (goto-char (point-min))
+     (when (called-interactively-p 'interactive) (emacsvox-speak-line)))))
 
 (defun emacsvox-wizards-vc-viewer-refresh ()
   "Refresh view of VC we're viewing."
@@ -994,7 +994,6 @@ Moves to the shortest line when called interactively."
         (goto-char (1+ where)))
       max)))
 
-
 (defun emacsvox-wizards-find-longest-sentence-in-region (start end)
   "Find longest sentence in region, and move to it. "
   (interactive "r")
@@ -1061,9 +1060,9 @@ Moves to the shortest line when called interactively."
     (read-from-minibuffer "ISO DateTime:"
                           (word-at-point))))
   (ems-with-messages-silenced
-    (let ((time (emacsvox-pronounce-decode-iso-datetime iso)))
-      (tts-with-punctuations 'some (dtk-speak time))
-      (message time))))
+   (let ((time (emacsvox-pronounce-decode-iso-datetime iso)))
+     (tts-with-punctuations 'some (dtk-speak time))
+     (message time))))
 
 ;;;  date pronouncer wizard
 (defvar emacsvox-wizards-mm-dd-yyyy-date-pronounce nil
@@ -1302,14 +1301,14 @@ of the source buffer."
   (cl-loop
    for entry in (reverse emacsvox-wizards-project-shells) do
    (ems-with-messages-silenced
-     (let* ((dtk-quiet t)
-            (name (cl-first entry))
-            (dir (cl-second entry))
-            (auto (cl-third entry))
-            (default-directory dir))
-       (with-current-buffer (shell name)
-         (setq emacsvox-comint-autospeak auto)
-         (setq emacsvox-wizards--project-shell-directory dir)))))
+    (let* ((dtk-quiet t)
+           (name (cl-first entry))
+           (dir (cl-second entry))
+           (auto (cl-third entry))
+           (default-directory dir))
+      (with-current-buffer (shell name)
+        (setq emacsvox-comint-autospeak auto)
+        (setq emacsvox-wizards--project-shell-directory dir)))))
   (emacsvox-wizards--build-shells-table))
 
 (defun emacsvox-wizards-shell-directory-set ()
@@ -1470,8 +1469,8 @@ interactive prompt."
   "Speak line using espeak polyglot wizard."
   (interactive)
   (ems-with-messages-silenced
-    (emacsvox-wizards-espeak-region
-     (line-beginning-position) (line-end-position))))
+   (emacsvox-wizards-espeak-region
+    (line-beginning-position) (line-end-position))))
 
 ;;;  Emacs Dev utilities
 
@@ -2209,11 +2208,11 @@ updating custom settings for a specific package or group of packages."
     (when (not found) (user-error "No saved user options matching %s"
                                   pattern))
     (ems-with-messages-silenced
-      (emacsvox-icon 'progress)
-      (custom-buffer-create
-       (custom-sort-items found t nil)
-       (format "*Customize %d Saved options Matching %s*" (length
-                                                           found) pattern)))
+     (emacsvox-icon 'progress)
+     (custom-buffer-create
+      (custom-sort-items found t nil)
+      (format "*Customize %d Saved options Matching %s*" (length
+                                                          found) pattern)))
     (emacsvox-icon 'task-done)
     (emacsvox-speak-mode-line)))
 

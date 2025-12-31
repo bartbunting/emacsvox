@@ -148,18 +148,12 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--geiser-repl-exit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'geiser-repl-exit :after #'ems--geiser-repl-exit-after)
-
-
-
-
 
 (defun ems--geiser-repl-import-module-around (orig-fun &rest args)
   "speak."
@@ -167,18 +161,13 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-icon 'task-done)
-	(emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-icon 'task-done)
+        (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'geiser-repl-import-module :around
-	    #'ems--geiser-repl-import-module-around)
-
-
-
-
+            #'ems--geiser-repl-import-module-around)
 
 (defun ems--geiser-repl--maybe-send-around (orig-fun &rest args)
   "speak."
@@ -186,18 +175,13 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-icon 'close-object)
-	(emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-icon 'close-object)
+        (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'geiser-repl--maybe-send :around
-	    #'ems--geiser-repl--maybe-send-around)
-
-
-
-
+            #'ems--geiser-repl--maybe-send-around)
 
 (defun ems--geiser-repl--doc-module-after (&rest _)
   "speak."
@@ -205,12 +189,8 @@
     (with-current-buffer (window-buffer (selected-window))
       (emacsvox-icon 'open-object) (emacsvox-speak-buffer))))
 
-
 (advice-add 'geiser-repl--doc-module :after
-	    #'ems--geiser-repl--doc-module-after)
-
-
-
+            #'ems--geiser-repl--doc-module-after)
 
 (cl-loop
  for f in

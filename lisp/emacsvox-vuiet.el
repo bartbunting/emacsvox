@@ -50,35 +50,20 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--vuiet-stop-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'vuiet-stop :after #'ems--vuiet-stop-after)
-
-
-
-
 
 (defun ems--vuiet-love-track-after (&rest _)
   "speak." (when (ems-interactive-p) (dtk-notify "loved track")))
 
-
 (advice-add 'vuiet-love-track :after #'ems--vuiet-love-track-after)
-
-
-
-
 
 (defun ems--vuiet-unlove-track-after (&rest _)
   "speak." (when (ems-interactive-p) (dtk-notify "UnLoved track")))
 
-
 (advice-add 'vuiet-unlove-track :after #'ems--vuiet-unlove-track-after)
-
-
-
 
 (cl-loop
  for f in 

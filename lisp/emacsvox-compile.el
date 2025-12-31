@@ -100,30 +100,20 @@
 
 ;;;  advise process filter and sentinels
 
-
 (defun ems--compile-after (&rest _)
   "provide auditory confirmation"
   (when (ems-interactive-p)
     (message "Launched compilation") (emacsvox-icon 'task-done)))
 
-
 (advice-add 'compile :after #'ems--compile-after)
-
-
-
-
 
 (defun ems--compilation-sentinel-after (&rest _)
   "speak" (emacsvox-icon 'task-done)
   (message "process %s %s" (process-name (ad-get-arg 0))
-	   (ad-get-arg 1)))
-
+           (ad-get-arg 1)))
 
 (advice-add 'compilation-sentinel :after
-	    #'ems--compilation-sentinel-after)
-
-
-
+            #'ems--compilation-sentinel-after)
 
 (provide 'emacsvox-compile)
 

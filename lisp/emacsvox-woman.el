@@ -63,30 +63,20 @@
 
 ;;;  Advice interactive functions
 
-
 (defun ems--WoMan-next-manpage-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'WoMan-next-manpage :after #'ems--WoMan-next-manpage-after)
-
-
-
-
 
 (defun ems--WoMan-previous-manpage-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'WoMan-previous-manpage :after
-	    #'ems--WoMan-previous-manpage-after)
-
-
-
+            #'ems--WoMan-previous-manpage-after)
 
 (provide 'emacsvox-woman)
 ;;;  end of file

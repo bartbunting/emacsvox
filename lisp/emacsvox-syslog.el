@@ -65,57 +65,37 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--syslog-whois-reverse-lookup-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-audit 'task-done)
     (message "Displayed WhoIs data in other window.")))
 
-
 (advice-add 'syslog-whois-reverse-lookup :after
-	    #'ems--syslog-whois-reverse-lookup-after)
-
-
-
-
+            #'ems--syslog-whois-reverse-lookup-after)
 
 (defun ems--syslog-filter-dates-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (forward-line -2) (what-line) (emacsvox-icon 'ellipses)))
 
-
 (advice-add 'syslog-filter-dates :after
-	    #'ems--syslog-filter-dates-after)
-
-
-
-
+            #'ems--syslog-filter-dates-after)
 
 (defun ems--syslog-filter-lines-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'ellipses)))
 
-
 (advice-add 'syslog-filter-lines :after
-	    #'ems--syslog-filter-lines-after)
-
-
-
-
+            #'ems--syslog-filter-lines-after)
 
 (defun ems--syslog-boot-start-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'syslog-boot-start :after #'ems--syslog-boot-start-after)
-
-
-
 
 (cl-loop
  for f in 

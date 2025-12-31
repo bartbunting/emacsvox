@@ -54,62 +54,37 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (message "Set bookmark ")))
 
-
 (advice-add 'bookmark-set :after #'ems--bookmark-set-after)
-
-
-
-
 
 (defun ems--bookmark-yank-word-after (&rest _)
   "Speak what has been yanked so far"
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-yank-word :after #'ems--bookmark-yank-word-after)
-
-
-
-
 
 (defun ems--bookmark-insert-current-bookmark-after (&rest _)
   "Speak what has been yanked so far"
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-insert-current-bookmark :after
-	    #'ems--bookmark-insert-current-bookmark-after)
-
-
-
-
+            #'ems--bookmark-insert-current-bookmark-after)
 
 (defun ems--bookmark-insert-current-file-name-after (&rest _)
   "Speak what has been yanked so far"
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-insert-current-file-name :after
-	    #'ems--bookmark-insert-current-file-name-after)
-
-
-
-
+            #'ems--bookmark-insert-current-file-name-after)
 
 (defun ems--bookmark-jump-after (&rest _)
   "Announce what happened."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-jump :after #'ems--bookmark-jump-after)
-
-
-
-
 
 (defun ems--bookmark-bmenu-list-after (&rest _)
   "speak"
@@ -117,166 +92,104 @@
     (emacsvox-icon 'open-object) (switch-to-buffer "*Bookmark List*")
     (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-list :after
-	    #'ems--bookmark-bmenu-list-after)
-
-
-
-
+            #'ems--bookmark-bmenu-list-after)
 
 (defun ems--bookmark-bmenu-this-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'bookmark-bmenu-this-window :after
-	    #'ems--bookmark-bmenu-this-window-after)
-
-
-
+            #'ems--bookmark-bmenu-this-window-after)
 
 (defun ems--bookmark-bmenu-select-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-select :after
-	    #'ems--bookmark-bmenu-select-after)
-
-
-
+            #'ems--bookmark-bmenu-select-after)
 
 (defun ems--bookmark-bmenu-delete-backwards-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-delete-backwards :after
-	    #'ems--bookmark-bmenu-delete-backwards-after)
-
-
-
-
+            #'ems--bookmark-bmenu-delete-backwards-after)
 
 (defun ems--bookmark-bmenu-1-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-1-window :after
-	    #'ems--bookmark-bmenu-1-window-after)
-
-
-
-
+            #'ems--bookmark-bmenu-1-window-after)
 
 (defun ems--bookmark-bmenu-2-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-2-window :after
-	    #'ems--bookmark-bmenu-2-window-after)
-
-
-
-
+            #'ems--bookmark-bmenu-2-window-after)
 
 (defun ems--bookmark-bmenu-switch-other-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-switch-other-window :after
-	    #'ems--bookmark-bmenu-switch-other-window-after)
-
-
-
-
+            #'ems--bookmark-bmenu-switch-other-window-after)
 
 (defun ems--bookmark-bmenu-edit-annotation-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'bookmark-bmenu-edit-annotation :after
-	    #'ems--bookmark-bmenu-edit-annotation-after)
-
-
-
-
+            #'ems--bookmark-bmenu-edit-annotation-after)
 
 (defun ems--bookmark-bmenu-delete-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-delete :after
-	    #'ems--bookmark-bmenu-delete-after)
-
-
-
-
+            #'ems--bookmark-bmenu-delete-after)
 
 (defun ems--bookmark-bmenu-unmark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'deselect-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-unmark :after
-	    #'ems--bookmark-bmenu-unmark-after)
-
-
-
-
+            #'ems--bookmark-bmenu-unmark-after)
 
 (defun ems--bookmark-bmenu-edit-annotation-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'bookmark-bmenu-edit-annotation :after
-	    #'ems--bookmark-bmenu-edit-annotation-after)
-
-
-
+            #'ems--bookmark-bmenu-edit-annotation-after)
 
 (defun ems--bookmark-send-edited-annotation-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-send-edited-annotation :after
-	    #'ems--bookmark-send-edited-annotation-after)
-
-
-
-
+            #'ems--bookmark-send-edited-annotation-after)
 
 (defun ems--bookmark-bmenu-show-annotation-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-other-window)))
 
-
 (advice-add 'bookmark-bmenu-show-annotation :after
-	    #'ems--bookmark-bmenu-show-annotation-after)
-
-
-
-
+            #'ems--bookmark-bmenu-show-annotation-after)
 
 (defun ems--bookmark-bmenu-show-all-annotations-after (&rest _)
   "speak"
@@ -284,51 +197,32 @@
     (emacsvox-icon 'open-object)
     (message "Displayed all annotations in other window")))
 
-
 (advice-add 'bookmark-bmenu-show-all-annotations :after
-	    #'ems--bookmark-bmenu-show-all-annotations-after)
-
-
-
-
+            #'ems--bookmark-bmenu-show-all-annotations-after)
 
 (defun ems--bookmark-bmenu-mark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-mark :after
-	    #'ems--bookmark-bmenu-mark-after)
-
-
-
-
+            #'ems--bookmark-bmenu-mark-after)
 
 (defun ems--bookmark-bmenu-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'bookmark-bmenu-quit :after
-	    #'ems--bookmark-bmenu-quit-after)
-
-
-
-
+            #'ems--bookmark-bmenu-quit-after)
 
 (defun ems--bookmark-bmenu-backup-unmark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'deselect-object) (emacsvox-speak-line)))
 
-
 (advice-add 'bookmark-bmenu-backup-unmark :after
-	    #'ems--bookmark-bmenu-backup-unmark-after)
-
-
-
+            #'ems--bookmark-bmenu-backup-unmark-after)
 
 (provide 'emacsvox-bookmark)
 ;;;  end of file 

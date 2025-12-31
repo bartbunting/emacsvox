@@ -80,14 +80,12 @@
   (setq dtk-chunk-separator-syntax ".)$\""))
 ;;; Helper: Read URL
 
-
 (defun ems--read-url (&optional history)
   (or
    (shr-url-at-point nil)
    (read-string "URL:" (browse-url-url-at-point) history)))
 
 ;;; Helpers: subdirs
-
 
 (defconst ems--subdirs-filter
   (eval-when-compile
@@ -176,7 +174,7 @@ current local  value to the result.")
 See  command emacsvox-toggle-word-echo bound to
 \\[emacsvox-toggle-word-echo].
 Speech flushes as you type."
-    (when buffer-read-only (dtk-speak "Buffer is read-only. "))
+  (when buffer-read-only (dtk-speak "Buffer is read-only. "))
   (when
       (and (eq (preceding-char) last-command-event) ; Sanity check.
            (not executing-kbd-macro)
@@ -254,7 +252,7 @@ message area.  You can use command
 
 (defun emacsvox-notifications-truncate ()
   "Trim notifications cache."
-    (with-current-buffer emacsvox-notifications-buffer
+  (with-current-buffer emacsvox-notifications-buffer
     (let ((lines (count-lines (point-min) (point-max)))
           (inhibit-read-only t))
       (when (> lines emacsvox-notifications-max)
@@ -548,14 +546,14 @@ emacsvox-speak-filter-table)\n" k v)))
 (defun emacsvox-speak-persist-filter-settings ()
   "Persist emacsvox filter settings for future sessions."
   (interactive)
-    (emacsvox--persist-variable
+  (emacsvox--persist-variable
    'emacsvox-speak-filter-table
    emacsvox-speak-filter-persistent-store))
 
 (defun emacsvox-speak-load-filter-settings ()
   "Load emacsvox filter settings."
   (interactive)
-    (unless emacsvox-speak-filters-loaded-p
+  (unless emacsvox-speak-filters-loaded-p
     ;; `ems--fastload' is defined in `emacsvox-preamble' which requires
     ;; us, so we can't require it at top-level.
     (require 'emacsvox-preamble)
@@ -607,11 +605,11 @@ the sense of the filter. "
   "Speak matched paren with context."
   (when-let* ((there (cl-fourth (show-paren--default))))
     (save-excursion
-        (goto-char there)
-        (dtk-speak
-         (buffer-substring              ; left or right context
-          (if (eolp) (line-beginning-position) there)
-          (line-end-position))))))
+      (goto-char there)
+      (dtk-speak
+       (buffer-substring              ; left or right context
+        (if (eolp) (line-beginning-position) there)
+        (line-end-position))))))
 
 ;;;   Speak units of text
 
@@ -628,7 +626,7 @@ the sense of the filter. "
 (defun emacsvox-speak-region (start end)
   "Speak region bounded by start and end. "
   (interactive "r")
-    (let ((inhibit-modification-hooks t)
+  (let ((inhibit-modification-hooks t)
         (deactivate-mark nil))
     (when (and
            (< (abs (- start end )) ems--large-text-size)
@@ -1158,27 +1156,27 @@ Negative prefix arg will read from start of current paragraph to point. "
 With prefix ARG, speaks the rest of the buffer from point.
 Negative prefix arg speaks from start of buffer to point. "
   (interactive "P")
-    (when
+  (when
       (and
        (< (buffer-size) ems--large-text-size)
        (not emacsvox-speak-voice-annotated-paragraphs))
-            (emacsvox-speak-voice-annotate-paragraphs))
-       (when (listp arg) (setq arg (car arg)))
-       (dtk-stop 'all)
-       (let ((start nil)
-             (end nil))
-         (cond
-          ((null arg)
-           (setq start (point-min)
-                 end (point-max)))
-          ((> arg 0)
-           (setq start (point)
-                 end (point-max)))
-          (t (setq start (point-min)
-                   end (point))))
-         (if (< (abs (- start end )) ems--large-text-size)
-             (dtk-speak (buffer-substring start end))
-           (emacsvox-speak-windowful))))
+    (emacsvox-speak-voice-annotate-paragraphs))
+  (when (listp arg) (setq arg (car arg)))
+  (dtk-stop 'all)
+  (let ((start nil)
+        (end nil))
+    (cond
+     ((null arg)
+      (setq start (point-min)
+            end (point-max)))
+     ((> arg 0)
+      (setq start (point)
+            end (point-max)))
+     (t (setq start (point-min)
+              end (point))))
+    (if (< (abs (- start end )) ems--large-text-size)
+        (dtk-speak (buffer-substring start end))
+      (emacsvox-speak-windowful))))
 
 (defun emacsvox-speak-other-buffer (buffer)
   "Speak specified buffer.
@@ -1266,7 +1264,7 @@ arrived mail."
 
 (defun emacsvox-mail-alert-user-p (f)
   "Predicate to check if we need to play an alert for the specified spool."
-    (let* ((mod-time (emacsvox-mail-get-last-mail-arrival-time f))
+  (let* ((mod-time (emacsvox-mail-get-last-mail-arrival-time f))
          (size (emacsvox-get-file-size f))
          (result
           (and (> size 0)
@@ -1417,7 +1415,7 @@ which-func without turning that mode on.  "
 Speaks header-line if that is set when called non-interactively.
 Interactive prefix arg speaks buffer info."
   (interactive "P")
-    (with-current-buffer (window-buffer (selected-window))
+  (with-current-buffer (window-buffer (selected-window))
     (dtk-stop)
     (force-mode-line-update)
     (when
@@ -1466,27 +1464,27 @@ Interactive prefix arg speaks buffer info."
             (when buffer-read-only
               (emacsvox-icon 'unmodified-object)))
           (tts-with-punctuations
-              'all
-            (dtk-speak
-             (concat
-              autospeak
-              dir-info
-              (propertize (buffer-name) 'personality
-                          voice-lighten-medium)
-              (emacsvox-get-current-percentage-verbously)
-              (when window-count
-                (propertize window-count 'personality voice-smoothen))
-              (when vc-mode
-                (propertize (downcase vc-mode) 'personality voice-smoothen))
-              (when vc-state (format " %s " vc-state))
-              (when line-number-mode
-                (format "line %d" (emacsvox-get-current-line-number)))
-              (when column-number-mode
-                (format "column %d" (current-column)))
-              (propertize
-               (downcase
-                (format-mode-line mode-name)) 'personality voice-animate)
-              global-info frame-info recursion-info))))))))))
+           'all
+           (dtk-speak
+            (concat
+             autospeak
+             dir-info
+             (propertize (buffer-name) 'personality
+                         voice-lighten-medium)
+             (emacsvox-get-current-percentage-verbously)
+             (when window-count
+               (propertize window-count 'personality voice-smoothen))
+             (when vc-mode
+               (propertize (downcase vc-mode) 'personality voice-smoothen))
+             (when vc-state (format " %s " vc-state))
+             (when line-number-mode
+               (format "line %d" (emacsvox-get-current-line-number)))
+             (when column-number-mode
+               (format "column %d" (current-column)))
+             (propertize
+              (downcase
+               (format-mode-line mode-name)) 'personality voice-animate)
+             global-info frame-info recursion-info))))))))))
 
 (defun emacsvox-return-mode-line ()
   "Debug tool: return visually displayed mode-line as a string."
@@ -1561,7 +1559,7 @@ Displays name of current buffer.")
 (defun emacsvox-speak-header-line ()
   "Speak header line if set."
   (interactive)
-    (cond
+  (cond
    (header-line-format
     (let ((window-count (length (window-list))))
       (emacsvox-icon 'item)
@@ -1576,7 +1574,7 @@ Displays name of current buffer.")
 (defun emacsvox-toggle-header-line ()
   "Toggle Emacsvox's default header line."
   (interactive)
-    (if header-line-format
+  (if header-line-format
       (setq header-line-format nil)
     (setq header-line-format emacsvox-header-line-format))
   (emacsvox-icon (if header-line-format 'on 'off))
@@ -1651,7 +1649,7 @@ Optional second arg `set' sets the TZ environment variable as well."
           (read-file-name-completion-ignore-case t))
       (read-file-name "Timezone: " emacsvox-speak-zoneinfo-directory))
     current-prefix-arg))
-    (when (and set
+  (when (and set
              (= 16 (car set)))
     ;; two interactive prefixes from caller
     (setenv "TZ" zone))
@@ -1713,8 +1711,6 @@ Second interactive prefix sets clock to new timezone."
         (* 60 (or  (cl-second v) 0))
         (or  (cl-third v) 0)))))
 
-
-
 (defsubst ems--format-clock (s)
   "Seconds -> mm:ss"
   (format "%02d:%02d" (floor (/ s 60)) (% (floor s) 60)))
@@ -1764,7 +1760,7 @@ Seconds value is also placed in the kill-ring."
   (interactive)
   (emacsvox-icon 'emacsvox)
   (message
-     (format "Emacsvox %s " emacsvox-version )))
+   (format "Emacsvox %s " emacsvox-version )))
 
 (defun emacsvox-speak-current-kill (&optional count)
   "Speak the current kill.
@@ -2468,22 +2464,22 @@ This function is sensitive to calendar mode when prompting."
 (defun emacsvox-speak-read-date-year/month/date ()
   "Return today as yyyy/mm/dd"
   (emacsvox-speak-collect-date "Date:"
-                                "%Y/%m/%d"))
+                               "%Y/%m/%d"))
 
 (defun emacsvox-speak-date-YearMonthDate ()
   "Return today as yyyymmdd"
   (emacsvox-speak-collect-date "Date:"
-                                "%Y%m%d"))
+                               "%Y%m%d"))
 
 (defun emacsvox-speak-date-month/date ()
   "Return today as mm/dd"
   (emacsvox-speak-collect-date "Date:"
-                                "%m/%d"))
+                               "%m/%d"))
 
 (defun emacsvox-speak-year-month-date ()
   "Return today as yyyy-mm-dd"
   (emacsvox-speak-collect-date "Date:"
-                                "%Y-%m-%d"))
+                               "%Y-%m-%d"))
 
 ;; ;;;  Open Emacsvox Info Pages:
 
@@ -2704,7 +2700,6 @@ Set this to the empty string once you've learnt this command. "
           (const :tag "Silence" :value ""))
   :group 'emacsvox)
 
-
 (defun emacsvox-buffer-select()
   "Select buffer by smart cycling.
 Use option emacsvox-buffer-select-help to customize interactive feedback.
@@ -2823,7 +2818,6 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
    ((featurep 'pip) (pip-speak text))
    (t (dtk-notify text))))
 
-
 ;;; Bug Reporter:
 (defconst emacsvox-bug-address "emacsvox@emacsvox.net" "List address")
 
@@ -2831,29 +2825,29 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
   "Function to submit a bug to the Emacsvox list"
   (interactive)
   )
-  (require 'reporter)
-  (when
-      (yes-or-no-p "Are you sure you want to submit a bug report? ")
-    (let ((reporter-prompt-for-summary-p t)
-          (vars
-           '(
-             window-system window-system-version emacs-version system-type
-             emacsvox-version emacsvox-show-point
-             dtk-program dtk-speech-rate dtk-character-scale
-             dtk-split-caps dtk-punctuation-mode visual-line-mode
-             emacsvox-line-echo  emacsvox-word-echo emacsvox-character-echo 
-              emacsvox-audio-indentation )))
-      (mapc
-       #'(lambda (x)
-           (if (not (and (boundp x) (symbol-value x)))
-               (setq vars (delq x vars))))
-       vars)
-      (when  reporter-prompt-for-summary-p ; to appease compiler
-        (reporter-submit-bug-report
-         emacsvox-bug-address 
-         (concat "Emacsvox: " emacsvox-version)
-         vars nil nil
-         "Description of Problem:")))))
+(require 'reporter)
+(when
+    (yes-or-no-p "Are you sure you want to submit a bug report? ")
+  (let ((reporter-prompt-for-summary-p t)
+        (vars
+         '(
+           window-system window-system-version emacs-version system-type
+           emacsvox-version emacsvox-show-point
+           dtk-program dtk-speech-rate dtk-character-scale
+           dtk-split-caps dtk-punctuation-mode visual-line-mode
+           emacsvox-line-echo  emacsvox-word-echo emacsvox-character-echo 
+           emacsvox-audio-indentation )))
+    (mapc
+     #'(lambda (x)
+         (if (not (and (boundp x) (symbol-value x)))
+             (setq vars (delq x vars))))
+     vars)
+    (when  reporter-prompt-for-summary-p ; to appease compiler
+      (reporter-submit-bug-report
+       emacsvox-bug-address 
+       (concat "Emacsvox: " emacsvox-version)
+       vars nil nil
+       "Description of Problem:")))))
 (provide 'emacsvox-speak)
 
 ;;;  end of file

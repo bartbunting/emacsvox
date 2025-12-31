@@ -51,15 +51,10 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--debugger-continue-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'debugger-continue :after #'ems--debugger-continue-after)
-
-
-
 
 (cl-loop
  for f in 
@@ -72,36 +67,22 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--debugger-eval-expression-after (&rest _)
   "speak." (when (ems-interactive-p) (dtk-speak ad-return-value)))
 
-
 (advice-add 'debugger-eval-expression :after
-	    #'ems--debugger-eval-expression-after)
-
-
-
-
+            #'ems--debugger-eval-expression-after)
 
 (defun ems--debugger-list-functions-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-help)))
 
-
 (advice-add 'debugger-list-functions :after
-	    #'ems--debugger-list-functions-after)
-
-
-
+            #'ems--debugger-list-functions-after)
 
 (defun ems--debugger-quit-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'debugger-quit :after #'ems--debugger-quit-after)
-
-
-
 
 (provide 'emacsvox-debugger)
 ;;;  end of file

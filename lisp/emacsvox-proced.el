@@ -283,18 +283,12 @@
 
 ;;;  Advice interactive commands:
 
-
 (defun ems--proced-mark-before (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-proced-speak-this-field)))
 
-
 (advice-add 'proced-mark :before #'ems--proced-mark-before)
-
-
-
-
 
 (defun ems--proced-unmark-before (&rest _)
   "speak."
@@ -302,35 +296,21 @@
     (emacsvox-icon 'deselect-object)
     (emacsvox-proced-speak-this-field)))
 
-
 (advice-add 'proced-unmark :before #'ems--proced-unmark-before)
-
-
-
-
 
 (defun ems--proced-mark-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Marked all processes. ") (emacsvox-icon 'mark-object)))
 
-
 (advice-add 'proced-mark-all :after #'ems--proced-mark-all-after)
-
-
-
-
 
 (defun ems--proced-unmark-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Removed all marks. ") (emacsvox-icon 'deselect-object)))
 
-
 (advice-add 'proced-unmark-all :after #'ems--proced-unmark-all-after)
-
-
-
 
 (cl-loop
  for f in

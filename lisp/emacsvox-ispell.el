@@ -75,38 +75,32 @@ many available corrections."
   :type 'number
   :group 'emacsvox-ispell)
 
-
 (defun ems--ispell-command-loop-before (&rest _)
   "Speak the line containing the incorrect word.\n Then speak the possible corrections. "
   (let
       ((choices (ad-get-arg 0)) (line nil) (pos "")
        (start (ad-get-arg 3)) (end (ad-get-arg 4)))
     (setq line
-	  (ems-set-personality-temporarily start end voice-bolden
-					   (buffer-substring
-					    (line-beginning-position)
-					    (line-end-position))))
+          (ems-set-personality-temporarily start end voice-bolden
+                                           (buffer-substring
+                                            (line-beginning-position)
+                                            (line-end-position))))
     (with-temp-buffer
       (setq voice-lock-mode t) (setq buffer-undo-list t)
       (dtk-set-punctuations 'all) (insert line)
       (cond
        ((< (length choices) emacsvox-ispell-max-choices)
-	(cl-loop for choice in choices and position from 0 do
-		 (setq pos
-		       (propertize (format "%d" position) 'personality
-				   voice-smoothen))
-		 (insert pos) (insert (format " %s\n" choice))))
+        (cl-loop for choice in choices and position from 0 do
+                 (setq pos
+                       (propertize (format "%d" position) 'personality
+                                   voice-smoothen))
+                 (insert pos) (insert (format " %s\n" choice))))
        (t
-	(insert (format "%s corrections available." (length choices)))))
+        (insert (format "%s corrections available." (length choices)))))
       (modify-syntax-entry 10 ">") (dtk-speak (buffer-string)))))
 
-
 (advice-add 'ispell-command-loop :before
-	    #'ems--ispell-command-loop-before)
-
-
-
-
+            #'ems--ispell-command-loop-before)
 
 (defun ems--ispell-comments-and-strings-around (orig-fun &rest args)
   "Stop chatter by turning off messages"
@@ -117,24 +111,15 @@ many available corrections."
       (emacsvox-icon 'task-done)))
    (t ad-do-it)))
 
-
 (advice-add 'ispell-comments-and-strings :around
-	    #'ems--ispell-comments-and-strings-around)
-
-
-
-
+            #'ems--ispell-comments-and-strings-around)
 
 (defun ems--ispell-help-before (&rest _)
   "Speak the help message. "
   (let ((dtk-stop-immediately nil))
     (dtk-speak (documentation 'ispell-help))))
 
-
 (advice-add 'ispell-help :before #'ems--ispell-help-before)
-
-
-
 
 ;;;   Advice top-level ispell commands:
 
@@ -153,7 +138,6 @@ many available corrections."
       (t ad-do-it))
      ad-return-value)))
 
-
 (defun ems--ispell-word-around (orig-fun &rest args)
   "Produce auditory icons for ispell."
   (let ((result (apply orig-fun args)))
@@ -161,17 +145,13 @@ many available corrections."
     (cond
      ((ems-interactive-p)
       (let ((dtk-stop-immediately t))
-	(setq emacsvox-last-message nil)
-	(ems-with-messages-silenced (apply orig-fun args))
-	(emacsvox-speak-message-again) (emacsvox-icon 'task-done)))
+        (setq emacsvox-last-message nil)
+        (ems-with-messages-silenced (apply orig-fun args))
+        (emacsvox-speak-message-again) (emacsvox-icon 'task-done)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'ispell-word :around #'ems--ispell-word-around)
-
-
-
 
 (provide 'emacsvox-ispell)
 

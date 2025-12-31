@@ -70,52 +70,33 @@
        (emacsvox-icon 'task-done)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--elpy-enable-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'on) (message "Enabled elpy")))
 
-
 (advice-add 'elpy-enable :after #'ems--elpy-enable-after)
-
-
-
-
 
 (defun ems--elpy-disable-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'off) (message "Disabled elpy")))
 
-
 (advice-add 'elpy-disable :after #'ems--elpy-disable-after)
-
-
-
-
 
 (defun ems--elpy-doc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'help) (message "Displayed help in other window.")))
 
-
 (advice-add 'elpy-doc :after #'ems--elpy-doc-after)
-
-
-
-
 
 (defun ems--elpy-find-file-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'elpy-find-file :after #'ems--elpy-find-file-after)
-
-
 
 (cl-loop
  for f in

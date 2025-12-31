@@ -115,18 +115,13 @@
 
 ;;;  Advice:
 
-
 (defun ems--paradox-quit-and-close-after (&rest _)
   "provide auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'paradox-quit-and-close :after
-	    #'ems--paradox-quit-and-close-after)
-
-
-
+            #'ems--paradox-quit-and-close-after)
 
 (cl-loop
  for f in
@@ -152,31 +147,21 @@
        (emacsvox-icon 'select-object)
        (emacsvox-tabulated-list-speak-cell)))))
 
-
 (defun ems--paradox-menu-view-commit-list-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'paradox-menu-view-commit-list :after
-	    #'ems--paradox-menu-view-commit-list-after)
-
-
-
-
+            #'ems--paradox-menu-view-commit-list-after)
 
 (defun ems--fparadox-commit-list-visit-commit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'fparadox-commit-list-visit-commit :after
-	    #'ems--fparadox-commit-list-visit-commit-after)
-
-
-
+            #'ems--fparadox-commit-list-visit-commit-after)
 
 (provide 'emacsvox-paradox)
 ;;;  end of file

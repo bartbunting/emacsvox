@@ -52,16 +52,11 @@
 
 ;;;  doctar
 
-
 (defun ems--doctor-txtype-after (&rest _)
   (dtk-speak
    (mapconcat #'(lambda (s) (format "%s" s)) (ad-get-arg 0) " ")))
 
-
 (advice-add 'doctor-txtype :after #'ems--doctor-txtype-after)
-
-
-
 
 ;;;  mpuz
 (voice-setup-add-map
@@ -104,16 +99,11 @@
             (not emacsvox-pronounce-table))
     (emacsvox-pronounce-toggle-dictionaries)))
 
-
 (defun ems--hm-self-guess-char-after (&rest _)
   "Speak the char."
   (when (ems-interactive-p) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'hm-self-guess-char :after #'ems--hm-self-guess-char-after)
-
-
-
 
 (defun emacsvox-hangman-speak-guess ()
   "Speak current guessed string. "
@@ -130,17 +120,13 @@
               (length string)
               (downcase string))))
 
-
 (defun ems--hangman-after (&rest _)
   "Speech enable hangman."
   (when (ems-interactive-p)
     (emacsvox-hangman-setup-pronunciations)
     (emacsvox-icon 'open-object)))
 
-
 (advice-add 'hangman :after #'ems--hangman-after)
-
-
 
 (cl-declaim (special hm-map))
 (when (boundp 'hm-map)

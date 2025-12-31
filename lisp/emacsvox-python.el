@@ -53,14 +53,10 @@
 
 ;;;  interactive programming
 
-
 (defun ems--python-check-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'python-check :after #'ems--python-check-after)
-
-
 
 (cl-loop
  for f in
@@ -82,13 +78,8 @@
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'right)))
 
-
 (advice-add 'python-indent-dedent-line :after
-	    #'ems--python-indent-dedent-line-after)
-
-
-
-
+            #'ems--python-indent-dedent-line-after)
 
 (defun ems--python-indent-dedent-line-backspace-around
     (orig-fun &rest args)
@@ -97,31 +88,21 @@
     (cond
      ((ems-interactive-p)
       (let ((ws (= 32 (char-syntax (preceding-char)))))
-	(dtk-tone 500 100 'force)
-	(unless ws (emacsvox-speak-this-char (preceding-char)))
-	(apply orig-fun args)
-	(when ws (dtk-notify (format "Indent %s " (current-column))))))
+        (dtk-tone 500 100 'force)
+        (unless ws (emacsvox-speak-this-char (preceding-char)))
+        (apply orig-fun args)
+        (when ws (dtk-notify (format "Indent %s " (current-column))))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'python-indent-dedent-line-backspace :around
-	    #'ems--python-indent-dedent-line-backspace-around)
-
-
-
-
+            #'ems--python-indent-dedent-line-backspace-around)
 
 (defun ems--python-fill-paragraph-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'fill-object)))
 
-
 (advice-add 'python-fill-paragraph :after
-	    #'ems--python-fill-paragraph-after)
-
-
-
-
+            #'ems--python-fill-paragraph-after)
 
 (defun ems--python-indent-shift-left-after (&rest _)
   "Speak number of lines that were shifted"
@@ -129,28 +110,20 @@
     (emacsvox-icon 'left)
     (dtk-speak
      (format "Left shifted block  containing %s lines"
-	     (count-lines (region-beginning) (region-end))))))
-
+             (count-lines (region-beginning) (region-end))))))
 
 (advice-add 'python-indent-shift-left :after
-	    #'ems--python-indent-shift-left-after)
-
-
-
+            #'ems--python-indent-shift-left-after)
 
 (defun ems--python-indent-shift-right-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p)
     (dtk-speak
      (format "Right shifted block  containing %s lines"
-	     (count-lines (region-beginning) (region-end))))))
-
+             (count-lines (region-beginning) (region-end))))))
 
 (advice-add 'python-indent-shift-right :after
-	    #'ems--python-indent-shift-right-after)
-
-
-
+            #'ems--python-indent-shift-right-after)
 
 (defun ems--python-indent-region-after (&rest _)
   "Speak number of lines that were shifted"
@@ -158,14 +131,10 @@
     (emacsvox-icon 'right)
     (dtk-speak
      (format "Indented region   containing %s lines"
-	     (count-lines (region-beginning) (region-end))))))
-
+             (count-lines (region-beginning) (region-end))))))
 
 (advice-add 'python-indent-region :after
-	    #'ems--python-indent-region-after)
-
-
-
+            #'ems--python-indent-region-after)
 
 ;;;   buffer navigation
 
@@ -174,13 +143,9 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (message "Marked function containing %s lines"
-	     (count-lines (point) (mark 'force)))))
-
+             (count-lines (point) (mark 'force)))))
 
 (advice-add 'python-mark-defun :after #'ems--python-mark-defun-after)
-
-
-
 
 (cl-loop
  for f in

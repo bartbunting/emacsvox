@@ -161,57 +161,36 @@
 
 ;;;  Char Motion :
 
-
 (defun ems--evil-backward-char-after (&rest _)
   "Speak char."
   (when (ems-interactive-p)
     (emacsvox-speak-this-char (following-char))))
 
-
 (advice-add 'evil-backward-char :after #'ems--evil-backward-char-after)
-
-
-
-
 
 (defun ems--evil-forward-char-after (&rest _)
   "Speak char."
   (when (ems-interactive-p)
     (emacsvox-speak-this-char (following-char))))
 
-
 (advice-add 'evil-forward-char :after #'ems--evil-forward-char-after)
 
-
-
-
 ;;;  Deletion:
-
 
 (defun ems--evil-delete-char-before (&rest _)
   "Speak char we are deleting."
   (when (ems-interactive-p)
     (emacsvox-speak-char t) (dtk-tone-deletion)))
 
-
 (advice-add 'evil-delete-char :before #'ems--evil-delete-char-before)
-
-
-
-
 
 (defun ems--evil-delete-backward-char-before (&rest _)
   "Speak char we are deleting."
   (when (ems-interactive-p)
     (emacsvox-speak-this-char (preceding-char)) (dtk-tone-deletion)))
 
-
 (advice-add 'evil-delete-backward-char :before
-	    #'ems--evil-delete-backward-char-before)
-
-
-
-
+            #'ems--evil-delete-backward-char-before)
 
 (defun ems--evil-delete-line-after (&rest _)
   "speak."
@@ -219,12 +198,7 @@
     (dtk-speak "Deleted to end of line.")
     (emacsvox-icon 'delete-object)))
 
-
 (advice-add 'evil-delete-line :after #'ems--evil-delete-line-after)
-
-
-
-
 
 (defun ems--evil-delete-before (&rest _)
   "speak."
@@ -232,11 +206,7 @@
     (emacsvox-icon 'delete-object)
     (emacsvox-speak-region (ad-get-arg 0) (ad-get-arg 1))))
 
-
 (advice-add 'evil-delete :before #'ems--evil-delete-before)
-
-
-
 
 ;;;  Searching:
 (cl-loop
@@ -294,11 +264,7 @@
       (emacsvox-speak-line)
       (dtk-notify (format "Marker %c" (ad-get-arg 0))))))
 
-
 (advice-add 'evil-set-marker :after #'ems--evil-set-marker-after)
-
-
-
 
 ;;;  Update keymaps:
 
@@ -364,12 +330,8 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (dtk-notify "Leaving Emacs state.")))
 
-
 (advice-add 'evil-exit-emacs-state :after
-	    #'ems--evil-exit-emacs-state-after)
-
-
-
+            #'ems--evil-exit-emacs-state-after)
 
 ;;;  Additional Commands:
 

@@ -111,22 +111,16 @@ Assumes that point is at the front of a field value."
        (emacsvox-icon 'search-hit)
        (emacsvox-speak-line)))))
 
-
 (defun ems--forms-next-record-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object)
     (goto-char
      (next-single-property-change (point) 'read-only (current-buffer)
-				  (point-max)))
+                                  (point-max)))
     (emacsvox-forms-summarize-current-record)))
 
-
 (advice-add 'forms-next-record :after #'ems--forms-next-record-after)
-
-
-
-
 
 (defun ems--forms-prev-record-after (&rest _)
   "speak."
@@ -134,15 +128,10 @@ Assumes that point is at the front of a field value."
     (emacsvox-icon 'select-object)
     (goto-char
      (next-single-property-change (point) 'read-only (current-buffer)
-				  (point-max)))
+                                  (point-max)))
     (emacsvox-forms-summarize-current-record)))
 
-
 (advice-add 'forms-prev-record :after #'ems--forms-prev-record-after)
-
-
-
-
 
 (defun ems--forms-first-record-after (&rest _)
   "speak."
@@ -150,12 +139,7 @@ Assumes that point is at the front of a field value."
     (emacsvox-icon 'select-object)
     (emacsvox-forms-summarize-current-record)))
 
-
 (advice-add 'forms-first-record :after #'ems--forms-first-record-after)
-
-
-
-
 
 (defun ems--forms-last-record-after (&rest _)
   "speak."
@@ -163,12 +147,7 @@ Assumes that point is at the front of a field value."
     (emacsvox-icon 'select-object)
     (emacsvox-forms-summarize-current-record)))
 
-
 (advice-add 'forms-last-record :after #'ems--forms-last-record-after)
-
-
-
-
 
 (defun ems--forms-jump-record-after (&rest _)
   "speak."
@@ -176,12 +155,7 @@ Assumes that point is at the front of a field value."
     (emacsvox-icon 'select-object)
     (emacsvox-forms-summarize-current-record)))
 
-
 (advice-add 'forms-jump-record :after #'ems--forms-jump-record-after)
-
-
-
-
 
 (defun ems--forms-search-after (&rest _)
   "speak."
@@ -189,24 +163,14 @@ Assumes that point is at the front of a field value."
     (emacsvox-icon 'search-hit)
     (emacsvox-forms-summarize-current-record)))
 
-
 (advice-add 'forms-search :after #'ems--forms-search-after)
-
-
-
-
 
 (defun ems--forms-exit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'forms-exit :after #'ems--forms-exit-after)
-
-
-
-
 
 (defun ems--forms-next-field-around (orig-fun &rest args)
   "speak."
@@ -217,54 +181,30 @@ Assumes that point is at the front of a field value."
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'forms-next-field :around #'ems--forms-next-field-around)
-
-
-
-
 
 (defun ems--forms-prev-field-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-forms-speak-field)))
 
-
 (advice-add 'forms-prev-field :after #'ems--forms-prev-field-after)
-
-
-   
-
 
 (defun ems--forms-kill-record-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
 
-
 (advice-add 'forms-kill-record :after #'ems--forms-kill-record-after)
-
-
-
-
 
 (defun ems--forms-insert-record-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'forms-insert-record :after
-	    #'ems--forms-insert-record-after)
-
-
-
-
+            #'ems--forms-insert-record-after)
 
 (defun ems--forms-save-buffer-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'save-object)))
 
-
 (advice-add 'forms-save-buffer :after #'ems--forms-save-buffer-after)
-
-
-
 
 ;;;  smart filters
 

@@ -47,22 +47,17 @@
 
 ;;;   Advise key helpers:
 
-
 (defun ems--gud-display-line-after (&rest _)
   "Speak the error line"
   
   (let ((marker gud-overlay-arrow-position))
     (emacsvox-icon 'large-movement)
     (and marker (marker-buffer marker) (marker-position marker)
-	 (save-current-buffer
-	   (set-buffer (marker-buffer marker))
-	   (goto-char (marker-position marker)) (emacsvox-speak-line)))))
-
+         (save-current-buffer
+           (set-buffer (marker-buffer marker))
+           (goto-char (marker-position marker)) (emacsvox-speak-line)))))
 
 (advice-add 'gud-display-line :after #'ems--gud-display-line-after)
-
-
-
 
 (cl-loop
  for f in

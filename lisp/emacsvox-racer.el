@@ -69,20 +69,15 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--racer-describe-after (&rest _)
   "speak."
   (when
       (and (ems-interactive-p)
-	   (buffer-live-p (get-buffer "*Racer Help*")))
+           (buffer-live-p (get-buffer "*Racer Help*")))
     (emacsvox-icon 'help-object)
     (with-current-buffer "*Racer Help*" (emacsvox-speak-buffer))))
 
-
 (advice-add 'racer-describe :after #'ems--racer-describe-after)
-
-
-
 
 (provide 'emacsvox-racer)
 ;;;  end of file

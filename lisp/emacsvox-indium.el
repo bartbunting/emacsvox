@@ -67,17 +67,12 @@
 
 ;;;  Advice indium-backend.el:
 
-
 (defun ems--indium-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'indium-quit :after #'ems--indium-quit-after)
-
-
-
 
 (cl-loop
  for f in
@@ -91,16 +86,11 @@
 
 ;;;  Advice indium-chrome.el
 
-
 (defun ems--indium-connect-to-chrome-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'indium-connect-to-chrome :after
-	    #'ems--indium-connect-to-chrome-after)
-
-
-
+            #'ems--indium-connect-to-chrome-after)
 
 ;;;  Advice indium-debugger.el
 
@@ -127,7 +117,6 @@
 
 ;;;  Advice indium-repl.el
 
-
 (defun ems--indium-repl-return-after (&rest _)
   "speak."
   (when (ems-interactive-p)
@@ -135,11 +124,7 @@
       (forward-line -1) (emacsvox-speak-line)
       (emacsvox-icon 'close-object))))
 
-
 (advice-add 'indium-repl-return :after #'ems--indium-repl-return-after)
-
-
-
 
 (cl-loop
  for f in 

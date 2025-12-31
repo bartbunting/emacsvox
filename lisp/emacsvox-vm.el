@@ -92,66 +92,56 @@ Note that some badly formed mime messages  cause trouble."
 
 ;;;  Advice completions
 
-
 (defun ems--vm-minibuffer-complete-word-around (orig-fun &rest args)
   "Say what you completed."
   (let ((result (apply orig-fun args)))
     (let
-	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-	 (dtk-stop-immediately t))
+        ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+         (dtk-stop-immediately t))
       (emacsvox-kill-buffer-carefully "*Completions*")
       (apply orig-fun args)
       (if (> (point) prior)
-	  (tts-with-punctuations 'all
-				 (if
-				     (>
-				      (length
-				       (emacsvox-get-minibuffer-contents))
-				      0)
-				     (dtk-speak
-				      (emacsvox-get-minibuffer-contents))
-				   (emacsvox-speak-line)))
-	(emacsvox-speak-completions-if-available))
+          (tts-with-punctuations 'all
+                                 (if
+                                     (>
+                                      (length
+                                       (emacsvox-get-minibuffer-contents))
+                                      0)
+                                     (dtk-speak
+                                      (emacsvox-get-minibuffer-contents))
+                                   (emacsvox-speak-line)))
+        (emacsvox-speak-completions-if-available))
       result)
     result))
 
-
 (advice-add 'vm-minibuffer-complete-word :around
-	    #'ems--vm-minibuffer-complete-word-around)
-
-
-
-
+            #'ems--vm-minibuffer-complete-word-around)
 
 (defun ems--vm-minibuffer-complete-word-and-exit-around
     (orig-fun &rest args)
   "Say what you completed."
   (let ((result (apply orig-fun args)))
     (let
-	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-	 (dtk-stop-immediately t))
+        ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+         (dtk-stop-immediately t))
       (emacsvox-kill-buffer-carefully "*Completions*")
       (apply orig-fun args)
       (if (> (point) prior)
-	  (tts-with-punctuations 'all
-				 (if
-				     (>
-				      (length
-				       (emacsvox-get-minibuffer-contents))
-				      0)
-				     (dtk-speak
-				      (emacsvox-get-minibuffer-contents))
-				   (emacsvox-speak-line)))
-	(emacsvox-speak-completions-if-available))
+          (tts-with-punctuations 'all
+                                 (if
+                                     (>
+                                      (length
+                                       (emacsvox-get-minibuffer-contents))
+                                      0)
+                                     (dtk-speak
+                                      (emacsvox-get-minibuffer-contents))
+                                   (emacsvox-speak-line)))
+        (emacsvox-speak-completions-if-available))
       result)
     result))
 
-
 (advice-add 'vm-minibuffer-complete-word-and-exit :around
-	    #'ems--vm-minibuffer-complete-word-and-exit-around)
-
-
-
+            #'ems--vm-minibuffer-complete-word-and-exit-around)
 
 ;;;   Helper functions:
 
@@ -292,24 +282,18 @@ that has been forwarded multiple times."
   (re-search-forward "^ *Subject:" nil t)
   (emacsvox-speak-line))
 
-
 (defun ems--vm-scroll-forward-after (&rest _)
   "Produce auditory feedback.\nThen speak the screenful. "
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll)
     (save-excursion
       (let
-	  ((start (point))
-	   (window (get-buffer-window (current-buffer))))
-	(forward-line (window-height window))
-	(emacsvox-speak-region start (point))))))
-
+          ((start (point))
+           (window (get-buffer-window (current-buffer))))
+        (forward-line (window-height window))
+        (emacsvox-speak-region start (point))))))
 
 (advice-add 'vm-scroll-forward :after #'ems--vm-scroll-forward-after)
-
-
-
-
 
 (defun ems--vm-scroll-backward-after (&rest _)
   "Produce auditory feedback.\nThen speak the screenful. "
@@ -317,15 +301,12 @@ that has been forwarded multiple times."
     (emacsvox-icon 'scroll)
     (save-excursion
       (let
-	  ((start (point))
-	   (window (get-buffer-window (current-buffer))))
-	(forward-line (- (window-height window)))
-	(emacsvox-speak-region start (point))))))
-
+          ((start (point))
+           (window (get-buffer-window (current-buffer))))
+        (forward-line (- (window-height window)))
+        (emacsvox-speak-region start (point))))))
 
 (advice-add 'vm-scroll-backward :after #'ems--vm-scroll-backward-after)
-
-
 
 (defun emacsvox-vm-browse-message ()
   "Browse an email message --read it paragraph at a time. "
@@ -334,29 +315,18 @@ that has been forwarded multiple times."
 
 ;;;   deleting and killing
 
-
 (defun ems--vm-delete-message-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (message "Message discarded.")))
 
-
 (advice-add 'vm-delete-message :after #'ems--vm-delete-message-after)
-
-
-
-
 
 (defun ems--vm-undelete-message-after (&rest _)
   "speak." (when (ems-interactive-p) (message "Message recovered.")))
 
-
 (advice-add 'vm-undelete-message :after
-	    #'ems--vm-undelete-message-after)
-
-
-
-
+            #'ems--vm-undelete-message-after)
 
 (defun ems--vm-kill-subject-after (&rest _)
   "speak. "
@@ -364,14 +334,9 @@ that has been forwarded multiple times."
     (emacsvox-icon 'delete-object)
     (call-interactively 'vm-next-message)))
 
-
 (advice-add 'vm-kill-subject :after #'ems--vm-kill-subject-after)
 
-
-
-
 ;;;   Sending mail:
-
 
 (defun ems--vm-forward-message-around (orig-fun &rest args)
   "Provide aural feedback."
@@ -381,53 +346,33 @@ that has been forwarded multiple times."
       (message "Forwarding message") (apply orig-fun args)
       (emacsvox-speak-line)
       (save-excursion
-	(search-forward "--text follows this line--") (insert "\n\n")))
+        (search-forward "--text follows this line--") (insert "\n\n")))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'vm-forward-message :around
-	    #'ems--vm-forward-message-around)
-
-
-
-
+            #'ems--vm-forward-message-around)
 
 (defun ems--vm-reply-after (&rest _)
   "Provide aural feedback."
   (when (ems-interactive-p) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'vm-reply :after #'ems--vm-reply-after)
-
-
-
-
 
 (defun ems--vm-followup-after (&rest _)
   "Provide aural feedback."
   (when (ems-interactive-p)
     (message "Folluwing up") (emacsvox-speak-mode-line)))
 
-
 (advice-add 'vm-followup :after #'ems--vm-followup-after)
-
-
-
-
 
 (defun ems--vm-reply-include-text-after (&rest _)
   "Provide aural feedback."
   (when (ems-interactive-p)
     (save-excursion (insert "\n\n")) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'vm-reply-include-text :after
-	    #'ems--vm-reply-include-text-after)
-
-
-
-
+            #'ems--vm-reply-include-text-after)
 
 (defun ems--vm-followup-include-text-after (&rest _)
   "Provide aural feedback."
@@ -435,36 +380,22 @@ that has been forwarded multiple times."
     (save-excursion (insert "\n\n")) (message "Following up")
     (emacsvox-speak-mode-line)))
 
-
 (advice-add 'vm-followup-include-text :after
-	    #'ems--vm-followup-include-text-after)
-
-
-
-
+            #'ems--vm-followup-include-text-after)
 
 (defun ems--vm-mail-send-after (&rest _)
   "Provide auditory context"
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'vm-mail-send :after #'ems--vm-mail-send-after)
-
-
-
-
 
 (defun ems--vm-mail-send-and-exit-after (&rest _)
   "Provide auditory context"
   (when (ems-interactive-p) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'vm-mail-send-and-exit :after
-	    #'ems--vm-mail-send-and-exit-after)
-
-
-
+            #'ems--vm-mail-send-and-exit-after)
 
 (cl-loop
  for f in
@@ -480,7 +411,6 @@ that has been forwarded multiple times."
 
 ;;;  quitting
 
-
 (defun ems--vm-quit-after (&rest _)
   "Provide an auditory icon if requested"
   (when (ems-interactive-p)
@@ -488,11 +418,7 @@ that has been forwarded multiple times."
     (with-current-buffer (window-buffer (selected-window))
       (emacsvox-speak-mode-line))))
 
-
 (advice-add 'vm-quit :after #'ems--vm-quit-after)
-
-
-
 
 ;;;  catching up on folders
 
@@ -537,21 +463,16 @@ that has been forwarded multiple times."
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args)
-	(cond
-	 ((not (= orig (point))) (emacsvox-icon 'search-hit)
-	  (emacsvox-speak-line))
-	 (t (emacsvox-icon 'search-miss)))))
+        (apply orig-fun args)
+        (cond
+         ((not (= orig (point))) (emacsvox-icon 'search-hit)
+          (emacsvox-speak-line))
+         (t (emacsvox-icon 'search-miss)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'vm-isearch-forward :around
-	    #'ems--vm-isearch-forward-around)
-
-
-
-
+            #'ems--vm-isearch-forward-around)
 
 (defun ems--vm-isearch-backward-around (orig-fun &rest args)
   "speak"
@@ -560,45 +481,30 @@ that has been forwarded multiple times."
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args)
-	(cond
-	 ((not (= orig (point))) (emacsvox-icon 'search-hit)
-	  (emacsvox-speak-line))
-	 (t (emacsvox-icon 'search-miss)))))
+        (apply orig-fun args)
+        (cond
+         ((not (= orig (point))) (emacsvox-icon 'search-hit)
+          (emacsvox-speak-line))
+         (t (emacsvox-icon 'search-miss)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'vm-isearch-backward :around
-	    #'ems--vm-isearch-backward-around)
-
-
-
+            #'ems--vm-isearch-backward-around)
 
 ;;;   silence mime parsing in vm 6.0 and above
-
 
 (defun ems--vm-mime-parse-entity-around (orig-fun &rest args)
   (ems-with-messages-silenced (apply orig-fun args)))
 
-
 (advice-add 'vm-mime-parse-entity :around
-	    #'ems--vm-mime-parse-entity-around)
-
-
-
-
+            #'ems--vm-mime-parse-entity-around)
 
 (defun ems--vm-decode-mime-message-around (orig-fun &rest args)
   (ems-with-messages-silenced (apply orig-fun args)))
 
-
 (advice-add 'vm-decode-mime-message :around
-	    #'ems--vm-decode-mime-message-around)
-
-
-
-
+            #'ems--vm-decode-mime-message-around)
 
 (defun ems--vm-mime-run-display-function-at-point-around
     (orig-fun &rest args)
@@ -607,32 +513,22 @@ that has been forwarded multiple times."
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args) (goto-char orig)
-	(message "Decoded attachment")))
+        (apply orig-fun args) (goto-char orig)
+        (message "Decoded attachment")))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'vm-mime-run-display-function-at-point :around
-	    #'ems--vm-mime-run-display-function-at-point-around)
-
-
-
+            #'ems--vm-mime-run-display-function-at-point-around)
 
 ;;;  silence unnecessary chatter
-
 
 (defun ems--vm-emit-eom-blurb-around (orig-fun &rest args)
   "Stop chattering" (ems-with-messages-silenced (apply orig-fun args)))
 
-
 (advice-add 'vm-emit-eom-blurb :around #'ems--vm-emit-eom-blurb-around)
 
-
-
-
 ;;;  advice password prompt
-
 
 (defun ems--vm-read-password-before (&rest _)
   "Speak the prompt"
@@ -641,11 +537,7 @@ that has been forwarded multiple times."
     (dtk-speak
      (format "%s %s" prompt (if confirm "Confirm by retyping" "")))))
 
-
 (advice-add 'vm-read-password :before #'ems--vm-read-password-before)
-
-
-
 
 ;;;  setup presentation buffer correctly
 
@@ -690,28 +582,18 @@ that has been forwarded multiple times."
 
 ;;;   misc
 
-
 (defun ems--vm-around (orig-fun &rest args)
   "Silence chatter."
   (let ((emacsvox-speak-messages nil))
     (apply orig-fun args) (emacsvox-vm-mode-line)))
 
-
 (advice-add 'vm :around #'ems--vm-around)
-
-
-
-
 
 (defun ems--vm-count-messages-in-file-around (orig-fun &rest args)
   (ad-set-arg 1 'quiet) (apply orig-fun args))
 
-
 (advice-add 'vm-count-messages-in-file :around
-	    #'ems--vm-count-messages-in-file-around)
-
-
-
+            #'ems--vm-count-messages-in-file-around)
 
 ;;;   button motion in vm
 

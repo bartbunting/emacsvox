@@ -63,42 +63,27 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--lua-start-process-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'lua-start-process :after #'ems--lua-start-process-after)
-
-
-
-
 
 (defun ems--lua-kill-process-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'lua-kill-process :after #'ems--lua-kill-process-after)
-
-
-
-
 
 (defun ems--lua-search-documentation-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'lua-search-documentation :after
-	    #'ems--lua-search-documentation-after)
-
-
-
+            #'ems--lua-search-documentation-after)
 
 (cl-loop
  for f in
@@ -112,18 +97,13 @@
                 (when (ems-interactive-p)
                   (emacsvox-icon 'task-done)))))
 
-
 (defun ems--lua-show-process-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'lua-show-process-buffer :after
-	    #'ems--lua-show-process-buffer-after)
-
-
-
+            #'ems--lua-show-process-buffer-after)
 
 (provide 'emacsvox-lua)
 ;;;  end of file

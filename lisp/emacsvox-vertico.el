@@ -59,7 +59,6 @@
 
 ;;;  Advice interactive commands
 
-
 (defun ems--vertico-insert-around (orig-fun &rest args)
   "speak."
   (let ((result (apply orig-fun args)))
@@ -68,12 +67,7 @@
       (emacsvox-speak-region orig-point (point)))
     result))
 
-
 (advice-add 'vertico-insert :around #'ems--vertico-insert-around)
-
-
-
-
 
 (defun ems--vertico--exhibit-after (&rest _)
   "speak."
@@ -81,29 +75,25 @@
    (special vertico--allow-prompt vertico--index vertico--base))
   (let
       ((new-cand
-	(substring (vertico--candidate)
-		   (if (>= vertico--index 0)
-		       (if (stringp vertico--base)
-			   (length vertico--base)
-			 vertico--base)
-		     0)))
+        (substring (vertico--candidate)
+                   (if (>= vertico--index 0)
+                       (if (stringp vertico--base)
+                           (length vertico--base)
+                         vertico--base)
+                     0)))
        (to-speak nil))
     (unless (equal emacsvox-vertico--prev-candidate new-cand)
       (setq to-speak new-cand)
       (when
-	  (or (equal vertico--index emacsvox-vertico--prev-index)
-	      (and (not (equal vertico--index -1))
-		   (equal emacsvox-vertico--prev-index -1)))
-	(emacsvox-icon 'select-object)))
+          (or (equal vertico--index emacsvox-vertico--prev-index)
+              (and (not (equal vertico--index -1))
+                   (equal emacsvox-vertico--prev-index -1)))
+        (emacsvox-icon 'select-object)))
     (when to-speak (dtk-speak to-speak))
     (setq-local emacsvox-vertico--prev-candidate new-cand
-		emacsvox-vertico--prev-index vertico--index)))
-
+                emacsvox-vertico--prev-index vertico--index)))
 
 (advice-add 'vertico--exhibit :after #'ems--vertico--exhibit-after)
-
-
-
 
 (cl-loop
  for (f icon) in

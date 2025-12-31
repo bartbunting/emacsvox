@@ -135,33 +135,22 @@
   
   )
 
-
 (defun ems--ses-forward-or-insert-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement)
     (emacsvox-ses-summarize-current-cell)))
 
-
 (advice-add 'ses-forward-or-insert :after
-	    #'ems--ses-forward-or-insert-after)
-
-
-
-
+            #'ems--ses-forward-or-insert-after)
 
 (defun ems--ses-recalculate-cell-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-ses-summarize-current-cell) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'ses-recalculate-cell :after
-	    #'ems--ses-recalculate-cell-after)
-
-
-
-
+            #'ems--ses-recalculate-cell-after)
 
 (defun ems--ses-jump-after (&rest _)
   "speak."
@@ -169,11 +158,7 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-ses-summarize-current-cell)))
 
-
 (advice-add 'ses-jump :after #'ems--ses-jump-after)
-
-
-
 
 ;;;  Setup:
 

@@ -73,17 +73,12 @@
   enwc-toggle-wired
   )
 
-
 (defun ems--enwc-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'enwc :after #'ems--enwc-after)
-
-
-
 
 (cl-loop
  for f in 

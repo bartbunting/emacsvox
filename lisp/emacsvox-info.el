@@ -117,52 +117,36 @@ node -- speak the entire node."
 emacsvox-info-select-node-speak-chunk"
      (when (ems-interactive-p) (emacsvox-info-visit-node)))))
 
-
 (defun ems--Info-search-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
-
 (advice-add 'Info-search :after #'ems--Info-search-after)
-
-
-
-
 
 (defun ems--Info-scroll-up-after (&rest _)
   "Speak the screenful."
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll)
     (let
-	((start (point)) (window (get-buffer-window (current-buffer))))
+        ((start (point)) (window (get-buffer-window (current-buffer))))
       (save-excursion
-	(forward-line (window-height window))
-	(emacsvox-speak-region start (point))))))
-
+        (forward-line (window-height window))
+        (emacsvox-speak-region start (point))))))
 
 (advice-add 'Info-scroll-up :after #'ems--Info-scroll-up-after)
-
-
-
-
 
 (defun ems--Info-scroll-down-after (&rest _)
   "Speak the screenful."
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll)
     (let
-	((start (point)) (window (get-buffer-window (current-buffer))))
+        ((start (point)) (window (get-buffer-window (current-buffer))))
       (save-excursion
-	(forward-line (window-height window))
-	(emacsvox-speak-region start (point))))))
-
+        (forward-line (window-height window))
+        (emacsvox-speak-region start (point))))))
 
 (advice-add 'Info-scroll-down :after #'ems--Info-scroll-down-after)
-
-
-
-
 
 (defun ems--Info-exit-after (&rest _)
   "Play an auditory icon to close info,\nand then cue the next selected buffer."
@@ -170,37 +154,23 @@ emacsvox-info-select-node-speak-chunk"
     (dtk-stop 'all) (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
-
 (advice-add 'Info-exit :after #'ems--Info-exit-after)
-
-
-
-
 
 (defun ems--Info-next-reference-after (&rest _)
   "Speak the line. "
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'Info-next-reference :after
-	    #'ems--Info-next-reference-after)
-
-
-
-
+            #'ems--Info-next-reference-after)
 
 (defun ems--Info-prev-reference-after (&rest _)
   "Speak the line. "
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'Info-prev-reference :after
-	    #'ems--Info-prev-reference-after)
-
-
-
+            #'ems--Info-prev-reference-after)
 
 ;;;###autoload
 (defun emacsvox-info-wizard (node-spec)

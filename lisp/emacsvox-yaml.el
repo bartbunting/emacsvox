@@ -58,39 +58,23 @@
   yaml-narrow-to-block-literal
   )
 
-
 (defun ems--yaml-indent-line-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'yaml-indent-line :after #'ems--yaml-indent-line-after)
-
-
-
-
 
 (defun ems--yaml-mode-after (&rest _)
   "speak."
   (unless emacsvox-audio-indentation
     (emacsvox-toggle-audio-indentation)))
 
-
 (advice-add 'yaml-mode :after #'ems--yaml-mode-after)
-
-
-
-
 
 (defun ems--yaml-fill-paragraph-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'fill-object)))
 
-
 (advice-add 'yaml-fill-paragraph :after
-	    #'ems--yaml-fill-paragraph-after)
-
-
-
-
+            #'ems--yaml-fill-paragraph-after)
 
 (defun ems--yaml-electric-backspace-around (orig-fun &rest args)
   "speak."
@@ -102,34 +86,20 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'yaml-electric-backspace :around
-	    #'ems--yaml-electric-backspace-around)
-
-
-
-
+            #'ems--yaml-electric-backspace-around)
 
 (defun ems--yaml-electric-bar-and-angle-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'yaml-electric-bar-and-angle :after
-	    #'ems--yaml-electric-bar-and-angle-after)
-
-
-
-
+            #'ems--yaml-electric-bar-and-angle-after)
 
 (defun ems--yaml-electric-dash-and-dot-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'yaml-electric-dash-and-dot :after
-	    #'ems--yaml-electric-dash-and-dot-after)
-
-
-
+            #'ems--yaml-electric-dash-and-dot-after)
 
 (provide 'emacsvox-yaml)
 ;;;  end of file

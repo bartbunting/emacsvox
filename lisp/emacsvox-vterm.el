@@ -73,43 +73,28 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--vterm-clear-after (&rest _)
   "speak." (emacsvox-vterm-snapshot)
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll) (message "Cleared screen")))
 
-
 (advice-add 'vterm-clear :after #'ems--vterm-clear-after)
-
-
-
-
 
 (defun ems--vterm-clear-scrollback-after (&rest _)
   "speak." (emacsvox-vterm-snapshot)
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll) (message "Cleared scrollback")))
 
-
 (advice-add 'vterm-clear-scrollback :after
-	    #'ems--vterm-clear-scrollback-after)
-
-
-
-
+            #'ems--vterm-clear-scrollback-after)
 
 (defun ems--vterm-copy-mode-done-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'vterm-copy-mode-done :after
-	    #'ems--vterm-copy-mode-done-after)
-
-
-
+            #'ems--vterm-copy-mode-done-after)
 
 (with-eval-after-load "vterm"
   (cl-declaim (special vterm-mode-map vterm-copy-mode-map))
@@ -117,17 +102,12 @@
               'emacsvox-keymap)
   (define-key vterm-copy-mode-map (kbd "C-e") 'emacsvox-keymap))
 
-
 (defun ems--vterm-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'vterm :after #'ems--vterm-after)
-
-
-
 
 (cl-loop
  for f in
@@ -140,28 +120,18 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--vterm-reset-cursor-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'vterm-reset-cursor-point :after
-	    #'ems--vterm-reset-cursor-point-after)
-
-
-
-
+            #'ems--vterm-reset-cursor-point-after)
 
 (defun ems--vterm-send-return-after (&rest _)
   "speak." (emacsvox-vterm-snapshot))
 
-
 (advice-add 'vterm-send-return :after #'ems--vterm-send-return-after)
-
-
-
 
 (cl-loop
  for f in
@@ -207,22 +177,16 @@
         ems--vterm-char (preceding-char))
   )
 
-
 (defun ems--vterm--flush-output-before (&rest _)
   "Cache state before input event is processed."
   (emacsvox-vterm-snapshot))
 
-
 (advice-add 'vterm--flush-output :before
-	    #'ems--vterm--flush-output-before)
-
-
-
+            #'ems--vterm--flush-output-before)
 
 ;; speech-enable term update loop, using previously cached state.
 (defvar emacsvox-vterm-debug nil
   "Debug flag")
-
 
 (defun ems--vterm--redraw-after (&rest _)
   "Speech-enable term emulation."
@@ -233,42 +197,38 @@
        (new-column (current-column)))
     (ems-with-messages-silenced
      (message "Event: %c r: %d c: %d new-row: %d new-col: %d char: %c"
-	      last-command-event row column new-row new-column
-	      current-char))
+              last-command-event row column new-row new-column
+              current-char))
     (cond
      ((and (memq last-command-event '(127 backspace)) (= new-row row)
-	   (= -1 (- new-column column)))
+           (= -1 (- new-column column)))
       (dtk-tone-deletion) (emacsvox-speak-this-char current-char))
      ((and (= new-row row) (= 1 (- new-column column)))
       (ems-with-messages-silenced (message "char insert"))
       (if (eq 32 last-command-event)
-	  (save-excursion
-	    (backward-char 2) (emacsvox-speak-word nil))
-	(emacsvox-speak-this-char (preceding-char))))
+          (save-excursion
+            (backward-char 2) (emacsvox-speak-word nil))
+        (emacsvox-speak-this-char (preceding-char))))
      ((and (= new-row row) (= 1 (abs (- new-column column))))
       (ems-with-messages-silenced (message "horizontal char motion"))
       (emacsvox-speak-this-char (following-char)))
      ((= row new-row)
       (ems-with-messages-silenced (message "left/right motion"))
       (if (= 32 (following-char))
-	  (save-excursion (forward-char 1) (emacsvox-speak-word))
-	(emacsvox-speak-word)))
+          (save-excursion (forward-char 1) (emacsvox-speak-word))
+        (emacsvox-speak-word)))
      (t
       (if emacsvox-comint-autospeak
-	  (let ((dtk-stop-immediately nil))
-	    (dtk-speak
-	     (string-trim
-	      (ansi-color-filter-apply
-	       (save-excursion
-		 (beginning-of-line)
-		 (buffer-substring (1+ opoint) (point)))))))
-	(emacsvox-speak-line))))))
-
+          (let ((dtk-stop-immediately nil))
+            (dtk-speak
+             (string-trim
+              (ansi-color-filter-apply
+               (save-excursion
+                 (beginning-of-line)
+                 (buffer-substring (1+ opoint) (point)))))))
+        (emacsvox-speak-line))))))
 
 (advice-add 'vterm--redraw :after #'ems--vterm--redraw-after)
-
-
-
 
 (provide 'emacsvox-vterm)
 ;;;  end of file

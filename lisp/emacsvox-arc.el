@@ -63,112 +63,68 @@
 
 ;;;  Advice
 
-
 (defun ems--archive-mark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-archive-speak-line)))
 
-
 (advice-add 'archive-mark :after #'ems--archive-mark-after)
-
-
-
-
 
 (defun ems--archive-next-line-after (&rest _)
   "Speak" (when (ems-interactive-p) (emacsvox-archive-speak-line)))
 
-
 (advice-add 'archive-next-line :after #'ems--archive-next-line-after)
-
-
-
-
 
 (defun ems--archive-previous-line-after (&rest _)
   "Speak" (when (ems-interactive-p) (emacsvox-archive-speak-line)))
 
-
 (advice-add 'archive-previous-line :after
-	    #'ems--archive-previous-line-after)
-
-
-
-
+            #'ems--archive-previous-line-after)
 
 (defun ems--archive-flag-deleted-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-archive-speak-line)))
 
-
 (advice-add 'archive-flag-deleted :after
-	    #'ems--archive-flag-deleted-after)
-
-
-
-
+            #'ems--archive-flag-deleted-after)
 
 (defun ems--archive-unflag-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-archive-speak-line)))
 
-
 (advice-add 'archive-unflag :after #'ems--archive-unflag-after)
-
-
-
 
 (defun ems--archive-unflag-backwards-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-archive-speak-line)))
 
-
 (advice-add 'archive-unflag-backwards :after
-	    #'ems--archive-unflag-backwards-after)
-
-
-
-
+            #'ems--archive-unflag-backwards-after)
 
 (defun ems--archive-extract-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'archive-extract :after #'ems--archive-extract-after)
-
-
-
-
 
 (defun ems--archive-extract-other-window-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'archive-extract-other-window :after
-	    #'ems--archive-extract-other-window-after)
-
-
-
-
+            #'ems--archive-extract-other-window-after)
 
 (defun ems--archive-view-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'archive-view :after #'ems--archive-view-after)
-
-
-
 
 ;;;  interactive commands
 

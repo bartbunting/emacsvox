@@ -120,15 +120,11 @@
      (when (ems-interactive-p)
        (emacsvox-icon 'task-done)))))
 
-
 (defun ems--elfeed-after (&rest _)
   "Emacsvox setup."
   (when (ems-interactive-p) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'elfeed :after #'ems--elfeed-after)
-
-
 
 (cl-loop
  for f in
@@ -141,15 +137,10 @@
        (emacsvox-icon 'close-object)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--elfeed-search-yank-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
 
-
 (advice-add 'elfeed-search-yank :after #'ems--elfeed-search-yank-after)
-
-
-
 
 ;;;  Helpers:
 
@@ -228,28 +219,23 @@
 
 ;;;  Set things up
 
-
 (defun ems--elfeed-search-mode-after (&rest _)
   "Set up Emacsvox commands."
   
   (setq goal-column 11)
   (define-key elfeed-search-mode-map "n" 'emacsvox-elfeed-next-entry)
   (define-key elfeed-search-mode-map "p"
-	      'emacsvox-elfeed-previous-entry)
+              'emacsvox-elfeed-previous-entry)
   (define-key elfeed-search-mode-map "."
-	      'emacsvox-elfeed-filter-entry-at-point)
+              'emacsvox-elfeed-filter-entry-at-point)
   (define-key elfeed-search-mode-map [right]
-	      'emacsvox-elfeed-filter-entry-at-point)
+              'emacsvox-elfeed-filter-entry-at-point)
   (define-key elfeed-search-mode-map "e"
-	      'emacsvox-elfeed-eww-entry-at-point)
+              'emacsvox-elfeed-eww-entry-at-point)
   (define-key elfeed-search-mode-map " "
-	      'emacsvox-elfeed-speak-entry-at-point))
-
+              'emacsvox-elfeed-speak-entry-at-point))
 
 (advice-add 'elfeed-search-mode :after #'ems--elfeed-search-mode-after)
-
-
-
 
 (provide 'emacsvox-elfeed)
 ;;;  end of file

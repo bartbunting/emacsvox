@@ -58,18 +58,13 @@
 
 ;;;  Speech-enable Editing:
 
-
 (defun ems--clojure-toggle-keyword-string-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'button)))
 
-
 (advice-add 'clojure-toggle-keyword-string :after
-	    #'ems--clojure-toggle-keyword-string-after)
-
-
-
+            #'ems--clojure-toggle-keyword-string-after)
 
 (cl-loop
  for f in 
@@ -111,11 +106,7 @@
 (defun ems--clojure-align-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'fill-object)))
 
-
 (advice-add 'clojure-align :after #'ems--clojure-align-after)
-
-
-
 
 (cl-loop
  for f in

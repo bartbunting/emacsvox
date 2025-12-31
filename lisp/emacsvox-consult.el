@@ -48,72 +48,67 @@
 (eval-when-compile  (require 'consult "consult" 'no-error))
 ;;;  Map Faces:
 
-
-
 (voice-setup-add-map 
-'(
-(consult-async-failed voice-lighten)
-(consult-async-finished voice-monotone)
-(consult-async-running voice-animated)
-(consult-async-split voice-brighten)
-(consult-bookmark voice-bolden)
-(consult-buffer voice-bolden)
-(consult-file voice-bolden)
-(consult-grep-context voice-animate)
-(consult-help voice-lighten)
-(consult-highlight-mark voice-animate)
-(consult-highlight-match voice-brighten)
-(consult-key voice-monotone)
-(consult-line-number voice-smoothen)
-(consult-line-number-prefix voice-lighten)
-(consult-line-number-wrapped voice-lighten)
-(consult-preview-insertion voice-bolden)
-(consult-preview-line voice-animate)
-(consult-preview-match voice-bolden)))
-
+ '(
+   (consult-async-failed voice-lighten)
+   (consult-async-finished voice-monotone)
+   (consult-async-running voice-animated)
+   (consult-async-split voice-brighten)
+   (consult-bookmark voice-bolden)
+   (consult-buffer voice-bolden)
+   (consult-file voice-bolden)
+   (consult-grep-context voice-animate)
+   (consult-help voice-lighten)
+   (consult-highlight-mark voice-animate)
+   (consult-highlight-match voice-brighten)
+   (consult-key voice-monotone)
+   (consult-line-number voice-smoothen)
+   (consult-line-number-prefix voice-lighten)
+   (consult-line-number-wrapped voice-lighten)
+   (consult-preview-insertion voice-bolden)
+   (consult-preview-line voice-animate)
+   (consult-preview-match voice-bolden)))
 
 ;;;  Interactive Commands:
 
 '(
-consult-complex-command
-consult-flymake
-consult-focus-lines
-consult-global-mark
-consult-goto-line
-consult-history
-consult-isearch-backward
-consult-isearch-forward
-consult-isearch-history
-consult-keep-lines
-consult-kmacro
-consult-line
-consult-line-multi
-consult-mark
-consult-minor-mode-menu
-consult-mode-command
-consult-narrow
-consult-narrow-help
-consult-preview-at-point
-consult-preview-at-point-mode
-consult-project-buffer
-consult-recent-file
-consult-register
-consult-register-load
-consult-register-store
-consult-theme
-consult-yank-from-kill-ring
-consult-yank-pop
-consult-yank-replace
-)
-
-
+  consult-complex-command
+  consult-flymake
+  consult-focus-lines
+  consult-global-mark
+  consult-goto-line
+  consult-history
+  consult-isearch-backward
+  consult-isearch-forward
+  consult-isearch-history
+  consult-keep-lines
+  consult-kmacro
+  consult-line
+  consult-line-multi
+  consult-mark
+  consult-minor-mode-menu
+  consult-mode-command
+  consult-narrow
+  consult-narrow-help
+  consult-preview-at-point
+  consult-preview-at-point-mode
+  consult-project-buffer
+  consult-recent-file
+  consult-register
+  consult-register-load
+  consult-register-store
+  consult-theme
+  consult-yank-from-kill-ring
+  consult-yank-pop
+  consult-yank-replace
+  )
 
 (add-hook 'consult-after-jump-hook #'emacsvox-speak-line)
 
 (cl-loop
  for f in 
  '(consult-bookmark
-consult-compile-error)
+   consult-compile-error)
  do
  (eval
   `(defadvice ,f (after emacsvox pre act comp)
@@ -121,8 +116,6 @@ consult-compile-error)
      (when (ems-interactive-p)
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
-
-
 
 (cl-loop
  for f in 
@@ -183,7 +176,6 @@ consult-project-buffer
    )
  do
  (define-key  emacsvox-consult-keymap (kbd (car b))  (cadr b)))
-
 
 (provide 'emacsvox-consult)
 ;;;  end of file

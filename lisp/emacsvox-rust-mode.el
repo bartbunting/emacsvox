@@ -70,19 +70,13 @@
      (when (ems-interactive-p)
        (emacsvox-icon 'task-done))))) 
 
-
 (defun ems--rust-dbg-wrap-or-unwrap-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (emacsvox-speak-line)))
 
-
 (advice-add 'rust-dbg-wrap-or-unwrap :after
-	    #'ems--rust-dbg-wrap-or-unwrap-after)
-
-
-
-
+            #'ems--rust-dbg-wrap-or-unwrap-after)
 
 (defun ems--rust-format-buffer-after (&rest _)
   "speak."
@@ -91,12 +85,7 @@
     (emacsvox-icon 'open-object))
    (t (emacsvox-icon 'task-done))))
 
-
 (advice-add 'rust-format-buffer :after #'ems--rust-format-buffer-after)
-
-
-
-
 
 (defun ems--rust-goto-format-problem-after (&rest _)
   "speak."
@@ -104,38 +93,24 @@
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'large-movement))))
 
-
 (advice-add 'rust-goto-format-problem :after
-	    #'ems--rust-goto-format-problem-after)
-
-
-
-
+            #'ems--rust-goto-format-problem-after)
 
 (defun ems--rust-enable-format-on-save-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'on) (message "Enabled format on save")))
 
-
 (advice-add 'rust-enable-format-on-save :after
-	    #'ems--rust-enable-format-on-save-after)
-
-
-
-
+            #'ems--rust-enable-format-on-save-after)
 
 (defun ems--rust-disable-format-on-save-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'off) (message "Disabled format on save")))
 
-
 (advice-add 'rust-disable-format-on-save :after
-	    #'ems--rust-disable-format-on-save-after)
-
-
-
+            #'ems--rust-disable-format-on-save-after)
 
 (cl-loop
  for f in

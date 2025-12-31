@@ -59,15 +59,10 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--annotate-annotate-after (&rest _)
   "speak." (when (ems-interactive-p) (dtk-notify "Added annotation")))
 
-
 (advice-add 'annotate-annotate :after #'ems--annotate-annotate-after)
-
-
-
 
 (cl-loop
  for f in 

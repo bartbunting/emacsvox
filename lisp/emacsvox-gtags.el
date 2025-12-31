@@ -78,29 +78,19 @@
                (emacsvox-icon 'large-movement)
                (emacsvox-speak-line)))))
 
-
 (defun ems--gtags-pop-stack-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'gtags-pop-stack :after #'ems--gtags-pop-stack-after)
-
-
-
-
 
 (defun ems--gtags-select-mode-after (&rest _)
   "Provide  auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'gtags-select-mode :after #'ems--gtags-select-mode-after)
-
-
-
 
 (provide 'emacsvox-gtags)
 ;;;  end of file

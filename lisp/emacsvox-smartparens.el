@@ -68,30 +68,19 @@
 
 ;;;  Advice low-level helpers:
 
-
 (defun ems--sp--pair-overlay-create-after (&rest _)
   "speak." (emacsvox-icon 'item))
 
-
 (advice-add 'sp--pair-overlay-create :after
-	    #'ems--sp--pair-overlay-create-after)
-
-
-
-
+            #'ems--sp--pair-overlay-create-after)
 
 (defun ems--sp-wrap--initialize-after (&rest _)
   "speak." (emacsvox-icon 'select-object))
 
-
 (advice-add 'sp-wrap--initialize :after
-	    #'ems--sp-wrap--initialize-after)
-
-
-
+            #'ems--sp-wrap--initialize-after)
 
 ;;;  Navigators And Modifiers:
-
 
 (defun ems--sp-backward-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -103,13 +92,8 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sp-backward-delete-char :around
-	    #'ems--sp-backward-delete-char-around)
-
-
-
-
+            #'ems--sp-backward-delete-char-around)
 
 (defun ems--sp-forward-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -120,13 +104,8 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sp-forward-delete-char :around
-	    #'ems--sp-forward-delete-char-around)
-
-
-
-
+            #'ems--sp-forward-delete-char-around)
 
 (defun ems--sp-backward-kill-word-before (&rest _)
   "Speak word before killing it."
@@ -134,15 +113,11 @@
     (when dtk-stop-immediately (dtk-stop 'all))
     (let ((start (point)) (dtk-stop-immediately nil))
       (save-excursion
-	(forward-word -1) (emacsvox-icon 'delete-object)
-	(emacsvox-speak-region (point) start)))))
-
+        (forward-word -1) (emacsvox-icon 'delete-object)
+        (emacsvox-speak-region (point) start)))))
 
 (advice-add 'sp-backward-kill-word :before
-	    #'ems--sp-backward-kill-word-before)
-
-
-
+            #'ems--sp-backward-kill-word-before)
 
 (cl-loop
  for f in

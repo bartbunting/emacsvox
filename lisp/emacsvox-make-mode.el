@@ -50,46 +50,30 @@
 
 ;;;  advice
 
-
 (defun ems--makefile-next-dependency-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'large-movement))))
 
-
 (advice-add 'makefile-next-dependency :after
-	    #'ems--makefile-next-dependency-after)
-
-
-
-
+            #'ems--makefile-next-dependency-after)
 
 (defun ems--makefile-browser-next-line-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'makefile-browser-next-line :after
-	    #'ems--makefile-browser-next-line-after)
-
-
-
-
+            #'ems--makefile-browser-next-line-after)
 
 (defun ems--makefile-browser-previous-line-after (&rest _)
   "Speak line we moved to"
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'makefile-browser-previous-line :after
-	    #'ems--makefile-browser-previous-line-after)
-
-
-
-
+            #'ems--makefile-browser-previous-line-after)
 
 (defun ems--makefile-previous-dependency-after (&rest _)
   "Speak line we moved to"
@@ -97,13 +81,8 @@
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'large-movement))))
 
-
 (advice-add 'makefile-previous-dependency :after
-	    #'ems--makefile-previous-dependency-after)
-
-
-
-
+            #'ems--makefile-previous-dependency-after)
 
 (defun ems--makefile-complete-around (orig-fun &rest args)
   "Speak what we completed"
@@ -111,58 +90,38 @@
     (cond
      ((ems-interactive-p)
       (let
-	  ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
-	(apply orig-fun args) (emacsvox-speak-region orig (point))))
+          ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
+        (apply orig-fun args) (emacsvox-speak-region orig (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'makefile-complete :around #'ems--makefile-complete-around)
-
-
-
-
 
 (defun ems--makefile-backslash-region-after (&rest _)
   "Speak how many lines we backslashed"
   (when (ems-interactive-p)
     (message "Backslashed region containing %s lines"
-	     (count-lines (region-beginning) (region-end)))
+             (count-lines (region-beginning) (region-end)))
     (emacsvox-icon 'select-object)))
 
-
 (advice-add 'makefile-backslash-region :after
-	    #'ems--makefile-backslash-region-after)
-
-
-
-
+            #'ems--makefile-backslash-region-after)
 
 (defun ems--makefile-browser-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'makefile-browser-quit :after
-	    #'ems--makefile-browser-quit-after)
-
-
-
-
+            #'ems--makefile-browser-quit-after)
 
 (defun ems--makefile-switch-to-browser-after (&rest _)
   "Provide status information"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'makefile-switch-to-browser :after
-	    #'ems--makefile-switch-to-browser-after)
-
-
-
-
+            #'ems--makefile-switch-to-browser-after)
 
 (defun ems--makefile-browser-toggle-around (orig-fun &rest args)
   "Speak what happened"
@@ -170,34 +129,25 @@
     (cond
      ((ems-interactive-p)
       (let
-	  ((this-line (max (count-lines (point-min) (point)) 1))
-	   (state nil))
-	(apply orig-fun args)
-	(setq state (makefile-browser-get-state-for-line this-line))
-	(emacsvox-icon (if state 'on 'off)) (emacsvox-speak-line)))
+          ((this-line (max (count-lines (point-min) (point)) 1))
+           (state nil))
+        (apply orig-fun args)
+        (setq state (makefile-browser-get-state-for-line this-line))
+        (emacsvox-icon (if state 'on 'off)) (emacsvox-speak-line)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'makefile-browser-toggle :around
-	    #'ems--makefile-browser-toggle-around)
-
-
-
-
+            #'ems--makefile-browser-toggle-around)
 
 (defun ems--makefile-browser-insert-selection-after (&rest _)
   "Provide status message"
   (when (ems-interactive-p)
     (message "Inserted selections into client  %s"
-	     (buffer-name makefile-browser-client))))
-
+             (buffer-name makefile-browser-client))))
 
 (advice-add 'makefile-browser-insert-selection :after
-	    #'ems--makefile-browser-insert-selection-after)
-
-
-
+            #'ems--makefile-browser-insert-selection-after)
 
 ;;;  personalities 
 

@@ -53,20 +53,14 @@
 
 ;;;  Advice commands
 
-
 (defun ems--winring-jump-to-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object)
     (emacsvox-describe-tapestry winring-name)))
 
-
 (advice-add 'winring-jump-to-configuration :after
-	    #'ems--winring-jump-to-configuration-after)
-
-
-
-
+            #'ems--winring-jump-to-configuration-after)
 
 (defun ems--winring-next-configuration-after (&rest _)
   "provide auditory feedback"
@@ -74,13 +68,8 @@
     (emacsvox-icon 'select-object)
     (emacsvox-describe-tapestry winring-name)))
 
-
 (advice-add 'winring-next-configuration :after
-	    #'ems--winring-next-configuration-after)
-
-
-
-
+            #'ems--winring-next-configuration-after)
 
 (defun ems--winring-prev-configuration-after (&rest _)
   "provide auditory feedback"
@@ -88,37 +77,24 @@
     (emacsvox-icon 'select-object)
     (emacsvox-describe-tapestry winring-name)))
 
-
 (advice-add 'winring-prev-configuration :after
-	    #'ems--winring-prev-configuration-after)
-
-
-
-
+            #'ems--winring-prev-configuration-after)
 
 (defun ems--winring-new-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'winring-new-configuration :after
-	    #'ems--winring-new-configuration-after)
-
-
-
+            #'ems--winring-new-configuration-after)
 
 (defun ems--winring-delete-configuration-after (&rest _)
   "provide auditory feedback"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'winring-delete-configuration :after
-	    #'ems--winring-delete-configuration-after)
-
-
-
+            #'ems--winring-delete-configuration-after)
 
 (provide 'emacsvox-winring)
 ;;;  end of file 

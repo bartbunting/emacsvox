@@ -122,29 +122,19 @@
      (when (ems-interactive-p) (emacsvox-icon 'yank-object))
      ad-return-value)))
 
-
 (defun ems--eat-reload-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (dtk-speak "Reloaded Eat")))
 
-
 (advice-add 'eat-reload :after #'ems--eat-reload-after)
-
-
-
-
 
 (defun ems--eat-reset-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (dtk-speak "Reset Eat")))
 
-
 (advice-add 'eat-reset :after #'ems--eat-reset-after)
-
-
-
 
 (cl-loop
  for f in
@@ -162,17 +152,12 @@
        (emacsvox-icon 'button)
        (message "%s " ,(symbol-name f))))))
 
-
 (defun ems--eat-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'eat :after #'ems--eat-after)
-
-
-
 
 ;;; Speech-Enable Terminal Emulation:
 

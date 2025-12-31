@@ -247,43 +247,28 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--notmuch-bury-or-kill-this-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'notmuch-bury-or-kill-this-buffer :after
-	    #'ems--notmuch-bury-or-kill-this-buffer-after)
-
-
-
-
+            #'ems--notmuch-bury-or-kill-this-buffer-after)
 
 (defun ems--notmuch-search-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'notmuch-search :after #'ems--notmuch-search-after)
-
-
-
-
 
 (defun ems--notmuch-search-show-thread-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'notmuch-search-show-thread :after
-	    #'ems--notmuch-search-show-thread-after)
-
-
-
+            #'ems--notmuch-search-show-thread-after)
 
 ;;; MUA:
 

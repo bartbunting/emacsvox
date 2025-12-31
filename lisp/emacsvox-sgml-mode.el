@@ -48,54 +48,33 @@
 
 ;;;  advice interactive commands 
 
-
 (defun ems--sgml-skip-tag-forward-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'sgml-skip-tag-forward :after
-	    #'ems--sgml-skip-tag-forward-after)
-
-
-
-
+            #'ems--sgml-skip-tag-forward-after)
 
 (defun ems--sgml-skip-tag-backward-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'sgml-skip-tag-backward :after
-	    #'ems--sgml-skip-tag-backward-after)
-
-
-
-
+            #'ems--sgml-skip-tag-backward-after)
 
 (defun ems--sgml-slash-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-speak-this-char (preceding-char))))
 
-
 (advice-add 'sgml-slash :after #'ems--sgml-slash-after)
-
-
-
-
 
 (defun ems--sgml-delete-tag-after (&rest _)
   "speak" (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
 
-
 (advice-add 'sgml-delete-tag :after #'ems--sgml-delete-tag-after)
-
-
-
-
 
 (defun ems--sgml-name-char-around (orig-fun &rest args)
   "Speak the character you typed"
@@ -103,29 +82,20 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(message "Type the char: ") (apply orig-fun args)
-	(emacsvox-speak-region start (point))))
+        (message "Type the char: ") (apply orig-fun args)
+        (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sgml-name-char :around #'ems--sgml-name-char-around)
-
-
-
-
 
 (defun ems--sgml-tags-invisible-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (dtk-speak "Toggled display of tags")))
 
-
 (advice-add 'sgml-tags-invisible :after
-	    #'ems--sgml-tags-invisible-after)
-
-
-
+            #'ems--sgml-tags-invisible-after)
 
 (provide  'emacsvox-sgml-mode)
 

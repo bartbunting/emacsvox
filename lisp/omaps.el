@@ -81,7 +81,6 @@
           (cdr (assoc 'lat location))
           (cdr (assoc 'lng location))))
 
-
 (defun omaps-geocode (address &optional full)
   "Geocode given address using nominatim search.. "
   (let ((result
@@ -92,7 +91,6 @@
      (t (list
          (cons 'lat (g-json-path-lookup "[0].lat" result))
          (cons 'lng (g-json-path-lookup "[0].lon" result)))))))
-
 
 (defun omaps-reverse-geocode (lat-long &optional full)
   "Reverse geocode lat-long.

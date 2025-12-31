@@ -44,7 +44,6 @@
 ;; This module speech-enables js2.
 ;;; Code:
 
-
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -81,24 +80,15 @@
     (let ((emacsvox-show-point t))
       (emacsvox-icon 'large-movement) (emacsvox-speak-line))))
 
-
 (advice-add 'js2-jump-to-definition :after
-	    #'ems--js2-jump-to-definition-after)
-
-
-
-
+            #'ems--js2-jump-to-definition-after)
 
 (defun ems--js2-mark-defun-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
 
-
 (advice-add 'js2-mark-defun :after #'ems--js2-mark-defun-after)
-
-
-
 
 (cl-loop for f in
          '(js2-mode-forward-sexp js2-mode-backward-sibling js2-next-error)
@@ -177,24 +167,15 @@
     (emacsvox-icon 'mark-object)
     (message "Narrowed to current function.")))
 
-
 (advice-add 'js2-narrow-to-defun :after
-	    #'ems--js2-narrow-to-defun-after)
-
-
-
-
+            #'ems--js2-narrow-to-defun-after)
 
 (defun ems--js2-next-error-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'js2-next-error :after #'ems--js2-next-error-after)
-
-
-
 
 ;;;  js2-mode hook
 

@@ -70,15 +70,10 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--flymake-compile-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'flymake-compile :after #'ems--flymake-compile-after)
-
-
-
 
 (provide 'emacsvox-flymake)
 ;;;  end of file

@@ -245,17 +245,11 @@
        (emacsvox-icon 'select-object)
        (emacsvox-gomoku-speak-square)))))
 
-
 (defun ems--gomoku-emacs-plays-after (&rest _)
   "Tell me where you played" (emacsvox-icon 'mark-object)
   (emacsvox-gomoku-speak-square))
 
-
 (advice-add 'gomoku-emacs-plays :after #'ems--gomoku-emacs-plays-after)
-
-
-
-
 
 (defun ems--gomoku-terminate-game-around (orig-fun &rest args)
   "speak"
@@ -266,27 +260,18 @@
       (apply orig-fun args)
       (dtk-speak
        (format "%s in %s moves  %s " result gomoku-number-of-moves
-	       emacsvox-last-message))
+               emacsvox-last-message))
       (sit-for 2))
     result))
 
-
 (advice-add 'gomoku-terminate-game :around
-	    #'ems--gomoku-terminate-game-around)
-
-
-
-
+            #'ems--gomoku-terminate-game-around)
 
 (defun ems--gomoku-after (&rest _)
   "Speech enable gomoku"
   (when (ems-interactive-p) (emacsvox-gomoku-setup-keys)))
 
-
 (advice-add 'gomoku :after #'ems--gomoku-after)
-
-
-
 
 ;;;  keybindings
 

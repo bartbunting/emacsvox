@@ -109,34 +109,21 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'help) (emacsvox-speak-buffer)))
 
-
 (advice-add 'slime-info :after #'ems--slime-info-after)
-
-
-
-
 
 (defun ems--slime-selector-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'slime-selector :after #'ems--slime-selector-after)
-
-
-
-
 
 (defun ems--slime-scratch-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'slime-scratch :after #'ems--slime-scratch-after)
-
-
 
 (add-hook
  'slime-repl-mode-hook
@@ -250,14 +237,10 @@
      (when (ems-interactive-p)
        (emacsvox-icon 'task-done)))))
 
-
 (defun ems--slime-repl-inspect-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'slime-repl-inspect :after #'ems--slime-repl-inspect-after)
-
-
 
 (cl-loop
  for f in
@@ -317,19 +300,13 @@
 
 ;;;  Inspector:
 
-
 (defun ems--slime-inspector-pop-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'slime-inspector-pop :after
-	    #'ems--slime-inspector-pop-after)
-
-
-
-
+            #'ems--slime-inspector-pop-after)
 
 (defun ems--slime-inspector-pprint-after (&rest _)
   "speak."
@@ -337,36 +314,24 @@
     (dtk-speak "Pretty printed description in other window.")
     (emacsvox-icon 'open-object)))
 
-
 (advice-add 'slime-inspector-pprint :after
-	    #'ems--slime-inspector-pprint-after)
-
-
-
-
+            #'ems--slime-inspector-pprint-after)
 
 (defun ems--slime-inspector-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'slime-inspector-quit :after
-	    #'ems--slime-inspector-quit-after)
-
-
-
+            #'ems--slime-inspector-quit-after)
 
 (defun ems--slime-inspector-toggle-verbose-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (emacsvox-speak-line)))
 
-
 (advice-add 'slime-inspector-toggle-verbose :after
-	    #'ems--slime-inspector-toggle-verbose-after)
-
-
+            #'ems--slime-inspector-toggle-verbose-after)
 
 (cl-loop
  for f in

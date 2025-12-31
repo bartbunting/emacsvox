@@ -80,18 +80,13 @@
        (message "Displayed cross-reference.")
        (emacsvox-icon 'select-object)))))
 
-
 (defun ems--xref-find-references-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'xref-find-references :after
-	    #'ems--xref-find-references-after)
-
-
-
+            #'ems--xref-find-references-after)
 
 (provide 'emacsvox-xref)
 ;;;  end of file

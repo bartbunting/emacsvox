@@ -67,17 +67,12 @@
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--yas-insert-snippet-after (&rest _)
   "Speak inserted template."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'yas-insert-snippet :after #'ems--yas-insert-snippet-after)
-
-
-
 
 (provide 'emacsvox-yasnippet)
 ;;;  end of file

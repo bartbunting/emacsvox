@@ -188,18 +188,13 @@
        (emacsvox-icon 'paragraph)
        (emacsvox-speak-paragraph)))))
 
-
 (defun ems--org-cycle-list-bullet-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
 
-
 (advice-add 'org-cycle-list-bullet :after
-	    #'ems--org-cycle-list-bullet-after)
-
-
-
+            #'ems--org-cycle-list-bullet-after)
 
 (defcustom emacsvox-org-table-after-movement-function
   #'emacsvox-org-table-speak-current-element
@@ -238,44 +233,29 @@
          (when (ems-interactive-p)
            (emacsvox-speak-line))))))))
 
-
 (defun ems--org-overview-after (&rest _)
   "speak."
   (when (ems-interactive-p) (message "Showing top-level overview.")))
 
-
 (advice-add 'org-overview :after #'ems--org-overview-after)
-
-
-
-
 
 (defun ems--org-content-after (&rest _)
   "speak."
   (when (ems-interactive-p) (message "Showing table of contents.")))
 
-
 (advice-add 'org-content :after #'ems--org-content-after)
-
-
-
-
 
 (defun ems--org-tree-to-indirect-buffer-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (message "Cloned %s"
-	     (with-current-buffer org-last-indirect-buffer
-	       (goto-char (point-min))
-	       (buffer-substring (line-beginning-position)
-				 (line-end-position))))))
-
+             (with-current-buffer org-last-indirect-buffer
+               (goto-char (point-min))
+               (buffer-substring (line-beginning-position)
+                                 (line-end-position))))))
 
 (advice-add 'org-tree-to-indirect-buffer :after
-	    #'ems--org-tree-to-indirect-buffer-after)
-
-
-
+            #'ems--org-tree-to-indirect-buffer-after)
 
 ;;;  Header insertion and relocation
 
@@ -298,7 +278,6 @@
        (emacsvox-speak-line)
        (emacsvox-icon 'open-object)))))
 
-
 (defun ems--org-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
   (let ((result (apply orig-fun args)))
@@ -308,11 +287,7 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'org-delete-char :around #'ems--org-delete-char-around)
-
-
-
 
 ;;;  cut and paste:
 
@@ -332,33 +307,28 @@
 
 ;;;  completion:
 
-
 (defun ems--org-complete-around (orig-fun &rest args)
   "Say what you completed."
   (let ((result (apply orig-fun args)))
     (let
-	((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-	 (dtk-stop-immediately t))
+        ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+         (dtk-stop-immediately t))
       (apply orig-fun args)
       (if (> (point) prior)
-	  (tts-with-punctuations 'all
-				 (if
-				     (>
-				      (length
-				       (emacsvox-get-minibuffer-contents))
-				      0)
-				     (dtk-speak
-				      (emacsvox-get-minibuffer-contents))
-				   (emacsvox-speak-line)))
-	(emacsvox-speak-completions-if-available))
+          (tts-with-punctuations 'all
+                                 (if
+                                     (>
+                                      (length
+                                       (emacsvox-get-minibuffer-contents))
+                                      0)
+                                     (dtk-speak
+                                      (emacsvox-get-minibuffer-contents))
+                                   (emacsvox-speak-line)))
+        (emacsvox-speak-completions-if-available))
       result)
     result))
 
-
 (advice-add 'org-complete :around #'ems--org-complete-around)
-
-
-
 
 ;;;  toggles:
 
@@ -399,17 +369,12 @@
                (emacsvox-icon 'select-object)
                (dtk-speak org-last-changed-timestamp)))))
 
-
 (defun ems--org-eval-in-calendar-after (&rest _)
   "Speak what is returned." 
   (dtk-speak org-ans2))
 
-
 (advice-add 'org-eval-in-calendar :after
-	    #'ems--org-eval-in-calendar-after)
-
-
-
+            #'ems--org-eval-in-calendar-after)
 
 ;;;  Agenda:
 
@@ -452,22 +417,16 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--org-agenda-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'org-agenda :after #'ems--org-agenda-after)
-
-
-
 
 ;;;  tables:
 
 ;;;  table minor mode:
-
 
 (defun ems--orgtbl-mode-after (&rest _)
   "speak." 
@@ -475,14 +434,9 @@
     (emacsvox-icon (if orgtbl-mode 'on 'off))
     (message "Turned %s org table mode." (if orgtbl-mode 'on 'off))))
 
-
 (advice-add 'orgtbl-mode :after #'ems--orgtbl-mode-after)
 
-
-
-
 ;;;  deleting chars:
-
 
 (defun ems--org-return-after (&rest _)
   "speak."
@@ -492,11 +446,7 @@
       (funcall emacsvox-org-table-after-movement-function))
      (t (emacsvox-speak-line) (emacsvox-icon 'select-object)))))
 
-
 (advice-add 'org-return :after #'ems--org-return-after)
-
-
-
 
 ;;;  Keymap update:
 
@@ -568,27 +518,18 @@
   "Call org specific actions in org mode."
   (when
       (and (ems-interactive-p) (eq major-mode 'org-mode)
-	   (fboundp 'org-end-of-line))
+           (fboundp 'org-end-of-line))
     (org-end-of-line)))
 
-
 (advice-add 'end-of-line :after #'ems--end-of-line-after)
-
-
-
-
 
 (defun ems--org-toggle-checkbox-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (emacsvox-speak-line)))
 
-
 (advice-add 'org-toggle-checkbox :after
-	    #'ems--org-toggle-checkbox-after)
-
-
-
+            #'ems--org-toggle-checkbox-after)
 
 ;;;  fix misc commands:
 
@@ -605,30 +546,20 @@
      (when (ems-interactive-p) (emacsvox-speak-line)
            (emacsvox-icon 'select-object)))))
 
-
 (defun ems--org-beginning-of-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'left)))
 
-
 (advice-add 'org-beginning-of-line :after
-	    #'ems--org-beginning-of-line-after)
-
-
-
-
+            #'ems--org-beginning-of-line-after)
 
 (defun ems--org-end-of-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'right)))
 
-
 (advice-add 'org-end-of-line :after #'ems--org-end-of-line-after)
-
-
-
 
 ;;;  global input wizard
 
@@ -639,50 +570,30 @@
 
 ;;;  org capture
 
-
 (defun ems--org-capture-goto-last-stored-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'org-capture-goto-last-stored :after
-	    #'ems--org-capture-goto-last-stored-after)
-
-
-
-
+            #'ems--org-capture-goto-last-stored-after)
 
 (defun ems--org-capture-goto-target-after (&rest _)
   "speak." (emacsvox-icon 'large-movement) (emacsvox-speak-line))
 
-
 (advice-add 'org-capture-goto-target :after
-	    #'ems--org-capture-goto-target-after)
-
-
-
-
+            #'ems--org-capture-goto-target-after)
 
 (defun ems--org-capture-finalize-after (&rest _)
   "speak." (emacsvox-icon 'save-object))
 
-
 (advice-add 'org-capture-finalize :after
-	    #'ems--org-capture-finalize-after)
-
-
-
-
+            #'ems--org-capture-finalize-after)
 
 (defun ems--org-capture-kill-after (&rest _)
   "speak." (emacsvox-icon 'close-object))
 
-
 (advice-add 'org-capture-kill :after #'ems--org-capture-kill-after)
-
-
-
 
 (defun emacsvox-org-table-speak-current-element ()
   "echoes current table element"
@@ -741,7 +652,6 @@
       " "
       (org-table-get-field)))))
 
-
 (cl-loop
  for f in
  '(org-table-next-field org-table-previous-field
@@ -751,8 +661,6 @@
   `(defadvice ,f  (after emacsvox pre act comp)
      "speak."
      (funcall emacsvox-org-table-after-movement-function))))
-
-
 
 ;;;  Additional table function:
 
@@ -777,11 +685,10 @@ Before doing so, re-align the table if necessary."
         (skip-chars-backward "^|\n\r")
         (if (looking-at " ") (forward-char 1))))))
 
-
 ;;;  Capture
 
 (defcustom emacsvox-org-hotlist  (expand-file-name
-                                   "~/.org/hotlist.org")
+                                  "~/.org/hotlist.org")
   "Emacsvox org hotlist location."
   :type 'file
   :group 'emacsvox-org)
@@ -812,20 +719,16 @@ arg just opens the file"
       ((prompt (ad-get-arg 0)) (entries (ad-get-arg 2))
        (first-key (ad-get-arg 4)) (choices nil))
     (setq choices
-	  (cond ((null first-key) entries)
-		(t (cl-caddr (assoc first-key entries)))))
+          (cond ((null first-key) entries)
+                (t (cl-caddr (assoc first-key entries)))))
     (dtk-notify
      (mapconcat
       #'(lambda (e) (format "%c: %s\n" (cl-first e) (cl-second e)))
       choices "\n"))
     (sit-for 5)))
 
-
 (advice-add 'org-export--dispatch-action :before
-	    #'ems--org-export--dispatch-action-before)
-
-
-
+            #'ems--org-export--dispatch-action-before)
 
 ;;;  Preview HTML With EWW:
 
@@ -859,18 +762,12 @@ arg just opens the file"
 
 ;;;  Fillers:
 
-
 (defun ems--org-fill-paragraph-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'fill-object) (message "Filled current paragraph")))
 
-
 (advice-add 'org-fill-paragraph :after #'ems--org-fill-paragraph-after)
-
-
-
-
 
 (defun ems--org-todo-after (&rest _)
   "speak when changing the state of a TODO item."
@@ -879,11 +776,7 @@ arg just opens the file"
     (let ((state (org-get-todo-state)))
       (if (null state) (message "State unset") (message state)))))
 
-
 (advice-add 'org-todo :after #'ems--org-todo-after)
-
-
-
 
 ;;; TVR: Conveniences
 
@@ -942,18 +835,13 @@ arg just opens the file"
 
 ;;; md export:
 
-
 (defun ems--org-md-export-as-markdown-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'org-md-export-as-markdown :after
-	    #'ems--org-md-export-as-markdown-after)
-
-
-
+            #'ems--org-md-export-as-markdown-after)
 
 ;;; Amark:
 
@@ -1064,16 +952,11 @@ Press `y' to play to next amark."
      (emacsvox-icon 'save-object)
      (emacsvox-speak-message-again)))
 
-
 (defun ems--org-export-to-file-after (&rest _)
   "speak." (emacsvox-icon 'save-object)
   (dtk-notify (format "Wrote %s" (ad-get-arg 1))))
 
-
 (advice-add 'org-export-to-file :after #'ems--org-export-to-file-after)
-
-
-
 
 (provide 'emacsvox-org)
 ;;;  end of file

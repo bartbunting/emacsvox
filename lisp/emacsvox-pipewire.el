@@ -61,18 +61,13 @@
 
 ;;; Interactive Commands:
 
-
 (defun ems--pipewire-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-toggle-audio-indentation) (emacsvox-icon 'open-object)
     (emacsvox-speak-mode-line)))
 
-
 (advice-add 'pipewire :after #'ems--pipewire-after)
-
-
-
 
 (cl-loop
  for f in 

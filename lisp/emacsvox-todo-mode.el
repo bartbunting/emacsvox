@@ -71,27 +71,17 @@
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--todo-save-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'save-object)))
 
-
 (advice-add 'todo-save :after #'ems--todo-save-after)
-
-
-
-
 
 (defun ems--todo-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'todo-quit :after #'ems--todo-quit-after)
-
-
-
 
 (provide 'emacsvox-todo-mode)
 ;;;  end of file 

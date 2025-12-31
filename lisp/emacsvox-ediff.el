@@ -91,16 +91,11 @@
   "Holds the control buffer for the most recent ediff")
 ;; Please tell me what control buffer you're using--
 
-
 (defun ems--ediff-setup-control-buffer-after (&rest _)
   (setq emacsvox-ediff-control-buffer (ad-get-arg 0)))
 
-
 (advice-add 'ediff-setup-control-buffer :after
-	    #'ems--ediff-setup-control-buffer-after)
-
-
-
+            #'ems--ediff-setup-control-buffer-after)
 
 (defsubst emacsvox-ediff-control-panel ()
   
@@ -220,16 +215,10 @@
 
 ;;;  Advice:
 
-
 (defun ems--ediff-toggle-help-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'help)))
 
-
 (advice-add 'ediff-toggle-help :after #'ems--ediff-toggle-help-after)
-
-
-
-
 
 (defun ems--ediff-next-difference-after (&rest _)
   "Speak the difference interactively."
@@ -237,13 +226,8 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-ediff-speak-current-difference)))
 
-
 (advice-add 'ediff-next-difference :after
-	    #'ems--ediff-next-difference-after)
-
-
-
-
+            #'ems--ediff-next-difference-after)
 
 (defun ems--ediff-previous-difference-after (&rest _)
   "Speak the difference interactively."
@@ -251,13 +235,8 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-ediff-speak-current-difference)))
 
-
 (advice-add 'ediff-previous-difference :after
-	    #'ems--ediff-previous-difference-after)
-
-
-
-
+            #'ems--ediff-previous-difference-after)
 
 (defun ems--ediff-status-info-after (&rest _)
   "Speak the status information"
@@ -265,50 +244,30 @@
     (save-current-buffer
       (set-buffer " *ediff-info*") (emacsvox-speak-buffer))))
 
-
 (advice-add 'ediff-status-info :after #'ems--ediff-status-info-after)
-
-
-
-
 
 (defun ems--ediff-scroll-up-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll) (message "Scrolled up buffers A and B")))
 
-
 (advice-add 'ediff-scroll-up :after #'ems--ediff-scroll-up-after)
-
-
-
-
 
 (defun ems--ediff-scroll-down-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll) (message "Scrolled down buffers A and B")))
 
-
 (advice-add 'ediff-scroll-down :after #'ems--ediff-scroll-down-after)
-
-
-
-
 
 (defun ems--ediff-toggle-split-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (if (eq ediff-split-window-function 'split-window-vertically)
-	(message "Split ediff windows vertically")
+        (message "Split ediff windows vertically")
       (message "Split ediff windows horizontally"))))
 
-
 (advice-add 'ediff-toggle-split :after #'ems--ediff-toggle-split-after)
-
-
-
-
 
 (defun ems--ediff-recenter-after (&rest _)
   "Speak"
@@ -316,12 +275,7 @@
     (emacsvox-icon 'select-object)
     (message "Refreshed the ediff display")))
 
-
 (advice-add 'ediff-recenter :after #'ems--ediff-recenter-after)
-
-
-
-
 
 (defun ems--ediff-jump-to-difference-after (&rest _)
   "Speak the difference you jumped to"
@@ -329,13 +283,8 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-ediff-speak-current-difference)))
 
-
 (advice-add 'ediff-jump-to-difference :after
-	    #'ems--ediff-jump-to-difference-after)
-
-
-
-
+            #'ems--ediff-jump-to-difference-after)
 
 (defun ems--ediff-jump-to-difference-at-point-after (&rest _)
   "speak"
@@ -343,12 +292,8 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-ediff-speak-current-difference)))
 
-
 (advice-add 'ediff-jump-to-difference-at-point :after
-	    #'ems--ediff-jump-to-difference-at-point-after)
-
-
-
+            #'ems--ediff-jump-to-difference-at-point-after)
 
 ;; advice meta panel
 
@@ -357,38 +302,24 @@
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'ediff-previous-meta-item :after
-	    #'ems--ediff-previous-meta-item-after)
-
-
-
+            #'ems--ediff-previous-meta-item-after)
 
 (defun ems--ediff-next-meta-item-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'ediff-next-meta-item :after
-	    #'ems--ediff-next-meta-item-after)
-
-
-
-
+            #'ems--ediff-next-meta-item-after)
 
 (defun ems--ediff-registry-action-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'ediff-registry-action :after
-	    #'ems--ediff-registry-action-after)
-
-
-
-
+            #'ems--ediff-registry-action-after)
 
 (defun ems--ediff-show-registry-after (&rest _)
   "speak."
@@ -396,26 +327,17 @@
     (emacsvox-icon 'open-object)
     (message "Welcome to the Ediff registry")))
 
-
 (advice-add 'ediff-show-registry :after
-	    #'ems--ediff-show-registry-after)
-
-
-
-
+            #'ems--ediff-show-registry-after)
 
 (defun ems--ediff-toggle-filename-truncation-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "turned %s file name truncation in Ediff registry"
-	     ediff-meta-truncate-filenames)))
-
+             ediff-meta-truncate-filenames)))
 
 (advice-add 'ediff-toggle-filename-truncation :after
-	    #'ems--ediff-toggle-filename-truncation-after)
-
-
-
+            #'ems--ediff-toggle-filename-truncation-after)
 
 ;;; Hooks:
 

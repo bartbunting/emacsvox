@@ -857,15 +857,15 @@ in the epub file."
     (or
      (get-text-property (point) 'epub)
      (when (eq major-mode 'dired-mode) (dired-get-filename))
-        (let ((completion-ignore-case t)
-              (emacsvox-speak-messages nil)
-              (read-file-name-completion-ignore-case t))
-          (shell-quote-argument
-           (completing-read
-            "Book: "
-            (directory-files-recursively
-             emacsvox-epub-library-directory
-             "\\.epub$" 'include-dirs)))))
+     (let ((completion-ignore-case t)
+           (emacsvox-speak-messages nil)
+           (read-file-name-completion-ignore-case t))
+       (shell-quote-argument
+        (completing-read
+         "Book: "
+         (directory-files-recursively
+          emacsvox-epub-library-directory
+          "\\.epub$" 'include-dirs)))))
     current-prefix-arg))
   (cl-declare (special emacsvox-speak-directory-settings eww-data
                        epub-this-epub emacsvox-epub-this-epub))

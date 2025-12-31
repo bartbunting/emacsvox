@@ -241,21 +241,21 @@ already disabled."
   "Emacsvox hook for Login1-resume."
   
   (ems-with-messages-silenced
-    (tts-restart)
-    (emacsvox-icon 'waking-up)
-    (emacsvox-speak-brief-time)
-    (amixer-restore amixer-alsactl-config-file)
-    (when (featurep 'soundscape) (soundscape-restart))
-    (cond
-     ((dbus-call-method 
-       :session "org.gnome.ScreenSaver" "/org/gnome/ScreenSaver"
-       "org.gnome.ScreenSaver" "GetActive") ; screen locked, gdm login
-      (and emacsvox-orca (not emacsvox-orca-handle) (emacsvox-orca-toggle))
-      (emacsvox-icon 'pwd)
-      (emacsvox-icon 'help))
-     (t                                 ;screen unlocked
-      (and emacsvox-orca emacsvox-orca-handle (emacsvox-orca-toggle)) 
-      (when (featurep 'light) (light-black))))))
+   (tts-restart)
+   (emacsvox-icon 'waking-up)
+   (emacsvox-speak-brief-time)
+   (amixer-restore amixer-alsactl-config-file)
+   (when (featurep 'soundscape) (soundscape-restart))
+   (cond
+    ((dbus-call-method 
+      :session "org.gnome.ScreenSaver" "/org/gnome/ScreenSaver"
+      "org.gnome.ScreenSaver" "GetActive") ; screen locked, gdm login
+     (and emacsvox-orca (not emacsvox-orca-handle) (emacsvox-orca-toggle))
+     (emacsvox-icon 'pwd)
+     (emacsvox-icon 'help))
+    (t                                 ;screen unlocked
+     (and emacsvox-orca emacsvox-orca-handle (emacsvox-orca-toggle)) 
+     (when (featurep 'light) (light-black))))))
 
 (add-hook 'emacsvox-dbus-resume-hook #'emacsvox-dbus-resume)
 
@@ -416,5 +416,4 @@ already disabled."
 
 (provide 'emacsvox-dbus)
 ;;;  end of file
-
 

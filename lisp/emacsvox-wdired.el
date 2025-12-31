@@ -60,55 +60,36 @@
                (emacsvox-icon 'select-object)
                (emacsvox-dired-speak-line)))))
 
-
 (defun ems--wdired-upcase-word-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (tts-with-punctuations 'some (dtk-speak "upper cased file name. "))))
 
-
 (advice-add 'wdired-upcase-word :after #'ems--wdired-upcase-word-after)
-
-
-
 
 (defun ems--wdired-capitalize-word-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (tts-with-punctuations 'some (dtk-speak "Capitalized file name. "))))
 
-
 (advice-add 'wdired-capitalize-word :after
-	    #'ems--wdired-capitalize-word-after)
-
-
-
+            #'ems--wdired-capitalize-word-after)
 
 (defun ems--wdired-downcase-word-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (tts-with-punctuations 'some
-			   (dtk-speak "Down cased file\n  name. "))))
-
+                           (dtk-speak "Down cased file\n  name. "))))
 
 (advice-add 'wdired-downcase-word :after
-	    #'ems--wdired-downcase-word-after)
-
-
-
-
+            #'ems--wdired-downcase-word-after)
 
 (defun ems--wdired-toggle-bit-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (dtk-speak "Toggled permission bit.")))
 
-
 (advice-add 'wdired-toggle-bit :after #'ems--wdired-toggle-bit-after)
-
-
-
-
 
 (defun ems--wdired-abort-changes-after (&rest _)
   "speak."
@@ -116,13 +97,8 @@
     (emacsvox-icon 'close-object)
     (tts-with-punctuations 'some (dtk-speak "Cancelling  changes. "))))
 
-
 (advice-add 'wdired-abort-changes :after
-	    #'ems--wdired-abort-changes-after)
-
-
-
-
+            #'ems--wdired-abort-changes-after)
 
 (defun ems--wdired-finish-edit-after (&rest _)
   "speak."
@@ -130,27 +106,18 @@
     (emacsvox-icon 'save-object)
     (tts-with-punctuations 'some (dtk-speak "Committed changes. "))))
 
-
 (advice-add 'wdired-finish-edit :after #'ems--wdired-finish-edit-after)
-
-
-
-
 
 (defun ems--wdired-change-to-wdired-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object)
     (tts-with-punctuations 'some
-			   (dtk-speak
-			    "Entering writeable dir ed mode. "))))
-
+                           (dtk-speak
+                            "Entering writeable dir ed mode. "))))
 
 (advice-add 'wdired-change-to-wdired-mode :after
-	    #'ems--wdired-change-to-wdired-mode-after)
-
-
-
+            #'ems--wdired-change-to-wdired-mode-after)
 
 (provide 'emacsvox-wdired)
 ;;;  end of file

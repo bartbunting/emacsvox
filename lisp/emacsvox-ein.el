@@ -150,17 +150,12 @@
        (emacsvox-speak-line)
        (emacsvox-icon 'large-movement)))))
 
-
 (defun ems--ein:tb-show-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'ein:tb-show-km :after #'ems--ein:tb-show-km-after)
-
-
-
 
 ;;; pytools:
 
@@ -255,44 +250,29 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--ein:worksheet-move-cell-up-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak "Moved cell up") (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'ein:worksheet-move-cell-up-km :after
-	    #'ems--ein:worksheet-move-cell-up-km-after)
-
-
-
-
+            #'ems--ein:worksheet-move-cell-up-km-after)
 
 (defun ems--ein:worksheet-move-cell-down-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak "Moved cell down") (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'ein:worksheet-move-cell-down-km :after
-	    #'ems--ein:worksheet-move-cell-down-km-after)
-
-
-
-
+            #'ems--ein:worksheet-move-cell-down-km-after)
 
 (defun ems--ein:worksheet-yank-cell-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-ein-speak-current-cell) (emacsvox-icon 'yank-object)))
 
-
 (advice-add 'ein:worksheet-yank-cell :after
-	    #'ems--ein:worksheet-yank-cell-after)
-
-
-
+            #'ems--ein:worksheet-yank-cell-after)
 
 (cl-loop
  for f in 
@@ -310,31 +290,21 @@
           (format "%s output"
                   (if state "Hid" "Showing"))))))))
 
-
 (defun ems--ein:worksheet-split-cell-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'ein:worksheet-split-cell-at-point :after
-	    #'ems--ein:worksheet-split-cell-at-point-after)
-
-
-
-
+            #'ems--ein:worksheet-split-cell-at-point-after)
 
 (defun ems--ein:worksheet-merge-cell-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'ein:worksheet-merge-cell :after
-	    #'ems--ein:worksheet-merge-cell-after)
-
-
-
+            #'ems--ein:worksheet-merge-cell-after)
 
 ;;; Notebooks:
 
@@ -370,31 +340,21 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--ein:notebook-jump-to-opened-notebook-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'ein:notebook-jump-to-opened-notebook :after
-	    #'ems--ein:notebook-jump-to-opened-notebook-after)
-
-
-
-
+            #'ems--ein:notebook-jump-to-opened-notebook-after)
 
 (defun ems--ein:notebook-close-km-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'ein:notebook-close-km :after
-	    #'ems--ein:notebook-close-km-after)
-
-
-
+            #'ems--ein:notebook-close-km-after)
 
 ;;; Notebooklists:
 

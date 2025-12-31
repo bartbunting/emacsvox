@@ -52,56 +52,35 @@
 
 ;;;  advice
 
-
 (defun ems--Custom-reset-current-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'item) (dtk-speak "Reset current")))
 
-
 (advice-add 'Custom-reset-current :after
-	    #'ems--Custom-reset-current-after)
-
-
-
-
+            #'ems--Custom-reset-current-after)
 
 (defun ems--Custom-reset-saved-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'unmodified-object) (dtk-speak "Reset to saved")))
 
-
 (advice-add 'Custom-reset-saved :after #'ems--Custom-reset-saved-after)
-
-
-
-
 
 (defun ems--Custom-reset-standard-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (dtk-speak "Erase customization")))
 
-
 (advice-add 'Custom-reset-standard :after
-	    #'ems--Custom-reset-standard-after)
-
-
-
-
+            #'ems--Custom-reset-standard-after)
 
 (defun ems--Custom-set-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (dtk-speak "Set for current session")))
 
-
 (advice-add 'Custom-set :after #'ems--Custom-set-after)
-
-
-
-
 
 (defun ems--Custom-save-around (orig-fun &rest args)
   "Silence messages and produce auditory feedback."
@@ -111,72 +90,42 @@
       (emacsvox-icon 'save-object) (dtk-speak "Set and saved"))
     result))
 
-
 (advice-add 'Custom-save :around #'ems--Custom-save-around)
-
-
-
-
 
 (defun ems--Custom-buffer-done-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'Custom-buffer-done :after #'ems--Custom-buffer-done-after)
-
-
-
-
 
 (defun ems--customize-save-customized-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
     (emacsvox-icon 'save-object) (message "Saved customizations.")))
 
-
 (advice-add 'customize-save-customized :after
-	    #'ems--customize-save-customized-after)
-
-
-
-
+            #'ems--customize-save-customized-after)
 
 (defun ems--custom-save-all-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
     (emacsvox-icon 'save-object) (message "Saved customizations.")))
 
-
 (advice-add 'custom-save-all :after #'ems--custom-save-all-after)
-
-
-
-
 
 (defun ems--customize-save-customized-around (orig-fun &rest args)
   "Silence speech." (let ((dtk-quiet t)) (apply orig-fun args)))
 
-
 (advice-add 'customize-save-customized :around
-	    #'ems--customize-save-customized-around)
-
-
-
-
+            #'ems--customize-save-customized-around)
 
 (defun ems--custom-set-after (&rest _)
   "speak. "
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (message "Set all updates.")))
 
-
 (advice-add 'custom-set :after #'ems--custom-set-after)
-
-
-
-
 
 (defun ems--customize-after (&rest _)
   "speak"
@@ -184,12 +133,7 @@
     (emacsvox-icon 'open-object) (emacsvox-custom-goto-group)
     (emacsvox-speak-line)))
 
-
 (advice-add 'customize :after #'ems--customize-after)
-
-
-
-
 
 (defun ems--customize-group-after (&rest _)
   "speak"
@@ -197,24 +141,14 @@
     (emacsvox-icon 'open-object) (emacsvox-custom-goto-group)
     (emacsvox-speak-line)))
 
-
 (advice-add 'customize-group :after #'ems--customize-group-after)
-
-
-
-
 
 (defun ems--customize-browse-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'customize-browse :after #'ems--customize-browse-after)
-
-
-
-
 
 (defun ems--customize-option-after (&rest _)
   "speak"
@@ -224,12 +158,7 @@
       (search-forward (custom-unlispify-tag-name symbol))
       (forward-line 0) (emacsvox-speak-line))))
 
-
 (advice-add 'customize-option :after #'ems--customize-option-after)
-
-
-
-
 
 (defun ems--customize-apropos-after (&rest _)
   "speak"
@@ -237,12 +166,7 @@
     (emacsvox-icon 'open-object) (forward-line 0)
     (emacsvox-speak-line)))
 
-
 (advice-add 'customize-apropos :after #'ems--customize-apropos-after)
-
-
-
-
 
 (defun ems--customize-variable-after (&rest _)
   "speak"
@@ -252,33 +176,19 @@
       (search-forward (custom-unlispify-tag-name symbol))
       (forward-line 0) (emacsvox-speak-line))))
 
-
 (advice-add 'customize-variable :after #'ems--customize-variable-after)
-
-
-
-
 
 (defun ems--Custom-goto-parent-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'Custom-goto-parent :after #'ems--Custom-goto-parent-after)
-
-
-
-
 
 (defun ems--Custom-newline-after (&rest _)
   "speak" (when (ems-interactive-p) (emacsvox-icon 'button)))
 
-
 (advice-add 'Custom-newline :after #'ems--Custom-newline-after)
-
-
-
 
 ;;;  custom hook
 

@@ -85,7 +85,6 @@ If in locate-mode, speak full pathname."
 
 ;;;   advice:
 
-
 (defun ems--dired-sort-toggle-or-edit-around (orig-fun &rest args)
   "speak."
   (let ((result (apply orig-fun args)))
@@ -96,34 +95,20 @@ If in locate-mode, speak full pathname."
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'dired-sort-toggle-or-edit :around
-	    #'ems--dired-sort-toggle-or-edit-around)
-
-
-
-
+            #'ems--dired-sort-toggle-or-edit-around)
 
 (defun ems--dired-query-before (&rest _)
   "Produce auditory icon." (emacsvox-icon 'ask-short-question))
 
-
 (advice-add 'dired-query :before #'ems--dired-query-before)
-
-
-
-
 
 (defun ems--dired-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'dired-quit :after #'ems--dired-quit-after)
-
-
-
 
 (defun emacsvox-dired-initialize ()
   "Set up emacsvox dired."
@@ -142,24 +127,19 @@ If in locate-mode, speak full pathname."
        (emacsvox-icon 'open-object)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--dired-find-file-around (orig-fun &rest args)
   "Produce an auditory icon."
   (let ((result (apply orig-fun args)))
     (cond
      ((ems-interactive-p)
       (let ((directory-p (file-directory-p (dired-get-filename t t))))
-	(apply orig-fun args)
-	(when directory-p (emacsvox-dired-label-fields))
-	(emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
+        (apply orig-fun args)
+        (when directory-p (emacsvox-dired-label-fields))
+        (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'dired-find-file :around #'ems--dired-find-file-around)
-
-
-
 
 (cl-loop
  for  f in
@@ -197,42 +177,27 @@ If in locate-mode, speak full pathname."
 ;; We speak the line moved to, and indicate the state change
 ;; with an auditory icon.
 
-
 (defun ems--dired-mark-after (&rest _)
   "Produce an auditory icon."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-dired-speak-line)))
 
-
 (advice-add 'dired-mark :after #'ems--dired-mark-after)
-
-
-
-
 
 (defun ems--dired-flag-file-deletion-after (&rest _)
   "Produce an auditory icon indicating that a file was marked for deletion."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-dired-speak-line)))
 
-
 (advice-add 'dired-flag-file-deletion :after
-	    #'ems--dired-flag-file-deletion-after)
-
-
-
-
+            #'ems--dired-flag-file-deletion-after)
 
 (defun ems--dired-unmark-after (&rest _)
   "Give speech feedback. Also provide an auditory icon."
   (when (ems-interactive-p)
     (emacsvox-icon 'deselect-object) (emacsvox-dired-speak-line)))
 
-
 (advice-add 'dired-unmark :after #'ems--dired-unmark-after)
-
-
-
 
 ;;;   labeling fields in the dired buffer:
 

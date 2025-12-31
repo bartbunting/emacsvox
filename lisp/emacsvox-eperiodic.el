@@ -148,20 +148,14 @@
 
 ;;;  advice interactive commands
 
-
 (defun ems--eperiodic-find-element-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-eperiodic-speak-current-element)
     (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'eperiodic-find-element :after
-	    #'ems--eperiodic-find-element-after)
-
-
-
-
+            #'ems--eperiodic-find-element-after)
 
 (defun ems--eperiodic-previous-element-after (&rest _)
   "speak."
@@ -169,13 +163,8 @@
     (dtk-speak (emacsvox-eperiodic-name-element-at-point))
     (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'eperiodic-previous-element :after
-	    #'ems--eperiodic-previous-element-after)
-
-
-
-
+            #'ems--eperiodic-previous-element-after)
 
 (defun ems--eperiodic-next-element-after (&rest _)
   "speak."
@@ -183,33 +172,20 @@
     (dtk-speak (emacsvox-eperiodic-name-element-at-point))
     (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'eperiodic-next-element :after
-	    #'ems--eperiodic-next-element-after)
-
-
-
+            #'ems--eperiodic-next-element-after)
 
 (defun ems--eperiodic-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'eperiodic :after #'ems--eperiodic-after)
-
-
-
 
 (defun ems--eperiodic-move-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'eperiodic-move :after #'ems--eperiodic-move-after)
-
-
-
-
 
 (defun ems--eperiodic-show-element-info-after (&rest _)
   "Speak displayed info."
@@ -218,26 +194,16 @@
       (unless b (error "Cannot find displayed info."))
       (save-current-buffer (set-buffer b) (emacsvox-speak-buffer)))))
 
-
 (advice-add 'eperiodic-show-element-info :after
-	    #'ems--eperiodic-show-element-info-after)
-
-
-
-
+            #'ems--eperiodic-show-element-info-after)
 
 (defun ems--eperiodic-bury-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'eperiodic-bury-buffer :after
-	    #'ems--eperiodic-bury-buffer-after)
-
-
-
-
+            #'ems--eperiodic-bury-buffer-after)
 
 (defun ems--eperiodic-cycle-view-after (&rest _)
   "speak."
@@ -245,12 +211,8 @@
     (emacsvox-icon 'select-object)
     (message "View %s" eperiodic-colour-element-function)))
 
-
 (advice-add 'eperiodic-cycle-view :after
-	    #'ems--eperiodic-cycle-view-after)
-
-
-
+            #'ems--eperiodic-cycle-view-after)
 
 (provide 'emacsvox-eperiodic)
 ;;;  end of file

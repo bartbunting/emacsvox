@@ -93,17 +93,12 @@
    (substring pianobar-current-song
               (+ 2 (string-match "|>" pianobar-current-song)))))
 
-
 (defun ems--pianobar-currently-playing-around (orig-fun &rest args)
   "Override with our own notifier."
   (message (emacsvox-pianobar-current-song)))
 
-
 (advice-add 'pianobar-currently-playing :around
-	    #'ems--pianobar-currently-playing-around)
-
-
-
+            #'ems--pianobar-currently-playing-around)
 
 ;;;  Advice Interactive Commands:
 
@@ -124,39 +119,35 @@
   (with-current-buffer pianobar-buffer
     (define-key pianobar-key-map "l" 'pianobar-love-current-song)
     (define-key pianobar-key-map "t"
-		'emacsvox-pianobar-electric-mode-toggle)
+                'emacsvox-pianobar-electric-mode-toggle)
     (define-key pianobar-key-map (kbd "RET")
-		'emacsvox-pianobar-send-raw)
+                'emacsvox-pianobar-send-raw)
     (define-key pianobar-key-map [right] 'pianobar-next-song)
     (dotimes (i 10)
       (define-key pianobar-key-map (format "%s" i)
-		  'emacsvox-pianobar-switch-to-preset))
+                  'emacsvox-pianobar-switch-to-preset))
     (dotimes (i 25)
       (define-key pianobar-key-map (format "%c" (+ i 65))
-		  'emacsvox-pianobar-switch-to-preset))
+                  'emacsvox-pianobar-switch-to-preset))
     (define-key pianobar-key-map [up]
-		'emacsvox-pianobar-previous-preset)
+                'emacsvox-pianobar-previous-preset)
     (define-key pianobar-key-map [down]
-		'emacsvox-pianobar-next-preset)
+                'emacsvox-pianobar-next-preset)
     (define-key pianobar-key-map ","
-		'emacsvox-pianobar-previous-preset)
+                'emacsvox-pianobar-previous-preset)
     (define-key pianobar-key-map "." 'emacsvox-pianobar-next-preset)
     (define-key pianobar-key-map "<"
-		'emacsvox-pianobar-previous-preset)
+                'emacsvox-pianobar-previous-preset)
     (define-key pianobar-key-map ">" 'emacsvox-pianobar-next-preset)
     (define-key pianobar-key-map "(" 'emacsvox-pianobar-volume-down)
     (define-key pianobar-key-map [prior]
-		'emacsvox-pianobar-volume-down)
+                'emacsvox-pianobar-volume-down)
     (define-key pianobar-key-map ")" 'emacsvox-pianobar-volume-up)
     (define-key pianobar-key-map [next] 'emacsvox-pianobar-volume-up)
     (use-local-map pianobar-key-map) (emacsvox-speak-mode-line)
     (bury-buffer) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'pianobar :after #'ems--pianobar-after)
-
-
-
 
 ;; Advice all actions to play a pre-auditory icon
 
@@ -181,32 +172,22 @@
      (when (ems-interactive-p)
        (emacsvox-icon 'item)))))
 
-
 (defun ems--pianobar-window-toggle-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (let ((state (get-buffer-window pianobar-buffer)))
       (cond
        (state (emacsvox-icon 'open-object)
-	      (dtk-speak "Displayed pianobar"))
+              (dtk-speak "Displayed pianobar"))
        (t (emacsvox-icon 'close-object) (dtk-speak "Hid Pianobar "))))))
 
-
 (advice-add 'pianobar-window-toggle :after
-	    #'ems--pianobar-window-toggle-after)
-
-
-
-
+            #'ems--pianobar-window-toggle-after)
 
 (defun ems--pianobar-quit-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'pianobar-quit :after #'ems--pianobar-quit-after)
-
-
-
 
 ;;;  emacsvox-pianobar
 

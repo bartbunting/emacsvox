@@ -117,10 +117,8 @@
 \\{emacsvox-m-player-mode-map}"
   (progn
     (setq-local ems--media-data (make-ems--media-data)
-          buffer-undo-list t
-          buffer-read-only nil)))
-
-
+                buffer-undo-list t
+                buffer-read-only nil)))
 
 (defvar emacsvox-m-player-process nil
   "Process handle to m-player.")
@@ -600,7 +598,6 @@ dynamic playlist. "
           (t
            (file-name-base  resource))))))))
 
-
 (defun emacsvox-m-player-using-openal ()
   "Use openal.  "
   (interactive)
@@ -614,7 +611,6 @@ dynamic playlist. "
 (defvar emacsvox-m-player-hrtf-options
   '("-af" "hrtf=s" "-af" "resample=48000")
   "Additional options to use built-in HRTF.")
-
 
 (defun emacsvox-m-player-using-hrtf ()
   "Add af resample=48000,hrtf to startup options.
@@ -633,7 +629,6 @@ This will work if the soundcard is set to 48000."
   (let ((emacsvox-m-player-options
          (append emacsvox-m-player-options (list "-shuffle"))))
     (call-interactively #'emacsvox-m-player)))
-
 
 (defun emacsvox-m-player-loop (&optional raw)
   "M-Player with repeat indefinitely  turned on.
@@ -1491,7 +1486,6 @@ flat classical club dance full-bass full-bass-and-treble
  for i from 1 to 9 do
  (define-key emacsvox-m-player-mode-map
              (kbd (format "%s" i)) 'emacsvox-m-player-volume-set))
-
 
 (declare-function emacsvox-google-result-url-prefix "emacsvox-google" nil)
 ;; yt player using mplayer is broken  due to xml manifests

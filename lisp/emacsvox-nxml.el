@@ -141,25 +141,19 @@
 
 ;;;  Advice interactive commands
 
-
 (defun ems--nxml-electric-slash-around (orig-fun &rest args)
   "Speak."
   (let ((result (apply orig-fun args)))
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))
-	(when (= (preceding-char) 62) (emacsvox-icon 'close-object))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))
+        (when (= (preceding-char) 62) (emacsvox-icon 'close-object))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'nxml-electric-slash :around
-	    #'ems--nxml-electric-slash-around)
-
-
-
-
+            #'ems--nxml-electric-slash-around)
 
 (defun ems--nxml-complete-around (orig-fun &rest args)
   "Speak."
@@ -167,24 +161,17 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'nxml-complete :around #'ems--nxml-complete-around)
-
-
-
 
 (defun ems--nxml-insert-xml-declaration-after (&rest _)
   "Speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'nxml-insert-xml-declaration :after
-	    #'ems--nxml-insert-xml-declaration-after)
-
-
+            #'ems--nxml-insert-xml-declaration-after)
 
 (cl-loop for f in 
          '(nxml-backward-up-element

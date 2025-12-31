@@ -53,52 +53,32 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--shx-after (&rest _)
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'shx :after #'ems--shx-after)
-
-
-
-
 
 (defun ems--shx-send-input-after (&rest _)
   "Flush any ongoing speech." (when (ems-interactive-p) (dtk-stop)))
 
-
 (advice-add 'shx-send-input :after #'ems--shx-send-input-after)
-
-
-
-
 
 (defun ems--shx-send-input-or-copy-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'shx-send-input-or-copy-line :after
-	    #'ems--shx-send-input-or-copy-line-after)
-
-
-
-
+            #'ems--shx-send-input-or-copy-line-after)
 
 (defun ems--shx--turn-on-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'on) (message "Turned on shx")))
 
-
 (advice-add 'shx--turn-on :after #'ems--shx--turn-on-after)
-
-
-
 
 (defun ems--shx-send-input-or-open-thing-after (&rest _)
   "speak."
@@ -106,13 +86,8 @@
     (unless (eq major-mode 'shell-mode)
       (emacsvox-speak-line) (emacsvox-icon 'open-object))))
 
-
 (advice-add 'shx-send-input-or-open-thing :after
-	    #'ems--shx-send-input-or-open-thing-after)
-
-
-
-
+            #'ems--shx-send-input-or-open-thing-after)
 
 (defun ems--shx-global-mode-after (&rest _)
   "speak."
@@ -120,12 +95,7 @@
     (message "Turned %s shx globally" (if shx-global-mode "on" "off"))
     (emacsvox-icon (if shx-global-mode 'on 'off))))
 
-
 (advice-add 'shx-global-mode :after #'ems--shx-global-mode-after)
-
-
-
-
 
 (defun ems--shx-magic-insert-around (orig-fun &rest args)
   "Speak word or completion."
@@ -134,21 +104,17 @@
      ((ems-interactive-p)
       (ems-with-messages-silenced
        (let ((orig (point)) (count (ad-get-arg 0)))
-	 (setq count (or count 1)) (apply orig-fun args)
-	 (cond
-	  ((= (point) (+ count orig))
-	   (save-excursion (forward-word -1) (emacsvox-speak-word)))
-	  (t (emacsvox-icon 'complete)
-	     (emacsvox-speak-region (comint-line-beginning-position)
-				     (point)))))))
+         (setq count (or count 1)) (apply orig-fun args)
+         (cond
+          ((= (point) (+ count orig))
+           (save-excursion (forward-word -1) (emacsvox-speak-word)))
+          (t (emacsvox-icon 'complete)
+             (emacsvox-speak-region (comint-line-beginning-position)
+                                    (point)))))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'shx-magic-insert :around #'ems--shx-magic-insert-around)
-
-
-
 
 ;;;  Additional shx commands:
 

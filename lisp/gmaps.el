@@ -176,7 +176,6 @@
   (format "%slatlng=%s&sensor=false&key=%s"
           gmaps-geocoder-base location gmaps-api-key))
 
-
 (defun gmaps-geocode (address &optional raw-p)
   "Geocode given address.
 Optional argument `raw-p' returns complete JSON  object."

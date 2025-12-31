@@ -686,7 +686,7 @@ specifies index of move, default is final index."
   (interactive)
   
   (dtk-speak (emacsvox-chess-describe-move chess-module-game
-                                            chess-display-index)))
+                                           chess-display-index)))
 
 ;;;  Interactive Commands:
 (cl-loop
@@ -723,19 +723,13 @@ specifies index of move, default is final index."
       msg
       (emacsvox-chess-describe-move chess-module-game chess-display-index)))))
 
-
 (defun ems--chess-display-undo-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'progress)
     (dtk-speak (emacsvox-chess-describe-move chess-module-game))))
 
-
 (advice-add 'chess-display-undo :after #'ems--chess-display-undo-after)
-
-
-
-
 
 (defun ems--chess-display-move-first-around (orig-fun &rest args)
   "speak."
@@ -747,13 +741,8 @@ specifies index of move, default is final index."
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'chess-display-move-first :around
-	    #'ems--chess-display-move-first-around)
-
-
-
-
+            #'ems--chess-display-move-first-around)
 
 (defun ems--chess-display-move-backward-around (orig-fun &rest args)
   "speak."
@@ -765,13 +754,8 @@ specifies index of move, default is final index."
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'chess-display-move-backward :around
-	    #'ems--chess-display-move-backward-around)
-
-
-
-
+            #'ems--chess-display-move-backward-around)
 
 (defun ems--chess-display-move-forward-around (orig-fun &rest args)
   "speak."
@@ -783,13 +767,8 @@ specifies index of move, default is final index."
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'chess-display-move-forward :around
-	    #'ems--chess-display-move-forward-around)
-
-
-
-
+            #'ems--chess-display-move-forward-around)
 
 (defun ems--chess-display-move-last-around (orig-fun &rest args)
   "speak."
@@ -801,13 +780,8 @@ specifies index of move, default is final index."
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'chess-display-move-last :around
-	    #'ems--chess-display-move-last-around)
-
-
-
-
+            #'ems--chess-display-move-last-around)
 
 (defun ems--chess-display-select-piece-around (orig-fun &rest args)
   "speak."
@@ -815,23 +789,19 @@ specifies index of move, default is final index."
     (cond
      ((ems-interactive-p)
       (let ((square (get-text-property (point) 'chess-coord)))
-	(cond
-	 ((and (consp chess-display-last-selected)
-	       (= (point) (car chess-display-last-selected)))
-	  (message "Deselected") (emacsvox-icon 'deselect-object))
-	 ((null chess-display-last-selected)
-	  (dtk-speak-list (emacsvox-chess-describe-square square))
-	  (emacsvox-icon 'select-object)))
-	(apply orig-fun args)))
+        (cond
+         ((and (consp chess-display-last-selected)
+               (= (point) (car chess-display-last-selected)))
+          (message "Deselected") (emacsvox-icon 'deselect-object))
+         ((null chess-display-last-selected)
+          (dtk-speak-list (emacsvox-chess-describe-square square))
+          (emacsvox-icon 'select-object)))
+        (apply orig-fun args)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'chess-display-select-piece :around
-	    #'ems--chess-display-select-piece-around)
-
-
-
+            #'ems--chess-display-select-piece-around)
 
 ;;; emacsvox Handler:
 

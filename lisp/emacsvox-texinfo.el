@@ -63,57 +63,37 @@
 
 ;;;  advice
 
-
 (defun ems--texinfo-insert-@end-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'texinfo-insert-@end :after
-	    #'ems--texinfo-insert-@end-after)
-
-
-
-
+            #'ems--texinfo-insert-@end-after)
 
 (defun ems--TeXinfo-insert-environment-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'TeXinfo-insert-environment :after
-	    #'ems--TeXinfo-insert-environment-after)
-
-
-
-
+            #'ems--TeXinfo-insert-environment-after)
 
 (defun ems--texinfo-insert-@item-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
 
-
 (advice-add 'texinfo-insert-@item :after
-	    #'ems--texinfo-insert-@item-after)
-
-
-
-
+            #'ems--texinfo-insert-@item-after)
 
 (defun ems--texinfo-insert-@node-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'texinfo-insert-@node :after
-	    #'ems--texinfo-insert-@node-after)
-
-
-
+            #'ems--texinfo-insert-@node-after)
 
 (provide 'emacsvox-texinfo)
 ;;;  end of file 

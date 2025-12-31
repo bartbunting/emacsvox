@@ -64,11 +64,7 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'projectile-vc :after #'ems--projectile-vc-after)
-
-
-
 
 (cl-loop
  for f in
@@ -98,12 +94,8 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'projectile-edit-dir-locals :after
-	    #'ems--projectile-edit-dir-locals-after)
-
-
-
+            #'ems--projectile-edit-dir-locals-after)
 
 (cl-loop
  for f in

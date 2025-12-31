@@ -79,28 +79,17 @@ fly spell checking."
 
 ;;;  advice
 
-
 (defun ems--flyspell-buffer-around (orig-fun &rest args)
   "Silence icon."
   (let ((emacsvox-use-icons nil)) (apply orig-fun args)))
 
-
 (advice-add 'flyspell-buffer :around #'ems--flyspell-buffer-around)
-
-
-
-
 
 (defun ems--flyspell-region-around (orig-fun &rest args)
   "Silence icon."
   (let ((emacsvox-use-icons nil)) (apply orig-fun args)))
 
-
 (advice-add 'flyspell-region :around #'ems--flyspell-region-around)
-
-
-
-
 
 (defun ems--flyspell-auto-correct-word-around (orig-fun &rest args)
   "Speak the correction we inserted."
@@ -108,25 +97,20 @@ fly spell checking."
     (cond
      ((ems-interactive-p)
       (ems-with-messages-silenced (apply orig-fun args)
-				  (dtk-speak
-				   (car (flyspell-get-word nil)))
-				  (when (sit-for 1)
-				    (dtk-notify
-				     (cl-second
-				      flyspell-auto-correct-ring)))
-				  (when (sit-for 1)
-				    (emacsvox-speak-message-again))
-				  (emacsvox-icon 'select-object)))
+                                  (dtk-speak
+                                   (car (flyspell-get-word nil)))
+                                  (when (sit-for 1)
+                                    (dtk-notify
+                                     (cl-second
+                                      flyspell-auto-correct-ring)))
+                                  (when (sit-for 1)
+                                    (emacsvox-speak-message-again))
+                                  (emacsvox-icon 'select-object)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'flyspell-auto-correct-word :around
-	    #'ems--flyspell-auto-correct-word-around)
-
-
-
-
+            #'ems--flyspell-auto-correct-word-around)
 
 (defun ems--flyspell-unhighlight-at-before (&rest _)
   "handle highlight/unhighlight."
@@ -134,16 +118,12 @@ fly spell checking."
     (while overlay-list
       (setq o (car overlay-list))
       (when (flyspell-overlay-p o)
-	(put-text-property (overlay-start o) (overlay-end o)
-			   'personality nil))
+        (put-text-property (overlay-start o) (overlay-end o)
+                           'personality nil))
       (setq overlay-list (cdr overlay-list)))))
 
-
 (advice-add 'flyspell-unhighlight-at :before
-	    #'ems--flyspell-unhighlight-at-before)
-
-
-
+            #'ems--flyspell-unhighlight-at-before)
 
 (add-hook
  'flyspell-incorrect-hook
@@ -183,16 +163,11 @@ fly spell checking."
      (when (ems-interactive-p)
        (dtk-speak (car (flyspell-get-word nil)))))))
 
-
 (defun ems--flyspell-goto-next-error-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'flyspell-goto-next-error :after
-	    #'ems--flyspell-goto-next-error-after)
-
-
-
+            #'ems--flyspell-goto-next-error-after)
 
 (provide 'emacsvox-flyspell)
 ;;;  emacs local variables

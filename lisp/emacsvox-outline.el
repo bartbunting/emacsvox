@@ -73,7 +73,6 @@
 
 (defvar ems--voiceify-overlays)
 
-
 (defun ems--outline-flag-region-around (orig-fun &rest args)
   "Reflect hide/show via property invisible as well"
   (let
@@ -82,14 +81,10 @@
     (apply orig-fun args) (when (zerop beg) (setq beg (point-min)))
     (with-silent-modifications
       (put-text-property beg end 'invisible
-			 (if (ad-get-arg 2) 'outline nil)))))
-
+                         (if (ad-get-arg 2) 'outline nil)))))
 
 (advice-add 'outline-flag-region :around
-	    #'ems--outline-flag-region-around)
-
-
-
+            #'ems--outline-flag-region-around)
 
 ;;; Misc Commands:
 
@@ -106,20 +101,14 @@
 
 ;;;   Hiding and showing subtrees
 
-
 (defun ems--outline-show-only-headings-after (&rest _)
   "Produce an auditory icon"
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object)
     (message "Hid the body directly following this heading")))
 
-
 (advice-add 'outline-show-only-headings :after
-	    #'ems--outline-show-only-headings-after)
-
-
-
-
+            #'ems--outline-show-only-headings-after)
 
 (defun ems--outline-hide-entry-after (&rest _)
   "Produce an auditory icon"
@@ -127,12 +116,7 @@
     (emacsvox-icon 'close-object)
     (message "Hid the body directly following this heading")))
 
-
 (advice-add 'outline-hide-entry :after #'ems--outline-hide-entry-after)
-
-
-
-
 
 (defun ems--outline-show-entry-after (&rest _)
   "Produce an auditory icon"
@@ -140,12 +124,7 @@
     (emacsvox-icon 'open-object)
     (message "Exposed body directly following current heading")))
 
-
 (advice-add 'outline-show-entry :after #'ems--outline-show-entry-after)
-
-
-
-
 
 (defun ems--outline-hide-body-after (&rest _)
   "Produce an auditory icon"
@@ -153,12 +132,7 @@
     (emacsvox-icon 'close-object)
     (message "Hid all of the buffer except for header lines")))
 
-
 (advice-add 'outline-hide-body :after #'ems--outline-hide-body-after)
-
-
-
-
 
 (defun ems--outline-show-all-after (&rest _)
   "Produce an auditory icon"
@@ -166,12 +140,7 @@
     (emacsvox-icon 'open-object)
     (message "Exposed all text in the buffer")))
 
-
 (advice-add 'outline-show-all :after #'ems--outline-show-all-after)
-
-
-
-
 
 (defun ems--outline-hide-subtree-after (&rest _)
   "Produce an auditory icon"
@@ -179,13 +148,8 @@
     (emacsvox-icon 'close-object)
     (message "Hid everything at deeper levels from current heading")))
 
-
 (advice-add 'outline-hide-subtree :after
-	    #'ems--outline-hide-subtree-after)
-
-
-
-
+            #'ems--outline-hide-subtree-after)
 
 (defun ems--outline-hide-leaves-after (&rest _)
   "Produce an auditory icon"
@@ -193,13 +157,8 @@
     (emacsvox-icon 'close-object)
     (message "Hid all of the body at deeper levels")))
 
-
 (advice-add 'outline-hide-leaves :after
-	    #'ems--outline-hide-leaves-after)
-
-
-
-
+            #'ems--outline-hide-leaves-after)
 
 (defun ems--outline-show-subtree-after (&rest _)
   "Produce an auditory icon"
@@ -208,13 +167,8 @@
     (message
      "Exposed everything after current heading at deeper levels")))
 
-
 (advice-add 'outline-show-subtree :after
-	    #'ems--outline-show-subtree-after)
-
-
-
-
+            #'ems--outline-show-subtree-after)
 
 (defun ems--outline-hide-sublevels-after (&rest _)
   "Produce an auditory icon"
@@ -222,13 +176,8 @@
     (emacsvox-icon 'close-object)
     (message "Hid everything except the top  %s levels" (ad-get-arg 0))))
 
-
 (advice-add 'outline-hide-sublevels :after
-	    #'ems--outline-hide-sublevels-after)
-
-
-
-
+            #'ems--outline-hide-sublevels-after)
 
 (defun ems--outline-hide-other-after (&rest _)
   "Produce an auditory icon"
@@ -236,12 +185,7 @@
     (emacsvox-icon 'close-object)
     (message "Hid everything except current body and parent headings")))
 
-
 (advice-add 'outline-hide-other :after #'ems--outline-hide-other-after)
-
-
-
-
 
 (defun ems--outline-show-branches-after (&rest _)
   "Produce an auditory icon"
@@ -250,13 +194,8 @@
     (message
      "Exposed all subheadings while leaving their bodies hidden")))
 
-
 (advice-add 'outline-show-branches :after
-	    #'ems--outline-show-branches-after)
-
-
-
-
+            #'ems--outline-show-branches-after)
 
 (defun ems--outline-show-children-after (&rest _)
   "Produce an auditory icon"
@@ -264,12 +203,8 @@
     (emacsvox-icon 'open-object)
     (message "Exposed subheadings below current level")))
 
-
 (advice-add 'outline-show-children :after
-	    #'ems--outline-show-children-after)
-
-
-
+            #'ems--outline-show-children-after)
 
 ;;;   Interactive speaking of sections
 

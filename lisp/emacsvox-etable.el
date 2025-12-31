@@ -56,25 +56,20 @@
   
   (when table-cell-map
     (cl-loop for k in
-	     (where-is-internal 'emacsvox-self-insert-command
-				(list table-cell-map))
-	     do
-	     (define-key table-cell-map k
-			 '*table--cell-self-insert-command))
+             (where-is-internal 'emacsvox-self-insert-command
+                                (list table-cell-map))
+             do
+             (define-key table-cell-map k
+                         '*table--cell-self-insert-command))
     (cl-loop for k in
-	     '(("S-TAB" table-backward-cell)
-	       ("." emacsvox-etable-speak-cell))
-	     do (emacsvox-keymap-update table-cell-map k))))
-
+             '(("S-TAB" table-backward-cell)
+               ("." emacsvox-etable-speak-cell))
+             do (emacsvox-keymap-update table-cell-map k))))
 
 (advice-add 'table--make-cell-map :after
-	    #'ems--table--make-cell-map-after)
-
-
-
+            #'ems--table--make-cell-map-after)
 
 ;;;  Advice edit commands
-
 
 (defun ems--*table--cell-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -85,13 +80,8 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add '*table--cell-delete-char :around
-	    #'ems--*table--cell-delete-char-around)
-
-
-
-
+            #'ems--*table--cell-delete-char-around)
 
 (defun ems--*table--cell-delete-backward-char-around
     (orig-fun &rest args)
@@ -104,13 +94,8 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add '*table--cell-delete-backward-char :around
-	    #'ems--*table--cell-delete-backward-char-around)
-
-
-
-
+            #'ems--*table--cell-delete-backward-char-around)
 
 (defun ems--*table--cell-self-insert-command-after (&rest _)
   "Provide spoken output."
@@ -118,20 +103,15 @@
     (cond
      ((and (= 32 last-input-event) emacsvox-word-echo)
       (save-excursion
-	(let ((orig (point)))
-	  (table--finish-delayed-tasks) (backward-word 1)
-	  (emacsvox-speak-region orig (point)))))
+        (let ((orig (point)))
+          (table--finish-delayed-tasks) (backward-word 1)
+          (emacsvox-speak-region orig (point)))))
      (emacsvox-character-echo (dtk-stop)
-			       (emacsvox-speak-this-char
-				last-input-event)))))
-
+                              (emacsvox-speak-this-char
+                               last-input-event)))))
 
 (advice-add '*table--cell-self-insert-command :after
-	    #'ems--*table--cell-self-insert-command-after)
-
-
-
-
+            #'ems--*table--cell-self-insert-command-after)
 
 (defun ems--*table--cell-quoted-insert-after (&rest _)
   "Speak the character that was inserted."
@@ -139,13 +119,8 @@
     (table--finish-delayed-tasks)
     (emacsvox-speak-this-char (preceding-char))))
 
-
 (advice-add '*table--cell-quoted-insert :after
-	    #'ems--*table--cell-quoted-insert-after)
-
-
-
-
+            #'ems--*table--cell-quoted-insert-after)
 
 (defun ems--*table--cell-newline-before (&rest _)
   "Speak the previous line if line echo is on.\nSee command \\[emacsvox-toggle-line-echo].  Otherwise cue the user to\nthe newly created blank line."
@@ -153,16 +128,11 @@
   (when (ems-interactive-p)
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
-	  (t (if dtk-stop-immediately (dtk-stop))
-	     (dtk-tone 225 120 'force)))))
-
+          (t (if dtk-stop-immediately (dtk-stop))
+             (dtk-tone 225 120 'force)))))
 
 (advice-add '*table--cell-newline :before
-	    #'ems--*table--cell-newline-before)
-
-
-
-
+            #'ems--*table--cell-newline-before)
 
 (defun ems--*table--cell-newline-and-indent-around
     (orig-fun &rest args)
@@ -172,20 +142,15 @@
     (cond
      ((ems-interactive-p)
       (cond (emacsvox-line-echo (emacsvox-speak-line))
-	    (t
-	     (dtk-speak-using-voice voice-annotate
-				    (format "indent %s"
-					    (current-column)))
-	     (dtk-interp-speak)))))
+            (t
+             (dtk-speak-using-voice voice-annotate
+                                    (format "indent %s"
+                                            (current-column)))
+             (dtk-interp-speak)))))
     (apply orig-fun args) result))
 
-
 (advice-add '*table--cell-newline-and-indent :around
-	    #'ems--*table--cell-newline-and-indent-around)
-
-
-
-
+            #'ems--*table--cell-newline-and-indent-around)
 
 (defun ems--*table--cell-open-line-after (&rest _)
   "speak."
@@ -193,14 +158,10 @@
     (let ((count (ad-get-arg 0)))
       (emacsvox-icon 'open-object)
       (message "Opened %s blank line%s" (if (= count 1) "a" count)
-	       (if (= count 1) "" "s")))))
-
+               (if (= count 1) "" "s")))))
 
 (advice-add '*table--cell-open-line :after
-	    #'ems--*table--cell-open-line-after)
-
-
-
+            #'ems--*table--cell-open-line-after)
 
 ;;;  speak cell contents:
 

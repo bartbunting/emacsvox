@@ -95,27 +95,17 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-line))))
 
-
 (defun ems--epa-delete-keys-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
 
-
 (advice-add 'epa-delete-keys :after #'ems--epa-delete-keys-after)
-
-
-
-
 
 (defun ems--epa-exit-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'epa-exit-buffer :after #'ems--epa-exit-buffer-after)
-
-
-
 
 (cl-loop
  for f in
@@ -141,29 +131,19 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--epa-mark-key-after (&rest _)
   "Produce auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
 
-
 (advice-add 'epa-mark-key :after #'ems--epa-mark-key-after)
-
-
-
-
 
 (defun ems--epa-unmark-key-after (&rest _)
   "Produce auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'unmark-object)))
 
-
 (advice-add 'epa-unmark-key :after #'ems--epa-unmark-key-after)
-
-
-
 
 (provide 'emacsvox-epa)
 ;;;  end of file

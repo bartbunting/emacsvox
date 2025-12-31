@@ -58,26 +58,16 @@
 ;; in fond memory of the past:
 ;; See obsolete emacsvox-fix-interactive in our attic.
 
-
 (defun ems--ebuku-search-before (&rest _)
   "Advice prompt to speak" (interactive (list (read-char "n,l,r,t"))))
 
-
 (advice-add 'ebuku-search :before #'ems--ebuku-search-before)
-
-
-
-
 
 (defun ems--ebuku--search-helper-before (&rest _)
   "Avoid exclude to speed up interaction.." (ad-set-arg 3 ""))
 
-
 (advice-add 'ebuku--search-helper :before
-	    #'ems--ebuku--search-helper-before)
-
-
-
+            #'ems--ebuku--search-helper-before)
 
 (cl-loop
  for f in
@@ -96,18 +86,11 @@
          (forward-word 2)
          (dtk-notify (word-at-point)))))))
 
-
 (defun ems--ebuku-show-all-after (&rest _)
   "speak."
   (when (ems-interactive-p) (dtk-speak "Showing all bookmarks")))
 
-
 (advice-add 'ebuku-show-all :after #'ems--ebuku-show-all-after)
-
-
-
-
-
 
 (defun ems--ebuku-toggle-results-limit-after (&rest _)
   "speak."
@@ -115,14 +98,8 @@
     (message "Results limit: %s" ebuku-results-limit)
     (emacsvox-icon 'button)))
 
-
 (advice-add 'ebuku-toggle-results-limit :after
-	    #'ems--ebuku-toggle-results-limit-after)
-
-
-
-
-
+            #'ems--ebuku-toggle-results-limit-after)
 
 (cl-loop
  for f in
@@ -135,27 +112,17 @@
        (emacsvox-icon 'select-object)
        (emacsvox-read-previous-line)))))
 
-
 (defun ems--ebuku-open-url-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
 
-
 (advice-add 'ebuku-open-url :after #'ems--ebuku-open-url-after)
-
-
-
-
 
 (defun ems--ebuku-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'ebuku :after #'ems--ebuku-after)
-
-
-
 
 ;;; Additional Keybindings:
 

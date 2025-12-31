@@ -130,46 +130,30 @@ Indicate  no movement if we did not move."
       (t ad-do-it))
      ad-return-value)))
 
-
 (defun ems--lispy-move-beginning-of-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'left)))
 
-
 (advice-add 'lispy-move-beginning-of-line :after
-	    #'ems--lispy-move-beginning-of-line-after)
-
-
-
-
+            #'ems--lispy-move-beginning-of-line-after)
 
 (defun ems--lispy-move-beginning-of-line-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'right)))
 
-
 (advice-add 'lispy-move-beginning-of-line :after
-	    #'ems--lispy-move-beginning-of-line-after)
-
-
-
+            #'ems--lispy-move-beginning-of-line-after)
 
 ;;; Advice Insertions:
-
 
 (defun ems--lispy-clone-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-sexp) (emacsvox-icon 'yank-object)))
 
-
 (advice-add 'lispy-clone :after #'ems--lispy-clone-after)
-
-
-
-
 
 (defun ems--lispy-comment-after (&rest _)
   "speak."
@@ -180,24 +164,14 @@ Indicate  no movement if we did not move."
       (emacsvox-speak-region (region-beginning) (region-end)))
      (t (emacsvox-speak-line)))))
 
-
 (advice-add 'lispy-comment :after #'ems--lispy-comment-after)
-
-
-
-
 
 (defun ems--lispy-backtick-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (let ((emacsvox-show-point t)) (emacsvox-speak-line))))
 
-
 (advice-add 'lispy-backtick :after #'ems--lispy-backtick-after)
-
-
-
-
 
 (defun ems--lispy-tick-after (&rest _)
   "speak."
@@ -207,11 +181,7 @@ Indicate  no movement if we did not move."
       (emacsvox-speak-region (region-beginning) (region-end)))
      (t (emacsvox-speak-line)))))
 
-
 (advice-add 'lispy-tick :after #'ems--lispy-tick-after)
-
-
-
 
 (cl-loop
  for f in
@@ -266,18 +236,13 @@ Indicate  no movement if we did not move."
        (emacsvox-icon 'mark-object)
        (emacsvox-speak-region (region-beginning) (region-end))))))
 
-
 (defun ems--lispy-mark-symbol-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (emacsvox-speak-region (region-beginning) (region-end))))
 
-
 (advice-add 'lispy-mark-symbol :after #'ems--lispy-mark-symbol-after)
-
-
-
 
 ;;; Advice WhiteSpace Manipulation:
 
@@ -286,11 +251,7 @@ Indicate  no movement if we did not move."
   (when (ems-interactive-p)
     (emacsvox-icon 'fill-object) (emacsvox-speak-line)))
 
-
 (advice-add 'lispy-fill :after #'ems--lispy-fill-after)
-
-
-
 
 (cl-loop
  for f in
@@ -303,7 +264,6 @@ Indicate  no movement if we did not move."
        (let ((emacsvox-show-point t))
          (emacsvox-speak-line))))))
 
-
 (defun ems--lispy-tab-after (&rest _)
   "speak."
   (when (ems-interactive-p)
@@ -311,11 +271,7 @@ Indicate  no movement if we did not move."
     (when (buffer-modified-p) (emacsvox-icon 'modified-object))
     (emacsvox-speak-line)))
 
-
 (advice-add 'lispy-tab :after #'ems--lispy-tab-after)
-
-
-
 
 ;;; Advice Kill/Yank:
 
@@ -324,13 +280,9 @@ Indicate  no movement if we did not move."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (message "region containing %s chars copied to kill ring "
-	     (length (current-kill 0)))))
-
+             (length (current-kill 0)))))
 
 (advice-add 'lispy-new-copy :after #'ems--lispy-new-copy-after)
-
-
-
 
 (cl-loop
  for f in
@@ -344,19 +296,13 @@ Indicate  no movement if we did not move."
        (emacsvox-icon 'delete-object)
        (dtk-speak (current-kill 0 nil))))))
 
-
 (defun ems--lispy-yank-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object)
     (emacsvox-speak-region (region-beginning) (region-end))))
 
-
 (advice-add 'lispy-yank :after #'ems--lispy-yank-after)
-
-
-
-
 
 (defun ems--lispy-delete-backward-around (orig-fun &rest args)
   "speak."
@@ -365,13 +311,8 @@ Indicate  no movement if we did not move."
     (emacsvox-speak-this-char (preceding-char)) ad-do-it)
    (t ad-do-it)))
 
-
 (advice-add 'lispy-delete-backward :around
-	    #'ems--lispy-delete-backward-around)
-
-
-
-
+            #'ems--lispy-delete-backward-around)
 
 (defun ems--lispy-delete-around (orig-fun &rest args)
   "speak."
@@ -380,57 +321,37 @@ Indicate  no movement if we did not move."
     ad-do-it)
    (t ad-do-it)))
 
-
 (advice-add 'lispy-delete :around #'ems--lispy-delete-around)
 
-
-
-
 ;;; Advice Help:
-
 
 (defun ems--lispy-describe-inline-after (&rest _)
   "speak."
   (when
       (and (ems-interactive-p)
-	   (buffer-live-p (get-buffer "*lispy-help*"))
-	   (window-live-p (get-buffer-window "*lispy-help*")))
+           (buffer-live-p (get-buffer "*lispy-help*"))
+           (window-live-p (get-buffer-window "*lispy-help*")))
     (with-current-buffer "*lispy-help*"
       (emacsvox-icon 'help) (emacsvox-speak-buffer))))
 
-
 (advice-add 'lispy-describe-inline :after
-	    #'ems--lispy-describe-inline-after)
-
-
-
-
+            #'ems--lispy-describe-inline-after)
 
 (defun ems--lispy--show-before (&rest _)
   "speak." (emacsvox-icon 'help) (dtk-speak (ad-get-arg 0)))
 
-
 (advice-add 'lispy--show :before #'ems--lispy--show-before)
 
-
-
-
 ;;; Advice Outliner:
-
 
 (defun ems--lispy-narrow-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (message "Narrowed editing region to %s lines"
-	     (count-lines (region-beginning) (region-end)))))
-
+             (count-lines (region-beginning) (region-end)))))
 
 (advice-add 'lispy-narrow :after #'ems--lispy-narrow-after)
-
-
-
-
 
 (defun ems--lispy-widen-after (&rest _)
   "Announce yourself."
@@ -438,11 +359,7 @@ Indicate  no movement if we did not move."
     (emacsvox-icon 'open-object)
     (message "You can now edit the entire buffer ")))
 
-
 (advice-add 'lispy-widen :after #'ems--lispy-widen-after)
-
-
-
 
 (cl-loop
  for f in

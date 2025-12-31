@@ -61,16 +61,10 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--tide-compile-file-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'tide-compile-file :after #'ems--tide-compile-file-after)
-
-
-
-
 
 (defun ems--tide-documentation-at-point-after (&rest _)
   "Speak documentation if any."
@@ -78,11 +72,8 @@
     (when documentation
       (dtk-speak documentation) (emacsvox-icon 'help))))
 
-
 (advice-add 'tide-documentation-at-point :after
-	    #'ems--tide-documentation-at-point-after)
-
-
+            #'ems--tide-documentation-at-point-after)
 
 (cl-loop
  for f in
@@ -97,27 +88,17 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--tide-format-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'tide-format :after #'ems--tide-format-after)
-
-
-
-
 
 (defun ems--tide-references-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'tide-references :after #'ems--tide-references-after)
-
-
-
 
 (provide 'emacsvox-tide)
 ;;;  end of file

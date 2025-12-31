@@ -72,26 +72,16 @@
 
   )
 
-
 (defun ems--iedit-mode-after (&rest _)
   "speak." 
   (when (ems-interactive-p) (emacsvox-icon (if iedit-mode 'on 'off))))
 
-
 (advice-add 'iedit-mode :after #'ems--iedit-mode-after)
-
-
-
-
 
 (defun ems--iedit-done-after (&rest _)
   "speak." (emacsvox-icon 'close-object) (message "IEdit done"))
 
-
 (advice-add 'iedit-done :after #'ems--iedit-done-after)
-
-
-
 
 (cl-loop
  for f in
@@ -129,19 +119,14 @@
        (emacsvox-icon 'task-done)
        (message "%s"  ,(symbol-name f))))))
 
-
 (defun ems--iedit-show/hide-unmatched-lines-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line)
     (emacsvox-icon (if iedit-unmatched-lines-invisible 'on 'off))))
 
-
 (advice-add 'iedit-show/hide-unmatched-lines :after
-	    #'ems--iedit-show/hide-unmatched-lines-after)
-
-
-
+            #'ems--iedit-show/hide-unmatched-lines-after)
 
 (provide 'emacsvox-iedit)
 ;;;  end of file

@@ -118,31 +118,21 @@
 
 ;;;  Advice Interactive Commands:
 
-
 (defun ems--transient-toggle-common-after (&rest _)
   "speak." 
   (when (ems-interactive-p)
     (dtk-stop 'all)
     (emacsvox-icon (if transient-show-common-commands 'on 'off))))
 
-
 (advice-add 'transient-toggle-common :after
-	    #'ems--transient-toggle-common-after)
-
-
-
-
+            #'ems--transient-toggle-common-after)
 
 (defun ems--transient-resume-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-stop 'all) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'transient-resume :after #'ems--transient-resume-after)
-
-
-
 
 (cl-loop
  for f in
@@ -192,21 +182,15 @@
 (defvar emacsvox-transient-cache nil
   "Cache of the last Transient buffer contents.")
 
-
 (defun ems--transient--show-after (&rest _)
   "Speak and set up cache."
   (when (window-live-p transient--window)
     (with-current-buffer (window-buffer transient--window)
       (setq emacsvox-transient-cache
-	    (buffer-substring (point-min) (point-max)))
+            (buffer-substring (point-min) (point-max)))
       (emacsvox-speak-line) (emacsvox-icon 'open-object))))
 
-
 (advice-add 'transient--show :after #'ems--transient--show-after)
-
-
-
-
 
 (defun ems--transient-suspend-around (orig-fun &rest args)
   "Pop to *Transient-emacsvox* buffer where the message emitted by\nthe transient can be browsed.\nPress `r' to resume the suspended transient."
@@ -215,22 +199,18 @@
     (cond
      ((ems-interactive-p)
       (let
-	  ((buff (get-buffer-create "*Transient-Emacsvox*"))
-	   (inhibit-read-only t))
-	(apply orig-fun args) (emacsvox-icon 'close-object)
-	(with-current-buffer buff
-	  (erase-buffer) (insert "r to resume, C-g to quit.\n\n")
-	  (insert emacsvox-transient-cache) (goto-char (point-min))
-	  (emacsvox-transient-mode))
-	(switch-to-buffer buff) (emacsvox-speak-mode-line)))
+          ((buff (get-buffer-create "*Transient-Emacsvox*"))
+           (inhibit-read-only t))
+        (apply orig-fun args) (emacsvox-icon 'close-object)
+        (with-current-buffer buff
+          (erase-buffer) (insert "r to resume, C-g to quit.\n\n")
+          (insert emacsvox-transient-cache) (goto-char (point-min))
+          (emacsvox-transient-mode))
+        (switch-to-buffer buff) (emacsvox-speak-mode-line)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'transient-suspend :around #'ems--transient-suspend-around)
-
-
-
 
 ;;; section nav:
 

@@ -54,19 +54,14 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--eglot-help-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'help)
     (with-current-buffer eglot--help-buffer (emacsvox-speak-buffer))))
 
-
 (advice-add 'eglot-help-at-point :after
-	    #'ems--eglot-help-at-point-after)
-
-
-
+            #'ems--eglot-help-at-point-after)
 
 (cl-loop
  for f in 

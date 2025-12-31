@@ -121,31 +121,21 @@
 
 ;;;  Managing packages:
 
-
 (defun ems--package-menu-describe-package-after (&rest _)
   "Speak displayed description."
   (when (ems-interactive-p)
     (emacsvox-icon 'help) (emacsvox-speak-help)))
 
-
 (advice-add 'package-menu-describe-package :after
-	    #'ems--package-menu-describe-package-after)
-
-
-
-
+            #'ems--package-menu-describe-package-after)
 
 (defun ems--package-menu-execute-around (orig-fun &rest args)
   "Silence messages while installing packages. "
   (ems-with-messages-silenced (apply orig-fun args))
   (emacsvox-speak-message-again))
 
-
 (advice-add 'package-menu-execute :around
-	    #'ems--package-menu-execute-around)
-
-
-
+            #'ems--package-menu-execute-around)
 
 (cl-loop
  for f in
@@ -162,20 +152,15 @@
 
 ;;;  Advice Upgrade:
 
-
 (defun ems--package-menu-mark-upgrades-after (&rest _)
   "Speak list of packages we marked for upgrading."
   (when (ems-interactive-p)
     (let ((upgrades (package-menu--find-upgrades)))
       (when upgrades
-	(dtk-notify (format "%s" (mapcar #'car upgrades)))))))
-
+        (dtk-notify (format "%s" (mapcar #'car upgrades)))))))
 
 (advice-add 'package-menu-mark-upgrades :after
-	    #'ems--package-menu-mark-upgrades-after)
-
-
-
+            #'ems--package-menu-mark-upgrades-after)
 
 (provide 'emacsvox-package)
 ;;;  end of file

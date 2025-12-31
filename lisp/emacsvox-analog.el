@@ -61,34 +61,21 @@
     (emacsvox-icon 'open-object) (emacsvox-analog-update-edit-keys)
     (emacsvox-speak-mode-line)))
 
-
 (advice-add 'analog :after #'ems--analog-after)
-
-
-
-
 
 (defun ems--analog-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'analog-quit :after #'ems--analog-quit-after)
-
-
-
 
 (defun ems--analog-bury-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'analog-bury-buffer :after #'ems--analog-bury-buffer-after)
-
-
-
 
 (cl-loop for command in
          '(analog-next-group

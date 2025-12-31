@@ -539,7 +539,7 @@ specifies the current pronunciation mode --- See
 
 (defun dtk-fix-control-chars ()
   "Handle control characters in speech stream."
-    (let ((char nil))
+  (let ((char nil))
     (goto-char (point-min))
     (cond
      (tts-strip-octals ;;;Strip octals if asked to
@@ -578,7 +578,7 @@ specifies the current pronunciation mode --- See
 
 (defun dtk-handle-caps ()
   "Handle capitalization"
-    (when dtk-caps
+  (when dtk-caps
     (let ((inhibit-read-only t)
           (case-fold-search nil))
       (goto-char (point-min))
@@ -768,12 +768,12 @@ Argument COMPLEMENT  is the complement of separator."
 
 (defun dtk-audio-format (start end)
   "Format and speak text from `start' to `end'. "
-    (when (and emacsvox-use-icons
+  (when (and emacsvox-use-icons
              (get-text-property start 'auditory-icon))
     (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
   (dtk-interp-queue-code (tts-voice-reset-code))
   (when-let* ((pause  (get-text-property start 'pause))
-             (dtk-interp-silence pause)))
+              (dtk-interp-silence pause)))
   (cond
    ((not voice-lock-mode)
     (dtk-interp-queue (buffer-substring-no-properties start end)))
@@ -800,7 +800,7 @@ Argument COMPLEMENT  is the complement of separator."
 
 (defun dtk-dispatch (string)
   "Send request  to speech server."
-    (unless dtk-quiet
+  (unless dtk-quiet
     (when (process-live-p dtk-speaker-process)
       (dtk-interp-say string))))
 
@@ -869,7 +869,7 @@ current local  value to the result."
   (interactive
    (list (read-from-minibuffer "Enter new rate: ")
          current-prefix-arg))
-    (when (process-live-p dtk-speaker-process)
+  (when (process-live-p dtk-speaker-process)
     (cond
      (prefix
       (unless (eq dtk-speaker-process (dtk-notify-process))
@@ -890,7 +890,7 @@ Interactive PREFIX arg says to set the rate globally.
 Formula used is:
 rate = dtk-speech-rate-base + dtk-speech-rate-step * level."
   (interactive "P")
-    (let ((level
+  (let ((level
          (condition-case nil
              (read (format "%c" last-input-event))
            (error nil))))
@@ -942,7 +942,7 @@ Not presently used by either Dectalk or Viavoice TTS.
 Interactive PREFIX arg means set the global default value, and
 then set the current local value to the result."
   (interactive "nEnter new factor:\nP")
-    (when (process-live-p dtk-speaker-process)
+  (when (process-live-p dtk-speaker-process)
     (cond
      (prefix
       (setq-default dtk-character-scale factor)
@@ -1005,7 +1005,7 @@ current local  value to the result."
                       nil
                       t))
     current-prefix-arg))
-    (when (process-live-p dtk-speaker-process)
+  (when (process-live-p dtk-speaker-process)
     (cond
      (prefix
       (setq dtk-punctuation-mode mode)
@@ -1049,7 +1049,7 @@ Interactive PREFIX arg makes the new setting global."
 (defun dtk-reset-state ()
   "Reset TTS engine."
   (interactive)
-    (when (process-live-p dtk-speaker-process)
+  (when (process-live-p dtk-speaker-process)
     (dtk-interp-reset-state)))
 
 (defun tts-speak-version ()
@@ -1408,7 +1408,7 @@ Set by \\[dtk-set-punctuations].")
      "Speech server:"
      (or dtk-servers-alist (tts-setup-servers-alist))
      nil t)))
-    (setq dtk-program program)
+  (setq dtk-program program)
   (ems--fastload "voice-setup")
   (dtk-initialize))
 
@@ -1464,7 +1464,7 @@ program. Port defaults to dtk-local-server-port"
      nil nil
      dtk-program)
     current-prefix-arg))
-    (setq
+  (setq
    dtk-local-server-process
    (start-process
     "LocalTTS"
@@ -1735,7 +1735,7 @@ grouping"
 
 (defun dtk-letter (letter)
   "Speak a LETTER."
-    (unless dtk-quiet
+  (unless dtk-quiet
     (when (process-live-p dtk-speaker-process)
       (dtk-interp-letter letter))))
 ;;;  Notify:

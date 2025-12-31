@@ -196,16 +196,11 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--haskell-cabal-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p) (emacsvox-setup-programming-mode)))
 
-
 (advice-add 'haskell-cabal-mode :after #'ems--haskell-cabal-mode-after)
-
-
-
 
 ;;; haskell-debugger:
 

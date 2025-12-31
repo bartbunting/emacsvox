@@ -60,7 +60,6 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--deadgrep-toggle-file-results-after (&rest _)
   "speak."
   (when (ems-interactive-p)
@@ -69,22 +68,13 @@
      (if (get-text-property (1+ (line-end-position)) 'invisible) 'off
        'on))))
 
-
 (advice-add 'deadgrep-toggle-file-results :after
-	    #'ems--deadgrep-toggle-file-results-after)
-
-
-
-
+            #'ems--deadgrep-toggle-file-results-after)
 
 (defun ems--deadgrep-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'deadgrep :after #'ems--deadgrep-after)
-
-
-
 
 (cl-loop
  for f in 

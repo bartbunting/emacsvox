@@ -81,19 +81,13 @@
 
 ;;;  Advice interactive commands:
 
-
 (defun ems--speedbar-close-frame-after (&rest _)
   "Cue buffer that becomes active"
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'speedbar-close-frame :after
-	    #'ems--speedbar-close-frame-after)
-
-
-
-
+            #'ems--speedbar-close-frame-after)
 
 (defun ems--speedbar-next-around (orig-fun &rest args)
   "Provide reasonable spoken feedback"
@@ -101,16 +95,12 @@
     (cond
      ((ems-interactive-p)
       (let ((emacsvox-speak-messages nil))
-	(apply orig-fun args) (emacsvox-speedbar-speak-line)
-	(emacsvox-icon 'select-object)))
+        (apply orig-fun args) (emacsvox-speedbar-speak-line)
+        (emacsvox-icon 'select-object)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'speedbar-next :around #'ems--speedbar-next-around)
-
-
-
 
 (defun ems--speedbar-prev-around (orig-fun &rest args)
   "Provide reasonable spoken feedback"
@@ -118,74 +108,45 @@
     (cond
      ((ems-interactive-p)
       (let ((emacsvox-speak-messages nil))
-	(apply orig-fun args) (emacsvox-speedbar-speak-line)
-	(emacsvox-icon 'select-object)))
+        (apply orig-fun args) (emacsvox-speedbar-speak-line)
+        (emacsvox-icon 'select-object)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'speedbar-prev :around #'ems--speedbar-prev-around)
-
-
-
 
 (defun ems--speedbar-edit-line-after (&rest _)
   "Speak line you jumped to"
   (when (ems-interactive-p) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'speedbar-edit-line :after #'ems--speedbar-edit-line-after)
-
-
-
-
 
 (defun ems--speedbar-tag-find-after (&rest _)
   "Speak the line you jumped to" (emacsvox-speedbar-speak-line))
 
-
 (advice-add 'speedbar-tag-find :after #'ems--speedbar-tag-find-after)
-
-
-
-
 
 (defun ems--speedbar-find-file-after (&rest _)
   "Speak modeline of buffer we switched to"
   (emacsvox-icon 'select-object) (emacsvox-speak-mode-line))
 
-
 (advice-add 'speedbar-find-file :after #'ems--speedbar-find-file-after)
-
-
-
-
 
 (defun ems--speedbar-expand-line-after (&rest _)
   "Speak the line we just expanded"
   (when (ems-interactive-p)
     (emacsvox-speedbar-speak-line) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'speedbar-expand-line :after
-	    #'ems--speedbar-expand-line-after)
-
-
-
-
+            #'ems--speedbar-expand-line-after)
 
 (defun ems--speedbar-contract-line-after (&rest _)
   "Speak the line we just contracted"
   (when (ems-interactive-p)
     (emacsvox-speedbar-speak-line) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'speedbar-contract-line :after
-	    #'ems--speedbar-contract-line-after)
-
-
-
-
+            #'ems--speedbar-contract-line-after)
 
 (defun ems--speedbar-up-directory-around (orig-fun &rest args)
   " Auditory icon and speech feedback indicate result of the\naction"
@@ -196,38 +157,24 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'speedbar-up-directory :around
-	    #'ems--speedbar-up-directory-around)
-
-
-
-
+            #'ems--speedbar-up-directory-around)
 
 (defun ems--speedbar-restricted-next-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speedbar-speak-line)))
 
-
 (advice-add 'speedbar-restricted-next :after
-	    #'ems--speedbar-restricted-next-after)
-
-
-
-
+            #'ems--speedbar-restricted-next-after)
 
 (defun ems--speedbar-restricted-prev-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speedbar-speak-line)))
 
-
 (advice-add 'speedbar-restricted-prev :after
-	    #'ems--speedbar-restricted-prev-after)
-
-
-
+            #'ems--speedbar-restricted-prev-after)
 
 ;;;  additional navigation
 
@@ -326,36 +273,31 @@ An automatically updating speedbar consumes resources.")
 (defvar emacsvox-speedbar-default-personality 'paul
   "Default personality used in speedbar buffers")
 
-
 (defun ems--speedbar-make-button-after (&rest _)
   "Voiceify the button"
   (let
       ((start (ad-get-arg 0)) (end (ad-get-arg 1))
        (face (ad-get-arg 2)) (personality nil))
     (setq personality
-	  (cond
-	   ((eq face 'speedbar-button-face)
-	    emacsvox-speedbar-button-personality)
-	   ((eq face 'speedbar-selected-face)
-	    emacsvox-speedbar-selected-personality)
-	   ((eq face 'speedbar-directory-face)
-	    emacsvox-speedbar-directory-personality)
-	   ((eq face 'speedbar-file-face)
-	    emacsvox-speedbar-file-personality)
-	   ((eq face 'speedbar-highlight-face)
-	    emacsvox-speedbar-highlight-personality)
-	   ((eq face 'speedbar-tag-face)
-	    emacsvox-speedbar-tag-personality)
-	   (t 'emacsvox-speedbar-default-personality)))
+          (cond
+           ((eq face 'speedbar-button-face)
+            emacsvox-speedbar-button-personality)
+           ((eq face 'speedbar-selected-face)
+            emacsvox-speedbar-selected-personality)
+           ((eq face 'speedbar-directory-face)
+            emacsvox-speedbar-directory-personality)
+           ((eq face 'speedbar-file-face)
+            emacsvox-speedbar-file-personality)
+           ((eq face 'speedbar-highlight-face)
+            emacsvox-speedbar-highlight-personality)
+           ((eq face 'speedbar-tag-face)
+            emacsvox-speedbar-tag-personality)
+           (t 'emacsvox-speedbar-default-personality)))
     (put-text-property start end 'personality personality)
     (save-excursion (save-match-data (beginning-of-line)))))
 
-
 (advice-add 'speedbar-make-button :after
-	    #'ems--speedbar-make-button-after)
-
-
-
+            #'ems--speedbar-make-button-after)
 
 ;;;  keys 
 (cl-declaim (special emacsvox-keymap))

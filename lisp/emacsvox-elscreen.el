@@ -93,7 +93,6 @@
 
 ;;;  Override:  Display screen list
 
-
 (defun ems--elscreen-display-screen-name-list-around
     (orig-fun &rest args)
   "Display and Audio format the list of screens in mini-buffer."
@@ -103,27 +102,23 @@
        (screen-to-name-alist (elscreen-get-screen-to-name-alist))
        (msg nil))
     (setq msg
-	  (mapconcat
-	   #'(lambda (screen)
-	       (ems-with-messages-silenced
-		(let
-		    ((screen-name
-		      (assoc-default screen screen-to-name-alist)))
-		  (concat
-		   (propertize (format "%d" screen) 'face
-			       'font-lock-keyword-face)
-		   (elscreen-status-label screen "")
-		   (propertize screen-name 'face
-			       'font-lock-string-face)))))
-	   screen-list "  "))
+          (mapconcat
+           #'(lambda (screen)
+               (ems-with-messages-silenced
+                (let
+                    ((screen-name
+                      (assoc-default screen screen-to-name-alist)))
+                  (concat
+                   (propertize (format "%d" screen) 'face
+                               'font-lock-keyword-face)
+                   (elscreen-status-label screen "")
+                   (propertize screen-name 'face
+                               'font-lock-string-face)))))
+           screen-list "  "))
     (message msg)))
 
-
 (advice-add 'elscreen-display-screen-name-list :around
-	    #'ems--elscreen-display-screen-name-list-around)
-
-
-
+            #'ems--elscreen-display-screen-name-list-around)
 
 (provide 'emacsvox-elscreen)
 ;;;  end of file

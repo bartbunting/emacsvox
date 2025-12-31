@@ -104,18 +104,13 @@
        (emacsvox-speak-line)
        (emacsvox-icon 'large-movement)))))
 
-
 (defun ems--racket-describe-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'help)
     (with-current-buffer "*Racket Describe*" (emacsvox-speak-buffer))))
 
-
 (advice-add 'racket-describe :after #'ems--racket-describe-after)
-
-
-
 
 (provide 'emacsvox-racket)
 ;;;  end of file

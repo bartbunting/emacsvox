@@ -59,40 +59,25 @@
 
 ;;;   desktop
 
-
 (defun ems--desktop-clear-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (dtk-notify "cleared desktop")
     (emacsvox-icon 'delete-object)))
 
-
 (advice-add 'desktop-clear :after #'ems--desktop-clear-after)
-
-
-
-
 
 (defun ems--desktop-save-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'save-object)))
 
-
 (advice-add 'desktop-save :after #'ems--desktop-save-after)
-
-
-
-
 
 (defun ems--desktop-lazy-create-buffer-around (orig-fun &rest args)
   "Silence messages."
   (ems-with-messages-silenced (apply orig-fun args)))
 
-
 (advice-add 'desktop-lazy-create-buffer :around
-	    #'ems--desktop-lazy-create-buffer-around)
-
-
-
+            #'ems--desktop-lazy-create-buffer-around)
 
 (provide 'emacsvox-desktop)
 ;;;  end of file

@@ -74,17 +74,12 @@
 
 ;;;  Interactive Commands:
 
-
 (defun ems--tab-bar-switch-to-tab-after (&rest _)
   "speak."
   (when (ems-interactive-p) (emacsvox-tab-bar-speak-tab-name)))
 
-
 (advice-add 'tab-bar-switch-to-tab :after
-	    #'ems--tab-bar-switch-to-tab-after)
-
-
-
+            #'ems--tab-bar-switch-to-tab-after)
 
 (cl-loop
  for f in 
@@ -125,19 +120,14 @@
        (emacsvox-icon 'open-object)
        (emacsvox-tab-bar-speak-tab-name)))))
 
-
 (defun ems--tab-bar-close-tab-by-name-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-speak (message "Closed tab %s" (ad-get-arg 0)))
     (emacsvox-icon 'close-object)))
 
-
 (advice-add 'tab-bar-close-tab-by-name :after
-	    #'ems--tab-bar-close-tab-by-name-after)
-
-
-
+            #'ems--tab-bar-close-tab-by-name-after)
 
 ;;; tab-list commands:
 
@@ -151,16 +141,11 @@
      (when (ems-interactive-p)
        (emacsvox-icon 'open-object)))))
 
-
 (defun ems--tab-bar-list-execute-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'tab-bar-list-execute :after
-	    #'ems--tab-bar-list-execute-after)
-
-
-
+            #'ems--tab-bar-list-execute-after)
 
 (cl-loop
  for f in 
@@ -173,18 +158,13 @@
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-
 (defun ems--tab-bar-list-unmark-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'unmark-object) (emacsvox-speak-line)))
 
-
 (advice-add 'tab-bar-list-unmark :after
-	    #'ems--tab-bar-list-unmark-after)
-
-
-
+            #'ems--tab-bar-list-unmark-after)
 
 (cl-loop
  for f in 
@@ -197,18 +177,13 @@
        (emacsvox-icon 'delete-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--tab-bar-list-select-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'tab-bar-list-select :after
-	    #'ems--tab-bar-list-select-after)
-
-
-
+            #'ems--tab-bar-list-select-after)
 
 (provide 'emacsvox-tab-bar)
 ;;;  end of file

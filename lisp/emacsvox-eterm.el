@@ -631,7 +631,7 @@ sent to the terminal as if it were typed by the user."
 ;; [column row right-stretch left-stretch ]
 
 (defun emacsvox-eterm-make-window (top-left bottom-right
-                                             right-stretch left-stretch)
+                                            right-stretch left-stretch)
   (let ((win (make-vector 4  nil)))
     (aset win 0 top-left)
     (aset win 1 bottom-right)
@@ -777,8 +777,8 @@ A terminal window is recorded by the  positions of its top left
 and bottom right.")
 
 (defun emacsvox-eterm-record-window  (window-id
-                                       top-left bottom-right
-                                       &optional right-stretch left-stretch)
+                                      top-left bottom-right
+                                      &optional right-stretch left-stretch)
   "Insert this window definition into the table of terminal windows.
 Argument WINDOW-ID specifies the window.
 Argument TOP-LEFT  specifies top-left of window.
@@ -792,7 +792,7 @@ Optional argument LEFT-STRETCH  specifies if the window stretches to the left."
              emacsvox-eterm-maximum-windows)
   (aset emacsvox-eterm-window-table window-id
         (emacsvox-eterm-make-window top-left bottom-right
-                                     right-stretch left-stretch)))
+                                    right-stretch left-stretch)))
 
 (defun emacsvox-eterm-get-window (id)
   "Retrieve a window.
@@ -823,13 +823,13 @@ eterm."
            (marker-position emacsvox-eterm-marker)))
          (bottom-right
           (emacsvox-eterm-position-to-coordinates (marker-position
-                                                    emacsvox-eterm-pointer)))
+                                                   emacsvox-eterm-pointer)))
          (right-stretch
           (y-or-n-p "Should the window stretch to the right as required "))
          (left-stretch
           (y-or-n-p "Should the window stretch to the left as required ")))
     (emacsvox-eterm-record-window  id top-left bottom-right
-                                    right-stretch left-stretch)
+                                   right-stretch left-stretch)
     (message "Defined %s window %s
 with top left at %s %s
 and bottom right at %s %s"
@@ -970,7 +970,7 @@ activity within the filter window."
     (setq emacsvox-eterm-focus-window 1))
   (dtk-stop)
   (emacsvox-icon (if emacsvox-eterm-focus-window
-                               'on 'off)))
+                     'on 'off)))
 
 (defun emacsvox-eterm-toggle-filter-window ()
   "Toggle active state of filter window."
@@ -981,7 +981,7 @@ activity within the filter window."
     (setq emacsvox-eterm-filter-window 1))
   (dtk-stop)
   (emacsvox-icon (if emacsvox-eterm-filter-window
-                               'on 'off)))
+                     'on 'off)))
 
 (defun emacsvox-eterm-speak-predefined-window ()
   "Speak a predefined eterm window between 1 and 10."
@@ -996,26 +996,15 @@ activity within the filter window."
 (defvar eterm-current-personality nil
   "Current personality for eterm. ")
 
-
 (defun ems--term-before (&rest _)
   "Single window please!" (delete-other-windows))
 
-
 (advice-add 'term :before #'ems--term-before)
-
-
-
-
 
 (defun ems--ansi-term-before (&rest _)
   "Single window please!" (delete-other-windows))
 
-
 (advice-add 'ansi-term :before #'ems--ansi-term-before)
-
-
-
-
 
 (defun ems--term-mode-after (&rest _)
   "Customize eterm to work with Emacsvox.\nAdditional commands provided by emacsvox under eterm are\navailable with the prefix emacsvox-eterm-prefix and are listed below:\n\\{emacsvox-eterm-keymap}"
@@ -1029,11 +1018,7 @@ activity within the filter window."
   (make-local-variable 'emacsvox-eterm-marker)
   (setq emacsvox-eterm-marker (copy-marker (point))))
 
-
 (advice-add 'term-mode :after #'ems--term-mode-after)
-
-
-
 
 (defvar emacsvox-eterm-row nil
   "Record the eterm row last spoken")
@@ -1077,84 +1062,79 @@ Use emacsvox-eterm-toggle-pointer-mode bound to
    (cons (term-current-column) (term-current-row))
    window))
 
-
 (defun ems--term-emulate-terminal-around (orig-fun &rest args)
   "Record position, emulate, then speak what happened.\nAlso keep track of terminal highlighting etc.  Feedback is\nlimited to current window If a `current window` is set (see\ncommand emacsvox-eterm-set-filter-window bound to\n\\[emacsvox-eterm-set-filter-window].  How output is spoken\ndepends on whether the terminal is in character or line mode.\n\nWhen in character mode, output is spoken like off a real\nterminal.  When in line mode, behavior resembles that of comint\nmode; i.e. you hear the output if emacsvox-eterm-autospeak is t.\nDo not set this variable by hand: See command\nemacsvox-toggle-eterm-autospeak bound to\n\\[emacsvox-toggle-eterm-autospeak]"
   (cl-declare
    (special emacsvox-eterm-row emacsvox-eterm-column eterm-line-mode
-	    eterm-char-mode emacsvox-eterm-filter-window
-	    emacsvox-eterm-pointer-mode emacsvox-eterm-autospeak))
+            eterm-char-mode emacsvox-eterm-filter-window
+            emacsvox-eterm-pointer-mode emacsvox-eterm-autospeak))
   (when (process-live-p (ad-get-arg 0))
     (let
-	((emacsvox-eterm-window
-	  (get-buffer-window (process-buffer (ad-get-arg 0))))
-	 (emacsvox-eterm-row (term-current-row))
-	 (emacsvox-eterm-column (term-current-column))
-	 (current-char (preceding-char)) (new-row nil)
-	 (new-column nil) (old-point (point))
-	 (dtk-stop-immediately (not eterm-line-mode))
-	 (inhibit-read-only t))
+        ((emacsvox-eterm-window
+          (get-buffer-window (process-buffer (ad-get-arg 0))))
+         (emacsvox-eterm-row (term-current-row))
+         (emacsvox-eterm-column (term-current-column))
+         (current-char (preceding-char)) (new-row nil)
+         (new-column nil) (old-point (point))
+         (dtk-stop-immediately (not eterm-line-mode))
+         (inhibit-read-only t))
       (apply orig-fun args)
       (setq new-row (term-current-row) new-column
-	    (term-current-column))
+            (term-current-column))
       (when
-	  (and emacsvox-eterm-autospeak
-	       (window-live-p emacsvox-eterm-window)
-	       (or (not emacsvox-eterm-focus-window)
-		   (emacsvox-eterm-activity-window
-		    emacsvox-eterm-focus-window)
-		   (emacsvox-eterm-activity-window
-		    emacsvox-eterm-filter-window)))
-	(cond
-	 ((and eterm-char-mode emacsvox-eterm-filter-window
-	       (not
-		(and
-		 (emacsvox-eterm-coordinate-within-window-p
-		  (cons new-column new-row)
-		  emacsvox-eterm-filter-window)
-		 (emacsvox-eterm-coordinate-within-window-p
-		  (cons (term-current-column) (term-current-row))
-		  emacsvox-eterm-filter-window))))
-	  nil)
-	 ((and eterm-line-mode emacsvox-eterm-autospeak)
-	  (setq dtk-stop-immediately nil)
-	  (condition-case nil
-	      (emacsvox-speak-region (1- old-point) (1- (point)))
-	    (error nil)))
-	 (emacsvox-eterm-focus-window
-	  (emacsvox-eterm-speak-window emacsvox-eterm-focus-window))
-	 ((and
-	   (or (eq last-command-event 127)
-	       (eq last-command-event 'backspace))
-	   (= new-row emacsvox-eterm-row)
-	   (= -1 (- new-column emacsvox-eterm-column)) current-char)
-	  (emacsvox-speak-this-char current-char) (delete-char 1)
-	  (dtk-tone-deletion))
-	 ((and (= new-row emacsvox-eterm-row)
-	       (= 1 (- new-column emacsvox-eterm-column)))
-	  (if (eq 32 last-command-event)
-	      (save-excursion
-		(backward-char 2) (emacsvox-speak-word nil))
-	    (emacsvox-speak-this-char (preceding-char))))
-	 ((and (= new-row emacsvox-eterm-row)
-	       (= 1 (abs (- new-column emacsvox-eterm-column))))
-	  (emacsvox-speak-this-char (following-char)))
-	 ((= emacsvox-eterm-row new-row)
-	  (if (= 32 (following-char))
-	      (save-excursion (forward-char 1) (emacsvox-speak-word))
-	    (emacsvox-speak-word)))
-	 (t (emacsvox-speak-line)))
-	(when
-	    (and (not emacsvox-eterm-pointer-mode)
-		 emacsvox-eterm-pointer)
-	  (emacsvox-eterm-pointer-to-cursor))))))
-
+          (and emacsvox-eterm-autospeak
+               (window-live-p emacsvox-eterm-window)
+               (or (not emacsvox-eterm-focus-window)
+                   (emacsvox-eterm-activity-window
+                    emacsvox-eterm-focus-window)
+                   (emacsvox-eterm-activity-window
+                    emacsvox-eterm-filter-window)))
+        (cond
+         ((and eterm-char-mode emacsvox-eterm-filter-window
+               (not
+                (and
+                 (emacsvox-eterm-coordinate-within-window-p
+                  (cons new-column new-row)
+                  emacsvox-eterm-filter-window)
+                 (emacsvox-eterm-coordinate-within-window-p
+                  (cons (term-current-column) (term-current-row))
+                  emacsvox-eterm-filter-window))))
+          nil)
+         ((and eterm-line-mode emacsvox-eterm-autospeak)
+          (setq dtk-stop-immediately nil)
+          (condition-case nil
+              (emacsvox-speak-region (1- old-point) (1- (point)))
+            (error nil)))
+         (emacsvox-eterm-focus-window
+          (emacsvox-eterm-speak-window emacsvox-eterm-focus-window))
+         ((and
+           (or (eq last-command-event 127)
+               (eq last-command-event 'backspace))
+           (= new-row emacsvox-eterm-row)
+           (= -1 (- new-column emacsvox-eterm-column)) current-char)
+          (emacsvox-speak-this-char current-char) (delete-char 1)
+          (dtk-tone-deletion))
+         ((and (= new-row emacsvox-eterm-row)
+               (= 1 (- new-column emacsvox-eterm-column)))
+          (if (eq 32 last-command-event)
+              (save-excursion
+                (backward-char 2) (emacsvox-speak-word nil))
+            (emacsvox-speak-this-char (preceding-char))))
+         ((and (= new-row emacsvox-eterm-row)
+               (= 1 (abs (- new-column emacsvox-eterm-column))))
+          (emacsvox-speak-this-char (following-char)))
+         ((= emacsvox-eterm-row new-row)
+          (if (= 32 (following-char))
+              (save-excursion (forward-char 1) (emacsvox-speak-word))
+            (emacsvox-speak-word)))
+         (t (emacsvox-speak-line)))
+        (when
+            (and (not emacsvox-eterm-pointer-mode)
+                 emacsvox-eterm-pointer)
+          (emacsvox-eterm-pointer-to-cursor))))))
 
 (advice-add 'term-emulate-terminal :around
-	    #'ems--term-emulate-terminal-around)
-
-
-
+            #'ems--term-emulate-terminal-around)
 
 (ems-generate-switcher 'emacsvox-eterm-toggle-pointer-mode
                        'emacsvox-eterm-pointer-mode
@@ -1164,7 +1144,6 @@ When emacsvox eterm is in pointer mode, the eterm read pointer
 stays where it is rather than automatically moving to the terminal cursor when
 there is terminal activity.")
 
-
 (defun ems--term-dynamic-complete-around (orig-fun &rest args)
   "Speak the completion. "
   (let ((result (apply orig-fun args)))
@@ -1172,15 +1151,12 @@ there is terminal activity.")
     (let ((saved-point (point)))
       (apply orig-fun args)
       (unless (= saved-point (point))
-	(emacsvox-speak-region saved-point (point)))
+        (emacsvox-speak-region saved-point (point)))
       result)
     result))
 
-
 (advice-add 'term-dynamic-complete :around
-	    #'ems--term-dynamic-complete-around)
-
-
+            #'ems--term-dynamic-complete-around)
 
 (voice-setup-add-map
  '(
@@ -1194,12 +1170,7 @@ there is terminal activity.")
   (setq eterm-char-mode nil eterm-line-mode t)
   (when (ems-interactive-p) (dtk-speak "Terminal line mode ")))
 
-
 (advice-add 'term-line-mode :after #'ems--term-line-mode-after)
-
-
-
-
 
 (defun ems--term-char-mode-after (&rest _)
   "Announce you entered character mode. "
@@ -1208,67 +1179,37 @@ there is terminal activity.")
   (emacsvox-eterm-setup-raw-keys)
   (when (ems-interactive-p) (dtk-speak "Terminal character mode ")))
 
-
 (advice-add 'term-char-mode :after #'ems--term-char-mode-after)
 
-
-
-
 ;;;   Advice term functions 
-
 
 (defun ems--term-next-input-after (&rest _)
   "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'term-next-input :after #'ems--term-next-input-after)
-
-
-
-
 
 (defun ems--term-next-matching-input-after (&rest _)
   "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'term-next-matching-input :after
-	    #'ems--term-next-matching-input-after)
-
-
-
-
+            #'ems--term-next-matching-input-after)
 
 (defun ems--term-previous-input-after (&rest _)
   "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'term-previous-input :after
-	    #'ems--term-previous-input-after)
-
-
-
-
+            #'ems--term-previous-input-after)
 
 (defun ems--term-previous-matching-input-after (&rest _)
   "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'term-previous-matching-input :after
-	    #'ems--term-previous-matching-input-after)
-
-
-
-
+            #'ems--term-previous-matching-input-after)
 
 (defun ems--term-send-input-after (&rest _)
   "Flush any ongoing speech" (when (ems-interactive-p) (dtk-stop)))
 
-
 (advice-add 'term-send-input :after #'ems--term-send-input-after)
-
-
-
-
 
 (defun ems--term-previous-prompt-after (&rest _)
   "Speak"
@@ -1276,13 +1217,8 @@ there is terminal activity.")
     (emacsvox-icon 'item)
     (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
 
-
 (advice-add 'term-previous-prompt :after
-	    #'ems--term-previous-prompt-after)
-
-
-
-
+            #'ems--term-previous-prompt-after)
 
 (defun ems--term-next-prompt-after (&rest _)
   "Speak"
@@ -1290,23 +1226,14 @@ there is terminal activity.")
     (emacsvox-icon 'item)
     (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
 
-
 (advice-add 'term-next-prompt :after #'ems--term-next-prompt-after)
-
-
-
 
 (defun ems--term-dynamic-list-input-ring-after (&rest _)
   "speak"
   (message "Switch to the other window to browse the input history "))
 
-
 (advice-add 'term-dynamic-list-input-ring :after
-	    #'ems--term-dynamic-list-input-ring-after)
-
-
-
-
+            #'ems--term-dynamic-list-input-ring-after)
 
 (defun ems--term-kill-output-after (&rest _)
   "speak"
@@ -1314,61 +1241,36 @@ there is terminal activity.")
     (emacsvox-icon 'delete-object)
     (message "Nuked output of last command ")))
 
-
 (advice-add 'term-kill-output :after #'ems--term-kill-output-after)
-
-
-
-
 
 (defun ems--term-quit-subjob-after (&rest _)
   "speak"
   (when (ems-interactive-p) (message "Sent quit signal to subjob ")))
 
-
 (advice-add 'term-quit-subjob :after #'ems--term-quit-subjob-after)
-
-
-
-
 
 (defun ems--term-stop-subjob-after (&rest _)
   "speak" (when (ems-interactive-p) (message "Stopped the subjob")))
 
-
 (advice-add 'term-stop-subjob :after #'ems--term-stop-subjob-after)
-
-
-
-
 
 (defun ems--term-interrupt-subjob-after (&rest _)
   "speak"
   (when (ems-interactive-p) (message "Interrupted  the subjob")))
 
-
 (advice-add 'term-interrupt-subjob :after
-	    #'ems--term-interrupt-subjob-after)
-
-
-
-
+            #'ems--term-interrupt-subjob-after)
 
 (defun ems--term-kill-input-before (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (let
-	((pmark (process-mark (get-buffer-process (current-buffer)))))
+        ((pmark (process-mark (get-buffer-process (current-buffer)))))
       (when (> (point) (marker-position pmark))
-	(emacsvox-icon 'delete-object)
-	(emacsvox-speak-region pmark (point))))))
-
+        (emacsvox-icon 'delete-object)
+        (emacsvox-speak-region pmark (point))))))
 
 (advice-add 'term-kill-input :before #'ems--term-kill-input-before)
-
-
-
-
 
 (defun ems--term-dynamic-list-filename-completions-after (&rest _)
   "speak"
@@ -1376,12 +1278,8 @@ there is terminal activity.")
     (message
      "Switch to the completions window to browse the possible\ncompletions for filename at point")))
 
-
 (advice-add 'term-dynamic-list-filename-completions :after
-	    #'ems--term-dynamic-list-filename-completions-after)
-
-
-
+            #'ems--term-dynamic-list-filename-completions-after)
 
 (provide 'emacsvox-eterm)
 

@@ -75,49 +75,30 @@
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'jdee-open-class-source :after
-	    #'ems--jdee-open-class-source-after)
-
-
-
-
+            #'ems--jdee-open-class-source-after)
 
 (defun ems--jdee-open-source-for-symbol-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'jdee-open-source-for-symbol :after
-	    #'ems--jdee-open-source-for-symbol-after)
-
-
-
-
+            #'ems--jdee-open-source-for-symbol-after)
 
 (defun ems--jdee-open-base-class-source-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'jdee-open-base-class-source :after
-	    #'ems--jdee-open-base-class-source-after)
-
-
-
+            #'ems--jdee-open-base-class-source-after)
 
 (defun ems--jdee-complete-popup-message-before (&rest _)
   "speak." (message "%s" (ad-get-arg 0)) (emacsvox-icon 'help))
 
-
 (advice-add 'jdee-complete-popup-message :before
-	    #'ems--jdee-complete-popup-message-before)
-
-
-
-
+            #'ems--jdee-complete-popup-message-before)
 
 (defun ems--jdee-complete-at-point-around (orig-fun &rest args)
   "Say what you completed."
@@ -127,13 +108,8 @@
       (apply orig-fun args) (dtk-speak emacsvox-last-message) result)
     result))
 
-
 (advice-add 'jdee-complete-at-point :around
-	    #'ems--jdee-complete-at-point-around)
-
-
-
-
+            #'ems--jdee-complete-at-point-around)
 
 (defun ems--jdee-compile-after (&rest _)
   "speak"
@@ -141,12 +117,7 @@
     (emacsvox-icon 'select-object)
     (dtk-speak "Compiling current java project")))
 
-
 (advice-add 'jdee-compile :after #'ems--jdee-compile-after)
-
-
-
-
 
 (defun ems--bsh-after (&rest _)
   "speak" 
@@ -154,12 +125,7 @@
     (emacsvox-icon 'select-object)
     (setq emacsvox-comint-autospeak nil) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'bsh :after #'ems--bsh-after)
-
-
-
-
 
 (defun ems--jdee-run-after (&rest _)
   "speak" 
@@ -167,146 +133,86 @@
     (emacsvox-icon 'select-object)
     (setq emacsvox-comint-autospeak nil) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'jdee-run :after #'ems--jdee-run-after)
-
-
-
-
 
 (defun ems--jdee-db-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'jdee-db :after #'ems--jdee-db-after)
 
-
-
-
 ;;;  jdeebug 
-
 
 (defun ems--jdee-debug-after (&rest _)
   "Speak the line where we eventually stop. "
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'jdee-debug :after #'ems--jdee-debug-after)
-
-
-
-
 
 (defun ems--jdee-bug-step-over-after (&rest _)
   "Speak the line we stepped to "
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-step-over :after #'ems--jdee-bug-step-over-after)
-
-
-
-
 
 (defun ems--jdee-bug-step-into-after (&rest _)
   "Speak the line we stepped to "
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-step-into :after #'ems--jdee-bug-step-into-after)
-
-
-
-
 
 (defun ems--jdee-bug-step-out-after (&rest _)
   "Speak the line we stepped to "
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-step-out :after #'ems--jdee-bug-step-out-after)
-
-
-
-
 
 (defun ems--jdee-bug-continue-after (&rest _)
   "Speak the line we stop  to "
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-continue :after #'ems--jdee-bug-continue-after)
-
-
-
-
 
 (defun ems--jdee-bug-exit-after (&rest _)
   "Produce auditory icon indicating successful exit "
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-exit :after #'ems--jdee-bug-exit-after)
-
-
-
-
 
 (defun ems--jdee-bug-clear-breakpoint-after (&rest _)
   "Produce auditory icon." (emacsvox-icon 'off))
 
-
 (advice-add 'jdee-bug-clear-breakpoint :after
-	    #'ems--jdee-bug-clear-breakpoint-after)
-
-
-
-
+            #'ems--jdee-bug-clear-breakpoint-after)
 
 (defun ems--jdee-bug-toggle-breakpoint-after (&rest _)
   "speak." (when (ems-interactive-p) (message "toggled breakpoint.")))
 
-
 (advice-add 'jdee-bug-toggle-breakpoint :after
-	    #'ems--jdee-bug-toggle-breakpoint-after)
-
-
-
-
+            #'ems--jdee-bug-toggle-breakpoint-after)
 
 (defun ems--jdee-bug-set-breakpoint-after (&rest _)
   "Speak the line we set the break point at "
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
 
-
 (advice-add 'jdee-bug-set-breakpoint :after
-	    #'ems--jdee-bug-set-breakpoint-after)
-
-
-
-
+            #'ems--jdee-bug-set-breakpoint-after)
 
 (defun ems--jdee-bug-clear-breakpoint-after (&rest _)
   "Speak the line we nuked the breakpoint  "
   (when (ems-interactive-p)
     (emacsvox-icon 'deselect-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-clear-breakpoint :after
-	    #'ems--jdee-bug-clear-breakpoint-after)
-
-
-
-
+            #'ems--jdee-bug-clear-breakpoint-after)
 
 (defun ems--jdee-bug-highlight-breakpoint-after (&rest _)
   "Annotate line with an auditory icon. "
@@ -315,15 +221,10 @@
       (if (ad-get-arg 0) (goto-line (ad-get-arg 0)))
       (beginning-of-line) (setq start (point)) (end-of-line)
       (with-silent-modifications
-	(put-text-property start (point) 'auditory-icon 'mark-object)))))
-
+        (put-text-property start (point) 'auditory-icon 'mark-object)))))
 
 (advice-add 'jdee-bug-highlight-breakpoint :after
-	    #'ems--jdee-bug-highlight-breakpoint-after)
-
-
-
-
+            #'ems--jdee-bug-highlight-breakpoint-after)
 
 (defun ems--jdee-bug-remove-breakpoint-highlight-after (&rest _)
   "Clear auditory annotation"
@@ -331,40 +232,26 @@
     (save-excursion
       (beginning-of-line) (setq start (point)) (end-of-line)
       (with-silent-modifications
-	(remove-text-properties start (point)
-				(list 'auditory-icon 'mark-object))))))
-
+        (remove-text-properties start (point)
+                                (list 'auditory-icon 'mark-object))))))
 
 (advice-add 'jdee-bug-remove-breakpoint-highlight :after
-	    #'ems--jdee-bug-remove-breakpoint-highlight-after)
-
-
-
-
+            #'ems--jdee-bug-remove-breakpoint-highlight-after)
 
 (defun ems--jdee-bug-up-stack-after (&rest _)
   "Speak the line we stepped to "
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-up-stack :after #'ems--jdee-bug-up-stack-after)
-
-
-
-
 
 (defun ems--jdee-bug-down-stack-after (&rest _)
   "Speak the line we stepped to "
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-bug-down-stack :after
-	    #'ems--jdee-bug-down-stack-after)
-
-
-
+            #'ems--jdee-bug-down-stack-after)
 
 ;;;  speech enable jdb interaction 
 
@@ -383,63 +270,40 @@
                (emacsvox-speak-line)
                (emacsvox-icon 'select-object)))))
 
-
 (defun ems--jdee-db-run-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'jdee-db-run :after #'ems--jdee-db-run-after)
-
-
-
-
 
 (defun ems--jdee-debug-cont-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (message "Continuing execution.")))
 
-
 (advice-add 'jdee-debug-cont :after #'ems--jdee-debug-cont-after)
-
-
-
 
 (defun ems--jdee-debug-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (message "Quit debugger.")))
 
-
 (advice-add 'jdee-debug-quit :after #'ems--jdee-debug-quit-after)
-
-
-
 
 (defun ems--jdee-debug-set-breakpoint-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
 
-
 (advice-add 'jdee-debug-set-breakpoint :after
-	    #'ems--jdee-debug-set-breakpoint-after)
-
-
-
-
+            #'ems--jdee-debug-set-breakpoint-after)
 
 (defun ems--jdee-debug-toggle-breakpoint-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'button)))
 
-
 (advice-add 'jdee-debug-toggle-breakpoint :after
-	    #'ems--jdee-debug-toggle-breakpoint-after)
-
-
-
+            #'ems--jdee-debug-toggle-breakpoint-after)
 
 (defun ems--jdee-debug-clear-breakpoints-after (&rest _)
   "speak."
@@ -447,12 +311,8 @@
     (emacsvox-icon 'delete-object)
     (message "Cleared all break points.")))
 
-
 (advice-add 'jdee-debug-clear-breakpoints :after
-	    #'ems--jdee-debug-clear-breakpoints-after)
-
-
-
+            #'ems--jdee-debug-clear-breakpoints-after)
 
 ;;;  advice jdee-xref
 
@@ -461,13 +321,8 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'jdee-xref-first-caller :after
-	    #'ems--jdee-xref-first-caller-after)
-
-
-
-
+            #'ems--jdee-xref-first-caller-after)
 
 (defun ems--jdee-xref-next-caller-around (orig-fun &rest args)
   "Speak line we jumped to.\nIf we are on the last call, do nothing."
@@ -480,42 +335,28 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'jdee-xref-next-caller :around
-	    #'ems--jdee-xref-next-caller-around)
-
-
-
+            #'ems--jdee-xref-next-caller-around)
 
 ;;;  Advice EFC widgets:
-
 
 (defun ems--efc-option-dialog-after (&rest _)
   "Announce dialog box we just opened." (emacsvox-icon 'open-object)
   (dtk-speak (ad-get-arg 0)))
 
-
 (advice-add 'efc-option-dialog :after #'ems--efc-option-dialog-after)
 
-
-
-
 ;;;  camel case deletion
-
 
 (defun ems--jdee-kill-camel-tok-before (&rest _)
   "Speak word before killing it."
   (when (ems-interactive-p)
     (dtk-speak
      (buffer-substring (point)
-		       (save-excursion (jdee-end-of-camel-tok))))))
-
+                       (save-excursion (jdee-end-of-camel-tok))))))
 
 (advice-add 'jdee-kill-camel-tok :before
-	    #'ems--jdee-kill-camel-tok-before)
-
-
-
+            #'ems--jdee-kill-camel-tok-before)
 
 (provide 'emacsvox-jdee)
 ;;;  end of file 

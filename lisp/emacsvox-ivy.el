@@ -113,27 +113,17 @@
        (emacsvox-ivy-speak-selection)
        (emacsvox-icon 'select-object)))))
 
-
 (defun ems--ivy--exhibit-after (&rest _)
   "Speak updated Ivy list." (emacsvox-ivy-speak-selection)
   (sit-for 5) (emacsvox-speak-rest-of-buffer))
 
-
 (advice-add 'ivy--exhibit :after #'ems--ivy--exhibit-after)
-
-
-
-
 
 (defun ems--ivy-read-before (&rest _)
   "Speak prompt" (emacsvox-icon 'open-object)
   (dtk-speak (ad-get-arg 0)))
 
-
 (advice-add 'ivy-read :before #'ems--ivy-read-before)
-
-
-
 
 (provide 'emacsvox-ivy)
 ;;;  end of file

@@ -109,12 +109,8 @@
   (with-current-buffer (window-buffer (selected-window))
     (emacsvox-icon 'help) (emacsvox-speak-buffer)))
 
-
 (advice-add 'sage-shell-help:describe-symbol :after
-	    #'ems--sage-shell-help:describe-symbol-after)
-
-
-
+            #'ems--sage-shell-help:describe-symbol-after)
 
 (cl-loop
  for f in
@@ -191,13 +187,8 @@
     (with-current-buffer (window-buffer (selected-window))
       (emacsvox-icon 'open-object) (emacsvox-speak-line))))
 
-
 (advice-add 'sage-shell:list-outputs :after
-	    #'ems--sage-shell:list-outputs-after)
-
-
-
-
+            #'ems--sage-shell:list-outputs-after)
 
 (defun ems--sage-shell:delchar-or-maybe-eof-around
     (orig-fun &rest args)
@@ -207,31 +198,22 @@
      ((ems-interactive-p)
       (cond
        ((= (point) (point-max))
-	(message "Sending EOF to comint process"))
+        (message "Sending EOF to comint process"))
        (t (dtk-tone-deletion) (emacsvox-speak-char t)))
       (apply orig-fun args))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sage-shell:delchar-or-maybe-eof :around
-	    #'ems--sage-shell:delchar-or-maybe-eof-around)
-
-
-
-
+            #'ems--sage-shell:delchar-or-maybe-eof-around)
 
 (defun ems--sage-shell:delete-output-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'sage-shell:delete-output :after
-	    #'ems--sage-shell:delete-output-after)
-
-
-
+            #'ems--sage-shell:delete-output-after)
 
 (cl-loop
  for f in
@@ -244,7 +226,6 @@
        (emacsvox-icon 'task-done)
        (emacsvox-speak-mode-line)))))
 
-
 (defun ems--sage-shell:copy-previous-output-to-kill-ring-after
     (&rest _)
   "speak."
@@ -252,13 +233,8 @@
     (emacsvox-icon 'yank-object)
     (call-interactively #'emacsvox-speak-current-kill)))
 
-
 (advice-add 'sage-shell:copy-previous-output-to-kill-ring :after
-	    #'ems--sage-shell:copy-previous-output-to-kill-ring-after)
-
-
-
-
+            #'ems--sage-shell:copy-previous-output-to-kill-ring-after)
 
 (defun ems--sage-shell:send-input-after (&rest _)
   "speak."
@@ -266,12 +242,8 @@
     (sit-for 0.01) (accept-process-output)
     (emacsvox-sage-speak-output) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'sage-shell:send-input :after
-	    #'ems--sage-shell:send-input-after)
-
-
-
+            #'ems--sage-shell:send-input-after)
 
 ;;;  sage sagetext:
 

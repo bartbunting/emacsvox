@@ -227,11 +227,7 @@ to beginning of board before searching."
   (when (ems-interactive-p)
     (dtk-speak "New Minesweeper game") (emacsvox-icon 'open-object)))
 
-
 (advice-add 'mines :after #'ems--mines-after)
-
-
-
 
 (cl-loop
  for f in
@@ -246,54 +242,34 @@ to beginning of board before searching."
      (when (ems-interactive-p)
        (emacsvox-mines-speak-cell)))))
 
-
 (defun ems--mines-dig-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object)
     (unless mines-game-over (emacsvox-mines-speak-cell))))
 
-
 (advice-add 'mines-dig :after #'ems--mines-dig-after)
-
-
-
-
 
 (defun ems--mines-flag-cell-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (if (eq t (aref mines-grid (mines-current-pos)))
-	(emacsvox-icon 'close-object)
+        (emacsvox-icon 'close-object)
       (emacsvox-icon 'mark-object))
     (emacsvox-mines-speak-cell)))
 
-
 (advice-add 'mines-flag-cell :after #'ems--mines-flag-cell-after)
-
-
-
-
 
 (defun ems--mines-game-over-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'shutdown)))
 
-
 (advice-add 'mines-game-over :after #'ems--mines-game-over-after)
-
-
-
-
 
 (defun ems--mines-game-completed-after (&rest _)
   "Provide an auditory icon." (emacsvox-icon 'task-done))
 
-
 (advice-add 'mines-game-completed :after
-	    #'ems--mines-game-completed-after)
-
-
-
+            #'ems--mines-game-completed-after)
 
 (provide 'emacsvox-mines)
 ;;;  end of file

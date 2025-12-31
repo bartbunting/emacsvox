@@ -94,46 +94,32 @@
 
 ;;;  Advice Interactive Commands:
 
-
 (defun ems--company-complete-selection-before (&rest _)
   "Speak the selection."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (dtk-speak (ems-company-current))))
 
-
 (advice-add 'company-complete-selection :before
-	    #'ems--company-complete-selection-before)
-
-
-
+            #'ems--company-complete-selection-before)
 
 (defun ems--company-complete-number-after (&rest _)
   "Speak what we completed."
   (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'company-complete-number :after
-	    #'ems--company-complete-number-after)
-
-
-
-
+            #'ems--company-complete-number-after)
 
 (defun ems--company-show-doc-buffer-before (&rest _)
   "Speak."
   (let*
       ((selected (nth company-selection company-candidates))
        (doc-buffer
-	(or (company-call-backend 'doc-buffer selected)
-	    (error "No documentation available"))))
+        (or (company-call-backend 'doc-buffer selected)
+            (error "No documentation available"))))
     (with-current-buffer doc-buffer (dtk-speak (buffer-string)))))
 
-
 (advice-add 'company-show-doc-buffer :before
-	    #'ems--company-show-doc-buffer-before)
-
-
-
+            #'ems--company-show-doc-buffer-before)
 
 ;;;  Company Setup For Emacsvox:
 

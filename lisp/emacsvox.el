@@ -386,8 +386,6 @@ This cannot be set via custom; set this in your startup file before
      emacsvox-version))
   "Emacsvox startup message.")
 
-
-
 (defcustom emacsvox-pip-enable
   (executable-find "piper")
   "Load pip if Piper-TTS is available."
@@ -397,7 +395,6 @@ This cannot be set via custom; set this in your startup file before
       (set-default sym val )
       (when val (require 'pip)))
   :group 'emacsvox)
-
 
 (defun emacsvox()
   "Start the Emacsvox Audio Desktop.
@@ -466,7 +463,7 @@ commands and options."
     (add-to-list
      'minor-mode-alist
      '(emacsvox-speak-show-volume (:eval
-                                    (ems--show-current-volume)))))
+                                   (ems--show-current-volume)))))
   (message emacsvox-startup)
   (when   emacsvox-play-startup-icon
     (emacsvox-icon 'emacsvox)

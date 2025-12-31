@@ -399,7 +399,6 @@ Optional interactive prefix arg `prompt-mode' prompts for the mode."
                (string= name  (car pair)))
            soundscape-default-theme)))
 
-
 (defun soundscape-init ()
   "Initialize Soundscape."
   (soundscape-catalog)
@@ -410,7 +409,6 @@ Optional interactive prefix arg `prompt-mode' prompts for the mode."
      'minor-mode-alist
      '(soundscape--auto (:eval (soundscape-current)))
      'at-end)))
-
 
 (defun soundscape-listener  (&optional restart)
   "Start  a Soundscape listener.

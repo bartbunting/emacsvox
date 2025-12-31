@@ -54,96 +54,61 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'dictionary :after #'ems--dictionary-after)
-
-
-
 
 (defun ems--dictionary-close-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'dictionary-close :after #'ems--dictionary-close-after)
-
-
-
 
 (defun ems--dictionary-select-dictionary-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (message "Selected dictionary")))
 
-
 (advice-add 'dictionary-select-dictionary :after
-	    #'ems--dictionary-select-dictionary-after)
-
-
-
+            #'ems--dictionary-select-dictionary-after)
 
 (defun ems--dictionary-select-strategy-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (message "Selected strategy")))
 
-
 (advice-add 'dictionary-select-strategy :after
-	    #'ems--dictionary-select-strategy-after)
-
-
-
-
+            #'ems--dictionary-select-strategy-after)
 
 (defun ems--dictionary-search-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
-
 (advice-add 'dictionary-search :after #'ems--dictionary-search-after)
-
-
-
 
 (defun ems--dictionary-lookup-definition-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
-
 (advice-add 'dictionary-lookup-definition :after
-	    #'ems--dictionary-lookup-definition-after)
-
-
-
-
+            #'ems--dictionary-lookup-definition-after)
 
 (defun ems--dictionary-match-words-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
-
 (advice-add 'dictionary-match-words :after
-	    #'ems--dictionary-match-words-after)
-
-
-
-
+            #'ems--dictionary-match-words-after)
 
 (defun ems--dictionary-previous-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'dictionary-previous :after
-	    #'ems--dictionary-previous-after)
-
-
-
+            #'ems--dictionary-previous-after)
 
 (defun ems--dictionary-prev-link-after (&rest _)
   "speak."
@@ -151,13 +116,8 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-speak-range 'link-function)))
 
-
 (advice-add 'dictionary-prev-link :after
-	    #'ems--dictionary-prev-link-after)
-
-
-
-
+            #'ems--dictionary-prev-link-after)
 
 (defun ems--dictionary-next-link-after (&rest _)
   "speak."
@@ -165,12 +125,8 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-speak-range 'link-function)))
 
-
 (advice-add 'dictionary-next-link :after
-	    #'ems--dictionary-next-link-after)
-
-
-
+            #'ems--dictionary-next-link-after)
 
 (provide 'emacsvox-dictionary)
 ;;;  end of file

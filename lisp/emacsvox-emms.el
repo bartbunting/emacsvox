@@ -107,26 +107,21 @@
                (emacsvox-speak-mode-line)
                (emacsvox-icon 'open-object)))))
 
-
 (defun ems--emms-browser-bury-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'close-object)))
 
-
 (advice-add 'emms-browser-bury-buffer :after
-	    #'ems--emms-browser-bury-buffer-after)
-
-
-
+            #'ems--emms-browser-bury-buffer-after)
 
 ;;; Playlists
 (cl-loop for f in
          '(emms-playlist-mode-go
-                        emms-playlist-mode-next
-                        emms-playlist-mode-previous
-                        emms-playlist-mode-switch-buffer
-                        )
+           emms-playlist-mode-next
+           emms-playlist-mode-previous
+           emms-playlist-mode-switch-buffer
+           )
          do
          (eval
           `(defadvice ,f (after emacsvox pre act comp)
@@ -150,37 +145,23 @@
   "Update keymaps."
   (define-key emms-stream-mode-map "" 'emacsvox-keymap))
 
-
 (advice-add 'emms-stream-mode :after #'ems--emms-stream-mode-after)
-
-
-
-
 
 (defun ems--emms-stream-delete-bookmark-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'emms-stream-delete-bookmark :after
-	    #'ems--emms-stream-delete-bookmark-after)
-
-
-
-
+            #'ems--emms-stream-delete-bookmark-after)
 
 (defun ems--emms-stream-save-bookmarks-file-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'save-object) (message "Saved stream bookmarks.")))
 
-
 (advice-add 'emms-stream-save-bookmarks-file :after
-	    #'ems--emms-stream-save-bookmarks-file-after)
-
-
-
+            #'ems--emms-stream-save-bookmarks-file-after)
 
 (cl-loop for f in
          '(emms-streams emms-stream-quit
@@ -207,27 +188,18 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'emms-playlist-mode-bury-buffer :after
-	    #'ems--emms-playlist-mode-bury-buffer-after)
-
-
-
+            #'ems--emms-playlist-mode-bury-buffer-after)
 
 ;;;  silence chatter from info
-
 
 (defun ems--emms-info-really-initialize-track-around
     (orig-fun &rest args)
   "Silence messages."
   (ems-with-messages-silenced (apply orig-fun args)))
 
-
 (advice-add 'emms-info-really-initialize-track :around
-	    #'ems--emms-info-really-initialize-track-around)
-
-
-
+            #'ems--emms-info-really-initialize-track-around)
 
 ;;;  pause/resume if needed
 

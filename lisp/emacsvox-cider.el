@@ -215,44 +215,30 @@
        (emacsvox-speak-line)
        (emacsvox-icon 'select-object)))))
 
-
 (defun ems--cider-repl-switch-to-other-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'cider-repl-switch-to-other :after
-	    #'ems--cider-repl-switch-to-other-after)
-
-
-
+            #'ems--cider-repl-switch-to-other-after)
 
 (defun ems--cider-repl-set-ns-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'cider-repl-set-ns :after #'ems--cider-repl-set-ns-after)
-
-
-
-
 
 (defun ems--cider-repl-toggle-pretty-printing-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon (f cider-repl-use-pretty-printing 'on 'off))
     (message "Turned  %s pretty printing."
-	     (if cider-repl-use-pretty-printing 'on 'off))))
-
+             (if cider-repl-use-pretty-printing 'on 'off))))
 
 (advice-add 'cider-repl-toggle-pretty-printing :after
-	    #'ems--cider-repl-toggle-pretty-printing-after)
-
-
-
+            #'ems--cider-repl-toggle-pretty-printing-after)
 
 ;;;  find:
 
@@ -278,43 +264,28 @@
          (emacsvox-icon 'close-object)
          (emacsvox-speak-mode-line))))))
 
-
 (defun ems--cider-connections-goto-connection-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'cider-connections-goto-connection :after
-	    #'ems--cider-connections-goto-connection-after)
-
-
-
-
+            #'ems--cider-connections-goto-connection-after)
 
 (defun ems--cider-connect-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
 
-
 (advice-add 'cider-connect :after #'ems--cider-connect-after)
-
-
-
-
 
 (defun ems--cider-close-nrepl-session-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (message "Closed Repl Session")))
 
-
 (advice-add 'cider-close-nrepl-session :after
-	    #'ems--cider-close-nrepl-session-after)
-
-
-
+            #'ems--cider-close-nrepl-session-after)
 
 (defun ems--cider-close-ancillary-buffers-after (&rest _)
   "speak."
@@ -322,11 +293,8 @@
     (emacsvox-icon 'close-object)
     (message "Closed ancillary buffers")))
 
-
 (advice-add 'cider-close-ancillary-buffers :after
-	    #'ems--cider-close-ancillary-buffers-after)
-
-
+            #'ems--cider-close-ancillary-buffers-after)
 
 (cl-loop
  for f in

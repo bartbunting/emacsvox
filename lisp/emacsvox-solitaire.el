@@ -145,22 +145,16 @@
 (defvar emacsvox-solitaire-autoshow nil
   "T means rows and columns are toned as we move")
 
-
 (defun ems--solitaire-left-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (let ((dtk-stop-immediately nil))
       (emacsvox-icon 'select-object)
       (and emacsvox-solitaire-autoshow
-	   (emacsvox-solitaire-show-column))
+           (emacsvox-solitaire-show-column))
       (emacsvox-solitaire-speak-coordinates))))
 
-
 (advice-add 'solitaire-left :after #'ems--solitaire-left-after)
-
-
-
-
 
 (defun ems--solitaire-right-after (&rest _)
   "speak"
@@ -168,15 +162,10 @@
     (let ((dtk-stop-immediately nil))
       (emacsvox-icon 'select-object)
       (and emacsvox-solitaire-autoshow
-	   (emacsvox-solitaire-show-column))
+           (emacsvox-solitaire-show-column))
       (emacsvox-solitaire-speak-coordinates))))
 
-
 (advice-add 'solitaire-right :after #'ems--solitaire-right-after)
-
-
-
-
 
 (defun ems--solitaire-up-after (&rest _)
   "speak"
@@ -186,12 +175,7 @@
       (and emacsvox-solitaire-autoshow (emacsvox-solitaire-show-row))
       (emacsvox-solitaire-speak-coordinates))))
 
-
 (advice-add 'solitaire-up :after #'ems--solitaire-up-after)
-
-
-
-
 
 (defun ems--solitaire-down-after (&rest _)
   "speak"
@@ -201,12 +185,7 @@
       (and emacsvox-solitaire-autoshow (emacsvox-solitaire-show-row))
       (emacsvox-solitaire-speak-coordinates))))
 
-
 (advice-add 'solitaire-down :after #'ems--solitaire-down-after)
-
-
-
-
 
 (defun ems--solitaire-center-point-after (&rest _)
   "speak"
@@ -214,23 +193,14 @@
     (emacsvox-icon 'large-movement)
     (emacsvox-solitaire-speak-coordinates)))
 
-
 (advice-add 'solitaire-center-point :after
-	    #'ems--solitaire-center-point-after)
-
-
-
-
+            #'ems--solitaire-center-point-after)
 
 (defun ems--solitaire-move-after (&rest _)
   "speak" (emacsvox-icon 'item)
   (emacsvox-solitaire-speak-coordinates))
 
-
 (advice-add 'solitaire-move :after #'ems--solitaire-move-after)
-
-
-
 
 (defun emacsvox-solitaire-setup()
   "Emacsvox provides an auditory interface to the solitaire game.
@@ -260,11 +230,7 @@ emacsvox-solitaire-speak-coordinates"
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'solitaire-quit :after #'ems--solitaire-quit-after)
-
-
-
 
 ;;;   add keybindings
 

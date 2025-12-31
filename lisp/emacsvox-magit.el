@@ -166,11 +166,7 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
 
-
 (advice-add 'magit-mark-item :after #'ems--magit-mark-item-after)
-
-
-
 
 (cl-loop
  for f in
@@ -210,28 +206,18 @@
      (emacsvox-speak-line)
      (emacsvox-icon 'open-object))))
 
-
 (defun ems--magit-section-hide-after (&rest _)
   "Icon." (emacsvox-icon 'close-object))
 
-
 (advice-add 'magit-section-hide :after #'ems--magit-section-hide-after)
-
-
-
-
 
 (defun ems--magit-section-cycle-global-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (dtk-notify "Cycling global visibility of sections")))
 
-
 (advice-add 'magit-section-cycle-global :after
-	    #'ems--magit-section-cycle-global-after)
-
-
-
+            #'ems--magit-section-cycle-global-after)
 
 (cl-loop
  for f in
@@ -248,31 +234,21 @@
 
 ;;; blob mode:
 
-
 (defun ems--magit-kill-this-buffer-after (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'magit-kill-this-buffer :after
-	    #'ems--magit-kill-this-buffer-after)
-
-
-
-
+            #'ems--magit-kill-this-buffer-after)
 
 (defun ems--magit-blob-visit-file-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'magit-blob-visit-file :after
-	    #'ems--magit-blob-visit-file-after)
-
-
-
+            #'ems--magit-blob-visit-file-after)
 
 (cl-loop
  for f in 
@@ -286,29 +262,19 @@
 
 ;;;  Additional commands to advice:
 
-
 (defun ems--magit-refresh-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (emacsvox-speak-line)))
 
-
 (advice-add 'magit-refresh :after #'ems--magit-refresh-after)
-
-
-
-
 
 (defun ems--magit-status-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'magit-status :after #'ems--magit-status-after)
-
-
-
 
 (cl-loop
  for f in
@@ -322,43 +288,28 @@
          (emacsvox-icon 'close-object)
          (emacsvox-speak-mode-line))))))
 
-
 (defun ems--magit-refresh-all-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'task-done) (emacsvox-speak-line)))
 
-
 (advice-add 'magit-refresh-all :after #'ems--magit-refresh-all-after)
-
-
-
-
 
 (defun ems--magit-display-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-
 (advice-add 'magit-display-buffer :after
-	    #'ems--magit-display-buffer-after)
-
-
-
+            #'ems--magit-display-buffer-after)
 
 ;;;  Advise process-sentinel:
-
 
 (defun ems--magit-process-finish-after (&rest _)
   "Produce auditory icon." (emacsvox-icon 'task-done))
 
-
 (advice-add 'magit-process-finish :after
-	    #'ems--magit-process-finish-after)
-
-
-
+            #'ems--magit-process-finish-after)
 
 ;;;  Magit Blame:
 
@@ -383,17 +334,12 @@
        (emacsvox-magit-blame-speak)
        (emacsvox-icon 'large-movement)))))
 
-
 (defun ems--magit-blame-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'magit-blame-quit :after #'ems--magit-blame-quit-after)
-
-
-
 
 (defun ems--magit-blame-toggle-headings-after (&rest _)
   "speak."
@@ -401,25 +347,15 @@
     (emacsvox-icon (if magit-blame-show-headings 'on 'off))
     (message "Toggled blame headings.")))
 
-
 (advice-add 'magit-blame-toggle-headings :after
-	    #'ems--magit-blame-toggle-headings-after)
-
-
-
-
+            #'ems--magit-blame-toggle-headings-after)
 
 (defun ems--magit-blame-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Entering Magit Blame") (emacsvox-icon 'open-object)))
 
-
 (advice-add 'magit-blame :after #'ems--magit-blame-after)
-
-
-
-
 
 (defun ems--magit-diff-show-or-scroll-up-around (orig-fun &rest args)
   "speak."
@@ -427,21 +363,17 @@
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args)
-	(cond
-	 ((= orig (point))
-	  (message "Displayed commit in other window.")
-	  (emacsvox-icon 'open-object))
-	 (t (emacsvox-icon 'scroll) (emacsvox-speak-line)))))
+        (apply orig-fun args)
+        (cond
+         ((= orig (point))
+          (message "Displayed commit in other window.")
+          (emacsvox-icon 'open-object))
+         (t (emacsvox-icon 'scroll) (emacsvox-speak-line)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'magit-diff-show-or-scroll-up :around
-	    #'ems--magit-diff-show-or-scroll-up-around)
-
-
-
+            #'ems--magit-diff-show-or-scroll-up-around)
 
 ;;; Keys:
 (cl-declaim (special magit-file-mode-map))
@@ -453,15 +385,10 @@
 
 ;;; Rebase:
 
-
 (defun ems--git-rebase-squash-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'git-rebase-squash :after #'ems--git-rebase-squash-after)
-
-
-
 
 (provide 'emacsvox-magit)
 ;;;  end of file

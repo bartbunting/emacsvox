@@ -165,18 +165,13 @@
   calibredb-yank-dispatch
   )
 
-
 (defun ems--calibredb-toggle-view-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'calibredb-toggle-view-at-point :after
-	    #'ems--calibredb-toggle-view-at-point-after)
-
-
-
+            #'ems--calibredb-toggle-view-at-point-after)
 
 (cl-loop
  for f in
@@ -189,31 +184,21 @@
        (emacsvox-icon 'open-object)
        (emacsvox-speak-predefined-window 1)))))
 
-
 (defun ems--calibredb-search-refresh-and-clear-filter-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'calibredb-search-refresh-and-clear-filter :after
-	    #'ems--calibredb-search-refresh-and-clear-filter-after)
-
-
-
-
+            #'ems--calibredb-search-refresh-and-clear-filter-after)
 
 (defun ems--calibredb-search-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'calibredb-search-quit :after
-	    #'ems--calibredb-search-quit-after)
-
-
-
+            #'ems--calibredb-search-quit-after)
 
 (cl-loop
  for f in
@@ -226,17 +211,12 @@
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--calibredb-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'calibredb :after #'ems--calibredb-after)
-
-
-
 
 ;;; Emacsvox Commands:
 

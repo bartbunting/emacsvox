@@ -121,28 +121,19 @@
        (emacsvox-icon 'task-done)
        (emacsvox-vdiff-speak-this-hunk)))))
 
-
 (defun ems--vdiff-switch-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'vdiff-switch-buffer :after
-	    #'ems--vdiff-switch-buffer-after)
-
-
-
-
+            #'ems--vdiff-switch-buffer-after)
 
 (defun ems--vdiff-refine-all-hunks-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
 
-
 (advice-add 'vdiff-refine-all-hunks :after
-	    #'ems--vdiff-refine-all-hunks-after)
-
-
+            #'ems--vdiff-refine-all-hunks-after)
 
 (cl-loop
  for f in

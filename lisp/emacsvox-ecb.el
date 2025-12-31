@@ -60,41 +60,26 @@
 
 ;;;   advice interactive commands
 
-
 (defun ems--ecb-activate-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'ecb-activate :after #'ems--ecb-activate-after)
-
-
-
-
 
 (defun ems--ecb-cancel-dialog-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'ecb-cancel-dialog :after #'ems--ecb-cancel-dialog-after)
-
-
-
-
 
 (defun ems--ecb-show-help-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'help) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'ecb-show-help :after #'ems--ecb-show-help-after)
-
-
-
 
 (cl-loop
  for f in 
@@ -116,18 +101,13 @@
        (emacsvox-speak-line)
        (emacsvox-icon 'select-object)))))
 
-
 (defun ems--ecb-select-ecb-frame-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-speak-mode-line) (emacsvox-icon 'select-object)))
 
-
 (advice-add 'ecb-select-ecb-frame :after
-	    #'ems--ecb-select-ecb-frame-after)
-
-
-
+            #'ems--ecb-select-ecb-frame-after)
 
 ;;;   inform tree browser about emacsvox
 
@@ -151,29 +131,23 @@
 (defun emacsvox-ecb-tree-clear ()
   "Clear search pattern during incremental search in tree buffers."
   (interactive)
-    
+  
   (setq tree-buffer-incr-searchpattern "")
   (dtk-speak "Cleared search pattern."))
-
 
 (defun ems--tree-buffer-create-after (&rest _)
   "Fixes up keybindings so incremental tree search is\navailable."
   (let ((incr-search (ad-get-arg 10)))
     (when incr-search
       (substitute-key-definition 'emacsvox-self-insert-command
-				 'tree-buffer-incremental-node-search
-				 tree-buffer-key-map global-map))
+                                 'tree-buffer-incremental-node-search
+                                 tree-buffer-key-map global-map))
     (define-key tree-buffer-key-map "" 'emacsvox-ecb-tree-backspace)
     (define-key tree-buffer-key-map '[delete]
-		'emacsvox-ecb-tree-backspace)
+                'emacsvox-ecb-tree-backspace)
     (define-key tree-buffer-key-map '[home] 'emacsvox-ecb-tree-clear)))
 
-
 (advice-add 'tree-buffer-create :after #'ems--tree-buffer-create-after)
-
-
-
-
 
 (defun ems--tree-buffer-incremental-node-search-around
     (orig-fun &rest args)
@@ -182,45 +156,36 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)) (beg nil) (end nil))
-	(apply orig-fun args)
-	(cond
-	 ((not (= start (point)))
-	  (let ((emacsvox-speak-messages nil) (case-fold-search t))
-	    (save-excursion
-	      (beginning-of-line) (setq beg (point)) (backward-char 1)
-	      (search-forward tree-buffer-incr-searchpattern)
-	      (setq end (point))
-	      (with-silent-modifications
-		(ems-set-personality-temporarily beg end voice-bolden
-						 (emacsvox-speak-line)))
-	      (emacsvox-icon 'search-hit))))
-	 (t (emacsvox-icon 'search-miss)))))
+        (apply orig-fun args)
+        (cond
+         ((not (= start (point)))
+          (let ((emacsvox-speak-messages nil) (case-fold-search t))
+            (save-excursion
+              (beginning-of-line) (setq beg (point)) (backward-char 1)
+              (search-forward tree-buffer-incr-searchpattern)
+              (setq end (point))
+              (with-silent-modifications
+                (ems-set-personality-temporarily beg end voice-bolden
+                                                 (emacsvox-speak-line)))
+              (emacsvox-icon 'search-hit))))
+         (t (emacsvox-icon 'search-miss)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'tree-buffer-incremental-node-search :around
-	    #'ems--tree-buffer-incremental-node-search-around)
-
-
-
-
+            #'ems--tree-buffer-incremental-node-search-around)
 
 (defun ems--tree-buffer-select-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'tree-buffer-select :after #'ems--tree-buffer-select-after)
-
-
 
 (defun tree-node-is-expanded (node)
   "Check if node is expanded."
   (or (not (tree-node->expandable node))
       (tree-node->expanded node)))
-
 
 (defun ems--tree-node-toggle-expanded-after (&rest _)
   "speak."
@@ -230,74 +195,44 @@
        ((tree-node-is-expanded node) (emacsvox-icon 'open-object))
        (t (emacsvox-icon 'close-object))))))
 
-
 (advice-add 'tree-node-toggle-expanded :after
-	    #'ems--tree-node-toggle-expanded-after)
-
-
-
-
+            #'ems--tree-node-toggle-expanded-after)
 
 (defun ems--tree-buffer-update-after (&rest _)
   "Provide context speech feedback."
   (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'tree-buffer-update :after #'ems--tree-buffer-update-after)
-
-
-
-
 
 (defun ems--tree-buffer-nolog-message-after (&rest _)
   "Speak the message." (dtk-speak ad-return-value))
 
-
 (advice-add 'tree-buffer-nolog-message :after
-	    #'ems--tree-buffer-nolog-message-after)
-
-
-
-
+            #'ems--tree-buffer-nolog-message-after)
 
 (defun ems--tree-buffer-arrow-pressed-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (emacsvox-speak-line)))
 
-
 (advice-add 'tree-buffer-arrow-pressed :after
-	    #'ems--tree-buffer-arrow-pressed-after)
-
-
-
-
+            #'ems--tree-buffer-arrow-pressed-after)
 
 (defun ems--tree-buffer-tab-pressed-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (emacsvox-speak-line)))
 
-
 (advice-add 'tree-buffer-tab-pressed :after
-	    #'ems--tree-buffer-tab-pressed-after)
-
-
-
-
+            #'ems--tree-buffer-tab-pressed-after)
 
 (defun ems--tree-buffer-return-pressed-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (emacsvox-speak-line)))
 
-
 (advice-add 'tree-buffer-return-pressed :after
-	    #'ems--tree-buffer-return-pressed-after)
-
-
-
-
+            #'ems--tree-buffer-return-pressed-after)
 
 (defun ems--tree-buffer-show-menu-keyboard-around
     (orig-fun &rest args)
@@ -307,12 +242,8 @@
     (tree-buffer-show-menu-keyboard 'use-tmm))
    (t (apply orig-fun args))))
 
-
 (advice-add 'tree-buffer-show-menu-keyboard :around
-	    #'ems--tree-buffer-show-menu-keyboard-around)
-
-
-
+            #'ems--tree-buffer-show-menu-keyboard-around)
 
 ;;;  commands to speak ECB windows without  moving
 

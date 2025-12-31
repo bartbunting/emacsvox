@@ -86,17 +86,12 @@
        (emacsvox-icon 'scroll)
        (emacsvox-speak-line)))))
 
-
 (defun ems--journalctl-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'journalctl-quit :after #'ems--journalctl-quit-after)
-
-
-
 
 (provide 'emacsvox-journalctl)
 ;;;  end of file

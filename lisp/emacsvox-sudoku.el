@@ -355,33 +355,23 @@ s   Sub-square Distribution.
 
 ;;;  advice interaction:
 
-
 (defun ems--sudoku-after (&rest _)
   "Speech-enable SuDoKu.\n  for details."
   (when (ems-interactive-p)
     (dtk-set-punctuations 'some) (emacsvox-icon 'open-object)
     (emacsvox-sudoku-speak-current-cell-value)))
 
-
 (advice-add 'sudoku :after #'ems--sudoku-after)
-
-
 
 (defvar emacsvox-sudoku-history-stack nil
   "Holds history of interesting board configurations.")
-
 
 (defun ems--sudoku-new-after (&rest _)
   "Reset history stack."
   
   (setq emacsvox-sudoku-history-stack nil))
 
-
 (advice-add 'sudoku-new :after #'ems--sudoku-new-after)
-
-
-
-
 
 (defun ems--sudoku-restart-after (&rest _)
   "speak."
@@ -389,11 +379,7 @@ s   Sub-square Distribution.
     (emacsvox-icon 'open-object)
     (emacsvox-sudoku-speak-current-cell-value)))
 
-
 (advice-add 'sudoku-restart :after #'ems--sudoku-restart-after)
-
-
-
 
 ;;;  implement history stack:
 

@@ -65,12 +65,7 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator :around #'ems--calculator-around)
-
-
-
-
 
 (defun ems--calculator-after (&rest _)
   "Speech enable calculator."
@@ -78,12 +73,7 @@
     (emacsvox-icon 'open-object)
     (message "Welcome to the pocket calculator.")))
 
-
 (advice-add 'calculator :after #'ems--calculator-after)
-
-
-
-
 
 (defun ems--calculator-digit-around (orig-fun &rest args)
   "Speak the digit."
@@ -91,16 +81,11 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-digit :around #'ems--calculator-digit-around)
-
-
-
-
 
 (defun ems--calculator-exp-around (orig-fun &rest args)
   "Speak the digit."
@@ -108,16 +93,11 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-exp :around #'ems--calculator-exp-around)
-
-
-
-
 
 (defun ems--calculator-op-around (orig-fun &rest args)
   "Speak the digit."
@@ -128,11 +108,7 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-op :around #'ems--calculator-op-around)
-
-
-
 
 (defun ems--calculator-op-or-exp-around (orig-fun &rest args)
   "Speak the digit."
@@ -140,16 +116,12 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-op-or-exp :around
-	    #'ems--calculator-op-or-exp-around)
-
-
-
+            #'ems--calculator-op-or-exp-around)
 
 (defun ems--calculator-open-paren-around (orig-fun &rest args)
   "Speak the digit."
@@ -157,17 +129,12 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-open-paren :around
-	    #'ems--calculator-open-paren-around)
-
-
-
-
+            #'ems--calculator-open-paren-around)
 
 (defun ems--calculator-close-paren-around (orig-fun &rest args)
   "Speak the digit."
@@ -175,17 +142,12 @@
     (cond
      ((ems-interactive-p)
       (let ((start (point)))
-	(apply orig-fun args) (emacsvox-speak-region start (point))))
+        (apply orig-fun args) (emacsvox-speak-region start (point))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-close-paren :around
-	    #'ems--calculator-close-paren-around)
-
-
-
-
+            #'ems--calculator-close-paren-around)
 
 (defun ems--calculator-saved-up-around (orig-fun &rest args)
   "Speak the digit."
@@ -196,13 +158,8 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-saved-up :around
-	    #'ems--calculator-saved-up-around)
-
-
-
-
+            #'ems--calculator-saved-up-around)
 
 (defun ems--calculator-saved-down-around (orig-fun &rest args)
   "Speak the digit."
@@ -213,51 +170,31 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-saved-down :around
-	    #'ems--calculator-saved-down-around)
-
-
-
-
+            #'ems--calculator-saved-down-around)
 
 (defun ems--calculator-save-on-list-after (&rest _)
   "Provide speech feedback"
   (when (ems-interactive-p)
     (emacsvox-icon 'save-object) (emacsvox-calculator-summarize)))
 
-
 (advice-add 'calculator-save-on-list :after
-	    #'ems--calculator-save-on-list-after)
-
-
-
-
+            #'ems--calculator-save-on-list-after)
 
 (defun ems--calculator-clear-saved-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-calculator-summarize)))
 
-
 (advice-add 'calculator-clear-saved :after
-	    #'ems--calculator-clear-saved-after)
-
-
-
-
+            #'ems--calculator-clear-saved-after)
 
 (defun ems--calculator-enter-after (&rest _)
   "Provide speech feedback"
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-calculator-summarize)))
 
-
 (advice-add 'calculator-enter :after #'ems--calculator-enter-after)
-
-
-
-
 
 (defun ems--calculator-backspace-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -269,92 +206,56 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'calculator-backspace :around
-	    #'ems--calculator-backspace-around)
-
-
-
-
+            #'ems--calculator-backspace-around)
 
 (defun ems--calculator-clear-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-calculator-summarize)))
 
-
 (advice-add 'calculator-clear :after #'ems--calculator-clear-after)
-
-
-
 
 (defun ems--calculator-copy-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-current-kill 1)))
 
-
 (advice-add 'calculator-copy :after #'ems--calculator-copy-after)
-
-
-
-
 
 (defun ems--calculator-paste-after (&rest _)
   "speak" (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
 
-
 (advice-add 'calculator-paste :after #'ems--calculator-paste-after)
-
-
-
-
 
 (defun ems--calculator-get-register-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'yank-object) (emacsvox-calculator-summarize)))
 
-
 (advice-add 'calculator-get-register :after
-	    #'ems--calculator-get-register-after)
-
-
-
+            #'ems--calculator-get-register-after)
 
 (defun ems--calculator-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'calculator-quit :after #'ems--calculator-quit-after)
-
-
-
 
 (defun ems--calculator-save-and-quit-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'calculator-save-and-quit :after
-	    #'ems--calculator-save-and-quit-after)
-
-
-
-
+            #'ems--calculator-save-and-quit-after)
 
 (defun ems--calculator-update-display-after (&rest _)
   "Speak the updated  display. " (emacsvox-speak-line))
 
-
 (advice-add 'calculator-update-display :after
-	    #'ems--calculator-update-display-after)
-
-
-
+            #'ems--calculator-update-display-after)
 
 ;;;   keys 
 (cl-declaim (special calculator-mode-map))

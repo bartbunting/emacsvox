@@ -49,7 +49,7 @@
 
 ;; restore emacsvox keybindings:
 (cl-declaim (special emacsvox-prefix))
-  
+
 (add-hook
  'view-mode-hook
  #'(lambda ()
@@ -60,23 +60,18 @@
 
 ;;;  Advise additional interactive commands:
 
-
 (defun ems--view-mode-after (&rest _)
   "Announce what happened" 
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object)
     (if view-mode
-	(message "Entered view mode Press %s to exit"
-		 (key-description
-		  (where-is-internal 'View-exit view-mode-map
-				     'firstonly)))
+        (message "Entered view mode Press %s to exit"
+                 (key-description
+                  (where-is-internal 'View-exit view-mode-map
+                                     'firstonly)))
       (message "Exited view mode"))))
 
-
 (advice-add 'view-mode :after #'ems--view-mode-after)
-
-
-
 
 (cl-loop
  for f in
@@ -123,11 +118,11 @@
  for f in
  '(
    View-scroll-half-page-backward View-scroll-half-page-forward
-View-scroll-line-backward View-scroll-line-forward
-View-scroll-lines-forward-set-scroll-size View-scroll-one-more-line
-View-scroll-page-backward view-scroll-page-forward 
-View-scroll-page-backward-set-page-size View-scroll-page-forward-set-page-size
-) do
+   View-scroll-line-backward View-scroll-line-forward
+   View-scroll-lines-forward-set-scroll-size View-scroll-one-more-line
+   View-scroll-page-backward view-scroll-page-forward 
+   View-scroll-page-backward-set-page-size View-scroll-page-forward-set-page-size
+   ) do
  `(eval
    (defadvice ,f (after emacsvox pre act comp)
      "speak"
@@ -135,48 +130,32 @@ View-scroll-page-backward-set-page-size View-scroll-page-forward-set-page-size
        (emacsvox-icon 'scroll)
        (emacsvox-speak-windowful)))))
 
-
 (defun ems--View-back-to-mark-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement)
     (let ((emacsvox-show-point t)) (emacsvox-speak-line))))
 
-
 (advice-add 'View-back-to-mark :after #'ems--View-back-to-mark-after)
-
-
-
-
 
 (defun ems--View-goto-line-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (let ((line-number (format "line %s" (ad-get-arg 0))))
       (put-text-property 0 (length line-number) 'personality
-			 voice-annotate line-number)
+                         voice-annotate line-number)
       (emacsvox-icon 'large-movement)
       (dtk-speak (concat line-number (ems--this-line))))))
 
-
 (advice-add 'View-goto-line :after #'ems--View-goto-line-after)
-
-
-
-
 
 (defun ems--View-scroll-to-buffer-end-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'large-movement)))
 
-
 (advice-add 'View-scroll-to-buffer-end :after
-	    #'ems--View-scroll-to-buffer-end-after)
-
-
-
-
+            #'ems--View-scroll-to-buffer-end-after)
 
 (defun ems--View-goto-percent-after (&rest _)
   "speak"
@@ -184,11 +163,7 @@ View-scroll-page-backward-set-page-size View-scroll-page-forward-set-page-size
     (emacsvox-icon 'scroll)
     (dtk-speak (emacsvox-get-window-contents))))
 
-
 (advice-add 'View-goto-percent :after #'ems--View-goto-percent-after)
-
-
-
 
 ;;;  bind convenience keys
 

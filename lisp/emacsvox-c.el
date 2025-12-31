@@ -56,7 +56,6 @@
 
 ;;;  advice electric deletion
 
-
 (defun ems--c-electric-delete-forward-around (orig-fun &rest args)
   "Speak character you're deleting."
   (let ((result (apply orig-fun args)))
@@ -67,11 +66,8 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'c-electric-delete-forward :around
-	    #'ems--c-electric-delete-forward-around)
-
-
+            #'ems--c-electric-delete-forward-around)
 
 (cl-loop
  for f in
@@ -91,152 +87,97 @@
 ;;;   advice things to speak
 ;;;   Electric chars speak
 
-
 (defun ems--c-electric-semi&comma-after (&rest _)
   "Speak the line when a statement is completed."
   (when (ems-interactive-p)
     (cond ((= last-input-event 44) (dtk-speak " comma "))
-	  (t (emacsvox-speak-line)))))
-
+          (t (emacsvox-speak-line)))))
 
 (advice-add 'c-electric-semi&comma :after
-	    #'ems--c-electric-semi&comma-after)
-
-
-
-
+            #'ems--c-electric-semi&comma-after)
 
 (defun ems--c-electric-delete-before (&rest _)
   "Speak char before deleting it."
   (when (ems-interactive-p)
     (emacsvox-speak-this-char (preceding-char)) (dtk-tone-deletion)))
 
-
 (advice-add 'c-electric-delete :before #'ems--c-electric-delete-before)
-
-
-
 
 ;;;   Moving across logical chunks
 
 ;; CPP directives:
-
 
 (defun ems--c-up-conditional-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'c-up-conditional :after #'ems--c-up-conditional-after)
-
-
-
-
 
 (defun ems--c-forward-conditional-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'c-forward-conditional :after
-	    #'ems--c-forward-conditional-after)
-
-
-
-
+            #'ems--c-forward-conditional-after)
 
 (defun ems--c-backward-conditional-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-
 (advice-add 'c-backward-conditional :after
-	    #'ems--c-backward-conditional-after)
-
-
-
+            #'ems--c-backward-conditional-after)
 
 ;; Statements
-
 
 (defun ems--c-beginning-of-statement-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
 
-
 (advice-add 'c-beginning-of-statement :after
-	    #'ems--c-beginning-of-statement-after)
-
-
-
-
+            #'ems--c-beginning-of-statement-after)
 
 (defun ems--c-end-of-statement-after (&rest _)
   "Speak the line moved to."
   (when (ems-interactive-p)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
 
-
 (advice-add 'c-end-of-statement :after #'ems--c-end-of-statement-after)
-
-
-
-
 
 (defun ems--c-mark-function-after (&rest _)
   "Provide spoken and auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
 
-
 (advice-add 'c-mark-function :after #'ems--c-mark-function-after)
 
-
-
-
 ;;;  advice program navigation
-
 
 (defun ems--c-beginning-of-defun-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
     (emacsvox-icon 'paragraph) (emacsvox-speak-line)))
 
-
 (advice-add 'c-beginning-of-defun :after
-	    #'ems--c-beginning-of-defun-after)
-
-
-
-
+            #'ems--c-beginning-of-defun-after)
 
 (defun ems--c-end-of-defun-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
     (emacsvox-icon 'paragraph) (emacsvox-speak-line)))
 
-
 (advice-add 'c-end-of-defun :after #'ems--c-end-of-defun-after)
 
-
-
-
 ;;;   extensions  provided by c++ mode
-
 
 (defun ems--c-scope-operator-after (&rest _)
   "speak what you inserted."
   (when (ems-interactive-p) (dtk-speak "colon colon")))
 
-
 (advice-add 'c-scope-operator :after #'ems--c-scope-operator-after)
-
-
-
 
 ;;;   Some more navigation functions I define:
 
@@ -423,26 +364,16 @@ and their meanings. ")
 
 ;;;   indenting commands
 
-
 (defun ems--c-indent-defun-after (&rest _)
   (when (ems-interactive-p)
     (emacsvox-icon 'fill-object) (message "Indented function")))
 
-
 (advice-add 'c-indent-defun :after #'ems--c-indent-defun-after)
-
-
-
-
 
 (defun ems--c-indent-command-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'c-indent-command :after #'ems--c-indent-command-after)
-
-
-
 
 ;;;  Additional Interactive Commands:
 
@@ -465,10 +396,7 @@ and their meanings. ")
     (emacsvox-icon 'task-done)
     (emacsvox-speak-region (point) (mark))))
 
-
 (advice-add 'c-backslash-region :after #'ems--c-backslash-region-after)
-
-
 
 (cl-loop
  for f in

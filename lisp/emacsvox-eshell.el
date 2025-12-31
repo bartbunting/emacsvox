@@ -79,7 +79,6 @@
 
 ;;;   Advice top-level EShell
 
-
 (defun ems--eshell-after (&rest _)
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
   (when (ems-interactive-p)
@@ -88,11 +87,7 @@
     (emacsvox-pronounce-refresh-pronunciations)
     (emacsvox-speak-line)))
 
-
 (advice-add 'eshell :after #'ems--eshell-after)
-
-
-
 
 ;;;  advice em-hist
 
@@ -173,21 +168,15 @@ personalities.")
                (emacsvox-icon 'select-object)
                (emacsvox-speak-line)))))
 
-
 (defun ems--eshell-insert-process-after (&rest _)
   "Speak output."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'eshell-insert-process :after
-	    #'ems--eshell-insert-process-after)
-
-
-
+            #'ems--eshell-insert-process-after)
 
 ;;;  advice esh-mode
-
 
 (defun ems--eshell-delchar-or-maybe-eof-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -196,19 +185,14 @@ personalities.")
      ((ems-interactive-p)
       (cond
        ((= (point) (point-max))
-	(message "Sending EOF to comint process"))
+        (message "Sending EOF to comint process"))
        (t (dtk-tone 500 100 'force) (emacsvox-speak-char t)))
       (apply orig-fun args))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'eshell-delchar-or-maybe-eof :around
-	    #'ems--eshell-delchar-or-maybe-eof-around)
-
-
-
-
+            #'ems--eshell-delchar-or-maybe-eof-around)
 
 (defun ems--eshell-delete-backward-char-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -220,13 +204,8 @@ personalities.")
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'eshell-delete-backward-char :around
-	    #'ems--eshell-delete-backward-char-around)
-
-
-
-
+            #'ems--eshell-delete-backward-char-around)
 
 (defun ems--eshell-show-output-after (&rest _)
   "Speak output."
@@ -235,11 +214,7 @@ personalities.")
       (emacsvox-icon 'large-movement)
       (emacsvox-speak-region (point) (mark)))))
 
-
 (advice-add 'eshell-show-output :after #'ems--eshell-show-output-after)
-
-
-
 
 (defun ems--eshell-mark-output-after (&rest _)
   "Speak output."
@@ -247,35 +222,21 @@ personalities.")
     (let ((emacsvox-show-point t))
       (emacsvox-icon 'mark-object) (emacsvox-speak-line))))
 
-
 (advice-add 'eshell-mark-output :after #'ems--eshell-mark-output-after)
-
-
-
 
 (defun ems--eshell-kill-output-after (&rest _)
   "Produce auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (message "Flushed output")))
 
-
 (advice-add 'eshell-kill-output :after #'ems--eshell-kill-output-after)
-
-
-
-
 
 (defun ems--eshell-kill-input-before (&rest _)
   "Speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-
 (advice-add 'eshell-kill-input :before #'ems--eshell-kill-input-before)
-
-
-
-
 
 (defun ems--eshell-toggle-after (&rest _)
   "Provide spoken context feedback."
@@ -286,24 +247,16 @@ personalities.")
      (t (emacsvox-speak-mode-line)))
     (emacsvox-icon 'select-object)))
 
-
 (advice-add 'eshell-toggle :after #'ems--eshell-toggle-after)
-
-
-
 
 (defun ems--eshell-toggle-cd-after (&rest _)
   "Provide spoken context feedback."
   (when (ems-interactive-p)
     (cond ((eq major-mode 'eshell-mode) (emacsvox-speak-line))
-	  (t (emacsvox-speak-mode-line)))
+          (t (emacsvox-speak-mode-line)))
     (emacsvox-icon 'select-object)))
 
-
 (advice-add 'eshell-toggle-cd :after #'ems--eshell-toggle-cd-after)
-
-
-
 
 ;;; Additional Commands To Enable: 
 
@@ -338,7 +291,6 @@ personalities.")
           (emacsvox-speak-completions-if-available))
         ad-return-value)))))
 
-
 (defun ems--eshell-copy-old-input-after (&rest _)
   "Speak what was inserted."
   (when (ems-interactive-p)
@@ -346,12 +298,8 @@ personalities.")
       (emacsvox-icon 'yank-object)
       (emacsvox-speak-region start (point)))))
 
-
 (advice-add 'eshell-copy-old-input :after
-	    #'ems--eshell-copy-old-input-after)
-
-
-
+            #'ems--eshell-copy-old-input-after)
 
 (defun ems--eshell-get-next-from-history-after (&rest _)
   "Speak what was inserted."
@@ -360,12 +308,8 @@ personalities.")
       (emacsvox-icon 'yank-object)
       (emacsvox-speak-region start (point)))))
 
-
 (advice-add 'eshell-get-next-from-history :after
-	    #'ems--eshell-get-next-from-history-after)
-
-
-
+            #'ems--eshell-get-next-from-history-after)
 
 (provide 'emacsvox-eshell)
 ;;;  end of file

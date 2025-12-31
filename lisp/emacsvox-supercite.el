@@ -55,42 +55,27 @@
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (message "Cited region containing %s lines"
-	     (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
-
+             (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
 
 (advice-add 'sc-cite-region :after #'ems--sc-cite-region-after)
-
-
-
-
 
 (defun ems--sc-recite-region-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (message "Re-cited region containing %s lines"
-	     (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
-
+             (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
 
 (advice-add 'sc-recite-region :after #'ems--sc-recite-region-after)
-
-
-
-
 
 (defun ems--sc-uncite-region-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'mark-object)
     (message "Uncited region containing %s lines"
-	     (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
-
+             (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
 
 (advice-add 'sc-uncite-region :after #'ems--sc-uncite-region-after)
-
-
-
-
 
 (defun ems--sc-insert-reference-around (orig-fun &rest args)
   "Speak what we inserted"
@@ -98,40 +83,27 @@
     (cond
      ((ems-interactive-p)
       (let ((opoint (point)))
-	(apply orig-fun args) (emacsvox-speak-region opoint (point))
-	(emacsvox-icon 'yank-object)))
+        (apply orig-fun args) (emacsvox-speak-region opoint (point))
+        (emacsvox-icon 'yank-object)))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sc-insert-reference :around
-	    #'ems--sc-insert-reference-around)
-
-
-
+            #'ems--sc-insert-reference-around)
 
 (defun ems--sc-insert-citation-after (&rest _)
   "Speak what we inserted"
   (when (ems-interactive-p)
     (emacsvox-speak-line) (emacsvox-icon 'yank-object)))
 
-
 (advice-add 'sc-insert-citation :after #'ems--sc-insert-citation-after)
-
-
-
-
 
 (defun ems--sc-open-line-after (&rest _)
   "speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (dtk-speak "Opened a blank line")))
 
-
 (advice-add 'sc-open-line :after #'ems--sc-open-line-after)
-
-
-
 
 (provide 'emacsvox-supercite)
 

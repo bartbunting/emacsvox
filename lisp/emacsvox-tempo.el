@@ -60,37 +60,22 @@
 
 ;;;   Advice: 
 
-
 (defun ems--tempo-forward-mark-after (&rest _)
   "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'tempo-forward-mark :after #'ems--tempo-forward-mark-after)
-
-
-
-
 
 (defun ems--tempo-backward-mark-after (&rest _)
   "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'tempo-backward-mark :after
-	    #'ems--tempo-backward-mark-after)
-
-
-
-
+            #'ems--tempo-backward-mark-after)
 
 (defun ems--html-helper-smart-insert-item-after (&rest _)
   "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'html-helper-smart-insert-item :after
-	    #'ems--html-helper-smart-insert-item-after)
-
-
-
+            #'ems--html-helper-smart-insert-item-after)
 
 (emacsvox-pronounce-add-super 'sgml-mode 'html-helper-mode)
 

@@ -61,27 +61,17 @@
      (when (ems-interactive-p)
        (emacsvox-speak-char t)))))
 
-
 (defun ems--folding-goto-line-after (&rest _)
   "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'folding-goto-line :after #'ems--folding-goto-line-after)
-
-
-
-
 
 (defun ems--folding-mode-after (&rest _)
   "Speak"
   (when (ems-interactive-p)
     (emacsvox-icon 'button) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'folding-mode :after #'ems--folding-mode-after)
-
-
-
 
 (cl-loop
  for f in
@@ -124,19 +114,14 @@ Then speak the  line."
        (emacsvox-icon'open-object)
        (emacsvox-speak-line)))))
 
-
 (defun ems--folding-fold-region-after (&rest _)
   "Produce an auditory icon. "
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object)
     (message "Specify a meaningful name for the new fold ")))
 
-
 (advice-add 'folding-fold-region :after
-	    #'ems--folding-fold-region-after)
-
-
-
+            #'ems--folding-fold-region-after)
 
 (cl-loop
  for f in 

@@ -54,20 +54,14 @@
 
 ;;;  advice
 
-
 (defun ems--sqlplus-execute-command-after (&rest _)
   "speak and place point at the start of the output."
   (when (ems-interactive-p)
     (emacsvox-icon 'scroll) (sqlplus-back-command 2) (forward-line 1)
     (emacsvox-speak-line)))
 
-
 (advice-add 'sqlplus-execute-command :after
-	    #'ems--sqlplus-execute-command-after)
-
-
-
-
+            #'ems--sqlplus-execute-command-after)
 
 (defun ems--sqlplus-back-command-after (&rest _)
   "Move prompt appropriately,  and speak the line."
@@ -75,13 +69,8 @@
     (emacsvox-icon 'large-movement) (forward-line 1)
     (emacsvox-speak-line)))
 
-
 (advice-add 'sqlplus-back-command :after
-	    #'ems--sqlplus-back-command-after)
-
-
-
-
+            #'ems--sqlplus-back-command-after)
 
 (defun ems--sqlplus-forward-command-after (&rest _)
   "Move prompt appropriately,  and speak the line."
@@ -89,39 +78,24 @@
     (emacsvox-icon 'large-movement) (forward-line 1)
     (emacsvox-speak-line)))
 
-
 (advice-add 'sqlplus-forward-command :after
-	    #'ems--sqlplus-forward-command-after)
-
-
-
-
+            #'ems--sqlplus-forward-command-after)
 
 (defun ems--sqlplus-next-command-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'sqlplus-next-command :after
-	    #'ems--sqlplus-next-command-after)
-
-
-
-
+            #'ems--sqlplus-next-command-after)
 
 (defun ems--sqlplus-previous-command-after (&rest _)
   "Speak the line."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-
 (advice-add 'sqlplus-previous-command :after
-	    #'ems--sqlplus-previous-command-after)
-
-
-
-
+            #'ems--sqlplus-previous-command-after)
 
 (defun ems--sql-send-region-around (orig-fun &rest args)
   "speak."
@@ -132,12 +106,7 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sql-send-region :around #'ems--sql-send-region-around)
-
-
-
-
 
 (defun ems--sql-send-buffer-around (orig-fun &rest args)
   "speak."
@@ -148,11 +117,7 @@
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'sql-send-buffer :around #'ems--sql-send-buffer-around)
-
-
-
 
 (provide 'emacsvox-sql)
 

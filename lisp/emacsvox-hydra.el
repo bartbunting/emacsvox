@@ -99,28 +99,18 @@
 
 (voice-setup-set-voice-for-face 'lv-separator  'inaudible)
 
-
 (defun ems--lv-message-after (&rest _)
   "speak."  (emacsvox-icon 'help)
   (with-current-buffer (window-buffer (lv-window))
     (setq ems--lv-cache (buffer-substring (point-min) (point-max)))
     (emacsvox-speak-buffer)))
 
-
 (advice-add 'lv-message :after #'ems--lv-message-after)
-
-
-
-
 
 (defun ems--lv-delete-window-after (&rest _)
   "speak." (dtk-stop 'all) (emacsvox-icon 'delete-object))
 
-
 (advice-add 'lv-delete-window :after #'ems--lv-delete-window-after)
-
-
-
 
 (provide 'emacsvox-hydra)
 ;;;  end of file

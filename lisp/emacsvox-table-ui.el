@@ -304,9 +304,9 @@ Full List Of Keybindings:
              (format " %s" element)))))
 
 (defun emacsvox-table-get-entry-with-headers  (row column
-                                                    &optional
-                                                    row-head-p
-                                                    col-head-p)
+                                                   &optional
+                                                   row-head-p
+                                                   col-head-p)
   "Return table element. Optional args specify  if we return any headers."
   
   (cl-assert  (boundp 'emacsvox-table) nil "No table here")
@@ -958,25 +958,25 @@ table markup.")
   (emacsvox-table-markup-set-table 'html-helper-mode html-table))
 
 (emacsvox-table-markup-set-table 'latex2e-mode
-                                  (emacsvox-table-make-markup
-                                   :table-start "\\begin{tabular}{}\n"
-                                   :table-end "\\end{tabular}\n"
-                                   :row-start ""
-                                   :row-end "\\\\\n"
-                                   :col-start ""
-                                   :col-end ""
-                                   :col-separator " & "))
+                                 (emacsvox-table-make-markup
+                                  :table-start "\\begin{tabular}{}\n"
+                                  :table-end "\\end{tabular}\n"
+                                  :row-start ""
+                                  :row-end "\\\\\n"
+                                  :col-start ""
+                                  :col-end ""
+                                  :col-separator " & "))
 (emacsvox-table-markup-set-table 'latex-mode
-                                  (emacsvox-table-markup-get-table
-                                   'latex2e-mode))
+                                 (emacsvox-table-markup-get-table
+                                  'latex2e-mode))
 
 (emacsvox-table-markup-set-table 'LaTeX-mode
-                                  (emacsvox-table-markup-get-table
-                                   'latex2e-mode))
+                                 (emacsvox-table-markup-get-table
+                                  'latex2e-mode))
 
 (emacsvox-table-markup-set-table 'TeX-mode
-                                  (emacsvox-table-markup-get-table
-                                   'latex2e-mode))
+                                 (emacsvox-table-markup-get-table
+                                  'latex2e-mode))
 
 (emacsvox-table-markup-set-table
  'org-mode
@@ -990,14 +990,14 @@ table markup.")
   :col-separator "|"))
 
 (emacsvox-table-markup-set-table 'fundamental-mode
-                                  (emacsvox-table-make-markup
-                                   :table-start ""
-                                   :table-end ""
-                                   :row-start ""
-                                   :row-end "\n"
-                                   :col-start "\""
-                                   :col-end "\""
-                                   :col-separator ", "))
+                                 (emacsvox-table-make-markup
+                                  :table-start ""
+                                  :table-end ""
+                                  :row-start ""
+                                  :row-end "\n"
+                                  :col-start "\""
+                                  :col-end "\""
+                                  :col-separator ", "))
 
 (emacsvox-table-markup-set-table
  'text-mode

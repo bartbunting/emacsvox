@@ -148,55 +148,33 @@
        (dtk-stop 'all)
        (emacsvox-icon 'button)))))
 
-
 (defun ems--empv-lyrics-display-mode-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'empv-lyrics-display-mode :after
-	    #'ems--empv-lyrics-display-mode-after)
-
-
-
-
-
+            #'ems--empv-lyrics-display-mode-after)
 
 (defun ems--empv-youtube-results-play-current-before (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
 
-
 (advice-add 'empv-youtube-results-play-current :before
-	    #'ems--empv-youtube-results-play-current-before)
-
-
-
-
+            #'ems--empv-youtube-results-play-current-before)
 
 (defun ems--empv-youtube-results-inspect-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'empv-youtube-results-inspect :after
-	    #'ems--empv-youtube-results-inspect-after)
-
-
-
-
+            #'ems--empv-youtube-results-inspect-after)
 
 (defun ems--empv-youtube-tabulated-before (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
 
-
 (advice-add 'empv-youtube-tabulated :before
-	    #'ems--empv-youtube-tabulated-before)
-
-
-
-
+            #'ems--empv-youtube-tabulated-before)
 
 (defun ems--empv-exit-after (&rest _)
   "Icon." (repeat-exit)
@@ -204,11 +182,7 @@
     (dtk-stop 'all) (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
-
 (advice-add 'empv-exit :after #'ems--empv-exit-after)
-
-
-
 
 ;;; Additional Commands:
 
@@ -231,24 +205,19 @@
   (add-to-history 'emacsvox-empv-history url emacsvox-empv-history-max)
   (empv-play url))
 
-
 (defun ems--empv-play-before (&rest _)
   "Record history."
   (cl-declare
    (special emacsvox-empv-history-max emacsvox-empv-history))
   (let ((url (ad-get-arg 0)))
     (when
-	(and url (stringp url)
-	     (string-prefix-p (emacsvox-google-result-url-prefix) url))
+        (and url (stringp url)
+             (string-prefix-p (emacsvox-google-result-url-prefix) url))
       (setq url (emacsvox-google-canonicalize-result-url url)))
     (add-to-history 'emacsvox-empv-history url
-		    emacsvox-empv-history-max)))
-
+                    emacsvox-empv-history-max)))
 
 (advice-add 'empv-play :before #'ems--empv-play-before)
-
-
-
 
 (defun emacsvox-empv-play-last ()
   "Play most recently played URL."
@@ -287,7 +256,7 @@ If already playing, then read an empv key and invoke its command."
   "Accumulate media links to register u"
   (interactive)
   (emacsvox-accumulate-to-register ?u
-                                    'empv-youtube-results--current-video-url))
+                                   'empv-youtube-results--current-video-url))
 (declare-function emacsvox-eww-yt-dl "emacsvox-eww" (url))
 
 ;;; Lyrics:
@@ -304,9 +273,9 @@ If already playing, then read an empv key and invoke its command."
   "Speak time and percent position."
   (interactive)
   (empv--let-properties '(time-pos percent-pos)
-    (message "%s.  %.2d%%"
-             (ems--format-clock (or .time-pos 0))
-             (or .percent-pos 0))))
+                        (message "%s.  %.2d%%"
+                                 (ems--format-clock (or .time-pos 0))
+                                 (or .percent-pos 0))))
 
 (defsubst emacsvox-empv-post-nav ()
   "Post nav action"
@@ -387,14 +356,13 @@ If already playing, then read an empv key and invoke its command."
      (emacsvox-pronounce-refresh-pronunciations)))
 
 (add-hook
-   'empv-youtube-tabulated-new-entries-hook
-   #'(lambda (e &rest _) (message (alist-get 'title (cl-first e)))))
+ 'empv-youtube-tabulated-new-entries-hook
+ #'(lambda (e &rest _) (message (alist-get 'title (cl-first e)))))
 (defun emacsvox-empv-current-title ()
   "Speak title of currently selected item."
   (interactive)
   (emacsvox-icon 'select-object)
   (message (cdr (assq 'title (empv-youtube-results--current-item)))))
-
 
 (defun ems--empv-youtube-results-copy-current-after (&rest _)
   "speak."
@@ -402,14 +370,8 @@ If already playing, then read an empv key and invoke its command."
     (emacsvox-icon 'yank-object)
     (message (current-kill 0 'dont-move))))
 
-
 (advice-add 'empv-youtube-results-copy-current :after
-	    #'ems--empv-youtube-results-copy-current-after)
-
-
-
-
-
+            #'ems--empv-youtube-results-copy-current-after)
 
 (defun ems--empv--youtube-tabulated-entries-append-after (&rest _)
   "speak."
@@ -417,20 +379,16 @@ If already playing, then read an empv key and invoke its command."
     (emacsvox-icon 'scroll)
     (dtk-notify
      (format "%s: %s results"
-	     (cdr
-	      (assoc 'title
-		     (cl-first
-		      (empv--yt-search-results
-		       empv--last-youtube-search))))
-	     (length
-	      (empv--yt-search-results empv--last-youtube-search))))))
-
+             (cdr
+              (assoc 'title
+                     (cl-first
+                      (empv--yt-search-results
+                       empv--last-youtube-search))))
+             (length
+              (empv--yt-search-results empv--last-youtube-search))))))
 
 (advice-add 'empv--youtube-tabulated-entries-append :after
-	    #'ems--empv--youtube-tabulated-entries-append-after)
-
-
-
+            #'ems--empv--youtube-tabulated-entries-append-after)
 
 (defun emacsvox-empv-setup ()
   "Emacsvox setup for empv."
@@ -496,7 +454,6 @@ If already playing, then read an empv key and invoke its command."
    emacsvox-empv-toggle-left emacsvox-empv-toggle-right
    emacsvox-empv-absolute-seek  emacsvox-empv-percentage-seek
    emacsvox-empv-relative-seek))
-
 
 (defvar emacsvox-empv-filter-history nil
   "History of filters used.")
@@ -572,7 +529,6 @@ The default value is suitable for classical instrumental music."
 
 (declare-function calendar-cursor-to-date "calendar" (&optional error event))
 
-
 ;;;###autoload
 (defun emacsvox-empv-yt-after ()
   "Youtube Search  from calendar --- add after:date-at-point.."
@@ -599,7 +555,6 @@ The default value is suitable for classical instrumental music."
     (funcall-interactively
      'empv-youtube-tabulated
      (concat (read-from-minibuffer "YT Search Before") date))))
-
 
 (provide 'emacsvox-empv)
 ;;;  end of file

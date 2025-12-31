@@ -538,16 +538,12 @@ current page."
 
 ;;;  Advice GMaps:
 
-
 (defun ems--gmaps-after (&rest _)
   "Provide  auditory feedback."
   (when (ems-interactive-p)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-
 (advice-add 'gmaps :after #'ems--gmaps-after)
-
-
 
 (cl-loop for f in
          '(gmaps-driving-directions
@@ -562,30 +558,19 @@ current page."
                (emacsvox-icon 'task-done)
                (emacsvox-speak-rest-of-buffer)))))
 
-
 (defun ems--gmaps-set-current-location-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-speak-header-line)))
 
-
 (advice-add 'gmaps-set-current-location :after
-	    #'ems--gmaps-set-current-location-after)
-
-
-
-
+            #'ems--gmaps-set-current-location-after)
 
 (defun ems--gmaps-set-current-radius-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (message "Radius set to %s. " gmaps-current-radius)))
 
-
 (advice-add 'gmaps-set-current-radius :after
-	    #'ems--gmaps-set-current-radius-after)
-
-
-
-
+            #'ems--gmaps-set-current-radius-after)
 
 (defun ems--gmaps-place-details-around (orig-fun &rest args)
   "speak."
@@ -593,19 +578,15 @@ current page."
     (cond
      ((ems-interactive-p) (apply orig-fun args)
       (emacsvox-speak-region (point)
-			      (or
-			       (next-single-property-change (point)
-							    'place-details)
-			       (point-max))))
+                             (or
+                              (next-single-property-change (point)
+                                                           'place-details)
+                              (point-max))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'gmaps-place-details :around
-	    #'ems--gmaps-place-details-around)
-
-
-
+            #'ems--gmaps-place-details-around)
 
 ;;;  TTS:
 
@@ -803,8 +784,6 @@ results, default is 1."
       (browse-url-of-buffer))))
 ;;; Google from Calendar:
 (declare-function calendar-cursor-to-date "calendar" (&optional error event))
-
-
 
 ;;;###autoload
 (defun emacsvox-google-search-after ()

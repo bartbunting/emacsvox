@@ -51,16 +51,10 @@
 
 ;;;  Advice edeitor to speak
 
-
 (defun ems--ess-indent-command-after (&rest _)
   "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
 
-
 (advice-add 'ess-indent-command :after #'ems--ess-indent-command-after)
-
-
-
-
 
 (defun ems--ess-smart-underscore-around (orig-fun &rest args)
   "Speak what you inserted."
@@ -68,16 +62,13 @@
     (cond
      ((ems-interactive-p)
       (let ((orig (point)))
-	(apply orig-fun args)
-	(dtk-speak (buffer-substring orig (point)))))
+        (apply orig-fun args)
+        (dtk-speak (buffer-substring orig (point)))))
      (t (apply orig-fun args)))
     result))
 
-
 (advice-add 'ess-smart-underscore :around
-	    #'ems--ess-smart-underscore-around)
-
-
+            #'ems--ess-smart-underscore-around)
 
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook
@@ -102,20 +93,14 @@ Cue electric insertion with a tone."
                (emacsvox-icon 'large-movement)
                (emacsvox-speak-line)))))
 
-
 (defun ems--ess-mark-function-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'select-object)
     (message "Marked function containing %s lines."
-	     (count-lines (point) (mark)))))
-
+             (count-lines (point) (mark)))))
 
 (advice-add 'ess-mark-function :after #'ems--ess-mark-function-after)
-
-
-
-
 
 (defun ems--ess-indent-exp-after (&rest _)
   "speak."
@@ -123,11 +108,7 @@ Cue electric insertion with a tone."
     (emacsvox-icon 'fill-object)
     (message "Indented current s expression ")))
 
-
 (advice-add 'ess-indent-exp :after #'ems--ess-indent-exp-after)
-
-
-
 
 ;;;  Evaluators
 
@@ -156,11 +137,8 @@ Cue electric insertion with a tone."
   (when (ems-interactive-p)
     (emacsvox-icon 'help) (message "Displayed help in other window.")))
 
-
 (advice-add 'ess-display-help-on-object :after
-	    #'ems--ess-display-help-on-object-after)
-
-
+            #'ems--ess-display-help-on-object-after)
 
 (cl-loop for f in
          '(
