@@ -76,10 +76,12 @@ CORE_OBJECTS =  \
 amixer.elc \
 emacsvox-2048.elc \
 emacsvox-abc-mode.elc \
+emacsvox-ace-window.elc \
 emacsvox-add-log.elc \
 emacsvox-amark.elc \
 emacsvox-annotate.elc \
 emacsvox-arc.elc \
+emacsvox-avy.elc \
 emacsvox-auctex.elc \
 emacsvox-bbdb.elc \
 emacsvox-bibtex.elc \
@@ -107,6 +109,7 @@ emacsvox-cperl.elc \
 emacsvox-custom.elc \
 emacsvox-dbus.elc \
 emacsvox-deadgrep.elc \
+emacsvox-denote.elc \
 emacsvox-debugger.elc \
 emacsvox-desktop.elc \
 emacsvox-devdocs.elc \
@@ -165,6 +168,7 @@ emacsvox-gridtext.elc \
 emacsvox-gud.elc \
 emacsvox-haskell.elc \
 emacsvox-helm.elc \
+emacsvox-helpful.elc \
 emacsvox-hide-lines.elc  \
 emacsvox-hide.elc \
 emacsvox-hideshow.elc \
@@ -185,11 +189,13 @@ emacsvox-m-player.elc \
 emacsvox-magit.elc \
 emacsvox-make-mode.elc \
 emacsvox-man.elc \
+emacsvox-marginalia.elc \
 emacsvox-markdown.elc \
 emacsvox-maths.elc \
 emacsvox-message.elc \
 emacsvox-mines.elc \
 emacsvox-mu4e.elc \
+emacsvox-multiple-cursors.elc \
 emacsvox-muse.elc \
 emacsvox-net-utils.elc \
 emacsvox-newsticker.elc \
