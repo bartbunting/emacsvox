@@ -85,7 +85,6 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'derived)
 (eval-when-compile (require 'transient))
@@ -220,7 +219,7 @@
   (with-selected-window
       (if (window-live-p transient--window)
           transient--window (selected-window))
-    (when-let
+    (when-let*
         ((match
           (text-property-search-forward 'face 'transient-heading t t)))
       (goto-char (prop-match-beginning match))
@@ -232,7 +231,7 @@
   (with-selected-window
       (if (window-live-p transient--window)
           transient--window (selected-window))
-    (when-let
+    (when-let*
         ((match
           (text-property-search-backward
            'face 'transient-heading t t)))
@@ -263,7 +262,7 @@
       ((ems-interactive-p)
        ad-do-it
        (with-current-buffer (window-buffer transient--window)
-         (when-let ((button (button-at (point)))
+         (when-let* ((button (button-at (point)))
                     (start (button-start button))
                     (end (button-end button)))
            (dtk-speak (buffer-substring start end))

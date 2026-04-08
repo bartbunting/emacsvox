@@ -49,7 +49,6 @@
 (eval-when-compile
   (require 'cl-lib))
 (require 'cl-extra)
-(cl-declaim (optimize (safety 0) (speed 3)))
 (eval-when-compile
   (require 'subr-x)
   (require 'derived)
@@ -2387,7 +2386,7 @@ external package."
   (let ((l (local-key-binding key))
         (g (global-key-binding key))
         (k
-         (when-let (map (get-text-property (point) 'keymap))
+         (when-let* (map (get-text-property (point) 'keymap))
            (lookup-key map key))))
     (cl-flet
         ((do-it (command)

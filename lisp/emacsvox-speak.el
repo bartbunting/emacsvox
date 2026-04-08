@@ -51,7 +51,6 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'voice-setup)
 (require 'voice-defs)
 (require 'dtk-speak)
@@ -2824,30 +2823,29 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
 (defun emacsvox-submit-bug ()
   "Function to submit a bug to the Emacsvox list"
   (interactive)
-  )
-(require 'reporter)
-(when
-    (yes-or-no-p "Are you sure you want to submit a bug report? ")
-  (let ((reporter-prompt-for-summary-p t)
-        (vars
-         '(
-           window-system window-system-version emacs-version system-type
-           emacsvox-version emacsvox-show-point
-           dtk-program dtk-speech-rate dtk-character-scale
-           dtk-split-caps dtk-punctuation-mode visual-line-mode
-           emacsvox-line-echo  emacsvox-word-echo emacsvox-character-echo 
-           emacsvox-audio-indentation )))
-    (mapc
-     #'(lambda (x)
-         (if (not (and (boundp x) (symbol-value x)))
-             (setq vars (delq x vars))))
-     vars)
-    (when  reporter-prompt-for-summary-p ; to appease compiler
-      (reporter-submit-bug-report
-       emacsvox-bug-address 
-       (concat "Emacsvox: " emacsvox-version)
-       vars nil nil
-       "Description of Problem:")))))
+  (require 'reporter)
+  (when
+      (yes-or-no-p "Are you sure you want to submit a bug report? ")
+    (let ((reporter-prompt-for-summary-p t)
+          (vars
+           '(
+             window-system window-system-version emacs-version system-type
+             emacsvox-version emacsvox-show-point
+             dtk-program dtk-speech-rate dtk-character-scale
+             dtk-split-caps dtk-punctuation-mode visual-line-mode
+             emacsvox-line-echo  emacsvox-word-echo emacsvox-character-echo
+             emacsvox-audio-indentation)))
+      (mapc
+       #'(lambda (x)
+           (if (not (and (boundp x) (symbol-value x)))
+               (setq vars (delq x vars))))
+       vars)
+      (when reporter-prompt-for-summary-p ; to appease compiler
+        (reporter-submit-bug-report
+         emacsvox-bug-address
+         (concat "Emacsvox: " emacsvox-version)
+         vars nil nil
+         "Description of Problem:")))))
 (provide 'emacsvox-speak)
 
 ;;;  end of file

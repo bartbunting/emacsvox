@@ -47,7 +47,6 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 ;;;  Map Faces:
@@ -102,7 +101,7 @@
           :test #'string= :key #'car)))
     (forward-line 1)
     (tabulated-list-next-column  col)
-    (when-let ((goal (next-single-property-change (point)
+    (when-let* ((goal (next-single-property-change (point)
                                                   'tabulated-list-column-name)))
       (goto-char goal))
     (emacsvox-tabulated-list-speak-cell)))
@@ -117,7 +116,7 @@
           :test #'string= :key #'car)))
     (forward-line -1)
     (tabulated-list-next-column  col)
-    (when-let ((goal (next-single-property-change
+    (when-let* ((goal (next-single-property-change
                       (point) 'tabulated-list-column-name)))
       (goto-char goal))
     (emacsvox-tabulated-list-speak-cell)))

@@ -58,7 +58,6 @@
 ;;  Required modules: 
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim (optimize (safety 0) (speed 3)))
 (eval-when-compile (require 'advice))
 (require 'emacsvox-preamble)
 
@@ -3001,7 +3000,7 @@ Produce an auditory icon if possible."
        (unless ad-return-value
          (emacsvox-icon 'warn-user)
          (emacsvox-speak-line))
-       (when-let ((m ad-return-value))
+       (when-let* ((m ad-return-value))
          (emacsvox-speak-region
           (prop-match-beginning m) (prop-match-end m))
          (emacsvox-icon 'select-object))))))

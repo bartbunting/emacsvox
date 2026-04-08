@@ -47,7 +47,6 @@
 ;;  required modules
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (eval-when-compile (require 'subr-x))
 
 ;;;  Forward Declarations:
@@ -772,8 +771,8 @@ Argument COMPLEMENT  is the complement of separator."
              (get-text-property start 'auditory-icon))
     (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
   (dtk-interp-queue-code (tts-voice-reset-code))
-  (when-let* ((pause  (get-text-property start 'pause))
-              (dtk-interp-silence pause)))
+  (when-let* ((pause (get-text-property start 'pause)))
+    (dtk-interp-silence pause))
   (cond
    ((not voice-lock-mode)
     (dtk-interp-queue (buffer-substring-no-properties start end)))

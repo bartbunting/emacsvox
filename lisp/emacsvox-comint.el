@@ -48,7 +48,6 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'comint)
 (require 'shell)
@@ -639,7 +638,7 @@ Shell-Dirtrack mode; turning it off does not re-enable it."
 Shell Utility zoxide --- implemented in Rust --- lets you jump to
 directories that are used often. "
   (interactive "sZoxide:")
-  (if-let
+  (if-let*
       ((z emacsvox-comint-zoxide)
        (target
         (with-temp-buffer; match found here if process returns 0

@@ -1,14 +1,12 @@
 # $Author: tv.raman.tv $
-# Description:  Makefile for Emacspeak
-# Keywords: Emacspeak, TTS, Makefile
+# Description:  Makefile for Emacsvox
+# Keywords: Emacsvox, TTS, Makefile
 ###  LCD Entry:
 
 # LCD Archive Entry:
-# emacspeak| T. V. Raman |raman@cs.cornell.edu
+# emacsvox| T. V. Raman |raman@cs.cornell.edu
 # A speech interface to Emacs |
-# $Date: 2007-06-24 15:56:04 -0700 (Sun, 24 Jun 2007) $ |
-#  $Revision: 4673 $ |
-# Location https://github.com/tvraman/emacspeak
+# Location https://github.com/tvraman/emacsvox
 #
 
 ###  Copyright:
@@ -44,258 +42,256 @@ SRC="../lisp"
 BATCH = -batch -q -no-site-file     \
 -f package-initialize \
 --eval '(setq file-name-handler-alist nil gc-cons-threshold 64000000 \
-load-source-file-function  nil)' 
-DEPS= -l $(SRC)/emacspeak-preamble.el -l $(SRC)/emacspeak-loaddefs.el 
+load-source-file-function  nil)'
+DEPS= -l $(SRC)/emacsvox-preamble.el -l $(SRC)/emacsvox-loaddefs.el
 
 COMPILE =  -f batch-byte-compile
 # How to compile
-%.elc:  %.el 
+%.elc:  %.el
 	@$(EMACS) $(BATCH)  $(DEPS)  $(COMPILE) $< &&  echo $<
 
 ###   grouping files into dependent modules
 
 #The various modules:
 TTS_OBJECTS =  \
-emacspeak-preamble.elc \
-emacspeak-loaddefs.elc \
+emacsvox-preamble.elc \
+emacsvox-loaddefs.elc \
 dtk-speak.elc		dectalk-voices.elc\
 plain-voices.elc espeak-voices.elc \
 outloud-voices.elc  mac-voices.elc \
-swiftmac-voices.elc 
+swiftmac-voices.elc
 
 SPEAK_OBJECTS =   \
 voice-setup.elc \
 voice-defs.elc \
-emacspeak-pronounce.elc \
-emacspeak-speak.elc  \
-emacspeak-advice.elc\
-emacspeak-keymap.elc\
-emacspeak-sounds.elc \
-emacspeak.elc \
-emacspeak-setup.elc 
+emacsvox-pronounce.elc \
+emacsvox-speak.elc  \
+emacsvox-advice.elc\
+emacsvox-keymap.elc\
+emacsvox-sounds.elc \
+emacsvox.elc \
+emacsvox-setup.elc
 
 CORE_OBJECTS =  \
 amixer.elc \
-emacspeak-2048.elc \
-emacspeak-abc-mode.elc \
-emacspeak-add-log.elc \
-emacspeak-amark.elc \
-emacspeak-analog.elc \
-emacspeak-annotate.elc \
-emacspeak-arc.elc \
-emacspeak-auctex.elc \
-emacspeak-bbdb.elc \
-emacspeak-bibtex.elc \
-emacspeak-bookmark.elc \
-emacspeak-bookshare.elc \
-emacspeak-browse-kill-ring.elc \
-emacspeak-bs.elc \
-emacspeak-buff-menu.elc \
-emacspeak-c.elc \
-emacspeak-calc.elc \
-emacspeak-calculator.elc \
-emacspeak-calendar.elc \
-emacspeak-calibredb.elc \
-emacspeak-chess.elc \
-emacspeak-cider.elc \
-emacspeak-ciel.elc \
-emacspeak-clojure.elc \
-emacspeak-cmuscheme.elc \
-emacspeak-combobulate.elc \
-emacspeak-comint.elc \
-emacspeak-company.elc \
-emacspeak-compile.elc \
-emacspeak-consult.elc \
-emacspeak-cperl.elc \
-emacspeak-custom.elc \
-emacspeak-dbus.elc \
-emacspeak-deadgrep.elc \
-emacspeak-debugger.elc \
-emacspeak-desktop.elc \
-emacspeak-devdocs.elc \
-emacspeak-dictionary.elc \
-emacspeak-diff-mode.elc \
-emacspeak-dired.elc \
-emacspeak-dismal.elc \
-emacspeak-dumb-jump.elc \
-emacspeak-eat.elc \
-emacspeak-ebuku.elc \
-emacspeak-ecb.elc \
-emacspeak-ediff.elc \
-emacspeak-eglot.elc \
-emacspeak-ein.elc \
-emacspeak-elfeed.elc \
-emacspeak-elisp-refs.elc \
-emacspeak-ellama.elc \
-emacspeak-elpher.elc \
-emacspeak-elpy.elc \
-emacspeak-elscreen.elc \
-emacspeak-emms.elc \
-emacspeak-empv.elc \
-emacspeak-enriched.elc \
-emacspeak-entertain.elc \
-emacspeak-enwc.elc \
-emacspeak-epa.elc \
-emacspeak-eperiodic.elc \
-emacspeak-epub.elc \
-emacspeak-erc.elc \
-emacspeak-eshell.elc \
-emacspeak-ess.elc \
-emacspeak-etable.elc \
-emacspeak-eterm.elc \
-emacspeak-eudc.elc \
-emacspeak-evil.elc \
-emacspeak-eww.elc \
-emacspeak-extras.elc \
-emacspeak-exwm.elc \
-emacspeak-feeds.elc \
-emacspeak-ffap.elc \
-emacspeak-ffip.elc \
-emacspeak-filtertext.elc \
-emacspeak-flycheck.elc \
-emacspeak-flymake.elc \
-emacspeak-flyspell.elc \
-emacspeak-folding.elc \
-emacspeak-forge.elc \
-emacspeak-forms.elc \
-emacspeak-geiser.elc \
-emacspeak-gh-explorer.elc \
-emacspeak-gnuplot.elc \
-emacspeak-gnus.elc\
-emacspeak-go-mode.elc \
-emacspeak-gomoku.elc \
-emacspeak-google.elc \
-emacspeak-gridtext.elc \
-emacspeak-gtags.elc \
-emacspeak-gud.elc \
-emacspeak-haskell.elc \
-emacspeak-helm.elc \
-emacspeak-hide-lines.elc  \
-emacspeak-hide.elc \
-emacspeak-hideshow.elc \
-emacspeak-hydra.elc \
-emacspeak-ibuffer.elc \
-emacspeak-ido.elc \
-emacspeak-iedit.elc \
-emacspeak-indium.elc \
-emacspeak-info.elc\
-emacspeak-ispell.elc \
-emacspeak-ivy.elc \
-emacspeak-jabber.elc \
-emacspeak-jdee.elc \
-emacspeak-journalctl.elc \
-emacspeak-js2.elc \
-emacspeak-kmacro.elc  \
-emacspeak-librivox.elc \
-emacspeak-lispy.elc \
-emacspeak-lua.elc \
-emacspeak-m-player.elc \
-emacspeak-magit.elc \
-emacspeak-make-mode.elc \
-emacspeak-man.elc \
-emacspeak-markdown.elc \
-emacspeak-maths.elc \
-emacspeak-message.elc \
-emacspeak-metapost.elc \
-emacspeak-midge.elc \
-emacspeak-mines.elc \
-emacspeak-mspools.elc \
-emacspeak-muse.elc \
-emacspeak-net-utils.elc \
-emacspeak-newsticker.elc \
-emacspeak-notmuch.elc \
-emacspeak-nov.elc \
-emacspeak-nxml.elc \
-emacspeak-ocr.elc \
-emacspeak-org.elc \
-emacspeak-orgalist.elc \
-emacspeak-outline.elc \
-emacspeak-package.elc \
-emacspeak-paradox.elc \
-emacspeak-perl.elc \
-emacspeak-pianobar.elc \
-emacspeak-pipewire.elc \
-emacspeak-popup.elc \
-emacspeak-proced.elc \
-emacspeak-project.elc \
-emacspeak-projectile.elc \
-emacspeak-py.elc \
-emacspeak-pydoc.elc \
-emacspeak-python.elc \
-emacspeak-racer.elc \
-emacspeak-racket.elc \
-emacspeak-re-builder.elc \
-emacspeak-re-builder.elc \
-emacspeak-reftex.elc \
-emacspeak-related.elc \
-emacspeak-rg.elc \
-emacspeak-rmail.elc \
-emacspeak-rpm-spec.elc \
-emacspeak-rst.elc \
-emacspeak-ruby.elc \
-emacspeak-rust-mode.elc \
-emacspeak-sage.elc \
-emacspeak-sdcv.elc \
-emacspeak-selectrum.elc \
-emacspeak-ses.elc \
-emacspeak-setup.el \
-emacspeak-sgml-mode.elc \
-emacspeak-sh-script.elc \
-emacspeak-shx.elc \
-emacspeak-slime.elc \
-emacspeak-smartparens.elc \
-emacspeak-solitaire.elc \
-emacspeak-speedbar.elc \
-emacspeak-sql.elc \
-emacspeak-sudoku.elc \
-emacspeak-supercite.elc \
-emacspeak-syslog.elc \
-emacspeak-tab-bar.elc \
-emacspeak-table-ui.elc \
-emacspeak-table.elc \
-emacspeak-tabulate.elc \
-emacspeak-tabulated-list.elc \
-emacspeak-tar.elc \
-emacspeak-tcl.elc \
-emacspeak-tempo.elc \
-emacspeak-tetris.elc \
-emacspeak-texinfo.elc \
-emacspeak-threes.elc \
-emacspeak-tide.elc \
-emacspeak-todo-mode.elc \
-emacspeak-transient.elc \
-emacspeak-treesit.elc \
-emacspeak-typo.elc \
-emacspeak-url-template.elc \
-emacspeak-vdiff.elc \
-emacspeak-vertico.elc \
-emacspeak-view.elc \
-emacspeak-vm.elc \
-emacspeak-vterm.elc \
-emacspeak-vuiet.elc \
-emacspeak-wdired.elc \
-emacspeak-we.elc \
-emacspeak-websearch.elc \
-emacspeak-webspace.elc \
-emacspeak-widget.elc \
-emacspeak-windmove.elc \
-emacspeak-winring.elc \
-emacspeak-wizards.elc  \
-emacspeak-woman.elc \
-emacspeak-xkcd.elc \
-emacspeak-xref.elc \
-emacspeak-xslt.elc \
-emacspeak-yaml.elc \
-emacspeak-yasnippet.elc \
+emacsvox-2048.elc \
+emacsvox-abc-mode.elc \
+emacsvox-add-log.elc \
+emacsvox-amark.elc \
+emacsvox-analog.elc \
+emacsvox-annotate.elc \
+emacsvox-arc.elc \
+emacsvox-auctex.elc \
+emacsvox-bbdb.elc \
+emacsvox-bibtex.elc \
+emacsvox-bookmark.elc \
+emacsvox-bookshare.elc \
+emacsvox-browse-kill-ring.elc \
+emacsvox-bs.elc \
+emacsvox-buff-menu.elc \
+emacsvox-c.elc \
+emacsvox-calc.elc \
+emacsvox-calculator.elc \
+emacsvox-calendar.elc \
+emacsvox-calibredb.elc \
+emacsvox-chess.elc \
+emacsvox-cider.elc \
+emacsvox-ciel.elc \
+emacsvox-clojure.elc \
+emacsvox-cmuscheme.elc \
+emacsvox-combobulate.elc \
+emacsvox-comint.elc \
+emacsvox-company.elc \
+emacsvox-compile.elc \
+emacsvox-consult.elc \
+emacsvox-cperl.elc \
+emacsvox-custom.elc \
+emacsvox-dbus.elc \
+emacsvox-deadgrep.elc \
+emacsvox-debugger.elc \
+emacsvox-desktop.elc \
+emacsvox-devdocs.elc \
+emacsvox-dictionary.elc \
+emacsvox-diff-mode.elc \
+emacsvox-dired.elc \
+emacsvox-dismal.elc \
+emacsvox-dumb-jump.elc \
+emacsvox-eat.elc \
+emacsvox-ebuku.elc \
+emacsvox-ecb.elc \
+emacsvox-ediff.elc \
+emacsvox-eglot.elc \
+emacsvox-ein.elc \
+emacsvox-elfeed.elc \
+emacsvox-elisp-refs.elc \
+emacsvox-ellama.elc \
+emacsvox-elpher.elc \
+emacsvox-elpy.elc \
+emacsvox-elscreen.elc \
+emacsvox-emms.elc \
+emacsvox-empv.elc \
+emacsvox-enriched.elc \
+emacsvox-entertain.elc \
+emacsvox-enwc.elc \
+emacsvox-epa.elc \
+emacsvox-eperiodic.elc \
+emacsvox-epub.elc \
+emacsvox-erc.elc \
+emacsvox-eshell.elc \
+emacsvox-ess.elc \
+emacsvox-etable.elc \
+emacsvox-eterm.elc \
+emacsvox-eudc.elc \
+emacsvox-evil.elc \
+emacsvox-eww.elc \
+emacsvox-extras.elc \
+emacsvox-exwm.elc \
+emacsvox-feeds.elc \
+emacsvox-ffap.elc \
+emacsvox-ffip.elc \
+emacsvox-filtertext.elc \
+emacsvox-flycheck.elc \
+emacsvox-flymake.elc \
+emacsvox-flyspell.elc \
+emacsvox-folding.elc \
+emacsvox-forge.elc \
+emacsvox-forms.elc \
+emacsvox-geiser.elc \
+emacsvox-gh-explorer.elc \
+emacsvox-gnuplot.elc \
+emacsvox-gnus.elc\
+emacsvox-go-mode.elc \
+emacsvox-gomoku.elc \
+emacsvox-google.elc \
+emacsvox-gridtext.elc \
+emacsvox-gtags.elc \
+emacsvox-gud.elc \
+emacsvox-haskell.elc \
+emacsvox-helm.elc \
+emacsvox-hide-lines.elc  \
+emacsvox-hide.elc \
+emacsvox-hideshow.elc \
+emacsvox-hydra.elc \
+emacsvox-ibuffer.elc \
+emacsvox-ido.elc \
+emacsvox-iedit.elc \
+emacsvox-indium.elc \
+emacsvox-info.elc\
+emacsvox-ispell.elc \
+emacsvox-ivy.elc \
+emacsvox-jabber.elc \
+emacsvox-jdee.elc \
+emacsvox-journalctl.elc \
+emacsvox-js2.elc \
+emacsvox-kmacro.elc  \
+emacsvox-librivox.elc \
+emacsvox-lispy.elc \
+emacsvox-lua.elc \
+emacsvox-m-player.elc \
+emacsvox-magit.elc \
+emacsvox-make-mode.elc \
+emacsvox-man.elc \
+emacsvox-markdown.elc \
+emacsvox-maths.elc \
+emacsvox-message.elc \
+emacsvox-metapost.elc \
+emacsvox-midge.elc \
+emacsvox-mines.elc \
+emacsvox-mspools.elc \
+emacsvox-muse.elc \
+emacsvox-net-utils.elc \
+emacsvox-newsticker.elc \
+emacsvox-notmuch.elc \
+emacsvox-nov.elc \
+emacsvox-nxml.elc \
+emacsvox-ocr.elc \
+emacsvox-org.elc \
+emacsvox-orgalist.elc \
+emacsvox-outline.elc \
+emacsvox-package.elc \
+emacsvox-paradox.elc \
+emacsvox-perl.elc \
+emacsvox-pianobar.elc \
+emacsvox-pipewire.elc \
+emacsvox-popup.elc \
+emacsvox-proced.elc \
+emacsvox-project.elc \
+emacsvox-projectile.elc \
+emacsvox-py.elc \
+emacsvox-pydoc.elc \
+emacsvox-python.elc \
+emacsvox-racer.elc \
+emacsvox-racket.elc \
+emacsvox-re-builder.elc \
+emacsvox-reftex.elc \
+emacsvox-related.elc \
+emacsvox-rg.elc \
+emacsvox-rmail.elc \
+emacsvox-rpm-spec.elc \
+emacsvox-rst.elc \
+emacsvox-ruby.elc \
+emacsvox-rust-mode.elc \
+emacsvox-sage.elc \
+emacsvox-sdcv.elc \
+emacsvox-selectrum.elc \
+emacsvox-ses.elc \
+emacsvox-sgml-mode.elc \
+emacsvox-sh-script.elc \
+emacsvox-shx.elc \
+emacsvox-slime.elc \
+emacsvox-smartparens.elc \
+emacsvox-solitaire.elc \
+emacsvox-speedbar.elc \
+emacsvox-sql.elc \
+emacsvox-sudoku.elc \
+emacsvox-supercite.elc \
+emacsvox-syslog.elc \
+emacsvox-tab-bar.elc \
+emacsvox-table-ui.elc \
+emacsvox-table.elc \
+emacsvox-tabulate.elc \
+emacsvox-tabulated-list.elc \
+emacsvox-tar.elc \
+emacsvox-tcl.elc \
+emacsvox-tempo.elc \
+emacsvox-tetris.elc \
+emacsvox-texinfo.elc \
+emacsvox-threes.elc \
+emacsvox-tide.elc \
+emacsvox-todo-mode.elc \
+emacsvox-transient.elc \
+emacsvox-treesit.elc \
+emacsvox-typo.elc \
+emacsvox-url-template.elc \
+emacsvox-vdiff.elc \
+emacsvox-vertico.elc \
+emacsvox-view.elc \
+emacsvox-vm.elc \
+emacsvox-vterm.elc \
+emacsvox-vuiet.elc \
+emacsvox-wdired.elc \
+emacsvox-we.elc \
+emacsvox-websearch.elc \
+emacsvox-webspace.elc \
+emacsvox-widget.elc \
+emacsvox-windmove.elc \
+emacsvox-winring.elc \
+emacsvox-wizards.elc  \
+emacsvox-woman.elc \
+emacsvox-xkcd.elc \
+emacsvox-xref.elc \
+emacsvox-xslt.elc \
+emacsvox-yaml.elc \
+emacsvox-yasnippet.elc \
 ladspa.elc \
 soundscape.elc \
 sox-gen.elc \
-sox.elc 
+sox.elc
 
 ADDON_OBJECTS = \
-emacspeak-nm.elc  dom-addons.elc light.elc pip.elc  \
+emacsvox-nm.elc  dom-addons.elc light.elc pip.elc  \
 xbacklight.elc   tetris.elc   \
-omaps.elc g-utils.elc gweb.elc gmaps.elc gm-nnir.elc 
+omaps.elc g-utils.elc gweb.elc gmaps.elc gm-nnir.elc
 
 OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 
@@ -303,26 +299,26 @@ OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 
 all: $(OBJECTS)
 
-muggles: emacspeak-muggles.elc 
+muggles: emacsvox-muggles.elc
 extra-muggles: extra-muggles.elc
-maths: emacspeak-maths.elc
+maths: emacsvox-maths.elc
 
-config: emacspeak-loaddefs.el   
+config: emacsvox-loaddefs.el
 lint:
 	echo "." |\
 emacs -batch -q \
 -f package-initialize \
--l advice.el -l emacspeak-preamble.el  -l emacspeak-loaddefs.el \
--f elint-directory 
+-l advice.el -l emacsvox-preamble.el  -l emacsvox-loaddefs.el \
+-f elint-directory
 
 ### build time target --loaddefs
 
-emacspeak-loaddefs.el: 
-	@$(EMACS) $(BATCH)  -l ./emacspeak-preamble.el  \
-	-l ./emacspeak-autoload.el  \
-	-f emacspeak-auto-generate-autoloads
+emacsvox-loaddefs.el:
+	@$(EMACS) $(BATCH)  -l ./emacsvox-preamble.el  \
+	-l ./emacsvox-autoload.el  \
+	-f emacsvox-auto-generate-autoloads
 
-### Development  target: indent, tags, relint 
+### Development  target: indent, tags, relint
 indent:
 	$(EMACS) -batch -q -no-site-file -l ../utils/indent-files.el
 
@@ -338,15 +334,15 @@ elint:
 	$(EMACS) -batch -q -no-site-file -l ../utils/elint-files.el
 
 relint:
-	$(EMACS) -batch -f package-initialize -l relint.el -f relint-batch ./*.el 
+	$(EMACS) -batch -f package-initialize -l relint.el -f relint-batch ./*.el
 
 tags:
-	etags *.el 
+	etags *.el
 
 ###   user level target-- clean
 
 clean:
-	@rm -f *.elc  emacspeak-loaddefs.el 
+	@rm -f *.elc  emacsvox-loaddefs.el
 
 ###  end of file
 
@@ -355,5 +351,3 @@ clean:
 #fill-column: 90
 #outline-regexp: "^### "
 #end:
-
-

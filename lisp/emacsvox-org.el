@@ -49,7 +49,6 @@
 ;;  required modules
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'emacsvox-amark)
 (require 'org)
@@ -854,7 +853,7 @@ arg just opens the file"
 (defun org-amark-store-link ()
   "Store a link to a AMark.
 Is enabled in the AMark Browser and M-Player Interaction buffers."
-  (when-let
+  (when-let*
       ((m (memq major-mode '(emacsvox-m-player-mode emacsvox-amark-mode)))
        (amark
         (if  (button-at (point))
@@ -871,7 +870,7 @@ Is enabled in the AMark Browser and M-Player Interaction buffers."
 
 (defun org-amark-follow-link (name)
   "Follow an AMark link."
-  (when-let
+  (when-let*
       ((match (string-match "\\(.*\\)#\\(.*\\)" name))
        (filename (match-string 1 name))
        (position  (match-string 2 name)))
@@ -903,7 +902,7 @@ Press `y' to play to next amark."
 
 (defun org-ebook-store-link ()
   "Store a link to an EWW mark from an EBook. "
-  (when-let
+  (when-let*
       ((m (eq major-mode 'emacsvox-eww-marks-mode))
        (b (button-at (point)))
        (desc  (buffer-substring (button-start b) (button-end b)))
