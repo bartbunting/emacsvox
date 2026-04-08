@@ -78,7 +78,6 @@ emacsvox-2048.elc \
 emacsvox-abc-mode.elc \
 emacsvox-add-log.elc \
 emacsvox-amark.elc \
-emacsvox-analog.elc \
 emacsvox-annotate.elc \
 emacsvox-arc.elc \
 emacsvox-auctex.elc \
@@ -96,7 +95,6 @@ emacsvox-calendar.elc \
 emacsvox-calibredb.elc \
 emacsvox-chess.elc \
 emacsvox-cider.elc \
-emacsvox-ciel.elc \
 emacsvox-clojure.elc \
 emacsvox-cmuscheme.elc \
 emacsvox-combobulate.elc \
@@ -114,11 +112,9 @@ emacsvox-devdocs.elc \
 emacsvox-dictionary.elc \
 emacsvox-diff-mode.elc \
 emacsvox-dired.elc \
-emacsvox-dismal.elc \
 emacsvox-dumb-jump.elc \
 emacsvox-eat.elc \
 emacsvox-ebuku.elc \
-emacsvox-ecb.elc \
 emacsvox-ediff.elc \
 emacsvox-eglot.elc \
 emacsvox-ein.elc \
@@ -127,14 +123,12 @@ emacsvox-elisp-refs.elc \
 emacsvox-ellama.elc \
 emacsvox-elpher.elc \
 emacsvox-elpy.elc \
-emacsvox-elscreen.elc \
 emacsvox-emms.elc \
 emacsvox-empv.elc \
 emacsvox-enriched.elc \
 emacsvox-entertain.elc \
 emacsvox-enwc.elc \
 emacsvox-epa.elc \
-emacsvox-eperiodic.elc \
 emacsvox-epub.elc \
 emacsvox-erc.elc \
 emacsvox-eshell.elc \
@@ -164,7 +158,6 @@ emacsvox-go-mode.elc \
 emacsvox-gomoku.elc \
 emacsvox-google.elc \
 emacsvox-gridtext.elc \
-emacsvox-gtags.elc \
 emacsvox-gud.elc \
 emacsvox-haskell.elc \
 emacsvox-helm.elc \
@@ -175,12 +168,9 @@ emacsvox-hydra.elc \
 emacsvox-ibuffer.elc \
 emacsvox-ido.elc \
 emacsvox-iedit.elc \
-emacsvox-indium.elc \
 emacsvox-info.elc\
 emacsvox-ispell.elc \
 emacsvox-ivy.elc \
-emacsvox-jabber.elc \
-emacsvox-jdee.elc \
 emacsvox-journalctl.elc \
 emacsvox-js2.elc \
 emacsvox-kmacro.elc  \
@@ -194,10 +184,7 @@ emacsvox-man.elc \
 emacsvox-markdown.elc \
 emacsvox-maths.elc \
 emacsvox-message.elc \
-emacsvox-metapost.elc \
-emacsvox-midge.elc \
 emacsvox-mines.elc \
-emacsvox-mspools.elc \
 emacsvox-muse.elc \
 emacsvox-net-utils.elc \
 emacsvox-newsticker.elc \
@@ -211,7 +198,6 @@ emacsvox-outline.elc \
 emacsvox-package.elc \
 emacsvox-paradox.elc \
 emacsvox-perl.elc \
-emacsvox-pianobar.elc \
 emacsvox-pipewire.elc \
 emacsvox-popup.elc \
 emacsvox-proced.elc \
@@ -220,7 +206,6 @@ emacsvox-projectile.elc \
 emacsvox-py.elc \
 emacsvox-pydoc.elc \
 emacsvox-python.elc \
-emacsvox-racer.elc \
 emacsvox-racket.elc \
 emacsvox-re-builder.elc \
 emacsvox-reftex.elc \
@@ -233,11 +218,9 @@ emacsvox-ruby.elc \
 emacsvox-rust-mode.elc \
 emacsvox-sage.elc \
 emacsvox-sdcv.elc \
-emacsvox-selectrum.elc \
 emacsvox-ses.elc \
 emacsvox-sgml-mode.elc \
 emacsvox-sh-script.elc \
-emacsvox-shx.elc \
 emacsvox-slime.elc \
 emacsvox-smartparens.elc \
 emacsvox-solitaire.elc \
@@ -257,7 +240,6 @@ emacsvox-tempo.elc \
 emacsvox-tetris.elc \
 emacsvox-texinfo.elc \
 emacsvox-threes.elc \
-emacsvox-tide.elc \
 emacsvox-todo-mode.elc \
 emacsvox-transient.elc \
 emacsvox-treesit.elc \
@@ -266,16 +248,13 @@ emacsvox-url-template.elc \
 emacsvox-vdiff.elc \
 emacsvox-vertico.elc \
 emacsvox-view.elc \
-emacsvox-vm.elc \
 emacsvox-vterm.elc \
-emacsvox-vuiet.elc \
 emacsvox-wdired.elc \
 emacsvox-we.elc \
 emacsvox-websearch.elc \
 emacsvox-webspace.elc \
 emacsvox-widget.elc \
 emacsvox-windmove.elc \
-emacsvox-winring.elc \
 emacsvox-wizards.elc  \
 emacsvox-woman.elc \
 emacsvox-xkcd.elc \
