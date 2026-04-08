@@ -9,7 +9,7 @@
 ;; A speech interface to Emacs |
 ;; 
 ;;  $Revision: 4558 $ |
-;; Location https://github.com/tvraman/emacsvox
+;; Location https://github.com/robertmeta/emacsvox
 ;; 
 
 ;;;   Copyright:

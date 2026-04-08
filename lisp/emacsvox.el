@@ -11,7 +11,7 @@
 ;; A speech interface to Emacs |
 ;;
 ;;  $Revision: 4642 $ |
-;; Location https://github.com/tvraman/emacsvox
+;; Location https://github.com/robertmeta/emacsvox
 ;;
 
 ;;;   Copyright:
@@ -61,23 +61,9 @@
 
 (defgroup emacsvox nil
   "Emacsvox: The Complete Audio Desktop."
-  :link '(url-link :tag "Web" "http://emacsvox.sf.net"
-                   :help-echo "Emacsvox  Site")
-  :link '(url-link :tag "Blog" "http://emacsvox.blogspot.com"
-                   :help-echo "Emacsvox Blog")
-  :link '(url-link :tag "Apps"
-                   "https://tvraman.github.io/emacsvox/applications.html"
-                   :help-echo "Browse Speech-Enabled  applications on
-the Emacsvox desktop.")
-  :link '(url-link :tag "Guide"
-                   "https://tvraman.github.io/emacsvox/manual"
-                   :help-echo "online user guide.")
-  :link '(url-link :tag "Tips"
-                   "https://tvraman.github.io/emacsvox/tips.html"
-                   :help-echo "Emacsvox Tips and Tricks.")
-  :link '(url-link :tag "Mail Archive"
-                   "https://www.emacsvox.net")
-  ;; end links
+  :link '(url-link :tag "Source"
+                   "https://github.com/robertmeta/emacsvox"
+                   :help-echo "Emacsvox on GitHub")
   :group 'applications)
 
 ;;;  Package Setup Helper
@@ -285,21 +271,13 @@ the Emacsvox desktop.")
     ("yasnippet" emacsvox-yasnippet)
     )
   "Packages to  speech-enable.")
-(defconst emacsvox-soundscapes
-  (executable-find "boodler")
-  "Whether we should turn on soundscapes on startup.")
-
 (defun emacsvox-prepare-emacs ()
   "Prepare Emacs to speech-enable packages when loaded."
-  (cl-declare (special emacsvox-packages-to-prepare
-                       Info-file-list-for-emacs
-                       emacsvox-soundscapes))
   (unless (boundp 'Info-file-list-for-emacs) (require 'info))
   (push "emacsvox" Info-file-list-for-emacs)
   (setq-default line-move-visual nil)
   (setq use-dialog-box nil)
   (mapc #'emacsvox-package-setup emacsvox-packages-to-prepare)
-  (when emacsvox-soundscapes (soundscape-toggle))
   (message "emacsvox-prepare-emacs: done"))
 
 ;;;  setup programming modes

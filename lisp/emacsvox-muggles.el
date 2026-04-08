@@ -7,7 +7,7 @@
 ;; LCD Archive Entry:
 ;; emacsvox| T. V. Raman |tv.raman.tv@gmail.com
 ;; A speech interface to Emacs |
-;; Location https://github.com/tvraman/emacsvox
+;; Location https://github.com/robertmeta/emacsvox
 ;;
 
 ;;;   Copyright:

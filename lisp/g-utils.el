@@ -10,7 +10,7 @@
 ;; An emacs interface to Google Services|
 ;; 
 ;;  $Revision: 1.14 $ |
-;; Location https://github.com/tvraman/emacsvox
+;; Location https://github.com/robertmeta/emacsvox
 ;; License: GPL
 ;; 
 

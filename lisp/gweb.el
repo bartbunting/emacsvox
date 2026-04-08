@@ -10,7 +10,7 @@
 ;; An emacs interface to Reader|
 ;; 
 ;;  $Revision: 1.30 $ |
-;; Location https://github.com/tvraman/emacsvox
+;; Location https://github.com/robertmeta/emacsvox
 ;; License: GPL
 ;; 
 
@@ -64,7 +64,7 @@
 
 ;;;  Variables
 
-(defvar gweb-referer "http://emacsvox.sf.net"
+(defvar gweb-referer "https://github.com/robertmeta/emacsvox"
   "Referer URL to send to the API.")
 (defvar gweb-history nil
   "History of Google Search queries.")
