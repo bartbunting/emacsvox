@@ -102,6 +102,7 @@ emacsvox-comint.elc \
 emacsvox-company.elc \
 emacsvox-compile.elc \
 emacsvox-consult.elc \
+emacsvox-corfu.elc \
 emacsvox-cperl.elc \
 emacsvox-custom.elc \
 emacsvox-dbus.elc \
@@ -114,6 +115,7 @@ emacsvox-diff-mode.elc \
 emacsvox-dired.elc \
 emacsvox-dumb-jump.elc \
 emacsvox-eat.elc \
+emacsvox-embark.elc \
 emacsvox-ebuku.elc \
 emacsvox-ediff.elc \
 emacsvox-eglot.elc \
@@ -156,6 +158,8 @@ emacsvox-gnuplot.elc \
 emacsvox-gnus.elc\
 emacsvox-go-mode.elc \
 emacsvox-gomoku.elc \
+emacsvox-gptel.elc \
+emacsvox-gptel.elc \
 emacsvox-google.elc \
 emacsvox-gridtext.elc \
 emacsvox-gud.elc \
@@ -185,6 +189,7 @@ emacsvox-markdown.elc \
 emacsvox-maths.elc \
 emacsvox-message.elc \
 emacsvox-mines.elc \
+emacsvox-mu4e.elc \
 emacsvox-muse.elc \
 emacsvox-net-utils.elc \
 emacsvox-newsticker.elc \
@@ -254,6 +259,7 @@ emacsvox-we.elc \
 emacsvox-websearch.elc \
 emacsvox-webspace.elc \
 emacsvox-widget.elc \
+emacsvox-which-key.elc \
 emacsvox-windmove.elc \
 emacsvox-wizards.elc  \
 emacsvox-woman.elc \

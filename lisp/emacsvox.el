@@ -82,18 +82,7 @@
 (with-eval-after-load "doc-view"
   (add-hook 'doc-view-mode-hook #'doc-view-open-text))
 
-(with-eval-after-load "gptel"
-  
-  (add-hook
-   'gptel-post-stream-hook
-   #'(lambda nil (emacsvox-icon 'tick-tick)))
-  
-  (setopt
-   gptel-post-response-functions
-   (cl-pushnew
-    #'(lambda (start end)
-        (emacsvox-pip (buffer-substring-no-properties start end)))
-    gptel-post-response-functions)))
+;; gptel speech-enabling moved to emacsvox-gptel.el
 
 ;;;  Setup package extensions
 (defvar emacsvox-packages-to-prepare
@@ -123,6 +112,7 @@
     ("company" emacsvox-company)
     ("compile" emacsvox-compile)
     ("consult" emacsvox-consult)
+    ("corfu" emacsvox-corfu)
     ("cperl-mode" emacsvox-cperl)
     ("cus-edit" emacsvox-custom)
     ("deadgrep" emacsvox-deadgrep)
@@ -137,6 +127,7 @@
     ("dunnet" emacsvox-entertain)
     ("eat" emacsvox-eat)
     ("ebuku" emacsvox-ebuku)
+    ("embark" emacsvox-embark)
     ("ediff" emacsvox-ediff)
     ("eglot" emacsvox-eglot)
     ("ein" emacsvox-ein)
@@ -146,6 +137,7 @@
     ("ellama" emacsvox-ellama)
     ("elpher" emacsvox-elpher)
     ("elpy" emacsvox-elpy)
+    ("embark" emacsvox-embark)
     ("emms" emacsvox-emms)
     ("empv" emacsvox-empv)
     ("enriched" emacsvox-enriched)
@@ -173,6 +165,7 @@
     ("gnus" emacsvox-gnus)
     ("go-mode" emacsvox-go-mode)
     ("gomoku" emacsvox-gomoku)
+    ("gptel" emacsvox-gptel)
     ("gud" emacsvox-gud)
     ("hangman" emacsvox-entertain)
     ("haskell-mode" emacsvox-haskell)
@@ -199,6 +192,8 @@
     ("mines" emacsvox-mines)
     ("mpuz" emacsvox-entertain)
     ("muse-mode" emacsvox-muse)
+    ("mu4e" emacsvox-mu4e)
+    ("mu4e" emacsvox-mu4e)
     ("net-utils" emacsvox-net-utils)
     ("newsticker" emacsvox-newsticker)
     ("notmuch" emacsvox-notmuch)
@@ -261,6 +256,7 @@
     ("view" emacsvox-view)
     ("vterm" emacsvox-vterm)
     ("wdired" emacsvox-wdired)
+    ("which-key" emacsvox-which-key)
     ("wid-edit" emacsvox-widget)
     ("widget" emacsvox-widget)
     ("windmove" emacsvox-windmove)
