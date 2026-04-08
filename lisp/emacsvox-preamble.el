@@ -47,7 +47,6 @@
 (eval-when-compile
   (require 'cl-lib)
   (require 'subr-x))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (cl-pushnew (file-name-directory load-file-name) load-path :test #'string=)
 
 ;; Note: Old defadvice infrastructure removed - now using modern advice-add throughout

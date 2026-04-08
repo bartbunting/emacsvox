@@ -44,7 +44,6 @@
 ;;   Required modules:
 
 (eval-when-compile  (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (eval-when-compile (require 'eat "eat" 'no-error))
 (declare-function eat-term-display-cursor "eat" (terminal))

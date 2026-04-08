@@ -87,7 +87,6 @@
 ;;; Code:
 
 ;;   Required modules:
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (eval-when-compile (require 'cl-lib))
 (require 'comint)

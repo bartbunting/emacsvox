@@ -56,7 +56,6 @@
 ;;;  requires
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 ;;;   ispell command cl-loop:

@@ -38,7 +38,7 @@
 
 ;;;  requires
 
-(require 'forms)(cl-declaim  (optimize  (safety 0) (speed 3)))
+(require 'forms)
 (require 'emacsvox-preamble)
 
 ;;; Commentary:

@@ -47,7 +47,6 @@
 ;;; Code:
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 
 ;;; plain:
 ;;;###autoload

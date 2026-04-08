@@ -46,7 +46,6 @@
 
 ;;; Code:
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 ;;;  speech-enable interactive commands

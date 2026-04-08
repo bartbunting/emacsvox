@@ -60,7 +60,6 @@
 ;;;  Requires
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 ;;;  define personalities

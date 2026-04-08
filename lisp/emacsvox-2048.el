@@ -49,7 +49,6 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require '2048-game "2048-game" 'no-error)
 

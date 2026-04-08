@@ -39,7 +39,6 @@
 
 ;;   Required modules:
 
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 ;;;   Introduction

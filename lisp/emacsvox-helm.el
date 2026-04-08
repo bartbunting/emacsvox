@@ -49,7 +49,6 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-google)
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 ;;;  Setup Helm Hooks:

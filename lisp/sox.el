@@ -461,7 +461,6 @@ and return a suitable effect structure." name)
 (provide 'sox)
 ;;;  Add Emacsvox Support
 
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 (defun ems--sox-open-file-after (&rest _)

@@ -94,7 +94,6 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'dtk-speak)
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (eval-when-compile (require 'easy-mmode))
 
 ;;;  customization group

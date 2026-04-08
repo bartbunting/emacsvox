@@ -55,7 +55,6 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'json)
 (unless emacsvox-curl (warn "This module will not work without Curl."))

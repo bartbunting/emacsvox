@@ -47,7 +47,6 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 
 ;;;  Customizations:
 

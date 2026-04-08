@@ -47,7 +47,6 @@
 
 ;;   Required modules:
 
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 
 (defun emacsvox-xslt-params-from-xpath (path base)

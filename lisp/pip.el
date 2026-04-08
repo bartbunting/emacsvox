@@ -57,7 +57,6 @@
 ;;   Required modules
 (unless (executable-find "piper") (error "Piper not installed."))
 (require 'cl-lib)
-(cl-declaim  (optimize  (safety 0) (speed 3)))
 
 (defvar pip-data-dir
   (expand-file-name "~/.local/share/voices-piper")
