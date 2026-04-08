@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  byte-compile:
+    name: Byte-compile (Emacs ${{ matrix.emacs }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs: ['29.4', '30.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs }}
+      - name: Byte-compile all elisp files
+        run: |
+          cd lisp
+          make config 2>/dev/null || true
+          emacs --batch \
+            --eval '(setq byte-compile-error-on-warn nil)' \
+            --eval '(push default-directory load-path)' \
+            -l emacsvox-preamble.el \
+            -l emacsvox-loaddefs.el \
+            -f batch-byte-compile \
+            emacsvox.el dtk-speak.el voice-setup.el voice-defs.el \
+            emacsvox-speak.el emacsvox-advice.el emacsvox-sounds.el \
+            emacsvox-keymap.el emacsvox-pronounce.el
