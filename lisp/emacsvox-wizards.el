@@ -2386,7 +2386,7 @@ external package."
   (let ((l (local-key-binding key))
         (g (global-key-binding key))
         (k
-         (when-let* (map (get-text-property (point) 'keymap))
+         (when-let* ((map (get-text-property (point) 'keymap)))
            (lookup-key map key))))
     (cl-flet
         ((do-it (command)
