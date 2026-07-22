@@ -49,7 +49,86 @@
   (require 'subr-x))
 (cl-pushnew (file-name-directory load-file-name) load-path :test #'string=)
 
-;; Note: Old defadvice infrastructure removed - now using modern advice-add throughout
+;;; Compatibility for converted advice:
+
+;; The defadvice conversion retained `ems-interactive-p', `ad-get-arg',
+;; `ad-set-arg', and `ad-return-value' in the generated advice functions.
+;; Preserve their old semantics while those functions are migrated fully to
+;; nadvice argument lists.
+
+(defvar ems--interactive-fn-name nil
+  "Holds the name of the function being called interactively.")
+
+(defvar ems--modern-advice-target nil
+  "Function targeted by the currently running converted advice.")
+
+(defvar ems--modern-advice-arguments nil
+  "Arguments supplied to the currently running converted advice.")
+
+(defvar ad-return-value nil
+  "Return value visible to converted `:after' advice.")
+
+(defvar ems--modern-advice-wrappers (make-hash-table :test #'equal)
+  "Wrappers used to retain context for converted advice functions.")
+
+(defun ems--modern-advice-function-p (function)
+  "Return non-nil when FUNCTION is converted Emacsvox advice."
+  (and
+   (symbolp function)
+   (string-prefix-p "ems--" (symbol-name function))
+   (not (eq function 'ems--advice-add-around))))
+
+(defun ad-get-arg (position)
+  "Return argument at POSITION for converted Emacsvox advice."
+  (nth position ems--modern-advice-arguments))
+
+(defun ad-set-arg (position value)
+  "Set argument at POSITION to VALUE for converted Emacsvox advice."
+  (setcar (nthcdr position ems--modern-advice-arguments) value))
+
+(defun ems--modern-advice-wrapper (symbol where function)
+  "Return a context-preserving wrapper for FUNCTION advising SYMBOL at WHERE."
+  (let ((key (list symbol where function)))
+    (or
+     (gethash key ems--modern-advice-wrappers)
+     (puthash
+      key
+      (pcase where
+        (:before
+         (lambda (original &rest arguments)
+           (let
+               ((ems--modern-advice-target symbol)
+                (ems--modern-advice-arguments arguments))
+             (apply function arguments)
+             (apply original ems--modern-advice-arguments))))
+        (:after
+         (lambda (original &rest arguments)
+           (let
+               ((ems--modern-advice-target symbol)
+                (ems--modern-advice-arguments arguments)
+                (ad-return-value (apply original arguments)))
+             (apply function arguments)
+             ad-return-value)))
+        (:around
+         (lambda (original &rest arguments)
+           (let
+               ((ems--modern-advice-target symbol)
+                (ems--modern-advice-arguments arguments))
+             (apply function original arguments)))))
+      ems--modern-advice-wrappers))))
+
+(defun ems--advice-add-around
+    (original symbol where function &optional props)
+  "Add advice while retaining context needed by converted Emacsvox advice."
+  (if (not (ems--modern-advice-function-p function))
+      (funcall original symbol where function props)
+    (funcall
+     original symbol
+     (if (memq where '(:before :after)) :around where)
+     (ems--modern-advice-wrapper symbol where function)
+     props)))
+
+(advice-add 'advice-add :around #'ems--advice-add-around)
 
 ;;;   Define locations:
 
@@ -214,9 +293,6 @@
 ;; Thus, ems-interactive-p is reserved for use within Emacsvox advice.
 ;;; Implementation: Interactive Check:
 
-(defvar ems--interactive-fn-name nil
-  "Holds name of function being called interactively.")
-
 (defun ems--funcall-interactively-around (orig-fun func &rest args)
   "Record name of interactive function being called."
   (let ((ems--interactive-fn-name func))
@@ -247,12 +323,10 @@ FN-NAME to our stored value of ems--interactive-fn-name."
        . ,macroexpand-all-environment)))))
 
 (defun ems-interactive-p ()
-  "Dynamically defined at runtime to provide Emacsvox's
-  interactive check.  This definition never be called, so produce debug
-  info if the unexpected happens."
-  
-  (error
-   (format "From %s: Unexpected call!" ems--interactive-fn-name)))
+  "Return non-nil in advice for the current interactive command."
+  (when (eq ems--interactive-fn-name ems--modern-advice-target)
+    (setq ems--interactive-fn-name nil)
+    t))
 
 ;;; defun: ems--fastload:
 
