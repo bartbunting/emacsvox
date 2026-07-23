@@ -156,21 +156,25 @@
 
 (advice-add 'ido-complete :after #'ems--ido-complete-after)
 
-(cl-loop 
- for f in
+(cl-loop
+ for target in
  '(
    ido-switch-buffer ido-switch-buffer-other-window
    ido-switch-buffer-other-frame ido-display-buffer
    ido-find-file ido-find-file-other-frame ido-find-file-other-window
    ido-find-alternate-file ido-find-file-read-only
    ido-find-file-read-only-other-window ido-find-file-read-only-other-frame)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice   ,f(after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak the result of an interactive IDO command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--ido-bury-buffer-at-head-after (&rest _)
   "Provide auditory icon."
@@ -230,4 +234,3 @@
 
 (provide 'emacsvox-ido)
 ;;;  end of file
-

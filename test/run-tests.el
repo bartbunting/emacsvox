@@ -71,6 +71,7 @@
   (require 'emacsvox-compile-tests)
   (require 'emacsvox-windmove-tests)
   (require 'emacsvox-ffap-tests)
+  (require 'emacsvox-ido-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
