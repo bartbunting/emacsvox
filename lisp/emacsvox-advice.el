@@ -1863,16 +1863,11 @@ TARGET identifies the evaluation command."
 
 (advice-add 'shell :after #'ems--shell-after)
 
-(cl-loop
- for f in
- '(find-tag pop-tag-mark tags-cl-loop-continue)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the line please."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (find-tag pop-tag-mark tags-loop-continue)
+    "Announce the destination of an interactive tag navigation command."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
 (defun emacsvox--advice-call-last-kbd-macro-around
     (original &rest arguments)

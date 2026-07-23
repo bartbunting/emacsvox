@@ -31,7 +31,11 @@
     (help-goto-previous-page :after
      emacsvox--advice-help-goto-previous-page-after)
     (ielm :after emacsvox--advice-ielm-after)
-    (where-is :after emacsvox--advice-where-is-after))
+    (where-is :after emacsvox--advice-where-is-after)
+    (find-tag :after emacsvox--advice-find-tag-after)
+    (pop-tag-mark :after emacsvox--advice-pop-tag-mark-after)
+    (tags-loop-continue :after
+     emacsvox--advice-tags-loop-continue-after))
   "Source navigation commands using individually named native advice.")
 
 (ert-deftest emacsvox-navigation-advice-is-directly-registered ()
@@ -189,6 +193,21 @@
       (nreverse events)
       '((lookup forward-char)
         (speak "forward-char  control f"))))))
+
+(ert-deftest emacsvox-tag-navigation-feedback-is-target-aware ()
+  "Only the matching tag command cues and speaks its destination."
+  (let ((ems--interactive-fn-name 'tags-loop-continue)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-find-tag-after "example")
+      (emacsvox--advice-tags-loop-continue-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object) speak-line)))))
 
 (provide 'emacsvox-navigation-tests)
 ;;; emacsvox-navigation-tests.el ends here
