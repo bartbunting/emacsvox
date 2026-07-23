@@ -20,7 +20,8 @@
   ;; Load source explicitly so tests never exercise a stale .elc file.
   (load (expand-file-name "emacsvox-preamble.el" lisp-directory)
         nil nil)
-  (require 'emacsvox-advice-tests))
+  (require 'emacsvox-advice-tests)
+  (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
 
