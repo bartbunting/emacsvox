@@ -85,6 +85,7 @@
   (require 'emacsvox-wdired-tests)
   (require 'emacsvox-tabulated-list-tests)
   (require 'emacsvox-net-utils-tests)
+  (require 'emacsvox-forms-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
