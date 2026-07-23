@@ -35,6 +35,7 @@
   (require 'emacsvox-process-tests)
   (require 'emacsvox-vc-tests)
   (require 'emacsvox-overlay-tests)
+  (require 'emacsvox-message-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

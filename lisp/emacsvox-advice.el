@@ -829,17 +829,23 @@ ARGUMENTS are passed to ORIGINAL unchanged."
       (setq ems--message-filter (regexp-opt val)))
   :group 'emacsvox-speak)
 
-(defun ems--momentary-string-display-around (orig-fun &rest args)
-  "Speak."
-  (ems-with-messages-silenced
-   (let ((msg (ad-get-arg 0)) (exit (ad-get-arg 2)))
-     (dtk-notify
-      (format "%s Press %s to exit" msg
-              (if exit (format "%c" exit) "space")))
-     (apply orig-fun args))))
+(defun emacsvox--advice-momentary-string-display-around
+    (original &rest arguments)
+  "Call ORIGINAL quietly after speaking its string and exit character."
+  (let ((string (nth 0 arguments))
+        (exit-character (nth 2 arguments)))
+    (ems-with-messages-silenced
+      (dtk-notify
+       (format "%s Press %s to exit" string
+               (if exit-character
+                   (format "%c" exit-character)
+                 "space")))
+      (apply original arguments))))
 
-(advice-add 'momentary-string-display :around
-            #'ems--momentary-string-display-around)
+(advice-add
+ 'momentary-string-display :around
+ #'emacsvox--advice-momentary-string-display-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-progress-reporter-do-update-around
     (original &rest arguments)
@@ -863,43 +869,71 @@ ARGUMENTS are passed to ORIGINAL unchanged."
  #'emacsvox--advice-progress-reporter-done-after
  '((name . emacsvox)))
 
-(cl-loop
- for f in
- '( minibuffer-message set-minibuffer-message
-    message display-message-or-buffer) do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak message. Duplicates will not be spoken."
-     (let ((m nil)
-           (o minibuffer-message-overlay))
-       ad-do-it
-       (cond
-        ((or inhibit-message (null emacsvox-speak-messages)) ad-return-value)
-        (t                              ; possibly peak it 
-         (setq m
-               (or (current-message) (and   o (overlay-get o 'after-string))))
-         (when m (setq m (string-trim m)))
-         (when
-             (and                       ;dup throttle
-              m
-              (not (zerop (length m)))
-              (not (string= m emacsvox-last-message))
-              (not (string-match ems--message-filter m)))
-           (setq emacsvox-last-message  m)
-;;; so we really need to speak it
-           (emacsvox-icon 'key)
-           (tts-with-punctuations 'all (dtk-notify m 'dont-log)))))
-       ad-return-value))))
+(defun emacsvox--message-around (original arguments)
+  "Call ORIGINAL with ARGUMENTS and speak a new, unfiltered message."
+  (let ((output nil)
+        (overlay minibuffer-message-overlay))
+    (let ((result (apply original arguments)))
+      (unless (or inhibit-message (null emacsvox-speak-messages))
+        (setq output
+              (or (current-message)
+                  (and overlay
+                       (overlay-get overlay 'after-string))))
+        (when output
+          (setq output (string-trim output)))
+        (when
+            (and
+             output
+             (not (zerop (length output)))
+             (not (string= output emacsvox-last-message))
+             (not (string-match ems--message-filter output)))
+          (setq emacsvox-last-message output)
+          (emacsvox-icon 'key)
+          (tts-with-punctuations 'all
+            (dtk-notify output 'dont-log))))
+      result)))
 
-(defun ems--display-message-or-buffer-after (&rest _)
-  "Icon"
-  (let ((buffer-name (ad-get-arg 1)))
-    (when (bufferp ad-return-value)
+(defun emacsvox--advice-minibuffer-message-around
+    (original &rest arguments)
+  "Call ORIGINAL and speak a new minibuffer message."
+  (emacsvox--message-around original arguments))
+
+(advice-add
+ 'minibuffer-message :around
+ #'emacsvox--advice-minibuffer-message-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-set-minibuffer-message-around
+    (original &rest arguments)
+  "Call ORIGINAL and speak a newly set minibuffer message."
+  (emacsvox--message-around original arguments))
+
+(advice-add
+ 'set-minibuffer-message :around
+ #'emacsvox--advice-set-minibuffer-message-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-message-around (original &rest arguments)
+  "Call ORIGINAL and speak a new message."
+  (emacsvox--message-around original arguments))
+
+(advice-add
+ 'message :around #'emacsvox--advice-message-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-display-message-or-buffer-around
+    (original &rest arguments)
+  "Call ORIGINAL and speak its message or displayed buffer."
+  (let ((result (emacsvox--message-around original arguments)))
+    (when (bufferp result)
       (dtk-notify
-       (format "Displayed message in buffer  %s" buffer-name)))))
+       (format "Displayed message in buffer  %s" (nth 1 arguments))))
+    result))
 
-(advice-add 'display-message-or-buffer :after
-            #'ems--display-message-or-buffer-after)
+(advice-add
+ 'display-message-or-buffer :around
+ #'emacsvox--advice-display-message-or-buffer-around
+ '((name . emacsvox)))
 
 (defvar emacsvox--last-docs nil
   "Last docs considered in `emacsvox-speak-eldoc'.")
