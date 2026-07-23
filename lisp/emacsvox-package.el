@@ -137,17 +137,21 @@
             #'ems--package-menu-execute-around)
 
 (cl-loop
- for f in
+ for target in
  '(
    package-menu-mark-delete package-menu-mark-install package-show-package-list
    package-menu-mark-unmark package-menu-backup-unmark)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act com)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'mark-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak and cue an interactive Package menu marking command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'mark-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  Advice Upgrade:
 
@@ -163,4 +167,3 @@
 
 (provide 'emacsvox-package)
 ;;;  end of file
-
