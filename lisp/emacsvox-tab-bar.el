@@ -148,61 +148,87 @@
  #'emacsvox--advice-tab-bar-close-tab-by-name-after
  '((name . emacsvox)))
 
-;;; tab-list commands:
+;;; Tab Switcher commands:
 
 (cl-loop
- for f in 
- '(tab-list tab-bar-list)
+ for target in '(tab-list tab-switcher)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue after interactively opening the Tab Switcher."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--tab-bar-list-execute-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(defun emacsvox--advice-tab-switcher-execute-after (&rest _)
+  "Cue after interactively deleting marked tabs."
+  (when (ems-interactive-p 'tab-switcher-execute)
+    (emacsvox-icon 'task-done)))
 
-(advice-add 'tab-bar-list-execute :after
-            #'ems--tab-bar-list-execute-after)
+(advice-add
+ 'tab-switcher-execute :after
+ #'emacsvox--advice-tab-switcher-execute-after
+ '((name . emacsvox)))
 
 (cl-loop
- for f in 
- '(tab-bar-list-prev-line tab-bar-list-next-line)
+ for target in '(tab-switcher-prev-line tab-switcher-next-line)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
-
-(defun ems--tab-bar-list-unmark-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'unmark-object) (emacsvox-speak-line)))
-
-(advice-add 'tab-bar-list-unmark :after
-            #'ems--tab-bar-list-unmark-after)
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Tab Switcher movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in 
- '(tab-bar-list-delete  tab-bar-list-delete-backwards)
+ for target in '(tab-switcher-unmark tab-switcher-backup-unmark)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'delete-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively unmarking a tab."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'unmark-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--tab-bar-list-select-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-line)))
+(cl-loop
+ for target in '(tab-switcher-delete tab-switcher-delete-backwards)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively marking a tab for deletion."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'delete-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'tab-bar-list-select :after
-            #'ems--tab-bar-list-select-after)
+(defun emacsvox--advice-tab-switcher-select-after (&rest _)
+  "Cue and speak after interactively selecting a tab."
+  (when (ems-interactive-p 'tab-switcher-select)
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-line)))
+
+(advice-add
+ 'tab-switcher-select :after
+ #'emacsvox--advice-tab-switcher-select-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-tab-bar)
 ;;;  end of file

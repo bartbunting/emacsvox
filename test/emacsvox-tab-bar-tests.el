@@ -121,5 +121,55 @@
         (speak "Closed tab Research")
         (icon close-object))))))
 
+(defconst emacsvox-test--tab-switcher-after-targets
+  '(tab-list
+    tab-switcher
+    tab-switcher-execute
+    tab-switcher-prev-line
+    tab-switcher-next-line
+    tab-switcher-unmark
+    tab-switcher-backup-unmark
+    tab-switcher-delete
+    tab-switcher-delete-backwards
+    tab-switcher-select)
+  "Emacs 31 Tab Switcher commands with direct advice.")
+
+(ert-deftest emacsvox-tab-switcher-advice-is-directly-registered ()
+  "Current Tab Switcher advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--tab-switcher-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-tab-switcher-movement-is-target-aware ()
+  "Only matching interactive Tab Switcher movement speaks and cues."
+  (let ((ems--interactive-fn-name 'tab-switcher-next-line)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda (&rest _) (push 'line events))))
+      (emacsvox--advice-tab-switcher-prev-line-after)
+      (emacsvox--advice-tab-switcher-next-line-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon large-movement) line)))))
+
+(ert-deftest emacsvox-tab-switcher-alias-feedback-is-not-duplicated ()
+  "Opening the switcher through `tab-list' produces one cue."
+  (let ((ems--interactive-fn-name 'tab-list)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-tab-switcher-after)
+      (emacsvox--advice-tab-list-after))
+    (should (equal events '(open-object)))))
+
 (provide 'emacsvox-tab-bar-tests)
 ;;; emacsvox-tab-bar-tests.el ends here
