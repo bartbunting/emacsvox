@@ -2222,51 +2222,30 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  Stop talking if activity
 
-(cl-loop
- for f in
- '(recenter-top-bottom recenter)
- do
- (eval
-  `(defadvice ,f (before emacsvox pre act comp)
-     "Icon."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)))))
+(emacsvox-advice--define-interactive-before-advice
+    (recenter-top-bottom recenter)
+    "Speak the current line before interactive recentering."
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in
- '(beginning-of-line move-beginning-of-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Icon."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'left)))))
+(emacsvox-advice--define-interactive-after-advice
+    (beginning-of-line move-beginning-of-line)
+    "Speak after moving interactively to the beginning of a line."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'left))
 
-(cl-loop
- for f in
- '(end-of-line move-end-of-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Icon."
-     (when (ems-interactive-p)
-       (emacsvox-speak-current-column)
-       (emacsvox-icon 'right)))))
+(emacsvox-advice--define-interactive-after-advice
+    (end-of-line move-end-of-line)
+    "Speak the column after moving interactively to the end of a line."
+  (emacsvox-speak-current-column)
+  (emacsvox-icon 'right))
 
 ;;;  yanking and popping
 
-(cl-loop
- for f in
- '(yank yank-pop)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Say what you yanked.
-Produce an auditory icon if possible."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'yank-object)
-       (emacsvox-speak-region (mark 'force) (point))))))
+(emacsvox-advice--define-interactive-after-advice
+    (yank yank-pop)
+    "Speak the text inserted by an interactive yank command."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-region (mark 'force) (point)))
 
 ;;;  advice non-incremental searchers
 
