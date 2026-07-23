@@ -71,18 +71,21 @@
 ;;;  Advice Interactive Commands:
 
 (cl-loop
- for f in
+ for target in
  '(diff-next-complex-hunk
    diff-hunk-prev diff-hunk-next
    diff-file-next diff-file-prev)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Diff Mode navigation command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (provide 'emacsvox-diff-mode)
 ;;;  end of file
-

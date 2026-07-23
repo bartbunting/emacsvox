@@ -72,6 +72,7 @@
   (require 'emacsvox-windmove-tests)
   (require 'emacsvox-ffap-tests)
   (require 'emacsvox-ido-tests)
+  (require 'emacsvox-diff-mode-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
