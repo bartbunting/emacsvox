@@ -9,6 +9,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 
 (defvar emacsvox-trace--events nil
   "Events accumulated by the active trace capture.")
@@ -54,12 +55,12 @@
       (emacsvox-trace--record
        'speak (emacsvox-trace--speech-description text)))))
 
-(defun emacsvox-trace--message (format-string &rest arguments)
-  "Record FORMAT-STRING formatted with ARGUMENTS and return the message."
+(defun emacsvox-trace--message (original format-string &rest arguments)
+  "Record a message, then call ORIGINAL with FORMAT-STRING and ARGUMENTS."
   (when format-string
     (let ((text (apply #'format-message format-string arguments)))
-      (emacsvox-trace--record 'message (substring-no-properties text))
-      text)))
+      (emacsvox-trace--record 'message (substring-no-properties text))))
+  (apply original format-string arguments))
 
 (defun emacsvox-trace-capture (thunk)
   "Call THUNK while recording semantic output and return a result plist.
@@ -67,8 +68,18 @@
 The result contains =:value= and chronological =:events=.  Low-level output
 functions are replaced temporarily, so no speech server or sound player is
 used."
-  (let (emacsvox-trace--events value)
+  (let ((original-message (symbol-function 'message))
+        emacsvox-trace--events
+        value)
     (cl-letf (((symbol-function 'dtk-speak) #'emacsvox-trace--speak)
+              ((symbol-function 'dtk-letter)
+               (lambda (letter)
+                 (emacsvox-trace--record
+                  'letter (substring-no-properties letter))))
+              ((symbol-function 'dtk-dispatch)
+               (lambda (string)
+                 (emacsvox-trace--record
+                  'dispatch (substring-no-properties string))))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (emacsvox-trace--record 'icon icon)))
               ((symbol-function 'emacspeak-icon)
@@ -86,7 +97,23 @@ used."
               ((symbol-function 'dtk-set-rate)
                (lambda (rate &optional prefix)
                  (emacsvox-trace--record 'rate rate prefix)))
-              ((symbol-function 'message) #'emacsvox-trace--message))
+              ((symbol-function 'dtk-notify)
+               (lambda (text &optional dont-log)
+                 (emacsvox-trace--record
+                  'notify
+                  (emacsvox-trace--speech-description text)
+                  dont-log)
+                 text))
+              ((symbol-function 'dtk-notify-icon)
+               (lambda (icon)
+                 (emacsvox-trace--record 'notify-icon icon)))
+              ((symbol-function 'dtk-notify-stop)
+               (lambda () (emacsvox-trace--record 'notify-stop)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (apply
+                  #'emacsvox-trace--message
+                  original-message format-string arguments))))
       (setq value (funcall thunk)))
     (list :value value :events (nreverse emacsvox-trace--events))))
 
@@ -135,8 +162,11 @@ MARK-ACTIVE, and MODE describe the initial buffer state."
             (goto-char point)
             (when mark (set-mark mark))
             (setq mark-active initial-mark-active)
+            (set-buffer-modified-p nil)
             (let* ((this-command command)
                    (real-this-command command)
+                   (kill-ring nil)
+                   (kill-ring-yank-pointer nil)
                    (capture
                     (emacsvox-trace-capture
                      (lambda ()
@@ -155,7 +185,9 @@ MARK-ACTIVE, and MODE describe the initial buffer state."
                 :point (point)
                 :mark (mark t)
                 :mark-active mark-active
-                :modified (buffer-modified-p))))))
+                :modified (buffer-modified-p)
+                :kill-ring
+                (emacsvox-trace-normalize-value kill-ring buffer))))))
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
 

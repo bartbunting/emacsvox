@@ -13,33 +13,45 @@
   "Trace capture records output operations without a speech server."
   (let* ((spoken (propertize "Hello" 'personality 'voice-bolden))
          (result
-          (emacsvox-trace-capture
-           (lambda ()
-             (funcall (symbol-function 'dtk-speak) spoken)
-             (funcall (symbol-function 'emacsvox-icon) 'select-object)
-             (funcall (symbol-function 'dtk-tone) 440 100 t)
-             (funcall (symbol-function 'dtk-silence) 50 nil)
-             (funcall (symbol-function 'dtk-set-rate) 120 t)
-             (funcall (symbol-function 'dtk-stop) t)
-             (funcall (symbol-function 'message) "At %s" "point")
-             'finished))))
+          (let ((inhibit-message t))
+            (emacsvox-trace-capture
+             (lambda ()
+               (funcall (symbol-function 'dtk-speak) spoken)
+               (funcall (symbol-function 'dtk-letter) "h")
+               (funcall (symbol-function 'dtk-dispatch) "punctuation")
+               (funcall (symbol-function 'emacsvox-icon) 'select-object)
+               (funcall (symbol-function 'dtk-tone) 440 100 t)
+               (funcall (symbol-function 'dtk-silence) 50 nil)
+               (funcall (symbol-function 'dtk-set-rate) 120 t)
+               (funcall (symbol-function 'dtk-stop) t)
+               (funcall (symbol-function 'dtk-notify) "notice" 'dont-log)
+               (funcall (symbol-function 'dtk-notify-icon) 'progress)
+               (funcall (symbol-function 'dtk-notify-stop))
+               (funcall (symbol-function 'message) "At %s" "point")
+               'finished)))))
     (should (eq (plist-get result :value) 'finished))
     (should
      (equal
       (plist-get result :events)
       '((speak
          (:text "Hello" :personalities ((0 5 voice-bolden))))
+        (letter "h")
+        (dispatch "punctuation")
         (icon select-object)
         (tone 440 100 t)
         (silence 50 nil)
         (rate 120 t)
         (stop t)
+        (notify (:text "notice") dont-log)
+        (notify-icon progress)
+        (notify-stop)
         (message "At point"))))))
 
 (ert-deftest emacsvox-trace-restores-output-functions ()
   "Trace capture restores every function definition it replaces."
   (let ((original (symbol-function 'message)))
-    (emacsvox-trace-capture (lambda () (message "captured")))
+    (let ((inhibit-message t))
+      (emacsvox-trace-capture (lambda () (message "captured"))))
     (should (eq (symbol-function 'message) original))))
 
 (ert-deftest emacsvox-trace-scenario-captures-result-and-buffer-state ()
@@ -67,7 +79,7 @@
             :value done
             :state
             (:text "ab" :point 2 :mark nil :mark-active nil
-                   :modified t))))
+                   :modified nil :kill-ring nil))))
       (fmakunbound command))))
 
 (provide 'emacsvox-trace-tests)

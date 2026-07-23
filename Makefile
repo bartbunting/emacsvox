@@ -41,9 +41,35 @@ README = README
 
 ### Tests
 
-.PHONY: test
-test:
+TRACE_GOLDEN=test/golden/emacsvox-core.eld
+EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
+
+.PHONY: test unit-test trace trace-test reference-test
+test: unit-test trace-test
+
+unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
+
+trace:
+	EMACSVOX_TRACE_IMPLEMENTATION=emacsvox \
+	EMACSVOX_TRACE_ROOT="$(CURDIR)" \
+	$(EMACS) -Q --batch -l test/run-scenarios.el
+
+trace-test:
+	EMACSVOX_TRACE_IMPLEMENTATION=emacsvox \
+	EMACSVOX_TRACE_ROOT="$(CURDIR)" \
+	EMACSVOX_TRACE_EXPECTED="$(CURDIR)/$(TRACE_GOLDEN)" \
+	$(EMACS) -Q --batch -l test/run-scenarios.el
+
+reference-test:
+	@if test -z "$(EMACSPEAK_DIR)"; then \
+		echo "Set EMACSPEAK_DIR to the pinned Emacspeak checkout."; \
+		exit 2; \
+	fi
+	EMACSVOX_TRACE_IMPLEMENTATION=emacspeak \
+	EMACSVOX_TRACE_ROOT="$(EMACSPEAK_DIR)" \
+	EMACSVOX_TRACE_EXPECTED="$(CURDIR)/$(EMACSPEAK_TRACE_GOLDEN)" \
+	$(EMACS) -Q --batch -l test/run-scenarios.el
 
 ###   User level targets emacsvox   outloud espeak 
 

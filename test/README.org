@@ -1,0 +1,63 @@
+#+title: Emacsvox Tests
+
+* Emacs 31 Test Suite
+
+Run unit tests and the self-contained Emacsvox golden traces with:
+
+#+begin_src sh
+make test EMACS=/home/bart/opt/emacs-31/bin/emacs
+#+end_src
+
+The trace tests replace low-level speech and sound functions temporarily.  They
+do not start a speech server or play audio.
+
+Use =make trace= to print the current structured core trace without comparing
+it to the committed baseline.
+
+* Pinned Emacspeak Reference
+
+The original reference is Emacspeak revision:
+
+#+begin_example
+7482f8e2713b5b8ea87132d9d2fcea6664ff4037
+#+end_example
+
+This is both the current upstream revision and the parent immediately before
+the Emacsvox conversion tooling was introduced.  Create an isolated checkout:
+
+#+begin_src sh
+git clone https://github.com/tvraman/emacspeak.git ~/src/emacspeak-reference
+git -C ~/src/emacspeak-reference switch --detach \
+  7482f8e2713b5b8ea87132d9d2fcea6664ff4037
+#+end_src
+
+No build or =make config= step is required for the core reference scenarios.
+The runner deliberately rejects a different revision, a dirty reference
+worktree, or compiled Lisp in its =lisp/= directory.
+
+Run the optional comparison with:
+
+#+begin_src sh
+make reference-test \
+  EMACS=/home/bart/opt/emacs-31/bin/emacs \
+  EMACSPEAK_DIR=$HOME/src/emacspeak-reference
+#+end_src
+
+The pinned legacy checkout produces many expected Emacs 31 obsolescence
+warnings while loading.  The final line reports whether all semantic traces
+match.
+
+* Trace Data
+
+=scenarios/emacsvox-core-scenarios.el= contains implementation-neutral command
+scenarios.  Golden output is stored under =golden/=.  Each result records:
+
+- semantic speech, letter, icon, tone, silence, stop, rate, notification, and
+  message events;
+- command return value;
+- final text, point, mark, modified state, and kill ring.
+
+Do not refresh a golden file merely to make a failure disappear.  Review the
+event and editor-state difference first, then update the appropriate Emacsvox
+baseline only when the behaviour change is intentional.  The pinned Emacspeak
+golden remains an independent reference.
