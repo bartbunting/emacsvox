@@ -27,6 +27,7 @@
   (require 'emacsvox-converter-tests)
   (require 'emacsvox-dired-tests)
   (require 'emacsvox-mail-tests)
+  (require 'emacsvox-core-migration-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

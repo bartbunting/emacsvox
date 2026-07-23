@@ -61,6 +61,25 @@
 (eval-when-compile (require 'advice))
 (require 'emacsvox-preamble)
 
+(defmacro emacsvox-advice--define-interactive-after-advice
+    (targets docstring &rest body)
+  "Define native interactive after advice for each command in TARGETS.
+DOCSTRING and BODY define the feedback function for each command."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add
+                ',target :after #',function '((name . emacsvox))))))
+        targets)))
+
 ;;;   Advice Replace
 
 (voice-setup-set-voice-for-face 'query-replace 'voice-animate)
@@ -199,20 +218,15 @@
 
 ;;;  advice cursor movement commands to speak
 
-(cl-loop
- for f in
- '(next-line previous-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak line. Speak  (visual) line if
+(emacsvox-advice--define-interactive-after-advice
+    (next-line previous-line)
+    "Speak line. Speak  (visual) line if
 `visual-line-mode' is  on, and
 indicate  point  by an aural highlight.   Moving to
 beginning or end of a physical line produces an  auditory icon."
-     (when (ems-interactive-p)
-       (cond
-        ((or line-move-visual visual-line-mode) (emacsvox-speak-visual-line))
-        (t (emacsvox-speak-line)))))))
+  (cond
+   ((or line-move-visual visual-line-mode) (emacsvox-speak-visual-line))
+   (t (emacsvox-speak-line))))
 
 (defun ems--delete-horizontal-space-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
@@ -278,26 +292,20 @@ beginning or end of a physical line produces an  auditory icon."
 (advice-add 'blink-matching-open :after
             #'ems--blink-matching-open-after)
 
-(cl-loop
- for f in
- '(left-char right-char
-             backward-char forward-char)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak char under point.
+(emacsvox-advice--define-interactive-after-advice
+    (left-char right-char backward-char forward-char)
+    "Speak char under point.
 When on a close delimiter, speak matching delimiter after a small delay. "
-     (when (ems-interactive-p)
-       (and dtk-stop-immediately (dtk-stop))
-       (emacsvox-speak-char t)
-       (when
-           (and
-            (= ?\) (char-syntax (following-char)))
-            (sit-for 0.25))
-         (emacsvox-icon 'tick-tick)
-         (save-excursion
-           (forward-char 1)
-           (emacsvox-speak-matching-paren)))))))
+  (and dtk-stop-immediately (dtk-stop))
+  (emacsvox-speak-char t)
+  (when
+      (and
+       (= ?\) (char-syntax (following-char)))
+       (sit-for 0.25))
+    (emacsvox-icon 'tick-tick)
+    (save-excursion
+      (forward-char 1)
+      (emacsvox-speak-matching-paren))))
 
 (cl-loop
  for f in
@@ -319,17 +327,12 @@ When on a close delimiter, speak matching delimiter after a small delay. "
      "Speak word."
      (when (ems-interactive-p) (emacsvox-speak-word)))))
 
-(cl-loop
- for f in
- '(beginning-of-buffer end-of-buffer)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the line."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)
-       (dtk-notify (emacsvox-get-current-percentage-verbously))))))
+(emacsvox-advice--define-interactive-after-advice
+    (beginning-of-buffer end-of-buffer)
+    "Speak the line."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line)
+  (dtk-notify (emacsvox-get-current-percentage-verbously)))
 
 (cl-loop
  for f in
@@ -536,28 +539,40 @@ When on a close delimiter, speak matching delimiter after a small delay. "
       (t ad-do-it))
      ad-return-value)))
 
-(cl-loop
- for f in
- '(delete-forward-char delete-char) do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak deleted character."
-     (cond
-      ((ems-interactive-p)
-       (dtk-tone-deletion)
-       (emacsvox-speak-char t)
-       ad-do-it)
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--delete-char-around (target original arguments)
+  "Speak before TARGET deletes a character, then call ORIGINAL with ARGUMENTS."
+  (when (ems-interactive-p target)
+    (dtk-tone-deletion)
+    (emacsvox-speak-char t))
+  (apply original arguments))
 
-(defun ems--kill-word-before (&rest _)
+(defun emacsvox--advice-delete-forward-char-around (original &rest arguments)
+  "Speak the character deleted by `delete-forward-char'."
+  (emacsvox--delete-char-around
+   'delete-forward-char original arguments))
+
+(advice-add
+ 'delete-forward-char :around #'emacsvox--advice-delete-forward-char-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-delete-char-around (original &rest arguments)
+  "Speak the character deleted by `delete-char'."
+  (emacsvox--delete-char-around 'delete-char original arguments))
+
+(advice-add
+ 'delete-char :around #'emacsvox--advice-delete-char-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-kill-word-before (&rest _)
   "Speak word beingkilled."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kill-word)
     (save-excursion
       (skip-syntax-forward " ") (dtk-tone-deletion)
       (emacsvox-speak-word 1))))
 
-(advice-add 'kill-word :before #'ems--kill-word-before)
+(advice-add
+ 'kill-word :before #'emacsvox--advice-kill-word-before
+ '((name . emacsvox)))
 
 (defun ems--backward-kill-word-before (&rest _)
   "Speak word beingkilled."
@@ -1296,25 +1311,6 @@ When on a close delimiter, speak matching delimiter after a small delay. "
   (advice-add
    command :after #'emacsvox--mail-compose-after '((name . emacsvox))))
 
-(defmacro emacsvox-advice--define-interactive-after-advice
-    (targets docstring &rest body)
-  "Define native interactive after advice for each command in TARGETS.
-DOCSTRING and BODY define the feedback function for each command."
-  (declare (indent 2) (debug (sexp stringp body)))
-  `(progn
-     ,@(mapcar
-        (lambda (target)
-          (let ((function
-                 (intern (format "emacsvox--advice-%s-after" target))))
-            `(progn
-               (defun ,function (&rest _)
-                 ,docstring
-                 (when (ems-interactive-p ',target)
-                   ,@body))
-               (advice-add
-                ',target :after #',function '((name . emacsvox))))))
-        targets)))
-
 (emacsvox-advice--define-interactive-after-advice
     (mail-text mail-subject mail-cc mail-bcc
      mail-to mail-reply-to mail-fcc)
@@ -1441,14 +1437,16 @@ Use an auditory icon if possible."
       (t ad-do-it))
      ad-return-value)))
 
-(defun ems--kill-ring-save-after (&rest _)
+(defun emacsvox--advice-kill-ring-save-after (&rest _)
   "Indicate that region has been copied to the kill ring.\nProduce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kill-ring-save)
     (emacsvox-icon 'mark-object)
     (message "region containing %s lines copied to kill ring "
              (count-lines (region-beginning) (region-end)))))
 
-(advice-add 'kill-ring-save :after #'ems--kill-ring-save-after)
+(advice-add
+ 'kill-ring-save :after #'emacsvox--advice-kill-ring-save-after
+ '((name . emacsvox)))
 
 (defun ems--find-file-after (&rest _)
   "Play an auditory icon if possible."
@@ -1665,20 +1663,14 @@ Indicate change of selection with an auditory icon
 (advice-add 'exchange-point-and-mark :after
             #'ems--exchange-point-and-mark-after)
 
-(cl-loop
- for f in
- '(newline newline-and-indent electric-newline-and-maybe-indent)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the previous line if line echo is on.
+(emacsvox-advice--define-interactive-after-advice
+    (newline newline-and-indent electric-newline-and-maybe-indent)
+    "Speak the previous line if line echo is on.
 See command \\[emacsvox-toggle-line-echo]. Otherwise cue the user to
 the newly created  line."
-     
-     (when (ems-interactive-p)
-       (if emacsvox-line-echo
-           (emacsvox-read-previous-line)
-         (dtk-tone 225 75 'force))))))
+  (if emacsvox-line-echo
+      (emacsvox-read-previous-line)
+    (dtk-tone 225 75 'force)))
 
 (cl-loop
  for f in

@@ -1,0 +1,89 @@
+;;; emacsvox-core-migration-tests.el --- Core advice migration tests -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+;; Native-registration coverage for migrated core movement and editing advice.
+;; `emacsvox-mail-tests' loads the core advice source before this file.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'ert)
+(require 'emacsvox-advice)
+
+(defconst emacsvox-test--core-after-targets
+  '(next-line previous-line
+    left-char right-char backward-char forward-char
+    beginning-of-buffer end-of-buffer
+    newline newline-and-indent electric-newline-and-maybe-indent)
+  "Core commands migrated with generated native after advice.")
+
+(defconst emacsvox-test--core-direct-advice
+  '((delete-forward-char :around emacsvox--advice-delete-forward-char-around)
+    (delete-char :around emacsvox--advice-delete-char-around)
+    (kill-word :before emacsvox--advice-kill-word-before)
+    (kill-ring-save :after emacsvox--advice-kill-ring-save-after))
+  "Core commands migrated with individually defined native advice.")
+
+(ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
+  "Generated movement and newline advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--core-after-targets)
+    (let ((function (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-core-migrated-direct-advice-bypasses-bridge ()
+  "Individually migrated editing advice is native and inspectable."
+  (dolist (entry emacsvox-test--core-direct-advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-core-delete-advice-calls-original-exactly-once ()
+  "Forward deletion preserves feedback order, arguments, and return value."
+  (let ((ems--interactive-fn-name 'delete-forward-char)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'dtk-tone-deletion)
+               (lambda () (push 'tone events)))
+              ((symbol-function 'emacsvox-speak-char)
+               (lambda (&rest arguments)
+                 (push (cons 'speak-char arguments) events))))
+      (should
+       (equal
+        (emacsvox--advice-delete-forward-char-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (cons 'original arguments) events)
+           'deleted)
+         2 'killflag)
+        'deleted)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '(tone (speak-char t) (original 2 killflag))))))
+
+(ert-deftest emacsvox-core-delete-advice-is-quiet-programmatically ()
+  "Programmatic deletion calls the original without speech feedback."
+  (let ((ems--interactive-fn-name nil)
+        events)
+    (cl-letf (((symbol-function 'dtk-tone-deletion)
+               (lambda () (push 'tone events)))
+              ((symbol-function 'emacsvox-speak-char)
+               (lambda (&rest _) (push 'speech events))))
+      (should
+       (eq
+        (emacsvox--advice-delete-forward-char-around
+         (lambda (&rest _) 'deleted) 1)
+        'deleted)))
+    (should-not events)))
+
+(provide 'emacsvox-core-migration-tests)
+;;; emacsvox-core-migration-tests.el ends here
