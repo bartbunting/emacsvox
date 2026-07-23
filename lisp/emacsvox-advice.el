@@ -1524,22 +1524,50 @@ ARGUMENT is the optional prefix argument accepted by `comment-region'."
     "Indicate completion of an interactive save."
   (emacsvox-icon 'save-object))
 
-(cl-loop
- for f in
- '(delete-region kill-region completion-kill-region)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Indicate region has been killed.
-Use an auditory icon if possible."
-     (cond
-      ((ems-interactive-p)
-       (let ((count (count-lines (region-beginning) (region-end))))
-         ad-do-it
-         (emacsvox-icon 'delete-object)
-         (message "Killed region containing %s lines" count)))
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--region-deletion-around
+    (target original beginning end arguments)
+  "Call ORIGINAL and announce an interactive region deletion.
+TARGET identifies the advised command.  BEGINNING and END are the affected
+range, and ARGUMENTS contains any remaining arguments for ORIGINAL."
+  (if (ems-interactive-p target)
+      (let ((count (count-lines beginning end))
+            (result (apply original beginning end arguments)))
+        (emacsvox-icon 'delete-object)
+        (message "Killed region containing %s lines" count)
+        result)
+    (apply original beginning end arguments)))
+
+(defun emacsvox--advice-delete-region-around
+    (original beginning end)
+  "Call ORIGINAL and announce interactive deletion from BEGINNING to END."
+  (emacsvox--region-deletion-around
+   'delete-region original beginning end nil))
+
+(advice-add
+ 'delete-region :around #'emacsvox--advice-delete-region-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-kill-region-around
+    (original beginning end &rest arguments)
+  "Call ORIGINAL and announce an interactive kill from BEGINNING to END."
+  (emacsvox--region-deletion-around
+   'kill-region original beginning end arguments))
+
+(advice-add
+ 'kill-region :around #'emacsvox--advice-kill-region-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-completion-kill-region-around
+    (original beginning end &rest arguments)
+  "Call ORIGINAL and announce an interactive completion-region kill.
+BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
+  (emacsvox--region-deletion-around
+   'completion-kill-region original beginning end arguments))
+
+(advice-add
+ 'completion-kill-region :around
+ #'emacsvox--advice-completion-kill-region-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-kill-ring-save-after (&rest _)
   "Indicate that region has been copied to the kill ring.\nProduce an auditory icon if possible."

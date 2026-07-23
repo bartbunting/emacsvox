@@ -44,6 +44,7 @@
   (require 'emacsvox-tooltip-tests)
   (require 'emacsvox-formatting-tests)
   (require 'emacsvox-help-tests)
+  (require 'emacsvox-region-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
