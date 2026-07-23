@@ -3087,23 +3087,33 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
 
 ;;;  Asking Questions:
 
-(defun ems--yes-or-no-p-around (orig-fun &rest args)
-  "Play auditory icon."
-  (emacsvox-icon 'ask-question)
-  (let ((result (apply orig-fun args)))
-    (emacsvox-icon (if result 'yes-answer 'no-answer))
+(defun emacsvox--question-around
+    (question-icon yes-icon no-icon original arguments)
+  "Call ORIGINAL with ARGUMENTS and cue the question and answer.
+QUESTION-ICON is played before the call.  YES-ICON or NO-ICON is
+played afterward according to the result."
+  (emacsvox-icon question-icon)
+  (let ((result (apply original arguments)))
+    (emacsvox-icon (if result yes-icon no-icon))
     result))
 
-(advice-add 'yes-or-no-p :around #'ems--yes-or-no-p-around)
+(defun emacsvox--advice-yes-or-no-p-around (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS and cue a long question and answer."
+  (emacsvox--question-around
+   'ask-question 'yes-answer 'no-answer original arguments))
 
-(defun ems--y-or-n-p-around (orig-fun &rest args)
-  "Play auditory icon."
-  (emacsvox-icon 'ask-short-question)
-  (let ((result (apply orig-fun args)))
-    (emacsvox-icon (if result 'y-answer 'n-answer))
-    result))
+(advice-add
+ 'yes-or-no-p :around #'emacsvox--advice-yes-or-no-p-around
+ '((name . emacsvox)))
 
-(advice-add 'y-or-n-p :around #'ems--y-or-n-p-around)
+(defun emacsvox--advice-y-or-n-p-around (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS and cue a short question and answer."
+  (emacsvox--question-around
+   'ask-short-question 'y-answer 'n-answer original arguments))
+
+(advice-add
+ 'y-or-n-p :around #'emacsvox--advice-y-or-n-p-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-ask-user-about-lock-around
     (original &rest arguments)
@@ -3121,11 +3131,14 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
  #'emacsvox--advice-ask-user-about-lock-around
  '((name . emacsvox)))
 
-(defun ems--ask-user-about-lock-help-after (&rest _)
-  "Play auditory icon." (emacsvox-icon 'help))
+(defun emacsvox--advice-ask-user-about-lock-help-after (&rest _)
+  "Cue the display of lock-conflict help."
+  (emacsvox-icon 'help))
 
-(advice-add 'ask-user-about-lock-help :after
-            #'ems--ask-user-about-lock-help-after)
+(advice-add
+ 'ask-user-about-lock-help :after
+ #'emacsvox--advice-ask-user-about-lock-help-after
+ '((name . emacsvox)))
 
 ;;;  Advice process-menu
 

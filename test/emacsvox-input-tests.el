@@ -25,7 +25,11 @@
     (read-passwd-toggle-visibility :after
      emacsvox--advice-read-passwd-toggle-visibility-after)
     (read-passwd :before emacsvox--advice-read-passwd-before)
-    (read-char-choice :before emacsvox--advice-read-char-choice-before))
+    (read-char-choice :before emacsvox--advice-read-char-choice-before)
+    (yes-or-no-p :around emacsvox--advice-yes-or-no-p-around)
+    (y-or-n-p :around emacsvox--advice-y-or-n-p-around)
+    (ask-user-about-lock-help :after
+     emacsvox--advice-ask-user-about-lock-help-after))
   "Input readers migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-input-advice-is-directly-registered ()
@@ -109,6 +113,58 @@
      (equal
       (nreverse events)
       '((icon open-object) (speak "Secret: ") (icon pwd))))))
+
+(ert-deftest emacsvox-long-question-preserves-call-and-positive-result ()
+  "A long question cues a positive answer around exactly one call."
+  (let ((calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        (emacsvox--advice-yes-or-no-p-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (list 'original arguments) events)
+           'accepted)
+         "Continue?")
+        'accepted)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((icon ask-question)
+        (original ("Continue?"))
+        (icon yes-answer))))))
+
+(ert-deftest emacsvox-short-question-preserves-negative-result ()
+  "A short question cues a negative answer around exactly one call."
+  (let ((calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should-not
+       (emacsvox--advice-y-or-n-p-around
+        (lambda (&rest arguments)
+          (cl-incf calls)
+          (push (list 'original arguments) events)
+          nil)
+        "Continue?")))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((icon ask-short-question)
+        (original ("Continue?"))
+        (icon n-answer))))))
+
+(ert-deftest emacsvox-lock-help-cue-remains-unconditional ()
+  "Lock-conflict help always plays its help cue."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-ask-user-about-lock-help-after))
+    (should (equal events '((icon help))))))
 
 (provide 'emacsvox-input-tests)
 ;;; emacsvox-input-tests.el ends here
