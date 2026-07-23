@@ -282,63 +282,81 @@
 
 ;;;  Advice interactive commands:
 
-(defun ems--proced-mark-before (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-proced-mark-before (&rest _)
+  "Cue and speak a process before interactively marking it."
+  (when (ems-interactive-p 'proced-mark)
     (emacsvox-icon 'mark-object) (emacsvox-proced-speak-this-field)))
 
-(advice-add 'proced-mark :before #'ems--proced-mark-before)
+(advice-add
+ 'proced-mark :before #'emacsvox--advice-proced-mark-before
+ '((name . emacsvox)))
 
-(defun ems--proced-unmark-before (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-proced-unmark-before (&rest _)
+  "Cue and speak a process before interactively unmarking it."
+  (when (ems-interactive-p 'proced-unmark)
     (emacsvox-icon 'deselect-object)
     (emacsvox-proced-speak-this-field)))
 
-(advice-add 'proced-unmark :before #'ems--proced-unmark-before)
+(advice-add
+ 'proced-unmark :before #'emacsvox--advice-proced-unmark-before
+ '((name . emacsvox)))
 
-(defun ems--proced-mark-all-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-proced-mark-all-after (&rest _)
+  "Report interactively marking all processes."
+  (when (ems-interactive-p 'proced-mark-all)
     (message "Marked all processes. ") (emacsvox-icon 'mark-object)))
 
-(advice-add 'proced-mark-all :after #'ems--proced-mark-all-after)
+(advice-add
+ 'proced-mark-all :after #'emacsvox--advice-proced-mark-all-after
+ '((name . emacsvox)))
 
-(defun ems--proced-unmark-all-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-proced-unmark-all-after (&rest _)
+  "Report interactively unmarking all processes."
+  (when (ems-interactive-p 'proced-unmark-all)
     (message "Removed all marks. ") (emacsvox-icon 'deselect-object)))
 
-(advice-add 'proced-unmark-all :after #'ems--proced-unmark-all-after)
+(advice-add
+ 'proced-unmark-all :after #'emacsvox--advice-proced-unmark-all-after
+ '((name . emacsvox)))
 
 (cl-loop
- for f in
+ for target in
  '(proced proced-update)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Update cache of field positions."
-     (let ((emacsvox-speak-messages nil))
-       ad-do-it
-       (emacsvox-proced-update-fields)
-       (emacsvox-proced-update-process-cache)
-       (when (ems-interactive-p)
-         (emacsvox-icon 'open-object)
-         (funcall-interactively #'emacsvox-speak-mode-line))))))
+  `(progn
+     (defun ,function (orig-fun &rest args)
+       "Run a Proced update, refresh speech caches, and preserve its result."
+       (let ((emacsvox-speak-messages nil)
+             result)
+         (setq result (apply orig-fun args))
+         (emacsvox-proced-update-fields)
+         (emacsvox-proced-update-process-cache)
+         (when (ems-interactive-p ',target)
+           (emacsvox-icon 'open-object)
+           (funcall-interactively #'emacsvox-speak-mode-line))
+         result))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
 (cl-loop
- for f  in
+ for target in
  '(proced-sort-pcpu proced-sort-start
                     proced-sort-time proced-sort-interactive
                     proced-sort-user  proced-sort-pmem
                     proced-sort-pid)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Provide auditory feedbak."
-     (when (ems-interactive-p)
-       (emacsvox-proced-speak-this-field)
-       (emacsvox-icon 'task-done)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak and cue after an interactive Proced sort command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-proced-speak-this-field)
+         (emacsvox-icon 'task-done)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  additional commands:
 
@@ -365,4 +383,3 @@
 
 (provide 'emacsvox-proced)
 ;;;  end of file
-
