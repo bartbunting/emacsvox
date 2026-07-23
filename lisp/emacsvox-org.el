@@ -139,18 +139,22 @@
       (emacsvox-speak-region start end))))
 
 (cl-loop
- for f in
+ for target in
  '(org-next-item org-previous-item)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'item)
-       (emacsvox-org-speak-item)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Org item movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'item)
+         (emacsvox-org-speak-item)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in
+ for target in
  '(
    org-mark-ring-goto org-mark-ring-push
    org-next-visible-heading org-previous-visible-heading
@@ -166,34 +170,44 @@
    org-shiftmetaleft org-shiftmetaright org-shiftmetaup org-shiftmetadown
    org-mark-element org-mark-subtree
    )
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f(after emacsvox pre act comp)
-     "Speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive Org structure movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'large-movement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in 
+ for target in
  '(
    org-backward-paragraph org-forward-paragraph
    org-agenda-forward-block org-agenda-backward-block)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'paragraph)
-       (emacsvox-speak-paragraph)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Org paragraph movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'paragraph)
+         (emacsvox-speak-paragraph)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--org-cycle-list-bullet-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-org-cycle-list-bullet-after (&rest _)
+  "Cue and speak after interactively cycling an Org list bullet."
+  (when (ems-interactive-p 'org-cycle-list-bullet)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
 
-(advice-add 'org-cycle-list-bullet :after
-            #'ems--org-cycle-list-bullet-after)
+(advice-add
+ 'org-cycle-list-bullet :after
+ #'emacsvox--advice-org-cycle-list-bullet-after
+ '((name . emacsvox)))
 
 (defcustom emacsvox-org-table-after-movement-function
   #'emacsvox-org-table-speak-current-element
@@ -218,43 +232,55 @@
 ;; Note that org itself produces the folded state via org-unlogged-message
 ;; Which gets spoken by Emacsvox
 (cl-loop
- for f in
+ for target in
  '(org-cycle org-shifttab)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f(after emacsvox pre act comp)
-     "speak."
-     (cond
-      ((org-at-table-p 'any)
-       (funcall emacsvox-org-table-after-movement-function))
-      (t
-       (let ((dtk-stop-immediately nil))
-         (when (ems-interactive-p)
-           (emacsvox-speak-line))))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after Org visibility cycling or report the current table cell."
+       (cond
+        ((org-at-table-p 'any)
+         (funcall emacsvox-org-table-after-movement-function))
+        (t
+         (let ((dtk-stop-immediately nil))
+           (when (ems-interactive-p ',target)
+             (emacsvox-speak-line))))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--org-overview-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (message "Showing top-level overview.")))
+(defun emacsvox--advice-org-overview-after (&rest _)
+  "Announce an interactively requested Org overview."
+  (when (ems-interactive-p 'org-overview)
+    (message "Showing top-level overview.")))
 
-(advice-add 'org-overview :after #'ems--org-overview-after)
+(advice-add
+ 'org-overview :after #'emacsvox--advice-org-overview-after
+ '((name . emacsvox)))
 
-(defun ems--org-content-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (message "Showing table of contents.")))
+(defun emacsvox--advice-org-content-after (&rest _)
+  "Announce interactively requested Org contents."
+  (when (ems-interactive-p 'org-content)
+    (message "Showing table of contents.")))
 
-(advice-add 'org-content :after #'ems--org-content-after)
+(advice-add
+ 'org-content :after #'emacsvox--advice-org-content-after
+ '((name . emacsvox)))
 
-(defun ems--org-tree-to-indirect-buffer-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-org-tree-to-indirect-buffer-after (&rest _)
+  "Announce a subtree cloned interactively into an indirect buffer."
+  (when (ems-interactive-p 'org-tree-to-indirect-buffer)
     (message "Cloned %s"
              (with-current-buffer org-last-indirect-buffer
                (goto-char (point-min))
                (buffer-substring (line-beginning-position)
                                  (line-end-position))))))
 
-(advice-add 'org-tree-to-indirect-buffer :after
-            #'ems--org-tree-to-indirect-buffer-after)
+(advice-add
+ 'org-tree-to-indirect-buffer :after
+ #'emacsvox--advice-org-tree-to-indirect-buffer-after
+ '((name . emacsvox)))
 
 ;;;  Header insertion and relocation
 
@@ -959,4 +985,3 @@ Press `y' to play to next amark."
 
 (provide 'emacsvox-org)
 ;;;  end of file
-
