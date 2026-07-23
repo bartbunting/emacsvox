@@ -2852,21 +2852,29 @@ Produce an auditory icon if possible."
 
 ;;;  advice button creation to add voicification:
 
-(cl-loop
- for f in
- '(make-button make-text-button)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Adds property personality."
-     (let ((start (ad-get-arg 0))
-           (end (ad-get-arg 1)))
-       (with-silent-modifications
-         (condition-case
-             nil
-             (let ((inhibit-read-only t))
-               (put-text-property start end 'auditory-icon 'button))
-           (error nil)))))))
+(defun emacsvox--mark-button-range (start end)
+  "Mark the button from START to END with its auditory icon."
+  (with-silent-modifications
+    (condition-case nil
+        (let ((inhibit-read-only t))
+          (put-text-property start end 'auditory-icon 'button))
+      (error nil))))
+
+(defun emacsvox--advice-make-button-after (start end &rest _)
+  "Add an auditory icon to the button from START to END."
+  (emacsvox--mark-button-range start end))
+
+(advice-add
+ 'make-button :after #'emacsvox--advice-make-button-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-make-text-button-after (start end &rest _)
+  "Add an auditory icon to the text button from START to END."
+  (emacsvox--mark-button-range start end))
+
+(advice-add
+ 'make-text-button :after #'emacsvox--advice-make-text-button-after
+ '((name . emacsvox)))
 
 (defun ems--push-button-after (&rest _)
   "Produce auditory icon."
