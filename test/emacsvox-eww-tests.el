@@ -311,5 +311,96 @@
       '((player "https://example.test/audio.MP3")
         (browser "https://example.test/page"))))))
 
+(defconst emacsvox-test--eww-shr-tags
+  '(h1 h2 h3 h4 h5 h6 div math
+    ul ol dl li dt dd p pre blockquote
+    a b i em span table)
+  "SHR renderers expected to receive Emacsvox tag-property advice.")
+
+(ert-deftest emacsvox-eww-shr-advice-is-directly-registered ()
+  "SHR tag and DOM property advice bypasses the compatibility bridge."
+  (dolist (tag emacsvox-test--eww-shr-tags)
+    (let* ((target (intern (format "shr-tag-%s" tag)))
+           (function
+            (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :around function) ems--modern-advice-wrappers))))
+  (dolist (entry
+           '((shr-tag-table-1
+              emacsvox--advice-shr-tag-table-1-around)
+             (shr-tag-div
+              emacsvox--advice-shr-tag-div-dom-around)))
+    (pcase-let ((`(,target ,function) entry))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :around function) ems--modern-advice-wrappers))))
+  (should-not (fboundp 'shr-tag-form))
+  (should-not (fboundp 'shr-tag-it)))
+
+(ert-deftest emacsvox-eww-shr-heading-advice-calls-original-once ()
+  "Heading rendering preserves its result and adds navigation properties."
+  (with-temp-buffer
+    (let ((calls 0)
+          (dom '(h1 nil "Heading")))
+      (should
+       (eq
+        (emacsvox--advice-shr-tag-h1-around
+         (lambda (argument)
+           (cl-incf calls)
+           (should (eq argument dom))
+           (insert "Heading\n")
+           'rendered)
+         dom)
+        'rendered))
+      (should (= calls 1))
+      (should (eq (get-text-property 1 'h1) 'shr-tag))
+      (should (eq (get-text-property 1 'h) 'shr-tag))
+      (should-not (get-text-property 8 'h1)))))
+
+(ert-deftest emacsvox-eww-shr-table-advice-calls-original-once ()
+  "Table rendering preserves its result and caches the table DOM once."
+  (with-temp-buffer
+    (let ((calls 0)
+          (dom '(table nil (tr nil (td nil "Cell")))))
+      (should
+       (eq
+        (emacsvox--advice-shr-tag-table-1-around
+         (lambda (argument)
+           (cl-incf calls)
+           (should (eq argument dom))
+           (insert "Cell")
+           'table-rendered)
+         dom)
+        'table-rendered))
+      (should (= calls 1))
+      (should (eq (get-text-property 1 'table-dom) dom))
+      (should (eq (get-text-property 1 'auditory-icon) 'fill-object))
+      (should (= (get-text-property 1 'table-start) 1))
+      (should (= (get-text-property 1 'table-end) 4)))))
+
+(ert-deftest emacsvox-eww-shr-div-advice-calls-original-once ()
+  "Div rendering preserves its result and caches the div DOM once."
+  (with-temp-buffer
+    (let ((calls 0)
+          (dom '(div ((class . "content")) "Text")))
+      (should
+       (eq
+        (emacsvox--advice-shr-tag-div-dom-around
+         (lambda (argument)
+           (cl-incf calls)
+           (should (eq argument dom))
+           (insert "Text")
+           'div-rendered)
+         dom)
+        'div-rendered))
+      (should (= calls 1))
+      (should (eq (get-text-property 1 'eww-dom) dom)))))
+
 (provide 'emacsvox-eww-tests)
 ;;; emacsvox-eww-tests.el ends here

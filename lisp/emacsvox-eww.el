@@ -1057,33 +1057,6 @@ Note that the Web browser should reset this hook after using it.")
 
 ;;;  DOM Structure In Rendered Buffer:
 
-(cl-loop
- for  tag in
- '(h1 h2 h3 h4 h5 h6 div                ; sectioning
-      math                              ; mathml
-      ul ol dl                          ; Lists
-      li dt dd p                        ; block-level: bullets, paras
-      pre form blockquote                   ; block-level
-      a b it em span                    ; in-line
-      table)
- do
- (eval
-  `
-  (defadvice ,(intern (format "shr-tag-%s" tag)) (around eww-tag pre act comp)
-    (let ((orig (point)))
-      ad-do-it
-      (let ((start
-             (if (char-equal (following-char) ?\n)
-                 (min (point-max) (1+ orig))
-               orig))
-            (end
-             (if (> (point) orig)
-                 (1- (point))
-               (point))))
-        (put-text-property start end
-                           (quote ,tag) 'shr-tag)
-        (when (memq (quote ,tag) '(h1 h2 h3 h4 h5 h6))
-          (put-text-property start end 'h 'shr-tag)))))))
 ;; Handle MathML math element:
 
 (defun shr-tag-math (dom)
@@ -1091,6 +1064,40 @@ Note that the Web browser should reset this hook after using it.")
   (shr-ensure-newline)
   (shr-generic dom)
   (shr-ensure-newline))
+
+(cl-loop
+ for tag in
+ '(h1 h2 h3 h4 h5 h6 div                ; sectioning
+      math                              ; mathml
+      ul ol dl                          ; Lists
+      li dt dd p                        ; block-level: bullets, paras
+      pre blockquote                    ; block-level
+      a b i em span                     ; in-line
+      table)
+ for target = (intern (format "shr-tag-%s" tag))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original dom)
+       "Render DOM once, then add Emacsvox SHR navigation properties."
+       (let ((origin (point))
+             (result (funcall original dom)))
+         (let ((start
+                (if (char-equal (following-char) ?\n)
+                    (min (point-max) (1+ origin))
+                  origin))
+               (end
+                (if (> (point) origin)
+                    (1- (point))
+                  (point))))
+           (put-text-property start end ',tag 'shr-tag)
+           (when (memq ',tag '(h1 h2 h3 h4 h5 h6))
+             (put-text-property start end 'h 'shr-tag)))
+         result))
+     (advice-add
+      ',target :around #',function
+      '((name . emacsvox-shr-tag))))))
 
 ;;;  Advice readable
 
@@ -2437,20 +2444,23 @@ with an interactive prefix arg. "
 ;; other negatives.
 ;; Overlays may avoid this problem.
 
-(defun ems--shr-tag-table-1-around (orig-fun &rest args)
-  "Cache pointer to table dom as a text property,\nand add relevant properties to the rendered region."
-  (let ((result (apply orig-fun args)))
-    (let ((table-dom (ad-get-arg 0)) (start (point)))
-      (apply orig-fun args)
-      (unless (get-text-property start 'table-dom)
-        (add-text-properties start (point)
-                             (list 'auditory-icon 'fill-object
-                                   'table-start start 'table-end
-                                   (1- (point)) 'table-dom table-dom)))
-      result)
+(defun emacsvox--advice-shr-tag-table-1-around (original dom)
+  "Render DOM once and cache its table metadata on the inserted text."
+  (let ((start (point))
+        (result (funcall original dom)))
+    (unless (get-text-property start 'table-dom)
+      (add-text-properties
+       start (point)
+       (list 'auditory-icon 'fill-object
+             'table-start start
+             'table-end (1- (point))
+             'table-dom dom)))
     result))
 
-(advice-add 'shr-tag-table-1 :around #'ems--shr-tag-table-1-around)
+(advice-add
+ 'shr-tag-table-1 :around
+ #'emacsvox--advice-shr-tag-table-1-around
+ '((name . emacsvox-table-dom)))
 
 (defvar-local emacsvox-eww-table-cell 0
   "Track current table cell to enable table navigation.
@@ -2607,17 +2617,18 @@ With interactive prefix arg, move to the start of the table."
 
 ;;; Dive Into DOM: div
 
-(defun ems--shr-tag-div-around (orig-fun &rest args)
-  "Persist dom to the div node as a text property."
-  (let ((result (apply orig-fun args)))
-    (let ((start (point)))
-      (apply orig-fun args)
-      (unless (get-text-property start 'eww-dom)
-        (put-text-property start (point) 'eww-dom (ad-get-arg 0)))
-      result)
+(defun emacsvox--advice-shr-tag-div-dom-around (original dom)
+  "Render DOM once and cache it on the inserted div text."
+  (let ((start (point))
+        (result (funcall original dom)))
+    (unless (get-text-property start 'eww-dom)
+      (put-text-property start (point) 'eww-dom dom))
     result))
 
-(advice-add 'shr-tag-div :around #'ems--shr-tag-div-around)
+(advice-add
+ 'shr-tag-div :around
+ #'emacsvox--advice-shr-tag-div-dom-around
+ '((name . emacsvox-div-dom)))
 
 (defun emacsvox-eww-dive-into-div ()
   "Focus on current div by rendering it in a new buffer."
