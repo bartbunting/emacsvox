@@ -956,16 +956,22 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   (voice-setup-set-voice-for-face
    'eldoc-highlight-function-argument 'voice-bolden))
 
-(defun ems--ange-ftp-process-handle-hash-around (orig-fun &rest args)
-  "Jibber intelligently." 
-  (ems-with-messages-silenced (apply orig-fun args)
-                              (emacsvox-icon 'progress)
-                              (dtk-speak
-                               (format " %s percent"
-                                       ange-ftp-last-percent))))
+(defvar ange-ftp-last-percent)
 
-(advice-add 'ange-ftp-process-handle-hash :around
-            #'ems--ange-ftp-process-handle-hash-around)
+(defun emacsvox--advice-ange-ftp-process-handle-hash-around
+    (original &rest arguments)
+  "Call ORIGINAL quietly, speak FTP progress, and preserve its result."
+  (let (result)
+    (ems-with-messages-silenced
+      (setq result (apply original arguments))
+      (emacsvox-icon 'progress)
+      (dtk-speak (format " %s percent" ange-ftp-last-percent)))
+    result))
+
+(advice-add
+ 'ange-ftp-process-handle-hash :around
+ #'emacsvox--advice-ange-ftp-process-handle-hash-around
+ '((name . emacsvox)))
 
 (cl-declaim (special command-error-function))
 (setq command-error-function 'emacsvox-error-handler)
