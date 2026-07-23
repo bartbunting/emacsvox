@@ -820,7 +820,7 @@ are available are cued by an auditory icon on the header line."
 
 ;; Check cache if URL already open, otherwise cache.
 
-(defun ems--eww-reload-around (orig-fun &rest args)
+(defun emacsvox--advice-eww-reload-around (original &rest arguments)
   "Check buffer local settings for feed buffers.\nIf buffer was result of displaying a feed, reload feed.\nIf we came from a url-template, reload that template.\nRetain previously set punctuations  mode."
   (add-hook 'emacsvox-eww-post-hook
             'emacsvox-eww-post-render-actions)
@@ -843,10 +843,14 @@ are available are cued by an auditory icon on the header line."
                 'at-end)
       (kill-buffer)
       (emacsvox-url-template-open (emacsvox-url-template-get n))))
-   (t (apply orig-fun args)
-      (sox-sin 0.5 "%-2:%-1" "fade h .1 .5 .4 gain -8 "))))
+   (t
+    (let ((result (apply original arguments)))
+      (sox-sin 0.5 "%-2:%-1" "fade h .1 .5 .4 gain -8 ")
+      result))))
 
-(advice-add 'eww-reload :around #'ems--eww-reload-around)
+(advice-add
+ 'eww-reload :around #'emacsvox--advice-eww-reload-around
+ '((name . emacsvox-reload-wrapper)))
 
 (cl-loop
  for target in
@@ -1040,7 +1044,7 @@ Note that the Web browser should reset this hook after using it.")
 
 ;;;  xslt transform on request:
 
-(defun ems--eww-display-html-before (&rest _)
+(defun emacsvox--advice-eww-display-html-before (&rest _)
   "Apply XSLT transform if requested."
   (cl-declare
    (special emacsvox-eww-pre-process-hook emacsvox-we-xsl-transform
@@ -1053,7 +1057,10 @@ Note that the Web browser should reset this hook after using it.")
       (emacsvox-xslt-region emacsvox-we-xsl-transform (point)
                             (point-max) emacsvox-we-xsl-params)))))
 
-(advice-add 'eww-display-html :before #'ems--eww-display-html-before)
+(advice-add
+ 'eww-display-html :before
+ #'emacsvox--advice-eww-display-html-before
+ '((name . emacsvox)))
 
 ;;;  DOM Structure In Rendered Buffer:
 
@@ -1101,21 +1108,29 @@ Note that the Web browser should reset this hook after using it.")
 
 ;;;  Advice readable
 
-(defun ems--eww-readable-around (orig-fun &rest args)
-  "Speak contents."
+(defun emacsvox--advice-eww-readable-around (original &rest arguments)
+  "Call ORIGINAL once and speak the resulting readable contents."
   (let ((inhibit-read-only t))
-    (apply orig-fun args) (emacsvox-icon 'open-object)
-    (emacsvox-speak-buffer)))
+    (let ((result (apply original arguments)))
+      (emacsvox-icon 'open-object)
+      (emacsvox-speak-buffer)
+      result)))
 
-(advice-add 'eww-readable :around #'ems--eww-readable-around)
+(advice-add
+ 'eww-readable :around #'emacsvox--advice-eww-readable-around
+ '((name . emacsvox)))
 
 ;;;   Customize image loading:
 
-(defun ems--eww-display-image-around (orig-fun &rest args)
-  "Image inhibition"
-  (unless emacsvox-eww-inhibit-images (apply orig-fun args)))
+(defun emacsvox--advice-eww-display-image-around (original buffer)
+  "Call ORIGINAL with BUFFER unless EWW image display is inhibited."
+  (unless emacsvox-eww-inhibit-images
+    (funcall original buffer)))
 
-(advice-add 'eww-display-image :around #'ems--eww-display-image-around)
+(advice-add
+ 'eww-display-image :around
+ #'emacsvox--advice-eww-display-image-around
+ '((name . emacsvox)))
 
 ;;;  element, class, role, id caches:
 

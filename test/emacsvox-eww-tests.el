@@ -402,5 +402,100 @@
       (should (= calls 1))
       (should (eq (get-text-property 1 'eww-dom) dom)))))
 
+(defconst emacsvox-test--eww-lifecycle-advice
+  '((eww-reload :around emacsvox--advice-eww-reload-around)
+    (eww-display-html :before
+     emacsvox--advice-eww-display-html-before)
+    (eww-readable :around emacsvox--advice-eww-readable-around)
+    (eww-display-image :around
+     emacsvox--advice-eww-display-image-around))
+  "Remaining EWW lifecycle advice and its native placement.")
+
+(ert-deftest emacsvox-eww-lifecycle-advice-is-directly-registered ()
+  "EWW lifecycle advice bypasses the compatibility bridge."
+  (dolist (entry emacsvox-test--eww-lifecycle-advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-eww-reload-calls-default-original-once ()
+  "Ordinary EWW reload preserves one original call and its result."
+  (let ((emacsvox-eww-post-hook nil)
+        (emacsvox-eww-feed nil)
+        (emacsvox-eww-url-template nil)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'eww-current-url)
+               (lambda () "https://example.test/"))
+              ((symbol-function 'sox-sin)
+               (lambda (&rest arguments)
+                 (push (cons 'sox arguments) events))))
+      (should
+       (eq
+        (emacsvox--advice-eww-reload-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (cons 'original arguments) events)
+           'reloaded)
+         t 'encode)
+        'reloaded)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original t encode)
+        (sox 0.5 "%-2:%-1" "fade h .1 .5 .4 gain -8 "))))))
+
+(ert-deftest emacsvox-eww-readable-calls-original-once ()
+  "Readable conversion preserves result and emits feedback afterwards."
+  (let ((calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-buffer)
+               (lambda () (push 'speak-buffer events))))
+      (should
+       (eq
+        (emacsvox--advice-eww-readable-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push
+            (list 'original arguments inhibit-read-only)
+            events)
+           'readable)
+         2)
+        'readable)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original (2) t)
+        (icon open-object)
+        speak-buffer)))))
+
+(ert-deftest emacsvox-eww-display-image-honours-inhibition ()
+  "Image display calls once when enabled and is skipped when inhibited."
+  (let ((emacsvox-eww-inhibit-images nil)
+        (calls 0))
+    (should
+     (eq
+      (emacsvox--advice-eww-display-image-around
+       (lambda (buffer)
+         (cl-incf calls)
+         (should (eq buffer 'image-buffer))
+         'displayed)
+       'image-buffer)
+      'displayed))
+    (setq emacsvox-eww-inhibit-images t)
+    (should-not
+     (emacsvox--advice-eww-display-image-around
+      (lambda (&rest _)
+        (cl-incf calls))
+      'image-buffer))
+    (should (= calls 1))))
+
 (provide 'emacsvox-eww-tests)
 ;;; emacsvox-eww-tests.el ends here
