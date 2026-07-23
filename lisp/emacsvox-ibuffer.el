@@ -40,6 +40,8 @@
 ;;  required modules
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'ibuffer)
+(require 'ibuf-ext)
 
 ;;; Commentary:
 
@@ -65,209 +67,142 @@
 
 ;;;  speech enable interactive commands 
 
-(defun ems--ibuffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(cl-loop
+ for target in
+ '(ibuffer ibuffer-other-window ibuffer-list-buffers ibuffer-customize)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after opening an Ibuffer-related display."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer :after #'ems--ibuffer-after)
+(defun emacsvox--advice-ibuffer-update-after (&rest _)
+  "Cue after an interactive Ibuffer refresh."
+  (when (ems-interactive-p 'ibuffer-update)
+    (emacsvox-icon 'modified-object)))
 
-(defun ems--ibuffer-other-window-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(advice-add
+ 'ibuffer-update :after #'emacsvox--advice-ibuffer-update-after
+ '((name . emacsvox)))
 
-(advice-add 'ibuffer-other-window :after
-            #'ems--ibuffer-other-window-after)
+(defun emacsvox--advice-ibuffer-bury-buffer-around
+    (original &rest arguments)
+  "Call ORIGINAL once, then report the buried buffer when interactive."
+  (let ((buffer (ibuffer-current-buffer t))
+        (interactive-p (ems-interactive-p 'ibuffer-bury-buffer)))
+    (let ((result (apply original arguments)))
+      (when interactive-p
+        (emacsvox-icon 'select-object)
+        (message "Buried buffer %s" buffer))
+      result)))
 
-(defun ems--ibuffer-list-buffers-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(advice-add
+ 'ibuffer-bury-buffer :around
+ #'emacsvox--advice-ibuffer-bury-buffer-around
+ '((name . emacsvox)))
 
-(advice-add 'ibuffer-list-buffers :after
-            #'ems--ibuffer-list-buffers-after)
+(defun emacsvox--advice-ibuffer-quit-window-around
+    (original &rest arguments)
+  "Call ORIGINAL and report an interactive quit originating in Ibuffer."
+  (let ((ibuffer-p (derived-mode-p 'ibuffer-mode))
+        (interactive-p (ems-interactive-p 'quit-window)))
+    (let ((result (apply original arguments)))
+      (when (and ibuffer-p interactive-p)
+        (emacsvox-icon 'close-object)
+        (emacsvox-speak-mode-line))
+      result)))
 
-(defun ems--ibuffer-update-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (emacsvox-icon 'modified-object)))
+(advice-add
+ 'quit-window :around #'emacsvox--advice-ibuffer-quit-window-around
+ '((name . emacsvox-ibuffer)))
 
-(advice-add 'ibuffer-update :after #'ems--ibuffer-update-after)
+(cl-loop
+ for target in
+ '(ibuffer-backward-line ibuffer-forward-line
+   ibuffer-backward-filter-group ibuffer-forward-filter-group
+   ibuffer-backwards-next-marked ibuffer-forward-next-marked)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and summarize after interactive Ibuffer navigation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-ibuffer-summarize-line)
+         (emacsvox-icon 'select-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--ibuffer-customize-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(cl-loop
+ for target in
+ '(ibuffer-visit-buffer ibuffer-visit-buffer-1-window
+   ibuffer-visit-buffer-other-window ibuffer-visit-buffer-other-frame)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively visiting an Ibuffer entry."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-customize :after #'ems--ibuffer-customize-after)
-
-(defun ems--ibuffer-bury-buffer-around (orig-fun &rest args)
-  "speak."
-  (let ((buf (ibuffer-current-buffer t)))
-    (when (ems-interactive-p)
-      (apply orig-fun args) (emacsvox-icon 'select-object)
-      (message "Buried buffer %s" buf))))
-
-(advice-add 'ibuffer-bury-buffer :around
-            #'ems--ibuffer-bury-buffer-around)
-
-(defun ems--ibuffer-quit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-quit :after #'ems--ibuffer-quit-after)
-
-(defun ems--ibuffer-backward-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ibuffer-summarize-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-backward-line :after
-            #'ems--ibuffer-backward-line-after)
-
-(defun ems--ibuffer-forward-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ibuffer-summarize-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-forward-line :after
-            #'ems--ibuffer-forward-line-after)
-
-(defun ems--ibuffer-backward-filter-group-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ibuffer-summarize-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-backward-filter-group :after
-            #'ems--ibuffer-backward-filter-group-after)
-
-(defun ems--ibuffer-forward-filter-group-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ibuffer-summarize-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-forward-filter-group :after
-            #'ems--ibuffer-forward-filter-group-after)
-
-(defun ems--ibuffer-backwards-next-marked-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ibuffer-summarize-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-backwards-next-marked :after
-            #'ems--ibuffer-backwards-next-marked-after)
-
-(defun ems--ibuffer-forward-next-marked-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ibuffer-summarize-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-forward-next-marked :after
-            #'ems--ibuffer-forward-next-marked-after)
-
-(defun ems--ibuffer-visit-buffer-after (&rest _)
-  "Provide spoken status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-visit-buffer :after
-            #'ems--ibuffer-visit-buffer-after)
-
-(defun ems--ibuffer-visit-buffer-1-window-after (&rest _)
-  "Provide spoken status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-visit-buffer-1-window :after
-            #'ems--ibuffer-visit-buffer-1-window-after)
-
-(defun ems--ibuffer-visit-buffer-other-window-after (&rest _)
-  "Provide spoken status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-visit-buffer-other-window :after
-            #'ems--ibuffer-visit-buffer-other-window-after)
-
-(defun ems--ibuffer-visit-buffer-other-window-noselect-after (&rest _)
-  "Provide spoken status information."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-visit-buffer-other-window-noselect-after
+    (&rest _)
+  "Report opening an Ibuffer entry without selecting its window."
+  (when (ems-interactive-p 'ibuffer-visit-buffer-other-window-noselect)
     (emacsvox-icon 'select-object)
     (dtk-speak "Opened buffer in other window.")))
 
-(advice-add 'ibuffer-visit-buffer-other-window-noselect :after
-            #'ems--ibuffer-visit-buffer-other-window-noselect-after)
+(advice-add
+ 'ibuffer-visit-buffer-other-window-noselect :after
+ #'emacsvox--advice-ibuffer-visit-buffer-other-window-noselect-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-visit-buffer-other-frame-after (&rest _)
-  "Provide spoken status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-visit-buffer-other-frame :after
-            #'ems--ibuffer-visit-buffer-other-frame-after)
-
-(defun ems--ibuffer-diff-with-file-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-diff-with-file-after (&rest _)
+  "Report an interactive Ibuffer file comparison."
+  (when (ems-interactive-p 'ibuffer-diff-with-file)
     (message "Displayed differences in other window.")
     (emacsvox-icon 'task-done)))
 
-(advice-add 'ibuffer-diff-with-file :after
-            #'ems--ibuffer-diff-with-file-after)
+(advice-add
+ 'ibuffer-diff-with-file :after
+ #'emacsvox--advice-ibuffer-diff-with-file-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-limit-disable-after (&rest _)
-  "Speak status information."
-  (when (ems-interactive-p) (message "Disabled limiting.")))
+(cl-loop
+ for target in
+ '(ibuffer-do-view ibuffer-do-view-horizontally
+   ibuffer-do-view-other-frame)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively viewing marked buffers."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-limit-disable :after
-            #'ems--ibuffer-limit-disable-after)
+(defun emacsvox--advice-ibuffer-do-save-after (&rest _)
+  "Report interactively saving marked buffers."
+  (when (ems-interactive-p 'ibuffer-do-save)
+    (message "Saving marked buffers.")
+    (emacsvox-icon 'save-object)))
 
-(defun ems--ibuffer-do-view-after (&rest _)
-  "Speak status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-do-view :after #'ems--ibuffer-do-view-after)
-
-(defun ems--ibuffer-do-view-horizontally-after (&rest _)
-  "Speak status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-do-view-horizontally :after
-            #'ems--ibuffer-do-view-horizontally-after)
-
-(defun ems--ibuffer-do-view-other-frame-after (&rest _)
-  "Speak status information."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
-
-(advice-add 'ibuffer-do-view-other-frame :after
-            #'ems--ibuffer-do-view-other-frame-after)
-
-(defun ems--ibuffer-do-save-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Saving marked buffers.") (emacsvox-icon 'save-object)))
-
-(advice-add 'ibuffer-do-save :after #'ems--ibuffer-do-save-after)
-
-(defun ems--ibuffer-occur-goto-occurence-after (&rest _)
-  "Speak line that becomes current."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-line)))
-
-(advice-add 'ibuffer-occur-goto-occurence :after
-            #'ems--ibuffer-occur-goto-occurence-after)
-
-(defun ems--ibuffer-occur-display-occurence-after (&rest _)
-  "Speak line that becomes current."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-occur-display-occurence :after
-            #'ems--ibuffer-occur-display-occurence-after)
+(advice-add
+ 'ibuffer-do-save :after #'emacsvox--advice-ibuffer-do-save-after
+ '((name . emacsvox)))
 
 (defun ems--ibuffer-mark-forward-after (&rest _)
   "speak."
@@ -713,4 +648,3 @@
 
 (provide 'emacsvox-ibuffer)
 ;;;  end of file
-
