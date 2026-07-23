@@ -1344,11 +1344,15 @@ to ORIGINAL unchanged."
  #'emacsvox--advice-vc-toggle-read-only-around
  '((name . emacsvox)))
 
-(defun ems--vc-refresh-state-around (orig-fun &rest args)
-  "Silence messages"
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-vc-refresh-state-around
+    (original &rest arguments)
+  "Call ORIGINAL with VC refresh messages silenced."
+  (ems-with-messages-silenced (apply original arguments)))
 
-(advice-add 'vc-refresh-state :around #'ems--vc-refresh-state-around)
+(advice-add
+ 'vc-refresh-state :around
+ #'emacsvox--advice-vc-refresh-state-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-vc-next-action-around
     (original &rest arguments)
@@ -1360,66 +1364,47 @@ to ORIGINAL unchanged."
  'vc-next-action :around #'emacsvox--advice-vc-next-action-around
  '((name . emacsvox)))
 
-(defun ems--vc-revert-buffer-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(emacsvox-advice--define-interactive-after-advice
+    (vc-revert-buffer)
+    "Cue completion of an interactive VC buffer revert."
+  (emacsvox-icon 'open-object))
 
-(advice-add 'vc-revert-buffer :after #'ems--vc-revert-buffer-after)
+(emacsvox-advice--define-interactive-after-advice
+    (vc-finish-logentry)
+    "Announce completion of an interactive VC log entry."
+  (emacsvox-icon 'close-object)
+  (message "Checked in version %s " (emacsvox-vc-get-version-id)))
 
-(defun ems--vc-finish-logentry-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Checked in version %s " (emacsvox-vc-get-version-id))))
+(emacsvox-advice--define-interactive-after-advice
+    (vc-dir-next-line vc-dir-previous-line
+     vc-dir-next-directory vc-dir-previous-directory)
+    "Speak the destination of an interactive VC directory movement."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
 
-(advice-add 'vc-finish-logentry :after #'ems--vc-finish-logentry-after)
+(emacsvox-advice--define-interactive-after-advice
+    (vc-dir-mark-file vc-dir-mark)
+    "Announce an interactive VC directory mark."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'mark-object))
 
-(cl-loop
- for f in
- '(vc-dir-next-line vc-dir-previous-line
-                    vc-dir-next-directory vc-dir-previous-directory)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'select-object)))))
+(emacsvox-advice--define-interactive-after-advice
+    (vc-dir)
+    "Announce an interactively opened VC directory."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
-(defun ems--vc-dir-mark-file-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
+(emacsvox-advice--define-interactive-after-advice
+    (vc-dir-hide-up-to-date)
+    "Announce an interactive VC directory filter change."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-line))
 
-(advice-add 'vc-dir-mark-file :after #'ems--vc-dir-mark-file-after)
-
-(defun ems--vc-dir-mark-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
-
-(advice-add 'vc-dir-mark :after #'ems--vc-dir-mark-after)
-
-(defun ems--vc-dir-after (&rest _)
-  "Produce auditory feedback."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
-
-(advice-add 'vc-dir :after #'ems--vc-dir-after)
-
-(defun ems--vc-dir-hide-up-to-date-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (emacsvox-speak-line)))
-
-(advice-add 'vc-dir-hide-up-to-date :after
-            #'ems--vc-dir-hide-up-to-date-after)
-
-(defun ems--vc-dir-kill-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
-
-(advice-add 'vc-dir-kill-line :after #'ems--vc-dir-kill-line-after)
+(emacsvox-advice--define-interactive-after-advice
+    (vc-dir-kill-line)
+    "Announce deletion of an interactive VC directory entry."
+  (emacsvox-icon 'delete-object)
+  (emacsvox-speak-line))
 
 ;;;  composing mail
 
