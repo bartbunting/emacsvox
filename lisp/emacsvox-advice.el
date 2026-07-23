@@ -396,34 +396,22 @@ When on a close delimiter, speak matching delimiter after a small delay. "
   (emacsvox-icon 'scroll)
   (emacsvox-speak-page))
 
-(cl-loop
- for f in
- '(scroll-other-window scroll-other-window-up scroll-other-window-down)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (save-window-excursion
-         (with-selected-window (other-window-for-scrolling)
-           (emacsvox-speak-windowful)))))))
+(emacsvox-advice--define-interactive-after-advice
+    (scroll-other-window scroll-other-window-up scroll-other-window-down)
+    "Speak the window that was scrolled."
+  (save-window-excursion
+    (with-selected-window (other-window-for-scrolling)
+      (emacsvox-speak-windowful))))
 
-(cl-loop
- for f in
- '(
-   scroll-up scroll-down
-   scroll-up-command scroll-down-command)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak next screenful."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'scroll)
-       (dtk-speak (emacsvox-get-window-contents))
-       (dtk-notify
-        (propertize
-         (format "%s " (emacsvox-get-current-percentage-into-buffer))
-         'personality voice-smoothen))))))
+(emacsvox-advice--define-interactive-after-advice
+    (scroll-up scroll-down scroll-up-command scroll-down-command)
+    "Speak the newly displayed screenful."
+  (emacsvox-icon 'scroll)
+  (dtk-speak (emacsvox-get-window-contents))
+  (dtk-notify
+   (propertize
+    (format "%s " (emacsvox-get-current-percentage-into-buffer))
+    'personality voice-smoothen)))
 
 ;;;  Advise modify case commands to speak
 

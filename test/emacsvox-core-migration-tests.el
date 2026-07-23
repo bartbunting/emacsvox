@@ -27,6 +27,8 @@
     forward-paragraph backward-paragraph
     forward-list backward-list up-list backward-up-list down-list
     forward-page backward-page
+    scroll-other-window scroll-other-window-up scroll-other-window-down
+    scroll-up scroll-down scroll-up-command scroll-down-command
     newline newline-and-indent electric-newline-and-maybe-indent)
   "Core commands migrated with generated native after advice.")
 
@@ -185,6 +187,58 @@
         '((original (1))
           (icon large-movement)
           (speak-region 1 6 t)))))))
+
+(ert-deftest emacsvox-core-scroll-other-window-speaks-target-window ()
+  "Other-window scrolling speaks there and restores the selected window."
+  (let* ((original-window (selected-window))
+         (target-buffer (generate-new-buffer " *emacsvox-scroll-test*"))
+         (target-window (split-window-right))
+         (ems--interactive-fn-name 'scroll-other-window)
+         spoken-window
+         spoken-buffer)
+    (unwind-protect
+        (progn
+          (set-window-buffer target-window target-buffer)
+          (cl-letf (((symbol-function 'other-window-for-scrolling)
+                     (lambda () target-window))
+                    ((symbol-function 'emacsvox-speak-windowful)
+                     (lambda ()
+                       (setq spoken-window (selected-window)
+                             spoken-buffer (current-buffer)))))
+            (emacsvox--advice-scroll-other-window-after))
+          (should (eq spoken-window target-window))
+          (should (eq spoken-buffer target-buffer))
+          (should (eq (selected-window) original-window)))
+      (when (window-live-p target-window)
+        (delete-window target-window))
+      (when (buffer-live-p target-buffer)
+        (kill-buffer target-buffer)))))
+
+(ert-deftest emacsvox-core-scroll-advice-preserves-semantic-feedback ()
+  "Current-window scrolling emits its icon, contents, and percentage."
+  (let ((ems--interactive-fn-name 'scroll-up-command)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-get-window-contents)
+               (lambda () "visible text"))
+              ((symbol-function 'emacsvox-get-current-percentage-into-buffer)
+               (lambda () "50%"))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'dtk-notify)
+               (lambda (text)
+                 (push
+                  (list 'notify (substring-no-properties text)
+                        (get-text-property 0 'personality text))
+                  events))))
+      (emacsvox--advice-scroll-up-command-after))
+    (should
+     (equal
+      (nreverse events)
+      `((icon scroll)
+        (speak "visible text")
+        (notify "50% " ,voice-smoothen))))))
 
 (provide 'emacsvox-core-migration-tests)
 ;;; emacsvox-core-migration-tests.el ends here
