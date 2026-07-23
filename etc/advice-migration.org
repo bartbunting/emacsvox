@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-EWW on 2026-07-23 on branch =bart=:
+Gnus on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 405 passing ERT tests;
+- the Emacs 31 suite contains 429 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -55,17 +55,20 @@ EWW on 2026-07-23 on branch =bart=:
 - =lisp/emacsvox-eww.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-gnus.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         307 |   104 |
+| =defadvice=         |         302 |   103 |
 | =ad-get-arg=        |          67 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          41 |   n/a |
-| =ad-return-value=   |          26 |   n/a |
-| =advice-add=        |        1418 |   156 |
+| =ad-do-it=          |          40 |   n/a |
+| =ad-return-value=   |          25 |   n/a |
+| =advice-add=        |        1397 |   156 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -85,10 +88,10 @@ The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
-integration, are also converted.
+integration, and Gnus are also converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 49 files still contain
+completely independent of the compatibility bridge; 48 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -147,6 +150,20 @@ Lifecycle wrappers now call ordinary reload and readable operations exactly
 once and preserve their original return values.  Moving EWW setup after its
 renderer-filter definition also makes the module load correctly as source in a
 fresh Emacs.
+
+The Gnus conversion is split into startup and group commands, summary marking
+and navigation, summary article display, and article, server, and
+authentication commits.  It removes advice for the obsolete
+=gnus-summary-mark-as-unread-forward= and
+=gnus-summary-mark-as-unread-backward= commands, moves button feedback to
+=gnus-summary-button-forward=, and moves server-edit feedback from the
+now-variable =gnus-server-edit-buffer= to =gnus-server-edit-server=.
+
+Gnus around advice now calls summary exit, subject movement, and XOAuth
+credential operations exactly once and preserves their original return values.
+The two native advice attached to =gnus-summary-show-article= have distinct
+names, so they coexist.  Optional XOAuth advice is installed only after its
+provider defines =auth-source-xoauth2--file-creds=.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
