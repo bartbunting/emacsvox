@@ -204,64 +204,35 @@
  'ibuffer-do-save :after #'emacsvox--advice-ibuffer-do-save-after
  '((name . emacsvox)))
 
-(defun ems--ibuffer-mark-forward-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-ibuffer-speak-buffer-line)))
+(cl-loop
+ for (target icon) in
+ '((ibuffer-mark-forward mark-object)
+   (ibuffer-mark-for-delete mark-object)
+   (ibuffer-mark-for-delete-backwards mark-object)
+   (ibuffer-unmark-forward deselect-object)
+   (ibuffer-unmark-backward deselect-object)
+   (ibuffer-unmark-all deselect-object))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively changing an Ibuffer mark."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon ',icon)
+         (emacsvox-ibuffer-speak-buffer-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-mark-forward :after
-            #'ems--ibuffer-mark-forward-after)
+(defun emacsvox--advice-ibuffer-toggle-marks-after (&rest _)
+  "Cue after interactively toggling Ibuffer marks."
+  (when (ems-interactive-p 'ibuffer-toggle-marks)
+    (emacsvox-icon 'select-object)))
 
-(defun ems--ibuffer-unmark-forward-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-ibuffer-speak-buffer-line)))
-
-(advice-add 'ibuffer-unmark-forward :after
-            #'ems--ibuffer-unmark-forward-after)
-
-(defun ems--ibuffer-unmark-backward-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-ibuffer-speak-buffer-line)))
-
-(advice-add 'ibuffer-unmark-backward :after
-            #'ems--ibuffer-unmark-backward-after)
-
-(defun ems--ibuffer-unmark-all-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-ibuffer-speak-buffer-line)))
-
-(advice-add 'ibuffer-unmark-all :after #'ems--ibuffer-unmark-all-after)
-
-(defun ems--ibuffer-toggle-marks-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'select-object)))
-
-(advice-add 'ibuffer-toggle-marks :after
-            #'ems--ibuffer-toggle-marks-after)
-
-(defun ems--ibuffer-mark-for-delete-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-ibuffer-speak-buffer-line)))
-
-(advice-add 'ibuffer-mark-for-delete :after
-            #'ems--ibuffer-mark-for-delete-after)
-
-(defun ems--ibuffer-mark-for-delete-backwards-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-ibuffer-speak-buffer-line)))
-
-(advice-add 'ibuffer-mark-for-delete-backwards :after
-            #'ems--ibuffer-mark-for-delete-backwards-after)
+(advice-add
+ 'ibuffer-toggle-marks :after
+ #'emacsvox--advice-ibuffer-toggle-marks-after
+ '((name . emacsvox)))
 
 (defun ems--ibuffer-interactive-filter-by-mode-after (&rest _)
   "speak."
@@ -300,35 +271,24 @@
 (advice-add 'ibuffer-toggle-filter-group :after
             #'ems--ibuffer-toggle-filter-group-after)
 
-(defun ems--ibuffer-do-shell-command-pipe-replace-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-do-shell-command-pipe-replace :after
-            #'ems--ibuffer-do-shell-command-pipe-replace-after)
-
-(defun ems--ibuffer-do-shell-command-pipe-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-do-shell-command-pipe :after
-            #'ems--ibuffer-do-shell-command-pipe-after)
-
-(defun ems--ibuffer-do-shell-command-file-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-do-shell-command-file :after
-            #'ems--ibuffer-do-shell-command-file-after)
-
-(defun ems--ibuffer-do-rename-uniquely-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-do-rename-uniquely :after
-            #'ems--ibuffer-do-rename-uniquely-after)
-
-(defun ems--ibuffer-do-replace-regexp-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-do-replace-regexp :after
-            #'ems--ibuffer-do-replace-regexp-after)
+(cl-loop
+ for target in
+ '(ibuffer-do-shell-command-pipe-replace
+   ibuffer-do-shell-command-pipe
+   ibuffer-do-shell-command-file
+   ibuffer-do-rename-uniquely
+   ibuffer-do-replace-regexp
+   ibuffer-do-kill-lines)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue completion of an interactive Ibuffer operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--ibuffer-filters-to-filter-group-after (&rest _)
   "speak."
@@ -528,12 +488,6 @@
 (advice-add 'ibuffer-add-to-tmp-show :after
             #'ems--ibuffer-add-to-tmp-show-after)
 
-(defun ems--ibuffer-do-kill-lines-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-do-kill-lines :after
-            #'ems--ibuffer-do-kill-lines-after)
-
 (defun ems--ibuffer-jump-to-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
@@ -543,101 +497,43 @@
 (advice-add 'ibuffer-jump-to-buffer :after
             #'ems--ibuffer-jump-to-buffer-after)
 
-(defun ems--ibuffer-copy-filename-as-kill-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Buffer added.")))
-
-(advice-add 'ibuffer-copy-filename-as-kill :after
-            #'ems--ibuffer-copy-filename-as-kill-after)
-
-(defun ems--ibuffer-copy-filename-as-kill-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-copy-filename-as-kill-after (&rest _)
+  "Report how many filenames were copied interactively."
+  (when (ems-interactive-p 'ibuffer-copy-filename-as-kill)
     (emacsvox-icon 'delete-object)
     (dtk-speak
      (format "copied %s filenames." (ibuffer-count-marked-lines)))))
 
-(advice-add 'ibuffer-copy-filename-as-kill :after
-            #'ems--ibuffer-copy-filename-as-kill-after)
+(advice-add
+ 'ibuffer-copy-filename-as-kill :after
+ #'emacsvox--advice-ibuffer-copy-filename-as-kill-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-mark-by-name-regexp-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-by-name-regexp :after
-            #'ems--ibuffer-mark-by-name-regexp-after)
-
-(defun ems--ibuffer-mark-by-mode-regexp-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-by-mode-regexp :after
-            #'ems--ibuffer-mark-by-mode-regexp-after)
-
-(defun ems--ibuffer-mark-by-file-name-regexp-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-by-file-name-regexp :after
-            #'ems--ibuffer-mark-by-file-name-regexp-after)
-
-(defun ems--ibuffer-mark-by-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-by-mode :after
-            #'ems--ibuffer-mark-by-mode-after)
-
-(defun ems--ibuffer-mark-modified-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-modified-buffers :after
-            #'ems--ibuffer-mark-modified-buffers-after)
-
-(defun ems--ibuffer-mark-unsaved-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-unsaved-buffers :after
-            #'ems--ibuffer-mark-unsaved-buffers-after)
-
-(defun ems--ibuffer-mark-dissociated-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-dissociated-buffers :after
-            #'ems--ibuffer-mark-dissociated-buffers-after)
-
-(defun ems--ibuffer-mark-help-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-help-buffers :after
-            #'ems--ibuffer-mark-help-buffers-after)
-
-(defun ems--ibuffer-mark-compressed-file-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-compressed-file-buffers :after
-            #'ems--ibuffer-mark-compressed-file-buffers-after)
-
-(defun ems--ibuffer-mark-old-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-old-buffers :after
-            #'ems--ibuffer-mark-old-buffers-after)
-
-(defun ems--ibuffer-mark-special-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-special-buffers :after
-            #'ems--ibuffer-mark-special-buffers-after)
-
-(defun ems--ibuffer-mark-read-only-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-read-only-buffers :after
-            #'ems--ibuffer-mark-read-only-buffers-after)
-
-(defun ems--ibuffer-mark-dired-buffers-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'ibuffer-mark-dired-buffers :after
-            #'ems--ibuffer-mark-dired-buffers-after)
+(cl-loop
+ for target in
+ '(ibuffer-mark-by-name-regexp
+   ibuffer-mark-by-mode-regexp
+   ibuffer-mark-by-file-name-regexp
+   ibuffer-mark-by-mode
+   ibuffer-mark-modified-buffers
+   ibuffer-mark-unsaved-buffers
+   ibuffer-mark-dissociated-buffers
+   ibuffer-mark-help-buffers
+   ibuffer-mark-compressed-file-buffers
+   ibuffer-mark-old-buffers
+   ibuffer-mark-special-buffers
+   ibuffer-mark-read-only-buffers
+   ibuffer-mark-dired-buffers)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue after interactively marking matching Ibuffer entries."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'mark-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--ibuffer-pop-filter-after (&rest _)
   "speak."

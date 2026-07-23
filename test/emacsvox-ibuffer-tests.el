@@ -184,5 +184,87 @@
       (nreverse events)
       '((icon close-object) speak-mode-line)))))
 
+(defconst emacsvox-test--ibuffer-mark-operation-after-targets
+  '(ibuffer-mark-forward
+    ibuffer-mark-for-delete ibuffer-mark-for-delete-backwards
+    ibuffer-unmark-forward ibuffer-unmark-backward ibuffer-unmark-all
+    ibuffer-toggle-marks
+    ibuffer-do-shell-command-pipe-replace
+    ibuffer-do-shell-command-pipe ibuffer-do-shell-command-file
+    ibuffer-do-rename-uniquely ibuffer-do-replace-regexp
+    ibuffer-do-kill-lines ibuffer-copy-filename-as-kill
+    ibuffer-mark-by-name-regexp ibuffer-mark-by-mode-regexp
+    ibuffer-mark-by-file-name-regexp ibuffer-mark-by-mode
+    ibuffer-mark-modified-buffers ibuffer-mark-unsaved-buffers
+    ibuffer-mark-dissociated-buffers ibuffer-mark-help-buffers
+    ibuffer-mark-compressed-file-buffers ibuffer-mark-old-buffers
+    ibuffer-mark-special-buffers ibuffer-mark-read-only-buffers
+    ibuffer-mark-dired-buffers)
+  "Ibuffer marking and buffer operations with direct after advice.")
+
+(ert-deftest emacsvox-ibuffer-mark-operation-advice-is-directly-registered ()
+  "Ibuffer marking and operation advice bypasses the bridge."
+  (dolist (target emacsvox-test--ibuffer-mark-operation-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-ibuffer-mark-feedback-is-target-aware ()
+  "Only the matching interactive mark command cues and speaks."
+  (let ((ems--interactive-fn-name 'ibuffer-unmark-forward)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-ibuffer-speak-buffer-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-ibuffer-mark-forward-after)
+      (emacsvox--advice-ibuffer-unmark-forward-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon deselect-object) speak-line)))))
+
+(ert-deftest emacsvox-ibuffer-operation-feedback-is-target-aware ()
+  "Only the matching interactive buffer operation emits its cue."
+  (let ((ems--interactive-fn-name 'ibuffer-do-rename-uniquely)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-ibuffer-do-replace-regexp-after)
+      (emacsvox--advice-ibuffer-do-rename-uniquely-after))
+    (should (equal events '(task-done)))))
+
+(ert-deftest emacsvox-ibuffer-copy-filename-feedback-is-not-duplicated ()
+  "Copying filenames emits the effective legacy feedback exactly once."
+  (let ((ems--interactive-fn-name 'ibuffer-copy-filename-as-kill)
+        (registrations 0)
+        events)
+    (advice-mapc
+     (lambda (function _properties)
+       (when
+           (eq
+            function
+            #'emacsvox--advice-ibuffer-copy-filename-as-kill-after)
+         (cl-incf registrations)))
+     'ibuffer-copy-filename-as-kill)
+    (cl-letf (((symbol-function 'ibuffer-count-marked-lines)
+               (lambda (&rest _) 3))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox--advice-ibuffer-copy-filename-as-kill-after))
+    (should (= registrations 1))
+    (should
+     (equal
+      (nreverse events)
+      '((icon delete-object)
+        (speak "copied 3 filenames."))))))
+
 (provide 'emacsvox-ibuffer-tests)
 ;;; emacsvox-ibuffer-tests.el ends here
