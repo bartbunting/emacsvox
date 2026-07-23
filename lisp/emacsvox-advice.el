@@ -1903,14 +1903,18 @@ TARGET identifies the evaluation command."
 
 ;; you DONT WANT TO SUSPEND EMACS WITHOUT CONFIRMATION
 
-(defun ems--suspend-emacs-around (orig-fun &rest args)
+(defun emacsvox--advice-suspend-emacs-around (original &rest arguments)
   "Ask for confirmation."
   (let ((confirmation (yes-or-no-p "Do you want to suspend emacs ")))
     (cond
-     (confirmation (message "Suspending Emacs ") (apply orig-fun args))
+     (confirmation
+      (message "Suspending Emacs ")
+      (apply original arguments))
      (t (message "Not suspending emacs")))))
 
-(advice-add 'suspend-emacs :around #'ems--suspend-emacs-around)
+(advice-add
+ 'suspend-emacs :around #'emacsvox--advice-suspend-emacs-around
+ '((name . emacsvox)))
 
 (defun emacsvox--case-region-after (target action beginning end)
   "Announce an interactive case conversion from BEGINNING to END.
