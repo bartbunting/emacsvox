@@ -3252,38 +3252,32 @@ Produce an auditory icon if possible."
 
 ;;; Rectangle Motion
 
-(cl-loop
- for f in
- '(rectangle-next-line rectangle-previous-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (rectangle-next-line rectangle-previous-line)
+    "Speak the line after moving vertically in a rectangle."
+  (emacsvox-speak-line))
 
-(defun ems--rectangle-mark-mode-after (&rest _)
-  "speak." 
-  (when (ems-interactive-p)
+(defvar rectangle-mark-mode nil
+  "Non-nil when rectangle mark mode is active.")
+
+(defun emacsvox--advice-rectangle-mark-mode-after (&rest _)
+  "Announce the state of rectangle mark mode after an interactive toggle."
+  (when (ems-interactive-p 'rectangle-mark-mode)
     (dtk-notify
      (format "Turned %s rectangle mark mode"
              (if rectangle-mark-mode "on" "off")))
     (emacsvox-icon (if rectangle-mark-mode 'on 'off))))
 
-(advice-add 'rectangle-mark-mode :after
-            #'ems--rectangle-mark-mode-after)
+(advice-add
+ 'rectangle-mark-mode :after
+ #'emacsvox--advice-rectangle-mark-mode-after
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(
-   rectangle-backward-char rectangle-forward-char
-   rectangle-right-char rectangle-left-char)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-char t )))))
+(emacsvox-advice--define-interactive-after-advice
+    (rectangle-backward-char rectangle-forward-char
+                             rectangle-right-char rectangle-left-char)
+    "Speak the character after moving horizontally in a rectangle."
+  (emacsvox-speak-char t))
 ;;; Compose Mail:
 
 (defun ems--compose-mail-after (&rest _)

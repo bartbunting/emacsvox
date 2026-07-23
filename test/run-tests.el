@@ -38,6 +38,7 @@
   (require 'emacsvox-message-tests)
   (require 'emacsvox-timer-tests)
   (require 'emacsvox-navigation-tests)
+  (require 'emacsvox-rectangle-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
