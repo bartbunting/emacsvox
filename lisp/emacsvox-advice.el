@@ -2934,18 +2934,21 @@ Produce an auditory icon if possible."
 
 (advice-add 'y-or-n-p :around #'ems--y-or-n-p-around)
 
-(defun ems--ask-user-about-lock-around (orig-fun &rest args)
-  "Play auditory icon."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (emacsvox-icon 'ask-short-question)
-      (apply orig-fun args)
-      (emacsvox-icon (if result 'y-answer 'n-answer)))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-ask-user-about-lock-around
+    (original &rest arguments)
+  "Call ORIGINAL once and cue an interactive lock question and answer."
+  (if (ems-interactive-p 'ask-user-about-lock)
+      (progn
+        (emacsvox-icon 'ask-short-question)
+        (let ((result (apply original arguments)))
+          (emacsvox-icon (if result 'y-answer 'n-answer))
+          result))
+    (apply original arguments)))
 
-(advice-add 'ask-user-about-lock :around
-            #'ems--ask-user-about-lock-around)
+(advice-add
+ 'ask-user-about-lock :around
+ #'emacsvox--advice-ask-user-about-lock-around
+ '((name . emacsvox)))
 
 (defun ems--ask-user-about-lock-help-after (&rest _)
   "Play auditory icon." (emacsvox-icon 'help))

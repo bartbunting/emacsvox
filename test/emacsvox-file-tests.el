@@ -16,7 +16,9 @@
     (not-modified :after emacsvox--advice-not-modified-after)
     (find-file :after emacsvox--advice-find-file-after)
     (revert-buffer-quick :after
-     emacsvox--advice-revert-buffer-quick-after))
+     emacsvox--advice-revert-buffer-quick-after)
+    (ask-user-about-lock :around
+     emacsvox--advice-ask-user-about-lock-around))
   "File functions using individually defined native advice.")
 
 (defconst emacsvox-test--file-after-targets
@@ -130,6 +132,46 @@
      (equal
       (nreverse events)
       '((icon open-object) mode-line)))))
+
+(ert-deftest emacsvox-lock-question-advice-calls-original-once ()
+  "An interactive lock question preserves call order, arguments, and result."
+  (let ((ems--interactive-fn-name 'ask-user-about-lock)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should-not
+       (emacsvox--advice-ask-user-about-lock-around
+        (lambda (&rest arguments)
+          (cl-incf calls)
+          (push (list 'original arguments) events)
+          nil)
+        "example.el" "other-user")))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((icon ask-short-question)
+        (original ("example.el" "other-user"))
+        (icon n-answer))))))
+
+(ert-deftest emacsvox-lock-question-advice-is-quiet-programmatically ()
+  "A programmatic lock question calls once without auditory feedback."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        feedback)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (&rest _) (setq feedback t))))
+      (should
+       (eq
+        (emacsvox--advice-ask-user-about-lock-around
+         (lambda (&rest _)
+           (cl-incf calls)
+           'lock-result)
+         "example.el" "other-user")
+        'lock-result)))
+    (should (= calls 1))
+    (should-not feedback)))
 
 (provide 'emacsvox-file-tests)
 ;;; emacsvox-file-tests.el ends here
