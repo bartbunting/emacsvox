@@ -46,6 +46,25 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 
+(defmacro emacsvox-compile--define-interactive-after-advice
+    (targets docstring &rest body)
+  "Define native interactive after advice for compile TARGETS.
+DOCSTRING and BODY define the feedback function for each command."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add
+                ',target :after #',function '((name . emacsvox))))))
+        targets)))
+
 ;;;  Personalities  
 (voice-setup-add-map
  '(
@@ -68,51 +87,43 @@
     (emacsvox-speak-line)))
 
 ;;;   advice  interactive commands
-(cl-loop for f in 
-         '(
-           next-error previous-error
-           compilation-next-file compilation-previous-file
-           compile-goto-error compile-mouse-goto-error
-           )
-         do
-         (eval
-          `(defadvice ,f (after  emacsvox pre act comp)
-             "Speak the line containing the error. "
-             (when (ems-interactive-p)
-               (dtk-stop 'all)
-               (emacsvox-icon 'large-movement)
-               (emacsvox-compilation-speak-error)))))
 
-(cl-loop for f in 
-         '(
-           compilation-next-error
-           compilation-previous-error
-           next-error-no-select
-           previous-error-no-select)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-line)
-               (emacsvox-icon 'select-object)))))
+(emacsvox-compile--define-interactive-after-advice
+    (next-error previous-error
+     compilation-next-file compilation-previous-file
+     compile-goto-error compile-mouse-goto-error)
+    "Speak the line containing the compilation error."
+  (dtk-stop 'all)
+  (emacsvox-icon 'large-movement)
+  (emacsvox-compilation-speak-error))
+
+(emacsvox-compile--define-interactive-after-advice
+    (compilation-next-error compilation-previous-error
+     next-error-no-select previous-error-no-select)
+    "Speak the selected compilation error."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
 
 ;;;  advise process filter and sentinels
 
-(defun ems--compile-after (&rest _)
-  "provide auditory confirmation"
-  (when (ems-interactive-p)
-    (message "Launched compilation") (emacsvox-icon 'task-done)))
+(defun emacsvox--advice-compile-after (&rest _)
+  "Confirm an interactively launched compilation."
+  (when (ems-interactive-p 'compile)
+    (message "Launched compilation")
+    (emacsvox-icon 'task-done)))
 
-(advice-add 'compile :after #'ems--compile-after)
+(advice-add
+ 'compile :after #'emacsvox--advice-compile-after
+ '((name . emacsvox)))
 
-(defun ems--compilation-sentinel-after (&rest _)
-  "speak" (emacsvox-icon 'task-done)
-  (message "process %s %s" (process-name (ad-get-arg 0))
-           (ad-get-arg 1)))
+(defun emacsvox--advice-compilation-sentinel-after (process status)
+  "Cue completion and report PROCESS and STATUS."
+  (emacsvox-icon 'task-done)
+  (message "process %s %s" (process-name process) status))
 
-(advice-add 'compilation-sentinel :after
-            #'ems--compilation-sentinel-after)
+(advice-add
+ 'compilation-sentinel :after
+ #'emacsvox--advice-compilation-sentinel-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-compile)
-
