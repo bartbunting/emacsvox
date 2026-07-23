@@ -1257,6 +1257,8 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 ;; helper function: find out vc version:
 
 ;; guess the vc version number from the variable used in minor mode alist
+(defvar vc-mode)
+
 (defun emacsvox-vc-get-version-id ()
   "Return VC version id."
   
@@ -1267,24 +1269,34 @@ ARGUMENTS are passed to ORIGINAL unchanged."
       (substring id 5 nil))
      (t " "))))
 
-(defun ems--vc-toggle-read-only-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let
-          ((message
-            (format "Checking %s version %s "
-                    (if buffer-read-only "out previous " " in new ")
-                    (emacsvox-vc-get-version-id))))
-        (if buffer-read-only (emacsvox-icon 'open-object)
-          (emacsvox-icon 'close-object))
-        (apply orig-fun args) (message message)))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--vc-action-around
+    (target read-only-icon writable-icon original arguments)
+  "Call ORIGINAL once and announce an interactive VC action.
+TARGET identifies the advised command.  READ-ONLY-ICON and WRITABLE-ICON
+select feedback from the buffer state before the action.  ARGUMENTS are passed
+to ORIGINAL unchanged."
+  (if (ems-interactive-p target)
+      (let ((announcement
+             (format "Checking %s version %s "
+                     (if buffer-read-only "out previous " " in new ")
+                     (emacsvox-vc-get-version-id))))
+        (emacsvox-icon
+         (if buffer-read-only read-only-icon writable-icon))
+        (let ((result (apply original arguments)))
+          (message announcement)
+          result))
+    (apply original arguments)))
 
-(advice-add 'vc-toggle-read-only :around
-            #'ems--vc-toggle-read-only-around)
+(defun emacsvox--advice-vc-toggle-read-only-around
+    (original &rest arguments)
+  "Call ORIGINAL once and announce an interactive VC read-only toggle."
+  (emacsvox--vc-action-around
+   'vc-toggle-read-only 'open-object 'close-object original arguments))
+
+(advice-add
+ 'vc-toggle-read-only :around
+ #'emacsvox--advice-vc-toggle-read-only-around
+ '((name . emacsvox)))
 
 (defun ems--vc-refresh-state-around (orig-fun &rest args)
   "Silence messages"
@@ -1292,23 +1304,15 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (advice-add 'vc-refresh-state :around #'ems--vc-refresh-state-around)
 
-(defun ems--vc-next-action-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let
-          ((message
-            (format "Checking %s version %s "
-                    (if buffer-read-only "out previous " " in new ")
-                    (emacsvox-vc-get-version-id))))
-        (if buffer-read-only (emacsvox-icon 'close-object)
-          (emacsvox-icon 'open-object))
-        (apply orig-fun args) (message message)))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-vc-next-action-around
+    (original &rest arguments)
+  "Call ORIGINAL once and announce an interactive next VC action."
+  (emacsvox--vc-action-around
+   'vc-next-action 'close-object 'open-object original arguments))
 
-(advice-add 'vc-next-action :around #'ems--vc-next-action-around)
+(advice-add
+ 'vc-next-action :around #'emacsvox--advice-vc-next-action-around
+ '((name . emacsvox)))
 
 (defun ems--vc-revert-buffer-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
