@@ -84,7 +84,9 @@
      emacsvox--advice-split-window-vertically-after)
     (delete-window :after emacsvox--advice-delete-window-after)
     (split-window-horizontally :after
-     emacsvox--advice-split-window-horizontally-after))
+     emacsvox--advice-split-window-horizontally-after)
+    (call-last-kbd-macro :around
+     emacsvox--advice-call-last-kbd-macro-around))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -346,6 +348,65 @@
            'case-result)
          1)
         'case-result)))
+    (should (= calls 1))
+    (should-not feedback)))
+
+(ert-deftest emacsvox-keyboard-macro-advice-calls-original-once ()
+  "An interactive keyboard macro runs once, quietly, before its completion cue."
+  (let ((ems--interactive-fn-name 'call-last-kbd-macro)
+        (emacsvox-speak-messages t)
+        (emacsvox-use-icons t)
+        (dtk-quiet nil)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (list 'message
+                        (apply #'format format-string arguments))
+                  events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        (emacsvox--advice-call-last-kbd-macro-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push
+            (list 'original arguments dtk-quiet
+                  emacsvox-use-icons emacsvox-speak-messages
+                  inhibit-message)
+            events)
+           'macro-result)
+         3)
+        'macro-result)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original (3) t nil nil t)
+        (message "Executed macro. ")
+        (icon task-done))))
+    (should emacsvox-speak-messages)
+    (should emacsvox-use-icons)
+    (should-not dtk-quiet)))
+
+(ert-deftest emacsvox-keyboard-macro-advice-is-quiet-programmatically ()
+  "A programmatic keyboard macro runs once without completion feedback."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        feedback)
+    (cl-letf (((symbol-function 'message)
+               (lambda (&rest _) (setq feedback t)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (&rest _) (setq feedback t))))
+      (should
+       (eq
+        (emacsvox--advice-call-last-kbd-macro-around
+         (lambda (&rest _)
+           (cl-incf calls)
+           'macro-result))
+        'macro-result)))
     (should (= calls 1))
     (should-not feedback)))
 

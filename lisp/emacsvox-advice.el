@@ -1766,21 +1766,24 @@ the newly created  line."
        (emacsvox-icon 'open-object)
        (emacsvox-speak-line)))))
 
-(defun ems--call-last-kbd-macro-around (orig-fun &rest args)
-  "Speak."
-  (let ((result (apply orig-fun args)))
-    
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced
-       (let ((dtk-quiet t) (emacsvox-use-icons nil))
-         (apply orig-fun args)))
-      (message "Executed macro. ") (emacsvox-icon 'task-done))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-call-last-kbd-macro-around
+    (original &rest arguments)
+  "Call ORIGINAL once and announce an interactive keyboard macro."
+  (if (ems-interactive-p 'call-last-kbd-macro)
+      (let (result)
+        (ems-with-messages-silenced
+          (let ((dtk-quiet t)
+                (emacsvox-use-icons nil))
+            (setq result (apply original arguments))))
+        (message "Executed macro. ")
+        (emacsvox-icon 'task-done)
+        result)
+    (apply original arguments)))
 
-(advice-add 'call-last-kbd-macro :around
-            #'ems--call-last-kbd-macro-around)
+(advice-add
+ 'call-last-kbd-macro :around
+ #'emacsvox--advice-call-last-kbd-macro-around
+ '((name . emacsvox)))
 
 (defun ems--kbd-macro-query-after (&rest _)
   "Announce yourself."
