@@ -2937,16 +2937,29 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  silence whitespace cleanup:
 
-(cl-loop
- for f in
- '(whitespace-cleanup whitespace-cleanup-internal)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Silence messages."
-     (ems-with-messages-silenced
-      ad-do-it
-      ad-return-value))))
+(defun emacsvox--whitespace-cleanup-around (original arguments)
+  "Call ORIGINAL with cleanup messages silenced, passing ARGUMENTS."
+  (ems-with-messages-silenced (apply original arguments)))
+
+(defun emacsvox--advice-whitespace-cleanup-around
+    (original &rest arguments)
+  "Call ORIGINAL with whitespace cleanup messages silenced."
+  (emacsvox--whitespace-cleanup-around original arguments))
+
+(advice-add
+ 'whitespace-cleanup :around
+ #'emacsvox--advice-whitespace-cleanup-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-whitespace-cleanup-internal-around
+    (original &rest arguments)
+  "Call ORIGINAL with internal whitespace cleanup messages silenced."
+  (emacsvox--whitespace-cleanup-around original arguments))
+
+(advice-add
+ 'whitespace-cleanup-internal :around
+ #'emacsvox--advice-whitespace-cleanup-internal-around
+ '((name . emacsvox)))
 
 ;;;  advice Finder:
 

@@ -50,6 +50,7 @@
   (require 'emacsvox-undo-tests)
   (require 'emacsvox-position-tests)
   (require 'emacsvox-mark-tests)
+  (require 'emacsvox-cleanup-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
