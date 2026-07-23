@@ -2003,15 +2003,17 @@ the newly created  line."
 
 (advice-add 'transpose-sexps :after #'ems--transpose-sexps-after)
 
-(defun ems--open-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (let ((count (ad-get-arg 0)))
-      (emacsvox-icon 'open-object)
-      (message "Opened %s blank line%s" (if (= count 1) "a" count)
-               (if (= count 1) "" "s")))))
+(defun emacsvox--advice-open-line-after (count)
+  "Announce COUNT lines opened by an interactive `open-line'."
+  (when (ems-interactive-p 'open-line)
+    (emacsvox-icon 'open-object)
+    (message "Opened %s blank line%s"
+             (if (= count 1) "a" count)
+             (if (= count 1) "" "s"))))
 
-(advice-add 'open-line :after #'ems--open-line-after)
+(advice-add
+ 'open-line :after #'emacsvox--advice-open-line-after
+ '((name . emacsvox)))
 
 (defun ems--abort-recursive-edit-after (&rest _)
   "speak."

@@ -96,7 +96,8 @@
      emacsvox--advice-describe-key-briefly-around)
     (battery :around emacsvox--advice-battery-around)
     (comment-dwim :after emacsvox--advice-comment-dwim-after)
-    (comment-region :after emacsvox--advice-comment-region-after))
+    (comment-region :after emacsvox--advice-comment-region-after)
+    (open-line :after emacsvox--advice-open-line-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -262,6 +263,23 @@
       (should
        (equal messages
               '("Uncommented region containing 3 lines"))))))
+
+(ert-deftest emacsvox-open-line-uses-explicit-count ()
+  "Interactive open-line feedback uses its native count and event order."
+  (let ((ems--interactive-fn-name 'open-line)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (apply #'format format-string arguments)
+                  events))))
+      (emacsvox--advice-open-line-after 3))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object) "Opened 3 blank lines")))))
 
 (ert-deftest emacsvox-core-button-advice-preserves-context-and-result ()
   "Button movement is silenced, spoken after moving, and returns its result."
