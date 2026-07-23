@@ -32,6 +32,7 @@
   (require 'emacsvox-input-tests)
   (require 'emacsvox-search-tests)
   (require 'emacsvox-file-tests)
+  (require 'emacsvox-process-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

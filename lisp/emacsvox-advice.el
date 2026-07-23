@@ -2958,21 +2958,25 @@ Produce an auditory icon if possible."
 
 ;;;  Advice process-menu
 
-(defun ems--process-menu-delete-process-after (&rest _)
+(defun emacsvox--advice-process-menu-delete-process-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'process-menu-delete-process)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-(advice-add 'process-menu-delete-process :after
-            #'ems--process-menu-delete-process-after)
+(advice-add
+ 'process-menu-delete-process :after
+ #'emacsvox--advice-process-menu-delete-process-after
+ '((name . emacsvox)))
 
-(defun ems--list-processes-after (&rest _)
+(defun emacsvox--advice-list-processes-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'list-processes)
     (emacsvox-icon 'open-object)
     (message "Displayed process list in other window.")))
 
-(advice-add 'list-processes :after #'ems--list-processes-after)
+(advice-add
+ 'list-processes :after #'emacsvox--advice-list-processes-after
+ '((name . emacsvox)))
 
 (defun ems--timer-list-after (&rest _)
   "speak."
