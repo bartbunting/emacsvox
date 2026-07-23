@@ -19,6 +19,8 @@
 ;; Verify that direct advice survives definition of lazily loaded Org commands.
 (require 'org-goto)
 (require 'org-agenda)
+(require 'org-archive)
+(require 'org-src)
 
 (defconst emacsvox-test--org-structure-after-targets
   '(org-next-item org-previous-item
@@ -50,6 +52,24 @@
     org-table-next-field org-table-previous-field
     org-table-next-row org-table-previous-row)
   "Native after-advice targets in the Org agenda and table slice.")
+
+(defconst emacsvox-test--org-editing-after-targets
+  '(org-delete-indentation
+    org-insert-heading org-insert-todo-heading org-insert-structure-template
+    org-promote-subtree org-demote-subtree org-do-promote org-do-demote
+    org-move-subtree-up org-move-subtree-down
+    org-convert-to-odd-levels org-convert-to-oddeven-levels
+    org-cut-subtree org-copy-subtree org-paste-subtree
+    org-archive-subtree org-narrow-to-subtree
+    org-toggle-archive-tag org-toggle-comment
+    end-of-line org-toggle-checkbox
+    org-occur org-beginning-of-item org-beginning-of-item-list
+    org-end-of-item org-end-of-item-list
+    org-beginning-of-line org-end-of-line
+    org-edit-src-exit org-edit-src-abort
+    org-edit-src-code org-edit-special org-switchb
+    org-fill-paragraph org-todo)
+  "Native after-advice targets in the Org editing slice.")
 
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice bypasses the compatibility bridge."
@@ -215,6 +235,104 @@
      (equal
       (nreverse events)
       '(table-cell speak-line (icon select-object))))))
+
+(ert-deftest emacsvox-org-editing-advice-is-directly-registered ()
+  "Org editing advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--org-editing-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-org-heading-edit-feedback-preserves-order ()
+  "Org heading edits speak the line before the open cue."
+  (let ((ems--interactive-fn-name 'org-insert-heading)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-org-insert-todo-heading-after)
+      (emacsvox--advice-org-insert-heading-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon open-object))))))
+
+(ert-deftest emacsvox-org-subtree-feedback-is-target-aware ()
+  "Only the matching subtree command speaks and cues its result."
+  (let ((ems--interactive-fn-name 'org-paste-subtree)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-org-copy-subtree-after)
+      (emacsvox--advice-org-paste-subtree-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon yank-object))))))
+
+(ert-deftest emacsvox-org-generic-end-of-line-delegates-in-org-mode ()
+  "Interactive generic line movement invokes Org's line endpoint logic."
+  (let ((ems--interactive-fn-name 'end-of-line)
+        (major-mode 'org-mode)
+        delegated)
+    (cl-letf (((symbol-function 'org-end-of-line)
+               (lambda (&rest _) (setq delegated t))))
+      (emacsvox--advice-end-of-line-after))
+    (should delegated)))
+
+(ert-deftest emacsvox-org-item-navigation-preserves-feedback-order ()
+  "Org item navigation speaks the line before its selection cue."
+  (let ((ems--interactive-fn-name 'org-end-of-item)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-org-end-of-item-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon select-object))))))
+
+(ert-deftest emacsvox-org-source-edit-feedback-is-target-aware ()
+  "Only the matching source edit command reports its window transition."
+  (let ((ems--interactive-fn-name 'org-edit-src-exit)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-org-edit-src-abort-after)
+      (emacsvox--advice-org-edit-src-exit-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object) speak-line)))))
+
+(ert-deftest emacsvox-org-todo-feedback-reports-current-state ()
+  "Interactive TODO changes cue and report the resulting state."
+  (let ((ems--interactive-fn-name 'org-todo)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'org-get-todo-state)
+               (lambda () "DONE"))
+              ((symbol-function 'message)
+               (lambda (format-string &rest args)
+                 (push (apply #'format format-string args) events))))
+      (emacsvox--advice-org-todo-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon button) "DONE")))))
 
 (provide 'emacsvox-org-tests)
 ;;; emacsvox-org-tests.el ends here

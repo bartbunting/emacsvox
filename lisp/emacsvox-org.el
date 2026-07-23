@@ -285,7 +285,7 @@
 ;;;  Header insertion and relocation
 
 (cl-loop
- for f in
+ for target in
  '(
    org-delete-indentation
    org-insert-heading org-insert-todo-heading
@@ -295,13 +295,17 @@
    org-move-subtree-up org-move-subtree-down
    org-convert-to-odd-levels org-convert-to-oddeven-levels
    )
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f(after emacsvox pre act comp)
-     "Speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'open-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive Org heading edit."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'open-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--org-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
@@ -317,18 +321,22 @@
 ;;;  cut and paste:
 
 (cl-loop
- for f in
+ for target in
  '(
    org-cut-subtree org-copy-subtree
    org-paste-subtree org-archive-subtree
    org-narrow-to-subtree)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f(after emacsvox pre act comp)
-     "Speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'yank-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive Org subtree operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'yank-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  completion:
 
@@ -358,16 +366,20 @@
 ;;;  toggles:
 
 (cl-loop
- for f in
+ for target in
  '(
    org-toggle-archive-tag org-toggle-comment)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'button)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Org toggle."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'button)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  ToDo:
 
@@ -569,52 +581,68 @@
 
 ;; advice end-of-line here to call org specific action
 
-(defun ems--end-of-line-after (&rest _)
+(defun emacsvox--advice-end-of-line-after (&rest _)
   "Call org specific actions in org mode."
   (when
-      (and (ems-interactive-p) (eq major-mode 'org-mode)
+      (and (ems-interactive-p 'end-of-line) (eq major-mode 'org-mode)
            (fboundp 'org-end-of-line))
     (org-end-of-line)))
 
-(advice-add 'end-of-line :after #'ems--end-of-line-after)
+(advice-add
+ 'end-of-line :after #'emacsvox--advice-end-of-line-after
+ '((name . emacsvox)))
 
-(defun ems--org-toggle-checkbox-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'button) (emacsvox-speak-line)))
+(defun emacsvox--advice-org-toggle-checkbox-after (&rest _)
+  "Cue and speak after interactively toggling an Org checkbox."
+  (when (ems-interactive-p 'org-toggle-checkbox)
+    (emacsvox-icon 'button)
+    (emacsvox-speak-line)))
 
-(advice-add 'org-toggle-checkbox :after
-            #'ems--org-toggle-checkbox-after)
+(advice-add
+ 'org-toggle-checkbox :after
+ #'emacsvox--advice-org-toggle-checkbox-after
+ '((name . emacsvox)))
 
 ;;;  fix misc commands:
 
 (cl-loop
- for f in
+ for target in
  '(
    org-occur
    org-beginning-of-item org-beginning-of-item-list
    org-end-of-item org-end-of-item-list)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p) (emacsvox-speak-line)
-           (emacsvox-icon 'select-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after interactive Org item navigation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'select-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--org-beginning-of-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'left)))
+(defun emacsvox--advice-org-beginning-of-line-after (&rest _)
+  "Speak after interactive movement to the beginning of an Org line."
+  (when (ems-interactive-p 'org-beginning-of-line)
+    (emacsvox-speak-line)
+    (emacsvox-icon 'left)))
 
-(advice-add 'org-beginning-of-line :after
-            #'ems--org-beginning-of-line-after)
+(advice-add
+ 'org-beginning-of-line :after
+ #'emacsvox--advice-org-beginning-of-line-after
+ '((name . emacsvox)))
 
-(defun ems--org-end-of-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'right)))
+(defun emacsvox--advice-org-end-of-line-after (&rest _)
+  "Speak after interactive movement to the end of an Org line."
+  (when (ems-interactive-p 'org-end-of-line)
+    (emacsvox-speak-line)
+    (emacsvox-icon 'right)))
 
-(advice-add 'org-end-of-line :after #'ems--org-end-of-line-after)
+(advice-add
+ 'org-end-of-line :after #'emacsvox--advice-org-end-of-line-after
+ '((name . emacsvox)))
 
 ;;;  global input wizard
 
@@ -799,43 +827,58 @@ arg just opens the file"
 ;;;  Edit Special Advice:
 
 (cl-loop
- for f in
+ for target in
  '(org-edit-src-exit org-edit-src-abort)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively closing an Org edit buffer."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'close-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in
- '(org-edit-src-code org-edit-special org-switchb) do
+ for target in
+ '(org-edit-src-code org-edit-special org-switchb)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively opening an Org edit buffer."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  Fillers:
 
-(defun ems--org-fill-paragraph-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'fill-object) (message "Filled current paragraph")))
+(defun emacsvox--advice-org-fill-paragraph-after (&rest _)
+  "Report an interactively filled Org paragraph."
+  (when (ems-interactive-p 'org-fill-paragraph)
+    (emacsvox-icon 'fill-object)
+    (message "Filled current paragraph")))
 
-(advice-add 'org-fill-paragraph :after #'ems--org-fill-paragraph-after)
+(advice-add
+ 'org-fill-paragraph :after
+ #'emacsvox--advice-org-fill-paragraph-after
+ '((name . emacsvox)))
 
-(defun ems--org-todo-after (&rest _)
-  "speak when changing the state of a TODO item."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-org-todo-after (&rest _)
+  "Report the state after interactively changing an Org TODO item."
+  (when (ems-interactive-p 'org-todo)
     (emacsvox-icon 'button)
     (let ((state (org-get-todo-state)))
       (if (null state) (message "State unset") (message state)))))
 
-(advice-add 'org-todo :after #'ems--org-todo-after)
+(advice-add
+ 'org-todo :after #'emacsvox--advice-org-todo-after
+ '((name . emacsvox)))
 
 ;;; TVR: Conveniences
 
