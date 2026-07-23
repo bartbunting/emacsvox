@@ -2065,19 +2065,22 @@ the newly created  line."
 
 ;;;  avoid chatter when byte compiling etc
 
-(defun ems--byte-compile-file-around (orig-fun &rest args)
-  "Announce one message, quietly compile, and announce termination.\nProduce an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (dtk-speak "Byte compiling ")
-                                  (apply orig-fun args)
-                                  (emacsvox-icon 'task-done)
-                                  (dtk-speak "Done byte compiling ")))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-byte-compile-file-around
+    (original &rest arguments)
+  "Call ORIGINAL once and announce interactive byte compilation."
+  (if (ems-interactive-p 'byte-compile-file)
+      (let (result)
+        (ems-with-messages-silenced
+          (dtk-speak "Byte compiling ")
+          (setq result (apply original arguments))
+          (emacsvox-icon 'task-done)
+          (dtk-speak "Done byte compiling "))
+        result)
+    (apply original arguments)))
 
-(advice-add 'byte-compile-file :around #'ems--byte-compile-file-around)
+(advice-add
+ 'byte-compile-file :around #'emacsvox--advice-byte-compile-file-around
+ '((name . emacsvox)))
 
 ;;;  Stop talking if activity
 
