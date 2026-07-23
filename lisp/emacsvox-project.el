@@ -49,16 +49,19 @@
 ;;;  Interactive Commands:
 
 (cl-loop
- for f in 
+ for target in
  '(project-vc-dir project-switch-to-buffer project-find-file project-dired)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Project command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (provide 'emacsvox-project)
 ;;;  end of file
-
