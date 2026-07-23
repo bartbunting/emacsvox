@@ -41,5 +41,52 @@
     (should (eq (key-binding (kbd "TAB")) 'indent-for-tab-command))
     (should (eq (key-binding (kbd "C-c C-o")) 'comint-delete-output))))
 
+(defconst emacsvox-test--comint-navigation-history-after-targets
+  '(comint-history-isearch-backward
+    comint-history-isearch-backward-regexp
+    comint-next-matching-input-from-input
+    comint-previous-matching-input-from-input
+    shell-forward-command
+    shell-backward-command
+    comint-show-output
+    comint-show-maximum-output
+    comint-bol-or-process-mark
+    comint-copy-old-input
+    comint-next-input
+    comint-next-matching-input
+    comint-previous-input
+    comint-previous-matching-input
+    comint-previous-prompt
+    comint-next-prompt
+    comint-get-next-from-history)
+  "Comint navigation and history commands with direct after advice.")
+
+(ert-deftest emacsvox-comint-navigation-history-advice-is-directly-registered ()
+  "Comint navigation and history advice bypasses the bridge."
+  (dolist (target emacsvox-test--comint-navigation-history-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-comint-navigation-feedback-is-target-aware ()
+  "Only matching interactive Comint navigation speaks and cues."
+  (let ((ems--interactive-fn-name 'shell-forward-command)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda (&rest _) (push 'line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-shell-backward-command-after)
+      (emacsvox--advice-shell-forward-command-after))
+    (should
+     (equal
+      (nreverse events)
+      '(line (icon item))))))
+
 (provide 'emacsvox-comint-tests)
 ;;; emacsvox-comint-tests.el ends here

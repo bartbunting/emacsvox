@@ -170,17 +170,23 @@ Interactive PREFIX arg means toggle the global default value. ")
             #'ems--comint-delete-output-after)
 
 (cl-loop
- for f in
- '(comint-history-isearch-backward comint-history-isearch-backward-regexp)
+ for target in
+ '(comint-history-isearch-backward
+   comint-history-isearch-backward-regexp)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (save-excursion
-         (comint-bol-or-process-mark)
-         (emacsvox-icon 'select-object)
-         (emacsvox-speak-line 1))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Comint history search."
+       (when (ems-interactive-p ',target)
+         (save-excursion
+           (comint-bol-or-process-mark)
+           (emacsvox-icon 'select-object)
+           (emacsvox-speak-line 1))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--comint-clear-buffer-after (&rest _)
   "speak."
@@ -288,72 +294,87 @@ Interactive PREFIX arg means toggle the global default value. ")
 (advice-add 'comint-accumulate :before #'ems--comint-accumulate-before)
 
 (cl-loop
- for f in
- '(
-   comint-next-matching-input-from-input
+ for target in
+ '(comint-next-matching-input-from-input
    comint-previous-matching-input-from-input)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak matched input."
-     (when (ems-interactive-p)
-       (save-excursion
-         (goto-char (comint-line-beginning-position))
-         (emacsvox-speak-line 1))
-       (emacsvox-icon 'select-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after matching input from the current input."
+       (when (ems-interactive-p ',target)
+         (save-excursion
+           (goto-char (comint-line-beginning-position))
+           (emacsvox-speak-line 1))
+         (emacsvox-icon 'select-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--shell-forward-command-after (&rest _)
-  "Speak  line."
-  (when (ems-interactive-p)
-    (let ((emacsvox-show-point t))
-      (emacsvox-speak-line) (emacsvox-icon 'item))))
+(cl-loop
+ for target in
+ '(shell-forward-command shell-backward-command)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive shell command movement."
+       (when (ems-interactive-p ',target)
+         (let ((emacsvox-show-point t))
+           (emacsvox-speak-line)
+           (emacsvox-icon 'item))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'shell-forward-command :after
-            #'ems--shell-forward-command-after)
-
-(defun ems--shell-backward-command-after (&rest _)
-  "Speak  line."
-  (when (ems-interactive-p)
-    (let ((emacsvox-show-point t))
-      (emacsvox-speak-line) (emacsvox-icon 'item))))
-
-(advice-add 'shell-backward-command :after
-            #'ems--shell-backward-command-after)
-
-(defun ems--comint-show-output-after (&rest _)
-  "Speak  line."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-comint-show-output-after (&rest _)
+  "Speak the output selected by an interactive Comint command."
+  (when (ems-interactive-p 'comint-show-output)
     (let ((emacsvox-show-point t))
       (emacsvox-icon 'large-movement)
       (emacsvox-speak-region (point) (mark)))))
 
-(advice-add 'comint-show-output :after #'ems--comint-show-output-after)
+(advice-add
+ 'comint-show-output :after
+ #'emacsvox--advice-comint-show-output-after
+ '((name . emacsvox)))
 
-(defun ems--comint-show-maximum-output-after (&rest _)
-  "Speak line."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-comint-show-maximum-output-after (&rest _)
+  "Cue and speak after showing maximum Comint output."
+  (when (ems-interactive-p 'comint-show-maximum-output)
     (let ((emacsvox-show-point t))
-      (emacsvox-speak-line) (emacsvox-icon 'scroll))))
+      (emacsvox-speak-line)
+      (emacsvox-icon 'scroll))))
 
-(advice-add 'comint-show-maximum-output :after
-            #'ems--comint-show-maximum-output-after)
+(advice-add
+ 'comint-show-maximum-output :after
+ #'emacsvox--advice-comint-show-maximum-output-after
+ '((name . emacsvox)))
 
-(defun ems--comint-bol-or-process-mark-after (&rest _)
-  "Speak line."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-comint-bol-or-process-mark-after (&rest _)
+  "Cue and speak after moving to the Comint input boundary."
+  (when (ems-interactive-p 'comint-bol-or-process-mark)
     (let ((emacsvox-show-point t))
-      (emacsvox-speak-line) (emacsvox-icon 'select-object))))
+      (emacsvox-speak-line)
+      (emacsvox-icon 'select-object))))
 
-(advice-add 'comint-bol-or-process-mark :after
-            #'ems--comint-bol-or-process-mark-after)
+(advice-add
+ 'comint-bol-or-process-mark :after
+ #'emacsvox--advice-comint-bol-or-process-mark-after
+ '((name . emacsvox)))
 
-(defun ems--comint-copy-old-input-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-comint-copy-old-input-after (&rest _)
+  "Cue and speak input copied interactively from Comint history."
+  (when (ems-interactive-p 'comint-copy-old-input)
+    (emacsvox-icon 'yank-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'comint-copy-old-input :after
-            #'ems--comint-copy-old-input-after)
+(advice-add
+ 'comint-copy-old-input :after
+ #'emacsvox--advice-comint-copy-old-input-after
+ '((name . emacsvox)))
 
 (defun ems--comint-output-filter-around (orig-fun &rest args)
   "Make comint speak its output.\nTry not to speak the shell prompt,\ninstead, always play an auditory icon when the shell prompt is displayed."
@@ -424,56 +445,28 @@ Interactive PREFIX arg means toggle the global default value. ")
 (advice-add 'comint-dynamic-complete :around
             #'ems--comint-dynamic-complete-around)
 
-(defun ems--comint-next-input-after (&rest _)
-  "Speak line."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'all
-                           (save-excursion
-                             (goto-char
-                              (comint-line-beginning-position))
-                             (emacsvox-speak-line 1)))
-    (emacsvox-icon 'item)))
-
-(advice-add 'comint-next-input :after #'ems--comint-next-input-after)
-
-(defun ems--comint-next-matching-input-after (&rest _)
-  "Speak line."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'all
-                           (save-excursion
-                             (goto-char
-                              (comint-line-beginning-position))
-                             (emacsvox-speak-line 1)))
-    (emacsvox-icon 'item)))
-
-(advice-add 'comint-next-matching-input :after
-            #'ems--comint-next-matching-input-after)
-
-(defun ems--comint-previous-input-after (&rest _)
-  "Speak line."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'all
-                           (save-excursion
-                             (goto-char
-                              (comint-line-beginning-position))
-                             (emacsvox-speak-line 1)))
-    (emacsvox-icon 'item)))
-
-(advice-add 'comint-previous-input :after
-            #'ems--comint-previous-input-after)
-
-(defun ems--comint-previous-matching-input-after (&rest _)
-  "Speak line."
-  (when (ems-interactive-p)
-    (tts-with-punctuations 'all
-                           (save-excursion
-                             (goto-char
-                              (comint-line-beginning-position))
-                             (emacsvox-speak-line 1)))
-    (emacsvox-icon 'item)))
-
-(advice-add 'comint-previous-matching-input :after
-            #'ems--comint-previous-matching-input-after)
+(cl-loop
+ for target in
+ '(comint-next-input
+   comint-next-matching-input
+   comint-previous-input
+   comint-previous-matching-input)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak input selected interactively from Comint history."
+       (when (ems-interactive-p ',target)
+         (tts-with-punctuations
+          'all
+          (save-excursion
+            (goto-char (comint-line-beginning-position))
+            (emacsvox-speak-line 1)))
+         (emacsvox-icon 'item)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--comint-send-input-after (&rest _)
   "Flush any ongoing speech."
@@ -481,31 +474,33 @@ Interactive PREFIX arg means toggle the global default value. ")
 
 (advice-add 'comint-send-input :after #'ems--comint-send-input-after)
 
-(defun ems--comint-previous-prompt-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'item)
-    (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
+(cl-loop
+ for target in '(comint-previous-prompt comint-next-prompt)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive movement between Comint prompts."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'item)
+         (if (eolp)
+             (emacsvox-speak-line)
+           (emacsvox-speak-line 1))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'comint-previous-prompt :after
-            #'ems--comint-previous-prompt-after)
-
-(defun ems--comint-next-prompt-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'item)
-    (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
-
-(advice-add 'comint-next-prompt :after #'ems--comint-next-prompt-after)
-
-(defun ems--comint-get-next-from-history-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-comint-get-next-from-history-after (&rest _)
+  "Cue and speak after interactively fetching the next history item."
+  (when (ems-interactive-p 'comint-get-next-from-history)
     (emacsvox-icon 'item)
     (save-excursion (comint-bol) (emacsvox-speak-line 1))))
 
-(advice-add 'comint-get-next-from-history :after
-            #'ems--comint-get-next-from-history-after)
+(advice-add
+ 'comint-get-next-from-history :after
+ #'emacsvox--advice-comint-get-next-from-history-after
+ '((name . emacsvox)))
 
 (defun ems--comint-dynamic-list-input-ring-around
     (orig-fun &rest args)
@@ -651,4 +646,3 @@ directories that are used often. "
 (provide 'emacsvox-wizards)
 (provide 'emacsvox-comint)
 ;;;  end of file
-
