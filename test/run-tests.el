@@ -70,6 +70,7 @@
   (require 'emacsvox-ange-ftp-tests)
   (require 'emacsvox-compile-tests)
   (require 'emacsvox-windmove-tests)
+  (require 'emacsvox-ffap-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
