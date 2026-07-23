@@ -22,6 +22,7 @@
 (require 'org-archive)
 (require 'org-capture)
 (require 'org-src)
+(require 'ox)
 (require 'ox-md)
 
 (defconst emacsvox-test--org-structure-after-targets
@@ -404,6 +405,116 @@
      (equal
       (nreverse events)
       '((icon task-done) mode-line)))))
+
+(ert-deftest emacsvox-org-risky-advice-is-directly-registered ()
+  "Org deletion and export advice bypasses the compatibility bridge."
+  (dolist
+      (entry
+       '((org-delete-char :around emacsvox--advice-org-delete-char-around)
+         (org-export--dispatch-action
+          :before emacsvox--advice-org-export--dispatch-action-before)
+         (org-export-to-file :after
+                             emacsvox--advice-org-export-to-file-after)))
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-org-delete-char-calls-original-once ()
+  "Interactive Org deletion gives feedback, then calls the command once."
+  (let ((ems--interactive-fn-name 'org-delete-char)
+        calls
+        events)
+    (cl-letf (((symbol-function 'dtk-tone-deletion)
+               (lambda () (push 'deletion-tone events)))
+              ((symbol-function 'emacsvox-speak-char)
+               (lambda (delete-p) (push (list 'speak-char delete-p) events))))
+      (should
+       (eq
+        'result
+        (emacsvox--advice-org-delete-char-around
+         (lambda (n)
+           (push n calls)
+           'result)
+         3))))
+    (should (equal calls '(3)))
+    (should
+     (equal
+      (nreverse events)
+      '(deletion-tone (speak-char t))))))
+
+(ert-deftest emacsvox-org-delete-char-is-quiet-programmatically ()
+  "Programmatic Org deletion calls the original once without feedback."
+  (let ((ems--interactive-fn-name nil)
+        calls
+        feedback)
+    (cl-letf (((symbol-function 'dtk-tone-deletion)
+               (lambda () (setq feedback t)))
+              ((symbol-function 'emacsvox-speak-char)
+               (lambda (&rest _) (setq feedback t))))
+      (emacsvox--advice-org-delete-char-around
+       (lambda (n) (push n calls))
+       2))
+    (should (equal calls '(2)))
+    (should-not feedback)))
+
+(ert-deftest emacsvox-org-legacy-completion-calls-original-once ()
+  "The optional legacy Org completion wrapper preserves one-call semantics."
+  (with-temp-buffer
+    (let ((calls 0)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-get-minibuffer-contents)
+                 (lambda () ""))
+                ((symbol-function 'emacsvox-speak-line)
+                 (lambda () (push 'speak-line events)))
+                ((symbol-function 'emacsvox-speak-completions-if-available)
+                 (lambda () (push 'completions events))))
+        (should
+         (eq
+          'result
+          (emacsvox--advice-org-complete-around
+           (lambda ()
+             (cl-incf calls)
+             (insert "completed")
+             'result))))
+      (should (= calls 1))
+      (should (equal events '(speak-line)))))))
+
+(ert-deftest emacsvox-org-legacy-completion-does-not-create-a-command ()
+  "Absent legacy Org completion remains absent on current Org."
+  (unless (symbol-file 'org-complete 'defun)
+    (should-not (fboundp 'org-complete))))
+
+(ert-deftest emacsvox-org-export-dispatch-uses-explicit-arguments ()
+  "Export menu feedback selects choices from native advice arguments."
+  (let ((entries '((?a "Alpha") (?b "Beta")))
+        notified
+        waited)
+    (cl-letf (((symbol-function 'dtk-notify)
+               (lambda (text) (setq notified text)))
+              ((symbol-function 'sit-for)
+               (lambda (seconds) (setq waited seconds))))
+      (emacsvox--advice-org-export--dispatch-action-before
+       "Export" '(?a ?b) entries nil nil nil))
+    (should (equal notified "a: Alpha\n\nb: Beta\n"))
+    (should (= waited 5))))
+
+(ert-deftest emacsvox-org-export-to-file-uses-explicit-file ()
+  "Export completion reports the FILE argument directly."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-notify)
+               (lambda (text) (push (list 'notify text) events))))
+      (emacsvox--advice-org-export-to-file-after
+       'html "/tmp/report.html" nil nil nil nil nil nil))
+    (should
+     (equal
+      (nreverse events)
+      '((icon save-object) (notify "Wrote /tmp/report.html"))))))
 
 (provide 'emacsvox-org-tests)
 ;;; emacsvox-org-tests.el ends here

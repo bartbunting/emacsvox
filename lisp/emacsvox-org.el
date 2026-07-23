@@ -307,16 +307,16 @@
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--org-delete-char-around (orig-fun &rest args)
-  "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone-deletion) (emacsvox-speak-char t)
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-org-delete-char-around (original n)
+  "Cue deletion and call ORIGINAL once with N."
+  (when (ems-interactive-p 'org-delete-char)
+    (dtk-tone-deletion)
+    (emacsvox-speak-char t))
+  (funcall original n))
 
-(advice-add 'org-delete-char :around #'ems--org-delete-char-around)
+(advice-add
+ 'org-delete-char :around #'emacsvox--advice-org-delete-char-around
+ '((name . emacsvox)))
 
 ;;;  cut and paste:
 
@@ -340,28 +340,26 @@
 
 ;;;  completion:
 
-(defun ems--org-complete-around (orig-fun &rest args)
-  "Say what you completed."
-  (let ((result (apply orig-fun args)))
-    (let
-        ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-         (dtk-stop-immediately t))
-      (apply orig-fun args)
+(defun emacsvox--advice-org-complete-around (original &rest arguments)
+  "Call legacy Org completion once, then speak its result."
+  (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+        (dtk-stop-immediately t))
+    (let ((result (apply original arguments)))
       (if (> (point) prior)
-          (tts-with-punctuations 'all
-                                 (if
-                                     (>
-                                      (length
-                                       (emacsvox-get-minibuffer-contents))
-                                      0)
-                                     (dtk-speak
-                                      (emacsvox-get-minibuffer-contents))
-                                   (emacsvox-speak-line)))
+          (tts-with-punctuations
+           'all
+           (if (> (length (emacsvox-get-minibuffer-contents)) 0)
+               (dtk-speak (emacsvox-get-minibuffer-contents))
+             (emacsvox-speak-line)))
         (emacsvox-speak-completions-if-available))
-      result)
-    result))
+      result)))
 
-(advice-add 'org-complete :around #'ems--org-complete-around)
+;; Current Org uses `completion-at-point', which Emacsvox advises centrally.
+;; Avoid creating an advised placeholder when the legacy command is absent.
+(when (fboundp 'org-complete)
+  (advice-add
+   'org-complete :around #'emacsvox--advice-org-complete-around
+   '((name . emacsvox))))
 
 ;;;  toggles:
 
@@ -814,11 +812,10 @@ arg just opens the file"
 
 ;;;  Speech-enable export prompt:
 
-(defun ems--org-export--dispatch-action-before (&rest _)
+(defun emacsvox--advice-org-export--dispatch-action-before
+    (_prompt _allowed-keys entries _options first-key _expertp)
   "Speak prompt intelligently."
-  (let
-      ((prompt (ad-get-arg 0)) (entries (ad-get-arg 2))
-       (first-key (ad-get-arg 4)) (choices nil))
+  (let (choices)
     (setq choices
           (cond ((null first-key) entries)
                 (t (cl-caddr (assoc first-key entries)))))
@@ -828,8 +825,10 @@ arg just opens the file"
       choices "\n"))
     (sit-for 5)))
 
-(advice-add 'org-export--dispatch-action :before
-            #'ems--org-export--dispatch-action-before)
+(advice-add
+ 'org-export--dispatch-action :before
+ #'emacsvox--advice-org-export--dispatch-action-before
+ '((name . emacsvox)))
 
 ;;;  Preview HTML With EWW:
 
@@ -1071,11 +1070,14 @@ Press `y' to play to next amark."
      (emacsvox-icon 'save-object)
      (emacsvox-speak-message-again)))
 
-(defun ems--org-export-to-file-after (&rest _)
-  "speak." (emacsvox-icon 'save-object)
-  (dtk-notify (format "Wrote %s" (ad-get-arg 1))))
+(defun emacsvox--advice-org-export-to-file-after (_backend file &rest _)
+  "Cue and report the Org export output FILE."
+  (emacsvox-icon 'save-object)
+  (dtk-notify (format "Wrote %s" file)))
 
-(advice-add 'org-export-to-file :after #'ems--org-export-to-file-after)
+(advice-add
+ 'org-export-to-file :after #'emacsvox--advice-org-export-to-file-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-org)
 ;;;  end of file
