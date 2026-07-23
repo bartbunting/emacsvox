@@ -686,24 +686,46 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;;;  Advice hippie expand:
 
-(cl-loop
- for f in
- '(hippie-expand complete)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak completion."
-     (cond
-      ((ems-interactive-p)
-       (let ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
-         (ems-with-messages-silenced
-          ad-do-it
+(declare-function word-at-point "thingatpt" ())
+
+(defmacro emacsvox-advice--define-completion-around-advice
+    (targets helper)
+  "Define native around advice using HELPER for each command in TARGETS."
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (original &rest arguments)
+                 ,(format "Provide completion feedback for `%s'." target)
+                 (,helper ',target original arguments))
+               (advice-add
+                ',target :around #',function '((name . emacsvox))))))
+        targets)))
+
+(defun emacsvox--expanding-completion-around
+    (target original arguments)
+  "Call ORIGINAL once and announce expansion by TARGET.
+ARGUMENTS are passed to ORIGINAL unchanged."
+  (if (ems-interactive-p target)
+      (let ((start
+             (save-excursion
+               (skip-syntax-backward "^ >")
+               (point)))
+            result)
+        (ems-with-messages-silenced
+          (setq result (apply original arguments))
           (emacsvox-icon 'complete)
-          (if (< orig (point))
-              (dtk-speak (buffer-substring orig (point)))
-            (dtk-speak (word-at-point))))))
-      (t ad-do-it))
-     ad-return-value)))
+          (if (< start (point))
+              (dtk-speak (buffer-substring start (point)))
+            (dtk-speak (word-at-point))))
+        result)
+    (apply original arguments)))
+
+(emacsvox-advice--define-completion-around-advice
+ (hippie-expand complete)
+ emacsvox--expanding-completion-around)
 
 ;;;  advice minibuffer to speak
 
@@ -1048,16 +1070,13 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;;;  advice completion functions to speak:
 
-(cl-loop
- for f in
- '(dabbrev-expand dabbrev-completion)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak completion."
-     (when (ems-interactive-p)
-       (accept-process-output)
-       (tts-with-punctuations 'all (dtk-speak dabbrev--last-expansion))))))
+(defvar dabbrev--last-expansion)
+
+(emacsvox-advice--define-interactive-after-advice
+    (dabbrev-expand dabbrev-completion)
+    "Speak the expanded dabbrev text."
+  (accept-process-output)
+  (tts-with-punctuations 'all (dtk-speak dabbrev--last-expansion)))
 
 (voice-setup-add-map
  '(
@@ -1065,45 +1084,52 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
    (completions-common-part voice-monotone-extra)
    (completions-first-difference voice-bolden)))
 
-(cl-loop
- for f in
- '(
-   minibuffer-complete-word minibuffer-complete
-   crm-complete-word crm-complete crm-complete-and-exit
-   crm-minibuffer-complete crm-minibuffer-complete-and-exit)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak completion."
-     (cond
-      ((ems-interactive-p)
-       (ems-with-messages-silenced
-        (let ((prior (point)))
+(defun emacsvox--minibuffer-completion-around
+    (target original arguments)
+  "Call ORIGINAL once and announce minibuffer completion by TARGET.
+ARGUMENTS are passed to ORIGINAL unchanged."
+  (if (ems-interactive-p target)
+      (let ((prior (point))
+            result)
+        (ems-with-messages-silenced
           (emacsvox-kill-buffer-carefully "*Completions*")
-          ad-do-it
+          (setq result (apply original arguments))
           (if (> (point) prior)
               (tts-with-punctuations
                'all (dtk-speak (buffer-substring (point) prior)))
-            (emacsvox-speak-completions-if-available)))))
-      (t ad-do-it))
-     ad-return-value)))
+            (emacsvox-speak-completions-if-available)))
+        result)
+    (apply original arguments)))
 
-(cl-loop
- for f in
- '(lisp-complete-symbol complete-symbol widget-complete)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak completion."
-     (ems-with-messages-silenced
-      (let ((prior (save-excursion (skip-syntax-backward "^ >") (point))))
-        ad-do-it
-        (if (> (point) prior)
-            (tts-with-punctuations
-             'all
-             (dtk-speak (buffer-substring prior (point))))
-          (emacsvox-speak-completions-if-available))
-        ad-return-value)))))
+(emacsvox-advice--define-completion-around-advice
+ (minibuffer-complete-word minibuffer-complete
+                           crm-complete-word crm-complete
+                           crm-complete-and-exit
+                           crm-minibuffer-complete
+                           crm-minibuffer-complete-and-exit)
+ emacsvox--minibuffer-completion-around)
+
+(defun emacsvox--symbol-completion-around
+    (_target original arguments)
+  "Call ORIGINAL once and announce symbol completion.
+ARGUMENTS are passed to ORIGINAL unchanged."
+  (let ((prior
+         (save-excursion
+           (skip-syntax-backward "^ >")
+           (point)))
+        result)
+    (ems-with-messages-silenced
+      (setq result (apply original arguments))
+      (if (> (point) prior)
+          (tts-with-punctuations
+           'all
+           (dtk-speak (buffer-substring prior (point))))
+        (emacsvox-speak-completions-if-available)))
+    result))
+
+(emacsvox-advice--define-completion-around-advice
+ (lisp-complete-symbol complete-symbol widget-complete)
+ emacsvox--symbol-completion-around)
 
 (define-key minibuffer-local-completion-map "\C-o" 'switch-to-completions)
 
