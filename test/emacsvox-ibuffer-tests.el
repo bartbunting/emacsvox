@@ -266,5 +266,171 @@
       '((icon delete-object)
         (speak "copied 3 filenames."))))))
 
+(defconst emacsvox-test--ibuffer-filter-sort-after-targets
+  '(ibuffer-interactive-filter-by-mode
+    ibuffer-recompile-formats ibuffer-switch-format
+    ibuffer-toggle-filter-group
+    ibuffer-filters-to-filter-group ibuffer-set-filter-groups-by-mode
+    ibuffer-clear-filter-groups ibuffer-jump-to-filter-group
+    ibuffer-kill-filter-group ibuffer-filter-disable
+    ibuffer-filter-by-mode ibuffer-filter-by-used-mode
+    ibuffer-filter-by-name ibuffer-filter-by-filename
+    ibuffer-filter-by-size-gt ibuffer-filter-by-size-lt
+    ibuffer-filter-by-content ibuffer-filter-by-predicate
+    ibuffer-toggle-sorting-mode ibuffer-invert-sorting
+    ibuffer-do-sort-by-major-mode ibuffer-do-sort-by-alphabetic
+    ibuffer-do-sort-by-size ibuffer-pop-filter)
+  "Ibuffer filtering and sorting commands with direct after advice.")
+
+(ert-deftest emacsvox-ibuffer-filter-sort-advice-is-directly-registered ()
+  "Ibuffer filter and sorting advice bypasses the bridge."
+  (dolist (target emacsvox-test--ibuffer-filter-sort-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers))))
+  (dolist
+      (entry
+       '((ibuffer-pop-filter-group
+          emacsvox--advice-ibuffer-pop-filter-group-around)
+         (ibuffer-yank-filter-group
+          emacsvox--advice-ibuffer-yank-filter-group-around)))
+    (pcase-let ((`(,target ,function) entry))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :around function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-ibuffer-filter-feedback-is-target-aware ()
+  "Only the matching interactive filter command emits its cue."
+  (let ((ems--interactive-fn-name 'ibuffer-filter-by-name)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-ibuffer-filter-by-mode-after)
+      (emacsvox--advice-ibuffer-filter-by-name-after))
+    (should (equal events '(task-done)))))
+
+(ert-deftest emacsvox-ibuffer-duplicate-filter-sort-advice-is-collapsed ()
+  "Duplicate legacy filter and sort definitions register only once."
+  (dolist
+      (entry
+       '((ibuffer-filter-by-predicate
+          emacsvox--advice-ibuffer-filter-by-predicate-after)
+         (ibuffer-toggle-sorting-mode
+          emacsvox--advice-ibuffer-toggle-sorting-mode-after)))
+    (pcase-let ((`(,target ,expected) entry)
+                (registrations 0))
+      (advice-mapc
+       (lambda (function _properties)
+         (when (eq function expected)
+           (cl-incf registrations)))
+       target)
+      (should (= registrations 1)))))
+
+(ert-deftest emacsvox-ibuffer-pop-filter-group-calls-original-once ()
+  "Interactive filter-group popping preserves one call and its result."
+  (let ((ems--interactive-fn-name 'ibuffer-pop-filter-group)
+        (ibuffer-filter-groups '(("Work" . ((mode . text-mode)))))
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (should
+       (eq
+        (emacsvox--advice-ibuffer-pop-filter-group-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (list 'original arguments) events)
+           'popped))
+        'popped)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original nil)
+        (icon task-done)
+        (speak "Popped group Work"))))))
+
+(ert-deftest emacsvox-ibuffer-yank-filter-group-preserves-order ()
+  "Interactive filter-group yanking cues around one original call."
+  (let ((ems--interactive-fn-name 'ibuffer-yank-filter-group)
+        (ibuffer-filter-group-kill-ring
+         '(("Archived" . ((name . "old")))))
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (should
+       (eq
+        (emacsvox--advice-ibuffer-yank-filter-group-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (list 'original arguments) events)
+           'yanked)
+         "Before")
+        'yanked)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((icon yank-object)
+        (original ("Before"))
+        (speak "Yanked Archived group."))))))
+
+(ert-deftest emacsvox-ibuffer-filter-group-programmatic-calls-still-run ()
+  "Programmatic pop and yank operations run once without feedback."
+  (let ((ems--interactive-fn-name nil)
+        (ibuffer-filter-groups '(("Work" . nil)))
+        (ibuffer-filter-group-kill-ring '(("Archived" . nil)))
+        (pop-calls 0)
+        (yank-calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (&rest arguments) (push arguments events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (&rest arguments) (push arguments events))))
+      (should
+       (eq
+        (emacsvox--advice-ibuffer-pop-filter-group-around
+         (lambda (&rest _)
+           (cl-incf pop-calls)
+           'popped))
+        'popped))
+      (should
+       (eq
+        (emacsvox--advice-ibuffer-yank-filter-group-around
+         (lambda (&rest _)
+           (cl-incf yank-calls)
+           'yanked)
+         "Before")
+        'yanked)))
+    (should (= pop-calls 1))
+    (should (= yank-calls 1))
+    (should-not events)))
+
+(ert-deftest emacsvox-ibuffer-kill-filter-group-uses-native-name ()
+  "Filter-group kill feedback uses the explicit native NAME argument."
+  (let ((ems--interactive-fn-name 'ibuffer-kill-filter-group)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox--advice-ibuffer-kill-filter-group-after "Work"))
+    (should
+     (equal
+      (nreverse events)
+      '((icon delete-object)
+        (speak "Killed Work group."))))))
+
 (provide 'emacsvox-ibuffer-tests)
 ;;; emacsvox-ibuffer-tests.el ends here

@@ -234,42 +234,46 @@
  #'emacsvox--advice-ibuffer-toggle-marks-after
  '((name . emacsvox)))
 
-(defun ems--ibuffer-interactive-filter-by-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-interactive-filter-by-mode-after (&rest _)
+  "Report the qualifiers after interactively filtering by mode."
+  (when (ems-interactive-p 'ibuffer-interactive-filter-by-mode)
     (emacsvox-icon 'modified-object)
     (dtk-speak
      (concat "Filtered by " (format "%s" ibuffer-filtering-qualifiers)))))
 
-(advice-add 'ibuffer-interactive-filter-by-mode :after
-            #'ems--ibuffer-interactive-filter-by-mode-after)
+(advice-add
+ 'ibuffer-interactive-filter-by-mode :after
+ #'emacsvox--advice-ibuffer-interactive-filter-by-mode-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-recompile-formats-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Recompiled formats")))
+(cl-loop
+ for (target announcement) in
+ '((ibuffer-recompile-formats "Recompiled formats")
+   (ibuffer-switch-format "Switched formats"))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and report an interactive Ibuffer format change."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)
+         (dtk-speak ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-recompile-formats :after
-            #'ems--ibuffer-recompile-formats-after)
-
-(defun ems--ibuffer-switch-format-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Switched formats")))
-
-(advice-add 'ibuffer-switch-format :after
-            #'ems--ibuffer-switch-format-after)
-
-(defun ems--ibuffer-toggle-filter-group-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (let
-        ((name (get-text-property (point) 'ibuffer-filter-group-name)))
+(defun emacsvox--advice-ibuffer-toggle-filter-group-after (&rest _)
+  "Report the group toggled interactively at point."
+  (when (ems-interactive-p 'ibuffer-toggle-filter-group)
+    (let ((name
+           (get-text-property (point) 'ibuffer-filter-group-name)))
       (emacsvox-icon 'modified-object)
       (dtk-speak (concat "Toggled group " (format "%s" name))))))
 
-(advice-add 'ibuffer-toggle-filter-group :after
-            #'ems--ibuffer-toggle-filter-group-after)
+(advice-add
+ 'ibuffer-toggle-filter-group :after
+ #'emacsvox--advice-ibuffer-toggle-filter-group-after
+ '((name . emacsvox)))
 
 (cl-loop
  for target in
@@ -290,172 +294,123 @@
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--ibuffer-filters-to-filter-group-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Group added.")))
+(cl-loop
+ for (target announcement) in
+ '((ibuffer-filters-to-filter-group "Group added.")
+   (ibuffer-set-filter-groups-by-mode "Filtered by major mode.")
+   (ibuffer-clear-filter-groups "Cleared all filter groups."))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and report an interactive Ibuffer filter-group change."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)
+         (dtk-speak ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-filters-to-filter-group :after
-            #'ems--ibuffer-filters-to-filter-group-after)
+(defun emacsvox--advice-ibuffer-pop-filter-group-around
+    (original &rest arguments)
+  "Call ORIGINAL once, then report the popped filter group."
+  (let ((name (caar ibuffer-filter-groups))
+        (interactive-p (ems-interactive-p 'ibuffer-pop-filter-group)))
+    (let ((result (apply original arguments)))
+      (when interactive-p
+        (emacsvox-icon 'task-done)
+        (dtk-speak (format "Popped group %s" name)))
+      result)))
 
-(defun ems--ibuffer-set-filter-groups-by-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Filtered by major mode.")))
+(advice-add
+ 'ibuffer-pop-filter-group :around
+ #'emacsvox--advice-ibuffer-pop-filter-group-around
+ '((name . emacsvox)))
 
-(advice-add 'ibuffer-set-filter-groups-by-mode :after
-            #'ems--ibuffer-set-filter-groups-by-mode-after)
-
-(defun ems--ibuffer-pop-filter-group-around (orig-fun &rest args)
-  "speak."
-  (when (ems-interactive-p)
-    (let ((name (car (car ibuffer-filter-groups))))
-      (apply orig-fun args) (emacsvox-icon 'task-done)
-      (dtk-speak (concat "Popped group " (format "%s" name))))))
-
-(advice-add 'ibuffer-pop-filter-group :around
-            #'ems--ibuffer-pop-filter-group-around)
-
-(defun ems--ibuffer-clear-filter-groups-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done)
-    (dtk-speak "Cleared all filter groups.")))
-
-(advice-add 'ibuffer-clear-filter-groups :after
-            #'ems--ibuffer-clear-filter-groups-after)
-
-(defun ems--ibuffer-jump-to-filter-group-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-jump-to-filter-group-after (&rest _)
+  "Cue and speak after an interactive filter-group jump."
+  (when (ems-interactive-p 'ibuffer-jump-to-filter-group)
     (emacsvox-icon 'large-movement)
     (emacsvox-ibuffer-speak-buffer-line)))
 
-(advice-add 'ibuffer-jump-to-filter-group :after
-            #'ems--ibuffer-jump-to-filter-group-after)
+(advice-add
+ 'ibuffer-jump-to-filter-group :after
+ #'emacsvox--advice-ibuffer-jump-to-filter-group-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-kill-filter-group-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-kill-filter-group-after (name)
+  "Report interactively killing the filter group NAME."
+  (when (ems-interactive-p 'ibuffer-kill-filter-group)
     (emacsvox-icon 'delete-object)
     (dtk-speak (format "Killed %s group." name))))
 
-(advice-add 'ibuffer-kill-filter-group :after
-            #'ems--ibuffer-kill-filter-group-after)
+(advice-add
+ 'ibuffer-kill-filter-group :after
+ #'emacsvox--advice-ibuffer-kill-filter-group-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-yank-filter-group-around (orig-fun &rest args)
-  "speak"
-  (when (ems-interactive-p)
-    (let ((name (car (car ibuffer-filter-group-kill-ring))))
-      (emacsvox-icon 'yank-object) (apply orig-fun args)
-      (dtk-speak (format "Yanked %s group." name)))))
+(defun emacsvox--advice-ibuffer-yank-filter-group-around
+    (original &rest arguments)
+  "Call ORIGINAL once and report the yanked filter group."
+  (let ((name (caar ibuffer-filter-group-kill-ring))
+        (interactive-p (ems-interactive-p 'ibuffer-yank-filter-group)))
+    (when interactive-p
+      (emacsvox-icon 'yank-object))
+    (let ((result (apply original arguments)))
+      (when interactive-p
+        (dtk-speak (format "Yanked %s group." name)))
+      result)))
 
-(advice-add 'ibuffer-yank-filter-group :around
-            #'ems--ibuffer-yank-filter-group-around)
+(advice-add
+ 'ibuffer-yank-filter-group :around
+ #'emacsvox--advice-ibuffer-yank-filter-group-around
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-filter-disable-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Disabled all filters.")))
+(defun emacsvox--advice-ibuffer-filter-disable-after (&rest _)
+  "Report interactively disabling all Ibuffer filters."
+  (when (ems-interactive-p 'ibuffer-filter-disable)
+    (emacsvox-icon 'task-done)
+    (dtk-speak "Disabled all filters.")))
 
-(advice-add 'ibuffer-filter-disable :after
-            #'ems--ibuffer-filter-disable-after)
+(advice-add
+ 'ibuffer-filter-disable :after
+ #'emacsvox--advice-ibuffer-filter-disable-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-filter-by-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(cl-loop
+ for target in
+ '(ibuffer-filter-by-mode ibuffer-filter-by-used-mode
+   ibuffer-filter-by-name ibuffer-filter-by-filename
+   ibuffer-filter-by-size-gt ibuffer-filter-by-size-lt
+   ibuffer-filter-by-content ibuffer-filter-by-predicate
+   ibuffer-toggle-sorting-mode ibuffer-invert-sorting)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue an interactive Ibuffer filtering or sorting change."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-filter-by-mode :after
-            #'ems--ibuffer-filter-by-mode-after)
-
-(defun ems--ibuffer-filter-by-used-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-used-mode :after
-            #'ems--ibuffer-filter-by-used-mode-after)
-
-(defun ems--ibuffer-filter-by-name-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-name :after
-            #'ems--ibuffer-filter-by-name-after)
-
-(defun ems--ibuffer-filter-by-filename-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-filename :after
-            #'ems--ibuffer-filter-by-filename-after)
-
-(defun ems--ibuffer-filter-by-size-gt-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-size-gt :after
-            #'ems--ibuffer-filter-by-size-gt-after)
-
-(defun ems--ibuffer-filter-by-size-lt-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-size-lt :after
-            #'ems--ibuffer-filter-by-size-lt-after)
-
-(defun ems--ibuffer-filter-by-content-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-content :after
-            #'ems--ibuffer-filter-by-content-after)
-
-(defun ems--ibuffer-filter-by-predicate-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-predicate :after
-            #'ems--ibuffer-filter-by-predicate-after)
-
-(defun ems--ibuffer-filter-by-predicate-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-filter-by-predicate :after
-            #'ems--ibuffer-filter-by-predicate-after)
-
-(defun ems--ibuffer-toggle-sorting-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-toggle-sorting-mode :after
-            #'ems--ibuffer-toggle-sorting-mode-after)
-
-(defun ems--ibuffer-toggle-sorting-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-toggle-sorting-mode :after
-            #'ems--ibuffer-toggle-sorting-mode-after)
-
-(defun ems--ibuffer-invert-sorting-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'ibuffer-invert-sorting :after
-            #'ems--ibuffer-invert-sorting-after)
-
-(defun ems--ibuffer-do-sort-by-major-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Sorted by major mode.")))
-
-(advice-add 'ibuffer-do-sort-by-major-mode :after
-            #'ems--ibuffer-do-sort-by-major-mode-after)
-
-(defun ems--ibuffer-do-sort-by-alphabetic-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Sorted alphabetically.")))
-
-(advice-add 'ibuffer-do-sort-by-alphabetic :after
-            #'ems--ibuffer-do-sort-by-alphabetic-after)
-
-(defun ems--ibuffer-do-sort-by-size-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Sorted by size.")))
-
-(advice-add 'ibuffer-do-sort-by-size :after
-            #'ems--ibuffer-do-sort-by-size-after)
+(cl-loop
+ for (target announcement) in
+ '((ibuffer-do-sort-by-major-mode "Sorted by major mode.")
+   (ibuffer-do-sort-by-alphabetic "Sorted alphabetically.")
+   (ibuffer-do-sort-by-size "Sorted by size."))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and report an interactive Ibuffer sort."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)
+         (dtk-speak ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--ibuffer-bs-show-after (&rest _)
   "speak."
@@ -535,12 +490,16 @@
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--ibuffer-pop-filter-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-ibuffer-pop-filter-after (&rest _)
+  "Cue and speak after interactively popping an Ibuffer filter."
+  (when (ems-interactive-p 'ibuffer-pop-filter)
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'ibuffer-pop-filter :after #'ems--ibuffer-pop-filter-after)
+(advice-add
+ 'ibuffer-pop-filter :after
+ #'emacsvox--advice-ibuffer-pop-filter-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-ibuffer)
 ;;;  end of file
