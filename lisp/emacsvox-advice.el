@@ -432,71 +432,59 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 
 ;;;  Advise modify case commands to speak
 
-(defun ems--upcase-word-around (orig-fun &rest args)
-  "Provide a tone, then Speak the word at point. "
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone-upcase)
-      (cond
-       ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
-        (apply orig-fun args)
-        (let ((start (point)))
-          (save-excursion
-            (forward-word current-prefix-arg)
-            (emacsvox-speak-region start (point)))))
-       (t (apply orig-fun args)
-          (save-excursion
-            (skip-syntax-forward " ")
-            (if (eobp) (message "Upper cased final word in buffer")
-              (emacsvox-speak-word))))))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--case-word-around
+    (target tone final-message original arguments)
+  "Call ORIGINAL once, then speak TARGET's case change.
+TONE is played before an interactive change.  FINAL-MESSAGE is announced when
+the change leaves point at the end of the buffer.  ARGUMENTS are passed through
+unchanged."
+  (if (ems-interactive-p target)
+      (progn
+        (funcall tone)
+        (let ((result (apply original arguments)))
+          (cond
+           ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
+            (let ((start (point)))
+              (save-excursion
+                (forward-word current-prefix-arg)
+                (emacsvox-speak-region start (point)))))
+           (t
+            (save-excursion
+              (skip-syntax-forward " ")
+              (if (eobp) (message "%s" final-message)
+                (emacsvox-speak-word)))))
+          result))
+    (apply original arguments)))
 
-(advice-add 'upcase-word :around #'ems--upcase-word-around)
+(defun emacsvox--advice-upcase-word-around (original &rest arguments)
+  "Provide a tone, then speak after `upcase-word'."
+  (emacsvox--case-word-around
+   'upcase-word #'dtk-tone-upcase "Upper cased final word in buffer"
+   original arguments))
 
-(defun ems--downcase-word-around (orig-fun &rest args)
-  "Provide a tone and Speak  word at point. "
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone-downcase)
-      (cond
-       ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
-        (apply orig-fun args)
-        (let ((start (point)))
-          (save-excursion
-            (forward-word current-prefix-arg)
-            (emacsvox-speak-region start (point)))))
-       (t (apply orig-fun args)
-          (save-excursion
-            (skip-syntax-forward " ")
-            (if (eobp) (message "Lower cased final word in buffer")
-              (emacsvox-speak-word))))))
-     (t (apply orig-fun args)))
-    result))
+(advice-add
+ 'upcase-word :around #'emacsvox--advice-upcase-word-around
+ '((name . emacsvox)))
 
-(advice-add 'downcase-word :around #'ems--downcase-word-around)
+(defun emacsvox--advice-downcase-word-around (original &rest arguments)
+  "Provide a tone, then speak after `downcase-word'."
+  (emacsvox--case-word-around
+   'downcase-word #'dtk-tone-downcase "Lower cased final word in buffer"
+   original arguments))
 
-(defun ems--capitalize-word-around (orig-fun &rest args)
-  "Provide a tone  and Speak  word at point. "
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone-upcase)
-      (cond
-       ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
-        (apply orig-fun args)
-        (let ((start (point)))
-          (save-excursion
-            (forward-word current-prefix-arg)
-            (emacsvox-speak-region start (point)))))
-       (t (apply orig-fun args)
-          (save-excursion
-            (skip-syntax-forward " ")
-            (if (eobp) (message "Capitalized final word in buffer")
-              (emacsvox-speak-word))))))
-     (t (apply orig-fun args)))
-    result))
+(advice-add
+ 'downcase-word :around #'emacsvox--advice-downcase-word-around
+ '((name . emacsvox)))
 
-(advice-add 'capitalize-word :around #'ems--capitalize-word-around)
+(defun emacsvox--advice-capitalize-word-around (original &rest arguments)
+  "Provide a tone, then speak after `capitalize-word'."
+  (emacsvox--case-word-around
+   'capitalize-word #'dtk-tone-upcase "Capitalized final word in buffer"
+   original arguments))
+
+(advice-add
+ 'capitalize-word :around #'emacsvox--advice-capitalize-word-around
+ '((name . emacsvox)))
 
 ;;;  Advice insert-char:
 

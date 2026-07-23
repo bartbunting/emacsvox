@@ -116,4 +116,19 @@
 	 (speak (:text "alpha")))
 	:value nil :state
 	(:text "beta\n" :point 1 :mark nil :mark-active nil :modified
-	       t :kill-ring ("alpha\n"))))
+	       t :kill-ring ("alpha\n")))
+ (:name upcase-word :events
+	((tone 800 100 force) (speak (:text "beta"))) :value nil
+	:state
+	(:text "ALPHA beta gamma" :point 6 :mark nil :mark-active nil
+	       :modified t :kill-ring nil))
+ (:name downcase-word :events
+	((tone 600 100 force) (speak (:text "BETA"))) :value nil
+	:state
+	(:text "alpha BETA GAMMA" :point 6 :mark nil :mark-active nil
+	       :modified t :kill-ring nil))
+ (:name capitalize-word :events
+	((tone 800 100 force) (speak (:text "beta"))) :value nil
+	:state
+	(:text "Alpha beta gamma" :point 6 :mark nil :mark-active nil
+	       :modified t :kill-ring nil)))

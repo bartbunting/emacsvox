@@ -151,6 +151,24 @@
      :arguments (1)
      :interactive t
      :text "alpha\nbeta\n"
+     :point 1)
+    (:name upcase-word
+     :command upcase-word
+     :arguments (1)
+     :interactive t
+     :text "alpha beta gamma"
+     :point 1)
+    (:name downcase-word
+     :command downcase-word
+     :arguments (1)
+     :interactive t
+     :text "ALPHA BETA GAMMA"
+     :point 1)
+    (:name capitalize-word
+     :command capitalize-word
+     :arguments (1)
+     :interactive t
+     :text "alpha beta gamma"
      :point 1))
   "Core scenarios used for Emacsvox and Emacspeak trace comparison.")
 

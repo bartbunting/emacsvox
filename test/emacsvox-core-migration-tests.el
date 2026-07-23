@@ -44,6 +44,9 @@
     (backward-delete-char-untabify :around
      emacsvox--advice-backward-delete-char-untabify-around)
     (delete-backward-char :around emacsvox--advice-delete-backward-char-around)
+    (upcase-word :around emacsvox--advice-upcase-word-around)
+    (downcase-word :around emacsvox--advice-downcase-word-around)
+    (capitalize-word :around emacsvox--advice-capitalize-word-around)
     (forward-button :around emacsvox--advice-forward-button-around)
     (backward-button :around emacsvox--advice-backward-button-around)
     (forward-sexp :around emacsvox--advice-forward-sexp-around)
@@ -271,6 +274,56 @@
     (insert "a" (string 160) "b" (string 160) "c")
     (emacsvox--advice-untabify-after 1 4)
     (should (equal (buffer-string) (concat "a b" (string 160) "c")))))
+
+(ert-deftest emacsvox-core-case-word-advice-calls-original-once-interactively ()
+  "Interactive case changes play a tone, call once, then speak ahead."
+  (with-temp-buffer
+    (insert "alpha beta gamma")
+    (goto-char 1)
+    (let ((ems--interactive-fn-name 'upcase-word)
+          (current-prefix-arg nil)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'dtk-tone-upcase)
+                 (lambda () (push 'tone events)))
+                ((symbol-function 'emacsvox-speak-word)
+                 (lambda (&rest _)
+                   (push (list 'speak-word (point)) events))))
+        (should
+         (eq
+          (emacsvox--advice-upcase-word-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push (list 'original arguments) events)
+             (goto-char 6)
+             'case-result)
+           1)
+          'case-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '(tone (original (1)) (speak-word 7)))))))
+
+(ert-deftest emacsvox-core-case-word-advice-calls-original-once-programmatically ()
+  "Programmatic case changes call once without speech feedback."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        feedback)
+    (cl-letf (((symbol-function 'dtk-tone-downcase)
+               (lambda () (setq feedback t)))
+              ((symbol-function 'emacsvox-speak-word)
+               (lambda (&rest _) (setq feedback t))))
+      (should
+       (eq
+        (emacsvox--advice-downcase-word-around
+         (lambda (&rest _)
+           (cl-incf calls)
+           'case-result)
+         1)
+        'case-result)))
+    (should (= calls 1))
+    (should-not feedback)))
 
 (provide 'emacsvox-core-migration-tests)
 ;;; emacsvox-core-migration-tests.el ends here
