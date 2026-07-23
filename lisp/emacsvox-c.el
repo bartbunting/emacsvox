@@ -384,16 +384,25 @@ and their meanings. ")
 
 ;;;   indenting commands
 
-(defun ems--c-indent-defun-after (&rest _)
-  (when (ems-interactive-p)
+(defun emacsvox--advice-c-indent-defun-after (&rest _)
+  "Cue completion after interactively indenting a function."
+  (when (ems-interactive-p 'c-indent-defun)
     (emacsvox-icon 'fill-object) (message "Indented function")))
 
-(advice-add 'c-indent-defun :after #'ems--c-indent-defun-after)
+(advice-add
+ 'c-indent-defun :after
+ #'emacsvox--advice-c-indent-defun-after
+ '((name . emacsvox)))
 
-(defun ems--c-indent-command-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-c-indent-command-after (&rest _)
+  "Speak the line after an interactive indentation command."
+  (when (ems-interactive-p 'c-indent-command)
+    (emacsvox-speak-line)))
 
-(advice-add 'c-indent-command :after #'ems--c-indent-command-after)
+(advice-add
+ 'c-indent-command :after
+ #'emacsvox--advice-c-indent-command-after
+ '((name . emacsvox)))
 
 ;;;  Additional Interactive Commands:
 
@@ -428,24 +437,31 @@ and their meanings. ")
        (advice-add
         ',target :after #',function '((name . emacsvox)))))))
 
-(defun ems--c-backslash-region-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-c-backslash-region-after (&rest _)
+  "Cue and speak the region after interactive backslash insertion."
+  (when (ems-interactive-p 'c-backslash-region)
     (emacsvox-icon 'task-done)
     (emacsvox-speak-region (point) (mark))))
 
-(advice-add 'c-backslash-region :after #'ems--c-backslash-region-after)
+(advice-add
+ 'c-backslash-region :after
+ #'emacsvox--advice-c-backslash-region-after
+ '((name . emacsvox)))
 
 (cl-loop
- for f in
- '(c-context-line-break c-context-open-line)
+ for target in '(c-context-line-break c-context-open-line)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'open-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak and cue after an interactive contextual line insertion."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'open-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
  for target in
@@ -463,31 +479,42 @@ and their meanings. ")
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 (cl-loop
- for f in
+ for target in
  '(
    c-indent-new-comment-line c-indent-line-or-region
    c-indent-exp c-fill-paragraph)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'fill-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive CC Mode formatting command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'fill-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in
+ for target in
  '(
    c-toggle-auto-hungry-state c-toggle-auto-newline
    c-toggle-electric-state c-toggle-hungry-state c-toggle-parse-state-debug
    c-toggle-syntactic-indentation)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ for announcement = (symbol-name target)
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'button)
-       (message   "Toggled %s"  ,(symbol-name f))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and report an interactive CC Mode state toggle."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'button)
+         (message "Toggled %s" ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  Additional keybindings:
 

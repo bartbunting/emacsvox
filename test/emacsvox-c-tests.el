@@ -169,5 +169,88 @@
       (nreverse events)
       '(line (icon large-movement))))))
 
+(defconst emacsvox-test--c-formatting-after-targets
+  '(c-indent-defun
+    c-indent-command
+    c-backslash-region
+    c-context-line-break
+    c-context-open-line
+    c-indent-new-comment-line
+    c-indent-line-or-region
+    c-indent-exp
+    c-fill-paragraph
+    c-toggle-auto-hungry-state
+    c-toggle-auto-newline
+    c-toggle-electric-state
+    c-toggle-hungry-state
+    c-toggle-parse-state-debug
+    c-toggle-syntactic-indentation)
+  "CC Mode formatting and toggle commands with direct after advice.")
+
+(ert-deftest emacsvox-c-formatting-advice-is-directly-registered ()
+  "CC Mode formatting advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--c-formatting-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-c-context-line-feedback-preserves-reference-order ()
+  "Contextual line insertion speaks before its opening cue."
+  (let ((ems--interactive-fn-name 'c-context-open-line)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda (&rest _) (push 'line events))))
+      (emacsvox--advice-c-context-line-break-after)
+      (emacsvox--advice-c-context-open-line-after))
+    (should
+     (equal
+      (nreverse events)
+      '(line (icon open-object))))))
+
+(ert-deftest emacsvox-c-toggle-feedback-is-target-aware ()
+  "Only the matching interactive CC Mode toggle is announced."
+  (let ((ems--interactive-fn-name 'c-toggle-electric-state)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (list 'message
+                        (apply #'format format-string arguments))
+                  events))))
+      (emacsvox--advice-c-toggle-auto-newline-after)
+      (emacsvox--advice-c-toggle-electric-state-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon button) (message "Toggled c-toggle-electric-state"))))))
+
+(ert-deftest emacsvox-c-backslash-region-speaks-post-command-region ()
+  "Backslash feedback uses the current point and mark after the command."
+  (with-temp-buffer
+    (insert "alpha")
+    (goto-char 2)
+    (set-mark 5)
+    (let ((ems--interactive-fn-name 'c-backslash-region)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'emacsvox-speak-region)
+                 (lambda (start end)
+                   (push (list 'region start end) events))))
+        (emacsvox--advice-c-backslash-region-after))
+      (should
+       (equal
+        (nreverse events)
+        '((icon task-done) (region 2 5)))))))
+
 (provide 'emacsvox-c-tests)
 ;;; emacsvox-c-tests.el ends here
