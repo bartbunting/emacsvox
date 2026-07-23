@@ -38,7 +38,7 @@ must become conservative and test-driven before further bulk use.
 As of the completed core-file migration and first built-in integration slices
 on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 314 passing ERT tests;
+- the Emacs 31 suite contains 328 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -53,12 +53,12 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         349 |   114 |
-| =ad-get-arg=        |          83 |   n/a |
+| =defadvice=         |         341 |   112 |
+| =ad-get-arg=        |          79 |   n/a |
 | =ad-set-arg=        |           3 |   n/a |
-| =ad-do-it=          |          43 |   n/a |
+| =ad-do-it=          |          42 |   n/a |
 | =ad-return-value=   |          26 |   n/a |
-| =advice-add=        |        1413 |   154 |
+| =advice-add=        |        1408 |   154 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -76,16 +76,23 @@ function rather than returning the result of speech output.
 
 The first built-in integration slices converted Compilation, Windmove, FFAP,
 IDO, Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, and
-Proced.  Each module has direct-registration and target-aware feedback tests,
-and each conversion is an independently revertible commit.  Debugger, table
-editing, and Proced are now completely independent of the compatibility bridge;
-54 files still contain bridge compatibility symbols.
+Proced, View, and Calendar.  Each module has direct-registration and
+target-aware feedback tests, and each conversion is an independently revertible
+commit.  These modules are now completely independent of the compatibility
+bridge; 52 files still contain bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
 The table conversion also corrected converter regressions where deletion and
 newline-and-indent advice invoked the original command twice.  Those wrappers
 now give feedback in upstream order and invoke the original exactly once.
+
+The View conversion restored a dead generated scroll-advice family and targets
+the View scrolling commands that exist in Emacs 31.  The Calendar conversion
+likewise replaces obsolete command names with current Emacs 31 Calendar and
+Diary APIs.  It also corrects duplicate original calls in =calendar-read= and
+Diary marking while preserving their return values and message-silencing
+semantics.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
