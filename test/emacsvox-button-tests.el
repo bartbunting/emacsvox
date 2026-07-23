@@ -12,7 +12,8 @@
 (defconst emacsvox-test--button-direct-advice
   '((make-button :after emacsvox--advice-make-button-after)
     (make-text-button :after
-     emacsvox--advice-make-text-button-after))
+     emacsvox--advice-make-text-button-after)
+    (push-button :after emacsvox--advice-push-button-after))
   "Button creation functions using individually named native advice.")
 
 (ert-deftest emacsvox-button-advice-is-directly-registered ()
@@ -40,6 +41,15 @@
     (should-not
      (emacsvox--advice-make-text-button-after "button" nil))
     (should-not (get-text-property 1 'auditory-icon))))
+
+(ert-deftest emacsvox-push-button-feedback-is-target-aware ()
+  "Only interactive button activation produces its auditory cue."
+  (let ((ems--interactive-fn-name 'push-button)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-push-button-after))
+    (should (equal events '((icon button))))))
 
 (provide 'emacsvox-button-tests)
 ;;; emacsvox-button-tests.el ends here

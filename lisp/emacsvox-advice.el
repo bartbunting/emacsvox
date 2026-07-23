@@ -2853,15 +2853,13 @@ TARGET identifies the command, STATE is its new value, and SETTING names it."
 
 ;;;  mail aliases
 
-(defun ems--expand-mail-aliases-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (let ((end (point)) (start (re-search-backward " " nil t)))
-      (message (buffer-substring start end))
-      (emacsvox-icon 'select-object))))
-
-(advice-add 'expand-mail-aliases :after
-            #'ems--expand-mail-aliases-after)
+(emacsvox-advice--define-interactive-after-advice
+    (expand-mail-aliases)
+    "Speak the expanded mail alias at point."
+  (let ((end (point))
+        (start (re-search-backward " " nil t)))
+    (message (buffer-substring start end))
+    (emacsvox-icon 'select-object)))
 
 ;;;  elint
 
@@ -2931,11 +2929,10 @@ TARGET identifies the Elint command, and ARGUMENTS are passed unchanged."
  'make-text-button :after #'emacsvox--advice-make-text-button-after
  '((name . emacsvox)))
 
-(defun ems--push-button-after (&rest _)
-  "Produce auditory icon."
-  (when (ems-interactive-p) (emacsvox-icon 'button)))
-
-(advice-add 'push-button :after #'ems--push-button-after)
+(emacsvox-advice--define-interactive-after-advice
+    (push-button)
+    "Cue interactive button activation."
+  (emacsvox-icon 'button))
 
 ;;;  silence whitespace cleanup:
 
@@ -3190,12 +3187,11 @@ played afterward according to the result."
 
 ;;; log-edit-done
 
-(defun ems--log-edit-done-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'close-object)))
-
-(advice-add 'log-edit-done :after #'ems--log-edit-done-after)
+(emacsvox-advice--define-interactive-after-advice
+    (log-edit-done)
+    "Speak the resulting mode line and cue the closed log edit."
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'close-object))
 
 ;;;  advice find-func etc.
 

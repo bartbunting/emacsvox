@@ -35,7 +35,9 @@
     (vc-dir-hide-up-to-date :after
      emacsvox--advice-vc-dir-hide-up-to-date-after)
     (vc-dir-kill-line :after
-     emacsvox--advice-vc-dir-kill-line-after))
+     emacsvox--advice-vc-dir-kill-line-after)
+    (log-edit-done :after
+     emacsvox--advice-log-edit-done-after))
   "Version-control functions using individually defined native advice.")
 
 (ert-deftest emacsvox-vc-advice-is-directly-registered ()
@@ -226,6 +228,20 @@
       (nreverse events)
       '((icon close-object)
         (message "Checked in version 42 "))))))
+
+(ert-deftest emacsvox-log-edit-done-feedback-preserves-order ()
+  "Completing an interactive log edit speaks before its close cue."
+  (let ((ems--interactive-fn-name 'log-edit-done)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-log-edit-done-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-mode-line (icon close-object))))))
 
 (provide 'emacsvox-vc-tests)
 ;;; emacsvox-vc-tests.el ends here

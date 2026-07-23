@@ -31,7 +31,7 @@
   "Mail field commands converted to per-target native advice.")
 
 (defconst emacsvox-test--mail-action-targets
-  '(mail-signature mail-send-and-exit compose-mail)
+  '(mail-signature mail-send-and-exit compose-mail expand-mail-aliases)
   "Mail actions converted to per-target native advice.")
 
 (defun emacsvox-test--mail-field-advice-function (target)
@@ -133,6 +133,27 @@
      (equal
       (nreverse events)
       '((icon open-object) speak-line)))))
+
+(ert-deftest emacsvox-expand-mail-aliases-speaks-expanded-address ()
+  "Interactive alias expansion reports the address before its selection cue."
+  (with-temp-buffer
+    (insert "To: person@example.com")
+    (let ((ems--interactive-fn-name 'expand-mail-aliases)
+          events)
+      (cl-letf (((symbol-function 'message)
+                 (lambda (format-string &rest arguments)
+                   (push
+                    (list 'message
+                          (apply #'format format-string arguments))
+                    events)))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-expand-mail-aliases-after))
+      (should
+       (equal
+        (nreverse events)
+        '((message " person@example.com")
+          (icon select-object)))))))
 
 (provide 'emacsvox-mail-tests)
 ;;; emacsvox-mail-tests.el ends here
