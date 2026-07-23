@@ -89,6 +89,7 @@
   (require 'emacsvox-xref-tests)
   (require 'emacsvox-org-tests)
   (require 'emacsvox-outline-tests)
+  (require 'emacsvox-eww-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

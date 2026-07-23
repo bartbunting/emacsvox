@@ -798,17 +798,21 @@ are available are cued by an auditory icon on the header line."
 ;;;  Advice Interactive Commands:
 
 (cl-loop
- for f in
+ for target in
  '(eww-up-url eww-top-url
               eww-next-url eww-previous-url
               eww-back-url eww-forward-url)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak"
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-header-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive EWW URL navigation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-header-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defvar-local emacsvox-eww-style nil
   "Record if we applied an  xsl style in this buffer.")
@@ -850,14 +854,18 @@ are available are cued by an auditory icon on the header line."
 (advice-add 'eww-reload :around #'ems--eww-reload-around)
 
 (cl-loop
- for f in
+ for target in
  '(eww eww-open-in-new-buffer eww-reload eww-open-file)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak"
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue after an interactive EWW open operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defvar emacsvox-eww-rename-buffer t
   "Result buffer is renamed to document title.")
@@ -880,101 +888,92 @@ are available are cued by an auditory icon on the header line."
 
 (add-hook 'eww-after-render-hook 'emacsvox-eww-after-render-hook)
 
-(defun ems--eww-add-bookmark-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'eww-add-bookmark :after #'ems--eww-add-bookmark-after)
-
-(defun ems--eww-beginning-of-text-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'large-movement)))
-
-(advice-add 'eww-beginning-of-text :after
-            #'ems--eww-beginning-of-text-after)
-
-(defun ems--eww-end-of-text-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
-
-(advice-add 'eww-end-of-text :after #'ems--eww-end-of-text-after)
-
-(defun ems--eww-bookmark-browse-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
-
-(advice-add 'eww-bookmark-browse :after
-            #'ems--eww-bookmark-browse-after)
-
-(defun ems--eww-bookmark-kill-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
-
-(advice-add 'eww-bookmark-kill :after #'ems--eww-bookmark-kill-after)
-
-(defun ems--eww-bookmark-yank-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
-
-(advice-add 'eww-bookmark-yank :after #'ems--eww-bookmark-yank-after)
-
-(defun ems--eww-list-bookmarks-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
-
-(advice-add 'eww-list-bookmarks :after #'ems--eww-list-bookmarks-after)
-
 (cl-loop
- for f in
- '(eww-next-bookmark eww-previous-bookmark)
+ for (target icon) in
+ '((eww-add-bookmark mark-object)
+   (eww-beginning-of-text large-movement)
+   (eww-end-of-text mark-object)
+   (eww-bookmark-browse open-object)
+   (eww-bookmark-kill delete-object)
+   (eww-bookmark-yank yank-object)
+   (eww-list-bookmarks open-object))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f(after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p) (emacsvox-icon 'select-object))
-     (emacsvox-speak-line))))
-
-(defun ems--eww-quit-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
-
-(advice-add 'eww-quit :after #'ems--eww-quit-after)
+  `(progn
+     (defun ,function (&rest _)
+       "Cue after an interactive EWW bookmark operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon ',icon)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in
+ for target in
+ '(eww-next-bookmark eww-previous-bookmark)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after EWW bookmark movement and cue interactive movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object))
+       (emacsvox-speak-line))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
+
+;; Emacs 31 exits EWW through `quit-window'; `eww-quit' no longer exists.
+
+(cl-loop
+ for target in
  '(eww-change-select
    eww-toggle-checkbox
    eww-submit)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'button)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue after an interactive EWW form operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'button)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 (defvar-local emacsvox-eww-a-speaker nil
   "Specialized link speaker.")
 
 (cl-loop
- for f in
+ for target in
  '(shr-next-link shr-previous-link)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     
-     (when (ems-interactive-p)
-       (let ((host
-              (condition-case nil
-                  (url-host
-                   (url-generic-parse-url
-                    (funcall emacsvox-eww-url-at-point)))
-                (error ""))))
-         (cond                          ; smarter icon:
-          ((or
-            emacsvox-we-url-executor
-            (string-match "reddit" host)
-            (string-match "wikipedia" host))
-           (emacsvox-icon 'item))
-          (t (emacsvox-icon 'button))))
-       (cond
-        (emacsvox-eww-a-speaker (funcall emacsvox-eww-a-speaker))
-        (t 
-         (emacsvox-speak-region
-          (point)
-          (next-single-property-change
-           (point) 'help-echo nil (point-max)))))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive EWW link navigation."
+       (when (ems-interactive-p ',target)
+         (let ((host
+                (condition-case nil
+                    (url-host
+                     (url-generic-parse-url
+                      (funcall emacsvox-eww-url-at-point)))
+                  (error ""))))
+           (emacsvox-icon
+            (if (or
+                 emacsvox-we-url-executor
+                 (string-match "reddit" host)
+                 (string-match "wikipedia" host))
+                'item
+              'button)))
+         (if emacsvox-eww-a-speaker
+             (funcall emacsvox-eww-a-speaker)
+           (emacsvox-speak-region
+            (point)
+            (next-single-property-change
+             (point) 'help-echo nil (point-max))))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;; Handle emacsvox-we-url-executor
 
@@ -1120,12 +1119,15 @@ Note that the Web browser should reset this hook after using it.")
 
 ;; Mark cache to be dirty if we restore history:
 
-(defun ems--eww-restore-history-after (&rest _)
-  "mark cache dirty." (setq emacsvox-eww-cache-updated nil)
+(defun emacsvox--advice-eww-restore-history-after (&rest _)
+  "Invalidate and rebuild EWW DOM caches after restoring history."
+  (setq emacsvox-eww-cache-updated nil)
   (emacsvox-eww-prepare-eww))
 
-(advice-add 'eww-restore-history :after
-            #'ems--eww-restore-history-after)
+(advice-add
+ 'eww-restore-history :after
+ #'emacsvox--advice-eww-restore-history-after
+ '((name . emacsvox)))
 
 (defvar-local eww-id-cache nil
   "Cache of id values. Is buffer-local.")
@@ -2029,38 +2031,48 @@ The %s is automatically spoken if there is no user activity."
         (dtk-speak (buffer-name buffer))
       (message "Can't find an EWW buffer for this line. "))))
 
-(defun ems--eww-list-buffers-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-eww-speak-buffer-line)))
-
-(advice-add 'eww-list-buffers :after #'ems--eww-list-buffers-after)
-
-(defun ems--eww-buffer-kill-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-eww-speak-buffer-line)))
-
-(advice-add 'eww-buffer-kill :after #'ems--eww-buffer-kill-after)
-
-(defun ems--eww-buffer-select-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)
-    (emacsvox-icon 'open-object)))
-
-(advice-add 'eww-buffer-select :after #'ems--eww-buffer-select-after)
-
 (cl-loop
- for f in
- '(eww-buffer-show-next eww-buffer-show-previous)
+ for (target icon) in
+ '((eww-list-buffers open-object)
+   (eww-buffer-kill close-object))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-eww-speak-buffer-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive EWW buffer-list operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon ',icon)
+         (emacsvox-eww-speak-buffer-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
+
+(defun emacsvox--advice-eww-buffer-select-after (&rest _)
+  "Cue and speak after interactively selecting an EWW buffer."
+  (when (ems-interactive-p 'eww-buffer-select)
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-mode-line)
+    (emacsvox-icon 'open-object)))
+
+(advice-add
+ 'eww-buffer-select :after
+ #'emacsvox--advice-eww-buffer-select-after
+ '((name . emacsvox)))
+
+(cl-loop
+ for target in
+ '(eww-buffer-show-next eww-buffer-show-previous)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive EWW buffer-list movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-eww-speak-buffer-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;   EWW Filtering shortcuts:
 
