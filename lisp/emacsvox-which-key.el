@@ -122,67 +122,102 @@
 
 ;;;  Advice interactive commands:
 
-(defadvice which-key--show-page (after emacsvox pre act comp)
+(defun emacsvox--advice-which-key--show-page-after (&rest _)
   "Speak the which-key page."
   (when emacsvox-which-key--auto-speak
     (emacsvox-icon 'help)
     (emacsvox-which-key--speak-page)))
 
-(defadvice which-key--hide-popup (after emacsvox pre act comp)
+(advice-add
+ 'which-key--show-page :after
+ #'emacsvox--advice-which-key--show-page-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-which-key--hide-popup-after (&rest _)
   "Announce popup hidden."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'which-key--hide-popup)
     (dtk-stop 'all)
     (emacsvox-icon 'close-object)))
 
-(defadvice which-key-abort (after emacsvox pre act comp)
+(advice-add
+ 'which-key--hide-popup :after
+ #'emacsvox--advice-which-key--hide-popup-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-which-key-abort-after (&rest _)
   "Speak abort feedback."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'which-key-abort)
     (dtk-stop 'all)
     (emacsvox-icon 'close-object)))
 
-(defadvice which-key-undo-key (after emacsvox pre act comp)
+(advice-add
+ 'which-key-abort :after
+ #'emacsvox--advice-which-key-abort-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-which-key-undo-key-after (&rest _)
   "Speak undo feedback."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'which-key-undo-key)
     (emacsvox-icon 'item)
     (dtk-speak "undo")))
 
-(defadvice which-key-show-standard-help (before emacsvox pre act comp)
+(advice-add
+ 'which-key-undo-key :after
+ #'emacsvox--advice-which-key-undo-key-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-which-key-show-standard-help-before (&rest _)
   "Announce showing help."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'which-key-show-standard-help)
     (emacsvox-icon 'help)))
+
+(advice-add
+ 'which-key-show-standard-help :before
+ #'emacsvox--advice-which-key-show-standard-help-before
+ '((name . emacsvox)))
 
 ;;; Batch advice for paging commands:
 
 (cl-loop
- for (f icon) in
- '((which-key-show-next-page-cycle scroll)
-   (which-key-show-previous-page-cycle scroll)
-   (which-key-show-next-page-no-cycle scroll)
-   (which-key-show-previous-page-no-cycle scroll))
+ for target in
+ '(which-key-show-next-page-cycle
+   which-key-show-previous-page-cycle
+   which-key-show-next-page-no-cycle
+   which-key-show-previous-page-no-cycle)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak page info after paging."
-     (when (ems-interactive-p)
-       (emacsvox-icon ',icon)
-       (let ((page-info (emacsvox-which-key--page-info)))
-         (when page-info (dtk-speak page-info)))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak page info after interactive Which-Key paging."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'scroll)
+         (let ((page-info (emacsvox-which-key--page-info)))
+           (when page-info (dtk-speak page-info)))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;; Batch advice for show commands:
 
 (cl-loop
- for f in
+ for target in
  '(which-key-show-top-level
    which-key-show-major-mode
    which-key-show-full-major-mode
    which-key-show-minor-mode-keymap
    which-key-show-keymap)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Announce which-key display."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Announce an interactive Which-Key display."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  Toggle auto-speak:
 
