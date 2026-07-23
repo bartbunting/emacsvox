@@ -94,7 +94,9 @@
     (expand-abbrev :around emacsvox--advice-expand-abbrev-around)
     (describe-key-briefly :around
      emacsvox--advice-describe-key-briefly-around)
-    (battery :around emacsvox--advice-battery-around))
+    (battery :around emacsvox--advice-battery-around)
+    (comment-dwim :after emacsvox--advice-comment-dwim-after)
+    (comment-region :after emacsvox--advice-comment-region-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -225,6 +227,41 @@
     (should
      (equal
       (nreverse events) '((icon fill-object) speak-current-column)))))
+
+(ert-deftest emacsvox-comment-dwim-speaks-active-region ()
+  "Interactive comment DWIM speaks the affected region before its icon."
+  (let ((ems--interactive-fn-name 'comment-dwim)
+        events)
+    (cl-letf (((symbol-function 'use-region-p) (lambda () t))
+              ((symbol-function 'region-beginning) (lambda () 2))
+              ((symbol-function 'region-end) (lambda () 8))
+              ((symbol-function 'emacsvox-speak-region)
+               (lambda (beginning end)
+                 (push (list 'speak-region beginning end) events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-comment-dwim-after))
+    (should
+     (equal
+      (nreverse events)
+      '((speak-region 2 8) (icon task-done))))))
+
+(ert-deftest emacsvox-comment-region-uses-explicit-arguments ()
+  "Comment feedback uses native arguments and recognizes plain `C-u'."
+  (with-temp-buffer
+    (insert "one\ntwo\nthree\n")
+    (let ((ems--interactive-fn-name 'comment-region)
+          messages)
+      (cl-letf (((symbol-function 'message)
+                 (lambda (format-string &rest arguments)
+                   (push
+                    (apply #'format format-string arguments)
+                    messages))))
+        (emacsvox--advice-comment-region-after
+         (point-min) (point-max) '(4)))
+      (should
+       (equal messages
+              '("Uncommented region containing 3 lines"))))))
 
 (ert-deftest emacsvox-core-button-advice-preserves-context-and-result ()
   "Button movement is silenced, spoken after moving, and returns its result."

@@ -1508,27 +1508,35 @@ to ORIGINAL unchanged."
  'not-modified :after #'emacsvox--advice-not-modified-after
  '((name . emacsvox)))
 
-(defun ems--comment-dwim-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-comment-dwim-after (&rest _)
+  "Speak the affected text after an interactive comment command."
+  (when (ems-interactive-p 'comment-dwim)
     (cond
      ((use-region-p)
       (emacsvox-speak-region (region-beginning) (region-end)))
      (t (emacsvox-speak-line)))
     (emacsvox-icon 'task-done)))
 
-(advice-add 'comment-dwim :after #'ems--comment-dwim-after)
+(advice-add
+ 'comment-dwim :after #'emacsvox--advice-comment-dwim-after
+ '((name . emacsvox)))
 
-(defun ems--comment-region-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (let ((prefix-arg (ad-get-arg 2)))
-      (message "%s region containing %s lines"
-               (if (and prefix-arg (< prefix-arg 0)) "Uncommented"
-                 "Commented")
-               (count-lines (point) (mark 'force))))))
+(defun emacsvox--advice-comment-region-after
+    (beginning end &optional argument)
+  "Announce an interactive comment operation on BEGINNING through END.
+ARGUMENT is the optional prefix argument accepted by `comment-region'."
+  (when (ems-interactive-p 'comment-region)
+    (message
+     "%s region containing %s lines"
+     (if (or (consp argument)
+             (and (numberp argument) (< argument 0)))
+         "Uncommented"
+       "Commented")
+     (count-lines beginning end))))
 
-(advice-add 'comment-region :after #'ems--comment-region-after)
+(advice-add
+ 'comment-region :after #'emacsvox--advice-comment-region-after
+ '((name . emacsvox)))
 
 (emacsvox-advice--define-interactive-after-advice
     (save-buffer save-some-buffers)
