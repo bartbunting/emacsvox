@@ -117,6 +117,50 @@
        (gethash
         (list target where function) ems--modern-advice-wrappers)))))
 
+(ert-deftest emacsvox-psession-advice-registers-after-package-load ()
+  "The delayed psession installer registers inspectable native advice."
+  (let* ((target 'psession--dump-object-to-file-save-alist)
+         (function
+          'emacsvox--advice-psession--dump-object-to-file-save-alist-around)
+         (had-definition (fboundp target))
+         (old-definition
+          (and had-definition (symbol-function target))))
+    (unwind-protect
+        (progn
+          (fset target (lambda (&rest _) 'psession-result))
+          (emacsvox--enable-psession-advice)
+          (should (advice-member-p function target))
+          (should-not
+           (gethash
+            (list target :around function)
+            ems--modern-advice-wrappers)))
+      (advice-remove target function)
+      (if had-definition
+          (fset target old-definition)
+        (fmakunbound target)))))
+
+(ert-deftest emacsvox-psession-advice-preserves-one-silenced-call ()
+  "The psession wrapper calls once, quietly, and preserves its result."
+  (let ((emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (calls 0)
+        observed)
+    (should
+     (eq
+      (emacsvox--advice-psession--dump-object-to-file-save-alist-around
+       (lambda (&rest arguments)
+         (cl-incf calls)
+         (setq observed
+               (list arguments emacsvox-speak-messages inhibit-message))
+         'psession-result)
+       'object "session-file")
+      'psession-result))
+    (should (= calls 1))
+    (should
+     (equal observed '((object "session-file") nil t)))
+    (should emacsvox-speak-messages)
+    (should-not inhibit-message)))
+
 (ert-deftest emacsvox-core-migrated-before-advice-is-directly-registered ()
   "Generated deletion feedback is native and inspectable."
   (dolist (target emacsvox-test--core-before-targets)

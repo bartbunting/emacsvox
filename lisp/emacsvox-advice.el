@@ -3313,12 +3313,23 @@ Produce an auditory icon if possible."
 (advice-add 'just-one-space :after #'ems--just-one-space-after)
 
 ;;; psession:
+
+(defun emacsvox--advice-psession--dump-object-to-file-save-alist-around
+    (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS while silencing messages."
+  (ems-with-messages-silenced
+    (apply original arguments)))
+
+(defun emacsvox--enable-psession-advice ()
+  "Install Emacsvox advice for psession persistence."
+  (advice-add
+   'psession--dump-object-to-file-save-alist :around
+   #'emacsvox--advice-psession--dump-object-to-file-save-alist-around
+   '((name . emacsvox))))
+
 (with-eval-after-load
     "psession"
-  (defadvice psession--dump-object-to-file-save-alist
-      (around emacsvox pre act comp)
-    "Silence."
-    (ems-with-messages-silenced ad-do-it)))
+  (emacsvox--enable-psession-advice))
 
 (provide 'emacsvox-advice)
 
