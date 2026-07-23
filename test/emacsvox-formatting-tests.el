@@ -18,7 +18,9 @@
     (fill-paragraph :after emacsvox--advice-fill-paragraph-after)
     (lisp-fill-paragraph :after
      emacsvox--advice-lisp-fill-paragraph-after)
-    (fill-region :after emacsvox--advice-fill-region-after))
+    (fill-region :after emacsvox--advice-fill-region-after)
+    (cycle-spacing :after emacsvox--advice-cycle-spacing-after)
+    (just-one-space :after emacsvox--advice-just-one-space-after))
   "Formatting commands using individually named native advice.")
 
 (ert-deftest emacsvox-formatting-advice-is-directly-registered ()
@@ -113,6 +115,21 @@
         (nreverse events)
         '((icon fill-object)
           (message "Filled current region containing 3 lines")))))))
+
+(ert-deftest emacsvox-spacing-feedback-is-target-aware ()
+  "Only the matching spacing command speaks the line and then whitespace."
+  (let ((ems--interactive-fn-name 'just-one-space)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-speak-spaces)
+               (lambda () (push 'speak-spaces events))))
+      (emacsvox--advice-cycle-spacing-after)
+      (emacsvox--advice-just-one-space-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line speak-spaces)))))
 
 (provide 'emacsvox-formatting-tests)
 ;;; emacsvox-formatting-tests.el ends here

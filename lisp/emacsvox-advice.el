@@ -3410,19 +3410,11 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
 
 ;;; Speaking Spaces:
 
-(defun ems--cycle-spacing-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-speak-spaces)))
-
-(advice-add 'cycle-spacing :after #'ems--cycle-spacing-after)
-
-(defun ems--just-one-space-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-speak-spaces)))
-
-(advice-add 'just-one-space :after #'ems--just-one-space-after)
+(emacsvox-advice--define-interactive-after-advice
+    (cycle-spacing just-one-space)
+    "Speak the line and resulting whitespace after normalizing spaces."
+  (emacsvox-speak-line)
+  (emacsvox-speak-spaces))
 
 ;;; psession:
 
