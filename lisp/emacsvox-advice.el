@@ -80,6 +80,25 @@ DOCSTRING and BODY define the feedback function for each command."
                 ',target :after #',function '((name . emacsvox))))))
         targets)))
 
+(defmacro emacsvox-advice--define-interactive-before-advice
+    (targets docstring &rest body)
+  "Define native interactive before advice for each command in TARGETS.
+DOCSTRING and BODY define the feedback function for each command."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-before" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add
+                ',target :before #',function '((name . emacsvox))))))
+        targets)))
+
 ;;;   Advice Replace
 
 (voice-setup-set-voice-for-face 'query-replace 'voice-animate)
@@ -228,18 +247,16 @@ beginning or end of a physical line produces an  auditory icon."
    ((or line-move-visual visual-line-mode) (emacsvox-speak-visual-line))
    (t (emacsvox-speak-line))))
 
-(defun ems--delete-horizontal-space-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
+(emacsvox-advice--define-interactive-after-advice
+    (delete-horizontal-space)
+    "Indicate deleted horizontal space."
+  (emacsvox-icon 'delete-object))
 
-(advice-add 'delete-horizontal-space :after
-            #'ems--delete-horizontal-space-after)
-
-(defun ems--kill-visual-line-before (&rest _)
-  "Speak line we're  to kill."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-visual-line)))
-
-(advice-add 'kill-visual-line :before #'ems--kill-visual-line-before)
+(emacsvox-advice--define-interactive-before-advice
+    (kill-visual-line)
+    "Speak the visual line before killing it."
+  (emacsvox-icon 'delete-object)
+  (emacsvox-speak-visual-line))
 
 (emacsvox-advice--define-interactive-after-advice
     (beginning-of-visual-line end-of-visual-line)
@@ -483,29 +500,42 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 
 ;;;  Advice insert-char:
 
-(defun ems--insert-char-after (&rest _)
+(defun emacsvox--advice-insert-char-after (character &rest _)
   "Speak char."
-  (when (ems-interactive-p)
-    (emacsvox-speak-char-name (ad-get-arg 0))))
+  (when (ems-interactive-p 'insert-char)
+    (emacsvox-speak-char-name character)))
 
-(advice-add 'insert-char :after #'ems--insert-char-after)
+(advice-add
+ 'insert-char :after #'emacsvox--advice-insert-char-after
+ '((name . emacsvox)))
 
 ;;;  Advice deletion commands:
 
-(cl-loop
- for f in
- '(backward-delete-char backward-delete-char-untabify delete-backward-char)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak deleted character."
-     (cond
-      ((ems-interactive-p)
-       (dtk-tone-deletion)
-       (emacsvox-speak-this-char (preceding-char))
-       ad-do-it)
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--backward-delete-char-around (target original arguments)
+  "Speak before TARGET deletes backward, then call ORIGINAL with ARGUMENTS."
+  (when (ems-interactive-p target)
+    (dtk-tone-deletion)
+    (emacsvox-speak-this-char (preceding-char)))
+  (apply original arguments))
+
+(defmacro emacsvox-advice--define-backward-delete-advice (targets)
+  "Define native around advice for backward-deletion commands in TARGETS."
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (original &rest arguments)
+                 ,(format "Speak the character deleted by `%s'." target)
+                 (emacsvox--backward-delete-char-around
+                  ',target original arguments))
+               (advice-add
+                ',target :around #',function '((name . emacsvox))))))
+        targets)))
+
+(emacsvox-advice--define-backward-delete-advice
+ (backward-delete-char backward-delete-char-untabify delete-backward-char))
 
 (defun emacsvox--delete-char-around (target original arguments)
   "Speak before TARGET deletes a character, then call ORIGINAL with ARGUMENTS."
@@ -542,48 +572,48 @@ When on a close delimiter, speak matching delimiter after a small delay. "
  'kill-word :before #'emacsvox--advice-kill-word-before
  '((name . emacsvox)))
 
-(defun ems--backward-kill-word-before (&rest _)
+(defun emacsvox--advice-backward-kill-word-before (&rest _)
   "Speak word beingkilled."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'backward-kill-word)
     (save-excursion
       (let ((start (point)))
         (forward-word -1) (dtk-tone-deletion)
         (emacsvox-speak-region (point) start)))))
 
-(advice-add 'backward-kill-word :before
-            #'ems--backward-kill-word-before)
+(advice-add
+ 'backward-kill-word :before #'emacsvox--advice-backward-kill-word-before
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(kill-line kill-whole-line)
- do
- (eval
-  `(defadvice ,f (before emacsvox pre act comp)
-     "Speak line being killed. "
-     (when (ems-interactive-p)
-       (emacsvox-icon 'delete-object)
-       (dtk-tone-deletion)
-       (emacsvox-speak-line 1)))))
+(emacsvox-advice--define-interactive-before-advice
+    (kill-line kill-whole-line)
+    "Speak the line before killing it."
+  (emacsvox-icon 'delete-object)
+  (dtk-tone-deletion)
+  (emacsvox-speak-line 1))
 
-(defun ems--kill-sexp-before (&rest _)
+(defun emacsvox--advice-kill-sexp-before (&rest _)
   "Speak the killed  sexp."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kill-sexp)
     (emacsvox-icon 'delete-object) (dtk-tone-deletion)
     (emacsvox-speak-sexp 1)))
 
-(advice-add 'kill-sexp :before #'ems--kill-sexp-before)
+(advice-add
+ 'kill-sexp :before #'emacsvox--advice-kill-sexp-before
+ '((name . emacsvox)))
 
-(defun ems--kill-sentence-before (&rest _)
+(defun emacsvox--advice-kill-sentence-before (&rest _)
   "Speak the kill."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kill-sentence)
     (emacsvox-icon 'delete-object) (dtk-tone-deletion)
     (emacsvox-speak-line 1)))
 
-(advice-add 'kill-sentence :before #'ems--kill-sentence-before)
+(advice-add
+ 'kill-sentence :before #'emacsvox--advice-kill-sentence-before
+ '((name . emacsvox)))
 
-(defun ems--delete-blank-lines-before (&rest _)
+(defun emacsvox--advice-delete-blank-lines-before (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'delete-blank-lines)
     (let (thisblank singleblank)
       (save-excursion
         (forward-line 0) (setq thisblank (looking-at "[         ]*$"))
@@ -598,21 +628,23 @@ When on a close delimiter, speak matching delimiter after a small delay. "
        (thisblank (message "Deleting surrounding blank lines"))
        (t (message "Deleting possible subsequent blank lines"))))))
 
-(advice-add 'delete-blank-lines :before
-            #'ems--delete-blank-lines-before)
+(advice-add
+ 'delete-blank-lines :before #'emacsvox--advice-delete-blank-lines-before
+ '((name . emacsvox)))
 
 ;;;  advice tabify:
 
-(defun ems--untabify-after (&rest _)
+(defun emacsvox--advice-untabify-after (start end &rest _)
   "Fix NBSP chars."
-  (let ((start (ad-get-arg 0)) (end (ad-get-arg 1)))
-    (save-excursion
-      (save-restriction
-        (narrow-to-region start end) (goto-char start)
-        (while (re-search-forward (format "[%c]+" 160) end 'no-error)
-          (replace-match " "))))))
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end) (goto-char start)
+      (while (re-search-forward (format "[%c]+" 160) end 'no-error)
+        (replace-match " ")))))
 
-(advice-add 'untabify :after #'ems--untabify-after)
+(advice-add
+ 'untabify :after #'emacsvox--advice-untabify-after
+ '((name . emacsvox)))
 
 ;;;  Advice PComplete
 

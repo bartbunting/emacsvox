@@ -21,6 +21,7 @@
     left-char right-char backward-char forward-char
     forward-word right-word backward-word left-word
     beginning-of-buffer end-of-buffer
+    delete-horizontal-space
     tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent
     indent-sexp indent-pp-sexp indent-region indent-relative
     backward-sentence forward-sentence
@@ -32,17 +33,31 @@
     newline newline-and-indent electric-newline-and-maybe-indent)
   "Core commands migrated with generated native after advice.")
 
+(defconst emacsvox-test--core-before-targets
+  '(kill-visual-line kill-line kill-whole-line)
+  "Core commands migrated with generated native before advice.")
+
 (defconst emacsvox-test--core-direct-advice
   '((delete-forward-char :around emacsvox--advice-delete-forward-char-around)
     (delete-char :around emacsvox--advice-delete-char-around)
+    (backward-delete-char :around emacsvox--advice-backward-delete-char-around)
+    (backward-delete-char-untabify :around
+     emacsvox--advice-backward-delete-char-untabify-around)
+    (delete-backward-char :around emacsvox--advice-delete-backward-char-around)
     (forward-button :around emacsvox--advice-forward-button-around)
     (backward-button :around emacsvox--advice-backward-button-around)
     (forward-sexp :around emacsvox--advice-forward-sexp-around)
     (backward-sexp :around emacsvox--advice-backward-sexp-around)
     (beginning-of-defun :around emacsvox--advice-beginning-of-defun-around)
     (end-of-defun :around emacsvox--advice-end-of-defun-around)
+    (insert-char :after emacsvox--advice-insert-char-after)
     (kill-word :before emacsvox--advice-kill-word-before)
-    (kill-ring-save :after emacsvox--advice-kill-ring-save-after))
+    (backward-kill-word :before emacsvox--advice-backward-kill-word-before)
+    (kill-sexp :before emacsvox--advice-kill-sexp-before)
+    (kill-sentence :before emacsvox--advice-kill-sentence-before)
+    (delete-blank-lines :before emacsvox--advice-delete-blank-lines-before)
+    (kill-ring-save :after emacsvox--advice-kill-ring-save-after)
+    (untabify :after emacsvox--advice-untabify-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -64,6 +79,16 @@
       (should-not
        (gethash
         (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-core-migrated-before-advice-is-directly-registered ()
+  "Generated deletion feedback is native and inspectable."
+  (dolist (target emacsvox-test--core-before-targets)
+    (let ((function (intern (format "emacsvox--advice-%s-before" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :before function) ems--modern-advice-wrappers)))))
 
 (ert-deftest emacsvox-core-delete-advice-calls-original-exactly-once ()
   "Forward deletion preserves feedback order, arguments, and return value."
@@ -239,6 +264,13 @@
       `((icon scroll)
         (speak "visible text")
         (notify "50% " ,voice-smoothen))))))
+
+(ert-deftest emacsvox-core-untabify-advice-uses-explicit-region-arguments ()
+  "Untabify cleanup replaces nonbreaking spaces inside its advised region."
+  (with-temp-buffer
+    (insert "a" (string 160) "b" (string 160) "c")
+    (emacsvox--advice-untabify-after 1 4)
+    (should (equal (buffer-string) (concat "a b" (string 160) "c")))))
 
 (provide 'emacsvox-core-migration-tests)
 ;;; emacsvox-core-migration-tests.el ends here

@@ -127,6 +127,30 @@
      :interactive t
      :mode emacs-lisp-mode
      :text "(one) (two)"
+     :point 1)
+    (:name insert-char
+     :command insert-char
+     :arguments (120 1 nil)
+     :interactive t
+     :text "ab"
+     :point 2)
+    (:name delete-backward-char
+     :command delete-backward-char
+     :arguments (1 nil)
+     :interactive t
+     :text "abc"
+     :point 2)
+    (:name backward-kill-word
+     :command backward-kill-word
+     :arguments (1)
+     :interactive t
+     :text "alpha beta"
+     :point 11)
+    (:name kill-line
+     :command kill-line
+     :arguments (1)
+     :interactive t
+     :text "alpha\nbeta\n"
      :point 1))
   "Core scenarios used for Emacsvox and Emacspeak trace comparison.")
 

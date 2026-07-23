@@ -98,4 +98,22 @@
 	((icon large-movement) (speak (:text "(one)"))) :value nil
 	:state
 	(:text "(one) (two)" :point 6 :mark nil :mark-active nil
-	       :modified nil :kill-ring nil)))
+	       :modified nil :kill-ring nil))
+ (:name insert-char :events ((speak (:text "latin small letter x")))
+	:value nil :state
+	(:text "axb" :point 3 :mark nil :mark-active nil :modified t
+	       :kill-ring nil))
+ (:name delete-backward-char :events
+	((tone 500 75 force) (letter "a")) :value nil :state
+	(:text "bc" :point 1 :mark nil :mark-active nil :modified t
+	       :kill-ring nil))
+ (:name backward-kill-word :events
+	((tone 500 75 force) (speak (:text "beta"))) :value nil :state
+	(:text "alpha " :point 7 :mark nil :mark-active nil :modified
+	       t :kill-ring ("beta")))
+ (:name kill-line :events
+	((icon delete-object) (tone 500 75 force) (stop all)
+	 (speak (:text "alpha")))
+	:value nil :state
+	(:text "beta\n" :point 1 :mark nil :mark-active nil :modified
+	       t :kill-ring ("alpha\n"))))
