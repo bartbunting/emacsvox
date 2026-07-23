@@ -2968,31 +2968,31 @@ TARGET identifies the Elint command, and ARGUMENTS are passed unchanged."
 
 ;;;  advice Finder:
 
-(defun ems--finder-commentary-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-buffer) (emacsvox-icon 'open-object)))
+(emacsvox-advice--define-interactive-after-advice
+    (finder-commentary)
+    "Speak Finder commentary and cue the opened buffer."
+  (emacsvox-speak-buffer)
+  (emacsvox-icon 'open-object))
 
-(advice-add 'finder-commentary :after #'ems--finder-commentary-after)
-
-(defun ems--finder-mode-after (&rest _)
-  "speak"
+(defun emacsvox--advice-finder-mode-after (&rest _)
+  "Register the Emacsvox keyword and announce the Finder buffer."
   (when
       (and (boundp 'finder-known-keywords)
            (not (eq 'emacsvox (caar finder-known-keywords))))
     (push (cons 'emacsvox "Audio Desktop") finder-known-keywords))
-  (emacsvox-icon 'open-object) (emacsvox-speak-mode-line))
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'finder-mode :after #'ems--finder-mode-after)
+(advice-add
+ 'finder-mode :after #'emacsvox--advice-finder-mode-after
+ '((name . emacsvox)))
 
-(defun ems--finder-exit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (with-current-buffer (window-buffer (selected-window))
-      (emacsvox-speak-mode-line))))
-
-(advice-add 'finder-exit :after #'ems--finder-exit-after)
+(emacsvox-advice--define-interactive-after-advice
+    (finder-exit)
+    "Cue leaving Finder and speak the selected window's mode line."
+  (emacsvox-icon 'close-object)
+  (with-current-buffer (window-buffer (selected-window))
+    (emacsvox-speak-mode-line)))
 
 ;;;  display world time
 
