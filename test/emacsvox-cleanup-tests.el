@@ -12,9 +12,10 @@
 
 (defconst emacsvox-test--cleanup-direct-advice
   '((whitespace-cleanup :around
-     emacsvox--advice-whitespace-cleanup-around)
+    emacsvox--advice-whitespace-cleanup-around)
     (whitespace-cleanup-internal :around
-     emacsvox--advice-whitespace-cleanup-internal-around))
+     emacsvox--advice-whitespace-cleanup-internal-around)
+    (clean-buffer-list :around emacsvox--silence-messages-around))
   "Cleanup functions using individually named native advice.")
 
 (ert-deftest emacsvox-cleanup-advice-is-directly-registered ()
@@ -57,6 +58,27 @@
       (emacsvox--advice-whitespace-cleanup-internal-around
        (lambda () 'internal-result))
       'internal-result))
+    (should emacsvox-speak-messages)
+    (should-not inhibit-message)))
+
+(ert-deftest emacsvox-clean-buffer-list-runs-once-with-messages-silenced ()
+  "Background buffer cleanup runs once and restores message state."
+  (let ((emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (calls 0)
+        observed-state)
+    (should
+     (eq
+      (emacsvox--silence-messages-around
+       (lambda (&rest arguments)
+         (cl-incf calls)
+         (setq observed-state
+               (list arguments emacsvox-speak-messages inhibit-message))
+         'cleanup-result)
+       'argument)
+      'cleanup-result))
+    (should (= calls 1))
+    (should (equal observed-state '((argument) nil t)))
     (should emacsvox-speak-messages)
     (should-not inhibit-message)))
 

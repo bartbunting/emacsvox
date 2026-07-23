@@ -999,12 +999,14 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;; Silence messages from async handlers:
 
-(defun ems--timer-event-handler-around (orig-fun &rest args)
-  "Silence messages from by timer events."
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--silence-messages-around (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS while silencing messages."
+  (ems-with-messages-silenced
+    (apply original arguments)))
 
-(advice-add 'timer-event-handler :around
-            #'ems--timer-event-handler-around)
+(advice-add
+ 'timer-event-handler :around #'emacsvox--silence-messages-around
+ '((name . emacsvox)))
 
 ;;;  Advice completion-at-point:
 
@@ -3048,10 +3050,9 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
 
 ;;;  silence midnight cleanup:
 
-(defun ems--clean-buffer-list-around (orig-fun &rest args)
-  (ems-with-messages-silenced (apply orig-fun args)))
-
-(advice-add 'clean-buffer-list :around #'ems--clean-buffer-list-around)
+(advice-add
+ 'clean-buffer-list :around #'emacsvox--silence-messages-around
+ '((name . emacsvox)))
 
 ;;;  Splash Screen:
 

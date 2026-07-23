@@ -11,7 +11,8 @@
 (require 'emacsvox-advice)
 
 (defconst emacsvox-test--timer-direct-advice
-  '((timer-list :after emacsvox--advice-timer-list-after)
+  '((timer-event-handler :around emacsvox--silence-messages-around)
+    (timer-list :after emacsvox--advice-timer-list-after)
     (list-timers :after emacsvox--advice-list-timers-after))
   "Timer commands using individually defined native advice.")
 
