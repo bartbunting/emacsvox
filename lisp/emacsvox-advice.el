@@ -158,26 +158,30 @@ DOCSTRING and BODY define the feedback function for each command."
 
 ;; Needed for  outline support:
 
-(defun ems--remove-overlays-around (orig-fun &rest args)
+(defun emacsvox--advice-remove-overlays-around
+    (original &rest arguments)
   "Clean up properties mirrored from overlays."
-  (let
-      ((ems--voiceify-overlays nil)
-       (beg (or (ad-get-arg 0) (point-min)))
-       (end (or (ad-get-arg 1) (point-max))) (name (ad-get-arg 2)))
+  (let ((ems--voiceify-overlays nil)
+        (beg (or (nth 0 arguments) (point-min)))
+        (end (or (nth 1 arguments) (point-max)))
+        (name (nth 2 arguments)))
     (when (zerop beg) (setq beg (point-min)))
     (with-silent-modifications (put-text-property beg end name nil))
-    (apply orig-fun args)))
+    (apply original arguments)))
 
-(advice-add 'remove-overlays :around #'ems--remove-overlays-around)
+(advice-add
+ 'remove-overlays :around #'emacsvox--advice-remove-overlays-around
+ '((name . emacsvox)))
 
-(defun ems--delete-overlay-before (&rest _)
+(defun emacsvox--advice-delete-overlay-before (overlay)
   "Augment voice lock."
   (when ems--voiceify-overlays
-    (let*
-        ((o (ad-get-arg 0)) (buffer (overlay-buffer o))
-         (start (overlay-start o)) (end (overlay-end o))
-         (voice (dtk-get-voice-for-face (overlay-get o 'face)))
-         (invisible (overlay-get o 'invisible)))
+    (let* ((buffer (overlay-buffer overlay))
+           (start (overlay-start overlay))
+           (end (overlay-end overlay))
+           (voice
+            (dtk-get-voice-for-face (overlay-get overlay 'face)))
+           (invisible (overlay-get overlay 'invisible)))
       (when (and start end voice buffer)
         (with-current-buffer buffer
           (save-restriction
@@ -186,48 +190,51 @@ DOCSTRING and BODY define the feedback function for each command."
         (with-silent-modifications
           (put-text-property start end 'invisible nil))))))
 
-(advice-add 'delete-overlay :before #'ems--delete-overlay-before)
+(advice-add
+ 'delete-overlay :before #'emacsvox--advice-delete-overlay-before
+ '((name . emacsvox)))
 
-(defun ems--overlay-put-after (&rest _)
+(defun emacsvox--advice-overlay-put-after (overlay property value)
   "Augment voice lock."
-  (when (and (overlay-buffer (ad-get-arg 0)) ems--voiceify-overlays)
-    (let*
-        ((overlay (ad-get-arg 0)) (prop (ad-get-arg 1))
-         (value (ad-get-arg 2)) (start (overlay-start overlay))
-         (end (overlay-end overlay)) (voice nil))
+  (when (and (overlay-buffer overlay) ems--voiceify-overlays)
+    (let ((start (overlay-start overlay))
+          (end (overlay-end overlay))
+          voice)
       (cond
        ((and
-         (or (memq prop '(font-lock-face face))
-             (and (eq prop 'category) (get value 'face)))
+         (or (memq property '(font-lock-face face))
+             (and (eq property 'category) (get value 'face)))
          (integerp start) (integerp end))
-        (when (eq prop 'category) (setq value (get value 'face)))
+        (when (eq property 'category)
+          (setq value (get value 'face)))
         (setq voice (dtk-get-voice-for-face value))
         (when voice
           (ems--add-personality start end voice
                                 (overlay-buffer overlay))))
-       ((eq prop 'invisible)
+       ((eq property 'invisible)
         (with-current-buffer (overlay-buffer overlay)
           (with-silent-modifications
             (put-text-property start end 'invisible (or value nil)))))))))
 
-(advice-add 'overlay-put :after #'ems--overlay-put-after)
+(advice-add
+ 'overlay-put :after #'emacsvox--advice-overlay-put-after
+ '((name . emacsvox)))
 
-(defun ems--move-overlay-before (&rest _)
+(defun emacsvox--advice-move-overlay-before
+    (overlay beginning end &optional object)
   "Used by emacsvox to augment voice lock."
   (when ems--voiceify-overlays
-    (let*
-        ((overlay (ad-get-arg 0)) (beg (ad-get-arg 1))
-         (end (ad-get-arg 2)) (object (ad-get-arg 3))
-         (buffer (overlay-buffer overlay))
-         (voice (dtk-get-voice-for-face (overlay-get overlay 'face)))
-         (invisible (overlay-get overlay 'invisible)))
+    (let* ((buffer (overlay-buffer overlay))
+           (voice
+            (dtk-get-voice-for-face (overlay-get overlay 'face)))
+           (invisible (overlay-get overlay 'invisible)))
       (unless object (setq object (or buffer (current-buffer))))
       (when
           (and voice (integerp (overlay-start overlay))
                (integerp (overlay-end overlay)))
         (ems--remove-personality (overlay-start overlay)
                                  (overlay-end overlay) voice buffer)
-        (ems--add-personality beg end voice object))
+        (ems--add-personality beginning end voice object))
       (when invisible
         (with-current-buffer buffer
           (with-silent-modifications
@@ -235,9 +242,12 @@ DOCSTRING and BODY define the feedback function for each command."
                                (overlay-end overlay) 'invisible nil)))
         (with-current-buffer object
           (with-silent-modifications
-            (put-text-property beg end 'invisible invisible)))))))
+            (put-text-property
+             beginning end 'invisible invisible)))))))
 
-(advice-add 'move-overlay :before #'ems--move-overlay-before)
+(advice-add
+ 'move-overlay :before #'emacsvox--advice-move-overlay-before
+ '((name . emacsvox)))
 
 ;;;  advice cursor movement commands to speak
 
