@@ -430,44 +430,21 @@ Interactive PREFIX arg means toggle the global default value. ")
  #'emacsvox--advice-comint-output-filter-around
  '((name . emacsvox)))
 
-(defun ems--comint-dynamic-list-completions-around
-    (orig-fun &rest args)
-  "Replacing default with keyboard friendly completer"
-  (let
-      ((completions (sort (ad-get-arg 0) 'string-lessp))
-       (_common (ad-get-arg 1)))
+(defun emacsvox--advice-comint-dynamic-list-completions-around
+    (_original completions &optional _common-substring)
+  "Replace the stock display with a sorted, keyboard-friendly COMPLETIONS list."
+  (let ((completions (sort completions #'string-lessp)))
     (with-output-to-temp-buffer "*Completions*"
       (display-completion-list completions))
-    (when nil (apply orig-fun args))
     (with-current-buffer (get-buffer "*Completions*")
-      (set (make-local-variable 'comint-displayed-dynamic-completions)
-           completions))
+      (setq-local comint-displayed-dynamic-completions completions))
     (next-completion 1)
     (dtk-speak (buffer-substring (point) (point-max)))))
 
-(advice-add 'comint-dynamic-list-completions :around
-            #'ems--comint-dynamic-list-completions-around)
-
-(defun ems--comint-dynamic-complete-around (orig-fun &rest args)
-  "Say what you completed."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced
-       (let
-           ((prior
-             (save-excursion (skip-syntax-backward "^ >") (point))))
-         (apply orig-fun args)
-         (if (> (point) prior)
-             (tts-with-punctuations 'all (emacsvox-icon 'complete)
-                                    (dtk-speak
-                                     (buffer-substring prior (point))))
-           (emacsvox-speak-completions-if-available)))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'comint-dynamic-complete :around
-            #'ems--comint-dynamic-complete-around)
+(advice-add
+ 'comint-dynamic-list-completions :around
+ #'emacsvox--advice-comint-dynamic-list-completions-around
+ '((name . emacsvox)))
 
 (cl-loop
  for target in
@@ -531,43 +508,36 @@ Interactive PREFIX arg means toggle the global default value. ")
  #'emacsvox--advice-comint-get-next-from-history-after
  '((name . emacsvox)))
 
-(defun ems--comint-dynamic-list-input-ring-around
-    (orig-fun &rest args)
-  "List  the buffer's input history."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (if
-          (or (not (ring-p comint-input-ring))
-              (ring-empty-p comint-input-ring))
-          (message "No history")
-        (let
-            ((history nil) (history-buffer " *Input History*")
-             (index (1- (ring-length comint-input-ring))))
-          (while (>= index 0)
-            (setq history
-                  (cons (ring-ref comint-input-ring index) history)
-                  index (1- index)))
-          (with-output-to-temp-buffer history-buffer
-            (display-completion-list history)
-            (switch-to-buffer history-buffer) (forward-line 3)
-            (while (search-backward "completion" nil 'move)
-              (replace-match "history reference")))
-          (emacsvox-icon 'help) (next-completion 1)
-          (dtk-speak (emacsvox-get-current-completion)))))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-comint-dynamic-list-input-ring-around (original)
+  "Use an accessible history display interactively, otherwise call ORIGINAL."
+  (if (not (ems-interactive-p 'comint-dynamic-list-input-ring))
+      (funcall original)
+    (if
+        (or (not (ring-p comint-input-ring))
+            (ring-empty-p comint-input-ring))
+        (message "No history")
+      (let
+          ((history nil)
+           (history-buffer " *Input History*")
+           (index (1- (ring-length comint-input-ring))))
+        (while (>= index 0)
+          (setq history
+                (cons (ring-ref comint-input-ring index) history)
+                index (1- index)))
+        (with-output-to-temp-buffer history-buffer
+          (display-completion-list history)
+          (switch-to-buffer history-buffer)
+          (forward-line 3)
+          (while (search-backward "completion" nil 'move)
+            (replace-match "history reference")))
+        (emacsvox-icon 'help)
+        (next-completion 1)
+        (dtk-speak (emacsvox-get-current-completion))))))
 
-(advice-add 'comint-dynamic-list-input-ring :around
-            #'ems--comint-dynamic-list-input-ring-around)
-
-(defun ems--comint-kill-output-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object)
-    (message "Nuked output of last command ")))
-
-(advice-add 'comint-kill-output :after #'ems--comint-kill-output-after)
+(advice-add
+ 'comint-dynamic-list-input-ring :around
+ #'emacsvox--advice-comint-dynamic-list-input-ring-around
+ '((name . emacsvox)))
 
 (cl-loop
  for (target announcement) in
@@ -600,13 +570,16 @@ Interactive PREFIX arg means toggle the global default value. ")
  #'emacsvox--advice-comint-kill-input-before
  '((name . emacsvox)))
 
-(defun ems--comint-dynamic-list-filename-completions-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-comint-dynamic-list-filename-completions-after
+    (&rest _)
+  "Speak filename completions displayed by an interactive Comint command."
+  (when (ems-interactive-p 'comint-dynamic-list-filename-completions)
     (emacsvox-speak-completions-if-available)))
 
-(advice-add 'comint-dynamic-list-filename-completions :after
-            #'ems--comint-dynamic-list-filename-completions-after)
+(advice-add
+ 'comint-dynamic-list-filename-completions :after
+ #'emacsvox--advice-comint-dynamic-list-filename-completions-after
+ '((name . emacsvox)))
 
 ;;; dirtrack-procfs:
 

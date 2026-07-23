@@ -158,6 +158,88 @@
         (nreverse events)
         '((original test-process "chunk") (speak "chunk")))))))
 
+(ert-deftest emacsvox-comint-completion-history-advice-is-directly-registered ()
+  "Comint completion and history-display advice bypasses the bridge."
+  (dolist
+      (entry
+       '((comint-dynamic-list-completions
+          :around
+          emacsvox--advice-comint-dynamic-list-completions-around)
+         (comint-dynamic-list-input-ring
+          :around
+          emacsvox--advice-comint-dynamic-list-input-ring-around)
+         (comint-dynamic-list-filename-completions
+          :after
+          emacsvox--advice-comint-dynamic-list-filename-completions-after)))
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-comint-completion-list-replaces-stock-display ()
+  "The accessible completion list sorts entries without calling the original."
+  (let ((calls 0)
+        events)
+    (unwind-protect
+        (with-temp-buffer
+          (insert "spoken completion")
+          (cl-letf (((symbol-function 'display-completion-list)
+                     (lambda (completions)
+                       (push (list 'display completions) events)))
+                    ((symbol-function 'next-completion)
+                     (lambda (count)
+                       (push (list 'next count) events)))
+                    ((symbol-function 'dtk-speak)
+                     (lambda (text)
+                       (push (list 'speak text) events)
+                       'completion-result)))
+            (should
+             (eq
+              (emacsvox--advice-comint-dynamic-list-completions-around
+               (lambda (&rest _)
+                 (cl-incf calls)
+                 'stock-result)
+               (list "zeta" "alpha"))
+              'completion-result))))
+      (when-let* ((buffer (get-buffer "*Completions*")))
+        (kill-buffer buffer)))
+    (should (= calls 0))
+    (should
+     (equal
+      (nreverse events)
+      '((display ("alpha" "zeta"))
+        (next 1)
+        (speak ""))))))
+
+(ert-deftest emacsvox-comint-input-ring-selects-one-display-path ()
+  "Input history replaces the stock UI only for interactive calls."
+  (let ((comint-input-ring (make-ring 1))
+        (calls 0)
+        messages)
+    (should
+     (eq
+      (emacsvox--advice-comint-dynamic-list-input-ring-around
+       (lambda ()
+         (cl-incf calls)
+         'stock-history))
+      'stock-history))
+    (let ((ems--interactive-fn-name 'comint-dynamic-list-input-ring))
+      (cl-letf (((symbol-function 'message)
+                 (lambda (format-string &rest arguments)
+                   (let ((text (apply #'format format-string arguments)))
+                     (push text messages)
+                     text))))
+        (should
+         (equal
+          (emacsvox--advice-comint-dynamic-list-input-ring-around
+           (lambda ()
+             (cl-incf calls)
+             'unexpected-stock-history))
+          "No history"))))
+    (should (= calls 1))
+    (should (equal messages '("No history")))))
+
 (ert-deftest emacsvox-comint-input-advice-is-directly-registered ()
   "Comint input advice bypasses the compatibility bridge."
   (dolist
