@@ -320,11 +320,14 @@ beginning or end of a physical line produces an  auditory icon."
  'backward-button :around #'emacsvox--advice-backward-button-around
  '((name . emacsvox)))
 
-(defun ems--blink-matching-open-after (&rest _)
-  "Speak" (emacsvox-speak-matching-paren))
+(defun emacsvox--advice-blink-matching-open-after (&rest _)
+  "Speak the matching opening delimiter."
+  (emacsvox-speak-matching-paren))
 
-(advice-add 'blink-matching-open :after
-            #'ems--blink-matching-open-after)
+(advice-add
+ 'blink-matching-open :after
+ #'emacsvox--advice-blink-matching-open-after
+ '((name . emacsvox)))
 
 (emacsvox-advice--define-interactive-after-advice
     (left-char right-char backward-char forward-char)
@@ -1440,12 +1443,11 @@ to ORIGINAL unchanged."
 
 ;;;  misc functions that have to be hand fixed:
 
-(defun ems--zap-to-char-after (&rest _)
-  "Speak line that is left."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-line 1)))
-
-(advice-add 'zap-to-char :after #'ems--zap-to-char-after)
+(emacsvox-advice--define-interactive-after-advice
+    (zap-to-char)
+    "Cue deletion and speak the remaining line."
+  (emacsvox-icon 'delete-object)
+  (emacsvox-speak-line 1))
 
 (emacsvox-advice--define-interactive-after-advice
     (describe-mode)
@@ -1802,14 +1804,12 @@ TARGET identifies the key-description command."
   (emacsvox-icon 'open-object)
   (emacsvox-speak-predefined-window 1))
 
-(defun ems--exchange-point-and-mark-after (&rest _)
-  "Speak the line.\nIndicate large movement with an auditory icon if possible.\nAuditory highlight indicates position of point."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement)
-    (let ((emacsvox-show-point t)) (emacsvox-speak-line))))
-
-(advice-add 'exchange-point-and-mark :after
-            #'ems--exchange-point-and-mark-after)
+(emacsvox-advice--define-interactive-after-advice
+    (exchange-point-and-mark)
+    "Cue a large movement and speak the line with point highlighted."
+  (emacsvox-icon 'large-movement)
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)))
 
 (emacsvox-advice--define-interactive-after-advice
     (newline newline-and-indent electric-newline-and-maybe-indent)
@@ -2050,12 +2050,10 @@ TARGET identifies the case command, and ACTION describes its result."
  'open-line :after #'emacsvox--advice-open-line-after
  '((name . emacsvox)))
 
-(defun ems--abort-recursive-edit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (message "Aborting recursive edit")))
-
-(advice-add 'abort-recursive-edit :after
-            #'ems--abort-recursive-edit-after)
+(emacsvox-advice--define-interactive-after-advice
+    (abort-recursive-edit)
+    "Announce an aborted recursive edit."
+  (message "Aborting recursive edit"))
 
 (emacsvox-advice--define-interactive-after-advice
     (undo undo-redo undo-only)
@@ -2515,12 +2513,11 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
   (let ((emacsvox-show-point t))
     (emacsvox-speak-line)))
 
-(defun ems--insert-parentheses-after (&rest _)
-  "Speak what you inserted."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'open-object)))
-
-(advice-add 'insert-parentheses :after #'ems--insert-parentheses-after)
+(emacsvox-advice--define-interactive-after-advice
+    (insert-parentheses)
+    "Speak the inserted parentheses and cue the opened object."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'open-object))
 
 (emacsvox-advice--define-interactive-after-advice
     (insert-register)
