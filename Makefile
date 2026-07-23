@@ -44,7 +44,7 @@ README = README
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
-.PHONY: test unit-test trace trace-test reference-test
+.PHONY: test unit-test trace trace-test reference-test advice-audit
 test: unit-test trace-test
 
 unit-test:
@@ -70,6 +70,10 @@ reference-test:
 	EMACSVOX_TRACE_ROOT="$(EMACSPEAK_DIR)" \
 	EMACSVOX_TRACE_EXPECTED="$(CURDIR)/$(EMACSPEAK_TRACE_GOLDEN)" \
 	$(EMACS) -Q --batch -l test/run-scenarios.el
+
+advice-audit:
+	$(EMACS) -Q --batch -l utils/advice-audit.el \
+		--eval '(ems-advice-audit-batch "lisp")'
 
 ###   User level targets emacsvox   outloud espeak 
 

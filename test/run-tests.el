@@ -14,13 +14,16 @@
 (let* ((test-directory
         (file-name-directory (or load-file-name buffer-file-name)))
        (root-directory (expand-file-name "../" test-directory))
-       (lisp-directory (expand-file-name "lisp/" root-directory)))
+       (lisp-directory (expand-file-name "lisp/" root-directory))
+       (utils-directory (expand-file-name "utils/" root-directory)))
   (add-to-list 'load-path test-directory)
   (add-to-list 'load-path lisp-directory)
+  (add-to-list 'load-path utils-directory)
   ;; Load source explicitly so tests never exercise a stale .elc file.
   (load (expand-file-name "emacsvox-preamble.el" lisp-directory)
         nil nil)
   (require 'emacsvox-advice-tests)
+  (require 'emacsvox-advice-audit-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
