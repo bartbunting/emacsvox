@@ -81,6 +81,7 @@
   (require 'emacsvox-etable-tests)
   (require 'emacsvox-proced-tests)
   (require 'emacsvox-view-tests)
+  (require 'emacsvox-calendar-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
