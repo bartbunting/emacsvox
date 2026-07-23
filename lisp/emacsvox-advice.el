@@ -2728,12 +2728,14 @@ Produce an auditory icon if possible."
      (format "%s  " cmd)
      (ems-canonicalize-key-description desc))))
 
-(defun ems--where-is-after (&rest _)
-  "Speak"
-  (when (ems-interactive-p)
-    (dtk-speak (ems--get-where-is (ad-get-arg 0)))))
+(defun emacsvox--advice-where-is-after (definition &optional _insert)
+  "Speak keys for interactive `where-is' DEFINITION."
+  (when (ems-interactive-p 'where-is)
+    (dtk-speak (ems--get-where-is definition))))
 
-(advice-add 'where-is :after #'ems--where-is-after)
+(advice-add
+ 'where-is :after #'emacsvox--advice-where-is-after
+ '((name . emacsvox)))
 
 ;;;  apropos and friends
 (cl-loop

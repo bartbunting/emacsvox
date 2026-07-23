@@ -30,7 +30,8 @@
      emacsvox--advice-help-goto-next-page-after)
     (help-goto-previous-page :after
      emacsvox--advice-help-goto-previous-page-after)
-    (ielm :after emacsvox--advice-ielm-after))
+    (ielm :after emacsvox--advice-ielm-after)
+    (where-is :after emacsvox--advice-where-is-after))
   "Source navigation commands using individually named native advice.")
 
 (ert-deftest emacsvox-navigation-advice-is-directly-registered ()
@@ -171,6 +172,23 @@
             '((icon open-object) speak-header-line))))
       (when (buffer-live-p working-buffer)
         (kill-buffer working-buffer)))))
+
+(ert-deftest emacsvox-where-is-uses-explicit-definition ()
+  "Interactive where-is feedback uses its native command definition."
+  (let ((ems--interactive-fn-name 'where-is)
+        events)
+    (cl-letf (((symbol-function 'ems--get-where-is)
+               (lambda (definition)
+                 (push (list 'lookup definition) events)
+                 "forward-char  control f"))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox--advice-where-is-after 'forward-char))
+    (should
+     (equal
+      (nreverse events)
+      '((lookup forward-char)
+        (speak "forward-char  control f"))))))
 
 (provide 'emacsvox-navigation-tests)
 ;;; emacsvox-navigation-tests.el ends here
