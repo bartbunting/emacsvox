@@ -41,5 +41,73 @@
     (should (eq (key-binding (kbd "M-n")) 'c-next-statement))
     (should (eq (key-binding (kbd "M-p")) 'c-previous-statement))))
 
+(defconst emacsvox-test--c-deletion-advice
+  '((c-electric-delete-forward
+     :before emacsvox--advice-c-electric-delete-forward-before)
+    (c-hungry-delete-forward
+     :before emacsvox--advice-c-hungry-delete-forward-before)
+    (c-hungry-delete-backwards
+     :before emacsvox--advice-c-hungry-delete-backwards-before)
+    (c-electric-backspace
+     :before emacsvox--advice-c-electric-backspace-before)
+    (c-electric-delete
+     :before emacsvox--advice-c-electric-delete-before)
+    (c-electric-semi&comma
+     :after emacsvox--advice-c-electric-semi&comma-after))
+  "CC Mode deletion and electric advice registrations.")
+
+(ert-deftest emacsvox-c-deletion-advice-is-directly-registered ()
+  "CC Mode deletion advice bypasses the compatibility bridge."
+  (dolist (entry emacsvox-test--c-deletion-advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-c-forward-delete-runs-once-after-feedback ()
+  "Interactive forward deletion speaks first and invokes CC Mode once."
+  (with-temp-buffer
+    (c-mode)
+    (insert "ab")
+    (goto-char 2)
+    (let ((c-hungry-delete-key nil)
+          (ems--interactive-fn-name 'c-electric-delete-forward)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'dtk-tone-deletion)
+                 (lambda () (push 'tone events)))
+                ((symbol-function 'emacsvox-speak-this-char)
+                 (lambda (character)
+                   (push (list 'char character) events)))
+                (c-delete-function
+                 (lambda (count)
+                   (cl-incf calls)
+                   (push (list 'original count) events)
+                   'delete-result)))
+        (should (eq (c-electric-delete-forward nil) 'delete-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '(tone (char 98) (original 1)))))))
+
+(ert-deftest emacsvox-c-deletion-feedback-is-target-aware ()
+  "Only the matching interactive deletion command gives feedback."
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char 2)
+    (let ((ems--interactive-fn-name 'c-hungry-delete-backwards)
+          events)
+      (cl-letf (((symbol-function 'dtk-tone-deletion)
+                 (lambda () (push 'tone events)))
+                ((symbol-function 'emacsvox-speak-this-char)
+                 (lambda (character)
+                   (push (list 'char character) events))))
+        (emacsvox--advice-c-hungry-delete-forward-before)
+        (emacsvox--advice-c-hungry-delete-backwards-before))
+      (should (equal (nreverse events) '(tone (char 97)))))))
+
 (provide 'emacsvox-c-tests)
 ;;; emacsvox-c-tests.el ends here

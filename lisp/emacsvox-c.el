@@ -55,52 +55,73 @@
 
 ;;;  advice electric deletion
 
-(defun ems--c-electric-delete-forward-around (orig-fun &rest args)
-  "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone-deletion)
-      (emacsvox-speak-this-char (following-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-c-electric-delete-forward-before (&rest _)
+  "Speak the following character before an interactive deletion."
+  (when (ems-interactive-p 'c-electric-delete-forward)
+    (dtk-tone-deletion)
+    (emacsvox-speak-this-char (following-char))))
 
-(advice-add 'c-electric-delete-forward :around
-            #'ems--c-electric-delete-forward-around)
+(advice-add
+ 'c-electric-delete-forward :before
+ #'emacsvox--advice-c-electric-delete-forward-before
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(c-hungry-delete-forward c-hungry-delete-backwards c-electric-backspace)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak character you're deleting."
-     (cond
-      ((ems-interactive-p)
-       (dtk-tone-deletion)
-       (emacsvox-speak-this-char (preceding-char))
-       ad-do-it)
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--advice-c-hungry-delete-forward-before (&rest _)
+  "Speak the reference character before an interactive hungry deletion."
+  (when (ems-interactive-p 'c-hungry-delete-forward)
+    (dtk-tone-deletion)
+    (emacsvox-speak-this-char (preceding-char))))
+
+(advice-add
+ 'c-hungry-delete-forward :before
+ #'emacsvox--advice-c-hungry-delete-forward-before
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-c-hungry-delete-backwards-before (&rest _)
+  "Speak the preceding character before an interactive hungry deletion."
+  (when (ems-interactive-p 'c-hungry-delete-backwards)
+    (dtk-tone-deletion)
+    (emacsvox-speak-this-char (preceding-char))))
+
+(advice-add
+ 'c-hungry-delete-backwards :before
+ #'emacsvox--advice-c-hungry-delete-backwards-before
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-c-electric-backspace-before (&rest _)
+  "Speak the preceding character before an interactive backspace."
+  (when (ems-interactive-p 'c-electric-backspace)
+    (dtk-tone-deletion)
+    (emacsvox-speak-this-char (preceding-char))))
+
+(advice-add
+ 'c-electric-backspace :before
+ #'emacsvox--advice-c-electric-backspace-before
+ '((name . emacsvox)))
 
 ;;;   advice things to speak
 ;;;   Electric chars speak
 
-(defun ems--c-electric-semi&comma-after (&rest _)
+(defun emacsvox--advice-c-electric-semi&comma-after (&rest _)
   "Speak the line when a statement is completed."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'c-electric-semi&comma)
     (cond ((= last-input-event 44) (dtk-speak " comma "))
           (t (emacsvox-speak-line)))))
 
-(advice-add 'c-electric-semi&comma :after
-            #'ems--c-electric-semi&comma-after)
+(advice-add
+ 'c-electric-semi&comma :after
+ #'emacsvox--advice-c-electric-semi&comma-after
+ '((name . emacsvox)))
 
-(defun ems--c-electric-delete-before (&rest _)
+(defun emacsvox--advice-c-electric-delete-before (&rest _)
   "Speak char before deleting it."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'c-electric-delete)
     (emacsvox-speak-this-char (preceding-char)) (dtk-tone-deletion)))
 
-(advice-add 'c-electric-delete :before #'ems--c-electric-delete-before)
+(advice-add
+ 'c-electric-delete :before
+ #'emacsvox--advice-c-electric-delete-before
+ '((name . emacsvox)))
 
 ;;;   Moving across logical chunks
 
