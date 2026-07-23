@@ -3164,19 +3164,23 @@ Produce an auditory icon if possible."
 
 ;;; ielm: header-line
 
-(defun ems--ielm-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    
+(defvar ielm-working-buffer)
+
+(defun emacsvox--advice-ielm-after (&rest _)
+  "Set and speak the header line after starting IELM interactively."
+  (when (ems-interactive-p 'ielm)
     (setq header-line-format
           '((:eval
              (concat
               (propertize "Interactive Elisp" 'personality
                           voice-annotate)
               (format "On %s" (buffer-name ielm-working-buffer))))))
-    (emacsvox-icon 'open-object) (emacsvox-speak-header-line)))
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-header-line)))
 
-(advice-add 'ielm :after #'ems--ielm-after)
+(advice-add
+ 'ielm :after #'emacsvox--advice-ielm-after
+ '((name . emacsvox)))
 
 ;;; Help Navigation:
 

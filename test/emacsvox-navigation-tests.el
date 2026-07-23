@@ -29,7 +29,8 @@
     (help-goto-next-page :after
      emacsvox--advice-help-goto-next-page-after)
     (help-goto-previous-page :after
-     emacsvox--advice-help-goto-previous-page-after))
+     emacsvox--advice-help-goto-previous-page-after)
+    (ielm :after emacsvox--advice-ielm-after))
   "Source navigation commands using individually named native advice.")
 
 (ert-deftest emacsvox-navigation-advice-is-directly-registered ()
@@ -144,6 +145,32 @@
      (equal
       (nreverse events)
       '((icon scroll) speak-line)))))
+
+(ert-deftest emacsvox-ielm-feedback-configures-and-speaks-header ()
+  "Interactive IELM startup sets its header and speaks it in order."
+  (let ((working-buffer
+         (generate-new-buffer " *emacsvox-ielm-working*"))
+        (ems--interactive-fn-name 'another-command)
+        (header-line-format nil)
+        events)
+    (unwind-protect
+        (let ((ielm-working-buffer working-buffer))
+          (cl-letf (((symbol-function 'emacsvox-icon)
+                     (lambda (icon)
+                       (push (list 'icon icon) events)))
+                    ((symbol-function 'emacsvox-speak-header-line)
+                     (lambda () (push 'speak-header-line events))))
+            (emacsvox--advice-ielm-after)
+            (should-not header-line-format)
+            (setq ems--interactive-fn-name 'ielm)
+            (emacsvox--advice-ielm-after))
+          (should header-line-format)
+          (should
+           (equal
+            (nreverse events)
+            '((icon open-object) speak-header-line))))
+      (when (buffer-live-p working-buffer)
+        (kill-buffer working-buffer)))))
 
 (provide 'emacsvox-navigation-tests)
 ;;; emacsvox-navigation-tests.el ends here
