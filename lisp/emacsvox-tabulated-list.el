@@ -48,6 +48,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'tabulated-list)
 
 ;;;  Map Faces:
 
@@ -81,15 +82,19 @@
         (dtk-speak  value)))))
 
 (cl-loop
- for f in 
+ for target in
  '(tabulated-list-next-column tabulated-list-previous-column)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-objet)
-       (emacsvox-tabulated-list-speak-cell)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Tabulated List column movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-tabulated-list-speak-cell)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox-tabulated-list-next-row ()
   "Move to next row and speak that cell"
@@ -144,4 +149,3 @@
                                         ; 
                                         ; 
                                         ; 
-
