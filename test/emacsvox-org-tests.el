@@ -38,6 +38,19 @@
     org-overview org-content org-tree-to-indirect-buffer)
   "Native after-advice targets in the Org structure and folding slice.")
 
+(defconst emacsvox-test--org-agenda-table-after-targets
+  '(org-timestamp-down-day org-timestamp-up-day
+    org-timestamp-down org-timestamp-up
+    org-eval-in-calendar
+    org-agenda-next-date-line org-agenda-previous-date-line
+    org-agenda-next-line org-agenda-previous-line org-agenda-goto-today
+    org-agenda-quit org-agenda-exit
+    org-agenda-goto org-agenda-show org-agenda-switch-to org-agenda
+    orgtbl-mode org-return
+    org-table-next-field org-table-previous-field
+    org-table-next-row org-table-previous-row)
+  "Native after-advice targets in the Org agenda and table slice.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice bypasses the compatibility bridge."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -117,6 +130,91 @@
       (emacsvox--advice-org-cycle-after)
       (emacsvox--advice-org-shifttab-after))
     (should (equal events '(speak-line)))))
+
+(ert-deftest emacsvox-org-agenda-table-advice-is-directly-registered ()
+  "Org agenda and table advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--org-agenda-table-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-org-timestamp-feedback-is-target-aware ()
+  "Only the matching timestamp command cues and speaks its value."
+  (let ((ems--interactive-fn-name 'org-timestamp-up)
+        (org-last-changed-timestamp "<2026-07-23 Thu>")
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox--advice-org-timestamp-down-after)
+      (emacsvox--advice-org-timestamp-up-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon select-object) (speak "<2026-07-23 Thu>"))))))
+
+(ert-deftest emacsvox-org-calendar-feedback-remains-unconditional ()
+  "Calendar expression results speak even outside an interactive call."
+  (let ((ems--interactive-fn-name nil)
+        (org-ans2 "Thursday")
+        spoken)
+    (cl-letf (((symbol-function 'dtk-speak)
+               (lambda (text) (setq spoken text))))
+      (emacsvox--advice-org-eval-in-calendar-after))
+    (should (equal spoken "Thursday"))))
+
+(ert-deftest emacsvox-org-agenda-navigation-preserves-feedback-order ()
+  "Agenda navigation cues before speaking the destination line."
+  (let ((ems--interactive-fn-name 'org-agenda-next-line)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-org-agenda-previous-line-after)
+      (emacsvox--advice-org-agenda-next-line-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon select-object) speak-line)))))
+
+(ert-deftest emacsvox-org-table-movement-feedback-remains-unconditional ()
+  "Table movement always reports the current cell."
+  (let* ((ems--interactive-fn-name nil)
+         events
+         (emacsvox-org-table-after-movement-function
+          (lambda () (push 'table-cell events))))
+    (emacsvox--advice-org-table-next-field-after)
+    (should (equal events '(table-cell)))))
+
+(ert-deftest emacsvox-org-return-selects-table-or-line-feedback ()
+  "Interactive Org return reports a table cell or the destination line."
+  (let* ((ems--interactive-fn-name 'org-return)
+         events
+         at-table
+         (emacsvox-org-table-after-movement-function
+          (lambda () (push 'table-cell events))))
+    (cl-letf (((symbol-function 'org-at-table-p)
+               (lambda (&rest _) at-table))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (setq at-table t)
+      (emacsvox--advice-org-return-after)
+      (setq at-table nil
+            ems--interactive-fn-name 'org-return)
+      (emacsvox--advice-org-return-after))
+    (should
+     (equal
+      (nreverse events)
+      '(table-cell speak-line (icon select-object))))))
 
 (provide 'emacsvox-org-tests)
 ;;; emacsvox-org-tests.el ends here

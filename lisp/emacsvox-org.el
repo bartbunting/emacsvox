@@ -374,104 +374,134 @@
 ;;;  timestamps and calendar:
 
 (cl-loop
- for f in
+ for target in
  '(org-timestamp-down-day org-timestamp-up-day)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Org day adjustment."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(cl-loop for f in
-         '(org-timestamp-down org-timestamp-up)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'select-object)
-               (dtk-speak org-last-changed-timestamp)))))
+(cl-loop
+ for target in
+ '(org-timestamp-down org-timestamp-up)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Org timestamp adjustment."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (dtk-speak org-last-changed-timestamp)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--org-eval-in-calendar-after (&rest _)
-  "Speak what is returned." 
+(defun emacsvox--advice-org-eval-in-calendar-after (&rest _)
+  "Speak the result of evaluating an Org calendar expression."
   (dtk-speak org-ans2))
 
-(advice-add 'org-eval-in-calendar :after
-            #'ems--org-eval-in-calendar-after)
+(advice-add
+ 'org-eval-in-calendar :after
+ #'emacsvox--advice-org-eval-in-calendar-after
+ '((name . emacsvox)))
 
 ;;;  Agenda:
 
 ;; AGENDA NAVIGATION
 
 (cl-loop
- for f in
+ for target in
  '(
    org-agenda-next-date-line org-agenda-previous-date-line
    org-agenda-next-line org-agenda-previous-line
    org-agenda-goto-today
    )
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Org agenda navigation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in
+ for target in
  '(org-agenda-quit org-agenda-exit)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively closing an Org agenda."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'close-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in
+ for target in
  '(org-agenda-goto org-agenda-show org-agenda-switch-to)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively opening an Org agenda item."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--org-agenda-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-org-agenda-after (&rest _)
+  "Cue and speak after interactively opening the Org agenda."
+  (when (ems-interactive-p 'org-agenda)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'org-agenda :after #'ems--org-agenda-after)
+(advice-add
+ 'org-agenda :after #'emacsvox--advice-org-agenda-after
+ '((name . emacsvox)))
 
 ;;;  tables:
 
 ;;;  table minor mode:
 
-(defun ems--orgtbl-mode-after (&rest _)
-  "speak." 
-  (when (ems-interactive-p)
+(defun emacsvox--advice-orgtbl-mode-after (&rest _)
+  "Report the new state after interactively toggling Org table mode."
+  (when (ems-interactive-p 'orgtbl-mode)
     (emacsvox-icon (if orgtbl-mode 'on 'off))
     (message "Turned %s org table mode." (if orgtbl-mode 'on 'off))))
 
-(advice-add 'orgtbl-mode :after #'ems--orgtbl-mode-after)
+(advice-add
+ 'orgtbl-mode :after #'emacsvox--advice-orgtbl-mode-after
+ '((name . emacsvox)))
 
 ;;;  deleting chars:
 
-(defun ems--org-return-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-org-return-after (&rest _)
+  "Speak the destination after interactive Org return."
+  (when (ems-interactive-p 'org-return)
     (cond
      ((org-at-table-p 'any)
       (funcall emacsvox-org-table-after-movement-function))
      (t (emacsvox-speak-line) (emacsvox-icon 'select-object)))))
 
-(advice-add 'org-return :after #'ems--org-return-after)
+(advice-add
+ 'org-return :after #'emacsvox--advice-org-return-after
+ '((name . emacsvox)))
 
 ;;;  Keymap update:
 
@@ -678,14 +708,18 @@
       (org-table-get-field)))))
 
 (cl-loop
- for f in
+ for target in
  '(org-table-next-field org-table-previous-field
                         org-table-next-row org-table-previous-row)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "speak."
-     (funcall emacsvox-org-table-after-movement-function))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak the current Org table cell after movement."
+       (funcall emacsvox-org-table-after-movement-function))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  Additional table function:
 
