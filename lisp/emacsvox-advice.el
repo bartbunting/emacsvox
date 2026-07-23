@@ -2438,20 +2438,22 @@ Produce an auditory icon if possible."
 
 (advice-add 'point-to-register :after #'ems--point-to-register-after)
 
-(defun ems--copy-to-register-after (&rest _)
-  "Acknowledge the copy."
-  (when (ems-interactive-p)
-    (let
-        ((start (ad-get-arg 1)) (end (ad-get-arg 2))
-         (register (ad-get-arg 0)) (lines nil) (chars nil))
-      (setq lines (count-lines start end) chars (abs (- start end)))
+(defun emacsvox--advice-copy-to-register-after
+    (register start end &rest _)
+  "Acknowledge an interactive copy from START to END into REGISTER."
+  (when (ems-interactive-p 'copy-to-register)
+    (let ((lines (count-lines start end))
+          (characters (abs (- start end))))
       (if (> lines 1)
           (dtk-notify
            (format "Copied %s lines to register %c" lines register))
         (dtk-notify
-         (format "Copied %s characters to register %c" chars register))))))
+         (format "Copied %s characters to register %c"
+                 characters register))))))
 
-(advice-add 'copy-to-register :after #'ems--copy-to-register-after)
+(advice-add
+ 'copy-to-register :after #'emacsvox--advice-copy-to-register-after
+ '((name . emacsvox)))
 
 (defun ems--view-register-after (&rest _)
   "Speak displayed contents."
@@ -2483,24 +2485,37 @@ Produce an auditory icon if possible."
 
 (advice-add 'insert-register :after #'ems--insert-register-after)
 
-(defun ems--window-configuration-to-register-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Copied window configuration to register %c"
-             (ad-get-arg 0))))
+(defun emacsvox--advice-window-configuration-to-register-after
+    (register &rest _)
+  "Announce an interactive window configuration copy to REGISTER."
+  (when (ems-interactive-p 'window-configuration-to-register)
+    (message "Copied window configuration to register %c" register)))
 
-(advice-add 'window-configuration-to-register :after
-            #'ems--window-configuration-to-register-after)
+(advice-add
+ 'window-configuration-to-register :after
+ #'emacsvox--advice-window-configuration-to-register-after
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(frameset-to-register frame-configuration-to-register)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (message "Copied frame  configuration to register %c" (ad-get-arg 0))))))
+(defun emacsvox--advice-frameset-to-register-after (register)
+  "Announce an interactive frameset copy to REGISTER."
+  (when (ems-interactive-p 'frameset-to-register)
+    (message "Copied frame  configuration to register %c" register)))
+
+(advice-add
+ 'frameset-to-register :after
+ #'emacsvox--advice-frameset-to-register-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-frame-configuration-to-register-after
+    (register &rest _)
+  "Announce an interactive frame configuration copy to REGISTER."
+  (when (ems-interactive-p 'frame-configuration-to-register)
+    (message "Copied frame  configuration to register %c" register)))
+
+(advice-add
+ 'frame-configuration-to-register :after
+ #'emacsvox--advice-frame-configuration-to-register-after
+ '((name . emacsvox)))
 
 ;;;  set up clause boundaries for specific modes:
 
