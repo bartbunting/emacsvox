@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Org on 2026-07-23 on branch =bart=:
+Outline on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 375 passing ERT tests;
+- the Emacs 31 suite contains 383 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -50,17 +50,19 @@ Org on 2026-07-23 on branch =bart=:
   =ad-set-arg=, =ad-do-it=, or =ad-return-value= forms;
 - =lisp/emacsvox-org.el= contains no =defadvice=, positional compatibility
   accessors, or bridge-era =ems--= advice helpers.
+- =lisp/emacsvox-outline.el= contains no =defadvice= or positional
+  compatibility accessors, including in its optional Foldout integration.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         319 |   106 |
-| =ad-get-arg=        |          75 |   n/a |
+| =defadvice=         |         315 |   105 |
+| =ad-get-arg=        |          71 |   n/a |
 | =ad-set-arg=        |           3 |   n/a |
 | =ad-do-it=          |          42 |   n/a |
 | =ad-return-value=   |          26 |   n/a |
-| =advice-add=        |        1425 |   156 |
+| =advice-add=        |        1419 |   156 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -79,9 +81,10 @@ function rather than returning the result of speech output.
 The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
+Outline and its optional Foldout integration are also converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 51 files still contain
+completely independent of the compatibility bridge; 50 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -119,6 +122,12 @@ actually defines =org-complete=, avoiding a phantom advised command and
 duplicate current completion feedback.  Org export advice now receives the
 native =org-export--dispatch-action= and =org-export-to-file= arguments
 directly instead of reading positional bridge state.
+
+The Outline conversion keeps hide/show announcements target-aware and gives
+=outline-hide-sublevels= its explicit =levels= argument.  Its
+=outline-flag-region= wrapper now calls the original exactly once, preserves
+the original return value, and mirrors Outline invisibility with native
+arguments.  Foldout advice remains deferred until Foldout loads.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
