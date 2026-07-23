@@ -2140,8 +2140,9 @@ Produce an auditory icon if possible."
 
 ;; Fix key bindings:
 
-(cl-declaim (special isearch-mode-map
-                     minibuffer-local-isearch-map emacsvox-prefix))
+(defvar isearch-mode-map)
+(defvar minibuffer-local-isearch-map)
+(defvar emacsvox-prefix)
 
 (define-key minibuffer-local-isearch-map
             emacsvox-prefix 'emacsvox-keymap)
@@ -2170,7 +2171,7 @@ Produce an auditory icon if possible."
 
 ;; Advice isearch-search to speak
 
-(defun ems--isearch-search-after (&rest _)
+(defun emacsvox--advice-isearch-search-after (&rest _)
   "Speak the hit."
   (cond ((null isearch-success) (emacsvox-icon 'search-miss))
         (t (emacsvox-icon 'search-hit)
@@ -2184,10 +2185,12 @@ Produce an auditory icon if possible."
                                                   (line-beginning-position)
                                                   (line-end-position)))))))))
 
-(advice-add 'isearch-search :after #'ems--isearch-search-after)
+(advice-add
+ 'isearch-search :after #'emacsvox--advice-isearch-search-after
+ '((name . emacsvox)))
 
-(defun ems--isearch-delete-char-after (&rest _)
-  "Speak search hit. "
+(defun emacsvox--advice-isearch-delete-char-after (&rest _)
+  "Speak the shortened isearch string and current hit."
   (dtk-speak (propertize isearch-string 'personality voice-bolden))
   (when (sit-for 0.1)
     (emacsvox-icon 'search-hit)
@@ -2200,56 +2203,58 @@ Produce an auditory icon if possible."
                                      voice-bolden
                                      (emacsvox-speak-line))))
 
-(advice-add 'isearch-delete-char :after
-            #'ems--isearch-delete-char-after)
+(advice-add
+ 'isearch-delete-char :after #'emacsvox--advice-isearch-delete-char-after
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(isearch-yank-word isearch-yank-kill isearch-yank-line) do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-speak (propertize  isearch-string 'personality voice-bolden))
-       (emacsvox-icon 'yank-object)))))
+(emacsvox-advice--define-interactive-after-advice
+    (isearch-yank-word isearch-yank-kill isearch-yank-line)
+    "Speak text yanked into an incremental search."
+  (dtk-speak (propertize isearch-string 'personality voice-bolden))
+  (emacsvox-icon 'yank-object))
 
-(cl-loop
- for f in
- '(
-   isearch-ring-advance isearch-ring-retreat
-   isearch-ring-advance-edit isearch-ring-retreat-edit) do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-speak (propertize  isearch-string 'personality voice-bolden))
-       (emacsvox-icon 'item)))))
+(emacsvox-advice--define-interactive-after-advice
+    (isearch-ring-advance isearch-ring-retreat
+                          isearch-ring-advance-edit isearch-ring-retreat-edit)
+    "Speak the incremental search ring item."
+  (dtk-speak (propertize isearch-string 'personality voice-bolden))
+  (emacsvox-icon 'item))
 
 ;; Note the advice on the next two toggle commands
 ;; checks the variable being toggled.
 ;; When our advice is called, emacs has not yet reflected
 ;; the newly toggled state.
 
-(defun ems--isearch-toggle-case-fold-after (&rest _)
-  "Speak" (emacsvox-icon (if isearch-case-fold-search 'off 'on))
+(defun emacsvox--advice-isearch-toggle-case-fold-after (&rest _)
+  "Announce the new isearch case-fold state."
+  (emacsvox-icon (if isearch-case-fold-search 'off 'on))
   (dtk-speak
    (format " Case is %s significant in search"
            (if isearch-case-fold-search " not" " "))))
 
-(advice-add 'isearch-toggle-case-fold :after
-            #'ems--isearch-toggle-case-fold-after)
+(advice-add
+ 'isearch-toggle-case-fold :after
+ #'emacsvox--advice-isearch-toggle-case-fold-after
+ '((name . emacsvox)))
 
-(defun ems--isearch-toggle-regexp-after (&rest _)
-  "Speak" (emacsvox-icon (if isearch-regexp 'on 'off))
+(defun emacsvox--advice-isearch-toggle-regexp-after (&rest _)
+  "Announce the new isearch regexp state."
+  (emacsvox-icon (if isearch-regexp 'on 'off))
   (dtk-speak (if isearch-regexp "Regexp search" "text search")))
 
-(advice-add 'isearch-toggle-regexp :after
-            #'ems--isearch-toggle-regexp-after)
+(advice-add
+ 'isearch-toggle-regexp :after
+ #'emacsvox--advice-isearch-toggle-regexp-after
+ '((name . emacsvox)))
 
-(defun ems--isearch-occur-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(defun emacsvox--advice-isearch-occur-after (&rest _)
+  "Cue interactively opening isearch matches in Occur."
+  (when (ems-interactive-p 'isearch-occur)
+    (emacsvox-icon 'open-object)))
 
-(advice-add 'isearch-occur :after #'ems--isearch-occur-after)
+(advice-add
+ 'isearch-occur :after #'emacsvox--advice-isearch-occur-after
+ '((name . emacsvox)))
 
 ;;;  marking objects produces auditory icons
 
