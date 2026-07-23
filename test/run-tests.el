@@ -30,6 +30,7 @@
   (require 'emacsvox-core-migration-tests)
   (require 'emacsvox-completion-tests)
   (require 'emacsvox-input-tests)
+  (require 'emacsvox-search-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

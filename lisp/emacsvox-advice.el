@@ -103,23 +103,27 @@ DOCSTRING and BODY define the feedback function for each command."
 
 (voice-setup-set-voice-for-face 'query-replace 'voice-animate)
 
-(cl-loop
- for f in
- '(query-replace query-replace-regexp) do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Icon"
-     (when (ems-interactive-p) (emacsvox-icon 'task-done)))))
+(emacsvox-advice--define-interactive-after-advice
+    (query-replace query-replace-regexp)
+    "Cue completion of an interactive query replacement."
+  (emacsvox-icon 'task-done))
 
-(defun ems--perform-replace-around (orig-fun &rest args)
-  "Silence help." (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-perform-replace-around
+    (original &rest arguments)
+  "Call ORIGINAL with replacement messages silenced."
+  (ems-with-messages-silenced (apply original arguments)))
 
-(advice-add 'perform-replace :around #'ems--perform-replace-around)
+(advice-add
+ 'perform-replace :around #'emacsvox--advice-perform-replace-around
+ '((name . emacsvox)))
 
-(defun ems--replace-highlight-after (&rest _)
-  "Speak line. " (emacsvox-speak-line))
+(defun emacsvox--advice-replace-highlight-after (&rest _)
+  "Speak the line after highlighting a replacement."
+  (emacsvox-speak-line))
 
-(advice-add 'replace-highlight :after #'ems--replace-highlight-after)
+(advice-add
+ 'replace-highlight :after #'emacsvox--advice-replace-highlight-after
+ '((name . emacsvox)))
 
 ;;;  advice overlays
 
