@@ -1,0 +1,234 @@
+#+title: Emacs 31 Advice Migration Plan
+#+author: Emacsvox Contributors
+#+date: <2026-07-23 Thu>
+
+* Goal
+
+Replace the remaining legacy and partially converted advice with correct native
+Emacs advice for Emacs 31.  Preserve Emacsvox's spoken interaction while the
+conversion proceeds, then remove the temporary compatibility bridge from
+=emacsvox-preamble.el=.
+
+The bridge is migration scaffolding.  It is not the final advice architecture.
+
+* Baseline
+
+The initial raw inventory of the =lisp/= tree is:
+
+| Pattern             | Occurrences | Files |
+|---------------------+-------------+-------|
+| =(defadvice=        |         439 |   127 |
+| =ad-get-arg=        |         129 |    39 |
+| =ad-set-arg=        |           4 |     3 |
+| =ad-do-it=          |          69 |    28 |
+| =ad-return-value=   |          46 |    25 |
+| =(advice-add=       |        1404 |   149 |
+| =ems-interactive-p= |        1644 |   175 |
+
+These are textual counts, so they include macro templates, comments, and other
+forms that require classification.  In particular, some backquoted macros
+generate =defadvice= forms and are not handled by the existing converter.
+
+The current converter is not yet safe for general use.  For example, its sample
+output retains =ad-get-arg= in a function whose arguments are discarded.  It
+must become conservative and test-driven before further bulk use.
+
+* Working Principles
+
+1. Preserve behaviour before improving or simplifying it.
+2. Convert in small, coherent commits that can be reverted independently.
+3. Prefer =:before= and =:after= advice when they express the behaviour exactly.
+4. Use =:filter-args= for argument transformation and =:filter-return= for
+   return-value transformation where practical.
+5. Use =:around= only when the original call genuinely needs explicit control.
+6. Make the advised interactive command explicit; do not depend on
+   =called-interactively-p= inside an advice helper.
+7. Automatically convert only patterns whose semantics are covered by tests.
+8. Manually review conditional calls, multiple =ad-do-it= forms, argument
+   mutation, return-value mutation, and advice ordering.
+9. Do not commit generated =lisp/emacsvox-loaddefs.el= changes as part of advice
+   migration slices.
+
+* Testing Strategy
+
+** Emacs 31 ERT suite
+
+Add a batch ERT suite that does not require a real speech server.  Tests record
+speech and auditory events using test doubles.  The initial suite covers:
+
+- interactive and non-interactive invocation;
+- nested and recursive interactive commands;
+- =:before=, =:after=, and =:around= ordering;
+- argument inspection and replacement;
+- return-value inspection and replacement;
+- autoload and function redefinition behaviour;
+- advice membership, removal, and module reload;
+- timers, overlays, font locking, and redisplay-sensitive paths where they can
+  be exercised deterministically in batch mode.
+
+The standard entry point will be similar to:
+
+#+begin_src sh
+make test EMACS=/home/bart/opt/emacs-31/bin/emacs
+#+end_src
+
+** Structured speech traces
+
+Compare semantic events rather than synthesized audio.  A trace may contain:
+
+#+begin_src emacs-lisp
+((speak "Beginning of buffer")
+ (icon select-object)
+ (voice annotate)
+ (stop))
+#+end_src
+
+Scenarios should also capture relevant editor state:
+
+- buffer contents;
+- point and mark;
+- selected buffer and window;
+- command return value;
+- messages;
+- whether invocation was interactive.
+
+Normalize dynamic values such as paths, timestamps, generated buffer names, and
+version strings before comparison.
+
+** Three-way behavioural comparison
+
+Use three implementations when practical:
+
+1. A pinned fresh checkout of the original Emacspeak codebase, as an additional
+   source of intended behaviour.
+2. Emacsvox at the bridge baseline, as the strict local regression reference.
+3. The converted Emacsvox implementation, as the candidate.
+
+Record the reference Emacspeak commit and Emacs version.  Do not treat current
+upstream Emacspeak automatically as correct: Emacspeak and Emacsvox may have
+intentionally diverged, and upstream behaviour may have changed since the fork.
+
+The normal test suite must remain self-contained and offline.  Reference tests
+will be optional and accept an explicit checkout, for example:
+
+#+begin_src sh
+make reference-test \
+  EMACS=/home/bart/opt/emacs-31/bin/emacs \
+  EMACSPEAK_DIR=/path/to/pinned/emacspeak
+#+end_src
+
+Commit normalized golden traces for a small set of valuable core scenarios.
+Use the live checkout comparison to investigate differences and refresh a trace
+only after reviewing the behavioural change.
+
+Audio waveform comparison is not a primary test: synthesis engines, timing,
+rate, and engine versions make it noisy.  TTS protocol traces may be added later
+when Lisp-level semantic traces are insufficient.
+
+** Manual acceptance
+
+Automated tests establish which speech operation occurred, but not whether the
+interaction sounds natural.  At core milestones, run a short audible checklist
+covering movement, editing, buffer boundaries, copying, minibuffer operation,
+Dired, completion, overlays, and font locking.
+
+* Migration Slices
+
+** 1. Record this plan
+
+Commit this document independently so the agreed strategy remains available to
+future contributors.
+
+** 2. Establish the ERT harness
+
+Add the batch runner and Make target.  Capture the compatibility bridge and
+interactive-command behaviour as regression tests before changing them.
+
+** 3. Add speech-event differential testing
+
+Add a reusable structured event recorder, scenario format, normalization, and
+the optional pinned-Emacspeak runner.  Begin with approximately ten core
+scenarios rather than attempting every optional package.
+
+** 4. Harden conversion and audit tooling
+
+Add ERT tests for parsing, classification, generation, dry runs, and failure
+cases.  Detect backquoted advice-generating macros.  Convert safe forms only and
+produce a deterministic manual-review report for complex forms.
+
+** 5. Make interactive targets explicit
+
+Introduce the final target-aware form, for example:
+
+#+begin_src emacs-lisp
+(ems-interactive-p 'kill-word)
+#+end_src
+
+Temporarily retain the argument-less compatibility behaviour for unmigrated
+code.  Ensure newly corrected native advice bypasses the bridge.
+
+** 6. Remove visible legacy redefinition warnings
+
+Convert and test the Dired/Locate advice and the Mail advice in separate commits.
+This validates autoload and redefinition behaviour early and removes the
+=ad-handle-definition= messages observed during manual testing.
+
+** 7. Convert core advice by behavioural area
+
+Use separate commits for coherent areas such as:
+
+- movement and editing;
+- buffers and windows;
+- minibuffer and completion;
+- search and replace;
+- files and processes;
+- overlays, font locking, timers, and redisplay.
+
+Avoid converting all of =emacsvox-advice.el= in one commit.
+
+** 8. Convert remaining modules
+
+Convert Emacs built-in integrations first, followed by optional third-party
+packages.  Prefer one module, or a small closely related group, per commit.
+
+** 9. Remove the bridge
+
+When the repository-wide legacy audit is clean, remove:
+
+- the advice on =advice-add=;
+- =ad-get-arg= and =ad-set-arg= compatibility definitions;
+- dynamic converted-advice argument and return-value state;
+- generated wrapper storage;
+- compatibility-only interactive target state.
+
+Do this in its own commit after the full suite and manual core checklist pass.
+
+* Commit Gate
+
+Before each migration commit:
+
+1. Run the Emacs 31 ERT suite.
+2. Byte-compile every touched Lisp file with Emacs 31.
+3. Run the legacy-symbol audit on the converted files.
+4. Run an integration load test where applicable.
+5. Inspect the exact staged diff and exclude generated or unrelated files.
+6. Record remaining warnings or manual-test requirements in the handoff.
+
+At major boundaries, compile the complete default Emacsvox object set and run a
+fresh startup smoke test.
+
+* Completion Criteria
+
+The migration is complete when:
+
+- no executable legacy =defadvice= remains;
+- no converted advice depends on =ad-get-arg=, =ad-set-arg=, =ad-do-it=, or
+  =ad-return-value=;
+- interactive advice uses the explicit, tested target mechanism;
+- advice can be inspected, removed, and reloaded through native APIs;
+- the compatibility bridge is absent;
+- all automated tests pass under Emacs 31;
+- the default object set byte-compiles under Emacs 31;
+- startup and the audible core acceptance checklist pass;
+- documentation no longer claims a stronger migration status than the audit
+  supports.
