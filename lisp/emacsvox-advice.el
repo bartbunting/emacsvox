@@ -1829,17 +1829,32 @@ the newly created  line."
       (emacsvox-read-previous-line)
     (dtk-tone 225 75 'force)))
 
-(cl-loop
- for f in
- '(eval-last-sexp eval-expression)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Also speaks the result of evaluation."
-     (when (ems-interactive-p)
-       (let ((dtk-chunk-separator-syntax " .<>()$\"'"))
-         (tts-with-punctuations 'all
-                                (dtk-speak (format "%s" ad-return-value))))))))
+(defun emacsvox--eval-filter-return (target result)
+  "Speak an interactive evaluation RESULT and return it unchanged.
+TARGET identifies the evaluation command."
+  (when (ems-interactive-p target)
+    (let ((dtk-chunk-separator-syntax " .<>()$\"'"))
+      (tts-with-punctuations 'all
+        (dtk-speak (format "%s" result)))))
+  result)
+
+(defun emacsvox--advice-eval-last-sexp-filter-return (result)
+  "Speak an interactive `eval-last-sexp' RESULT and return it."
+  (emacsvox--eval-filter-return 'eval-last-sexp result))
+
+(advice-add
+ 'eval-last-sexp :filter-return
+ #'emacsvox--advice-eval-last-sexp-filter-return
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-eval-expression-filter-return (result)
+  "Speak an interactive `eval-expression' RESULT and return it."
+  (emacsvox--eval-filter-return 'eval-expression result))
+
+(advice-add
+ 'eval-expression :filter-return
+ #'emacsvox--advice-eval-expression-filter-return
+ '((name . emacsvox)))
 
 (defun ems--shell-after (&rest _)
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
