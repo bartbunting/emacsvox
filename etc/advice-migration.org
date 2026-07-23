@@ -35,9 +35,9 @@ must become conservative and test-driven before further bulk use.
 
 * Progress Checkpoint
 
-As of 2026-07-23 on branch =bart=:
+As of the completed core-file migration on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 211 passing ERT tests;
+- the Emacs 31 suite contains 277 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -57,17 +57,25 @@ The syntax-aware repository audit currently reports:
 | =ad-set-arg=        |           3 |   n/a |
 | =ad-do-it=          |          44 |   n/a |
 | =ad-return-value=   |          27 |   n/a |
-| =advice-add=        |        1443 |   150 |
+| =advice-add=        |        1400 |   150 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
 messages, overlays, timers, source navigation, property search, Help
 navigation, IELM, rectangle editing, comments, registers, button creation, and
-tooltips.  The remaining 66 =ems--= advice helpers in
-=lisp/emacsvox-advice.el= use native =advice-add= forms but still pass through
-the compatibility bridge.  Continue by converting those helpers to explicit,
-target-aware =emacsvox--= advice, then migrate built-in integration modules
-before optional third-party integrations.
+tooltips.  All advice registered by =lisp/emacsvox-advice.el= now uses direct,
+named native advice and bypasses the compatibility bridge.  Its three remaining
+=ems--= definitions are ordinary utility functions, not advice helpers.
+
+This phase also corrected two bridge-era semantic regressions: native
+interactive specifications now restore the intended spoken prompts for
+=local-set-key=, =global-set-key=, and =modify-syntax-entry=; and Ange FTP
+progress advice now preserves the processed string returned by the original
+function rather than returning the result of speech output.
+
+Continue by migrating built-in integration modules before optional third-party
+integrations.  The compatibility bridge remains necessary until the
+repository-wide legacy audit is clean.
 
 * Working Principles
 
