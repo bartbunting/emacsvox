@@ -2795,26 +2795,22 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
  '((name . emacsvox)))
 
 ;;;  apropos and friends
-(cl-loop
- for f in
- '(
-   apropos apropos-char apropos-library
-   apropos-unicode apropos-user-option apropos-value apropos-variable
-   apropos-command apropos-documentation)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Provide an auditory icon."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)
-       (message "Displayed apropos in other window.")))))
+(emacsvox-advice--define-interactive-after-advice
+    (apropos apropos-char apropos-library
+     apropos-unicode apropos-user-option apropos-value apropos-variable
+     apropos-command apropos-documentation)
+    "Announce display of interactive Apropos results."
+  (emacsvox-icon 'help)
+  (message "Displayed apropos in other window."))
 
-(defun ems--apropos-follow-after (&rest _)
-  "Speak the help you displayed."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-apropos-follow-after (&rest _)
+  "Speak Help displayed by interactively following an Apropos result."
+  (when (ems-interactive-p 'apropos-follow)
     (emacsvox-icon 'select-object) (emacsvox-speak-help)))
 
-(advice-add 'apropos-follow :after #'ems--apropos-follow-after)
+(advice-add
+ 'apropos-follow :after #'emacsvox--advice-apropos-follow-after
+ '((name . emacsvox)))
 
 ;;;  toggling debug state
 

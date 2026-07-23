@@ -34,7 +34,9 @@
     (describe-key :filter-return
      emacsvox--advice-describe-key-filter-return)
     (describe-keymap :filter-return
-     emacsvox--advice-describe-keymap-filter-return))
+     emacsvox--advice-describe-keymap-filter-return)
+    (apropos-follow :after
+     emacsvox--advice-apropos-follow-after))
   "Help commands using individually named native advice.")
 
 (defconst emacsvox-test--help-description-targets
@@ -54,6 +56,12 @@
     describe-personal-keybindings describe-theme)
   "Description commands using generated native after advice.")
 
+(defconst emacsvox-test--apropos-targets
+  '(apropos apropos-char apropos-library
+    apropos-unicode apropos-user-option apropos-value apropos-variable
+    apropos-command apropos-documentation)
+  "Apropos commands using generated native after advice.")
+
 (ert-deftest emacsvox-help-advice-is-directly-registered ()
   "Migrated Help advice bypasses the compatibility bridge."
   (dolist (entry emacsvox-test--help-direct-advice)
@@ -64,6 +72,14 @@
        (gethash
         (list target where function) ems--modern-advice-wrappers))))
   (dolist (target emacsvox-test--help-description-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers))))
+  (dolist (target emacsvox-test--apropos-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
@@ -212,6 +228,40 @@
      (equal
       (nreverse events)
       '((icon help) speak-help)))))
+
+(ert-deftest emacsvox-apropos-feedback-is-target-aware ()
+  "Only the matching Apropos command cues and announces its result window."
+  (let ((ems--interactive-fn-name 'apropos-command)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (list 'message
+                        (apply #'format format-string arguments))
+                  events))))
+      (emacsvox--advice-apropos-variable-after "wrong")
+      (emacsvox--advice-apropos-command-after "right"))
+    (should
+     (equal
+      (nreverse events)
+      '((icon help)
+        (message "Displayed apropos in other window."))))))
+
+(ert-deftest emacsvox-apropos-follow-feedback-preserves-order ()
+  "Following an Apropos result cues selection before speaking Help."
+  (let ((ems--interactive-fn-name 'apropos-follow)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-help)
+               (lambda () (push 'speak-help events))))
+      (emacsvox--advice-apropos-follow-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon select-object) speak-help)))))
 
 (provide 'emacsvox-help-tests)
 ;;; emacsvox-help-tests.el ends here
