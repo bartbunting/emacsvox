@@ -92,6 +92,7 @@
   (require 'emacsvox-eww-tests)
   (require 'emacsvox-gnus-tests)
   (require 'emacsvox-ibuffer-tests)
+  (require 'emacsvox-comint-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
