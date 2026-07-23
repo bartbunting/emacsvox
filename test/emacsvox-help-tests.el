@@ -37,6 +37,23 @@
      emacsvox--advice-describe-keymap-filter-return))
   "Help commands using individually named native advice.")
 
+(defconst emacsvox-test--help-description-targets
+  '(describe-function describe-variable describe-symbol
+    describe-face describe-font
+    describe-text-properties describe-syntax
+    describe-package
+    describe-char describe-char-after describe-character-set
+    describe-chars-in-region
+    describe-coding-system describe-current-coding-system
+    describe-current-coding-system-briefly
+    describe-current-display-table describe-fontset
+    describe-help-keys describe-input-method
+    describe-language-environment
+    describe-minor-mode describe-minor-mode-from-indicator
+    describe-minor-mode-from-symbol
+    describe-personal-keybindings describe-theme)
+  "Description commands using generated native after advice.")
+
 (ert-deftest emacsvox-help-advice-is-directly-registered ()
   "Migrated Help advice bypasses the compatibility bridge."
   (dolist (entry emacsvox-test--help-direct-advice)
@@ -45,7 +62,15 @@
       (should (advice-member-p function target))
       (should-not
        (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+        (list target where function) ems--modern-advice-wrappers))))
+  (dolist (target emacsvox-test--help-description-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
 
 (ert-deftest emacsvox-describe-mode-feedback-preserves-order ()
   "Interactive mode help announces its message before the Help icon."
@@ -172,6 +197,21 @@
         (emacsvox--advice-describe-keymap-filter-return 'keymap-result)
         'keymap-result)))
     (should (equal events '((icon help))))))
+
+(ert-deftest emacsvox-description-feedback-is-target-aware ()
+  "Only the matching description command cues and speaks its Help buffer."
+  (let ((ems--interactive-fn-name 'describe-language-environment)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-help)
+               (lambda () (push 'speak-help events))))
+      (emacsvox--advice-describe-function-after)
+      (emacsvox--advice-describe-language-environment-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon help) speak-help)))))
 
 (provide 'emacsvox-help-tests)
 ;;; emacsvox-help-tests.el ends here

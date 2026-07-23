@@ -1784,29 +1784,24 @@ TARGET identifies the key-description command."
  #'emacsvox--advice-describe-keymap-filter-return
  '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(
-   describe-function describe-variable describe-symbol
-   describe-face describe-font
-   describe-text-properties describe-syntax
-   describe-package
-   describe-char describe-char-after describe-character-set
-   describe-chars-in-region
-   describe-coding-system describe-current-coding-system
-   describe-current-coding-system-briefly
-   describe-current-display-table describe-fontset
-   describe-help-keys describe-input-method describe-language-environment
-   describe-minor-mode describe-minor-mode-from-indicator
-   describe-minor-mode-from-symbol
-   describe-personal-keybindings describe-theme)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the help."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)
-       (emacsvox-speak-help)))))
+(emacsvox-advice--define-interactive-after-advice
+    (describe-function describe-variable describe-symbol
+     describe-face describe-font
+     describe-text-properties describe-syntax
+     describe-package
+     describe-char describe-char-after describe-character-set
+     describe-chars-in-region
+     describe-coding-system describe-current-coding-system
+     describe-current-coding-system-briefly
+     describe-current-display-table describe-fontset
+     describe-help-keys describe-input-method
+     describe-language-environment
+     describe-minor-mode describe-minor-mode-from-indicator
+     describe-minor-mode-from-symbol
+     describe-personal-keybindings describe-theme)
+    "Speak help produced by an interactive description command."
+  (emacsvox-icon 'help)
+  (emacsvox-speak-help))
 
 (defun ems--help-with-tutorial-after (&rest _)
   "speak."
