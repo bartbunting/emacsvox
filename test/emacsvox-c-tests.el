@@ -109,5 +109,65 @@
         (emacsvox--advice-c-hungry-delete-backwards-before))
       (should (equal (nreverse events) '(tone (char 97)))))))
 
+(defconst emacsvox-test--c-navigation-after-targets
+  '(c-up-conditional
+    c-forward-conditional
+    c-backward-conditional
+    c-beginning-of-statement
+    c-end-of-statement
+    c-mark-function
+    c-beginning-of-defun
+    c-end-of-defun
+    c-scope-operator
+    c-previous-statement
+    c-next-statement
+    c-awk-beginning-of-defun
+    c-awk-end-of-defun
+    c-up-conditional-with-else
+    c-down-conditional-with-else
+    c-down-conditional)
+  "CC Mode navigation commands with direct after advice.")
+
+(ert-deftest emacsvox-c-navigation-advice-is-directly-registered ()
+  "CC Mode navigation advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--c-navigation-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-c-navigation-feedback-is-target-aware ()
+  "Only matching interactive C navigation speaks and cues."
+  (let ((ems--interactive-fn-name 'c-forward-conditional)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda (&rest _) (push 'line events))))
+      (emacsvox--advice-c-backward-conditional-after)
+      (emacsvox--advice-c-forward-conditional-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon large-movement) line)))))
+
+(ert-deftest emacsvox-c-conditional-feedback-preserves-reference-order ()
+  "Conditional descent speaks the destination before its cue."
+  (let ((ems--interactive-fn-name 'c-down-conditional-with-else)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda (&rest _) (push 'line events))))
+      (emacsvox--advice-c-down-conditional-with-else-after))
+    (should
+     (equal
+      (nreverse events)
+      '(line (icon large-movement))))))
+
 (provide 'emacsvox-c-tests)
 ;;; emacsvox-c-tests.el ends here
