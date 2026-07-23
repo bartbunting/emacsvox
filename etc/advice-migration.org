@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Ibuffer on 2026-07-24 on branch =bart=:
+Comint on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 449 passing ERT tests;
+- the Emacs 31 suite contains 464 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -61,18 +61,21 @@ Ibuffer on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-ibuffer.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-comint.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         302 |   103 |
-| =ad-get-arg=        |          67 |   n/a |
+| =defadvice=         |         300 |   102 |
+| =ad-get-arg=        |          62 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
 | =ad-do-it=          |          40 |   n/a |
 | =ad-return-value=   |          25 |   n/a |
-| =advice-add=        |        1340 |   156 |
-| =ems-interactive-p= |        1412 |   176 |
+| =advice-add=        |        1333 |   156 |
+| =ems-interactive-p= |        1403 |   176 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -92,10 +95,10 @@ The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
-integration, Gnus, and Ibuffer are also converted.
+integration, Gnus, Ibuffer, and Comint are also converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 48 files still contain
+completely independent of the compatibility bridge; 47 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -184,6 +187,20 @@ and preserve the original result.  Filter-group kill feedback receives its
 native =name= argument instead of relying on obsolete dynamic scope.  Duplicate
 legacy definitions for predicate filtering, sorting-mode toggling, and filename
 copying are collapsed to one registration each.
+
+The Comint conversion is split into Emacs 31 target contracts,
+navigation/history, input, output/process, and completion/history-display
+commits.  It removes advice for the obsolete =comint-dynamic-complete= and
+=comint-kill-output= commands.  Emacs 31 completion now reaches the existing
+Emacsvox =completion-at-point= advice through =comint-completion-at-point=, and
+=comint-delete-output= provides the current output-deletion command.
+
+Comint magic-space, previous-argument insertion, delete-or-EOF, and process
+output wrappers now call their originals exactly once and preserve the original
+result.  In particular, each process chunk is inserted only once before
+autospeech.  The accessible input-history display replaces the stock display
+only for interactive calls; programmatic calls still invoke the stock function
+once.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
