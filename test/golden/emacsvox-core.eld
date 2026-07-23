@@ -93,4 +93,9 @@
 	((icon scroll) (speak (:text "second page\n\f"))) :value nil
 	:state
 	(:text "first page\n\fsecond page\n\fthird page\n" :point 13
-	       :mark 26 :mark-active t :modified nil :kill-ring nil)))
+	       :mark 26 :mark-active t :modified nil :kill-ring nil))
+ (:name forward-sexp :events
+	((icon large-movement) (speak (:text "(one)"))) :value nil
+	:state
+	(:text "(one) (two)" :point 6 :mark nil :mark-active nil
+	       :modified nil :kill-ring nil)))

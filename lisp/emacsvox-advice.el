@@ -255,26 +255,39 @@ beginning or end of a physical line produces an  auditory icon."
   (let ((emacsvox-show-point t))
     (emacsvox-speak-line)))
 
-(cl-loop
- for f in
- '(forward-button backward-button)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak button with messages Silenced."
-     (cond
-      ((ems-interactive-p)
-       (ems-with-messages-silenced
-        ad-do-it
-        (condition-case nil
-            (let* ((button (button-at (point)))
-                   (start (button-start button))
-                   (end (button-end button)))
-              (dtk-speak (buffer-substring start end))
-              (emacsvox-icon 'large-movement))
-          (error nil))))
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--button-movement-around (target original arguments)
+  "Call ORIGINAL with ARGUMENTS and speak the button reached by TARGET."
+  (if (ems-interactive-p target)
+      (let (result)
+        (ems-with-messages-silenced
+          (setq result (apply original arguments))
+          (condition-case nil
+              (let* ((button (button-at (point)))
+                     (start (button-start button))
+                     (end (button-end button)))
+                (dtk-speak (buffer-substring start end))
+                (emacsvox-icon 'large-movement))
+            (error nil)))
+        result)
+    (apply original arguments)))
+
+(defun emacsvox--advice-forward-button-around (original &rest arguments)
+  "Speak the button reached by `forward-button'."
+  (emacsvox--button-movement-around
+   'forward-button original arguments))
+
+(advice-add
+ 'forward-button :around #'emacsvox--advice-forward-button-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-backward-button-around (original &rest arguments)
+  "Speak the button reached by `backward-button'."
+  (emacsvox--button-movement-around
+   'backward-button original arguments))
+
+(advice-add
+ 'backward-button :around #'emacsvox--advice-backward-button-around
+ '((name . emacsvox)))
 
 (defun ems--blink-matching-open-after (&rest _)
   "Speak" (emacsvox-speak-matching-paren))
@@ -327,26 +340,40 @@ When on a close delimiter, speak matching delimiter after a small delay. "
     "Speak the sentence after moving."
   (emacsvox-speak-sentence))
 
-(cl-loop
- for f in
- '(forward-sexp backward-sexp
-                beginning-of-defun end-of-defun)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak sexp or line."
-     (if (ems-interactive-p)
-         (let ((start (point))
-               (end (line-end-position))
-               (emacsvox-show-point t))
-           ad-do-it
-           (emacsvox-icon 'large-movement)
-           (cond
-            ((>= end (point))
-             (emacsvox-speak-region start (point)))
-            (t (emacsvox-speak-line))))
-       ad-do-it)
-     ad-return-value)))
+(defun emacsvox--sexp-movement-around (target original arguments)
+  "Call ORIGINAL with ARGUMENTS and speak the movement made by TARGET."
+  (if (ems-interactive-p target)
+      (let ((start (point))
+            (end (line-end-position))
+            (emacsvox-show-point t)
+            result)
+        (setq result (apply original arguments))
+        (emacsvox-icon 'large-movement)
+        (cond
+         ((>= end (point))
+          (emacsvox-speak-region start (point)))
+         (t (emacsvox-speak-line)))
+        result)
+    (apply original arguments)))
+
+(defmacro emacsvox-advice--define-sexp-movement-advice (targets)
+  "Define native around advice for each movement command in TARGETS."
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (original &rest arguments)
+                 ,(format "Speak movement produced by `%s'." target)
+                 (emacsvox--sexp-movement-around
+                  ',target original arguments))
+               (advice-add
+                ',target :around #',function '((name . emacsvox))))))
+        targets)))
+
+(emacsvox-advice--define-sexp-movement-advice
+ (forward-sexp backward-sexp beginning-of-defun end-of-defun))
 
 (emacsvox-advice--define-interactive-after-advice
     (forward-paragraph backward-paragraph)

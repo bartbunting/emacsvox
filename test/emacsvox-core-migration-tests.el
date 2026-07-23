@@ -9,6 +9,7 @@
 
 (require 'cl-lib)
 (require 'ert)
+(require 'button)
 (require 'emacsvox-advice)
 
 (defconst emacsvox-test--core-after-targets
@@ -32,6 +33,12 @@
 (defconst emacsvox-test--core-direct-advice
   '((delete-forward-char :around emacsvox--advice-delete-forward-char-around)
     (delete-char :around emacsvox--advice-delete-char-around)
+    (forward-button :around emacsvox--advice-forward-button-around)
+    (backward-button :around emacsvox--advice-backward-button-around)
+    (forward-sexp :around emacsvox--advice-forward-sexp-around)
+    (backward-sexp :around emacsvox--advice-backward-sexp-around)
+    (beginning-of-defun :around emacsvox--advice-beginning-of-defun-around)
+    (end-of-defun :around emacsvox--advice-end-of-defun-around)
     (kill-word :before emacsvox--advice-kill-word-before)
     (kill-ring-save :after emacsvox--advice-kill-ring-save-after))
   "Core commands migrated with individually defined native advice.")
@@ -110,6 +117,74 @@
     (should
      (equal
       (nreverse events) '((icon fill-object) speak-current-column)))))
+
+(ert-deftest emacsvox-core-button-advice-preserves-context-and-result ()
+  "Button movement is silenced, spoken after moving, and returns its result."
+  (with-temp-buffer
+    (insert "start target")
+    (make-text-button 7 13)
+    (goto-char 1)
+    (let ((ems--interactive-fn-name 'forward-button)
+          (emacsvox-speak-messages t)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'dtk-speak)
+                 (lambda (text) (push (list 'speak text) events)))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events))))
+        (should
+         (eq
+          (emacsvox--advice-forward-button-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push
+              (list 'original arguments inhibit-message
+                    emacsvox-speak-messages)
+              events)
+             (goto-char 7)
+             'button-result)
+           1 nil t)
+          'button-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((original (1 nil t) t nil)
+          (speak "target")
+          (icon large-movement)))))))
+
+(ert-deftest emacsvox-core-sexp-advice-calls-original-once-before-feedback ()
+  "Sexp movement preserves return value and speaks the traversed region."
+  (with-temp-buffer
+    (insert "(one) (two)")
+    (goto-char 1)
+    (let ((ems--interactive-fn-name 'forward-sexp)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'emacsvox-speak-region)
+                 (lambda (start end)
+                   (push
+                    (list 'speak-region start end emacsvox-show-point)
+                    events))))
+        (should
+         (eq
+          (emacsvox--advice-forward-sexp-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push (list 'original arguments) events)
+             (goto-char 6)
+             'sexp-result)
+           1)
+          'sexp-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((original (1))
+          (icon large-movement)
+          (speak-region 1 6 t)))))))
 
 (provide 'emacsvox-core-migration-tests)
 ;;; emacsvox-core-migration-tests.el ends here

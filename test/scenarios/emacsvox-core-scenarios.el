@@ -120,6 +120,13 @@
      :arguments (1)
      :interactive t
      :text "first page\n\fsecond page\n\fthird page\n"
+     :point 1)
+    (:name forward-sexp
+     :command forward-sexp
+     :arguments (1)
+     :interactive t
+     :mode emacs-lisp-mode
+     :text "(one) (two)"
      :point 1))
   "Core scenarios used for Emacsvox and Emacspeak trace comparison.")
 
