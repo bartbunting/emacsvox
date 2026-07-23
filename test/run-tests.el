@@ -95,6 +95,7 @@
   (require 'emacsvox-comint-tests)
   (require 'emacsvox-tab-bar-tests)
   (require 'emacsvox-c-tests)
+  (require 'emacsvox-eshell-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

@@ -78,35 +78,43 @@
 
 ;;;   Advice top-level EShell
 
-(defun ems--eshell-after (&rest _)
+(defun emacsvox--advice-eshell-after (&rest _)
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'eshell)
     (emacsvox-icon 'open-object) (dtk-set-punctuations 'all)
     (or dtk-split-caps (dtk-toggle-split-caps))
     (emacsvox-pronounce-refresh-pronunciations)
     (emacsvox-speak-line)))
 
-(advice-add 'eshell :after #'ems--eshell-after)
+(advice-add
+ 'eshell :after #'emacsvox--advice-eshell-after
+ '((name . emacsvox)))
 
 ;;;  advice em-hist
 
-(cl-loop
- for f in
- '(
-   eshell-next-input eshell-previous-input
-   eshell-next-matching-input eshell-previous-matching-input
-   eshell-next-matching-input-from-input
-   eshell-previous-matching-input-from-input)
- do
- (eval
-  `(defadvice ,f (after  emacsvox pre act comp)
-     "Speak selected command."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (save-excursion
-         (beginning-of-line)
-         (eshell-skip-prompt)
-         (emacsvox-speak-line 1))))))
+(with-eval-after-load 'em-hist
+  (cl-loop
+   for target in
+   '(
+     eshell-next-input eshell-previous-input
+     eshell-next-matching-input eshell-previous-matching-input
+     eshell-next-matching-input-from-input
+     eshell-previous-matching-input-from-input)
+   for function =
+   (intern (format "emacsvox--advice-%s-after" target))
+   do
+   (eval
+    `(progn
+       (defun ,function (&rest _)
+         "Cue and speak after interactive Eshell input-history movement."
+         (when (ems-interactive-p ',target)
+           (emacsvox-icon 'select-object)
+           (save-excursion
+             (beginning-of-line)
+             (eshell-skip-prompt)
+             (emacsvox-speak-line 1))))
+       (advice-add
+        ',target :after #',function '((name . emacsvox)))))))
 
 ;;;   advice em-ls
 
@@ -139,41 +147,43 @@ personalities.")
 
 ;;;  Advice em-prompt
 
-(cl-loop for f in
-         '(
-           eshell-next-prompt eshell-previous-prompt
-           eshell-forward-matching-input  eshell-backward-matching-input)
-         do
-         (eval
-          `(defadvice ,f (after  emacsvox pre act comp)
-             "Speak selected command."
-             (when (ems-interactive-p)
-               (let ((emacsvox-speak-messages nil))
-                 (emacsvox-icon 'select-object)
-                 (emacsvox-speak-line 1))))))
+(with-eval-after-load 'em-prompt
+  (cl-loop
+   for target in
+   '(
+     eshell-next-prompt eshell-previous-prompt
+     eshell-forward-matching-input eshell-backward-matching-input)
+   for function =
+   (intern (format "emacsvox--advice-%s-after" target))
+   do
+   (eval
+    `(progn
+       (defun ,function (&rest _)
+         "Cue and speak after interactive Eshell prompt movement."
+         (when (ems-interactive-p ',target)
+           (let ((emacsvox-speak-messages nil))
+             (emacsvox-icon 'select-object)
+             (emacsvox-speak-line 1))))
+       (advice-add
+        ',target :after #',function '((name . emacsvox)))))))
 
 ;;;   advice esh-arg
 
-(cl-loop for f in
-         '(
-           eshell-insert-buffer-name
-           eshell-insert-process
-           eshell-insert-envvar)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Speak output."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'select-object)
-               (emacsvox-speak-line)))))
-
-(defun ems--eshell-insert-process-after (&rest _)
-  "Speak output."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-line)))
-
-(advice-add 'eshell-insert-process :after
-            #'ems--eshell-insert-process-after)
+(cl-loop
+ for target in
+ '(eshell-insert-buffer-name eshell-insert-process eshell-insert-envvar)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Eshell argument insertion."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  advice esh-mode
 
@@ -260,17 +270,21 @@ personalities.")
 ;;; Additional Commands To Enable: 
 
 (cl-loop
- for f in
- '(eshell-forward-argument eshell-backward-argument eshell-bol)
+ for target in
+ '(eshell-forward-argument eshell-backward-argument)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "provide auditory feedback."
-     (when
-         (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line)
-         (emacsvox-icon 'large-movement))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak and cue after interactive Eshell argument movement."
+       (when (ems-interactive-p ',target)
+         (let ((emacsvox-show-point t))
+           (emacsvox-speak-line)
+           (emacsvox-icon 'large-movement))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
  for f in
@@ -290,26 +304,30 @@ personalities.")
           (emacsvox-speak-completions-if-available))
         ad-return-value)))))
 
-(defun ems--eshell-copy-old-input-after (&rest _)
+(defun emacsvox--advice-eshell-copy-old-input-after (&rest _)
   "Speak what was inserted."
-  (when (ems-interactive-p)
-    (let ((start (save-excursion (eshell-bol) (point))))
+  (when (ems-interactive-p 'eshell-copy-old-input)
+    (let ((start (save-excursion (beginning-of-line) (point))))
       (emacsvox-icon 'yank-object)
       (emacsvox-speak-region start (point)))))
 
-(advice-add 'eshell-copy-old-input :after
-            #'ems--eshell-copy-old-input-after)
+(advice-add
+ 'eshell-copy-old-input :after
+ #'emacsvox--advice-eshell-copy-old-input-after
+ '((name . emacsvox)))
 
-(defun ems--eshell-get-next-from-history-after (&rest _)
+(defun emacsvox--advice-eshell-get-next-from-history-after (&rest _)
   "Speak what was inserted."
-  (when (ems-interactive-p)
-    (let ((start (save-excursion (eshell-bol) (point))))
+  (when (ems-interactive-p 'eshell-get-next-from-history)
+    (let ((start (save-excursion (beginning-of-line) (point))))
       (emacsvox-icon 'yank-object)
       (emacsvox-speak-region start (point)))))
 
-(advice-add 'eshell-get-next-from-history :after
-            #'ems--eshell-get-next-from-history-after)
+(with-eval-after-load 'em-hist
+  (advice-add
+   'eshell-get-next-from-history :after
+   #'emacsvox--advice-eshell-get-next-from-history-after
+   '((name . emacsvox))))
 
 (provide 'emacsvox-eshell)
 ;;;  end of file
-
