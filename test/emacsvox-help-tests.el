@@ -30,7 +30,11 @@
     (help-customize :after
      emacsvox--advice-help-customize-after)
     (help-window-display-message :around
-     emacsvox--advice-help-window-display-message-around))
+     emacsvox--advice-help-window-display-message-around)
+    (describe-key :filter-return
+     emacsvox--advice-describe-key-filter-return)
+    (describe-keymap :filter-return
+     emacsvox--advice-describe-keymap-filter-return))
   "Help commands using individually named native advice.")
 
 (ert-deftest emacsvox-help-advice-is-directly-registered ()
@@ -135,6 +139,39 @@
     (should (equal observed-state '((argument) nil t)))
     (should emacsvox-speak-messages)
     (should-not inhibit-message)))
+
+(ert-deftest emacsvox-describe-key-speaks-help-for-nil-result ()
+  "Interactive key description speaks Help when its original result is nil."
+  (let ((ems--interactive-fn-name 'describe-key)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-help)
+               (lambda () (push 'speak-help events))))
+      (should-not
+       (emacsvox--advice-describe-key-filter-return nil)))
+    (should
+     (equal
+      (nreverse events)
+      '((icon help) speak-help)))))
+
+(ert-deftest emacsvox-describe-keymap-preserves-non-nil-result ()
+  "Interactive keymap description returns a non-nil result without speech."
+  (let ((ems--interactive-fn-name 'describe-keymap)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-help)
+               (lambda () (push 'speak-help events))))
+      (should
+       (eq
+        (emacsvox--advice-describe-key-filter-return 'wrong-result)
+        'wrong-result))
+      (should
+       (eq
+        (emacsvox--advice-describe-keymap-filter-return 'keymap-result)
+        'keymap-result)))
+    (should (equal events '((icon help))))))
 
 (provide 'emacsvox-help-tests)
 ;;; emacsvox-help-tests.el ends here

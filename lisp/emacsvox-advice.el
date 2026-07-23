@@ -1757,17 +1757,32 @@ BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
  #'emacsvox--advice-help-window-display-message-around
  '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(describe-key describe-keymap)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the help."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)
-       (unless ad-return-value
-         (emacsvox-speak-help))))))
+(defun emacsvox--describe-key-filter-return (target result)
+  "Announce interactive key help and return RESULT unchanged.
+TARGET identifies the key-description command."
+  (when (ems-interactive-p target)
+    (emacsvox-icon 'help)
+    (unless result
+      (emacsvox-speak-help)))
+  result)
+
+(defun emacsvox--advice-describe-key-filter-return (result)
+  "Announce interactive `describe-key' help and return RESULT."
+  (emacsvox--describe-key-filter-return 'describe-key result))
+
+(advice-add
+ 'describe-key :filter-return
+ #'emacsvox--advice-describe-key-filter-return
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-describe-keymap-filter-return (result)
+  "Announce interactive `describe-keymap' help and return RESULT."
+  (emacsvox--describe-key-filter-return 'describe-keymap result))
+
+(advice-add
+ 'describe-keymap :filter-return
+ #'emacsvox--advice-describe-keymap-filter-return
+ '((name . emacsvox)))
 
 (cl-loop
  for f in
