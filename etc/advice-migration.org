@@ -38,7 +38,7 @@ must become conservative and test-driven before further bulk use.
 As of the completed core-file migration and first built-in integration slices
 on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 294 passing ERT tests;
+- the Emacs 31 suite contains 314 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -53,12 +53,12 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         355 |   119 |
-| =ad-get-arg=        |          84 |   n/a |
+| =defadvice=         |         349 |   114 |
+| =ad-get-arg=        |          83 |   n/a |
 | =ad-set-arg=        |           3 |   n/a |
-| =ad-do-it=          |          44 |   n/a |
-| =ad-return-value=   |          27 |   n/a |
-| =advice-add=        |        1407 |   154 |
+| =ad-do-it=          |          43 |   n/a |
+| =ad-return-value=   |          26 |   n/a |
+| =advice-add=        |        1413 |   154 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -75,9 +75,17 @@ progress advice now preserves the processed string returned by the original
 function rather than returning the result of speech output.
 
 The first built-in integration slices converted Compilation, Windmove, FFAP,
-IDO, Diff Mode, Project, and Flymake.  Each module has direct-registration and
-target-aware feedback tests, and each conversion is an independently revertible
-commit.
+IDO, Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, and
+Proced.  Each module has direct-registration and target-aware feedback tests,
+and each conversion is an independently revertible commit.  Debugger, table
+editing, and Proced are now completely independent of the compatibility bridge;
+54 files still contain bridge compatibility symbols.
+
+The Debugger conversion uses native =:filter-return= advice so interactive
+evaluation can speak the result without changing the value returned to callers.
+The table conversion also corrected converter regressions where deletion and
+newline-and-indent advice invoked the original command twice.  Those wrappers
+now give feedback in upstream order and invoke the original exactly once.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
