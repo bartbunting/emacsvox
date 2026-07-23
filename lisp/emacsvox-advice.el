@@ -1450,19 +1450,12 @@ Use an auditory icon if possible."
   (dtk-stop 'all)
   (emacsvox-speak-mode-line))
 
-(cl-loop
- for f in
- '(delete-windows-on delete-other-frames
-                     delete-window delete-completion-window
-                     split-window-below split-window-right
-                     split-window-vertically split-window-horizontally)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speech-enabled by emacsvox."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'window-resize)
-       (emacsvox-speak-mode-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (delete-windows-on delete-other-frames delete-completion-window
+                       split-window-below split-window-right)
+    "Announce a change to the window configuration."
+  (emacsvox-icon 'window-resize)
+  (emacsvox-speak-mode-line))
 
 (emacsvox-advice--define-interactive-after-advice
     (other-frame other-window
@@ -1506,20 +1499,23 @@ Use an auditory icon if possible."
  'display-buffer :after #'emacsvox--advice-display-buffer-after
  '((name . emacsvox)))
 
-(defun ems--make-frame-command-after (&rest _)
-  "Indicate that a new frame is being created."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-make-frame-command-after (&rest _)
+  "Announce interactively creating a frame."
+  (when (ems-interactive-p 'make-frame-command)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'make-frame-command :after #'ems--make-frame-command-after)
+(advice-add
+ 'make-frame-command :after #'emacsvox--advice-make-frame-command-after
+ '((name . emacsvox)))
 
-(defun ems--move-to-window-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-move-to-window-line-after (&rest _)
+  "Speak after interactively moving within a window."
+  (when (ems-interactive-p 'move-to-window-line)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-(advice-add 'move-to-window-line :after
-            #'ems--move-to-window-line-after)
+(advice-add
+ 'move-to-window-line :after #'emacsvox--advice-move-to-window-line-after
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-rename-buffer-after (&rest _)
   "Speak the mode line after interactively renaming a buffer."
@@ -1789,67 +1785,55 @@ the newly created  line."
 
 (advice-add 'widen :after #'ems--widen-after)
 
-(defun ems--delete-other-windows-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-delete-other-windows-after (&rest _)
+  "Announce interactively deleting all other windows."
+  (when (ems-interactive-p 'delete-other-windows)
     (message "Deleted all other windows")
     (emacsvox-icon 'window-resize) (emacsvox-speak-mode-line)))
 
-(advice-add 'delete-other-windows :after
-            #'ems--delete-other-windows-after)
+(advice-add
+ 'delete-other-windows :after #'emacsvox--advice-delete-other-windows-after
+ '((name . emacsvox)))
 
-(defun ems--split-window-vertically-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-split-window-vertically-after (&rest _)
+  "Announce an interactive vertical window split."
+  (when (ems-interactive-p 'split-window-vertically)
     (message "Split window vertically, current window has %s lines "
              (window-height))
     (emacsvox-speak-mode-line)))
 
-(advice-add 'split-window-vertically :after
-            #'ems--split-window-vertically-after)
+(advice-add
+ 'split-window-vertically :after
+ #'emacsvox--advice-split-window-vertically-after
+ '((name . emacsvox)))
 
-(defun ems--delete-window-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-delete-window-after (&rest _)
+  "Announce interactively deleting the selected window."
+  (when (ems-interactive-p 'delete-window)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'delete-window :after #'ems--delete-window-after)
+(advice-add
+ 'delete-window :after #'emacsvox--advice-delete-window-after
+ '((name . emacsvox)))
 
-(defun ems--shrink-window-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Current window has %s lines and %s columns"
-             (window-height) (window-width))))
+(emacsvox-advice--define-interactive-after-advice
+    (shrink-window shrink-window-if-larger-than-buffer balance-windows)
+    "Announce the current window dimensions."
+  (message "Current window has %s lines and %s columns"
+           (window-height) (window-width)))
 
-(advice-add 'shrink-window :after #'ems--shrink-window-after)
-
-(defun ems--shrink-window-if-larger-than-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Current window has %s lines and %s columns"
-             (window-height) (window-width))))
-
-(advice-add 'shrink-window-if-larger-than-buffer :after
-            #'ems--shrink-window-if-larger-than-buffer-after)
-
-(defun ems--balance-windows-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Current window has %s lines and %s columns"
-             (window-height) (window-width))))
-
-(advice-add 'balance-windows :after #'ems--balance-windows-after)
-
-(defun ems--split-window-horizontally-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-split-window-horizontally-after (&rest _)
+  "Announce an interactive horizontal window split."
+  (when (ems-interactive-p 'split-window-horizontally)
     (message
      "Split window horizontally current window has %s columns "
      (window-width))
     (emacsvox-speak-mode-line)))
 
-(advice-add 'split-window-horizontally :after
-            #'ems--split-window-horizontally-after)
+(advice-add
+ 'split-window-horizontally :after
+ #'emacsvox--advice-split-window-horizontally-after
+ '((name . emacsvox)))
 
 (defun ems--transpose-chars-after (&rest _)
   "speak."

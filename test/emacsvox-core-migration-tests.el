@@ -36,6 +36,9 @@
     switch-to-prev-buffer switch-to-next-buffer
     switch-to-buffer switch-to-buffer-other-window bury-buffer
     next-buffer previous-buffer switch-to-buffer-other-frame
+    delete-windows-on delete-other-frames delete-completion-window
+    split-window-below split-window-right
+    shrink-window shrink-window-if-larger-than-buffer balance-windows
     newline newline-and-indent electric-newline-and-maybe-indent)
   "Core commands migrated with generated native after advice.")
 
@@ -71,7 +74,17 @@
     (scratch-buffer :after emacsvox--advice-scratch-buffer-after)
     (display-buffer :after emacsvox--advice-display-buffer-after)
     (rename-buffer :after emacsvox--advice-rename-buffer-after)
-    (rename-uniquely :after emacsvox--advice-rename-uniquely-after))
+    (rename-uniquely :after emacsvox--advice-rename-uniquely-after)
+    (make-frame-command :after emacsvox--advice-make-frame-command-after)
+    (move-to-window-line :after
+     emacsvox--advice-move-to-window-line-after)
+    (delete-other-windows :after
+     emacsvox--advice-delete-other-windows-after)
+    (split-window-vertically :after
+     emacsvox--advice-split-window-vertically-after)
+    (delete-window :after emacsvox--advice-delete-window-after)
+    (split-window-horizontally :after
+     emacsvox--advice-split-window-horizontally-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -398,6 +411,74 @@
                (lambda (&rest _) (setq feedback t))))
       (emacsvox--advice-display-buffer-after "notes"))
     (should-not feedback)))
+
+(ert-deftest emacsvox-core-window-configuration-advice-preserves-feedback ()
+  "Generic window changes emit resize feedback once when interactive."
+  (let ((ems--interactive-fn-name 'split-window-right)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-split-window-right-after)
+      (emacsvox--advice-split-window-right-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon window-resize) speak-mode-line)))))
+
+(ert-deftest emacsvox-core-specific-split-advice-replaces-generic-feedback ()
+  "Vertical split feedback matches the later original Emacspeak definition."
+  (let ((ems--interactive-fn-name 'split-window-vertically)
+        events)
+    (cl-letf (((symbol-function 'window-height) (lambda (&rest _) 12))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (apply #'format format-string arguments)
+                  events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-split-window-vertically-after))
+    (should
+     (equal
+      (nreverse events)
+      '("Split window vertically, current window has 12 lines "
+        speak-mode-line)))))
+
+(ert-deftest emacsvox-core-delete-window-uses-specific-close-feedback ()
+  "Deleting a window uses its effective original close feedback."
+  (let ((ems--interactive-fn-name 'delete-window)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-delete-window-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object) speak-mode-line)))))
+
+(ert-deftest emacsvox-core-window-size-advice-reports-dimensions ()
+  "Interactive window resizing reports the current dimensions."
+  (let ((ems--interactive-fn-name 'shrink-window)
+        events)
+    (cl-letf (((symbol-function 'window-height) (lambda (&rest _) 18))
+              ((symbol-function 'window-width) (lambda (&rest _) 72))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (apply #'format format-string arguments)
+                  events))))
+      (emacsvox--advice-shrink-window-after)
+      (emacsvox--advice-balance-windows-after))
+    (should
+     (equal
+      (nreverse events)
+      '("Current window has 18 lines and 72 columns")))))
 
 (provide 'emacsvox-core-migration-tests)
 ;;; emacsvox-core-migration-tests.el ends here
