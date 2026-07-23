@@ -97,7 +97,9 @@
     (battery :around emacsvox--advice-battery-around)
     (comment-dwim :after emacsvox--advice-comment-dwim-after)
     (comment-region :after emacsvox--advice-comment-region-after)
-    (open-line :after emacsvox--advice-open-line-after))
+    (open-line :after emacsvox--advice-open-line-after)
+    (set-selective-display :after
+     emacsvox--advice-set-selective-display-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -280,6 +282,23 @@
      (equal
       (nreverse events)
       '((icon open-object) "Opened 3 blank lines")))))
+
+(ert-deftest emacsvox-selective-display-uses-explicit-argument ()
+  "Interactive selective-display feedback reports its native argument."
+  (let ((ems--interactive-fn-name 'set-selective-display)
+        events)
+    (cl-letf (((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (apply #'format format-string arguments)
+                  events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-set-selective-display-after 6))
+    (should
+     (equal
+      (nreverse events)
+      '("Set selective display to 6" (icon button))))))
 
 (ert-deftest emacsvox-core-button-advice-preserves-context-and-result ()
   "Button movement is silenced, spoken after moving, and returns its result."

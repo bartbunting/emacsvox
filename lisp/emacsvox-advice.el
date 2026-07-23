@@ -2118,14 +2118,16 @@ the newly created  line."
 
 ;;;  selective display
 
-(defun ems--set-selective-display-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (message "Set selective display to %s" (ad-get-arg 0))
+(defun emacsvox--advice-set-selective-display-after (argument)
+  "Announce selective display set to ARGUMENT interactively."
+  (when (ems-interactive-p 'set-selective-display)
+    (message "Set selective display to %s" argument)
     (emacsvox-icon 'button)))
 
-(advice-add 'set-selective-display :after
-            #'ems--set-selective-display-after)
+(advice-add
+ 'set-selective-display :after
+ #'emacsvox--advice-set-selective-display-after
+ '((name . emacsvox)))
 
 ;;;  avoid chatter when byte compiling etc
 
