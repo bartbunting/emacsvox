@@ -636,32 +636,53 @@ unchanged."
 
 ;;;  Advice PComplete
 
-(defun ems--pcomplete-list-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-pcomplete-list-after (&rest _)
+  "Announce an interactive PComplete listing."
+  (when (ems-interactive-p 'pcomplete-list)
     (emacsvox-icon 'help) (emacsvox-icon 'complete)))
 
-(advice-add 'pcomplete-list :after #'ems--pcomplete-list-after)
+(advice-add
+ 'pcomplete-list :after #'emacsvox--advice-pcomplete-list-after
+ '((name . emacsvox)))
 
-(defun ems--pcomplete-show-completions-around (orig-fun &rest args)
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-pcomplete-show-completions-around
+    (original &rest arguments)
+  "Run ORIGINAL with PComplete messages silenced."
+  (ems-with-messages-silenced (apply original arguments)))
 
-(advice-add 'pcomplete-show-completions :around
-            #'ems--pcomplete-show-completions-around)
+(advice-add
+ 'pcomplete-show-completions :around
+ #'emacsvox--advice-pcomplete-show-completions-around
+ '((name . emacsvox)))
 
-(defun ems--pcomplete-around (orig-fun &rest args)
-  "Speak completion."
-  (let ((result (apply orig-fun args)))
-    (let
-        ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (emacsvox-speak-region orig (point))
+(defun emacsvox--speak-completion-text (start end)
+  "Speak completion text between START and END."
+  (dtk-speak (buffer-substring start end)))
+
+(defun emacsvox--completion-around
+    (target backward-syntax speaker original arguments)
+  "Call ORIGINAL once and announce an interactive completion.
+TARGET names the advised command.  BACKWARD-SYNTAX locates the beginning of
+the completion before the call.  SPEAKER receives the resulting start and end
+positions.  ARGUMENTS are passed to ORIGINAL unchanged."
+  (let ((start
+         (save-excursion
+           (skip-syntax-backward backward-syntax)
+           (point))))
+    (let ((result (apply original arguments)))
+      (when (ems-interactive-p target)
+        (funcall speaker start (point))
         (emacsvox-icon 'complete))
-      result)
-    result))
+      result)))
 
-(advice-add 'pcomplete :around #'ems--pcomplete-around)
+(defun emacsvox--advice-pcomplete-around (original &rest arguments)
+  "Speak text completed by an interactive `pcomplete' call."
+  (emacsvox--completion-around
+   'pcomplete "^ >" #'emacsvox-speak-region original arguments))
+
+(advice-add
+ 'pcomplete :around #'emacsvox--advice-pcomplete-around
+ '((name . emacsvox)))
 
 ;;;  Advice hippie expand:
 
@@ -912,43 +933,39 @@ unchanged."
 
 ;;;  Advice completion-at-point:
 
-(defun ems--completion-at-point-around (orig-fun &rest args)
-  "Speak completion."
-  (let ((result (apply orig-fun args)))
-    (let
-        ((orig (save-excursion (skip-syntax-backward "^->_") (point))))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (dtk-speak (buffer-substring orig (point)))
-        (emacsvox-icon 'complete))
-      result)
-    result))
+(defun emacsvox--advice-completion-at-point-around
+    (original &rest arguments)
+  "Speak text completed by an interactive `completion-at-point' call."
+  (emacsvox--completion-around
+   'completion-at-point "^->_" #'emacsvox--speak-completion-text
+   original arguments))
 
-(advice-add 'completion-at-point :around
-            #'ems--completion-at-point-around)
+(advice-add
+ 'completion-at-point :around
+ #'emacsvox--advice-completion-at-point-around
+ '((name . emacsvox)))
 
-(defun ems--minibuffer-choose-completion-around (orig-fun &rest args)
-  "Speak completion."
-  (let ((result (apply orig-fun args)))
-    (let
-        ((orig (save-excursion (skip-syntax-backward "^ >_") (point))))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (dtk-speak (buffer-substring orig (point)))
-        (emacsvox-icon 'complete))
-      result)
-    result))
+(defun emacsvox--advice-minibuffer-choose-completion-around
+    (original &rest arguments)
+  "Speak text inserted by interactive minibuffer completion."
+  (emacsvox--completion-around
+   'minibuffer-choose-completion "^ >_" #'emacsvox--speak-completion-text
+   original arguments))
 
-(advice-add 'minibuffer-choose-completion :around
-            #'ems--minibuffer-choose-completion-around)
+(advice-add
+ 'minibuffer-choose-completion :around
+ #'emacsvox--advice-minibuffer-choose-completion-around
+ '((name . emacsvox)))
 
-(defun ems--minibuffer-choose-completion-or-exit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-minibuffer-choose-completion-or-exit-after (&rest _)
+  "Announce accepting or exiting minibuffer completion."
+  (when (ems-interactive-p 'minibuffer-choose-completion-or-exit)
     (emacsvox-speak-line) (emacsvox-icon 'close-object)))
 
-(advice-add 'minibuffer-choose-completion-or-exit :after
-            #'ems--minibuffer-choose-completion-or-exit-after)
+(advice-add
+ 'minibuffer-choose-completion-or-exit :after
+ #'emacsvox--advice-minibuffer-choose-completion-or-exit-after
+ '((name . emacsvox)))
 
 ;;;  advice various input functions to speak:
 
