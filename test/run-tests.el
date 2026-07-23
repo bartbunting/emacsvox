@@ -46,6 +46,7 @@
   (require 'emacsvox-help-tests)
   (require 'emacsvox-region-tests)
   (require 'emacsvox-eval-tests)
+  (require 'emacsvox-narrowing-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

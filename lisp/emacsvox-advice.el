@@ -1938,35 +1938,35 @@ TARGET identifies the evaluation command."
 
 (advice-add 'upcase-region :after #'ems--upcase-region-after)
 
-(cl-loop
- for f in
- '(narrow-to-region narrow-to-page)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Announce yourself."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'mark-object)
-       (message "Narrowed editing region to %s lines"
-                (count-lines (region-beginning)
-                             (region-end)))))))
+(emacsvox-advice--define-interactive-after-advice
+    (narrow-to-region narrow-to-page)
+    "Announce the size of the resulting accessible buffer restriction."
+  (emacsvox-icon 'mark-object)
+  (message "Narrowed editing region to %s lines"
+           (count-lines (point-min) (point-max))))
+
 (declare-function which-function "which-func" nil)
 
-(defun ems--narrow-to-defun-after (&rest _)
-  "Announce yourself."
-  (when (ems-interactive-p)
-    (require 'which-func) (emacsvox-icon 'mark-object)
+(defun emacsvox--advice-narrow-to-defun-after (&rest _)
+  "Announce the function selected by interactive narrowing."
+  (when (ems-interactive-p 'narrow-to-defun)
+    (require 'which-func)
+    (emacsvox-icon 'mark-object)
     (message "Narrowed to function %s" (which-function))))
 
-(advice-add 'narrow-to-defun :after #'ems--narrow-to-defun-after)
+(advice-add
+ 'narrow-to-defun :after #'emacsvox--advice-narrow-to-defun-after
+ '((name . emacsvox)))
 
-(defun ems--widen-after (&rest _)
-  "Announce yourself."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-widen-after ()
+  "Announce restoration of the complete buffer restriction."
+  (when (ems-interactive-p 'widen)
     (emacsvox-icon 'open-object)
     (message "You can now edit the entire buffer ")))
 
-(advice-add 'widen :after #'ems--widen-after)
+(advice-add
+ 'widen :after #'emacsvox--advice-widen-after
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-delete-other-windows-after (&rest _)
   "Announce interactively deleting all other windows."
