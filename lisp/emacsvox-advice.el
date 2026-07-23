@@ -1244,48 +1244,53 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;;;  Advice centering and filling commands:
 
-(defun ems--center-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'center) (message "Centered current line")))
+(defun emacsvox--advice-center-line-after (&optional _count)
+  "Announce completion of interactive line centering."
+  (when (ems-interactive-p 'center-line)
+    (emacsvox-icon 'center)
+    (message "Centered current line")))
 
-(advice-add 'center-line :after #'ems--center-line-after)
+(advice-add
+ 'center-line :after #'emacsvox--advice-center-line-after
+ '((name . emacsvox)))
 
-(defun ems--center-region-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-center-region-after (beginning end)
+  "Announce centering the region from BEGINNING to END."
+  (when (ems-interactive-p 'center-region)
     (emacsvox-icon 'center)
     (message "Centered current region containing %s lines"
-             (count-lines (region-beginning) (region-end)))))
+             (count-lines beginning end))))
 
-(advice-add 'center-region :after #'ems--center-region-after)
+(advice-add
+ 'center-region :after #'emacsvox--advice-center-region-after
+ '((name . emacsvox)))
 
-(defun ems--center-paragraph-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'center) (message "Centered current paragraph")))
+(defun emacsvox--advice-center-paragraph-after ()
+  "Announce completion of interactive paragraph centering."
+  (when (ems-interactive-p 'center-paragraph)
+    (emacsvox-icon 'center)
+    (message "Centered current paragraph")))
 
-(advice-add 'center-paragraph :after #'ems--center-paragraph-after)
+(advice-add
+ 'center-paragraph :after #'emacsvox--advice-center-paragraph-after
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(fill-paragraph lisp-fill-paragraph)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'fill-object)
-       (message "Filled current paragraph")))))
+(emacsvox-advice--define-interactive-after-advice
+    (fill-paragraph lisp-fill-paragraph)
+    "Announce completion of interactive paragraph filling."
+  (emacsvox-icon 'fill-object)
+  (message "Filled current paragraph"))
 
-(defun ems--fill-region-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-fill-region-after (beginning end &rest _)
+  "Announce filling the region from BEGINNING to END."
+  (when (ems-interactive-p 'fill-region)
     (emacsvox-icon 'fill-object)
     (message "Filled current region containing %s lines"
-             (count-lines (region-beginning) (region-end)))))
+             (count-lines beginning end))))
 
-(advice-add 'fill-region :after #'ems--fill-region-after)
+(advice-add
+ 'fill-region :after #'emacsvox--advice-fill-region-after
+ '((name . emacsvox)))
 
 ;;;  vc:
 

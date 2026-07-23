@@ -42,6 +42,7 @@
   (require 'emacsvox-register-tests)
   (require 'emacsvox-button-tests)
   (require 'emacsvox-tooltip-tests)
+  (require 'emacsvox-formatting-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
