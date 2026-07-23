@@ -3353,15 +3353,21 @@ played afterward according to the result."
 
 ;;; Spinner:
 
-(defun ems--spinner-start-after (&rest _)
-  "Icon." (emacsvox-icon 'repeat-start))
+(defun emacsvox--advice-spinner-start-after (&rest _)
+  "Cue the start of spinner activity."
+  (emacsvox-icon 'repeat-start))
 
-(advice-add 'spinner-start :after #'ems--spinner-start-after)
+(advice-add
+ 'spinner-start :after #'emacsvox--advice-spinner-start-after
+ '((name . emacsvox)))
 
-(defun ems--spinner-stop-after (&rest _)
-  "Icon." (emacsvox-icon 'repeat-stop))
+(defun emacsvox--advice-spinner-stop-after (&rest _)
+  "Cue the end of spinner activity."
+  (emacsvox-icon 'repeat-stop))
 
-(advice-add 'spinner-stop :after #'ems--spinner-stop-after)
+(advice-add
+ 'spinner-stop :after #'emacsvox--advice-spinner-stop-after
+ '((name . emacsvox)))
 
 ;;; Rectangle Motion
 
