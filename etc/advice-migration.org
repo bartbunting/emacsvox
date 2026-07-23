@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-C Mode on 2026-07-24 on branch =bart=:
+Eshell on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 485 passing ERT tests;
+- the Emacs 31 suite contains 494 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -70,17 +70,20 @@ C Mode on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-c.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-eshell.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         288 |   100 |
+| =defadvice=         |         283 |    99 |
 | =ad-get-arg=        |          61 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          38 |   n/a |
-| =ad-return-value=   |          24 |   n/a |
-| =advice-add=        |        1344 |   156 |
+| =ad-do-it=          |          37 |   n/a |
+| =ad-return-value=   |          23 |   n/a |
+| =advice-add=        |        1348 |   156 |
 | =ems-interactive-p= |        1402 |   176 |
 
 Converted core areas include movement and editing, buffers and windows,
@@ -101,10 +104,11 @@ The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
-integration, Gnus, Ibuffer, Comint, Tab Bar, and C Mode are also converted.
+integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, and Eshell are also
+converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 45 files still contain
+completely independent of the compatibility bridge; 44 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -231,9 +235,25 @@ twice, while preserving the reference character selection and feedback order.
 All remaining C navigation, formatting, and toggle advice uses direct named
 registration and explicit interactive targets.
 
-Continue by migrating built-in integration modules before optional third-party
-integrations.  The compatibility bridge remains necessary until the
-repository-wide legacy audit is clean.
+The Eshell conversion is split into selection and history, then editing, output,
+and completion commits.  It replaces the obsolete =eshell-kill-output= target
+with =eshell-delete-output=.  Emacs 31 line-start and TAB handling now reach the
+existing generic Emacsvox advice through =move-beginning-of-line= and
+=completion-at-point=, so the obsolete =eshell-bol= and =eshell-pcomplete=
+registrations are removed.  Optional =eshell-toggle= advice is deferred until
+that third-party library loads and no longer creates phantom commands.
+
+Eshell deletion feedback now uses native =:before= advice, correcting bridge-era
+wrappers that invoked the original deletion twice.  The duplicate
+=eshell-insert-process= feedback path is collapsed to one registration, and Lisp
+symbol completion calls the original exactly once while preserving its return
+value.  Advice for Eshell submodules is installed only after the corresponding
+=em-hist=, =em-prompt=, =em-rebind=, or =em-cmpl= feature loads.
+
+Continue with the bundled Emacs 31 Which-Key integration, then migrate remaining
+built-in integration modules before optional third-party integrations.  The
+compatibility bridge remains necessary until the repository-wide legacy audit
+is clean.
 
 * Working Principles
 
