@@ -37,7 +37,7 @@ must become conservative and test-driven before further bulk use.
 
 As of 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 147 passing ERT tests;
+- the Emacs 31 suite contains 211 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -45,26 +45,29 @@ As of 2026-07-23 on branch =bart=:
   31.0.90, with warnings but no errors;
 - the real =~/bin/emacsvox-test= launcher loads Emacsvox under Emacs 31.0.90;
 - =lisp/emacsvox-loaddefs.el= is generated, ignored, and not tracked;
-- =lisp/emacsvox-advice.el= contains no =ad-get-arg= or =ad-set-arg= calls.
+- =lisp/emacsvox-advice.el= contains no =defadvice=, =ad-get-arg=,
+  =ad-set-arg=, =ad-do-it=, or =ad-return-value= forms.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         386 |   127 |
+| =defadvice=         |         363 |   126 |
 | =ad-get-arg=        |          86 |   n/a |
 | =ad-set-arg=        |           3 |   n/a |
-| =ad-do-it=          |          51 |   n/a |
-| =ad-return-value=   |          33 |   n/a |
-| =advice-add=        |        1440 |   150 |
+| =ad-do-it=          |          44 |   n/a |
+| =ad-return-value=   |          27 |   n/a |
+| =advice-add=        |        1443 |   150 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
 messages, overlays, timers, source navigation, property search, Help
 navigation, IELM, rectangle editing, comments, registers, button creation, and
-tooltips.  Continue by finishing the remaining legacy templates in
-=emacsvox-advice.el=, then migrate built-in integration modules before optional
-third-party integrations.
+tooltips.  The remaining 66 =ems--= advice helpers in
+=lisp/emacsvox-advice.el= use native =advice-add= forms but still pass through
+the compatibility bridge.  Continue by converting those helpers to explicit,
+target-aware =emacsvox--= advice, then migrate built-in integration modules
+before optional third-party integrations.
 
 * Working Principles
 
