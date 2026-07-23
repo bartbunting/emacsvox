@@ -2129,17 +2129,12 @@ Produce an auditory icon if possible."
 
 ;;;  advice non-incremental searchers
 
-(cl-loop
- for f in
- '(search-forward search-backward
-                  word-search-forward word-search-backward)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak line we land on."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'search-hit)))))
+(emacsvox-advice--define-interactive-after-advice
+    (search-forward search-backward
+                    word-search-forward word-search-backward)
+    "Speak the line reached by an interactive search."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'search-hit))
 
 ;;;  customize isearch:
 

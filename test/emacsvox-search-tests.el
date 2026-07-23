@@ -14,6 +14,11 @@
   '(query-replace query-replace-regexp)
   "Replacement commands using generated native after advice.")
 
+(defconst emacsvox-test--search-after-targets
+  '(search-forward search-backward
+    word-search-forward word-search-backward)
+  "Non-incremental search commands using generated native after advice.")
+
 (defconst emacsvox-test--replace-direct-advice
   '((perform-replace :around emacsvox--advice-perform-replace-around)
     (replace-highlight :after emacsvox--advice-replace-highlight-after))
@@ -22,6 +27,13 @@
 (ert-deftest emacsvox-replace-advice-is-directly-registered ()
   "Migrated replacement advice bypasses the compatibility bridge."
   (dolist (target emacsvox-test--replace-after-targets)
+    (let ((function (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers))))
+  (dolist (target emacsvox-test--search-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
       (should (advice-member-p function target))
@@ -72,6 +84,22 @@
                (lambda (&rest _) (push 'speak-line events))))
       (emacsvox--advice-replace-highlight-after))
     (should (equal events '(speak-line)))))
+
+(ert-deftest emacsvox-nonincremental-search-preserves-feedback-order ()
+  "Interactive search speaks its destination before the hit icon."
+  (let ((ems--interactive-fn-name 'search-forward)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda (&rest _) (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-search-backward-after)
+      (emacsvox--advice-search-forward-after)
+      (emacsvox--advice-search-forward-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon search-hit))))))
 
 (provide 'emacsvox-search-tests)
 ;;; emacsvox-search-tests.el ends here
