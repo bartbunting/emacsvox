@@ -2829,20 +2829,23 @@ TARGET identifies the command, STATE is its new value, and SETTING names it."
 
 ;;;  Options mode and custom
 
-(defun ems--customize-after (&rest _)
-  "Provide status update."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(emacsvox-advice--define-interactive-after-advice
+    (customize)
+    "Provide status update."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'customize :after #'ems--customize-after)
-
-(defun ems--customize-save-variable-around (orig-fun &rest args)
-  "Silence chatter."
+(defun emacsvox--advice-customize-save-variable-around
+    (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS while silencing Custom chatter."
   (ems-with-messages-silenced
-   (let ((dtk-quiet t)) (apply orig-fun args))))
+    (let ((dtk-quiet t))
+      (apply original arguments))))
 
-(advice-add 'customize-save-variable :around
-            #'ems--customize-save-variable-around)
+(advice-add
+ 'customize-save-variable :around
+ #'emacsvox--advice-customize-save-variable-around
+ '((name . emacsvox)))
 
 ;;;  transient mark mode
 

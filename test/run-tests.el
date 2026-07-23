@@ -61,6 +61,7 @@
   (require 'emacsvox-abbrev-tests)
   (require 'emacsvox-finder-tests)
   (require 'emacsvox-server-tests)
+  (require 'emacsvox-customize-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
