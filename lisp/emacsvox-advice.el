@@ -1916,21 +1916,32 @@ TARGET identifies the evaluation command."
 
 (advice-add 'suspend-emacs :around #'ems--suspend-emacs-around)
 
-(defun ems--downcase-region-after (&rest _)
-  "Give spoken confirmation."
-  (when (ems-interactive-p)
-    (message "Downcased region containing %s lines"
-             (count-lines (region-beginning) (region-end)))))
+(defun emacsvox--case-region-after (target action beginning end)
+  "Announce an interactive case conversion from BEGINNING to END.
+TARGET identifies the case command, and ACTION describes its result."
+  (when (ems-interactive-p target)
+    (message "%s region containing %s lines"
+             action (count-lines beginning end))))
 
-(advice-add 'downcase-region :after #'ems--downcase-region-after)
+(defun emacsvox--advice-downcase-region-after
+    (beginning end &optional _region-noncontiguous-p)
+  "Announce an interactive downcase from BEGINNING to END."
+  (emacsvox--case-region-after
+   'downcase-region "Downcased" beginning end))
 
-(defun ems--upcase-region-after (&rest _)
-  "Give spoken confirmation."
-  (when (ems-interactive-p)
-    (message "Upcased region containing %s lines"
-             (count-lines (region-beginning) (region-end)))))
+(advice-add
+ 'downcase-region :after #'emacsvox--advice-downcase-region-after
+ '((name . emacsvox)))
 
-(advice-add 'upcase-region :after #'ems--upcase-region-after)
+(defun emacsvox--advice-upcase-region-after
+    (beginning end &optional _region-noncontiguous-p)
+  "Announce an interactive upcase from BEGINNING to END."
+  (emacsvox--case-region-after
+   'upcase-region "Upcased" beginning end))
+
+(advice-add
+ 'upcase-region :after #'emacsvox--advice-upcase-region-after
+ '((name . emacsvox)))
 
 (emacsvox-advice--define-interactive-after-advice
     (narrow-to-region narrow-to-page)

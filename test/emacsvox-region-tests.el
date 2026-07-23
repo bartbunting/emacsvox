@@ -16,7 +16,11 @@
     (kill-region :around
      emacsvox--advice-kill-region-around)
     (completion-kill-region :around
-     emacsvox--advice-completion-kill-region-around))
+     emacsvox--advice-completion-kill-region-around)
+    (downcase-region :after
+     emacsvox--advice-downcase-region-after)
+    (upcase-region :after
+     emacsvox--advice-upcase-region-after))
   "Region-editing commands using individually named native advice.")
 
 (ert-deftest emacsvox-region-advice-is-directly-registered ()
@@ -110,6 +114,26 @@
         'completion-result)))
     (should (= calls 1))
     (should-not feedback)))
+
+(ert-deftest emacsvox-region-case-feedback-uses-explicit-range ()
+  "Case conversion reports its arguments without consulting the mark."
+  (with-temp-buffer
+    (insert "one\ntwo\nthree\n")
+    (set-marker (mark-marker) nil)
+    (let ((ems--interactive-fn-name 'downcase-region)
+          events)
+      (cl-letf (((symbol-function 'message)
+                 (lambda (format-string &rest arguments)
+                   (push
+                    (apply #'format format-string arguments)
+                    events))))
+        (emacsvox--advice-upcase-region-after
+         (point-min) (point-max) nil)
+        (emacsvox--advice-downcase-region-after
+         (point-min) (point-max) nil))
+      (should
+       (equal events
+              '("Downcased region containing 3 lines"))))))
 
 (provide 'emacsvox-region-tests)
 ;;; emacsvox-region-tests.el ends here
