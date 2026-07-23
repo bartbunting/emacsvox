@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Tab Bar on 2026-07-24 on branch =bart=:
+C Mode on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 472 passing ERT tests;
+- the Emacs 31 suite contains 485 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -67,18 +67,21 @@ Tab Bar on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-tab-bar.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-c.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         294 |   101 |
+| =defadvice=         |         288 |   100 |
 | =ad-get-arg=        |          61 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          40 |   n/a |
-| =ad-return-value=   |          25 |   n/a |
-| =advice-add=        |        1339 |   156 |
-| =ems-interactive-p= |        1403 |   176 |
+| =ad-do-it=          |          38 |   n/a |
+| =ad-return-value=   |          24 |   n/a |
+| =advice-add=        |        1344 |   156 |
+| =ems-interactive-p= |        1402 |   176 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -98,10 +101,10 @@ The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
-integration, Gnus, Ibuffer, Comint, and Tab Bar are also converted.
+integration, Gnus, Ibuffer, Comint, Tab Bar, and C Mode are also converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 46 files still contain
+completely independent of the compatibility bridge; 45 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -214,6 +217,19 @@ Explicit interactive targets prevent aliases such as =tab-next= and
 =tab-bar-switch-to-next-tab= from producing duplicate feedback.  Closing a tab
 by name now receives the native =name= argument directly instead of reading
 positional bridge state.
+
+The C Mode conversion is split into Emacs 31 target contracts, deletion and
+electric commands, navigation, and formatting and toggle commits.  It replaces
+the misspelled =c-awk-end-of-defunm= target with
+=c-awk-end-of-defun= and removes the =c-toggle-auto-state= compatibility alias
+that Emacs removed in version 29.  AWK advice is now installed only after
+=cc-awk= loads, so the integration does not create phantom commands.
+
+Deletion feedback now uses native =:before= advice.  This corrects a converter
+regression where =c-electric-delete-forward= called the original deletion
+twice, while preserving the reference character selection and feedback order.
+All remaining C navigation, formatting, and toggle advice uses direct named
+registration and explicit interactive targets.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
