@@ -2023,33 +2023,29 @@ TARGET identifies the case command, and ACTION describes its result."
  #'emacsvox--advice-split-window-horizontally-after
  '((name . emacsvox)))
 
-(defun ems--transpose-chars-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-speak-char t)))
+(emacsvox-advice--define-interactive-after-advice
+    (transpose-chars)
+    "Cue a character transpose and speak the resulting character."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-char t))
 
-(advice-add 'transpose-chars :after #'ems--transpose-chars-after)
+(emacsvox-advice--define-interactive-after-advice
+    (transpose-lines)
+    "Cue a line transpose and speak the resulting line."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-line))
 
-(defun ems--transpose-lines-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
+(emacsvox-advice--define-interactive-after-advice
+    (transpose-words)
+    "Cue a word transpose and speak the resulting word."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-word))
 
-(advice-add 'transpose-lines :after #'ems--transpose-lines-after)
-
-(defun ems--transpose-words-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-speak-word)))
-
-(advice-add 'transpose-words :after #'ems--transpose-words-after)
-
-(defun ems--transpose-sexps-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-speak-sexp)))
-
-(advice-add 'transpose-sexps :after #'ems--transpose-sexps-after)
+(emacsvox-advice--define-interactive-after-advice
+    (transpose-sexps)
+    "Cue a sexp transpose and speak the resulting expression."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-sexp))
 
 (defun emacsvox--advice-open-line-after (count)
   "Announce COUNT lines opened by an interactive `open-line'."
