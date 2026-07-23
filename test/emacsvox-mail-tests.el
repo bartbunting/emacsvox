@@ -30,6 +30,10 @@
     mail-to mail-reply-to mail-fcc)
   "Mail field commands converted to per-target native advice.")
 
+(defconst emacsvox-test--mail-action-targets
+  '(mail-signature mail-send-and-exit)
+  "Mail actions converted to per-target native advice.")
+
 (defun emacsvox-test--mail-field-advice-function (target)
   "Return the native Emacsvox Mail advice function for TARGET."
   (intern (format "emacsvox--advice-%s-after" target)))
@@ -44,6 +48,13 @@
       (list target :after #'emacsvox--mail-compose-after)
       ems--modern-advice-wrappers)))
   (dolist (target emacsvox-test--mail-field-targets)
+    (let ((function (emacsvox-test--mail-field-advice-function target)))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers))))
+  (dolist (target emacsvox-test--mail-action-targets)
     (let ((function (emacsvox-test--mail-field-advice-function target)))
       (should (fboundp function))
       (should (advice-member-p function target))
@@ -83,6 +94,31 @@
         (funcall function)
         (funcall function)))
     (should (equal events '(speak-line)))))
+
+(ert-deftest emacsvox-mail-signature-feedback-is-target-aware ()
+  "Only interactive signature insertion reports that the message was signed."
+  (let ((ems--interactive-fn-name 'mail-signature)
+        events)
+    (cl-letf (((symbol-function 'message)
+               (lambda (text) (push (list 'message text) events))))
+      (emacsvox--advice-mail-send-and-exit-after)
+      (emacsvox--advice-mail-signature-after))
+    (should
+     (equal events '((message "Signed your message"))))))
+
+(ert-deftest emacsvox-mail-send-feedback-preserves-order ()
+  "Sending mail cues closure before speaking the resulting mode line."
+  (let ((ems--interactive-fn-name 'mail-send-and-exit)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-mail-send-and-exit-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object) speak-mode-line)))))
 
 (provide 'emacsvox-mail-tests)
 ;;; emacsvox-mail-tests.el ends here

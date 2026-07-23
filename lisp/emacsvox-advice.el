@@ -1425,18 +1425,16 @@ to ORIGINAL unchanged."
     "Speak the current mail header field."
   (emacsvox-speak-line))
 
-(defun ems--mail-signature-after (&rest _)
-  "Announce you signed the message."
-  (when (ems-interactive-p) (message "Signed your message")))
+(emacsvox-advice--define-interactive-after-advice
+    (mail-signature)
+    "Announce insertion of a mail signature."
+  (message "Signed your message"))
 
-(advice-add 'mail-signature :after #'ems--mail-signature-after)
-
-(defun ems--mail-send-and-exit-after (&rest _)
-  "Speak the modeline of active buffer."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'mail-send-and-exit :after #'ems--mail-send-and-exit-after)
+(emacsvox-advice--define-interactive-after-advice
+    (mail-send-and-exit)
+    "Cue sending mail and speak the resulting mode line."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
 ;;;  misc functions that have to be hand fixed:
 
