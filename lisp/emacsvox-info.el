@@ -98,7 +98,7 @@ node -- speak the entire node."
    (t (emacsvox-speak-line))))
 
 (cl-loop
- for f in
+ for target in
  '(info info-display-manual Info-select-node
         Info-follow-reference Info-goto-node info-emacs-manual
         Info-top-node Info-menu-last-node  Info-final-node Info-up
@@ -109,12 +109,16 @@ node -- speak the entire node."
         Info-history-back Info-history-forward
         Info-backward-node Info-forward-node
         Info-next Info-prev)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     " Speak the selected node based on setting of
-emacsvox-info-select-node-speak-chunk"
-     (when (ems-interactive-p) (emacsvox-info-visit-node)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak a node selected by an interactive Info command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-info-visit-node)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--Info-search-after (&rest _)
   "speak."
@@ -263,4 +267,3 @@ node-spec."
 (define-key Info-mode-map "\M-p" 'emacsvox-info-previous-section)
 
 (provide  'emacsvox-info)
-

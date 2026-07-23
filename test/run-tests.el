@@ -76,6 +76,7 @@
   (require 'emacsvox-project-tests)
   (require 'emacsvox-flymake-tests)
   (require 'emacsvox-package-tests)
+  (require 'emacsvox-info-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
