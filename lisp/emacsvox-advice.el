@@ -2634,19 +2634,20 @@ Produce an auditory icon if possible."
         (replace-match " cap \\& " t))
       (buffer-string))))
 
-(defun ems--describe-key-briefly-around (orig-fun &rest args)
-  "Speak what you displayed"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((emacsvox-speak-messages nil))
-        (apply orig-fun args)
-        (dtk-speak (ems-canonicalize-key-description result))))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-describe-key-briefly-around
+    (original &rest arguments)
+  "Call ORIGINAL once and speak an interactive key description."
+  (if (ems-interactive-p 'describe-key-briefly)
+      (let* ((emacsvox-speak-messages nil)
+             (result (apply original arguments)))
+        (dtk-speak (ems-canonicalize-key-description result))
+        result)
+    (apply original arguments)))
 
-(advice-add 'describe-key-briefly :around
-            #'ems--describe-key-briefly-around)
+(advice-add
+ 'describe-key-briefly :around
+ #'emacsvox--advice-describe-key-briefly-around
+ '((name . emacsvox)))
 
 (defun ems--get-where-is (cmd )
   "Return string describing keys that invoke `cmd'. "
@@ -3135,19 +3136,20 @@ Produce an auditory icon if possible."
 
 ;;; Battery:
 
-(defun ems--battery-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args)
-                                  (tts-with-punctuations 'some
-                                                         (dtk-speak
-                                                          result))))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-battery-around (original &rest arguments)
+  "Call ORIGINAL once and speak an interactive battery report."
+  (if (ems-interactive-p 'battery)
+      (let (result)
+        (ems-with-messages-silenced
+          (setq result (apply original arguments))
+          (tts-with-punctuations 'some
+            (dtk-speak result)))
+        result)
+    (apply original arguments)))
 
-(advice-add 'battery :around #'ems--battery-around)
+(advice-add
+ 'battery :around #'emacsvox--advice-battery-around
+ '((name . emacsvox)))
 
 ;;; emacs lisp mode:
 

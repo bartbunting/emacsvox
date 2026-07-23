@@ -91,7 +91,10 @@
      emacsvox--advice-progress-reporter-do-update-around)
     (progress-reporter-done :after
      emacsvox--advice-progress-reporter-done-after)
-    (expand-abbrev :around emacsvox--advice-expand-abbrev-around))
+    (expand-abbrev :around emacsvox--advice-expand-abbrev-around)
+    (describe-key-briefly :around
+     emacsvox--advice-describe-key-briefly-around)
+    (battery :around emacsvox--advice-battery-around))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -510,6 +513,107 @@
           'expansion-result)))
       (should (= calls 1))
       (should-not feedback))))
+
+(ert-deftest emacsvox-describe-key-advice-calls-original-once ()
+  "An interactive key description is generated once and spoken canonically."
+  (let ((ems--interactive-fn-name 'describe-key-briefly)
+        (emacsvox-speak-messages t)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'ems-canonicalize-key-description)
+               (lambda (description)
+                 (push (list 'canonicalize description) events)
+                 "canonical key"))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (should
+       (equal
+        (emacsvox--advice-describe-key-briefly-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push
+            (list 'original arguments emacsvox-speak-messages)
+            events)
+           "raw key")
+         'key)
+        "raw key")))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original (key) nil)
+        (canonicalize "raw key")
+        (speak "canonical key"))))
+    (should emacsvox-speak-messages)))
+
+(ert-deftest emacsvox-describe-key-advice-is-quiet-programmatically ()
+  "A programmatic key description calls once without speech."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        feedback)
+    (cl-letf (((symbol-function 'dtk-speak)
+               (lambda (&rest _) (setq feedback t))))
+      (should
+       (equal
+        (emacsvox--advice-describe-key-briefly-around
+         (lambda (&rest _)
+           (cl-incf calls)
+           "raw key"))
+        "raw key")))
+    (should (= calls 1))
+    (should-not feedback)))
+
+(ert-deftest emacsvox-battery-advice-calls-original-once ()
+  "An interactive battery report is generated once and spoken quietly."
+  (let ((ems--interactive-fn-name 'battery)
+        (emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (dtk-punctuation-mode 'some)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'dtk-speak)
+               (lambda (text)
+                 (push
+                  (list 'speak text emacsvox-speak-messages
+                        inhibit-message)
+                  events))))
+      (should
+       (equal
+        (emacsvox--advice-battery-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push
+            (list 'original arguments
+                  emacsvox-speak-messages inhibit-message)
+            events)
+           "Battery 80%")
+         'argument)
+        "Battery 80%")))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original (argument) nil t)
+        (speak "Battery 80%" nil t))))
+    (should emacsvox-speak-messages)
+    (should-not inhibit-message)))
+
+(ert-deftest emacsvox-battery-advice-is-quiet-programmatically ()
+  "A programmatic battery report calls once without speech."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        feedback)
+    (cl-letf (((symbol-function 'dtk-speak)
+               (lambda (&rest _) (setq feedback t))))
+      (should
+       (equal
+        (emacsvox--advice-battery-around
+         (lambda (&rest _)
+           (cl-incf calls)
+           "Battery 80%"))
+        "Battery 80%")))
+    (should (= calls 1))
+    (should-not feedback)))
 
 (ert-deftest emacsvox-core-buffer-close-advice-preserves-feedback-order ()
   "Interactive buffer closing emits its icon, stop, and mode line once."
