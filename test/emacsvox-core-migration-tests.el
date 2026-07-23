@@ -90,7 +90,8 @@
     (progress-reporter-do-update :around
      emacsvox--advice-progress-reporter-do-update-around)
     (progress-reporter-done :after
-     emacsvox--advice-progress-reporter-done-after))
+     emacsvox--advice-progress-reporter-done-after)
+    (expand-abbrev :around emacsvox--advice-expand-abbrev-around))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -464,6 +465,51 @@
                (lambda (icon) (push icon events))))
       (emacsvox--advice-progress-reporter-done-after))
     (should (equal events '(time)))))
+
+(ert-deftest emacsvox-expand-abbrev-advice-calls-original-once ()
+  "Interactive abbrev expansion runs once before speaking the replacement."
+  (with-temp-buffer
+    (insert "abbr")
+    (let ((ems--interactive-fn-name 'expand-abbrev)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'dtk-speak)
+                 (lambda (text) (push (list 'speak text) events))))
+        (should
+         (eq
+          (emacsvox--advice-expand-abbrev-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push (list 'original arguments) events)
+             (delete-region (point-min) (point-max))
+             (insert "expanded")
+             'expansion-result)
+           'noerror)
+          'expansion-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((original (noerror))
+          (speak "expanded")))))))
+
+(ert-deftest emacsvox-expand-abbrev-advice-is-quiet-programmatically ()
+  "Programmatic abbrev expansion runs once without speech in a writable buffer."
+  (with-temp-buffer
+    (let ((ems--interactive-fn-name nil)
+          (calls 0)
+          feedback)
+      (cl-letf (((symbol-function 'dtk-speak)
+                 (lambda (&rest _) (setq feedback t))))
+        (should
+         (eq
+          (emacsvox--advice-expand-abbrev-around
+           (lambda (&rest _)
+             (cl-incf calls)
+             'expansion-result))
+          'expansion-result)))
+      (should (= calls 1))
+      (should-not feedback))))
 
 (ert-deftest emacsvox-core-buffer-close-advice-preserves-feedback-order ()
   "Interactive buffer closing emits its icon, stop, and mode line once."

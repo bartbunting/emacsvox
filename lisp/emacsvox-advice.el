@@ -2559,19 +2559,22 @@ Produce an auditory icon if possible."
 
 (advice-add 'edit-abbrevs :after #'ems--edit-abbrevs-after)
 
-(defun ems--expand-abbrev-around (orig-fun &rest args)
-  "Speak what you expanded."
-  (let ((result (apply orig-fun args)))
-    (when buffer-read-only (dtk-speak "Buffer is read-only. "))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (save-excursion (backward-word 1) (point))))
-        (apply orig-fun args)
-        (dtk-speak (buffer-substring start (point)))))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-expand-abbrev-around
+    (original &rest arguments)
+  "Call ORIGINAL once and speak an interactive abbrev expansion."
+  (when buffer-read-only
+    (dtk-speak "Buffer is read-only. "))
+  (if (ems-interactive-p 'expand-abbrev)
+      (let ((start (save-excursion (backward-word 1) (point)))
+            result)
+        (setq result (apply original arguments))
+        (dtk-speak (buffer-substring start (point)))
+        result)
+    (apply original arguments)))
 
-(advice-add 'expand-abbrev :around #'ems--expand-abbrev-around)
+(advice-add
+ 'expand-abbrev :around #'emacsvox--advice-expand-abbrev-around
+ '((name . emacsvox)))
 
 (defun ems--abbrev-mode-after (&rest _)
   "speak."
