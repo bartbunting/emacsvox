@@ -3128,21 +3128,39 @@ Produce an auditory icon if possible."
 
 ;;; Advice property search
 
-(cl-loop
- for f in
- '(text-property-search-backward text-property-search-forward)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak range."
-     (when (ems-interactive-p)
-       (unless ad-return-value
-         (emacsvox-icon 'warn-user)
-         (emacsvox-speak-line))
-       (when-let* ((m ad-return-value))
-         (emacsvox-speak-region
-          (prop-match-beginning m) (prop-match-end m))
-         (emacsvox-icon 'select-object))))))
+(defun emacsvox--property-search-filter-return (result target)
+  "Speak property search RESULT for interactive TARGET and return RESULT."
+  (when (ems-interactive-p target)
+    (if result
+        (progn
+          (emacsvox-speak-region
+           (prop-match-beginning result) (prop-match-end result))
+          (emacsvox-icon 'select-object))
+      (emacsvox-icon 'warn-user)
+      (emacsvox-speak-line)))
+  result)
+
+(defun emacsvox--advice-text-property-search-backward-filter-return
+    (result)
+  "Speak the result of an interactive backward text-property search."
+  (emacsvox--property-search-filter-return
+   result 'text-property-search-backward))
+
+(advice-add
+ 'text-property-search-backward :filter-return
+ #'emacsvox--advice-text-property-search-backward-filter-return
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-text-property-search-forward-filter-return
+    (result)
+  "Speak the result of an interactive forward text-property search."
+  (emacsvox--property-search-filter-return
+   result 'text-property-search-forward))
+
+(advice-add
+ 'text-property-search-forward :filter-return
+ #'emacsvox--advice-text-property-search-forward-filter-return
+ '((name . emacsvox)))
 
 ;;; ielm: header-line
 
