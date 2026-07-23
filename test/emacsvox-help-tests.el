@@ -19,7 +19,18 @@
     (describe-prefix-bindings :after
      emacsvox--advice-describe-prefix-bindings-after)
     (isearch-describe-bindings :after
-     emacsvox--advice-isearch-describe-bindings-after))
+     emacsvox--advice-isearch-describe-bindings-after)
+    (help-do-xref :after emacsvox--advice-help-do-xref-after)
+    (help-xref-go-back :after
+     emacsvox--advice-help-xref-go-back-after)
+    (help-xref-go-forward :after
+     emacsvox--advice-help-xref-go-forward-after)
+    (help-view-source :after
+     emacsvox--advice-help-view-source-after)
+    (help-customize :after
+     emacsvox--advice-help-customize-after)
+    (help-window-display-message :around
+     emacsvox--advice-help-window-display-message-around))
   "Help commands using individually named native advice.")
 
 (ert-deftest emacsvox-help-advice-is-directly-registered ()
@@ -70,6 +81,60 @@
       (nreverse events)
       '((message "Displayed key bindings in help window")
         (icon help))))))
+
+(ert-deftest emacsvox-help-xref-feedback-remains-unconditional ()
+  "Help xref callbacks speak even without an interactive command marker."
+  (let ((ems--interactive-fn-name nil)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-help-do-xref-after)
+      (emacsvox--advice-help-xref-go-back-after)
+      (emacsvox--advice-help-xref-go-forward-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon item) speak-line speak-line)))))
+
+(ert-deftest emacsvox-help-source-feedback-is-target-aware ()
+  "Only interactive source viewing speaks its line before the open icon."
+  (let ((ems--interactive-fn-name 'help-view-source)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-help-customize-after)
+      (emacsvox--advice-help-view-source-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon open-object))))))
+
+(ert-deftest emacsvox-help-window-message-advice-calls-original-once ()
+  "Help window messaging calls once, quietly, and preserves its result."
+  (let ((emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (calls 0)
+        observed-state)
+    (should
+     (eq
+      (emacsvox--advice-help-window-display-message-around
+       (lambda (&rest arguments)
+         (cl-incf calls)
+         (setq observed-state
+               (list arguments emacsvox-speak-messages inhibit-message))
+         'help-message-result)
+       'argument)
+      'help-message-result))
+    (should (= calls 1))
+    (should (equal observed-state '((argument) nil t)))
+    (should emacsvox-speak-messages)
+    (should-not inhibit-message)))
 
 (provide 'emacsvox-help-tests)
 ;;; emacsvox-help-tests.el ends here

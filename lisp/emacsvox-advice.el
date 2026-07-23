@@ -1706,42 +1706,56 @@ BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
 (advice-add 'modify-syntax-entry :before
             #'ems--modify-syntax-entry-before)
 
-(defun ems--help-do-xref-after (&rest _)
-  "Speak the ref we moved to." (emacsvox-speak-line)
+(defun emacsvox--advice-help-do-xref-after (&rest _)
+  "Speak the Help reference just selected."
+  (emacsvox-speak-line)
   (emacsvox-icon 'item))
 
-(advice-add 'help-do-xref :after #'ems--help-do-xref-after)
+(advice-add
+ 'help-do-xref :after #'emacsvox--advice-help-do-xref-after
+ '((name . emacsvox)))
 
-(cl-loop
- for f in 
- '(help-xref-go-back help-xref-go-forward)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (emacsvox-speak-line))))
+(defun emacsvox--advice-help-xref-go-back-after (&rest _)
+  "Speak the Help reference reached by moving backward."
+  (emacsvox-speak-line))
 
-(defun ems--help-view-source-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'open-object)))
+(advice-add
+ 'help-xref-go-back :after
+ #'emacsvox--advice-help-xref-go-back-after
+ '((name . emacsvox)))
 
-(advice-add 'help-view-source :after #'ems--help-view-source-after)
+(defun emacsvox--advice-help-xref-go-forward-after (&rest _)
+  "Speak the Help reference reached by moving forward."
+  (emacsvox-speak-line))
 
-(defun ems--help-customize-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(advice-add
+ 'help-xref-go-forward :after
+ #'emacsvox--advice-help-xref-go-forward-after
+ '((name . emacsvox)))
 
-(advice-add 'help-customize :after #'ems--help-customize-after)
+(emacsvox-advice--define-interactive-after-advice
+    (help-view-source)
+    "Announce viewing source from Help."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'open-object))
+
+(emacsvox-advice--define-interactive-after-advice
+    (help-customize)
+    "Announce opening Customize from Help."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
 ;; Silence help for help
 
-(defun ems--help-window-display-message-around (orig-fun &rest args)
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-help-window-display-message-around
+    (original &rest arguments)
+  "Call ORIGINAL with Help window messages silenced."
+  (ems-with-messages-silenced (apply original arguments)))
 
-(advice-add 'help-window-display-message :around
-            #'ems--help-window-display-message-around)
+(advice-add
+ 'help-window-display-message :around
+ #'emacsvox--advice-help-window-display-message-around
+ '((name . emacsvox)))
 
 (cl-loop
  for f in
