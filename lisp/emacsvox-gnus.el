@@ -135,163 +135,221 @@ instead you hear only the first screenful."
 
 ;; emacs can hang if too many message sfly by as gnus starts
 
-(defun ems--gnus-around (orig-fun &rest args)
-  "Silence messages, produce auditory icon."
+(defun emacsvox--advice-gnus-around (original &rest arguments)
+  "Run ORIGINAL with silenced messages and cue Gnus startup."
   (dtk-speak "Starting gnus")
-  (ems-with-messages-silenced (apply orig-fun args))
-  (emacsvox-icon 'news) (message "Gnus is ready "))
+  (let ((result
+         (ems-with-messages-silenced
+           (apply original arguments))))
+    (emacsvox-icon 'news)
+    (message "Gnus is ready ")
+    result))
 
-(advice-add 'gnus :around #'ems--gnus-around)
+(advice-add
+ 'gnus :around #'emacsvox--advice-gnus-around
+ '((name . emacsvox)))
 
 (cl-loop
- for f in
+ for target in
  '(gnus-group-suspend gnus-group-quit
-                      gnus-group-exit gnus-server-exit)
+   gnus-group-exit gnus-server-exit)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f(after emacsvox pre act com)
-     "Provide auditory contextual feedback."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (dtk-stop)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively leaving a Gnus view."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'close-object)
+         (dtk-stop)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;   starting up:
 
-(defun ems--gnus-group-post-news-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-gnus-group-post-news-after (&rest _)
+  "Cue and speak after interactively starting a Gnus post."
+  (when (ems-interactive-p 'gnus-group-post-news)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'gnus-group-post-news :after
-            #'ems--gnus-group-post-news-after)
+(advice-add
+ 'gnus-group-post-news :after
+ #'emacsvox--advice-gnus-group-post-news-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-get-new-news-around (orig-fun &rest args)
-  "Temporarily silence on message" (dtk-speak "Getting new  gnus")
-  (ems-with-messages-silenced (apply orig-fun args))
-  (message "Gnus is ready ") (emacsvox-icon 'news))
+(defun emacsvox--advice-gnus-group-get-new-news-around
+    (original &rest arguments)
+  "Run ORIGINAL with silenced messages and cue the news refresh."
+  (dtk-speak "Getting new  gnus")
+  (let ((result
+         (ems-with-messages-silenced
+           (apply original arguments))))
+    (message "Gnus is ready ")
+    (emacsvox-icon 'news)
+    result))
 
-(advice-add 'gnus-group-get-new-news :around
-            #'ems--gnus-group-get-new-news-around)
+(advice-add
+ 'gnus-group-get-new-news :around
+ #'emacsvox--advice-gnus-group-get-new-news-around
+ '((name . emacsvox)))
 
-(defun ems--nnheader-message-maybe-around (orig-fun &rest args)
-  "Silence emacsvox"
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-nnheader-message-maybe-around
+    (original &rest arguments)
+  "Run ORIGINAL with Emacsvox messages silenced."
+  (ems-with-messages-silenced
+    (apply original arguments)))
 
-(advice-add 'nnheader-message-maybe :around
-            #'ems--nnheader-message-maybe-around)
+(advice-add
+ 'nnheader-message-maybe :around
+ #'emacsvox--advice-nnheader-message-maybe-around
+ '((name . emacsvox)))
 
 ;;;   Newsgroup selection
 
 (cl-loop
- for f in
+ for target in
  '(
    gnus-group-select-group gnus-group-first-unread-group
    gnus-group-read-group
    gnus-group-prev-group gnus-group-next-group
    gnus-group-prev-unread-group  gnus-group-next-unread-group
    gnus-group-get-new-news-this-group)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Gnus group movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--gnus-group-unsubscribe-current-group-after (&rest _)
+(defun emacsvox--advice-gnus-group-unsubscribe-current-group-after
+    (&rest _)
   "Produce an auditory icon indicating\nthis group is being deselected."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'gnus-group-unsubscribe-current-group)
+    (emacsvox-icon 'deselect-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'gnus-group-unsubscribe-current-group :after
-            #'ems--gnus-group-unsubscribe-current-group-after)
+(advice-add
+ 'gnus-group-unsubscribe-current-group :after
+ #'emacsvox--advice-gnus-group-unsubscribe-current-group-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-catchup-current-after (&rest _)
+(defun emacsvox--advice-gnus-group-catchup-current-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'gnus-group-catchup-current)
+    (emacsvox-icon 'close-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'gnus-group-catchup-current :after
-            #'ems--gnus-group-catchup-current-after)
+(advice-add
+ 'gnus-group-catchup-current :after
+ #'emacsvox--advice-gnus-group-catchup-current-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-yank-group-after (&rest _)
+(defun emacsvox--advice-gnus-group-yank-group-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'gnus-group-yank-group)
+    (emacsvox-icon 'yank-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'gnus-group-yank-group :after
-            #'ems--gnus-group-yank-group-after)
+(advice-add
+ 'gnus-group-yank-group :after
+ #'emacsvox--advice-gnus-group-yank-group-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-list-groups-after (&rest _)
+(defun emacsvox--advice-gnus-group-list-groups-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (dtk-speak "Listing groups... done")))
+  (when (ems-interactive-p 'gnus-group-list-groups)
+    (emacsvox-icon 'open-object)
+    (dtk-speak "Listing groups... done")))
 
-(advice-add 'gnus-group-list-groups :after
-            #'ems--gnus-group-list-groups-after)
+(advice-add
+ 'gnus-group-list-groups :after
+ #'emacsvox--advice-gnus-group-list-groups-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-topic-mode-after (&rest _)
+(defun emacsvox--advice-gnus-topic-mode-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (dtk-speak "toggled topic mode")))
+  (when (ems-interactive-p 'gnus-topic-mode)
+    (emacsvox-icon 'open-object)
+    (dtk-speak "toggled topic mode")))
 
-(advice-add 'gnus-topic-mode :after #'ems--gnus-topic-mode-after)
+(advice-add
+ 'gnus-topic-mode :after
+ #'emacsvox--advice-gnus-topic-mode-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-list-all-groups-after (&rest _)
+(defun emacsvox--advice-gnus-group-list-all-groups-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-group-list-all-groups)
     (emacsvox-icon 'open-object)
     (dtk-speak "Listing all groups... done")))
 
-(advice-add 'gnus-group-list-all-groups :after
-            #'ems--gnus-group-list-all-groups-after)
+(advice-add
+ 'gnus-group-list-all-groups :after
+ #'emacsvox--advice-gnus-group-list-all-groups-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-list-all-matching-after (&rest _)
+(defun emacsvox--advice-gnus-group-list-all-matching-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-group-list-all-matching)
     (emacsvox-icon 'open-object)
     (dtk-speak "Listing all matching groups... done")))
 
-(advice-add 'gnus-group-list-all-matching :after
-            #'ems--gnus-group-list-all-matching-after)
+(advice-add
+ 'gnus-group-list-all-matching :after
+ #'emacsvox--advice-gnus-group-list-all-matching-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-list-killed-after (&rest _)
+(defun emacsvox--advice-gnus-group-list-killed-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-group-list-killed)
     (emacsvox-icon 'open-object)
     (dtk-speak "Listing killed groups... done")))
 
-(advice-add 'gnus-group-list-killed :after
-            #'ems--gnus-group-list-killed-after)
+(advice-add
+ 'gnus-group-list-killed :after
+ #'emacsvox--advice-gnus-group-list-killed-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-list-matching-after (&rest _)
+(defun emacsvox--advice-gnus-group-list-matching-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-group-list-matching)
     (emacsvox-icon 'open-object)
     (emacsvox-pip
      "listing matching groups with unread articles... done")))
 
-(advice-add 'gnus-group-list-matching :after
-            #'ems--gnus-group-list-matching-after)
+(advice-add
+ 'gnus-group-list-matching :after
+ #'emacsvox--advice-gnus-group-list-matching-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-list-zombies-after (&rest _)
+(defun emacsvox--advice-gnus-group-list-zombies-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-group-list-zombies)
     (emacsvox-icon 'open-object)
     (dtk-speak "Listing zombie groups... done")))
 
-(advice-add 'gnus-group-list-zombies :after
-            #'ems--gnus-group-list-zombies-after)
+(advice-add
+ 'gnus-group-list-zombies :after
+ #'emacsvox--advice-gnus-group-list-zombies-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-group-customize-before (&rest _)
+(defun emacsvox--advice-gnus-group-customize-before (&rest _)
   "speak.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-group-customize)
     (emacsvox-icon 'open-object)
     (message "Customizing group %s" (gnus-group-group-name))))
 
-(advice-add 'gnus-group-customize :before
-            #'ems--gnus-group-customize-before)
+(advice-add
+ 'gnus-group-customize :before
+ #'emacsvox--advice-gnus-group-customize-before
+ '((name . emacsvox)))
 
 ;;;   summary mode 
 (cl-loop
@@ -981,4 +1039,3 @@ Helps to prevent words from being spelled instead of spoken."
 ;;;   end of file 
 
 ;; byte-compile-warnings: (deprecated )
-

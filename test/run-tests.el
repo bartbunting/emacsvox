@@ -90,6 +90,7 @@
   (require 'emacsvox-org-tests)
   (require 'emacsvox-outline-tests)
   (require 'emacsvox-eww-tests)
+  (require 'emacsvox-gnus-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
