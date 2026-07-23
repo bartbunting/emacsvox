@@ -38,7 +38,7 @@ must become conservative and test-driven before further bulk use.
 As of the completed core-file migration and first built-in integration slices
 on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 334 passing ERT tests;
+- the Emacs 31 suite contains 344 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -53,12 +53,12 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         339 |   110 |
+| =defadvice=         |         335 |   107 |
 | =ad-get-arg=        |          79 |   n/a |
 | =ad-set-arg=        |           3 |   n/a |
 | =ad-do-it=          |          42 |   n/a |
 | =ad-return-value=   |          26 |   n/a |
-| =advice-add=        |        1410 |   155 |
+| =advice-add=        |        1409 |   156 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -76,11 +76,11 @@ function rather than returning the result of speech output.
 
 The first built-in integration slices converted Compilation, Windmove, FFAP,
 IDO, Diff Mode, Project, Flymake, Package, Info, Debugger, table editing,
-Proced, View, Calendar, Wdired, and Tabulated List.  Each module has
-direct-registration and target-aware feedback tests, and each conversion is an
-independently revertible commit.  These modules are now completely independent
-of the compatibility bridge; 52 files still contain bridge compatibility
-symbols.
+Proced, View, Calendar, Wdired, Tabulated List, Net Utils, Forms, and Xref.
+Each module has direct-registration and target-aware feedback tests, and each
+conversion is an independently revertible commit.  These modules are now
+completely independent of the compatibility bridge; 52 files still contain
+bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
@@ -95,6 +95,13 @@ Diary APIs.  It also corrects duplicate original calls in =calendar-read= and
 Diary marking while preserving their return values and message-silencing
 semantics.  The Tabulated List conversion also corrects the misspelled
 =select-objet= auditory icon to the existing =select-object= icon.
+
+The Forms conversion replaces obsolete =forms-kill-record= advice with the
+current =forms-delete-record= command, removes the dead generic =forms-search=
+target, and corrects a converted around-wrapper that called =forms-next-field=
+twice.  The Xref conversion removes the undefined =xref-find-regexp= target and
+a duplicate obsolete-alias registration while retaining target-aware feedback
+for callable aliases.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
