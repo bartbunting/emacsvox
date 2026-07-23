@@ -63,6 +63,7 @@
   (require 'emacsvox-server-tests)
   (require 'emacsvox-customize-tests)
   (require 'emacsvox-editing-tests)
+  (require 'emacsvox-display-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

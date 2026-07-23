@@ -1847,12 +1847,11 @@ TARGET identifies the evaluation command."
  #'emacsvox--advice-eval-expression-filter-return
  '((name . emacsvox)))
 
-(defun ems--shell-after (&rest _)
-  "Announce switching to shell mode.\nProvide an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'shell :after #'ems--shell-after)
+(emacsvox-advice--define-interactive-after-advice
+    (shell)
+    "Cue an interactive shell and speak its mode line."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
 (emacsvox-advice--define-interactive-after-advice
     (find-tag pop-tag-mark tags-loop-continue)
@@ -2994,14 +2993,13 @@ TARGET identifies the Elint command, and ARGUMENTS are passed unchanged."
 
 ;;;  display world time
 
-(defun ems--world-clock-after (&rest _)
-  "Speak what you displayed."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (save-current-buffer
-      (set-buffer "*wclock*") (emacsvox-speak-buffer))))
-
-(advice-add 'world-clock :after #'ems--world-clock-after)
+(emacsvox-advice--define-interactive-after-advice
+    (world-clock)
+    "Cue and speak the displayed world clock."
+  (emacsvox-icon 'open-object)
+  (save-current-buffer
+    (set-buffer "*wclock*")
+    (emacsvox-speak-buffer)))
 
 ;;;  browse-url
 
