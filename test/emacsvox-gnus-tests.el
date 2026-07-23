@@ -454,5 +454,148 @@
         '(visual-lines (icon open-object)
           hide-blocks speak-article))))))
 
+(defconst emacsvox-test--gnus-article-after-targets
+  '(gnus-article-show-summary
+    gnus-article-next-page gnus-article-prev-page
+    gnus-summary-button-forward
+    gnus-article-goto-prev-page gnus-article-goto-next-page)
+  "Current Gnus article commands with direct after advice.")
+
+(defconst emacsvox-test--gnus-server-after-targets
+  '(gnus-server-edit-server
+    gnus-group-enter-server-mode gnus-browse-exit)
+  "Current Gnus server commands with direct after advice.")
+
+(ert-deftest emacsvox-gnus-article-server-advice-is-directly-registered ()
+  "Gnus article and server advice bypasses the compatibility bridge."
+  (dolist
+      (target
+       (append
+        emacsvox-test--gnus-article-after-targets
+        emacsvox-test--gnus-server-after-targets))
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers))))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-gnus-article-press-button-before
+    'gnus-article-press-button))
+  (should-not
+   (gethash
+    '(gnus-article-press-button :before
+      emacsvox--advice-gnus-article-press-button-before)
+    ems--modern-advice-wrappers))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-auth-source-do-debug-around
+    'auth-source-do-debug))
+  (should-not
+   (gethash
+    '(auth-source-do-debug :around
+      emacsvox--advice-auth-source-do-debug-around)
+    ems--modern-advice-wrappers)))
+
+(ert-deftest emacsvox-gnus-does-not-create-obsolete-article-server-targets ()
+  "Loading the integration does not recreate removed Gnus commands."
+  (should-not (fboundp 'gnus-article-next-button))
+  (should-not (fboundp 'gnus-server-edit-buffer)))
+
+(ert-deftest emacsvox-gnus-button-navigation-uses-current-command ()
+  "Current Gnus button navigation cues and identifies its button."
+  (with-temp-buffer
+    (insert-text-button "Open link" 'action #'ignore)
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'gnus-summary-button-forward)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'message)
+                 (lambda (format-string &rest arguments)
+                   (push
+                    (list
+                     'message
+                     (apply #'format format-string arguments))
+                    events))))
+        (emacsvox--advice-gnus-summary-button-forward-after))
+      (should
+       (equal
+        (nreverse events)
+        '((icon large-movement) (message "Open link")))))))
+
+(ert-deftest emacsvox-gnus-article-page-feedback-is-target-aware ()
+  "Only matching article page movement speaks the current window."
+  (let ((ems--interactive-fn-name 'gnus-article-prev-page)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-current-window)
+               (lambda () (push 'speak-window events))))
+      (emacsvox--advice-gnus-article-next-page-after)
+      (emacsvox--advice-gnus-article-prev-page-after))
+    (should (equal events '(speak-window)))))
+
+(ert-deftest emacsvox-gnus-server-feedback-is-target-aware ()
+  "Only matching interactive server navigation speaks the mode line."
+  (let ((ems--interactive-fn-name 'gnus-server-edit-server)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-gnus-browse-exit-after)
+      (emacsvox--advice-gnus-server-edit-server-after))
+    (should (equal events '(speak-mode-line)))))
+
+(ert-deftest emacsvox-gnus-auth-debug-calls-original-once ()
+  "Auth-source debugging preserves one silenced call and its result."
+  (let ((emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (calls 0))
+    (should
+     (eq
+      (emacsvox--advice-auth-source-do-debug-around
+       (lambda (&rest arguments)
+         (cl-incf calls)
+         (should-not emacsvox-speak-messages)
+         (should inhibit-message)
+         (should (equal arguments '("debug")))
+         'debugged)
+       "debug")
+      'debugged))
+    (should (= calls 1))))
+
+(ert-deftest emacsvox-gnus-xoauth-calls-original-once ()
+  "XOAuth credential lookup preserves one quiet call and its result."
+  (let ((emacsvox-speak-messages t)
+        (calls 0))
+    (should
+     (eq
+      (emacsvox--advice-auth-source-xoauth2--file-creds-around
+       (lambda (&rest arguments)
+         (cl-incf calls)
+         (should-not emacsvox-speak-messages)
+         (should (equal arguments '("host" "user")))
+         'credentials)
+       "host" "user")
+      'credentials))
+    (should (= calls 1))))
+
+(ert-deftest emacsvox-gnus-xoauth-advice-is-deferred ()
+  "Optional XOAuth advice is installed only after its package loads."
+  (should-not (fboundp 'auth-source-xoauth2--file-creds))
+  (unwind-protect
+      (progn
+        (fset 'auth-source-xoauth2--file-creds #'ignore)
+        (emacsvox-gnus--setup-xoauth2-advice)
+        (should
+         (advice-member-p
+          #'emacsvox--advice-auth-source-xoauth2--file-creds-around
+          'auth-source-xoauth2--file-creds)))
+    (advice-remove
+     'auth-source-xoauth2--file-creds
+     #'emacsvox--advice-auth-source-xoauth2--file-creds-around)
+    (fmakunbound 'auth-source-xoauth2--file-creds)))
+
 (provide 'emacsvox-gnus-tests)
 ;;; emacsvox-gnus-tests.el ends here

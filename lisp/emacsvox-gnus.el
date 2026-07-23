@@ -657,61 +657,69 @@ instead you hear only the first screenful."
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--gnus-article-show-summary-after (&rest _)
+(defun emacsvox--advice-gnus-article-show-summary-after (&rest _)
   "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
+  (when (ems-interactive-p 'gnus-article-show-summary)
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'gnus-article-show-summary :after
-            #'ems--gnus-article-show-summary-after)
+(advice-add
+ 'gnus-article-show-summary :after
+ #'emacsvox--advice-gnus-article-show-summary-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-article-next-page-after (&rest _)
-  "Speak the current window full of news"
-  (when (ems-interactive-p) (emacsvox-speak-current-window)))
+(cl-loop
+ for target in
+ '(gnus-article-next-page gnus-article-prev-page)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Speak the current window after interactive article scrolling."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-current-window)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'gnus-article-next-page :after
-            #'ems--gnus-article-next-page-after)
-
-(defun ems--gnus-article-prev-page-after (&rest _)
-  "Speak the current window full"
-  (when (ems-interactive-p) (emacsvox-speak-current-window)))
-
-(advice-add 'gnus-article-prev-page :after
-            #'ems--gnus-article-prev-page-after)
-
-(defun ems--gnus-article-next-button-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (let ((end (next-single-property-change (point) 'gnus-callback)))
+(defun emacsvox--advice-gnus-summary-button-forward-after (&rest _)
+  "Cue and identify the current Gnus article button."
+  (when (ems-interactive-p 'gnus-summary-button-forward)
+    (let ((button (button-at (point))))
       (emacsvox-icon 'large-movement)
-      (message (buffer-substring (point) end)))))
+      (when button
+        (message "%s" (button-label button))))))
 
-(advice-add 'gnus-article-next-button :after
-            #'ems--gnus-article-next-button-after)
+(advice-add
+ 'gnus-summary-button-forward :after
+ #'emacsvox--advice-gnus-summary-button-forward-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-article-press-button-before (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'button)))
+(defun emacsvox--advice-gnus-article-press-button-before (&rest _)
+  "Cue before interactively pressing a Gnus article button."
+  (when (ems-interactive-p 'gnus-article-press-button)
+    (emacsvox-icon 'button)))
 
-(advice-add 'gnus-article-press-button :before
-            #'ems--gnus-article-press-button-before)
+(advice-add
+ 'gnus-article-press-button :before
+ #'emacsvox--advice-gnus-article-press-button-before
+ '((name . emacsvox)))
 
-(defun ems--gnus-article-goto-prev-page-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'scroll) (sit-for 1)
-    (emacsvox-speak-current-window)))
-
-(advice-add 'gnus-article-goto-prev-page :after
-            #'ems--gnus-article-goto-prev-page-after)
-
-(defun ems--gnus-article-goto-next-page-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'scroll) (sit-for 1)
-    (emacsvox-speak-current-window)))
-
-(advice-add 'gnus-article-goto-next-page :after
-            #'ems--gnus-article-goto-next-page-after)
+(cl-loop
+ for target in
+ '(gnus-article-goto-prev-page gnus-article-goto-next-page)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Gnus article page movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'scroll)
+         (sit-for 1)
+         (emacsvox-speak-current-window)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun gnus-summary-downcase-article ()
   "Downcases the article body
@@ -843,14 +851,18 @@ Helps to prevent words from being spelled instead of spoken."
 ;;;  server mode:
 
 (cl-loop
- for f in 
- '(gnus-server-edit-buffer gnus-group-enter-server-mode gnus-browse-exit)
+ for target in
+ '(gnus-server-edit-server gnus-group-enter-server-mode gnus-browse-exit)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak the mode line after interactive Gnus server navigation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;  Async Gnus:
 
@@ -874,24 +886,34 @@ Helps to prevent words from being spelled instead of spoken."
 
 ;;; xoauth2
 
-(defun ems--auth-source-do-debug-around (orig-fun &rest args)
-  "silence" (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-auth-source-do-debug-around
+    (original &rest arguments)
+  "Run ORIGINAL with Emacsvox messages silenced."
+  (ems-with-messages-silenced
+    (apply original arguments)))
 
-(advice-add 'auth-source-do-debug :around
-            #'ems--auth-source-do-debug-around)
+(advice-add
+ 'auth-source-do-debug :around
+ #'emacsvox--advice-auth-source-do-debug-around
+ '((name . emacsvox)))
 
 ;;; xoauth:
 
-(defun ems--auth-source-xoauth2--file-creds-around
-    (orig-fun &rest args)
-  "Silence messages"
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages nil))
-      (apply orig-fun args) result)
-    result))
+(defun emacsvox--advice-auth-source-xoauth2--file-creds-around
+    (original &rest arguments)
+  "Run ORIGINAL once with Emacsvox messages silenced."
+  (let ((emacsvox-speak-messages nil))
+    (apply original arguments)))
 
-(advice-add 'auth-source-xoauth2--file-creds :around
-            #'ems--auth-source-xoauth2--file-creds-around)
+(defun emacsvox-gnus--setup-xoauth2-advice ()
+  "Install Emacsvox advice for the optional XOAuth2 package."
+  (advice-add
+   'auth-source-xoauth2--file-creds :around
+   #'emacsvox--advice-auth-source-xoauth2--file-creds-around
+   '((name . emacsvox))))
+
+(with-eval-after-load 'auth-source-xoauth2
+  (emacsvox-gnus--setup-xoauth2-advice))
 
 (provide 'emacsvox-gnus)
 ;;;   end of file 
