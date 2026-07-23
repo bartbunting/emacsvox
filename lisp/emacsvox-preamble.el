@@ -287,23 +287,24 @@
 ;;;; Design:
 ;; Advice on funcall-interactively stores the name of the
 ;; interactive command being run.
-;; The defadvice macro  itself has a defadvice  to generate a locally bound
-;; predicate that ensures that ems-interactive-p is only called from
-;; within emacsvox advice forms.
+;; Advice on the defadvice macro generates a locally bound predicate that
+;; ensures that ems-interactive-p is only called from legacy Emacsvox advice.
 ;; Thus, ems-interactive-p is reserved for use within Emacsvox advice.
 ;;; Implementation: Interactive Check:
 
-(defun ems--funcall-interactively-around (orig-fun func &rest args)
+(defun emacsvox--funcall-interactively-around (orig-fun func &rest args)
   "Record name of interactive function being called."
   (let ((ems--interactive-fn-name func))
     (apply orig-fun func args)))
 
-(advice-add 'funcall-interactively :around #'ems--funcall-interactively-around)
+(advice-add
+ 'funcall-interactively :around #'emacsvox--funcall-interactively-around)
 
 ;; Beware: Advice on defadvice
-(advice-add 'defadvice :around #'ems--generate-interactive-check)
+(advice-add 'defadvice :around #'emacsvox--generate-interactive-check)
 
-(defun ems--generate-interactive-check (orig-macro fn-name args &rest body)
+(defun emacsvox--generate-interactive-check
+    (orig-macro fn-name args &rest body)
   "Lexically redefine ems-interactive-p  to test  ems--interactive-fn-name.
 The local definition expands to a call to `eq' that compares
 FN-NAME to our stored value of ems--interactive-fn-name."
@@ -322,9 +323,12 @@ FN-NAME to our stored value of ems--interactive-fn-name."
                 t)))
        . ,macroexpand-all-environment)))))
 
-(defun ems-interactive-p ()
-  "Return non-nil in advice for the current interactive command."
-  (when (eq ems--interactive-fn-name ems--modern-advice-target)
+(defun ems-interactive-p (&optional target)
+  "Return non-nil in advice for the current interactive command.
+TARGET explicitly names the advised command for native advice.  When TARGET is
+nil, use compatibility context supplied by the temporary advice bridge."
+  (setq target (or target ems--modern-advice-target))
+  (when (and target (eq ems--interactive-fn-name target))
     (setq ems--interactive-fn-name nil)
     t))
 

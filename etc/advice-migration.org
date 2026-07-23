@@ -165,7 +165,10 @@ Introduce the final target-aware form, for example:
 #+end_src
 
 Temporarily retain the argument-less compatibility behaviour for unmigrated
-code.  Ensure newly corrected native advice bypasses the bridge.
+code.  Fully converted native advice helpers use the package-private
+=emacsvox--= prefix, while the bridge remains limited to converted helpers with
+the legacy =ems--= prefix.  This makes newly corrected advice bypass the bridge
+without another wrapper or marker property.
 
 ** 6. Remove visible legacy redefinition warnings
 

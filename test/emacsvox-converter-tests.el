@@ -18,13 +18,13 @@
     (should
      (equal
       (ems--convert-defadvice-form form)
-      '((defun ems--calendar-forward-day-emacsvox-after (&rest _)
+      '((defun emacsvox--calendar-forward-day-emacsvox-after (&rest _)
           "Speak the date."
           (when (ems-interactive-p 'calendar-forward-day)
             (message "done")))
         (advice-add
          'calendar-forward-day :after
-         #'ems--calendar-forward-day-emacsvox-after
+         #'emacsvox--calendar-forward-day-emacsvox-after
          '((name . emacsvox))))))))
 
 (ert-deftest emacsvox-converter-does-not-rewrite-quoted-examples ()
@@ -64,11 +64,11 @@
   (should
    (eq
     (ems--generate-advice-function-name 'target 'first 'after)
-    'ems--target-first-after))
+    'emacsvox--target-first-after))
   (should
    (eq
     (ems--generate-advice-function-name 'target 'second 'after)
-    'ems--target-second-after)))
+    'emacsvox--target-second-after)))
 
 (ert-deftest emacsvox-converter-buffer-leaves-unsafe-and-generated-forms ()
   "Buffer conversion changes safe top-level forms and reports everything else."
@@ -88,7 +88,7 @@
       (should (= 1 (plist-get stats :nested)))
       (should (= 2 (length (plist-get stats :manual-review)))))
     (goto-char (point-min))
-    (should (search-forward "ems--safe-target-emacsvox-after" nil t))
+    (should (search-forward "emacsvox--safe-target-emacsvox-after" nil t))
     (should (search-forward "(defadvice unsafe-target" nil t))
     (should (search-forward "`(defadvice ,target" nil t))))
 

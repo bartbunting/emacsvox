@@ -174,5 +174,50 @@
             (should-not called)))
       (emacsvox-test--remove-bridge-advice target :after advice))))
 
+(ert-deftest emacsvox-interactive-p-requires-advice-context ()
+  "The compatibility predicate is false outside an advised command."
+  (let ((ems--interactive-fn-name nil)
+        (ems--modern-advice-target nil))
+    (should-not (ems-interactive-p))))
+
+(ert-deftest emacsvox-native-advice-uses-an-explicit-interactive-target ()
+  "Native advice bypasses the bridge and detects interactive invocation."
+  (let ((target 'emacsvox-test--native-target)
+        (advice 'emacsvox--test-native-after)
+        events)
+    (fset target (lambda () (interactive) 'result))
+    (fset advice
+          (lambda (&rest _)
+            (push (ems-interactive-p target) events)))
+    (unwind-protect
+        (progn
+          (advice-add target :after advice)
+          (should (advice-member-p advice target))
+          (should-not
+           (emacsvox-test--bridge-wrapper target :after advice))
+          (emacsvox-test--call target)
+          (emacsvox-test--call-interactively target)
+          (should (equal (nreverse events) '(nil t))))
+      (emacsvox-test--remove-bridge-advice target :after advice))))
+
+(ert-deftest emacsvox-native-advice-does-not-consume-a-different-target ()
+  "A failed explicit target check leaves the interactive marker available."
+  (let ((target 'emacsvox-test--native-target-selection)
+        (advice 'emacsvox--test-native-target-selection-after)
+        result)
+    (fset target (lambda () (interactive) 'result))
+    (fset advice
+          (lambda (&rest _)
+            (setq result
+                  (list
+                   (ems-interactive-p 'different-command)
+                   (ems-interactive-p target)))))
+    (unwind-protect
+        (progn
+          (advice-add target :after advice)
+          (emacsvox-test--call-interactively target)
+          (should (equal result '(nil t))))
+      (emacsvox-test--remove-bridge-advice target :after advice))))
+
 (provide 'emacsvox-advice-tests)
 ;;; emacsvox-advice-tests.el ends here

@@ -105,7 +105,7 @@
 
 (defun ems--generate-advice-function-name (target name class)
   "Return a collision-resistant helper name for TARGET, NAME, and CLASS."
-  (intern (format "ems--%s-%s-%s" target name class)))
+  (intern (format "emacsvox--%s-%s-%s" target name class)))
 
 (defun ems--generate-advice-function (parsed)
   "Generate a native advice helper from safe PARSED legacy advice."
