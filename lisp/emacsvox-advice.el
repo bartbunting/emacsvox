@@ -2479,15 +2479,13 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  emacs registers
 
-(defun ems--point-to-register-after (&rest _)
-  "Produce auditory icon to indicate mark set."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (if current-prefix-arg
-        (message "Stored current frame configuration")
-      (emacsvox-speak-line))))
-
-(advice-add 'point-to-register :after #'ems--point-to-register-after)
+(emacsvox-advice--define-interactive-after-advice
+    (point-to-register)
+    "Cue storing point or the current frame configuration in a register."
+  (emacsvox-icon 'mark-object)
+  (if current-prefix-arg
+      (message "Stored current frame configuration")
+    (emacsvox-speak-line)))
 
 (defun emacsvox--advice-copy-to-register-after
     (register start end &rest _)
@@ -2506,20 +2504,18 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
  'copy-to-register :after #'emacsvox--advice-copy-to-register-after
  '((name . emacsvox)))
 
-(defun ems--view-register-after (&rest _)
-  "Speak displayed contents."
-  (when (ems-interactive-p)
-    (with-current-buffer "*Output*"
-      (dtk-speak (buffer-string)) (emacsvox-icon 'open-object))))
+(emacsvox-advice--define-interactive-after-advice
+    (view-register)
+    "Speak the displayed contents of a register."
+  (with-current-buffer "*Output*"
+    (dtk-speak (buffer-string))
+    (emacsvox-icon 'open-object)))
 
-(advice-add 'view-register :after #'ems--view-register-after)
-
-(defun ems--jump-to-register-after (&rest _)
-  "Speak the line you jumped to."
-  (when (ems-interactive-p)
-    (let ((emacsvox-show-point t)) (emacsvox-speak-line))))
-
-(advice-add 'jump-to-register :after #'ems--jump-to-register-after)
+(emacsvox-advice--define-interactive-after-advice
+    (jump-to-register)
+    "Speak the line reached by jumping to a register."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)))
 
 (defun ems--insert-parentheses-after (&rest _)
   "Speak what you inserted."
@@ -2528,13 +2524,12 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 (advice-add 'insert-parentheses :after #'ems--insert-parentheses-after)
 
-(defun ems--insert-register-after (&rest _)
-  "Speak the first line of the inserted text."
-  (when (ems-interactive-p)
-    (let ((emacsvox-show-point t))
-      (emacsvox-icon 'yank-object) (emacsvox-speak-line))))
-
-(advice-add 'insert-register :after #'ems--insert-register-after)
+(emacsvox-advice--define-interactive-after-advice
+    (insert-register)
+    "Cue inserted register text and speak its first line."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'yank-object)
+    (emacsvox-speak-line)))
 
 (defun emacsvox--advice-window-configuration-to-register-after
     (register &rest _)
