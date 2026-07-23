@@ -2634,25 +2634,22 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (define-key minibuffer-local-ns-map (kbd "C-c b") 'emacsvox-filter-before)
 ;;;  Advice occur
 
-(cl-loop
- for f in
- '(occur-prev occur-next occur-mode-goto-occurrence)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+(emacsvox-advice--define-interactive-after-advice
+    (occur-prev occur-next occur-mode-goto-occurrence)
+    "Announce the destination of interactive Occur navigation."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'large-movement))
 
-(defun ems--occur-mode-display-occurrence-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-occur-mode-display-occurrence-after ()
+  "Announce interactively displaying an occurrence."
+  (when (ems-interactive-p 'occur-mode-display-occurrence)
     (emacsvox-icon 'open-object)
     (message "Displayed occurrence in other window")))
 
-(advice-add 'occur-mode-display-occurrence :after
-            #'ems--occur-mode-display-occurrence-after)
+(advice-add
+ 'occur-mode-display-occurrence :after
+ #'emacsvox--advice-occur-mode-display-occurrence-after
+ '((name . emacsvox)))
 
 ;;;  abbrev mode advice
 

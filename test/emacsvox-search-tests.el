@@ -16,7 +16,8 @@
 
 (defconst emacsvox-test--search-after-targets
   '(search-forward search-backward
-    word-search-forward word-search-backward)
+    word-search-forward word-search-backward
+    occur-prev occur-next occur-mode-goto-occurrence)
   "Non-incremental search commands using generated native after advice.")
 
 (defconst emacsvox-test--isearch-after-targets
@@ -34,7 +35,9 @@
      emacsvox--advice-isearch-toggle-case-fold-after)
     (isearch-toggle-regexp :after
      emacsvox--advice-isearch-toggle-regexp-after)
-    (isearch-occur :after emacsvox--advice-isearch-occur-after))
+    (isearch-occur :after emacsvox--advice-isearch-occur-after)
+    (occur-mode-display-occurrence :after
+     emacsvox--advice-occur-mode-display-occurrence-after))
   "Search and replacement functions using individually defined native advice.")
 
 (ert-deftest emacsvox-replace-advice-is-directly-registered ()
@@ -190,6 +193,40 @@
         (speak " Case is  not significant in search")
         (icon on)
         (speak "Regexp search"))))))
+
+(ert-deftest emacsvox-occur-navigation-feedback-is-target-aware ()
+  "Only the matching Occur navigation command speaks and cues its line."
+  (let ((ems--interactive-fn-name 'occur-next)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-occur-prev-after)
+      (emacsvox--advice-occur-next-after))
+    (should
+     (equal
+      (nreverse events)
+      '(speak-line (icon large-movement))))))
+
+(ert-deftest emacsvox-occur-display-feedback-preserves-order ()
+  "Displaying an occurrence cues its window before the status message."
+  (let ((ems--interactive-fn-name 'occur-mode-display-occurrence)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (list 'message
+                        (apply #'format format-string arguments))
+                  events))))
+      (emacsvox--advice-occur-mode-display-occurrence-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object)
+        (message "Displayed occurrence in other window"))))))
 
 (provide 'emacsvox-search-tests)
 ;;; emacsvox-search-tests.el ends here
