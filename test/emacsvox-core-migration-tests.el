@@ -30,6 +30,12 @@
     forward-page backward-page
     scroll-other-window scroll-other-window-up scroll-other-window-down
     scroll-up scroll-down scroll-up-command scroll-down-command
+    kill-buffer kill-current-buffer quit-window
+    other-frame other-window
+    next-window-any-frame previous-window-any-frame
+    switch-to-prev-buffer switch-to-next-buffer
+    switch-to-buffer switch-to-buffer-other-window bury-buffer
+    next-buffer previous-buffer switch-to-buffer-other-frame
     newline newline-and-indent electric-newline-and-maybe-indent)
   "Core commands migrated with generated native after advice.")
 
@@ -60,7 +66,12 @@
     (kill-sentence :before emacsvox--advice-kill-sentence-before)
     (delete-blank-lines :before emacsvox--advice-delete-blank-lines-before)
     (kill-ring-save :after emacsvox--advice-kill-ring-save-after)
-    (untabify :after emacsvox--advice-untabify-after))
+    (untabify :after emacsvox--advice-untabify-after)
+    (pop-to-buffer :after emacsvox--advice-pop-to-buffer-after)
+    (scratch-buffer :after emacsvox--advice-scratch-buffer-after)
+    (display-buffer :after emacsvox--advice-display-buffer-after)
+    (rename-buffer :after emacsvox--advice-rename-buffer-after)
+    (rename-uniquely :after emacsvox--advice-rename-uniquely-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -323,6 +334,69 @@
          1)
         'case-result)))
     (should (= calls 1))
+    (should-not feedback)))
+
+(ert-deftest emacsvox-core-buffer-close-advice-preserves-feedback-order ()
+  "Interactive buffer closing emits its icon, stop, and mode line once."
+  (let ((ems--interactive-fn-name 'kill-buffer)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-stop)
+               (lambda (stream) (push (list 'stop stream) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-kill-buffer-after)
+      ;; The explicit interactive marker is consumed after one response.
+      (emacsvox--advice-kill-buffer-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object) (stop all) speak-mode-line)))))
+
+(ert-deftest emacsvox-core-buffer-selection-advice-is-interactive-only ()
+  "Buffer selection feedback is emitted only for its interactive command."
+  (let ((ems--interactive-fn-name 'switch-to-buffer)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-other-window-after)
+      (emacsvox--advice-switch-to-buffer-after)
+      (emacsvox--advice-switch-to-buffer-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon select-object) speak-mode-line)))))
+
+(ert-deftest emacsvox-core-display-buffer-advice-uses-explicit-argument ()
+  "Display feedback names its argument without compatibility bridge state."
+  (let ((ems--interactive-fn-name 'display-buffer)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (apply #'format format-string arguments)
+                  events))))
+      (emacsvox--advice-display-buffer-after
+       "notes" 'display-action 'frame))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object) "Displayed notes")))))
+
+(ert-deftest emacsvox-core-display-buffer-advice-is-quiet-programmatically ()
+  "Programmatic display calls do not produce speech feedback."
+  (let ((ems--interactive-fn-name nil)
+        feedback)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (&rest _) (setq feedback t)))
+              ((symbol-function 'message)
+               (lambda (&rest _) (setq feedback t))))
+      (emacsvox--advice-display-buffer-after "notes"))
     (should-not feedback)))
 
 (provide 'emacsvox-core-migration-tests)

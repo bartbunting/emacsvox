@@ -1443,17 +1443,12 @@ Use an auditory icon if possible."
 
 (advice-add 'find-file :after #'ems--find-file-after)
 
-(cl-loop
- for f in
- '(kill-buffer kill-current-buffer quit-window)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speech-enabled by emacsvox."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (dtk-stop 'all)
-       (emacsvox-speak-mode-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (kill-buffer kill-current-buffer quit-window)
+    "Announce closing a buffer or window."
+  (emacsvox-icon 'close-object)
+  (dtk-stop 'all)
+  (emacsvox-speak-mode-line))
 
 (cl-loop
  for f in
@@ -1469,47 +1464,47 @@ Use an auditory icon if possible."
        (emacsvox-icon 'window-resize)
        (emacsvox-speak-mode-line)))))
 
-(cl-loop
- for f in
- '(other-frame other-window
-               next-window-any-frame previous-window-any-frame
-               switch-to-prev-buffer switch-to-next-buffer
-               switch-to-buffer switch-to-buffer-other-window bury-buffer
-               next-buffer previous-buffer
-               switch-to-buffer-other-frame)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak modeline.
-Indicate change of selection with an auditory icon
- if possible."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-mode-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (other-frame other-window
+                 next-window-any-frame previous-window-any-frame
+                 switch-to-prev-buffer switch-to-next-buffer
+                 switch-to-buffer switch-to-buffer-other-window bury-buffer
+                 next-buffer previous-buffer
+                 switch-to-buffer-other-frame)
+    "Announce a change of selected buffer, window, or frame."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--pop-to-buffer-after (&rest _)
-  "Icon."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-pop-to-buffer-after (&rest _)
+  "Announce an interactive buffer pop."
+  (when (ems-interactive-p 'pop-to-buffer)
     (emacsvox-icon 'tick-tick) (emacsvox-speak-mode-line)))
 
-(advice-add 'pop-to-buffer :after #'ems--pop-to-buffer-after)
+(advice-add
+ 'pop-to-buffer :after #'emacsvox--advice-pop-to-buffer-after
+ '((name . emacsvox)))
 
-(defun ems--scratch-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-scratch-buffer-after (&rest _)
+  "Announce switching to the scratch buffer."
+  (when (ems-interactive-p 'scratch-buffer)
     (emacsvox-icon 'tick-tick) (emacsvox-speak-mode-line)))
 
-(advice-add 'scratch-buffer :after #'ems--scratch-buffer-after)
+(advice-add
+ 'scratch-buffer :after #'emacsvox--advice-scratch-buffer-after
+ '((name . emacsvox)))
 
-(defun ems--display-buffer-after (&rest _)
-  "Provide auditory icon."
-  (when (ems-interactive-p)
-    (let ((buffer (ad-get-arg 0)))
-      (emacsvox-icon 'open-object)
-      (message "Displayed %s"
-               (if (bufferp buffer) (buffer-name buffer) buffer)))))
+(defun emacsvox--advice-display-buffer-after (buffer-or-name &rest _)
+  "Announce interactively displaying BUFFER-OR-NAME."
+  (when (ems-interactive-p 'display-buffer)
+    (emacsvox-icon 'open-object)
+    (message "Displayed %s"
+             (if (bufferp buffer-or-name)
+                 (buffer-name buffer-or-name)
+               buffer-or-name))))
 
-(advice-add 'display-buffer :after #'ems--display-buffer-after)
+(advice-add
+ 'display-buffer :after #'emacsvox--advice-display-buffer-after
+ '((name . emacsvox)))
 
 (defun ems--make-frame-command-after (&rest _)
   "Indicate that a new frame is being created."
@@ -1526,15 +1521,23 @@ Indicate change of selection with an auditory icon
 (advice-add 'move-to-window-line :after
             #'ems--move-to-window-line-after)
 
-(defun ems--rename-buffer-after (&rest _)
-  "Speak." (when (ems-interactive-p) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-rename-buffer-after (&rest _)
+  "Speak the mode line after interactively renaming a buffer."
+  (when (ems-interactive-p 'rename-buffer)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'rename-buffer :after #'ems--rename-buffer-after)
+(advice-add
+ 'rename-buffer :after #'emacsvox--advice-rename-buffer-after
+ '((name . emacsvox)))
 
-(defun ems--rename-uniquely-after (&rest _)
-  "Speak." (when (ems-interactive-p) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-rename-uniquely-after (&rest _)
+  "Speak the mode line after interactively making a buffer name unique."
+  (when (ems-interactive-p 'rename-uniquely)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'rename-uniquely :after #'ems--rename-uniquely-after)
+(advice-add
+ 'rename-uniquely :after #'emacsvox--advice-rename-uniquely-after
+ '((name . emacsvox)))
 
 (defun ems--local-set-key-before (&rest _)
   "Prompt using speech."
