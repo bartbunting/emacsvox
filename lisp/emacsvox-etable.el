@@ -50,7 +50,7 @@
 
 ;;;  Update command remap list.
 
-(defun ems--table--make-cell-map-after (&rest _)
+(defun emacsvox--advice-table--make-cell-map-after (&rest _)
   "Set up emacsvox for table.el"
   
   (when table-cell-map
@@ -65,40 +65,41 @@
                ("." emacsvox-etable-speak-cell))
              do (emacsvox-keymap-update table-cell-map k))))
 
-(advice-add 'table--make-cell-map :after
-            #'ems--table--make-cell-map-after)
+(advice-add
+ 'table--make-cell-map :after
+ #'emacsvox--advice-table--make-cell-map-after
+ '((name . emacsvox)))
 
 ;;;  Advice edit commands
 
-(defun ems--*table--cell-delete-char-around (orig-fun &rest args)
+(defun emacsvox--advice-*table--cell-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone 500 100 'force)
-      (emacsvox-speak-char t) (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+  (when (ems-interactive-p '*table--cell-delete-char)
+    (dtk-tone 500 100 'force)
+    (emacsvox-speak-char t))
+  (apply orig-fun args))
 
-(advice-add '*table--cell-delete-char :around
-            #'ems--*table--cell-delete-char-around)
+(advice-add
+ '*table--cell-delete-char :around
+ #'emacsvox--advice-*table--cell-delete-char-around
+ '((name . emacsvox)))
 
-(defun ems--*table--cell-delete-backward-char-around
+(defun emacsvox--advice-*table--cell-delete-backward-char-around
     (orig-fun &rest args)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone 500 100 'force)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+  (when (ems-interactive-p '*table--cell-delete-backward-char)
+    (dtk-tone 500 100 'force)
+    (emacsvox-speak-this-char (preceding-char)))
+  (apply orig-fun args))
 
-(advice-add '*table--cell-delete-backward-char :around
-            #'ems--*table--cell-delete-backward-char-around)
+(advice-add
+ '*table--cell-delete-backward-char :around
+ #'emacsvox--advice-*table--cell-delete-backward-char-around
+ '((name . emacsvox)))
 
-(defun ems--*table--cell-self-insert-command-after (&rest _)
+(defun emacsvox--advice-*table--cell-self-insert-command-after (&rest _)
   "Provide spoken output."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p '*table--cell-self-insert-command)
     (cond
      ((and (= 32 last-input-event) emacsvox-word-echo)
       (save-excursion
@@ -109,58 +110,64 @@
                               (emacsvox-speak-this-char
                                last-input-event)))))
 
-(advice-add '*table--cell-self-insert-command :after
-            #'ems--*table--cell-self-insert-command-after)
+(advice-add
+ '*table--cell-self-insert-command :after
+ #'emacsvox--advice-*table--cell-self-insert-command-after
+ '((name . emacsvox)))
 
-(defun ems--*table--cell-quoted-insert-after (&rest _)
+(defun emacsvox--advice-*table--cell-quoted-insert-after (&rest _)
   "Speak the character that was inserted."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p '*table--cell-quoted-insert)
     (table--finish-delayed-tasks)
     (emacsvox-speak-this-char (preceding-char))))
 
-(advice-add '*table--cell-quoted-insert :after
-            #'ems--*table--cell-quoted-insert-after)
+(advice-add
+ '*table--cell-quoted-insert :after
+ #'emacsvox--advice-*table--cell-quoted-insert-after
+ '((name . emacsvox)))
 
-(defun ems--*table--cell-newline-before (&rest _)
+(defun emacsvox--advice-*table--cell-newline-before (&rest _)
   "Speak the previous line if line echo is on.\nSee command \\[emacsvox-toggle-line-echo].  Otherwise cue the user to\nthe newly created blank line."
   
-  (when (ems-interactive-p)
+  (when (ems-interactive-p '*table--cell-newline)
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
           (t (if dtk-stop-immediately (dtk-stop))
              (dtk-tone 225 120 'force)))))
 
-(advice-add '*table--cell-newline :before
-            #'ems--*table--cell-newline-before)
+(advice-add
+ '*table--cell-newline :before
+ #'emacsvox--advice-*table--cell-newline-before
+ '((name . emacsvox)))
 
-(defun ems--*table--cell-newline-and-indent-around
+(defun emacsvox--advice-*table--cell-newline-and-indent-around
     (orig-fun &rest args)
   "Speak the previous line if line echo is on.\nSee command \\[emacsvox-toggle-line-echo].\nOtherwise cue user to the line just created."
-  (let ((result (apply orig-fun args)))
-    
+  (when (ems-interactive-p '*table--cell-newline-and-indent)
     (cond
-     ((ems-interactive-p)
-      (cond (emacsvox-line-echo (emacsvox-speak-line))
-            (t
-             (dtk-speak-using-voice voice-annotate
-                                    (format "indent %s"
-                                            (current-column)))
-             (dtk-interp-speak)))))
-    (apply orig-fun args) result))
+     (emacsvox-line-echo (emacsvox-speak-line))
+     (t
+      (dtk-speak-using-voice
+       voice-annotate (format "indent %s" (current-column)))
+      (dtk-interp-speak))))
+  (apply orig-fun args))
 
-(advice-add '*table--cell-newline-and-indent :around
-            #'ems--*table--cell-newline-and-indent-around)
+(advice-add
+ '*table--cell-newline-and-indent :around
+ #'emacsvox--advice-*table--cell-newline-and-indent-around
+ '((name . emacsvox)))
 
-(defun ems--*table--cell-open-line-after (&rest _)
+(defun emacsvox--advice-*table--cell-open-line-after (count &rest _)
   "speak."
-  (when (ems-interactive-p)
-    (let ((count (ad-get-arg 0)))
-      (emacsvox-icon 'open-object)
-      (message "Opened %s blank line%s" (if (= count 1) "a" count)
-               (if (= count 1) "" "s")))))
+  (when (ems-interactive-p '*table--cell-open-line)
+    (emacsvox-icon 'open-object)
+    (message "Opened %s blank line%s" (if (= count 1) "a" count)
+             (if (= count 1) "" "s"))))
 
-(advice-add '*table--cell-open-line :after
-            #'ems--*table--cell-open-line-after)
+(advice-add
+ '*table--cell-open-line :after
+ #'emacsvox--advice-*table--cell-open-line-after
+ '((name . emacsvox)))
 
 ;;;  speak cell contents:
 
@@ -175,17 +182,20 @@
        (cdr cell)))
      (t (error "Can't identify cell.")))))
 
-(cl-loop for f in
+(cl-loop for target in
          '(table-forward-cell table-backward-cell)
+         for function =
+         (intern (format "emacsvox--advice-%s-after" target))
          do
          (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak by speaking current cell
-      contents."
-             (when (ems-interactive-p)
-               (table--finish-delayed-tasks)
-               (emacsvox-icon 'select-object)
-               (emacsvox-etable-speak-cell)))))
+          `(progn
+             (defun ,function (&rest _)
+               "Speak the cell selected by an interactive table command."
+               (when (ems-interactive-p ',target)
+                 (table--finish-delayed-tasks)
+                 (emacsvox-icon 'select-object)
+                 (emacsvox-etable-speak-cell)))
+             (advice-add
+              ',target :after #',function '((name . emacsvox))))))
 
 (provide  'emacsvox-etable)
-

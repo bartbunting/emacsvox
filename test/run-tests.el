@@ -78,6 +78,7 @@
   (require 'emacsvox-package-tests)
   (require 'emacsvox-info-tests)
   (require 'emacsvox-debugger-tests)
+  (require 'emacsvox-etable-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
