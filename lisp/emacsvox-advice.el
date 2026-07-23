@@ -241,29 +241,19 @@ beginning or end of a physical line produces an  auditory icon."
 
 (advice-add 'kill-visual-line :before #'ems--kill-visual-line-before)
 
-(cl-loop
- for f in
- '(beginning-of-visual-line end-of-visual-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak visual line with show-point enabled."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-visual-line))))))
-(cl-loop
- for f in
- '(
-   next-logical-line previous-logical-line
-   delete-indentation back-to-indentation
-   lisp-indent-line goto-line goto-line-relative)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak line."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line))))))
+(emacsvox-advice--define-interactive-after-advice
+    (beginning-of-visual-line end-of-visual-line)
+    "Speak visual line with show-point enabled."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-visual-line)))
+
+(emacsvox-advice--define-interactive-after-advice
+    (next-logical-line previous-logical-line
+     delete-indentation back-to-indentation
+     lisp-indent-line goto-line goto-line-relative)
+    "Speak line with show-point enabled."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)))
 
 (cl-loop
  for f in
@@ -307,25 +297,16 @@ When on a close delimiter, speak matching delimiter after a small delay. "
       (forward-char 1)
       (emacsvox-speak-matching-paren))))
 
-(cl-loop
- for f in
- '(forward-word right-word)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak  word."
-     (when (ems-interactive-p)
-       (skip-syntax-forward " ")
-       (emacsvox-speak-word)))))
+(emacsvox-advice--define-interactive-after-advice
+    (forward-word right-word)
+    "Speak the word after moving forward."
+  (skip-syntax-forward " ")
+  (emacsvox-speak-word))
 
-(cl-loop
- for f in
- '(backward-word left-word)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak word."
-     (when (ems-interactive-p) (emacsvox-speak-word)))))
+(emacsvox-advice--define-interactive-after-advice
+    (backward-word left-word)
+    "Speak the word after moving backward."
+  (emacsvox-speak-word))
 
 (emacsvox-advice--define-interactive-after-advice
     (beginning-of-buffer end-of-buffer)
@@ -334,28 +315,17 @@ When on a close delimiter, speak matching delimiter after a small delay. "
   (emacsvox-speak-line)
   (dtk-notify (emacsvox-get-current-percentage-verbously)))
 
-(cl-loop
- for f in
- '(
-   tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent
-   indent-sexp indent-pp-sexp
-   indent-region indent-relative)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'fill-object)
-       (emacsvox-speak-current-column)))))
+(emacsvox-advice--define-interactive-after-advice
+    (tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent
+     indent-sexp indent-pp-sexp indent-region indent-relative)
+    "Speak the current column after indenting."
+  (emacsvox-icon 'fill-object)
+  (emacsvox-speak-current-column))
 
-(cl-loop
- for f in
- '(backward-sentence forward-sentence)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak sentence."
-     (when (ems-interactive-p) (emacsvox-speak-sentence)))))
+(emacsvox-advice--define-interactive-after-advice
+    (backward-sentence forward-sentence)
+    "Speak the sentence after moving."
+  (emacsvox-speak-sentence))
 
 (cl-loop
  for f in
@@ -378,43 +348,26 @@ When on a close delimiter, speak matching delimiter after a small delay. "
        ad-do-it)
      ad-return-value)))
 
-(cl-loop
- for f in
- '(forward-paragraph backward-paragraph)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak paragraph."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'paragraph)
-       (emacsvox-speak-paragraph)))))
+(emacsvox-advice--define-interactive-after-advice
+    (forward-paragraph backward-paragraph)
+    "Speak the paragraph after moving."
+  (emacsvox-icon 'paragraph)
+  (emacsvox-speak-paragraph))
 
 ;; list navigation:
 
-(cl-loop
- for f in
- '(
-   forward-list backward-list
-   up-list backward-up-list down-list)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak line."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-icon 'large-movement)
-         (emacsvox-speak-line))))))
+(emacsvox-advice--define-interactive-after-advice
+    (forward-list backward-list up-list backward-up-list down-list)
+    "Speak the line after list movement."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
 
-(cl-loop
- for f in
- '(forward-page backward-page)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'scroll)
-       (emacsvox-speak-page)))))
+(emacsvox-advice--define-interactive-after-advice
+    (forward-page backward-page)
+    "Speak the page after moving."
+  (emacsvox-icon 'scroll)
+  (emacsvox-speak-page))
 
 (cl-loop
  for f in

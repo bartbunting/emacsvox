@@ -66,7 +66,61 @@
      :arguments (1)
      :interactive t
      :text "alpha beta"
-     :point 6))
+     :point 6)
+    (:name beginning-of-visual-line
+     :command beginning-of-visual-line
+     :arguments (1)
+     :interactive t
+     :text "alpha beta\n"
+     :point 7)
+    (:name next-logical-line
+     :command next-logical-line
+     :arguments (1)
+     :interactive t
+     :text "first\nsecond\n"
+     :point 1)
+    (:name forward-word
+     :command forward-word
+     :arguments (1)
+     :interactive t
+     :text "alpha beta"
+     :point 1)
+    (:name backward-word
+     :command backward-word
+     :arguments (1)
+     :interactive t
+     :text "alpha beta"
+     :point 11)
+    (:name back-to-indentation
+     :command back-to-indentation
+     :interactive t
+     :text "  alpha\n"
+     :point 7)
+    (:name forward-sentence
+     :command forward-sentence
+     :arguments (1)
+     :interactive t
+     :text "First sentence.  Second sentence.  Third sentence."
+     :point 1)
+    (:name forward-paragraph
+     :command forward-paragraph
+     :arguments (1)
+     :interactive t
+     :text "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n"
+     :point 1)
+    (:name forward-list
+     :command forward-list
+     :arguments (1)
+     :interactive t
+     :mode emacs-lisp-mode
+     :text "(one) (two)"
+     :point 1)
+    (:name forward-page
+     :command forward-page
+     :arguments (1)
+     :interactive t
+     :text "first page\n\fsecond page\n\fthird page\n"
+     :point 1))
   "Core scenarios used for Emacsvox and Emacspeak trace comparison.")
 
 (provide 'emacsvox-core-scenarios)

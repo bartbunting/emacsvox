@@ -13,8 +13,19 @@
 
 (defconst emacsvox-test--core-after-targets
   '(next-line previous-line
+    beginning-of-visual-line end-of-visual-line
+    next-logical-line previous-logical-line
+    delete-indentation back-to-indentation
+    lisp-indent-line goto-line goto-line-relative
     left-char right-char backward-char forward-char
+    forward-word right-word backward-word left-word
     beginning-of-buffer end-of-buffer
+    tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent
+    indent-sexp indent-pp-sexp indent-region indent-relative
+    backward-sentence forward-sentence
+    forward-paragraph backward-paragraph
+    forward-list backward-list up-list backward-up-list down-list
+    forward-page backward-page
     newline newline-and-indent electric-newline-and-maybe-indent)
   "Core commands migrated with generated native after advice.")
 
@@ -84,6 +95,21 @@
          (lambda (&rest _) 'deleted) 1)
         'deleted)))
     (should-not events)))
+
+(ert-deftest emacsvox-core-indent-advice-preserves-feedback-order ()
+  "Indentation advice emits its icon before speaking the current column."
+  (let ((ems--interactive-fn-name 'indent-for-tab-command)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-current-column)
+               (lambda () (push 'speak-current-column events))))
+      (emacsvox--advice-indent-for-tab-command-after)
+      ;; The interactive marker was consumed by the first invocation.
+      (emacsvox--advice-indent-for-tab-command-after))
+    (should
+     (equal
+      (nreverse events) '((icon fill-object) speak-current-column)))))
 
 (provide 'emacsvox-core-migration-tests)
 ;;; emacsvox-core-migration-tests.el ends here
