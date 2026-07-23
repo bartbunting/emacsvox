@@ -1,6 +1,6 @@
 #+title: Emacs 31 Advice Migration Plan
 #+author: Emacsvox Contributors
-#+date: <2026-07-23 Thu>
+#+date: <2026-07-24 Fri>
 
 * Goal
 
@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Gnus on 2026-07-23 on branch =bart=:
+Ibuffer on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 429 passing ERT tests;
+- the Emacs 31 suite contains 449 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -58,6 +58,9 @@ Gnus on 2026-07-23 on branch =bart=:
 - =lisp/emacsvox-gnus.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-ibuffer.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
@@ -68,7 +71,8 @@ The syntax-aware repository audit currently reports:
 | =ad-set-arg=        |           2 |   n/a |
 | =ad-do-it=          |          40 |   n/a |
 | =ad-return-value=   |          25 |   n/a |
-| =advice-add=        |        1397 |   156 |
+| =advice-add=        |        1340 |   156 |
+| =ems-interactive-p= |        1412 |   176 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -88,7 +92,7 @@ The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
-integration, and Gnus are also converted.
+integration, Gnus, and Ibuffer are also converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
 completely independent of the compatibility bridge; 48 files still contain
@@ -164,6 +168,22 @@ credential operations exactly once and preserves their original return values.
 The two native advice attached to =gnus-summary-show-article= have distinct
 names, so they coexist.  Optional XOAuth advice is installed only after its
 provider defines =auth-source-xoauth2--file-creds=.
+
+The Ibuffer conversion is split into Emacs 31 target contracts, entry and
+navigation, marking and buffer operations, filtering and sorting, and remaining
+BS utilities.  It removes advice for the obsolete =ibuffer-limit-disable=,
+=ibuffer-quit=, and misspelled =ibuffer-occur-*-occurence= commands.  Current
+filter disabling and generic Occur advice already provide the corresponding
+feedback.  Ibuffer quitting now uses mode-scoped =quit-window= advice with a
+distinct native advice name, allowing it to coexist with generic
+=quit-window= feedback.
+
+Ibuffer bury, filter-group pop, and filter-group yank wrappers now call their
+original operations exactly once for both interactive and programmatic calls
+and preserve the original result.  Filter-group kill feedback receives its
+native =name= argument instead of relying on obsolete dynamic scope.  Duplicate
+legacy definitions for predicate filtering, sorting-mode toggling, and filename
+copying are collapsed to one registration each.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
