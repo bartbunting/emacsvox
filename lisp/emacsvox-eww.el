@@ -580,21 +580,16 @@ Safari/537.36"
           )
   "User Agent string sent when masquerading.")
 
-;; Advice note: Setting ad-return-value in one arm of the cond
-;; appears to perculate to both arms.
+(defun emacsvox--advice-url-http-user-agent-string-filter-return (_)
+  "Return the configured EWW user-agent header."
+  (if emacsvox-eww-masquerade
+      emacsvox-eww-masquerade-as
+    "User-Agent: URL/Emacs \r\n"))
 
-(defun ems--url-http-user-agent-string-around (orig-fun &rest args)
-  "Masquerade response"
-  (let ((result (apply orig-fun args)))
-    (apply orig-fun args)
-    (cond
-     (emacsvox-eww-masquerade
-      (setq result emacsvox-eww-masquerade-as))
-     (t (setq result "User-Agent: URL/Emacs \n")))
-    result))
-
-(advice-add 'url-http-user-agent-string :around
-            #'ems--url-http-user-agent-string-around)
+(advice-add
+ 'url-http-user-agent-string :filter-return
+ #'emacsvox--advice-url-http-user-agent-string-filter-return
+ '((name . emacsvox)))
 
 (defcustom emacsvox-eww-inhibit-images nil
   "Turn this on to avoid rendering images."
@@ -977,20 +972,23 @@ are available are cued by an auditory icon on the header line."
 
 ;; Handle emacsvox-we-url-executor
 
-(defun ems--eww-follow-link-around (orig-fun &rest args)
-  "Respect emacsvox-we-url-executor if set."
-  
+(defun emacsvox--advice-eww-follow-link-around (original &rest arguments)
+  "Call ORIGINAL or offer the configured custom URL executor."
   (emacsvox-icon 'button)
   (let ((emacsvox-eww-masquerade t))
     (cond
-     ((and (ems-interactive-p) (functionp emacsvox-we-url-executor)
+     ((and (ems-interactive-p 'eww-follow-link)
+           (functionp emacsvox-we-url-executor)
            (y-or-n-p "Use custom executor? "))
       (let ((url (get-text-property (point) 'shr-url)))
         (unless url (error "No URL  under point"))
         (funcall emacsvox-we-url-executor url)))
-     (t (apply orig-fun args)))))
+     (t (apply original arguments)))))
 
-(advice-add 'eww-follow-link :around #'ems--eww-follow-link-around)
+(advice-add
+ 'eww-follow-link :around
+ #'emacsvox--advice-eww-follow-link-around
+ '((name . emacsvox)))
 
 ;;;  web-pre-process
 
@@ -1969,56 +1967,47 @@ The %s is automatically spoken if there is no user activity."
          (setq emacsvox-eww-autospeak (not emacsvox-eww-autospeak)))
        (funcall-interactively #'emacsvox-eww-previous-element s)))))
 
+(defun emacsvox--advice-google-url-filter-args (arguments)
+  "Canonicalize a Google result URL in the first of ARGUMENTS."
+  (let ((url (car arguments)))
+    (if (and
+         (stringp url)
+         (string-prefix-p (emacsvox-google-result-url-prefix) url))
+        (cons
+         (emacsvox-google-canonicalize-result-url url)
+         (cdr arguments))
+      arguments)))
+
+(dolist (target '(url-retrieve-internal url-truncate-url-for-viewing eww))
+  (advice-add
+   target :filter-args #'emacsvox--advice-google-url-filter-args
+   '((name . emacsvox-cleanup-url))))
+
 (cl-loop
- for f in
- '(url-retrieve-internal  url-truncate-url-for-viewing eww)
+ for target in
+ '(shr-copy-url shr-maybe-probe-and-copy-url)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f (before cleanup-url  pre act comp)
-     "Canonicalize Google search URLs."
-     (let ((u (ad-get-arg 0)))
-       (cond
-        ((and u (stringp u)
-              (string-prefix-p (emacsvox-google-result-url-prefix) u))
-         (ad-set-arg 0 (emacsvox-google-canonicalize-result-url
-                        u))))))))
-
-(defun ems--shr-copy-url-around (orig-fun &rest args)
-  "Canonicalize Google URLs"
-  (ems-with-messages-silenced (apply orig-fun args)
-                              (when (ems-interactive-p)
-                                (emacsvox-icon 'delete-object)
-                                (let ((u (car kill-ring)))
-                                  (when
-                                      (and u (stringp u)
-                                           (string-prefix-p
-                                            (emacsvox-google-result-url-prefix)
-                                            u))
-                                    (kill-new
-                                     (emacsvox-google-canonicalize-result-url
-                                      u))))
-                                (emacsvox-speak-current-kill))))
-
-(advice-add 'shr-copy-url :around #'ems--shr-copy-url-around)
-
-(defun ems--shr-maybe-probe-and-copy-url-around (orig-fun &rest args)
-  "Canonicalize Google URLs"
-  (ems-with-messages-silenced (apply orig-fun args)
-                              (when (ems-interactive-p)
-                                (emacsvox-icon 'delete-object)
-                                (let ((u (car kill-ring)))
-                                  (when
-                                      (and u (stringp u)
-                                           (string-prefix-p
-                                            (emacsvox-google-result-url-prefix)
-                                            u))
-                                    (kill-new
-                                     (emacsvox-google-canonicalize-result-url
-                                      u))))
-                                (emacsvox-speak-current-kill))))
-
-(advice-add 'shr-maybe-probe-and-copy-url :around
-            #'ems--shr-maybe-probe-and-copy-url-around)
+  `(progn
+     (defun ,function (original url)
+       "Copy URL once, canonicalize Google results, and preserve the result."
+       (ems-with-messages-silenced
+         (let ((result (funcall original url)))
+           (when (ems-interactive-p ',target)
+             (emacsvox-icon 'delete-object)
+             (let ((copied-url (car kill-ring)))
+               (when
+                   (and
+                    (stringp copied-url)
+                    (string-prefix-p
+                     (emacsvox-google-result-url-prefix) copied-url))
+                 (kill-new
+                  (emacsvox-google-canonicalize-result-url copied-url))))
+             (emacsvox-speak-current-kill))
+           result)))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
 ;;;  Speech-enable EWW buffer list:
 
@@ -2094,16 +2083,19 @@ The %s is automatically spoken if there is no user activity."
 ;; eww-browse-with-external-browser to use emacsvox-m-player
 ;; instead.
 
-(defun ems--eww-browse-with-external-browser-around
-    (orig-fun &rest args)
-  "Use our m-player integration."
-  (let*
-      ((url (or (ad-get-arg 0) "")) (case-fold-search t)
-       (media-p (string-match emacsvox-media-extensions url)))
-    (cond (media-p (emacsvox-m-player url)) (t (apply orig-fun args)))))
+(defun emacsvox--advice-eww-browse-with-external-browser-around
+    (original &optional url)
+  "Send media URL to Emacsvox or call ORIGINAL for other URLs."
+  (let ((url (or url ""))
+        (case-fold-search t))
+    (if (string-match emacsvox-media-extensions url)
+        (emacsvox-m-player url)
+      (funcall original url))))
 
-(advice-add 'eww-browse-with-external-browser :around
-            #'ems--eww-browse-with-external-browser-around)
+(advice-add
+ 'eww-browse-with-external-browser :around
+ #'emacsvox--advice-eww-browse-with-external-browser-around
+ '((name . emacsvox)))
 
 ;;;  eww-marks:
 

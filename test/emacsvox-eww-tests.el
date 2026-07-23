@@ -131,5 +131,185 @@
     (should-not emacsvox-eww-cache-updated)
     (should prepared)))
 
+(defconst emacsvox-test--eww-url-around-advice
+  '((eww-follow-link
+     emacsvox--advice-eww-follow-link-around)
+    (shr-copy-url
+     emacsvox--advice-shr-copy-url-around)
+    (shr-maybe-probe-and-copy-url
+     emacsvox--advice-shr-maybe-probe-and-copy-url-around)
+    (eww-browse-with-external-browser
+     emacsvox--advice-eww-browse-with-external-browser-around))
+  "EWW URL functions expected to use direct native around advice.")
+
+(ert-deftest emacsvox-eww-url-advice-is-directly-registered ()
+  "EWW URL and media advice bypasses the compatibility bridge."
+  (dolist (entry emacsvox-test--eww-url-around-advice)
+    (pcase-let ((`(,target ,function) entry))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :around function) ems--modern-advice-wrappers))))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-url-http-user-agent-string-filter-return
+    'url-http-user-agent-string))
+  (should-not
+   (gethash
+    '(url-http-user-agent-string :filter-return
+      emacsvox--advice-url-http-user-agent-string-filter-return)
+    ems--modern-advice-wrappers))
+  (dolist (target
+           '(url-retrieve-internal url-truncate-url-for-viewing eww))
+    (should
+     (advice-member-p
+      #'emacsvox--advice-google-url-filter-args target))
+    (should-not
+     (gethash
+      (list target :filter-args
+            'emacsvox--advice-google-url-filter-args)
+      ems--modern-advice-wrappers))))
+
+(ert-deftest emacsvox-eww-user-agent-filter-reflects-masquerade ()
+  "The user-agent result filter selects the configured identity."
+  (let ((emacsvox-eww-masquerade t)
+        (emacsvox-eww-masquerade-as "User-Agent: Test\r\n"))
+    (should
+     (equal
+      (emacsvox--advice-url-http-user-agent-string-filter-return
+       "ignored")
+      "User-Agent: Test\r\n")))
+  (let ((emacsvox-eww-masquerade nil))
+    (should
+     (equal
+      (emacsvox--advice-url-http-user-agent-string-filter-return
+       "ignored")
+      "User-Agent: URL/Emacs \r\n"))))
+
+(ert-deftest emacsvox-eww-google-url-filter-replaces-only-first-argument ()
+  "Google result canonicalisation preserves all non-URL arguments."
+  (let ((arguments
+         '("https://google.test/result?id=1" callback (state) t)))
+    (cl-letf (((symbol-function 'emacsvox-google-result-url-prefix)
+               (lambda () "https://google.test/result"))
+              ((symbol-function
+                'emacsvox-google-canonicalize-result-url)
+               (lambda (url) (concat "canonical:" url))))
+      (should
+       (equal
+        (emacsvox--advice-google-url-filter-args arguments)
+        '("canonical:https://google.test/result?id=1"
+          callback (state) t)))))
+  (let ((arguments '("https://example.test/" callback)))
+    (cl-letf (((symbol-function 'emacsvox-google-result-url-prefix)
+               (lambda () "https://google.test/result")))
+      (should
+       (eq
+        (emacsvox--advice-google-url-filter-args arguments)
+        arguments)))))
+
+(ert-deftest emacsvox-eww-copy-url-calls-original-once ()
+  "Interactive URL copying preserves one silenced call and its result."
+  (let ((ems--interactive-fn-name 'shr-copy-url)
+        (emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (kill-ring nil)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-google-result-url-prefix)
+               (lambda () "https://google.test/result"))
+              ((symbol-function
+                'emacsvox-google-canonicalize-result-url)
+               (lambda (_) "https://example.test/canonical"))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-current-kill)
+               (lambda () (push 'speak-kill events))))
+      (should
+       (eq
+        (emacsvox--advice-shr-copy-url-around
+         (lambda (url)
+           (cl-incf calls)
+           (push
+            (list 'original url emacsvox-speak-messages inhibit-message)
+            events)
+           (setq kill-ring (list url))
+           'copied)
+         "https://google.test/result?id=1")
+        'copied)))
+    (should (= calls 1))
+    (should (equal (car kill-ring) "https://example.test/canonical"))
+    (should
+     (equal
+      (nreverse events)
+      '((original "https://google.test/result?id=1" nil t)
+        (icon delete-object)
+        speak-kill)))
+    (should emacsvox-speak-messages)
+    (should-not inhibit-message)))
+
+(ert-deftest emacsvox-eww-follow-link-can-use-custom-executor ()
+  "Interactive custom link execution skips the original and returns its value."
+  (with-temp-buffer
+    (insert (propertize "link" 'shr-url "https://example.test/"))
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'eww-follow-link)
+           (emacsvox-eww-masquerade nil)
+           (calls 0)
+           observed
+           events
+           (emacsvox-we-url-executor
+            (lambda (url)
+              (setq observed (list url emacsvox-eww-masquerade))
+              'executed)))
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'y-or-n-p)
+                 (lambda (&rest _) t)))
+        (should
+         (eq
+          (emacsvox--advice-eww-follow-link-around
+           (lambda (&rest _)
+             (cl-incf calls)
+             'followed))
+          'executed)))
+      (should (= calls 0))
+      (should (equal observed '("https://example.test/" t)))
+      (should (equal events '((icon button)))))))
+
+(ert-deftest emacsvox-eww-media-dispatch-selects-player-or-original ()
+  "External browsing sends media to the player and other URLs onward."
+  (let ((emacsvox-media-extensions "\\.mp3\\'")
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-m-player)
+               (lambda (url)
+                 (push (list 'player url) events)
+                 'played)))
+      (should
+       (eq
+        (emacsvox--advice-eww-browse-with-external-browser-around
+         (lambda (&rest _)
+           (cl-incf calls)
+           'browsed)
+         "https://example.test/audio.MP3")
+        'played))
+      (should
+       (eq
+        (emacsvox--advice-eww-browse-with-external-browser-around
+         (lambda (url)
+           (cl-incf calls)
+           (push (list 'browser url) events)
+           'browsed)
+         "https://example.test/page")
+        'browsed)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((player "https://example.test/audio.MP3")
+        (browser "https://example.test/page"))))))
+
 (provide 'emacsvox-eww-tests)
 ;;; emacsvox-eww-tests.el ends here
