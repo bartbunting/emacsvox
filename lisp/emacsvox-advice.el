@@ -2408,75 +2408,83 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
  'pop-global-mark :after #'emacsvox--advice-pop-global-mark-after
  '((name . emacsvox)))
 
-(defun ems--mark-defun-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+(defun emacsvox--marked-lines-after (target object)
+  "Announce lines marked by TARGET as OBJECT."
+  (when (ems-interactive-p target)
     (emacsvox-icon 'mark-object)
-    (message "Marked function containing %s lines"
-             (count-lines (point) (mark 'force)))))
+    (message "Marked %s containing %s lines"
+             object (count-lines (point) (mark 'force)))))
 
-(advice-add 'mark-defun :after #'ems--mark-defun-after)
+(defun emacsvox--advice-mark-defun-after (&rest _)
+  "Announce the function marked interactively."
+  (emacsvox--marked-lines-after 'mark-defun "function"))
 
-(defun ems--mark-whole-buffer-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+(advice-add
+ 'mark-defun :after #'emacsvox--advice-mark-defun-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-mark-whole-buffer-after (&rest _)
+  "Announce the buffer marked interactively."
+  (emacsvox--marked-lines-after 'mark-whole-buffer "buffer"))
+
+(advice-add
+ 'mark-whole-buffer :after
+ #'emacsvox--advice-mark-whole-buffer-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-mark-paragraph-after (&rest _)
+  "Announce the paragraph marked interactively."
+  (emacsvox--marked-lines-after 'mark-paragraph "paragraph"))
+
+(advice-add
+ 'mark-paragraph :after #'emacsvox--advice-mark-paragraph-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-mark-page-after (&rest _)
+  "Announce the page marked interactively."
+  (emacsvox--marked-lines-after 'mark-page "page"))
+
+(advice-add
+ 'mark-page :after #'emacsvox--advice-mark-page-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-mark-word-after (&rest _)
+  "Announce the word marked interactively."
+  (when (ems-interactive-p 'mark-word)
     (emacsvox-icon 'mark-object)
-    (message
-     (format "Marked buffer containing %s lines"
-             (count-lines (point) (mark 'force))))))
+    (message "Word %s marked"
+             (buffer-substring-no-properties
+              (point) (mark 'force)))))
 
-(advice-add 'mark-whole-buffer :after #'ems--mark-whole-buffer-after)
+(advice-add
+ 'mark-word :after #'emacsvox--advice-mark-word-after
+ '((name . emacsvox)))
 
-(defun ems--mark-paragraph-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (message
-     (format "Marked paragraph containing %s lines"
-             (count-lines (point) (mark 'force))))))
-
-(advice-add 'mark-paragraph :after #'ems--mark-paragraph-after)
-
-(defun ems--mark-page-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (message
-     (format "Marked page containing %s lines"
-             (count-lines (point) (mark 'force))))))
-
-(advice-add 'mark-page :after #'ems--mark-page-after)
-
-(defun ems--mark-word-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (message
-     (format "Word %s marked"
-             (buffer-substring-no-properties (point) (mark 'force))))))
-
-(advice-add 'mark-word :after #'ems--mark-word-after)
-
-(defun ems--mark-sexp-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-mark-sexp-after (&rest _)
+  "Announce the S-expression marked interactively."
+  (when (ems-interactive-p 'mark-sexp)
     (let
         ((lines (count-lines (point) (marker-position (mark-marker))))
          (chars (abs (- (point) (marker-position (mark-marker))))))
       (emacsvox-icon 'mark-object)
       (message
        (if (> lines 1)
-           (format "Marked S expression spanning %s lines" lines)
+         (format "Marked S expression spanning %s lines" lines)
          (format "marked S expression containing %s characters" chars))))))
 
-(advice-add 'mark-sexp :after #'ems--mark-sexp-after)
+(advice-add
+ 'mark-sexp :after #'emacsvox--advice-mark-sexp-after
+ '((name . emacsvox)))
 
-(defun ems--mark-end-of-sentence-after (&rest _)
-  "Produce an auditory icon if possible."
-  (when (ems-interactive-p) (emacsvox-icon 'mark-object)))
+(defun emacsvox--advice-mark-end-of-sentence-after (&rest _)
+  "Cue an interactively marked sentence."
+  (when (ems-interactive-p 'mark-end-of-sentence)
+    (emacsvox-icon 'mark-object)))
 
-(advice-add 'mark-end-of-sentence :after
-            #'ems--mark-end-of-sentence-after)
+(advice-add
+ 'mark-end-of-sentence :after
+ #'emacsvox--advice-mark-end-of-sentence-after
+ '((name . emacsvox)))
 
 ;;;  emacs registers
 
