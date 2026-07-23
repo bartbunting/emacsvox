@@ -705,7 +705,6 @@ Safari/537.36"
    do
    (emacsvox-keymap-update eww-mode-map binding))
   (setq shr-external-rendering-functions emacsvox-eww-filter-renderers))
-(emacsvox-eww-setup)
 
 ;;; play media:
 
@@ -1261,6 +1260,8 @@ Note that the Web browser should reset this hook after using it.")
     (cl-pushnew (cons 'span 'emacsvox-eww-span-with-space) copy)
     copy)
   "Renderers used when filtering.")
+
+(emacsvox-eww-setup)
 
 (defun eww-dom-keep-if (dom predicate)
   "Return filtered DOM  keeping nodes that match  predicate.
