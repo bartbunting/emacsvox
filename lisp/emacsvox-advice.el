@@ -1888,28 +1888,22 @@ TARGET identifies the evaluation command."
  #'emacsvox--advice-call-last-kbd-macro-around
  '((name . emacsvox)))
 
-(defun ems--kbd-macro-query-after (&rest _)
-  "Announce yourself."
-  (when (ems-interactive-p)
-    (message "Will prompt at this point in macro")))
+(emacsvox-advice--define-interactive-after-advice
+    (kbd-macro-query)
+    "Announce that a keyboard macro will prompt at this point."
+  (message "Will prompt at this point in macro"))
 
-(advice-add 'kbd-macro-query :after #'ems--kbd-macro-query-after)
+(emacsvox-advice--define-interactive-before-advice
+    (start-kbd-macro)
+    "Announce the start of keyboard macro definition."
+  (emacsvox-icon 'open-object)
+  (dtk-speak "Started defining a keyboard macro "))
 
-(defun ems--start-kbd-macro-before (&rest _)
-  "Announce yourself."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (dtk-speak "Started defining a keyboard macro ")))
-
-(advice-add 'start-kbd-macro :before #'ems--start-kbd-macro-before)
-
-(defun ems--end-kbd-macro-after (&rest _)
-  "Announce yourself."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (dtk-speak "Finished defining keyboard macro ")))
-
-(advice-add 'end-kbd-macro :after #'ems--end-kbd-macro-after)
+(emacsvox-advice--define-interactive-after-advice
+    (end-kbd-macro)
+    "Announce the end of keyboard macro definition."
+  (emacsvox-icon 'close-object)
+  (dtk-speak "Finished defining keyboard macro "))
 
 ;; you DONT WANT TO SUSPEND EMACS WITHOUT CONFIRMATION
 
