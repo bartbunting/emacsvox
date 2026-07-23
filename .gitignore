@@ -9,7 +9,7 @@ announcements/auto
 # ignore generated files:
 README
 etc/emacspeak.sh
-lisp/emacspeak-loaddefs.el
+lisp/emacsvox-loaddefs.el
 lisp/TAGS
 info/TAGS
 js/node/node_modules/
