@@ -980,9 +980,6 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (defun emacsvox-fancy-error-handler (data _ caller)
   "Custom error handler."
-  
-  (cl-declare (special ems--last-error-msg
-                       ems--lazy-error-time))
   (let ((m (error-message-string data))
         (fn (if caller (symbol-name caller) "")))
     (when                               ; speak conditionally
