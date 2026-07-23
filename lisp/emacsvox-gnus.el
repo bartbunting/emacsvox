@@ -428,21 +428,6 @@ instead you hear only the first screenful."
  #'emacsvox--advice-gnus-summary-select-article-buffer-after
  '((name . emacsvox)))
 
-;; Article movement feedback is grouped with article-display advice below.
-(defun ems--gnus-summary-prev-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-prev-article :after
-            #'ems--gnus-summary-prev-article-after)
-
-(defun ems--gnus-summary-next-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-next-article :after
-            #'ems--gnus-summary-next-article-after)
-
 (cl-loop
  for target in
  '(gnus-summary-exit-no-update gnus-summary-exit)
@@ -584,126 +569,93 @@ instead you hear only the first screenful."
   (emacsvox-icon 'close-object)
   (emacsvox-speak-line))
 
-(defun ems--gnus-summary-read-group-around (orig-fun &rest args)
-  "Deactivate our shr-external-rendering-functions"
-  (let ((shr-external-rendering-functions nil)) (apply orig-fun args)))
+(cl-loop
+ for target in
+ '(gnus-summary-read-group gnus-summary-show-article)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call ORIGINAL without Emacsvox's external SHR renderers."
+       (let ((shr-external-rendering-functions nil))
+         (apply original arguments)))
+     (advice-add
+      ',target :around #',function
+      '((name . emacsvox-disable-shr))))))
 
-(advice-add 'gnus-summary-read-group :around
-            #'ems--gnus-summary-read-group-around)
-
-(defun ems--gnus-summary-show-article-around (orig-fun &rest args)
-  "Deactivate our shr-external-rendering-functions"
-  (let ((shr-external-rendering-functions nil)) (apply orig-fun args)))
-
-(advice-add 'gnus-summary-show-article :around
-            #'ems--gnus-summary-show-article-around)
-
-(defun ems--gnus-summary-show-article-after (&rest _)
+(defun emacsvox--advice-gnus-summary-show-article-after (&rest _)
   "Start speaking the article. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-summary-show-article)
     (with-current-buffer gnus-article-buffer
-      (visual-line-mode) (emacsvox-icon 'open-object)
-      (condition-case nil (emacsvox-hide-all-blocks-in-buffer)
+      (visual-line-mode)
+      (emacsvox-icon 'open-object)
+      (condition-case nil
+          (emacsvox-hide-all-blocks-in-buffer)
         (error nil))
       (emacsvox-gnus-speak-article-body))))
 
-(advice-add 'gnus-summary-show-article :after
-            #'ems--gnus-summary-show-article-after)
+(advice-add
+ 'gnus-summary-show-article :after
+ #'emacsvox--advice-gnus-summary-show-article-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-summary-next-page-after (&rest _)
-  "Speak the next pageful " 
-  (dtk-stop 'all) (emacsvox-icon 'scroll)
-  (with-current-buffer gnus-article-buffer
-    (let
-        ((start (point)) (window (get-buffer-window (current-buffer))))
-      (with-selected-window window
-        (save-excursion
-          (move-to-window-line -1) (end-of-line)
-          (emacsvox-speak-region start (point)))))))
+(cl-loop
+ for target in
+ '(gnus-summary-next-page gnus-summary-prev-page)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak the visible article page."
+       (dtk-stop 'all)
+       (emacsvox-icon 'scroll)
+       (with-current-buffer gnus-article-buffer
+         (let ((start (point))
+               (window (get-buffer-window (current-buffer))))
+           (with-selected-window window
+             (save-excursion
+               (move-to-window-line -1)
+               (end-of-line)
+               (emacsvox-speak-region start (point)))))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'gnus-summary-next-page :after
-            #'ems--gnus-summary-next-page-after)
+(cl-loop
+ for target in
+ '(gnus-summary-beginning-of-article
+   gnus-summary-end-of-article)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Speak the current line in the Gnus article buffer."
+       (with-current-buffer gnus-article-buffer
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--gnus-summary-prev-page-after (&rest _)
-  "Speak the previous  pageful "
-  (dtk-stop 'all)
-  (emacsvox-icon 'scroll)
-  (save-current-buffer
-    (set-buffer gnus-article-buffer)
-    (let
-        ((start (point)) (window (get-buffer-window (current-buffer))))
-      (with-selected-window window
-        (save-excursion
-          (move-to-window-line -1) (end-of-line)
-          (emacsvox-speak-region start (point)))))))
-
-(advice-add 'gnus-summary-prev-page :after
-            #'ems--gnus-summary-prev-page-after)
-
-(defun ems--gnus-summary-beginning-of-article-after (&rest _)
-  "Speak the first line. " 
-  (save-current-buffer
-    (set-buffer gnus-article-buffer) (emacsvox-speak-line)))
-
-(advice-add 'gnus-summary-beginning-of-article :after
-            #'ems--gnus-summary-beginning-of-article-after)
-
-(defun ems--gnus-summary-end-of-article-after (&rest _)
-  "Speak the first line. " 
-  (save-current-buffer
-    (set-buffer gnus-article-buffer) (emacsvox-speak-line)))
-
-(advice-add 'gnus-summary-end-of-article :after
-            #'ems--gnus-summary-end-of-article-after)
-
-(defun ems--gnus-summary-next-unread-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-next-unread-article :after
-            #'ems--gnus-summary-next-unread-article-after)
-
-(defun ems--gnus-summary-prev-unread-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-prev-unread-article :after
-            #'ems--gnus-summary-prev-unread-article-after)
-
-(defun ems--gnus-summary-next-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-next-article :after
-            #'ems--gnus-summary-next-article-after)
-
-(defun ems--gnus-summary-prev-same-subject-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-prev-same-subject :after
-            #'ems--gnus-summary-prev-same-subject-after)
-
-(defun ems--gnus-summary-next-same-subject-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-next-same-subject :after
-            #'ems--gnus-summary-next-same-subject-after)
-
-(defun ems--gnus-summary-first-unread-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-first-unread-article :after
-            #'ems--gnus-summary-first-unread-article-after)
-
-(defun ems--gnus-summary-goto-last-article-after (&rest _)
-  "Speak the article. "
-  (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
-
-(advice-add 'gnus-summary-goto-last-article :after
-            #'ems--gnus-summary-goto-last-article-after)
+(cl-loop
+ for target in
+ '(gnus-summary-prev-article gnus-summary-next-article
+   gnus-summary-next-unread-article
+   gnus-summary-prev-unread-article
+   gnus-summary-prev-same-subject
+   gnus-summary-next-same-subject
+   gnus-summary-first-unread-article
+   gnus-summary-goto-last-article)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after interactive movement to a Gnus article."
+       (when (ems-interactive-p ',target)
+         (emacsvox-gnus-speak-article-body)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--gnus-article-show-summary-after (&rest _)
   "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."

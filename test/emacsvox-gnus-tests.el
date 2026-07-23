@@ -347,5 +347,112 @@
       (nreverse events)
       '((icon select-object) speak-subject)))))
 
+(defconst emacsvox-test--gnus-summary-article-after-targets
+  '(gnus-summary-show-article
+    gnus-summary-next-page gnus-summary-prev-page
+    gnus-summary-beginning-of-article
+    gnus-summary-end-of-article
+    gnus-summary-prev-article gnus-summary-next-article
+    gnus-summary-next-unread-article
+    gnus-summary-prev-unread-article
+    gnus-summary-prev-same-subject
+    gnus-summary-next-same-subject
+    gnus-summary-first-unread-article
+    gnus-summary-goto-last-article)
+  "Gnus summary article-display commands with direct after advice.")
+
+(ert-deftest emacsvox-gnus-summary-article-advice-is-directly-registered ()
+  "Gnus summary article-display advice bypasses the bridge."
+  (dolist (target '(gnus-summary-read-group gnus-summary-show-article))
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :around function) ems--modern-advice-wrappers))))
+  (dolist (target emacsvox-test--gnus-summary-article-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers))))
+  ;; Both differently named advice must coexist on this target.
+  (should
+   (advice-member-p
+    #'emacsvox--advice-gnus-summary-show-article-around
+    'gnus-summary-show-article))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-gnus-summary-show-article-after
+    'gnus-summary-show-article)))
+
+(ert-deftest emacsvox-gnus-summary-render-calls-original-once ()
+  "Summary rendering disables external SHR renderers for one call."
+  (let ((shr-external-rendering-functions '(external-renderer))
+        (calls 0))
+    (should
+     (eq
+      (emacsvox--advice-gnus-summary-show-article-around
+       (lambda (&rest arguments)
+         (cl-incf calls)
+         (should-not shr-external-rendering-functions)
+         (should (equal arguments '(4)))
+         'rendered)
+       4)
+      'rendered))
+    (should (= calls 1))
+    (should
+     (equal
+      shr-external-rendering-functions
+      '(external-renderer)))))
+
+(ert-deftest emacsvox-gnus-summary-article-movement-is-target-aware ()
+  "Only matching interactive article movement speaks the article."
+  (let ((ems--interactive-fn-name 'gnus-summary-next-unread-article)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-gnus-speak-article-body)
+               (lambda () (push 'speak-article events))))
+      (emacsvox--advice-gnus-summary-prev-unread-article-after)
+      (emacsvox--advice-gnus-summary-next-unread-article-after))
+    (should (equal events '(speak-article)))))
+
+(ert-deftest emacsvox-gnus-summary-boundary-speech-is-unconditional ()
+  "Article boundary commands speak even when invoked internally."
+  (with-temp-buffer
+    (let ((gnus-article-buffer (current-buffer))
+          events)
+      (cl-letf (((symbol-function 'emacsvox-speak-line)
+                 (lambda () (push (current-buffer) events))))
+        (emacsvox--advice-gnus-summary-beginning-of-article-after)
+        (emacsvox--advice-gnus-summary-end-of-article-after))
+      (should
+       (equal events
+              (list (current-buffer) (current-buffer)))))))
+
+(ert-deftest emacsvox-gnus-summary-show-article-is-target-aware ()
+  "Article rendering feedback is limited to interactive display."
+  (with-temp-buffer
+    (let ((gnus-article-buffer (current-buffer))
+          (ems--interactive-fn-name 'gnus-summary-show-article)
+          events)
+      (cl-letf (((symbol-function 'visual-line-mode)
+                 (lambda (&rest _) (push 'visual-lines events)))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'emacsvox-hide-all-blocks-in-buffer)
+                 (lambda () (push 'hide-blocks events)))
+                ((symbol-function 'emacsvox-gnus-speak-article-body)
+                 (lambda () (push 'speak-article events))))
+        (emacsvox--advice-gnus-summary-show-article-after))
+      (should
+       (equal
+        (nreverse events)
+        '(visual-lines (icon open-object)
+          hide-blocks speak-article))))))
+
 (provide 'emacsvox-gnus-tests)
 ;;; emacsvox-gnus-tests.el ends here
