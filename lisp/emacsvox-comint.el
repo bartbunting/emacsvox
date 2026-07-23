@@ -161,13 +161,16 @@ Interactive PREFIX arg means toggle the global default value. ")
 
 ;;;  Advice comint:
 
-(defun ems--comint-delete-output-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-comint-delete-output-after (&rest _)
+  "Cue and speak after interactively deleting Comint output."
+  (when (ems-interactive-p 'comint-delete-output)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'comint-delete-output :after
-            #'ems--comint-delete-output-after)
+(advice-add
+ 'comint-delete-output :after
+ #'emacsvox--advice-comint-delete-output-after
+ '((name . emacsvox)))
 
 (cl-loop
  for target in
@@ -188,13 +191,16 @@ Interactive PREFIX arg means toggle the global default value. ")
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--comint-clear-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-comint-clear-buffer-after (&rest _)
+  "Cue and speak after interactively clearing a Comint buffer."
+  (when (ems-interactive-p 'comint-clear-buffer)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'comint-clear-buffer :after
-            #'ems--comint-clear-buffer-after)
+(advice-add
+ 'comint-clear-buffer :after
+ #'emacsvox--advice-comint-clear-buffer-after
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-comint-magic-space-around
     (original argument)
@@ -262,12 +268,16 @@ Interactive PREFIX arg means toggle the global default value. ")
   (cons 're-search-forward
         'emacsvox-pronounce-uuid)))
 
-(defun ems--shell-dirstack-message-around (orig-fun &rest args)
-  "Silence messages"
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-shell-dirstack-message-around
+    (original &rest arguments)
+  "Call ORIGINAL once with ARGUMENTS while silencing its messages."
+  (ems-with-messages-silenced
+   (apply original arguments)))
 
-(advice-add 'shell-dirstack-message :around
-            #'ems--shell-dirstack-message-around)
+(advice-add
+ 'shell-dirstack-message :around
+ #'emacsvox--advice-shell-dirstack-message-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-comint-delchar-or-maybe-eof-around
     (original &optional argument)
@@ -390,17 +400,15 @@ Interactive PREFIX arg means toggle the global default value. ")
  #'emacsvox--advice-comint-copy-old-input-after
  '((name . emacsvox)))
 
-(defun ems--comint-output-filter-around (orig-fun &rest args)
-  "Make comint speak its output.\nTry not to speak the shell prompt,\ninstead, always play an auditory icon when the shell prompt is displayed."
-  (let ((result (apply orig-fun args)))
-    (let
-        ((monitor emacsvox-comint-output-monitor)
-         (buffer (process-buffer (ad-get-arg 0)))
-         (output (ad-get-arg 1)))
-      (apply orig-fun args)
+(defun emacsvox--advice-comint-output-filter-around
+    (original process output)
+  "Call ORIGINAL once for PROCESS and OUTPUT, then provide autospeech."
+  (let ((monitor emacsvox-comint-output-monitor)
+        (buffer (process-buffer process)))
+    (let ((result (funcall original process output)))
       (with-current-buffer buffer
         (when
-            (and (not (string-match "^" output))
+            (and (not (string-match "^\r" output))
                  comint-last-output-start
                  (or monitor (eq (window-buffer) buffer)))
           (let
@@ -413,12 +421,14 @@ Interactive PREFIX arg means toggle the global default value. ")
              ((and emacsvox-comint-autospeak (not prompt-p))
               (dtk-speak output))
              (prompt-p
-              (when emacsvox-comint-autospeak (emacsvox-icon 'item))))))
-        result))
-    result))
+              (when emacsvox-comint-autospeak
+                (emacsvox-icon 'item)))))))
+      result)))
 
-(advice-add 'comint-output-filter :around
-            #'ems--comint-output-filter-around)
+(advice-add
+ 'comint-output-filter :around
+ #'emacsvox--advice-comint-output-filter-around
+ '((name . emacsvox)))
 
 (defun ems--comint-dynamic-list-completions-around
     (orig-fun &rest args)
@@ -559,23 +569,22 @@ Interactive PREFIX arg means toggle the global default value. ")
 
 (advice-add 'comint-kill-output :after #'ems--comint-kill-output-after)
 
-(defun ems--comint-quit-subjob-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (message "Sent quit signal to subjob ")))
-
-(advice-add 'comint-quit-subjob :after #'ems--comint-quit-subjob-after)
-
-(defun ems--comint-stop-subjob-after (&rest _)
-  "speak." (when (ems-interactive-p) (message "Stopped the subjob")))
-
-(advice-add 'comint-stop-subjob :after #'ems--comint-stop-subjob-after)
-
-(defun ems--comint-interrupt-subjob-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (message "Interrupted the subjob")))
-
-(advice-add 'comint-interrupt-subjob :after
-            #'ems--comint-interrupt-subjob-after)
+(cl-loop
+ for (target announcement) in
+ '((comint-quit-subjob "Sent quit signal to subjob ")
+   (comint-stop-subjob "Stopped the subjob")
+   (comint-interrupt-subjob "Interrupted the subjob"))
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Report an interactive signal sent to a Comint subjob."
+       (when (ems-interactive-p ',target)
+         (message ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-comint-kill-input-before (&rest _)
   "Cue and speak input about to be killed interactively."

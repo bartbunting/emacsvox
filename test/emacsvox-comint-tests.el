@@ -88,6 +88,76 @@
       (nreverse events)
       '(line (icon item))))))
 
+(ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
+  "Comint output and subprocess advice bypasses the bridge."
+  (dolist
+      (entry
+       '((comint-delete-output
+          :after emacsvox--advice-comint-delete-output-after)
+         (comint-clear-buffer
+          :after emacsvox--advice-comint-clear-buffer-after)
+         (shell-dirstack-message
+          :around emacsvox--advice-shell-dirstack-message-around)
+         (comint-output-filter
+          :around emacsvox--advice-comint-output-filter-around)
+         (comint-quit-subjob
+          :after emacsvox--advice-comint-quit-subjob-after)
+         (comint-stop-subjob
+          :after emacsvox--advice-comint-stop-subjob-after)
+         (comint-interrupt-subjob
+          :after emacsvox--advice-comint-interrupt-subjob-after)))
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-comint-dirstack-message-calls-original-once ()
+  "Shell directory-stack reporting preserves one silenced call."
+  (let ((calls 0))
+    (should
+     (eq
+      (emacsvox--advice-shell-dirstack-message-around
+       (lambda ()
+         (cl-incf calls)
+         'dirstack-result))
+      'dirstack-result))
+    (should (= calls 1))))
+
+(ert-deftest emacsvox-comint-output-filter-calls-original-once ()
+  "Each Comint process chunk is inserted once before autospeech."
+  (with-temp-buffer
+    (insert "ordinary output\n")
+    (let ((output-buffer (current-buffer))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (comint-last-output-start (point-min))
+          (shell-prompt-pattern "\\`never-a-prompt\\'")
+          (comint-prompt-regexp "\\`never-a-prompt\\'")
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'process-buffer)
+                 (lambda (process)
+                   (should (eq process 'test-process))
+                   output-buffer))
+                ((symbol-function 'dtk-speak)
+                 (lambda (text) (push (list 'speak text) events))))
+        (should
+         (eq
+          (emacsvox--advice-comint-output-filter-around
+           (lambda (process output)
+             (cl-incf calls)
+             (push (list 'original process output) events)
+             'filter-result)
+           'test-process
+           "chunk")
+          'filter-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((original test-process "chunk") (speak "chunk")))))))
+
 (ert-deftest emacsvox-comint-input-advice-is-directly-registered ()
   "Comint input advice bypasses the compatibility bridge."
   (dolist
