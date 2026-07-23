@@ -57,6 +57,7 @@
   (require 'emacsvox-copyright-tests)
   (require 'emacsvox-keyboard-macro-tests)
   (require 'emacsvox-transpose-tests)
+  (require 'emacsvox-toggle-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

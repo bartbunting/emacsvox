@@ -2805,33 +2805,40 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  toggling debug state
 
-(defun ems--toggle-debug-on-error-after (&rest _)
-  "Produce an auditory icon."
-  (when (ems-interactive-p)
-    (if debug-on-error (emacsvox-icon 'on) nil (emacsvox-icon 'off))
-    (message "Turned %s debug on error" debug-on-error)))
+(defun emacsvox--debug-toggle-after (target state setting)
+  "Announce an interactive debug toggle.
+TARGET identifies the command, STATE is its new value, and SETTING names it."
+  (when (ems-interactive-p target)
+    (emacsvox-icon (if state 'on 'off))
+    (message "Turned %s debug on %s" state setting)))
 
-(advice-add 'toggle-debug-on-error :after
-            #'ems--toggle-debug-on-error-after)
+(defun emacsvox--advice-toggle-debug-on-error-after (&rest _)
+  "Announce the new `debug-on-error' state."
+  (emacsvox--debug-toggle-after
+   'toggle-debug-on-error debug-on-error "error"))
 
-(defun ems--toggle-debug-on-quit-after (&rest _)
-  "Produce an auditory icon."
-  (when (ems-interactive-p)
-    (if debug-on-error (emacsvox-icon 'on) nil (emacsvox-icon 'off))
-    (message "Turned %s debug on quit" debug-on-quit)))
+(advice-add
+ 'toggle-debug-on-error :after
+ #'emacsvox--advice-toggle-debug-on-error-after
+ '((name . emacsvox)))
 
-(advice-add 'toggle-debug-on-quit :after
-            #'ems--toggle-debug-on-quit-after)
+(defun emacsvox--advice-toggle-debug-on-quit-after (&rest _)
+  "Announce the new `debug-on-quit' state."
+  (emacsvox--debug-toggle-after
+   'toggle-debug-on-quit debug-on-quit "quit"))
+
+(advice-add
+ 'toggle-debug-on-quit :after
+ #'emacsvox--advice-toggle-debug-on-quit-after
+ '((name . emacsvox)))
 
 ;;;  alert if entering override mode
 
-(defun ems--overwrite-mode-after (&rest _)
-  "Provide auditory indication that overwrite mode has changed."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'warn-user)
-    (message "Turned %s overwrite mode" (or overwrite-mode "off"))))
-
-(advice-add 'overwrite-mode :after #'ems--overwrite-mode-after)
+(emacsvox-advice--define-interactive-after-advice
+    (overwrite-mode)
+    "Announce the new overwrite mode state."
+  (emacsvox-icon 'warn-user)
+  (message "Turned %s overwrite mode" (or overwrite-mode "off")))
 
 ;;;  Options mode and custom
 
@@ -2852,15 +2859,12 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  transient mark mode
 
-(defun ems--transient-mark-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (if transient-mark-mode 'on 'off))
-    (message "Turned %s transient mark."
-             (if transient-mark-mode "on" "off"))))
-
-(advice-add 'transient-mark-mode :after
-            #'ems--transient-mark-mode-after)
+(emacsvox-advice--define-interactive-after-advice
+    (transient-mark-mode)
+    "Announce the new transient mark mode state."
+  (emacsvox-icon (if transient-mark-mode 'on 'off))
+  (message "Turned %s transient mark."
+           (if transient-mark-mode "on" "off")))
 
 ;;;  provide auditory icon when window config changes
 
@@ -3049,16 +3053,13 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
 
 ;;;  Cue input method changes
 
-(defun ems--toggle-input-method-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (if current-input-method 'on 'off))
-    (dtk-speak
-     (format "Current input method is %s"
-             (or current-input-method "none")))))
-
-(advice-add 'toggle-input-method :after
-            #'ems--toggle-input-method-after)
+(emacsvox-advice--define-interactive-after-advice
+    (toggle-input-method)
+    "Announce the new input method state."
+  (emacsvox-icon (if current-input-method 'on 'off))
+  (dtk-speak
+   (format "Current input method is %s"
+           (or current-input-method "none"))))
 
 ;;;  silence midnight cleanup:
 
