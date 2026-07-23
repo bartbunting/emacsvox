@@ -1446,13 +1446,15 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (advice-add 'column-number-mode :after #'ems--column-number-mode-after)
 
-(defun ems--not-modified-after (&rest _)
+(defun emacsvox--advice-not-modified-after (&optional argument)
   "Provide an auditory icon."
-  (when (ems-interactive-p)
-    (if (ad-get-arg 0) (emacsvox-icon 'modified-object)
+  (when (ems-interactive-p 'not-modified)
+    (if argument (emacsvox-icon 'modified-object)
       (emacsvox-icon 'unmodified-object))))
 
-(advice-add 'not-modified :after #'ems--not-modified-after)
+(advice-add
+ 'not-modified :after #'emacsvox--advice-not-modified-after
+ '((name . emacsvox)))
 
 (defun ems--comment-dwim-after (&rest _)
   "speak."
@@ -1476,15 +1478,10 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (advice-add 'comment-region :after #'ems--comment-region-after)
 
-(cl-loop
- for f in
- '(save-buffer save-some-buffers)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'save-object)))))
+(emacsvox-advice--define-interactive-after-advice
+    (save-buffer save-some-buffers)
+    "Indicate completion of an interactive save."
+  (emacsvox-icon 'save-object))
 
 (cl-loop
  for f in
@@ -1514,12 +1511,14 @@ Use an auditory icon if possible."
  'kill-ring-save :after #'emacsvox--advice-kill-ring-save-after
  '((name . emacsvox)))
 
-(defun ems--find-file-after (&rest _)
+(defun emacsvox--advice-find-file-after (&rest _)
   "Play an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'find-file)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'find-file :after #'ems--find-file-after)
+(advice-add
+ 'find-file :after #'emacsvox--advice-find-file-after
+ '((name . emacsvox)))
 
 (emacsvox-advice--define-interactive-after-advice
     (kill-buffer kill-current-buffer quit-window)
@@ -3098,13 +3097,14 @@ Produce an auditory icon if possible."
 
 ;;; C-x x commands
 
-(defun ems--revert-buffer-quick-after (&rest _)
+(defun emacsvox--advice-revert-buffer-quick-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'revert-buffer-quick)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'revert-buffer-quick :after
-            #'ems--revert-buffer-quick-after)
+(advice-add
+ 'revert-buffer-quick :after #'emacsvox--advice-revert-buffer-quick-after
+ '((name . emacsvox)))
 
 ;;; Battery:
 
