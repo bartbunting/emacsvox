@@ -3093,22 +3093,16 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
 
 ;;;  copyright commands:
 
-(cl-loop
- for f in
- '(copyright copyright-update)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (copyright copyright-update)
+    "Cue completion and speak the updated copyright line."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-line))
 
-(defun ems--copyright-update-directory-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'copyright-update-directory :after
-            #'ems--copyright-update-directory-after)
+(emacsvox-advice--define-interactive-after-advice
+    (copyright-update-directory)
+    "Cue completion of an interactive directory copyright update."
+  (emacsvox-icon 'task-done))
 
 ;;;  Asking Questions:
 
