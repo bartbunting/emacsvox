@@ -831,20 +831,27 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (advice-add 'momentary-string-display :around
             #'ems--momentary-string-display-around)
 
-(defun ems--progress-reporter-do-update-around (orig-fun &rest args)
+(defun emacsvox--advice-progress-reporter-do-update-around
+    (original &rest arguments)
   "Silence progress reporters."
-  (let ((result (apply orig-fun args)))
-    (ems-with-messages-silenced (apply orig-fun args))
-    (when result (emacsvox-icon 'progress)) result))
+  (let (result)
+    (ems-with-messages-silenced
+      (setq result (apply original arguments)))
+    (when result (emacsvox-icon 'progress))
+    result))
 
-(advice-add 'progress-reporter-do-update :around
-            #'ems--progress-reporter-do-update-around)
+(advice-add
+ 'progress-reporter-do-update :around
+ #'emacsvox--advice-progress-reporter-do-update-around
+ '((name . emacsvox)))
 
-(defun ems--progress-reporter-done-after (&rest _)
+(defun emacsvox--advice-progress-reporter-done-after (&rest _)
   "speak." (emacsvox-icon 'time))
 
-(advice-add 'progress-reporter-done :after
-            #'ems--progress-reporter-done-after)
+(advice-add
+ 'progress-reporter-done :after
+ #'emacsvox--advice-progress-reporter-done-after
+ '((name . emacsvox)))
 
 (cl-loop
  for f in

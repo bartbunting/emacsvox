@@ -86,7 +86,11 @@
     (split-window-horizontally :after
      emacsvox--advice-split-window-horizontally-after)
     (call-last-kbd-macro :around
-     emacsvox--advice-call-last-kbd-macro-around))
+     emacsvox--advice-call-last-kbd-macro-around)
+    (progress-reporter-do-update :around
+     emacsvox--advice-progress-reporter-do-update-around)
+    (progress-reporter-done :after
+     emacsvox--advice-progress-reporter-done-after))
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
@@ -409,6 +413,57 @@
         'macro-result)))
     (should (= calls 1))
     (should-not feedback)))
+
+(ert-deftest emacsvox-progress-update-advice-calls-original-once ()
+  "A successful progress update runs once while messages are silenced."
+  (let ((emacsvox-speak-messages t)
+        (inhibit-message nil)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        (emacsvox--advice-progress-reporter-do-update-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push
+            (list 'original arguments
+                  emacsvox-speak-messages inhibit-message)
+            events)
+           'updated)
+         'reporter 50)
+        'updated)))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original (reporter 50) nil t)
+        (icon progress))))
+    (should emacsvox-speak-messages)
+    (should-not inhibit-message)))
+
+(ert-deftest emacsvox-progress-update-cues-only-a-real-update ()
+  "A false update result is preserved without a progress icon."
+  (let ((calls 0)
+        feedback)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (&rest _) (setq feedback t))))
+      (should-not
+       (emacsvox--advice-progress-reporter-do-update-around
+        (lambda (&rest _)
+          (cl-incf calls)
+          nil))))
+    (should (= calls 1))
+    (should-not feedback)))
+
+(ert-deftest emacsvox-progress-done-advice-always-cues-completion ()
+  "Completing a progress reporter always emits its time icon."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-progress-reporter-done-after))
+    (should (equal events '(time)))))
 
 (ert-deftest emacsvox-core-buffer-close-advice-preserves-feedback-order ()
   "Interactive buffer closing emits its icon, stop, and mode line once."
