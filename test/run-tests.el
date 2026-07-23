@@ -24,6 +24,7 @@
         nil nil)
   (require 'emacsvox-advice-tests)
   (require 'emacsvox-advice-audit-tests)
+  (require 'emacsvox-converter-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

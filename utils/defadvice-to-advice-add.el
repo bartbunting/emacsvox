@@ -1,344 +1,251 @@
-;;; defadvice-to-advice-add.el --- Convert defadvice to advice-add -*- lexical-binding: t; -*-
+;;; defadvice-to-advice-add.el --- Conservatively convert advice -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024 Emacsvox Modernization Team
-
-;; This file is part of the Emacsvox modernization effort to convert
-;; deprecated defadvice forms to modern advice-add.
+;; Copyright (C) 2024--2026 Emacsvox Contributors
 
 ;;; Commentary:
 
-;; This script provides automated conversion of defadvice forms to advice-add.
-;; It handles the most common patterns and flags complex cases for manual review.
+;; Convert only legacy advice whose semantics map directly to native
+;; `advice-add'.  Anything involving positional arguments, argument mutation,
+;; explicit original calls, return-value access, around advice, or generated
+;; targets is left unchanged and reported for manual review.
 ;;
 ;; Usage:
-;;   emacs --batch -l defadvice-to-advice-add.el -f ems-convert-file FILE.el
-;;
-;; Transformations:
-;;   - defadvice → advice-add with named function
-;;   - ad-do-it → (apply orig-fun args)
-;;   - ad-get-arg N → (nth N args) or function parameter
-;;   - ad-return-value → result variable
-;;
-;; Naming convention:
-;;   Generated functions: ems--FUNCNAME-CLASS
-;;   Example: next-line@emacspeak-after → ems--next-line-after
+;;   emacs --batch -l utils/defadvice-to-advice-add.el \
+;;     --eval '(ems-convert-file "lisp/example.el")'
 
 ;;; Code:
 
 (require 'cl-lib)
-
-;;; Configuration
+(require 'pp)
+(require 'subr-x)
 
 (defvar ems-conversion-stats nil
   "Statistics for the current conversion run.")
 
 (defvar ems-manual-review-items nil
-  "List of items requiring manual review.")
+  "Advice forms refused by the current conversion run.")
 
-;;; Helper Functions
+(defconst ems--unsafe-advice-symbols
+  '(ad-get-arg ad-set-arg ad-do-it ad-return-value)
+  "Legacy constructs that require manual semantic conversion.")
 
 (defun ems--symbol-in-tree-p (symbol tree)
-  "Return t if SYMBOL appears anywhere in TREE."
+  "Return non-nil when SYMBOL occurs in parsed Lisp TREE."
   (cond
    ((eq symbol tree) t)
-   ((atom tree) nil)
-   (t (or (ems--symbol-in-tree-p symbol (car tree))
-          (ems--symbol-in-tree-p symbol (cdr tree))))))
-
-(defun ems--count-symbol-in-tree (symbol tree)
-  "Count occurrences of SYMBOL in TREE."
-  (cond
-   ((eq symbol tree) 1)
-   ((atom tree) 0)
-   (t (+ (ems--count-symbol-in-tree symbol (car tree))
-         (ems--count-symbol-in-tree symbol (cdr tree))))))
-
-(defun ems--replace-in-tree (old new tree)
-  "Replace all occurrences of OLD with NEW in TREE."
-  (cond
-   ((eq old tree) new)
-   ((atom tree) tree)
-   (t (cons (ems--replace-in-tree old new (car tree))
-            (ems--replace-in-tree old new (cdr tree))))))
+   ((consp tree)
+    (or (ems--symbol-in-tree-p symbol (car tree))
+        (ems--symbol-in-tree-p symbol (cdr tree))))
+   ((vectorp tree)
+    (cl-some (lambda (item) (ems--symbol-in-tree-p symbol item)) tree))
+   (t nil)))
 
 (defun ems--extract-docstring (body)
-  "Extract docstring from BODY if present. Returns (docstring . rest-of-body)."
-  (if (and body (stringp (car body)))
+  "Return BODY as a pair of its optional docstring and remaining forms."
+  (if (stringp (car-safe body))
       (cons (car body) (cdr body))
     (cons nil body)))
 
-;;; Defadvice Parsing
-
 (defun ems--parse-defadvice (form)
-  "Parse a defadvice FORM and extract its components.
-Returns a plist with keys:
-  :function - function being advised
-  :class - advice class (before/after/around)
-  :name - advice name
-  :flags - activation flags (pre act comp)
-  :docstring - documentation string
-  :body - advice body forms"
-  (unless (eq (car form) 'defadvice)
+  "Parse literal legacy advice FORM and return a property list."
+  (unless (eq (car-safe form) 'defadvice)
     (error "Not a defadvice form: %S" form))
+  (let* ((target (nth 1 form))
+         (specification (nth 2 form))
+         (class (car-safe specification))
+         (name (cadr specification))
+         (flags (cddr specification))
+         (doc-and-body (ems--extract-docstring (nthcdr 3 form))))
+    (list
+     :function target
+     :class class
+     :name name
+     :flags flags
+     :docstring (car doc-and-body)
+     :body (cdr doc-and-body))))
 
-  (let* ((fn-name (nth 1 form))
-         (advice-spec (nth 2 form))
-         (advice-class (car advice-spec))
-         (advice-name (cadr advice-spec))
-         (flags (cddr advice-spec))
-         (body-start (nthcdr 3 form))
-         (docstring-and-body (ems--extract-docstring body-start))
-         (docstring (car docstring-and-body))
-         (body (cdr docstring-and-body)))
+(defun ems--literal-advice-target-p (target)
+  "Return non-nil when TARGET names one function literally."
+  (and (symbolp target) target))
 
-    (list :function fn-name
-          :class advice-class
-          :name advice-name
-          :flags flags
-          :docstring docstring
-          :body body)))
+(defun ems--literal-advice-name-p (name)
+  "Return non-nil when legacy advice NAME is a literal symbol."
+  (and (symbolp name) name))
 
-;;; Complexity Analysis
+(defun ems--conversion-review-reasons (parsed)
+  "Return reasons why PARSED advice cannot be converted automatically."
+  (let ((target (plist-get parsed :function))
+        (class (plist-get parsed :class))
+        (name (plist-get parsed :name))
+        (body (plist-get parsed :body))
+        reasons)
+    (unless (ems--literal-advice-target-p target)
+      (push "generated or non-literal target" reasons))
+    (unless (ems--literal-advice-name-p name)
+      (push "generated or missing advice name" reasons))
+    (unless (memq class '(before after))
+      (push (format "advice class %S requires manual review" class) reasons))
+    (dolist (symbol ems--unsafe-advice-symbols)
+      (when (ems--symbol-in-tree-p symbol body)
+        (push (format "uses %s" symbol) reasons)))
+    (nreverse reasons)))
 
-(defun ems--classify-complexity (parsed)
-  "Classify the complexity of a PARSED defadvice form.
-Returns 'simple, 'medium, or 'complex."
-  (let* ((class (plist-get parsed :class))
-         (body (plist-get parsed :body))
-         (ad-do-it-count (ems--count-symbol-in-tree 'ad-do-it body))
-         (has-ad-return-value (ems--symbol-in-tree-p 'ad-return-value body))
-         (has-ad-get-arg (ems--symbol-in-tree-p 'ad-get-arg body)))
+(defun ems--transform-interactive-checks (tree target)
+  "Give argument-less `ems-interactive-p' calls in TREE an explicit TARGET."
+  (cond
+   ((atom tree) tree)
+   ;; Do not rewrite documentation or quoted example data.
+   ((eq (car tree) 'quote) tree)
+   ((and (eq (car tree) 'ems-interactive-p) (null (cdr tree)))
+    `(ems-interactive-p ',target))
+   (t
+    (cons
+     (ems--transform-interactive-checks (car tree) target)
+     (ems--transform-interactive-checks (cdr tree) target)))))
 
-    (cond
-     ;; Complex cases
-     ((> ad-do-it-count 1) 'complex) ; Multiple ad-do-it calls
-     ((and has-ad-return-value (eq class 'around)) 'complex)
-
-     ;; Medium cases
-     ((eq class 'around) 'medium)
-     (has-ad-get-arg 'medium)
-
-     ;; Simple cases
-     ((and (eq class 'after)
-           (not has-ad-return-value)
-           (not has-ad-get-arg))
-      'simple)
-     ((eq class 'before) 'simple)
-
-     ;; Default to medium
-     (t 'medium))))
-
-;;; Body Transformation
-
-(defun ems--transform-body-for-after (body)
-  "Transform BODY for :after advice. Simply returns body as-is with &rest _."
-  body)
-
-(defun ems--transform-body-for-before (body)
-  "Transform BODY for :before advice. Returns body as-is."
-  body)
-
-(defun ems--transform-body-for-around (body fn-name)
-  "Transform BODY for :around advice.
-Replaces ad-do-it with (apply orig-fun args).
-Handles ad-return-value by binding result.
-FN-NAME is the function being advised (for error messages)."
-  (let ((has-ad-return-value (ems--symbol-in-tree-p 'ad-return-value body))
-        (ad-do-it-count (ems--count-symbol-in-tree 'ad-do-it body)))
-
-    (cond
-     ;; Simple case: just ad-do-it, no return value manipulation
-     ((and (not has-ad-return-value) (= ad-do-it-count 1))
-      (ems--replace-in-tree 'ad-do-it '(apply orig-fun args) body))
-
-     ;; Complex case: ad-return-value manipulation
-     (has-ad-return-value
-      (let ((transformed (ems--replace-in-tree 'ad-do-it '(apply orig-fun args) body)))
-        (setq transformed (ems--replace-in-tree 'ad-return-value 'result transformed))
-        ;; Wrap in let to bind result
-        `((let ((result (apply orig-fun args)))
-            ,@transformed
-            result))))
-
-     ;; Multiple ad-do-it - flag for manual review
-     ((> ad-do-it-count 1)
-      (push (list :function fn-name :reason "Multiple ad-do-it calls")
-            ems-manual-review-items)
-      body) ; Return unchanged for manual review
-
-     ;; Default: simple replacement
-     (t (ems--replace-in-tree 'ad-do-it '(apply orig-fun args) body)))))
-
-;;; Function Name Generation
-
-(defun ems--generate-advice-function-name (fn-name class)
-  "Generate advice function name for FN-NAME and CLASS.
-Format: ems--FUNCNAME-CLASS
-Example: (ems--generate-advice-function-name 'next-line 'after)
-         => ems--next-line-after"
-  (intern (format "ems--%s-%s" fn-name class)))
-
-;;; Code Generation
+(defun ems--generate-advice-function-name (target name class)
+  "Return a collision-resistant helper name for TARGET, NAME, and CLASS."
+  (intern (format "ems--%s-%s-%s" target name class)))
 
 (defun ems--generate-advice-function (parsed)
-  "Generate the advice function definition from PARSED defadvice.
-Returns a defun form."
-  (let* ((fn-name (plist-get parsed :function))
+  "Generate a native advice helper from safe PARSED legacy advice."
+  (let* ((target (plist-get parsed :function))
          (class (plist-get parsed :class))
+         (name (plist-get parsed :name))
          (docstring (plist-get parsed :docstring))
-         (body (plist-get parsed :body))
-         (advice-fn-name (ems--generate-advice-function-name fn-name class))
-         (complexity (ems--classify-complexity parsed))
-         (transformed-body
-          (pcase class
-            ('after (ems--transform-body-for-after body))
-            ('before (ems--transform-body-for-before body))
-            ('around (ems--transform-body-for-around body fn-name))
-            (_ (error "Unknown advice class: %s" class)))))
-
-    ;; Generate the function
-    (pcase class
-      ('after
-       `(defun ,advice-fn-name (&rest _)
-          ,@(when docstring (list docstring))
-          ,@transformed-body))
-
-      ('before
-       `(defun ,advice-fn-name (&rest _)
-          ,@(when docstring (list docstring))
-          ,@transformed-body))
-
-      ('around
-       `(defun ,advice-fn-name (orig-fun &rest args)
-          ,@(when docstring (list docstring))
-          ,@transformed-body)))))
+         (body
+          (mapcar
+           (lambda (form)
+             (ems--transform-interactive-checks form target))
+           (plist-get parsed :body)))
+         (helper (ems--generate-advice-function-name target name class)))
+    `(defun ,helper (&rest _)
+       ,@(when docstring (list docstring))
+       ,@body)))
 
 (defun ems--generate-advice-add (parsed)
-  "Generate the advice-add call from PARSED defadvice.
-Returns an advice-add form."
-  (let* ((fn-name (plist-get parsed :function))
+  "Generate a named `advice-add' registration from PARSED legacy advice."
+  (let* ((target (plist-get parsed :function))
          (class (plist-get parsed :class))
-         (advice-fn-name (ems--generate-advice-function-name fn-name class))
-         (advice-class-keyword (intern (concat ":" (symbol-name class)))))
-
-    `(advice-add ',fn-name ,advice-class-keyword #',advice-fn-name)))
+         (name (plist-get parsed :name))
+         (helper (ems--generate-advice-function-name target name class))
+         (where (intern (format ":%s" class))))
+    `(advice-add ',target ,where #',helper '((name . ,name)))))
 
 (defun ems--convert-defadvice-form (form)
-  "Convert a single defadvice FORM to advice-add equivalent.
-Returns a list of forms (defun + advice-add), or nil if should skip."
-  (condition-case err
+  "Convert safe legacy advice FORM, or return nil and record review reasons."
+  (condition-case error-data
       (let* ((parsed (ems--parse-defadvice form))
-             (complexity (ems--classify-complexity parsed))
-             (defun-form (ems--generate-advice-function parsed))
-             (advice-add-form (ems--generate-advice-add parsed)))
-
-        ;; Add to manual review if complex
-        (when (eq complexity 'complex)
-          (push (list :function (plist-get parsed :function)
-                      :class (plist-get parsed :class)
-                      :reason "Complex pattern requiring manual review")
-                ems-manual-review-items))
-
-        ;; Return both forms
-        (list defun-form advice-add-form))
-
+             (reasons (ems--conversion-review-reasons parsed)))
+        (if reasons
+            (progn
+              (push
+               (list
+                :function (plist-get parsed :function)
+                :class (plist-get parsed :class)
+                :reasons reasons)
+               ems-manual-review-items)
+              nil)
+          (list
+           (ems--generate-advice-function parsed)
+           (ems--generate-advice-add parsed))))
     (error
-     (push (list :form form :error (error-message-string err))
-           ems-manual-review-items)
+     (push
+      (list :form form :reasons (list (error-message-string error-data)))
+      ems-manual-review-items)
      nil)))
 
-;;; Pretty Printing
-
-(defun ems--format-elisp-form (form &optional indent)
-  "Format elisp FORM as a string with proper indentation.
-INDENT is the current indentation level (default 0)."
+(defun ems--format-elisp-form (form)
+  "Return pretty-printed Lisp FORM as a string."
   (with-temp-buffer
     (emacs-lisp-mode)
     (let ((print-level nil)
           (print-length nil))
       (pp form (current-buffer)))
-    (goto-char (point-min))
-    ;; Clean up extra blank lines that pp sometimes adds
-    (while (re-search-forward "\n\n+" nil t)
-      (replace-match "\n"))
     (buffer-string)))
 
-;;; File Processing
-
-(defun ems--find-all-defadvice (buffer)
-  "Find all defadvice forms in BUFFER.
-Returns a list of (position . form) pairs."
+(defun ems--find-top-level-defadvice (buffer)
+  "Return positions and forms for literal top-level advice in BUFFER."
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
-      (let ((results nil))
-        (while (re-search-forward "^(defadvice " nil t)
-          (goto-char (match-beginning 0))
-          (let ((pos (point))
-                (form (ignore-errors (read (current-buffer)))))
-            (when form
-              (push (cons pos form) results))))
+      (let (results)
+        (while (re-search-forward "^[ \t]*\\([(]defadvice\\_>\\)" nil t)
+          (let ((start (match-beginning 1))
+                (next (match-end 1)))
+            (when (and (= 0 (car (syntax-ppss start)))
+                       (not (nth 8 (syntax-ppss start))))
+              (goto-char start)
+              (let ((form (read (current-buffer)))
+                    (end (point)))
+                (push (list start end form) results)))
+            (when (< (point) next) (goto-char next))))
         (nreverse results)))))
 
-(defun ems-convert-buffer ()
-  "Convert all defadvice forms in current buffer to advice-add.
-This modifies the buffer in-place."
-  (interactive)
-  (let ((ems-conversion-stats '(:converted 0 :skipped 0 :errors 0))
-        (ems-manual-review-items nil)
-        (defadvice-list (ems--find-all-defadvice (current-buffer))))
-
+(defun ems--count-nested-defadvice (buffer)
+  "Count nested or generated legacy advice templates in BUFFER."
+  (with-current-buffer buffer
     (save-excursion
-      (dolist (item (reverse defadvice-list)) ; Process in reverse to preserve positions
-        (let* ((pos (car item))
-               (form (cdr item))
-               (converted (ems--convert-defadvice-form form)))
+      (goto-char (point-min))
+      (let ((count 0))
+        (while (re-search-forward "(defadvice\\_>" nil t)
+          (let* ((start (match-beginning 0))
+                 (next (match-end 0))
+                 (state (syntax-ppss start)))
+            (when (and (> (car state) 0) (not (nth 8 state)))
+              (cl-incf count))
+            (goto-char next)))
+        count))))
 
-          (if converted
-              (progn
-                (goto-char pos)
-                (let ((end (progn (forward-sexp) (point))))
-                  (delete-region pos end)
-                  (goto-char pos)
-
-                  ;; Insert converted forms
-                  (insert "\n")
-                  (dolist (new-form converted)
-                    (insert (ems--format-elisp-form new-form))
-                    (insert "\n\n"))
-
-                  (cl-incf (plist-get ems-conversion-stats :converted))))
-
-            (cl-incf (plist-get ems-conversion-stats :skipped))))))
-
-    ;; Report results
-    (message "Conversion complete: %d converted, %d skipped, %d for manual review"
-             (plist-get ems-conversion-stats :converted)
-             (plist-get ems-conversion-stats :skipped)
-             (length ems-manual-review-items))
-
+(defun ems-convert-buffer ()
+  "Conservatively convert safe top-level legacy advice in this buffer."
+  (interactive)
+  (let* ((ems-conversion-stats
+          '(:converted 0 :skipped 0 :nested 0))
+         (ems-manual-review-items nil)
+         (candidates (ems--find-top-level-defadvice (current-buffer)))
+         (nested (ems--count-nested-defadvice (current-buffer))))
+    (plist-put ems-conversion-stats :nested nested)
+    (when (> nested 0)
+      (push
+       (list
+        :count nested
+        :reasons (list "nested or generated defadvice templates"))
+       ems-manual-review-items))
+    (save-excursion
+      (dolist (item (reverse candidates))
+        (pcase-let ((`(,start ,end ,form) item))
+          (let ((converted (ems--convert-defadvice-form form)))
+            (if (not converted)
+                (cl-incf (plist-get ems-conversion-stats :skipped))
+              (delete-region start end)
+              (goto-char start)
+              (dolist (new-form converted)
+                (insert (ems--format-elisp-form new-form) "\n"))
+              (cl-incf (plist-get ems-conversion-stats :converted)))))))
+    (message
+     "Conversion: %d safe, %d refused, %d nested templates"
+     (plist-get ems-conversion-stats :converted)
+     (plist-get ems-conversion-stats :skipped)
+     nested)
     (when ems-manual-review-items
-      (message "Manual review items:")
-      (dolist (item ems-manual-review-items)
-        (message "  - %S" item)))
-
+      (message "Manual review required for %d items"
+               (length ems-manual-review-items)))
+    (setq ems-conversion-stats
+          (plist-put
+           ems-conversion-stats :manual-review
+           (nreverse ems-manual-review-items)))
     ems-conversion-stats))
 
 (defun ems-convert-file (filename)
-  "Convert defadvice forms in FILENAME to advice-add.
-Creates a backup with .defadvice-backup extension."
+  "Conservatively convert safe advice in FILENAME and save a backup."
   (interactive "fFile to convert: ")
   (let ((backup-file (concat filename ".defadvice-backup")))
-    ;; Create backup
     (copy-file filename backup-file t)
-    (message "Backup created: %s" backup-file)
-
-    ;; Convert
     (with-current-buffer (find-file-noselect filename)
       (let ((stats (ems-convert-buffer)))
         (save-buffer)
-        (message "Converted %s: %d forms" filename
-                 (plist-get stats :converted))
+        (message "Converted %s; backup is %s" filename backup-file)
         stats))))
 
 (provide 'defadvice-to-advice-add)
