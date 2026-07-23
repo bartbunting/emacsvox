@@ -3040,21 +3040,27 @@ Produce an auditory icon if possible."
  'list-processes :after #'emacsvox--advice-list-processes-after
  '((name . emacsvox)))
 
-(defun ems--timer-list-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-timer-list-after (&rest _)
+  "Speak the mode line after displaying the interactive timer list."
+  (when (ems-interactive-p 'timer-list)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'timer-list :after #'ems--timer-list-after)
+(advice-add
+ 'timer-list :after #'emacsvox--advice-timer-list-after
+ '((name . emacsvox)))
 
 ;;; list-timers:
 
-(defun ems--list-timers-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-list-timers-after (&rest _)
+  "Speak the current line after listing timers interactively."
+  (when (ems-interactive-p 'list-timers)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'list-timers :after #'ems--list-timers-after)
+(advice-add
+ 'list-timers :after #'emacsvox--advice-list-timers-after
+ '((name . emacsvox)))
 
 ;;; find-library:
 
