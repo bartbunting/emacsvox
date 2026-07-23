@@ -65,6 +65,7 @@
   (require 'emacsvox-editing-tests)
   (require 'emacsvox-display-tests)
   (require 'emacsvox-spinner-tests)
+  (require 'emacsvox-key-definition-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

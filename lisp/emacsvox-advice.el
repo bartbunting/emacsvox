@@ -1675,30 +1675,36 @@ BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
  'rename-uniquely :after #'emacsvox--advice-rename-uniquely-after
  '((name . emacsvox)))
 
-(defun ems--local-set-key-before (&rest _)
+(defun emacsvox--advice-local-set-key-before (&rest _)
   "Prompt using speech."
   (interactive
    (list (read-key-sequence "Locally bind key:")
          (read-command "To command:"))))
 
-(advice-add 'local-set-key :before #'ems--local-set-key-before)
+(advice-add
+ 'local-set-key :before #'emacsvox--advice-local-set-key-before
+ '((name . emacsvox)))
 
-(defun ems--global-set-key-before (&rest _)
+(defun emacsvox--advice-global-set-key-before (&rest _)
   "Provide spoken prompts."
   (interactive
    (list (read-key-sequence "Globally bind key:")
          (read-command "To command:"))))
 
-(advice-add 'global-set-key :before #'ems--global-set-key-before)
+(advice-add
+ 'global-set-key :before #'emacsvox--advice-global-set-key-before
+ '((name . emacsvox)))
 
-(defun ems--modify-syntax-entry-before (&rest _)
+(defun emacsvox--advice-modify-syntax-entry-before (&rest _)
   "Provide spoken prompts."
   (interactive
    (list (read-char "Modify syntax for: ")
          (read-string "Syntax Entry: ") current-prefix-arg)))
 
-(advice-add 'modify-syntax-entry :before
-            #'ems--modify-syntax-entry-before)
+(advice-add
+ 'modify-syntax-entry :before
+ #'emacsvox--advice-modify-syntax-entry-before
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-help-do-xref-after (&rest _)
   "Speak the Help reference just selected."
