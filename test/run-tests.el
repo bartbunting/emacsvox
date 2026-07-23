@@ -37,6 +37,7 @@
   (require 'emacsvox-overlay-tests)
   (require 'emacsvox-message-tests)
   (require 'emacsvox-timer-tests)
+  (require 'emacsvox-navigation-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

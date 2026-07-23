@@ -3064,12 +3064,15 @@ Produce an auditory icon if possible."
 
 ;;; find-library:
 
-(defun ems--find-library-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-find-library-after (&rest _)
+  "Speak the mode line after finding a library interactively."
+  (when (ems-interactive-p 'find-library)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'find-library :after #'ems--find-library-after)
+(advice-add
+ 'find-library :after #'emacsvox--advice-find-library-after
+ '((name . emacsvox)))
 
 ;;; log-edit-done
 
@@ -3082,18 +3085,12 @@ Produce an auditory icon if possible."
 
 ;;;  advice find-func etc.
 
-(cl-loop
- for f in
- '(
-   find-function find-function-at-point find-variable
-   find-variable-at-point find-function-on-key)
- do
- (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "Speak current line"
-     (when  (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (find-function find-function-at-point find-variable
+                   find-variable-at-point find-function-on-key)
+    "Speak the source line after navigating to a definition."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
 ;;; Advice Semantic:
 
@@ -3119,12 +3116,15 @@ Produce an auditory icon if possible."
 
 ;;;  advice Imenu
 
-(defun ems--imenu-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(defun emacsvox--advice-imenu-after (&rest _)
+  "Speak the destination after navigating with Imenu interactively."
+  (when (ems-interactive-p 'imenu)
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
 
-(advice-add 'imenu :after #'ems--imenu-after)
+(advice-add
+ 'imenu :after #'emacsvox--advice-imenu-after
+ '((name . emacsvox)))
 
 ;;; Advice property search
 
