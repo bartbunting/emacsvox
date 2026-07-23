@@ -36,7 +36,14 @@
 .POSIX:
 MAKE=make
 MAKEFLAGS=--no-print-directory
+EMACS=emacs
 README = README
+
+### Tests
+
+.PHONY: test
+test:
+	$(EMACS) -Q --batch -l test/run-tests.el
 
 ###   User level targets emacsvox   outloud espeak 
 
@@ -146,4 +153,3 @@ wk:
 #fill-column: 90
 #outline-regexp: "^###"
 #end:
-
