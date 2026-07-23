@@ -412,45 +412,42 @@
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--ibuffer-bs-show-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-bs-show-after (&rest _)
+  "Cue and speak after interactively showing an Ibuffer BS display."
+  (when (ems-interactive-p 'ibuffer-bs-show)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'ibuffer-bs-show :after #'ems--ibuffer-bs-show-after)
+(advice-add
+ 'ibuffer-bs-show :after #'emacsvox--advice-ibuffer-bs-show-after
+ '((name . emacsvox)))
 
-(defun ems--ibuffer-bs-toggle-all-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Toggled show all.")))
+(cl-loop
+ for (target announcement) in
+ '((ibuffer-bs-toggle-all "Toggled show all.")
+   (ibuffer-add-to-tmp-hide "Buffer hidden.")
+   (ibuffer-add-to-tmp-show "Buffer added."))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and report an interactive Ibuffer BS visibility change."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'task-done)
+         (dtk-speak ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'ibuffer-bs-toggle-all :after
-            #'ems--ibuffer-bs-toggle-all-after)
-
-(defun ems--ibuffer-add-to-tmp-hide-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Buffer hidden.")))
-
-(advice-add 'ibuffer-add-to-tmp-hide :after
-            #'ems--ibuffer-add-to-tmp-hide-after)
-
-(defun ems--ibuffer-add-to-tmp-show-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Buffer added.")))
-
-(advice-add 'ibuffer-add-to-tmp-show :after
-            #'ems--ibuffer-add-to-tmp-show-after)
-
-(defun ems--ibuffer-jump-to-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ibuffer-jump-to-buffer-after (&rest _)
+  "Cue and speak after interactively jumping to an Ibuffer entry."
+  (when (ems-interactive-p 'ibuffer-jump-to-buffer)
     (emacsvox-icon 'large-movement)
     (emacsvox-ibuffer-speak-buffer-line)))
 
-(advice-add 'ibuffer-jump-to-buffer :after
-            #'ems--ibuffer-jump-to-buffer-after)
+(advice-add
+ 'ibuffer-jump-to-buffer :after
+ #'emacsvox--advice-ibuffer-jump-to-buffer-after
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-ibuffer-copy-filename-as-kill-after (&rest _)
   "Report how many filenames were copied interactively."

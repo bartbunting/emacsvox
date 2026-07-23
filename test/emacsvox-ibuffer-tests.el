@@ -432,5 +432,39 @@
       '((icon delete-object)
         (speak "Killed Work group."))))))
 
+(defconst emacsvox-test--ibuffer-bs-utility-after-targets
+  '(ibuffer-bs-show ibuffer-bs-toggle-all
+    ibuffer-add-to-tmp-hide ibuffer-add-to-tmp-show
+    ibuffer-jump-to-buffer)
+  "Ibuffer BS and utility commands with direct after advice.")
+
+(ert-deftest emacsvox-ibuffer-bs-utility-advice-is-directly-registered ()
+  "Ibuffer BS and utility advice bypasses the bridge."
+  (dolist (target emacsvox-test--ibuffer-bs-utility-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-ibuffer-bs-visibility-feedback-is-target-aware ()
+  "Only the matching interactive BS visibility command emits feedback."
+  (let ((ems--interactive-fn-name 'ibuffer-add-to-tmp-hide)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox--advice-ibuffer-add-to-tmp-show-after)
+      (emacsvox--advice-ibuffer-add-to-tmp-hide-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon task-done)
+        (speak "Buffer hidden."))))))
+
 (provide 'emacsvox-ibuffer-tests)
 ;;; emacsvox-ibuffer-tests.el ends here
