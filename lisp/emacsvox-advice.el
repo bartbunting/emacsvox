@@ -753,37 +753,28 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
  #'emacsvox--advice-read-multiple-choice-before
  '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(
-   minibuffer-complete-history
-   next-history-element previous-history-element
-   next-line-or-history-element previous-line-or-history-element
-   previous-matching-history-element next-matching-history-element)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the completion element just inserted."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (tts-with-punctuations 'all
-                              (dtk-speak
-                               (or (minibuffer-contents)
-                                   (emacsvox-get-current-completion))))))))
+(emacsvox-advice--define-interactive-after-advice
+    (minibuffer-complete-history
+     next-history-element previous-history-element
+     next-line-or-history-element previous-line-or-history-element
+     previous-matching-history-element next-matching-history-element)
+    "Speak the history or completion element just inserted."
+  (emacsvox-icon 'select-object)
+  (tts-with-punctuations
+   'all
+   (dtk-speak
+    (or (minibuffer-contents)
+        (emacsvox-get-current-completion)))))
 
-(cl-loop
- for f in
- '(   minibuffer-next-completion minibuffer-previous-completion
-      minibuffer-next-line-completion minibuffer-previous-line-completion)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (tts-with-punctuations 'all
-                              (emacsvox-icon 'item)
-                              (dtk-speak
-                               (emacsvox-get-current-completion)))))))
+(emacsvox-advice--define-interactive-after-advice
+    (minibuffer-next-completion minibuffer-previous-completion
+                                minibuffer-next-line-completion
+                                minibuffer-previous-line-completion)
+    "Speak the newly selected minibuffer completion."
+  (tts-with-punctuations
+   'all
+   (emacsvox-icon 'item)
+   (dtk-speak (emacsvox-get-current-completion))))
 
 (defvar emacsvox-last-message nil
   "Last output from `message'.")
@@ -1116,53 +1107,62 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
 
 (define-key minibuffer-local-completion-map "\C-o" 'switch-to-completions)
 
-(defun ems--switch-to-completions-after (&rest _)
-  "Speak." (emacsvox-icon 'select-object)
+(defun emacsvox--advice-switch-to-completions-after (&rest _)
+  "Speak the first completion after switching to the completions buffer."
+  (emacsvox-icon 'select-object)
   (dtk-speak (emacsvox-get-current-completion)))
 
-(advice-add 'switch-to-completions :after
-            #'ems--switch-to-completions-after)
+(advice-add
+ 'switch-to-completions :after
+ #'emacsvox--advice-switch-to-completions-after
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(
-   next-line-completion previous-line-completion
-   next-completion previous-completion)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (tts-with-punctuations 'all
-                              (dtk-speak
-                               (emacsvox-get-current-completion)))))))
+(emacsvox-advice--define-interactive-after-advice
+    (next-line-completion previous-line-completion
+                          next-completion previous-completion)
+    "Speak the newly selected completion."
+  (emacsvox-icon 'select-object)
+  (tts-with-punctuations
+   'all (dtk-speak (emacsvox-get-current-completion))))
 
-(defun ems--choose-completion-before (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
+(defun emacsvox--advice-choose-completion-before (&rest _)
+  "Cue an interactive completion choice."
+  (when (ems-interactive-p 'choose-completion)
+    (emacsvox-icon 'button)))
 
-(advice-add 'choose-completion :before #'ems--choose-completion-before)
+(advice-add
+ 'choose-completion :before #'emacsvox--advice-choose-completion-before
+ '((name . emacsvox)))
 
 ;;;  tmm support
 
-(defun ems--tmm-goto-completions-after (&rest _)
-  "announce completions "
-  (when (ems-interactive-p)
+(defun emacsvox--advice-tmm-goto-completions-after (&rest _)
+  "Announce an interactive TMM completion."
+  (when (ems-interactive-p 'tmm-goto-completions)
     (emacsvox-icon 'help)
     (dtk-speak (emacsvox-get-current-completion))))
 
-(advice-add 'tmm-goto-completions :after
-            #'ems--tmm-goto-completions-after)
+(advice-add
+ 'tmm-goto-completions :after
+ #'emacsvox--advice-tmm-goto-completions-after
+ '((name . emacsvox)))
 
-(defun ems--tmm-menubar-before (&rest _)
-  "Icon" (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(defun emacsvox--advice-tmm-menubar-before (&rest _)
+  "Cue opening the text-mode menu bar interactively."
+  (when (ems-interactive-p 'tmm-menubar)
+    (emacsvox-icon 'open-object)))
 
-(advice-add 'tmm-menubar :before #'ems--tmm-menubar-before)
+(advice-add
+ 'tmm-menubar :before #'emacsvox--advice-tmm-menubar-before
+ '((name . emacsvox)))
 
-(defun ems--tmm-shortcut-after (&rest _)
-  "Icon" (emacsvox-icon 'button))
+(defun emacsvox--advice-tmm-shortcut-after (&rest _)
+  "Cue a TMM shortcut."
+  (emacsvox-icon 'button))
 
-(advice-add 'tmm-shortcut :after #'ems--tmm-shortcut-after)
+(advice-add
+ 'tmm-shortcut :after #'emacsvox--advice-tmm-shortcut-after
+ '((name . emacsvox)))
 
 ;;;  Advice centering and filling commands:
 
