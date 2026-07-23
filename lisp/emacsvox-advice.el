@@ -709,39 +709,49 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
 
 (voice-setup-set-voice-for-face 'minibuffer-prompt 'voice-bolden)
 
-(defun ems--quoted-insert-after (&rest _)
-  "Speak inserted  character."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-quoted-insert-after (&rest _)
+  "Speak the character inserted by interactive `quoted-insert'."
+  (when (ems-interactive-p 'quoted-insert)
     (emacsvox-speak-this-char (preceding-char))))
 
-(advice-add 'quoted-insert :after #'ems--quoted-insert-after)
+(advice-add
+ 'quoted-insert :after #'emacsvox--advice-quoted-insert-after
+ '((name . emacsvox)))
 
-(defun ems--read-event-before (&rest _)
-  "Speak prompt." (when (ad-get-arg 0) (dtk-notify (ad-get-arg 0))))
+(defun emacsvox--advice-read-event-before (&optional prompt &rest _)
+  "Speak PROMPT before reading an event."
+  (when prompt (dtk-notify prompt)))
 
-(advice-add 'read-event :before #'ems--read-event-before)
+(advice-add
+ 'read-event :before #'emacsvox--advice-read-event-before
+ '((name . emacsvox)))
 
-(defun ems--read-multiple-choice-before (&rest _)
-  "speak."
+(defun emacsvox--advice-read-multiple-choice-before
+    (prompt choices &rest _)
+  "Speak PROMPT and CHOICES before prompting."
   (let
-      ((dtk-stop-immediately nil) (msg (ad-get-arg 0))
-       (choices
+      ((dtk-stop-immediately nil)
+       (spoken-choices
         (mapcar
          #'(lambda (c) (format "%c: %s" (cl-first c) (cl-second c)))
-         (ad-get-arg 1)))
+         choices))
        (details
         (mapcar
          #'(lambda (c)
              (format "%c: %s: %s" (cl-first c) (cl-second c)
                      (or (cl-third c) "")))
-         (ad-get-arg 1))))
+         choices)))
     (emacsvox-icon 'open-object)
     (ems--log-message
-     (concat msg (mapconcat #'identity details "\n ")))
-    (dtk-notify msg) (sox-tones 2 2) (dtk-speak-list choices)))
+     (concat prompt (mapconcat #'identity details "\n ")))
+    (dtk-notify prompt)
+    (sox-tones 2 2)
+    (dtk-speak-list spoken-choices)))
 
-(advice-add 'read-multiple-choice :before
-            #'ems--read-multiple-choice-before)
+(advice-add
+ 'read-multiple-choice :before
+ #'emacsvox--advice-read-multiple-choice-before
+ '((name . emacsvox)))
 
 (cl-loop
  for f in
@@ -971,58 +981,79 @@ positions.  ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;; read-password--hide-password
 
-(defun ems--read-passwd--hide-password-after (&rest _)
-  "Icon."
+(defun emacsvox--advice-read-passwd--hide-password-after (&rest _)
+  "Speak the masked or visible password character."
   (dtk-notify
    (if read-passwd--hide-password "dot"
      (if (characterp last-input-event) (format "%c" last-input-event)
        "dot")))
   (emacsvox-icon 'repeat-active))
 
-(advice-add 'read-passwd--hide-password :after
-            #'ems--read-passwd--hide-password-after)
+(advice-add
+ 'read-passwd--hide-password :after
+ #'emacsvox--advice-read-passwd--hide-password-after
+ '((name . emacsvox)))
 
-(defun ems--read-passwd-toggle-visibility-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-read-passwd-toggle-visibility-after (&rest _)
+  "Announce an interactive password visibility change."
+  (when (ems-interactive-p 'read-passwd-toggle-visibility)
     (emacsvox-icon (if read-passwd--hide-password 'off 'on))))
 
-(advice-add 'read-passwd-toggle-visibility :after
-            #'ems--read-passwd-toggle-visibility-after)
+(advice-add
+ 'read-passwd-toggle-visibility :after
+ #'emacsvox--advice-read-passwd-toggle-visibility-after
+ '((name . emacsvox)))
 
-(defun ems--read-passwd-before (&rest _)
-  "speak." (emacsvox-icon 'open-object)
-  (dtk-speak (or (ad-get-arg 0) "password: ")) (emacsvox-icon 'pwd))
+(defun emacsvox--advice-read-passwd-before (&optional prompt &rest _)
+  "Speak PROMPT before reading a password."
+  (emacsvox-icon 'open-object)
+  (dtk-speak (or prompt "password: "))
+  (emacsvox-icon 'pwd))
 
-(advice-add 'read-passwd :before #'ems--read-passwd-before)
+(advice-add
+ 'read-passwd :before #'emacsvox--advice-read-passwd-before
+ '((name . emacsvox)))
 
 (defvar emacsvox-read-char-prompt-cache nil
   "Cache prompt from read-char etc.")
 
-(cl-loop
- for f in
- '(read-key read-key-sequence read-key-sequence-vector
-            read-char read-char-exclusive)
- do
- (eval
-  `(defadvice ,f (before emacsvox pre act comp)
-     "Speak prompt"
-     (let ((prompt (ad-get-arg 0)))
-       (emacsvox-icon 'char)
-       (setq emacsvox-last-message prompt)
-       (setq emacsvox-read-char-prompt-cache prompt)
-       (tts-with-punctuations 'all (dtk-notify (or prompt "key")))))))
+(defmacro emacsvox-advice--define-read-prompt-advice (targets)
+  "Define native prompt advice for each key reader in TARGETS."
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-before" target))))
+            `(progn
+               (defun ,function (&optional prompt &rest _)
+                 ,(format "Speak PROMPT before calling `%s'." target)
+                 (emacsvox-icon 'char)
+                 (setq emacsvox-last-message prompt)
+                 (setq emacsvox-read-char-prompt-cache prompt)
+                 (tts-with-punctuations
+                  'all (dtk-notify (or prompt "key"))))
+               (advice-add
+                ',target :before #',function '((name . emacsvox))))))
+        targets)))
 
-(defun ems--read-char-choice-before (&rest _)
-  "Speak the prompt. "
-  (let*
-      ((prompt (ad-get-arg 0)) (chars (ad-get-arg 1))
-       (m
+(emacsvox-advice--define-read-prompt-advice
+ (read-key read-key-sequence read-key-sequence-vector
+           read-char read-char-exclusive))
+
+(defun emacsvox--advice-read-char-choice-before (prompt characters &rest _)
+  "Speak PROMPT and permitted CHARACTERS before reading a choice."
+  (let
+      ((message
         (format "%s: %s" prompt
-                (mapconcat #'(lambda (c) (format "%c" c)) chars ", "))))
-    (ems--log-message m) (tts-with-punctuations 'all (dtk-speak m))))
+                (mapconcat
+                 #'(lambda (character) (format "%c" character))
+                 characters ", "))))
+    (ems--log-message message)
+    (tts-with-punctuations 'all (dtk-speak message))))
 
-(advice-add 'read-char-choice :before #'ems--read-char-choice-before)
+(advice-add
+ 'read-char-choice :before #'emacsvox--advice-read-char-choice-before
+ '((name . emacsvox)))
 
 ;;;  advice completion functions to speak:
 
