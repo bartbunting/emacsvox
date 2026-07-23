@@ -48,45 +48,55 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'xref)
 
 ;;;   Advice Interactive Commands:
 
 (cl-loop
- for   f in 
+ for target in
  '(
    xref-find-definitions xref-pop-marker-stack pop-tag-mark
    xref-next-line xref-prev-line xref-go-back
-   xref-find-regexp  xref-pop-marker-stack
    xref-find-apropos xref-goto-xref)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre  act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive Xref movement command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'large-movement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in 
+ for target in
  '(
    xref-find-definitions-other-frame  xref-find-definitions-other-window
    xref-show-location-at-point)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre  act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (message "Displayed cross-reference.")
-       (emacsvox-icon 'select-object)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Announce a cross-reference displayed by an interactive command."
+       (when (ems-interactive-p ',target)
+         (message "Displayed cross-reference.")
+         (emacsvox-icon 'select-object)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--xref-find-references-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'task-done)))
+(defun emacsvox--advice-xref-find-references-after (&rest _)
+  "Speak after interactively finding Xref references."
+  (when (ems-interactive-p 'xref-find-references)
+    (emacsvox-speak-line)
+    (emacsvox-icon 'task-done)))
 
-(advice-add 'xref-find-references :after
-            #'ems--xref-find-references-after)
+(advice-add
+ 'xref-find-references :after
+ #'emacsvox--advice-xref-find-references-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-xref)
 ;;;  end of file
-
