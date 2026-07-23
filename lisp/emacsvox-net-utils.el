@@ -44,25 +44,28 @@
 ;;; Code:
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'net-utils)
 
 ;;;  advice
 
 (cl-loop
- for f in
+ for target in
  '(
    arp route traceroute
    ifconfig iwconfig ping netstat
    dns-lookup-host nslookup-host)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "Speak output"
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (message "Displayed results of %s in other window"
-                (quote ,f))))))
+  `(progn
+     (defun ,function (&rest _)
+       "Announce results after an interactive network utility command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (message "Displayed results of %s in other window" ',target)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (provide 'emacsvox-net-utils)
 
 ;;;  end of file 
-

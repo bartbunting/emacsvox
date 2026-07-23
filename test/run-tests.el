@@ -84,6 +84,7 @@
   (require 'emacsvox-calendar-tests)
   (require 'emacsvox-wdired-tests)
   (require 'emacsvox-tabulated-list-tests)
+  (require 'emacsvox-net-utils-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
