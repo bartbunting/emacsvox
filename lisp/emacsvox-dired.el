@@ -113,18 +113,32 @@ If in locate-mode, speak full pathname."
   "Set up emacsvox dired."
   (emacsvox-dired-label-fields)
   (emacsvox-dired-setup-keys))
-(cl-loop
- for  f in
- '(dired ido-dired dired-jump
-         dired-other-window dired-other-frame)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Set up emacsvox."
-     (when (ems-interactive-p)
-       (emacsvox-dired-initialize)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+
+(defmacro emacsvox-dired--define-after-advice
+    (targets docstring &rest body)
+  "Define native after advice for each command in TARGETS.
+DOCSTRING and BODY define the feedback function for each command."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--dired-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add
+                ',target :after #',function '((name . emacsvox))))))
+        targets)))
+
+(emacsvox-dired--define-after-advice
+    (dired ido-dired dired-jump dired-other-window dired-other-frame)
+    "Set up Emacsvox."
+  (emacsvox-dired-initialize)
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
 (defun ems--dired-find-file-around (orig-fun &rest args)
   "Produce an auditory icon."
@@ -140,33 +154,21 @@ If in locate-mode, speak full pathname."
 
 (advice-add 'dired-find-file :around #'ems--dired-find-file-around)
 
-(cl-loop
- for  f in
- '(
-   dired-next-subdir dired-prev-subdir
-   dired-tree-up dired-tree-down dired-up-directory
-   dired-next-marked-file dired-prev-marked-file
-   dired-next-dirline dired-prev-dirline
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the filename."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-dired-speak-line)))))
+(emacsvox-dired--define-after-advice
+    (dired-next-subdir dired-prev-subdir
+     dired-tree-up dired-tree-down dired-up-directory
+     dired-next-marked-file dired-prev-marked-file
+     dired-next-dirline dired-prev-dirline)
+    "Speak the filename."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-dired-speak-line))
 
-(cl-loop
- for f in
- '(dired-next-line dired-previous-line
-                   dired-unmark-backward dired-maybe-insert-subdir)
- do
- (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "Speak the filename."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-dired-speak-line)))))
+(emacsvox-dired--define-after-advice
+    (dired-next-line dired-previous-line
+     dired-unmark-backward dired-maybe-insert-subdir)
+    "Speak the filename."
+  (emacsvox-icon 'select-object)
+  (emacsvox-dired-speak-line))
 
 ;; Producing auditory icons:
 ;; These dired commands do some action that causes a state change:
@@ -378,16 +380,11 @@ On a directory line, run du -s on the directory to speak its size."
   (funcall-interactively
    #'dired (file-name-directory    (dired-get-filename))))
 
-(cl-loop
- for f in
- '(locate locate-with-filter)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'open-object)))))
+(emacsvox-dired--define-after-advice
+    (locate locate-with-filter)
+    "Speak the Locate results."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'open-object))
 (load "locate" t t)
 
 (cl-declaim (special locate-mode-map))
@@ -591,4 +588,3 @@ If on a directory, speak the total duration of all sound files under
 
 (provide 'emacsvox-dired)
 ;;;  emacs local variables
-
