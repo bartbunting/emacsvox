@@ -2065,19 +2065,14 @@ TARGET identifies the evaluation command."
 (advice-add 'abort-recursive-edit :after
             #'ems--abort-recursive-edit-after)
 
-(cl-loop
- for f in
- '(undo undo-redo undo-only)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line))
-       (if (buffer-modified-p)
-           (emacsvox-icon 'modified-object)
-         (emacsvox-icon 'unmodified-object))))))
+(emacsvox-advice--define-interactive-after-advice
+    (undo undo-redo undo-only)
+    "Speak the result and modified state of an interactive undo command."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line))
+  (if (buffer-modified-p)
+      (emacsvox-icon 'modified-object)
+    (emacsvox-icon 'unmodified-object)))
 
 (defun ems--view-emacs-news-after (&rest _)
   "Provide auditory cue."
