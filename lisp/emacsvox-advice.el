@@ -2639,36 +2639,29 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  abbrev mode advice
 
-(defun ems--abbrev-edit-save-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'save-object) (dtk-speak "Saved Abbrevs")))
+(emacsvox-advice--define-interactive-after-advice
+    (abbrev-edit-save-buffer)
+    "Cue saving the edited abbrev definitions."
+  (emacsvox-icon 'save-object)
+  (dtk-speak "Saved Abbrevs"))
 
-(advice-add 'abbrev-edit-save-buffer :after
-            #'ems--abbrev-edit-save-buffer-after)
+(emacsvox-advice--define-interactive-after-advice
+    (edit-abbrevs-redefine)
+    "Cue redefining abbrevs from the edit buffer."
+  (emacsvox-icon 'task-done)
+  (dtk-speak "Redefined abbrevs"))
 
-(defun ems--edit-abbrevs-redefine-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (dtk-speak "Redefined abbrevs")))
+(emacsvox-advice--define-interactive-after-advice
+    (list-abbrevs)
+    "Announce display of the abbrev list."
+  (emacsvox-icon 'open-object)
+  (message "Displayed abbrevs in other window."))
 
-(advice-add 'edit-abbrevs-redefine :after
-            #'ems--edit-abbrevs-redefine-after)
-
-(defun ems--list-abbrevs-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message "Displayed abbrevs in other window.")))
-
-(advice-add 'list-abbrevs :after #'ems--list-abbrevs-after)
-
-(defun ems--edit-abbrevs-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'edit-abbrevs :after #'ems--edit-abbrevs-after)
+(emacsvox-advice--define-interactive-after-advice
+    (edit-abbrevs)
+    "Cue opening the abbrev editor and speak its mode line."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
 (defun emacsvox--advice-expand-abbrev-around
     (original &rest arguments)
@@ -2687,13 +2680,11 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
  'expand-abbrev :around #'emacsvox--advice-expand-abbrev-around
  '((name . emacsvox)))
 
-(defun ems--abbrev-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'button)
-    (message "Turned %s abbrev mode" (if abbrev-mode "on" "off"))))
-
-(advice-add 'abbrev-mode :after #'ems--abbrev-mode-after)
+(emacsvox-advice--define-interactive-after-advice
+    (abbrev-mode)
+    "Announce the new abbrev mode state."
+  (emacsvox-icon 'button)
+  (message "Turned %s abbrev mode" (if abbrev-mode "on" "off")))
 
 ;;;  advice where-is and friends
 
