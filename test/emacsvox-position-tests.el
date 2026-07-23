@@ -17,7 +17,8 @@
 (defconst emacsvox-test--position-after-targets
   '(beginning-of-line move-beginning-of-line
     end-of-line move-end-of-line
-    yank yank-pop)
+    yank yank-pop
+    line-number-mode column-number-mode)
   "Point-editing commands using generated native after advice.")
 
 (ert-deftest emacsvox-position-advice-is-directly-registered ()
@@ -85,6 +86,21 @@
        (equal
         (nreverse events)
         '((icon yank-object) (speak-region 2 5)))))))
+
+(ert-deftest emacsvox-position-indicator-feedback-is-target-aware ()
+  "Only the toggled position indicator cues and speaks the mode line."
+  (let ((ems--interactive-fn-name 'column-number-mode)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-line-number-mode-after)
+      (emacsvox--advice-column-number-mode-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon button) speak-mode-line)))))
 
 (provide 'emacsvox-position-tests)
 ;;; emacsvox-position-tests.el ends here

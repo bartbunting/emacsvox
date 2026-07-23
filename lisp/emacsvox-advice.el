@@ -1463,19 +1463,11 @@ to ORIGINAL unchanged."
   (message "Displayed key bindings in help window")
   (emacsvox-icon 'help))
 
-(defun ems--line-number-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'button) (emacsvox-speak-mode-line)))
-
-(advice-add 'line-number-mode :after #'ems--line-number-mode-after)
-
-(defun ems--column-number-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'button) (emacsvox-speak-mode-line)))
-
-(advice-add 'column-number-mode :after #'ems--column-number-mode-after)
+(emacsvox-advice--define-interactive-after-advice
+    (line-number-mode column-number-mode)
+    "Cue a position indicator toggle and speak the resulting mode line."
+  (emacsvox-icon 'button)
+  (emacsvox-speak-mode-line))
 
 (defun emacsvox--advice-not-modified-after (&optional argument)
   "Provide an auditory icon."
