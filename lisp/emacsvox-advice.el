@@ -3402,12 +3402,11 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
   (emacsvox-speak-char t))
 ;;; Compose Mail:
 
-(defun ems--compose-mail-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
-
-(advice-add 'compose-mail :after #'ems--compose-mail-after)
+(emacsvox-advice--define-interactive-after-advice
+    (compose-mail)
+    "Cue opening a mail composition buffer and speak its current line."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
 ;;; Speaking Spaces:
 

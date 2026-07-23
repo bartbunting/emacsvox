@@ -31,7 +31,7 @@
   "Mail field commands converted to per-target native advice.")
 
 (defconst emacsvox-test--mail-action-targets
-  '(mail-signature mail-send-and-exit)
+  '(mail-signature mail-send-and-exit compose-mail)
   "Mail actions converted to per-target native advice.")
 
 (defun emacsvox-test--mail-field-advice-function (target)
@@ -119,6 +119,20 @@
      (equal
       (nreverse events)
       '((icon close-object) speak-mode-line)))))
+
+(ert-deftest emacsvox-compose-mail-feedback-preserves-order ()
+  "Interactive composition cues opening before speaking its current line."
+  (let ((ems--interactive-fn-name 'compose-mail)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-compose-mail-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object) speak-line)))))
 
 (provide 'emacsvox-mail-tests)
 ;;; emacsvox-mail-tests.el ends here
