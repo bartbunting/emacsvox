@@ -54,16 +54,18 @@
 ;;;  advice window navigation
 
 (cl-loop
- for f in
- '(windmove-left windmove-right windmove-up windmove-down)
+ for target in '(windmove-left windmove-right windmove-up windmove-down)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice  ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-mode-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak the window selected by an interactive windmove command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-mode-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (provide 'emacsvox-windmove)
 ;;;  end of file
-
