@@ -3180,16 +3180,11 @@ Produce an auditory icon if possible."
 
 ;;; Help Navigation:
 
-(cl-loop
- for f in
- '(help-goto-next-page help-goto-previous-page)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'scroll)
-       (emacsvox-speak-line)))))
+(emacsvox-advice--define-interactive-after-advice
+    (help-goto-next-page help-goto-previous-page)
+    "Speak the destination after navigating between Help pages."
+  (emacsvox-icon 'scroll)
+  (emacsvox-speak-line))
 
 ;;; C-x x commands
 

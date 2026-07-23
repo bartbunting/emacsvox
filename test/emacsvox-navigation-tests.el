@@ -25,7 +25,11 @@
     (text-property-search-backward :filter-return
      emacsvox--advice-text-property-search-backward-filter-return)
     (text-property-search-forward :filter-return
-     emacsvox--advice-text-property-search-forward-filter-return))
+     emacsvox--advice-text-property-search-forward-filter-return)
+    (help-goto-next-page :after
+     emacsvox--advice-help-goto-next-page-after)
+    (help-goto-previous-page :after
+     emacsvox--advice-help-goto-previous-page-after))
   "Source navigation commands using individually named native advice.")
 
 (ert-deftest emacsvox-navigation-advice-is-directly-registered ()
@@ -125,6 +129,21 @@
      (equal
       (nreverse events)
       '((icon warn-user) speak-line)))))
+
+(ert-deftest emacsvox-help-page-feedback-is-target-aware ()
+  "Only the matching interactive Help page command speaks its destination."
+  (let ((ems--interactive-fn-name 'help-goto-previous-page)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-help-goto-next-page-after)
+      (emacsvox--advice-help-goto-previous-page-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon scroll) speak-line)))))
 
 (provide 'emacsvox-navigation-tests)
 ;;; emacsvox-navigation-tests.el ends here
