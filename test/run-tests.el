@@ -41,6 +41,7 @@
   (require 'emacsvox-rectangle-tests)
   (require 'emacsvox-register-tests)
   (require 'emacsvox-button-tests)
+  (require 'emacsvox-tooltip-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

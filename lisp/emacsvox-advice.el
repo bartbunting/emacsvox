@@ -2059,29 +2059,63 @@ the newly created  line."
   "Enable to get tooltips spoken."
   :type 'boolean
   :group 'emacsvox)
-(cl-loop
- for f in
- '(tooltip-show-help tooltip-show-help-non-mode) do
- (eval
-  `(defadvice   ,f  (around emacsvox pre act comp)
-     "speak."
-     (ems-with-messages-silenced ad-do-it)
-     (cond
-      (emacsvox-speak-tooltips
-       (let ((msg (ad-get-arg 0)))
-         (when msg (dtk-speak msg))))))))
 
-(cl-loop
- for f in
- '(tooltip-show-help-non-mode tooltip-sho)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the tooltip."
-     (when emacsvox-speak-tooltips
-       (let ((help (ad-get-arg 0)))
-         (dtk-speak help)
-         (emacsvox-icon 'help))))))
+(defun emacsvox--tooltip-show-around
+    (original help &rest arguments)
+  "Call ORIGINAL quietly, then optionally speak HELP.
+ARGUMENTS are the remaining arguments passed to ORIGINAL."
+  (let (result)
+    (ems-with-messages-silenced
+      (setq result (apply original help arguments)))
+    (when (and emacsvox-speak-tooltips help)
+      (dtk-speak help))
+    result))
+
+(defun emacsvox--advice-tooltip-show-help-around
+    (original help &rest arguments)
+  "Call `tooltip-show-help' quietly and optionally speak HELP."
+  (apply
+   #'emacsvox--tooltip-show-around original help arguments))
+
+(advice-add
+ 'tooltip-show-help :around
+ #'emacsvox--advice-tooltip-show-help-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-tooltip-show-help-non-mode-around
+    (original help &rest arguments)
+  "Call `tooltip-show-help-non-mode' quietly and optionally speak HELP."
+  (apply
+   #'emacsvox--tooltip-show-around original help arguments))
+
+(advice-add
+ 'tooltip-show-help-non-mode :around
+ #'emacsvox--advice-tooltip-show-help-non-mode-around
+ '((name . emacsvox-tooltip-around)))
+
+(defun emacsvox--tooltip-show-after (help)
+  "Speak HELP and play its icon when tooltip speech is enabled."
+  (when emacsvox-speak-tooltips
+    (dtk-speak help)
+    (emacsvox-icon 'help)))
+
+(defun emacsvox--advice-tooltip-show-help-non-mode-after
+    (help &rest _)
+  "Speak HELP after `tooltip-show-help-non-mode'."
+  (emacsvox--tooltip-show-after help))
+
+(advice-add
+ 'tooltip-show-help-non-mode :after
+ #'emacsvox--advice-tooltip-show-help-non-mode-after
+ '((name . emacsvox-tooltip-after)))
+
+(defun emacsvox--advice-tooltip-sho-after (help &rest _)
+  "Speak HELP after the legacy `tooltip-sho' entry point."
+  (emacsvox--tooltip-show-after help))
+
+(advice-add
+ 'tooltip-sho :after #'emacsvox--advice-tooltip-sho-after
+ '((name . emacsvox)))
 
 ;;;  Emacs server
 (defun emacsvox-speak-announce-server-buffer ()
