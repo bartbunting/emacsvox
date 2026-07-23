@@ -20,7 +20,9 @@
 (require 'org-goto)
 (require 'org-agenda)
 (require 'org-archive)
+(require 'org-capture)
 (require 'org-src)
+(require 'ox-md)
 
 (defconst emacsvox-test--org-structure-after-targets
   '(org-next-item org-previous-item
@@ -70,6 +72,11 @@
     org-edit-src-code org-edit-special org-switchb
     org-fill-paragraph org-todo)
   "Native after-advice targets in the Org editing slice.")
+
+(defconst emacsvox-test--org-capture-after-targets
+  '(org-capture-goto-last-stored org-capture-goto-target
+    org-capture-finalize org-capture-kill org-md-export-as-markdown)
+  "Native after-advice targets in the Org capture slice.")
 
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice bypasses the compatibility bridge."
@@ -333,6 +340,70 @@
      (equal
       (nreverse events)
       '((icon button) "DONE")))))
+
+(ert-deftest emacsvox-org-capture-advice-is-directly-registered ()
+  "Org capture advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--org-capture-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-org-last-capture-feedback-is-target-aware ()
+  "Visiting the last capture only reports an interactive invocation."
+  (let ((ems--interactive-fn-name 'org-capture-goto-last-stored)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-org-capture-goto-last-stored-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon large-movement) speak-line)))))
+
+(ert-deftest emacsvox-org-capture-target-feedback-remains-unconditional ()
+  "Internally selected capture targets still cue and speak."
+  (let ((ems--interactive-fn-name nil)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-line)
+               (lambda () (push 'speak-line events))))
+      (emacsvox--advice-org-capture-goto-target-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon large-movement) speak-line)))))
+
+(ert-deftest emacsvox-org-capture-lifecycle-cues-remain-unconditional ()
+  "Finalizing and cancelling captures always emit their lifecycle cues."
+  (let ((ems--interactive-fn-name nil)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-org-capture-finalize-after)
+      (emacsvox--advice-org-capture-kill-after))
+    (should (equal (nreverse events) '(save-object close-object)))))
+
+(ert-deftest emacsvox-org-markdown-export-feedback-is-target-aware ()
+  "Interactive Markdown export cues completion and speaks the mode line."
+  (let ((ems--interactive-fn-name 'org-md-export-as-markdown)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'mode-line events))))
+      (emacsvox--advice-org-md-export-as-markdown-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon task-done) mode-line)))))
 
 (provide 'emacsvox-org-tests)
 ;;; emacsvox-org-tests.el ends here

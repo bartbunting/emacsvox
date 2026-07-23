@@ -653,30 +653,44 @@
 
 ;;;  org capture
 
-(defun ems--org-capture-goto-last-stored-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(defun emacsvox--advice-org-capture-goto-last-stored-after (&rest _)
+  "Cue and speak after interactively visiting the last capture."
+  (when (ems-interactive-p 'org-capture-goto-last-stored)
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
 
-(advice-add 'org-capture-goto-last-stored :after
-            #'ems--org-capture-goto-last-stored-after)
+(advice-add
+ 'org-capture-goto-last-stored :after
+ #'emacsvox--advice-org-capture-goto-last-stored-after
+ '((name . emacsvox)))
 
-(defun ems--org-capture-goto-target-after (&rest _)
-  "speak." (emacsvox-icon 'large-movement) (emacsvox-speak-line))
+(defun emacsvox--advice-org-capture-goto-target-after (&rest _)
+  "Cue and speak after visiting an Org capture target."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
 
-(advice-add 'org-capture-goto-target :after
-            #'ems--org-capture-goto-target-after)
+(advice-add
+ 'org-capture-goto-target :after
+ #'emacsvox--advice-org-capture-goto-target-after
+ '((name . emacsvox)))
 
-(defun ems--org-capture-finalize-after (&rest _)
-  "speak." (emacsvox-icon 'save-object))
+(defun emacsvox--advice-org-capture-finalize-after (&rest _)
+  "Cue after finalizing an Org capture."
+  (emacsvox-icon 'save-object))
 
-(advice-add 'org-capture-finalize :after
-            #'ems--org-capture-finalize-after)
+(advice-add
+ 'org-capture-finalize :after
+ #'emacsvox--advice-org-capture-finalize-after
+ '((name . emacsvox)))
 
-(defun ems--org-capture-kill-after (&rest _)
-  "speak." (emacsvox-icon 'close-object))
+(defun emacsvox--advice-org-capture-kill-after (&rest _)
+  "Cue after cancelling an Org capture."
+  (emacsvox-icon 'close-object))
 
-(advice-add 'org-capture-kill :after #'ems--org-capture-kill-after)
+(advice-add
+ 'org-capture-kill :after
+ #'emacsvox--advice-org-capture-kill-after
+ '((name . emacsvox)))
 
 (defun emacsvox-org-table-speak-current-element ()
   "echoes current table element"
@@ -937,13 +951,16 @@ arg just opens the file"
 
 ;;; md export:
 
-(defun ems--org-md-export-as-markdown-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-org-md-export-as-markdown-after (&rest _)
+  "Cue and speak after an interactive Org Markdown export."
+  (when (ems-interactive-p 'org-md-export-as-markdown)
+    (emacsvox-icon 'task-done)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'org-md-export-as-markdown :after
-            #'ems--org-md-export-as-markdown-after)
+(advice-add
+ 'org-md-export-as-markdown :after
+ #'emacsvox--advice-org-md-export-as-markdown-after
+ '((name . emacsvox)))
 
 ;;; Amark:
 
