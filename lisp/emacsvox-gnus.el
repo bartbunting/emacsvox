@@ -352,67 +352,83 @@ instead you hear only the first screenful."
  '((name . emacsvox)))
 
 ;;;   summary mode 
+
 (cl-loop
- for f in
+ for target in
  '(
    gnus-summary-clear-mark-backward gnus-summary-clear-mark-forward
    gnus-summary-mark-as-dormant gnus-summary-mark-as-expirable
    gnus-summary-mark-as-processable
    gnus-summary-tick-article-backward gnus-summary-tick-article-forward
-   ) do
+   )
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
  (eval
-  `(defadvice   ,f (around  emacsvox pre act comp)
-     "Speak the article  line.
- Produce an auditory icon if possible."
-     (let ((saved-point (point)))
-       ad-do-it
-       (when (ems-interactive-p)
-         (if (= saved-point (point))
-             (emacsvox-pip "No more articles")
-           (progn 
-             (emacsvox-icon 'mark-object)
-             (emacsvox-gnus-summary-speak-subject))))
-       ad-return-value))))
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Mark via ORIGINAL once, then report interactive movement."
+       (let ((saved-point (point)))
+         (let ((result (apply original arguments)))
+           (when (ems-interactive-p ',target)
+             (if (= saved-point (point))
+                 (emacsvox-pip "No more articles")
+               (emacsvox-icon 'mark-object)
+               (emacsvox-gnus-summary-speak-subject)))
+           result)))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
-(defun ems--gnus-summary-unmark-as-processable-after (&rest _)
+(defun emacsvox--advice-gnus-summary-unmark-as-processable-after
+    (&rest _)
   "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-summary-unmark-as-processable)
     (emacsvox-icon 'deselect-object)
     (emacsvox-gnus-summary-speak-subject)))
 
-(advice-add 'gnus-summary-unmark-as-processable :after
-            #'ems--gnus-summary-unmark-as-processable-after)
+(advice-add
+ 'gnus-summary-unmark-as-processable :after
+ #'emacsvox--advice-gnus-summary-unmark-as-processable-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-summary-delete-article-after (&rest _)
+(defun emacsvox--advice-gnus-summary-delete-article-after (&rest _)
   "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnus-summary-delete-article)
     (emacsvox-icon 'delete-object)
     (emacsvox-gnus-summary-speak-subject)))
 
-(advice-add 'gnus-summary-delete-article :after
-            #'ems--gnus-summary-delete-article-after)
+(advice-add
+ 'gnus-summary-delete-article :after
+ #'emacsvox--advice-gnus-summary-delete-article-after
+ '((name . emacsvox)))
 
 (cl-loop
- for f in
- '(
-   gnus-summary-catchup-to-here gnus-summary-catchup-from-here
-   ) do
+ for target in
+ '(gnus-summary-catchup-to-here gnus-summary-catchup-from-here)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
  (eval
-  `(defadvice  ,f (after emacsvox pre act comp)
-     "Speak the line.
- Produce an auditory icon if possible."
-     (when (ems-interactive-p)
-       (emacsvox-icon  'mark-object)
-       (emacsvox-gnus-summary-speak-subject)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively catching up articles."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'mark-object)
+         (emacsvox-gnus-summary-speak-subject)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--gnus-summary-select-article-buffer-after (&rest _)
+(defun emacsvox--advice-gnus-summary-select-article-buffer-after
+    (&rest _)
   "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
+  (when (ems-interactive-p 'gnus-summary-select-article-buffer)
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'gnus-summary-select-article-buffer :after
-            #'ems--gnus-summary-select-article-buffer-after)
+(advice-add
+ 'gnus-summary-select-article-buffer :after
+ #'emacsvox--advice-gnus-summary-select-article-buffer-after
+ '((name . emacsvox)))
 
+;; Article movement feedback is grouped with article-display advice below.
 (defun ems--gnus-summary-prev-article-after (&rest _)
   "Speak the article. "
   (when (ems-interactive-p) (emacsvox-gnus-speak-article-body)))
@@ -427,173 +443,94 @@ instead you hear only the first screenful."
 (advice-add 'gnus-summary-next-article :after
             #'ems--gnus-summary-next-article-after)
 
-(defun ems--gnus-summary-exit-no-update-around (orig-fun &rest args)
-  "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((cur-group gnus-newsgroup-name))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (emacsvox-icon 'close-object) (dtk-stop)
-        (if (eq cur-group (gnus-group-group-name))
-            (emacsvox-pip "No more unread newsgroups")
-          (progn (emacsvox-speak-line))))
-      result)
-    result))
+(cl-loop
+ for target in
+ '(gnus-summary-exit-no-update gnus-summary-exit)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Exit via ORIGINAL once and describe the selected Gnus group."
+       (let ((current-group gnus-newsgroup-name))
+         (let ((result (apply original arguments)))
+           (when (ems-interactive-p ',target)
+             (emacsvox-icon 'close-object)
+             (dtk-stop)
+             (if (eq current-group (gnus-group-group-name))
+                 (emacsvox-pip "No more unread newsgroups")
+               (emacsvox-speak-line)))
+           result)))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
-(advice-add 'gnus-summary-exit-no-update :around
-            #'ems--gnus-summary-exit-no-update-around)
+(cl-loop
+ for target in
+ '(gnus-summary-prev-subject
+   gnus-summary-next-subject
+   gnus-summary-prev-unread-subject
+   gnus-summary-next-unread-subject
+   gnus-summary-goto-subject)
+ for no-more-message in
+ '("No more articles "
+   "No more articles "
+   "No more unread articles "
+   "No more articles "
+   "No more articles ")
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Move via ORIGINAL once and speak the resulting Gnus subject."
+       (let ((saved-point (point)))
+         (let ((result (apply original arguments)))
+           (when (ems-interactive-p ',target)
+             (if (= saved-point (point))
+                 (emacsvox-pip ,no-more-message)
+               (emacsvox-icon 'select-object)
+               (dtk-speak (gnus-summary-article-subject))))
+           result)))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
-(defun ems--gnus-summary-exit-around (orig-fun &rest args)
-  "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((cur-group gnus-newsgroup-name))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (emacsvox-icon 'close-object) (dtk-stop)
-        (if (eq cur-group (gnus-group-group-name))
-            (emacsvox-pip "No more unread newsgroups")
-          (progn (emacsvox-speak-line))))
-      result)
-    result))
-
-(advice-add 'gnus-summary-exit :around #'ems--gnus-summary-exit-around)
-
-(defun ems--gnus-summary-prev-subject-around (orig-fun &rest args)
-  "Speak the article  line.\n Produce an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((saved-point (point)))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (if (= saved-point (point))
-            (emacsvox-pip "No more articles ")
-          (progn
-            (emacsvox-icon 'select-object)
-            (dtk-speak (gnus-summary-article-subject)))))
-      result)
-    result))
-
-(advice-add 'gnus-summary-prev-subject :around
-            #'ems--gnus-summary-prev-subject-around)
-
-(defun ems--gnus-summary-next-subject-around (orig-fun &rest args)
-  "Speak the article  line. \nProduce an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((saved-point (point)))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (if (= saved-point (point))
-            (emacsvox-pip "No more articles ")
-          (progn
-            (emacsvox-icon 'select-object)
-            (dtk-speak (gnus-summary-article-subject)))))
-      result)
-    result))
-
-(advice-add 'gnus-summary-next-subject :around
-            #'ems--gnus-summary-next-subject-around)
-
-(defun ems--gnus-summary-prev-unread-subject-around
-    (orig-fun &rest args)
-  "Speak the article  line.\n Produce an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((saved-point (point)))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (if (= saved-point (point))
-            (emacsvox-pip "No more unread articles ")
-          (progn
-            (emacsvox-icon 'select-object)
-            (dtk-speak (gnus-summary-article-subject)))))
-      result)
-    result))
-
-(advice-add 'gnus-summary-prev-unread-subject :around
-            #'ems--gnus-summary-prev-unread-subject-around)
-
-(defun ems--gnus-summary-next-unread-subject-around
-    (orig-fun &rest args)
-  "Speak the article line.\nProduce an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((saved-point (point)))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (if (= saved-point (point))
-            (emacsvox-pip "No more articles ")
-          (progn
-            (emacsvox-icon 'select-object)
-            (dtk-speak (gnus-summary-article-subject)))))
-      result)
-    result))
-
-(advice-add 'gnus-summary-next-unread-subject :around
-            #'ems--gnus-summary-next-unread-subject-around)
-
-(defun ems--gnus-summary-goto-subject-around (orig-fun &rest args)
-  "Speak the article  line.\n Produce an auditory icon if possible."
-  (let ((result (apply orig-fun args)))
-    (let ((saved-point (point)))
-      (apply orig-fun args)
-      (when (ems-interactive-p)
-        (if (= saved-point (point))
-            (emacsvox-pip "No more articles ")
-          (progn
-            (emacsvox-icon 'select-object)
-            (dtk-speak (gnus-summary-article-subject)))))
-      result)
-    result))
-
-(advice-add 'gnus-summary-goto-subject :around
-            #'ems--gnus-summary-goto-subject-around)
-
-(defun ems--gnus-summary-catchup-and-exit-after (&rest _)
+(defun emacsvox--advice-gnus-summary-catchup-and-exit-after
+    (&rest _)
   "Speak the newsgroup line.\n Produce an auditory icon indicating \nthe previous group was closed."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'gnus-summary-catchup-and-exit)
+    (emacsvox-icon 'close-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'gnus-summary-catchup-and-exit :after
-            #'ems--gnus-summary-catchup-and-exit-after)
+(advice-add
+ 'gnus-summary-catchup-and-exit :after
+ #'emacsvox--advice-gnus-summary-catchup-and-exit-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-summary-mark-as-unread-forward-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-gnus-summary-speak-subject)))
+(cl-loop
+ for target in
+ '(gnus-summary-mark-as-read-forward
+   gnus-summary-mark-as-read-backward)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively marking articles as read."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'mark-object)
+         (emacsvox-gnus-summary-speak-subject)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'gnus-summary-mark-as-unread-forward :after
-            #'ems--gnus-summary-mark-as-unread-forward-after)
-
-(defun ems--gnus-summary-mark-as-read-forward-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-mark-as-read-forward :after
-            #'ems--gnus-summary-mark-as-read-forward-after)
-
-(defun ems--gnus-summary-mark-as-unread-backward-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-mark-as-unread-backward :after
-            #'ems--gnus-summary-mark-as-unread-backward-after)
-
-(defun ems--gnus-summary-mark-as-read-backward-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-mark-as-read-backward :after
-            #'ems--gnus-summary-mark-as-read-backward-after)
-
-(defun ems--gnus-summary-kill-same-subject-and-select-after (&rest _)
+(defun emacsvox--advice-gnus-summary-kill-same-subject-and-select-after
+    (&rest _)
   "Speak the subject and speak the first screenful.\nProduce an auditory icon\nindicating the article is being opened."
   
-  (when (ems-interactive-p)
-    (emacsvox-gnus-summary-speak-subject) (sit-for 2)
+  (when
+      (ems-interactive-p
+       'gnus-summary-kill-same-subject-and-select)
+    (emacsvox-gnus-summary-speak-subject)
+    (sit-for 2)
     (emacsvox-icon 'open-object)
     (with-current-buffer gnus-article-buffer
       (let
@@ -604,70 +541,39 @@ instead you hear only the first screenful."
             (move-to-window-line -1) (end-of-line)
             (emacsvox-speak-region start (point))))))))
 
-(advice-add 'gnus-summary-kill-same-subject-and-select :after
-            #'ems--gnus-summary-kill-same-subject-and-select-after)
+(advice-add
+ 'gnus-summary-kill-same-subject-and-select :after
+ #'emacsvox--advice-gnus-summary-kill-same-subject-and-select-after
+ '((name . emacsvox)))
 
-(defun ems--gnus-summary-kill-same-subject-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-gnus-summary-speak-subject)))
+(cl-loop
+ for target in
+ '(gnus-summary-kill-same-subject
+   gnus-summary-next-thread gnus-summary-prev-thread
+   gnus-summary-up-thread gnus-summary-down-thread
+   gnus-summary-kill-thread)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Gnus thread movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-gnus-summary-speak-subject)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'gnus-summary-kill-same-subject :after
-            #'ems--gnus-summary-kill-same-subject-after)
-
-(defun ems--gnus-summary-next-thread-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-next-thread :after
-            #'ems--gnus-summary-next-thread-after)
-
-(defun ems--gnus-summary-prev-thread-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-prev-thread :after
-            #'ems--gnus-summary-prev-thread-after)
-
-(defun ems--gnus-summary-up-thread-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-up-thread :after
-            #'ems--gnus-summary-up-thread-after)
-
-(defun ems--gnus-summary-down-thread-after (&rest _)
-  "Speak the line. \nProduce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-down-thread :after
-            #'ems--gnus-summary-down-thread-after)
-
-(defun ems--gnus-summary-kill-thread-after (&rest _)
-  "Speak the line.\n Produce an auditory icon if possible."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-gnus-summary-speak-subject)))
-
-(advice-add 'gnus-summary-kill-thread :after
-            #'ems--gnus-summary-kill-thread-after)
-
-(defun ems--gnus-summary-hide-all-threads-after (&rest _)
+(defun emacsvox--advice-gnus-summary-hide-all-threads-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'gnus-summary-hide-all-threads)
+    (emacsvox-icon 'close-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'gnus-summary-hide-all-threads :after
-            #'ems--gnus-summary-hide-all-threads-after)
+(advice-add
+ 'gnus-summary-hide-all-threads :after
+ #'emacsvox--advice-gnus-summary-hide-all-threads-after
+ '((name . emacsvox)))
 
 ;;;   Article reading
 
