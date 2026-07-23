@@ -49,6 +49,7 @@
   (require 'emacsvox-narrowing-tests)
   (require 'emacsvox-undo-tests)
   (require 'emacsvox-position-tests)
+  (require 'emacsvox-mark-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

@@ -2381,31 +2381,32 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 ;; Prevent push-mark from displaying its mark set message
 ;; when called from functions that know better.
 
-(defun ems--push-mark-around (orig-fun &rest args)
-  "Never show the mark set message."
-  (ems-with-messages-silenced (apply orig-fun args)))
+(defun emacsvox--advice-push-mark-around
+    (original &rest arguments)
+  "Call ORIGINAL with the mark-set message silenced."
+  (ems-with-messages-silenced (apply original arguments)))
 
-(advice-add 'push-mark :around #'ems--push-mark-around)
+(advice-add
+ 'push-mark :around #'emacsvox--advice-push-mark-around
+ '((name . emacsvox)))
 
-(cl-loop
- for f in
- '(set-mark-command pop-to-mark-command)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Produce an auditory icon if possible."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'mark-object)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line))))))
+(emacsvox-advice--define-interactive-after-advice
+    (set-mark-command pop-to-mark-command)
+    "Announce an interactive mark-ring operation."
+  (emacsvox-icon 'mark-object)
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)))
 
-(defun ems--pop-global-mark-after (&rest _)
-  "Speak buffer name if notification stream is available."
-  (when (ems-interactive-p)
-    (let ((emacsvox-show-point t)) (emacsvox-speak-line))
+(defun emacsvox--advice-pop-global-mark-after ()
+  "Speak the destination and buffer after popping the global mark."
+  (when (ems-interactive-p 'pop-global-mark)
+    (let ((emacsvox-show-point t))
+      (emacsvox-speak-line))
     (dtk-notify (buffer-name))))
 
-(advice-add 'pop-global-mark :after #'ems--pop-global-mark-after)
+(advice-add
+ 'pop-global-mark :after #'emacsvox--advice-pop-global-mark-after
+ '((name . emacsvox)))
 
 (defun ems--mark-defun-after (&rest _)
   "Produce an auditory icon if possible."
