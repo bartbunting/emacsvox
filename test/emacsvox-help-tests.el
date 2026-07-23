@@ -36,7 +36,15 @@
     (describe-keymap :filter-return
      emacsvox--advice-describe-keymap-filter-return)
     (apropos-follow :after
-     emacsvox--advice-apropos-follow-after))
+     emacsvox--advice-apropos-follow-after)
+    (help-with-tutorial :after
+     emacsvox--advice-help-with-tutorial-after)
+    (view-emacs-news :after
+     emacsvox--advice-view-emacs-news-after)
+    (view-echo-area-messages :after
+     emacsvox--advice-view-echo-area-messages-after)
+    (help-form-show :after
+     emacsvox--advice-help-form-show-after))
   "Help commands using individually named native advice.")
 
 (defconst emacsvox-test--help-description-targets
@@ -262,6 +270,78 @@
      (equal
       (nreverse events)
       '((icon select-object) speak-help)))))
+
+(ert-deftest emacsvox-tutorial-feedback-is-target-aware ()
+  "Interactive tutorial display configures and speaks its window in order."
+  (let ((ems--interactive-fn-name 'help-with-tutorial)
+        events)
+    (cl-letf (((symbol-function 'dtk-set-punctuations)
+               (lambda (mode) (push (list 'punctuations mode) events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-predefined-window)
+               (lambda (window) (push (list 'speak-window window) events))))
+      (emacsvox--advice-view-emacs-news-after)
+      (emacsvox--advice-help-with-tutorial-after))
+    (should
+     (equal
+      (nreverse events)
+      '((punctuations all)
+        (icon open-object)
+        (speak-window 1))))))
+
+(ert-deftest emacsvox-news-feedback-is-target-aware ()
+  "Interactive Emacs news display cues before speaking its mode line."
+  (let ((ems--interactive-fn-name 'view-emacs-news)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'speak-mode-line events))))
+      (emacsvox--advice-view-emacs-news-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object) speak-mode-line)))))
+
+(ert-deftest emacsvox-echo-area-feedback-is-target-aware ()
+  "Interactive echo-area viewing cues and reports its Messages window."
+  (let ((ems--interactive-fn-name 'view-echo-area-messages)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push
+                  (list 'message
+                        (apply #'format format-string arguments))
+                  events))))
+      (emacsvox--advice-view-echo-area-messages-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object)
+        (message "Displayed messages in other window."))))))
+
+(ert-deftest emacsvox-help-form-speaks-private-buffer-from-start ()
+  "The internal help callback speaks its live private buffer from point-min."
+  (let ((help-buffer (get-buffer-create emacsvox--help-char-helpbuf))
+        observations)
+    (unwind-protect
+        (progn
+          (with-current-buffer help-buffer
+            (erase-buffer)
+            (insert "Character help")
+            (goto-char (point-max)))
+          (cl-letf (((symbol-function 'emacsvox-speak-buffer)
+                     (lambda ()
+                       (push
+                        (list (current-buffer) (point))
+                        observations))))
+            (emacsvox--advice-help-form-show-after))
+          (should
+           (equal observations (list (list help-buffer 1)))))
+      (kill-buffer help-buffer))))
 
 (provide 'emacsvox-help-tests)
 ;;; emacsvox-help-tests.el ends here

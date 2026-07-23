@@ -1795,13 +1795,12 @@ TARGET identifies the key-description command."
   (emacsvox-icon 'help)
   (emacsvox-speak-help))
 
-(defun ems--help-with-tutorial-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-set-punctuations 'all) (emacsvox-icon 'open-object)
-    (emacsvox-speak-predefined-window 1)))
-
-(advice-add 'help-with-tutorial :after #'ems--help-with-tutorial-after)
+(emacsvox-advice--define-interactive-after-advice
+    (help-with-tutorial)
+    "Speak the tutorial window."
+  (dtk-set-punctuations 'all)
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-predefined-window 1))
 
 (defun ems--exchange-point-and-mark-after (&rest _)
   "Speak the line.\nIndicate large movement with an auditory icon if possible.\nAuditory highlight indicates position of point."
@@ -2067,24 +2066,25 @@ TARGET identifies the case command, and ACTION describes its result."
       (emacsvox-icon 'modified-object)
     (emacsvox-icon 'unmodified-object)))
 
-(defun ems--view-emacs-news-after (&rest _)
-  "Provide auditory cue."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'view-emacs-news :after #'ems--view-emacs-news-after)
+(emacsvox-advice--define-interactive-after-advice
+    (view-emacs-news)
+    "Cue and speak the mode line after displaying Emacs news."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
 (defvar emacsvox--help-char-helpbuf " *Char Help*"
   "This is hard-coded in subr.el")
 
-(defun ems--help-form-show-after (&rest _)
+(defun emacsvox--advice-help-form-show-after (&rest _)
   "Speak displayed help form."
-  
   (when (buffer-live-p (get-buffer emacsvox--help-char-helpbuf))
     (with-current-buffer emacsvox--help-char-helpbuf
-      (goto-char (point-min)) (emacsvox-speak-buffer))))
+      (goto-char (point-min))
+      (emacsvox-speak-buffer))))
 
-(advice-add 'help-form-show :after #'ems--help-form-show-after)
+(advice-add
+ 'help-form-show :after #'emacsvox--advice-help-form-show-after
+ '((name . emacsvox)))
 
 (defcustom emacsvox-speak-tooltips nil
   "Enable to get tooltips spoken."
@@ -2171,14 +2171,11 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  view echo area
 
-(defun ems--view-echo-area-messages-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message "Displayed messages in other window.")))
-
-(advice-add 'view-echo-area-messages :after
-            #'ems--view-echo-area-messages-after)
+(emacsvox-advice--define-interactive-after-advice
+    (view-echo-area-messages)
+    "Cue the Messages buffer displayed in another window."
+  (emacsvox-icon 'open-object)
+  (message "Displayed messages in other window."))
 
 ;;;  selective display
 
