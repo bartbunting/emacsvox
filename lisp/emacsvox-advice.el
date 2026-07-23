@@ -1447,32 +1447,23 @@ to ORIGINAL unchanged."
 
 (advice-add 'zap-to-char :after #'ems--zap-to-char-after)
 
-(defun ems--describe-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Displayed mode help") (emacsvox-icon 'help)))
+(emacsvox-advice--define-interactive-after-advice
+    (describe-mode)
+    "Announce display of mode help."
+  (message "Displayed mode help")
+  (emacsvox-icon 'help))
 
-(advice-add 'describe-mode :after #'ems--describe-mode-after)
+(emacsvox-advice--define-interactive-after-advice
+    (describe-repeat-maps)
+    "Announce display of repeat-mode help."
+  (message "Displayed  repeat-mode  help")
+  (emacsvox-icon 'help))
 
-(defun ems--describe-repeat-maps-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (message "Displayed  repeat-mode  help") (emacsvox-icon 'help)))
-
-(advice-add 'describe-repeat-maps :after
-            #'ems--describe-repeat-maps-after)
-
-(cl-loop
- for f in
- '(
-   describe-bindings describe-prefix-bindings isearch-describe-bindings)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (message "Displayed key bindings in help window")
-       (emacsvox-icon 'help)))))
+(emacsvox-advice--define-interactive-after-advice
+    (describe-bindings describe-prefix-bindings isearch-describe-bindings)
+    "Announce display of key bindings."
+  (message "Displayed key bindings in help window")
+  (emacsvox-icon 'help))
 
 (defun ems--line-number-mode-after (&rest _)
   "speak."
