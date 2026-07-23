@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Outline on 2026-07-23 on branch =bart=:
+EWW on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 383 passing ERT tests;
+- the Emacs 31 suite contains 405 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -52,17 +52,20 @@ Outline on 2026-07-23 on branch =bart=:
   accessors, or bridge-era =ems--= advice helpers.
 - =lisp/emacsvox-outline.el= contains no =defadvice= or positional
   compatibility accessors, including in its optional Foldout integration.
+- =lisp/emacsvox-eww.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         315 |   105 |
-| =ad-get-arg=        |          71 |   n/a |
-| =ad-set-arg=        |           3 |   n/a |
-| =ad-do-it=          |          42 |   n/a |
+| =defadvice=         |         307 |   104 |
+| =ad-get-arg=        |          67 |   n/a |
+| =ad-set-arg=        |           2 |   n/a |
+| =ad-do-it=          |          41 |   n/a |
 | =ad-return-value=   |          26 |   n/a |
-| =advice-add=        |        1419 |   156 |
+| =advice-add=        |        1418 |   156 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -81,10 +84,11 @@ function rather than returning the result of speech output.
 The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
 Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
-Outline and its optional Foldout integration are also converted.
+Outline and its optional Foldout integration, and EWW with its SHR rendering
+integration, are also converted.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 50 files still contain
+completely independent of the compatibility bridge; 49 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -128,6 +132,21 @@ The Outline conversion keeps hide/show announcements target-aware and gives
 =outline-flag-region= wrapper now calls the original exactly once, preserves
 the original return value, and mirrors Outline invisibility with native
 arguments.  Foldout advice remains deferred until Foldout loads.
+
+The EWW conversion is split into navigation, URL and media handling, SHR
+rendering, and lifecycle commits.  It targets the Emacs 31 SHR renderer
+=shr-tag-i= instead of the obsolete =shr-tag-it=, omits nonexistent
+=shr-tag-form= and =eww-quit= targets, and installs the local =shr-tag-math=
+implementation before its advice.  Unique native advice names prevent multiple
+advice on =shr-tag-div= and =eww-reload= from replacing each other.
+
+The URL conversion expresses user-agent transformation as =:filter-return= and
+Google URL cleanup as =:filter-args=.  The rendering conversion corrects
+bridge-era wrappers that called =shr-tag-table-1= and =shr-tag-div= twice.
+Lifecycle wrappers now call ordinary reload and readable operations exactly
+once and preserve their original return values.  Moving EWW setup after its
+renderer-filter definition also makes the module load correctly as source in a
+fresh Emacs.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
