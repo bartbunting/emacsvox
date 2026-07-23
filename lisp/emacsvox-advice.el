@@ -1285,27 +1285,41 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 
 ;;;  composing mail
 
-(cl-loop
- for f in
- '(mail mail-other-window mail-other-frame)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Give some auditory feedback."
-     (emacsvox-icon 'open-object)
-     (save-excursion
-       (goto-char (point-min))
-       (emacsvox-speak-line)))))
-(cl-loop
- for f in
- '(mail-text mail-subject mail-cc mail-bcc
-             mail-to mail-reply-to mail-fcc)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the reply-to line."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)))))
+(defun emacsvox--mail-compose-after (&rest _)
+  "Give auditory feedback after opening a mail composition buffer."
+  (emacsvox-icon 'open-object)
+  (save-excursion
+    (goto-char (point-min))
+    (emacsvox-speak-line)))
+
+(dolist (command '(mail mail-other-window mail-other-frame))
+  (advice-add
+   command :after #'emacsvox--mail-compose-after '((name . emacsvox))))
+
+(defmacro emacsvox-advice--define-interactive-after-advice
+    (targets docstring &rest body)
+  "Define native interactive after advice for each command in TARGETS.
+DOCSTRING and BODY define the feedback function for each command."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add
+                ',target :after #',function '((name . emacsvox))))))
+        targets)))
+
+(emacsvox-advice--define-interactive-after-advice
+    (mail-text mail-subject mail-cc mail-bcc
+     mail-to mail-reply-to mail-fcc)
+    "Speak the current mail header field."
+  (emacsvox-speak-line))
 
 (defun ems--mail-signature-after (&rest _)
   "Announce you signed the message."
@@ -3165,4 +3179,3 @@ Produce an auditory icon if possible."
 (provide 'emacsvox-advice)
 
 ;;;  end of file
-
