@@ -3026,19 +3026,35 @@ TARGET identifies the Elint command, and ARGUMENTS are passed unchanged."
 
 ;;;  browse-url
 
-(cl-loop for f in
-         '(browse-url-of-buffer browse-url-of-region)
-         do
-         (eval
-          `(defadvice ,f (around emacsvox pre act comp)
-             "Automatically speak results of rendering."
-             (cond
-              ((ems-interactive-p)
-               (emacsvox-icon 'open-object)
-               (emacsvox-eww-autospeak)
-               ad-do-it)
-              (t ad-do-it))
-             ad-return-value)))
+(defun emacsvox--browse-url-around (target original arguments)
+  "Call ORIGINAL and prepare speech for interactive browsing.
+TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
+  (when (ems-interactive-p target)
+    (emacsvox-icon 'open-object)
+    (emacsvox-eww-autospeak))
+  (apply original arguments))
+
+(defun emacsvox--advice-browse-url-of-buffer-around
+    (original &rest arguments)
+  "Call ORIGINAL after preparing speech for interactive buffer browsing."
+  (emacsvox--browse-url-around
+   'browse-url-of-buffer original arguments))
+
+(advice-add
+ 'browse-url-of-buffer :around
+ #'emacsvox--advice-browse-url-of-buffer-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-browse-url-of-region-around
+    (original &rest arguments)
+  "Call ORIGINAL after preparing speech for interactive region browsing."
+  (emacsvox--browse-url-around
+   'browse-url-of-region original arguments))
+
+(advice-add
+ 'browse-url-of-region :around
+ #'emacsvox--advice-browse-url-of-region-around
+ '((name . emacsvox)))
 
 ;;;  Cue input method changes
 

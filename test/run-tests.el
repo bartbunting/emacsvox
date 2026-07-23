@@ -52,6 +52,7 @@
   (require 'emacsvox-mark-tests)
   (require 'emacsvox-cleanup-tests)
   (require 'emacsvox-elint-tests)
+  (require 'emacsvox-browser-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
