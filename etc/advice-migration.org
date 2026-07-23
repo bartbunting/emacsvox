@@ -35,10 +35,10 @@ must become conservative and test-driven before further bulk use.
 
 * Progress Checkpoint
 
-As of the completed core-file migration and first built-in integration slices
-on 2026-07-23 on branch =bart=:
+As of the completed core-file migration and built-in integration slices through
+Org on 2026-07-23 on branch =bart=:
 
-- the Emacs 31 suite contains 344 passing ERT tests;
+- the Emacs 31 suite contains 375 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -47,18 +47,20 @@ on 2026-07-23 on branch =bart=:
 - the real =~/bin/emacsvox-test= launcher loads Emacsvox under Emacs 31.0.90;
 - =lisp/emacsvox-loaddefs.el= is generated, ignored, and not tracked;
 - =lisp/emacsvox-advice.el= contains no =defadvice=, =ad-get-arg=,
-  =ad-set-arg=, =ad-do-it=, or =ad-return-value= forms.
+  =ad-set-arg=, =ad-do-it=, or =ad-return-value= forms;
+- =lisp/emacsvox-org.el= contains no =defadvice=, positional compatibility
+  accessors, or bridge-era =ems--= advice helpers.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         335 |   107 |
-| =ad-get-arg=        |          79 |   n/a |
+| =defadvice=         |         319 |   106 |
+| =ad-get-arg=        |          75 |   n/a |
 | =ad-set-arg=        |           3 |   n/a |
 | =ad-do-it=          |          42 |   n/a |
 | =ad-return-value=   |          26 |   n/a |
-| =advice-add=        |        1409 |   156 |
+| =advice-add=        |        1425 |   156 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -74,12 +76,12 @@ interactive specifications now restore the intended spoken prompts for
 progress advice now preserves the processed string returned by the original
 function rather than returning the result of speech output.
 
-The first built-in integration slices converted Compilation, Windmove, FFAP,
-IDO, Diff Mode, Project, Flymake, Package, Info, Debugger, table editing,
-Proced, View, Calendar, Wdired, Tabulated List, Net Utils, Forms, and Xref.
+The built-in integration slices converted Compilation, Windmove, FFAP, IDO,
+Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
+View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 52 files still contain
+completely independent of the compatibility bridge; 51 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -102,6 +104,21 @@ target, and corrects a converted around-wrapper that called =forms-next-field=
 twice.  The Xref conversion removes the undefined =xref-find-regexp= target and
 a duplicate obsolete-alias registration while retaining target-aware feedback
 for callable aliases.
+
+The Org conversion is split into structure, agenda/table, editing, capture, and
+completion/export commits.  It preserves unconditional table-cell and capture
+lifecycle feedback where Org invokes commands internally.  It also corrects
+converter regressions that called =org-delete-char= and =org-complete= multiple
+times.  Both wrappers now call the original exactly once and preserve its
+result.
+
+Emacs 31 Org no longer defines =org-complete=.  Current Org completion reaches
+the existing Emacsvox =completion-at-point= advice through =complete-symbol=.
+The Org-specific legacy wrapper is therefore installed only when an older Org
+actually defines =org-complete=, avoiding a phantom advised command and
+duplicate current completion feedback.  Org export advice now receives the
+native =org-export--dispatch-action= and =org-export-to-file= arguments
+directly instead of reading positional bridge state.
 
 Continue by migrating built-in integration modules before optional third-party
 integrations.  The compatibility bridge remains necessary until the
