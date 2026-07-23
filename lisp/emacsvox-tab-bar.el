@@ -73,60 +73,80 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--tab-bar-switch-to-tab-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (emacsvox-tab-bar-speak-tab-name)))
+(defun emacsvox--advice-tab-bar-switch-to-tab-after (&rest _)
+  "Speak the tab selected by an interactive name-based switch."
+  (when (ems-interactive-p 'tab-bar-switch-to-tab)
+    (emacsvox-tab-bar-speak-tab-name)))
 
-(advice-add 'tab-bar-switch-to-tab :after
-            #'ems--tab-bar-switch-to-tab-after)
+(advice-add
+ 'tab-bar-switch-to-tab :after
+ #'emacsvox--advice-tab-bar-switch-to-tab-after
+ '((name . emacsvox)))
 
 (cl-loop
- for f in 
+ for target in
  '(
    tab-next tab-previous tab-select
    tab-bar-select-tab tab-bar-select-tab-by-name
    tab-bar-switch-to-next-tab tab-bar-switch-to-prev-tab
    tab-bar-switch-to-recent-tab)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-tab-bar-speak-tab-name)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively selecting a tab."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-tab-bar-speak-tab-name)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in 
+ for target in
  '(
    tab-bar-close-other-tabs tab-bar-close-tab
    tab-close tab-close-other)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (emacsvox-tab-bar-speak-tab-name)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively closing tabs."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'close-object)
+         (emacsvox-tab-bar-speak-tab-name)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (cl-loop
- for f in 
+ for target in
  '(tab-new tab-bar-new-tab)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-tab-bar-speak-tab-name)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactively creating a tab."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-tab-bar-speak-tab-name)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--tab-bar-close-tab-by-name-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak (message "Closed tab %s" (ad-get-arg 0)))
+(defun emacsvox--advice-tab-bar-close-tab-by-name-after (name)
+  "Report interactively closing the tab called NAME."
+  (when (ems-interactive-p 'tab-bar-close-tab-by-name)
+    (dtk-speak (message "Closed tab %s" name))
     (emacsvox-icon 'close-object)))
 
-(advice-add 'tab-bar-close-tab-by-name :after
-            #'ems--tab-bar-close-tab-by-name-after)
+(advice-add
+ 'tab-bar-close-tab-by-name :after
+ #'emacsvox--advice-tab-bar-close-tab-by-name-after
+ '((name . emacsvox)))
 
 ;;; tab-list commands:
 
@@ -186,4 +206,3 @@
 
 (provide 'emacsvox-tab-bar)
 ;;;  end of file
-

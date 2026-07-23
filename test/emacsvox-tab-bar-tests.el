@@ -54,5 +54,72 @@
     (should (eq (key-binding (kbd "n")) 'tab-switcher-next-line))
     (should (eq (key-binding (kbd "p")) 'tab-switcher-prev-line))))
 
+(defconst emacsvox-test--tab-bar-lifecycle-after-targets
+  '(tab-bar-switch-to-tab
+    tab-next
+    tab-previous
+    tab-select
+    tab-bar-select-tab
+    tab-bar-select-tab-by-name
+    tab-bar-switch-to-next-tab
+    tab-bar-switch-to-prev-tab
+    tab-bar-switch-to-recent-tab
+    tab-bar-close-other-tabs
+    tab-bar-close-tab
+    tab-close
+    tab-close-other
+    tab-new
+    tab-bar-new-tab
+    tab-bar-close-tab-by-name)
+  "Tab selection, creation, and closing commands with direct advice.")
+
+(ert-deftest emacsvox-tab-bar-lifecycle-advice-is-directly-registered ()
+  "Tab lifecycle advice bypasses the compatibility bridge."
+  (dolist (target emacsvox-test--tab-bar-lifecycle-after-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target :after function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-tab-bar-alias-feedback-is-target-aware ()
+  "Only the interactively invoked tab-selection alias gives feedback."
+  (let ((ems--interactive-fn-name 'tab-next)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-tab-bar-speak-tab-name)
+               (lambda () (push 'tab-name events))))
+      (emacsvox--advice-tab-bar-switch-to-next-tab-after)
+      (emacsvox--advice-tab-next-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon select-object) tab-name)))))
+
+(ert-deftest emacsvox-tab-bar-close-by-name-uses-native-argument ()
+  "Closing by name reports the explicit native NAME argument."
+  (let ((ems--interactive-fn-name 'tab-bar-close-tab-by-name)
+        events)
+    (cl-letf (((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (let ((text (apply #'format format-string arguments)))
+                   (push (list 'message text) events)
+                   text)))
+              ((symbol-function 'dtk-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (emacsvox--advice-tab-bar-close-tab-by-name-after "Research"))
+    (should
+     (equal
+      (nreverse events)
+      '((message "Closed tab Research")
+        (speak "Closed tab Research")
+        (icon close-object))))))
+
 (provide 'emacsvox-tab-bar-tests)
 ;;; emacsvox-tab-bar-tests.el ends here
