@@ -2157,16 +2157,15 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 (add-hook 'server-switch-hook 'emacsvox-speak-announce-server-buffer)
 
-(defun ems--server-start-after (&rest _)
-  "Provide auditory confirmation."
-  (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(emacsvox-advice--define-interactive-after-advice
+    (server-start)
+    "Cue completion of an interactive Emacs server start."
+  (emacsvox-icon 'task-done))
 
-(advice-add 'server-start :after #'ems--server-start-after)
-
-(defun ems--server-edit-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-mode-line)))
-
-(advice-add 'server-edit :after #'ems--server-edit-after)
+(emacsvox-advice--define-interactive-after-advice
+    (server-edit)
+    "Speak the mode line after interactively finishing a server edit."
+  (emacsvox-speak-mode-line))
 
 ;;;  view echo area
 
