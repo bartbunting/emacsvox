@@ -48,7 +48,9 @@
     (tmm-goto-completions :after
      emacsvox--advice-tmm-goto-completions-after)
     (tmm-menubar :before emacsvox--advice-tmm-menubar-before)
-    (tmm-shortcut :after emacsvox--advice-tmm-shortcut-after))
+    (tmm-shortcut :after emacsvox--advice-tmm-shortcut-after)
+    (semantic-complete-symbol :around
+     emacsvox--advice-semantic-complete-symbol-around))
   "Completion commands migrated to directly registered native advice.")
 
 (ert-deftest emacsvox-completion-advice-is-directly-registered ()
@@ -327,6 +329,42 @@
        (equal
         (nreverse events)
         '(original (speak "foobar")))))))
+
+(ert-deftest emacsvox-semantic-completion-calls-original-once ()
+  "Semantic completion clears stale results, calls once, and speaks new text."
+  (with-temp-buffer
+    (insert "foo")
+    (goto-char (point-min))
+    (let ((dtk-stop-immediately nil)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-kill-buffer-carefully)
+                 (lambda (buffer)
+                   (push (list 'kill-buffer buffer) events)))
+                ((symbol-function 'emacsvox-speak-rest-of-buffer)
+                 (lambda () (push 'speak-rest events)))
+                ((symbol-function 'emacsvox-speak-completions-if-available)
+                 (lambda () (push 'speak-completions events))))
+        (should
+         (eq
+          (emacsvox--advice-semantic-complete-symbol-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push
+              (list 'original arguments dtk-stop-immediately)
+              events)
+             (goto-char (point-max))
+             'semantic-result)
+           'argument)
+          'semantic-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((kill-buffer "*Completions*")
+          (original (argument) t)
+          speak-rest)))
+      (should-not dtk-stop-immediately))))
 
 (ert-deftest emacsvox-dabbrev-advice-preserves-feedback-order ()
   "Interactive dabbrev feedback waits for output before speaking expansion."

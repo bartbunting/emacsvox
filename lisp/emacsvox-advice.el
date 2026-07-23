@@ -3046,20 +3046,23 @@ Produce an auditory icon if possible."
 
 ;;; Advice Semantic:
 
-(defun ems--semantic-complete-symbol-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (let ((prior (point)) (dtk-stop-immediately t))
-      (emacsvox-kill-buffer-carefully "*Completions*")
-      (apply orig-fun args)
+(defun emacsvox--advice-semantic-complete-symbol-around
+    (original &rest arguments)
+  "Call ORIGINAL once and speak the resulting semantic completion."
+  (let ((prior (point))
+        (dtk-stop-immediately t))
+    (emacsvox-kill-buffer-carefully "*Completions*")
+    (let ((result (apply original arguments)))
       (if (> (point) prior)
-          (tts-with-punctuations 'all (emacsvox-speak-rest-of-buffer))
+          (tts-with-punctuations 'all
+            (emacsvox-speak-rest-of-buffer))
         (emacsvox-speak-completions-if-available))
-      result)
-    result))
+      result)))
 
-(advice-add 'semantic-complete-symbol :around
-            #'ems--semantic-complete-symbol-around)
+(advice-add
+ 'semantic-complete-symbol :around
+ #'emacsvox--advice-semantic-complete-symbol-around
+ '((name . emacsvox)))
 
 (provide 'emacsvox-cedet)
 
