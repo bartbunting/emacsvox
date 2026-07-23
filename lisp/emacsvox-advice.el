@@ -2887,21 +2887,45 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 ;;;  elint
 
-(cl-loop
- for f in
- '(elint-current-buffer elint-file elint-defun)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Silence messages while elint is running."
-     (cond
-      ((ems-interactive-p)
-       (ems-with-messages-silenced
-        ad-do-it
-        (emacsvox-icon 'task-done)
-        (message "Displayed lint results in other window. ")))
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--elint-around (target original arguments)
+  "Call ORIGINAL and announce interactive Elint completion.
+TARGET identifies the Elint command, and ARGUMENTS are passed unchanged."
+  (if (ems-interactive-p target)
+      (ems-with-messages-silenced
+        (let ((result (apply original arguments)))
+          (emacsvox-icon 'task-done)
+          (message "Displayed lint results in other window. ")
+          result))
+    (apply original arguments)))
+
+(defun emacsvox--advice-elint-current-buffer-around
+    (original &rest arguments)
+  "Call ORIGINAL and announce interactive current-buffer linting."
+  (emacsvox--elint-around
+   'elint-current-buffer original arguments))
+
+(advice-add
+ 'elint-current-buffer :around
+ #'emacsvox--advice-elint-current-buffer-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-elint-file-around
+    (original &rest arguments)
+  "Call ORIGINAL and announce interactive file linting."
+  (emacsvox--elint-around 'elint-file original arguments))
+
+(advice-add
+ 'elint-file :around #'emacsvox--advice-elint-file-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-elint-defun-around
+    (original &rest arguments)
+  "Call ORIGINAL and announce interactive defun linting."
+  (emacsvox--elint-around 'elint-defun original arguments))
+
+(advice-add
+ 'elint-defun :around #'emacsvox--advice-elint-defun-around
+ '((name . emacsvox)))
 
 ;;;  advice button creation to add voicification:
 
