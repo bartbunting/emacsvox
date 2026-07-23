@@ -51,19 +51,23 @@
 ;;;   Navigating through an outline:
 
 (cl-loop
- for f in 
+ for target in
  '(
    outline-next-heading outline-previous-heading outline-next-preface
    outline-next-visible-heading outline-previous-visible-heading
    outline-back-to-heading outline-up-heading
    outline-backward-same-level outline-forward-same-level)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'section)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Outline navigation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'section)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;; outline-flag-region:
 
@@ -72,138 +76,94 @@
 
 (defvar ems--voiceify-overlays)
 
-(defun ems--outline-flag-region-around (orig-fun &rest args)
-  "Reflect hide/show via property invisible as well"
-  (let
-      ((ems--voiceify-overlays nil) (beg (ad-get-arg 0))
-       (end (ad-get-arg 1)) (inhibit-read-only t))
-    (apply orig-fun args) (when (zerop beg) (setq beg (point-min)))
-    (with-silent-modifications
-      (put-text-property beg end 'invisible
-                         (if (ad-get-arg 2) 'outline nil)))))
+(defun emacsvox--advice-outline-flag-region-around
+    (original from to flag)
+  "Call ORIGINAL, then mirror FLAG as invisibility between FROM and TO."
+  (let ((ems--voiceify-overlays nil)
+        (beginning from)
+        (inhibit-read-only t))
+    (let ((result (funcall original from to flag)))
+      ;; Outline accepts zero as a sentinel, but text properties do not.
+      (when (zerop beginning)
+        (setq beginning (point-min)))
+      (with-silent-modifications
+        (put-text-property
+         beginning to 'invisible (and flag 'outline)))
+      result)))
 
-(advice-add 'outline-flag-region :around
-            #'ems--outline-flag-region-around)
+(advice-add
+ 'outline-flag-region :around
+ #'emacsvox--advice-outline-flag-region-around
+ '((name . emacsvox)))
 
 ;;; Misc Commands:
 
 (cl-loop
- for f in 
+ for target in
  '(outline-insert-heading outline-cycle-buffer outline-cycle)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Outline visibility change."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'open-object)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 ;;;   Hiding and showing subtrees
 
-(defun ems--outline-show-only-headings-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
+(cl-loop
+ for (target icon announcement) in
+ '((outline-show-only-headings
+    close-object "Hid the body directly following this heading")
+   (outline-hide-entry
+    close-object "Hid the body directly following this heading")
+   (outline-show-entry
+    open-object "Exposed body directly following current heading")
+   (outline-hide-body
+    close-object "Hid all of the buffer except for header lines")
+   (outline-show-all
+    open-object "Exposed all text in the buffer")
+   (outline-hide-subtree
+    close-object "Hid everything at deeper levels from current heading")
+   (outline-hide-leaves
+    close-object "Hid all of the body at deeper levels")
+   (outline-show-subtree
+    open-object
+    "Exposed everything after current heading at deeper levels")
+   (outline-hide-other
+    close-object
+    "Hid everything except current body and parent headings")
+   (outline-show-branches
+    open-object
+    "Exposed all subheadings while leaving their bodies hidden")
+   (outline-show-children
+    open-object "Exposed subheadings below current level"))
+ for function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and announce an interactive Outline visibility change."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon ',icon)
+         (message ,announcement)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
+
+(defun emacsvox--advice-outline-hide-sublevels-after (levels &rest _)
+  "Cue and announce hiding all but the top LEVELS."
+  (when (ems-interactive-p 'outline-hide-sublevels)
     (emacsvox-icon 'close-object)
-    (message "Hid the body directly following this heading")))
+    (message "Hid everything except the top  %s levels" levels)))
 
-(advice-add 'outline-show-only-headings :after
-            #'ems--outline-show-only-headings-after)
-
-(defun ems--outline-hide-entry-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Hid the body directly following this heading")))
-
-(advice-add 'outline-hide-entry :after #'ems--outline-hide-entry-after)
-
-(defun ems--outline-show-entry-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message "Exposed body directly following current heading")))
-
-(advice-add 'outline-show-entry :after #'ems--outline-show-entry-after)
-
-(defun ems--outline-hide-body-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Hid all of the buffer except for header lines")))
-
-(advice-add 'outline-hide-body :after #'ems--outline-hide-body-after)
-
-(defun ems--outline-show-all-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message "Exposed all text in the buffer")))
-
-(advice-add 'outline-show-all :after #'ems--outline-show-all-after)
-
-(defun ems--outline-hide-subtree-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Hid everything at deeper levels from current heading")))
-
-(advice-add 'outline-hide-subtree :after
-            #'ems--outline-hide-subtree-after)
-
-(defun ems--outline-hide-leaves-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Hid all of the body at deeper levels")))
-
-(advice-add 'outline-hide-leaves :after
-            #'ems--outline-hide-leaves-after)
-
-(defun ems--outline-show-subtree-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message
-     "Exposed everything after current heading at deeper levels")))
-
-(advice-add 'outline-show-subtree :after
-            #'ems--outline-show-subtree-after)
-
-(defun ems--outline-hide-sublevels-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Hid everything except the top  %s levels" (ad-get-arg 0))))
-
-(advice-add 'outline-hide-sublevels :after
-            #'ems--outline-hide-sublevels-after)
-
-(defun ems--outline-hide-other-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (message "Hid everything except current body and parent headings")))
-
-(advice-add 'outline-hide-other :after #'ems--outline-hide-other-after)
-
-(defun ems--outline-show-branches-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message
-     "Exposed all subheadings while leaving their bodies hidden")))
-
-(advice-add 'outline-show-branches :after
-            #'ems--outline-show-branches-after)
-
-(defun ems--outline-show-children-after (&rest _)
-  "Produce an auditory icon"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message "Exposed subheadings below current level")))
-
-(advice-add 'outline-show-children :after
-            #'ems--outline-show-children-after)
+(advice-add
+ 'outline-hide-sublevels :after
+ #'emacsvox--advice-outline-hide-sublevels-after
+ '((name . emacsvox)))
 
 ;;;   Interactive speaking of sections
 
@@ -326,20 +286,28 @@ except that the outline section is  spoken"
 
 ;;;  foldout specific advice
 
-(with-eval-after-load "foldout"
-  (defadvice foldout-zoom-subtree (after emacsvox pre act comp)
-    "speak about the child we zoomed into"
-    (when (ems-interactive-p)
-      (emacsvox-icon 'open-object)
-      (message
-       "Zoomed into outline %s containing %s lines"
-       (ems--this-line) (count-lines (point-min) (point-max)))))
+(defun emacsvox--advice-foldout-zoom-subtree-after (&rest _)
+  "Cue and describe an interactively zoomed Foldout subtree."
+  (when (ems-interactive-p 'foldout-zoom-subtree)
+    (emacsvox-icon 'open-object)
+    (message
+     "Zoomed into outline %s containing %s lines"
+     (ems--this-line) (count-lines (point-min) (point-max)))))
 
-  (defadvice foldout-exit-fold (after emacsvox pre act comp)
-    "speak when exiting a fold"
-    (when (ems-interactive-p)
-      (emacsvox-icon 'close-object)
-      (emacsvox-speak-line))))
+(defun emacsvox--advice-foldout-exit-fold-after (&rest _)
+  "Cue and speak after interactively exiting a Foldout fold."
+  (when (ems-interactive-p 'foldout-exit-fold)
+    (emacsvox-icon 'close-object)
+    (emacsvox-speak-line)))
+
+(with-eval-after-load "foldout"
+  (advice-add
+   'foldout-zoom-subtree :after
+   #'emacsvox--advice-foldout-zoom-subtree-after
+   '((name . emacsvox)))
+  (advice-add
+   'foldout-exit-fold :after
+   #'emacsvox--advice-foldout-exit-fold-after
+   '((name . emacsvox))))
 
 (provide  'emacsvox-outline)
-
