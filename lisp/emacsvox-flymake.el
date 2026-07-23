@@ -57,17 +57,21 @@
 ;;;  Interactive Commands:
 
 (cl-loop
- for f in 
+ for target in
  '(flymake-goto-diagnostic
    flymake-goto-next-error
    flymake-goto-prev-error)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive Flymake navigation command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
 (defun ems--flymake-compile-after (&rest _)
   "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
@@ -76,4 +80,3 @@
 
 (provide 'emacsvox-flymake)
 ;;;  end of file
-

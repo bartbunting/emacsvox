@@ -74,6 +74,7 @@
   (require 'emacsvox-ido-tests)
   (require 'emacsvox-diff-mode-tests)
   (require 'emacsvox-project-tests)
+  (require 'emacsvox-flymake-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
