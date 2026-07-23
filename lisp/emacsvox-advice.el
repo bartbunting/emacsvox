@@ -3078,24 +3078,18 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
 
 ;;;  Splash Screen:
 
-(cl-loop
- for f in
- '(about-emacs display-about-screen)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (with-current-buffer (window-buffer (selected-window))
-         (emacsvox-speak-buffer))))))
+(emacsvox-advice--define-interactive-after-advice
+    (about-emacs display-about-screen)
+    "Speak the displayed splash or About buffer."
+  (emacsvox-icon 'open-object)
+  (with-current-buffer (window-buffer (selected-window))
+    (emacsvox-speak-buffer)))
 
-(defun ems--exit-splash-screen-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'exit-splash-screen :after #'ems--exit-splash-screen-after)
+(emacsvox-advice--define-interactive-after-advice
+    (exit-splash-screen)
+    "Cue closing the splash screen and speak the resulting mode line."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
 ;;;  copyright commands:
 
