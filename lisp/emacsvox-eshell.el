@@ -187,85 +187,105 @@ personalities.")
 
 ;;;  advice esh-mode
 
-(defun ems--eshell-delchar-or-maybe-eof-around (orig-fun &rest args)
+(defun emacsvox--advice-eshell-delchar-or-maybe-eof-before (&rest _)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
+  (when (ems-interactive-p 'eshell-delchar-or-maybe-eof)
     (cond
-     ((ems-interactive-p)
-      (cond
-       ((= (point) (point-max))
-        (message "Sending EOF to comint process"))
-       (t (dtk-tone 500 100 'force) (emacsvox-speak-char t)))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+     ((= (point) (point-max))
+      (message "Sending EOF to comint process"))
+     (t
+      (dtk-tone 500 100 'force)
+      (emacsvox-speak-char t)))))
 
-(advice-add 'eshell-delchar-or-maybe-eof :around
-            #'ems--eshell-delchar-or-maybe-eof-around)
-
-(defun ems--eshell-delete-backward-char-around (orig-fun &rest args)
+(defun emacsvox--advice-eshell-delete-backward-char-before (&rest _)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone 500 100 'force)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+  (when (ems-interactive-p 'eshell-delete-backward-char)
+    (dtk-tone 500 100 'force)
+    (emacsvox-speak-this-char (preceding-char))))
 
-(advice-add 'eshell-delete-backward-char :around
-            #'ems--eshell-delete-backward-char-around)
+(with-eval-after-load 'em-rebind
+  (advice-add
+   'eshell-delchar-or-maybe-eof :before
+   #'emacsvox--advice-eshell-delchar-or-maybe-eof-before
+   '((name . emacsvox)))
+  (advice-add
+   'eshell-delete-backward-char :before
+   #'emacsvox--advice-eshell-delete-backward-char-before
+   '((name . emacsvox))))
 
-(defun ems--eshell-show-output-after (&rest _)
+(defun emacsvox--advice-eshell-show-output-after (&rest _)
   "Speak output."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'eshell-show-output)
     (let ((emacsvox-show-point t))
       (emacsvox-icon 'large-movement)
       (emacsvox-speak-region (point) (mark)))))
 
-(advice-add 'eshell-show-output :after #'ems--eshell-show-output-after)
+(advice-add
+ 'eshell-show-output :after
+ #'emacsvox--advice-eshell-show-output-after
+ '((name . emacsvox)))
 
-(defun ems--eshell-mark-output-after (&rest _)
+(defun emacsvox--advice-eshell-mark-output-after (&rest _)
   "Speak output."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'eshell-mark-output)
     (let ((emacsvox-show-point t))
-      (emacsvox-icon 'mark-object) (emacsvox-speak-line))))
+      (emacsvox-icon 'mark-object)
+      (emacsvox-speak-line))))
 
-(advice-add 'eshell-mark-output :after #'ems--eshell-mark-output-after)
+(advice-add
+ 'eshell-mark-output :after
+ #'emacsvox--advice-eshell-mark-output-after
+ '((name . emacsvox)))
 
-(defun ems--eshell-kill-output-after (&rest _)
+(defun emacsvox--advice-eshell-delete-output-after (&rest _)
   "Produce auditory feedback."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (message "Flushed output")))
+  (when (ems-interactive-p 'eshell-delete-output)
+    (emacsvox-icon 'delete-object)
+    (message "Flushed output")))
 
-(advice-add 'eshell-kill-output :after #'ems--eshell-kill-output-after)
+(advice-add
+ 'eshell-delete-output :after
+ #'emacsvox--advice-eshell-delete-output-after
+ '((name . emacsvox)))
 
-(defun ems--eshell-kill-input-before (&rest _)
+(defun emacsvox--advice-eshell-kill-input-before (&rest _)
   "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'eshell-kill-input)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'eshell-kill-input :before #'ems--eshell-kill-input-before)
+(advice-add
+ 'eshell-kill-input :before
+ #'emacsvox--advice-eshell-kill-input-before
+ '((name . emacsvox)))
 
-(defun ems--eshell-toggle-after (&rest _)
+(defun emacsvox--advice-eshell-toggle-after (&rest _)
   "Provide spoken context feedback."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'eshell-toggle)
     (cond
-     ((eq major-mode 'eshell-mode) (emacsvox-setup-programming-mode)
+     ((eq major-mode 'eshell-mode)
+      (emacsvox-setup-programming-mode)
       (emacsvox-speak-line))
      (t (emacsvox-speak-mode-line)))
     (emacsvox-icon 'select-object)))
 
-(advice-add 'eshell-toggle :after #'ems--eshell-toggle-after)
-
-(defun ems--eshell-toggle-cd-after (&rest _)
+(defun emacsvox--advice-eshell-toggle-cd-after (&rest _)
   "Provide spoken context feedback."
-  (when (ems-interactive-p)
-    (cond ((eq major-mode 'eshell-mode) (emacsvox-speak-line))
-          (t (emacsvox-speak-mode-line)))
+  (when (ems-interactive-p 'eshell-toggle-cd)
+    (cond
+     ((eq major-mode 'eshell-mode) (emacsvox-speak-line))
+     (t (emacsvox-speak-mode-line)))
     (emacsvox-icon 'select-object)))
 
-(advice-add 'eshell-toggle-cd :after #'ems--eshell-toggle-cd-after)
+(with-eval-after-load 'eshell-toggle
+  (advice-add
+   'eshell-toggle :after
+   #'emacsvox--advice-eshell-toggle-after
+   '((name . emacsvox)))
+  (advice-add
+   'eshell-toggle-cd :after
+   #'emacsvox--advice-eshell-toggle-cd-after
+   '((name . emacsvox))))
 
 ;;; Additional Commands To Enable: 
 
@@ -286,23 +306,27 @@ personalities.")
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(cl-loop
- for f in
- '(eshell-pcomplete eshell-complete-lisp-symbol)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Say what you completed."
-     (ems-with-messages-silenced
-      (let ((prior (save-excursion (skip-syntax-backward "^ >") (point))))
-        ad-do-it
-        (if (> (point) prior)
-            (tts-with-punctuations
-             'all
-             (dtk-speak
-              (buffer-substring prior (point))))
-          (emacsvox-speak-completions-if-available))
-        ad-return-value)))))
+(defun emacsvox--advice-eshell-complete-lisp-symbol-around
+    (original &rest arguments)
+  "Say what ORIGINAL completed with ARGUMENTS."
+  (ems-with-messages-silenced
+   (let ((interactive-p
+          (ems-interactive-p 'eshell-complete-lisp-symbol))
+         (prior (save-excursion (skip-syntax-backward "^ >") (point))))
+     (let ((result (apply original arguments)))
+       (when interactive-p
+         (if (> (point) prior)
+             (tts-with-punctuations
+              'all
+              (dtk-speak (buffer-substring prior (point))))
+           (emacsvox-speak-completions-if-available)))
+       result))))
+
+(with-eval-after-load 'em-cmpl
+  (advice-add
+   'eshell-complete-lisp-symbol :around
+   #'emacsvox--advice-eshell-complete-lisp-symbol-around
+   '((name . emacsvox))))
 
 (defun emacsvox--advice-eshell-copy-old-input-after (&rest _)
   "Speak what was inserted."
