@@ -50,39 +50,59 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--debugger-continue-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(defun emacsvox--advice-debugger-continue-after (&rest _)
+  "Cue completion after an interactive debugger continue command."
+  (when (ems-interactive-p 'debugger-continue)
+    (emacsvox-icon 'task-done)))
 
-(advice-add 'debugger-continue :after #'ems--debugger-continue-after)
+(advice-add
+ 'debugger-continue :after #'emacsvox--advice-debugger-continue-after
+ '((name . emacsvox)))
 
 (cl-loop
- for f in 
+ for target in
  '(backtrace-forward-frame backtrace-backward-frame)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after an interactive backtrace navigation command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--debugger-eval-expression-after (&rest _)
-  "speak." (when (ems-interactive-p) (dtk-speak ad-return-value)))
+(defun emacsvox--advice-debugger-eval-expression-filter-return (result)
+  "Speak and return RESULT from an interactive debugger evaluation."
+  (when (ems-interactive-p 'debugger-eval-expression)
+    (dtk-speak result))
+  result)
 
-(advice-add 'debugger-eval-expression :after
-            #'ems--debugger-eval-expression-after)
+(advice-add
+ 'debugger-eval-expression :filter-return
+ #'emacsvox--advice-debugger-eval-expression-filter-return
+ '((name . emacsvox)))
 
-(defun ems--debugger-list-functions-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-help)))
+(defun emacsvox--advice-debugger-list-functions-after (&rest _)
+  "Speak help after interactively listing debugged functions."
+  (when (ems-interactive-p 'debugger-list-functions)
+    (emacsvox-speak-help)))
 
-(advice-add 'debugger-list-functions :after
-            #'ems--debugger-list-functions-after)
+(advice-add
+ 'debugger-list-functions :after
+ #'emacsvox--advice-debugger-list-functions-after
+ '((name . emacsvox)))
 
-(defun ems--debugger-quit-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
+(defun emacsvox--advice-debugger-quit-after (&rest _)
+  "Cue closure after interactively quitting the debugger."
+  (when (ems-interactive-p 'debugger-quit)
+    (emacsvox-icon 'close-object)))
 
-(advice-add 'debugger-quit :after #'ems--debugger-quit-after)
+(advice-add
+ 'debugger-quit :after #'emacsvox--advice-debugger-quit-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-debugger)
 ;;;  end of file
-
