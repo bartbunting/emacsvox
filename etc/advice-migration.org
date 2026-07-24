@@ -41,19 +41,23 @@ Avy, BBDB, Calibredb, Chess, CIDER, Clojure Mode, Combobulate, Consult, Corfu,
 Deadgrep, DevDocs, Dumb Jump, Eat, Ebuku, EIN, Elfeed, Elisp Refs, Ellama,
 Elpher, Elpy, EMMS, EMPV, ENWC, ESS, Evil, and the remaining 40
 legacy-or-positional third-party integrations, plus the standalone Gweb add-on,
-and the final six third-party helper-cleanup integrations,
-on 2026-07-24 on branch =bart=:
+the final six third-party helper-cleanup integrations, removal of the
+compatibility bridge, and replacement of the last legacy advice-introspection
+call, on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 1005 passing ERT tests and one Mu4e contract test
+- the Emacs 31 suite contains 1009 passing ERT tests and one Mu4e contract test
   skipped until the system Mu4e package is installed;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
 - the complete default Lisp object set builds with Emacs 31.0.90, with warnings
-  but no errors: 233 unique object targets are checked and 232 =.elc= files are
-  emitted because the generated loaddefs target remains source-only;
-- the real =~/bin/emacsvox-test= launcher loads Emacsvox under Emacs 31.0.90;
+  but no errors: 233 object-list entries resolve to 232 unique =.elc= files
+  because =emacsvox-gptel.elc= is listed twice;
+- the real =~/bin/emacsvox-test= launcher loads Emacsvox under Emacs 31.0.90
+  and confirms that the bridge function is absent;
 - =lisp/emacsvox-loaddefs.el= is generated, ignored, and not tracked;
+- =lisp/emacsvox-preamble.el= contains only native interactive-command
+  tracking; the advice compatibility bridge and its dynamic state are absent;
 - =lisp/emacsvox-advice.el= contains no =defadvice=, =ad-get-arg=,
   =ad-set-arg=, =ad-do-it=, or =ad-return-value= forms;
 - =lisp/emacsvox-org.el= contains no =defadvice=, positional compatibility
@@ -273,15 +277,17 @@ on 2026-07-24 on branch =bart=:
 
 The syntax-aware repository audit currently reports:
 
-| Pattern             | Occurrences | Files |
-|---------------------+-------------+-------|
-| =defadvice=         |           1 |     1 |
-| =ad-get-arg=        |           1 |   n/a |
-| =ad-set-arg=        |           1 |   n/a |
-| =ad-do-it=          |           0 |   n/a |
-| =ad-return-value=   |           3 |   n/a |
-| =advice-add=        |         937 |   183 |
-| =ems-interactive-p= |         994 |   176 |
+| Pattern                      | Occurrences | Files |
+|------------------------------+-------------+-------|
+| =defadvice=                  |           0 |     0 |
+| =ad-get-arg=                 |           0 |   n/a |
+| =ad-set-arg=                 |           0 |   n/a |
+| =ad-do-it=                   |           0 |   n/a |
+| =ad-return-value=            |           0 |   n/a |
+| =ad-find-some-advice=        |           0 |   n/a |
+| bridge compatibility symbols |           0 |     0 |
+| =advice-add=                 |         934 |   183 |
+| =ems-interactive-p=          |         993 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -306,8 +312,8 @@ modules in this inventory satisfy the final-form gate.
 The separately tracked =emacsvox-entertain.el= integration is also final-form.
 Its built-in Doctor and Dunnet advice remains lazily loaded, and optional
 Hangman advice and bindings are deferred until that package loads.  Emacsvox
-core files and removal of the compatibility bridge remain separate from this
-integration-module count.
+core files remain separate from this integration-module count; their bridge
+removal is also complete.
 
 ** Remaining third-party inventory
 
@@ -374,7 +380,7 @@ conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge.  The final six helper-cleanup modules now use distinct
 native advice names and explicit interactive targets.  The syntax-aware legacy
-audit reports compatibility symbols only in =emacsvox-preamble.el= itself.
+audit reports no compatibility symbols anywhere in =lisp/=.
 
 The standalone Gweb conversion preserves its conditional completion behavior:
 Google completion inserts a literal space without calling normal completion,
@@ -736,10 +742,11 @@ retains unconditional feedback for completed stone moves, and relies on the
 existing =quit-window= integration in place of the removed =solitaire-quit=
 command.
 
-All integration modules are now final-form.  The next migration slice is to
-remove the compatibility bridge from =emacsvox-preamble.el=, then rerun the
+All integration modules and internal advice-support paths are now final-form.
+The compatibility bridge has been removed from =emacsvox-preamble.el=.  The
 complete Emacs 31 suite, semantic trace comparison, full Lisp build, startup
-smoke test, and syntax-aware audit.
+smoke test, and syntax-aware audit all pass.  The remaining acceptance task is
+the post-removal audible core checklist.
 
 * Working Principles
 
@@ -904,6 +911,9 @@ packages.  Prefer one module, or a small closely related group, per commit.
 
 ** 9. Remove the bridge
 
+Status: completed on 2026-07-24 in commit =2a46242a6=, followed by the
+legacy-introspection cleanup and audit expansion in commit =03db55661=.
+
 When the repository-wide legacy audit is clean, remove:
 
 - the advice on =advice-add=;
@@ -912,7 +922,9 @@ When the repository-wide legacy audit is clean, remove:
 - generated wrapper storage;
 - compatibility-only interactive target state.
 
-Do this in its own commit after the full suite and manual core checklist pass.
+The removal was committed independently after the automated suite and semantic
+trace gate passed.  The post-removal audible core checklist remains the final
+manual acceptance task.
 
 * Commit Gate
 
@@ -943,3 +955,7 @@ The migration is complete when:
 - startup and the audible core acceptance checklist pass;
 - documentation no longer claims a stronger migration status than the audit
   supports.
+
+As of 2026-07-24, every automated, audit, build, and startup criterion above is
+satisfied.  The post-removal audible core acceptance checklist is the only
+open criterion.
