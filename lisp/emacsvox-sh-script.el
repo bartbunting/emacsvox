@@ -40,6 +40,7 @@
 ;;  required modules
 
 (require 'emacsvox-preamble)
+(require 'sh-script)
 
 ;;; Commentary:
 
@@ -49,82 +50,49 @@
 
 ;;;   advice interactive commands
 
-(defun ems--sh-mode-after (&rest _)
+(defun emacsvox--advice-sh-mode-after (&rest _)
   "Speech-enable sh-script editing." (dtk-set-punctuations 'all)
   (unless emacsvox-audio-indentation
     (emacsvox-toggle-audio-indentation))
   (emacsvox-speak-mode-line))
 
-(advice-add 'sh-mode :after #'ems--sh-mode-after)
+(advice-add 'sh-mode :after
+            #'emacsvox--advice-sh-mode-after)
 
-(defun ems--sh-indent-line-after (&rest _)
-  "speak to indicate indentation."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-current-column)))
+(defun emacsvox-sh-script--interactive-insertion-p ()
+  "Return non-nil when a self-insertion command is active."
+  (or (ems-interactive-p 'self-insert-command)
+      (ems-interactive-p 'skeleton-pair-insert-maybe)
+      (ems-interactive-p 'sh-assignment)))
 
-(advice-add 'sh-indent-line :after #'ems--sh-indent-line-after)
-
-(unless (and (boundp 'post-self-insert-hook)
-             post-self-insert-hook
-             (memq 'emacsvox-post-self-insert-hook post-self-insert-hook))
-  (defadvice sh-assignment (after emacsvox pre act comp)
-    "Speak assignment as it is inserted."
-    (when (ems-interactive-p)
-      (emacsvox-speak-this-char (preceding-char)))))
-
-(defun ems--sh-maybe-here-document-around (orig-fun &rest args)
-  "Spoken feedback based on what we insert."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args)
-        (if (= (point) (1+ start))
-            (emacsvox-speak-this-char last-input-event)
-          (message "Started a shell here  document."))))
-     (t (apply orig-fun args)))
+(defun emacsvox--advice-sh--maybe-here-document-around (orig-fun)
+  "Call ORIG-FUN once and announce an inserted here document."
+  (let ((start (point))
+        (interactive-p (emacsvox-sh-script--interactive-insertion-p))
+        result)
+    (setq result (funcall orig-fun))
+    (when (and interactive-p (/= (point) start))
+      (message "Started a shell here document."))
     result))
 
-(advice-add 'sh-maybe-here-document :around
-            #'ems--sh-maybe-here-document-around)
+(advice-add 'sh--maybe-here-document :around
+            #'emacsvox--advice-sh--maybe-here-document-around)
 
-(defun ems--sh-newline-and-indent-after (&rest _)
-  "speak to indicate indentation."
-  (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'sh-newline-and-indent :after
-            #'ems--sh-newline-and-indent-after)
-
-(defun ems--sh-beginning-of-command-after (&rest _)
+(defun emacsvox--advice-sh-beginning-of-command-after (&rest _)
   "Speak point moved to."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sh-beginning-of-command)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'sh-beginning-of-command :after
-            #'ems--sh-beginning-of-command-after)
+            #'emacsvox--advice-sh-beginning-of-command-after)
 
-(defun ems--sh-end-of-command-after (&rest _)
+(defun emacsvox--advice-sh-end-of-command-after (&rest _)
   "Speak point moved to."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sh-end-of-command)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-(advice-add 'sh-end-of-command :after #'ems--sh-end-of-command-after)
-
-;;;  advice skeleton insertion 
-(unless (and (boundp 'post-self-insert-hook)
-             post-self-insert-hook
-             (memq 'emacsvox-post-self-insert-hook post-self-insert-hook))
-  (defadvice skeleton-pair-insert-maybe(around emacsvox pre
-                                               act comp)
-    "Speak what you inserted."
-    (cond
-     ((ems-interactive-p)
-      (let ((orig (point)))
-        ad-do-it
-        (emacsvox-speak-region orig (point))))
-     (t ad-do-it))
-    ad-return-value))
+(advice-add 'sh-end-of-command :after
+            #'emacsvox--advice-sh-end-of-command-after)
 
 (provide 'emacsvox-sh-script)
 ;;;  end of file
-
