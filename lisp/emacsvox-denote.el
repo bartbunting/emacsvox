@@ -64,86 +64,97 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--denote-after (&rest _)
+(defun emacsvox--advice-denote-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote)
     (emacsvox-icon 'open-object)
     (dtk-speak (format "Created note %s" (buffer-name)))))
 
-(advice-add 'denote :after #'ems--denote-after)
-
-(defun ems--denote-open-or-create-after (&rest _)
+(defun emacsvox--advice-denote-open-or-create-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-open-or-create)
     (emacsvox-icon 'open-object)
     (dtk-speak (format "Note %s" (buffer-name)))))
 
-(advice-add 'denote-open-or-create :after #'ems--denote-open-or-create-after)
-
-(defun ems--denote-rename-file-after (&rest _)
+(defun emacsvox--advice-denote-rename-file-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-rename-file)
     (emacsvox-icon 'task-done)
     (dtk-speak "Renamed")))
 
-(advice-add 'denote-rename-file :after #'ems--denote-rename-file-after)
-
-(defun ems--denote-rename-file-using-front-matter-after (&rest _)
+(defun emacsvox--advice-denote-rename-file-using-front-matter-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-rename-file-using-front-matter)
     (emacsvox-icon 'task-done)
     (dtk-speak "Renamed from front matter")))
 
-(advice-add 'denote-rename-file-using-front-matter :after
-            #'ems--denote-rename-file-using-front-matter-after)
-
-(defun ems--denote-link-after (&rest _)
+(defun emacsvox--advice-denote-link-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-link)
     (emacsvox-icon 'complete)
     (dtk-speak "Linked")))
 
-(advice-add 'denote-link :after #'ems--denote-link-after)
-
-(defun ems--denote-link-or-create-after (&rest _)
+(defun emacsvox--advice-denote-link-or-create-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-link-or-create)
     (emacsvox-icon 'complete)
     (dtk-speak "Linked")))
 
-(advice-add 'denote-link-or-create :after #'ems--denote-link-or-create-after)
-
-(defun ems--denote-backlinks-after (&rest _)
+(defun emacsvox--advice-denote-backlinks-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-backlinks)
     (emacsvox-icon 'open-object)
     (dtk-speak "Backlinks")))
 
-(advice-add 'denote-backlinks :after #'ems--denote-backlinks-after)
-
-(defun ems--denote-keywords-add-after (&rest _)
+(defun emacsvox--advice-denote-keywords-add-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-keywords-add)
     (emacsvox-icon 'task-done)
     (dtk-speak "Keywords added")))
 
-(advice-add 'denote-keywords-add :after #'ems--denote-keywords-add-after)
-
-(defun ems--denote-keywords-remove-after (&rest _)
+(defun emacsvox--advice-denote-keywords-remove-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-keywords-remove)
     (emacsvox-icon 'delete-object)
     (dtk-speak "Keywords removed")))
 
-(advice-add 'denote-keywords-remove :after #'ems--denote-keywords-remove-after)
-
-(defun ems--denote-dired-after (&rest _)
+(defun emacsvox--advice-denote-dired-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'denote-dired)
     (emacsvox-icon 'open-object)
     (emacsvox-speak-mode-line)))
 
-(advice-add 'denote-dired :after #'ems--denote-dired-after)
+(defconst emacsvox-denote--advice
+  '((denote :after emacsvox--advice-denote-after)
+    (denote-open-or-create :after
+     emacsvox--advice-denote-open-or-create-after)
+    (denote-rename-file :after
+     emacsvox--advice-denote-rename-file-after)
+    (denote-rename-file-using-front-matter :after
+     emacsvox--advice-denote-rename-file-using-front-matter-after)
+    (denote-link :after emacsvox--advice-denote-link-after)
+    (denote-link-or-create :after
+     emacsvox--advice-denote-link-or-create-after)
+    (denote-backlinks :after emacsvox--advice-denote-backlinks-after)
+    (denote-keywords-add :after
+     emacsvox--advice-denote-keywords-add-after)
+    (denote-keywords-remove :after
+     emacsvox--advice-denote-keywords-remove-after)
+    (denote-dired :after emacsvox--advice-denote-dired-after))
+  "Current Denote targets and their native advice functions.")
+
+(defun emacsvox-denote--install-advice ()
+  "Install native advice for loaded Denote commands."
+  (dolist (entry emacsvox-denote--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox-denote)))))))
+
+(with-eval-after-load 'denote
+  (emacsvox-denote--install-advice))
+
+(emacsvox-denote--install-advice)
 
 (provide 'emacsvox-denote)
 ;;;  end of file

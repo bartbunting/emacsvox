@@ -185,6 +185,7 @@
   (require 'emacsvox-consult-tests)
   (require 'emacsvox-corfu-tests)
   (require 'emacsvox-deadgrep-tests)
+  (require 'emacsvox-denote-tests)
   (require 'emacsvox-devdocs-tests)
   (require 'emacsvox-dumb-jump-tests)
   (require 'emacsvox-eat-tests)
