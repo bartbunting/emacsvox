@@ -154,9 +154,8 @@
 ;; This sends what you typed to the term process.  Handle terminal
 ;; emulation logic here, as per term-emulate-term in emacsvox-eterm.
 ;; Simpler because for now, we dont implement sub-windows etc.
-;; ad-do-it doesn't update for native module functions?
-;; tried with before/after advice pair, and we still dont see the
-;; updates, so  using before advice to record state,
+;; A before/after advice pair does not expose the native module's updates,
+;; so use before advice to record state
 ;; and an after advice on vterm--redraw to implement the spoken
 ;; feedback loop.
 

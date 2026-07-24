@@ -49,86 +49,10 @@
   (require 'subr-x))
 (cl-pushnew (file-name-directory load-file-name) load-path :test #'string=)
 
-;;; Compatibility for converted advice:
-
-;; The defadvice conversion retained `ems-interactive-p', `ad-get-arg',
-;; `ad-set-arg', and `ad-return-value' in the generated advice functions.
-;; Preserve their old semantics while those functions are migrated fully to
-;; nadvice argument lists.
+;;; Interactive command tracking:
 
 (defvar ems--interactive-fn-name nil
   "Holds the name of the function being called interactively.")
-
-(defvar ems--modern-advice-target nil
-  "Function targeted by the currently running converted advice.")
-
-(defvar ems--modern-advice-arguments nil
-  "Arguments supplied to the currently running converted advice.")
-
-(defvar ad-return-value nil
-  "Return value visible to converted `:after' advice.")
-
-(defvar ems--modern-advice-wrappers (make-hash-table :test #'equal)
-  "Wrappers used to retain context for converted advice functions.")
-
-(defun ems--modern-advice-function-p (function)
-  "Return non-nil when FUNCTION is converted Emacsvox advice."
-  (and
-   (symbolp function)
-   (string-prefix-p "ems--" (symbol-name function))
-   (not (eq function 'ems--advice-add-around))))
-
-(defun ad-get-arg (position)
-  "Return argument at POSITION for converted Emacsvox advice."
-  (nth position ems--modern-advice-arguments))
-
-(defun ad-set-arg (position value)
-  "Set argument at POSITION to VALUE for converted Emacsvox advice."
-  (setcar (nthcdr position ems--modern-advice-arguments) value))
-
-(defun ems--modern-advice-wrapper (symbol where function)
-  "Return a context-preserving wrapper for FUNCTION advising SYMBOL at WHERE."
-  (let ((key (list symbol where function)))
-    (or
-     (gethash key ems--modern-advice-wrappers)
-     (puthash
-      key
-      (pcase where
-        (:before
-         (lambda (original &rest arguments)
-           (let
-               ((ems--modern-advice-target symbol)
-                (ems--modern-advice-arguments arguments))
-             (apply function arguments)
-             (apply original ems--modern-advice-arguments))))
-        (:after
-         (lambda (original &rest arguments)
-           (let
-               ((ems--modern-advice-target symbol)
-                (ems--modern-advice-arguments arguments)
-                (ad-return-value (apply original arguments)))
-             (apply function arguments)
-             ad-return-value)))
-        (:around
-         (lambda (original &rest arguments)
-           (let
-               ((ems--modern-advice-target symbol)
-                (ems--modern-advice-arguments arguments))
-             (apply function original arguments)))))
-      ems--modern-advice-wrappers))))
-
-(defun ems--advice-add-around
-    (original symbol where function &optional props)
-  "Add advice while retaining context needed by converted Emacsvox advice."
-  (if (not (ems--modern-advice-function-p function))
-      (funcall original symbol where function props)
-    (funcall
-     original symbol
-     (if (memq where '(:before :after)) :around where)
-     (ems--modern-advice-wrapper symbol where function)
-     props)))
-
-(advice-add 'advice-add :around #'ems--advice-add-around)
 
 ;;;   Define locations:
 
@@ -287,9 +211,8 @@
 ;;;; Design:
 ;; Advice on funcall-interactively stores the name of the
 ;; interactive command being run.
-;; Advice on the defadvice macro generates a locally bound predicate that
-;; ensures that ems-interactive-p is only called from legacy Emacsvox advice.
-;; Thus, ems-interactive-p is reserved for use within Emacsvox advice.
+;; Native Emacsvox advice passes its target explicitly to `ems-interactive-p'.
+;; This prevents a nested command from consuming the outer command's marker.
 ;;; Implementation: Interactive Check:
 
 (defun emacsvox--funcall-interactively-around (orig-fun func &rest args)
@@ -300,35 +223,9 @@
 (advice-add
  'funcall-interactively :around #'emacsvox--funcall-interactively-around)
 
-;; Beware: Advice on defadvice
-(advice-add 'defadvice :around #'emacsvox--generate-interactive-check)
-
-(defun emacsvox--generate-interactive-check
-    (orig-macro fn-name args &rest body)
-  "Lexically redefine ems-interactive-p  to test  ems--interactive-fn-name.
-The local definition expands to a call to `eq' that compares
-FN-NAME to our stored value of ems--interactive-fn-name."
-  (apply
-   orig-macro fn-name args
-   (macroexp-unprogn
-    (macroexpand-all
-     (macroexp-progn body)
-     ;;  env with new definition
-     `((ems-interactive-p
-        ;; Reset the var to nil after consuming it to avoid  misfiring if
-        ;; fn-name calls itself recursively.
-        . ,(lambda ()
-             `(when (eq ems--interactive-fn-name ',fn-name)
-                (setq ems--interactive-fn-name nil)
-                t)))
-       . ,macroexpand-all-environment)))))
-
-(defun ems-interactive-p (&optional target)
-  "Return non-nil in advice for the current interactive command.
-TARGET explicitly names the advised command for native advice.  When TARGET is
-nil, use compatibility context supplied by the temporary advice bridge."
-  (setq target (or target ems--modern-advice-target))
-  (when (and target (eq ems--interactive-fn-name target))
+(defun ems-interactive-p (target)
+  "Return non-nil when TARGET is the current interactive command."
+  (when (eq ems--interactive-fn-name target)
     (setq ems--interactive-fn-name nil)
     t))
 

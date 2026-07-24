@@ -128,6 +128,10 @@
           (should (equal result '(nil t))))
       (emacsvox-test--remove-native-advice target advice))))
 
+(ert-deftest emacsvox-interactive-p-requires-an-explicit-target ()
+  "Interactive advice checks cannot fall back to compatibility state."
+  (should-error (ems-interactive-p) :type 'wrong-number-of-arguments))
+
 (ert-deftest emacsvox-unicode-cache-advice-is-native ()
   "Unicode data caching uses its native around-advice function directly."
   (should

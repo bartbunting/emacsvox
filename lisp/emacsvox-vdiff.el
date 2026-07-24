@@ -182,10 +182,6 @@
 
 ;;;  Navigation:
 
-;; (defadvice vdiff--scroll-function (around emacsvox pre act comp)
-;;   "Silence messages."
-;;   (ems-with-messages-silenced ad-do-it))
-
 (defun emacsvox-vdiff--movement-feedback ()
   "Speak the selected VDiff hunk."
   (emacsvox-vdiff-speak-this-hunk)
