@@ -119,6 +119,7 @@
   (require 'emacsvox-man-tests)
   (require 'emacsvox-python-tests)
   (require 'emacsvox-make-mode-tests)
+  (require 'emacsvox-dictionary-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

@@ -40,6 +40,7 @@
 ;;  required modules
 
 (require 'emacsvox-preamble)
+(require 'dictionary)
 
 ;;; Commentary:
 ;; Speech-enables emacs client for accessing dictionary
@@ -48,85 +49,68 @@
 
 ;;;  Advice interactive commands to speak.
 
-(defun ems--dictionary-after (&rest _)
+(defun emacsvox--advice-dictionary-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'dictionary :after #'ems--dictionary-after)
+(advice-add 'dictionary :after #'emacsvox--advice-dictionary-after)
 
-(defun ems--dictionary-close-after (&rest _)
+(defun emacsvox--advice-dictionary-close-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-close)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'dictionary-close :after #'ems--dictionary-close-after)
+(advice-add 'dictionary-close :after
+            #'emacsvox--advice-dictionary-close-after)
 
-(defun ems--dictionary-select-dictionary-after (&rest _)
+(defun emacsvox--advice-dictionary-select-dictionary-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-select-dictionary)
     (emacsvox-icon 'select-object) (message "Selected dictionary")))
 
 (advice-add 'dictionary-select-dictionary :after
-            #'ems--dictionary-select-dictionary-after)
+            #'emacsvox--advice-dictionary-select-dictionary-after)
 
-(defun ems--dictionary-select-strategy-after (&rest _)
+(defun emacsvox--advice-dictionary-select-strategy-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-select-strategy)
     (emacsvox-icon 'select-object) (message "Selected strategy")))
 
 (advice-add 'dictionary-select-strategy :after
-            #'ems--dictionary-select-strategy-after)
+            #'emacsvox--advice-dictionary-select-strategy-after)
 
-(defun ems--dictionary-search-after (&rest _)
+(defun emacsvox--advice-dictionary-search-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-search)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
-(advice-add 'dictionary-search :after #'ems--dictionary-search-after)
+(advice-add 'dictionary-search :after
+            #'emacsvox--advice-dictionary-search-after)
 
-(defun ems--dictionary-lookup-definition-after (&rest _)
+(defun emacsvox--advice-dictionary-lookup-definition-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-lookup-definition)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
 (advice-add 'dictionary-lookup-definition :after
-            #'ems--dictionary-lookup-definition-after)
+            #'emacsvox--advice-dictionary-lookup-definition-after)
 
-(defun ems--dictionary-match-words-after (&rest _)
+(defun emacsvox--advice-dictionary-match-words-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-match-words)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
 (advice-add 'dictionary-match-words :after
-            #'ems--dictionary-match-words-after)
+            #'emacsvox--advice-dictionary-match-words-after)
 
-(defun ems--dictionary-previous-after (&rest _)
+(defun emacsvox--advice-dictionary-previous-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'dictionary-previous)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'dictionary-previous :after
-            #'ems--dictionary-previous-after)
-
-(defun ems--dictionary-prev-link-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement)
-    (emacsvox-speak-range 'link-function)))
-
-(advice-add 'dictionary-prev-link :after
-            #'ems--dictionary-prev-link-after)
-
-(defun ems--dictionary-next-link-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement)
-    (emacsvox-speak-range 'link-function)))
-
-(advice-add 'dictionary-next-link :after
-            #'ems--dictionary-next-link-after)
+            #'emacsvox--advice-dictionary-previous-after)
 
 (provide 'emacsvox-dictionary)
 ;;;  end of file
-
