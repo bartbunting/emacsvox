@@ -103,17 +103,28 @@ many available corrections."
  #'emacsvox--advice-ispell-command-loop-before
  '((name . emacsvox)))
 
-(defun ems--ispell-comments-and-strings-around (orig-fun &rest args)
-  "Stop chatter by turning off messages"
-  (cond
-   ((ems-interactive-p)
-    (let ((dtk-stop-immediately t))
-      (ems-with-messages-silenced ad-do-it)
-      (emacsvox-icon 'task-done)))
-   (t ad-do-it)))
+(defun emacsvox--ispell-call-with-completion-feedback
+    (target original arguments)
+  "Call ORIGINAL with ARGUMENTS and announce interactive TARGET completion."
+  (if (ems-interactive-p target)
+      (let ((dtk-stop-immediately t))
+        (let ((result
+               (ems-with-messages-silenced
+                 (apply original arguments))))
+          (emacsvox-icon 'task-done)
+          result))
+    (apply original arguments)))
 
-(advice-add 'ispell-comments-and-strings :around
-            #'ems--ispell-comments-and-strings-around)
+(defun emacsvox--advice-ispell-comments-and-strings-around
+    (original &rest arguments)
+  "Suppress chatter from interactive comment and string spell checking."
+  (emacsvox--ispell-call-with-completion-feedback
+   'ispell-comments-and-strings original arguments))
+
+(advice-add
+ 'ispell-comments-and-strings :around
+ #'emacsvox--advice-ispell-comments-and-strings-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-ispell-help-before (&rest _)
   "Speak the help message. "
@@ -126,20 +137,23 @@ many available corrections."
 
 ;;;   Advice top-level ispell commands:
 
-(cl-loop
- for f in
- '(ispell-buffer ispell-region)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Produce auditory icons for ispell."
-     (cond
-      ((ems-interactive-p)
-       (let ((dtk-stop-immediately t))
-         (ems-with-messages-silenced ad-do-it)
-         (emacsvox-icon 'task-done)))
-      (t ad-do-it))
-     ad-return-value)))
+(defun emacsvox--advice-ispell-buffer-around (original)
+  "Suppress chatter from interactive whole-buffer spell checking."
+  (emacsvox--ispell-call-with-completion-feedback
+   'ispell-buffer original nil))
+
+(advice-add
+ 'ispell-buffer :around #'emacsvox--advice-ispell-buffer-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-ispell-region-around (original &rest arguments)
+  "Suppress chatter from interactive region spell checking."
+  (emacsvox--ispell-call-with-completion-feedback
+   'ispell-region original arguments))
+
+(advice-add
+ 'ispell-region :around #'emacsvox--advice-ispell-region-around
+ '((name . emacsvox)))
 
 (defun ems--ispell-word-around (orig-fun &rest args)
   "Produce auditory icons for ispell."

@@ -31,6 +31,13 @@
     (ispell-help :before emacsvox--advice-ispell-help-before))
   "Directly migrated simple Ispell advice.")
 
+(defconst emacsvox-test--ispell-session-advice
+  '((ispell-comments-and-strings
+     :around emacsvox--advice-ispell-comments-and-strings-around)
+    (ispell-buffer :around emacsvox--advice-ispell-buffer-around)
+    (ispell-region :around emacsvox--advice-ispell-region-around))
+  "Directly migrated Ispell session advice.")
+
 (ert-deftest emacsvox-ispell-emacs31-target-contracts ()
   "Every advised Ispell target exists with its Emacs 31 arguments."
   (dolist (entry emacsvox-test--ispell-target-arglists)
@@ -43,6 +50,16 @@
 (ert-deftest emacsvox-ispell-simple-advice-is-directly-registered ()
   "Simple Ispell advice bypasses the compatibility bridge."
   (dolist (entry emacsvox-test--ispell-simple-advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers)))))
+
+(ert-deftest emacsvox-ispell-session-advice-is-directly-registered ()
+  "Ispell session advice bypasses the compatibility bridge."
+  (dolist (entry emacsvox-test--ispell-session-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
       (should (advice-member-p function target))
@@ -78,6 +95,51 @@
                (lambda (text) (setq spoken text))))
       (emacsvox--advice-ispell-help-before))
     (should (equal spoken "Ispell help"))))
+
+(ert-deftest emacsvox-ispell-region-runs-once-with-interactive-feedback ()
+  "Interactive region checking runs once, silenced, then cues completion."
+  (let ((ems--interactive-fn-name 'ispell-region)
+        (emacsvox-speak-messages t)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        'region-result
+        (emacsvox--advice-ispell-region-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push
+            (list
+             'call arguments inhibit-message emacsvox-speak-messages)
+            events)
+           'region-result)
+         1 9 t 2))))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((call (1 9 t 2) t nil) (icon task-done))))))
+
+(ert-deftest emacsvox-ispell-session-programmatic-call-is-quiet ()
+  "Programmatic session checking runs once without completion feedback."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        'comments-result
+        (emacsvox--advice-ispell-comments-and-strings-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (list 'call arguments) events)
+           'comments-result)
+         3 12))))
+    (should (= calls 1))
+    (should (equal events '((call (3 12)))))))
 
 (provide 'emacsvox-ispell-tests)
 ;;; emacsvox-ispell-tests.el ends here
