@@ -165,6 +165,7 @@
   (require 'emacsvox-gh-explorer-tests)
   (require 'emacsvox-ivy-tests)
   (require 'emacsvox-magit-tests)
+  (require 'emacsvox-yasnippet-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

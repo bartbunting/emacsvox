@@ -53,26 +53,44 @@
 
 ;;;  Advice interactive commands:
 
-(cl-loop 
- for f in 
- '(
-   yas-prev-field yas-expand
-   yas-next-field yas-next-field-or-maybe-expand)
+(defconst emacsvox-yasnippet--field-targets
+  '(yas-prev-field
+    yas-expand
+    yas-next-field
+    yas-next-field-or-maybe-expand)
+  "Yasnippet commands that move or expand fields.")
+
+(cl-loop
+ for target in emacsvox-yasnippet--field-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "provide feedback"
      (let ((emacsvox-show-point t))
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
-(defun ems--yas-insert-snippet-after (&rest _)
+(defun emacsvox--advice-yas-insert-snippet-after (&rest _)
   "Speak inserted template."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'yas-insert-snippet)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-(advice-add 'yas-insert-snippet :after #'ems--yas-insert-snippet-after)
+(defconst emacsvox-yasnippet--advice-targets
+  (append emacsvox-yasnippet--field-targets '(yas-insert-snippet))
+  "Current Yasnippet targets that receive native after advice.")
+
+(defun emacsvox-yasnippet--install-advice ()
+  "Install advice after the optional Yasnippet package loads."
+  (dolist (target emacsvox-yasnippet--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'yasnippet
+  (emacsvox-yasnippet--install-advice))
 
 (provide 'emacsvox-yasnippet)
 ;;;  end of file
-
