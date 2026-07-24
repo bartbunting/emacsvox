@@ -114,6 +114,27 @@
     dtk--with-charset-priority)
   "Removed DECtalk-era names for generic text preparation.")
 
+(defconst emacsvox-test--legacy-character-functions
+  '(dtk-speak-setup-character-table
+    dtk-char-to-speech
+    dtk-letter
+    dtk-unicode-charset-limits
+    dtk-unicode-build-skip-regexp
+    dtk-unicode-update-untouched-charsets
+    dtk-unicode-char-in-charsets-p
+    dtk-unicode-char-untouched-p
+    dtk-unicode-name-for-char
+    dtk-unicode-char-punctuation-p
+    dtk-unicode-apply-name-transformation-rules
+    dtk-unicode-uncustomize-char
+    dtk-unicode-customize-char
+    dtk-unicode-user-table-handler
+    dtk-unicode-full-table-handler
+    dtk-unicode-full-name-for-char
+    dtk-unicode-short-name-for-char
+    dtk-unicode-replace-chars)
+  "Removed DECtalk-era names for generic character pronunciation.")
+
 (defconst emacsvox-test--tts-public-aliases
   '((tts-dispatch . dtk-dispatch)
     (tts-reset-state . dtk-reset-state)
@@ -123,14 +144,7 @@
     (tts-local-server . dtk-local-server)
     (tts-set-language . dtk-set-language)
     (tts-set-next-language . dtk-set-next-language)
-    (tts-set-previous-language . dtk-set-previous-language)
-    (tts-char-to-speech . dtk-char-to-speech)
-    (tts-unicode-update-untouched-charsets
-     . dtk-unicode-update-untouched-charsets)
-    (tts-unicode-char-untouched-p . dtk-unicode-char-untouched-p)
-    (tts-unicode-name-for-char . dtk-unicode-name-for-char)
-    (tts-unicode-full-name-for-char . dtk-unicode-full-name-for-char)
-    (tts-letter . dtk-letter))
+    (tts-set-previous-language . dtk-set-previous-language))
   "Canonical public aliases and their legacy implementations.")
 
 (defun emacsvox-test--tts-capture-protocol (thunk)
@@ -370,6 +384,22 @@
          dtk-yank-excluded-properties))
     (should-not (boundp variable))))
 
+(ert-deftest emacsvox-tts-legacy-character-api-is-removed ()
+  "Generic character pronunciation no longer exposes DECtalk-era names."
+  (dolist (function emacsvox-test--legacy-character-functions)
+    (should-not (fboundp function)))
+  (dolist
+      (variable
+       '(dtk-handle-unicode
+         dtk-character-to-speech-table
+         dtk-unicode-character-replacement-alist
+         dtk-unicode-name-transformation-rules-alist
+         dtk-unicode-untouched-charsets
+         dtk-unicode-handlers
+         dtk-unicode-charset-filter-regexp
+         dtk-unicode-cache))
+    (should-not (boundp variable))))
+
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
   (let ((default-quiet (default-value 'tts-quiet))
@@ -386,17 +416,13 @@
 (ert-deftest emacsvox-tts-canonical-state-aliases-share-storage ()
   "Canonical and legacy global state names address the same values."
   (let ((dtk-program "legacy")
-        (tts-speaker-process 'primary)
-        (dtk-character-to-speech-table ["legacy"]))
+        (tts-speaker-process 'primary))
     (should (equal tts-program "legacy"))
     (should (eq tts-speaker-process 'primary))
-    (should (equal tts-character-to-speech-table ["legacy"]))
     (setq tts-program "canonical"
-          tts-speaker-process 'replacement
-          tts-character-to-speech-table ["canonical"])
+          tts-speaker-process 'replacement)
     (should (equal dtk-program "canonical"))
-    (should (eq tts-speaker-process 'replacement))
-    (should (equal dtk-character-to-speech-table ["canonical"]))))
+    (should (eq tts-speaker-process 'replacement))))
 
 (ert-deftest emacsvox-tts-legacy-speaker-process-state-is-removed ()
   "The primary speech process no longer exposes its DECtalk-era state name."

@@ -72,7 +72,7 @@ used."
         emacsvox-trace--events
         value)
     (cl-letf (((symbol-function 'tts-speak) #'emacsvox-trace--speak)
-              ((symbol-function 'dtk-letter)
+              ((symbol-function 'tts-letter)
                (lambda (letter)
                  (emacsvox-trace--record
                   'letter (substring-no-properties letter))))

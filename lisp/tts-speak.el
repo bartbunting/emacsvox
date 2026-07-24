@@ -62,10 +62,6 @@
 ;; buffer-local bindings in live sessions.
 (defvaralias 'tts-program 'dtk-program
   "Canonical name for the selected speech-server program.")
-(defvaralias 'tts-handle-unicode 'dtk-handle-unicode
-  "Canonical name for speech-server Unicode preprocessing state.")
-(defvaralias 'tts-character-to-speech-table 'dtk-character-to-speech-table
-  "Canonical name for the shared character pronunciation table.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
 (defvar dtk-program
@@ -257,7 +253,7 @@ mac for MAC TTS (default on Mac)")
   :type 'integer
   :group 'tts)
 
-(defvar dtk-handle-unicode nil
+(defvar tts-handle-unicode nil
   "convert unicode characters if the speech server doesn't support it.
   This variable shouldn't usually be set")
 
@@ -559,7 +555,7 @@ specifies the current pronunciation mode --- See
       (while (re-search-forward tts-octal-chars nil t)
         (setq char (char-after (match-beginning 0)))
         (replace-match
-         (format " %s " (aref dtk-character-to-speech-table char))
+         (format " %s " (aref tts-character-to-speech-table char))
          nil t))))))
 (defconst tts-caps-regexp
   (concat
@@ -1112,14 +1108,14 @@ Set by \\[tts-set-punctuations].")
 
 ;;;   Mapping characters to speech:
 
-(defvar dtk-character-to-speech-table
+(defvar tts-character-to-speech-table
   (make-vector 256 "")
   "Maps characters to pronunciation strings.")
 
 ;;  Assign entries in the table:
-(defun dtk-speak-setup-character-table ()
+(defun tts-speak-setup-character-table ()
   "Setup pronunciations in the character table for theTTS engine."
-  (let ((table dtk-character-to-speech-table))
+  (let ((table tts-character-to-speech-table))
     (aset table 0 "control at")
     (aset table 1 "control a")
     (aset table 2 "control b")
@@ -1378,14 +1374,14 @@ Set by \\[tts-set-punctuations].")
     (aset table 254 " octal 376 ")
     (aset table 255 " octal 377 ")))
 
-(dtk-speak-setup-character-table)
+(tts-speak-setup-character-table)
 
-(defun dtk-char-to-speech (char)
+(defun tts-char-to-speech (char)
   "Translate CHAR to speech string."
   
   (if (eq (char-charset char) 'ascii)
-      (aref dtk-character-to-speech-table char)
-    (or (dtk-unicode-short-name-for-char char)
+      (aref tts-character-to-speech-table char)
+    (or (tts-unicode-short-name-for-char char)
         (format "octal %o" char))))
 
 ;;;   interactively selecting the server:
@@ -1667,7 +1663,7 @@ unless   `tts-quiet' is set to t. "
         (tts--delete-invisible-text)
         (tts-handle-repeating-patterns mode)
         (when pron-table (tts-apply-pronunciations pron-table))
-        (when dtk-handle-unicode (dtk-unicode-replace-chars mode))
+        (when tts-handle-unicode (tts-unicode-replace-chars mode))
         (tts-quote mode)
         (goto-char (point-min))         ; text is ready to be spoken
         (skip-syntax-forward "-")       ;skip leading whitespace
@@ -1746,7 +1742,7 @@ grouping"
     (tts-with-punctuations 'some (tts-speak contents))
     t))
 
-(defun dtk-letter (letter)
+(defun tts-letter (letter)
   "Speak a LETTER."
   (unless tts-quiet
     (when (process-live-p tts-speaker-process)
@@ -1814,9 +1810,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
         (when (process-live-p new)
           (setq tts-notify-process new))))))
 
-;; Include dtk-unicode.el
-
-;; dtk-unicode.el --- Pronounce Unicode characters
+;; Unicode character pronunciation support:
 ;;;  Header: Lukas
 
 ;; Copyright 2007, 2011 Lukas Loehrer
@@ -1829,7 +1823,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 
 ;;;  Customizations
 
-(defcustom dtk-unicode-character-replacement-alist
+(defcustom tts-unicode-character-replacement-alist
   '(
     (? . "-")                       ; START OF GUARDED AREA
     (?━ . "-")                          ; horiz bars
@@ -1869,7 +1863,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
           :key-type (character :tag "character")
           :value-type (string :tag "replacement")))
 
-(defcustom dtk-unicode-name-transformation-rules-alist
+(defcustom tts-unicode-name-transformation-rules-alist
   '(
     ("BOX DRAWING" . (lambda (_ignored) "."))
     ("^Mathematical Sans-Serif\\( small\\| capital\\)? letter \\(.*\\)$"
@@ -1892,22 +1886,22 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
 
 ;;;  Variables
 
-(defcustom dtk-unicode-untouched-charsets
+(defcustom tts-unicode-untouched-charsets
   '(ascii latin-iso8859-1)
   "Characters of these charsets are  ignored by
-  dtk-unicode-replace-chars."
+  tts-unicode-replace-chars."
   :group 'dtk
   :type '(repeat symbol))
 
-(defvar dtk-unicode-handlers
-  '(dtk-unicode-user-table-handler dtk-unicode-full-table-handler)
+(defvar tts-unicode-handlers
+  '(tts-unicode-user-table-handler tts-unicode-full-table-handler)
   "List of functions which are called in this order for replacing
 an unspeakable character.  A handler returns a non-nil value if
 the replacement was successful, nil otherwise.")
 
 ;;;  Helper functions
 
-(defun dtk-unicode-charset-limits (charset)
+(defun tts-unicode-charset-limits (charset)
   "Return rough lower and upper limits for character codes in CHARSET."
   (cond
    ((eq charset 'ascii)
@@ -1924,27 +1918,27 @@ the replacement was successful, nil otherwise.")
         (setq min 33 max 126))
       (list (make-char charset min min) (make-char charset max max))))))
 
-(defun dtk-unicode-build-skip-regexp (charsets)
+(defun tts-unicode-build-skip-regexp (charsets)
   "Construct regexp to match all but the characters in
-dtk-unicode-untouched-charsets."
+tts-unicode-untouched-charsets."
   (format "[^%s]"
           (cl-loop for charset in charsets
                    when (charsetp charset)
                    concat
                    (apply
                     #'format
-                    "%c-%c" (dtk-unicode-charset-limits charset)))))
+                    "%c-%c" (tts-unicode-charset-limits charset)))))
 
-(defvar dtk-unicode-charset-filter-regexp
-  (dtk-unicode-build-skip-regexp dtk-unicode-untouched-charsets)
+(defvar tts-unicode-charset-filter-regexp
+  (tts-unicode-build-skip-regexp tts-unicode-untouched-charsets)
   "Regular exppression that matches characters not in
-  dtk-unicode-untouched-charsets.")
+  tts-unicode-untouched-charsets.")
 
-(defun dtk-unicode-update-untouched-charsets (charsets)
+(defun tts-unicode-update-untouched-charsets (charsets)
   "Update list of charsets we will not touch."
-  (setq dtk-unicode-untouched-charsets charsets)
-  (setq dtk-unicode-charset-filter-regexp
-        (dtk-unicode-build-skip-regexp dtk-unicode-untouched-charsets)))
+  (setq tts-unicode-untouched-charsets charsets)
+  (setq tts-unicode-charset-filter-regexp
+        (tts-unicode-build-skip-regexp tts-unicode-untouched-charsets)))
 ;; Execute BODY like `progn' with CHARSETS at the front of priority list.
 ;; CHARSETS is a list of charsets.  See
 ;; `set-charset-priority'.  This affects the implicit sorting of lists of
@@ -1960,32 +1954,32 @@ dtk-unicode-untouched-charsets."
          (apply #'set-charset-priority ,current)))))
 ;; Now use it:
 
-(defun dtk-unicode-char-in-charsets-p (char charsets)
+(defun tts-unicode-char-in-charsets-p (char charsets)
   "Return t if CHAR is a member of one in the charsets in CHARSETS."
   (tts--with-charset-priority charsets (memq (char-charset char) charsets)))
 
-(defun dtk-unicode-char-untouched-p (char)
+(defun tts-unicode-char-untouched-p (char)
   "Return t if char is a member of one of the charsets in
-dtk-unicode-untouched-charsets."
-  (dtk-unicode-char-in-charsets-p char dtk-unicode-untouched-charsets))
+tts-unicode-untouched-charsets."
+  (tts-unicode-char-in-charsets-p char tts-unicode-untouched-charsets))
 
-(defvar dtk-unicode-cache (make-hash-table)
+(defvar tts-unicode-cache (make-hash-table)
   "Cache for unicode data lookups.")
 
 (defun emacsvox--advice-describe-char-unicode-data-around
     (orig-fun char &rest args)
   "Cache result."
-  (let ((result (gethash char dtk-unicode-cache 'not-found)))
+  (let ((result (gethash char tts-unicode-cache 'not-found)))
     (if (eq result 'not-found)
         (let ((ret (apply orig-fun char args)))
-          (puthash char ret dtk-unicode-cache)
+          (puthash char ret tts-unicode-cache)
           ret)
       result)))
 
 (advice-add 'describe-char-unicode-data :around
             #'emacsvox--advice-describe-char-unicode-data-around)
 
-(defun dtk-unicode-name-for-char (char)
+(defun tts-unicode-name-for-char (char)
   "Return unicode name for character CHAR. "
   (cond
    ((= char 128) "")
@@ -1996,7 +1990,7 @@ dtk-unicode-untouched-charsets."
       (get-char-code-property char 'old-name)
       (format "%c" char))))))
 
-(defun dtk-unicode-char-punctuation-p (char)
+(defun tts-unicode-char-punctuation-p (char)
   "Use unicode properties to determine whether CHAR is a
 ppunctuation character."
   (let ((category (get-char-code-property char 'category))
@@ -2004,28 +1998,28 @@ ppunctuation character."
     (when (stringp category)
       (string-match "punctuation" category))))
 
-(defun dtk-unicode-apply-name-transformation-rules (name)
+(defun tts-unicode-apply-name-transformation-rules (name)
   "Apply transformation rules in
-dtk-unicode-name-transformation-rules-alist to NAME."
+tts-unicode-name-transformation-rules-alist to NAME."
   (let ((case-fold-search t))
     (funcall
      (or
       (assoc-default
        name
-       dtk-unicode-name-transformation-rules-alist 'string-match)
+       tts-unicode-name-transformation-rules-alist 'string-match)
       'identity)
      name)))
 
-(defun dtk-unicode-uncustomize-char (char)
+(defun tts-unicode-uncustomize-char (char)
   "Delete custom replacement for CHAR.
 
 When called interactively, CHAR defaults to the character after point."
   (interactive (list (following-char)))
-  (setq dtk-unicode-character-replacement-alist
-        (cl-loop for elem in dtk-unicode-character-replacement-alist
+  (setq tts-unicode-character-replacement-alist
+        (cl-loop for elem in tts-unicode-character-replacement-alist
                  unless (eq (car elem) char) collect elem)))
 
-(defun dtk-unicode-customize-char (char replacement)
+(defun tts-unicode-customize-char (char replacement)
   "Add a custom replacement string for CHAR.
 
 When called interactively, CHAR defaults to the character after point."
@@ -2036,38 +2030,38 @@ When called interactively, CHAR defaults to the character after point."
             (format
              "Replacement for %c (0x%x) from charset %s: "
              char char (char-charset char))))))
-  (push (cons char replacement) dtk-unicode-character-replacement-alist))
+  (push (cons char replacement) tts-unicode-character-replacement-alist))
 
 ;;;  Character replacement handlers
 
-(defun dtk-unicode-user-table-handler (char)
+(defun tts-unicode-user-table-handler (char)
   "Return user defined replacement character if it exists."
-  (cdr (assq char dtk-unicode-character-replacement-alist)))
+  (cdr (assq char tts-unicode-character-replacement-alist)))
 
-(defun dtk-unicode-full-table-handler (char)
+(defun tts-unicode-full-table-handler (char)
   "Uses the unicode data file to find the name of CHAR."
-  (let ((char-desc (dtk-unicode-name-for-char char)))
+  (let ((char-desc (tts-unicode-name-for-char char)))
     (when char-desc
       (format
-       " %s " (dtk-unicode-apply-name-transformation-rules char-desc)))))
+       " %s " (tts-unicode-apply-name-transformation-rules char-desc)))))
 
 ;;;  External interface
 
-(defun dtk-unicode-full-name-for-char (char)
+(defun tts-unicode-full-name-for-char (char)
   "Return full name of CHAR. "
-  (dtk-unicode-name-for-char char))
-(defun dtk-unicode-short-name-for-char (char)
+  (tts-unicode-name-for-char char))
+(defun tts-unicode-short-name-for-char (char)
   "Return short name of CHAR. "
-  (if (memq char dtk-unicode-untouched-charsets)
+  (if (memq char tts-unicode-untouched-charsets)
       (char-to-string char)
-    (dtk-unicode-name-for-char char)))
+    (tts-unicode-name-for-char char)))
 
-(defun dtk-unicode-replace-chars (mode)
+(defun tts-unicode-replace-chars (mode)
   "Replace unicode characters with something  TTS friendly. "
   (let ((inhibit-read-only t))
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward dtk-unicode-charset-filter-regexp nil t)
+      (while (re-search-forward tts-unicode-charset-filter-regexp nil t)
         (let* ((pos (match-beginning 0))
                (char (char-after pos))
                (props (text-properties-at pos))
@@ -2075,10 +2069,10 @@ When called interactively, CHAR defaults to the character after point."
                 (save-match-data
                   (if (and
                        (memq mode '(some none))
-                       (dtk-unicode-char-punctuation-p char))
+                       (tts-unicode-char-punctuation-p char))
                       " "
                     (run-hook-with-args-until-success
-                     'dtk-unicode-handlers char)))))
+                     'tts-unicode-handlers char)))))
           (replace-match replacement t t nil)
           (when props
             (set-text-properties pos (point) props)))))))
@@ -2096,13 +2090,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-set-language #'dtk-set-language)
 (defalias 'tts-set-next-language #'dtk-set-next-language)
 (defalias 'tts-set-previous-language #'dtk-set-previous-language)
-(defalias 'tts-char-to-speech #'dtk-char-to-speech)
-(defalias 'tts-unicode-update-untouched-charsets
-  #'dtk-unicode-update-untouched-charsets)
-(defalias 'tts-unicode-char-untouched-p #'dtk-unicode-char-untouched-p)
-(defalias 'tts-unicode-name-for-char #'dtk-unicode-name-for-char)
-(defalias 'tts-unicode-full-name-for-char #'dtk-unicode-full-name-for-char)
-(defalias 'tts-letter #'dtk-letter)
 
 ;;; tts-speak.el ends here
 
