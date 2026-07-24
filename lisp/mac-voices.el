@@ -48,6 +48,9 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
 
+(defvar tts-default-speech-rate)
+(defvar tts-default-voice)
+
 ;;; mac:
 ;;;###autoload
 (defun mac ()
@@ -55,8 +58,8 @@
   (interactive)
   (mac-configure-tts)
   (ems--fastload "voice-defs")
-  (dtk-select-server "mac")
-  (dtk-initialize))
+  (tts-select-server "mac")
+  (tts-initialize))
 
 ;;;  Customizations:
 
@@ -66,8 +69,8 @@
   :type 'integer
   :set #'(lambda(sym val)
            (set-default sym val)
-           (when (string-match "mac\\'"dtk-program)
-             (setq-default dtk-speech-rate val))))
+           (when (string-match "mac\\'" tts-program)
+             (setq-default tts-speech-rate val))))
 
 ;;;   voice table
 
@@ -284,15 +287,13 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun mac-configure-tts ()
   "Configure TTS  to use mac."
-  (cl-declare (special tts-default-speech-rate
-                       tts-default-voice mac-default-speech-rate))
   (setq tts-default-voice 'systemDefault)
   (fset 'tts-voice-defined-p 'mac-voice-defined-p)
   (fset 'tts-get-voice-command 'mac-get-voice-command)
   (fset 'tts-define-voice-from-acss 'mac-define-voice-from-acss)
   (setq tts-default-speech-rate mac-default-speech-rate)
   (set-default 'tts-default-speech-rate mac-default-speech-rate)
-  (dtk-unicode-update-untouched-charsets
+  (tts-unicode-update-untouched-charsets
    '(ascii latin-iso8859-1 latin-iso8859-15 latin-iso8859-9
            eight-bit-graphic))
   (setq emacsvox-play-program nil))
@@ -300,4 +301,3 @@ and TABLE gives the values along that dimension."
 ;;;  tts-env for Mac:
 
 (provide 'mac-voices)
-

@@ -13,6 +13,7 @@
 (require 'dtk-speak)
 (require 'emacsvox-sounds)
 (require 'espeak-voices)
+(require 'mac-voices)
 (require 'outloud-voices)
 (require 'swiftmac-voices)
 (require 'voice-setup)
@@ -610,6 +611,69 @@
      (equal
       defaults
       `((tts-default-speech-rate . ,swiftmac-default-speech-rate))))
+    (should
+     (equal
+      untouched-charsets
+      '(ascii latin-iso8859-1 latin-iso8859-15
+              latin-iso8859-9 eight-bit-graphic)))))
+
+(ert-deftest emacsvox-tts-mac-uses-canonical-runtime ()
+  "The macOS selector uses the generic TTS runtime API."
+  (let (events)
+    (cl-letf (((symbol-function 'mac-configure-tts)
+               (lambda () (push 'configure events)))
+              ((symbol-function 'ems--fastload)
+               (lambda (file) (push (list 'fastload file) events)))
+              ((symbol-function 'tts-select-server)
+               (lambda (server) (push (list 'select server) events)))
+              ((symbol-function 'tts-initialize)
+               (lambda () (push 'initialize events))))
+      (mac))
+    (should
+     (equal
+      (nreverse events)
+      '(configure
+        (fastload "voice-defs")
+        (select "mac")
+        initialize)))))
+
+(ert-deftest emacsvox-tts-mac-configures-canonical-state ()
+  "The macOS adapter configures generic TTS state and dispatch."
+  (let (defaults
+        untouched-charsets)
+    (cl-progv
+        '(tts-default-voice tts-default-speech-rate
+          emacsvox-play-program)
+        '(unset 1 local-player)
+      (cl-letf (((symbol-function 'set-default)
+                 (lambda (symbol value)
+                   (push (cons symbol value) defaults)))
+                ((symbol-function 'tts-unicode-update-untouched-charsets)
+                 (lambda (charsets)
+                   (setq untouched-charsets charsets)))
+                ((symbol-function 'tts-voice-defined-p) #'ignore)
+                ((symbol-function 'tts-get-voice-command) #'ignore)
+                ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (mac-configure-tts)
+        (should
+         (eq (symbol-value 'tts-default-voice) 'systemDefault))
+        (should
+         (= (symbol-value 'tts-default-speech-rate)
+            mac-default-speech-rate))
+        (should-not (symbol-value 'emacsvox-play-program))
+        (should
+         (eq (symbol-function 'tts-voice-defined-p)
+             'mac-voice-defined-p))
+        (should
+         (eq (symbol-function 'tts-get-voice-command)
+             'mac-get-voice-command))
+        (should
+         (eq (symbol-function 'tts-define-voice-from-acss)
+             'mac-define-voice-from-acss))))
+    (should
+     (equal
+      defaults
+      `((tts-default-speech-rate . ,mac-default-speech-rate))))
     (should
      (equal
       untouched-charsets
