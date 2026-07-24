@@ -236,6 +236,7 @@
   (require 'emacsvox-threes-tests)
   (require 'emacsvox-typo-tests)
   (require 'emacsvox-vdiff-tests)
+  (require 'emacsvox-vertico-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

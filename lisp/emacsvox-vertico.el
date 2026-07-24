@@ -58,17 +58,15 @@
 
 ;;;  Advice interactive commands
 
-(defun ems--vertico-insert-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (let* ((orig-point (point)))
-      (apply orig-fun args) (emacsvox-icon 'complete)
-      (emacsvox-speak-region orig-point (point)))
+(defun emacsvox--advice-vertico-insert-around (orig-fun &rest args)
+  "Call ORIG-FUN once and speak the inserted completion."
+  (let ((orig-point (point))
+        (result (apply orig-fun args)))
+    (emacsvox-icon 'complete)
+    (emacsvox-speak-region orig-point (point))
     result))
 
-(advice-add 'vertico-insert :around #'ems--vertico-insert-around)
-
-(defun ems--vertico--exhibit-after (&rest _)
+(defun emacsvox--advice-vertico--exhibit-after (&rest _)
   "speak."
   (cl-declare
    (special vertico--allow-prompt vertico--index vertico--base))
@@ -92,25 +90,48 @@
     (setq-local emacsvox-vertico--prev-candidate new-cand
                 emacsvox-vertico--prev-index vertico--index)))
 
-(advice-add 'vertico--exhibit :after #'ems--vertico--exhibit-after)
-
-(cl-loop
- for (f icon) in
+(defconst emacsvox-vertico--icon-targets
  '((vertico-scroll-up scroll)
    (vertico-scroll-down scroll)
    (vertico-first large-movement)
    (vertico-last large-movement)
    (vertico-next select-object)
    (vertico-previous select-object)
-   (vertico-exit close-object)
-   (vertico-kill delete-object))
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon ',icon)))))
+   (vertico-exit close-object))
+ "Current Vertico commands and their auditory icons.")
+
+(dolist (entry emacsvox-vertico--icon-targets)
+  (pcase-let ((`(,target ,icon) entry))
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Play an auditory icon after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (emacsvox-icon ',icon)))))))
+
+(defconst emacsvox-vertico--advice
+  (append
+   '((vertico-insert :around emacsvox--advice-vertico-insert-around)
+     (vertico--exhibit :after emacsvox--advice-vertico--exhibit-after))
+   (mapcar
+    (lambda (entry)
+      (let ((target (car entry)))
+        (list target :after
+              (intern (format "emacsvox--advice-%s-after" target)))))
+    emacsvox-vertico--icon-targets))
+  "Current Vertico targets and their native advice functions.")
+
+(defun emacsvox-vertico--install-advice ()
+  "Install native advice after Vertico loads."
+  (dolist (entry emacsvox-vertico--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'vertico
+  (emacsvox-vertico--install-advice))
 
 (provide 'emacsvox-vertico)
 ;;;  end of file
-
