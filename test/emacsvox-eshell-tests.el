@@ -123,7 +123,8 @@
   (should (eq (symbol-function 'eshell-pcomplete) 'completion-at-point))
   (should-not (fboundp 'emacsvox--advice-eshell-kill-output-after))
   (with-temp-buffer
-    (eshell-mode)
+    (cl-letf (((symbol-function 'dtk-speak) #'ignore))
+      (eshell-mode))
     (should (eq (key-binding (kbd "C-a")) 'move-beginning-of-line))
     (should (eq (key-binding (kbd "TAB")) 'completion-at-point))
     (should (eq (key-binding (kbd "C-c C-o")) 'eshell-delete-output))))
