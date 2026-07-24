@@ -102,6 +102,7 @@
   (require 'emacsvox-widget-tests)
   (require 'emacsvox-rst-tests)
   (require 'emacsvox-reftex-tests)
+  (require 'emacsvox-bs-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

@@ -95,169 +95,169 @@
 
 ;;;  speech enable interactive commands 
 
-(defun ems--bs-mode-after (&rest _)
+(defun emacsvox--advice-bs-mode-after (&rest _)
   "Speech-enable bs mode" (setq voice-lock-mode t))
 
-(advice-add 'bs-mode :after #'ems--bs-mode-after)
+(advice-add 'bs-mode :after #'emacsvox--advice-bs-mode-after)
 
-(defun ems--bs-kill-after (&rest _)
+(defun emacsvox--advice-bs-kill-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-kill)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'bs-kill :after #'ems--bs-kill-after)
+(advice-add 'bs-kill :after #'emacsvox--advice-bs-kill-after)
 
-(defun ems--bs-abort-after (&rest _)
+(defun emacsvox--advice-bs-abort-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-abort)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'bs-abort :after #'ems--bs-abort-after)
+(advice-add 'bs-abort :after #'emacsvox--advice-bs-abort-after)
 
-(defun ems--bs-set-configuration-and-refresh-after (&rest _)
+(defun emacsvox--advice-bs-set-configuration-and-refresh-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p) (emacsvox-icon 'select-object)))
+  (when (ems-interactive-p 'bs-set-configuration-and-refresh) (emacsvox-icon 'select-object)))
 
 (advice-add 'bs-set-configuration-and-refresh :after
-            #'ems--bs-set-configuration-and-refresh-after)
+            #'emacsvox--advice-bs-set-configuration-and-refresh-after)
 
-(defun ems--bs-refresh-after (&rest _)
+(defun emacsvox--advice-bs-refresh-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p) (emacsvox-icon 'select-object)))
+  (when (ems-interactive-p 'bs-refresh) (emacsvox-icon 'select-object)))
 
-(advice-add 'bs-refresh :after #'ems--bs-refresh-after)
+(advice-add 'bs-refresh :after #'emacsvox--advice-bs-refresh-after)
 
-(defun ems--bs-view-after (&rest _)
+(defun emacsvox--advice-bs-view-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-view)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'bs-view :after #'ems--bs-view-after)
+(advice-add 'bs-view :after #'emacsvox--advice-bs-view-after)
 
-(defun ems--bs-select-after (&rest _)
+(defun emacsvox--advice-bs-select-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-select)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'bs-select :after #'ems--bs-select-after)
+(advice-add 'bs-select :after #'emacsvox--advice-bs-select-after)
 
-(defun ems--bs-select-other-window-after (&rest _)
+(defun emacsvox--advice-bs-select-other-window-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-select-other-window)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'bs-select-other-window :after
-            #'ems--bs-select-other-window-after)
+            #'emacsvox--advice-bs-select-other-window-after)
 
-(defun ems--bs-tmp-select-other-window-after (&rest _)
+(defun emacsvox--advice-bs-tmp-select-other-window-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-tmp-select-other-window)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'bs-tmp-select-other-window :after
-            #'ems--bs-tmp-select-other-window-after)
+            #'emacsvox--advice-bs-tmp-select-other-window-after)
 
-(defun ems--bs-select-other-frame-after (&rest _)
+(defun emacsvox--advice-bs-select-other-frame-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-select-other-frame)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'bs-select-other-frame :after
-            #'ems--bs-select-other-frame-after)
+            #'emacsvox--advice-bs-select-other-frame-after)
 
-(defun ems--bs-select-in-one-window-after (&rest _)
+(defun emacsvox--advice-bs-select-in-one-window-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-select-in-one-window)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'bs-select-in-one-window :after
-            #'ems--bs-select-in-one-window-after)
+            #'emacsvox--advice-bs-select-in-one-window-after)
 
-(defun ems--bs-bury-buffer-after (&rest _)
+(defun emacsvox--advice-bs-bury-buffer-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p) (emacsvox-icon 'close-object)))
+  (when (ems-interactive-p 'bs-bury-buffer) (emacsvox-icon 'close-object)))
 
-(advice-add 'bs-bury-buffer :after #'ems--bs-bury-buffer-after)
+(advice-add 'bs-bury-buffer :after #'emacsvox--advice-bs-bury-buffer-after)
 
-(defun ems--bs-save-after (&rest _)
+(defun emacsvox--advice-bs-save-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p) (emacsvox-icon 'save-object)))
+  (when (ems-interactive-p 'bs-save) (emacsvox-icon 'save-object)))
 
-(advice-add 'bs-save :after #'ems--bs-save-after)
+(advice-add 'bs-save :after #'emacsvox--advice-bs-save-after)
 
-(defun ems--bs-toggle-current-to-show-after (&rest _)
+(defun emacsvox--advice-bs-toggle-current-to-show-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-toggle-current-to-show)
     (emacsvox-icon 'button) (emacsvox-bs-speak-buffer-line)))
 
 (advice-add 'bs-toggle-current-to-show :after
-            #'ems--bs-toggle-current-to-show-after)
+            #'emacsvox--advice-bs-toggle-current-to-show-after)
 
-(defun ems--bs-set-current-buffer-to-show-never-after (&rest _)
+(defun emacsvox--advice-bs-set-current-buffer-to-show-never-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-set-current-buffer-to-show-never)
     (emacsvox-icon 'button) (emacsvox-bs-speak-buffer-line)))
 
 (advice-add 'bs-set-current-buffer-to-show-never :after
-            #'ems--bs-set-current-buffer-to-show-never-after)
+            #'emacsvox--advice-bs-set-current-buffer-to-show-never-after)
 
-(defun ems--bs-mark-current-after (&rest _)
+(defun emacsvox--advice-bs-mark-current-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-mark-current)
     (emacsvox-icon 'mark-object) (emacsvox-bs-speak-buffer-line)))
 
-(advice-add 'bs-mark-current :after #'ems--bs-mark-current-after)
+(advice-add 'bs-mark-current :after #'emacsvox--advice-bs-mark-current-after)
 
-(defun ems--bs-unmark-current-after (&rest _)
+(defun emacsvox--advice-bs-unmark-current-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-unmark-current)
     (emacsvox-icon 'deselect-object) (emacsvox-bs-speak-buffer-line)))
 
-(advice-add 'bs-unmark-current :after #'ems--bs-unmark-current-after)
+(advice-add 'bs-unmark-current :after #'emacsvox--advice-bs-unmark-current-after)
 
-(defun ems--bs-delete-after (&rest _)
+(defun emacsvox--advice-bs-delete-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-delete)
     (emacsvox-icon 'delete-object) (emacsvox-bs-speak-buffer-line)))
 
-(advice-add 'bs-delete :after #'ems--bs-delete-after)
+(advice-add 'bs-delete :after #'emacsvox--advice-bs-delete-after)
 
-(defun ems--bs-delete-backward-after (&rest _)
+(defun emacsvox--advice-bs-delete-backward-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-delete-backward)
     (emacsvox-icon 'delete-object) (emacsvox-bs-speak-buffer-line)))
 
-(advice-add 'bs-delete-backward :after #'ems--bs-delete-backward-after)
+(advice-add 'bs-delete-backward :after #'emacsvox--advice-bs-delete-backward-after)
 
-(defun ems--bs-up-after (&rest _)
+(defun emacsvox--advice-bs-up-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-up)
     (emacsvox-icon 'select-object) (emacsvox-bs-speak-buffer-line)))
 
-(advice-add 'bs-up :after #'ems--bs-up-after)
+(advice-add 'bs-up :after #'emacsvox--advice-bs-up-after)
 
-(defun ems--bs-down-after (&rest _)
+(defun emacsvox--advice-bs-down-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-down)
     (emacsvox-icon 'select-object) (emacsvox-bs-speak-buffer-line)))
 
-(advice-add 'bs-down :after #'ems--bs-down-after)
+(advice-add 'bs-down :after #'emacsvox--advice-bs-down-after)
 
-(defun ems--bs-cycle-next-after (&rest _)
+(defun emacsvox--advice-bs-cycle-next-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-cycle-next)
     (let ((emacsvox-speak-messages nil))
       (emacsvox-icon 'select-object) (emacsvox-speak-mode-line))))
 
-(advice-add 'bs-cycle-next :after #'ems--bs-cycle-next-after)
+(advice-add 'bs-cycle-next :after #'emacsvox--advice-bs-cycle-next-after)
 
-(defun ems--bs-cycle-previous-after (&rest _)
+(defun emacsvox--advice-bs-cycle-previous-after (&rest _)
   "Speech-enable bs mode"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'bs-cycle-previous)
     (let ((emacsvox-speak-messages nil))
       (emacsvox-icon 'select-object) (emacsvox-speak-mode-line))))
 
-(advice-add 'bs-cycle-previous :after #'ems--bs-cycle-previous-after)
+(advice-add 'bs-cycle-previous :after #'emacsvox--advice-bs-cycle-previous-after)
 
 (provide 'emacsvox-bs)
 ;;;  end of file
