@@ -157,6 +157,7 @@
   (require 'emacsvox-browse-kill-ring-tests)
   (require 'emacsvox-company-tests)
   (require 'emacsvox-helm-tests)
+  (require 'emacsvox-hydra-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

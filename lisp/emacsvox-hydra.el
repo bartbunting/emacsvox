@@ -93,24 +93,36 @@
 
 ;;; lv-message:
 
-(defvar ems--lv-cache nil
+(defvar emacsvox-hydra--lv-cache nil
   "Emacsvox's private cache of the last lv message.")
 
 (voice-setup-set-voice-for-face 'lv-separator  'inaudible)
 
-(defun ems--lv-message-after (&rest _)
+(defun emacsvox--advice-lv-message-after (&rest _)
   "speak."  (emacsvox-icon 'help)
   (with-current-buffer (window-buffer (lv-window))
-    (setq ems--lv-cache (buffer-substring (point-min) (point-max)))
+    (setq emacsvox-hydra--lv-cache
+          (buffer-substring (point-min) (point-max)))
     (emacsvox-speak-buffer)))
 
-(advice-add 'lv-message :after #'ems--lv-message-after)
-
-(defun ems--lv-delete-window-after (&rest _)
+(defun emacsvox--advice-lv-delete-window-after (&rest _)
   "speak." (dtk-stop 'all) (emacsvox-icon 'delete-object))
 
-(advice-add 'lv-delete-window :after #'ems--lv-delete-window-after)
+(defconst emacsvox-hydra--advice
+  '((lv-message :after emacsvox--advice-lv-message-after)
+    (lv-delete-window :after emacsvox--advice-lv-delete-window-after))
+  "LV targets and their native advice functions.")
+
+(defun emacsvox-hydra--install-advice ()
+  "Install advice after Hydra's optional LV dependency loads."
+  (dolist (entry emacsvox-hydra--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'lv
+  (emacsvox-hydra--install-advice))
 
 (provide 'emacsvox-hydra)
 ;;;  end of file
-
