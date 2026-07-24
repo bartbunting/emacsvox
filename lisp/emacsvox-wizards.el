@@ -1540,6 +1540,23 @@ interactive prompt."
            (push s result))))
     result))
 
+(defun emacsvox-wizards--advised-p (symbol)
+  "Return non-nil when SYMBOL has native Emacsvox advice."
+  (catch 'emacsvox-advice-found
+    (advice-mapc
+     (lambda (function properties)
+       (let ((name (alist-get 'name properties)))
+         (when
+             (or
+              (and name
+                   (string-prefix-p "emacsvox" (format "%s" name)))
+              (and (symbolp function)
+                   (string-prefix-p
+                    "emacsvox" (symbol-name function))))
+           (throw 'emacsvox-advice-found t))))
+     symbol)
+    nil))
+
 ;;;###autoload
 (defun emacsvox-wizards-enumerate-uncovered-commands (pattern &optional bound)
   "Enumerate unadvised commands matching pattern.
@@ -1557,7 +1574,7 @@ filters out commands that dont have an active key-binding."
                 (if bound (where-is-internal s nil nil t) t)
                 (not (string-match "^emacsvox" name))
                 (not (string-match "^ad-Orig" name))
-                (not (ad-find-some-advice s 'any "emacsvox")))
+                (not (emacsvox-wizards--advised-p s)))
              (push s result)))))
     (sort result
           #'(lambda (a b) (string-lessp (symbol-name a) (symbol-name b))))))
@@ -1576,7 +1593,7 @@ filters out commands that dont have an active key-binding."
              (and
               (commandp s)
               (string= f (symbol-file s))
-              (not (ad-find-some-advice s 'any "emacsvox")))
+              (not (emacsvox-wizards--advised-p s)))
            (push s result))))
     (sort result
           #'(lambda (a b)

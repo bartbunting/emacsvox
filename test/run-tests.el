@@ -248,6 +248,7 @@
   (require 'emacsvox-vertico-tests)
   (require 'emacsvox-vterm-tests)
   (require 'emacsvox-we-tests)
+  (require 'emacsvox-wizards-tests)
   (require 'emacsvox-xkcd-tests)
   (require 'gweb-tests)
   (require 'emacsvox-trace-tests))

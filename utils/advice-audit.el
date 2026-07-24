@@ -12,7 +12,8 @@
 (require 'subr-x)
 
 (defconst ems-advice-audit-legacy-symbols
-  '(ad-get-arg ad-set-arg ad-do-it ad-return-value ems-interactive-p)
+  '(ad-get-arg ad-set-arg ad-do-it ad-return-value
+    ad-find-some-advice ems-interactive-p)
   "Legacy or compatibility symbols tracked by the advice audit.")
 
 (defun ems-advice-audit--walk (object function)

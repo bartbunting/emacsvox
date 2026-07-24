@@ -26,7 +26,8 @@
      (equal
       (plist-get result :symbol-counts)
       '((ad-get-arg . 0) (ad-set-arg . 0) (ad-do-it . 0)
-        (ad-return-value . 0) (ems-interactive-p . 0))))))
+        (ad-return-value . 0) (ad-find-some-advice . 0)
+        (ems-interactive-p . 0))))))
 
 (ert-deftest emacsvox-advice-audit-finds-backquoted-templates ()
   "Advice generated inside a backquoted macro is included in the audit."
@@ -67,6 +68,17 @@
     (should (= 1 (plist-get result :advice-add-count)))
     (should
      (= 1 (alist-get 'ad-get-arg (plist-get result :symbol-counts))))))
+
+(ert-deftest emacsvox-advice-audit-counts-legacy-introspection ()
+  "The audit includes legacy advice introspection APIs."
+  (let ((result
+         (emacsvox-test--audit-source
+          "(ad-find-some-advice 'target 'any \"emacsvox\")\n")))
+    (should
+     (= 1
+        (alist-get
+         'ad-find-some-advice
+         (plist-get result :symbol-counts))))))
 
 (provide 'emacsvox-advice-audit-tests)
 ;;; emacsvox-advice-audit-tests.el ends here
