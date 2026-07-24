@@ -547,32 +547,37 @@ Returns a string with appropriate personality."
 ;;;   activating widgets:
 ;; forward declaration:
 
-(defun ems--widget-button-press-around (orig-fun &rest args)
+(defun emacsvox--advice-widget-button-press-around
+    (original pos &rest arguments)
   "speak"
-  (let ((result (apply orig-fun args)))
-    (let ((inhibit-read-only t) (widget (widget-at (ad-get-arg 0))))
-      (cond
-       (widget
-        (let ((pos (ad-get-arg 0)) (old-position (point)))
-          (cond
-           ((and (eq major-mode 'eww-mode)
-                 (bound-and-true-p emacsvox-we-url-executor)
-                 (functionp emacsvox-we-url-executor))
-            (emacsvox-icon 'button)
-            (call-interactively 'emacsvox-we-url-expand-and-execute))
-           (t (apply orig-fun args)
-              (cond
-               ((= old-position (point)) (emacsvox-icon 'button)
-                (emacsvox-widget-summarize (widget-at pos)))
-               (t (emacsvox-icon 'large-movement)
-                  (or (emacsvox-widget-summarize (widget-at (point)))
-                      (emacsvox-speak-line))))))))
-       (t (apply orig-fun args)))
-      result)
-    result))
+  (let ((inhibit-read-only t)
+        (widget (widget-at pos)))
+    (cond
+     ((not widget)
+      (apply original pos arguments))
+     ((and (eq major-mode 'eww-mode)
+           (bound-and-true-p emacsvox-we-url-executor)
+           (functionp emacsvox-we-url-executor))
+      (emacsvox-icon 'button)
+      (call-interactively 'emacsvox-we-url-expand-and-execute)
+      nil)
+     (t
+      (let ((old-position (point))
+            (result (apply original pos arguments)))
+        (cond
+         ((= old-position (point))
+          (emacsvox-icon 'button)
+          (emacsvox-widget-summarize (widget-at pos)))
+         (t
+          (emacsvox-icon 'large-movement)
+          (or (emacsvox-widget-summarize (widget-at (point)))
+              (emacsvox-speak-line))))
+        result)))))
 
-(advice-add 'widget-button-press :around
-            #'ems--widget-button-press-around)
+(advice-add
+ 'widget-button-press :around
+ #'emacsvox--advice-widget-button-press-around
+ '((name . emacsvox)))
 
 ;;;   Interactively summarize a widget and its parents.
 

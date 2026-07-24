@@ -139,5 +139,128 @@
         (lookup-key map "\215")
         'emacsvox-widget-update-from-minibuffer)))))
 
+(ert-deftest emacsvox-widget-button-advice-is-directly-registered ()
+  "Widget button advice bypasses the compatibility bridge."
+  (should
+   (advice-member-p
+    #'emacsvox--advice-widget-button-press-around
+    'widget-button-press))
+  (should-not
+   (gethash
+    '(widget-button-press
+      :around
+      emacsvox--advice-widget-button-press-around)
+    ems--modern-advice-wrappers)))
+
+(ert-deftest emacsvox-widget-button-press-calls-original-once ()
+  "Ordinary button activation calls once, preserves args, and summarizes."
+  (let ((calls 0)
+        events)
+    (cl-letf (((symbol-function 'widget-at)
+               (lambda (pos)
+                 (when (= pos 7) 'pressed-widget)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-widget-summarize)
+               (lambda (widget) (push (list 'summary widget) events))))
+      (should
+       (eq
+        'button-result
+        (emacsvox--advice-widget-button-press-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (list 'call arguments) events)
+           'button-result)
+         7 'mouse-event))))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((call (7 mouse-event))
+        (icon button)
+        (summary pressed-widget))))))
+
+(ert-deftest emacsvox-widget-button-movement-speaks-destination ()
+  "Button movement cues a large move and falls back to the current line."
+  (with-temp-buffer
+    (insert "button destination")
+    (goto-char (point-min))
+    (let ((calls 0)
+          events)
+      (cl-letf (((symbol-function 'widget-at)
+                 (lambda (pos)
+                   (when (= pos 1) 'source-widget)))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'emacsvox-widget-summarize)
+                 (lambda (widget)
+                   (push (list 'summary widget) events)
+                   nil))
+                ((symbol-function 'emacsvox-speak-line)
+                 (lambda (&rest _) (push 'line events))))
+        (should
+         (eq
+          'moved
+          (emacsvox--advice-widget-button-press-around
+           (lambda (&rest _)
+             (cl-incf calls)
+             (goto-char 8)
+             'moved)
+           1))))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((icon large-movement) (summary nil) line))))))
+
+(ert-deftest emacsvox-widget-button-without-widget-runs-quietly-once ()
+  "Activation without a widget calls the original once without feedback."
+  (let ((calls 0)
+        events)
+    (cl-letf (((symbol-function 'widget-at)
+               (lambda (_pos) nil))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        'plain-result
+        (emacsvox--advice-widget-button-press-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (push (list 'call arguments) events)
+           'plain-result)
+         4))))
+    (should (= calls 1))
+    (should (equal events '((call (4)))))))
+
+(ert-deftest emacsvox-widget-button-eww-executor-replaces-original ()
+  "EWW custom URL execution skips the original Widget action."
+  (let ((major-mode 'eww-mode)
+        (calls 0)
+        events)
+    (cl-progv
+        '(emacsvox-we-url-executor)
+        (list (lambda (&rest _)))
+      (cl-letf (((symbol-function 'widget-at)
+                 (lambda (_pos) 'link-widget))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'call-interactively)
+                 (lambda (command)
+                   (push (list 'execute command) events)
+                   'executor-result)))
+        (should-not
+         (emacsvox--advice-widget-button-press-around
+          (lambda (&rest _)
+            (cl-incf calls)
+            'original-result)
+          5))))
+    (should (= calls 0))
+    (should
+     (equal
+      (nreverse events)
+      '((icon button)
+        (execute emacsvox-we-url-expand-and-execute))))))
+
 (provide 'emacsvox-widget-tests)
 ;;; emacsvox-widget-tests.el ends here
