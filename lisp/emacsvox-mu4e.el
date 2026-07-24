@@ -214,14 +214,14 @@
    mu4e-compose-edit mu4e-compose-resend)
  #'emacsvox-mu4e--compose-feedback)
 
-(defun emacsvox--advice-message-send-and-exit-after (&rest _)
+(defun emacsvox--advice-mu4e-message-send-and-exit-after (&rest _)
   "Announce send in Mu4e compose buffers."
   (when (ems-interactive-p 'message-send-and-exit)
     (emacsvox-icon 'close-object)
     (dtk-speak "Message sent")))
 
 (push '(message-send-and-exit :after
-        emacsvox--advice-message-send-and-exit-after)
+        emacsvox--advice-mu4e-message-send-and-exit-after)
       emacsvox-mu4e--advice)
 
 (defun emacsvox-mu4e--search-feedback (_target)
@@ -306,7 +306,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (when (and (fboundp target)
                  (not (advice-member-p function target)))
-        (advice-add target where function '((name . emacsvox)))))))
+        (advice-add target where function '((name . emacsvox-mu4e)))))))
 
 (dolist (feature '(message mu4e mu4e-compose mu4e-headers mu4e-mark
                    mu4e-search mu4e-update mu4e-view))
