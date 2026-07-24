@@ -262,5 +262,43 @@
       '((icon button)
         (execute emacsvox-we-url-expand-and-execute))))))
 
+(ert-deftest emacsvox-widget-convert-text-advice-is-directly-registered ()
+  "Widget text conversion advice bypasses the compatibility bridge."
+  (should
+   (advice-member-p
+    #'emacsvox--advice-widget-convert-text-around
+    'widget-convert-text))
+  (should-not
+   (gethash
+    '(widget-convert-text
+      :around
+      emacsvox--advice-widget-convert-text-around)
+    ems--modern-advice-wrappers)))
+
+(ert-deftest emacsvox-widget-convert-text-preserves-personality-and-result ()
+  "Text conversion calls once, restores personality, and returns its widget."
+  (with-temp-buffer
+    (insert "abcdef")
+    (put-text-property 2 5 'personality 'original-personality)
+    (let ((calls 0)
+          received)
+      (should
+       (eq
+        'converted-widget
+        (emacsvox--advice-widget-convert-text-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (setq received arguments)
+           (put-text-property 2 5 'personality 'replacement-personality)
+           'converted-widget)
+         'item 2 5 2 4 :tag "Value")))
+      (should (= calls 1))
+      (should
+       (equal received '(item 2 5 2 4 :tag "Value")))
+      (should
+       (eq
+        (get-text-property 2 'personality)
+        'original-personality)))))
+
 (provide 'emacsvox-widget-tests)
 ;;; emacsvox-widget-tests.el ends here

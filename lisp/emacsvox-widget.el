@@ -621,17 +621,20 @@ widget before summarizing."
 
 ;;;  work around widget problems
 
-(defun ems--widget-convert-text-around (orig-fun &rest args)
+(defun emacsvox--advice-widget-convert-text-around
+    (original type from to &rest arguments)
   "Protect value of personality if set originally"
-  (let
-      ((inhibit-read-only t) (start (ad-get-arg 1))
-       (end (ad-get-arg 2)) (orig nil))
-    (setq orig (get-text-property start 'personality))
-    (apply orig-fun args)
-    (and orig (put-text-property start end 'personality orig))))
+  (let ((inhibit-read-only t)
+        (personality (get-text-property from 'personality)))
+    (let ((result (apply original type from to arguments)))
+      (when personality
+        (put-text-property from to 'personality personality))
+      result)))
 
-(advice-add 'widget-convert-text :around
-            #'ems--widget-convert-text-around)
+(advice-add
+ 'widget-convert-text :around
+ #'emacsvox--advice-widget-convert-text-around
+ '((name . emacsvox)))
 
 ;;;  update widget related keymaps so we dont loose the
 ;;emacsvox prefix 
