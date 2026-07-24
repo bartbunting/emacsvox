@@ -162,6 +162,7 @@
   (require 'emacsvox-yaml-tests)
   (require 'emacsvox-flycheck-tests)
   (require 'emacsvox-folding-tests)
+  (require 'emacsvox-gh-explorer-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

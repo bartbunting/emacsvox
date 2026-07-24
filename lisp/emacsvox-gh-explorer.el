@@ -56,17 +56,19 @@
 ;;;  Interactive Commands:
 
 (cl-loop
- for f in 
+ for target in
  '(github-explorer github-explorer-at-point)
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-speak-mode-line)
        (emacsvox-icon 'open-object)))))
 
-(defun ems--gh-explorer-nav (direction)
+(defun emacsvox-gh-explorer--navigate (direction)
   "Move forward/back based on `direction' and speak current entry."
   (emacsvox-icon 'select-object)
   (forward-line direction)
@@ -84,22 +86,34 @@
 (defun emacsvox-gh-explorer-next ()
   "Move forward and speak current entry."
   (interactive)
-  (ems--gh-explorer-nav 1))
+  (emacsvox-gh-explorer--navigate 1))
 
 (defun emacsvox-gh-explorer-previous ()
   "Moveback and speak current entry."
   (interactive)
   
-  (ems--gh-explorer-nav -1))
+  (emacsvox-gh-explorer--navigate -1))
 
-(eval-after-load
-    "github-explorer"
-  `(progn
-     
-     (define-key github-explorer-mode-map "p" 'emacsvox-gh-explorer-previous)
-     (define-key github-explorer-mode-map "n" 'emacsvox-gh-explorer-next))
-  )
+(defconst emacsvox-gh-explorer--advice-targets
+  '(github-explorer github-explorer-at-point)
+  "Current GitHub Explorer targets that receive native advice.")
+
+(defun emacsvox-gh-explorer--setup ()
+  "Install GitHub Explorer advice and Emacsvox navigation bindings."
+  (dolist (target emacsvox-gh-explorer--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox))))))
+  (when (boundp 'github-explorer-mode-map)
+    (define-key
+     github-explorer-mode-map "p" #'emacsvox-gh-explorer-previous)
+    (define-key
+     github-explorer-mode-map "n" #'emacsvox-gh-explorer-next)))
+
+(with-eval-after-load 'github-explorer
+  (emacsvox-gh-explorer--setup))
 
 (provide 'emacsvox-gh-explorer)
 ;;;  end of file
-
