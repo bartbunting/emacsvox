@@ -63,83 +63,88 @@
 
 ;;;  Advice interactive commands:
 
-(cl-loop
- for f in
- '(
-   elfeed-apply-hooks-now elfeed-search-browse-url
-   elfeed-show-entry elfeed-show-visit
+(defvar emacsvox-elfeed--advice nil
+  "Current Elfeed targets and their native advice functions.")
+(setq emacsvox-elfeed--advice nil)
+
+(defun emacsvox-elfeed--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-elfeed--advice))))
+
+(defun emacsvox-elfeed--task-feedback ()
+  "Confirm an Elfeed operation and speak the current line."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-line))
+
+(emacsvox-elfeed--register-after-group
+ '(elfeed-apply-hooks-now elfeed-search-browse-url elfeed-show-visit
    elfeed-update-feed elfeed-update elfeed-show-refresh
    elfeed-search-update--force elfeed-search-update
    elfeed-search-untag-all-unread
-   elfeed-search-untag-all elfeed-search-tag-all-unread elfeed-search-tag-all
-   elfeed-load-opml elfeed-export-opml
-   elfeed-db-compact elfeed-add-feed
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-line)))))
+   elfeed-search-untag-all elfeed-search-tag-all-unread
+   elfeed-search-tag-all elfeed-load-opml elfeed-export-opml
+   elfeed-db-compact elfeed-add-feed)
+ #'emacsvox-elfeed--task-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-elfeed--selection-feedback ()
+  "Speak an Elfeed tag selection."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-line))
+
+(emacsvox-elfeed--register-after-group
  '(elfeed-show-tag elfeed-show-untag)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+ #'emacsvox-elfeed--selection-feedback)
 
-(cl-loop
- for f in
- '(
-   elfeed-show-entry elfeed-ssearch-show-entry
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-elfeed--open-entry-feedback ()
+  "Speak an Elfeed entry after opening it."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in
- '(
-   elfeed-show-add-enclosure-to-playlist elfeed-show-play-enclosure
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+(emacsvox-elfeed--register-after-group
+ '(elfeed-show-entry)
+ #'emacsvox-elfeed--open-entry-feedback)
 
-(defun ems--elfeed-after (&rest _)
-  "Emacsvox setup."
-  (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(defun emacsvox-elfeed--task-icon-feedback ()
+  "Confirm an Elfeed enclosure operation."
+  (emacsvox-icon 'task-done))
 
-(advice-add 'elfeed :after #'ems--elfeed-after)
+(emacsvox-elfeed--register-after-group
+ '(elfeed-show-add-enclosure-to-playlist elfeed-show-play-enclosure)
+ #'emacsvox-elfeed--task-icon-feedback)
 
-(cl-loop
- for f in
- '(elfeed-kill-buffer  elfeed-search-quit-window)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act  comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (emacsvox-speak-mode-line)))))
+(defun emacsvox-elfeed--open-feedback ()
+  "Play an icon after opening Elfeed."
+  (emacsvox-icon 'open-object))
 
-(defun ems--elfeed-search-yank-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
+(emacsvox-elfeed--register-after-group
+ '(elfeed)
+ #'emacsvox-elfeed--open-feedback)
 
-(advice-add 'elfeed-search-yank :after #'ems--elfeed-search-yank-after)
+(defun emacsvox-elfeed--close-feedback ()
+  "Speak after closing an Elfeed view."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-elfeed--register-after-group
+ '(elfeed-kill-buffer elfeed-search-quit-window)
+ #'emacsvox-elfeed--close-feedback)
+
+(defun emacsvox-elfeed--yank-feedback ()
+  "Play an icon after copying an Elfeed URL."
+  (emacsvox-icon 'yank-object))
+
+(emacsvox-elfeed--register-after-group
+ '(elfeed-search-yank)
+ #'emacsvox-elfeed--yank-feedback)
 
 ;;;  Helpers:
 
@@ -206,19 +211,27 @@
      (t (message "No link under point.")))))
 
 ;;;  Silence warnings/errors
+
+(defconst emacsvox-elfeed--silenced-targets
+  '(elfeed-update-feed elfeed-handle-parse-error elfeed-handle-http-error
+    elfeed-unjam elfeed-update)
+  "Elfeed operations whose incidental errors are silenced.")
+
 (cl-loop
- for f in
- '(elfeed-update-feed elfeed-handle-parse-error  elfeed-handle-http-error
-                      elfeed-unjam elfeed-update)
+ for target in emacsvox-elfeed--silenced-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice  ,f (around emacsvox pre act comp)
-     "Silence messages and errors."
-     (ems-with-errors-silenced ad-do-it))))
+  `(defun ,advice-function (original &rest args)
+     ,(format "Call `%s' while silencing incidental errors." target)
+     (ems-with-errors-silenced
+      (apply original args))))
+ (push (list target :around advice-function) emacsvox-elfeed--advice))
 
 ;;;  Set things up
 
-(defun ems--elfeed-search-mode-after (&rest _)
+(defun emacsvox--advice-elfeed-search-mode-after (&rest _)
   "Set up Emacsvox commands."
   
   (setq goal-column 11)
@@ -234,8 +247,27 @@
   (define-key elfeed-search-mode-map " "
               'emacsvox-elfeed-speak-entry-at-point))
 
-(advice-add 'elfeed-search-mode :after #'ems--elfeed-search-mode-after)
+(push '(elfeed-search-mode :after
+        emacsvox--advice-elfeed-search-mode-after)
+      emacsvox-elfeed--advice)
+
+(defconst emacsvox-elfeed--removed-targets
+  '(elfeed-ssearch-show-entry)
+  "Misspelled Elfeed targets removed during migration.")
+
+(defun emacsvox-elfeed--install-advice ()
+  "Install native advice for currently loaded Elfeed features."
+  (dolist (entry emacsvox-elfeed--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function
+                    (list (cons 'name function)))))))
+
+(dolist (feature '(elfeed elfeed-db elfeed-search elfeed-show))
+  (eval
+   `(with-eval-after-load ',feature
+      (emacsvox-elfeed--install-advice))))
 
 (provide 'emacsvox-elfeed)
 ;;;  end of file
-
