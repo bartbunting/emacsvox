@@ -48,6 +48,7 @@
 ;;; Code:
 
 (require 'emacsvox-preamble)
+(require 're-builder)
 
 ;;;  Map faces to personalities 
 (voice-setup-add-map
@@ -59,65 +60,78 @@
 
 ;;;  Speech-enable interactive commands.
 
-(defun ems--re-builder-after (&rest _)
+(defun emacsvox--advice-re-builder-after (&rest _)
   "Speak status information."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 're-builder)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-(advice-add 're-builder :after #'ems--re-builder-after)
+(advice-add 're-builder :after
+            #'emacsvox--advice-re-builder-after)
 
-(defun ems--reb-quit-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
+(defun emacsvox--advice-reb-quit-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'reb-quit)
+    (emacsvox-icon 'close-object)))
 
-(advice-add 'reb-quit :after #'ems--reb-quit-after)
+(advice-add 'reb-quit :after
+            #'emacsvox--advice-reb-quit-after)
 
-(defun ems--reb-next-match-after (&rest _)
+(defun emacsvox--advice-reb-next-match-after (&rest _)
   "Speak matched line."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'reb-next-match)
     (let ((emacsvox-show-point t))
-      (save-excursion
-        (set-buffer reb-target-buffer) (emacsvox-speak-line)
+      (with-current-buffer reb-target-buffer
+        (emacsvox-speak-line)
         (emacsvox-icon 'large-movement)))))
 
-(advice-add 'reb-next-match :after #'ems--reb-next-match-after)
+(advice-add 'reb-next-match :after
+            #'emacsvox--advice-reb-next-match-after)
 
-(defun ems--reb-prev-match-after (&rest _)
+(defun emacsvox--advice-reb-prev-match-after (&rest _)
   "Speak matched line."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'reb-prev-match)
     (let ((emacsvox-show-point t))
-      (save-excursion
-        (set-buffer reb-target-buffer) (emacsvox-speak-line)
+      (with-current-buffer reb-target-buffer
+        (emacsvox-speak-line)
         (emacsvox-icon 'large-movement)))))
 
-(advice-add 'reb-prev-match :after #'ems--reb-prev-match-after)
+(advice-add 'reb-prev-match :after
+            #'emacsvox--advice-reb-prev-match-after)
 
-(defun ems--reb-toggle-case-after (&rest _)
+(defun emacsvox--advice-reb-toggle-case-after (&rest _)
   "Speak."
-  (when (ems-interactive-p)
-    (save-excursion
-      (set-buffer reb-target-buffer)
+  (when (ems-interactive-p 'reb-toggle-case)
+    (with-current-buffer reb-target-buffer
       (emacsvox-icon (if case-fold-search 'on 'off)))))
 
-(advice-add 'reb-toggle-case :after #'ems--reb-toggle-case-after)
+(advice-add 'reb-toggle-case :after
+            #'emacsvox--advice-reb-toggle-case-after)
 
-(defun ems--reb-copy-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
+(defun emacsvox--advice-reb-copy-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'reb-copy)
+    (emacsvox-icon 'yank-object)))
 
-(advice-add 'reb-copy :after #'ems--reb-copy-after)
+(advice-add 'reb-copy :after
+            #'emacsvox--advice-reb-copy-after)
 
-(defun ems--reb-enter-subexp-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(defun emacsvox--advice-reb-enter-subexp-mode-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'reb-enter-subexp-mode)
+    (emacsvox-icon 'open-object)))
 
 (advice-add 'reb-enter-subexp-mode :after
-            #'ems--reb-enter-subexp-mode-after)
+            #'emacsvox--advice-reb-enter-subexp-mode-after)
 
-(defun ems--reb-quit-subexp-mode-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
+(defun emacsvox--advice-reb-quit-subexp-mode-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'reb-quit-subexp-mode)
+    (emacsvox-icon 'close-object)))
 
 (advice-add 'reb-quit-subexp-mode :after
-            #'ems--reb-quit-subexp-mode-after)
+            #'emacsvox--advice-reb-quit-subexp-mode-after)
 
-(defun ems--reb-auto-update-after (&rest _)
+(defun emacsvox--advice-reb-auto-update-after (&rest _)
   "Speak after update is done."
   (when (buffer-live-p reb-target-buffer)
     (with-current-buffer reb-target-buffer
@@ -126,8 +140,8 @@
               reb-overlays))))
   (emacsvox-speak-message-again))
 
-(advice-add 'reb-auto-update :after #'ems--reb-auto-update-after)
+(advice-add 'reb-auto-update :after
+            #'emacsvox--advice-reb-auto-update-after)
 
 (provide 'emacsvox-re-builder)
 ;;;  end of file
-
