@@ -64,8 +64,8 @@
 ;; but use these only after reading the transient info documentations.
 ;; @itemize
 ;; @item transient-force-single-column: t
-;; @item  transient-show-popup:  1
-;; @item transient-enable-popup-navigation:  t
+;; @item  transient-show-menu:  1
+;; @item transient-enable-menu-navigation:  t
 ;; @end itemize
 ;; 
 ;; this pops up the transient buffer after a short delay  and lets
@@ -87,7 +87,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'derived)
-(eval-when-compile (require 'transient))
+(require 'transient)
 
 ;;; Map Faces:
 
@@ -117,56 +117,92 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--transient-toggle-common-after (&rest _)
+(defun emacsvox--advice-transient-toggle-common-after (&rest _)
   "speak." 
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'transient-toggle-common)
     (dtk-stop 'all)
     (emacsvox-icon (if transient-show-common-commands 'on 'off))))
 
 (advice-add 'transient-toggle-common :after
-            #'ems--transient-toggle-common-after)
+            #'emacsvox--advice-transient-toggle-common-after)
 
-(defun ems--transient-resume-after (&rest _)
+(defun emacsvox--advice-transient-resume-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'transient-resume)
     (dtk-stop 'all) (emacsvox-icon 'open-object)))
 
-(advice-add 'transient-resume :after #'ems--transient-resume-after)
+(advice-add 'transient-resume :after
+            #'emacsvox--advice-transient-resume-after)
 
-(cl-loop
- for f in
- '(transient-quit-all transient-quit-one transient-quit-seq )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-stop 'all)
-       (emacsvox-icon 'close-object)
-       (when (eq major-mode 'emacsvox-transient-mode) (bury-buffer))
-       (emacsvox-speak-mode-line)))))
+(defun emacsvox-transient--quit-feedback (target)
+  "Provide quit feedback when TARGET is the interactive command."
+  (when (ems-interactive-p target)
+    (dtk-stop 'all)
+    (emacsvox-icon 'close-object)
+    (when (eq major-mode 'emacsvox-transient-mode)
+      (bury-buffer))
+    (emacsvox-speak-mode-line)))
 
-(cl-loop
- for f in
- '(transient-save transient-set)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'save-object)
-       (dtk-stop 'all)))))
+(defun emacsvox--advice-transient-quit-all-after (&rest _)
+  "Provide feedback after quitting all transients."
+  (emacsvox-transient--quit-feedback 'transient-quit-all))
 
-(cl-loop
- for f in
- '(transient-history-next transient-history-prev)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-speak-list (minibuffer-contents))
-       (emacsvox-icon 'select-object)))))
+(advice-add 'transient-quit-all :after
+            #'emacsvox--advice-transient-quit-all-after)
+
+(defun emacsvox--advice-transient-quit-one-after (&rest _)
+  "Provide feedback after quitting one transient."
+  (emacsvox-transient--quit-feedback 'transient-quit-one))
+
+(advice-add 'transient-quit-one :after
+            #'emacsvox--advice-transient-quit-one-after)
+
+(defun emacsvox--advice-transient-quit-seq-after (&rest _)
+  "Provide feedback after quitting a transient key sequence."
+  (emacsvox-transient--quit-feedback 'transient-quit-seq))
+
+(advice-add 'transient-quit-seq :after
+            #'emacsvox--advice-transient-quit-seq-after)
+
+(defun emacsvox-transient--save-feedback (target)
+  "Provide save feedback when TARGET is the interactive command."
+  (when (ems-interactive-p target)
+    (emacsvox-icon 'save-object)
+    (dtk-stop 'all)))
+
+(defun emacsvox--advice-transient-save-after (&rest _)
+  "Provide feedback after saving a transient value."
+  (emacsvox-transient--save-feedback 'transient-save))
+
+(advice-add 'transient-save :after
+            #'emacsvox--advice-transient-save-after)
+
+(defun emacsvox--advice-transient-set-after (&rest _)
+  "Provide feedback after setting a transient value."
+  (emacsvox-transient--save-feedback 'transient-set))
+
+(advice-add 'transient-set :after
+            #'emacsvox--advice-transient-set-after)
+
+(defun emacsvox-transient--history-feedback (target)
+  "Speak history when TARGET is the interactive command."
+  (when (ems-interactive-p target)
+    (dtk-speak-list (minibuffer-contents))
+    (emacsvox-icon 'select-object)))
+
+(defun emacsvox--advice-transient-history-next-after (&rest _)
+  "Speak the next transient history value."
+  (emacsvox-transient--history-feedback 'transient-history-next))
+
+(advice-add 'transient-history-next :after
+            #'emacsvox--advice-transient-history-next-after)
+
+(defun emacsvox--advice-transient-history-prev-after (&rest _)
+  "Speak the previous transient history value."
+  (emacsvox-transient--history-feedback 'transient-history-prev))
+
+(advice-add 'transient-history-prev :after
+            #'emacsvox--advice-transient-history-prev-after)
 
 (define-derived-mode emacsvox-transient-mode special-mode
   "Browse current transient choices"
@@ -181,7 +217,7 @@
 (defvar emacsvox-transient-cache nil
   "Cache of the last Transient buffer contents.")
 
-(defun ems--transient--show-after (&rest _)
+(defun emacsvox--advice-transient--show-after (&rest _)
   "Speak and set up cache."
   (when (window-live-p transient--window)
     (with-current-buffer (window-buffer transient--window)
@@ -189,27 +225,29 @@
             (buffer-substring (point-min) (point-max)))
       (emacsvox-speak-line) (emacsvox-icon 'open-object))))
 
-(advice-add 'transient--show :after #'ems--transient--show-after)
+(advice-add 'transient--show :after
+            #'emacsvox--advice-transient--show-after)
 
-(defun ems--transient-suspend-around (orig-fun &rest args)
+(defun emacsvox--advice-transient-suspend-around (orig-fun)
   "Pop to *Transient-emacsvox* buffer where the message emitted by\nthe transient can be browsed.\nPress `r' to resume the suspended transient."
-  (let ((result (apply orig-fun args)))
-    
-    (cond
-     ((ems-interactive-p)
+  (if (ems-interactive-p 'transient-suspend)
       (let
           ((buff (get-buffer-create "*Transient-Emacsvox*"))
            (inhibit-read-only t))
-        (apply orig-fun args) (emacsvox-icon 'close-object)
-        (with-current-buffer buff
-          (erase-buffer) (insert "r to resume, C-g to quit.\n\n")
-          (insert emacsvox-transient-cache) (goto-char (point-min))
-          (emacsvox-transient-mode))
-        (switch-to-buffer buff) (emacsvox-speak-mode-line)))
-     (t (apply orig-fun args)))
-    result))
+        (prog1 (funcall orig-fun)
+          (emacsvox-icon 'close-object)
+          (with-current-buffer buff
+            (erase-buffer)
+            (insert "r to resume, C-g to quit.\n\n")
+            (insert emacsvox-transient-cache)
+            (goto-char (point-min))
+            (emacsvox-transient-mode))
+          (switch-to-buffer buff)
+          (emacsvox-speak-mode-line)))
+    (funcall orig-fun)))
 
-(advice-add 'transient-suspend :around #'ems--transient-suspend-around)
+(advice-add 'transient-suspend :around
+            #'emacsvox--advice-transient-suspend-around)
 
 ;;; section nav:
 
@@ -251,33 +289,40 @@
 (add-hook 'transient-exit-hook 'emacsvox-transient-post-hook)
 
 ;;; Advice transient navigation:
-(cl-loop
- for f in
- '(transient-backward-button transient-forward-button)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "speak selected button"
-     (cond
-      ((ems-interactive-p)
-       ad-do-it
-       (with-current-buffer (window-buffer transient--window)
-         (when-let* ((button (button-at (point)))
-                    (start (button-start button))
-                    (end (button-end button)))
-           (dtk-speak (buffer-substring start end))
-           (emacsvox-icon 'button))))
-      (t ad-do-it))
-     ad-return-value)))
+
+(defun emacsvox-transient--speak-button ()
+  "Speak the current button in the Transient menu window."
+  (with-current-buffer (window-buffer transient--window)
+    (when-let* ((button (button-at (point)))
+                (start (button-start button))
+                (end (button-end button)))
+      (dtk-speak (buffer-substring start end))
+      (emacsvox-icon 'button))))
+
+(defun emacsvox--advice-transient-backward-button-around
+    (orig-fun n)
+  "Speak the button reached after moving backward by N."
+  (prog1 (funcall orig-fun n)
+    (when (ems-interactive-p 'transient-backward-button)
+      (emacsvox-transient--speak-button))))
+
+(advice-add 'transient-backward-button :around
+            #'emacsvox--advice-transient-backward-button-around)
+
+(defun emacsvox--advice-transient-forward-button-around
+    (orig-fun n)
+  "Speak the button reached after moving forward by N."
+  (prog1 (funcall orig-fun n)
+    (when (ems-interactive-p 'transient-forward-button)
+      (emacsvox-transient--speak-button))))
+
+(advice-add 'transient-forward-button :around
+            #'emacsvox--advice-transient-forward-button-around)
 
 ;;; Enable And Customize Transient Navigation:
-(declare-function transient-push-button "emacsvox-transient" t)
 
 (defun emacsvox-transient-setup ()
   "Emacsvox Transient Customizations"
-  (cl-declare (special transient-enable-popup-navigation
-                       transient-popup-navigation-map
-                       transient-predicate-map))
   (keymap-set  transient-popup-navigation-map "C-j" #'transient-push-button)
   (define-key transient-predicate-map
               [emacsvox-transient-previous-section] 'transient--do-move)
@@ -290,12 +335,11 @@
   (define-key transient-popup-navigation-map
               [right] 'emacsvox-transient-next-section)
 
-  (setq transient-enable-popup-navigation t
+  (setq transient-enable-menu-navigation t
         transient-force-single-column t
         transient-semantic-coloring t
-        transient-show-popup 1))
+        transient-show-menu 1))
 (emacsvox-transient-setup)
 
 (provide 'emacsvox-transient)
 ;;;  end of file
-
