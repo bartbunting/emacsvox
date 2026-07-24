@@ -151,6 +151,7 @@
   (require 'emacsvox-enriched-tests)
   (require 'emacsvox-gud-tests)
   (require 'emacsvox-perl-tests)
+  (require 'emacsvox-todo-mode-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

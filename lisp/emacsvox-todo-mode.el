@@ -40,6 +40,7 @@
 ;;   Required modules:
 
 (require 'emacsvox-preamble)
+(require 'todo-mode)
 
 :
 ;;; Commentary:
@@ -51,37 +52,38 @@
 ;;;   Advice interactive commands:
 
 (cl-loop
- for f in
+ for target in
  '(todo-forward-item
    todo-backward-item
    todo-next-item
    todo-previous-item
    todo-forward-category
    todo-backward-category
-   todo-next-category
-   todo-previous-category
-   todo-jump-to-category
-   )
+   todo-jump-to-category)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive Todo navigation operation."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'select-object)
+         (emacsvox-speak-line)))
+     (advice-add ',target :after #',function))))
 
-(defun ems--todo-save-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'save-object)))
-
-(advice-add 'todo-save :after #'ems--todo-save-after)
-
-(defun ems--todo-quit-after (&rest _)
+(defun emacsvox--advice-todo-save-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'todo-save)
+    (emacsvox-icon 'save-object)))
+
+(advice-add 'todo-save :after #'emacsvox--advice-todo-save-after)
+
+(defun emacsvox--advice-todo-quit-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'todo-quit)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'todo-quit :after #'ems--todo-quit-after)
+(advice-add 'todo-quit :after #'emacsvox--advice-todo-quit-after)
 
 (provide 'emacsvox-todo-mode)
 ;;;  end of file 
-
