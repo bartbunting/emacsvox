@@ -93,7 +93,7 @@ DOCSTRING and BODY define the feedback function for each command."
      compilation-next-file compilation-previous-file
      compile-goto-error compile-mouse-goto-error)
     "Speak the line containing the compilation error."
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (emacsvox-icon 'large-movement)
   (emacsvox-compilation-speak-error))
 

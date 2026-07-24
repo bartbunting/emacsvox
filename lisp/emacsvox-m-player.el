@@ -850,7 +850,7 @@ The time position can also be specified as HH:MM:SS."
   "Pause or unpause."
   (interactive)
   
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (ems--mp-send "pause")
   (setq emacsvox-m-player-paused (not emacsvox-m-player-paused)))
 

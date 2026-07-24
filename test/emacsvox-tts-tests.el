@@ -51,7 +51,6 @@
     (tts-tone . dtk-tone)
     (tts-speak-using-voice . dtk-speak-using-voice)
     (tts-dispatch . dtk-dispatch)
-    (tts-stop . dtk-stop)
     (tts-set-rate . dtk-set-rate)
     (tts-set-punctuations . dtk-set-punctuations)
     (tts-set-punctuations-to-all . dtk-set-punctuations-to-all)
@@ -260,6 +259,10 @@
 (ert-deftest emacsvox-tts-legacy-speech-function-is-removed ()
   "The generic speech entry point no longer exposes its DECtalk-era name."
   (should-not (fboundp 'dtk-speak)))
+
+(ert-deftest emacsvox-tts-legacy-stop-function-is-removed ()
+  "The speech stop entry point no longer exposes its DECtalk-era name."
+  (should-not (fboundp 'dtk-stop)))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."

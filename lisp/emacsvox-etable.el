@@ -106,7 +106,7 @@
         (let ((orig (point)))
           (table--finish-delayed-tasks) (backward-word 1)
           (emacsvox-speak-region orig (point)))))
-     (emacsvox-character-echo (dtk-stop)
+     (emacsvox-character-echo (tts-stop)
                               (emacsvox-speak-this-char
                                last-input-event)))))
 
@@ -132,7 +132,7 @@
   (when (ems-interactive-p '*table--cell-newline)
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
-          (t (if dtk-stop-immediately (dtk-stop))
+          (t (if dtk-stop-immediately (tts-stop))
              (dtk-tone 225 120 'force)))))
 
 (advice-add

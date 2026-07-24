@@ -726,7 +726,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-stop)
+              ((symbol-function 'tts-stop)
                (lambda (stream) (push (list 'stop stream) events)))
               ((symbol-function 'emacsvox-speak-mode-line)
                (lambda () (push 'speak-mode-line events))))

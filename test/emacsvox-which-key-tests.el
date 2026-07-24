@@ -79,7 +79,7 @@
   "Only the matching interactive popup-closing command gives feedback."
   (let ((ems--interactive-fn-name 'which-key-abort)
         events)
-    (cl-letf (((symbol-function 'dtk-stop)
+    (cl-letf (((symbol-function 'tts-stop)
                (lambda (&rest arguments)
                  (push (cons 'stop arguments) events)))
               ((symbol-function 'emacsvox-icon)

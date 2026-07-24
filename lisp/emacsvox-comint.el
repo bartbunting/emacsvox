@@ -472,7 +472,7 @@ Interactive PREFIX arg means toggle the global default value. ")
 (defun emacsvox--advice-comint-send-input-after (&rest _)
   "Flush speech and cue an interactively submitted Comint input."
   (when (ems-interactive-p 'comint-send-input)
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon 'more)))
 
 (advice-add

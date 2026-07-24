@@ -22,7 +22,7 @@
   "Only the matching interactive EMPV toggle command provides feedback."
   (let ((ems--interactive-fn-name 'empv-toggle)
         events)
-    (cl-letf (((symbol-function 'dtk-stop)
+    (cl-letf (((symbol-function 'tts-stop)
                (lambda (scope) (push scope events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push icon events))))

@@ -55,7 +55,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-stop)
+              ((symbol-function 'tts-stop)
                (lambda (scope) (push (list 'stop scope) events))))
       (emacsvox--advice-transient-save-after)
       (emacsvox--advice-transient-set-after))

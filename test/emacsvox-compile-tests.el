@@ -46,7 +46,7 @@
   "Interactive error navigation stops speech before cueing and speaking."
   (let ((ems--interactive-fn-name 'next-error)
         events)
-    (cl-letf (((symbol-function 'dtk-stop)
+    (cl-letf (((symbol-function 'tts-stop)
                (lambda (scope) (push (list 'stop scope) events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))

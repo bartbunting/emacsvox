@@ -123,7 +123,7 @@
   (message "Signed the article."))
 
 (emacsvox-message--define-advice message-beginning-of-line :before
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (emacsvox-icon 'select-object)
   (tts-speak "beginning of line"))
 

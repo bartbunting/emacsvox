@@ -207,7 +207,7 @@ to  ~/.emacs.d ")
     (start-process
      "AlsaCtl" nil amixer-alsactl
      "restore"))
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (message
    "Resetting  sound to %s"
    (string-trim (shell-command-to-string ems--vol-cmd)))

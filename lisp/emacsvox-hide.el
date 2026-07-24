@@ -311,7 +311,7 @@ Returns t if a block was found and hidden."
 buffer to be hidden or exposed."
   (interactive "P")
   (save-excursion
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (forward-line 0)
     (cond
      (prefix                            ;work on entire buffer

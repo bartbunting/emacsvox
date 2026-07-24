@@ -192,7 +192,7 @@ prefix arg is equivalent to hitting the I'm Feeling Lucky button on Google. "
        #'(lambda ()
            (goto-char (point-min))
            (emacsvox-eww-next-h)
-           (dtk-stop)
+           (tts-stop)
            (emacsvox-eww-next-h)
            (emacsvox-speak-windowful))
        'at-end)
@@ -225,7 +225,7 @@ Optional prefix arg prompts for toolbelt options."
            (goto-char (point-min))
            (emacsvox-eww-next-h)
            (search-forward "Search Tools" nil t)
-           (dtk-stop)
+           (tts-stop)
            (emacsvox-eww-next-h)
            (emacsvox-speak-windowful)))
       (emacsvox-we-extract-by-id-list
@@ -255,7 +255,7 @@ Optional prefix arg prompts for toolbelt options."
            (goto-char (point-min))
            (emacsvox-eww-next-h) (search-forward "Search Tools" nil
                                                  t)
-           (dtk-stop)
+           (tts-stop)
            (emacsvox-eww-next-h)
            (emacsvox-speak-windowful)))
       (emacsvox-we-extract-by-id-list

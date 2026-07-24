@@ -120,7 +120,7 @@
 (defun emacsvox--advice-transient-toggle-common-after (&rest _)
   "speak." 
   (when (ems-interactive-p 'transient-toggle-common)
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon (if transient-show-common-commands 'on 'off))))
 
 (advice-add 'transient-toggle-common :after
@@ -129,7 +129,7 @@
 (defun emacsvox--advice-transient-resume-after (&rest _)
   "speak."
   (when (ems-interactive-p 'transient-resume)
-    (dtk-stop 'all) (emacsvox-icon 'open-object)))
+    (tts-stop 'all) (emacsvox-icon 'open-object)))
 
 (advice-add 'transient-resume :after
             #'emacsvox--advice-transient-resume-after)
@@ -137,7 +137,7 @@
 (defun emacsvox-transient--quit-feedback (target)
   "Provide quit feedback when TARGET is the interactive command."
   (when (ems-interactive-p target)
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon 'close-object)
     (when (eq major-mode 'emacsvox-transient-mode)
       (bury-buffer))
@@ -168,7 +168,7 @@
   "Provide save feedback when TARGET is the interactive command."
   (when (ems-interactive-p target)
     (emacsvox-icon 'save-object)
-    (dtk-stop 'all)))
+    (tts-stop 'all)))
 
 (defun emacsvox--advice-transient-save-after (&rest _)
   "Provide feedback after saving a transient value."
@@ -282,7 +282,7 @@
   "Actions to execute after transient is done."
   
   (unless transient--stack
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon 'task-done)
     (emacsvox-speak-mode-line)))
 

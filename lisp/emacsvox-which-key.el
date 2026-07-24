@@ -136,7 +136,7 @@
 (defun emacsvox--advice-which-key--hide-popup-after (&rest _)
   "Announce popup hidden."
   (when (ems-interactive-p 'which-key--hide-popup)
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon 'close-object)))
 
 (advice-add
@@ -147,7 +147,7 @@
 (defun emacsvox--advice-which-key-abort-after (&rest _)
   "Speak abort feedback."
   (when (ems-interactive-p 'which-key-abort)
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon 'close-object)))
 
 (advice-add

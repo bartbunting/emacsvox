@@ -153,7 +153,7 @@
   `(defun ,advice-function (&rest _)
      ,(format "Provide feedback after `%s'." target)
      (when (ems-interactive-p ',target)
-       (dtk-stop 'all)
+       (tts-stop 'all)
        (emacsvox-icon 'button))))
  (push (list target :after advice-function) emacsvox-empv--advice))
 
@@ -196,7 +196,7 @@
   "Speak after exiting EMPV."
   (repeat-exit)
   (when (ems-interactive-p 'empv-exit)
-    (dtk-stop 'all) (emacsvox-icon 'close-object)
+    (tts-stop 'all) (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
 (push '(empv-exit :after emacsvox--advice-empv-exit-after)

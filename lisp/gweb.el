@@ -145,7 +145,7 @@ Uses corpus found in gweb-completion-corpus"
 (defun gweb-google-autocomplete (&optional prompt)
   "Autocomplete using Google Search corpus."
   
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (let ((gweb-completion-corpus ""))
     (setq
      emacsvox-google-query

@@ -103,7 +103,7 @@
 (defun emacsvox--advice-gptel-abort-after (&rest _)
   "Announce that request was aborted."
   (when (ems-interactive-p 'gptel-abort)
-    (dtk-stop 'all)
+    (tts-stop 'all)
     (emacsvox-icon 'close-object)
     (tts-speak "Aborted LLM request")))
 

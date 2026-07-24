@@ -84,7 +84,7 @@ used."
                (lambda (icon) (emacsvox-trace--record 'icon icon)))
               ((symbol-function 'emacspeak-icon)
                (lambda (icon) (emacsvox-trace--record 'icon icon)))
-              ((symbol-function 'dtk-stop)
+              ((symbol-function 'tts-stop)
                (lambda (&optional all)
                  (emacsvox-trace--record 'stop all)))
               ((symbol-function 'dtk-tone)

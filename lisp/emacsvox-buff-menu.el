@@ -76,7 +76,7 @@
   (let((buffer (Buffer-menu-buffer t)))
     (cond
      ((get-buffer buffer)
-      (when dtk-stop-immediately (dtk-stop))
+      (when dtk-stop-immediately (tts-stop))
       (let ((name (buffer-name buffer))
             (file (buffer-file-name buffer))
             this-buffer-read-only

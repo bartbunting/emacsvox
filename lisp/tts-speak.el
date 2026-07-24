@@ -844,7 +844,7 @@ Argument COMPLEMENT  is the complement of separator."
     (when (process-live-p tts-speaker-process)
       (tts--protocol-say string))))
 
-(defun dtk-stop (&optional all)
+(defun tts-stop (&optional all)
   "Stop speech.  Optional arg `all' or interactive call silences
 notification stream as well."
   (interactive "P")
@@ -1640,7 +1640,7 @@ unless   `dtk-quiet' is set to t. "
     ;; flush previous speech if asked to
     (when dtk-stop-immediately
       (when (process-live-p dtk-notify-process) (dtk-notify-stop))
-      (dtk-stop))
+      (tts-stop))
     (when selective-display
       (let ((ctrl-m (string-match "\015" text)))
         (and ctrl-m (setq text (substring text 0 ctrl-m))
@@ -1794,7 +1794,7 @@ grouping"
   "Stop  speech on notification stream."
   (interactive)
   (let ((tts-speaker-process (dtk-notify-process)))
-    (when tts-speaker-process (dtk-stop))))
+    (when tts-speaker-process (tts-stop))))
 
 (defun dtk-notify-apply (func text)
   " Applies func to text with tts-speaker-process set to notification stream."
@@ -2123,7 +2123,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-tone #'dtk-tone)
 (defalias 'tts-speak-using-voice #'dtk-speak-using-voice)
 (defalias 'tts-dispatch #'dtk-dispatch)
-(defalias 'tts-stop #'dtk-stop)
 (defalias 'tts-set-rate #'dtk-set-rate)
 (defalias 'tts-set-punctuations #'dtk-set-punctuations)
 (defalias 'tts-set-punctuations-to-all #'dtk-set-punctuations-to-all)

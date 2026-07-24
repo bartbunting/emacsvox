@@ -198,7 +198,7 @@
       (setq key
             (read-key-sequence "Press any key to continue")))
     (unless (= 7 (string-to-char key))
-      (dtk-stop 'all)
+      (tts-stop 'all)
       (tts-speak
        (concat
         "Difference B "

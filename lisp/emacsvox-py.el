@@ -372,7 +372,7 @@
                (window-live-p
                 (get-buffer-window (process-buffer process))))
         (condition-case nil (emacsvox-speak-region prior (point))
-          (error (emacsvox-icon 'scroll) (dtk-stop 'all))))
+          (error (emacsvox-icon 'scroll) (tts-stop 'all))))
     result))
 
 (push '(py-process-filter :around emacsvox--advice-py-process-filter-around)
@@ -405,7 +405,7 @@
 (defun emacsvox--advice-py-help-at-point-after (&rest _)
   "speak."
   (when (ems-interactive-p 'py-help-at-point)
-    (emacsvox-icon 'help) (dtk-stop 'all) (emacsvox-speak-buffer)))
+    (emacsvox-icon 'help) (tts-stop 'all) (emacsvox-speak-buffer)))
 
 (push '(pydoc :after emacsvox--advice-py-pydoc-after)
       emacsvox-py--advice)

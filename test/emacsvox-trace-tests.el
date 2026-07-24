@@ -23,7 +23,7 @@
                (funcall (symbol-function 'dtk-tone) 440 100 t)
                (funcall (symbol-function 'dtk-silence) 50 nil)
                (funcall (symbol-function 'dtk-set-rate) 120 t)
-               (funcall (symbol-function 'dtk-stop) t)
+               (funcall (symbol-function 'tts-stop) t)
                (funcall (symbol-function 'dtk-notify) "notice" 'dont-log)
                (funcall (symbol-function 'dtk-notify-icon) 'progress)
                (funcall (symbol-function 'dtk-notify-stop))

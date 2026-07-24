@@ -74,7 +74,7 @@
   (emacsvox-icon 'progress))
 (defun emacsvox-hydra-post ()
   "Provide auditory icon. "
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (when emacsvox-use-icons
     (emacsvox-icon 'close-object)))
 
@@ -106,7 +106,7 @@
     (emacsvox-speak-buffer)))
 
 (defun emacsvox--advice-lv-delete-window-after (&rest _)
-  "speak." (dtk-stop 'all) (emacsvox-icon 'delete-object))
+  "speak." (tts-stop 'all) (emacsvox-icon 'delete-object))
 
 (defconst emacsvox-hydra--advice
   '((lv-message :after emacsvox--advice-lv-message-after)

@@ -343,7 +343,7 @@ Argument COUNT specifies number of columns by which to move."
     (backward-char count)
     (set-marker emacsvox-eterm-pointer (point))
     (when (called-interactively-p 'interactive)
-      (dtk-stop)
+      (tts-stop)
       (emacsvox-speak-char t))))
 
 (defun emacsvox-eterm-pointer-right (count)
@@ -357,7 +357,7 @@ Argument COUNT specifies number of columns by which to move."
     (forward-char  count)
     (set-marker emacsvox-eterm-pointer (point))
     (when (called-interactively-p 'interactive)
-      (dtk-stop)
+      (tts-stop)
       (emacsvox-speak-char t))))
 
 (defun emacsvox-eterm-pointer-to-right-edge ()
@@ -369,7 +369,7 @@ Argument COUNT specifies number of columns by which to move."
     (end-of-line)
     (set-marker emacsvox-eterm-pointer (point))
     (when (called-interactively-p 'interactive)
-      (dtk-stop)
+      (tts-stop)
       (emacsvox-icon 'right)
       (emacsvox-speak-char t))))
 
@@ -382,7 +382,7 @@ Argument COUNT specifies number of columns by which to move."
     (forward-line 0)
     (set-marker emacsvox-eterm-pointer (point))
     (when (called-interactively-p 'interactive)
-      (dtk-stop)
+      (tts-stop)
       (emacsvox-icon 'left)
       (emacsvox-speak-char t))))
 
@@ -573,7 +573,7 @@ to by the emacsvox eterm pointer."
            (marker-position emacsvox-eterm-pointer)))
     (when (called-interactively-p 'interactive)
       (emacsvox-icon 'mark-object)
-      (dtk-stop)
+      (tts-stop)
       (message "Set eterm mark at row %s column %s"
                (cdr coordinates)
                (car coordinates)))))
@@ -967,7 +967,7 @@ activity within the filter window."
   (if emacsvox-eterm-focus-window
       (setq emacsvox-eterm-focus-window nil)
     (setq emacsvox-eterm-focus-window 1))
-  (dtk-stop)
+  (tts-stop)
   (emacsvox-icon (if emacsvox-eterm-focus-window
                      'on 'off)))
 
@@ -978,7 +978,7 @@ activity within the filter window."
   (if emacsvox-eterm-filter-window
       (setq emacsvox-eterm-filter-window nil)
     (setq emacsvox-eterm-filter-window 1))
-  (dtk-stop)
+  (tts-stop)
   (emacsvox-icon (if emacsvox-eterm-filter-window
                      'on 'off)))
 
@@ -1215,7 +1215,7 @@ there is terminal activity.")
 (defun emacsvox--advice-term-send-input-after (&rest _)
   "Flush any ongoing speech."
   (when (ems-interactive-p 'term-send-input)
-    (dtk-stop)))
+    (tts-stop)))
 
 (advice-add
  'term-send-input :after #'emacsvox--advice-term-send-input-after

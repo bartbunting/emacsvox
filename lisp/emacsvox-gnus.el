@@ -161,7 +161,7 @@ instead you hear only the first screenful."
        "Cue and speak after interactively leaving a Gnus view."
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'close-object)
-         (dtk-stop)
+         (tts-stop)
          (emacsvox-speak-mode-line)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
@@ -441,7 +441,7 @@ instead you hear only the first screenful."
          (let ((result (apply original arguments)))
            (when (ems-interactive-p ',target)
              (emacsvox-icon 'close-object)
-             (dtk-stop)
+             (tts-stop)
              (if (eq current-group (gnus-group-group-name))
                  (emacsvox-pip "No more unread newsgroups")
                (emacsvox-speak-line)))
@@ -609,7 +609,7 @@ instead you hear only the first screenful."
   `(progn
      (defun ,function (&rest _)
        "Cue and speak the visible article page."
-       (dtk-stop 'all)
+       (tts-stop 'all)
        (emacsvox-icon 'scroll)
        (with-current-buffer gnus-article-buffer
          (let ((start (point))
