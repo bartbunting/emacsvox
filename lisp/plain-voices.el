@@ -48,6 +48,9 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
 
+(defvar tts-default-speech-rate)
+(defvar tts-default-voice)
+
 ;;; plain:
 ;;;###autoload
 (defun plain ()
@@ -55,16 +58,12 @@
   (interactive)
   (plain-configure-tts)
   (ems--fastload "voice-defs")
-  (dtk-select-server "plain")
-  (dtk-initialize))
+  (tts-select-server "plain")
+  (tts-initialize))
 
 ;;;  Forward declarations:
 
-;; From dtk-speak.el:
-
 (defvar plain-default-speech-rate 75)
-(defvar dtk-speech-rate-step)
-(defvar dtk-speech-rate-base)
 
 ;;;   voice table
 
@@ -326,9 +325,6 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun plain-configure-tts ()
   "Configures TTS  to use Plain."
-  (cl-declare (special  plain-default-speech-rate
-                        tts-default-speech-rate
-                        tts-default-voice))
   (setq tts-default-voice 'paul)
   (fset 'tts-voice-defined-p 'plain-voice-defined-p)
   (fset 'tts-get-voice-command 'plain-get-voice-command)
@@ -341,4 +337,3 @@ and TABLE gives the values along that dimension."
 (plain-configure-tts)
 
 (provide 'plain-voices)
-

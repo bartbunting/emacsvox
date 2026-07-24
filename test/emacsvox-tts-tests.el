@@ -15,6 +15,7 @@
 (require 'espeak-voices)
 (require 'mac-voices)
 (require 'outloud-voices)
+(require 'plain-voices)
 (require 'swiftmac-voices)
 (require 'voice-setup)
 
@@ -679,6 +680,57 @@
       untouched-charsets
       '(ascii latin-iso8859-1 latin-iso8859-15
               latin-iso8859-9 eight-bit-graphic)))))
+
+(ert-deftest emacsvox-tts-plain-uses-canonical-runtime ()
+  "The Plain selector uses the generic TTS runtime API."
+  (let (events)
+    (cl-letf (((symbol-function 'plain-configure-tts)
+               (lambda () (push 'configure events)))
+              ((symbol-function 'ems--fastload)
+               (lambda (file) (push (list 'fastload file) events)))
+              ((symbol-function 'tts-select-server)
+               (lambda (server) (push (list 'select server) events)))
+              ((symbol-function 'tts-initialize)
+               (lambda () (push 'initialize events))))
+      (plain))
+    (should
+     (equal
+      (nreverse events)
+      '(configure
+        (fastload "voice-defs")
+        (select "plain")
+        initialize)))))
+
+(ert-deftest emacsvox-tts-plain-configures-canonical-state ()
+  "The Plain adapter configures generic TTS state and dispatch."
+  (let (defaults)
+    (cl-progv
+        '(tts-default-voice tts-default-speech-rate)
+        '(unset 1)
+      (cl-letf (((symbol-function 'set-default)
+                 (lambda (symbol value)
+                   (push (cons symbol value) defaults)))
+                ((symbol-function 'tts-voice-defined-p) #'ignore)
+                ((symbol-function 'tts-get-voice-command) #'ignore)
+                ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (plain-configure-tts)
+        (should (eq (symbol-value 'tts-default-voice) 'paul))
+        (should
+         (= (symbol-value 'tts-default-speech-rate)
+            plain-default-speech-rate))
+        (should
+         (eq (symbol-function 'tts-voice-defined-p)
+             'plain-voice-defined-p))
+        (should
+         (eq (symbol-function 'tts-get-voice-command)
+             'plain-get-voice-command))
+        (should
+         (eq (symbol-function 'tts-define-voice-from-acss)
+             'plain-define-voice-from-acss))))
+    (should
+     (equal
+      defaults
+      `((tts-default-speech-rate . ,plain-default-speech-rate))))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."
