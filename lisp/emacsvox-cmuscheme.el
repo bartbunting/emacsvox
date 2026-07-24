@@ -48,114 +48,104 @@
 ;;; Code:
 
 (require 'emacsvox-preamble)
+(require 'cmuscheme)
 
 ;;;  advice interactive commands.
 
 ;; speech-enable cmuscheme 
 
-(defun ems--inferior-scheme-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defmacro emacsvox-cmuscheme--define-advice (target where &rest body)
+  "Define direct WHERE advice for interactive CMU Scheme TARGET."
+  (declare (indent 2))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-%s"
+                         target
+                         (substring (symbol-name where) 1)))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback %s `%s'." where target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target ,where #',function
+        '((name . ,function))))))
+
+(emacsvox-cmuscheme--define-advice inferior-scheme-mode :after
+  (emacsvox-icon 'task-done)
+  (message "Welcome to inferior scheme mode."))
+
+(defun emacsvox--advice-run-scheme-after (command &rest _)
+  "Report COMMAND after interactive `run-scheme'."
+  (when (ems-interactive-p 'run-scheme)
     (emacsvox-icon 'task-done)
-    (message "Welcome to inferior scheme mode.")))
+    (message "Launched scheme %s" command)))
 
-(advice-add 'inferior-scheme-mode :after
-            #'ems--inferior-scheme-mode-after)
+(advice-add
+ 'run-scheme :after
+ #'emacsvox--advice-run-scheme-after
+ '((name . emacsvox--advice-run-scheme-after)))
 
-(defun ems--run-scheme-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done)
-    (message "Launched scheme %s" (ad-get-arg 0))))
+(defmacro emacsvox-cmuscheme--define-region-advice
+    (target action)
+  "Define explicit region feedback for TARGET using ACTION."
+  (let ((function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    `(progn
+       (defun ,function (start end &rest _)
+         ,(format "Report the region processed by `%s'." target)
+         (when (ems-interactive-p ',target)
+           (emacsvox-icon 'select-object)
+           (message
+            ,(format "%s %%s lines to scheme. " action)
+            (count-lines start end))))
+       (advice-add
+        ',target :after #',function
+        '((name . ,function))))))
 
-(advice-add 'run-scheme :after #'ems--run-scheme-after)
+(emacsvox-cmuscheme--define-region-advice
+ scheme-send-region "Sent")
+(emacsvox-cmuscheme--define-region-advice
+ scheme-compile-region "Compiling ")
 
-(defun ems--scheme-send-region-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "Sent %s lines to scheme. "
-             (count-lines (region-beginning) (region-end)))))
+(emacsvox-cmuscheme--define-advice scheme-send-definition :after
+  (emacsvox-icon 'select-object)
+  (message "Sent definition   to scheme. "))
 
-(advice-add 'scheme-send-region :after #'ems--scheme-send-region-after)
+(emacsvox-cmuscheme--define-advice scheme-send-last-sexp :after
+  (emacsvox-icon 'select-object)
+  (message "Sent last sexp  to scheme. "))
 
-(defun ems--scheme-send-definition-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "Sent definition   to scheme. ")))
+(emacsvox-cmuscheme--define-advice scheme-compile-definition :after
+  (emacsvox-icon 'select-object)
+  (message "Compiled definition  to scheme. "))
 
-(advice-add 'scheme-send-definition :after
-            #'ems--scheme-send-definition-after)
+(dolist
+    (target
+     '(switch-to-scheme
+       scheme-send-region-and-go
+       scheme-send-definition-and-go))
+  (eval
+   `(emacsvox-cmuscheme--define-advice ,target :after
+      (emacsvox-icon 'select-object)
+      (emacsvox-speak-mode-line))))
 
-(defun ems--scheme-send-last-sexp-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "Sent last sexp  to scheme. ")))
+(defmacro emacsvox-cmuscheme--define-file-advice
+    (target action)
+  "Define explicit file feedback for TARGET using ACTION."
+  (let ((function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    `(progn
+       (defun ,function (file-name &rest _)
+         ,(format "Report the file processed by `%s'." target)
+         (when (ems-interactive-p ',target)
+           (emacsvox-icon 'select-object)
+           (message ,(format "%s scheme file %%s" action) file-name)))
+       (advice-add
+        ',target :after #',function
+        '((name . ,function))))))
 
-(advice-add 'scheme-send-last-sexp :after
-            #'ems--scheme-send-last-sexp-after)
-
-(defun ems--scheme-compile-region-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "Compiling  %s lines to scheme. "
-             (count-lines (region-beginning) (region-end)))))
-
-(advice-add 'scheme-compile-region :after
-            #'ems--scheme-compile-region-after)
-
-(defun ems--scheme-compile-definition-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "Compiled definition  to scheme. ")))
-
-(advice-add 'scheme-compile-definition :after
-            #'ems--scheme-compile-definition-after)
-
-(defun ems--switch-to-scheme-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'switch-to-scheme :after #'ems--switch-to-scheme-after)
-
-(defun ems--scheme-send-region-and-go-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'scheme-send-region-and-go :after
-            #'ems--scheme-send-region-and-go-after)
-
-(defun ems--scheme-send-definition-and-go-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'scheme-send-definition-and-go :after
-            #'ems--scheme-send-definition-and-go-after)
-
-(defun ems--scheme-load-file-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "loaded scheme file %s" (ad-get-arg 0))))
-
-(advice-add 'scheme-load-file :after #'ems--scheme-load-file-after)
-
-(defun ems--scheme-compile-file-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (message "Compiled scheme file %s" (ad-get-arg 0))))
-
-(advice-add 'scheme-compile-file :after
-            #'ems--scheme-compile-file-after)
+(emacsvox-cmuscheme--define-file-advice scheme-load-file "loaded")
+(emacsvox-cmuscheme--define-file-advice scheme-compile-file "Compiled")
 
 (provide 'emacsvox-cmuscheme)
 ;;;  end of file
-

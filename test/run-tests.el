@@ -113,6 +113,7 @@
   (require 'emacsvox-ediff-tests)
   (require 'emacsvox-tetris-tests)
   (require 'emacsvox-cperl-tests)
+  (require 'emacsvox-cmuscheme-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
