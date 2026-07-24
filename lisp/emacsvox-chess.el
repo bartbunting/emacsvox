@@ -688,24 +688,28 @@ specifies index of move, default is final index."
                                            chess-display-index)))
 
 ;;;  Interactive Commands:
+
+(defconst emacsvox-chess--search-targets
+  '(chess-display-search-forward chess-display-search-backward)
+  "Chess commands that search through moves.")
+
 (cl-loop
- for f in
- '(chess-display-search-forward chess-display-search-backward)
+ for target in emacsvox-chess--search-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "speak."
-     (cond
-      ((ems-interactive-p)
-       (let ((orig chess-display-index))
-         ad-do-it
-         (when (not (= orig chess-display-index))
-           (emacsvox-icon 'search-hit)
-           (dtk-speak
-            (emacsvox-chess-describe-move
-             chess-module-game chess-display-index)))))
-      (t ad-do-it))
-     ad-return-value)))
+  `(defun ,advice-function (original &rest arguments)
+     "Speak a move found by a Chess search."
+     (let ((previous-index chess-display-index)
+           (result (apply original arguments)))
+       (when (and (ems-interactive-p ',target)
+                  (/= previous-index chess-display-index))
+         (emacsvox-icon 'search-hit)
+         (dtk-speak
+          (emacsvox-chess-describe-move
+           chess-module-game chess-display-index)))
+       result))))
 
 (defun emacsvox-chess-state-speaker  ()
   "Helper function that describes game state."
@@ -722,85 +726,86 @@ specifies index of move, default is final index."
       msg
       (emacsvox-chess-describe-move chess-module-game chess-display-index)))))
 
-(defun ems--chess-display-undo-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-chess-display-undo-after (&rest _)
+  "Speak after undoing a Chess move."
+  (when (ems-interactive-p 'chess-display-undo)
     (emacsvox-icon 'progress)
     (dtk-speak (emacsvox-chess-describe-move chess-module-game))))
 
-(advice-add 'chess-display-undo :after #'ems--chess-display-undo-after)
+(defconst emacsvox-chess--backward-targets
+  '(chess-display-move-first chess-display-move-backward)
+  "Chess commands that move backward through a game.")
 
-(defun ems--chess-display-move-first-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args))
-      (emacsvox-chess-state-speaker) (emacsvox-icon 'left))
-     (t (apply orig-fun args)))
+(defconst emacsvox-chess--forward-targets
+  '(chess-display-move-forward chess-display-move-last)
+  "Chess commands that move forward through a game.")
+
+(cl-loop
+ for target in
+ (append emacsvox-chess--backward-targets
+         emacsvox-chess--forward-targets)
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
+ for icon = (if (memq target emacsvox-chess--backward-targets)
+                'left
+              'right)
+ do
+ (eval
+  `(defun ,advice-function (original &rest arguments)
+     "Move once, then speak the resulting Chess state."
+     (let* ((interactive (ems-interactive-p ',target))
+            (result
+             (if interactive
+                 (ems-with-messages-silenced
+                  (apply original arguments))
+               (apply original arguments))))
+       (when interactive
+         (emacsvox-icon ',icon)
+         (emacsvox-chess-state-speaker))
+       result))))
+
+(defun emacsvox--advice-chess-display-select-piece-around
+    (original &rest arguments)
+  "Call ORIGINAL once, then report the resulting selection state."
+  (let* ((previous-selection chess-display-last-selected)
+         (square (get-text-property (point) 'chess-coord))
+         (result (apply original arguments)))
+    (when (ems-interactive-p 'chess-display-select-piece)
+      (cond
+       ((consp chess-display-last-selected)
+        (dtk-speak-list (emacsvox-chess-describe-square square))
+        (emacsvox-icon 'select-object))
+       ((and (consp previous-selection)
+             (= (point) (car previous-selection)))
+        (message "Deselected")
+        (emacsvox-icon 'deselect-object))))
     result))
 
-(advice-add 'chess-display-move-first :around
-            #'ems--chess-display-move-first-around)
+(defconst emacsvox-chess--advice
+  (append
+   '((chess-display-undo :after
+      emacsvox--advice-chess-display-undo-after)
+     (chess-display-select-piece :around
+      emacsvox--advice-chess-display-select-piece-around))
+   (mapcar
+    (lambda (target)
+      (list target :around
+            (intern (format "emacsvox--advice-%s-around" target))))
+    (append emacsvox-chess--search-targets
+            emacsvox-chess--backward-targets
+            emacsvox-chess--forward-targets)))
+  "Current Chess targets and their native advice functions.")
 
-(defun ems--chess-display-move-backward-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args))
-      (emacsvox-icon 'left) (emacsvox-chess-state-speaker))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox-chess--install-advice ()
+  "Install advice after the optional Chess display package loads."
+  (dolist (entry emacsvox-chess--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(advice-add 'chess-display-move-backward :around
-            #'ems--chess-display-move-backward-around)
-
-(defun ems--chess-display-move-forward-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args))
-      (emacsvox-icon 'right) (emacsvox-chess-state-speaker))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'chess-display-move-forward :around
-            #'ems--chess-display-move-forward-around)
-
-(defun ems--chess-display-move-last-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args))
-      (emacsvox-icon 'right) (emacsvox-chess-state-speaker))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'chess-display-move-last :around
-            #'ems--chess-display-move-last-around)
-
-(defun ems--chess-display-select-piece-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((square (get-text-property (point) 'chess-coord)))
-        (cond
-         ((and (consp chess-display-last-selected)
-               (= (point) (car chess-display-last-selected)))
-          (message "Deselected") (emacsvox-icon 'deselect-object))
-         ((null chess-display-last-selected)
-          (dtk-speak-list (emacsvox-chess-describe-square square))
-          (emacsvox-icon 'select-object)))
-        (apply orig-fun args)))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'chess-display-select-piece :around
-            #'ems--chess-display-select-piece-around)
+(with-eval-after-load 'chess-display
+  (emacsvox-chess--install-advice))
 
 ;;; emacsvox Handler:
 
@@ -853,4 +858,3 @@ specifies index of move, default is final index."
 
 (provide 'emacsvox-chess)
 ;;;  end of file
-
