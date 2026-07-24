@@ -625,8 +625,8 @@ echo, change the t to nill and vice versa for the applical line item.:
 
  '(emacspeak-character-echo nil) '(emacspeak-line-echo t)
  '(emacspeak-word-echo nil) '(espeak-default-speech-rate 250)
- '(line-number-mode nil)) (dtk-toggle-split-caps t)
- (dtk-toggle-allcaps-beep t) #+END_SRC emacs-lisp
+ '(line-number-mode nil)) (tts-toggle-split-caps t)
+ #+END_SRC emacs-lisp
 
 **    Adding pluggins or extensions
 
@@ -1645,5 +1645,4 @@ browse the list archives, the url is
 [[http://www.cs.vassar.edu/~priestdo/emacspeak/][http://www.cs.vassar.edu/~priestdo/emacspeak/]].
 
 Now, go fish!
-
 

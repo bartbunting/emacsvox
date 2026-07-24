@@ -24,7 +24,7 @@ tcl <emacspeak-location>/servers/ssh-<synth>
    local machine --all is well, type exit to quit that
    running server.
 
-3) Now use command dtk-select-server to select either
+3) Now use command tts-select-server to select either
    ssh-outloud or ssh-dtk-exp as your speech server.
 
 ** Caveats:

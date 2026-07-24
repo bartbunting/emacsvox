@@ -19,7 +19,7 @@ Project: https://github.com/robertmeta/swiftmac
   ; stops doubletalk (when emacs supports it)
   (setopt mac-ignore-accessibility 't) 
   ; choose swiftmac
-  (setopt dtk-program "swiftmac")
+  (setopt tts-program "swiftmac")
   ; for notifications: set to right or left
   (setopt tts-notification-device "right") 
   ; initialize Emacspeak

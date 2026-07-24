@@ -14,6 +14,15 @@
 
 *Modernization Status:* Fully updated for Emacs 31+ with modern elisp patterns and advice-add throughout.
 
+** TTS Namespace Upgrade
+
+The generic speech interface now uses =tts-*= names and the
+=TTS_PROGRAM= environment variable.  This is an intentional breaking change:
+configuration written for the old generic =dtk-*= interface must be updated.
+Names for actual DECtalk backends, such as =dtk-exp= and =dtk-soft=, are
+unchanged.  See [[file:etc/tts-modernization.org][the migration record]] for
+the complete naming policy and migration table.
+
 ** Quick Installation Instructions
 
 For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.
@@ -58,18 +67,18 @@ For a more detailed installation guide, and further instructions on usage, see t
    - For Bash (default on Linux or macOS before Catalina):
      Add the following line to your `.bash_profile`:
      #+BEGIN_SRC sh
-     export DTK_PROGRAM=<engine-name>
+     export TTS_PROGRAM=<engine-name>
      #+END_SRC
 
    - For Zsh (default on macOS Catalina and later):
      Add the following line to your `.zshrc` file:
      #+BEGIN_SRC sh
-     export DTK_PROGRAM=<engine-name>
+     export TTS_PROGRAM=<engine-name>
      #+END_SRC
 
    For example, to use ESpeak, add:
    #+BEGIN_SRC sh
-   export DTK_PROGRAM=espeak
+   export TTS_PROGRAM=espeak
    #+END_SRC
 
 7. Load Emacsvox in Your Emacs Configuration:

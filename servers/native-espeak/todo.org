@@ -1,7 +1,7 @@
 * Current functionality
 - The server fully implements the emacspeak server interface
 - Users can switch languages and the voice used for each language.
-  In general, the syntax for arguments to dtk-set-language is
+  In general, the syntax for arguments to tts-set-language is
   `[lang-code][:voice]`, for example "en-us:whisper".
   The voice name can be any value that would be accepted by the espeak command.
   The default voice for a language can be selected by omitting the colon,
@@ -18,7 +18,7 @@ This change causes some voice styles to sound different, but the impact
 should be minor.
 ** Voice selection support
 The espeak server supports voice selection for each language.
-When calling dtk-set-lang (either interactively using C-e d S or in your init file)
+When calling tts-set-language (either interactively using C-e d S or in your init file)
 the argument is no longer restricted to just a language name
 (such as "en-us" or "pl"): the language name be followed by a : and then the name
 of a voice known to espeak. For example, "en-us:whisper" selects

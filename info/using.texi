@@ -108,14 +108,14 @@ commands, set the variable @var{emacspeak-prefix}.
 @item
 The second category of commands provided by Emacspeak manipulate the
 state of the speech device.  The names of these commands start with
-the common prefix @code{dtk-} and are bound in keymap
-@var{emacspeak-dtk-submap}.
+the common prefix @code{tts-} and are bound in keymap
+@var{emacsvox-tts-submap}.
 
 You can access these commands via the prefix @kbd{C-e d}
 @footnote{Historically, d was mnemonic for Dectalk; note that nothing
 in Emacspeak is DECTalk specific.}.  Thus, the command
-@dfn{dtk-set-rate} is bound to @kbd{r} in keymap
-@var{emacspeak-dtk-submap} and can be executed by pressing
+@dfn{tts-set-rate} is bound to @kbd{r} in keymap
+@var{emacsvox-tts-submap} and can be executed by pressing
 @kbd{C-e d r}.
 @end itemize
 

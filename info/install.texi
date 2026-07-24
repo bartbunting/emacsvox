@@ -92,11 +92,11 @@ comes with a speech server for that TTS engine written in @code{swift}.
 @item
 Having installed and configured the TTS engine of your choice, and
 having built the associated speech server, set Emacspeak up to use that
-engine by setting environment variable @env{DTK_PROGRAM}.  If using @command{bash}
+engine by setting environment variable @env{TTS_PROGRAM}.  If using @command{bash}
 as your shell, add the line
 
 @example
-export DTK_PROGRAM=@var{<engine-name>}
+export TTS_PROGRAM=@var{<engine-name>}
 @end example
 
 to your @code{.bash_profile}.
@@ -104,7 +104,7 @@ to your @code{.bash_profile}.
 As an example, to use ESpeak, add
 
 @example
-export DTK_PROGRAM=espeak
+export TTS_PROGRAM=espeak
 @end example
 
 @item
