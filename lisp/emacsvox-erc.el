@@ -241,7 +241,7 @@ set the current local value to the result.")
             (emacsvox-icon 'progress)
             (message "%s" msg)
             (tts-with-punctuations dtk-punctuation-mode
-              (dtk-speak msg))))))))
+              (tts-speak msg))))))))
 
 (advice-add 'erc-insert-line :after
             #'emacsvox--advice-erc-insert-line-after)

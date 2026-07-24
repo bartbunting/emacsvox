@@ -199,7 +199,7 @@
 (defun emacsvox--advice-evil-delete-line-after (&rest _)
   "Report deleting to the end of the line."
   (when (ems-interactive-p 'evil-delete-line)
-    (dtk-speak "Deleted to end of line.")
+    (tts-speak "Deleted to end of line.")
     (emacsvox-icon 'delete-object)))
 
 (push '(evil-delete-line :after
@@ -246,8 +246,8 @@
             (let ((result (apply original args)))
               (emacsvox-icon 'complete)
               (if (< start (point))
-                  (dtk-speak (buffer-substring start (point)))
-                (dtk-speak (word-at-point)))
+                  (tts-speak (buffer-substring start (point)))
+                (tts-speak (word-at-point)))
               result)))
        (apply original args))))
  (push (list target :around advice-function) emacsvox-evil--advice))

@@ -225,7 +225,7 @@
      (t
       (if emacsvox-comint-autospeak
           (let ((dtk-stop-immediately nil))
-            (dtk-speak
+            (tts-speak
              (string-trim
               (ansi-color-filter-apply
                (save-excursion

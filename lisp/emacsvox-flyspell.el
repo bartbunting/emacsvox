@@ -99,7 +99,7 @@ fly spell checking."
   (if (ems-interactive-p 'flyspell-auto-correct-word)
       (ems-with-messages-silenced
         (let ((result (apply orig-fun args)))
-          (dtk-speak (car (flyspell-get-word nil)))
+          (tts-speak (car (flyspell-get-word nil)))
           (when (sit-for 1)
             (dtk-notify (cl-second flyspell-auto-correct-ring)))
           (when (sit-for 1)
@@ -169,7 +169,7 @@ fly spell checking."
             `(defun ,function (&rest _)
                "Speak the corrected word."
                (when (ems-interactive-p ',target)
-                 (dtk-speak (car (flyspell-get-word nil)))))))
+                 (tts-speak (car (flyspell-get-word nil)))))))
         targets)))
 
 (emacsvox-flyspell--define-correct-feedback

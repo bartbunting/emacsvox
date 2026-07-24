@@ -99,7 +99,7 @@
                  (equal corfu--index emacsvox-corfu--prev-index))
       (setq emacsvox-corfu--prev-candidate text
             emacsvox-corfu--prev-index corfu--index)
-      (dtk-speak text))))
+      (tts-speak text))))
 
 ;;;  Advice Interactive Commands:
 

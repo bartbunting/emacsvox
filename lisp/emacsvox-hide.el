@@ -266,7 +266,7 @@ Returns t if a block was found and hidden."
                                          (current-buffer)
                                          (point-max))))
           (t (forward-line 1)))))
-     (dtk-speak
+     (tts-speak
       (format "Hid %s blocks" count)))))
 
 (defun emacsvox-hide-expose-hidden-blocks-in-buffer ()
@@ -283,7 +283,7 @@ Returns t if a block was found and hidden."
            (goto-char block-end)
            (cl-incf count))
           (t (forward-line 1)))))
-     (dtk-speak (format "Exposed %s blocks" count)))))
+     (tts-speak (format "Exposed %s blocks" count)))))
 
 ;;;  User interface
 ;; helper to get prefix

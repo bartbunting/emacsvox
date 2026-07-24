@@ -164,7 +164,7 @@
          (tags (and e (elfeed-entry-tags e))))
     (unless e (message "No entry here"))
     (when title
-      (dtk-speak (propertize title 'personality voice-brighten))
+      (tts-speak (propertize title 'personality voice-brighten))
       (when (memq 'read tags)
         (emacsvox-icon 'modified-object))
       (when (memq 'seen  tags)

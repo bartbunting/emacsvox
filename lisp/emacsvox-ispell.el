@@ -98,7 +98,7 @@ many available corrections."
                  (insert pos) (insert (format " %s\n" choice))))
        (t
         (insert (format "%s corrections available." (length choices)))))
-      (modify-syntax-entry 10 ">") (dtk-speak (buffer-string)))))
+      (modify-syntax-entry 10 ">") (tts-speak (buffer-string)))))
 
 (advice-add
  'ispell-command-loop :before
@@ -131,7 +131,7 @@ many available corrections."
 (defun emacsvox--advice-ispell-help-before (&rest _)
   "Speak the help message. "
   (let ((dtk-stop-immediately nil))
-    (dtk-speak (documentation 'ispell-help))))
+    (tts-speak (documentation 'ispell-help))))
 
 (advice-add
  'ispell-help :before #'emacsvox--advice-ispell-help-before

@@ -69,19 +69,19 @@
 
 (emacsvox-custom--define-advice Custom-reset-current :after
   (emacsvox-icon 'item)
-  (dtk-speak "Reset current"))
+  (tts-speak "Reset current"))
 
 (emacsvox-custom--define-advice Custom-reset-saved :after
   (emacsvox-icon 'unmodified-object)
-  (dtk-speak "Reset to saved"))
+  (tts-speak "Reset to saved"))
 
 (emacsvox-custom--define-advice Custom-reset-standard :after
   (emacsvox-icon 'delete-object)
-  (dtk-speak "Erase customization"))
+  (tts-speak "Erase customization"))
 
 (emacsvox-custom--define-advice Custom-set :after
   (emacsvox-icon 'button)
-  (dtk-speak "Set for current session"))
+  (tts-speak "Set for current session"))
 
 (defun emacsvox--advice-Custom-save-around
     (original &rest arguments)
@@ -90,7 +90,7 @@
     (let ((result (apply original arguments)))
       (when interactive-p
         (emacsvox-icon 'save-object)
-        (dtk-speak "Set and saved"))
+        (tts-speak "Set and saved"))
       result)))
 
 (advice-add

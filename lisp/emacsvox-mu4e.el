@@ -125,7 +125,7 @@
                  ('trashed "trashed")
                  (_ nil)))
              flags " ")))
-      (dtk-speak
+      (tts-speak
        (format "%s from %s %s"
                subject sender
                (if (string-empty-p (string-trim flag-str)) ""
@@ -144,7 +144,7 @@
                      "Unknown"))
            (date (mu4e-message-field msg :date))
            (date-str (if date (format-time-string "%B %d" date) "")))
-      (dtk-speak
+      (tts-speak
        (format "%s from %s %s" subject sender date-str)))))
 
 ;;;  Headers View -- Navigation:
@@ -204,7 +204,7 @@
 (defun emacsvox-mu4e--compose-feedback (target)
   "Announce Mu4e compose command TARGET."
   (emacsvox-icon 'open-object)
-  (dtk-speak
+  (tts-speak
    (format "Compose %s"
            (substring (symbol-name target) (length "mu4e-compose-"))))
   (emacsvox-speak-mode-line))
@@ -218,7 +218,7 @@
   "Announce send in Mu4e compose buffers."
   (when (ems-interactive-p 'message-send-and-exit)
     (emacsvox-icon 'close-object)
-    (dtk-speak "Message sent")))
+    (tts-speak "Message sent")))
 
 (push '(message-send-and-exit :after
         emacsvox--advice-mu4e-message-send-and-exit-after)
@@ -237,7 +237,7 @@
   "Announce a narrowed Mu4e search."
   (when (ems-interactive-p 'mu4e-search-narrow)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Narrowed search")
+    (tts-speak "Narrowed search")
     (emacsvox-speak-mode-line)))
 
 (push '(mu4e-search-narrow :after
@@ -276,7 +276,7 @@
 (defun emacsvox-mu4e--execute-feedback (_target)
   "Announce execution of all Mu4e marks."
   (emacsvox-icon 'task-done)
-  (dtk-speak "Executed all marks"))
+  (tts-speak "Executed all marks"))
 
 (emacsvox-mu4e--register-after-group
  '(mu4e-mark-execute-all)
@@ -294,7 +294,7 @@
 (defun emacsvox-mu4e--update-feedback (_target)
   "Announce a Mu4e mail update."
   (emacsvox-icon 'progress)
-  (dtk-speak "Updating mail"))
+  (tts-speak "Updating mail"))
 
 (emacsvox-mu4e--register-after-group
  '(mu4e-update-mail-and-index)

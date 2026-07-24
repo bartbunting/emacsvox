@@ -85,7 +85,7 @@
                     (- (count-lines(point-min) (point-max))2))
             'personality voice-bolden)))
     (when (and line count-msg)
-      (dtk-speak (concat line count-msg)))))
+      (tts-speak (concat line count-msg)))))
 
 (add-hook 'helm-move-selection-after-hook #'emacsvox-helm-cue-update 'at-end)
 (add-hook 'helm-after-action-hook #'emacsvox-speak-mode-line 'at-end)

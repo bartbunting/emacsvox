@@ -96,7 +96,7 @@
 (defun emacsvox--advice-company-complete-selection-before (&rest _)
   "Speak the selection."
   (when (ems-interactive-p 'company-complete-selection)
-    (emacsvox-icon 'select-object) (dtk-speak (ems-company-current))))
+    (emacsvox-icon 'select-object) (tts-speak (ems-company-current))))
 
 (defun emacsvox--advice-company-complete-tooltip-row-after (&rest _)
   "Speak what we completed."
@@ -112,7 +112,7 @@
             (error "No documentation available"))))
     (when (consp doc-buffer)
       (setq doc-buffer (car doc-buffer)))
-    (with-current-buffer doc-buffer (dtk-speak (buffer-string)))))
+    (with-current-buffer doc-buffer (tts-speak (buffer-string)))))
 
 (defconst emacsvox-company--advice
   '((company-complete-selection :before

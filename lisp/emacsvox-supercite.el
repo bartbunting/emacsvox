@@ -91,7 +91,7 @@
 (defun emacsvox--advice-sc-open-line-after (&rest _)
   "speak"
   (when (ems-interactive-p 'sc-open-line)
-    (emacsvox-icon 'open-object) (dtk-speak "Opened a blank line")))
+    (emacsvox-icon 'open-object) (tts-speak "Opened a blank line")))
 
 (advice-add 'sc-open-line :after
             #'emacsvox--advice-sc-open-line-after)

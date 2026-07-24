@@ -78,8 +78,8 @@
       (when (zerop (length (string-trim value)))
         (dtk-tone 261.6 150 'force))    ;blank
       (if (called-interactively-p 'interactive) 
-          (dtk-speak (concat name " " value))
-        (dtk-speak  value)))))
+          (tts-speak (concat name " " value))
+        (tts-speak  value)))))
 
 (cl-loop
  for target in

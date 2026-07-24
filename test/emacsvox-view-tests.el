@@ -139,7 +139,7 @@
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
               ((symbol-function 'ems--this-line) (lambda () ": contents"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text)
                  (push (list 'speak (substring-no-properties text)) events))))
       (emacsvox--advice-View-goto-line-after 23))

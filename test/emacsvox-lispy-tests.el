@@ -35,7 +35,7 @@
   "Lispy display advice speaks its explicit string argument."
   (let (spoken)
     (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (setq spoken text))))
       (emacsvox--advice-lispy--show-before "details"))
     (should (equal spoken "details"))))

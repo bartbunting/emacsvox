@@ -68,55 +68,55 @@
   "speak."
   (when (ems-interactive-p 'denote)
     (emacsvox-icon 'open-object)
-    (dtk-speak (format "Created note %s" (buffer-name)))))
+    (tts-speak (format "Created note %s" (buffer-name)))))
 
 (defun emacsvox--advice-denote-open-or-create-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-open-or-create)
     (emacsvox-icon 'open-object)
-    (dtk-speak (format "Note %s" (buffer-name)))))
+    (tts-speak (format "Note %s" (buffer-name)))))
 
 (defun emacsvox--advice-denote-rename-file-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-rename-file)
     (emacsvox-icon 'task-done)
-    (dtk-speak "Renamed")))
+    (tts-speak "Renamed")))
 
 (defun emacsvox--advice-denote-rename-file-using-front-matter-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-rename-file-using-front-matter)
     (emacsvox-icon 'task-done)
-    (dtk-speak "Renamed from front matter")))
+    (tts-speak "Renamed from front matter")))
 
 (defun emacsvox--advice-denote-link-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-link)
     (emacsvox-icon 'complete)
-    (dtk-speak "Linked")))
+    (tts-speak "Linked")))
 
 (defun emacsvox--advice-denote-link-or-create-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-link-or-create)
     (emacsvox-icon 'complete)
-    (dtk-speak "Linked")))
+    (tts-speak "Linked")))
 
 (defun emacsvox--advice-denote-backlinks-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-backlinks)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Backlinks")))
+    (tts-speak "Backlinks")))
 
 (defun emacsvox--advice-denote-keywords-add-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-keywords-add)
     (emacsvox-icon 'task-done)
-    (dtk-speak "Keywords added")))
+    (tts-speak "Keywords added")))
 
 (defun emacsvox--advice-denote-keywords-remove-after (&rest _)
   "speak."
   (when (ems-interactive-p 'denote-keywords-remove)
     (emacsvox-icon 'delete-object)
-    (dtk-speak "Keywords removed")))
+    (tts-speak "Keywords removed")))
 
 (defun emacsvox--advice-denote-dired-after (&rest _)
   "speak."

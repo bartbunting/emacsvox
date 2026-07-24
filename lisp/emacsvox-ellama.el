@@ -50,7 +50,7 @@
 (defun emacsvox--advice-ellama-chat-done-after (text &rest _)
   "Speak completed Ellama response TEXT."
   (emacsvox-icon 'item)
-  (dtk-speak text))
+  (tts-speak text))
 
 (defconst emacsvox-ellama--request-targets
   '(
@@ -87,7 +87,7 @@
      ,(format "Report the LLM request submitted by `%s'." target)
      (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
-       (dtk-speak "Calling LLM")))))
+       (tts-speak "Calling LLM")))))
 
 (defconst emacsvox-ellama--removed-targets
   '(ellama-add-code ellama-ask ellama-ask-interactive

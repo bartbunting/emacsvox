@@ -90,7 +90,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-toggle-input-method-after))
     (should

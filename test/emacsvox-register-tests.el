@@ -112,7 +112,7 @@
                 (progn
                   (erase-buffer)
                   (insert "register contents")
-                  (cl-letf (((symbol-function 'dtk-speak)
+                  (cl-letf (((symbol-function 'tts-speak)
                              (lambda (text)
                                (push
                                 (list 'speak text (current-buffer))

@@ -68,7 +68,7 @@
         (inhibit-message nil)
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
@@ -105,7 +105,7 @@
         (inhibit-message nil)
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
@@ -262,7 +262,7 @@
                  (lambda (icon) (push (list 'icon icon) events)))
                 ((symbol-function 'gnus-summary-article-subject)
                  (lambda () "Second subject"))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (should
          (eq

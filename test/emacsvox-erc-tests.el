@@ -98,7 +98,7 @@
                           (apply #'format format-string arguments)
                           emacsvox-speak-messages)
                     events)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (emacsvox--advice-erc-insert-line-after
          "<bart> hello" (current-buffer)))
@@ -118,7 +118,7 @@
     (let (events)
       (cl-letf (((symbol-function 'emacsvox-icon)
                  (lambda (&rest arguments) (push arguments events)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (&rest arguments) (push arguments events))))
         (emacsvox--advice-erc-insert-line-after
          "<bart> hello" (current-buffer)))

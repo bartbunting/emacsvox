@@ -138,8 +138,8 @@ Returns a string with appropriate personality."
      (cond
       ((and emacsvox-help
             (fboundp emacsvox-help))
-       (dtk-speak  (funcall emacsvox-help widget)))
-      (t (dtk-speak (current-message)))))))
+       (tts-speak  (funcall emacsvox-help widget)))
+      (t (tts-speak (current-message)))))))
 
 ;;;  advice activators 
 

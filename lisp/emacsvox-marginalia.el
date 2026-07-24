@@ -95,7 +95,7 @@
   "Announce the new annotator after cycling."
   (when (ems-interactive-p 'marginalia-cycle)
     (emacsvox-icon 'select-object)
-    (dtk-speak "Cycled marginalia annotator.")))
+    (tts-speak "Cycled marginalia annotator.")))
 
 (defconst emacsvox-marginalia--advice
   '((marginalia-mode :after emacsvox--advice-marginalia-mode-after)

@@ -66,7 +66,7 @@
 (defun emacsvox-solitaire-speak-coordinates ()
   "Speak coordinates of current position"
   (interactive)
-  (dtk-speak
+  (tts-speak
    (format "%s at %s %s "
            (cl-case(char-after (point))
              (?o "stone")
@@ -80,7 +80,7 @@
   "Speak number of stones remaining."
   (interactive)
   
-  (dtk-speak (format "%d stones" solitaire-stones)))
+  (tts-speak (format "%d stones" solitaire-stones)))
 
 (defun emacsvox-solitaire-stone  () (dtk-tone 400 150))
 

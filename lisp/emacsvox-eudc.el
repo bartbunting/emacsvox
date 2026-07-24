@@ -104,7 +104,7 @@
   (let
       ((server (propertize "Server " 'personality voice-smoothen))
        (host eudc-server))
-    (dtk-speak
+    (tts-speak
      (concat server " " host " "
              (when (widget-at (point))
                (emacsvox-eudc-widget-help (widget-at (point))))))))

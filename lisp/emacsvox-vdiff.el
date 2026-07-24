@@ -87,7 +87,7 @@
   (interactive)
   (let ((o(emacsvox-vdiff-get-overlay-at-point)))
     (when o
-      (dtk-speak (buffer-substring (overlay-start o) (overlay-end o))))))
+      (tts-speak (buffer-substring (overlay-start o) (overlay-end o))))))
 
 (defun emacsvox-vdiff-speak-other-hunk ()
   "Speak corresponding hunk from other buffer."

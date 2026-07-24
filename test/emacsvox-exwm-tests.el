@@ -19,7 +19,7 @@
 (ert-deftest emacsvox-exwm-prompt-advice-uses-native-argument ()
   "Workspace prompt advice speaks its explicit PROMPT argument."
   (let (spoken)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text) (setq spoken text))))
       (emacsvox--advice-exwm-workspace--prompt-for-workspace-before
        "Workspace: "))

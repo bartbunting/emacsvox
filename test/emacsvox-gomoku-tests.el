@@ -43,7 +43,7 @@
   (let ((gomoku-number-of-moves 17)
         (emacsvox-last-message "game over")
         (calls 0) events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text) (push text events)))
               ((symbol-function 'sit-for) (lambda (&rest _) nil)))
       (should

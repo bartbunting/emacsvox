@@ -138,7 +138,7 @@
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'python-indent-shift-left)
     (emacsvox-icon 'left)
-    (dtk-speak
+    (tts-speak
      (format "Left shifted block  containing %s lines"
              (count-lines start end)))))
 
@@ -149,7 +149,7 @@
     (start end &rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'python-indent-shift-right)
-    (dtk-speak
+    (tts-speak
      (format "Right shifted block  containing %s lines"
              (count-lines start end)))))
 
@@ -160,7 +160,7 @@
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'indent-region)
     (emacsvox-icon 'right)
-    (dtk-speak
+    (tts-speak
      (format "Indented region   containing %s lines"
              (count-lines start end)))))
 

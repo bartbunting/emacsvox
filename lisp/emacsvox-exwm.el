@@ -54,58 +54,58 @@
 (defun emacsvox--advice-exwm-workspace--prompt-for-workspace-before
     (&optional prompt)
   "Speak PROMPT before reading an EXWM workspace."
-  (when prompt (dtk-speak prompt)))
+  (when prompt (tts-speak prompt)))
 
 ;;;   Advice Interactive Commands
 
 (defun emacsvox--advice-exwm-floating-hide-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-floating-hide)
-    (emacsvox-icon 'close-object) (dtk-speak "Hid floating window")))
+    (emacsvox-icon 'close-object) (tts-speak "Hid floating window")))
 
 (defun emacsvox--advice-exwm-floating-toggle-floating-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-floating-toggle-floating)
-    (dtk-speak
+    (tts-speak
      (format "Turned %s floating" (if exwm--floating-frame "on" "off")))
     (emacsvox-icon (if exwm--floating-frame 'on 'off))))
 
 (defun emacsvox--advice-exwm-input-grab-keyboard-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-input-grab-keyboard)
-    (dtk-speak "line mode") (emacsvox-icon 'off)))
+    (tts-speak "line mode") (emacsvox-icon 'off)))
 
 (defun emacsvox--advice-exwm-input-release-keyboard-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-input-release-keyboard)
-    (dtk-speak "Char mode") (emacsvox-icon 'on)))
+    (tts-speak "Char mode") (emacsvox-icon 'on)))
 
 (defun emacsvox--advice-exwm-input-toggle-keyboard-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-input-toggle-keyboard)
     (cl-case exwm--input-mode
-      (line-mode (dtk-speak "Line mode") (emacsvox-icon 'off))
-      (char-mode (dtk-speak "Char mode") (emacsvox-icon 'on)))))
+      (line-mode (tts-speak "Line mode") (emacsvox-icon 'off))
+      (char-mode (tts-speak "Char mode") (emacsvox-icon 'on)))))
 
 (defun emacsvox--advice-exwm-layout-show-mode-line-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-layout-show-mode-line)
-    (dtk-speak "Showing mode line") (emacsvox-icon 'open-object)))
+    (tts-speak "Showing mode line") (emacsvox-icon 'open-object)))
 
 (defun emacsvox--advice-exwm-layout-set-fullscreen-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-layout-set-fullscreen)
-    (dtk-speak "Full screen") (emacsvox-icon 'window-resize)))
+    (tts-speak "Full screen") (emacsvox-icon 'window-resize)))
 
 (defun emacsvox--advice-exwm-layout-hide-mode-line-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-layout-hide-mode-line)
-    (dtk-speak "hid mode line") (emacsvox-icon 'close-object)))
+    (tts-speak "hid mode line") (emacsvox-icon 'close-object)))
 
 (defun emacsvox--advice-exwm-layout-toggle-fullscreen-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-layout-toggle-fullscreen)
-    (dtk-speak
+    (tts-speak
      (format "Turned %s full screen"
              (if (exwm-layout--fullscreen-p) "on" "off")))
     (emacsvox-icon (if (exwm-layout--fullscreen-p) 'on 'off))))
@@ -113,7 +113,7 @@
 (defun emacsvox--advice-exwm-layout-toggle-mode-line-after (&rest _)
   "speak."
   (when (ems-interactive-p 'exwm-layout-toggle-mode-line)
-    (dtk-speak
+    (tts-speak
      (format "Turned %s mode line" (if mode-line-format 'on 'off)))
     (emacsvox-icon (if mode-line-format 'on 'off))))
 

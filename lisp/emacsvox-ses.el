@@ -83,7 +83,7 @@
     (read-minibuffer "Cell: ")))
   (cond
    (cell-name
-    (dtk-speak
+    (tts-speak
      (format "%s: %s"
              cell-name
              (emacsvox-ses-get-cell-value-by-name cell-name))))

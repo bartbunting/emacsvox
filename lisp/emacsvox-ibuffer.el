@@ -160,7 +160,7 @@
   "Report opening an Ibuffer entry without selecting its window."
   (when (ems-interactive-p 'ibuffer-visit-buffer-other-window-noselect)
     (emacsvox-icon 'select-object)
-    (dtk-speak "Opened buffer in other window.")))
+    (tts-speak "Opened buffer in other window.")))
 
 (advice-add
  'ibuffer-visit-buffer-other-window-noselect :after
@@ -238,7 +238,7 @@
   "Report the qualifiers after interactively filtering by mode."
   (when (ems-interactive-p 'ibuffer-interactive-filter-by-mode)
     (emacsvox-icon 'modified-object)
-    (dtk-speak
+    (tts-speak
      (concat "Filtered by " (format "%s" ibuffer-filtering-qualifiers)))))
 
 (advice-add
@@ -258,7 +258,7 @@
        "Cue and report an interactive Ibuffer format change."
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'task-done)
-         (dtk-speak ,announcement)))
+         (tts-speak ,announcement)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -268,7 +268,7 @@
     (let ((name
            (get-text-property (point) 'ibuffer-filter-group-name)))
       (emacsvox-icon 'modified-object)
-      (dtk-speak (concat "Toggled group " (format "%s" name))))))
+      (tts-speak (concat "Toggled group " (format "%s" name))))))
 
 (advice-add
  'ibuffer-toggle-filter-group :after
@@ -307,7 +307,7 @@
        "Cue and report an interactive Ibuffer filter-group change."
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'task-done)
-         (dtk-speak ,announcement)))
+         (tts-speak ,announcement)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -319,7 +319,7 @@
     (let ((result (apply original arguments)))
       (when interactive-p
         (emacsvox-icon 'task-done)
-        (dtk-speak (format "Popped group %s" name)))
+        (tts-speak (format "Popped group %s" name)))
       result)))
 
 (advice-add
@@ -342,7 +342,7 @@
   "Report interactively killing the filter group NAME."
   (when (ems-interactive-p 'ibuffer-kill-filter-group)
     (emacsvox-icon 'delete-object)
-    (dtk-speak (format "Killed %s group." name))))
+    (tts-speak (format "Killed %s group." name))))
 
 (advice-add
  'ibuffer-kill-filter-group :after
@@ -358,7 +358,7 @@
       (emacsvox-icon 'yank-object))
     (let ((result (apply original arguments)))
       (when interactive-p
-        (dtk-speak (format "Yanked %s group." name)))
+        (tts-speak (format "Yanked %s group." name)))
       result)))
 
 (advice-add
@@ -370,7 +370,7 @@
   "Report interactively disabling all Ibuffer filters."
   (when (ems-interactive-p 'ibuffer-filter-disable)
     (emacsvox-icon 'task-done)
-    (dtk-speak "Disabled all filters.")))
+    (tts-speak "Disabled all filters.")))
 
 (advice-add
  'ibuffer-filter-disable :after
@@ -408,7 +408,7 @@
        "Cue and report an interactive Ibuffer sort."
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'task-done)
-         (dtk-speak ,announcement)))
+         (tts-speak ,announcement)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -434,7 +434,7 @@
        "Cue and report an interactive Ibuffer BS visibility change."
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'task-done)
-         (dtk-speak ,announcement)))
+         (tts-speak ,announcement)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -453,7 +453,7 @@
   "Report how many filenames were copied interactively."
   (when (ems-interactive-p 'ibuffer-copy-filename-as-kill)
     (emacsvox-icon 'delete-object)
-    (dtk-speak
+    (tts-speak
      (format "copied %s filenames." (ibuffer-count-marked-lines)))))
 
 (advice-add

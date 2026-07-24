@@ -80,7 +80,7 @@
 (defun emacsvox--advice-popup-menu-read-key-sequence-before
     (_keymap &optional prompt _timeout)
   "Speak our prompt."
-  (when (sit-for 2) (dtk-speak (or prompt "Menu:"))))
+  (when (sit-for 2) (tts-speak (or prompt "Menu:"))))
 
 (defun emacsvox-popup--register-movement-group (targets icon)
   "Define native after advice for TARGETS using ICON."
@@ -111,7 +111,7 @@
   "Speak help if available."
   (let ((doc (popup-menu-documentation menu item)))
     (emacsvox-icon 'help)
-    (if doc (dtk-speak doc) (dtk-speak "helpless"))))
+    (if doc (tts-speak doc) (tts-speak "helpless"))))
 
 (defconst emacsvox-popup--advice
   (append

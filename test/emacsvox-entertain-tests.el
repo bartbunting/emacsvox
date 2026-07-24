@@ -27,7 +27,7 @@
 
 (ert-deftest emacsvox-entertain-doctor-uses-native-answer ()
   (let (spoken)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text) (setq spoken text))))
       (emacsvox--advice-doctor-txtype-after
        '(please "tell" me more)))

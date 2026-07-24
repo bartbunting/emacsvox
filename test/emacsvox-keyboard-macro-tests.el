@@ -29,7 +29,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-kbd-macro-query-after)
       (emacsvox--advice-start-kbd-macro-before)
@@ -46,7 +46,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-end-kbd-macro-after))
     (should

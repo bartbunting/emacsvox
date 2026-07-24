@@ -16,7 +16,7 @@
           (let ((inhibit-message t))
             (emacsvox-trace-capture
              (lambda ()
-               (funcall (symbol-function 'dtk-speak) spoken)
+               (funcall (symbol-function 'tts-speak) spoken)
                (funcall (symbol-function 'dtk-letter) "h")
                (funcall (symbol-function 'dtk-dispatch) "punctuation")
                (funcall (symbol-function 'emacsvox-icon) 'select-object)
@@ -61,7 +61,7 @@
           (lambda ()
             (interactive)
             (forward-char 1)
-            (funcall (symbol-function 'dtk-speak) "moved")
+            (funcall (symbol-function 'tts-speak) "moved")
             (funcall (symbol-function 'emacsvox-icon) 'select-object)
             'done))
     (unwind-protect

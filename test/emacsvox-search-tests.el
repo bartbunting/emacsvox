@@ -123,7 +123,7 @@
       (cl-letf (((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events)))
                 ((symbol-function 'sit-for) (lambda (&rest _) t))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text)
                    (push
                     (list 'speak
@@ -146,7 +146,7 @@
   (let ((ems--interactive-fn-name 'isearch-yank-word)
         (isearch-string "search text")
         events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text)
                  (push
                   (list 'speak
@@ -170,7 +170,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-isearch-toggle-case-fold-after)
       (emacsvox--advice-isearch-toggle-regexp-after))

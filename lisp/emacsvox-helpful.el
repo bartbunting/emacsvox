@@ -90,7 +90,7 @@
   "Announce that helpful buffers were closed."
   (when (ems-interactive-p 'helpful-kill-buffers)
     (emacsvox-icon 'close-object)
-    (dtk-speak "help buffers closed")))
+    (tts-speak "help buffers closed")))
 
 (defconst emacsvox-helpful--advice
   (append

@@ -66,7 +66,7 @@
        `(defun ,advice-function (&rest _)
           ,(format "Report cursor count after `%s'." target)
           (when (ems-interactive-p ',target)
-            (dtk-speak (format "%s cursors" mc/num-cursors))
+            (tts-speak (format "%s cursors" mc/num-cursors))
             (emacsvox-icon ',icon))))
       (push (list target :after advice-function)
             emacsvox-multiple-cursors--advice))))

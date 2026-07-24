@@ -79,7 +79,7 @@
       (cond
        ((null path) (emacsvox-speak-line))
        (t
-        (dtk-speak
+        (tts-speak
          (propertize path 'personality
                      (when (string= type "tree") voice-bolden-medium))))))))
 

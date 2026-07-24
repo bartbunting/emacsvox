@@ -94,7 +94,7 @@
   "Announce that prompt is being sent."
   (when (ems-interactive-p 'gptel-send)
     (emacsvox-icon 'select-object)
-    (dtk-speak
+    (tts-speak
      (format "Sending prompt to %s"
              (if (bound-and-true-p gptel-backend)
                  (gptel-backend-name gptel-backend)
@@ -105,13 +105,13 @@
   (when (ems-interactive-p 'gptel-abort)
     (dtk-stop 'all)
     (emacsvox-icon 'close-object)
-    (dtk-speak "Aborted LLM request")))
+    (tts-speak "Aborted LLM request")))
 
 (defun emacsvox--advice-gptel-menu-after (&rest _)
   "Announce gptel menu and current model."
   (when (ems-interactive-p 'gptel-menu)
     (emacsvox-icon 'open-object)
-    (dtk-speak
+    (tts-speak
      (format "gptel menu, model %s"
              (if (bound-and-true-p gptel-model)
                  gptel-model
@@ -165,7 +165,7 @@
          emacsvox-gptel--last-response-start
          emacsvox-gptel--last-response-end)
     (with-current-buffer emacsvox-gptel--last-response-buffer
-      (dtk-speak
+      (tts-speak
        (buffer-substring-no-properties
         emacsvox-gptel--last-response-start
         emacsvox-gptel--last-response-end))))

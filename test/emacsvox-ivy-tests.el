@@ -29,7 +29,7 @@
   (let (events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push icon events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push text events))))
       (emacsvox--advice-ivy-read-before "Choose: " '(a b)))
     (should (equal (nreverse events) '(open-object "Choose: ")))))

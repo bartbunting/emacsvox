@@ -142,7 +142,7 @@
   "Speak number of cells that are non-empty."
   (interactive)
   
-  (dtk-speak
+  (tts-speak
    (format " %d zeros"
            (apply #'+
                   (mapcar #'(lambda (s) (cl-count-if #'zerop s))
@@ -152,7 +152,7 @@
   "Speak upcoming tile."
   (interactive)
   (emacsvox-threes-sox-gen threes-next-number)
-  (dtk-speak (format "%s" threes-next-number)))
+  (tts-speak (format "%s" threes-next-number)))
 
 (defun emacsvox-threes-speak-transposed-board ()
   "Speak the board by columns."

@@ -141,7 +141,7 @@
           events)
       (cl-letf (((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speech text) events))))
         (emacsvox--advice-python-indent-region-after
          (point-min) (point-max)))

@@ -125,7 +125,7 @@ Infolets use the same structure as mode-line-format and header-line-format.
 Generates auditory and visual display."
   
   (setq header-line-format infolet)
-  (dtk-speak (format-mode-line header-line-format))
+  (tts-speak (format-mode-line header-line-format))
   (emacsvox-icon 'progress))
 
 ;;;###autoload

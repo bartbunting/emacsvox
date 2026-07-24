@@ -69,7 +69,7 @@
   (let ((start (point))
         (result (apply original args)))
     (when (ems-interactive-p 'ess-smart-underscore)
-      (dtk-speak (buffer-substring start (point))))
+      (tts-speak (buffer-substring start (point))))
     result))
 
 (push '(ess-smart-underscore :around

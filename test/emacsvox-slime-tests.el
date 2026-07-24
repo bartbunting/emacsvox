@@ -23,7 +23,7 @@
     (insert "cl")
     (let ((ems--interactive-fn-name 'slime-complete-symbol)
           (calls 0))
-      (cl-letf (((symbol-function 'dtk-speak) #'ignore)
+      (cl-letf (((symbol-function 'tts-speak) #'ignore)
                 ((symbol-function 'emacsvox-speak-completions-if-available)
                  #'ignore))
         (should

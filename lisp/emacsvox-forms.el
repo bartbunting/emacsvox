@@ -65,7 +65,7 @@ speak the first field")
   (interactive)
   (cl-declare (special forms--current-record forms--total-records
                        forms-file))
-  (dtk-speak
+  (tts-speak
    (format "Record %s of %s from %s"
            forms--current-record forms--total-records forms-file)))
 
@@ -97,7 +97,7 @@ Assumes that point is at the front of a field value."
                        emacsvox-forms-ro-voice name)
     (put-text-property 0 (length value)
                        'personality emacsvox-forms-rw-voice value)
-    (dtk-speak (concat name " " value))))
+    (tts-speak (concat name " " value))))
 
 ;;;  Advise interactive  commands
 (cl-loop

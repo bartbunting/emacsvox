@@ -80,27 +80,27 @@
   "speak."
   (when (ems-interactive-p 'flycheck-list-errors)
     (emacsvox-icon 'task-done)
-    (dtk-speak "Displayed error listing in other window.")))
+    (tts-speak "Displayed error listing in other window.")))
 
 (defun emacsvox--advice-flycheck-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p 'flycheck-buffer)
-    (emacsvox-icon 'task-done) (dtk-speak "Checking buffer.")))
+    (emacsvox-icon 'task-done) (tts-speak "Checking buffer.")))
 
 (defun emacsvox--advice-flycheck-clear-after (&rest _)
   "speak."
   (when (ems-interactive-p 'flycheck-clear)
-    (emacsvox-icon 'task-done) (dtk-speak "Cleared errors")))
+    (emacsvox-icon 'task-done) (tts-speak "Cleared errors")))
 
 (defun emacsvox--advice-flycheck-compile-after (&rest _)
   "speak."
   (when (ems-interactive-p 'flycheck-compile)
-    (emacsvox-icon 'task-done) (dtk-speak "Compiling buffer")))
+    (emacsvox-icon 'task-done) (tts-speak "Compiling buffer")))
 
 (defun emacsvox--advice-flycheck-error-list-refresh-after (&rest _)
   "speak."
   (when (ems-interactive-p 'flycheck-error-list-refresh)
-    (emacsvox-icon 'task-done) (dtk-speak "Refreshed errors")))
+    (emacsvox-icon 'task-done) (tts-speak "Refreshed errors")))
 
 (defconst emacsvox-flycheck--advice
   '((flycheck-next-error

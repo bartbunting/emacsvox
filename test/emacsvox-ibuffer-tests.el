@@ -247,7 +247,7 @@
                (lambda (&rest _) 3))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-ibuffer-copy-filename-as-kill-after))
     (should (= registrations 1))
@@ -325,7 +325,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (should
        (eq
@@ -352,7 +352,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (should
        (eq
@@ -381,7 +381,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (&rest arguments) (push arguments events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (&rest arguments) (push arguments events))))
       (should
        (eq
@@ -408,7 +408,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-ibuffer-kill-filter-group-after "Work"))
     (should
@@ -438,7 +438,7 @@
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-ibuffer-add-to-tmp-show-after)
       (emacsvox--advice-ibuffer-add-to-tmp-hide-after))

@@ -56,7 +56,7 @@
   "Interactive evaluation speaks its result without replacing it."
   (let ((ems--interactive-fn-name 'debugger-eval-expression)
         spoken)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (value) (setq spoken value) 'speech-result)))
       (should
        (equal
@@ -68,7 +68,7 @@
 (ert-deftest emacsvox-debugger-eval-is-quiet-programmatically ()
   "Programmatic evaluation preserves its result without speaking."
   (let (spoken)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (value) (setq spoken value))))
       (should
        (eq

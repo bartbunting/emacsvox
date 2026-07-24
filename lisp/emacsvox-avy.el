@@ -98,7 +98,7 @@
      "Confirm action."
      (when (ems-interactive-p ',target)
        (emacsvox-icon 'task-done)
-       (dtk-speak ,(format "%s done" (symbol-name target)))))))
+       (tts-speak ,(format "%s done" (symbol-name target)))))))
 
 (defconst emacsvox-avy--advice-targets
   (append emacsvox-avy--goto-targets emacsvox-avy--action-targets)

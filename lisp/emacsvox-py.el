@@ -143,14 +143,14 @@
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-shift-region-left)
     (emacsvox-icon 'left)
-    (dtk-speak
+    (tts-speak
      (format "Left shifted block  containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
 (defun emacsvox--advice-py-shift-region-right-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-shift-region-right)
-    (dtk-speak
+    (tts-speak
      (format "Right shifted block  containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
@@ -158,14 +158,14 @@
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-indent-region)
     (emacsvox-icon 'right)
-    (dtk-speak
+    (tts-speak
      (format "Indented region   containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
 (defun emacsvox--advice-py-comment-region-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-comment-region)
-    (dtk-speak
+    (tts-speak
      (format "Commented  block  containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
@@ -307,7 +307,7 @@
   `(defun ,advice-function (&rest _)
      "Speak number of lines marked"
      (when (ems-interactive-p ',target)
-       (dtk-speak
+       (tts-speak
         (format
          "Marked block containing %s lines"
          (count-lines (region-beginning) (region-end))))
@@ -335,7 +335,7 @@
 (defun emacsvox--advice-py-mark-def-or-class-after (&rest _)
   "Speak number of lines marked"
   (when (ems-interactive-p 'py-mark-def-or-class)
-    (dtk-speak
+    (tts-speak
      (format "Marked block containing %s lines"
              (count-lines (region-beginning) (region-end))))
     (emacsvox-icon 'mark-object)))

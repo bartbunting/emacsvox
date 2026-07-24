@@ -178,7 +178,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak
+    (tts-speak
      (sudoku-cell current-board (cl-first cell) (cl-second cell)))))
 
 (defun emacsvox-sudoku-hint ()
@@ -200,7 +200,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak
+    (tts-speak
      (cl-count 0
                (sudoku-row current-board (cl-second cell))))))
 
@@ -209,7 +209,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak
+    (tts-speak
      (cl-count 0
                (sudoku-column current-board  (cl-first cell))))))
 
@@ -218,7 +218,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak
+    (tts-speak
      (cl-count 0
                (sudoku-subsquare current-board
                                  (emacsvox-sudoku-cell-sub-square cell))))))

@@ -75,7 +75,7 @@
     (let ((ems--interactive-fn-name 'completion-at-point)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events)))
                 ((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events))))
@@ -134,7 +134,7 @@
   (let ((ems--interactive-fn-name nil)
         (calls 0)
         feedback)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (&rest _) (setq feedback t)))
               ((symbol-function 'emacsvox-icon)
                (lambda (&rest _) (setq feedback t))))
@@ -165,7 +165,7 @@
                (lambda (icon) (push (list 'icon icon) events)))
               ((symbol-function 'minibuffer-contents)
                (lambda () "history entry"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-next-history-element-after))
     (should
@@ -181,7 +181,7 @@
                (lambda (icon) (push (list 'icon icon) events)))
               ((symbol-function 'emacsvox-get-current-completion)
                (lambda () "selected item"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-next-completion-after))
     (should
@@ -196,7 +196,7 @@
                (lambda (icon) (push (list 'icon icon) events)))
               ((symbol-function 'emacsvox-get-current-completion)
                (lambda () "first completion"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-switch-to-completions-after))
     (should
@@ -213,7 +213,7 @@
           events)
       (cl-letf (((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (should
          (eq
@@ -240,7 +240,7 @@
         feedback)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (&rest _) (setq feedback t)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (&rest _) (setq feedback t))))
       (should
        (eq
@@ -263,7 +263,7 @@
       (cl-letf (((symbol-function 'emacsvox-kill-buffer-carefully)
                  (lambda (buffer)
                    (push (list 'kill-buffer buffer) events)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (should
          (eq
@@ -304,7 +304,7 @@
           (dtk-punctuation-mode 'all)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (should
          (eq
@@ -365,7 +365,7 @@
         events)
     (cl-letf (((symbol-function 'accept-process-output)
                (lambda (&rest _) (push 'accept-output events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-dabbrev-expand-after))
     (should

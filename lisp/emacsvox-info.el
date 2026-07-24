@@ -236,7 +236,7 @@ node-spec."
    ((and (boundp 'Info-use-header-line)
          (boundp 'Info-header-line)
          Info-header-line)
-    (dtk-speak Info-header-line))
+    (tts-speak Info-header-line))
    (t (save-excursion
         (goto-char (point-min))
         (emacsvox-speak-line)))))

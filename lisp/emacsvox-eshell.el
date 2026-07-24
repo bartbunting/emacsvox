@@ -318,7 +318,7 @@ personalities.")
          (if (> (point) prior)
              (tts-with-punctuations
               'all
-              (dtk-speak (buffer-substring prior (point))))
+              (tts-speak (buffer-substring prior (point))))
            (emacsvox-speak-completions-if-available)))
        result))))
 

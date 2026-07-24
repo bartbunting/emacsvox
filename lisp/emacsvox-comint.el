@@ -419,7 +419,7 @@ Interactive PREFIX arg means toggle the global default value. ")
                       (looking-at comint-prompt-regexp)))))
             (cond
              ((and emacsvox-comint-autospeak (not prompt-p))
-              (dtk-speak output))
+              (tts-speak output))
              (prompt-p
               (when emacsvox-comint-autospeak
                 (emacsvox-icon 'item)))))))
@@ -439,7 +439,7 @@ Interactive PREFIX arg means toggle the global default value. ")
     (with-current-buffer (get-buffer "*Completions*")
       (setq-local comint-displayed-dynamic-completions completions))
     (next-completion 1)
-    (dtk-speak (buffer-substring (point) (point-max)))))
+    (tts-speak (buffer-substring (point) (point-max)))))
 
 (advice-add
  'comint-dynamic-list-completions :around
@@ -532,7 +532,7 @@ Interactive PREFIX arg means toggle the global default value. ")
             (replace-match "history reference")))
         (emacsvox-icon 'help)
         (next-completion 1)
-        (dtk-speak (emacsvox-get-current-completion))))))
+        (tts-speak (emacsvox-get-current-completion))))))
 
 (advice-add
  'comint-dynamic-list-input-ring :around

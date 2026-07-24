@@ -128,12 +128,12 @@
 (defun emacsvox--advice-eat-reload-after (&rest _)
   "Speak after reloading Eat."
   (when (ems-interactive-p 'eat-reload)
-    (emacsvox-icon 'task-done) (dtk-speak "Reloaded Eat")))
+    (emacsvox-icon 'task-done) (tts-speak "Reloaded Eat")))
 
 (defun emacsvox--advice-eat-reset-after (&rest _)
   "Speak after resetting Eat."
   (when (ems-interactive-p 'eat-reset)
-    (emacsvox-icon 'task-done) (dtk-speak "Reset Eat")))
+    (emacsvox-icon 'task-done) (tts-speak "Reset Eat")))
 
 (defconst emacsvox-eat--mode-targets
   '(eat-blink-mode eat-char-mode eat-emacs-mode

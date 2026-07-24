@@ -89,7 +89,7 @@
      (cond
       ((emacsvox-calendar-entry-marked-p)
        (dtk-speak-using-voice emacsvox-calendar-mark-personality date))
-      (t (dtk-speak date))))))
+      (t (tts-speak date))))))
 
 ;;;   Advice:
 
@@ -139,7 +139,7 @@
        (save-current-buffer
          (set-buffer "*Fancy Diary Entries*")
          (tts-with-punctuations "some" (emacsvox-speak-buffer))))
-      (t (dtk-speak "No diary entries."))))))
+      (t (tts-speak "No diary entries."))))))
 
 (advice-add
  'diary-view-entries :after #'emacsvox--advice-diary-view-entries-after
@@ -458,7 +458,7 @@
         (set-buffer  appt-buffer)
         (if (= (point-min) (point-max))
             (message  "No appointments are currently displayed")
-          (dtk-speak (buffer-string)))))
+          (tts-speak (buffer-string)))))
      (t (message "You have no appointments ")))))
 
 (defun emacsvox--advice-appt-add-after (time message &rest _)

@@ -77,7 +77,7 @@
 (defun emacsvox--advice-debugger-eval-expression-filter-return (result)
   "Speak and return RESULT from an interactive debugger evaluation."
   (when (ems-interactive-p 'debugger-eval-expression)
-    (dtk-speak result))
+    (tts-speak result))
   result)
 
 (advice-add

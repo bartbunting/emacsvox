@@ -86,7 +86,6 @@
     (tts-unicode-char-untouched-p . dtk-unicode-char-untouched-p)
     (tts-unicode-name-for-char . dtk-unicode-name-for-char)
     (tts-unicode-full-name-for-char . dtk-unicode-full-name-for-char)
-    (tts-speak . dtk-speak)
     (tts-speak-list . dtk-speak-list)
     (tts-letter . dtk-letter)
     (tts-notify-process . dtk-notify-process)
@@ -258,13 +257,9 @@
   (dolist (function emacsvox-test--legacy-protocol-functions)
     (should-not (fboundp function))))
 
-(ert-deftest emacsvox-tts-canonical-speech-preserves-legacy-interception ()
-  "Replacing the legacy speech function still intercepts canonical speech."
-  (let (spoken)
-    (cl-letf (((symbol-function 'dtk-speak)
-               (lambda (text) (setq spoken text))))
-      (tts-speak "hello"))
-    (should (equal spoken "hello"))))
+(ert-deftest emacsvox-tts-legacy-speech-function-is-removed ()
+  "The generic speech entry point no longer exposes its DECtalk-era name."
+  (should-not (fboundp 'dtk-speak)))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."

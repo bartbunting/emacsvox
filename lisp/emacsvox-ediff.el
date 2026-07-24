@@ -189,7 +189,7 @@
         (b-overlay (emacsvox-ediff-difference-b-overlay n))
         (key ""))
     (emacsvox-icon 'select-object)
-    (dtk-speak
+    (tts-speak
      (concat
       "Difference ai "
       (emacsvox-overlay-get-text a-overlay)))
@@ -199,7 +199,7 @@
             (read-key-sequence "Press any key to continue")))
     (unless (= 7 (string-to-char key))
       (dtk-stop 'all)
-      (dtk-speak
+      (tts-speak
        (concat
         "Difference B "
         (emacsvox-overlay-get-text b-overlay))))))

@@ -85,7 +85,7 @@
 (defun emacsvox--advice-ebuku-show-all-after (&rest _)
   "Speak after showing every bookmark."
   (when (ems-interactive-p 'ebuku-show-all)
-    (dtk-speak "Showing all bookmarks")))
+    (tts-speak "Showing all bookmarks")))
 
 (defun emacsvox--advice-ebuku-toggle-results-limit-after (&rest _)
   "Report the new Ebuku results limit."

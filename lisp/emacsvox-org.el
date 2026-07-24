@@ -349,7 +349,7 @@
           (tts-with-punctuations
            'all
            (if (> (length (emacsvox-get-minibuffer-contents)) 0)
-               (dtk-speak (emacsvox-get-minibuffer-contents))
+               (tts-speak (emacsvox-get-minibuffer-contents))
              (emacsvox-speak-line)))
         (emacsvox-speak-completions-if-available))
       result)))
@@ -409,13 +409,13 @@
        "Cue and speak after an interactive Org timestamp adjustment."
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'select-object)
-         (dtk-speak org-last-changed-timestamp)))
+         (tts-speak org-last-changed-timestamp)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-org-eval-in-calendar-after (&rest _)
   "Speak the result of evaluating an Org calendar expression."
-  (dtk-speak org-ans2))
+  (tts-speak org-ans2))
 
 (advice-add
  'org-eval-in-calendar :after
@@ -695,7 +695,7 @@
   (interactive)
   (let ((field (org-table-get-field)))
     (cond
-     ((string-match "^ *$" field) (dtk-speak "space"))
+     ((string-match "^ *$" field) (tts-speak "space"))
      (t (message field)))))
 
 (defun emacsvox-org-table-speak-column-header ()

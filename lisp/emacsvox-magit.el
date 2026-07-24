@@ -300,7 +300,7 @@
 (defun emacsvox-magit-blame-speak ()
   "Summarize current blame chunk."
   (emacsvox-icon 'left)
-  (dtk-speak
+  (tts-speak
    (concat
     (buffer-substring (line-beginning-position) (line-end-position))
     (ems--display-props-get))))

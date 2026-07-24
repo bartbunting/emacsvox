@@ -29,7 +29,7 @@
   (let ((ems--interactive-fn-name 'eval-last-sexp)
         (dtk-punctuation-mode 'all)
         events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text)
                  (push
                   (list 'speak text
@@ -54,7 +54,7 @@
   "A programmatic evaluation result is returned without speech."
   (let ((ems--interactive-fn-name nil)
         feedback)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (&rest _) (setq feedback t))))
       (should
        (eq

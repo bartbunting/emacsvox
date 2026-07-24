@@ -109,7 +109,7 @@ instead you hear only the first screenful."
 ;;;   helper functions
 
 (defun emacsvox-gnus-summary-speak-subject ()
-  (dtk-speak (gnus-summary-article-subject)))
+  (tts-speak (gnus-summary-article-subject)))
 
 (defun emacsvox-gnus-speak-article-body ()
   (cl-declare (special emacsvox-gnus-large-article
@@ -137,7 +137,7 @@ instead you hear only the first screenful."
 
 (defun emacsvox--advice-gnus-around (original &rest arguments)
   "Run ORIGINAL with silenced messages and cue Gnus startup."
-  (dtk-speak "Starting gnus")
+  (tts-speak "Starting gnus")
   (let ((result
          (ems-with-messages-silenced
            (apply original arguments))))
@@ -182,7 +182,7 @@ instead you hear only the first screenful."
 (defun emacsvox--advice-gnus-group-get-new-news-around
     (original &rest arguments)
   "Run ORIGINAL with silenced messages and cue the news refresh."
-  (dtk-speak "Getting new  gnus")
+  (tts-speak "Getting new  gnus")
   (let ((result
          (ems-with-messages-silenced
            (apply original arguments))))
@@ -266,7 +266,7 @@ instead you hear only the first screenful."
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-groups)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Listing groups... done")))
+    (tts-speak "Listing groups... done")))
 
 (advice-add
  'gnus-group-list-groups :after
@@ -277,7 +277,7 @@ instead you hear only the first screenful."
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-topic-mode)
     (emacsvox-icon 'open-object)
-    (dtk-speak "toggled topic mode")))
+    (tts-speak "toggled topic mode")))
 
 (advice-add
  'gnus-topic-mode :after
@@ -288,7 +288,7 @@ instead you hear only the first screenful."
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-all-groups)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Listing all groups... done")))
+    (tts-speak "Listing all groups... done")))
 
 (advice-add
  'gnus-group-list-all-groups :after
@@ -299,7 +299,7 @@ instead you hear only the first screenful."
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-all-matching)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Listing all matching groups... done")))
+    (tts-speak "Listing all matching groups... done")))
 
 (advice-add
  'gnus-group-list-all-matching :after
@@ -310,7 +310,7 @@ instead you hear only the first screenful."
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-killed)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Listing killed groups... done")))
+    (tts-speak "Listing killed groups... done")))
 
 (advice-add
  'gnus-group-list-killed :after
@@ -333,7 +333,7 @@ instead you hear only the first screenful."
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-zombies)
     (emacsvox-icon 'open-object)
-    (dtk-speak "Listing zombie groups... done")))
+    (tts-speak "Listing zombie groups... done")))
 
 (advice-add
  'gnus-group-list-zombies :after
@@ -474,7 +474,7 @@ instead you hear only the first screenful."
              (if (= saved-point (point))
                  (emacsvox-pip ,no-more-message)
                (emacsvox-icon 'select-object)
-               (dtk-speak (gnus-summary-article-subject))))
+               (tts-speak (gnus-summary-article-subject))))
            result)))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
@@ -733,7 +733,7 @@ Helps to prevent words from being spelled instead of spoken."
     (downcase-region beg end))
   (gnus-article-show-summary)
   (emacsvox-icon 'modified-object)
-  (dtk-speak "Downcased article body"))
+  (tts-speak "Downcased article body"))
 
 ;;;  refreshing the pronunciation  and punctuation mode
 

@@ -111,7 +111,7 @@
                (lambda (scope) (push (list 'stop scope) events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-message-beginning-of-line-before))
     (should

@@ -88,7 +88,7 @@
       (let ((content (buffer-string)))
         (unless (string-empty-p content)
           (setq emacsvox-which-key--page-cache content)
-          (dtk-speak content))))))
+          (tts-speak content))))))
 
 (defun emacsvox-which-key--page-info ()
   "Return current page info as string."
@@ -103,7 +103,7 @@
   "Speak current page with page number info."
   (let ((page-info (emacsvox-which-key--page-info)))
     (when page-info
-      (dtk-speak page-info))
+      (tts-speak page-info))
     (emacsvox-which-key--speak-page)))
 
 ;;;  Interactive command to speak cached content:
@@ -117,7 +117,7 @@
          (which-key--popup-showing-p))
     (emacsvox-which-key--speak-page-with-info))
    (emacsvox-which-key--page-cache
-    (dtk-speak emacsvox-which-key--page-cache))
+    (tts-speak emacsvox-which-key--page-cache))
    (t (message "No which-key content available"))))
 
 ;;;  Advice interactive commands:
@@ -159,7 +159,7 @@
   "Speak undo feedback."
   (when (ems-interactive-p 'which-key-undo-key)
     (emacsvox-icon 'item)
-    (dtk-speak "undo")))
+    (tts-speak "undo")))
 
 (advice-add
  'which-key-undo-key :after
@@ -194,7 +194,7 @@
        (when (ems-interactive-p ',target)
          (emacsvox-icon 'scroll)
          (let ((page-info (emacsvox-which-key--page-info)))
-           (when page-info (dtk-speak page-info)))))
+           (when page-info (tts-speak page-info)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 

@@ -53,7 +53,7 @@
 
 (defun emacsvox--advice-doctor-txtype-after (answer)
   "Speak Doctor's ANSWER after it is inserted."
-  (dtk-speak
+  (tts-speak
    (mapconcat (lambda (item) (format "%s" item)) answer " ")))
 
 (with-eval-after-load 'doctor

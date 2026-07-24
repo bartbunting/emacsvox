@@ -86,7 +86,7 @@
 (defun emacsvox-nov--scroll-feedback ()
   "Speak the visible Nov window after scrolling."
   (emacsvox-icon 'scroll)
-  (dtk-speak (emacsvox-get-window-contents)))
+  (tts-speak (emacsvox-get-window-contents)))
 
 (emacsvox-nov--register-after-group
  '(nov-scroll-up nov-scroll-down)

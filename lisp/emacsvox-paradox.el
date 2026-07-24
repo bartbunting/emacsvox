@@ -84,7 +84,7 @@
      ((string= state "incompat") (emacsvox-icon
                                   'alert-user))
      (t (emacsvox-icon 'doc)))
-    (dtk-speak
+    (tts-speak
      (concat
       (propertize name 'personality voice-animate) "  "desc))))
 

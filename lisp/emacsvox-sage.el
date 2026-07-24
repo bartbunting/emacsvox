@@ -75,7 +75,7 @@
    t "Not in a Sage buffer")
   (cl-flet
       ((say-it ()
-         (dtk-speak
+         (tts-speak
           (apply #'buffer-substring (sage-shell:last-output-beg-end)))))
     (cond
      ((eq major-mode 'sage-shell-mode) (say-it))

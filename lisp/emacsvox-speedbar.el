@@ -75,7 +75,7 @@
                    "0")))))
       (setq indent 
             (if (zerop indent) "" indent))
-      (dtk-speak 
+      (tts-speak
        (concat indent (ems--this-line))))))
 
 ;;;  Advice interactive commands:
@@ -204,7 +204,7 @@ An automatically updating speedbar consumes resources.")
     (speedbar-stealthy-updates)
     (speedbar-disable-update))
   (emacsvox-icon 'select-object)
-  (dtk-speak
+  (tts-speak
    (concat "Speedbar: "
            (let ((start nil))
              (save-excursion 

@@ -55,7 +55,7 @@
 (add-hook
  'tempo-insert-string-hook
  #'(lambda (string)
-     (dtk-speak string)
+     (tts-speak string)
      string))
 
 ;;;   Advice: 

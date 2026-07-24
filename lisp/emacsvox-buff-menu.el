@@ -63,7 +63,7 @@
    ((eq major-mode 'Buffer-menu-mode)
     (let*((buffer (Buffer-menu-buffer t)))
       (if (get-buffer buffer)
-          (dtk-speak (buffer-name  buffer))
+          (tts-speak (buffer-name  buffer))
         (error "No valid buffer on this line"))))
    (t (error "This command can be used only in buffer menus"))))
 
@@ -101,7 +101,7 @@
         (when this-buffer-modified-p (emacsvox-icon 'modified-object))
         (when this-buffer-read-only
           (emacsvox-icon 'unmodified-object))
-        (dtk-speak
+        (tts-speak
          (format  "%s a %s  buffer  %s with size  %s"
                   name this-buffer-mode-name
                   (if (or file this-buffer-directory)

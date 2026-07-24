@@ -67,7 +67,7 @@
 ;;;  Emacsvox Helpers:
 (defun emacsvox-hydra-body-pre (&optional name)
   "Provide auditory icon"
-  (when name (dtk-speak name))
+  (when name (tts-speak name))
   (emacsvox-icon 'open-object))
 (defun emacsvox-hydra-pre ()
   "Provide auditory icon"

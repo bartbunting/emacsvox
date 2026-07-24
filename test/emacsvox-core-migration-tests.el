@@ -297,7 +297,7 @@
           (emacsvox-speak-messages t)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events)))
                 ((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events))))
@@ -391,7 +391,7 @@
                (lambda () "visible text"))
               ((symbol-function 'emacsvox-get-current-percentage-into-buffer)
                (lambda () "50%"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events)))
               ((symbol-function 'dtk-notify)
                (lambda (text)
@@ -581,7 +581,7 @@
     (let ((ems--interactive-fn-name 'expand-abbrev)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (should
          (eq
@@ -607,7 +607,7 @@
     (let ((ems--interactive-fn-name nil)
           (calls 0)
           feedback)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (&rest _) (setq feedback t))))
         (should
          (eq
@@ -629,7 +629,7 @@
                (lambda (description)
                  (push (list 'canonicalize description) events)
                  "canonical key"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (should
        (equal
@@ -656,7 +656,7 @@
   (let ((ems--interactive-fn-name nil)
         (calls 0)
         feedback)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (&rest _) (setq feedback t))))
       (should
        (equal
@@ -676,7 +676,7 @@
         (dtk-punctuation-mode 'some)
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (text)
                  (push
                   (list 'speak text emacsvox-speak-messages
@@ -708,7 +708,7 @@
   (let ((ems--interactive-fn-name nil)
         (calls 0)
         feedback)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (&rest _) (setq feedback t))))
       (should
        (equal

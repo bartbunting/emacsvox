@@ -87,14 +87,14 @@
   "Announce collect buffer."
   (when (ems-interactive-p 'embark-collect)
     (emacsvox-icon 'open-object)
-    (dtk-speak
+    (tts-speak
      (format "Collected into %s" (buffer-name)))))
 
 (defun emacsvox--advice-embark-export-after (&rest _)
   "Announce export result."
   (when (ems-interactive-p 'embark-export)
     (emacsvox-icon 'task-done)
-    (dtk-speak
+    (tts-speak
      (format "Exported to %s" (buffer-name)))))
 
 (defun emacsvox--advice-embark-become-after (&rest _)

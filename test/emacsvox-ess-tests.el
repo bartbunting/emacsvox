@@ -35,7 +35,7 @@
     (let ((ems--interactive-fn-name 'ess-smart-underscore)
           (calls 0)
           spoken)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (setq spoken text))))
         (should
          (eq 'result

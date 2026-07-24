@@ -213,7 +213,7 @@
      nxml-balanced-close-start-tag-inline)
     "Speak the closed element."
   (emacsvox-icon 'close-object)
-  (dtk-speak
+  (tts-speak
    (format "Closed %s" (xmltok-start-tag-qname))))
 
 ;;;  speech enable outliner 
@@ -253,7 +253,7 @@
         (beginning-of-line)
         (forward-char -2)
         (setq o-close (car (overlays-at (point))))
-        (dtk-speak (concat 
+        (tts-speak (concat
                     (overlay-get  o-open 'display)
                     (overlay-get o-close 'display)))))
     (emacsvox-icon 'ellipses))

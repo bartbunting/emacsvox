@@ -182,7 +182,7 @@
                (lambda (definition)
                  (push (list 'lookup definition) events)
                  "forward-char  control f"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events))))
       (emacsvox--advice-where-is-after 'forward-char))
     (should

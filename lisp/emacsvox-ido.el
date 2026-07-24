@@ -122,33 +122,33 @@
 
 (emacsvox-ido--define-advice ido-mode :after
   (emacsvox-icon (if ido-mode 'on 'off))
-  (dtk-speak (format "IDo set to %s" ido-mode)))
+  (tts-speak (format "IDo set to %s" ido-mode)))
 
 (emacsvox-ido--define-advice ido-everywhere :after
   (emacsvox-icon (if ido-everywhere 'on 'off))
-  (dtk-speak
+  (tts-speak
    (format "Turned %s IDo everywhere."
            (if ido-everywhere " on " " off "))))
 
 (emacsvox-ido--define-advice ido-toggle-case :after
   (emacsvox-icon (if ido-case-fold 'on 'off))
-  (dtk-speak (format "Case %s" (if ido-case-fold 'on 'off))))
+  (tts-speak (format "Case %s" (if ido-case-fold 'on 'off))))
 
 (emacsvox-ido--define-advice ido-toggle-regexp :after
   (emacsvox-icon (if ido-enable-regexp 'on 'off))
-  (dtk-speak (format "Regexp %s" (if ido-enable-regexp 'on 'off))))
+  (tts-speak (format "Regexp %s" (if ido-enable-regexp 'on 'off))))
 
 (emacsvox-ido--define-advice ido-toggle-prefix :after
   (emacsvox-icon (if ido-enable-prefix 'on 'off))
-  (dtk-speak (format "Prefix %s" (if ido-enable-prefix 'on 'off))))
+  (tts-speak (format "Prefix %s" (if ido-enable-prefix 'on 'off))))
 
 (emacsvox-ido--define-advice ido-toggle-ignore :after
   (emacsvox-icon (if ido-ignore-files 'on 'off))
-  (dtk-speak
+  (tts-speak
    (format "File ignoring  %s" (if ido-ignore-files 'on 'off))))
 
 (emacsvox-ido--define-advice ido-complete :after
-  (dtk-speak (car ido-matches)))
+  (tts-speak (car ido-matches)))
 
 (cl-loop
  for target in

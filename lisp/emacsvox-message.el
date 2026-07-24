@@ -125,7 +125,7 @@
 (emacsvox-message--define-advice message-beginning-of-line :before
   (dtk-stop 'all)
   (emacsvox-icon 'select-object)
-  (dtk-speak "beginning of line"))
+  (tts-speak "beginning of line"))
 
 (emacsvox-message--define-advice message-newline-and-reformat :after
   (emacsvox-icon 'fill-object)

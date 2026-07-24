@@ -245,7 +245,7 @@
   "Report the current EIN cell type."
   (let ((type (ein:cell-type (ein:worksheet-get-current-cell))))
     (emacsvox-ein-sox-gen type)
-    (dtk-speak type)))
+    (tts-speak type)))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-toggle-cell-type ein:worksheet-change-cell-type-km)
@@ -253,7 +253,7 @@
 
 (defun emacsvox-ein--move-cell-up-feedback ()
   "Report moving an EIN cell up."
-  (dtk-speak "Moved cell up")
+  (tts-speak "Moved cell up")
   (emacsvox-icon 'large-movement))
 
 (emacsvox-ein--register-after-group
@@ -262,7 +262,7 @@
 
 (defun emacsvox-ein--move-cell-down-feedback ()
   "Report moving an EIN cell down."
-  (dtk-speak "Moved cell down")
+  (tts-speak "Moved cell down")
   (emacsvox-icon 'large-movement))
 
 (emacsvox-ein--register-after-group
@@ -273,7 +273,7 @@
   "Report the visibility of the current EIN cell output."
   (let ((state (slot-value (ein:worksheet-get-current-cell) 'collapsed)))
     (emacsvox-icon (if state 'close-object 'open-object))
-    (dtk-speak (format "%s output" (if state "Hid" "Showing")))))
+    (tts-speak (format "%s output" (if state "Hid" "Showing")))))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-toggle-output-km

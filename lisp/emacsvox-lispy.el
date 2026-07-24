@@ -296,7 +296,7 @@
 (defun emacsvox-lispy--kill-feedback ()
   "Speak text killed by Lispy."
   (emacsvox-icon 'delete-object)
-  (dtk-speak (current-kill 0 nil)))
+  (tts-speak (current-kill 0 nil)))
 
 (emacsvox-lispy--register-after-group
  '(lispy-kill lispy-kill-word lispy-backward-kill-word
@@ -351,7 +351,7 @@
 (defun emacsvox--advice-lispy--show-before (string)
   "Speak STRING before Lispy displays it."
   (emacsvox-icon 'help)
-  (dtk-speak string))
+  (tts-speak string))
 
 (push '(lispy--show :before emacsvox--advice-lispy--show-before)
       emacsvox-lispy--advice)

@@ -77,7 +77,7 @@
     (when (= 0 column) (emacsvox-icon 'left))
     (when (= 7 column) (emacsvox-icon 'right))
     (when (or (= row 0) (= row 7)) (emacsvox-icon 'large-movement))
-    (dtk-speak
+    (tts-speak
      (format "%c in row %s column %s" (following-char) row column))))
 
 (defun emacsvox-mines-speak-uncovered-count ()
@@ -85,7 +85,7 @@
   (interactive)
   
   
-  (dtk-speak
+  (tts-speak
    (format "%d mines with %d uncovered cells remaining."
            mines-number-mines (cl-count-if #'null mines-state))))
 
@@ -228,7 +228,7 @@ to beginning of board before searching."
 (defun emacsvox--advice-mines-after (&rest _)
   "speak."
   (when (ems-interactive-p 'mines)
-    (dtk-speak "New Minesweeper game") (emacsvox-icon 'open-object)))
+    (tts-speak "New Minesweeper game") (emacsvox-icon 'open-object)))
 
 (push '(mines :after emacsvox--advice-mines-after)
       emacsvox-mines--advice)

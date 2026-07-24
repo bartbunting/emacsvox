@@ -66,7 +66,7 @@
 (defun emacsvox--advice-wdired-upcase-word-after (&rest _)
   "Confirm interactively upper-casing a file name."
   (when (ems-interactive-p 'wdired-upcase-word)
-    (tts-with-punctuations 'some (dtk-speak "upper cased file name. "))))
+    (tts-with-punctuations 'some (tts-speak "upper cased file name. "))))
 
 (advice-add
  'wdired-upcase-word :after #'emacsvox--advice-wdired-upcase-word-after
@@ -75,7 +75,7 @@
 (defun emacsvox--advice-wdired-capitalize-word-after (&rest _)
   "Confirm interactively capitalizing a file name."
   (when (ems-interactive-p 'wdired-capitalize-word)
-    (tts-with-punctuations 'some (dtk-speak "Capitalized file name. "))))
+    (tts-with-punctuations 'some (tts-speak "Capitalized file name. "))))
 
 (advice-add
  'wdired-capitalize-word :after
@@ -86,7 +86,7 @@
   "Confirm interactively lower-casing a file name."
   (when (ems-interactive-p 'wdired-downcase-word)
     (tts-with-punctuations 'some
-                           (dtk-speak "Down cased file\n  name. "))))
+                           (tts-speak "Down cased file\n  name. "))))
 
 (advice-add
  'wdired-downcase-word :after
@@ -96,7 +96,7 @@
 (defun emacsvox--advice-wdired-toggle-bit-after (&rest _)
   "Confirm interactively toggling a permission bit."
   (when (ems-interactive-p 'wdired-toggle-bit)
-    (emacsvox-icon 'button) (dtk-speak "Toggled permission bit.")))
+    (emacsvox-icon 'button) (tts-speak "Toggled permission bit.")))
 
 (advice-add
  'wdired-toggle-bit :after #'emacsvox--advice-wdired-toggle-bit-after
@@ -106,7 +106,7 @@
   "Confirm interactively cancelling Wdired changes."
   (when (ems-interactive-p 'wdired-abort-changes)
     (emacsvox-icon 'close-object)
-    (tts-with-punctuations 'some (dtk-speak "Cancelling  changes. "))))
+    (tts-with-punctuations 'some (tts-speak "Cancelling  changes. "))))
 
 (advice-add
  'wdired-abort-changes :after
@@ -117,7 +117,7 @@
   "Confirm interactively committing Wdired changes."
   (when (ems-interactive-p 'wdired-finish-edit)
     (emacsvox-icon 'save-object)
-    (tts-with-punctuations 'some (dtk-speak "Committed changes. "))))
+    (tts-with-punctuations 'some (tts-speak "Committed changes. "))))
 
 (advice-add
  'wdired-finish-edit :after #'emacsvox--advice-wdired-finish-edit-after
@@ -128,7 +128,7 @@
   (when (ems-interactive-p 'wdired-change-to-wdired-mode)
     (emacsvox-icon 'open-object)
     (tts-with-punctuations 'some
-                           (dtk-speak
+                           (tts-speak
                             "Entering writeable dir ed mode. "))))
 
 (advice-add

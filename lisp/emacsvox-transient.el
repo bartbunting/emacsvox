@@ -296,7 +296,7 @@
     (when-let* ((button (button-at (point)))
                 (start (button-start button))
                 (end (button-end button)))
-      (dtk-speak (buffer-substring start end))
+      (tts-speak (buffer-substring start end))
       (emacsvox-icon 'button))))
 
 (defun emacsvox--advice-transient-backward-button-around

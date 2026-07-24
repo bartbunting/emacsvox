@@ -105,7 +105,7 @@
 (defun emacsvox--advice-c-electric-semi&comma-after (&rest _)
   "Speak the line when a statement is completed."
   (when (ems-interactive-p 'c-electric-semi&comma)
-    (cond ((= last-input-event 44) (dtk-speak " comma "))
+    (cond ((= last-input-event 44) (tts-speak " comma "))
           (t (emacsvox-speak-line)))))
 
 (advice-add
@@ -192,7 +192,7 @@
 (defun emacsvox--advice-c-scope-operator-after (&rest _)
   "Speak the scope operator after interactive insertion."
   (when (ems-interactive-p 'c-scope-operator)
-    (dtk-speak "colon colon")))
+    (tts-speak "colon colon")))
 
 (advice-add
  'c-scope-operator :after
@@ -224,7 +224,7 @@
         (and (save-match-data (looking-at "{"))
              (skip-syntax-backward " "))
         (if (>= (point) opoint)
-            (progn (dtk-speak "Cannot move to previous  statement at
+            (progn (tts-speak "Cannot move to previous  statement at
 this level")
                    (goto-char opoint)
                    (and (sit-for 2)
@@ -255,7 +255,7 @@ this level")
         (and (save-match-data (looking-at "{"))
              (skip-syntax-backward " "))
         (if (<= (point) opoint)
-            (progn (dtk-speak "Cannot move to next statement at this
+            (progn (tts-speak "Cannot move to next statement at this
 level")
                    (goto-char opoint)
                    (and (sit-for 2)
@@ -379,7 +379,7 @@ and their meanings. ")
                             (end-of-line)
                             (buffer-substring start (point))))))))
       (error nil))
-    (dtk-speak description)
+    (tts-speak description)
     description))
 
 ;;;   indenting commands

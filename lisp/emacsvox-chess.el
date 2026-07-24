@@ -684,7 +684,7 @@ specifies index of move, default is final index."
   "Speak move at current display index."
   (interactive)
   
-  (dtk-speak (emacsvox-chess-describe-move chess-module-game
+  (tts-speak (emacsvox-chess-describe-move chess-module-game
                                            chess-display-index)))
 
 ;;;  Interactive Commands:
@@ -706,7 +706,7 @@ specifies index of move, default is final index."
        (when (and (ems-interactive-p ',target)
                   (/= previous-index chess-display-index))
          (emacsvox-icon 'search-hit)
-         (dtk-speak
+         (tts-speak
           (emacsvox-chess-describe-move
            chess-module-game chess-display-index)))
        result))))
@@ -730,7 +730,7 @@ specifies index of move, default is final index."
   "Speak after undoing a Chess move."
   (when (ems-interactive-p 'chess-display-undo)
     (emacsvox-icon 'progress)
-    (dtk-speak (emacsvox-chess-describe-move chess-module-game))))
+    (tts-speak (emacsvox-chess-describe-move chess-module-game))))
 
 (defconst emacsvox-chess--backward-targets
   '(chess-display-move-first chess-display-move-backward)
@@ -817,7 +817,7 @@ specifies index of move, default is final index."
     (emacsvox-icon 'open-object)
     t)
    ((eq event 'move)
-    (dtk-speak  (emacsvox-chess-describe-move game))
+    (tts-speak  (emacsvox-chess-describe-move game))
     (emacsvox-icon 'time)
     t)
    ((eq event 'kibitz)

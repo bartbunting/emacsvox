@@ -140,7 +140,7 @@
 (defun emacsvox--advice-tab-bar-close-tab-by-name-after (name)
   "Report interactively closing the tab called NAME."
   (when (ems-interactive-p 'tab-bar-close-tab-by-name)
-    (dtk-speak (message "Closed tab %s" name))
+    (tts-speak (message "Closed tab %s" name))
     (emacsvox-icon 'close-object)))
 
 (advice-add

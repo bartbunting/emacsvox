@@ -42,7 +42,7 @@
     (cl-letf (((symbol-function 'flyspell-get-word)
                (lambda (&rest _) '("corrected")))
               ((symbol-function 'sit-for) (lambda (&rest _) nil))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events))))
@@ -57,7 +57,7 @@
 
 (ert-deftest emacsvox-flyspell-programmatic-auto-correct-runs-once-quietly ()
   (let ((calls 0) events)
-    (cl-letf (((symbol-function 'dtk-speak)
+    (cl-letf (((symbol-function 'tts-speak)
                (lambda (&rest args) (push args events))))
       (should
        (eq 'result

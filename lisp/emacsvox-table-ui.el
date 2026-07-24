@@ -247,7 +247,7 @@ Full List Of Keybindings:
            emacsvox-table
            (emacsvox-table-current-row emacsvox-table)))))
     (put-text-property 0 (length head) 'face 'italic head)
-    (dtk-speak
+    (tts-speak
      (concat head
              (format " %s" element)))))
 
@@ -298,7 +298,7 @@ Full List Of Keybindings:
      0 (length row-head) 'face 'italic row-head)
     (put-text-property
      0 (length col-head) 'face 'bold col-head)
-    (dtk-speak
+    (tts-speak
      (concat row-head " " col-head
              (format " %s" element)))))
 

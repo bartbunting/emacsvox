@@ -80,7 +80,7 @@
                                         ;format and speak the line
         (when this-buffer-modified-p (dtk-tone 700 100))
         (when this-buffer-read-only (dtk-tone 250 100))
-        (dtk-speak
+        (tts-speak
          (concat 
           name " "
           (format-mode-line mode-name)

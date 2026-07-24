@@ -117,7 +117,7 @@
   (should (eq (symbol-function 'eshell-pcomplete) 'completion-at-point))
   (should-not (fboundp 'emacsvox--advice-eshell-kill-output-after))
   (with-temp-buffer
-    (cl-letf (((symbol-function 'dtk-speak) #'ignore))
+    (cl-letf (((symbol-function 'tts-speak) #'ignore))
       (eshell-mode))
     (should (eq (key-binding (kbd "C-a")) 'move-beginning-of-line))
     (should (eq (key-binding (kbd "TAB")) 'completion-at-point))
@@ -176,7 +176,7 @@
     (let ((ems--interactive-fn-name 'eshell-complete-lisp-symbol)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events)))
                 ((symbol-function 'emacsvox-speak-completions-if-available)
                  (lambda () (push 'completions events))))

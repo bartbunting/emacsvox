@@ -702,7 +702,7 @@ the result at point."
            (when b (kill-region (car b) (cdr b))))
          (insert r)
          (emacsvox-speak-line))
-        (t (dtk-speak "Saved shortened url to kill ring"))))))
+        (t (tts-speak "Saved shortened url to kill ring"))))))
 
 ;;; Hoogle
 (declare-function emacsvox-eww-next-h1 "emacsvox-eww" (&optional speak))

@@ -71,7 +71,7 @@ used."
   (let ((original-message (symbol-function 'message))
         emacsvox-trace--events
         value)
-    (cl-letf (((symbol-function 'dtk-speak) #'emacsvox-trace--speak)
+    (cl-letf (((symbol-function 'tts-speak) #'emacsvox-trace--speak)
               ((symbol-function 'dtk-letter)
                (lambda (letter)
                  (emacsvox-trace--record

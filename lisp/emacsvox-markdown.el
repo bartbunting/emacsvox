@@ -124,7 +124,7 @@
   "Speak the current heading with level information."
   (interactive)
   (let ((info (emacsvox-markdown--get-heading-info)))
-    (if info (dtk-speak info)
+    (if info (tts-speak info)
       (message "Not at a heading"))))
 
 ;;;  Structure detection:
@@ -244,25 +244,25 @@ but you won't hear the literal markup characters."
     (cond
      ((emacsvox-markdown--at-horizontal-rule-p)
       (emacsvox-icon 'item)
-      (dtk-speak "section separator"))
+      (tts-speak "section separator"))
      ((emacsvox-markdown--at-table-separator-p) nil)
      ((emacsvox-markdown--at-reference-link-def-p) nil)
      (fence
       (emacsvox-icon 'open-object)
-      (dtk-speak (format "code block: %s" fence)))
+      (tts-speak (format "code block: %s" fence)))
      (footnote
-      (dtk-speak (format "footnote %s: %s" footnote clean)))
+      (tts-speak (format "footnote %s: %s" footnote clean)))
      ((emacsvox-markdown--at-table-row-p)
-      (dtk-speak clean))
+      (tts-speak clean))
      (heading
       (emacsvox-icon 'section)
-      (dtk-speak heading))
+      (tts-speak heading))
      (task
       (emacsvox-icon 'mark-object)
-      (dtk-speak clean))
+      (tts-speak clean))
      ((emacsvox-markdown--at-list-item-p)
-      (dtk-speak (concat "item " clean)))
-     (t (dtk-speak (or clean ""))))))
+      (tts-speak (concat "item " clean)))
+     (t (tts-speak (or clean ""))))))
 
 (defun emacsvox-markdown--speak-table-row ()
   "Speak table row with column info."
@@ -288,7 +288,7 @@ but you won't hear the literal markup characters."
              (emacsvox-markdown--get-heading-info))
         (progn
           (emacsvox-icon 'section)
-          (dtk-speak (emacsvox-markdown--get-heading-info)))
+          (tts-speak (emacsvox-markdown--get-heading-info)))
       (apply original arguments))))
 
 (advice-add
@@ -314,7 +314,7 @@ but you won't hear the literal markup characters."
      (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
        (let ((info (emacsvox-markdown--get-heading-info)))
-         (if info (dtk-speak info) (emacsvox-speak-line))))))
+         (if info (tts-speak info) (emacsvox-speak-line))))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop

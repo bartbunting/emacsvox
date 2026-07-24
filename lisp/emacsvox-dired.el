@@ -77,7 +77,7 @@ If in locate-mode, speak full pathname."
          (dired-get-filename (if (eq major-mode 'locate-mode) nil 'no-dir) t))
         (personality (dtk-get-style)))
     (cond
-     (filename (dtk-speak (propertize filename 'personality personality))
+     (filename (tts-speak (propertize filename 'personality personality))
                (setq emacsvox-speak-last-spoken-word-position (point)))
      (t (emacsvox-speak-line)
         (ding)))))

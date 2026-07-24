@@ -71,20 +71,20 @@
 (defun emacsvox--advice-ace-swap-window-after (&rest _)
   "speak."
   (when (ems-interactive-p 'ace-swap-window)
-    (dtk-speak "Swapped windows")
+    (tts-speak "Swapped windows")
     (emacsvox-icon 'task-done)))
 
 (defun emacsvox--advice-ace-delete-window-after (&rest _)
   "speak."
   (when (ems-interactive-p 'ace-delete-window)
-    (dtk-speak "Deleted window")
+    (tts-speak "Deleted window")
     (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
 (defun emacsvox--advice-ace-delete-other-windows-after (&rest _)
   "speak."
   (when (ems-interactive-p 'ace-delete-other-windows)
-    (dtk-speak "One window")
+    (tts-speak "One window")
     (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 

@@ -99,7 +99,7 @@
 (defun emacsvox--advice-sgml-tags-invisible-after (&rest _)
   "speak"
   (when (ems-interactive-p 'sgml-tags-invisible)
-    (emacsvox-icon 'button) (dtk-speak "Toggled display of tags")))
+    (emacsvox-icon 'button) (tts-speak "Toggled display of tags")))
 
 (advice-add 'sgml-tags-invisible :after
             #'emacsvox--advice-sgml-tags-invisible-after)

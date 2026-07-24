@@ -760,7 +760,7 @@ Argument COMPLEMENT  is the complement of separator."
     (tts--protocol-queue-text text)
     (tts--protocol-queue-code (tts-voice-reset-code))))
 
-;; Internal function used by dtk-speak to send text out.
+;; Internal function used by tts-speak to send text out.
 ;; Handles voice locking etc.
 ;; assumes in dtk-scratch-buffer
 ;; start and end give the extent of the
@@ -838,7 +838,7 @@ Argument COMPLEMENT  is the complement of separator."
 
 ;; Write out the string to the tts via TCL.
 ;; No quoting is done,
-;; ifyou want to quote the text, see dtk-speak
+;; ifyou want to quote the text, see tts-speak
 
 (defun dtk-dispatch (string)
   "Send request  to speech server."
@@ -1626,7 +1626,7 @@ This is so text marked invisible is silenced.")
      (car org-link--link-folding-spec)
      :visible (not org-link-descriptive))))
 
-(defun dtk-speak (text)
+(defun tts-speak (text)
   "Speak the TEXT string
 unless   `dtk-quiet' is set to t. "
   ;; ensure text is a  string
@@ -1772,7 +1772,7 @@ grouping"
           (t (cl-incf count)
              (insert " ")))))
       (setq contents (buffer-string)))
-    (tts-with-punctuations 'some (dtk-speak contents))
+    (tts-with-punctuations 'some (tts-speak contents))
     t))
 
 (defun dtk-letter (letter)
@@ -1812,8 +1812,8 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   (setq emacsvox-last-message text)
   (cond
    ((dtk-notify-process)                ; we have a live notifier
-    (dtk-notify-apply #'dtk-speak text))
-   (t (dtk-speak text)))
+    (dtk-notify-apply #'tts-speak text))
+   (t (tts-speak text)))
   text)
 
 (defun dtk-notify-icon (icon)
@@ -2163,7 +2163,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-unicode-char-untouched-p #'dtk-unicode-char-untouched-p)
 (defalias 'tts-unicode-name-for-char #'dtk-unicode-name-for-char)
 (defalias 'tts-unicode-full-name-for-char #'dtk-unicode-full-name-for-char)
-(defalias 'tts-speak #'dtk-speak)
 (defalias 'tts-speak-list #'dtk-speak-list)
 (defalias 'tts-letter #'dtk-letter)
 (defalias 'tts-notify-process #'dtk-notify-process)

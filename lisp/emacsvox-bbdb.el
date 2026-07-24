@@ -145,8 +145,8 @@
               (unless (get-text-property (point) 'mouse-face)
                 (goto-char
                  (next-single-property-change (point) 'mouse-face)))
-              (dtk-speak (emacsvox-get-current-completion)))
-          (dtk-speak
+              (tts-speak (emacsvox-get-current-completion)))
+          (tts-speak
            (with-current-buffer buffer
              (buffer-substring prior (point)))))))
     result))

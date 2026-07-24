@@ -161,7 +161,7 @@
       (put-text-property 0 (length line-number) 'personality
                          voice-annotate line-number)
       (emacsvox-icon 'large-movement)
-      (dtk-speak (concat line-number (ems--this-line))))))
+      (tts-speak (concat line-number (ems--this-line))))))
 
 (advice-add
  'View-goto-line :after #'emacsvox--advice-View-goto-line-after
@@ -181,7 +181,7 @@
   "Speak after interactively moving to a percentage of a View buffer."
   (when (ems-interactive-p 'View-goto-percent)
     (emacsvox-icon 'scroll)
-    (dtk-speak (emacsvox-get-window-contents))))
+    (tts-speak (emacsvox-get-window-contents))))
 
 (advice-add
  'View-goto-percent :after #'emacsvox--advice-View-goto-percent-after

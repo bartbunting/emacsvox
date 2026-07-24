@@ -66,7 +66,7 @@
         (from (rmail-get-header "From" message))
         (lines (count-lines (rmail-msgbeg message) (rmail-msgend message)))
         (labels (rmail-display-labels)))
-    (dtk-speak
+    (tts-speak
      (format "%s %s   %s %s labelled %s "
              (or from "")
              (if (and to (< (length to) 80))
@@ -185,7 +185,7 @@
 (defun  emacsvox-rmail-speak-current-message-labels ()
   "Speak labels of current message"
   (interactive)
-  (dtk-speak
+  (tts-speak
    (format "Labels are %s"
            (rmail-display-labels))))
 

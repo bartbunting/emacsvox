@@ -46,7 +46,7 @@
           (calls 0)
           spoken)
       (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (setq spoken text))))
         (should
          (eq 'result

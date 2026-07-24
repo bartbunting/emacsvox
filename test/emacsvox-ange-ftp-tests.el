@@ -34,7 +34,7 @@
                   (list 'icon icon
                         emacsvox-speak-messages inhibit-message)
                   events)))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text)
                  (push
                   (list 'speak text

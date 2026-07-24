@@ -68,7 +68,7 @@
     (let (spoken)
       (cl-letf (((symbol-function 'dtk-set-punctuations)
                  (lambda (&rest _)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (setq spoken text))))
         (emacsvox--advice-ispell-command-loop-before
          '("good" "best") nil "bad" 1 4))
@@ -85,7 +85,7 @@
         spoken)
     (cl-letf (((symbol-function 'documentation)
                (lambda (_function) "Ispell help"))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (setq spoken text))))
       (emacsvox--advice-ispell-help-before))
     (should (equal spoken "Ispell help"))))

@@ -2039,7 +2039,7 @@ The %s is automatically spoken if there is no user activity."
              "Not in an EWW buffer listing.")
   (let ((buffer (get-text-property (line-beginning-position) 'eww-buffer)))
     (if buffer
-        (dtk-speak (buffer-name buffer))
+        (tts-speak (buffer-name buffer))
       (message "Can't find an EWW buffer for this line. "))))
 
 (cl-loop
@@ -2521,7 +2521,7 @@ Value is specified as a position in the list of table cells.")
 (defun emacsvox-eww-table-speak-dimensions ()
   "Speak number of rows and cells."
   (interactive)
-  (dtk-speak
+  (tts-speak
    (format "Table with %s rows and %s cells"
            (emacsvox-eww-table-row-count) (emacsvox-eww-table-cell-count))))
 
@@ -2529,7 +2529,7 @@ Value is specified as a position in the list of table cells.")
   "Speak current cell."
   (interactive)
   
-  (dtk-speak
+  (tts-speak
    (dom-node-as-text
     (elt (emacsvox-eww-table-cells) emacsvox-eww-table-cell))))
 

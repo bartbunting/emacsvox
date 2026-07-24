@@ -34,7 +34,7 @@
   "Popup prompt advice speaks its explicit PROMPT argument."
   (let (spoken)
     (cl-letf (((symbol-function 'sit-for) (lambda (&rest _) t))
-              ((symbol-function 'dtk-speak)
+              ((symbol-function 'tts-speak)
                (lambda (text) (setq spoken text))))
       (emacsvox--advice-popup-menu-read-key-sequence-before
        'keymap "Choose: " 2))

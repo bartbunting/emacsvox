@@ -117,7 +117,7 @@
      ,(format "Speak the link selected by `%s'." target)
      (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
-       (dtk-speak
+       (tts-speak
         (car (get-text-property (point) 'elpher-page)))))))
 
 (defconst emacsvox-elpher--advice-targets

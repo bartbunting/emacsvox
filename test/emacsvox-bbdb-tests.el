@@ -34,7 +34,7 @@
     (let ((ems--interactive-fn-name 'bbdb-complete-mail)
           (calls 0)
           spoken)
-      (cl-letf (((symbol-function 'dtk-speak)
+      (cl-letf (((symbol-function 'tts-speak)
                  (lambda (text) (setq spoken text))))
         (should
          (eq 'completed

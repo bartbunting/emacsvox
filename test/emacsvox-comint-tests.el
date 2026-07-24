@@ -134,7 +134,7 @@
                  (lambda (process)
                    (should (eq process 'test-process))
                    output-buffer))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (should
          (eq
@@ -181,7 +181,7 @@
                     ((symbol-function 'next-completion)
                      (lambda (count)
                        (push (list 'next count) events)))
-                    ((symbol-function 'dtk-speak)
+                    ((symbol-function 'tts-speak)
                      (lambda (text)
                        (push (list 'speak text) events)
                        'completion-result)))

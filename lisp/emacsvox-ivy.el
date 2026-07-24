@@ -101,7 +101,7 @@
 (defun emacsvox-ivy-speak-selection ()
   "Speak current ivy selection."
   
-  (dtk-speak
+  (tts-speak
    (format
     "%d: %s"
     ivy--length
@@ -131,7 +131,7 @@
 
 (defun emacsvox--advice-ivy-read-before (prompt &rest _)
   "Speak prompt" (emacsvox-icon 'open-object)
-  (dtk-speak prompt))
+  (tts-speak prompt))
 
 (defconst emacsvox-ivy--advice
   (append

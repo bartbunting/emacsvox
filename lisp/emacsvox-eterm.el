@@ -853,7 +853,7 @@ Argument ID specifies the window."
   (save-excursion
     (save-restriction
       (narrow-to-region term-home-marker (point-max))
-      (dtk-speak
+      (tts-speak
        (emacsvox-eterm-return-window-contents
         (emacsvox-eterm-get-window id))))))
 
@@ -1174,7 +1174,7 @@ there is terminal activity.")
   (setq mode-line-process '("line"))
   (setq eterm-char-mode nil eterm-line-mode t)
   (when (ems-interactive-p 'term-line-mode)
-    (dtk-speak "Terminal line mode ")))
+    (tts-speak "Terminal line mode ")))
 
 (advice-add
  'term-line-mode :after #'emacsvox--advice-term-line-mode-after
@@ -1186,7 +1186,7 @@ there is terminal activity.")
   (setq eterm-char-mode t eterm-line-mode nil)
   (emacsvox-eterm-setup-raw-keys)
   (when (ems-interactive-p 'term-char-mode)
-    (dtk-speak "Terminal character mode ")))
+    (tts-speak "Terminal character mode ")))
 
 (advice-add
  'term-char-mode :after #'emacsvox--advice-term-char-mode-after

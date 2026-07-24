@@ -137,7 +137,7 @@
   "Speak the converted Clojure collection at point."
   (let ((begin (point)))
     (forward-sexp)
-    (dtk-speak (buffer-substring begin (point)))))
+    (tts-speak (buffer-substring begin (point)))))
 (emacsvox-clojure--register-after-group
  '(clojure-convert-collection-to-list
    clojure-convert-collection-to-map

@@ -234,7 +234,7 @@
           events)
       (cl-letf (((symbol-function 'emacsvox-eterm-setup-raw-keys)
                  (lambda () (push 'raw-keys events)))
-                ((symbol-function 'dtk-speak)
+                ((symbol-function 'tts-speak)
                  (lambda (text) (push (list 'speak text) events))))
         (emacsvox--advice-term-char-mode-after)
         (emacsvox--advice-term-line-mode-after))

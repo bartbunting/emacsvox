@@ -72,7 +72,7 @@
 (defun emacsvox-gomoku-speak-square ()
   "Speak coordinates and state of square at point"
   (interactive)
-  (dtk-speak
+  (tts-speak
    (format "%s %s %s"
            (gomoku-point-y)
            (gomoku-point-x)
@@ -94,7 +94,7 @@
                      (0 "-")
                      (1  "x")
                      (6 "0"))))
-    (dtk-speak
+    (tts-speak
      (apply 'concat values))))
 
 (defun emacsvox-gomoku-show-current-column ()
@@ -110,7 +110,7 @@
                      (0 "-")
                      (1  "x")
                      (6 "0"))))
-    (dtk-speak
+    (tts-speak
      (apply 'concat values))))
 
 (defun emacsvox-gomoku-show-current-positive-diagonal ()
@@ -139,7 +139,7 @@
                      (0 "-")
                      (1  "x")
                      (6 "0"))))
-    (dtk-speak
+    (tts-speak
      (apply 'concat values))))
 
 (defun emacsvox-gomoku-show-current-negative-diagonal ()
@@ -171,7 +171,7 @@
                      (0 "-")
                      (1  "x")
                      (6 "0"))))
-    (dtk-speak
+    (tts-speak
      (apply 'concat values))))
 
 (defun emacsvox-gomoku-display-statistics ()
@@ -265,7 +265,7 @@
     (orig-fun result)
   "speak"
   (let ((return-value (funcall orig-fun result)))
-    (dtk-speak
+    (tts-speak
      (format "%s in %s moves  %s " result gomoku-number-of-moves
              emacsvox-last-message))
     (sit-for 2)

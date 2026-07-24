@@ -585,7 +585,7 @@ If optional arg property is not supplied, read it interactively. "
                                  'personality
                                  voice-annotate skipped))
             (emacsvox-icon 'select-object)
-            (dtk-speak
+            (tts-speak
              (concat skipped (ems--this-line))))))
       (modify-syntax-entry 10 (format "%c" save-syntax)))))
 ;;;###autoload
@@ -616,7 +616,7 @@ If optional arg property is not supplied, read it interactively. "
                                  'personality
                                  voice-annotate skipped))
             (emacsvox-icon 'select-object)
-            (dtk-speak
+            (tts-speak
              (concat skipped (ems--this-line))))))
       (modify-syntax-entry 10 (format "%c" save-syntax)))))
 
@@ -1060,7 +1060,7 @@ Moves to the shortest line when called interactively."
                           (word-at-point))))
   (ems-with-messages-silenced
    (let ((time (emacsvox-pronounce-decode-iso-datetime iso)))
-     (tts-with-punctuations 'some (dtk-speak time))
+     (tts-with-punctuations 'some (tts-speak time))
      (message time))))
 
 ;;;  date pronouncer wizard
@@ -2087,11 +2087,11 @@ q: Quit color wheel, after copying current hex value to kill-ring."
        ((eq event 'left)
         (setq this (% (+ this 2) 3))
         (setq color (elt colors this))
-        (dtk-speak (format "%s Axis" color)))
+        (tts-speak (format "%s Axis" color)))
        ((eq event 'right)
         (setq this (% (+ this 1) 3))
         (setq color (elt colors this))
-        (dtk-speak (format "%s Axis" color)))
+        (tts-speak (format "%s Axis" color)))
        ((eq event ?n)
         (setq start
               (mapcar #'(lambda (c) (round (* 255 c)))
@@ -2424,7 +2424,7 @@ Optional interactive prefix arg reverse-geocodes using Google Maps."
   (let-alist
       (g-json-from-url "https://freegeoip.app/json")
     (if reverse-geocode
-        (dtk-speak
+        (tts-speak
          (gmaps-reverse-geocode
           `((lat . ,.latitude) (lng . ,.longitude ))))
       (dtk-speak-list (list  .city .region_name)))))
@@ -2586,7 +2586,7 @@ Optional interactive prefix arg deletes it."
           (emacsvox-icon 'delete-object))
          (t (kill-ring-save (1+ orig) (1- (point)))
             (emacsvox-icon 'mark-object)))
-        (dtk-speak (car kill-ring))))))
+        (tts-speak (car kill-ring))))))
 
 ;;; Brightness Alert:
 

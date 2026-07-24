@@ -86,7 +86,7 @@
               (and (not (equal vertico--index -1))
                    (equal emacsvox-vertico--prev-index -1)))
         (emacsvox-icon 'select-object)))
-    (when to-speak (dtk-speak to-speak))
+    (when to-speak (tts-speak to-speak))
     (setq-local emacsvox-vertico--prev-candidate new-cand
                 emacsvox-vertico--prev-index vertico--index)))
 

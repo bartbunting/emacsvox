@@ -171,7 +171,7 @@
        (if (> (point) prior)
            (tts-with-punctuations
             'all
-            (dtk-speak (buffer-substring prior (point))))
+            (tts-speak (buffer-substring prior (point))))
          (emacsvox-speak-completions-if-available)))
      result)))
 
@@ -238,7 +238,7 @@
 (defun emacsvox-slime--help-window-feedback ()
   "Announce Slime help displayed in another window."
   (emacsvox-icon 'help)
-  (dtk-speak "Displayed help in other window."))
+  (tts-speak "Displayed help in other window."))
 
 (emacsvox-slime--register-after-group
  '(slime-list-repl-short-cuts slime-repl-shortcut-help slime-documentation)
@@ -247,7 +247,7 @@
 (defun emacsvox-slime--help-frame-feedback ()
   "Announce the Slime cheat sheet."
   (emacsvox-icon 'help)
-  (dtk-speak "Displaying help in new frame."))
+  (tts-speak "Displaying help in new frame."))
 
 (emacsvox-slime--register-after-group
  '(slime-cheat-sheet)
@@ -295,7 +295,7 @@
 
 (defun emacsvox-slime--inspector-pprint-feedback ()
   "Announce a pretty-printed Slime description."
-  (dtk-speak "Pretty printed description in other window.")
+  (tts-speak "Pretty printed description in other window.")
   (emacsvox-icon 'open-object))
 
 (emacsvox-slime--register-after-group
