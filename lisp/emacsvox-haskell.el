@@ -159,20 +159,38 @@
   haskell-yesod-parse-routes-mode
   )
 
-(cl-loop
- for f in
- '(
-   haskell-add-import haskell-align-imports haskell-auto-insert-module-template)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'task-done)))))
+(defvar emacsvox-haskell--advice nil
+  "Current Haskell mode targets and their native advice functions.")
+(setq emacsvox-haskell--advice nil)
 
-(cl-loop
- for f in
+(defun emacsvox-haskell--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-haskell--advice))))
+
+(defun emacsvox-haskell--task-feedback ()
+  "Speak the line after completing a Haskell editing task."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'task-done))
+
+(emacsvox-haskell--register-after-group
+ '(haskell-align-imports haskell-auto-insert-module-template)
+ #'emacsvox-haskell--task-feedback)
+
+(defun emacsvox-haskell--movement-feedback ()
+  "Speak after a large Haskell source movement."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-haskell--register-after-group
  '(
    haskell-cabal-beginning-of-section haskell-cabal-beginning-of-subsection
    haskell-cabal-end-of-section haskell-cabal-end-of-subsection
@@ -182,24 +200,18 @@
    haskell-cabal-next-section haskell-cabal-next-subsection
    haskell-cabal-previous-section haskell-cabal-previous-subsection
    haskell-cabal-section-end haskell-cabal-indent-line
-   haskell-delete-indentation
-   haskell-forward-sexp haskell-goto-first-error
-   haskell-goto-next-error haskell-goto-prev-error
-   haskell-mode-jump-to-def
+   haskell-delete-indentation haskell-forward-sexp haskell-mode-jump-to-def
    haskell-mode-jump-to-def-or-tag haskell-mode-jump-to-tag)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+ #'emacsvox-haskell--movement-feedback)
 
-(defun ems--haskell-cabal-mode-after (&rest _)
+(defun emacsvox--advice-haskell-cabal-mode-after (&rest _)
   "speak."
-  (when (ems-interactive-p) (emacsvox-setup-programming-mode)))
+  (when (ems-interactive-p 'haskell-cabal-mode)
+    (emacsvox-setup-programming-mode)))
 
-(advice-add 'haskell-cabal-mode :after #'ems--haskell-cabal-mode-after)
+(push '(haskell-cabal-mode :after
+        emacsvox--advice-haskell-cabal-mode-after)
+      emacsvox-haskell--advice)
 
 ;;; haskell-debugger:
 
@@ -207,20 +219,30 @@
 
 ;;; haskell-indentation
 
-(cl-loop
- for f in
+(defun emacsvox-haskell--selection-feedback ()
+  "Speak the line selected by Haskell indentation."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
+
+(emacsvox-haskell--register-after-group
  '(
    haskell-indentation-common-electric-command
    haskell-indentation-indent-backwards
    haskell-indentation-indent-line haskell-indentation-indent-rigidly
    haskell-indentation-newline-and-indent)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'select-object)))))
+ #'emacsvox-haskell--selection-feedback)
+
+(defun emacsvox-haskell--install-advice ()
+  "Install advice for Haskell mode features loaded so far."
+  (dolist (entry emacsvox-haskell--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(haskell-mode haskell-cabal haskell-indentation))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-haskell--install-advice))))
 
 ;;; haskell-mode-hook:
 
@@ -231,4 +253,3 @@
 
 (provide 'emacsvox-haskell)
 ;;;  end of file
-
