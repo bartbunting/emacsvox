@@ -99,9 +99,9 @@ node -- speak the entire node."
 
 (cl-loop
  for target in
- '(info info-display-manual Info-select-node
-        Info-follow-reference Info-goto-node info-emacs-manual
-        Info-top-node Info-menu-last-node  Info-final-node Info-up
+ '(info info-display-manual Info-follow-reference
+        Info-goto-node info-emacs-manual
+        Info-top-node Info-final-node Info-up
         Info-goto-emacs-key-command-node Info-goto-emacs-command-node
         Info-history Info-virtual-index Info-directory Info-help
         Info-nth-menu-item
@@ -120,60 +120,47 @@ node -- speak the entire node."
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--Info-search-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-Info-search-after (&rest _)
+  "Announce an interactive Info search result."
+  (when (ems-interactive-p 'Info-search)
     (emacsvox-icon 'search-hit) (emacsvox-speak-line)))
 
-(advice-add 'Info-search :after #'ems--Info-search-after)
+(advice-add 'Info-search :after
+            #'emacsvox--advice-Info-search-after)
 
-(defun ems--Info-scroll-up-after (&rest _)
+(defun emacsvox--advice-Info-scroll-up-after (&rest _)
   "Speak the screenful."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Info-scroll-up)
     (emacsvox-icon 'scroll)
-    (let
-        ((start (point)) (window (get-buffer-window (current-buffer))))
-      (save-excursion
-        (forward-line (window-height window))
-        (emacsvox-speak-region start (point))))))
+    (emacsvox-info-speak-current-window)))
 
-(advice-add 'Info-scroll-up :after #'ems--Info-scroll-up-after)
+(advice-add 'Info-scroll-up :after
+            #'emacsvox--advice-Info-scroll-up-after)
 
-(defun ems--Info-scroll-down-after (&rest _)
+(defun emacsvox--advice-Info-scroll-down-after (&rest _)
   "Speak the screenful."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Info-scroll-down)
     (emacsvox-icon 'scroll)
-    (let
-        ((start (point)) (window (get-buffer-window (current-buffer))))
-      (save-excursion
-        (forward-line (window-height window))
-        (emacsvox-speak-region start (point))))))
+    (emacsvox-info-speak-current-window)))
 
-(advice-add 'Info-scroll-down :after #'ems--Info-scroll-down-after)
+(advice-add 'Info-scroll-down :after
+            #'emacsvox--advice-Info-scroll-down-after)
 
-(defun ems--Info-exit-after (&rest _)
-  "Play an auditory icon to close info,\nand then cue the next selected buffer."
-  (when (ems-interactive-p)
-    (dtk-stop 'all) (emacsvox-icon 'close-object)
-    (emacsvox-speak-mode-line)))
-
-(advice-add 'Info-exit :after #'ems--Info-exit-after)
-
-(defun ems--Info-next-reference-after (&rest _)
+(defun emacsvox--advice-Info-next-reference-after (&rest _)
   "Speak the line. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Info-next-reference)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'Info-next-reference :after
-            #'ems--Info-next-reference-after)
+            #'emacsvox--advice-Info-next-reference-after)
 
-(defun ems--Info-prev-reference-after (&rest _)
+(defun emacsvox--advice-Info-prev-reference-after (&rest _)
   "Speak the line. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Info-prev-reference)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'Info-prev-reference :after
-            #'ems--Info-prev-reference-after)
+            #'emacsvox--advice-Info-prev-reference-after)
 
 ;;;###autoload
 (defun emacsvox-info-wizard (node-spec)
@@ -239,11 +226,12 @@ node-spec."
 
 ;;;  Speak header line if hidden
 
+(defvar Info-use-header-line)
+(defvar Info-header-line)
+
 (defun emacsvox-info-speak-header ()
   "Speak info header line."
   (interactive)
-  (cl-declare (special Info-use-header-line
-                       Info-header-line))
   (cond
    ((and (boundp 'Info-use-header-line)
          (boundp 'Info-header-line)
