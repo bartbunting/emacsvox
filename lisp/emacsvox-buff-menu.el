@@ -124,11 +124,12 @@
   (forward-line  (* -1 count))
   (emacsvox-list-buffers-speak-buffer-line))
 
-(defun ems--list-buffers-after (&rest _)
+(defun emacsvox--advice-list-buffers-filter-return (window)
   "Select the window displaying buffer-menu,\nand set up additional Emacsvox bindings."
   
-  (when (ems-interactive-p)
-    (select-window ad-return-value) (tabulated-list-next-column 3)
+  (when (ems-interactive-p 'list-buffers)
+    (select-window window)
+    (tabulated-list-next-column 3)
     (define-key Buffer-menu-mode-map ","
                 'emacsvox-list-buffers-speak-name)
     (define-key Buffer-menu-mode-map "l"
@@ -138,158 +139,107 @@
     (define-key Buffer-menu-mode-map "p"
                 'emacsvox-list-buffers-previous-line)
     (emacsvox-list-buffers-speak-buffer-line)
-    (emacsvox-icon 'open-object)))
+    (emacsvox-icon 'open-object))
+  window)
 
-(advice-add 'list-buffers :after #'ems--list-buffers-after)
+(advice-add
+ 'list-buffers :filter-return
+ #'emacsvox--advice-list-buffers-filter-return
+ '((name . emacsvox--advice-list-buffers-filter-return)))
 
-(defun ems--buffer-menu-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done)
-    (message "Displayed list of buffers in other window")))
+(defmacro emacsvox-buff-menu--define-advice (target where &rest body)
+  "Define direct WHERE advice for interactive Buffer Menu TARGET."
+  (declare (indent 2))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-%s"
+                         target
+                         (substring (symbol-name where) 1)))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback %s `%s'." where target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target ,where #',function
+        '((name . ,function))))))
 
-(advice-add 'buffer-menu :after #'ems--buffer-menu-after)
+(emacsvox-buff-menu--define-advice buffer-menu :after
+  (emacsvox-icon 'task-done)
+  (message "Displayed list of buffers in other window"))
 
 ;;;   buffer manipulation commands 
 
-(defun ems--Buffer-menu-bury-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
+(dolist
+    (spec
+     '((Buffer-menu-bury select-object)
+       (Buffer-menu-delete-backwards delete-object)
+       (Buffer-menu-delete delete-object)
+       (Buffer-menu-mark mark-object)
+       (Buffer-menu-save save-object)
+       (Buffer-menu-unmark deselect-object)
+       (Buffer-menu-backup-unmark deselect-object)))
+  (eval
+   `(emacsvox-buff-menu--define-advice ,(car spec) :after
+      (emacsvox-icon ',(cadr spec))
+      (emacsvox-list-buffers-speak-buffer-line))))
 
-(advice-add 'Buffer-menu-bury :after #'ems--Buffer-menu-bury-after)
+(emacsvox-buff-menu--define-advice Buffer-menu-select :after
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--Buffer-menu-delete-backwards-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
+(emacsvox-buff-menu--define-advice Buffer-menu-execute :after
+  (emacsvox-icon 'task-done))
 
-(advice-add 'Buffer-menu-delete-backwards :after
-            #'ems--Buffer-menu-delete-backwards-after)
+(emacsvox-buff-menu--define-advice Buffer-menu-toggle-read-only :after
+  (emacsvox-list-buffers-speak-buffer-line))
 
-(defun ems--Buffer-menu-delete-after (&rest _)
-  "Provide spoken and auditory feedback."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
-
-(advice-add 'Buffer-menu-delete :after #'ems--Buffer-menu-delete-after)
-
-(defun ems--Buffer-menu-mark-after (&rest _)
-  "Provide spoken and auditory feedback."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
-
-(advice-add 'Buffer-menu-mark :after #'ems--Buffer-menu-mark-after)
-
-(defun ems--Buffer-menu-quit-after (&rest _)
-  "Speak the modeline of the newly visible buffer."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'Buffer-menu-quit :after #'ems--Buffer-menu-quit-after)
-
-(defun ems--Buffer-menu-save-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'save-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
-
-(advice-add 'Buffer-menu-save :after #'ems--Buffer-menu-save-after)
-
-(defun ems--Buffer-menu-select-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'Buffer-menu-select :after #'ems--Buffer-menu-select-after)
-
-(defun ems--Buffer-menu-unmark-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
-
-(advice-add 'Buffer-menu-unmark :after #'ems--Buffer-menu-unmark-after)
-
-(defun ems--Buffer-menu-backup-unmark-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-list-buffers-speak-buffer-line)))
-
-(advice-add 'Buffer-menu-backup-unmark :after
-            #'ems--Buffer-menu-backup-unmark-after)
-
-(defun ems--Buffer-menu-execute-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'Buffer-menu-execute :after
-            #'ems--Buffer-menu-execute-after)
-
-(defun ems--Buffer-menu-toggle-read-only-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-list-buffers-speak-buffer-line)))
-
-(advice-add 'Buffer-menu-toggle-read-only :after
-            #'ems--Buffer-menu-toggle-read-only-after)
-
-(defun ems--Buffer-menu-not-modified-after (&rest _)
-  "speak "
-  (when (ems-interactive-p)
+(defun emacsvox--advice-Buffer-menu-not-modified-after
+    (arg &rest _)
+  "Report whether `Buffer-menu-not-modified' marked the buffer modified."
+  (when (ems-interactive-p 'Buffer-menu-not-modified)
     (emacsvox-list-buffers-speak-buffer-line)
-    (if (ad-get-arg 0) (emacsvox-icon 'modified-object)
-      (emacsvox-icon 'unmodified-object))))
+    (emacsvox-icon
+     (if arg 'modified-object 'unmodified-object))))
 
-(advice-add 'Buffer-menu-not-modified :after
-            #'ems--Buffer-menu-not-modified-after)
+(advice-add
+ 'Buffer-menu-not-modified :after
+ #'emacsvox--advice-Buffer-menu-not-modified-after
+ '((name . emacsvox--advice-Buffer-menu-not-modified-after)))
 
-(defun ems--Buffer-menu-visit-tags-table-before (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (message "Visiting tags table on current line")))
+(emacsvox-buff-menu--define-advice Buffer-menu-visit-tags-table :before
+  (message "Visiting tags table on current line"))
 
-(advice-add 'Buffer-menu-visit-tags-table :before
-            #'ems--Buffer-menu-visit-tags-table-before)
+(defun emacsvox--advice-buffer-menu-quit-window-around
+    (original &rest arguments)
+  "Call ORIGINAL and report an interactive quit from Buffer Menu."
+  (let ((buffer-menu-p (eq major-mode 'Buffer-menu-mode))
+        (interactive-p (ems-interactive-p 'quit-window)))
+    (let ((result (apply original arguments)))
+      (when (and buffer-menu-p interactive-p)
+        (emacsvox-icon 'close-object)
+        (emacsvox-speak-mode-line))
+      result)))
+
+(advice-add
+ 'quit-window :around
+ #'emacsvox--advice-buffer-menu-quit-window-around
+ '((name . emacsvox-buffer-menu)))
 
 ;;;   display buffers 
 
-(defun ems--Buffer-menu-1-window-after (&rest _)
-  "Announce the newly selected buffer."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'select-object)))
+(dolist
+    (target
+     '(Buffer-menu-1-window
+       Buffer-menu-2-window
+       Buffer-menu-this-window))
+  (eval
+   `(emacsvox-buff-menu--define-advice ,target :after
+      (emacsvox-speak-mode-line)
+      (emacsvox-icon 'select-object))))
 
-(advice-add 'Buffer-menu-1-window :after
-            #'ems--Buffer-menu-1-window-after)
-
-(defun ems--Buffer-menu-2-window-after (&rest _)
-  "Announce the newly selected buffer."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'Buffer-menu-2-window :after
-            #'ems--Buffer-menu-2-window-after)
-
-(defun ems--Buffer-menu-this-window-after (&rest _)
-  "Announce the newly selected buffer."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'Buffer-menu-this-window :after
-            #'ems--Buffer-menu-this-window-after)
-
-(defun ems--Buffer-menu-other-window-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'Buffer-menu-other-window :after
-            #'ems--Buffer-menu-other-window-after)
+(emacsvox-buff-menu--define-advice Buffer-menu-other-window :after
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
 (provide 'emacsvox-buff-menu)
 ;;;  end of file 
-

@@ -107,6 +107,7 @@
   (require 'emacsvox-bookmark-tests)
   (require 'emacsvox-posting-message-tests)
   (require 'emacsvox-calculator-tests)
+  (require 'emacsvox-buff-menu-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
