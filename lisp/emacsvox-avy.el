@@ -62,35 +62,59 @@
 
 ;;;  Goto Commands:
 
-(cl-loop
- for f in
+(defconst emacsvox-avy--goto-targets
  '(avy-goto-char avy-goto-char-2 avy-goto-char-timer
    avy-goto-word-0 avy-goto-word-1
    avy-goto-line
    avy-goto-subword-0 avy-goto-subword-1
    avy-isearch avy-resume)
+  "Current Avy jump commands.")
+
+(cl-loop
+ for target in emacsvox-avy--goto-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak line after jump."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
 ;;;  Copy, Move, Kill Commands:
 
-(cl-loop
- for f in
+(defconst emacsvox-avy--action-targets
  '(avy-copy-line avy-copy-region
    avy-move-line avy-move-region
-   avy-kill-whole-line avy-kill-region avy-kill-ring-save)
+   avy-kill-whole-line avy-kill-region)
+  "Current Avy copy, move, and kill commands.")
+
+(cl-loop
+ for target in emacsvox-avy--action-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Confirm action."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'task-done)
-       (dtk-speak ,(format "%s done" (symbol-name f)))))))
+       (dtk-speak ,(format "%s done" (symbol-name target)))))))
+
+(defconst emacsvox-avy--advice-targets
+  (append emacsvox-avy--goto-targets emacsvox-avy--action-targets)
+  "Current Avy targets that receive native after advice.")
+
+(defun emacsvox-avy--install-advice ()
+  "Install advice after the optional Avy package loads."
+  (dolist (target emacsvox-avy--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'avy
+  (emacsvox-avy--install-advice))
 
 (provide 'emacsvox-avy)
 ;;;  end of file
