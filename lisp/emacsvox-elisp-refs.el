@@ -50,17 +50,33 @@
 
 ;;;  Advice interactive commands:
 
+(defconst emacsvox-elisp-refs--advice-targets
+  '(elisp-refs-prev-match elisp-refs-next-match elisp-refs-visit-match)
+  "Current Elisp Refs commands that receive speech feedback.")
+
 (cl-loop
- for f in
- '(elisp-refs-prev-match elisp-refs-next-match elisp-refs-visit-match)
+ for target in emacsvox-elisp-refs--advice-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak after `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
+(defun emacsvox-elisp-refs--install-advice ()
+  "Install native advice after the optional Elisp Refs package loads."
+  (dolist (target emacsvox-elisp-refs--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'elisp-refs
+  (emacsvox-elisp-refs--install-advice))
+
 (provide 'emacsvox-elisp-refs)
 ;;;  end of file
-
