@@ -54,18 +54,14 @@
 
 ;;;  Fix error when loading images on the console:
 
-(defun ems--xkcd-insert-image-around (orig-fun &rest args)
-  "no-Op on console"
+(defun emacsvox--advice-xkcd-insert-image-around (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS when running in a graphical display."
   (cond ((not window-system) t) (t (apply orig-fun args))))
 
-(advice-add 'xkcd-insert-image :around #'ems--xkcd-insert-image-around)
-
-(defun ems--xkcd-kill-buffer-after (&rest _)
+(defun emacsvox--advice-xkcd-kill-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'xkcd-kill-buffer :after #'ems--xkcd-kill-buffer-after)
 
 (defvar xkcd-transcript nil
   "Cache current transcript.")
@@ -79,7 +75,7 @@
    (cdr 
     (assoc 'transcript (json-read-from-string (xkcd-get-json "" xkcd-cur))))))
 
-(defun ems--xkcd-get-after (&rest _)
+(defun emacsvox--advice-xkcd-get-after (&rest _)
   "Insert cached transcript in xkcd-transcript."
   (let ((inhibit-read-only t))
     (emacsvox-xkcd-get-current-transcript) (goto-char (point-max))
@@ -91,16 +87,36 @@
     (goto-char (point-min)) (emacsvox-icon 'open-object)
     (emacsvox-speak-buffer)))
 
-(advice-add 'xkcd-get :after #'ems--xkcd-get-after)
-
 ;;;  Advice browse-url-default-browser:
 
-(defun ems--browse-url-default-browser-around (orig-fun &rest args)
+(defun emacsvox--advice-browse-url-default-browser-around
+    (_orig-fun url &rest _args)
   "Use Emacs browser --- rather than an external browser."
-  (when nil (apply orig-fun args)) (eww-browse-url (ad-get-arg 0)))
+  (eww-browse-url url))
 
-(advice-add 'browse-url-default-browser :around
-            #'ems--browse-url-default-browser-around)
+(defconst emacsvox-xkcd--advice
+  '((xkcd-insert-image :around
+     emacsvox--advice-xkcd-insert-image-around)
+    (xkcd-kill-buffer :after
+     emacsvox--advice-xkcd-kill-buffer-after)
+    (xkcd-get :after emacsvox--advice-xkcd-get-after)
+    (browse-url-default-browser :around
+     emacsvox--advice-browse-url-default-browser-around))
+  "Current XKCD targets and their native advice functions.")
+
+(defun emacsvox-xkcd--install-advice ()
+  "Install native advice for XKCD and URL features loaded so far."
+  (dolist (entry emacsvox-xkcd--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(xkcd browse-url))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-xkcd--install-advice))))
+
+(emacsvox-xkcd--install-advice)
 
 (defun emacsvox-xkcd-open-explanation-browser ()
   "Open explanation of current xkcd in default browser"
@@ -112,4 +128,3 @@
   (define-key xkcd-mode-map "e" 'emacsvox-xkcd-open-explanation-browser))
 (provide 'emacsvox-xkcd)
 ;;;  end of file
-
