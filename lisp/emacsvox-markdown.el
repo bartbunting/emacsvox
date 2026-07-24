@@ -279,7 +279,7 @@ but you won't hear the literal markup characters."
 
 ;;;  Advice for speak-line in markdown:
 
-(defadvice emacsvox-speak-line (around emacsvox-markdown-reading pre act comp)
+(defun emacsvox--advice-markdown-speak-line-around (original &rest arguments)
   "In markdown mode with reading mode, strip markup from speech."
   (if (and (eq major-mode 'markdown-mode)
            emacsvox-markdown-reading-mode)
@@ -289,54 +289,65 @@ but you won't hear the literal markup characters."
         (progn
           (emacsvox-icon 'section)
           (dtk-speak (emacsvox-markdown--get-heading-info)))
-      ad-do-it)))
+      (apply original arguments))))
+
+(advice-add
+ 'emacsvox-speak-line :around
+ #'emacsvox--advice-markdown-speak-line-around
+ '((name . emacsvox-markdown)))
 
 ;;;  Advice navigation commands:
 
+(defvar emacsvox-markdown--advice nil
+  "Markdown Mode targets and their native advice functions.")
+
 (cl-loop
- for f in
+ for target in
  '(markdown-next-heading markdown-previous-heading
    markdown-next-visible-heading markdown-previous-visible-heading
    markdown-outline-next markdown-outline-previous)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak the heading we moved to."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
        (let ((info (emacsvox-markdown--get-heading-info)))
-         (if info (dtk-speak info) (emacsvox-speak-line)))))))
+         (if info (dtk-speak info) (emacsvox-speak-line))))))
+ (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop
- for f in
+ for target in
  '(markdown-next-link markdown-previous-link)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak the link we moved to."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'button)
-       (emacsvox-speak-line)))))
+       (emacsvox-speak-line))))
+ (push (list target :after advice-function) emacsvox-markdown--advice))
 
 ;;;  Advice editing/movement commands:
 
 (cl-loop
- for f in
+ for target in
  '(markdown-outdent-or-delete markdown-exdent-or-delete)
+ for advice-function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
+  `(defun ,advice-function (original &rest arguments)
      "Speak character you're deleting."
-     (cond
-      ((ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (dtk-tone 500 100 'force)
-       (emacsvox-speak-this-char (preceding-char))
-       ad-do-it)
-      (t ad-do-it))
-     ad-return-value)))
+       (emacsvox-speak-this-char (preceding-char)))
+     (apply original arguments)))
+ (push (list target :around advice-function) emacsvox-markdown--advice))
 
 (cl-loop
- for f in
+ for target in
  '(markdown-back-to-heading
    markdown-backward-block markdown-backward-page
    markdown-beginning-of-list markdown-beginning-of-text-block
@@ -377,37 +388,51 @@ but you won't hear the literal markup characters."
    markdown-indent-line
    markdown-promote markdown-promote-list-item
    markdown-reference-goto-definition)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+       (emacsvox-speak-line))))
+ (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop
- for f in
+ for target in
  '(markdown-check-refs markdown-export markdown-export-and-preview
    markdown-indent-region markdown-blockquote-region)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'task-done)
-       (emacsvox-speak-line)))))
+       (emacsvox-speak-line))))
+ (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop
- for f in
+ for target in
  '(markdown-complete-region markdown-complete-buffer
    markdown-complete-at-point markdown-complete)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'complete)
-       (emacsvox-speak-line)))))
+       (emacsvox-speak-line))))
+ (push (list target :after advice-function) emacsvox-markdown--advice))
+
+(defun emacsvox-markdown--install-advice ()
+  "Install advice for commands present in the current Markdown Mode."
+  (dolist (entry emacsvox-markdown--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
 ;;;  Setup:
 
@@ -424,6 +449,7 @@ but you won't hear the literal markup characters."
 
 (eval-after-load "markdown-mode"
   (lambda ()
+    (emacsvox-markdown--install-advice)
     (emacsvox-markdown-setup)
     (add-hook 'markdown-mode-hook #'emacsvox-markdown-mode-hook)))
 
