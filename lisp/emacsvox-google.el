@@ -537,55 +537,74 @@ current page."
 
 ;;;  Advice GMaps:
 
-(defun ems--gmaps-after (&rest _)
+(defun emacsvox--advice-gmaps-after (&rest _)
   "Provide  auditory feedback."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gmaps)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'gmaps :after #'ems--gmaps-after)
+(defconst emacsvox-google--result-targets
+  '(gmaps-driving-directions gmaps-bicycling-directions
+    gmaps-walking-directions gmaps-transit-directions
+    gmaps-places-nearby gmaps-places-search)
+  "GMaps commands that display a result buffer.")
 
-(cl-loop for f in
-         '(gmaps-driving-directions
-           gmaps-bicycling-directions
-           gmaps-walking-directions gmaps-transit-directions
-           gmaps-places-nearby gmaps-places-search)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'task-done)
-               (emacsvox-speak-rest-of-buffer)))))
+(dolist (target emacsvox-google--result-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Provide speech feedback after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-icon 'task-done)
+          (emacsvox-speak-rest-of-buffer))))))
 
-(defun ems--gmaps-set-current-location-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-header-line)))
+(defun emacsvox--advice-gmaps-set-current-location-after (&rest _)
+  "Speak the current location after setting it."
+  (when (ems-interactive-p 'gmaps-set-current-location)
+    (emacsvox-speak-header-line)))
 
-(advice-add 'gmaps-set-current-location :after
-            #'ems--gmaps-set-current-location-after)
-
-(defun ems--gmaps-set-current-radius-after (&rest _)
+(defun emacsvox--advice-gmaps-set-current-radius-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gmaps-set-current-radius)
     (message "Radius set to %s. " gmaps-current-radius)))
 
-(advice-add 'gmaps-set-current-radius :after
-            #'ems--gmaps-set-current-radius-after)
-
-(defun ems--gmaps-place-details-around (orig-fun &rest args)
-  "speak."
+(defun emacsvox--advice-gmaps-place-details-around (orig-fun &rest args)
+  "Call ORIG-FUN once, then speak the place details when interactive."
   (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (apply orig-fun args)
+    (when (ems-interactive-p 'gmaps-place-details)
       (emacsvox-speak-region (point)
                              (or
                               (next-single-property-change (point)
                                                            'place-details)
                               (point-max))))
-     (t (apply orig-fun args)))
     result))
 
-(advice-add 'gmaps-place-details :around
-            #'ems--gmaps-place-details-around)
+(defconst emacsvox-google--advice
+  (append
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-google--result-targets)
+   '((gmaps :after emacsvox--advice-gmaps-after)
+     (gmaps-set-current-location :after
+      emacsvox--advice-gmaps-set-current-location-after)
+     (gmaps-set-current-radius :after
+      emacsvox--advice-gmaps-set-current-radius-after)
+     (gmaps-place-details :around
+      emacsvox--advice-gmaps-place-details-around)))
+  "Current GMaps targets and their native advice functions.")
+
+(defun emacsvox-google--install-advice ()
+  "Install native advice after the bundled GMaps package loads."
+  (dolist (entry emacsvox-google--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'gmaps
+  (emacsvox-google--install-advice))
 
 ;;;  TTS:
 
