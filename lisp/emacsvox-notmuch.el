@@ -235,39 +235,60 @@
   notmuch-unthreaded-from-show-current-query
   notmuch-unthreaded-from-tree-current-query
   )
-(cl-loop
- for f in 
+(defvar emacsvox-notmuch--advice nil
+  "Current Notmuch targets and their native advice functions.")
+(setq emacsvox-notmuch--advice nil)
+
+(defun emacsvox-notmuch--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-notmuch--advice))))
+
+(defun emacsvox-notmuch--open-feedback ()
+  "Speak a newly opened Notmuch view."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-notmuch--register-after-group
  '(notmuch notmuch-hello notmuch-hello-update)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+ #'emacsvox-notmuch--open-feedback)
 
-(defun ems--notmuch-bury-or-kill-this-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+(defun emacsvox-notmuch--close-feedback ()
+  "Speak after closing a Notmuch view."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'notmuch-bury-or-kill-this-buffer :after
-            #'ems--notmuch-bury-or-kill-this-buffer-after)
+(emacsvox-notmuch--register-after-group
+ '(notmuch-bury-or-kill-this-buffer)
+ #'emacsvox-notmuch--close-feedback)
 
-(defun ems--notmuch-search-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox-notmuch--search-feedback ()
+  "Speak a Notmuch search result."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
-(advice-add 'notmuch-search :after #'ems--notmuch-search-after)
+(emacsvox-notmuch--register-after-group
+ '(notmuch-search notmuch-search-show-thread)
+ #'emacsvox-notmuch--search-feedback)
 
-(defun ems--notmuch-search-show-thread-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox-notmuch--install-advice ()
+  "Install advice for Notmuch features loaded so far."
+  (dolist (entry emacsvox-notmuch--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(advice-add 'notmuch-search-show-thread :after
-            #'ems--notmuch-search-show-thread-after)
+(dolist (feature '(notmuch notmuch-hello notmuch-lib notmuch-search))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-notmuch--install-advice))))
 
 ;;; MUA:
 
@@ -284,4 +305,3 @@
                                         ; 
                                         ; 
                                         ; 
-

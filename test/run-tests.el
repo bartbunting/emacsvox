@@ -217,6 +217,7 @@
   (require 'emacsvox-mu4e-tests)
   (require 'emacsvox-multiple-cursors-tests)
   (require 'emacsvox-muse-tests)
+  (require 'emacsvox-notmuch-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
