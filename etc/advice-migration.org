@@ -35,16 +35,12 @@ must become conservative and test-driven before further bulk use.
 
 * Progress Checkpoint
 
-As of the completed core-file migration and built-in integration slices through
-Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris, CPerl, IDO,
-CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary, Transient,
-Archive Mode, Tar Mode, Sh Script, Re Builder, Kmacro, Hideshow, Dired, NXML,
-EPA, Ruby, ERC, Info, Solitaire, SQL, Flyspell, Supercite, Lua, SGML Mode,
-Newsticker, Calc, Gomoku, Package, EUDC, Texinfo, Desktop, Flymake, SES, Tempo,
-WoMan, Eglot, Enriched, GUD, Perl, Todo Mode, Treesit, and Entertainment on
-2026-07-24 on branch =bart=:
+As of the completed core-file migration, all built-in integration slices, and
+the third-party slices through 2048, ABC Mode, Ace Window, Annotate, AUCTeX,
+Avy, BBDB, Calibredb, Chess, CIDER, Clojure Mode, Combobulate, Consult, Corfu,
+and Deadgrep on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 860 passing ERT tests;
+- the Emacs 31 suite contains 893 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -265,18 +261,21 @@ WoMan, Eglot, Enriched, GUD, Perl, Todo Mode, Treesit, and Entertainment on
 - =lisp/emacsvox-entertain.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- the 15 third-party integrations listed above contain no =defadvice=,
+  positional compatibility accessors, bridge-era =ems--= advice helpers, or
+  implicit interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         210 |    69 |
-| =ad-get-arg=        |          21 |   n/a |
-| =ad-set-arg=        |           3 |   n/a |
-| =ad-do-it=          |          21 |   n/a |
-| =ad-return-value=   |          13 |   n/a |
-| =advice-add=        |        1122 |   160 |
-| =ems-interactive-p= |        1178 |   176 |
+| =defadvice=         |         164 |    55 |
+| =ad-get-arg=        |          14 |   n/a |
+| =ad-set-arg=        |           2 |   n/a |
+| =ad-do-it=          |          15 |   n/a |
+| =ad-return-value=   |          10 |   n/a |
+| =advice-add=        |        1077 |   165 |
+| =ems-interactive-p= |        1132 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -306,18 +305,16 @@ integration-module count.
 
 ** Remaining third-party inventory
 
-As of 2026-07-24, 76 third-party integrations remain: 70 legacy-or-positional
+As of 2026-07-24, 61 third-party integrations remain: 55 legacy-or-positional
 modules and 6 helper-cleanup modules.
 
 The legacy-or-positional modules are:
 
-=2048=, =abc-mode=, =ace-window=, =annotate=, =auctex=, =avy=, =bbdb=,
-=calibredb=, =chess=, =cider=, =clojure=, =combobulate=, =consult=, =corfu=,
-=deadgrep=, =devdocs=, =dumb-jump=, =eat=, =ebuku=, =ein=, =elfeed=,
-=elisp-refs=, =ellama=, =elpher=, =elpy=, =emms=, =empv=, =enwc=, =ess=,
-=evil=, =exwm=, =ffip=, =forge=, =geiser=, =go-mode=, =google=, =haskell=,
-=helpful=, =hide-lines=, =iedit=, =journalctl=, =js2=, =lispy=, =mines=,
-=mu4e=, =multiple-cursors=, =muse=, =notmuch=, =nov=, =orgalist=, =paradox=,
+=devdocs=, =dumb-jump=, =eat=, =ebuku=, =ein=, =elfeed=, =elisp-refs=,
+=ellama=, =elpher=, =elpy=, =emms=, =empv=, =enwc=, =ess=, =evil=, =exwm=,
+=ffip=, =forge=, =geiser=, =go-mode=, =google=, =haskell=, =helpful=,
+=hide-lines=, =iedit=, =journalctl=, =js2=, =lispy=, =mines=, =mu4e=,
+=multiple-cursors=, =muse=, =notmuch=, =nov=, =orgalist=, =paradox=,
 =pipewire=, =popup=, =projectile=, =racket=, =related=, =rg=, =rpm-spec=,
 =sage=, =sdcv=, =slime=, =smartparens=, =sudoku=, =threes=, =typo=, =vdiff=,
 =vertico=, =vterm=, =we=, and =xkcd=.
@@ -325,6 +322,14 @@ The legacy-or-positional modules are:
 The helper-cleanup modules are:
 
 =denote=, =embark=, =gnuplot=, =gptel=, =marginalia=, and =maths=.
+
+The first 15 third-party migrations use only current package APIs and install
+their native advice after the relevant optional feature loads.  Removed command
+names remain absent.  The focused tests also cover one-call and return-value
+semantics where the old around advice repeated its original operation,
+including BBDB completion and Chess movement and selection.  CIDER targets 101
+current commands across its deferred subfeatures; its removed connection,
+inspector, and error-buffer command names are no longer recreated.
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
