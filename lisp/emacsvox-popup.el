@@ -68,47 +68,77 @@
   (let ((msg (elt (popup-list popup) (popup-cursor popup))))
     (message msg)))
 
-(defun ems--popup-menu-event-loop-around (orig-fun &rest args)
-  "speak." (emacsvox-icon 'open-object)
-  (emacsvox-popup-speak-item (ad-get-arg 0)) (apply orig-fun args)
-  (emacsvox-icon 'close-object))
+(defun emacsvox--advice-popup-menu-event-loop-around
+    (orig-fun menu &rest args)
+  "Speak MENU around ORIG-FUN while preserving its return value."
+  (emacsvox-icon 'open-object)
+  (emacsvox-popup-speak-item menu)
+  (unwind-protect
+      (apply orig-fun menu args)
+    (emacsvox-icon 'close-object)))
 
-(advice-add 'popup-menu-event-loop :around
-            #'ems--popup-menu-event-loop-around)
-
-(defun ems--popup-menu-read-key-sequence-before (&rest _)
+(defun emacsvox--advice-popup-menu-read-key-sequence-before
+    (_keymap &optional prompt _timeout)
   "Speak our prompt."
-  (when (sit-for 2) (dtk-speak (or (ad-get-arg 1) "Menu:"))))
+  (when (sit-for 2) (dtk-speak (or prompt "Menu:"))))
 
-(advice-add 'popup-menu-read-key-sequence :before
-            #'ems--popup-menu-read-key-sequence-before)
+(defun emacsvox-popup--register-movement-group (targets icon)
+  "Define native after advice for TARGETS using ICON."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (popup &rest _)
+          ,(format "Speak the Popup item selected by `%s'." target)
+          (emacsvox-icon ',icon)
+          (emacsvox-popup-speak-item popup))))))
 
-(cl-loop
- for f in
- '(popup-next popup-previous)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     (emacsvox-icon 'select-object)
-     (emacsvox-popup-speak-item (ad-get-arg 0)))))
+(defconst emacsvox-popup--selection-targets
+  '(popup-next popup-previous)
+  "Popup commands that select an adjacent item.")
 
-(cl-loop
- for f in
- '(popup-page-next popup-page-previous)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     (emacsvox-icon 'scroll)
-     (emacsvox-popup-speak-item (ad-get-arg 0)))))
+(defconst emacsvox-popup--page-targets
+  '(popup-page-next popup-page-previous)
+  "Popup commands that select another page.")
 
-(defun ems--popup-menu-show-help-after (&rest _)
+(emacsvox-popup--register-movement-group
+ emacsvox-popup--selection-targets 'select-object)
+(emacsvox-popup--register-movement-group
+ emacsvox-popup--page-targets 'scroll)
+
+(defun emacsvox--advice-popup-menu-show-help-after
+    (menu &optional _persist item)
   "Speak help if available."
-  (let ((doc (popup-item-documentation item)))
+  (let ((doc (popup-menu-documentation menu item)))
     (emacsvox-icon 'help)
     (if doc (dtk-speak doc) (dtk-speak "helpless"))))
 
-(advice-add 'popup-menu-show-help :after
-            #'ems--popup-menu-show-help-after)
+(defconst emacsvox-popup--advice
+  (append
+   '((popup-menu-event-loop :around
+      emacsvox--advice-popup-menu-event-loop-around)
+     (popup-menu-read-key-sequence :before
+      emacsvox--advice-popup-menu-read-key-sequence-before)
+     (popup-menu-show-help :after
+      emacsvox--advice-popup-menu-show-help-after))
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    (append emacsvox-popup--selection-targets
+            emacsvox-popup--page-targets)))
+  "Current Popup targets and their native advice functions.")
+
+(defun emacsvox-popup--install-advice ()
+  "Install native advice after Popup loads."
+  (dolist (entry emacsvox-popup--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'popup
+  (emacsvox-popup--install-advice))
 
 ;;;  Augment popup keymap:
 
@@ -118,4 +148,3 @@
 
 (provide 'emacsvox-popup)
 ;;;  end of file
-

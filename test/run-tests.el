@@ -222,6 +222,7 @@
   (require 'emacsvox-orgalist-tests)
   (require 'emacsvox-paradox-tests)
   (require 'emacsvox-pipewire-tests)
+  (require 'emacsvox-popup-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
