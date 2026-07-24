@@ -135,239 +135,219 @@
 
 ;;; Modules To Enable:
 
-;;; tb (traceback):
+(defvar emacsvox-ein--advice nil
+  "Current EIN targets and their native advice functions.")
+(setq emacsvox-ein--advice nil)
 
-(cl-loop
- for f in 
- '(ein:tb-jump-to-source-at-point-command
-   ein:tb-next-item ein:tb-prev-item)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+(defun emacsvox-ein--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-ein--advice))))
 
-(defun ems--ein:tb-show-km-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox-ein--line-movement-feedback ()
+  "Speak the current line after EIN navigation."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'large-movement))
 
-(advice-add 'ein:tb-show-km :after #'ems--ein:tb-show-km-after)
+(emacsvox-ein--register-after-group
+ '(ein:tb-jump-to-source-at-point-command ein:tb-next-item ein:tb-prev-item)
+ #'emacsvox-ein--line-movement-feedback)
 
-;;; pytools:
+(defun emacsvox-ein--open-line-feedback ()
+  "Speak the current line after opening an EIN view."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in 
+(emacsvox-ein--register-after-group
+ '(ein:tb-show-km ein:worksheet-split-cell-at-point)
+ #'emacsvox-ein--open-line-feedback)
+
+(defun emacsvox-ein--source-movement-feedback ()
+  "Speak after moving between EIN source locations."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-ein--register-after-group
  '(ein:pytools-jump-back-command ein:pytools-jump-to-source-command)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+ #'emacsvox-ein--source-movement-feedback)
 
-;;;  Worksheets:
+(defun emacsvox-ein--delete-feedback ()
+  "Speak after deleting EIN cell content."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'delete-object))
 
-(cl-loop
- for f in
- '(
-   ein:worksheet-clear-all-output-km ein:worksheet-delete-cell
-   ein:worksheet-clear-output-km ein:worksheet-kill-cell-km) do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'delete-object)))))
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-clear-all-output-km ein:worksheet-delete-cell
+   ein:worksheet-clear-output-km ein:worksheet-kill-cell-km)
+ #'emacsvox-ein--delete-feedback)
 
-(cl-loop
- for f in
- '(
-   ein:worksheet-execute-all-cells 
+(defun emacsvox-ein--execute-feedback ()
+  "Confirm execution of an EIN cell."
+  (emacsvox-icon 'task-done)
+  (forward-line 1)
+  (message "Press C-c . to hear the results."))
+
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-execute-all-cells
    ein:worksheet-execute-cell-and-insert-below
    ein:worksheet-execute-cell-and-insert-below-km
    ein:worksheet-execute-cell-and-goto-next-km
    ein:worksheet-execute-cell-and-goto-next
-   ein:worksheet-execute-cell ein:worksheet-execute-cell-km) do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (forward-line 1)
-       (message "Press C-c . to hear the results.")))))
+   ein:worksheet-execute-cell ein:worksheet-execute-cell-km)
+ #'emacsvox-ein--execute-feedback)
 
-(cl-loop
- for f in
- '(
-   ein:worksheet-goto-next-input-km ein:worksheet-goto-prev-input-km
+(defun emacsvox-ein--cell-movement-feedback ()
+  "Speak the current EIN cell after navigation."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-ein-speak-current-cell))
+
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-goto-next-input-km ein:worksheet-goto-prev-input-km
    ein:worksheet-goto-next-input ein:worksheet-goto-prev-input)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-ein-speak-current-cell)))))
+ #'emacsvox-ein--cell-movement-feedback)
 
-(cl-loop
- for f in
- '(
-   ein:worksheet-yank-cell
-   ein:worksheet-insert-cell-above-km ein:worksheet-insert-cell-above
-   ein:worksheet-insert-cell-below-km ein:worksheet-insert-cell-below)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'yank-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-ein--insert-feedback ()
+  "Speak after inserting an EIN cell."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in 
- '(ein:worksheet-toggle-cell-type ein ein:worksheet-change-cell-type-km )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-ein-sox-gen (ein:cell-type (ein:worksheet-get-current-cell)))
-       (dtk-speak (ein:cell-type (ein:worksheet-get-current-cell)))))))
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-insert-cell-above ein:worksheet-insert-cell-below)
+ #'emacsvox-ein--insert-feedback)
 
-(cl-loop
- for f in 
- '(ein:worksheet-insert-cell-below-km ein:worksheet-insert-cell-above-km)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-ein--insert-command-feedback ()
+  "Speak after an interactive EIN cell insertion command."
+  (emacsvox-icon 'yank-object)
+  (emacsvox-speak-line)
+  (emacsvox-icon 'open-object))
 
-(defun ems--ein:worksheet-move-cell-up-km-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak "Moved cell up") (emacsvox-icon 'large-movement)))
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-insert-cell-above-km ein:worksheet-insert-cell-below-km)
+ #'emacsvox-ein--insert-command-feedback)
 
-(advice-add 'ein:worksheet-move-cell-up-km :after
-            #'ems--ein:worksheet-move-cell-up-km-after)
+(defun emacsvox-ein--yank-cell-feedback ()
+  "Speak the cell inserted by an EIN yank command."
+  (emacsvox-ein-speak-current-cell)
+  (emacsvox-icon 'yank-object))
 
-(defun ems--ein:worksheet-move-cell-down-km-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak "Moved cell down") (emacsvox-icon 'large-movement)))
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-yank-cell)
+ #'emacsvox-ein--yank-cell-feedback)
 
-(advice-add 'ein:worksheet-move-cell-down-km :after
-            #'ems--ein:worksheet-move-cell-down-km-after)
+(defun emacsvox-ein--cell-type-feedback ()
+  "Report the current EIN cell type."
+  (let ((type (ein:cell-type (ein:worksheet-get-current-cell))))
+    (emacsvox-ein-sox-gen type)
+    (dtk-speak type)))
 
-(defun ems--ein:worksheet-yank-cell-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-ein-speak-current-cell) (emacsvox-icon 'yank-object)))
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-toggle-cell-type ein:worksheet-change-cell-type-km)
+ #'emacsvox-ein--cell-type-feedback)
 
-(advice-add 'ein:worksheet-yank-cell :after
-            #'ems--ein:worksheet-yank-cell-after)
+(defun emacsvox-ein--move-cell-up-feedback ()
+  "Report moving an EIN cell up."
+  (dtk-speak "Moved cell up")
+  (emacsvox-icon 'large-movement))
 
-(cl-loop
- for f in 
- '(ein:worksheet-toggle-output-km ein:worksheet-set-output-visibility-all-km)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let  ((state (slot-value (ein:worksheet-get-current-cell)
-                                 'collapsed )))
-         (emacsvox-icon
-          (if state 'close-object 'open-object))
-         (dtk-speak
-          (format "%s output"
-                  (if state "Hid" "Showing"))))))))
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-move-cell-up-km)
+ #'emacsvox-ein--move-cell-up-feedback)
 
-(defun ems--ein:worksheet-split-cell-at-point-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+(defun emacsvox-ein--move-cell-down-feedback ()
+  "Report moving an EIN cell down."
+  (dtk-speak "Moved cell down")
+  (emacsvox-icon 'large-movement))
 
-(advice-add 'ein:worksheet-split-cell-at-point :after
-            #'ems--ein:worksheet-split-cell-at-point-after)
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-move-cell-down-km)
+ #'emacsvox-ein--move-cell-down-feedback)
 
-(defun ems--ein:worksheet-merge-cell-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-line)))
+(defun emacsvox-ein--toggle-output-feedback ()
+  "Report the visibility of the current EIN cell output."
+  (let ((state (slot-value (ein:worksheet-get-current-cell) 'collapsed)))
+    (emacsvox-icon (if state 'close-object 'open-object))
+    (dtk-speak (format "%s output" (if state "Hid" "Showing")))))
 
-(advice-add 'ein:worksheet-merge-cell :after
-            #'ems--ein:worksheet-merge-cell-after)
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-toggle-output-km
+   ein:worksheet-set-output-visibility-all-km)
+ #'emacsvox-ein--toggle-output-feedback)
 
-;;; Notebooks:
+(defun emacsvox-ein--merge-cell-feedback ()
+  "Speak after merging EIN cells."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in 
+(emacsvox-ein--register-after-group
+ '(ein:worksheet-merge-cell)
+ #'emacsvox-ein--merge-cell-feedback)
+
+(defun emacsvox-ein--save-feedback ()
+  "Confirm saving an EIN notebook."
+  (message "Saving notebook")
+  (emacsvox-icon 'save-object))
+
+(emacsvox-ein--register-after-group
  '(ein:notebook-save-to-command ein:notebook-save-notebook-command)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (message "Saving notebook")
-       (emacsvox-icon 'save-object)))))
+ #'emacsvox-ein--save-feedback)
 
-(cl-loop
- for f in 
- '(
-   ein:notebook-worksheet-insert-next ein:notebook-worksheet-insert-prev
-   ein:notebook-worksheet-move-next ein:notebook-worksheet-move-prev
-   ein:notebook-worksheet-open-1th ein:notebook-worksheet-open-2th
-   ein:notebook-worksheet-open-3th ein:notebook-worksheet-open-4th
-   ein:notebook-worksheet-open-5th ein:notebook-worksheet-open-6th
-   ein:notebook-worksheet-open-7th ein:notebook-worksheet-open-8th
-   ein:notebook-worksheet-open-last ein:notebook-worksheet-open-next
-   ein:notebook-worksheet-open-next-or-first
-   ein:notebook-worksheet-open-next-or-new
-   ein:notebook-worksheet-open-prev ein:notebook-worksheet-open-prev-or-last)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+(defun emacsvox-ein--open-notebook-feedback ()
+  "Speak after opening an EIN notebook."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--ein:notebook-jump-to-opened-notebook-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(emacsvox-ein--register-after-group
+ '(ein:notebook-jump-to-opened-notebook)
+ #'emacsvox-ein--open-notebook-feedback)
 
-(advice-add 'ein:notebook-jump-to-opened-notebook :after
-            #'ems--ein:notebook-jump-to-opened-notebook-after)
+(defun emacsvox-ein--close-notebook-feedback ()
+  "Speak after closing an EIN notebook."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--ein:notebook-close-km-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+(emacsvox-ein--register-after-group
+ '(ein:notebook-close-km)
+ #'emacsvox-ein--close-notebook-feedback)
 
-(advice-add 'ein:notebook-close-km :after
-            #'ems--ein:notebook-close-km-after)
-
-;;; Notebooklists:
-
-(cl-loop
- for f in 
+(emacsvox-ein--register-after-group
  '(ein:notebooklist-prev-item ein:notebooklist-next-item)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+ #'emacsvox-ein--line-movement-feedback)
+
+(defconst emacsvox-ein--removed-targets
+  '(ein
+    ein:notebook-worksheet-insert-next ein:notebook-worksheet-insert-prev
+    ein:notebook-worksheet-move-next ein:notebook-worksheet-move-prev
+    ein:notebook-worksheet-open-1th ein:notebook-worksheet-open-2th
+    ein:notebook-worksheet-open-3th ein:notebook-worksheet-open-4th
+    ein:notebook-worksheet-open-5th ein:notebook-worksheet-open-6th
+    ein:notebook-worksheet-open-7th ein:notebook-worksheet-open-8th
+    ein:notebook-worksheet-open-last ein:notebook-worksheet-open-next
+    ein:notebook-worksheet-open-next-or-first
+    ein:notebook-worksheet-open-next-or-new
+    ein:notebook-worksheet-open-prev ein:notebook-worksheet-open-prev-or-last)
+  "Obsolete pre-nbformat-4 EIN worksheet-tab commands.")
+
+(defun emacsvox-ein--install-advice ()
+  "Install native advice for currently loaded EIN features."
+  (dolist (entry emacsvox-ein--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature
+         '(ein ein-notebook ein-notebooklist ein-pytools
+               ein-traceback ein-worksheet))
+  (eval
+   `(with-eval-after-load ',feature
+      (emacsvox-ein--install-advice))))
 
 (provide 'emacsvox-ein)
 ;;;  end of file
-
