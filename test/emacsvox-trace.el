@@ -94,7 +94,7 @@ used."
               ((symbol-function 'tts-silence)
                (lambda (duration &optional force)
                  (emacsvox-trace--record 'silence duration force)))
-              ((symbol-function 'dtk-set-rate)
+              ((symbol-function 'tts-set-rate)
                (lambda (rate &optional prefix)
                  (emacsvox-trace--record 'rate rate prefix)))
               ((symbol-function 'tts-notify)

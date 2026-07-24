@@ -62,10 +62,6 @@
 ;; buffer-local bindings in live sessions.
 (defvaralias 'tts-program 'dtk-program
   "Canonical name for the selected speech-server program.")
-(defvaralias 'tts-speech-rate-base 'dtk-speech-rate-base
-  "Canonical name for the lowest predefined speech rate.")
-(defvaralias 'tts-speech-rate-step 'dtk-speech-rate-step
-  "Canonical name for the predefined speech-rate step.")
 (defvaralias 'tts-handle-unicode 'dtk-handle-unicode
   "Canonical name for speech-server Unicode preprocessing state.")
 (defvaralias 'tts-quiet 'dtk-quiet
@@ -74,14 +70,10 @@
   "Canonical name for buffer-local split-capitalization state.")
 (defvaralias 'tts-cleanup-repeats 'dtk-cleanup-repeats
   "Canonical name for repeated-pattern cleanup configuration.")
-(defvaralias 'tts-character-scale 'dtk-character-scale
-  "Canonical name for character speech-rate scaling.")
 (defvaralias 'tts-character-to-speech-table 'dtk-character-to-speech-table
   "Canonical name for the shared character pronunciation table.")
 (defvaralias 'tts-caps 'dtk-caps
   "Canonical name for buffer-local capitalization feedback.")
-(defvaralias 'tts-speech-rate 'dtk-speech-rate
-  "Canonical name for the current buffer-local speech rate.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
 (defvaralias 'tts-chunk-separator-syntax 'dtk-chunk-separator-syntax
@@ -176,7 +168,7 @@ mac for MAC TTS (default on Mac)")
            tts-punctuation-mode
            (if dtk-split-caps 1 0)
            (if dtk-caps 1 0)
-           dtk-speech-rate)))
+           tts-speech-rate)))
 
 ;;;;   letter
 
@@ -264,15 +256,15 @@ mac for MAC TTS (default on Mac)")
 (defvar-local tts-strip-octals nil
   "Strip all octal chars. ")
 
-(defcustom dtk-speech-rate-base
+(defcustom tts-speech-rate-base
   (if (string-match "dtk" dtk-program) 180 50)
   "Value of lowest speech rate."
   :type 'integer
   :group 'tts)
 
-(defcustom dtk-speech-rate-step
+(defcustom tts-speech-rate-step
   (if (string-match "dtk" dtk-program) 50 8)
-  "Speech rate step used by `dtk-set-predefined-rate'."
+  "Speech rate step used by `tts-set-predefined-rate'."
   :type 'integer
   :group 'tts)
 
@@ -301,10 +293,10 @@ replaced with a repeat count. ")
 
 ;;;   internal variables
 
-(defvar dtk-character-scale 1.1
+(defvar tts-character-scale 1.1
   "Factor used to  scale speech rate  when speaking letters.
-  Use `dtk-set-character-scale' bound to
-\\[dtk-set-character-scale].")
+  Use `tts-set-character-scale' bound to
+\\[tts-set-character-scale].")
 
 (defvar-local dtk-caps nil
   "Non-nil means  indicate  capitalization.
@@ -317,13 +309,13 @@ bound to \\[dtk-toggle-caps].")
   '("some" "all" "none")
   "List of  punctuation modes.")
 
-(defvar-local dtk-speech-rate
+(defvar-local tts-speech-rate
   100
   "Speech rate. Default rate is set via
     this is an internal variable; <tts-name>-default-speech-rate can
     be customized for the engine specific default.
- Use `dtk-set-rate'
- bound to \\[dtk-set-rate].")
+ Use `tts-set-rate'
+ bound to \\[tts-set-rate].")
 
 ;;; Style Helpers:
 
@@ -894,7 +886,7 @@ this pattern if previously added.    "
 
 ;;;   sending commands
 
-(defun dtk-set-rate (rate &optional prefix)
+(defun tts-set-rate (rate &optional prefix)
   "Set speaking RATE.
 Interactive PREFIX arg means set   the global default value, and then set the
 current local  value to the result."
@@ -906,21 +898,21 @@ current local  value to the result."
      (prefix
       (unless (eq tts-speaker-process (tts-notify-process))
         (let ((tts-speaker-process (tts-notify-process)))
-          (dtk-set-rate rate prefix)))
-      (setq-default dtk-speech-rate rate)
-      (setq dtk-speech-rate rate))
-     (t (setq dtk-speech-rate rate)))
+          (tts-set-rate rate prefix)))
+      (setq-default tts-speech-rate rate)
+      (setq tts-speech-rate rate))
+     (t (setq tts-speech-rate rate)))
     (tts--protocol-set-rate rate)
     (when (called-interactively-p 'interactive)
       (message "Set speech rate to %s %s"
                rate
                (if prefix "" "locally")))))
 
-(defun dtk-set-predefined-rate (&optional prefix)
+(defun tts-set-predefined-rate (&optional prefix)
   "Set speech rate to one of nine predefined levels.
 Interactive PREFIX arg says to set the rate globally.
 Formula used is:
-rate = dtk-speech-rate-base + dtk-speech-rate-step * level."
+rate = tts-speech-rate-base + tts-speech-rate-step * level."
   (interactive "P")
   (let ((level
          (condition-case nil
@@ -934,15 +926,15 @@ rate = dtk-speech-rate-base + dtk-speech-rate-step * level."
           (< level 0)
           (> level 9))
       (error "Invalid level %s" level))
-     (t (dtk-set-rate
-         (+ dtk-speech-rate-base (* dtk-speech-rate-step level))
+     (t (tts-set-rate
+         (+ tts-speech-rate-base (* tts-speech-rate-step level))
          prefix)
         (when (called-interactively-p 'interactive)
           (message "Set speech rate to level %s %s"
                    level
                    (if prefix "" "locally")))))))
 
-(defun dtk-rate-adjust ()
+(defun tts-rate-adjust ()
   "Adjust speech rate in current buffer, inspired by
   text-scale-adjust.   Invoke this command via C-e d =/+ or
 C-impel-d -. Pressing =,+, or - immediately continues to adjust
@@ -952,22 +944,22 @@ the speech rate.  Call when on a non-blank line to preview the effectt"
   (let* ((base (event-basic-type last-command-event))
          (step
           (pcase base
-            ((or ?+ ?=) dtk-speech-rate-step)
-            (?- (- dtk-speech-rate-step))
-            (_ dtk-speech-rate-step))))
+            ((or ?+ ?=) tts-speech-rate-step)
+            (?- (- tts-speech-rate-step))
+            (_ tts-speech-rate-step))))
     (emacsvox-icon 'repeat-start)
-    (dtk-set-rate (+ dtk-speech-rate  step))
+    (tts-set-rate (+ tts-speech-rate  step))
     (emacsvox-speak-line)
     (emacsvox-icon (if (cl-minusp step) 'left 'right))
     (set-transient-map
      (let ((map (make-sparse-keymap)))
        (dolist (key '("=" "+" "-")) ;; = is often unshifted +.
-         (define-key map key (lambda () (interactive) (dtk-rate-adjust ))))
+         (define-key map key (lambda () (interactive) (tts-rate-adjust ))))
        map)
      t (lambda nil (emacsvox-icon 'repeat-end))
-     (format "%s: Repeat with %%k" dtk-speech-rate))))
+     (format "%s: Repeat with %%k" tts-speech-rate))))
 
-(defun dtk-set-character-scale (factor &optional prefix)
+(defun tts-set-character-scale (factor &optional prefix)
   "Set character scale FACTOR for   speech rate.
 Speech rate is scaled by this factor when speaking characters.
 Not presently used by either Dectalk or Viavoice TTS.
@@ -977,14 +969,14 @@ then set the current local value to the result."
   (when (process-live-p tts-speaker-process)
     (cond
      (prefix
-      (setq-default dtk-character-scale factor)
-      (setq dtk-character-scale factor))
-     (t (make-local-variable 'dtk-character-scale)
-        (setq dtk-character-scale factor)))
-    (tts--protocol-set-character-scale dtk-character-scale)
+      (setq-default tts-character-scale factor)
+      (setq tts-character-scale factor))
+     (t (make-local-variable 'tts-character-scale)
+        (setq tts-character-scale factor)))
+    (tts--protocol-set-character-scale tts-character-scale)
     (when (called-interactively-p 'interactive)
       (message "Set character scale factor to %s %s"
-               dtk-character-scale
+               tts-character-scale
                (if prefix "" "locally")))))
 
 (ems-generate-switcher
@@ -1651,7 +1643,7 @@ unless   `dtk-quiet' is set to t. "
           (inherit-speak-nonprinting-chars dtk-speak-nonprinting-chars)
           (inherit-strip-octals tts-strip-octals)
           (complement-sep (dtk-complement-chunk-separator-syntax))
-          (speech-rate dtk-speech-rate)
+          (speech-rate tts-speech-rate)
           (caps dtk-caps)
           (split-caps dtk-split-caps)
           (dtk-scratch-buffer (get-buffer-create " *dtk-scratch-buffer* "))
@@ -1673,7 +1665,7 @@ unless   `dtk-quiet' is set to t. "
          emacsvox-pronounce-personality pron-personality
          buffer-invisibility-spec invisibility-spec
          dtk-chunk-separator-syntax chunk-sep
-         dtk-speech-rate speech-rate
+         tts-speech-rate speech-rate
          tts-punctuation-mode mode
          dtk-split-caps split-caps
          dtk-caps caps
@@ -2110,13 +2102,9 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-get-voice-for-face #'dtk-get-voice-for-face)
 (defalias 'tts-speak-using-voice #'dtk-speak-using-voice)
 (defalias 'tts-dispatch #'dtk-dispatch)
-(defalias 'tts-set-rate #'dtk-set-rate)
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)
 (defalias 'tts-add-cleanup-pattern #'dtk-add-cleanup-pattern)
-(defalias 'tts-rate-adjust #'dtk-rate-adjust)
-(defalias 'tts-set-predefined-rate #'dtk-set-predefined-rate)
-(defalias 'tts-set-character-scale #'dtk-set-character-scale)
 (defalias 'tts-toggle-quiet #'dtk-toggle-quiet)
 (defalias 'tts-toggle-split-caps #'dtk-toggle-split-caps)
 (defalias 'tts-toggle-strip-octals #'dtk-toggle-strip-octals)

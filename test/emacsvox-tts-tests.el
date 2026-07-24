@@ -65,18 +65,21 @@
     dtk-toggle-punctuation-mode)
   "Removed DECtalk-era names for generic punctuation commands.")
 
+(defconst emacsvox-test--legacy-rate-functions
+  '(dtk-set-rate
+    dtk-rate-adjust
+    dtk-set-predefined-rate
+    dtk-set-character-scale)
+  "Removed DECtalk-era names for generic speech-rate commands.")
+
 (defconst emacsvox-test--tts-public-aliases
   '((tts-get-style . dtk-get-style)
     (tts-get-voice-for-face . dtk-get-voice-for-face)
     (tts-speak-using-voice . dtk-speak-using-voice)
     (tts-dispatch . dtk-dispatch)
-    (tts-set-rate . dtk-set-rate)
     (tts-reset-state . dtk-reset-state)
     (tts-initialize . dtk-initialize)
     (tts-add-cleanup-pattern . dtk-add-cleanup-pattern)
-    (tts-rate-adjust . dtk-rate-adjust)
-    (tts-set-predefined-rate . dtk-set-predefined-rate)
-    (tts-set-character-scale . dtk-set-character-scale)
     (tts-toggle-quiet . dtk-toggle-quiet)
     (tts-toggle-split-caps . dtk-toggle-split-caps)
     (tts-toggle-strip-octals . dtk-toggle-strip-octals)
@@ -181,7 +184,7 @@
   (let ((tts-punctuation-mode 'none)
         (dtk-split-caps t)
         (dtk-caps nil)
-        (dtk-speech-rate 210))
+        (tts-speech-rate 210))
     (should
      (equal
       (emacsvox-test--tts-capture-protocol #'tts--protocol-sync)
@@ -294,18 +297,30 @@
   (should-not (boundp 'dtk-punctuation-mode))
   (should-not (boundp 'dtk-punctuation-mode-alist)))
 
+(ert-deftest emacsvox-tts-legacy-rate-api-is-removed ()
+  "Generic speech-rate state and commands no longer expose DTK names."
+  (dolist (function emacsvox-test--legacy-rate-functions)
+    (should-not (fboundp function)))
+  (dolist
+      (variable
+       '(dtk-speech-rate
+         dtk-speech-rate-base
+         dtk-speech-rate-step
+         dtk-character-scale))
+    (should-not (boundp variable))))
+
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
   (let ((default-quiet (default-value 'dtk-quiet))
-        (default-rate (default-value 'dtk-speech-rate)))
+        (default-rate (default-value 'tts-speech-rate)))
     (with-temp-buffer
       (setq dtk-quiet (not default-quiet)
-            dtk-speech-rate (1+ default-rate))
+            tts-speech-rate (1+ default-rate))
       (should (eq dtk-quiet (not default-quiet)))
-      (should (= dtk-speech-rate (1+ default-rate))))
+      (should (= tts-speech-rate (1+ default-rate))))
     (with-temp-buffer
       (should (eq dtk-quiet default-quiet))
-      (should (= dtk-speech-rate default-rate)))))
+      (should (= tts-speech-rate default-rate)))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-share-storage ()
   "Canonical and legacy global state names address the same values."
@@ -761,14 +776,14 @@
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."
   (let ((default-quiet (default-value 'dtk-quiet))
-        (default-rate (default-value 'dtk-speech-rate))
+        (default-rate (default-value 'tts-speech-rate))
         (default-separators (default-value 'dtk-chunk-separator-syntax)))
     (with-temp-buffer
       (setq tts-quiet (not default-quiet)
             tts-speech-rate (1+ default-rate)
             tts-chunk-separator-syntax "canonical")
       (should (eq dtk-quiet (not default-quiet)))
-      (should (= dtk-speech-rate (1+ default-rate)))
+      (should (= tts-speech-rate (1+ default-rate)))
       (should (equal dtk-chunk-separator-syntax "canonical"))
       (should (local-variable-p 'tts-quiet))
       (should (local-variable-p 'dtk-quiet))

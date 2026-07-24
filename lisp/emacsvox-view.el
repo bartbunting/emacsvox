@@ -218,7 +218,7 @@
   (cl-loop
    for i from 0 to 9
    do
-   (define-key view-mode-map (format "%s" i) 'dtk-set-predefined-rate)))
+   (define-key view-mode-map (format "%s" i) 'tts-set-predefined-rate)))
 
 (emacsvox-view-setup-keys)
 

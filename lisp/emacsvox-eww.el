@@ -827,19 +827,19 @@ are available are cued by an auditory icon on the header line."
   (cond
    ((and (eww-current-url) emacsvox-eww-feed emacsvox-eww-style)
     (let
-        ((r dtk-speech-rate) (u (eww-current-url))
+        ((r tts-speech-rate) (u (eww-current-url))
          (s emacsvox-eww-style))
       (kill-buffer)
       (add-hook 'emacsvox-eww-post-hook
                 #'(lambda nil (tts-set-punctuations 'all)
-                    (dtk-set-rate r))
+                    (tts-set-rate r))
                 'at-end)
       (emacsvox-feeds-feed-display u s 'speak)))
    ((and (eww-current-url) emacsvox-eww-url-template)
-    (let ((n emacsvox-eww-url-template) (r dtk-speech-rate))
+    (let ((n emacsvox-eww-url-template) (r tts-speech-rate))
       (add-hook 'emacsvox-eww-post-hook
                 #'(lambda nil (tts-set-punctuations 'all)
-                    (dtk-set-rate r))
+                    (tts-set-rate r))
                 'at-end)
       (kill-buffer)
       (emacsvox-url-template-open (emacsvox-url-template-get n))))
@@ -2329,7 +2329,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
   "Setup speech-rate, punctuation and split-caps for reading prose."
   (interactive)
   
-  (dtk-set-rate (+ dtk-speech-rate-base (* dtk-speech-rate-step  3)))
+  (tts-set-rate (+ tts-speech-rate-base (* tts-speech-rate-step  3)))
   (tts-set-punctuations 'all)
   (when dtk-split-caps(dtk-toggle-split-caps))
   (emacsvox-speak-rest-of-buffer))

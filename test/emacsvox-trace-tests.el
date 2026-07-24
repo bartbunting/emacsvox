@@ -22,7 +22,7 @@
                (funcall (symbol-function 'emacsvox-icon) 'select-object)
                (funcall (symbol-function 'tts-tone) 440 100 t)
                (funcall (symbol-function 'tts-silence) 50 nil)
-               (funcall (symbol-function 'dtk-set-rate) 120 t)
+               (funcall (symbol-function 'tts-set-rate) 120 t)
                (funcall (symbol-function 'tts-stop) t)
                (funcall (symbol-function 'tts-notify) "notice" 'dont-log)
                (funcall (symbol-function 'tts-notify-icon) 'progress)

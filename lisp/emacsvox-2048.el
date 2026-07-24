@@ -319,9 +319,9 @@ Optional interactive prefix arg prompts for a filename."
   (define-key 2048-mode-map  "r"'emacsvox-2048-randomize-game)
   (define-key 2048-mode-map  (kbd "C-SPC") 'emacsvox-2048-score)
   (define-key 2048-mode-map "g" '2048-game)
-  (dtk-set-rate
-   (+ dtk-speech-rate-base
-      (* dtk-speech-rate-step  3)))
+  (tts-set-rate
+   (+ tts-speech-rate-base
+      (* tts-speech-rate-step  3)))
   (tts-set-punctuations 'some)
   (emacsvox-icon 'open-object)
   (emacsvox-pronounce-add-local-entry "0" "o")
