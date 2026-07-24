@@ -105,6 +105,7 @@
   (require 'emacsvox-bs-tests)
   (require 'emacsvox-bibtex-tests)
   (require 'emacsvox-bookmark-tests)
+  (require 'emacsvox-posting-message-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

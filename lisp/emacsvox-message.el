@@ -43,6 +43,7 @@
 
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'message)
 
 ;;;  customize
 (defgroup emacsvox-message nil
@@ -67,188 +68,70 @@
    (message-separator voice-bolden-extra)))
 
 ;;;   advice interactive commands
-(cl-loop
- for f in
- '(message-send message-send-and-exit)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Provide auditory context"
-     (when  (ems-interactive-p)
-       (emacsvox-speak-mode-line)
-       (emacsvox-icon 'close-object)))))
 
-(defun ems--message-goto-to-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(defmacro emacsvox-message--define-advice (target where &rest body)
+  "Define direct WHERE advice for interactive Message TARGET using BODY."
+  (declare (indent 2))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-%s"
+                         target
+                         (substring (symbol-name where) 1)))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback %s `%s'." where target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target ,where #',function '((name . emacsvox))))))
 
-(advice-add 'message-goto-to :after #'ems--message-goto-to-after)
+(dolist (target '(message-send message-send-and-exit))
+  (eval
+   `(emacsvox-message--define-advice ,target :after
+      (emacsvox-speak-mode-line)
+      (emacsvox-icon 'close-object))))
 
-(defun ems--message-goto-summary-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(dolist
+    (target
+     '(message-goto-to
+       message-goto-summary
+       message-goto-subject
+       message-goto-cc
+       message-goto-bcc
+       message-goto-fcc
+       message-goto-keywords
+       message-goto-newsgroups
+       message-goto-followup-to
+       message-goto-reply-to
+       message-goto-signature
+       message-goto-distribution
+       message-insert-citation-line
+       message-insert-to
+       message-insert-newsgroups
+       message-insert-courtesy-copy
+       message-goto-from
+       message-goto-mail-followup-to))
+  (eval
+   `(emacsvox-message--define-advice ,target :after
+      (emacsvox-icon 'large-movement)
+      (emacsvox-speak-line))))
 
-(advice-add 'message-goto-summary :after
-            #'ems--message-goto-summary-after)
+(emacsvox-message--define-advice message-goto-body :after
+  (emacsvox-icon 'large-movement)
+  (message "Beginning of message body"))
 
-(defun ems--message-goto-subject-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(emacsvox-message--define-advice message-insert-signature :after
+  (message "Signed the article."))
 
-(advice-add 'message-goto-subject :after
-            #'ems--message-goto-subject-after)
+(emacsvox-message--define-advice message-beginning-of-line :before
+  (dtk-stop 'all)
+  (emacsvox-icon 'select-object)
+  (dtk-speak "beginning of line"))
 
-(defun ems--message-goto-cc-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-cc :after #'ems--message-goto-cc-after)
-
-(defun ems--message-goto-bcc-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-bcc :after #'ems--message-goto-bcc-after)
-
-(defun ems--message-goto-fcc-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-fcc :after #'ems--message-goto-fcc-after)
-
-(defun ems--message-goto-keywords-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-keywords :after
-            #'ems--message-goto-keywords-after)
-
-(defun ems--message-goto-newsgroups-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-newsgroups :after
-            #'ems--message-goto-newsgroups-after)
-
-(defun ems--message-goto-followup-to-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-followup-to :after
-            #'ems--message-goto-followup-to-after)
-
-(defun ems--message-goto-reply-to-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-reply-to :after
-            #'ems--message-goto-reply-to-after)
-
-(defun ems--message-goto-body-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement)
-    (message "Beginning of message body")))
-
-(advice-add 'message-goto-body :after #'ems--message-goto-body-after)
-
-(defun ems--message-goto-signature-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-signature :after
-            #'ems--message-goto-signature-after)
-
-(defun ems--message-goto-distribution-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-distribution :after
-            #'ems--message-goto-distribution-after)
-
-(defun ems--message-insert-citation-line-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-insert-citation-line :after
-            #'ems--message-insert-citation-line-after)
-
-(defun ems--message-insert-to-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-insert-to :after #'ems--message-insert-to-after)
-
-(defun ems--message-insert-signature-after (&rest _)
-  "speak" (when (ems-interactive-p) (message "Signed the article.")))
-
-(advice-add 'message-insert-signature :after
-            #'ems--message-insert-signature-after)
-
-(defun ems--message-insert-newsgroups-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-insert-newsgroups :after
-            #'ems--message-insert-newsgroups-after)
-
-(defun ems--message-insert-courtesy-copy-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-insert-courtesy-copy :after
-            #'ems--message-insert-courtesy-copy-after)
-
-(defun ems--message-beginning-of-line-before (&rest _)
-  "Stop speech first."
-  (when (ems-interactive-p)
-    (dtk-stop 'all) (emacsvox-icon 'select-object)
-    (dtk-speak "beginning of line")))
-
-(advice-add 'message-beginning-of-line :before
-            #'ems--message-beginning-of-line-before)
-
-(defun ems--message-goto-from-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-from :after #'ems--message-goto-from-after)
-
-(defun ems--message-goto-mail-followup-to-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'message-goto-mail-followup-to :after
-            #'ems--message-goto-mail-followup-to-after)
-
-(defun ems--message-newline-and-reformat-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'fill-object) (message "newline and reformat")))
-
-(advice-add 'message-newline-and-reformat :after
-            #'ems--message-newline-and-reformat-after)
+(emacsvox-message--define-advice message-newline-and-reformat :after
+  (emacsvox-icon 'fill-object)
+  (message "newline and reformat"))
 
 (add-hook 'message-mode-hook
           #'emacsvox-pronounce-refresh-pronunciations)
 
 (provide  'emacsvox-message)
-
