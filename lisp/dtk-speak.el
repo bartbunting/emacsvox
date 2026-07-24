@@ -77,6 +77,8 @@
   "Canonical name for repeated-pattern cleanup configuration.")
 (defvaralias 'tts-character-scale 'dtk-character-scale
   "Canonical name for character speech-rate scaling.")
+(defvaralias 'tts-character-to-speech-table 'dtk-character-to-speech-table
+  "Canonical name for the shared character pronunciation table.")
 (defvaralias 'tts-caps 'dtk-caps
   "Canonical name for buffer-local capitalization feedback.")
 (defvaralias 'tts-punctuation-mode-alist 'dtk-punctuation-mode-alist

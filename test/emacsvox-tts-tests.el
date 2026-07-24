@@ -12,6 +12,7 @@
 (require 'dectalk-voices)
 (require 'dtk-speak)
 (require 'emacsvox-sounds)
+(require 'espeak-voices)
 (require 'outloud-voices)
 (require 'voice-setup)
 
@@ -278,16 +279,20 @@
   "Canonical and legacy global state names address the same values."
   (let ((dtk-program "legacy")
         (dtk-stop-immediately t)
-        (dtk-speaker-process 'primary))
+        (dtk-speaker-process 'primary)
+        (dtk-character-to-speech-table ["legacy"]))
     (should (equal tts-program "legacy"))
     (should tts-stop-immediately)
     (should (eq tts-speaker-process 'primary))
+    (should (equal tts-character-to-speech-table ["legacy"]))
     (setq tts-program "canonical"
           tts-stop-immediately nil
-          tts-speaker-process 'replacement)
+          tts-speaker-process 'replacement
+          tts-character-to-speech-table ["canonical"])
     (should (equal dtk-program "canonical"))
     (should-not dtk-stop-immediately)
-    (should (eq dtk-speaker-process 'replacement))))
+    (should (eq dtk-speaker-process 'replacement))
+    (should (equal dtk-character-to-speech-table ["canonical"]))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-preserve-dynamic-routing ()
   "Binding either process name is visible through its corresponding alias."
@@ -475,6 +480,78 @@
       untouched-charsets
       '(ascii latin-iso8859-1 latin-iso8859-15
               latin-iso8859-9 eight-bit-graphic)))))
+
+(ert-deftest emacsvox-tts-espeak-uses-canonical-runtime ()
+  "The eSpeak selector uses the generic TTS runtime API."
+  (let (events)
+    (cl-letf (((symbol-function 'espeak-configure-tts)
+               (lambda () (push 'configure events)))
+              ((symbol-function 'ems--fastload)
+               (lambda (file) (push (list 'fastload file) events)))
+              ((symbol-function 'tts-select-server)
+               (lambda (server) (push (list 'select server) events)))
+              ((symbol-function 'tts-initialize)
+               (lambda () (push 'initialize events))))
+      (espeak))
+    (should
+     (equal
+      (nreverse events)
+      '(configure
+        (fastload "voice-defs")
+        (select "espeak")
+        initialize)))))
+
+(ert-deftest emacsvox-tts-espeak-copies-canonical-character-table ()
+  "The eSpeak table derives from canonical pronunciation state."
+  (let ((espeak-character-to-speech-table nil)
+        (source ["plain" "left [*] right"]))
+    (cl-progv '(tts-character-to-speech-table) (list source)
+      (espeak-setup-character-to-speech-table))
+    (should
+     (equal espeak-character-to-speech-table
+            ["plain" "left   right"]))
+    (should (equal source ["plain" "left [*] right"]))
+    (should-not (eq espeak-character-to-speech-table source))))
+
+(ert-deftest emacsvox-tts-espeak-configures-canonical-state ()
+  "The eSpeak adapter configures generic TTS state and dispatch."
+  (let (defaults
+        character-table-setup
+        untouched-charsets)
+    (cl-progv
+        '(tts-default-voice tts-default-speech-rate)
+        '(unset 1)
+      (cl-letf (((symbol-function 'set-default)
+                 (lambda (symbol value)
+                   (push (cons symbol value) defaults)))
+                ((symbol-function 'espeak-setup-character-to-speech-table)
+                 (lambda () (setq character-table-setup t)))
+                ((symbol-function 'tts-unicode-update-untouched-charsets)
+                 (lambda (charsets)
+                   (setq untouched-charsets charsets)))
+                ((symbol-function 'tts-voice-defined-p) #'ignore)
+                ((symbol-function 'tts-get-voice-command) #'ignore)
+                ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (espeak-configure-tts)
+        (should-not (symbol-value 'tts-default-voice))
+        (should
+         (= (symbol-value 'tts-default-speech-rate)
+            espeak-default-speech-rate))
+        (should
+         (eq (symbol-function 'tts-voice-defined-p)
+             'espeak-voice-defined-p))
+        (should
+         (eq (symbol-function 'tts-get-voice-command)
+             'espeak-get-voice-command))
+        (should
+         (eq (symbol-function 'tts-define-voice-from-acss)
+             'espeak-define-voice-from-acss))))
+    (should
+     (equal
+      defaults
+      `((tts-default-speech-rate . ,espeak-default-speech-rate))))
+    (should character-table-setup)
+    (should (equal untouched-charsets '(ascii latin-iso8859-1)))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."

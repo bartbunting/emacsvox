@@ -40,6 +40,9 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
 
+(defvar tts-character-to-speech-table)
+(defvar tts-default-speech-rate)
+
 ;;;  Customizations:
 
 (defcustom espeak-default-speech-rate 175
@@ -48,8 +51,8 @@
   :type 'integer
   :set #'(lambda(sym val)
            (set-default sym val)
-           (when (string-match "espeak" dtk-program)
-             (setq-default dtk-speech-rate val))))
+           (when (string-match "espeak" tts-program)
+             (setq-default tts-speech-rate val))))
 
 ;;;  Top-Level TTS Call
 
@@ -59,8 +62,8 @@
   (interactive)
   (espeak-configure-tts)
   (ems--fastload "voice-defs")
-  (dtk-select-server "espeak")
-  (dtk-initialize))
+  (tts-select-server "espeak")
+  (tts-initialize))
 
 ;;;   voice table
 
@@ -272,10 +275,10 @@ and TABLE gives the values along that dimension."
 
 (defun espeak-setup-character-to-speech-table ()
   (when (and (null espeak-character-to-speech-table)
-             (boundp 'dtk-character-to-speech-table)
-             (vectorp dtk-character-to-speech-table))
+             (boundp 'tts-character-to-speech-table)
+             (vectorp tts-character-to-speech-table))
     (setq espeak-character-to-speech-table
-          (let ((table (cl-copy-seq  dtk-character-to-speech-table)))
+          (let ((table (cl-copy-seq  tts-character-to-speech-table)))
             (cl-loop for entry across-ref table 
                      when   (string-match "\\(\\[\\*\\]\\)"  entry) do
                      (setf entry (replace-match " " nil nil  entry 1)))
@@ -283,9 +286,6 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun espeak-configure-tts ()
   "Configure  to use eSpeak."
-  (cl-declare (special tts-default-speech-rate
-                       espeak-default-speech-rate
-                       dtk-speaker-process))
   (fset 'tts-voice-defined-p 'espeak-voice-defined-p)
   (fset 'tts-get-voice-command 'espeak-get-voice-command)
   (fset
@@ -294,7 +294,6 @@ and TABLE gives the values along that dimension."
   (setq tts-default-speech-rate espeak-default-speech-rate)
   (set-default 'tts-default-speech-rate espeak-default-speech-rate)
   (espeak-setup-character-to-speech-table)
-  (dtk-unicode-update-untouched-charsets '(ascii latin-iso8859-1)))
+  (tts-unicode-update-untouched-charsets '(ascii latin-iso8859-1)))
 
 (provide 'espeak-voices)
-
