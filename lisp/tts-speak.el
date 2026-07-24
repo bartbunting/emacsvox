@@ -64,15 +64,10 @@
   "Canonical name for the selected speech-server program.")
 (defvaralias 'tts-handle-unicode 'dtk-handle-unicode
   "Canonical name for speech-server Unicode preprocessing state.")
-(defvaralias 'tts-cleanup-repeats 'dtk-cleanup-repeats
-  "Canonical name for repeated-pattern cleanup configuration.")
 (defvaralias 'tts-character-to-speech-table 'dtk-character-to-speech-table
   "Canonical name for the shared character pronunciation table.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
-(defvaralias 'tts-chunk-separator-syntax 'dtk-chunk-separator-syntax
-  "Canonical name for the buffer-local speech chunk separators.")
-
 (defvar dtk-program
   (or
    (getenv "DTK_PROGRAM")
@@ -273,13 +268,13 @@ mac for MAC TTS (default on Mac)")
   "Flag indicating whether to use split caps.
  Use   `tts-toggle-split-caps'bound to \\[tts-toggle-split-caps].")
 
-(defvar dtk-cleanup-repeats
+(defvar tts-cleanup-repeats
   (list
    ". " "." "_" "-" "=" "/" "+" "*" ":" ";" "%"
    "\\/" "/\\" "{" "}" "~" "$" ")" "#" "<>" "^" "<" ">")
   "List of repeating patterns to clean up.
-Use `dtk-add-cleanup-pattern'
- bound to \\[dtk-add-cleanup-pattern]  to add  patterns.
+Use `tts-add-cleanup-pattern'
+ bound to \\[tts-add-cleanup-pattern]  to add  patterns.
 
 More than 3 consecutive occurrences
 of a  pattern   is
@@ -388,7 +383,7 @@ bound to \\[tts-toggle-caps].")
 
 ;;;   Helpers to handle invisible text:
 
-(defun dtk--skip-invisible-forward ()
+(defun tts--skip-invisible-forward ()
   "Move across invisible text."
   (while (and (not (eobp))
               (invisible-p (point)))
@@ -396,7 +391,7 @@ bound to \\[tts-toggle-caps].")
      (next-single-property-change (point) 'invisible
                                   (current-buffer) (point-max)))))
 
-(defun dtk--skip-invisible-backward ()
+(defun tts--skip-invisible-backward ()
   "Move backwards over invisible text."
   (while (and (not (bobp))
               (invisible-p (point)))
@@ -404,14 +399,14 @@ bound to \\[tts-toggle-caps].")
      (previous-single-property-change (point) 'invisible
                                       (current-buffer) (point-min)))))
 
-(defun dtk--delete-invisible-text ()
+(defun tts--delete-invisible-text ()
   "Delete invisible text."
   (goto-char (point-min))
   (let ((start (point)))
     (while (not (eobp))
       (cond
        ((invisible-p (point))
-        (dtk--skip-invisible-forward)
+        (tts--skip-invisible-forward)
         (delete-region start (point))
         (setq start (point)))
        (t (goto-char
@@ -486,7 +481,7 @@ Uses a 5ms fade-in and fade-out. "
 ;; This is necessary because
 ;;  [] marks dtk commands; {} is special to tcl
 
-(defconst dtk-bracket-regexp
+(defconst tts-bracket-regexp
   "[][{}<>\\|`#\n]"
   "Brackets and other chars  that are special to dtk and tcl.
 Newlines  become spaces so each server request is a single line.
@@ -502,10 +497,10 @@ Newlines  become spaces so each server request is a single line.
     (while (re-search-forward "[\177-\377]+" nil t)
       (replace-match " "))))
 
-(defun dtk-fix-brackets (mode)
+(defun tts-fix-brackets (mode)
   "Quote  delimiters that need special treatment. Argument MODE
 specifies the current pronunciation mode --- See
-\\[dtk-bracket-regexp]"
+\\[tts-bracket-regexp]"
   
   (let ((inhibit-read-only t))
     (goto-char (point-min))
@@ -513,7 +508,7 @@ specifies the current pronunciation mode --- See
      ((eq 'all mode)
       (let ((start nil)
             (personality nil))
-        (while (re-search-forward dtk-bracket-regexp nil t)
+        (while (re-search-forward tts-bracket-regexp nil t)
           (setq start (match-beginning 0))
           (setq personality (tts-get-style (match-beginning 0)))
           (cond
@@ -543,7 +538,7 @@ specifies the current pronunciation mode --- See
             (put-text-property start (point)
                                'personality personality)))))
      (t
-      (while (re-search-forward dtk-bracket-regexp nil t)
+      (while (re-search-forward tts-bracket-regexp nil t)
         (replace-match " " nil t))))))
 
 (defvar-local tts-speak-nonprinting-chars nil
@@ -553,7 +548,7 @@ specifies the current pronunciation mode --- See
   "[\000-\010\013\014\016-\037\177-\377]"
   "Regular expression matching control chars. ")
 
-(defun dtk-fix-control-chars ()
+(defun tts-fix-control-chars ()
   "Handle control characters in speech stream."
   (let ((char nil))
     (goto-char (point-min))
@@ -613,7 +608,7 @@ specifies the current pronunciation mode --- See
 ;; mode being used to speak.  Removing repeated chars, and
 ;; replacing them by a count:
 
-(defun dtk-replace-duplicates (string mode)
+(defun tts-replace-duplicates (string mode)
   "Replace repeating patterns.
  `STRING' is  the repeating string to replace.
 ` MODE' is  the current pronunciation mode."
@@ -642,26 +637,26 @@ specifies the current pronunciation mode --- See
         (put-text-property start (point) 'personality personality)))
     (goto-char (point-min))))
 
-(defun dtk-handle-repeating-patterns (mode)
+(defun tts-handle-repeating-patterns (mode)
   "Handle repeating patterns by replacing them with  `aw <length> char-names'"
   
-  (when dtk-cleanup-repeats
+  (when tts-cleanup-repeats
     (goto-char (point-min))
     (mapc
      #'(lambda (str)
-         (dtk-replace-duplicates str mode))
-     dtk-cleanup-repeats)))
+         (tts-replace-duplicates str mode))
+     tts-cleanup-repeats)))
 
-(defun dtk-quote (mode)
+(defun tts-quote (mode)
   "Clean-up text."
   (let ((inhibit-read-only t))
     ;; dtk will think it's processing a command otherwise:
-    (dtk-fix-brackets mode)
+    (tts-fix-brackets mode)
     (tts-handle-caps)
     ;; fix control chars
-    (dtk-fix-control-chars)))
+    (tts-fix-control-chars)))
 
-(defun dtk-fix-backslash ()
+(defun tts-fix-backslash ()
   "Quote backslash characters."
   (goto-char (point-min))
   (while (search-forward "\\" nil t)
@@ -674,32 +669,32 @@ specifies the current pronunciation mode --- See
 ;; or a parenthesis grouping start or end
 ;; leaves point at the end of the chunk.
 ;; returns  distance moved; nil if stationery
-(defvar-local dtk-chunk-separator-syntax ".>)$\""
+(defvar-local tts-chunk-separator-syntax ".>)$\""
   "Syntax classes  used when   splitting text.")
 
-(defsubst dtk-complement-chunk-separator-syntax ()
+(defsubst tts-complement-chunk-separator-syntax ()
   "Return complement of syntactic class that splits clauses."
   
-  (concat "^" dtk-chunk-separator-syntax))
+  (concat "^" tts-chunk-separator-syntax))
 
 ;; set chunk separator to match both whitespace and punctuations:
-(defun dtk-chunk-on-white-space-and-punctuations ()
+(defun tts-chunk-on-white-space-and-punctuations ()
   
-  (setq dtk-chunk-separator-syntax
-        (concat dtk-chunk-separator-syntax "-")))
+  (setq tts-chunk-separator-syntax
+        (concat tts-chunk-separator-syntax "-")))
 
-(defun dtk-chunk-only-on-punctuations ()
+(defun tts-chunk-only-on-punctuations ()
   
-  (setq dtk-chunk-separator-syntax
+  (setq tts-chunk-separator-syntax
         (cl-delete-if
          #'(lambda (x) (= x ?-))
-         dtk-chunk-separator-syntax)))
+         tts-chunk-separator-syntax)))
 
 ;; invarianc: looking at complement
 ;; move across the complement and the following separator
 ;; return value is a boolean indicating if we moved.
 ;; side-effect is to move across a chunk
-(defun dtk-move-across-a-chunk (separator complement)
+(defun tts-move-across-a-chunk (separator complement)
   "Move over a chunk of text.
 Chunks are defined  based on major modes.
 Argument SEPARATOR  is the syntax class of chunk separators.
@@ -738,7 +733,7 @@ Argument COMPLEMENT  is the complement of separator."
 
 ;; Internal function used by tts-speak to send text out.
 ;; Handles voice locking etc.
-;; assumes in dtk-scratch-buffer
+;; assumes in tts-scratch-buffer
 ;; start and end give the extent of the
 ;; text to be spoken.
 ;; note that property auditory-icon at the start  of a clause
@@ -838,7 +833,7 @@ notification stream as well."
 
 ;;;   adding cleanup patterns:
 
-(defun dtk-add-cleanup-pattern (&optional delete)
+(defun tts-add-cleanup-pattern (&optional delete)
   "Add this pattern to the list of repeating patterns.
   Optional interactive prefix arg deletes
 this pattern if previously added.    "
@@ -846,13 +841,13 @@ this pattern if previously added.    "
   
   (cond
    (delete
-    (setq dtk-cleanup-repeats
+    (setq tts-cleanup-repeats
           (delete
            (read-from-minibuffer "Specify repeating pattern to delete: ")
-           dtk-cleanup-repeats)))
+           tts-cleanup-repeats)))
    (t
     (cl-pushnew (read-from-minibuffer "Specify repeating pattern: ")
-                dtk-cleanup-repeats
+                tts-cleanup-repeats
                 :test #'string-equal))))
 
 ;;;  helper --generate state switcher:
@@ -1548,33 +1543,33 @@ For swiftmac, set this to `left' or `right'."
 
 ;;;   interactively select how text is split:
 
-(defun dtk-toggle-splitting-on-white-space ()
+(defun tts-toggle-splitting-on-white-space ()
   "Toggle splitting of speech on white space. "
   (interactive)
   
   (cond
-   ((not (string-match "-" dtk-chunk-separator-syntax))
-    (dtk-chunk-on-white-space-and-punctuations)
+   ((not (string-match "-" tts-chunk-separator-syntax))
+    (tts-chunk-on-white-space-and-punctuations)
     (when (called-interactively-p 'interactive)
       (message "Text will be split at punctuations and white space")))
-   (t (dtk-chunk-only-on-punctuations)
+   (t (tts-chunk-only-on-punctuations)
       (when (called-interactively-p 'interactive)
         (message "Text split  at clause boundaries")))))
 
-(defun dtk-set-chunk-separator-syntax (s)
+(defun tts-set-chunk-separator-syntax (s)
   "Interactively set how text is split in chunks.
 Argument S specifies the syntax class."
   (interactive
    (list
     (read-from-minibuffer "Specify separator syntax string: ")))
   
-  (setq dtk-chunk-separator-syntax s)
+  (setq tts-chunk-separator-syntax s)
   (when (called-interactively-p 'interactive)
     (message "Set  separator to %s" s)))
 
 ;;;  speak text
 
-(defvar-local dtk-yank-excluded-properties
+(defvar-local tts-yank-excluded-properties
   '(category field follow-link fontified font-lock-face help-echo
              keymap local-map mouse-face read-only yank-handler)
   "Like yank-excluded-properties, but without  invisible
@@ -1591,7 +1586,7 @@ This is so text marked invisible is silenced.")
 (declare-function org-fold-initialize "org-fold" (ellipsis))
 (declare-function org-set-regexps-and-options "org" (&optional tags-only))
 
-(defun dtk-org-fold ()
+(defun tts-org-fold ()
   "Prepare Org fold."
   (when
       (and
@@ -1633,32 +1628,32 @@ unless   `tts-quiet' is set to t. "
           (syntax-table (syntax-table))
           (pron-table emacsvox-pronounce-table)
           (pron-personality emacsvox-pronounce-personality)
-          (chunk-sep dtk-chunk-separator-syntax)
+          (chunk-sep tts-chunk-separator-syntax)
           (inherit-speak-nonprinting-chars tts-speak-nonprinting-chars)
           (inherit-strip-octals tts-strip-octals)
-          (complement-sep (dtk-complement-chunk-separator-syntax))
+          (complement-sep (tts-complement-chunk-separator-syntax))
           (speech-rate tts-speech-rate)
           (caps tts-caps)
           (split-caps tts-split-caps)
-          (dtk-scratch-buffer (get-buffer-create " *dtk-scratch-buffer* "))
+          (tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
           (start 1)
           (end nil)
           (mode tts-punctuation-mode)
           (voice-lock voice-lock-mode)) ; done snapshotting
-      (with-current-buffer dtk-scratch-buffer
+      (with-current-buffer tts-scratch-buffer
         (setq buffer-undo-list  t)
         (erase-buffer)
         (when (eq orig-mode 'org-mode)
           (setq org-link-descriptive links-desc)
-          (dtk-org-fold))
+          (tts-org-fold))
         ;; inherit environment
         (setq                           ; mirror snapshot
-         yank-excluded-properties dtk-yank-excluded-properties
+         yank-excluded-properties tts-yank-excluded-properties
          char-property-alias-alist  char-alias
          emacsvox-pronounce-table pron-table
          emacsvox-pronounce-personality pron-personality
          buffer-invisibility-spec invisibility-spec
-         dtk-chunk-separator-syntax chunk-sep
+         tts-chunk-separator-syntax chunk-sep
          tts-speech-rate speech-rate
          tts-punctuation-mode mode
          tts-split-caps split-caps
@@ -1669,16 +1664,16 @@ unless   `tts-quiet' is set to t. "
         (set-syntax-table syntax-table)
         (tts--protocol-sync)
         (insert-for-yank text)          ; insert and pre-process text
-        (dtk--delete-invisible-text)
-        (dtk-handle-repeating-patterns mode)
+        (tts--delete-invisible-text)
+        (tts-handle-repeating-patterns mode)
         (when pron-table (tts-apply-pronunciations pron-table))
         (when dtk-handle-unicode (dtk-unicode-replace-chars mode))
-        (dtk-quote mode)
+        (tts-quote mode)
         (goto-char (point-min))         ; text is ready to be spoken
         (skip-syntax-forward "-")       ;skip leading whitespace
         (setq start (point))
         (while (and (not (eobp))
-                    (dtk-move-across-a-chunk chunk-sep complement-sep))
+                    (tts-move-across-a-chunk chunk-sep complement-sep))
           (unless ;;;If  embedded punctuations, continue
               (and (char-after (point))
                    (= ?. (char-syntax (preceding-char)))
@@ -1722,12 +1717,12 @@ grouping"
               `(,@splits ,r)))))
   (cl-assert
    (= (length text) (apply #'+ group)) group "Argument mismatch:" text group)
-  (let ((dtk-scratch-buffer (get-buffer-create " *dtk-scratch-buffer* "))
+  (let ((tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
         (contents nil)
         (count 1)
         (inhibit-read-only t))
     (save-current-buffer
-      (set-buffer dtk-scratch-buffer)
+      (set-buffer tts-scratch-buffer)
       (setq buffer-undo-list  t)
       (erase-buffer)
       (cl-loop
@@ -1955,7 +1950,7 @@ dtk-unicode-untouched-charsets."
 ;; `set-charset-priority'.  This affects the implicit sorting of lists of
 ;; charsets returned by operations such as `find-charset-region'.
 
-(defmacro dtk--with-charset-priority (charsets &rest body)
+(defmacro tts--with-charset-priority (charsets &rest body)
   (declare (indent 1) (debug t))
   (let ((current (make-symbol "current")))
     `(let ((,current (charset-priority-list)))
@@ -1967,7 +1962,7 @@ dtk-unicode-untouched-charsets."
 
 (defun dtk-unicode-char-in-charsets-p (char charsets)
   "Return t if CHAR is a member of one in the charsets in CHARSETS."
-  (dtk--with-charset-priority charsets (memq (char-charset char) charsets)))
+  (tts--with-charset-priority charsets (memq (char-charset char) charsets)))
 
 (defun dtk-unicode-char-untouched-p (char)
   "Return t if char is a member of one of the charsets in
@@ -2095,20 +2090,12 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-dispatch #'dtk-dispatch)
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)
-(defalias 'tts-add-cleanup-pattern #'dtk-add-cleanup-pattern)
 (defalias 'tts-select-server #'dtk-select-server)
 (defalias 'tts-cloud #'dtk-cloud)
 (defalias 'tts-local-server #'dtk-local-server)
 (defalias 'tts-set-language #'dtk-set-language)
 (defalias 'tts-set-next-language #'dtk-set-next-language)
 (defalias 'tts-set-previous-language #'dtk-set-previous-language)
-(defalias
- 'tts-toggle-splitting-on-white-space
- #'dtk-toggle-splitting-on-white-space)
-(defalias 'tts-set-chunk-separator-syntax #'dtk-set-chunk-separator-syntax)
-(defalias
- 'tts-chunk-on-white-space-and-punctuations
- #'dtk-chunk-on-white-space-and-punctuations)
 (defalias 'tts-char-to-speech #'dtk-char-to-speech)
 (defalias 'tts-unicode-update-untouched-charsets
   #'dtk-unicode-update-untouched-charsets)

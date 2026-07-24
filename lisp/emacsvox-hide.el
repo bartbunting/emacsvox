@@ -347,7 +347,7 @@ buffer to be hidden or exposed."
   (unless (get-text-property (point) 'emacsvox-hidden-block)
     (emacsvox-hide-current-block
      (emacsvox-hide-get-block-prefix)))
-  (let ((scratch-buffer (get-buffer-create " *dtk-scratch-buffer* "))
+  (let ((scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
         (block nil)
         (contents nil)
         (start nil)

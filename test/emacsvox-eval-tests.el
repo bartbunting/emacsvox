@@ -34,7 +34,7 @@
                  (push
                   (list 'speak text
                         tts-punctuation-mode
-                        dtk-chunk-separator-syntax)
+                        tts-chunk-separator-syntax)
                   events))))
       (should
        (eq

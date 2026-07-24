@@ -93,22 +93,37 @@
     dtk-audio-format)
   "Removed DECtalk-era names for generic styled speech.")
 
+(defconst emacsvox-test--legacy-text-preparation-functions
+  '(dtk-add-cleanup-pattern
+    dtk-handle-repeating-patterns
+    dtk-replace-duplicates
+    dtk-fix-brackets
+    dtk-fix-control-chars
+    dtk-fix-backslash
+    dtk-quote
+    dtk-complement-chunk-separator-syntax
+    dtk-chunk-on-white-space-and-punctuations
+    dtk-chunk-only-on-punctuations
+    dtk-move-across-a-chunk
+    dtk-toggle-splitting-on-white-space
+    dtk-set-chunk-separator-syntax
+    dtk-org-fold
+    dtk--skip-invisible-forward
+    dtk--skip-invisible-backward
+    dtk--delete-invisible-text
+    dtk--with-charset-priority)
+  "Removed DECtalk-era names for generic text preparation.")
+
 (defconst emacsvox-test--tts-public-aliases
   '((tts-dispatch . dtk-dispatch)
     (tts-reset-state . dtk-reset-state)
     (tts-initialize . dtk-initialize)
-    (tts-add-cleanup-pattern . dtk-add-cleanup-pattern)
     (tts-select-server . dtk-select-server)
     (tts-cloud . dtk-cloud)
     (tts-local-server . dtk-local-server)
     (tts-set-language . dtk-set-language)
     (tts-set-next-language . dtk-set-next-language)
     (tts-set-previous-language . dtk-set-previous-language)
-    (tts-toggle-splitting-on-white-space
-     . dtk-toggle-splitting-on-white-space)
-    (tts-set-chunk-separator-syntax . dtk-set-chunk-separator-syntax)
-    (tts-chunk-on-white-space-and-punctuations
-     . dtk-chunk-on-white-space-and-punctuations)
     (tts-char-to-speech . dtk-char-to-speech)
     (tts-unicode-update-untouched-charsets
      . dtk-unicode-update-untouched-charsets)
@@ -342,6 +357,18 @@
   "Generic styled speech no longer exposes DECtalk-era names."
   (dolist (function emacsvox-test--legacy-style-functions)
     (should-not (fboundp function))))
+
+(ert-deftest emacsvox-tts-legacy-text-preparation-api-is-removed ()
+  "Generic text preparation no longer exposes DECtalk-era names."
+  (dolist (function emacsvox-test--legacy-text-preparation-functions)
+    (should-not (fboundp function)))
+  (dolist
+      (variable
+       '(dtk-cleanup-repeats
+         dtk-bracket-regexp
+         dtk-chunk-separator-syntax
+         dtk-yank-excluded-properties))
+    (should-not (boundp variable))))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
@@ -811,17 +838,16 @@
   "Canonical buffer-local state does not leak between buffers."
   (let ((default-quiet (default-value 'tts-quiet))
         (default-rate (default-value 'tts-speech-rate))
-        (default-separators (default-value 'dtk-chunk-separator-syntax)))
+        (default-separators (default-value 'tts-chunk-separator-syntax)))
     (with-temp-buffer
       (setq tts-quiet (not default-quiet)
             tts-speech-rate (1+ default-rate)
             tts-chunk-separator-syntax "canonical")
       (should (eq tts-quiet (not default-quiet)))
       (should (= tts-speech-rate (1+ default-rate)))
-      (should (equal dtk-chunk-separator-syntax "canonical"))
+      (should (equal tts-chunk-separator-syntax "canonical"))
       (should (local-variable-p 'tts-quiet))
-      (should (local-variable-p 'tts-chunk-separator-syntax))
-      (should (local-variable-p 'dtk-chunk-separator-syntax)))
+      (should (local-variable-p 'tts-chunk-separator-syntax)))
     (with-temp-buffer
       (should (eq tts-quiet default-quiet))
       (should (= tts-speech-rate default-rate))
