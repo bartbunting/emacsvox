@@ -196,6 +196,7 @@
   (require 'emacsvox-ellama-tests)
   (require 'emacsvox-elpher-tests)
   (require 'emacsvox-elpy-tests)
+  (require 'emacsvox-embark-tests)
   (require 'emacsvox-emms-tests)
   (require 'emacsvox-empv-tests)
   (require 'emacsvox-enwc-tests)

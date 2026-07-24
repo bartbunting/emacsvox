@@ -71,47 +71,58 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--embark-act-after (&rest _)
+(defun emacsvox--advice-embark-act-after (&rest _)
   "Announce action completed."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'embark-act)
     (emacsvox-icon 'button)
     (emacsvox-speak-mode-line)))
 
-(advice-add 'embark-act :after #'ems--embark-act-after)
-
-(defun ems--embark-dwim-after (&rest _)
+(defun emacsvox--advice-embark-dwim-after (&rest _)
   "Announce default action taken."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'embark-dwim)
     (emacsvox-icon 'button)
     (emacsvox-speak-mode-line)))
 
-(advice-add 'embark-dwim :after #'ems--embark-dwim-after)
-
-(defun ems--embark-collect-after (&rest _)
+(defun emacsvox--advice-embark-collect-after (&rest _)
   "Announce collect buffer."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'embark-collect)
     (emacsvox-icon 'open-object)
     (dtk-speak
      (format "Collected into %s" (buffer-name)))))
 
-(advice-add 'embark-collect :after #'ems--embark-collect-after)
-
-(defun ems--embark-export-after (&rest _)
+(defun emacsvox--advice-embark-export-after (&rest _)
   "Announce export result."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'embark-export)
     (emacsvox-icon 'task-done)
     (dtk-speak
      (format "Exported to %s" (buffer-name)))))
 
-(advice-add 'embark-export :after #'ems--embark-export-after)
-
-(defun ems--embark-become-after (&rest _)
+(defun emacsvox--advice-embark-become-after (&rest _)
   "Announce mode change."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'embark-become)
     (emacsvox-icon 'select-object)
     (emacsvox-speak-mode-line)))
 
-(advice-add 'embark-become :after #'ems--embark-become-after)
+(defconst emacsvox-embark--advice
+  '((embark-act :after emacsvox--advice-embark-act-after)
+    (embark-dwim :after emacsvox--advice-embark-dwim-after)
+    (embark-collect :after emacsvox--advice-embark-collect-after)
+    (embark-export :after emacsvox--advice-embark-export-after)
+    (embark-become :after emacsvox--advice-embark-become-after))
+  "Current Embark targets and their native advice functions.")
+
+(defun emacsvox-embark--install-advice ()
+  "Install native advice for loaded Embark commands."
+  (dolist (entry emacsvox-embark--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox-embark)))))))
+
+(with-eval-after-load 'embark
+  (emacsvox-embark--install-advice))
+
+(emacsvox-embark--install-advice)
 
 (provide 'emacsvox-embark)
 ;;;  end of file
