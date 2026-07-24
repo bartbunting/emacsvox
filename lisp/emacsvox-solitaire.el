@@ -144,62 +144,51 @@
 (defvar emacsvox-solitaire-autoshow nil
   "T means rows and columns are toned as we move")
 
-(defun ems--solitaire-left-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (let ((dtk-stop-immediately nil))
-      (emacsvox-icon 'select-object)
-      (and emacsvox-solitaire-autoshow
-           (emacsvox-solitaire-show-column))
-      (emacsvox-solitaire-speak-coordinates))))
+(defmacro emacsvox-solitaire--define-navigation-advice
+    (targets show-function)
+  "Define native movement advice for TARGETS using SHOW-FUNCTION."
+  (declare (indent 1) (debug (sexp function-form)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 "Announce an interactive move around the Solitaire board."
+                 (when (ems-interactive-p ',target)
+                   (let ((dtk-stop-immediately nil))
+                     (emacsvox-icon 'select-object)
+                     (when emacsvox-solitaire-autoshow
+                       (,show-function))
+                     (emacsvox-solitaire-speak-coordinates))))
+               (advice-add ',target :after #',function))))
+        targets)))
 
-(advice-add 'solitaire-left :after #'ems--solitaire-left-after)
+(emacsvox-solitaire--define-navigation-advice
+    (solitaire-left solitaire-right)
+  emacsvox-solitaire-show-column)
 
-(defun ems--solitaire-right-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (let ((dtk-stop-immediately nil))
-      (emacsvox-icon 'select-object)
-      (and emacsvox-solitaire-autoshow
-           (emacsvox-solitaire-show-column))
-      (emacsvox-solitaire-speak-coordinates))))
+(emacsvox-solitaire--define-navigation-advice
+    (solitaire-up solitaire-down)
+  emacsvox-solitaire-show-row)
 
-(advice-add 'solitaire-right :after #'ems--solitaire-right-after)
-
-(defun ems--solitaire-up-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (let ((dtk-stop-immediately nil))
-      (emacsvox-icon 'select-object)
-      (and emacsvox-solitaire-autoshow (emacsvox-solitaire-show-row))
-      (emacsvox-solitaire-speak-coordinates))))
-
-(advice-add 'solitaire-up :after #'ems--solitaire-up-after)
-
-(defun ems--solitaire-down-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (let ((dtk-stop-immediately nil))
-      (emacsvox-icon 'select-object)
-      (and emacsvox-solitaire-autoshow (emacsvox-solitaire-show-row))
-      (emacsvox-solitaire-speak-coordinates))))
-
-(advice-add 'solitaire-down :after #'ems--solitaire-down-after)
-
-(defun ems--solitaire-center-point-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-solitaire-center-point-after (&rest _)
+  "Announce an interactive move to the center of the board."
+  (when (ems-interactive-p 'solitaire-center-point)
     (emacsvox-icon 'large-movement)
     (emacsvox-solitaire-speak-coordinates)))
 
 (advice-add 'solitaire-center-point :after
-            #'ems--solitaire-center-point-after)
+            #'emacsvox--advice-solitaire-center-point-after)
 
-(defun ems--solitaire-move-after (&rest _)
-  "speak" (emacsvox-icon 'item)
+(defun emacsvox--advice-solitaire-move-after (&rest _)
+  "Announce a completed stone move."
+  (emacsvox-icon 'item)
   (emacsvox-solitaire-speak-coordinates))
 
-(advice-add 'solitaire-move :after #'ems--solitaire-move-after)
+(advice-add 'solitaire-move :after
+            #'emacsvox--advice-solitaire-move-after)
 
 (defun emacsvox-solitaire-setup()
   "Emacsvox provides an auditory interface to the solitaire game.
@@ -224,13 +213,6 @@ emacsvox-solitaire-speak-coordinates"
  'solitaire-mode-hook
  #'emacsvox-solitaire-setup)
 
-(defun ems--solitaire-quit-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done) (emacsvox-speak-mode-line)))
-
-(advice-add 'solitaire-quit :after #'ems--solitaire-quit-after)
-
 ;;;   add keybindings
 
 (defun emacsvox-solitaire-setup-keymap ()
@@ -252,4 +234,3 @@ emacsvox-solitaire-speak-coordinates"
 
 (provide 'emacsvox-solitaire)
 ;;;  end of file 
-
