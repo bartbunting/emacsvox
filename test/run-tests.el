@@ -114,6 +114,7 @@
   (require 'emacsvox-tetris-tests)
   (require 'emacsvox-cperl-tests)
   (require 'emacsvox-cmuscheme-tests)
+  (require 'emacsvox-speedbar-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
