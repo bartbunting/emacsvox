@@ -133,6 +133,7 @@
   (require 'emacsvox-erc-tests)
   (require 'emacsvox-info-tests)
   (require 'emacsvox-solitaire-tests)
+  (require 'emacsvox-sql-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

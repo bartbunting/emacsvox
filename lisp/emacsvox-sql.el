@@ -40,6 +40,9 @@
 ;;  required modules
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'sql)
+
+(declare-function sqlplus-back-command "sqlplus" (&optional count))
 
 ;;; Commentary:
 
@@ -53,72 +56,77 @@
 
 ;;;  advice
 
-(defun ems--sqlplus-execute-command-after (&rest _)
+(defun emacsvox--advice-sqlplus-execute-command-after (&rest _)
   "speak and place point at the start of the output."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sqlplus-execute-command)
     (emacsvox-icon 'scroll) (sqlplus-back-command 2) (forward-line 1)
     (emacsvox-speak-line)))
 
-(advice-add 'sqlplus-execute-command :after
-            #'ems--sqlplus-execute-command-after)
-
-(defun ems--sqlplus-back-command-after (&rest _)
+(defun emacsvox--advice-sqlplus-back-command-after (&rest _)
   "Move prompt appropriately,  and speak the line."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sqlplus-back-command)
     (emacsvox-icon 'large-movement) (forward-line 1)
     (emacsvox-speak-line)))
 
-(advice-add 'sqlplus-back-command :after
-            #'ems--sqlplus-back-command-after)
-
-(defun ems--sqlplus-forward-command-after (&rest _)
+(defun emacsvox--advice-sqlplus-forward-command-after (&rest _)
   "Move prompt appropriately,  and speak the line."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sqlplus-forward-command)
     (emacsvox-icon 'large-movement) (forward-line 1)
     (emacsvox-speak-line)))
 
-(advice-add 'sqlplus-forward-command :after
-            #'ems--sqlplus-forward-command-after)
-
-(defun ems--sqlplus-next-command-after (&rest _)
+(defun emacsvox--advice-sqlplus-next-command-after (&rest _)
   "Speak the line."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sqlplus-next-command)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-(advice-add 'sqlplus-next-command :after
-            #'ems--sqlplus-next-command-after)
-
-(defun ems--sqlplus-previous-command-after (&rest _)
+(defun emacsvox--advice-sqlplus-previous-command-after (&rest _)
   "Speak the line."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sqlplus-previous-command)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-(advice-add 'sqlplus-previous-command :after
-            #'ems--sqlplus-previous-command-after)
+(defconst emacsvox-sql--sqlplus-targets
+  '(sqlplus-execute-command
+    sqlplus-back-command
+    sqlplus-forward-command
+    sqlplus-next-command
+    sqlplus-previous-command)
+  "Commands supplied by the optional sqlplus package.")
 
-(defun ems--sql-send-region-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (emacsvox-icon 'select-object)
-      (apply orig-fun args) (emacsvox-icon 'mark-object))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox-sql--install-sqlplus-advice ()
+  "Attach speech feedback to available sqlplus commands."
+  (dolist (target emacsvox-sql--sqlplus-targets)
+    (when (fboundp target)
+      (advice-add
+       target :after
+       (intern (format "emacsvox--advice-%s-after" target))))))
 
-(advice-add 'sql-send-region :around #'ems--sql-send-region-around)
+(with-eval-after-load 'sqlplus
+  (emacsvox-sql--install-sqlplus-advice))
 
-(defun ems--sql-send-buffer-around (orig-fun &rest args)
-  "speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (emacsvox-icon 'select-object)
-      (apply orig-fun args) (emacsvox-icon 'mark-object))
-     (t (apply orig-fun args)))
-    result))
+(defmacro emacsvox-sql--define-send-advice (targets)
+  "Define once-only native around advice for SQL send TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (orig-fun &rest args)
+                 "Run one SQL send operation and cue interactive dispatch."
+                 (if (ems-interactive-p ',target)
+                     (progn
+                       (emacsvox-icon 'select-object)
+                       (let ((result (apply orig-fun args)))
+                         (emacsvox-icon 'mark-object)
+                         result))
+                   (apply orig-fun args)))
+               (advice-add ',target :around #',function))))
+        targets)))
 
-(advice-add 'sql-send-buffer :around #'ems--sql-send-buffer-around)
+(emacsvox-sql--define-send-advice
+    (sql-send-region sql-send-buffer))
 
 (provide 'emacsvox-sql)
 
 ;;;  end of file
-
