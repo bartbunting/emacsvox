@@ -204,6 +204,7 @@
   (require 'emacsvox-ffip-tests)
   (require 'emacsvox-forge-tests)
   (require 'emacsvox-geiser-tests)
+  (require 'emacsvox-go-mode-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

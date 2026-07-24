@@ -50,29 +50,51 @@
 
 ;;;  Advice interactive commands:
 
-(cl-loop
- for f in
- '(go-goto-imports go-import-add
-                   godef-jump godef-jump-other-window
-                   go-mode-indent-line go-mode-insert-and-indent)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+(defvar emacsvox-go-mode--advice nil
+  "Current Go mode targets and their native advice functions.")
+(setq emacsvox-go-mode--advice nil)
 
-(cl-loop
- for f in
+(defun emacsvox-go-mode--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-go-mode--advice))))
+
+(defun emacsvox-go-mode--selection-feedback ()
+  "Speak the selected Go source line."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-line))
+
+(emacsvox-go-mode--register-after-group
+ '(go-goto-imports go-import-add godef-jump godef-jump-other-window
+   go-mode-indent-line go-mode-insert-and-indent)
+ #'emacsvox-go-mode--selection-feedback)
+
+(defun emacsvox-go-mode--task-feedback ()
+  "Play the task completion icon."
+  (emacsvox-icon 'task-done))
+
+(emacsvox-go-mode--register-after-group
  '(godoc gofmt)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+ #'emacsvox-go-mode--task-feedback)
+
+(defun emacsvox-go-mode--install-advice ()
+  "Install native advice after Go mode loads."
+  (dolist (entry emacsvox-go-mode--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'go-mode
+  (emacsvox-go-mode--install-advice))
 
 (provide 'emacsvox-go-mode)
 ;;;  end of file
-
