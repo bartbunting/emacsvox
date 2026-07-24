@@ -38,9 +38,10 @@ must become conservative and test-driven before further bulk use.
 As of the completed core-file migration, all built-in integration slices, and
 the third-party slices through 2048, ABC Mode, Ace Window, Annotate, AUCTeX,
 Avy, BBDB, Calibredb, Chess, CIDER, Clojure Mode, Combobulate, Consult, Corfu,
-and Deadgrep on 2026-07-24 on branch =bart=:
+Deadgrep, DevDocs, Dumb Jump, Eat, Ebuku, EIN, Elfeed, Elisp Refs, Ellama,
+Elpher, Elpy, EMMS, EMPV, ENWC, ESS, and Evil on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 893 passing ERT tests;
+- the Emacs 31 suite contains 935 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -261,7 +262,7 @@ and Deadgrep on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-entertain.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
-- the 15 third-party integrations listed above contain no =defadvice=,
+- the 30 third-party integrations listed above contain no =defadvice=,
   positional compatibility accessors, bridge-era =ems--= advice helpers, or
   implicit interactive-target checks.
 
@@ -269,13 +270,13 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         164 |    55 |
-| =ad-get-arg=        |          14 |   n/a |
-| =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          15 |   n/a |
-| =ad-return-value=   |          10 |   n/a |
-| =advice-add=        |        1077 |   165 |
-| =ems-interactive-p= |        1132 |   176 |
+| =defadvice=         |         108 |    40 |
+| =ad-get-arg=        |           8 |   n/a |
+| =ad-set-arg=        |           1 |   n/a |
+| =ad-do-it=          |          11 |   n/a |
+| =ad-return-value=   |           7 |   n/a |
+| =advice-add=        |        1039 |   169 |
+| =ems-interactive-p= |        1083 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -305,14 +306,12 @@ integration-module count.
 
 ** Remaining third-party inventory
 
-As of 2026-07-24, 61 third-party integrations remain: 55 legacy-or-positional
+As of 2026-07-24, 46 third-party integrations remain: 40 legacy-or-positional
 modules and 6 helper-cleanup modules.
 
 The legacy-or-positional modules are:
 
-=devdocs=, =dumb-jump=, =eat=, =ebuku=, =ein=, =elfeed=, =elisp-refs=,
-=ellama=, =elpher=, =elpy=, =emms=, =empv=, =enwc=, =ess=, =evil=, =exwm=,
-=ffip=, =forge=, =geiser=, =go-mode=, =google=, =haskell=, =helpful=,
+=exwm=, =ffip=, =forge=, =geiser=, =go-mode=, =google=, =haskell=, =helpful=,
 =hide-lines=, =iedit=, =journalctl=, =js2=, =lispy=, =mines=, =mu4e=,
 =multiple-cursors=, =muse=, =notmuch=, =nov=, =orgalist=, =paradox=,
 =pipewire=, =popup=, =projectile=, =racket=, =related=, =rg=, =rpm-spec=,
@@ -323,13 +322,16 @@ The helper-cleanup modules are:
 
 =denote=, =embark=, =gnuplot=, =gptel=, =marginalia=, and =maths=.
 
-The first 15 third-party migrations use only current package APIs and install
+The first 30 third-party migrations use only current package APIs and install
 their native advice after the relevant optional feature loads.  Removed command
 names remain absent.  The focused tests also cover one-call and return-value
 semantics where the old around advice repeated its original operation,
-including BBDB completion and Chess movement and selection.  CIDER targets 101
-current commands across its deferred subfeatures; its removed connection,
-inspector, and error-buffer command names are no longer recreated.
+including BBDB completion, Chess movement and selection, ESS smart-underscore,
+and Evil completion.  CIDER targets 101 current commands across its deferred
+subfeatures; its removed connection, inspector, and error-buffer command names
+are no longer recreated.  The current EMPV YouTube entry point and result
+helpers replace retired package names, and the retired EIN worksheet-tab and
+EMMS stream commands are no longer recreated.
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
