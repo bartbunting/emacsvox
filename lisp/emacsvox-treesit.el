@@ -58,15 +58,18 @@
 ;;;  Advice Interactive Commands:
 
 (cl-loop
- for f in 
+ for target in
  '(treesit-end-of-defun treesit-beginning-of-defun treesit-forward-sexp)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive tree-sitter navigation command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'large-movement)
+         (emacsvox-speak-line)))
+     (advice-add ',target :after #',function))))
 
 ;;; Interactive Helpers:
 
@@ -86,4 +89,3 @@
                                         ; 
                                         ; 
                                         ; 
-
