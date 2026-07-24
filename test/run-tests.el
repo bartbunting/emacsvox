@@ -208,6 +208,7 @@
   (require 'emacsvox-geiser-tests)
   (require 'emacsvox-go-mode-tests)
   (require 'emacsvox-gnuplot-tests)
+  (require 'emacsvox-gptel-tests)
   (require 'emacsvox-google-tests)
   (require 'emacsvox-haskell-tests)
   (require 'emacsvox-helpful-tests)

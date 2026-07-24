@@ -90,9 +90,9 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--gptel-send-after (&rest _)
+(defun emacsvox--advice-gptel-send-after (&rest _)
   "Announce that prompt is being sent."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gptel-send)
     (emacsvox-icon 'select-object)
     (dtk-speak
      (format "Sending prompt to %s"
@@ -100,20 +100,16 @@
                  (gptel-backend-name gptel-backend)
                "LLM")))))
 
-(advice-add 'gptel-send :after #'ems--gptel-send-after)
-
-(defun ems--gptel-abort-after (&rest _)
+(defun emacsvox--advice-gptel-abort-after (&rest _)
   "Announce that request was aborted."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gptel-abort)
     (dtk-stop 'all)
     (emacsvox-icon 'close-object)
     (dtk-speak "Aborted LLM request")))
 
-(advice-add 'gptel-abort :after #'ems--gptel-abort-after)
-
-(defun ems--gptel-menu-after (&rest _)
+(defun emacsvox--advice-gptel-menu-after (&rest _)
   "Announce gptel menu and current model."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gptel-menu)
     (emacsvox-icon 'open-object)
     (dtk-speak
      (format "gptel menu, model %s"
@@ -121,7 +117,27 @@
                  gptel-model
                "default")))))
 
-(advice-add 'gptel-menu :after #'ems--gptel-menu-after)
+(defconst emacsvox-gptel--advice
+  '((gptel-send :after emacsvox--advice-gptel-send-after)
+    (gptel-abort :after emacsvox--advice-gptel-abort-after)
+    (gptel-menu :after emacsvox--advice-gptel-menu-after))
+  "Current GPTel targets and their native advice functions.")
+
+(defun emacsvox-gptel--install-advice ()
+  "Install native advice for loaded GPTel commands."
+  (dolist (entry emacsvox-gptel--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox-gptel)))))))
+
+(with-eval-after-load 'gptel
+  (emacsvox-gptel--install-advice))
+
+(with-eval-after-load 'gptel-transient
+  (emacsvox-gptel--install-advice))
+
+(emacsvox-gptel--install-advice)
 
 ;;;  Hook Functions:
 
@@ -162,7 +178,8 @@
   (add-hook 'gptel-post-stream-hook #'emacsvox-gptel-stream-hook)
   (cl-pushnew #'emacsvox-gptel-post-response gptel-post-response-functions))
 
-(eval-after-load "gptel" '(emacsvox-gptel-setup))
+(with-eval-after-load 'gptel
+  (emacsvox-gptel-setup))
 
 (provide 'emacsvox-gptel)
 ;;;  end of file
