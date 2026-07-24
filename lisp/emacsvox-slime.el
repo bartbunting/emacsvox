@@ -91,128 +91,124 @@
    (slime-repl-result-face voice-animate)))
 
 ;;;  Navigation And Repl:
-(cl-loop
- for f in
- '(
-   slime-xref-next-line slime-xref-prev-line slime-goto-xref)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act com)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
 
-(defun ems--slime-info-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'help) (emacsvox-speak-buffer)))
+(defvar emacsvox-slime--advice nil
+  "Current Slime targets and their native advice functions.")
+(setq emacsvox-slime--advice nil)
 
-(advice-add 'slime-info :after #'ems--slime-info-after)
+(defun emacsvox-slime--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-slime--advice))))
 
-(defun ems--slime-selector-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(defun emacsvox-slime--movement-feedback ()
+  "Speak after moving through a Slime view."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
 
-(advice-add 'slime-selector :after #'ems--slime-selector-after)
+(emacsvox-slime--register-after-group
+ '(slime-xref-next-line slime-xref-prev-line slime-goto-xref
+   slime-repl-backward-input slime-repl-forward-input
+   slime-repl-previous-matching-input slime-repl-previous-input
+   slime-repl-next-matching-input slime-repl-next-input
+   slime-repl-end-of-defun slime-repl-beginning-of-defun
+   slime-end-of-defun slime-beginning-of-defun
+   slime-close-all-parens-in-sexp slime-repl-previous-prompt
+   slime-repl-next-prompt slime-next-presentation slime-previous-presentation
+   slime-next-location slime-previous-location slime-edit-definition
+   slime-pop-find-definition-stack slime-edit-definition-other-frame
+   slime-edit-definition-other-window slime-next-note slime-previous-note)
+ #'emacsvox-slime--movement-feedback)
 
-(defun ems--slime-scratch-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(defun emacsvox-slime--help-buffer-feedback ()
+  "Speak the current Slime help buffer."
+  (emacsvox-icon 'help)
+  (emacsvox-speak-buffer))
 
-(advice-add 'slime-scratch :after #'ems--slime-scratch-after)
+(emacsvox-slime--register-after-group
+ '(slime-info)
+ #'emacsvox-slime--help-buffer-feedback)
+
+(defun emacsvox-slime--open-feedback ()
+  "Speak a newly opened Slime view."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-slime--register-after-group
+ '(slime-selector slime-scratch)
+ #'emacsvox-slime--open-feedback)
 
 (add-hook
  'slime-repl-mode-hook
  'emacsvox-pronounce-refresh-pronunciations)
 
-(cl-loop
- for f in
- '(
-   slime-repl-backward-input slime-repl-forward-input
-   slime-repl-previous-matching-input slime-repl-previous-input
-   slime-repl-next-matching-input slime-repl-next-input
-   slime-repl-end-of-defun slime-repl-beginning-of-defun
-   slime-end-of-defun                   slime-beginning-of-defun
-   slime-close-all-parens-in-sexp
-   slime-repl-previous-prompt slime-repl-next-prompt
-   slime-next-presentation slime-previous-presentation
-   slime-next-location slime-previous-location
-   slime-edit-definition slime-pop-find-definition-stack
-   slime-edit-definition-other-frame slime-edit-definition-other-window
-   slime-next-note slime-previous-note
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+(defun emacsvox-slime--repl-return-feedback ()
+  "Speak output produced by a Slime REPL command."
+  (save-excursion
+    (goto-char
+     (previous-single-property-change (point) 'face nil (point-min)))
+    (emacsvox-speak-range))
+  (emacsvox-icon 'close-object))
 
-(cl-loop
- for f in
+(emacsvox-slime--register-after-group
  '(slime-repl-return slime-repl-closing-return
-                     slime-repl-set-package slime-handle-repl-shortcut)
- do
- (eval
-  `(defadvice  ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (save-excursion
-         (goto-char
-          (previous-single-property-change (point)   'face nil (point-min)))
-         (emacsvox-speak-range))
-       (emacsvox-icon 'close-object)))))
+   slime-repl-set-package slime-handle-repl-shortcut)
+ #'emacsvox-slime--repl-return-feedback)
 
-(cl-loop
- for f in
- '(slime-complete-symbol slime-indent-and-complete-symbol)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Say what you completed."
-     (ems-with-messages-silenced
-      (let ((prior (save-excursion (skip-syntax-backward "^ >") (point))))
-        ad-do-it
-        (if (> (point) prior)
-            (tts-with-punctuations
-             'all
-             (dtk-speak (buffer-substring prior (point))))
-          (emacsvox-speak-completions-if-available))
-        ad-return-value)))))
+(defun emacsvox-slime--completion-around (target orig-fun &rest args)
+  "Call ORIG-FUN once and speak completion performed by Slime TARGET."
+  (ems-with-messages-silenced
+   (let* ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
+          (result (apply orig-fun args)))
+     (when (ems-interactive-p target)
+       (if (> (point) prior)
+           (tts-with-punctuations
+            'all
+            (dtk-speak (buffer-substring prior (point))))
+         (emacsvox-speak-completions-if-available)))
+     result)))
 
-(cl-loop
- for f in
- '(
-   slime-delete-system-fasls slime-delete-package
+(dolist (target '(slime-complete-symbol slime-indent-and-complete-symbol))
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    (eval
+     `(defun ,advice-function (orig-fun &rest args)
+        ,(format "Speak completion performed by `%s'." target)
+        (apply #'emacsvox-slime--completion-around
+               ',target orig-fun args)))
+    (push (list target :around advice-function) emacsvox-slime--advice)))
+
+(defun emacsvox-slime--delete-feedback ()
+  "Announce a Slime deletion."
+  (emacsvox-icon 'delete-object))
+
+(emacsvox-slime--register-after-group
+ '(slime-delete-system-fasls slime-delete-package
    slime-repl-delete-from-input-history slime-repl-delete-current-input
-   slime-repl-kill-input
-   slime-repl-clear-output slime-repl-clear-buffer)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'delete-object)))))
+   slime-repl-kill-input slime-repl-clear-output slime-repl-clear-buffer)
+ #'emacsvox-slime--delete-feedback)
 
-(cl-loop
- for f in
- '(
-   slime-repl-sayoonara slime-repl-quit
-   slime-disconnect-all slime-disconnect
-   slime-repl-disconnect-all slime-repl-disconnect)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)))))
+(defun emacsvox-slime--close-feedback ()
+  "Announce closing a Slime connection or REPL."
+  (emacsvox-icon 'close-object))
 
-(cl-loop
- for f in
+(emacsvox-slime--register-after-group
+ '(slime-repl-sayoonara slime-repl-quit slime-disconnect-all
+   slime-disconnect slime-repl-disconnect-all slime-repl-disconnect)
+ #'emacsvox-slime--close-feedback)
+
+(defun emacsvox-slime--task-feedback ()
+  "Announce completion of a Slime task."
+  (emacsvox-icon 'task-done))
+
+(emacsvox-slime--register-after-group
  '(
    slime-eval-buffer slime-eval-defun
    slime-eval-last-expression slime-eval-last-expression-in-repl
@@ -229,40 +225,36 @@
    slime-quit-lisp
    slime-repl-compile-system
    slime-repl-compile-and-load slime-repl-browse-system)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+ #'emacsvox-slime--task-feedback)
 
-(defun ems--slime-repl-inspect-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(defun emacsvox-slime--inspect-feedback ()
+  "Announce opening the Slime inspector."
+  (emacsvox-icon 'open-object))
 
-(advice-add 'slime-repl-inspect :after #'ems--slime-repl-inspect-after)
+(emacsvox-slime--register-after-group
+ '(slime-repl-inspect)
+ #'emacsvox-slime--inspect-feedback)
 
-(cl-loop
- for f in
- '(slime-list-repl-short-cuts slime-repl-shortcut-help
-                              slime-documentation)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+(defun emacsvox-slime--help-window-feedback ()
+  "Announce Slime help displayed in another window."
+  (emacsvox-icon 'help)
+  (dtk-speak "Displayed help in other window."))
 
-     (defadvice slime-cheat-sheet (after emacsvox pre act comp)
-       "speak."
-       (when (ems-interactive-p)
-         (emacsvox-icon 'help)
-         (dtk-speak "Displaying  help in new frame.")))
+(emacsvox-slime--register-after-group
+ '(slime-list-repl-short-cuts slime-repl-shortcut-help slime-documentation)
+ #'emacsvox-slime--help-window-feedback)
 
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)
-       (dtk-speak "Displayed help in other window.")))))
+(defun emacsvox-slime--help-frame-feedback ()
+  "Announce the Slime cheat sheet."
+  (emacsvox-icon 'help)
+  (dtk-speak "Displaying help in new frame."))
+
+(emacsvox-slime--register-after-group
+ '(slime-cheat-sheet)
+ #'emacsvox-slime--help-frame-feedback)
 
 ;;;  Writing Code:
-(cl-loop
- for f in
+(emacsvox-slime--register-after-group
  '(slime-compile-and-load-file
    slime-compile-defun slime-compile-file
    slime-compile-region slime-compiler-macroexpand-1
@@ -270,126 +262,110 @@
    slime-compiler-notes-default-action-or-show-details
    slime-compiler-notes-default-action-or-show-details/mouse
    slime-compiler-notes-show-details)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+ #'emacsvox-slime--task-feedback)
 
 ;;;  Lisp Interaction:
 
 ;;;  Browsing Documentation:
 
-(cl-loop
- for f in
+(defun emacsvox-slime--documentation-feedback ()
+  "Speak Slime's description buffer."
+  (sit-for 0.1)
+  (with-current-buffer (slime-buffer-name :description)
+    (emacsvox-speak-buffer)
+    (emacsvox-icon 'help)))
+
+(emacsvox-slime--register-after-group
  '(
    slime-documentation-lookup
    slime-describe-function  slime-describe-symbol slime-describe-presentation
    slime-apropos slime-apropos-package slime-apropos-summary)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (sit-for 0.1)
-       (with-current-buffer (slime-buffer-name :description)
-         (emacsvox-speak-buffer)
-         (emacsvox-icon 'help))))))
+ #'emacsvox-slime--documentation-feedback)
 
 ;;;  Inspector:
 
-(defun ems--slime-inspector-pop-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-line)))
+(defun emacsvox-slime--inspector-pop-feedback ()
+  "Speak after returning in the Slime inspector."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-line))
 
-(advice-add 'slime-inspector-pop :after
-            #'ems--slime-inspector-pop-after)
+(emacsvox-slime--register-after-group
+ '(slime-inspector-pop)
+ #'emacsvox-slime--inspector-pop-feedback)
 
-(defun ems--slime-inspector-pprint-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak "Pretty printed description in other window.")
-    (emacsvox-icon 'open-object)))
+(defun emacsvox-slime--inspector-pprint-feedback ()
+  "Announce a pretty-printed Slime description."
+  (dtk-speak "Pretty printed description in other window.")
+  (emacsvox-icon 'open-object))
 
-(advice-add 'slime-inspector-pprint :after
-            #'ems--slime-inspector-pprint-after)
+(emacsvox-slime--register-after-group
+ '(slime-inspector-pprint)
+ #'emacsvox-slime--inspector-pprint-feedback)
 
-(defun ems--slime-inspector-quit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+(defun emacsvox-slime--inspector-quit-feedback ()
+  "Speak after closing the Slime inspector."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'slime-inspector-quit :after
-            #'ems--slime-inspector-quit-after)
+(emacsvox-slime--register-after-group
+ '(slime-inspector-quit)
+ #'emacsvox-slime--inspector-quit-feedback)
 
-(defun ems--slime-inspector-toggle-verbose-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'button) (emacsvox-speak-line)))
+(defun emacsvox-slime--inspector-toggle-feedback ()
+  "Speak after toggling verbose Slime inspection."
+  (emacsvox-icon 'button)
+  (emacsvox-speak-line))
 
-(advice-add 'slime-inspector-toggle-verbose :after
-            #'ems--slime-inspector-toggle-verbose-after)
+(emacsvox-slime--register-after-group
+ '(slime-inspector-toggle-verbose)
+ #'emacsvox-slime--inspector-toggle-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-slime--inspector-movement-feedback ()
+  "Speak after moving through Slime inspector objects."
+  (emacsvox-speak-range)
+  (emacsvox-icon 'large-movement))
+
+(emacsvox-slime--register-after-group
  '(slime-inspector-next-inspectable-object
    slime-inspector-previous-inspectable-object)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     speak.
-     (when (ems-interactive-p)
-       (emacsvox-speak-range)
-       (emacsvox-icon 'large-movement)))))
+ #'emacsvox-slime--inspector-movement-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-slime--inspector-open-feedback ()
+  "Speak an object opened in the Slime inspector."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'open-object))
+
+(emacsvox-slime--register-after-group
  '(
    slime-inspector-operate-on-point slime-inspector-operate-on-click
-   slime-inspector-show-source
-   slime-inspect slime-inspect-definition
-   slime-inspector-reinspect slime-inspector-show-source
-   slime-inspector-next
-   slime-inspector-fetch-all
-   slime-inspect-presentation-at-mouse
-   slime-inspect-presentation-at-point)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'open-object)))))
+   slime-inspector-show-source slime-inspect slime-inspect-definition
+   slime-inspector-reinspect slime-inspector-next slime-inspector-fetch-all
+   slime-inspect-presentation-at-mouse slime-inspect-presentation-at-point)
+ #'emacsvox-slime--inspector-open-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-slime--inspector-help-feedback ()
+  "Speak Slime inspector help."
+  (emacsvox-speak-buffer)
+  (emacsvox-icon 'help))
+
+(emacsvox-slime--register-after-group
  '(slime-inspector-history slime-inspector-describe)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     speak.
-     (when (ems-interactive-p)
-       (emacsvox-speak-buffer)
-       (emacsvox-icon 'help)))))
+ #'emacsvox-slime--inspector-help-feedback)
 
-'(
-  slime-inspector-copy-down-to-repl
+(defun emacsvox-slime--install-advice ()
+  "Install advice for Slime features loaded so far."
+  (dolist (entry emacsvox-slime--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-  slime-inspector-eval
-
-  slime-inspector-next-inspectable-object
-  slime-inspector-operate-on-click
-  slime-inspector-operate-on-point
-  slime-inspector-pop
-  slime-inspector-pprint
-  slime-inspector-previous-inspectable-object
-  slime-inspector-quit
-
-  slime-inspector-toggle-verbose)
+(dolist (feature '(slime slime-asdf slime-cheat-sheet slime-compiler-notes
+                   slime-fancy slime-repl))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-slime--install-advice))))
 
 ;;;  Debugger:
 
 (provide 'emacsvox-slime)
 ;;;  end of file
-
