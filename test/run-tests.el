@@ -121,6 +121,7 @@
   (require 'emacsvox-make-mode-tests)
   (require 'emacsvox-dictionary-tests)
   (require 'emacsvox-transient-tests)
+  (require 'emacsvox-arc-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

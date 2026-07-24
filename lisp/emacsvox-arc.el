@@ -62,68 +62,77 @@
 
 ;;;  Advice
 
-(defun ems--archive-mark-after (&rest _)
+(defun emacsvox--advice-archive-mark-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-mark)
     (emacsvox-icon 'mark-object) (emacsvox-archive-speak-line)))
 
-(advice-add 'archive-mark :after #'ems--archive-mark-after)
+(advice-add 'archive-mark :after
+            #'emacsvox--advice-archive-mark-after)
 
-(defun ems--archive-next-line-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-archive-speak-line)))
+(defun emacsvox--advice-archive-next-line-after (&rest _)
+  "Speak"
+  (when (ems-interactive-p 'archive-next-line)
+    (emacsvox-archive-speak-line)))
 
-(advice-add 'archive-next-line :after #'ems--archive-next-line-after)
+(advice-add 'archive-next-line :after
+            #'emacsvox--advice-archive-next-line-after)
 
-(defun ems--archive-previous-line-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-archive-speak-line)))
+(defun emacsvox--advice-archive-previous-line-after (&rest _)
+  "Speak"
+  (when (ems-interactive-p 'archive-previous-line)
+    (emacsvox-archive-speak-line)))
 
 (advice-add 'archive-previous-line :after
-            #'ems--archive-previous-line-after)
+            #'emacsvox--advice-archive-previous-line-after)
 
-(defun ems--archive-flag-deleted-after (&rest _)
+(defun emacsvox--advice-archive-flag-deleted-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-flag-deleted)
     (emacsvox-icon 'delete-object) (emacsvox-archive-speak-line)))
 
 (advice-add 'archive-flag-deleted :after
-            #'ems--archive-flag-deleted-after)
+            #'emacsvox--advice-archive-flag-deleted-after)
 
-(defun ems--archive-unflag-after (&rest _)
+(defun emacsvox--advice-archive-unflag-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-unflag)
     (emacsvox-icon 'yank-object) (emacsvox-archive-speak-line)))
 
-(advice-add 'archive-unflag :after #'ems--archive-unflag-after)
+(advice-add 'archive-unflag :after
+            #'emacsvox--advice-archive-unflag-after)
 
-(defun ems--archive-unflag-backwards-after (&rest _)
+(defun emacsvox--advice-archive-unflag-backwards-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-unflag-backwards)
     (emacsvox-icon 'yank-object) (emacsvox-archive-speak-line)))
 
 (advice-add 'archive-unflag-backwards :after
-            #'ems--archive-unflag-backwards-after)
+            #'emacsvox--advice-archive-unflag-backwards-after)
 
-(defun ems--archive-extract-after (&rest _)
+(defun emacsvox--advice-archive-extract-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-extract)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'archive-extract :after #'ems--archive-extract-after)
+(advice-add 'archive-extract :after
+            #'emacsvox--advice-archive-extract-after)
 
-(defun ems--archive-extract-other-window-after (&rest _)
+(defun emacsvox--advice-archive-extract-other-window-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-extract-other-window)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'archive-extract-other-window :after
-            #'ems--archive-extract-other-window-after)
+            #'emacsvox--advice-archive-extract-other-window-after)
 
-(defun ems--archive-view-after (&rest _)
+(defun emacsvox--advice-archive-view-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'archive-view)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'archive-view :after #'ems--archive-view-after)
+(advice-add 'archive-view :after
+            #'emacsvox--advice-archive-view-after)
 
 ;;;  interactive commands
 
@@ -234,4 +243,3 @@ first initializing it if necessary."
 
 (provide 'emacsvox-arc)
 ;;;  end of file 
-
