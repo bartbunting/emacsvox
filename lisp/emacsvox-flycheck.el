@@ -64,55 +64,71 @@
 ;;;  Advice interactive commands.
 
 (cl-loop
- for  f in
+ for target in
  '(flycheck-next-error flycheck-previous-error flycheck-first-error)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
-(defun ems--flycheck-list-errors-after (&rest _)
+(defun emacsvox--advice-flycheck-list-errors-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'flycheck-list-errors)
     (emacsvox-icon 'task-done)
     (dtk-speak "Displayed error listing in other window.")))
 
-(advice-add 'flycheck-list-errors :after
-            #'ems--flycheck-list-errors-after)
-
-(defun ems--flycheck-buffer-after (&rest _)
+(defun emacsvox--advice-flycheck-buffer-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'flycheck-buffer)
     (emacsvox-icon 'task-done) (dtk-speak "Checking buffer.")))
 
-(advice-add 'flycheck-buffer :after #'ems--flycheck-buffer-after)
-
-(defun ems--flycheck-clear-after (&rest _)
+(defun emacsvox--advice-flycheck-clear-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'flycheck-clear)
     (emacsvox-icon 'task-done) (dtk-speak "Cleared errors")))
 
-(advice-add 'flycheck-clear :after #'ems--flycheck-clear-after)
-
-(defun ems--flycheck-compile-after (&rest _)
+(defun emacsvox--advice-flycheck-compile-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'flycheck-compile)
     (emacsvox-icon 'task-done) (dtk-speak "Compiling buffer")))
 
-(advice-add 'flycheck-compile :after #'ems--flycheck-compile-after)
-
-(defun ems--flycheck-error-list-refresh-after (&rest _)
+(defun emacsvox--advice-flycheck-error-list-refresh-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'flycheck-error-list-refresh)
     (emacsvox-icon 'task-done) (dtk-speak "Refreshed errors")))
 
-(advice-add 'flycheck-error-list-refresh :after
-            #'ems--flycheck-error-list-refresh-after)
+(defconst emacsvox-flycheck--advice
+  '((flycheck-next-error
+     emacsvox--advice-flycheck-next-error-after)
+    (flycheck-previous-error
+     emacsvox--advice-flycheck-previous-error-after)
+    (flycheck-first-error
+     emacsvox--advice-flycheck-first-error-after)
+    (flycheck-list-errors
+     emacsvox--advice-flycheck-list-errors-after)
+    (flycheck-buffer emacsvox--advice-flycheck-buffer-after)
+    (flycheck-clear emacsvox--advice-flycheck-clear-after)
+    (flycheck-compile emacsvox--advice-flycheck-compile-after)
+    (flycheck-error-list-refresh
+     emacsvox--advice-flycheck-error-list-refresh-after))
+  "Current Flycheck targets and their native advice functions.")
+
+(defun emacsvox-flycheck--install-advice ()
+  "Install advice after the optional Flycheck package loads."
+  (dolist (entry emacsvox-flycheck--advice)
+    (pcase-let ((`(,target ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'flycheck
+  (emacsvox-flycheck--install-advice))
 
 (provide 'emacsvox-flycheck)
 ;;; emacsvox-flycheck ends here
 ;;;  end of file
-
