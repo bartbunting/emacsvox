@@ -54,109 +54,98 @@
 
 ;;;  advice interactive commands
 
-(defun ems--gnuplot-send-region-to-gnuplot-after (&rest _)
+(defun emacsvox--advice-gnuplot-send-region-to-gnuplot-after (&rest _)
   "Speak status."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-send-region-to-gnuplot)
     (emacsvox-icon 'select-object) (emacsvox-speak-other-window)))
 
-(advice-add 'gnuplot-send-region-to-gnuplot :after
-            #'ems--gnuplot-send-region-to-gnuplot-after)
-
-(defun ems--gnuplot-send-line-to-gnuplot-after (&rest _)
+(defun emacsvox--advice-gnuplot-send-line-to-gnuplot-after (&rest _)
   "Speak status."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-send-line-to-gnuplot)
     (emacsvox-icon 'select-object) (emacsvox-speak-other-window)))
 
-(advice-add 'gnuplot-send-line-to-gnuplot :after
-            #'ems--gnuplot-send-line-to-gnuplot-after)
-
-(defun ems--gnuplot-send-line-and-forward-after (&rest _)
+(defun emacsvox--advice-gnuplot-send-line-and-forward-after (&rest _)
   "Speak status."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-send-line-and-forward)
     (emacsvox-icon 'select-object) (emacsvox-speak-other-window)))
 
-(advice-add 'gnuplot-send-line-and-forward :after
-            #'ems--gnuplot-send-line-and-forward-after)
-
-(defun ems--gnuplot-send-buffer-to-gnuplot-after (&rest _)
+(defun emacsvox--advice-gnuplot-send-buffer-to-gnuplot-after (&rest _)
   "Speak status."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-send-buffer-to-gnuplot)
     (emacsvox-icon 'select-object) (emacsvox-speak-other-window)))
 
-(advice-add 'gnuplot-send-buffer-to-gnuplot :after
-            #'ems--gnuplot-send-buffer-to-gnuplot-after)
-
-(defun ems--gnuplot-send-file-to-gnuplot-after (&rest _)
+(defun emacsvox--advice-gnuplot-send-file-to-gnuplot-after (&rest _)
   "Speak status."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-send-file-to-gnuplot)
     (emacsvox-icon 'select-object) (emacsvox-speak-other-window)))
 
-(advice-add 'gnuplot-send-file-to-gnuplot :after
-            #'ems--gnuplot-send-file-to-gnuplot-after)
-
-(defun ems--gnuplot-delchar-or-maybe-eof-around (orig-fun &rest args)
+(defun emacsvox--advice-gnuplot-delchar-or-maybe-eof-around
+    (orig-fun &rest args)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
+  (when (ems-interactive-p 'gnuplot-delchar-or-maybe-eof)
     (cond
-     ((ems-interactive-p)
-      (cond
-       ((= (point) (point-max))
-        (message "Sending EOF to comint process"))
-       (t (dtk-tone 500 100 'force) (emacsvox-speak-char t)))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+     ((= (point) (point-max))
+      (message "Sending EOF to comint process"))
+     (t
+      (dtk-tone 500 100 'force)
+      (emacsvox-speak-char t))))
+  (apply orig-fun args))
 
-(advice-add 'gnuplot-delchar-or-maybe-eof :around
-            #'ems--gnuplot-delchar-or-maybe-eof-around)
-
-(defun ems--gnuplot-kill-gnuplot-buffer-after (&rest _)
+(defun emacsvox--advice-gnuplot-kill-comint-buffer-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-kill-comint-buffer)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'gnuplot-kill-gnuplot-buffer :after
-            #'ems--gnuplot-kill-gnuplot-buffer-after)
-
-(defun ems--gnuplot-show-gnuplot-buffer-after (&rest _)
+(defun emacsvox--advice-gnuplot-show-comint-buffer-after (&rest _)
   "Speak status."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-show-comint-buffer)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'gnuplot-show-gnuplot-buffer :after
-            #'ems--gnuplot-show-gnuplot-buffer-after)
-
-(defun ems--gnuplot-complete-keyword-around (orig-fun &rest args)
-  "Say what you completed."
-  (let ((result (apply orig-fun args)))
-    (let
-        ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-         (dtk-stop-immediately dtk-stop-immediately))
-      (when dtk-stop-immediately (dtk-stop)) (apply orig-fun args)
-      (when (> (point) prior)
-        (setq dtk-stop-immediately nil)
-        (dtk-speak (buffer-substring prior (point))))
-      result)
-    result))
-
-(advice-add 'gnuplot-complete-keyword :around
-            #'ems--gnuplot-complete-keyword-around)
-
-(defun ems--gnuplot-indent-line-after (&rest _)
-  "Speak line we idnented."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-gnuplot-indent-line-after (&rest _)
+  "Speak line we indented."
+  (when (ems-interactive-p 'gnuplot-indent-line)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-(advice-add 'gnuplot-indent-line :after
-            #'ems--gnuplot-indent-line-after)
-
-(defun ems--gnuplot-negate-option-after (&rest _)
+(defun emacsvox--advice-gnuplot-negate-option-after (&rest _)
   "Speak line we negated."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'gnuplot-negate-option)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-(advice-add 'gnuplot-negate-option :after
-            #'ems--gnuplot-negate-option-after)
+(defconst emacsvox-gnuplot--advice
+  '((gnuplot-send-region-to-gnuplot :after
+     emacsvox--advice-gnuplot-send-region-to-gnuplot-after)
+    (gnuplot-send-line-to-gnuplot :after
+     emacsvox--advice-gnuplot-send-line-to-gnuplot-after)
+    (gnuplot-send-line-and-forward :after
+     emacsvox--advice-gnuplot-send-line-and-forward-after)
+    (gnuplot-send-buffer-to-gnuplot :after
+     emacsvox--advice-gnuplot-send-buffer-to-gnuplot-after)
+    (gnuplot-send-file-to-gnuplot :after
+     emacsvox--advice-gnuplot-send-file-to-gnuplot-after)
+    (gnuplot-delchar-or-maybe-eof :around
+     emacsvox--advice-gnuplot-delchar-or-maybe-eof-around)
+    (gnuplot-kill-comint-buffer :after
+     emacsvox--advice-gnuplot-kill-comint-buffer-after)
+    (gnuplot-show-comint-buffer :after
+     emacsvox--advice-gnuplot-show-comint-buffer-after)
+    (gnuplot-indent-line :after
+     emacsvox--advice-gnuplot-indent-line-after)
+    (gnuplot-negate-option :after
+     emacsvox--advice-gnuplot-negate-option-after))
+  "Current Gnuplot targets and their native advice functions.")
+
+(defun emacsvox-gnuplot--install-advice ()
+  "Install native advice for loaded Gnuplot commands."
+  (dolist (entry emacsvox-gnuplot--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox-gnuplot)))))))
+
+(with-eval-after-load 'gnuplot
+  (emacsvox-gnuplot--install-advice))
+
+(emacsvox-gnuplot--install-advice)
 
 (add-hook 'gnuplot-mode-hook
           #'(lambda nil
@@ -164,4 +153,3 @@
 
 (provide 'emacsvox-gnuplot)
 ;;;  end of file
-
