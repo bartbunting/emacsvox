@@ -62,21 +62,33 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
- '(
-   forge-create-issue forge-create-post forge-create-pullreq
-   forge-list-issues forge-list-notifications forge-list-pullreqs
-   forge-list-visit-issue forge-list-visit-pullreq forge-visit-issue
-   forge-visit-pullreq forge-visit-topic)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(defconst emacsvox-forge--advice-targets
+  '(forge-create-issue forge-create-post forge-create-pullreq
+    forge-list-issues forge-list-notifications forge-list-pullreqs
+    forge-visit-issue forge-visit-pullreq forge-visit-topic)
+  "Current Forge commands that receive native advice.")
+
+(dolist (target emacsvox-forge--advice-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Provide speech feedback after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-icon 'open-object)
+          (emacsvox-speak-line))))))
+
+(defun emacsvox-forge--install-advice ()
+  "Install native advice after Forge loads."
+  (dolist (target emacsvox-forge--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'forge
+  (emacsvox-forge--install-advice))
 
 (provide 'emacsvox-forge)
 ;;;  end of file
-
