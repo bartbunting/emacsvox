@@ -40,6 +40,7 @@
 ;;  required modules
 
 (require 'emacsvox-preamble)
+(require 'calculator)
 
 ;;; Commentary:
 
@@ -55,206 +56,129 @@
 
 ;;;   advice interactive commands 
 
-(defun ems--calculator-around (orig-fun &rest args)
+(defun emacsvox--advice-calculator-around (orig-fun &rest args)
   "Fix while waiting for a bug-fix in Emacs."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((header-line-format nil)) (apply orig-fun args)))
-     (t (apply orig-fun args)))
-    result))
+  (if (ems-interactive-p 'calculator)
+      (let ((header-line-format nil))
+        (apply orig-fun args))
+    (apply orig-fun args)))
 
-(advice-add 'calculator :around #'ems--calculator-around)
+(advice-add
+ 'calculator :around #'emacsvox--advice-calculator-around
+ '((name . emacsvox--advice-calculator-around)))
 
-(defun ems--calculator-after (&rest _)
-  "Speech enable calculator."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (message "Welcome to the pocket calculator.")))
+(defmacro emacsvox-calculator--define-after-advice (target &rest body)
+  "Define direct after advice for interactive Calculator TARGET using BODY."
+  (declare (indent 1))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback after `%s'." target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target :after #',function
+        '((name . ,function))))))
 
-(advice-add 'calculator :after #'ems--calculator-after)
+(emacsvox-calculator--define-after-advice calculator
+  (emacsvox-icon 'open-object)
+  (message "Welcome to the pocket calculator."))
 
-(defun ems--calculator-digit-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
+(defmacro emacsvox-calculator--define-insertion-advice (target)
+  "Define direct around advice that speaks text inserted by TARGET."
+  (let ((function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    `(progn
+       (defun ,function (orig-fun &rest args)
+         ,(format "Speak text inserted by `%s'." target)
+         (if (ems-interactive-p ',target)
+             (let ((start (point)))
+               (prog1
+                   (apply orig-fun args)
+                 (emacsvox-speak-region start (point))))
+           (apply orig-fun args)))
+       (advice-add
+        ',target :around #',function
+        '((name . ,function))))))
 
-(advice-add 'calculator-digit :around #'ems--calculator-digit-around)
+(dolist
+    (target
+     '(calculator-digit
+       calculator-exp
+       calculator-op-or-exp
+       calculator-open-paren
+       calculator-close-paren))
+  (eval `(emacsvox-calculator--define-insertion-advice ,target)))
 
-(defun ems--calculator-exp-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
+(defmacro emacsvox-calculator--define-selection-advice (target)
+  "Define direct around advice that summarizes selection by TARGET."
+  (let ((function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    `(progn
+       (defun ,function (orig-fun &rest args)
+         ,(format "Summarize the calculator after `%s'." target)
+         (if (ems-interactive-p ',target)
+             (prog1
+                 (apply orig-fun args)
+               (emacsvox-icon 'select-object)
+               (emacsvox-calculator-summarize))
+           (apply orig-fun args)))
+       (advice-add
+        ',target :around #',function
+        '((name . ,function))))))
 
-(advice-add 'calculator-exp :around #'ems--calculator-exp-around)
+(dolist
+    (target
+     '(calculator-op
+       calculator-saved-up
+       calculator-saved-down))
+  (eval `(emacsvox-calculator--define-selection-advice ,target)))
 
-(defun ems--calculator-op-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (apply orig-fun args)
-      (emacsvox-icon 'select-object) (emacsvox-calculator-summarize))
-     (t (apply orig-fun args)))
-    result))
+(dolist
+    (spec
+     '((calculator-save-on-list save-object)
+       (calculator-clear-saved delete-object)
+       (calculator-enter select-object)
+       (calculator-clear delete-object)
+       (calculator-get-register yank-object)))
+  (eval
+   `(emacsvox-calculator--define-after-advice ,(car spec)
+      (emacsvox-icon ',(cadr spec))
+      (emacsvox-calculator-summarize))))
 
-(advice-add 'calculator-op :around #'ems--calculator-op-around)
-
-(defun ems--calculator-op-or-exp-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'calculator-op-or-exp :around
-            #'ems--calculator-op-or-exp-around)
-
-(defun ems--calculator-open-paren-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'calculator-open-paren :around
-            #'ems--calculator-open-paren-around)
-
-(defun ems--calculator-close-paren-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'calculator-close-paren :around
-            #'ems--calculator-close-paren-around)
-
-(defun ems--calculator-saved-up-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (apply orig-fun args)
-      (emacsvox-icon 'select-object) (emacsvox-calculator-summarize))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'calculator-saved-up :around
-            #'ems--calculator-saved-up-around)
-
-(defun ems--calculator-saved-down-around (orig-fun &rest args)
-  "Speak the digit."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (apply orig-fun args)
-      (emacsvox-icon 'select-object) (emacsvox-calculator-summarize))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'calculator-saved-down :around
-            #'ems--calculator-saved-down-around)
-
-(defun ems--calculator-save-on-list-after (&rest _)
-  "Provide speech feedback"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'save-object) (emacsvox-calculator-summarize)))
-
-(advice-add 'calculator-save-on-list :after
-            #'ems--calculator-save-on-list-after)
-
-(defun ems--calculator-clear-saved-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-calculator-summarize)))
-
-(advice-add 'calculator-clear-saved :after
-            #'ems--calculator-clear-saved-after)
-
-(defun ems--calculator-enter-after (&rest _)
-  "Provide speech feedback"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-calculator-summarize)))
-
-(advice-add 'calculator-enter :after #'ems--calculator-enter-after)
-
-(defun ems--calculator-backspace-around (orig-fun &rest args)
+(defun emacsvox--advice-calculator-backspace-around (orig-fun &rest args)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone 500 100 'force)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+  (when (ems-interactive-p 'calculator-backspace)
+    (dtk-tone 500 100 'force)
+    (emacsvox-speak-this-char (preceding-char)))
+  (apply orig-fun args))
 
-(advice-add 'calculator-backspace :around
-            #'ems--calculator-backspace-around)
+(advice-add
+ 'calculator-backspace :around
+ #'emacsvox--advice-calculator-backspace-around
+ '((name . emacsvox--advice-calculator-backspace-around)))
 
-(defun ems--calculator-clear-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-calculator-summarize)))
+(emacsvox-calculator--define-after-advice calculator-copy
+  (emacsvox-icon 'delete-object)
+  (emacsvox-speak-current-kill 1))
 
-(advice-add 'calculator-clear :after #'ems--calculator-clear-after)
+(emacsvox-calculator--define-after-advice calculator-paste
+  (emacsvox-icon 'yank-object))
 
-(defun ems--calculator-copy-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-current-kill 1)))
+(dolist (target '(calculator-quit calculator-save-and-quit))
+  (eval
+   `(emacsvox-calculator--define-after-advice ,target
+      (emacsvox-icon 'close-object)
+      (emacsvox-speak-mode-line))))
 
-(advice-add 'calculator-copy :after #'ems--calculator-copy-after)
-
-(defun ems--calculator-paste-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
-
-(advice-add 'calculator-paste :after #'ems--calculator-paste-after)
-
-(defun ems--calculator-get-register-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'yank-object) (emacsvox-calculator-summarize)))
-
-(advice-add 'calculator-get-register :after
-            #'ems--calculator-get-register-after)
-
-(defun ems--calculator-quit-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'calculator-quit :after #'ems--calculator-quit-after)
-
-(defun ems--calculator-save-and-quit-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'calculator-save-and-quit :after
-            #'ems--calculator-save-and-quit-after)
-
-(defun ems--calculator-update-display-after (&rest _)
+(defun emacsvox--advice-calculator-update-display-after (&rest _)
   "Speak the updated  display. " (emacsvox-speak-line))
 
-(advice-add 'calculator-update-display :after
-            #'ems--calculator-update-display-after)
+(advice-add
+ 'calculator-update-display :after
+ #'emacsvox--advice-calculator-update-display-after
+ '((name . emacsvox--advice-calculator-update-display-after)))
 
 ;;;   keys 
 (cl-declaim (special calculator-mode-map))
@@ -266,4 +190,3 @@
 
 (provide 'emacsvox-calculator)
 ;;;  end of file
-
