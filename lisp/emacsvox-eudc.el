@@ -41,6 +41,7 @@
 (require 'emacsvox-preamble)
 (require 'widget)
 (require 'emacsvox-widget)
+(require 'eudc)
 (declare-function widget-at "wid-edit" (&optional pos))
 (declare-function widget-type "wid-edit" (widget))
 
@@ -55,21 +56,21 @@
 
 ;;;  speech enable interactive commands 
 
-(defun ems--eudc-move-to-next-record-after (&rest _)
+(defun emacsvox--advice-eudc-move-to-next-record-after (&rest _)
   "speak. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'eudc-move-to-next-record)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
 (advice-add 'eudc-move-to-next-record :after
-            #'ems--eudc-move-to-next-record-after)
+            #'emacsvox--advice-eudc-move-to-next-record-after)
 
-(defun ems--eudc-move-to-previous-record-after (&rest _)
+(defun emacsvox--advice-eudc-move-to-previous-record-after (&rest _)
   "speak. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'eudc-move-to-previous-record)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
 (advice-add 'eudc-move-to-previous-record :after
-            #'ems--eudc-move-to-previous-record-after)
+            #'emacsvox--advice-eudc-move-to-previous-record-after)
 
 ;;;  speech enable  eudc widgets 
 
@@ -95,7 +96,7 @@
                     'emacsvox-eudc-widget-help)
         (forward-line 1)))))
 
-(defun ems--eudc-query-form-after (&rest _)
+(defun emacsvox--advice-eudc-query-form-after (&rest _)
   "Attach emacsvox help to all EUDC widgets.\nSummarize the form to welcome the user. "
   
   (emacsvox-eudc-widgets-add-emacsvox-help)
@@ -108,7 +109,8 @@
              (when (widget-at (point))
                (emacsvox-eudc-widget-help (widget-at (point))))))))
 
-(advice-add 'eudc-query-form :after #'ems--eudc-query-form-after)
+(advice-add 'eudc-query-form :after
+            #'emacsvox--advice-eudc-query-form-after)
 
 ;;;  additional interactive commands 
 
@@ -141,23 +143,20 @@
   voice-animate
   "Personality t use for voiceifying attribute values. ")
 
-(defun ems--eudc-print-attribute-value-around (orig-fun &rest args)
+(defun emacsvox--advice-eudc-print-attribute-value-around
+    (orig-fun &rest args)
   "voiceify attribute values"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((not emacsvox-eudc-attribute-value-personality)
-      (apply orig-fun args))
-     (t
-      (let ((start (point)))
-        (apply orig-fun args)
+  (if (not emacsvox-eudc-attribute-value-personality)
+      (apply orig-fun args)
+    (let ((start (point)))
+      (let ((result (apply orig-fun args)))
         (with-silent-modifications
           (put-text-property start (point) 'personality
-                             emacsvox-eudc-attribute-value-personality)))))
-    result))
+                             emacsvox-eudc-attribute-value-personality))
+        result))))
 
 (advice-add 'eudc-print-attribute-value :around
-            #'ems--eudc-print-attribute-value-around)
+            #'emacsvox--advice-eudc-print-attribute-value-around)
 
 (provide 'emacsvox-eudc)
 ;;;  end of file
-

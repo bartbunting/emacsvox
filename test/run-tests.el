@@ -141,6 +141,7 @@
   (require 'emacsvox-newsticker-tests)
   (require 'emacsvox-calc-tests)
   (require 'emacsvox-gomoku-tests)
+  (require 'emacsvox-eudc-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
