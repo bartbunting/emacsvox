@@ -87,6 +87,41 @@
        (gethash
         (list target where function) ems--modern-advice-wrappers)))))
 
+(ert-deftest emacsvox-eterm-completion-advice-is-directly-registered ()
+  "Term completion advice bypasses the compatibility bridge."
+  (should
+   (advice-member-p
+    #'emacsvox--advice-term-dynamic-complete-around
+    'term-dynamic-complete))
+  (should-not
+   (gethash
+    '(term-dynamic-complete
+      :around
+      emacsvox--advice-term-dynamic-complete-around)
+    ems--modern-advice-wrappers)))
+
+(ert-deftest emacsvox-eterm-completion-calls-original-once ()
+  "Term completion calls once, returns its result, and speaks inserted text."
+  (with-temp-buffer
+    (insert "ec")
+    (let ((calls 0)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-speak-region)
+                 (lambda (start end)
+                   (push
+                    (buffer-substring-no-properties start end)
+                    events))))
+        (should
+         (eq
+          'completed
+          (emacsvox--advice-term-dynamic-complete-around
+           (lambda ()
+             (cl-incf calls)
+             (insert "ho")
+             'completed)))))
+      (should (= calls 1))
+      (should (equal events '("ho"))))))
+
 (ert-deftest emacsvox-eterm-launch-feedback-remains-unconditional ()
   "Programmatic terminal launch still requests a single window."
   (let (events)

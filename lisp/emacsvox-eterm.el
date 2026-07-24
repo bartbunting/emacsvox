@@ -1149,19 +1149,19 @@ When emacsvox eterm is in pointer mode, the eterm read pointer
 stays where it is rather than automatically moving to the terminal cursor when
 there is terminal activity.")
 
-(defun ems--term-dynamic-complete-around (orig-fun &rest args)
-  "Speak the completion. "
-  (let ((result (apply orig-fun args)))
-    
-    (let ((saved-point (point)))
-      (apply orig-fun args)
+(defun emacsvox--advice-term-dynamic-complete-around
+    (original &rest arguments)
+  "Speak text inserted by ORIGINAL completion."
+  (let ((saved-point (point)))
+    (let ((result (apply original arguments)))
       (unless (= saved-point (point))
         (emacsvox-speak-region saved-point (point)))
-      result)
-    result))
+      result)))
 
-(advice-add 'term-dynamic-complete :around
-            #'ems--term-dynamic-complete-around)
+(advice-add
+ 'term-dynamic-complete :around
+ #'emacsvox--advice-term-dynamic-complete-around
+ '((name . emacsvox)))
 
 (voice-setup-add-map
  '(
