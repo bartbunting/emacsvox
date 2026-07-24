@@ -64,16 +64,10 @@
   "Canonical name for the selected speech-server program.")
 (defvaralias 'tts-handle-unicode 'dtk-handle-unicode
   "Canonical name for speech-server Unicode preprocessing state.")
-(defvaralias 'tts-quiet 'dtk-quiet
-  "Canonical name for buffer-local speech suppression.")
-(defvaralias 'tts-split-caps 'dtk-split-caps
-  "Canonical name for buffer-local split-capitalization state.")
 (defvaralias 'tts-cleanup-repeats 'dtk-cleanup-repeats
   "Canonical name for repeated-pattern cleanup configuration.")
 (defvaralias 'tts-character-to-speech-table 'dtk-character-to-speech-table
   "Canonical name for the shared character pronunciation table.")
-(defvaralias 'tts-caps 'dtk-caps
-  "Canonical name for buffer-local capitalization feedback.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
 (defvaralias 'tts-chunk-separator-syntax 'dtk-chunk-separator-syntax
@@ -166,8 +160,8 @@ mac for MAC TTS (default on Mac)")
    tts-speaker-process
    (format "tts_sync_state %s %s %s %s\n"
            tts-punctuation-mode
-           (if dtk-split-caps 1 0)
-           (if dtk-caps 1 0)
+           (if tts-split-caps 1 0)
+           (if tts-caps 1 0)
            tts-speech-rate)))
 
 ;;;;   letter
@@ -272,12 +266,12 @@ mac for MAC TTS (default on Mac)")
   "convert unicode characters if the speech server doesn't support it.
   This variable shouldn't usually be set")
 
-(defvar-local dtk-quiet nil
+(defvar-local tts-quiet nil
   "Silence speech ")
 
-(defvar-local  dtk-split-caps t
+(defvar-local  tts-split-caps t
   "Flag indicating whether to use split caps.
- Use   `dtk-toggle-split-caps'bound to \\[dtk-toggle-split-caps].")
+ Use   `tts-toggle-split-caps'bound to \\[tts-toggle-split-caps].")
 
 (defvar dtk-cleanup-repeats
   (list
@@ -298,12 +292,12 @@ replaced with a repeat count. ")
   Use `tts-set-character-scale' bound to
 \\[tts-set-character-scale].")
 
-(defvar-local dtk-caps nil
+(defvar-local tts-caps nil
   "Non-nil means  indicate  capitalization.
 Capitalized words are preceded by `cap', and upper-case words are
   preceded by `ac' spoken in a lower voice.
-Use dtk-toggle-caps
-bound to \\[dtk-toggle-caps].")
+Use tts-toggle-caps
+bound to \\[tts-toggle-caps].")
 
 (defconst tts-punctuation-mode-alist
   '("some" "all" "none")
@@ -430,7 +424,7 @@ bound to \\[dtk-toggle-caps].")
 (defun tts-silence (duration &optional force)
   "Produce `duration' ms of silence. "
   
-  (unless dtk-quiet
+  (unless tts-quiet
     (when (process-live-p tts-speaker-process)
       (tts--protocol-silence duration
                              (if force "\nd" "")))))
@@ -441,7 +435,7 @@ bound to \\[dtk-toggle-caps].")
  Duration  is  in milliseconds.
 Uses a 5ms fade-in and fade-out. "
   
-  (unless (or dtk-quiet (not (process-live-p tts-speaker-process)))
+  (unless (or tts-quiet (not (process-live-p tts-speaker-process)))
     (tts--protocol-tone pitch duration force)))
 
 (defun dtk-set-language (lang)
@@ -501,7 +495,7 @@ Newlines  become spaces so each server request is a single line.
 <> and | are fixed to improve pronunciation.
 \\ is fixed because it tends to be a metacharacter")
 
-(defun dtk-strip-octals ()
+(defun tts-strip-octals ()
   "Remove all octal chars."
   (let ((inhibit-read-only t))
     (goto-char (point-min))
@@ -552,10 +546,10 @@ specifies the current pronunciation mode --- See
       (while (re-search-forward dtk-bracket-regexp nil t)
         (replace-match " " nil t))))))
 
-(defvar-local dtk-speak-nonprinting-chars nil
+(defvar-local tts-speak-nonprinting-chars nil
   "Speak non-printing chars.")
 
-(defvar dtk-octal-chars
+(defvar tts-octal-chars
   "[\000-\010\013\014\016-\037\177-\377]"
   "Regular expression matching control chars. ")
 
@@ -565,21 +559,21 @@ specifies the current pronunciation mode --- See
     (goto-char (point-min))
     (cond
      (tts-strip-octals ;;;Strip octals if asked to
-      (dtk-strip-octals))
-     (dtk-speak-nonprinting-chars
-      (while (re-search-forward dtk-octal-chars nil t)
+      (tts-strip-octals))
+     (tts-speak-nonprinting-chars
+      (while (re-search-forward tts-octal-chars nil t)
         (setq char (char-after (match-beginning 0)))
         (replace-match
          (format " %s " (aref dtk-character-to-speech-table char))
          nil t))))))
-(defconst dtk-caps-regexp
+(defconst tts-caps-regexp
   (concat
    "\\(\\b[A-Z][A-Z0-9_-]+\\b\\)"
    "\\|"
    "\\(\\b[A-Z]\\)")
   "Match capitalized or upper-case words.")
 
-(defcustom dtk-caps-prefix
+(defcustom tts-caps-prefix
 
   (propertize  "cap" 'personality 'acss-s4-r6)
   "Prefix used to indicate capitalization":type 'string
@@ -588,7 +582,7 @@ specifies the current pronunciation mode --- See
            (set-default sym
                         (propertize  val 'personality 'acss-p3-s1-r3))))
 
-(defcustom dtk-allcaps-prefix
+(defcustom tts-allcaps-prefix
 
   (propertize  " acc " 'personality 'acss-s4-r6)
   "Prefix used to indicate AllCaps"
@@ -598,20 +592,20 @@ specifies the current pronunciation mode --- See
            (set-default sym
                         (propertize  val 'personality 'acss-p3-s1-r3))))
 
-(defun dtk-handle-caps ()
+(defun tts-handle-caps ()
   "Handle capitalization"
-  (when dtk-caps
+  (when tts-caps
     (let ((inhibit-read-only t)
           (case-fold-search nil))
       (goto-char (point-min))
       (while
-          (re-search-forward dtk-caps-regexp nil t)
+          (re-search-forward tts-caps-regexp nil t)
         (save-excursion
           (goto-char (match-beginning 0))
           (cond
            ((= 1  (- (match-end 0) (match-beginning 0)))
-            (insert dtk-caps-prefix))
-           (t (insert dtk-allcaps-prefix))))))))
+            (insert tts-caps-prefix))
+           (t (insert tts-allcaps-prefix))))))))
 
 ;; Takes a string, and replaces occurrences  of this pattern
 ;; that are longer than 3 by a string of the form \"count
@@ -663,7 +657,7 @@ specifies the current pronunciation mode --- See
   (let ((inhibit-read-only t))
     ;; dtk will think it's processing a command otherwise:
     (dtk-fix-brackets mode)
-    (dtk-handle-caps)
+    (tts-handle-caps)
     ;; fix control chars
     (dtk-fix-control-chars)))
 
@@ -824,7 +818,7 @@ Argument COMPLEMENT  is the complement of separator."
 
 (defun dtk-dispatch (string)
   "Send request  to speech server."
-  (unless dtk-quiet
+  (unless tts-quiet
     (when (process-live-p tts-speaker-process)
       (tts--protocol-say string))))
 
@@ -980,15 +974,15 @@ then set the current local value to the result."
                (if prefix "" "locally")))))
 
 (ems-generate-switcher
- 'dtk-toggle-quiet
- 'dtk-quiet
- "Toggles state of  dtk-quiet.
+ 'tts-toggle-quiet
+ 'tts-quiet
+ "Toggles state of  tts-quiet.
 Turning on this switch silences speech.  Optional interactive
 prefix arg causes this setting to become global.")
 
 (ems-generate-switcher
- 'dtk-toggle-split-caps
- 'dtk-split-caps
+ 'tts-toggle-split-caps
+ 'tts-split-caps
  "Toggle split caps mode.
 Split caps mode is useful when reading Hungarian notation in
 program source code.  Interactive PREFIX arg means toggle the
@@ -996,22 +990,22 @@ global default value, and then set the current local value to the
 result.")
 
 (ems-generate-switcher
- 'dtk-toggle-strip-octals
+ 'tts-toggle-strip-octals
  'tts-strip-octals
  "Toggle stripping of octals.
 Interactive prefix arg means
  toggle the global default value, and then set the current local
 value to the result.")
 (ems-generate-switcher
- 'dtk-toggle-caps
- 'dtk-caps
- "Toggle dtk-caps.
+ 'tts-toggle-caps
+ 'tts-caps
+ "Toggle tts-caps.
 Interactive PREFIX arg means toggle the global default
 value, and then set the current local value to the result.")
 
 (ems-generate-switcher
- 'dtk-toggle-speak-nonprinting-chars
- 'dtk-speak-nonprinting-chars
+ 'tts-toggle-speak-nonprinting-chars
+ 'tts-speak-nonprinting-chars
  "Toggle speak-nonprinting-chars.
 Interactive PREFIX arg means toggle the global default
 value, and then set the current local value to the result.")
@@ -1610,7 +1604,7 @@ This is so text marked invisible is silenced.")
 
 (defun tts-speak (text)
   "Speak the TEXT string
-unless   `dtk-quiet' is set to t. "
+unless   `tts-quiet' is set to t. "
   ;; ensure text is a  string
   (unless (stringp text) (when text (setq text (format "%s" text))))
   ;; ensure  the process  is live
@@ -1619,7 +1613,7 @@ unless   `dtk-quiet' is set to t. "
   ;; I will remain silent.
   ;; I also do nothing if text is nil or ""
   (unless
-      (or dtk-quiet (not (process-live-p tts-speaker-process))
+      (or tts-quiet (not (process-live-p tts-speaker-process))
           (null text) (zerop (length text)))
     ;; flush previous speech if asked to
     (when tts-stop-immediately
@@ -1640,12 +1634,12 @@ unless   `dtk-quiet' is set to t. "
           (pron-table emacsvox-pronounce-table)
           (pron-personality emacsvox-pronounce-personality)
           (chunk-sep dtk-chunk-separator-syntax)
-          (inherit-speak-nonprinting-chars dtk-speak-nonprinting-chars)
+          (inherit-speak-nonprinting-chars tts-speak-nonprinting-chars)
           (inherit-strip-octals tts-strip-octals)
           (complement-sep (dtk-complement-chunk-separator-syntax))
           (speech-rate tts-speech-rate)
-          (caps dtk-caps)
-          (split-caps dtk-split-caps)
+          (caps tts-caps)
+          (split-caps tts-split-caps)
           (dtk-scratch-buffer (get-buffer-create " *dtk-scratch-buffer* "))
           (start 1)
           (end nil)
@@ -1667,9 +1661,9 @@ unless   `dtk-quiet' is set to t. "
          dtk-chunk-separator-syntax chunk-sep
          tts-speech-rate speech-rate
          tts-punctuation-mode mode
-         dtk-split-caps split-caps
-         dtk-caps caps
-         dtk-speak-nonprinting-chars inherit-speak-nonprinting-chars
+         tts-split-caps split-caps
+         tts-caps caps
+         tts-speak-nonprinting-chars inherit-speak-nonprinting-chars
          tts-strip-octals inherit-strip-octals
          voice-lock-mode voice-lock)
         (set-syntax-table syntax-table)
@@ -1759,7 +1753,7 @@ grouping"
 
 (defun dtk-letter (letter)
   "Speak a LETTER."
-  (unless dtk-quiet
+  (unless tts-quiet
     (when (process-live-p tts-speaker-process)
       (tts--protocol-letter letter))))
 ;;;  Notify:
@@ -2105,13 +2099,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)
 (defalias 'tts-add-cleanup-pattern #'dtk-add-cleanup-pattern)
-(defalias 'tts-toggle-quiet #'dtk-toggle-quiet)
-(defalias 'tts-toggle-split-caps #'dtk-toggle-split-caps)
-(defalias 'tts-toggle-strip-octals #'dtk-toggle-strip-octals)
-(defalias 'tts-toggle-caps #'dtk-toggle-caps)
-(defalias
- 'tts-toggle-speak-nonprinting-chars
- #'dtk-toggle-speak-nonprinting-chars)
 (defalias 'tts-select-server #'dtk-select-server)
 (defalias 'tts-cloud #'dtk-cloud)
 (defalias 'tts-local-server #'dtk-local-server)

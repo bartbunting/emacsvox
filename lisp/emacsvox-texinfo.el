@@ -54,8 +54,8 @@
   "Setup Emacsvox extensions"
   
   (tts-set-punctuations 'all)
-  (or dtk-split-caps
-      (dtk-toggle-split-caps))
+  (or tts-split-caps
+      (tts-toggle-split-caps))
   (or emacsvox-audio-indentation
       (emacsvox-toggle-audio-indentation)))
 

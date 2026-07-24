@@ -469,7 +469,7 @@
   (let ((ems--interactive-fn-name 'call-last-kbd-macro)
         (emacsvox-speak-messages t)
         (emacsvox-use-icons t)
-        (dtk-quiet nil)
+        (tts-quiet nil)
         (calls 0)
         events)
     (cl-letf (((symbol-function 'message)
@@ -486,7 +486,7 @@
          (lambda (&rest arguments)
            (cl-incf calls)
            (push
-            (list 'original arguments dtk-quiet
+            (list 'original arguments tts-quiet
                   emacsvox-use-icons emacsvox-speak-messages
                   inhibit-message)
             events)
@@ -502,7 +502,7 @@
         (icon task-done))))
     (should emacsvox-speak-messages)
     (should emacsvox-use-icons)
-    (should-not dtk-quiet)))
+    (should-not tts-quiet)))
 
 (ert-deftest emacsvox-keyboard-macro-advice-is-quiet-programmatically ()
   "A programmatic keyboard macro runs once without completion feedback."

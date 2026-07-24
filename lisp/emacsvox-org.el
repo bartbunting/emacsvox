@@ -572,7 +572,7 @@
   (when (fboundp 'org-end-of-line)
     (define-key org-mode-map emacsvox-prefix  'emacsvox-keymap)
     (emacsvox-setup-programming-mode)
-    (when dtk-caps (dtk-toggle-caps))
+    (when tts-caps (tts-toggle-caps))
     (emacsvox-speak-load-directory-settings)))
 
 (add-hook 'org-mode-hook #'emacsvox-org-mode-setup)

@@ -46,7 +46,7 @@
   "Saving a variable preserves arguments, result, and dynamic state."
   (let ((emacsvox-speak-messages t)
         (inhibit-message nil)
-        (dtk-quiet nil)
+        (tts-quiet nil)
         (calls 0)
         observed-state)
     (should
@@ -56,7 +56,7 @@
          (cl-incf calls)
          (setq observed-state
                (list arguments emacsvox-speak-messages
-                     inhibit-message dtk-quiet))
+                     inhibit-message tts-quiet))
          'saved)
        'variable 'value "comment")
       'saved))
@@ -67,7 +67,7 @@
       '((variable value "comment") nil t t)))
     (should emacsvox-speak-messages)
     (should-not inhibit-message)
-    (should-not dtk-quiet)))
+    (should-not tts-quiet)))
 
 (provide 'emacsvox-customize-tests)
 ;;; emacsvox-customize-tests.el ends here

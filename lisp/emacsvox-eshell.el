@@ -82,7 +82,7 @@
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
   (when (ems-interactive-p 'eshell)
     (emacsvox-icon 'open-object) (tts-set-punctuations 'all)
-    (or dtk-split-caps (dtk-toggle-split-caps))
+    (or tts-split-caps (tts-toggle-split-caps))
     (emacsvox-pronounce-refresh-pronunciations)
     (emacsvox-speak-line)))
 

@@ -1300,7 +1300,7 @@ of the source buffer."
   (cl-loop
    for entry in (reverse emacsvox-wizards-project-shells) do
    (ems-with-messages-silenced
-    (let* ((dtk-quiet t)
+    (let* ((tts-quiet t)
            (name (cl-first entry))
            (dir (cl-second entry))
            (auto (cl-third entry))

@@ -112,7 +112,7 @@
 (defun emacsvox--advice-customize-save-customized-around
     (original &rest arguments)
   "Call ORIGINAL once with speech silenced."
-  (let ((dtk-quiet t))
+  (let ((tts-quiet t))
     (apply original arguments)))
 
 (advice-add

@@ -210,7 +210,7 @@ already disabled."
 (defun emacsvox-dbus-sleep ()
   "Emacsvox  hook for -sleep signal from Login1."
   
-  (let ((dtk-quiet t))
+  (let ((tts-quiet t))
     (ems-with-messages-silenced
      (emacsvox-dbus-screensaver-check)
      (save-some-buffers t))))

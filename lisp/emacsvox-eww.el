@@ -2331,7 +2331,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
   
   (tts-set-rate (+ tts-speech-rate-base (* tts-speech-rate-step  3)))
   (tts-set-punctuations 'all)
-  (when dtk-split-caps(dtk-toggle-split-caps))
+  (when tts-split-caps(tts-toggle-split-caps))
   (emacsvox-speak-rest-of-buffer))
 
 ;;;  Shell Command On URL Under Point:

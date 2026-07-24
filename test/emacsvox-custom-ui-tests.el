@@ -105,7 +105,7 @@
 
 (ert-deftest emacsvox-custom-ui-session-save-is-silenced-once ()
   "Saving session customizations runs once with speech silenced."
-  (let ((dtk-quiet nil)
+  (let ((tts-quiet nil)
         (calls 0)
         observed)
     (should
@@ -114,12 +114,12 @@
       (emacsvox--advice-customize-save-customized-around
        (lambda (&rest arguments)
          (setq calls (1+ calls)
-               observed (list arguments dtk-quiet))
+               observed (list arguments tts-quiet))
          'saved)
        'argument)))
     (should (= calls 1))
     (should (equal observed '((argument) t)))
-    (should-not dtk-quiet)))
+    (should-not tts-quiet)))
 
 (ert-deftest emacsvox-custom-ui-option-uses-native-symbol-argument ()
   "Option feedback searches for the option passed by Emacs."
