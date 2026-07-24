@@ -46,64 +46,76 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'lua-mode)
 
 ;;;  Advice Interactive Commands:
-(cl-loop
- for f in
- '(
-   lua-backwards-to-block-begin-or-end lua-beginning-of-proc
-   lua-end-of-proc
-   lua-forward-sexp lua-goto-matching-block)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+(defmacro emacsvox-lua--define-after-advice
+    (targets docstring &rest body)
+  "Define native after advice for TARGETS using DOCSTRING and BODY."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add ',target :after #',function))))
+        targets)))
 
-(defun ems--lua-start-process-after (&rest _)
+(emacsvox-lua--define-after-advice
+    (lua-backwards-to-block-begin-or-end
+     lua-beginning-of-proc
+     lua-end-of-proc
+     lua-forward-sexp
+     lua-goto-matching-block)
+    "Speak the Lua navigation destination."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(defun emacsvox--advice-lua-start-process-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lua-start-process)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'lua-start-process :after #'ems--lua-start-process-after)
+(advice-add 'lua-start-process :after
+            #'emacsvox--advice-lua-start-process-after)
 
-(defun ems--lua-kill-process-after (&rest _)
+(defun emacsvox--advice-lua-kill-process-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lua-kill-process)
     (emacsvox-icon 'delete-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'lua-kill-process :after #'ems--lua-kill-process-after)
+(advice-add 'lua-kill-process :after
+            #'emacsvox--advice-lua-kill-process-after)
 
-(defun ems--lua-search-documentation-after (&rest _)
+(defun emacsvox--advice-lua-search-documentation-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lua-search-documentation)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'lua-search-documentation :after
-            #'ems--lua-search-documentation-after)
+            #'emacsvox--advice-lua-search-documentation-after)
 
-(cl-loop
- for f in
- '(
-   lua-send-buffer lua-send-current-line
-   lua-send-lua-region lua-send-proc lua-send-region)
- do
- (eval
-  `(defadvice,f (after emacsvox pre act comp)
-                "speak."
-                (when (ems-interactive-p)
-                  (emacsvox-icon 'task-done)))))
+(emacsvox-lua--define-after-advice
+    (lua-send-buffer
+     lua-send-current-line
+     lua-send-lua-region
+     lua-send-proc
+     lua-send-region)
+    "Cue an interactive Lua send operation."
+  (emacsvox-icon 'task-done))
 
-(defun ems--lua-show-process-buffer-after (&rest _)
+(defun emacsvox--advice-lua-show-process-buffer-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lua-show-process-buffer)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'lua-show-process-buffer :after
-            #'ems--lua-show-process-buffer-after)
+            #'emacsvox--advice-lua-show-process-buffer-after)
 
 (provide 'emacsvox-lua)
 ;;;  end of file
-
