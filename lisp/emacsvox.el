@@ -290,9 +290,9 @@
 (defsubst emacsvox-setup-programming-mode ()
   "Setup programming mode."
   
-  (dtk-set-punctuations 'all)
-  (or dtk-split-caps (dtk-toggle-split-caps))
-  (or dtk-caps (dtk-toggle-caps))
+  (tts-set-punctuations 'all)
+  (or tts-split-caps (tts-toggle-split-caps))
+  (or tts-caps (tts-toggle-caps))
   (emacsvox-pronounce-refresh-pronunciations)
   (or emacsvox-audio-indentation (emacsvox-toggle-audio-indentation)))
 
@@ -401,7 +401,7 @@ commands and options."
    'kill-emacs-hook
    #'(lambda nil (setq-default emacsvox-speak-messages nil))
    -10)
-  (dtk-initialize)
+  (tts-initialize)
   (emacsvox-sounds-select-theme)
   (emacsvox-pronounce-load-dictionaries)
   (make-thread #'(lambda nil  (ems--fastload "emacsvox-advice")))
