@@ -211,7 +211,7 @@ Use Custom to customize where possible. "
 
 (defun tvr-prog-mode-hook ()
   "TVR:prog-mode"
-  (cl-declare (special dtk-caps))
+  (cl-declare (special tts-caps))
   (outline-minor-mode 1)
   (local-set-key "\C-m" 'newline-and-indent)
   (company-mode)
@@ -219,7 +219,7 @@ Use Custom to customize where possible. "
   (auto-fill-mode)
   (cond
    ((memq major-mode '(emacs-lisp-mode lisp-mode lisp-interaction-mode))
-    (when dtk-caps (setq dtk-caps nil))
+    (when tts-caps (setq tts-caps nil))
     (lispy-mode ))
    (t (smartparens-mode)))
   (yas-minor-mode)
@@ -263,8 +263,8 @@ configuration happens via the after-init-hook. "
 ;;live: so reuse it as the speaker
 (defun n2s ()
   (interactive)
-  (cl-declare (special dtk-speaker-process dtk-notify-process))
-  (setq dtk-speaker-process dtk-notify-process))
+  (cl-declare (special tts-speaker-process tts-notify-process))
+  (setq tts-speaker-process tts-notify-process))
 
 (provide 'emacs-startup)
 ;;;  end of file

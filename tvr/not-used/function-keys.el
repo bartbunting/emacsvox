@@ -10,7 +10,7 @@
 (global-set-key '[kp-f4] 'emacspeak-kill-buffer-quietly)
 (global-set-key [f5] 'bury-buffer)
 (global-set-key '[find]  'yasb)
-(global-set-key '[delete] 'dtk-toggle-punctuation-mode)
+(global-set-key '[delete] 'tts-toggle-punctuation-mode)
 (global-set-key '[kp-enter] 'tmm-menubar)
 (global-set-key  '[f8] 'emacspeak-remote-quick-connect-to-server)
 (global-set-key '[f9] 'bbdb)

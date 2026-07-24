@@ -1,5 +1,5 @@
 ;;; Disable mouse buttons and touchpad.
-;; Instead have all mouse-buttons run dtk-stop 
+;; Instead have all mouse-buttons run tts-stop
 ;; Also, Avoids accidental touches  on touch-pad
 (require 'cl-lib)
 ;(load-library "disable-mouse-autoloads")
@@ -41,5 +41,5 @@ Set by locating it via xinput --list."
 ;(add-hook 'delete-frame-functions #'turn-on-touchpad)
 (when (fboundp 'global-disable-mouse-mode)
   (global-disable-mouse-mode)
-  (setq disable-mouse-command 'dtk-stop))
+  (setq disable-mouse-command 'tts-stop))
 (turn-off-touchpad)

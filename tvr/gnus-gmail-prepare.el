@@ -108,7 +108,7 @@ This moves them into the Spam folder."
     (interactive )
     (cl-declare (special auth-source-xoauth2-creds))
     (kill-buffer (find-file-noselect auth-source-xoauth2-creds))
-    (dtk-stop)
+    (tts-stop)
     (emacspeak-icon 'task-done))
 
   (when (keymapp emacspeak-z-keymap )
@@ -140,4 +140,3 @@ Uses the go oauth tool found in the xoauth git repo."
 ;; local variables:
 ;; folded-file: t
 ;; end:
-
