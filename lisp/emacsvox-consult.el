@@ -104,31 +104,59 @@
 
 (add-hook 'consult-after-jump-hook #'emacsvox-speak-line)
 
+(defconst emacsvox-consult--selection-targets
+  '(consult-bookmark consult-compile-error)
+  "Consult commands that select a location.")
+
 (cl-loop
- for f in 
- '(consult-bookmark
-   consult-compile-error)
+ for target in emacsvox-consult--selection-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak the location selected by Consult."
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
+(defconst emacsvox-consult--open-targets
+  '(consult-buffer
+    consult-buffer-other-frame
+    consult-buffer-other-tab
+    consult-buffer-other-window
+    consult-find
+    consult-fd)
+  "Consult commands that open a buffer or file.")
+
 (cl-loop
- for f in 
- '(
-   consult-buffer consult-buffer-other-frame
-   consult-buffer-other-tab consult-buffer-other-window
-   consult-find consult-fd)
+ for target in emacsvox-consult--open-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak after opening a Consult selection."
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'open-object)
        (emacsvox-speak-mode-line)))))
+
+(defconst emacsvox-consult--advice-targets
+  (append emacsvox-consult--selection-targets
+          emacsvox-consult--open-targets)
+  "Current Consult targets that receive native after advice.")
+
+(defun emacsvox-consult--install-advice ()
+  "Install advice for functions present in current Consult."
+  (dolist (target emacsvox-consult--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(dolist (feature '(consult consult-compile))
+  (eval-after-load feature #'emacsvox-consult--install-advice))
 
 ;;; Set it up:
 (defvar  emacsvox-consult-keymap nil "Emacsvox consult keymap")
@@ -136,7 +164,6 @@
 (define-prefix-command 'emacsvox-consult-keymap)
 
 (global-set-key (kbd "C-/") 'emacsvox-consult-keymap)
-consult-project-buffer
 
 (cl-loop
  for b in
