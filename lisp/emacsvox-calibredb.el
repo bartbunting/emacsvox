@@ -164,58 +164,92 @@
   calibredb-yank-dispatch
   )
 
-(defun ems--calibredb-toggle-view-at-point-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-calibredb-toggle-view-at-point-after (&rest _)
+  "Speak after toggling the view at point."
+  (when (ems-interactive-p 'calibredb-toggle-view-at-point)
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-line)))
 
-(advice-add 'calibredb-toggle-view-at-point :after
-            #'ems--calibredb-toggle-view-at-point-after)
+(defconst emacsvox-calibredb--view-targets
+  '(calibredb-view
+    calibredb-show-next-entry
+    calibredb-show-previous-entry)
+  "Calibredb commands that display an entry.")
 
 (cl-loop
- for f in
- '(calibredb-view calibredb-show-next-entry calibredb-show-previous-entry)
+ for target in emacsvox-calibredb--view-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak the displayed Calibredb entry."
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'open-object)
        (emacsvox-speak-predefined-window 1)))))
 
-(defun ems--calibredb-search-refresh-and-clear-filter-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-calibredb-search-refresh-and-clear-filter-after
+    (&rest _)
+  "Speak after refreshing Calibredb and clearing its filter."
+  (when (ems-interactive-p 'calibredb-search-refresh-and-clear-filter)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'calibredb-search-refresh-and-clear-filter :after
-            #'ems--calibredb-search-refresh-and-clear-filter-after)
+(defun emacsvox--advice-calibredb-search-quit-after (&rest _)
+  "Speak after quitting a Calibredb search."
+  (when (ems-interactive-p 'calibredb-search-quit)
+    (emacsvox-icon 'close-object)
+    (emacsvox-speak-mode-line)))
 
-(defun ems--calibredb-search-quit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'calibredb-search-quit :after
-            #'ems--calibredb-search-quit-after)
+(defconst emacsvox-calibredb--movement-targets
+  '(calibredb-previous-entry calibredb-next-entry)
+  "Calibredb entry movement commands.")
 
 (cl-loop
- for f in
- '(calibredb-previous-entry calibredb-next-entry)
+ for target in emacsvox-calibredb--movement-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak the selected Calibredb entry."
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)))))
 
-(defun ems--calibredb-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-calibredb-after (&rest _)
+  "Speak after opening Calibredb."
+  (when (ems-interactive-p 'calibredb)
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'calibredb :after #'ems--calibredb-after)
+(defconst emacsvox-calibredb--advice
+  (append
+   '((calibredb-toggle-view-at-point :after
+      emacsvox--advice-calibredb-toggle-view-at-point-after)
+     (calibredb-search-refresh-and-clear-filter :after
+      emacsvox--advice-calibredb-search-refresh-and-clear-filter-after)
+     (calibredb-search-quit :after
+      emacsvox--advice-calibredb-search-quit-after)
+     (calibredb :after emacsvox--advice-calibredb-after))
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    (append emacsvox-calibredb--view-targets
+            emacsvox-calibredb--movement-targets)))
+  "Current Calibredb targets and their native advice functions.")
+
+(defun emacsvox-calibredb--install-advice ()
+  "Install advice after the optional Calibredb package loads."
+  (dolist (entry emacsvox-calibredb--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'calibredb
+  (emacsvox-calibredb--install-advice))
 
 ;;; Emacsvox Commands:
 
@@ -242,4 +276,3 @@ with broken NCX files."
 
 (provide 'emacsvox-calibredb)
 ;;;  end of file
-
