@@ -30,7 +30,7 @@ cd "emacspeak-${v}"
 make config && make
 (cd servers/native-espeak &&  make )
 #Run out of this directory.
-# Default to using  espeak unless DTK_PROGRAM is set.
+# Default to using espeak unless TTS_PROGRAM is set.
 #
-export DTK_PROGRAM="espeak"
+export TTS_PROGRAM="espeak"
 emacs -q -l ./lisp/emacspeak-setup.el -l $HOME/.emacs

@@ -1,6 +1,6 @@
 #!/bin/sh
 #Run out of this directory.
-# Default to using  espeak unless DTK_PROGRAM is set.
+# Default to using espeak unless TTS_PROGRAM is set.
 #
-[ -z "$DTK_PROGRAM" ] && export DTK_PROGRAM="espeak"
+[ -z "$TTS_PROGRAM" ] && export TTS_PROGRAM="espeak"
 emacs -q -l ./lisp/emacspeak-setup.el 

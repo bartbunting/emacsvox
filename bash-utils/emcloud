@@ -3,4 +3,4 @@
 #Usage emcloud 
 
 pidof -q `which emacs` &&\
- emacsclient -n -e "(dtk-cloud)" 2>&1 > /dev/null
+ emacsclient -n -e "(tts-cloud)" 2>&1 > /dev/null

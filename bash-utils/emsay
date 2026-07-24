@@ -3,4 +3,4 @@
 #Usage emsay <text> 
 l="$@"
 pidof -q `which emacs` &&\
- emacsclient -n -e "(dtk-speak \"$l\")"
+ emacsclient -n -e "(tts-speak \"$l\")"
