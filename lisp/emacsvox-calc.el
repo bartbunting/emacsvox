@@ -47,52 +47,60 @@
 
 ;;  required modules
 (require 'emacsvox-preamble)
+(require 'calc)
 
 ;;;   advice calc interaction 
 
-(defun ems--calc-dispatch-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
+(defun emacsvox--advice-calc-dispatch-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'calc-dispatch)
+    (emacsvox-icon 'open-object)))
 
-(advice-add 'calc-dispatch :after #'ems--calc-dispatch-after)
+(advice-add 'calc-dispatch :after
+            #'emacsvox--advice-calc-dispatch-after)
 
-(defun ems--calc-quit-after (&rest _)
+(defun emacsvox--advice-calc-quit-after (&rest _)
   "Announce the buffer that becomes current when calc is quit."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'calc-quit)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'calc-quit :after #'ems--calc-quit-after)
+(advice-add 'calc-quit :after #'emacsvox--advice-calc-quit-after)
 
 ;;;   speak output 
 
-(defun ems--calc-call-last-kbd-macro-around (orig-fun &rest args)
+(defun emacsvox--advice-calc-call-last-kbd-macro-around
+    (orig-fun &rest args)
   "Speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args))
-      (tts-with-punctuations 'all (emacsvox-read-previous-line))
-      (emacsvox-icon 'task-done))
-     (t (apply orig-fun args)))
-    result))
+  (if (ems-interactive-p 'calc-call-last-kbd-macro)
+      (let ((result
+             (ems-with-messages-silenced
+               (apply orig-fun args))))
+        (tts-with-punctuations 'all
+          (emacsvox-read-previous-line))
+        (emacsvox-icon 'task-done)
+        result)
+    (apply orig-fun args)))
 
-(advice-add 'calc-call-last-kbd-macro :around
-            #'ems--calc-call-last-kbd-macro-around)
+(with-eval-after-load 'calc-prog
+  (advice-add 'calc-call-last-kbd-macro :around
+              #'emacsvox--advice-calc-call-last-kbd-macro-around))
 
-(defun ems--calc-do-around (orig-fun &rest args)
+(defun emacsvox--advice-calc-do-around (orig-fun &rest args)
   "Speak previous line of output."
-  (let ((result (apply orig-fun args)))
-    (ems-with-messages-silenced (apply orig-fun args))
+  (let ((result
+         (ems-with-messages-silenced
+           (apply orig-fun args))))
     (tts-with-punctuations 'all (emacsvox-read-previous-line)
                            (emacsvox-icon 'select-object))
     result))
 
-(advice-add 'calc-do :around #'ems--calc-do-around)
+(advice-add 'calc-do :around #'emacsvox--advice-calc-do-around)
 
-(defun ems--calc-trail-here-after (&rest _)
+(defun emacsvox--advice-calc-trail-here-after (&rest _)
   "Speak previous line of output." (emacsvox-speak-line)
   (emacsvox-icon 'select-object))
 
-(advice-add 'calc-trail-here :after #'ems--calc-trail-here-after)
+(advice-add 'calc-trail-here :after
+            #'emacsvox--advice-calc-trail-here-after)
 
 (provide 'emacsvox-calc)
-
