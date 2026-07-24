@@ -1,7 +1,7 @@
 # $Id$
 # $Author: tv.raman.tv $ 
-# Description:  Makefile for Emacspeak 
-# Keywords: Emacspeak, Dectalk, Makefile 
+# Description: Makefile for Emacsvox documentation
+# Keywords: Emacsvox, documentation, Makefile
 # {{{ LCD Entry: 
 
 # LCD Archive Entry:
@@ -51,11 +51,10 @@ config:
 	@chmod 755   *.pl
 
 # }}}
-# {{{maintainer target 
+# {{{maintainer target
 
 pub: tips.html applications.html
-	scp tips.html applications.html    raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs
-	cp applications.html tips.html ../gh-emacspeak/
+	@echo "Publish generated documentation through the Emacsvox repository workflow."
 # }}}
 # {{{ end of file 
 

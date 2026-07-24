@@ -6,9 +6,9 @@
                 version="1.0">
   <xsl:output method="html" media-type="text/html"/>
   <xsl:strip-space elements="*"/>
-  
 
-  
+
+
 
   <xsl:template match="applications">
     <html>
@@ -84,13 +84,13 @@
     </xsl:copy>
   </xsl:template>
   <xsl:template name="toc">
-    <h2>Application Categories</h2>  
+    <h2>Application Categories</h2>
     <p>
       As of the last update, there are a total of
       <em><xsl:value-of select="count(//application)"/></em>
-      speech-enabled applications 
+      speech-enabled applications
       in <em><xsl:value-of select="count(//category)"/></em> categories
-      on the Emacspeak audio desktop.
+      on the Emacsvox audio desktop.
     </p>
     <ol>
       <xsl:for-each select="//category">
@@ -100,7 +100,7 @@
               #<xsl:value-of select="@name"/>
             </xsl:attribute>
             <xsl:value-of select="translate(@name,
-                                  'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/> 
+                                  'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
             (<xsl:value-of select="count(./application)"/>)
           </a>
         </li>

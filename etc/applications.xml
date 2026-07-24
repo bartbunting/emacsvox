@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--$Id$-->
 <!DOCTYPE applications PUBLIC " applications // t. v. raman 1.0" "applications.dtd">
-<?xml-stylesheet href="file:////home/raman/emacs/lisp/emacspeak/etc/applications.xsl"
+<?xml-stylesheet href="applications.xsl"
 type="text/xsl"?>
-<applications caption="Speech-enabled applications  on the Emacspeak audio desktop.">
-  <preamble title="Emacspeak --The Complete Audio Desktop"/>
+<applications caption="Speech-enabled applications  on the Emacsvox audio desktop.">
+  <preamble title="Emacsvox --The Complete Audio Desktop"/>
   <introduction>
-    <h1>Speech-enabled Applications On The Emacspeak Desktop </h1>
+    <h1>Speech-enabled Applications On The Emacsvox Desktop </h1>
     <p>
-      This document catalogs the speech-enabled applications available on the Emacspeak desktop.
+      This document catalogs the speech-enabled applications available on the Emacsvox desktop.
       Note that depending on your Emacs installation,
       you may need to download and install extra applications to
-      avail yourself of all of the features of the Emacspeak audio
+      avail yourself of all of the features of the Emacsvox audio
       desktop.
       Emacs applications can be located via the various Emacs Lisp
       archives  such as <em>ELPA</em> and <em>MELPA</em>.</p>
-    
+
     <h2>Speech-Enabled Applications</h2>
   </introduction>
   <category name="documentation">
     <application name="info">
       Emacs' online hypertext documentation system.
-      Emacspeak uses audio formatting to highlight menus and hyperlinks.
+      Emacsvox uses audio formatting to highlight menus and hyperlinks.
     </application>
     <application name="help">
       Speech-enabled online help across the audio
@@ -107,7 +107,7 @@ type="text/xsl"?>
       Client for browsing installed RPM packages.
     </application>
     <application name="Find Wizard">
-      Command  <code>emacspeak-wizards-generate-finder</code>
+      Command  <code>find-dired</code>
     provides an easy to use front-end to UNIX <code>find</code>.</application>
 
     <application name="apt-get">
@@ -122,18 +122,18 @@ type="text/xsl"?>
     <application name="w3">
       Standards-compliant WWW browser with Aural CSS
     support.</application>
-    
+
     <application name="piglets">
-      Integrates Emacspeak with Firefox, with Fire-Vox providing spoken
-      output through the emacspeak TTS server.</application><application name="w3m">
+      Integrates Emacsvox with Firefox, with Fire-Vox providing spoken
+      output through the Emacsvox TTS server.</application><application name="w3m">
       Light-weight WWW browser.
       Does not support table navigation, CSS or Aural CSS, but can be fast and light-weight.</application>
-      
+
       <application name="mozrepl">
         Speech-enabled bridge between Emacs and the MozREPL extenxion for
       Firefox.</application>
       <application name="url-template">
-        Emacspeak client  that provides programmable  URL templates.
+        Emacsvox client  that provides programmable  URL templates.
         Pre-defined templates offer easy access to W3C mailing
         lists, CNN sites etc.
       </application>
@@ -143,19 +143,19 @@ type="text/xsl"?>
         access to Google Maps</a>
       </application>
       <application name="webspace">
-        Emacspeak tool for displaying continuously updating
+        Emacsvox tool for displaying continuously updating
         headers, and browsing conveniently setup hypertext links to
       WebSpace content.</application>
       <application name="websearch">
-        Emacspeak websearch client with single click access to
+        Emacsvox websearch client with single click access to
         popular search engines.
         Once selected,  the searcher prompts for the relevant input,
         performs the search, and speaks the  result.
         In addition, see the Web wizards in <a
-        href="#wizards">Emacspeak Wizards</a>.
+        href="#wizards">Emacsvox Wizards</a>.
       </application>
       <application name="webspace">
-        Emacspeak WebSpace --- provides interaction-free information access.
+        Emacsvox WebSpace --- provides interaction-free information access.
       </application>
       <application name="xslt">
         Ability to apply XSL transforms to Web content before it is
@@ -191,7 +191,7 @@ type="text/xsl"?>
     </application>
     <application name="gcal">
     Google Calendar client using ATOM and GData.</application>
-    
+
     <application name="gmaps">
       Google Maps (V2) API  client, that enables Maps exploration.
     </application>
@@ -224,7 +224,7 @@ type="text/xsl"?>
     Slashdot etc.</application>
     <application name="elfeed">
       Feed reader  for Emacs
-      
+
     </application>
     <application name="newsticker">
       Speech-enabled NewsTicker, a native Emacs RSS reader.
@@ -316,7 +316,7 @@ type="text/xsl"?>
   </category>
   <category name="Multimedia">
     <application name="aumix">
-      Emacspeak front-end for configuring  the
+      Emacsvox front-end for configuring  the
       auditory display.
     </application>
     <application name="cd-tool">
@@ -344,10 +344,10 @@ type="text/xsl"?>
       Play Internet  Media  streams. Player of choice for Youtube.
     </application>
     <application name="vuiet">
-      Discover and play music 
+      Discover and play music
     </application>
     <application name="sox">
-      Audio workbench for the Emacspeak desktop.
+      Audio workbench for the Emacsvox desktop.
     </application>
     <application name="tune-in">
       Search, Browse and play Internet radio stations
@@ -411,7 +411,7 @@ type="text/xsl"?>
     processor.</application>
 <application name="evil">
 EVIL == Emacs VI Emulation Layer.
-module emacspeak-evil speech-enables EVIL.</application>
+module emacsvox-evil speech-enables EVIL.</application>
     <application name="rdf-edit">
       Speech-enabled editing of RDF/DAML ontologies using DAMLITE.
     </application>
@@ -428,14 +428,11 @@ module emacspeak-evil speech-enables EVIL.</application>
       acquisition and  document recognition tools
       available on the underlying platform.
     </application>
-    <application name="emacspeak-daisy">
-      Implements a digital talking book reader for DAISY3  talking
-    books.</application>
-    <application name="emacspeak-bookshare">
+    <application name="emacsvox-bookshare">
       Implements a client for Bookshare, including a light-weight
       Daisy reader.
-    </application>    
-    <application name="emacspeak-epub">
+    </application>
+    <application name="emacsvox-epub">
       Implements a simple EPub reader.
     </application>
     <application name="view">
@@ -450,10 +447,10 @@ module emacspeak-evil speech-enables EVIL.</application>
       It is built on top of <code>outline mode</code> and is a useful
     way to keep organized notes.</application>
     <application name="markdown">
-      Speech-enabled markdown mode. 
-    </application>  
-    
-    
+      Speech-enabled markdown mode.
+    </application>
+
+
     <application name="remember">
       Package <code>remember.el</code>
       in conjunction with <code>org mode</code> for keeping notes is a
@@ -471,23 +468,23 @@ module emacspeak-evil speech-enables EVIL.</application>
       structured views of files.
     </application>
     <application name="hide">
-      Emacspeak client for hiding and exposing blocks of text.
+      Emacsvox client for hiding and exposing blocks of text.
       Blocks are automatically recognized by lines having a common
       prefix.
       This is used to advantage in imposing dialog structure on
       email conversations, skipping blocks of commented code etc.
     </application>
     <application name="table-ui">
-      Emacspeak's rich table browsing interface.
+      Emacsvox's rich table browsing interface.
       See Auditory User Interfaces (AUI) at
       http://www.cs.cornell.edu/home/raman/aui/aui.html
       for the theoretical underpinnings of this interface.
     </application>
     <application name="filtertext">
-      Emacspeak client for progressively filtering text.
+      Emacsvox client for progressively filtering text.
     </application>
     <application name="gridtext">
-      Emacspeak client for overlaying grids on text.
+      Emacsvox client for overlaying grids on text.
       Useful in browsing log files and other text output that has
       columnar structure.
     </application>
@@ -536,7 +533,7 @@ module emacspeak-evil speech-enables EVIL.</application>
     </application>
 <application name="vdiff">
 Package VDiff implements visual diff --- and is speech-enabled by
-module emacspeak-vdiff.</application>
+module emacsvox-vdiff.</application>
     <application name="ediff">
       Interface for browsing diff output;
       enables easy merging of different file versions, applying
@@ -576,14 +573,14 @@ of Magit and the rest of Emacs.
       Front-end for working with CVS repositories.
     </application>
     <application name="pronounce">
-      Emacspeak client for defining custom pronunciations.
+      Emacsvox client for defining custom pronunciations.
       Pronunciations can be defined on a per-file, per-directory,
       or per-mode basis and persisted across sessions.
     </application>
     <application name="remote">
-      Emacspeak client for running remote sessions.
-      Like the X windows system, Emacspeak supports a
-      remote speech server, allowing an Emacspeak
+      Emacsvox client for running remote sessions.
+      Like the X windows system, Emacsvox supports a
+      remote speech server, allowing an Emacsvox
       session running on a remote machine to send speech
       output to a server running on the local machine.
     </application>
@@ -595,14 +592,14 @@ of Magit and the rest of Emacs.
       Browse various compressed archives.
     </application>
     <application name="Muggles">
-      Emacspeak Muggles exposes smart keybindings for   performing common tasks.
+      Emacsvox Muggles exposes smart keybindings for   performing common tasks.
     </application>
     <application name="wizards">
-      Emacspeak wizards for performing common tasks.
+      Emacsvox wizards for performing common tasks.
     </application>
     <application name="clipboard">
-      Emacspeak clipboard for cut and paste among different
-      emacspeak sessions, possibly running on different
+      Emacsvox clipboard for cut and paste among different
+      Emacsvox sessions, possibly running on different
     hosts.</application>
     <application name="units">
       Simple wizard for accessing Units tool
@@ -803,20 +800,19 @@ delimiters.
     <p>
       Many shell-based tools., e.g., the napster.pl from
       Lincoln Stein's Napster package can be run effectively
-      from within an Emacs shell.  In such cases, Emacspeak
+      from within an Emacs shell.  In such cases, Emacsvox
       utilities like <em>filtertext</em> and
       <em>gridtext</em> can be used to advantage in
       efficiently scanning and filtering the program output.
       Finally, note that when using full screen applications
       like PINE and Lynx when run within the Emacs terminal
-      emulator (provided by package eterm) Emacspeak
+      emulator (provided by package eterm) Emacsvox
       functions like a traditional screenreader.
     </p>
     <p>
       <strong>
-        <a href="http://sourceforge.net/projects/emacspeak">
-          Emacspeak Home On Sourceforge
-          <IMG src="http://sourceforge.net/sflogo.php?group_id=2238" width="88" height="31" border="0" alt="SourceForge Logo"/>
+        <a href="https://github.com/robertmeta/emacsvox">
+          Emacsvox on GitHub
         </a>
       </strong>
     </p>

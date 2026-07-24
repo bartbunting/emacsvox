@@ -22,15 +22,12 @@
       <firstname>T. V.</firstname>
       <surname>Raman</surname>
     </author>
-    <title>Tips And Tricks For The Emacspeak Audio Desktop
+    <title>Tips And Tricks For The Emacsvox Audio Desktop
     </title>
     <abstract>
       <para>
-        <inlinegraphic fileref="emacspeak.jpg" width="150" align="center" role="Logo"/>
-      </para>
-      <para>
         This document is a collection of productivity tips
-        for using the Emacspeak audio desktop.  Make sure
+        for using the Emacsvox audio desktop.  Make sure
         you listen to this document with punctuation mode
         set to <emphasis>all</emphasis> to ensure that you
         do not miss important concepts.  Note that this
@@ -47,13 +44,9 @@
         rely on for your work.
       </para>
       <para>
-        The latest copy of this document is always available via
-        
-        <ulink url="https://github.com/tvraman/emacspeak/blob/master/etc/tips.xml#L50">Emacspeak
-        GitHub Repository  </ulink>
-        and  on the 
-        <ulink url="https://tvraman.github.io/emacspeak/tips.html">Emacspeak
-        WWW site</ulink>.
+        The latest copy of this document is available in the
+        <ulink url="https://github.com/robertmeta/emacsvox/blob/master/etc/tips.xml">Emacsvox
+        GitHub repository</ulink>.
       </para>
     </abstract>
   </articleinfo>
@@ -99,9 +92,9 @@
       </qandaentry>
       <qandaentry>
         <question>
-        <para>Emacspeak Hypertext Reference</para></question>
+        <para>Emacsvox Hypertext Reference</para></question>
         <answer>
-          <para>You can open the online Emacspeak hypertext reference using
+          <para>You can open the online Emacsvox hypertext reference using
           key <command><keysym>C-e TAB</keysym></command>.
         </para></answer>
       </qandaentry>
@@ -137,13 +130,13 @@
             Hitting  <command><keysym>tab</keysym></command>
             causes Emacs to complete the currently typed input as far as
             possible.
-            If there is more than one choice available, Emacspeak plays
+            If there is more than one choice available, Emacsvox plays
             auditory icon <emphasis>help</emphasis>
             and speaks the available choices.  At this point, you can
             input more characters to unambiguously specify the
             choice. Alternatively, you can browse the
             completion list which is typically displayed in
-            another window in a buffer called 
+            another window in a buffer called
           <literal>*Completions*</literal>.</para>
         </answer>
       </qandaentry>
@@ -157,7 +150,7 @@
             prompting  for user input.
             When using completion in the minibuffer by
             hitting <command><keysym>tab</keysym></command>,
-            you can switch to the 
+            you can switch to the
             <literal>*Completions*</literal>
             buffer by pressing command <command><keysym>C-o</keysym></command>.
           </para>
@@ -165,17 +158,17 @@
       </qandaentry>
       <qandaentry>
         <question>
-          <para>Customizing Emacs And Emacspeak</para>
+          <para>Customizing Emacs And Emacsvox</para>
         </question>
         <answer>
           <para>
-            Emacspeak can now be customized using
+            Emacsvox can now be customized using
             <application>custom</application> and this is
             the recommended way for users new to Emacs to
-            customize Emacs and Emacspeak.  Command
-            <command>emacspeak-customize</command> invokes
+            customize Emacs and Emacsvox.  Command
+            <command>emacsvox-customize</command> invokes
             Emacs' customize interface for customizing
-            Emacspeak.  Use
+            Emacsvox.  Use
             <application>custom</application> to customize
             Emacs packages that support this feature.  Note
             that not all Emacs packages are fully
@@ -229,7 +222,7 @@
           provides seamless access to remote files and folders by
           using UNIX <command>ssh</command>
           behind the scenes.
-          To open a remote directory, specify the directory location  as 
+          To open a remote directory, specify the directory location  as
           <command>/username@host:/path</command>
           when prompted by command <command>dired</command>.
           Note that in the above,
@@ -283,7 +276,7 @@
             ---an extended Emacs interface to UNIX
             <application>grep</application>
             to search all files in a directory.
-            For simpler tasks use command 
+            For simpler tasks use command
             <command>grep-dired</command> and command <command>find-grep-dired</command>.
           </para>
         </answer>
@@ -294,11 +287,11 @@
         </question>
         <answer>
           <para>
-            When working on a project consisting of many files, 
+            When working on a project consisting of many files,
             build a tags table using UNIX command
             <command>etags</command>
             and use it to advantage from within Emacs with commands such
-            as 
+            as
             <simplelist type="vert"><member><command>find-tag</command></member><member><command>tags-search</command></member><member><command>tags-query-replace</command></member></simplelist>
           </para>
         </answer>
@@ -321,8 +314,8 @@
             is defined as a sequence of contiguous lines starting with
             a common prefix e.g., cited lines in an email message or blocks of
             comments in programming languages.
-            See commands 
-            <simplelist type="vert"><member><command><keysym>C-e j</keysym></command><command> emacspeak-hide-or-expose-block</command></member><member><command><keysym>C-e C-j</keysym></command><command> emacspeak-hide-speak-block-sans-prefix</command></member></simplelist>
+            See commands
+            <simplelist type="vert"><member><command><keysym>C-e j</keysym></command><command> emacsvox-hide-or-expose-block</command></member><member><command><keysym>C-e C-j</keysym></command><command> emacsvox-hide-speak-block-sans-prefix</command></member></simplelist>
             to use these features.
           </para>
         </answer>
@@ -344,7 +337,7 @@ example, see <application>hideshow</application>.</para></answer>
         <answer>
           <para>
             Use commands
-            <simplelist type="vert"><member><command>emacspeak-skip-blank-lines-backward</command></member><member><command>emacspeak-skip-blank-lines-forward</command></member></simplelist>
+            <simplelist type="vert"><member><command>emacsvox-skip-blank-lines-backward</command></member><member><command>emacsvox-skip-blank-lines-forward</command></member></simplelist>
           to move across contiguous blank lines.</para>
         </answer>
       </qandaentry>
@@ -364,8 +357,8 @@ example, see <application>hideshow</application>.</para></answer>
             to a regular expression that matches header lines.
             When using Emacs <command>view-mode</command>
             to read text, this feature is especially useful when combined with
-            Emacspeak built-in feature that loads a directory specific
-            file to customize  Emacspeak on a per-directory basis.
+            Emacsvox built-in feature that loads a directory specific
+            file to customize  Emacsvox on a per-directory basis.
             Thus, one can organize electronic texts by placing  files for a given
             book  in a specific directory, and then creating a file
             called <literal>.espeak.el</literal>
@@ -385,7 +378,7 @@ example, see <application>hideshow</application>.</para></answer>
             is <emphasis>searchable</emphasis>
             in Emacs. Use this to advantage when working with all forms
             of content, since it is often more efficient to
-            use Emacs commands 
+            use Emacs commands
             <command><keycap>C-s</keycap></command>
             and  <command><keycap>C-r</keycap></command>
             to perform forward or backward incremental search to locate
@@ -417,11 +410,11 @@ example, see <application>hideshow</application>.</para></answer>
         <answer>
           <para>
             Display the file in different Emacs
-            <emphasis>windows</emphasis> 
+            <emphasis>windows</emphasis>
             or <emphasis>frames</emphasis>;
-            Emacs allows you to display different portions 
-            of the file in each window or frame. Use Emacspeak commands 
-            <simplelist type="vert"><member><command>emacspeak-speak-predefined-window</command></member><member><command>emacspeak-speak-this-buffer-other-window-display</command></member><member><command>emacspeak-speak-this-buffer-previous-display</command></member><member><command>emacspeak-speak-this-buffer-next-display</command></member></simplelist>
+            Emacs allows you to display different portions
+            of the file in each window or frame. Use Emacsvox commands
+            <simplelist type="vert"><member><command>emacsvox-speak-predefined-window</command></member><member><command>emacsvox-speak-this-buffer-other-window-display</command></member><member><command>emacsvox-speak-this-buffer-previous-display</command></member><member><command>emacsvox-speak-this-buffer-next-display</command></member></simplelist>
             to listen to a given  portion of a file whilst working on a
             different portion of the same file.
           </para>
@@ -438,8 +431,8 @@ example, see <application>hideshow</application>.</para></answer>
             Rather than switching back and forth between the document
             you are reading and the document where the
             comments are being jotted down, you can use
-            Emacspeak utility 
-            <command>emacspeak-annotate-add-annotation</command> --see
+            Emacsvox utility
+            <command>emacsvox-annotate-add-annotation</command> --see
             that command's online documentation for details on
           its use.</para>
         </answer>
@@ -447,13 +440,11 @@ example, see <application>hideshow</application>.</para></answer>
 
     </qandadiv>
     <qandadiv id="status">
-      <title>State Of The Emacspeak Audio Desktop</title>
+      <title>State Of The Emacsvox Audio Desktop</title>
       <para>This section contains tips on querying and updating
-      the status of the Emacspeak audio desktop.
-      See section 
-      <ulink url="http://emacspeak.sourceforge.net/info/emacspeak.html#SEC20">
-      status commands</ulink>
-      in the Emacspeak online manual for additional details.
+      the status of the Emacsvox audio desktop.
+      See the status commands in the Emacsvox Info manual for
+      additional details.
       </para>
       <qandaentry>
         <question>
@@ -462,7 +453,7 @@ example, see <application>hideshow</application>.</para></answer>
         </question>
         <answer>
           <para><emphasis>Emacs buffers</emphasis> are the building blocks of the
-          Emacspeak audio desktop.  Current context is
+          Emacsvox audio desktop.  Current context is
           thus determined by the <emphasis>current
           buffer</emphasis> ---i.e., the buffer with which the
           user is presently interacting.  The state of the
@@ -470,24 +461,24 @@ example, see <application>hideshow</application>.</para></answer>
           updated visually by Emacs on the
           <emphasis>modeline</emphasis> (see the Emacs online
           tutorial for details on the visual display)---
-          the status is  spoken by Emacspeak whenever
+          the status is  spoken by Emacsvox whenever
           there is a context change. You can explicitly
           request this context information using command
-          <command>emacspeak-speak-mode-line</command>;
+          <command>emacsvox-speak-mode-line</command>;
           additional details are provided by command
-          <command>emacspeak-speak-minor-mode-line</command>.
+          <command>emacsvox-speak-minor-mode-line</command>.
           </para>
         </answer>
       </qandaentry>
       <qandaentry>
         <question>
-          <para>Information conveyed by 
-          command <command>emacspeak-speak-mode-line</command></para>
+          <para>Information conveyed by
+          command <command>emacsvox-speak-mode-line</command></para>
         </question>
         <answer>
           <para>
             Command
-            <command>emacspeak-speak-mode-line</command> is
+            <command>emacsvox-speak-mode-line</command> is
             optimized to convey the most relevant
             information first. Different user options
             control additional status information that may
@@ -496,20 +487,20 @@ example, see <application>hideshow</application>.</para></answer>
             icons to make the spoken feedback more succinct.
             Here is a brief summary listing the various
             items of status information conveyed by command
-            <command>emacspeak-speak-mode-line</command>:
+            <command>emacsvox-speak-mode-line</command>:
             <simplelist type="vert">
               <member>Shell-mode The working directory is
               spoken for shell-mode buffers.</member>
               <member> which-function
               When <command>which-function-mode</command> is
               activated using command
-              <command>emacspeak-toggle-which-function</command>,
+              <command>which-function-mode</command>,
               the name of the function containing the cursor
               is spoken. This is useful in programming modes.
               </member><member> mail-alert Produces an
               auditory icon indicating newly arrived mail and
               is controlled via command
-              <command>emacspeak-toggle-mail-alert</command>.</member><member>
+              <command>emacsvox-toggle-mail-alert</command>.</member><member>
               buffer-modified An auditory tone when the
               contents of the <emphasis>current</emphasis>
               buffer has been modified since it was last
@@ -544,7 +535,7 @@ example, see <application>hideshow</application>.</para></answer>
               the feedback is designed using the principle
               <emphasis>no news is good news</emphasis>, thus,
               in many cases the absence of a cue is itself a
-              cue.  As an example, Emacspeak produces an
+              cue.  As an example, Emacsvox produces an
               auditory tone only if a buffer is
               <emphasis>read-only</emphasis> --the absence of
               the tone indicates the buffer can be edited
@@ -555,12 +546,12 @@ example, see <application>hideshow</application>.</para></answer>
       </qandaentry>
       <qandaentry>
         <question>
-          <para>Information conveyed by command <command>emacspeak-speak-minor-mode-line</command></para>
+          <para>Information conveyed by command <command>emacsvox-speak-minor-mode-line</command></para>
         </question>
         <answer>
           <para>
             Command
-            <command>emacspeak-speak-minor-mode-line</command>
+            <command>emacsvox-speak-minor-mode-line</command>
             typically conveys additional information
             including:
             <simplelist type="vert"><member>Minor modes that are active e.g.,
@@ -570,11 +561,11 @@ example, see <application>hideshow</application>.</para></answer>
       </qandaentry>
     </qandadiv>
     <qandadiv id="multimedia">
-      <title>Multimedia On The Emacspeak Audio
+      <title>Multimedia On The Emacsvox Audio
       Desktop</title>
       <para>
         This section contains tips on using the various
-        multimedia features of the Emacspeak audio
+        multimedia features of the Emacsvox audio
       desktop.</para>
       <qandaentry>
         <question>
@@ -584,9 +575,9 @@ example, see <application>hideshow</application>.</para></answer>
           <para>
             The state of the auditory display can be set and
             updated using command
-            <command>emacspeak-audio-setup</command>.  The
+            <command>amixer</command>.  The
             available settings depend on the sound card in
-            use. 
+            use.
           </para>
         </answer>
       </qandaentry>
@@ -595,9 +586,9 @@ example, see <application>hideshow</application>.</para></answer>
           <para>Playing audio CDs</para>
         </question>
         <answer>
-          <para>Emacspeak built-in command
+          <para>Emacsvox built-in command
           <command>cd-tool</command>
-          uses the command-line tools provided by RPM package 
+          uses the command-line tools provided by RPM package
           <application>cdp</application>.
           This is convenient for  playing tracks from a CD.
           Use <application>cdcd</application> from within an Emacs
@@ -612,16 +603,16 @@ example, see <application>hideshow</application>.</para></answer>
         <answer>
           <para>Application
           <application>mplayer</application> can play music
-          listed 
+          listed
           in a <application>playlist</application> file --typically
-          such files are given the extension 
+          such files are given the extension
           <computeroutput>.m3u</computeroutput>.
           A playlist file contains names of MP3 files, one per line.
           To create  a playlist file for use with
           <application>mplayer</application>,
           you might execute the following command from
           within a <application>shell</application>
-          buffer:  
+          buffer:
           <blockquote><para><programlisting format="linespecific">
             cd $HOME/music
             find . -name '*.mp3'  &gt; playlist.m3u
@@ -638,15 +629,15 @@ example, see <application>hideshow</application>.</para></answer>
             Install <application>mplayer</application>
             -- this is an open source media player.
             Once you have this installed and configured, you can use
-            Emacspeak's built-in 
+            Emacsvox's built-in
             Media Player  front-end provided by module
-            <application>emacspeak-m-player.el</application>
+            <application>emacsvox-m-player.el</application>
             to conveniently play streaming media from anywhere on the
             audio desktop --see command
-            <command>emacspeak-multimedia</command>.
+            <command>emacsvox-multimedia</command>.
             Note that when playing a stream, you can use all the
             single-keystroke navigation commands provided by
-            <application>emacspeak-m-player</application>
+            <application>emacsvox-m-player</application>
             by prefixing them with <keysym>C-e ;</keysym>
             from anywhere on the audio desktop; alternatively,
             you can use <keysym>C-e ;;</keysym> to switch to a special
@@ -657,7 +648,7 @@ example, see <application>hideshow</application>.</para></answer>
           </para>
         </answer>
       </qandaentry>
-      
+
       <qandaentry>
         <question>
           <para>Streaming media presets</para>
@@ -665,14 +656,14 @@ example, see <application>hideshow</application>.</para></answer>
         <answer>
           <para>Streaming media on the WWW is often
           well-hidden behind several mouse clicks.
-          Emacspeak allows you to configure your favorite
-          streams as an organized hierarchy.  The Emacspeak
+          Emacsvox allows you to configure your favorite
+          streams as an organized hierarchy.  The Emacsvox
           distribution comes with such a collection of
           streams I listen to on a frequent basis.  You can
           access these by using standard Emacs completion
           when prompted for a <computeroutput>media
           Resource</computeroutput> by command
-          <command>emacspeak-m-player</command>. </para>
+          <command>emacsvox-m-player</command>. </para>
         </answer>
       </qandaentry>
       <qandaentry>
@@ -681,8 +672,8 @@ example, see <application>hideshow</application>.</para></answer>
         <answer>
           <para>
             The ImageMagick  package provides a powerful set of image
-            manipulation tools --for an excellent  overview see 
-            the online article 
+            manipulation tools --for an excellent  overview see
+            the online article
             <ulink
                 url="http://www.ibm.com/developerworks/linux/library/l-graf/?ca=dgr-lnxw02ImageMagick">command-line graphics</ulink></para>
         </answer>
@@ -692,22 +683,17 @@ example, see <application>hideshow</application>.</para></answer>
       <title>Authoring Tools</title>
       <para>This section contains tips on authoring
       structured documents for online and print
-      publishing.  See the relevant section of the online
-      Emacspeak manual
-      for further details on 
-      <ulink url="http://emacspeak.sourceforge.net/info/emacspeak.html#SEC31">
-      document authoring on the Emacspeak desktop.</ulink>
+      publishing.  See the relevant section of the Emacsvox Info
+      manual for further details on document authoring.
       </para>
     </qandadiv>
     <qandadiv id="messaging">
       <title>Electronic Messaging</title>
       <para>
         This section contains tips about electronic messaging  on
-        the Emacspeak desktop.
-        For further details, see the relevant section 
-        of the online Emacspeak manual on 
-        <ulink url="http://emacspeak.sourceforge.net/info/emacspeak.html#SEC40">
-      electronic messaging.</ulink></para>
+        the Emacsvox desktop.
+        For further details, see the relevant electronic-messaging
+        section of the Emacsvox Info manual.</para>
     </qandadiv>
     <qandadiv id="web">
       <title>Web Browsing</title>
@@ -726,7 +712,7 @@ example, see <application>hideshow</application>.</para></answer>
               <para>
                 <command>eww</command>.
                 EWW is built-in with Emacs 24.4 and later.
-                Emacspeak's web-specific wizards 
+                Emacsvox's web-specific wizards
                 make up for many of the short-comings encountered when navigating
                 complex web sites.
               </para>
@@ -739,7 +725,7 @@ example, see <application>hideshow</application>.</para></answer>
                 W3 lacks the features you need to interact with many commerce sites,
                 but is a very flexsible and powerful solution for
                 efficiently browsing content.
-                Emacspeak's web-specific wizards 
+                Emacsvox's web-specific wizards
                 make up for many of the short-comings encountered when navigating
                 complex web sites and these wizards work best with
                 the W3 browser.
@@ -762,14 +748,14 @@ example, see <application>hideshow</application>.</para></answer>
                 The oldest terminal based browser of them all.
                 It's still a good solution for some interactive sites, but its lack of
                 support for tables can make some sites very confusing.
-              Emacspeak command: <command>emacspeak-lynx</command>.</para>
+              Run <command>lynx</command> in an Emacs terminal.</para>
             </listitem>
             <listitem>
               <para><command>Links</command>.
               This is <emphasis>Links</emphasis> with an <emphasis>i</emphasis> and
               not to be confused with the older Lynx browser.
               It has rudimentary Javascript support and is under active development.
-              Emacspeak command: <command>emacspeak-links</command>.</para>
+              Run <command>links</command> in an Emacs terminal.</para>
             </listitem>
           </orderedlist>
         </answer>
@@ -781,23 +767,24 @@ example, see <application>hideshow</application>.</para></answer>
       <para>This section contains tips on managing your system.</para>
     </qandadiv>
     <qandadiv id="utils">
-      <title>Emacspeak Utilities</title>
+      <title>Emacsvox Utilities</title>
       <para>This section gives tips on using some of the built-in
-      productivity tools bundled with Emacspeak.
+      productivity tools bundled with Emacsvox.
       Most of these are implemented in module
-      <application>emacspeak-wizards</application>.
+      <application>emacsvox-wizards</application>.
       </para>
       <qandaentry>
         <question>
           <para>
-          Launch a <command>root</command> shell.</para>
+          Edit a file as <command>root</command>.</para>
         </question>
         <answer>
-          <para><emphasis>Never</emphasis> run Emacspeak as the
+          <para><emphasis>Never</emphasis> run Emacsvox as the
           <command>root</command> user.
-          Instead use Emacspeak command 
-          <command>emacspeak-root</command>
-          to create a <command>root shell</command> after starting Emacspeak.
+          Use
+          <command>emacsvox-wizards-find-file-as-root</command>
+          to open a file through TRAMP with only the required operation
+          running as <command>root</command>.
           </para>
         </answer>
       </qandaentry>
@@ -813,8 +800,8 @@ example, see <application>hideshow</application>.</para></answer>
             You often find yourself switching to the shell
             buffer and then executing <command>cd</command> to
             switch to the directory containing the file you
-            were working on.  Emacspeak wizard
-            <command>emacspeak-wizards-shell-toggle</command>
+            were working on.  Emacsvox wizard
+            <command>emacsvox-wizards-shell-toggle</command>
             switches to a running shell buffer and
             automatically executes command
             <command>cd</command> so you are in the right
@@ -823,14 +810,14 @@ example, see <application>hideshow</application>.</para></answer>
       </qandaentry>
       <qandaentry>
         <question>
-          <para>Emacspeak Clipboard</para>
+          <para>Emacsvox Clipboard</para>
         </question>
         <answer>
           <para>
-            Emacspeak provides a clipboard facility to enabling cut and
-            paste across different emacspeak sessions,
+            Emacsvox provides a clipboard facility to enabling cut and
+            paste across different Emacsvox sessions,
             see commands
-            <simplelist type="vert"><member><command>emacspeak-clipboard-copy</command></member><member><command>emacspeak-clipboard-paste</command></member></simplelist>
+            <simplelist type="vert"><member><command>emacsvox-clipfile-copy</command></member><member><command>emacsvox-clipfile-paste</command></member></simplelist>
           </para>
         </answer>
       </qandaentry>
@@ -839,8 +826,8 @@ example, see <application>hideshow</application>.</para></answer>
           <para>Copying current file.</para>
         </question>
         <answer>
-          <para>Emacspeak command
-          <command>emacspeak-copy-current-file</command>
+          <para>Emacsvox command
+          <command>emacsvox-copy-current-file</command>
           lets you copy the file being visited to a
           different location ---this is a convenient way of
           publishing to a  WWW server.
@@ -853,8 +840,8 @@ example, see <application>hideshow</application>.</para></answer>
         </question>
         <answer>
           <para>
-            Emacspeak command
-            <command>emacspeak-speak-telephone-directory</command>
+            Emacsvox command
+            <command>emacsvox-speak-telephone-directory</command>
           lets you maintain a telephone directory as a simple text file.</para>
         </answer>
       </qandaentry>
@@ -866,10 +853,10 @@ example, see <application>hideshow</application>.</para></answer>
           <para>Many UNIX commands produce tabulated output,
           e.g., command <command>df</command> for displaying
           a disk usage summary.
-          You can use Emacspeak command
-          <command>emacspeak-speak-run-shell-command</command>
+          You can use Emacsvox command
+          <command>emacsvox-speak-run-shell-command</command>
           to run such commands and have the tabular output available
-          for browsing using Emacspeak's table browsing facilities.</para>
+          for browsing using Emacsvox's table browsing facilities.</para>
         </answer>
       </qandaentry>
       <qandaentry>
@@ -879,14 +866,14 @@ example, see <application>hideshow</application>.</para></answer>
         <answer>
           <para>
             This is most useful when working with log files.  Command
-            <command> emacspeak-speak-line-set-column-filter</command>
+            <command> emacsvox-speak-line-set-column-filter</command>
             enables you to filter out uninteresting columns of each
             line as it is spoken.  Note that columns are filtered out
             by making them <emphasis>inaudible</emphasis> ---in order
             for this to take effect, <command>voice-lock</command>
             needs to be active in the current buffer.  You can invert
             the sense of the filter by invoking command <command>
-            emacspeak-toggle-speak-line-invert-filter</command>.
+            emacsvox-toggle-speak-line-invert-filter</command>.
           </para>
         </answer>
       </qandaentry>
