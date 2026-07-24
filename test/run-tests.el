@@ -220,6 +220,7 @@
   (require 'emacsvox-notmuch-tests)
   (require 'emacsvox-nov-tests)
   (require 'emacsvox-orgalist-tests)
+  (require 'emacsvox-paradox-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

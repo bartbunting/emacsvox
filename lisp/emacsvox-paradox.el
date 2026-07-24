@@ -102,66 +102,85 @@
 
 ;;;  Managing Packages:
 
-(cl-loop
- for f in
+(defvar emacsvox-paradox--advice nil
+  "Current Paradox targets and their native advice functions.")
+(setq emacsvox-paradox--advice nil)
+
+(defun emacsvox-paradox--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-paradox--advice))))
+
+(emacsvox-paradox--register-after-group
  '(paradox-next-entry paradox-previous-entry)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-paradox-summarize-line)))))
+ #'emacsvox-paradox-summarize-line)
 
 ;;;  Advice:
 
-(defun ems--paradox-quit-and-close-after (&rest _)
+(defun emacsvox--advice-paradox-quit-and-close-after (&rest _)
   "provide auditory feedback."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'paradox-quit-and-close)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'paradox-quit-and-close :after
-            #'ems--paradox-quit-and-close-after)
+(push '(paradox-quit-and-close :after
+        emacsvox--advice-paradox-quit-and-close-after)
+      emacsvox-paradox--advice)
 
-(cl-loop
- for f in
- '(
-   paradox-sort-by-package paradox-sort-by-status
-   paradox-sort-by-version paradox-sort-by-★) do
- (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "Speak after done."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'task-done)))))
+(defun emacsvox-paradox--sort-feedback ()
+  "Speak after sorting Paradox entries."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'task-done))
+
+(emacsvox-paradox--register-after-group
+ '(paradox-sort-by-package paradox-sort-by-status
+   paradox-sort-by-version paradox-sort-by-★)
+ #'emacsvox-paradox--sort-feedback)
 
 ;;;  Commit Navigation:
-(cl-loop
- for f in 
- '(paradox-next-commit paradox-previous-commit)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-tabulated-list-speak-cell)))))
+(defun emacsvox-paradox--commit-feedback ()
+  "Speak the selected Paradox commit."
+  (emacsvox-icon 'select-object)
+  (emacsvox-tabulated-list-speak-cell))
 
-(defun ems--paradox-menu-view-commit-list-after (&rest _)
+(emacsvox-paradox--register-after-group
+ '(paradox-next-commit paradox-previous-commit)
+ #'emacsvox-paradox--commit-feedback)
+
+(defun emacsvox--advice-paradox-menu-view-commit-list-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'paradox-menu-view-commit-list)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'paradox-menu-view-commit-list :after
-            #'ems--paradox-menu-view-commit-list-after)
+(push '(paradox-menu-view-commit-list :after
+        emacsvox--advice-paradox-menu-view-commit-list-after)
+      emacsvox-paradox--advice)
 
-(defun ems--fparadox-commit-list-visit-commit-after (&rest _)
+(defun emacsvox--advice-paradox-commit-list-visit-commit-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'paradox-commit-list-visit-commit)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-(advice-add 'fparadox-commit-list-visit-commit :after
-            #'ems--fparadox-commit-list-visit-commit-after)
+(push '(paradox-commit-list-visit-commit :after
+        emacsvox--advice-paradox-commit-list-visit-commit-after)
+      emacsvox-paradox--advice)
+
+(defun emacsvox-paradox--install-advice ()
+  "Install native advice after Paradox loads."
+  (dolist (entry emacsvox-paradox--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'paradox
+  (emacsvox-paradox--install-advice))
 
 (provide 'emacsvox-paradox)
 ;;;  end of file
-
