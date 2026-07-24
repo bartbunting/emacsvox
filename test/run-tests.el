@@ -111,6 +111,7 @@
   (require 'emacsvox-rmail-tests)
   (require 'emacsvox-custom-ui-tests)
   (require 'emacsvox-ediff-tests)
+  (require 'emacsvox-tetris-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
