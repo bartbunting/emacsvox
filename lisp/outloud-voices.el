@@ -48,6 +48,12 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
 
+(defvar tts-default-speech-rate)
+(defvar tts-default-voice)
+(defvar tts-speech-rate)
+(defvar tts-speech-rate-base)
+(defvar tts-speech-rate-step)
+
 ;;;  Customizations:
 
 (defcustom outloud-default-speech-rate 50
@@ -57,8 +63,8 @@
   :set #'(lambda(sym val)
            
            (set-default sym val)
-           (when (string-match "outloud" dtk-program)
-             (setq-default dtk-speech-rate val))))
+           (when (string-match "outloud" tts-program)
+             (setq-default tts-speech-rate val))))
 
 ;;;  Top level TTS  switcher
 
@@ -68,8 +74,8 @@
   (interactive )
   (outloud-configure-tts)
   (ems--fastload "voice-defs")
-  (funcall-interactively #'dtk-select-server "outloud" )
-  (dtk-initialize))
+  (funcall-interactively #'tts-select-server "outloud" )
+  (tts-initialize))
 
 ;;;   voice table
 
@@ -280,9 +286,6 @@
 ;;;###autoload
 (defun outloud-configure-tts ()
   "Configure TTS  to use Outloud."
-  (cl-declare (special tts-default-speech-rate tts-default-voice
-                       outloud-default-speech-rate dtk-speech-rate
-                       dtk-speech-rate-step dtk-speech-rate-base))
   (fset 'tts-voice-defined-p 'outloud-voice-defined-p)
   (fset 'tts-get-voice-command 'outloud-get-voice-command)
   (fset
@@ -290,17 +293,16 @@
   (setq tts-default-voice 'paul)
   (setq tts-default-speech-rate outloud-default-speech-rate)
   (set-default 'tts-default-speech-rate outloud-default-speech-rate)
-  (setq dtk-speech-rate-step 10
-        dtk-speech-rate-base 50
-        dtk-speech-rate outloud-default-speech-rate)
-  (setq-default dtk-speech-rate-step 10
-                dtk-speech-rate outloud-default-speech-rate
-                dtk-speech-rate-base 50)
-  (dtk-set-character-scale 1.5 'default)
-  (setq dtk-handle-unicode t)
-  (dtk-unicode-update-untouched-charsets
+  (setq tts-speech-rate-step 10
+        tts-speech-rate-base 50
+        tts-speech-rate outloud-default-speech-rate)
+  (setq-default tts-speech-rate-step 10
+                tts-speech-rate outloud-default-speech-rate
+                tts-speech-rate-base 50)
+  (tts-set-character-scale 1.5 'default)
+  (setq tts-handle-unicode t)
+  (tts-unicode-update-untouched-charsets
    '(ascii latin-iso8859-1 latin-iso8859-15 latin-iso8859-9
            eight-bit-graphic)))
 
 (provide 'outloud-voices)
-

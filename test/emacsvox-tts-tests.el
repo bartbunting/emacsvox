@@ -12,6 +12,7 @@
 (require 'dectalk-voices)
 (require 'dtk-speak)
 (require 'emacsvox-sounds)
+(require 'outloud-voices)
 (require 'voice-setup)
 
 (defconst emacsvox-test--tts-protocol-aliases
@@ -392,6 +393,82 @@
       `((tts-default-speech-rate . ,dectalk-default-speech-rate)
         (tts-speech-rate-step . 50)
         (tts-speech-rate-base . 150))))
+    (should (equal character-scale '(1.5 default)))
+    (should
+     (equal
+      untouched-charsets
+      '(ascii latin-iso8859-1 latin-iso8859-15
+              latin-iso8859-9 eight-bit-graphic)))))
+
+(ert-deftest emacsvox-tts-outloud-uses-canonical-runtime ()
+  "The Outloud selector uses the generic TTS runtime API."
+  (let (events)
+    (cl-letf (((symbol-function 'outloud-configure-tts)
+               (lambda () (push 'configure events)))
+              ((symbol-function 'ems--fastload)
+               (lambda (file) (push (list 'fastload file) events)))
+              ((symbol-function 'tts-select-server)
+               (lambda (server) (push (list 'select server) events)))
+              ((symbol-function 'tts-initialize)
+               (lambda () (push 'initialize events))))
+      (outloud))
+    (should
+     (equal
+      (nreverse events)
+      '(configure
+        (fastload "voice-defs")
+        (select "outloud")
+        initialize)))))
+
+(ert-deftest emacsvox-tts-outloud-configures-canonical-state ()
+  "The Outloud adapter configures generic TTS state and dispatch."
+  (let (defaults
+        character-scale
+        untouched-charsets)
+    (cl-progv
+        '(tts-default-voice tts-default-speech-rate
+          tts-speech-rate-step tts-speech-rate-base
+          tts-speech-rate tts-handle-unicode)
+        '(nil 1 2 3 4 nil)
+      (cl-letf (((symbol-function 'set-default)
+                 (lambda (symbol value)
+                   (push (cons symbol value) defaults)))
+                ((symbol-function 'tts-set-character-scale)
+                 (lambda (scale scope)
+                   (setq character-scale (list scale scope))))
+                ((symbol-function 'tts-unicode-update-untouched-charsets)
+                 (lambda (charsets)
+                   (setq untouched-charsets charsets)))
+                ((symbol-function 'tts-voice-defined-p) #'ignore)
+                ((symbol-function 'tts-get-voice-command) #'ignore)
+                ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (outloud-configure-tts)
+        (should (eq (symbol-value 'tts-default-voice) 'paul))
+        (should
+         (= (symbol-value 'tts-default-speech-rate)
+            outloud-default-speech-rate))
+        (should (= (symbol-value 'tts-speech-rate-step) 10))
+        (should (= (symbol-value 'tts-speech-rate-base) 50))
+        (should
+         (= (symbol-value 'tts-speech-rate)
+            outloud-default-speech-rate))
+        (should (symbol-value 'tts-handle-unicode))
+        (should
+         (eq (symbol-function 'tts-voice-defined-p)
+             'outloud-voice-defined-p))
+        (should
+         (eq (symbol-function 'tts-get-voice-command)
+             'outloud-get-voice-command))
+        (should
+         (eq (symbol-function 'tts-define-voice-from-acss)
+             'outloud-define-voice-from-acss))))
+    (should
+     (equal
+      (nreverse defaults)
+      `((tts-default-speech-rate . ,outloud-default-speech-rate)
+        (tts-speech-rate-step . 10)
+        (tts-speech-rate . ,outloud-default-speech-rate)
+        (tts-speech-rate-base . 50))))
     (should (equal character-scale '(1.5 default)))
     (should
      (equal
