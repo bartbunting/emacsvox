@@ -213,6 +213,7 @@
   (require 'emacsvox-journalctl-tests)
   (require 'emacsvox-js2-tests)
   (require 'emacsvox-lispy-tests)
+  (require 'emacsvox-mines-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

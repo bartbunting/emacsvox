@@ -221,55 +221,73 @@ to beginning of board before searching."
 
 ;;;  Advice Interactive Commands
 
-(defun ems--mines-after (&rest _)
+(defvar emacsvox-mines--advice nil
+  "Current Mines targets and their native advice functions.")
+(setq emacsvox-mines--advice nil)
+
+(defun emacsvox--advice-mines-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'mines)
     (dtk-speak "New Minesweeper game") (emacsvox-icon 'open-object)))
 
-(advice-add 'mines :after #'ems--mines-after)
+(push '(mines :after emacsvox--advice-mines-after)
+      emacsvox-mines--advice)
 
-(cl-loop
- for f in
- '(mines-go-down
-   mines-go-left
-   mines-go-right
-   mines-go-up)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-mines-speak-cell)))))
+(dolist (target '(mines-go-down mines-go-left mines-go-right mines-go-up))
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Speak the cell selected by `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-mines-speak-cell))))
+    (push (list target :after advice-function) emacsvox-mines--advice)))
 
-(defun ems--mines-dig-after (&rest _)
+(defun emacsvox--advice-mines-dig-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'mines-dig)
     (emacsvox-icon 'open-object)
     (unless mines-game-over (emacsvox-mines-speak-cell))))
 
-(advice-add 'mines-dig :after #'ems--mines-dig-after)
+(push '(mines-dig :after emacsvox--advice-mines-dig-after)
+      emacsvox-mines--advice)
 
-(defun ems--mines-flag-cell-after (&rest _)
+(defun emacsvox--advice-mines-flag-cell-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'mines-flag-cell)
     (if (eq t (aref mines-grid (mines-current-pos)))
         (emacsvox-icon 'close-object)
       (emacsvox-icon 'mark-object))
     (emacsvox-mines-speak-cell)))
 
-(advice-add 'mines-flag-cell :after #'ems--mines-flag-cell-after)
+(push '(mines-flag-cell :after emacsvox--advice-mines-flag-cell-after)
+      emacsvox-mines--advice)
 
-(defun ems--mines-game-over-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'shutdown)))
+(defun emacsvox--advice-mines-game-over-after (&rest _)
+  "Play the shutdown icon when an interactive dig ends the game."
+  (when (ems-interactive-p 'mines-dig)
+    (emacsvox-icon 'shutdown)))
 
-(advice-add 'mines-game-over :after #'ems--mines-game-over-after)
+(push '(mines-game-over :after emacsvox--advice-mines-game-over-after)
+      emacsvox-mines--advice)
 
-(defun ems--mines-game-completed-after (&rest _)
+(defun emacsvox--advice-mines-game-completed-after (&rest _)
   "Provide an auditory icon." (emacsvox-icon 'task-done))
 
-(advice-add 'mines-game-completed :after
-            #'ems--mines-game-completed-after)
+(push '(mines-game-completed :after
+        emacsvox--advice-mines-game-completed-after)
+      emacsvox-mines--advice)
+
+(defun emacsvox-mines--install-advice ()
+  "Install native advice after Mines loads."
+  (dolist (entry emacsvox-mines--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'mines
+  (emacsvox-mines--install-advice))
 
 (provide 'emacsvox-mines)
 ;;;  end of file
-
