@@ -51,8 +51,7 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
+(defconst emacsvox-abc-mode--advice-targets
  '(
    abc-align-bars
    abc-backward-song
@@ -67,14 +66,30 @@
    abc-renumber-songs
    abc-repeat-region
    abc-slur-region)
+  "Current ABC Mode commands that receive native advice.")
+
+(cl-loop
+ for target in emacsvox-abc-mode--advice-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-speak-line)
        (emacsvox-icon 'button)))))
 
+(defun emacsvox-abc-mode--install-advice ()
+  "Install advice after the optional ABC Mode package loads."
+  (dolist (target emacsvox-abc-mode--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'abc-mode
+  (emacsvox-abc-mode--install-advice))
+
 (provide 'emacsvox-abc-mode)
 ;;;  end of file
-
