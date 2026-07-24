@@ -152,6 +152,43 @@
       (should (eq dtk-quiet default-quiet))
       (should (= dtk-speech-rate default-rate)))))
 
+(ert-deftest emacsvox-tts-canonical-state-aliases-share-storage ()
+  "Canonical and legacy global state names address the same values."
+  (let ((dtk-program "legacy")
+        (dtk-stop-immediately t)
+        (dtk-speaker-process 'primary))
+    (should (equal tts-program "legacy"))
+    (should tts-stop-immediately)
+    (should (eq tts-speaker-process 'primary))
+    (setq tts-program "canonical"
+          tts-stop-immediately nil
+          tts-speaker-process 'replacement)
+    (should (equal dtk-program "canonical"))
+    (should-not dtk-stop-immediately)
+    (should (eq dtk-speaker-process 'replacement))))
+
+(ert-deftest emacsvox-tts-canonical-state-aliases-preserve-dynamic-routing ()
+  "Binding either process name is visible through its corresponding alias."
+  (let ((tts-speaker-process 'canonical))
+    (should (eq dtk-speaker-process 'canonical)))
+  (let ((dtk-speaker-process 'legacy))
+    (should (eq tts-speaker-process 'legacy))))
+
+(ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
+  "Canonical buffer-local state shares legacy storage without leaking."
+  (let ((default-quiet (default-value 'dtk-quiet))
+        (default-rate (default-value 'dtk-speech-rate)))
+    (with-temp-buffer
+      (setq tts-quiet (not default-quiet)
+            tts-speech-rate (1+ default-rate))
+      (should (eq dtk-quiet (not default-quiet)))
+      (should (= dtk-speech-rate (1+ default-rate)))
+      (should (local-variable-p 'tts-quiet))
+      (should (local-variable-p 'dtk-quiet)))
+    (with-temp-buffer
+      (should (eq tts-quiet default-quiet))
+      (should (= tts-speech-rate default-rate)))))
+
 (ert-deftest emacsvox-tts-voice-setup-selects-engine-adapter ()
   "Each speech-server name selects the corresponding voice adapter."
   (dolist

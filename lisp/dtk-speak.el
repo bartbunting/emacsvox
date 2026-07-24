@@ -56,6 +56,44 @@
 (declare-function emacsvox-icon "emacsvox-sounds.el" (icon))
 (declare-function emacsvox-queue-icon "emacsvox-sounds.el" (icon))
 
+;;;   Canonical TTS state aliases:
+
+;; Keep the established variables as storage during the consumer migration.
+;; Declaring aliases first satisfies the byte compiler and preserves existing
+;; buffer-local bindings in live sessions.
+(defvaralias 'tts-program 'dtk-program
+  "Canonical name for the selected speech-server program.")
+(defvaralias 'tts-speech-rate-base 'dtk-speech-rate-base
+  "Canonical name for the lowest predefined speech rate.")
+(defvaralias 'tts-speech-rate-step 'dtk-speech-rate-step
+  "Canonical name for the predefined speech-rate step.")
+(defvaralias 'tts-handle-unicode 'dtk-handle-unicode
+  "Canonical name for speech-server Unicode preprocessing state.")
+(defvaralias 'tts-quiet 'dtk-quiet
+  "Canonical name for buffer-local speech suppression.")
+(defvaralias 'tts-split-caps 'dtk-split-caps
+  "Canonical name for buffer-local split-capitalization state.")
+(defvaralias 'tts-cleanup-repeats 'dtk-cleanup-repeats
+  "Canonical name for repeated-pattern cleanup configuration.")
+(defvaralias 'tts-character-scale 'dtk-character-scale
+  "Canonical name for character speech-rate scaling.")
+(defvaralias 'tts-caps 'dtk-caps
+  "Canonical name for buffer-local capitalization feedback.")
+(defvaralias 'tts-punctuation-mode-alist 'dtk-punctuation-mode-alist
+  "Canonical name for supported punctuation modes.")
+(defvaralias 'tts-speech-rate 'dtk-speech-rate
+  "Canonical name for the current buffer-local speech rate.")
+(defvaralias 'tts-stop-immediately 'dtk-stop-immediately
+  "Canonical name for immediate speech interruption state.")
+(defvaralias 'tts-speaker-process 'dtk-speaker-process
+  "Canonical name for the primary speech-server process.")
+(defvaralias 'tts-notify-process 'dtk-notify-process
+  "Canonical name for the notification speech-server process.")
+(defvaralias 'tts-punctuation-mode 'dtk-punctuation-mode
+  "Canonical name for buffer-local punctuation state.")
+(defvaralias 'tts-servers-alist 'dtk-servers-alist
+  "Canonical name for the available speech-server list.")
+
 (defvar dtk-program
   (or
    (getenv "DTK_PROGRAM")
