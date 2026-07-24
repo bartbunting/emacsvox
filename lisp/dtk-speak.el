@@ -2143,6 +2143,7 @@ When called interactively, CHAR defaults to the character after point."
 
 ;; Public speech and state operations.
 (defalias 'tts-get-style #'dtk-get-style)
+(defalias 'tts-get-voice-for-face #'dtk-get-voice-for-face)
 (defalias 'tts-tone-deletion #'dtk-tone-deletion)
 (defalias 'tts-tone-upcase #'dtk-tone-upcase)
 (defalias 'tts-tone-downcase #'dtk-tone-downcase)

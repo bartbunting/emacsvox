@@ -180,7 +180,7 @@ DOCSTRING and BODY define the feedback function for each command."
            (start (overlay-start overlay))
            (end (overlay-end overlay))
            (voice
-            (dtk-get-voice-for-face (overlay-get overlay 'face)))
+            (tts-get-voice-for-face (overlay-get overlay 'face)))
            (invisible (overlay-get overlay 'invisible)))
       (when (and start end voice buffer)
         (with-current-buffer buffer
@@ -207,7 +207,7 @@ DOCSTRING and BODY define the feedback function for each command."
          (integerp start) (integerp end))
         (when (eq property 'category)
           (setq value (get value 'face)))
-        (setq voice (dtk-get-voice-for-face value))
+        (setq voice (tts-get-voice-for-face value))
         (when voice
           (ems--add-personality start end voice
                                 (overlay-buffer overlay))))
@@ -226,7 +226,7 @@ DOCSTRING and BODY define the feedback function for each command."
   (when ems--voiceify-overlays
     (let* ((buffer (overlay-buffer overlay))
            (voice
-            (dtk-get-voice-for-face (overlay-get overlay 'face)))
+            (tts-get-voice-for-face (overlay-get overlay 'face)))
            (invisible (overlay-get overlay 'invisible)))
       (unless object (setq object (or buffer (current-buffer))))
       (when
@@ -296,7 +296,7 @@ beginning or end of a physical line produces an  auditory icon."
               (let* ((button (button-at (point)))
                      (start (button-start button))
                      (end (button-end button)))
-                (dtk-speak (buffer-substring start end))
+                (tts-speak (buffer-substring start end))
                 (emacsvox-icon 'large-movement))
             (error nil)))
         result)
@@ -333,7 +333,7 @@ beginning or end of a physical line produces an  auditory icon."
     (left-char right-char backward-char forward-char)
     "Speak char under point.
 When on a close delimiter, speak matching delimiter after a small delay. "
-  (and dtk-stop-immediately (dtk-stop))
+  (and tts-stop-immediately (tts-stop))
   (emacsvox-speak-char t)
   (when
       (and
@@ -360,7 +360,7 @@ When on a close delimiter, speak matching delimiter after a small delay. "
     "Speak the line."
   (emacsvox-icon 'large-movement)
   (emacsvox-speak-line)
-  (dtk-notify (emacsvox-get-current-percentage-verbously)))
+  (tts-notify (emacsvox-get-current-percentage-verbously)))
 
 (emacsvox-advice--define-interactive-after-advice
     (tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent
@@ -441,8 +441,8 @@ When on a close delimiter, speak matching delimiter after a small delay. "
     (scroll-up scroll-down scroll-up-command scroll-down-command)
     "Speak the newly displayed screenful."
   (emacsvox-icon 'scroll)
-  (dtk-speak (emacsvox-get-window-contents))
-  (dtk-notify
+  (tts-speak (emacsvox-get-window-contents))
+  (tts-notify
    (propertize
     (format "%s " (emacsvox-get-current-percentage-into-buffer))
     'personality voice-smoothen)))
@@ -476,7 +476,7 @@ unchanged."
 (defun emacsvox--advice-upcase-word-around (original &rest arguments)
   "Provide a tone, then speak after `upcase-word'."
   (emacsvox--case-word-around
-   'upcase-word #'dtk-tone-upcase "Upper cased final word in buffer"
+   'upcase-word #'tts-tone-upcase "Upper cased final word in buffer"
    original arguments))
 
 (advice-add
@@ -486,7 +486,7 @@ unchanged."
 (defun emacsvox--advice-downcase-word-around (original &rest arguments)
   "Provide a tone, then speak after `downcase-word'."
   (emacsvox--case-word-around
-   'downcase-word #'dtk-tone-downcase "Lower cased final word in buffer"
+   'downcase-word #'tts-tone-downcase "Lower cased final word in buffer"
    original arguments))
 
 (advice-add
@@ -496,7 +496,7 @@ unchanged."
 (defun emacsvox--advice-capitalize-word-around (original &rest arguments)
   "Provide a tone, then speak after `capitalize-word'."
   (emacsvox--case-word-around
-   'capitalize-word #'dtk-tone-upcase "Capitalized final word in buffer"
+   'capitalize-word #'tts-tone-upcase "Capitalized final word in buffer"
    original arguments))
 
 (advice-add
@@ -519,7 +519,7 @@ unchanged."
 (defun emacsvox--backward-delete-char-around (target original arguments)
   "Speak before TARGET deletes backward, then call ORIGINAL with ARGUMENTS."
   (when (ems-interactive-p target)
-    (dtk-tone-deletion)
+    (tts-tone-deletion)
     (emacsvox-speak-this-char (preceding-char)))
   (apply original arguments))
 
@@ -545,7 +545,7 @@ unchanged."
 (defun emacsvox--delete-char-around (target original arguments)
   "Speak before TARGET deletes a character, then call ORIGINAL with ARGUMENTS."
   (when (ems-interactive-p target)
-    (dtk-tone-deletion)
+    (tts-tone-deletion)
     (emacsvox-speak-char t))
   (apply original arguments))
 
@@ -570,7 +570,7 @@ unchanged."
   "Speak word beingkilled."
   (when (ems-interactive-p 'kill-word)
     (save-excursion
-      (skip-syntax-forward " ") (dtk-tone-deletion)
+      (skip-syntax-forward " ") (tts-tone-deletion)
       (emacsvox-speak-word 1))))
 
 (advice-add
@@ -582,7 +582,7 @@ unchanged."
   (when (ems-interactive-p 'backward-kill-word)
     (save-excursion
       (let ((start (point)))
-        (forward-word -1) (dtk-tone-deletion)
+        (forward-word -1) (tts-tone-deletion)
         (emacsvox-speak-region (point) start)))))
 
 (advice-add
@@ -593,13 +593,13 @@ unchanged."
     (kill-line kill-whole-line)
     "Speak the line before killing it."
   (emacsvox-icon 'delete-object)
-  (dtk-tone-deletion)
+  (tts-tone-deletion)
   (emacsvox-speak-line 1))
 
 (defun emacsvox--advice-kill-sexp-before (&rest _)
   "Speak the killed  sexp."
   (when (ems-interactive-p 'kill-sexp)
-    (emacsvox-icon 'delete-object) (dtk-tone-deletion)
+    (emacsvox-icon 'delete-object) (tts-tone-deletion)
     (emacsvox-speak-sexp 1)))
 
 (advice-add
@@ -609,7 +609,7 @@ unchanged."
 (defun emacsvox--advice-kill-sentence-before (&rest _)
   "Speak the kill."
   (when (ems-interactive-p 'kill-sentence)
-    (emacsvox-icon 'delete-object) (dtk-tone-deletion)
+    (emacsvox-icon 'delete-object) (tts-tone-deletion)
     (emacsvox-speak-line 1)))
 
 (advice-add
@@ -674,7 +674,7 @@ unchanged."
 
 (defun emacsvox--speak-completion-text (start end)
   "Speak completion text between START and END."
-  (dtk-speak (buffer-substring start end)))
+  (tts-speak (buffer-substring start end)))
 
 (defun emacsvox--completion-around
     (target backward-syntax speaker original arguments)
@@ -735,8 +735,8 @@ ARGUMENTS are passed to ORIGINAL unchanged."
           (setq result (apply original arguments))
           (emacsvox-icon 'complete)
           (if (< start (point))
-              (dtk-speak (buffer-substring start (point)))
-            (dtk-speak (word-at-point))))
+              (tts-speak (buffer-substring start (point)))
+            (tts-speak (word-at-point))))
         result)
     (apply original arguments)))
 
@@ -759,7 +759,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (defun emacsvox--advice-read-event-before (&optional prompt &rest _)
   "Speak PROMPT before reading an event."
-  (when prompt (dtk-notify prompt)))
+  (when prompt (tts-notify prompt)))
 
 (advice-add
  'read-event :before #'emacsvox--advice-read-event-before
@@ -769,7 +769,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (prompt choices &rest _)
   "Speak PROMPT and CHOICES before prompting."
   (let
-      ((dtk-stop-immediately nil)
+      ((tts-stop-immediately nil)
        (spoken-choices
         (mapcar
          #'(lambda (c) (format "%c: %s" (cl-first c) (cl-second c)))
@@ -783,9 +783,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (emacsvox-icon 'open-object)
     (ems--log-message
      (concat prompt (mapconcat #'identity details "\n ")))
-    (dtk-notify prompt)
+    (tts-notify prompt)
     (sox-tones 2 2)
-    (dtk-speak-list spoken-choices)))
+    (tts-speak-list spoken-choices)))
 
 (advice-add
  'read-multiple-choice :before
@@ -801,7 +801,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   (emacsvox-icon 'select-object)
   (tts-with-punctuations
    'all
-   (dtk-speak
+   (tts-speak
     (or (minibuffer-contents)
         (emacsvox-get-current-completion)))))
 
@@ -813,7 +813,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   (tts-with-punctuations
    'all
    (emacsvox-icon 'item)
-   (dtk-speak (emacsvox-get-current-completion))))
+   (tts-speak (emacsvox-get-current-completion))))
 
 (defvar emacsvox-last-message nil
   "Last output from `message'.")
@@ -838,7 +838,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   (let ((string (nth 0 arguments))
         (exit-character (nth 2 arguments)))
     (ems-with-messages-silenced
-      (dtk-notify
+      (tts-notify
        (format "%s Press %s to exit" string
                (if exit-character
                    (format "%c" exit-character)
@@ -893,7 +893,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
           (setq emacsvox-last-message output)
           (emacsvox-icon 'key)
           (tts-with-punctuations 'all
-            (dtk-notify output 'dont-log))))
+            (tts-notify output 'dont-log))))
       result)))
 
 (defun emacsvox--advice-minibuffer-message-around
@@ -929,7 +929,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   "Call ORIGINAL and speak its message or displayed buffer."
   (let ((result (emacsvox--message-around original arguments)))
     (when (bufferp result)
-      (dtk-notify
+      (tts-notify
        (format "Displayed message in buffer  %s" (nth 1 arguments))))
     result))
 
@@ -948,7 +948,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (insert (mapconcat #'car docs "\n"))
     (unless (equal docs emacsvox--last-docs)
       (emacsvox-icon 'doc))
-    (when interactive (dtk-notify  (buffer-string))))
+    (when interactive (tts-notify  (buffer-string))))
   (setq emacsvox--last-docs docs))
 
 (with-eval-after-load "eldoc"
@@ -965,7 +965,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (ems-with-messages-silenced
       (setq result (apply original arguments))
       (emacsvox-icon 'progress)
-      (dtk-speak (format " %s percent" ange-ftp-last-percent)))
+      (tts-speak (format " %s percent" ange-ftp-last-percent)))
     result))
 
 (advice-add
@@ -1059,7 +1059,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (defun emacsvox--advice-read-passwd--hide-password-after (&rest _)
   "Speak the masked or visible password character."
-  (dtk-notify
+  (tts-notify
    (if read-passwd--hide-password "dot"
      (if (characterp last-input-event) (format "%c" last-input-event)
        "dot")))
@@ -1083,7 +1083,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (defun emacsvox--advice-read-passwd-before (&optional prompt &rest _)
   "Speak PROMPT before reading a password."
   (emacsvox-icon 'open-object)
-  (dtk-speak (or prompt "password: "))
+  (tts-speak (or prompt "password: "))
   (emacsvox-icon 'pwd))
 
 (advice-add
@@ -1107,7 +1107,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
                  (setq emacsvox-last-message prompt)
                  (setq emacsvox-read-char-prompt-cache prompt)
                  (tts-with-punctuations
-                  'all (dtk-notify (or prompt "key"))))
+                  'all (tts-notify (or prompt "key"))))
                (advice-add
                 ',target :before #',function '((name . emacsvox))))))
         targets)))
@@ -1125,7 +1125,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
                  #'(lambda (character) (format "%c" character))
                  characters ", "))))
     (ems--log-message message)
-    (tts-with-punctuations 'all (dtk-speak message))))
+    (tts-with-punctuations 'all (tts-speak message))))
 
 (advice-add
  'read-char-choice :before #'emacsvox--advice-read-char-choice-before
@@ -1139,7 +1139,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     (dabbrev-expand dabbrev-completion)
     "Speak the expanded dabbrev text."
   (accept-process-output)
-  (tts-with-punctuations 'all (dtk-speak dabbrev--last-expansion)))
+  (tts-with-punctuations 'all (tts-speak dabbrev--last-expansion)))
 
 (voice-setup-add-map
  '(
@@ -1159,7 +1159,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
           (setq result (apply original arguments))
           (if (> (point) prior)
               (tts-with-punctuations
-               'all (dtk-speak (buffer-substring (point) prior)))
+               'all (tts-speak (buffer-substring (point) prior)))
             (emacsvox-speak-completions-if-available)))
         result)
     (apply original arguments)))
@@ -1186,7 +1186,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
       (if (> (point) prior)
           (tts-with-punctuations
            'all
-           (dtk-speak (buffer-substring prior (point))))
+           (tts-speak (buffer-substring prior (point))))
         (emacsvox-speak-completions-if-available)))
     result))
 
@@ -1199,7 +1199,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (defun emacsvox--advice-switch-to-completions-after (&rest _)
   "Speak the first completion after switching to the completions buffer."
   (emacsvox-icon 'select-object)
-  (dtk-speak (emacsvox-get-current-completion)))
+  (tts-speak (emacsvox-get-current-completion)))
 
 (advice-add
  'switch-to-completions :after
@@ -1212,7 +1212,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     "Speak the newly selected completion."
   (emacsvox-icon 'select-object)
   (tts-with-punctuations
-   'all (dtk-speak (emacsvox-get-current-completion))))
+   'all (tts-speak (emacsvox-get-current-completion))))
 
 (defun emacsvox--advice-choose-completion-before (&rest _)
   "Cue an interactive completion choice."
@@ -1229,7 +1229,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   "Announce an interactive TMM completion."
   (when (ems-interactive-p 'tmm-goto-completions)
     (emacsvox-icon 'help)
-    (dtk-speak (emacsvox-get-current-completion))))
+    (tts-speak (emacsvox-get-current-completion))))
 
 (advice-add
  'tmm-goto-completions :after
@@ -1593,7 +1593,7 @@ BEGINNING, END, and ARGUMENTS are passed to ORIGINAL unchanged."
     (kill-buffer kill-current-buffer quit-window)
     "Announce closing a buffer or window."
   (emacsvox-icon 'close-object)
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (emacsvox-speak-mode-line))
 
 (emacsvox-advice--define-interactive-after-advice
@@ -1812,7 +1812,7 @@ TARGET identifies the key-description command."
 (emacsvox-advice--define-interactive-after-advice
     (help-with-tutorial)
     "Speak the tutorial window."
-  (dtk-set-punctuations 'all)
+  (tts-set-punctuations 'all)
   (emacsvox-icon 'open-object)
   (emacsvox-speak-predefined-window 1))
 
@@ -1830,15 +1830,15 @@ See command \\[emacsvox-toggle-line-echo]. Otherwise cue the user to
 the newly created  line."
   (if emacsvox-line-echo
       (emacsvox-read-previous-line)
-    (dtk-tone 225 75 'force)))
+    (tts-tone 225 75 'force)))
 
 (defun emacsvox--eval-filter-return (target result)
   "Speak an interactive evaluation RESULT and return it unchanged.
 TARGET identifies the evaluation command."
   (when (ems-interactive-p target)
-    (let ((dtk-chunk-separator-syntax " .<>()$\"'"))
+    (let ((tts-chunk-separator-syntax " .<>()$\"'"))
       (tts-with-punctuations 'all
-        (dtk-speak (format "%s" result)))))
+        (tts-speak (format "%s" result)))))
   result)
 
 (defun emacsvox--advice-eval-last-sexp-filter-return (result)
@@ -1877,7 +1877,7 @@ TARGET identifies the evaluation command."
   (if (ems-interactive-p 'call-last-kbd-macro)
       (let (result)
         (ems-with-messages-silenced
-          (let ((dtk-quiet t)
+          (let ((tts-quiet t)
                 (emacsvox-use-icons nil))
             (setq result (apply original arguments))))
         (message "Executed macro. ")
@@ -1899,13 +1899,13 @@ TARGET identifies the evaluation command."
     (start-kbd-macro)
     "Announce the start of keyboard macro definition."
   (emacsvox-icon 'open-object)
-  (dtk-speak "Started defining a keyboard macro "))
+  (tts-speak "Started defining a keyboard macro "))
 
 (emacsvox-advice--define-interactive-after-advice
     (end-kbd-macro)
     "Announce the end of keyboard macro definition."
   (emacsvox-icon 'close-object)
-  (dtk-speak "Finished defining keyboard macro "))
+  (tts-speak "Finished defining keyboard macro "))
 
 ;; you DONT WANT TO SUSPEND EMACS WITHOUT CONFIRMATION
 
@@ -2112,7 +2112,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (ems-with-messages-silenced
       (setq result (apply original help arguments)))
     (when (and emacsvox-speak-tooltips help)
-      (dtk-speak help))
+      (tts-speak help))
     result))
 
 (defun emacsvox--advice-tooltip-show-help-around
@@ -2140,7 +2140,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (defun emacsvox--tooltip-show-after (help)
   "Speak HELP and play its icon when tooltip speech is enabled."
   (when emacsvox-speak-tooltips
-    (dtk-speak help)
+    (tts-speak help)
     (emacsvox-icon 'help)))
 
 (defun emacsvox--advice-tooltip-show-help-non-mode-after
@@ -2211,10 +2211,10 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
   (if (ems-interactive-p 'byte-compile-file)
       (let (result)
         (ems-with-messages-silenced
-          (dtk-speak "Byte compiling ")
+          (tts-speak "Byte compiling ")
           (setq result (apply original arguments))
           (emacsvox-icon 'task-done)
-          (dtk-speak "Done byte compiling "))
+          (tts-speak "Done byte compiling "))
         result)
     (apply original arguments)))
 
@@ -2280,7 +2280,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
   "Setup emacsvox isearch."
   (emacsvox-icon 'open-object)
   (setq emacsvox-speak-messages isearch-lazy-count)
-  (dtk-speak (isearch-message-prefix)))
+  (tts-speak (isearch-message-prefix)))
 
 (defun emacsvox-isearch-teardown ()
   "Teardown emacsvox isearch."
@@ -2302,7 +2302,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
                (ems-set-personality-temporarily (point)
                                                 isearch-other-end
                                                 voice-bolden
-                                                (dtk-speak
+                                                (tts-speak
                                                  (buffer-substring
                                                   (line-beginning-position)
                                                   (line-end-position)))))))))
@@ -2313,7 +2313,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 (defun emacsvox--advice-isearch-delete-char-after (&rest _)
   "Speak the shortened isearch string and current hit."
-  (dtk-speak (propertize isearch-string 'personality voice-bolden))
+  (tts-speak (propertize isearch-string 'personality voice-bolden))
   (when (sit-for 0.1)
     (emacsvox-icon 'search-hit)
     (ems-set-personality-temporarily (point)
@@ -2332,14 +2332,14 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (emacsvox-advice--define-interactive-after-advice
     (isearch-yank-word isearch-yank-kill isearch-yank-line)
     "Speak text yanked into an incremental search."
-  (dtk-speak (propertize isearch-string 'personality voice-bolden))
+  (tts-speak (propertize isearch-string 'personality voice-bolden))
   (emacsvox-icon 'yank-object))
 
 (emacsvox-advice--define-interactive-after-advice
     (isearch-ring-advance isearch-ring-retreat
                           isearch-ring-advance-edit isearch-ring-retreat-edit)
     "Speak the incremental search ring item."
-  (dtk-speak (propertize isearch-string 'personality voice-bolden))
+  (tts-speak (propertize isearch-string 'personality voice-bolden))
   (emacsvox-icon 'item))
 
 ;; Note the advice on the next two toggle commands
@@ -2350,7 +2350,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (defun emacsvox--advice-isearch-toggle-case-fold-after (&rest _)
   "Announce the new isearch case-fold state."
   (emacsvox-icon (if isearch-case-fold-search 'off 'on))
-  (dtk-speak
+  (tts-speak
    (format " Case is %s significant in search"
            (if isearch-case-fold-search " not" " "))))
 
@@ -2362,7 +2362,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (defun emacsvox--advice-isearch-toggle-regexp-after (&rest _)
   "Announce the new isearch regexp state."
   (emacsvox-icon (if isearch-regexp 'on 'off))
-  (dtk-speak (if isearch-regexp "Regexp search" "text search")))
+  (tts-speak (if isearch-regexp "Regexp search" "text search")))
 
 (advice-add
  'isearch-toggle-regexp :after
@@ -2404,7 +2404,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
   (when (ems-interactive-p 'pop-global-mark)
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line))
-    (dtk-notify (buffer-name))))
+    (tts-notify (buffer-name))))
 
 (advice-add
  'pop-global-mark :after #'emacsvox--advice-pop-global-mark-after
@@ -2505,9 +2505,9 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (let ((lines (count-lines start end))
           (characters (abs (- start end))))
       (if (> lines 1)
-          (dtk-notify
+          (tts-notify
            (format "Copied %s lines to register %c" lines register))
-        (dtk-notify
+        (tts-notify
          (format "Copied %s characters to register %c"
                  characters register))))))
 
@@ -2519,7 +2519,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (view-register)
     "Speak the displayed contents of a register."
   (with-current-buffer "*Output*"
-    (dtk-speak (buffer-string))
+    (tts-speak (buffer-string))
     (emacsvox-icon 'open-object)))
 
 (emacsvox-advice--define-interactive-after-advice
@@ -2598,7 +2598,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 (defun emacsvox-minibuffer-setup-hook ()
   "Actions to take when entering the minibuffer with emacsvox running."
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (let ((inhibit-field-text-motion t))
     (setq emacsvox-pronounce-table emacsvox-minibuffer-dictionary)
     (puthash  default-directory "" emacsvox-pronounce-table)
@@ -2606,7 +2606,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (when minibuffer-default (emacsvox-icon 'help))
     (tts-with-punctuations
      'all
-     (dtk-notify
+     (tts-notify
       (concat
        (buffer-string)
        (if (stringp minibuffer-default) minibuffer-default ""))))))
@@ -2615,7 +2615,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 
 (defun emacsvox-minibuffer-exit-hook ()
   "Actions performed when exiting the minibuffer with Emacsvox loaded."
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (remhash  default-directory  emacsvox-pronounce-table)
   (emacsvox-icon 'close-object))
 
@@ -2653,13 +2653,13 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (abbrev-edit-save-buffer)
     "Cue saving the edited abbrev definitions."
   (emacsvox-icon 'save-object)
-  (dtk-speak "Saved Abbrevs"))
+  (tts-speak "Saved Abbrevs"))
 
 (emacsvox-advice--define-interactive-after-advice
     (edit-abbrevs-redefine)
     "Cue redefining abbrevs from the edit buffer."
   (emacsvox-icon 'task-done)
-  (dtk-speak "Redefined abbrevs"))
+  (tts-speak "Redefined abbrevs"))
 
 (emacsvox-advice--define-interactive-after-advice
     (list-abbrevs)
@@ -2677,12 +2677,12 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
     (original &rest arguments)
   "Call ORIGINAL once and speak an interactive abbrev expansion."
   (when buffer-read-only
-    (dtk-speak "Buffer is read-only. "))
+    (tts-speak "Buffer is read-only. "))
   (if (ems-interactive-p 'expand-abbrev)
       (let ((start (save-excursion (backward-word 1) (point)))
             result)
         (setq result (apply original arguments))
-        (dtk-speak (buffer-substring start (point)))
+        (tts-speak (buffer-substring start (point)))
         result)
     (apply original arguments)))
 
@@ -2752,7 +2752,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
   (if (ems-interactive-p 'describe-key-briefly)
       (let* ((emacsvox-speak-messages nil)
              (result (apply original arguments)))
-        (dtk-speak (ems-canonicalize-key-description result))
+        (tts-speak (ems-canonicalize-key-description result))
         result)
     (apply original arguments)))
 
@@ -2775,7 +2775,7 @@ ARGUMENTS are the remaining arguments passed to ORIGINAL."
 (defun emacsvox--advice-where-is-after (definition &optional _insert)
   "Speak keys for interactive `where-is' DEFINITION."
   (when (ems-interactive-p 'where-is)
-    (dtk-speak (ems--get-where-is definition))))
+    (tts-speak (ems--get-where-is definition))))
 
 (advice-add
  'where-is :after #'emacsvox--advice-where-is-after
@@ -2848,7 +2848,7 @@ TARGET identifies the command, STATE is its new value, and SETTING names it."
     (original &rest arguments)
   "Call ORIGINAL with ARGUMENTS while silencing Custom chatter."
   (ems-with-messages-silenced
-    (let ((dtk-quiet t))
+    (let ((tts-quiet t))
       (apply original arguments))))
 
 (advice-add
@@ -3052,7 +3052,7 @@ TARGET identifies the browse command, and ARGUMENTS are passed unchanged."
     (toggle-input-method)
     "Announce the new input method state."
   (emacsvox-icon (if current-input-method 'on 'off))
-  (dtk-speak
+  (tts-speak
    (format "Current input method is %s"
            (or current-input-method "none"))))
 
@@ -3224,7 +3224,7 @@ played afterward according to the result."
     (original &rest arguments)
   "Call ORIGINAL once and speak the resulting semantic completion."
   (let ((prior (point))
-        (dtk-stop-immediately t))
+        (tts-stop-immediately t))
     (emacsvox-kill-buffer-carefully "*Completions*")
     (let ((result (apply original arguments)))
       (if (> (point) prior)
@@ -3336,7 +3336,7 @@ played afterward according to the result."
         (ems-with-messages-silenced
           (setq result (apply original arguments))
           (tts-with-punctuations 'some
-            (dtk-speak result)))
+            (tts-speak result)))
         result)
     (apply original arguments)))
 
@@ -3398,7 +3398,7 @@ played afterward according to the result."
 (defun emacsvox--advice-rectangle-mark-mode-after (&rest _)
   "Announce the state of rectangle mark mode after an interactive toggle."
   (when (ems-interactive-p 'rectangle-mark-mode)
-    (dtk-notify
+    (tts-notify
      (format "Turned %s rectangle mark mode"
              (if rectangle-mark-mode "on" "off")))
     (emacsvox-icon (if rectangle-mark-mode 'on 'off))))

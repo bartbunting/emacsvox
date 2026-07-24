@@ -36,6 +36,7 @@
 
 (defconst emacsvox-test--tts-public-aliases
   '((tts-get-style . dtk-get-style)
+    (tts-get-voice-for-face . dtk-get-voice-for-face)
     (tts-tone-deletion . dtk-tone-deletion)
     (tts-tone-upcase . dtk-tone-upcase)
     (tts-tone-downcase . dtk-tone-downcase)
