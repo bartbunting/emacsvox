@@ -50,7 +50,7 @@
 (declare-function rmail-msgbeg "rmail" (n))
 (declare-function rmail-get-header "rmail" (name &optional msgnum))
 
-(cl-declaim (special rmail-ignored-headers))
+(cl-declaim (special rmail-current-message rmail-ignored-headers))
 (setq rmail-ignored-headers
       (concat "^X-\\|"
               "^Content-\\|"
@@ -76,191 +76,104 @@
              labels))))
 
 ;;;   Advice some commands.
+
+(defmacro emacsvox-rmail--define-advice (target where &rest body)
+  "Define direct WHERE advice for interactive Rmail TARGET."
+  (declare (indent 2))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-%s"
+                         target
+                         (substring (symbol-name where) 1)))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback %s `%s'." where target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target ,where #',function
+        '((name . ,function))))))
+
 ;;;   buffer selection
 
-(defun ems--rmail-quit-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+(emacsvox-rmail--define-advice rmail-quit :after
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'rmail-quit :after #'ems--rmail-quit-after)
+(emacsvox-rmail--define-advice rmail-bury :after
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--rmail-bury-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
+(emacsvox-rmail--define-advice rmail :after
+  (emacsvox-icon 'select-object)
+  (emacsvox-rmail-summarize-current-message))
 
-(advice-add 'rmail-bury :after #'ems--rmail-bury-after)
-
-(defun ems--rmail-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-current-message)))
-
-(advice-add 'rmail :after #'ems--rmail-after)
-
-(defun ems--rmail-expunge-and-save-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'save-object)))
-
-(advice-add 'rmail-expunge-and-save :after
-            #'ems--rmail-expunge-and-save-after)
+(emacsvox-rmail--define-advice rmail-expunge-and-save :after
+  (emacsvox-icon 'save-object))
 
 ;;;   message navigation
 
-(defun ems--rmail-beginning-of-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'rmail-beginning-of-message :after
-            #'ems--rmail-beginning-of-message-after)
+(emacsvox-rmail--define-advice rmail-beginning-of-message :after
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
 
 ;;;   folder navigation
 
-(defun ems--rmail-first-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
+(dolist
+    (target
+     '(rmail-first-message
+       rmail-first-unseen-message
+       rmail-last-message
+       rmail-next-undeleted-message
+       rmail-next-message
+       rmail-previous-undeleted-message
+       rmail-previous-message
+       rmail-show-message))
+  (eval
+   `(emacsvox-rmail--define-advice ,target :after
+      (emacsvox-icon 'select-object)
+      (emacsvox-rmail-summarize-message rmail-current-message))))
 
-(advice-add 'rmail-first-message :after
-            #'ems--rmail-first-message-after)
+(defmacro emacsvox-rmail--define-labeled-advice (target)
+  "Define direct around advice for labeled-message TARGET."
+  (let ((function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    `(progn
+       (defun ,function (original &rest arguments)
+         ,(format "Call `%s' once and report whether it moved." target)
+         (let ((interactive-p (ems-interactive-p ',target))
+               (original-message rmail-current-message))
+           (let ((result (apply original arguments)))
+             (when interactive-p
+               (if (/= original-message rmail-current-message)
+                   (progn
+                     (emacsvox-icon 'select-object)
+                     (emacsvox-rmail-summarize-message
+                      rmail-current-message))
+                 (emacsvox-icon 'search-miss)))
+             result)))
+       (advice-add
+        ',target :around #',function
+        '((name . ,function))))))
 
-(defun ems--rmail-first-unseen-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-first-unseen-message :after
-            #'ems--rmail-first-unseen-message-after)
-
-(defun ems--rmail-last-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-last-message :after #'ems--rmail-last-message-after)
-
-(defun ems--rmail-next-undeleted-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-next-undeleted-message :after
-            #'ems--rmail-next-undeleted-message-after)
-
-(defun ems--rmail-next-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-next-message :after #'ems--rmail-next-message-after)
-
-(defun ems--rmail-previous-undeleted-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-previous-undeleted-message :after
-            #'ems--rmail-previous-undeleted-message-after)
-
-(defun ems--rmail-previous-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-previous-message :after
-            #'ems--rmail-previous-message-after)
-
-(defun ems--rmail-next-labeled-message-around (orig-fun &rest args)
-  "speak"
-  (let ((result (apply orig-fun args)))
-    
-    (cond
-     ((ems-interactive-p)
-      (let ((original rmail-current-message))
-        (apply orig-fun args)
-        (cond
-         ((not (= original rmail-current-message))
-          (emacsvox-icon 'select-object)
-          (emacsvox-rmail-summarize-message rmail-current-message))
-         (t (emacsvox-icon 'search-miss)))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'rmail-next-labeled-message :around
-            #'ems--rmail-next-labeled-message-around)
-
-(defun ems--rmail-previous-labeled-message-around
-    (orig-fun &rest args)
-  "speak"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((original rmail-current-message))
-        (apply orig-fun args)
-        (cond
-         ((not (= original rmail-current-message))
-          (emacsvox-icon 'select-object)
-          (emacsvox-rmail-summarize-message rmail-current-message))
-         (t (emacsvox-icon 'search-miss)))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'rmail-previous-labeled-message :around
-            #'ems--rmail-previous-labeled-message-around)
-
-(defun ems--rmail-show-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-message rmail-current-message)))
-
-(advice-add 'rmail-show-message :after #'ems--rmail-show-message-after)
+(emacsvox-rmail--define-labeled-advice rmail-next-labeled-message)
+(emacsvox-rmail--define-labeled-advice rmail-previous-labeled-message)
 
 ;;;  delete and undelete messages
 
-(defun ems--rmail-undelete-previous-message-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-rmail-summarize-current-message)))
+(emacsvox-rmail--define-advice rmail-undelete-previous-message :after
+  (emacsvox-icon 'select-object)
+  (emacsvox-rmail-summarize-current-message))
 
-(advice-add 'rmail-undelete-previous-message :after
-            #'ems--rmail-undelete-previous-message-after)
+(emacsvox-rmail--define-advice rmail-delete-message :after
+  (emacsvox-icon 'delete-object)
+  (message "Message discarded."))
 
-(defun ems--rmail-delete-message-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (message "Message discarded.")))
-
-(advice-add 'rmail-delete-message :after
-            #'ems--rmail-delete-message-after)
-
-(defun ems--rmail-delete-forward-after (&rest _)
-  "provide auditory feedback"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-rmail-summarize-current-message)))
-
-(advice-add 'rmail-delete-forward :after
-            #'ems--rmail-delete-forward-after)
-
-(defun ems--rmail-delete-backward-after (&rest _)
-  "provide auditory feedback"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-rmail-summarize-current-message)))
-
-(advice-add 'rmail-delete-backward :after
-            #'ems--rmail-delete-backward-after)
+(dolist
+    (target '(rmail-delete-forward rmail-delete-backward))
+  (eval
+   `(emacsvox-rmail--define-advice ,target :after
+      (emacsvox-icon 'delete-object)
+      (emacsvox-rmail-summarize-current-message))))
 
 ;;;   Additional interactive commands
 
@@ -284,4 +197,3 @@
               'emacsvox-rmail-speak-current-message-labels))
 
 (provide  'emacsvox-rmail)
-

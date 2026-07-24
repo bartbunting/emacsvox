@@ -108,6 +108,7 @@
   (require 'emacsvox-posting-message-tests)
   (require 'emacsvox-calculator-tests)
   (require 'emacsvox-buff-menu-tests)
+  (require 'emacsvox-rmail-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
