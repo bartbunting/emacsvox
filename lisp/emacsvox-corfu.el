@@ -103,75 +103,94 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--corfu-insert-around (orig-fun &rest args)
-  "Speak inserted completion."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (emacsvox-icon 'complete)
-      (emacsvox-speak-line))
-     (t nil))
-    result))
-
-(advice-add 'corfu-insert :around #'ems--corfu-insert-around)
-
-(defun ems--corfu-quit-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (setq emacsvox-corfu--prev-candidate nil
-          emacsvox-corfu--prev-index -1)))
-
-(advice-add 'corfu-quit :after #'ems--corfu-quit-after)
-
-(defun ems--corfu-reset-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (setq emacsvox-corfu--prev-candidate nil
-          emacsvox-corfu--prev-index -1)))
-
-(advice-add 'corfu-reset :after #'ems--corfu-reset-after)
-
-(defun ems--corfu-insert-separator-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (dtk-tone 500 50)))
-
-(advice-add 'corfu-insert-separator :after
-            #'ems--corfu-insert-separator-after)
-
-(defun ems--corfu-complete-after (&rest _)
-  "Speak completed text."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-corfu-insert-after (&rest _)
+  "Speak an inserted completion."
+  (when (ems-interactive-p 'corfu-insert)
     (emacsvox-icon 'complete)
     (emacsvox-speak-line)))
 
-(advice-add 'corfu-complete :after #'ems--corfu-complete-after)
+(defun emacsvox--advice-corfu-quit-after (&rest _)
+  "Reset spoken candidate state after quitting Corfu."
+  (when (ems-interactive-p 'corfu-quit)
+    (emacsvox-icon 'close-object)
+    (setq emacsvox-corfu--prev-candidate nil
+          emacsvox-corfu--prev-index -1)))
+
+(defun emacsvox--advice-corfu-reset-after (&rest _)
+  "Reset spoken candidate state after resetting Corfu."
+  (when (ems-interactive-p 'corfu-reset)
+    (emacsvox-icon 'close-object)
+    (setq emacsvox-corfu--prev-candidate nil
+          emacsvox-corfu--prev-index -1)))
+
+(defun emacsvox--advice-corfu-insert-separator-after (&rest _)
+  "Confirm insertion of a Corfu separator."
+  (when (ems-interactive-p 'corfu-insert-separator)
+    (emacsvox-icon 'select-object)
+    (dtk-tone 500 50)))
+
+(defun emacsvox--advice-corfu-complete-after (&rest _)
+  "Speak completed text."
+  (when (ems-interactive-p 'corfu-complete)
+    (emacsvox-icon 'complete)
+    (emacsvox-speak-line)))
 
 ;;;  Navigation advice:
 
+(defconst emacsvox-corfu--navigation-targets
+  '(corfu-next
+    corfu-previous
+    corfu-first
+    corfu-last
+    corfu-scroll-up
+    corfu-scroll-down)
+  "Current Corfu candidate navigation commands.")
+
 (cl-loop
- for f in
- '(corfu-next corfu-previous corfu-first corfu-last
-   corfu-scroll-up corfu-scroll-down)
+ for target in emacsvox-corfu--navigation-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak current candidate."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak the current Corfu candidate."
+     (when (ems-interactive-p ',target)
        (emacsvox-corfu--speak-candidate)))))
 
 ;;;  Internal advice:
 
-(defun ems--corfu--update-after (&rest _)
-  "Speak candidate after corfu updates."
+(defun emacsvox--advice-corfu--update-after (&rest _)
+  "Speak the candidate after Corfu updates."
   (when (and (bound-and-true-p corfu-mode)
              (bound-and-true-p corfu--candidates))
     (emacsvox-corfu--speak-candidate)))
 
-(advice-add 'corfu--update :after #'ems--corfu--update-after)
+(defconst emacsvox-corfu--advice
+  (append
+   '((corfu-insert :after emacsvox--advice-corfu-insert-after)
+     (corfu-quit :after emacsvox--advice-corfu-quit-after)
+     (corfu-reset :after emacsvox--advice-corfu-reset-after)
+     (corfu-insert-separator :after
+      emacsvox--advice-corfu-insert-separator-after)
+     (corfu-complete :after emacsvox--advice-corfu-complete-after)
+     (corfu--update :after emacsvox--advice-corfu--update-after))
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-corfu--navigation-targets))
+  "Current Corfu targets and their native advice functions.")
+
+(defun emacsvox-corfu--install-advice ()
+  "Install advice after the optional Corfu package loads."
+  (dolist (entry emacsvox-corfu--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'corfu
+  (emacsvox-corfu--install-advice))
 
 ;;;  Hooks:
 
