@@ -287,9 +287,9 @@ proc tts_initialize {} {
     #play program
     # always use paplay
     set tts(play) "/usr/bin/paplay"
-    #if env variable EMACSPEAK_PLAY is set, use it;
-    if {[info exists env(EMACSPEAK_PLAY)] } {
-        set tts(play)  $env(EMACSPEAK_PLAY)
+    # If EMACSVOX_PLAY is set, use it.
+    if {[info exists env(EMACSVOX_PLAY)] } {
+        set tts(play)  $env(EMACSVOX_PLAY)
     }
     #optional debuggin output
     if {[info exists env(TTS_DEBUG)] } {

@@ -3,6 +3,6 @@
 # Default to using espeak unless TTS_PROGRAM is set.
 #
 [ -z "$TTS_PROGRAM" ] && export TTS_PROGRAM="espeak"
-EMACSPEAK_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" > /dev/null 2>&1 && pwd)
-export EMACSPEAK_DIR
+EMACSVOX_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" > /dev/null 2>&1 && pwd)
+export EMACSVOX_DIR
 emacs "$@"

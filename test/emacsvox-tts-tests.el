@@ -423,6 +423,42 @@
     (setenv "TTS_PROGRAM" nil)
     (should-not (equal (tts--default-program) "legacy"))))
 
+(defun emacsvox-test--tts-server-player (emacsvox-player emacspeak-player)
+  "Return the Tcl TTS player selected from the supplied environment.
+
+EMACSVOX-PLAYER and EMACSPEAK-PLAYER set their respective environment
+variables; nil removes the variable."
+  (let ((process-environment (copy-sequence process-environment))
+        (library
+         (expand-file-name "servers/tts-lib.tcl" emacsvox-directory)))
+    (setenv "EMACSVOX_PLAY" emacsvox-player)
+    (setenv "EMACSPEAK_PLAY" emacspeak-player)
+    (with-temp-buffer
+      (insert
+       (format
+        "source {%s}; tts_initialize; puts $tts(play)"
+        library))
+      (let ((status
+             (call-process-region
+              (point-min) (point-max) "tclsh" t t)))
+        (unless (and (integerp status) (zerop status))
+          (error "Could not exercise Tcl TTS initialization: %s"
+                 (buffer-string)))
+        (string-trim (buffer-string))))))
+
+(ert-deftest emacsvox-tts-server-player-uses-emacsvox-environment ()
+  "TTS servers honor EMACSVOX_PLAY and ignore the removed Emacspeak name."
+  (skip-unless (executable-find "tclsh"))
+  (should
+   (equal
+    (emacsvox-test--tts-server-player
+     "/tmp/emacsvox-player" "/tmp/emacspeak-player")
+    "/tmp/emacsvox-player"))
+  (should
+   (equal
+    (emacsvox-test--tts-server-player nil "/tmp/emacspeak-player")
+    "/usr/bin/paplay")))
+
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
   (let ((default-quiet (default-value 'tts-quiet))

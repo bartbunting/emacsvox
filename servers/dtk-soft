@@ -236,7 +236,7 @@ beep_initialize
 set tts(speech_rate)  225
 set tts(say_rate) [round \
                            [expr $tts(speech_rate) * $tts(char_factor)]]
-set tclTTS $env(EMACSPEAK_DIR)/servers/software-dtk
+set tclTTS $env(EMACSVOX_DIR)/servers/software-dtk
 load $tclTTS/tcldtk.so
 synth   {[:phoneme arpabet speak on ]
     [:pu s ]

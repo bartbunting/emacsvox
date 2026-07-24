@@ -23,6 +23,17 @@ Names for actual DECtalk backends, such as =dtk-exp= and =dtk-soft=, are
 unchanged.  See [[file:etc/tts-modernization.org][the migration record]] for
 the complete naming policy and migration table.
 
+** Emacsvox Namespace Upgrade
+
+Active project configuration uses the Emacsvox name.  Set =EMACSVOX_DIR= when
+a speech server or external utility needs the checkout root, and set
+=EMACSVOX_PLAY= to override the audio player used by TTS servers.
+
+The former =EMACSPEAK_DIR= and =EMACSPEAK_PLAY= environment variables are not
+recognized.  This is an intentional breaking change; update user configuration
+to the Emacsvox names.  References to Emacspeak remain where they identify the
+upstream project, historical material, or the pinned comparison test checkout.
+
 ** Quick Installation Instructions
 
 For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.
