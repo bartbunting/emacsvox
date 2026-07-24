@@ -1,4 +1,4 @@
-This is introducing-emacspeak.info, produced by makeinfo version 7.1
+This is introducing-emacspeak.info, produced by makeinfo version 7.2
 from introducing-emacspeak.texi.
 
 Copyright © 2003, 2005, 2006 Robert J. Chassell
@@ -417,13 +417,13 @@ Setting the Speech Rate
 Returning to what you might talk about early on with your friend:
 
    He may want to set the voice synthesizer speech rate.  I use both the
-‘dtk-set-predefined-speech-rate’ command:
+‘tts-set-predefined-rate’ command:
 
      Control-e d 1
      Control-e d 2
      Control-e d 3
 
-and the ‘dtk-set-rate’ command, such as
+and the ‘tts-set-rate’ command, such as
 
      Control-e d r 230 RET
 
@@ -745,7 +745,7 @@ write the expression as:
 
      ;; The `t' is optional and sets the global default value.
      ;; Without it, the setting applied only to the local buffer.
-     (dtk-set-punctuations 'all t)
+     (tts-set-punctuations 'all t)
 
    Here is the file:
 
@@ -911,7 +911,7 @@ write the expression as:
      ;;     With an interactive prefix argument, `C-u C-e d p',
      ;;     set the global default value.
      ;; In this sample, I have set the mode to 'none.
-     (dtk-set-punctuations 'none t)
+     (tts-set-punctuations 'none t)
 
      ;;;;;;;;;;;;;;;; end ~/.emacs ::::::::::::::::
 
@@ -1090,7 +1090,7 @@ you need to set Emacspeak's punctuation mode to all.  If you are
 listening to this in Emacspeak, you can evaluate the following
 expression by placing point after it and typing ‘Control-x Control-e’:
 
-     (dtk-set-punctuations 'all)
+     (tts-set-punctuations 'all)
 
 First, the ‘/usr/local/bin/emacspeak-eflite’ script.
 
@@ -1110,11 +1110,11 @@ First, the ‘/usr/local/bin/emacspeak-eflite’ script.
      CL_ALL=""
      for CL in $* ; do
              if [ "$CL" = "-o" ]; then
-                     DTK_PROGRAM=outloud
-                     export DTK_PROGRAM
+                     TTS_PROGRAM=outloud
+                     export TTS_PROGRAM
                      elif [ "$CL" = "-d" ]; then
-                     DTK_PROGRAM=dtk-soft
-                     export DTK_PROGRAM
+                     TTS_PROGRAM=dtk-soft
+                     export TTS_PROGRAM
              elif [ "$CL" = "-q" ]; then
                      INITSTR=""
              else
@@ -1123,8 +1123,7 @@ First, the ‘/usr/local/bin/emacspeak-eflite’ script.
      done
 
      export EMACS_UNIBYTE=1
-     export DTK_PROGRAM=/usr/local/bin/eflite
-     export DTK_TCL=/usr/local/bin/eflite
+     export TTS_PROGRAM=/usr/local/bin/eflite
 
      exec emacs -q \
                 -l /usr/share/emacs/site-lisp/emacspeak/lisp/emacspeak-setup.el \
@@ -1149,11 +1148,11 @@ Second, the ‘/usr/local/bin/emacspeak-espeakf’ script:
      CL_ALL=""
      for CL in $* ; do
              if [ "$CL" = "-o" ]; then
-                     DTK_PROGRAM=/usr/local/src/espeakf/espeakf.pl
-                     export DTK_PROGRAM
+                     TTS_PROGRAM=/usr/local/src/espeakf/espeakf.pl
+                     export TTS_PROGRAM
                      elif [ "$CL" = "-d" ]; then
-                     DTK_PROGRAM=dtk-soft
-                     export DTK_PROGRAM
+                     TTS_PROGRAM=dtk-soft
+                     export TTS_PROGRAM
              elif [ "$CL" = "-q" ]; then
                      INITSTR=""
              else
@@ -1162,8 +1161,7 @@ Second, the ‘/usr/local/bin/emacspeak-espeakf’ script:
      done
 
      export EMACS_UNIBYTE=1
-     export DTK_PROGRAM=/usr/local/src/espeakf/espeakf.pl
-     export DTK_TCL=/usr/bin/perl
+     export TTS_PROGRAM=/usr/local/src/espeakf/espeakf.pl
 
      exec emacs -q \
                 -l /usr/share/emacs/site-lisp/emacspeak/lisp/emacspeak-setup.el \
@@ -1179,7 +1177,6 @@ in a shell as user ‘root’.
 
    ### End of document
 
-
 
 Tag Table:
 Node: Top760
@@ -1191,13 +1188,13 @@ Node: Movement10906
 Node: Keybindings12128
 Node: X Windows Keybindings14740
 Node: Speech Rate15852
-Node: Basic Commands Reference16884
-Node: Characteristics18234
-Node: Emacs manual20131
-Node: Free Books26769
-Node: An Initialization File28881
-Node: Software Synthesizers36090
-Node: Installation37601
+Node: Basic Commands Reference16877
+Node: Characteristics18227
+Node: Emacs manual20124
+Node: Free Books26762
+Node: An Initialization File28874
+Node: Software Synthesizers36083
+Node: Installation37594
 
 End Tag Table
 

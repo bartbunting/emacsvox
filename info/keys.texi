@@ -1,141 +1,140 @@
 @node Emacspeak Keymaps
  @chapter Emacspeak Keymaps
 
- 
-@node Emacspeak Keybindings On emacspeak-keymap
- @section Emacspeak Keybindings On emacspeak-keymap
+@node Emacspeak Keybindings On emacsvox-keymap
+ @section Emacspeak Keybindings On emacsvox-keymap
 
 @table @kbd
-@item C-@@  emacspeak-speak-current-mark
-@item C-a  emacspeak-toggle-icons
-@item C-b  emacspeak-bookshare
-@item C-c  emacspeak-selective-display
-@item C-d  emacspeak-toggle-show-point
+@item C-@@  emacsvox-speak-current-mark
+@item C-a  emacsvox-toggle-icons
+@item C-b  emacsvox-bookshare
+@item C-c  emacsvox-selective-display
+@item C-d  emacsvox-toggle-show-point
 @item C-e  move-end-of-line
-@item C-f  emacspeak-find-dired
-@item TAB  emacspeak-open-info
-@item C-j  emacspeak-hide-speak-block-sans-prefix
+@item C-f  emacsvox-find-dired
+@item TAB  emacsvox-open-info
+@item C-j  emacsvox-hide-speak-block-sans-prefix
 @item C-k  browse-kill-ring
 @item C-l  what-line
-@item RET  emacspeak-websearch-google
-@item C-o  emacspeak-ocr
-@item C-q  emacspeak-toggle-inaudible-or-comint-autospeak
+@item RET  emacsvox-websearch-google
+@item C-o  emacsvox-ocr
+@item C-q  emacsvox-toggle-inaudible-or-comint-autospeak
 @item C-r  restart-emacs
 @item C-s  tts-restart
-@item C-u  emacspeak-feeds-browse
+@item C-u  emacsvox-feeds-browse
 @item C-v  view-mode
-@item C-w  emacspeak-speak-window-information
-@item C-x  emacspeak-speak-header-line
-@item SPC  emacspeak-speak-windowful
-@item L  emacspeak-speak-line-interactively
-@item M  emacspeak-speak-minor-mode-line
-@item N  emacspeak-view-emacspeak-news
-@item P  emacspeak-speak-paragraph-interactively
-@item R  emacspeak-speak-rectangle
-@item T  emacspeak-view-emacspeak-tips
-@item V  emacspeak-speak-version
-@item W  emacspeak-select-window-by-name
-@item [  emacspeak-speak-paragraph
-@item \  emacspeak-toggle-speak-line-invert-filter
-@item ]  emacspeak-speak-page
-@item ^  emacspeak-filtertext
-@item `  emacspeak-speak-net-id
-@item a  emacspeak-speak-message-again
-@item b  emacspeak-speak-buffer
-@item c  emacspeak-speak-char
+@item C-w  emacsvox-speak-window-information
+@item C-x  emacsvox-speak-header-line
+@item SPC  emacsvox-speak-windowful
+@item L  emacsvox-speak-line-interactively
+@item M  emacsvox-speak-minor-mode-line
+@item N  emacsvox-view-emacsvox-news
+@item P  emacsvox-speak-paragraph-interactively
+@item R  emacsvox-speak-rectangle
+@item T  emacsvox-view-emacsvox-tips
+@item V  emacsvox-speak-version
+@item W  emacsvox-select-window-by-name
+@item [  emacsvox-speak-paragraph
+@item \  emacsvox-toggle-speak-line-invert-filter
+@item ]  emacsvox-speak-page
+@item ^  emacsvox-filtertext
+@item `  emacsvox-speak-net-id
+@item a  emacsvox-speak-message-again
+@item b  emacsvox-speak-buffer
+@item c  emacsvox-speak-char
 @item e  move-end-of-line
-@item f  emacspeak-speak-buffer-filename
+@item f  emacsvox-speak-buffer-filename
 @item g  keyboard-quit
-@item h  emacspeak-speak-help
-@item i  emacspeak-speak-rest-of-buffer
-@item j  emacspeak-hide-or-expose-block
-@item k  emacspeak-speak-current-kill
-@item l  emacspeak-speak-line
-@item m  emacspeak-speak-mode-line
-@item n  emacspeak-buffer-select
+@item h  emacsvox-speak-help
+@item i  emacsvox-speak-rest-of-buffer
+@item j  emacsvox-hide-or-expose-block
+@item k  emacsvox-speak-current-kill
+@item l  emacsvox-speak-line
+@item m  emacsvox-speak-mode-line
+@item n  emacsvox-buffer-select
 @item o  delete-blank-lines
-@item p  emacspeak-buffer-select
-@item r  emacspeak-speak-region
-@item s  dtk-stop
-@item t  emacspeak-speak-time
-@item u  emacspeak-url-template-fetch
-@item w  emacspeak-speak-word
-@item |  emacspeak-speak-line-set-column-filter
-@item !  emacspeak-speak-run-shell-command
+@item p  emacsvox-buffer-select
+@item r  emacsvox-speak-region
+@item s  tts-stop
+@item t  emacsvox-speak-time
+@item u  emacsvox-url-template-fetch
+@item w  emacsvox-speak-word
+@item |  emacsvox-speak-line-set-column-filter
+@item !  emacsvox-speak-run-shell-command
 @item $  flyspell-mode
-@item %  emacspeak-speak-current-percentage
-@item &  emacspeak-wizards-shell-command-on-current-file
-@item '  emacspeak-empv-play-file
+@item %  emacsvox-speak-current-percentage
+@item &  emacsvox-wizards-shell-command-on-current-file
+@item '  emacsvox-empv-play-file
 @item (  amixer
-@item )  emacspeak-sounds-select-theme
-@item ,  emacspeak-buffer-select
-@item .  emacspeak-buffer-select
-@item 1  emacspeak-speak-this-window
-@item 2  emacspeak-speak-other-window
+@item )  emacsvox-sounds-select-theme
+@item ,  emacsvox-buffer-select
+@item .  emacsvox-buffer-select
+@item 1  emacsvox-speak-this-window
+@item 2  emacsvox-speak-other-window
 @item 3  amixer-volume-adjust
 @item 4  amixer-volume-adjust
-@item ;  emacspeak-multimedia
-@item =  emacspeak-speak-current-column
-@item @@  emacspeak-speak-message-at-time
-@item A  emacspeak-appt-repeat-announcement
-@item B  emacspeak-speak-buffer-interactively
-@item C  emacspeak-customize
+@item ;  emacsvox-multimedia
+@item =  emacsvox-speak-current-column
+@item @@  emacsvox-speak-message-at-time
+@item A  emacsvox-appt-repeat-announcement
+@item B  emacsvox-speak-buffer-interactively
+@item C  emacsvox-customize
 @end table
 
-@node Emacspeak Keybindings On emacspeak-dtk-submap
- @section Emacspeak Keybindings On emacspeak-dtk-submap
+@node Emacspeak Keybindings On emacsvox-tts-submap
+ @section Emacspeak Keybindings On emacsvox-tts-submap
 
 @table @kbd
-@item C-c  dtk-cloud
+@item C-c  tts-cloud
 @item C-d  dectalk
 @item C-e  espeak
-@item C-j  dtk-set-chunk-separator-syntax
-@item C-n  dtk-notify-initialize
+@item C-j  tts-set-chunk-separator-syntax
+@item C-n  tts-notify-initialize
 @item C-o  outloud
 @item C-s  dectalk-soft
 @item C-v  global-voice-lock-mode
-@item SPC  dtk-toggle-splitting-on-white-space
-@item +  dtk-rate-adjust
-@item ,  dtk-toggle-punctuation-mode
-@item -  dtk-rate-adjust
-@item .  dtk-notify-stop
-@item 0  dtk-set-predefined-rate
-@item 1  dtk-set-predefined-rate
-@item 2  dtk-set-predefined-rate
-@item 3  dtk-set-predefined-rate
-@item 4  dtk-set-predefined-rate
-@item 5  dtk-set-predefined-rate
-@item 6  dtk-set-predefined-rate
-@item 7  dtk-set-predefined-rate
-@item 8  dtk-set-predefined-rate
-@item 9  dtk-set-predefined-rate
-@item =  dtk-rate-adjust
-@item L  dtk-local-server
-@item N  dtk-set-next-language
-@item P  dtk-set-previous-language
-@item R  dtk-reset-state
-@item S  dtk-set-language
+@item SPC  tts-toggle-splitting-on-white-space
+@item +  tts-rate-adjust
+@item ,  tts-toggle-punctuation-mode
+@item -  tts-rate-adjust
+@item .  tts-notify-stop
+@item 0  tts-set-predefined-rate
+@item 1  tts-set-predefined-rate
+@item 2  tts-set-predefined-rate
+@item 3  tts-set-predefined-rate
+@item 4  tts-set-predefined-rate
+@item 5  tts-set-predefined-rate
+@item 6  tts-set-predefined-rate
+@item 7  tts-set-predefined-rate
+@item 8  tts-set-predefined-rate
+@item 9  tts-set-predefined-rate
+@item =  tts-rate-adjust
+@item L  tts-local-server
+@item N  tts-set-next-language
+@item P  tts-set-previous-language
+@item R  tts-reset-state
+@item S  tts-set-language
 @item V  tts-speak-version
-@item a  dtk-add-cleanup-pattern
-@item c  dtk-toggle-caps
-@item d  dtk-select-server
-@item f  dtk-set-character-scale
-@item i  emacspeak-toggle-audio-indentation
-@item k  emacspeak-toggle-character-echo
-@item l  emacspeak-toggle-line-echo
-@item n  dtk-toggle-speak-nonprinting-chars
-@item o  dtk-toggle-strip-octals
-@item p  dtk-set-punctuations
-@item q  dtk-toggle-quiet
-@item r  dtk-set-rate
-@item s  dtk-toggle-split-caps
+@item a  tts-add-cleanup-pattern
+@item c  tts-toggle-caps
+@item d  tts-select-server
+@item f  tts-set-character-scale
+@item i  emacsvox-toggle-audio-indentation
+@item k  emacsvox-toggle-character-echo
+@item l  emacsvox-toggle-line-echo
+@item n  tts-toggle-speak-nonprinting-chars
+@item o  tts-toggle-strip-octals
+@item p  tts-set-punctuations
+@item q  tts-toggle-quiet
+@item r  tts-set-rate
+@item s  tts-toggle-split-caps
 @item v  voice-lock-mode
-@item w  emacspeak-toggle-word-echo
-@item z  emacspeak-zap-tts
+@item w  emacsvox-toggle-word-echo
+@item z  emacsvox-zap-tts
 @end table
 
-@node Emacspeak Keybindings On emacspeak-hyper-keymap
- @section Emacspeak Keybindings On emacspeak-hyper-keymap
+@node Emacspeak Keybindings On emacsvox-hyper-keymap
+ @section Emacspeak Keybindings On emacsvox-hyper-keymap
 
 @table @kbd
 @item C-a  ansi-term
@@ -144,44 +143,44 @@
 @item C-e  eshell
 @item TAB  hippie-expand
 @item C-j  journalctl
-@item C-l  emacspeak-librivox
-@item C-t  emacspeak-wizards-tramp-open-location
-@item a  emacspeak-amark-browse
+@item C-l  emacsvox-librivox
+@item C-t  emacsvox-wizards-tramp-open-location
+@item a  emacsvox-amark-browse
 @item c  browse-url-chrome
 @item d  magit-dispatch
 @item f  magit-file-dispatch
 @item g  gnus
-@item h  emacspeak-m-player-from-history
+@item h  emacsvox-m-player-from-history
 @item i  ibuffer
-@item j  emacspeak-zoxide
+@item j  emacsvox-zoxide
 @item l  locate
 @item m  vm
 @item o  find-file
-@item r  emacspeak-wizards-find-file-as-root
+@item r  emacsvox-wizards-find-file-as-root
 @item s  magit-status
 @item u  list-unicode-display
-@item w  emacspeak-wizards-noaa-weather
+@item w  emacsvox-wizards-noaa-weather
 @item y  yas-expand
-@item DEL  emacspeak-wizards-snarf-sexp
+@item DEL  emacsvox-wizards-snarf-sexp
 @end table
 
-@node Emacspeak Keybindings On emacspeak-super-keymap
- @section Emacspeak Keybindings On emacspeak-super-keymap
+@node Emacspeak Keybindings On emacsvox-super-keymap
+ @section Emacspeak Keybindings On emacsvox-super-keymap
 
 @table @kbd
 @item SPC  scratch-buffer
-@item .  emacspeak-wizards-shell-directory-reset
-@item R  emacspeak-webspace-feed-reader
+@item .  emacsvox-wizards-shell-directory-reset
+@item R  emacsvox-webspace-feed-reader
 @item b  eww-list-buffers
 @item c  calculator
-@item d  emacspeak-dired-downloads
+@item d  emacsvox-dired-downloads
 @item e  elfeed
 @item f  browse-url-firefox
-@item g  emacspeak-google-tts
-@item h  emacspeak-org-capture-link
-@item l  emacspeak-wizards-locate-content
-@item m  emacspeak-wizards-view-buffers-filtered-by-this-mode
-@item n  emacspeak-wizards-google-news
+@item g  emacsvox-google-tts
+@item h  emacsvox-org-capture-link
+@item l  emacsvox-wizards-locate-content
+@item m  emacsvox-wizards-view-buffers-filtered-by-this-mode
+@item n  emacsvox-wizards-google-news
 @item p  proced
 @item r  soundscape-restart
 @item s  soundscape
@@ -189,14 +188,14 @@
 @item u  soundscape-update-mood
 @end table
 
-@node Emacspeak Keybindings On emacspeak-alt-keymap
- @section Emacspeak Keybindings On emacspeak-alt-keymap
+@node Emacspeak Keybindings On emacsvox-alt-keymap
+ @section Emacspeak Keybindings On emacsvox-alt-keymap
 
 @table @kbd
 @item C-l  ellama-chat
-@item SPC  emacspeak-eww-smart-tabs
+@item SPC  emacsvox-eww-smart-tabs
 @item ,  eldoc
-@item a  emacspeak-feeds-atom-display
+@item a  emacsvox-feeds-atom-display
 @item b  sox-binaural
 @item c  gptel
 @item d  deadgrep
@@ -204,109 +203,109 @@
 @item f  ffip
 @item g  rg
 @item l  eww-open-file
-@item p  emacspeak-wizards-pdf-open
-@item r  emacspeak-feeds-rss-display
-@item s  emacspeak-wizards-tune-in-radio-search
-@item t  emacspeak-wizards-tune-in-radio-browse
-@item u  emacspeak-m-player-url
+@item p  emacsvox-wizards-pdf-open
+@item r  emacsvox-feeds-rss-display
+@item s  emacsvox-wizards-tune-in-radio-search
+@item t  emacsvox-wizards-tune-in-radio-browse
+@item u  emacsvox-m-player-url
 @item v  visual-line-mode
 @item w  define-word
 @end table
 
-@node Emacspeak Keybindings On emacspeak-multi-keymap
- @section Emacspeak Keybindings On emacspeak-multi-keymap
+@node Emacspeak Keybindings On emacsvox-multi-keymap
+ @section Emacspeak Keybindings On emacsvox-multi-keymap
 
 @table @kbd
-@item '  emacspeak-pianobar
+@item '  emacsvox-pianobar
 @item d  sdcv-search-input
 @item f  ffap
-@item l  emacspeak-m-player-locate-media
+@item l  emacsvox-m-player-locate-media
 @item m  notmuch-search
 @item o  org-mode
-@item p  emacspeak-wizards-portfolio
-@item y  emacspeak-google-yt-feed
+@item p  emacsvox-wizards-portfolio
+@item y  emacsvox-google-yt-feed
 @end table
 
-@node Emacspeak Keybindings On emacspeak-v-keymap
- @section Emacspeak Keybindings On emacspeak-v-keymap
+@node Emacspeak Keybindings On emacsvox-v-keymap
+ @section Emacspeak Keybindings On emacsvox-v-keymap
 
 @table @kbd
-@item SPC  emacspeak-speak-spaces
-@item a  emacspeak-xslt-view-atom-file
+@item SPC  emacsvox-speak-spaces
+@item a  emacsvox-xslt-view-atom-file
 @item b  ebuku
-@item o  emacspeak-feeds-opml-display
-@item r  emacspeak-xslt-view-rss-file
+@item o  emacsvox-feeds-opml-display
+@item r  emacsvox-xslt-view-rss-file
 @item v  view-register
-@item x  emacspeak-xslt-view-file
+@item x  emacsvox-xslt-view-file
 @end table
 
-@node Emacspeak Keybindings On emacspeak-x-keymap
- @section Emacspeak Keybindings On emacspeak-x-keymap
+@node Emacspeak Keybindings On emacsvox-x-keymap
+ @section Emacspeak Keybindings On emacsvox-x-keymap
 
 @table @kbd
-@item C-c  emacspeak-wizards-color-wheel
-@item ,  emacspeak-wizards-shell-directory-set
-@item .  emacspeak-wizards-shell-directory-reset
-@item 0  emacspeak-wizards-shell-by-key
-@item 1  emacspeak-wizards-shell-by-key
-@item 2  emacspeak-wizards-shell-by-key
-@item 3  emacspeak-wizards-shell-by-key
-@item 4  emacspeak-wizards-shell-by-key
-@item 5  emacspeak-wizards-shell-by-key
-@item 7  emacspeak-wizards-shell-command-on-current-file
+@item C-c  emacsvox-wizards-color-wheel
+@item ,  emacsvox-wizards-shell-directory-set
+@item .  emacsvox-wizards-shell-directory-reset
+@item 0  emacsvox-wizards-shell-by-key
+@item 1  emacsvox-wizards-shell-by-key
+@item 2  emacsvox-wizards-shell-by-key
+@item 3  emacsvox-wizards-shell-by-key
+@item 4  emacsvox-wizards-shell-by-key
+@item 5  emacsvox-wizards-shell-by-key
+@item 7  emacsvox-wizards-shell-command-on-current-file
 @item 8  calc
-@item :  emacspeak-m-player-loop
-@item ;  emacspeak-m-player-shuffle
-@item =  emacspeak-wizards-find-longest-line-in-region
-@item [  emacspeak-wizards-find-longest-paragraph-in-region
-@item ]  emacspeak-wizards-find-longest-sentence-in-region
+@item :  emacsvox-m-player-loop
+@item ;  emacsvox-m-player-shuffle
+@item =  emacsvox-wizards-find-longest-line-in-region
+@item [  emacsvox-wizards-find-longest-paragraph-in-region
+@item ]  emacsvox-wizards-find-longest-sentence-in-region
 @item b  battery
-@item d  emacspeak-speak-load-directory-settings
-@item e  emacspeak-we-xsl-map
-@item f  emacspeak-wizards-remote-frame
-@item h  emacspeak-wizards-how-many-matches
+@item d  emacsvox-speak-load-directory-settings
+@item e  emacsvox-we-xsl-map
+@item f  emacsvox-wizards-remote-frame
+@item h  emacsvox-wizards-how-many-matches
 @item i  ibuffer
-@item k  emacspeak-desktop-preserve
+@item k  emacsvox-desktop-preserve
 @item l  load-library
 @item m  mspools-show
-@item o  emacspeak-wizards-occur-header-lines
+@item o  emacsvox-wizards-occur-header-lines
 @item p  paradox-list-packages
-@item t  emacspeak-speak-telephone-directory
-@item u  emacspeak-wizards-units
-@item v  emacspeak-wizards-vc-viewer
-@item w  emacspeak-wizards-noaa-weather
+@item t  emacsvox-speak-telephone-directory
+@item u  emacsvox-wizards-units
+@item v  emacsvox-wizards-vc-viewer
+@item w  emacsvox-wizards-noaa-weather
 @item x  exchange-point-and-mark
-@item |  emacspeak-wizards-squeeze-blanks
+@item |  emacsvox-wizards-squeeze-blanks
 @item DEL  desktop-clear
 @end table
 
-@node Emacspeak Keybindings On emacspeak-y-keymap
- @section Emacspeak Keybindings On emacspeak-y-keymap
+@node Emacspeak Keybindings On emacsvox-y-keymap
+ @section Emacspeak Keybindings On emacsvox-y-keymap
 
 @table @kbd
-@item b  emacspeak-bookshare-eww
+@item b  emacsvox-bookshare-eww
 @item d  empv-download-youtube
-@item e  emacspeak-epub-eww
-@item l  emacspeak-empv-play-last
+@item e  emacsvox-epub-eww
+@item l  emacsvox-empv-play-last
 @item p  empv-youtube-playlist
-@item s  emacspeak-empv-yt-search
+@item s  emacsvox-empv-yt-search
 @item t  empv-youtube-tabulated
-@item y  emacspeak-empv-play-url
+@item y  emacsvox-empv-play-url
 @end table
 
-@node Emacspeak Keybindings On emacspeak-z-keymap
- @section Emacspeak Keybindings On emacspeak-z-keymap
+@node Emacspeak Keybindings On emacsvox-z-keymap
+ @section Emacspeak Keybindings On emacsvox-z-keymap
 
 @table @kbd
 @item SPC  flyspell-mode
-@item b  emacspeak-wizards-view-buffers-filtered-by-this-mode
+@item b  emacsvox-wizards-view-buffers-filtered-by-this-mode
 @item c  calibredb
 @item d  magit-dispatch
-@item e  emacspeak-wizards-eww-buffer-list
+@item e  emacsvox-wizards-eww-buffer-list
 @item f  magit-file-dispatch
-@item l  emacspeak-m-player-locate-media
-@item n  emacspeak-wizards-buffer-select
-@item p  emacspeak-wizards-buffer-select
+@item l  emacsvox-m-player-locate-media
+@item n  emacsvox-wizards-buffer-select
+@item p  emacsvox-wizards-buffer-select
 @item r  restart-emacs
 @item s  magit-status
 @item z  suspend-frame
