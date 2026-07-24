@@ -28,6 +28,7 @@
   (require 'emacsvox-advice-audit-tests)
   (require 'emacsvox-tts-audit-tests)
   (require 'emacsvox-tts-tests)
+  (require 'emacsvox-keymap-tests)
   (require 'emacsvox-converter-tests)
   (require 'emacsvox-dired-tests)
   (require 'emacsvox-mail-tests)

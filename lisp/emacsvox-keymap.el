@@ -94,7 +94,10 @@
 (defvar emacsvox-keymap nil
   "Primary emacsvox keymap. ")
 
-(defvar emacsvox-dtk-submap nil
+(defvaralias 'emacsvox-dtk-submap 'emacsvox-tts-submap
+  "Legacy name for `emacsvox-tts-submap'.")
+
+(defvar emacsvox-tts-submap nil
   "Submap used for TTS commands. ")
 
 (defvar emacsvox-table-submap nil
@@ -103,7 +106,9 @@
 ;;;    Binding keymap and submap
 
 (define-prefix-command  'emacsvox-keymap)
-(define-prefix-command   'emacsvox-dtk-submap)
+(define-prefix-command   'emacsvox-tts-submap)
+(declare-function emacsvox-tts-submap "emacsvox-keymap")
+(defalias 'emacsvox-dtk-submap #'emacsvox-tts-submap)
 (define-prefix-command  'emacsvox-table-submap-command
                         'emacsvox-table-submap)
 
@@ -117,7 +122,7 @@
 (global-set-key (kbd "<XF86AudioLowerVolume>")  'amixer-volume-down)
 (global-set-key (kbd "<XF86AudioRaiseVolume>") 'amixer-volume-up)
 
-(define-key emacsvox-keymap "d"  'emacsvox-dtk-submap)
+(define-key emacsvox-keymap "d"  'emacsvox-tts-submap)
 (define-key emacsvox-keymap (kbd "C-t")  'emacsvox-table-submap-command)
 
 ;;;   The Emacsvox key  bindings.
@@ -278,7 +283,7 @@
    ("o" delete-blank-lines)
    ("p" emacsvox-buffer-select)
    ("r" emacsvox-speak-region)
-   ("s" dtk-stop)
+   ("s" tts-stop)
    ("t" emacsvox-speak-time)
    ("u" emacsvox-url-template-fetch)
    ("w" emacsvox-speak-word)
@@ -290,49 +295,49 @@
 (cl-loop
  for binding in
  '(
-   ("=" dtk-rate-adjust)
-   ("+" dtk-rate-adjust)
-   ("-" dtk-rate-adjust)
-   ("," dtk-toggle-punctuation-mode)
-   ("." dtk-notify-stop)
-   ("C-c" dtk-cloud)
+   ("=" tts-rate-adjust)
+   ("+" tts-rate-adjust)
+   ("-" tts-rate-adjust)
+   ("," tts-toggle-punctuation-mode)
+   ("." tts-notify-stop)
+   ("C-c" tts-cloud)
    ("C-d" dectalk)
    ("C-e" espeak)
    ("C-s" dectalk-soft)
-   ("C-j" dtk-set-chunk-separator-syntax)
-   ("C-n" dtk-notify-initialize)
+   ("C-j" tts-set-chunk-separator-syntax)
+   ("C-n" tts-notify-initialize)
    ("C-o" outloud)
    ("C-v" global-voice-lock-mode)
-   ("d" dtk-select-server)
-   ("L" dtk-local-server)
-   ("N" dtk-set-next-language)
-   ("P" dtk-set-previous-language)
-   ("R" dtk-reset-state)
-   ("S" dtk-set-language)
-   ("SPC" dtk-toggle-splitting-on-white-space)
+   ("d" tts-select-server)
+   ("L" tts-local-server)
+   ("N" tts-set-next-language)
+   ("P" tts-set-previous-language)
+   ("R" tts-reset-state)
+   ("S" tts-set-language)
+   ("SPC" tts-toggle-splitting-on-white-space)
    ("V" tts-speak-version)
-   ("a" dtk-add-cleanup-pattern)
-   ("c" dtk-toggle-caps)
-   ("f" dtk-set-character-scale)
+   ("a" tts-add-cleanup-pattern)
+   ("c" tts-toggle-caps)
+   ("f" tts-set-character-scale)
    ("i" emacsvox-toggle-audio-indentation)
    ("k" emacsvox-toggle-character-echo)
    ("l" emacsvox-toggle-line-echo)
-   ("n" dtk-toggle-speak-nonprinting-chars)
-   ("o" dtk-toggle-strip-octals)
-   ("p" dtk-set-punctuations)
-   ("q" dtk-toggle-quiet)
-   ("r" dtk-set-rate)
-   ("s" dtk-toggle-split-caps)
+   ("n" tts-toggle-speak-nonprinting-chars)
+   ("o" tts-toggle-strip-octals)
+   ("p" tts-set-punctuations)
+   ("q" tts-toggle-quiet)
+   ("r" tts-set-rate)
+   ("s" tts-toggle-split-caps)
    ("v" voice-lock-mode)
    ("w" emacsvox-toggle-word-echo)
    ("z" emacsvox-zap-tts)
    )
  do
- (emacsvox-keymap-update emacsvox-dtk-submap binding))
+ (emacsvox-keymap-update emacsvox-tts-submap binding))
 
 (dotimes (i 10)
-  (define-key emacsvox-dtk-submap
-              (format "%s" i)   'dtk-set-predefined-rate))
+  (define-key emacsvox-tts-submap
+              (format "%s" i)   'tts-set-predefined-rate))
 
 (cl-loop
  for binding in
@@ -758,4 +763,3 @@
 (global-set-key (kbd "C-x r e") 'emacsvox-eww-open-mark)
 
 (provide 'emacsvox-keymap)
-

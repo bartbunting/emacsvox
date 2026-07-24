@@ -2158,6 +2158,28 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-set-punctuations-to-some #'dtk-set-punctuations-to-some)
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)
+(defalias 'tts-add-cleanup-pattern #'dtk-add-cleanup-pattern)
+(defalias 'tts-rate-adjust #'dtk-rate-adjust)
+(defalias 'tts-set-predefined-rate #'dtk-set-predefined-rate)
+(defalias 'tts-set-character-scale #'dtk-set-character-scale)
+(defalias 'tts-toggle-quiet #'dtk-toggle-quiet)
+(defalias 'tts-toggle-split-caps #'dtk-toggle-split-caps)
+(defalias 'tts-toggle-strip-octals #'dtk-toggle-strip-octals)
+(defalias 'tts-toggle-caps #'dtk-toggle-caps)
+(defalias
+ 'tts-toggle-speak-nonprinting-chars
+ #'dtk-toggle-speak-nonprinting-chars)
+(defalias 'tts-toggle-punctuation-mode #'dtk-toggle-punctuation-mode)
+(defalias 'tts-select-server #'dtk-select-server)
+(defalias 'tts-cloud #'dtk-cloud)
+(defalias 'tts-local-server #'dtk-local-server)
+(defalias 'tts-set-language #'dtk-set-language)
+(defalias 'tts-set-next-language #'dtk-set-next-language)
+(defalias 'tts-set-previous-language #'dtk-set-previous-language)
+(defalias
+ 'tts-toggle-splitting-on-white-space
+ #'dtk-toggle-splitting-on-white-space)
+(defalias 'tts-set-chunk-separator-syntax #'dtk-set-chunk-separator-syntax)
 (defalias
  'tts-chunk-on-white-space-and-punctuations
  #'dtk-chunk-on-white-space-and-punctuations)
