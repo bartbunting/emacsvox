@@ -110,7 +110,7 @@
 ;; outloud, dectalk, espeak.
 ;; Whenever we switch engines, we load voice-definitions for that
 ;; engine by reloading module voice-defs.
-(cl-declaim (special dtk-program))
+(cl-declaim (special tts-program))
 
 (cl-defstruct (acss
                (:predicate nil) ;; Don't make a predicate we don't need.
@@ -120,19 +120,19 @@
 (defun voice-setup ()
   "Setup voices for selected TTS engine."
   (cond
-   ((string-match "outloud" dtk-program)
+   ((string-match "outloud" tts-program)
     (require 'outloud-voices)
     (outloud-configure-tts))
-   ((string-match "dtk" dtk-program)
+   ((string-match "dtk" tts-program)
     (require 'dectalk-voices)
     (dectalk-configure-tts))
-   ((string-match "swiftmac" dtk-program)
+   ((string-match "swiftmac" tts-program)
     (require 'swiftmac-voices)
     (swiftmac-configure-tts))
-   ((string-match "mac\\'" dtk-program)
+   ((string-match "mac\\'" tts-program)
     (require 'mac-voices)
     (mac-configure-tts))
-   ((string-match "espeak\\'" dtk-program)
+   ((string-match "espeak\\'" tts-program)
     (require 'espeak-voices)
     (espeak-configure-tts))
    (t
@@ -300,4 +300,3 @@ Define a voice for it if needed, then return the symbol."
 
 (provide 'voice-setup)
 ;;;  end of file
-

@@ -322,7 +322,7 @@
          ("mac" mac-voices mac)
          ("espeak" espeak-voices espeak)
          ("unknown" plain-voices plain)))
-    (let ((dtk-program (nth 0 case))
+    (let ((tts-program (nth 0 case))
           required
           configured
           fastloaded)
