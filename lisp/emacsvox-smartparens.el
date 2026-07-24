@@ -67,94 +67,107 @@
 
 ;;;  Advice low-level helpers:
 
-(defun ems--sp--pair-overlay-create-after (&rest _)
+(defvar emacsvox-smartparens--advice nil
+  "Current Smartparens targets and their native advice functions.")
+(setq emacsvox-smartparens--advice nil)
+
+(defun emacsvox--advice-sp--pair-overlay-create-after (&rest _)
   "speak." (emacsvox-icon 'item))
 
-(advice-add 'sp--pair-overlay-create :after
-            #'ems--sp--pair-overlay-create-after)
+(push '(sp--pair-overlay-create :after
+        emacsvox--advice-sp--pair-overlay-create-after)
+      emacsvox-smartparens--advice)
 
-(defun ems--sp-wrap--initialize-after (&rest _)
+(defun emacsvox--advice-sp-wrap--initialize-after (&rest _)
   "speak." (emacsvox-icon 'select-object))
 
-(advice-add 'sp-wrap--initialize :after
-            #'ems--sp-wrap--initialize-after)
+(push '(sp-wrap--initialize :after
+        emacsvox--advice-sp-wrap--initialize-after)
+      emacsvox-smartparens--advice)
 
 ;;;  Navigators And Modifiers:
 
-(defun ems--sp-backward-delete-char-around (orig-fun &rest args)
-  "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (emacsvox-icon 'delete-object)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+(defun emacsvox--advice-sp-backward-delete-char-around (orig-fun &rest args)
+  "Speak the character deleted by ORIG-FUN, which is called once."
+  (when (ems-interactive-p 'sp-backward-delete-char)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-this-char (preceding-char)))
+  (apply orig-fun args))
 
-(advice-add 'sp-backward-delete-char :around
-            #'ems--sp-backward-delete-char-around)
+(push '(sp-backward-delete-char :around
+        emacsvox--advice-sp-backward-delete-char-around)
+      emacsvox-smartparens--advice)
 
-(defun ems--sp-forward-delete-char-around (orig-fun &rest args)
-  "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (emacsvox-icon 'delete-object)
-      (emacsvox-speak-char t) (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'sp-forward-delete-char :around
-            #'ems--sp-forward-delete-char-around)
-
-(defun ems--sp-backward-kill-word-before (&rest _)
+(defun emacsvox--advice-sp-backward-kill-word-before (&rest _)
   "Speak word before killing it."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sp-backward-kill-word)
     (when dtk-stop-immediately (dtk-stop 'all))
     (let ((start (point)) (dtk-stop-immediately nil))
       (save-excursion
         (forward-word -1) (emacsvox-icon 'delete-object)
         (emacsvox-speak-region (point) start)))))
 
-(advice-add 'sp-backward-kill-word :before
-            #'ems--sp-backward-kill-word-before)
+(push '(sp-backward-kill-word :before
+        emacsvox--advice-sp-backward-kill-word-before)
+      emacsvox-smartparens--advice)
 
-(cl-loop
- for f in
- '(sp-forward-sexp sp-backward-sexp)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak sexp after moving."
-     (if (ems-interactive-p)
-         (let ((start (point))
-               (end (line-end-position))
-               (emacsvox-show-point t))
-           ad-do-it
-           (emacsvox-icon 'large-movement)
-           (cond
-            ((>= end (point))
-             (emacsvox-speak-region start (point)))
-            (t (emacsvox-speak-line))))
-       ad-do-it)
-     ad-return-value)))
+(defun emacsvox-smartparens--movement-around (target orig-fun &rest args)
+  "Call ORIG-FUN once and speak movement by Smartparens TARGET."
+  (let ((start (point))
+        (end (line-end-position))
+        (result (apply orig-fun args)))
+    (when (ems-interactive-p target)
+      (let ((emacsvox-show-point t))
+        (emacsvox-icon 'large-movement)
+        (if (>= end (point))
+            (emacsvox-speak-region start (point))
+          (emacsvox-speak-line))))
+    result))
 
-(cl-loop
- for f in
+(dolist (target '(sp-forward-sexp sp-backward-sexp))
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    (eval
+     `(defun ,advice-function (orig-fun &rest args)
+        ,(format "Speak movement performed by `%s'." target)
+        (apply #'emacsvox-smartparens--movement-around
+               ',target orig-fun args)))
+    (push (list target :around advice-function)
+          emacsvox-smartparens--advice)))
+
+(defun emacsvox-smartparens--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-smartparens--advice))))
+
+(defun emacsvox-smartparens--kill-feedback ()
+  "Speak text killed by Smartparens."
+  (emacsvox-speak-current-kill)
+  (emacsvox-icon 'delete-object))
+
+(emacsvox-smartparens--register-after-group
  '(
    sp-kill-whole-line sp-kill-region sp-backward-kill-sexp
    sp-splice-sexp-killing-around sp-splice-sexp-killing-backward
    sp-splice-sexp-killing-forward sp-kill-sexp sp-kill-hybrid-sexp
    sp-copy-sexp sp--kill-or-copy-region)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-current-kill)
-       (emacsvox-icon 'delete-object)))))
+ #'emacsvox-smartparens--kill-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-smartparens--edit-feedback ()
+  "Speak after a structural Smartparens edit."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
+
+(emacsvox-smartparens--register-after-group
  '(
    sp-absorb-sexp sp-emit-sexp
    sp-add-to-next-sexp sp-add-to-previous-sexp
@@ -180,15 +193,19 @@
    sp-transpose-sexp
    sp-unwrap-sexp sp-backward-down-sexp
    sp-up-sexp)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-icon 'large-movement)
-         (emacsvox-speak-line))))))
+ #'emacsvox-smartparens--edit-feedback)
+
+(defun emacsvox-smartparens--install-advice ()
+  "Install advice for Smartparens features loaded so far."
+  (dolist (entry emacsvox-smartparens--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(smartparens smartparens-html smartparens-ruby))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-smartparens--install-advice))))
 
 (provide 'emacsvox-smartparens)
 ;;;  end of file
-

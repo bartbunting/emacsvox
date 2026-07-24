@@ -231,6 +231,7 @@
   (require 'emacsvox-sage-tests)
   (require 'emacsvox-sdcv-tests)
   (require 'emacsvox-slime-tests)
+  (require 'emacsvox-smartparens-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
