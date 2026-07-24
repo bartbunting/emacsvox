@@ -1,6 +1,7 @@
 #!/bin/sh
 #$Iid:$
-LOAD="-l advice.el -l cl-macs.el -l cl-lib.el -l emacspeak-load-path.el -l cl.elc  \
- -l emacspeak-loaddefs.el -L ./g-client"
+EMACS=${EMACS:-emacs}
+LOAD="-L . -L ./g-client -l advice.el -l cl-macs.el -l cl-lib.el -l cl.elc \
+ -l emacsvox-preamble.el -l emacsvox-loaddefs.el -l elint.el"
 echo "$@" | \
-emacs -batch -q -f package-initialize $LOAD -f elint-file 
+"$EMACS" -batch -q -f package-initialize $LOAD -f elint-file

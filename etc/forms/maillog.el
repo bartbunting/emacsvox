@@ -1,16 +1,16 @@
-;;; emacspeak/maillog.el --- Speech friendly interface to /var/log/maillog  -*- lexical-binding: t; -*-
+;;; emacsvox/maillog.el --- Speech friendly interface to /var/log/maillog  -*- lexical-binding: t; -*-
 ;;;$Id$
 ;;; $Author$
-;;; Description:  Emacspeak extension to speech enable maillog
+;;; Description:  Emacsvox extension to speech enable maillog
 ;;; Keywords: forms
 ;;{{{  LCD Archive entry:
 
 ;;; LCD Archive Entry:
-;;; emacspeak| T. V. Raman |raman@cs.cornell.edu
+;;; emacsvox| T. V. Raman |raman@cs.cornell.edu
 ;;; A speech interface to Emacs |
 ;;; $Date$ |
 ;;;  $Revision$ |
-;;; Location https://github.com/tvraman/emacspeak
+;;; Location https://github.com/robertmeta/emacsvox
 ;;;
 
 ;;}}}

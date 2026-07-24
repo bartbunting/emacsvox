@@ -1,4 +1,4 @@
-;;; indent.el --- Indent Emacspeak Source Code.  -*- lexical-binding: t; -*-
+;;; indent.el --- Indent Emacsvox Source Code.  -*- lexical-binding: t; -*-
 
 (require 'cl-lib)
 

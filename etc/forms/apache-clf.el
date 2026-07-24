@@ -1,17 +1,17 @@
-;;; emacspeak/forms/apache-clf.el --- Speech friendly  -*- lexical-binding: t; -*-
+;;; emacsvox/forms/apache-clf.el --- Speech friendly  -*- lexical-binding: t; -*-
 ;;; interface to apache logs (CLF)
 ;;;$Id$
 ;;; $Author$
-;;; Description:  Emacspeak extension to speech enable  forms
+;;; Description:  Emacsvox extension to speech enable  forms
 ;;; Keywords: forms
 ;;{{{  LCD Archive entry:
 
 ;;; LCD Archive Entry:
-;;; emacspeak| T. V. Raman |raman@cs.cornell.edu
+;;; emacsvox| T. V. Raman |raman@cs.cornell.edu
 ;;; A speech interface to Emacs |
 ;;; $Date$ |
 ;;;  $Revision$ |
-;;; Location https://github.com/tvraman/emacspeak
+;;; Location https://github.com/robertmeta/emacsvox
 ;;;
 
 ;;}}}
@@ -47,7 +47,7 @@
                        "/etc/httpd/logs/access_log"))
 
 
-(setq forms-read-file-filter 'emacspeak-forms-flush-unwanted-records)
+(setq forms-read-file-filter 'emacsvox-forms-flush-unwanted-records)
 
 (setq forms-field-sep " ")
 (setq forms-number-of-fields 15)

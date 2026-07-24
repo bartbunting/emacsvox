@@ -9,4 +9,4 @@ dc.title: Run agents by command
 :SoundscapePanel
 boodler.arguments: (arglist () listtype=(ListOf ((Wrapped Agent)) min=0))
 boodler.use: agent
-dc.title: Emacspeak soundscape  Panel With Remote Control
+dc.title: Emacsvox soundscape Panel With Remote Control

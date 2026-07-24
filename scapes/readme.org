@@ -1,7 +1,7 @@
-* Emacspeak Soundscapes 
+* Emacsvox Soundscapes
 
 This directory will contain Boodler packages that I create as part of
-Emacspeak.
+Emacsvox.
 
 * Contents
   1. File ~soundscapes~ contains a list of all the Soundscapes I use.

@@ -16,7 +16,7 @@
 (defun ems--get-iplayer-play ()
   "Play using mpv"
   (interactive)
-  (emacspeak-empv-play-url (nth  13 forms-fields)))
+  (emacsvox-empv-play-url (nth  13 forms-fields)))
 
 (defun ems--get-iplayer-download ()
   (interactive)

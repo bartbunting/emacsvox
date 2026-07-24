@@ -1,6 +1,6 @@
-;;; soundscape.el -- Soundscapes for The Emacspeak Desktop  -*- lexical-binding: t; -*-
+;;; soundscape.el -- Soundscapes for the Emacsvox desktop  -*- lexical-binding: t; -*-
 ;; Description:  Soundscapes Using Boodler
-;; Keywords: Emacspeak,  Audio Desktop Soundscapes
+;; Keywords: Emacsvox, Audio Desktop Soundscapes
 ;;{{{  LCD Archive entry:
 
 ;; LCD Archive Entry:
@@ -48,15 +48,15 @@
 ;; at @url{http://boodler.org/lib}.
 ;; Make sure boodler works and produces audio in your environment.
 ;; finally install the Boodler packages  from
-;; emacspeak/scapes from the Emacspeak GitHub repository by running
-;; @code{cd emacspeak/scapes; make }
+;; emacsvox/scapes from the Emacsvox GitHub repository by running
+;; @code{cd emacsvox/scapes; make }
 ;; 
 ;; When  boodler is set up and all packages installed, copy
-;; file emacspeak/scapes/soundscapes  to ~/.boodler/Collection.
+;; file emacsvox/scapes/soundscapes to ~/.boodler/Collection.
 ;; The above file lists all installed SoundScapes.
-;; Directory emacspeak/scapes also contains
+;; Directory emacsvox/scapes also contains
 ;; additional Boodler Agents and SoundScapes  that
-;; I have created for use with Emacspeak.
+;; I have created for use with Emacsvox.
 ;; 
 ;;  Module soundscape.el  defines Emacs conveniences for running
 ;; Soundscapes. Main Entry Points:
@@ -73,7 +73,7 @@
 ;; When automatic Soundscapes are enabled, SoundScapes are
 ;;  started and stopped based on the current major
 ;; mode. Active Soundscape  are displayed as part of the minor-mode-alist.
-;; Command emacspeak-speak-minor-mode-line can be used to have this spoken.
+;; Command emacsvox-speak-minor-mode-line can be used to have this spoken.
 ;; 
 ;; Thus, SoundScapes can be thought of as reflecting the
 ;; @emph{mood} of the current @emph{mode}.
@@ -330,14 +330,14 @@ See  \\{soundscape-default-theme} for details."
     ("ChangingLoopsPitches" nil)
     ("Drip" ,soundscape-communication-modes)
     ("GardenBackground" nil)
-    ("LoopStew" (emacspeak-m-player-mode))
+    ("LoopStew" (emacsvox-m-player-mode))
     ("ManyMockingBirds" nil)
     ("SomeMockingBirds" nil)
     ("MoreMockingBirds" nil)
     ("ManyNightingales" nil)
     ("MockingBirds" nil)
     ("MockingCuckoos" nil)
-    ("Nightscape" (emacspeak-screen-saver-mode))
+    ("Nightscape" (emacsvox-screen-saver-mode))
     ("BirdCalls"  (fundamental-mode))
     ("RainForever" ,soundscape-help-modes)
     ("RainSounds" ,soundscape-vc-modes)

@@ -1,7 +1,7 @@
-;;; emacspeak/forms.el --- Speech friendly interface to /var/log/messages  -*- lexical-binding: t; -*-
+;;; emacsvox/forms.el --- Speech friendly interface to /var/log/messages  -*- lexical-binding: t; -*-
 ;;;$Id$
 ;;; $Author$
-;;; Description:  Emacspeak extension to speech enable sql-mode
+;;; Description:  Emacsvox extension to speech enable sql-mode
 ;;; Keywords: forms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;{{{  setup forms

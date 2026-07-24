@@ -26,14 +26,14 @@
          (insert (format "%s:\t%s\t%s\n" (cl-first p) c (cl-second p))))))
     (setq buffer-read-only t)
     (special-mode))
-  (emacspeak-icon 'open-object)
+  (emacsvox-icon 'open-object)
   (funcall-interactively #'switch-to-buffer "*Colors*")
   (goto-char (point-min))
-  (emacspeak-speak-line))
+  (emacsvox-speak-line))
 
-(declare-function emacspeak-icon "emacspeak-sounds" (icon))
-(declare-function ems--color-name "emacspeak-wizards" (color))
-(declare-function emacspeak-speak-line "emacspeak-speak" (&optional arg))
+(declare-function emacsvox-icon "emacsvox-sounds" (icon))
+(declare-function ems--color-name "emacsvox-wizards" (color))
+(declare-function emacsvox-speak-line "emacsvox-speak" (&optional arg))
 
 
 (provide 'theme-colors)
