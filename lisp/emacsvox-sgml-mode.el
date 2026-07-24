@@ -44,57 +44,64 @@
 
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'sgml-mode)
 
 ;;;  advice interactive commands 
 
-(defun ems--sgml-skip-tag-forward-after (&rest _)
+(defmacro emacsvox-sgml--define-navigation-advice (targets)
+  "Define native navigation feedback for SGML TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 "Speak the SGML navigation destination."
+                 (when (ems-interactive-p ',target)
+                   (emacsvox-icon 'large-movement)
+                   (emacsvox-speak-line)))
+               (advice-add ',target :after #',function))))
+        targets)))
+
+(emacsvox-sgml--define-navigation-advice
+    (sgml-skip-tag-forward sgml-skip-tag-backward))
+
+(defun emacsvox--advice-sgml-slash-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'sgml-skip-tag-forward :after
-            #'ems--sgml-skip-tag-forward-after)
-
-(defun ems--sgml-skip-tag-backward-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'sgml-skip-tag-backward :after
-            #'ems--sgml-skip-tag-backward-after)
-
-(defun ems--sgml-slash-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sgml-slash)
     (emacsvox-speak-this-char (preceding-char))))
 
-(advice-add 'sgml-slash :after #'ems--sgml-slash-after)
+(advice-add 'sgml-slash :after #'emacsvox--advice-sgml-slash-after)
 
-(defun ems--sgml-delete-tag-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
-
-(advice-add 'sgml-delete-tag :after #'ems--sgml-delete-tag-after)
-
-(defun ems--sgml-name-char-around (orig-fun &rest args)
-  "Speak the character you typed"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (message "Type the char: ") (apply orig-fun args)
-        (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
-
-(advice-add 'sgml-name-char :around #'ems--sgml-name-char-around)
-
-(defun ems--sgml-tags-invisible-after (&rest _)
+(defun emacsvox--advice-sgml-delete-tag-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sgml-delete-tag)
+    (emacsvox-icon 'delete-object)))
+
+(advice-add 'sgml-delete-tag :after
+            #'emacsvox--advice-sgml-delete-tag-after)
+
+(defun emacsvox--advice-sgml-name-char-around (orig-fun &rest args)
+  "Speak the character you typed"
+  (if (ems-interactive-p 'sgml-name-char)
+      (let ((start (point)))
+        (message "Type the char: ")
+        (let ((result (apply orig-fun args)))
+          (emacsvox-speak-region start (point))
+          result))
+    (apply orig-fun args)))
+
+(advice-add 'sgml-name-char :around
+            #'emacsvox--advice-sgml-name-char-around)
+
+(defun emacsvox--advice-sgml-tags-invisible-after (&rest _)
+  "speak"
+  (when (ems-interactive-p 'sgml-tags-invisible)
     (emacsvox-icon 'button) (dtk-speak "Toggled display of tags")))
 
 (advice-add 'sgml-tags-invisible :after
-            #'ems--sgml-tags-invisible-after)
+            #'emacsvox--advice-sgml-tags-invisible-after)
 
 (provide  'emacsvox-sgml-mode)
-

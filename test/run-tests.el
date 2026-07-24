@@ -137,6 +137,7 @@
   (require 'emacsvox-flyspell-tests)
   (require 'emacsvox-supercite-tests)
   (require 'emacsvox-lua-tests)
+  (require 'emacsvox-sgml-mode-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
