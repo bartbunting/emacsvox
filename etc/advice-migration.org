@@ -37,9 +37,10 @@ must become conservative and test-driven before further bulk use.
 
 As of the completed core-file migration and built-in integration slices through
 Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris, CPerl, IDO,
-and CMU Scheme on 2026-07-24 on branch =bart=:
+CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary, Transient,
+Archive Mode, Tar Mode, and Sh Script on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 611 passing ERT tests;
+- the Emacs 31 suite contains 666 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -131,18 +132,48 @@ and CMU Scheme on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-cmuscheme.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-speedbar.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-tcl.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-man.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-python.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-make-mode.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-dictionary.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-transient.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-arc.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-tar.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-sh-script.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         268 |    95 |
-| =ad-get-arg=        |          41 |   n/a |
+| =defadvice=         |         260 |    92 |
+| =ad-get-arg=        |          38 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          31 |   n/a |
-| =ad-return-value=   |          19 |   n/a |
-| =advice-add=        |        1173 |   157 |
-| =ems-interactive-p= |        1210 |   176 |
+| =ad-do-it=          |          27 |   n/a |
+| =ad-return-value=   |          17 |   n/a |
+| =advice-add=        |        1195 |   157 |
+| =ems-interactive-p= |        1200 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -163,13 +194,13 @@ The previous checkpoint used "converted" for some modules at the
 native-advice-installed stage.  Those modules remain in this inventory until
 they satisfy the final-form gate.
 
-As of 2026-07-24, 42 Emacs-bundled integration modules remain: 19 legacy or
-positional modules and 23 helper-cleanup modules.
+As of 2026-07-24, 32 Emacs-bundled integration modules remain: 15 legacy or
+positional modules and 17 helper-cleanup modules.
 
 | State                | Modules |
 |----------------------+---------|
-| legacy or positional | =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =newsticker=, =nxml=, =perl=, =python=, =ruby=, =sh-script=, =speedbar=, =supercite=, =todo-mode=, =transient=, =treesit= |
-| helper cleanup       | =arc=, =calc=, =desktop=, =dictionary=, =dired=, =eudc=, =flymake=, =hideshow=, =info=, =kmacro=, =make-mode=, =man=, =package=, =re-builder=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tar=, =tcl=, =tempo=, =texinfo=, =woman= |
+| legacy or positional | =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =newsticker=, =nxml=, =perl=, =ruby=, =supercite=, =todo-mode=, =treesit= |
+| helper cleanup       | =calc=, =desktop=, =dired=, =eudc=, =flymake=, =hideshow=, =info=, =kmacro=, =package=, =re-builder=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tempo=, =texinfo=, =woman= |
 
 =emacsvox-entertain.el= is tracked separately because it combines built-in
 Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
@@ -197,12 +228,13 @@ Outline and its optional Foldout integration, and EWW with its SHR rendering
 integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, Eshell, and Which-Key are
 also converted, along with Eterm, Ispell, Widget, RST, RefTeX, BS, BibTeX, and
 Bookmark.  Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris,
-CPerl, IDO, and CMU Scheme are now also fully final-form.
+CPerl, IDO, CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary,
+Transient, Archive Mode, Tar Mode, and Sh Script are now also fully final-form.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge; modules in the inventory above still require final-form
-work.  Repository-wide, 34 files still contain bridge compatibility symbols.
+work.  Repository-wide, 31 files still contain bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
@@ -453,6 +485,42 @@ The CMU Scheme conversion covers all 12 current Emacs 31 targets.  Launch,
 region, and file operations receive their native command, bounds, and file-name
 arguments directly; switching and evaluation feedback uses direct target-aware
 registration.
+
+The Speedbar conversion covers 12 current registrations.  Frame-close feedback
+now follows =dframe-close-frame= only in Speedbar mode because
+=speedbar-close-frame= was removed.  Navigation and directory wrappers call
+their originals exactly once, and button voiceification receives native
+arguments.
+
+The Tcl conversion covers nine current registrations, replaces removed
+Tcl-specific defun aliases with current generic navigation, and keeps
+evaluation, indentation, help, and shell feedback target-aware.  The Man
+conversion covers ten current registrations and omits the removed =Man-quit=
+command.
+
+The Python conversion expands generated advice into 31 distinct direct
+registrations.  It omits the non-command
+=python-shell-send-string-no-output= target, uses native region bounds for
+indentation, and makes backspace call its original exactly once.  The Make Mode
+conversion covers nine callable Emacs 31 targets; generic
+=completion-at-point= feedback replaces the removed =makefile-complete=
+command, while the still-callable browser API remains covered.
+
+The Dictionary conversion covers eight current registrations and relies on
+generic =forward-button= and =backward-button= feedback in place of removed
+Dictionary-specific link commands.  The Transient conversion covers 13 current
+registrations, uses the Emacs 31 =transient-show-menu= and
+=transient-enable-menu-navigation= settings, and corrects a suspend wrapper
+that previously called the original operation multiple times.
+
+The Archive Mode conversion covers all nine current targets.  The Tar Mode
+conversion covers eight current targets and removes advice for the absent
+=tar-quit= command rather than attaching mode-specific behaviour to a global
+quit command.  The Sh Script conversion retains four current direct
+registrations, moves here-document feedback to =sh--maybe-here-document=, and
+calls that hook exactly once.  Removed Sh-specific indentation and newline
+commands are covered by existing generic Emacsvox advice, while ordinary
+character echo remains handled by =emacsvox-post-self-insert-hook=.
 
 Continue by migrating remaining built-in integration modules before optional
 third-party integrations.  The compatibility bridge remains necessary until
