@@ -121,7 +121,7 @@
     (let ((ems--interactive-fn-name 'calculator-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-tone)
+      (cl-letf (((symbol-function 'tts-tone)
                  (lambda (&rest _) (push 'tone events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (char) (push (list 'char char) events))))

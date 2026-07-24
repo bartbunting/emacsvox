@@ -32,7 +32,7 @@
     (let ((calls 0)
           (ems--interactive-fn-name 'gnuplot-delchar-or-maybe-eof)
           events)
-      (cl-letf (((symbol-function 'dtk-tone)
+      (cl-letf (((symbol-function 'tts-tone)
                  (lambda (&rest _) (push 'tone events)))
                 ((symbol-function 'emacsvox-speak-char)
                  (lambda (&rest _) (push 'speak-char events))))

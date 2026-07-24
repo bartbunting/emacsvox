@@ -60,7 +60,7 @@
   (let ((result (apply orig-fun args)))
     (when (ems-interactive-p 'py-electric-backspace)
       (let ((ws (= (char-syntax (preceding-char)) 32)))
-        (dtk-tone 500 100 'force)
+        (tts-tone 500 100 'force)
         (unless ws (emacsvox-speak-this-char (preceding-char)))
         (when ws
           (tts-notify (format "Indent %s " result))
@@ -77,7 +77,7 @@
   "Speak character you're deleting."
   (let ((result (apply orig-fun args)))
     (when (ems-interactive-p 'py-electric-delete)
-      (dtk-tone 500 100 'force)
+      (tts-tone 500 100 'force)
       (emacsvox-speak-this-char (preceding-char)))
     result))
 

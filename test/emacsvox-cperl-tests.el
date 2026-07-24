@@ -51,7 +51,7 @@
     (let ((ems--interactive-fn-name 'cperl-electric-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-tone)
+      (cl-letf (((symbol-function 'tts-tone)
                  (lambda (&rest _) (push 'tone events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)

@@ -48,7 +48,7 @@
   "Interactive forward deletion cues once before one original call."
   (let ((ems--interactive-fn-name '*table--cell-delete-char)
         events)
-    (cl-letf (((symbol-function 'dtk-tone)
+    (cl-letf (((symbol-function 'tts-tone)
                (lambda (&rest _) (push 'tone events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (push 'speak-char events))))
@@ -67,7 +67,7 @@
   "Programmatic forward deletion calls the original exactly once."
   (let ((calls 0)
         events)
-    (cl-letf (((symbol-function 'dtk-tone)
+    (cl-letf (((symbol-function 'tts-tone)
                (lambda (&rest _) (push 'tone events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (push 'speak-char events))))
@@ -89,7 +89,7 @@
         events)
     (with-temp-buffer
       (insert "x")
-      (cl-letf (((symbol-function 'dtk-tone)
+      (cl-letf (((symbol-function 'tts-tone)
                  (lambda (&rest _) (push 'tone events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)

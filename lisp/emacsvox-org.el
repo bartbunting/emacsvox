@@ -310,7 +310,7 @@
 (defun emacsvox--advice-org-delete-char-around (original n)
   "Cue deletion and call ORIGINAL once with N."
   (when (ems-interactive-p 'org-delete-char)
-    (dtk-tone-deletion)
+    (tts-tone-deletion)
     (emacsvox-speak-char t))
   (funcall original n))
 

@@ -87,11 +87,11 @@ used."
               ((symbol-function 'tts-stop)
                (lambda (&optional all)
                  (emacsvox-trace--record 'stop all)))
-              ((symbol-function 'dtk-tone)
+              ((symbol-function 'tts-tone)
                (lambda (pitch duration &optional force)
                  (emacsvox-trace--record
                   'tone pitch duration force)))
-              ((symbol-function 'dtk-silence)
+              ((symbol-function 'tts-silence)
                (lambda (duration &optional force)
                  (emacsvox-trace--record 'silence duration force)))
               ((symbol-function 'dtk-set-rate)

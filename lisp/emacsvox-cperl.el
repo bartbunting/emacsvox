@@ -57,7 +57,7 @@
     (original &rest arguments)
   "Speak character you're deleting."
   (when (ems-interactive-p 'cperl-electric-backspace)
-    (dtk-tone 500 100 'force)
+    (tts-tone 500 100 'force)
     (emacsvox-speak-this-char (preceding-char)))
   (apply original arguments))
 

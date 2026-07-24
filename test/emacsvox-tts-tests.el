@@ -50,14 +50,17 @@
     dtk-notify-initialize)
   "Removed DECtalk-era names for generic notification speech.")
 
+(defconst emacsvox-test--legacy-audio-cue-functions
+  '(dtk-tone-deletion
+    dtk-tone-upcase
+    dtk-tone-downcase
+    dtk-silence
+    dtk-tone)
+  "Removed DECtalk-era names for generic tones and silence.")
+
 (defconst emacsvox-test--tts-public-aliases
   '((tts-get-style . dtk-get-style)
     (tts-get-voice-for-face . dtk-get-voice-for-face)
-    (tts-tone-deletion . dtk-tone-deletion)
-    (tts-tone-upcase . dtk-tone-upcase)
-    (tts-tone-downcase . dtk-tone-downcase)
-    (tts-silence . dtk-silence)
-    (tts-tone . dtk-tone)
     (tts-speak-using-voice . dtk-speak-using-voice)
     (tts-dispatch . dtk-dispatch)
     (tts-set-rate . dtk-set-rate)
@@ -275,6 +278,11 @@
   (dolist (function emacsvox-test--legacy-notification-functions)
     (should-not (fboundp function)))
   (should-not (boundp 'dtk-notify-process)))
+
+(ert-deftest emacsvox-tts-legacy-audio-cue-functions-are-removed ()
+  "Generic tones and silence no longer expose DECtalk-era names."
+  (dolist (function emacsvox-test--legacy-audio-cue-functions)
+    (should-not (fboundp function))))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."

@@ -87,7 +87,7 @@
      ((= (point) (point-max))
       (message "Sending EOF to comint process"))
      (t
-      (dtk-tone 500 100 'force)
+      (tts-tone 500 100 'force)
       (emacsvox-speak-char t))))
   (apply orig-fun args))
 

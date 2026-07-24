@@ -76,7 +76,7 @@
         (emacsvox-icon 'right))
       (when (listp value) (setq value (car value)))
       (when (zerop (length (string-trim value)))
-        (dtk-tone 261.6 150 'force))    ;blank
+        (tts-tone 261.6 150 'force))    ;blank
       (if (called-interactively-p 'interactive) 
           (tts-speak (concat name " " value))
         (tts-speak  value)))))

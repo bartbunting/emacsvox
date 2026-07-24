@@ -135,7 +135,7 @@
     (insert "ab")
     (let ((ems--interactive-fn-name 'eshell-delete-backward-char)
           events)
-      (cl-letf (((symbol-function 'dtk-tone)
+      (cl-letf (((symbol-function 'tts-tone)
                  (lambda (&rest arguments)
                    (push (cons 'tone arguments) events)))
                 ((symbol-function 'emacsvox-speak-this-char)

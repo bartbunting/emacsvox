@@ -285,7 +285,7 @@ Interactive PREFIX arg means toggle the global default value. ")
   (when (ems-interactive-p 'comint-delchar-or-maybe-eof)
     (if (= (point) (point-max))
         (message "Sending EOF to comint process")
-      (dtk-tone-deletion)
+      (tts-tone-deletion)
       (emacsvox-speak-char t)))
   (funcall original argument))
 

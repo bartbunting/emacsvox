@@ -23,7 +23,7 @@
     (insert "x")
     (let ((calls 0)
           (ems--interactive-fn-name 'py-electric-delete))
-      (cl-letf (((symbol-function 'dtk-tone) #'ignore)
+      (cl-letf (((symbol-function 'tts-tone) #'ignore)
                 ((symbol-function 'emacsvox-speak-this-char) #'ignore))
         (should
          (eq

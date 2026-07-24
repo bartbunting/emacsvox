@@ -39,7 +39,7 @@
     (let ((ems--interactive-fn-name 'yaml-electric-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-tone-deletion)
+      (cl-letf (((symbol-function 'tts-tone-deletion)
                  (lambda () (push 'tone events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (char) (push (list 'char char) events))))

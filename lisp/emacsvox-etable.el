@@ -75,7 +75,7 @@
 (defun emacsvox--advice-*table--cell-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
   (when (ems-interactive-p '*table--cell-delete-char)
-    (dtk-tone 500 100 'force)
+    (tts-tone 500 100 'force)
     (emacsvox-speak-char t))
   (apply orig-fun args))
 
@@ -88,7 +88,7 @@
     (orig-fun &rest args)
   "Speak character you're deleting."
   (when (ems-interactive-p '*table--cell-delete-backward-char)
-    (dtk-tone 500 100 'force)
+    (tts-tone 500 100 'force)
     (emacsvox-speak-this-char (preceding-char)))
   (apply orig-fun args))
 
@@ -133,7 +133,7 @@
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
           (t (if dtk-stop-immediately (tts-stop))
-             (dtk-tone 225 120 'force)))))
+             (tts-tone 225 120 'force)))))
 
 (advice-add
  '*table--cell-newline :before

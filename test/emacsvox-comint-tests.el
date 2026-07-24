@@ -331,7 +331,7 @@
     (let ((ems--interactive-fn-name 'comint-delchar-or-maybe-eof)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-tone-deletion)
+      (cl-letf (((symbol-function 'tts-tone-deletion)
                  (lambda () (push 'tone events)))
                 ((symbol-function 'emacsvox-speak-char)
                  (lambda (&rest _) (push 'character events))))

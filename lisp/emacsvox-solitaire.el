@@ -82,9 +82,9 @@
   
   (tts-speak (format "%d stones" solitaire-stones)))
 
-(defun emacsvox-solitaire-stone  () (dtk-tone 400 150))
+(defun emacsvox-solitaire-stone  () (tts-tone 400 150))
 
-(defun emacsvox-solitaire-hole () (dtk-tone 800 100))
+(defun emacsvox-solitaire-hole () (tts-tone 800 100))
 (defun emacsvox-solitaire-speak-row ()
   "Speak current row."
   (interactive)

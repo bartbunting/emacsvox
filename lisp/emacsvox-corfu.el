@@ -127,7 +127,7 @@
   "Confirm insertion of a Corfu separator."
   (when (ems-interactive-p 'corfu-insert-separator)
     (emacsvox-icon 'select-object)
-    (dtk-tone 500 50)))
+    (tts-tone 500 50)))
 
 (defun emacsvox--advice-corfu-complete-after (&rest _)
   "Speak completed text."

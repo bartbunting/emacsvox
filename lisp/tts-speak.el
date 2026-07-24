@@ -357,14 +357,14 @@ bound to \\[dtk-toggle-caps].")
 ;;;  Tone Helpers:
 
 ;; Deletion Tone.
-(defsubst dtk-tone-deletion ()
-  (dtk-tone 500 75 'force))
+(defsubst tts-tone-deletion ()
+  (tts-tone 500 75 'force))
 ;; Upcase Tone.
-(defsubst dtk-tone-upcase ()
-  (dtk-tone 800 100 'force))
+(defsubst tts-tone-upcase ()
+  (tts-tone 800 100 'force))
 ;; Downcase tone.
-(defsubst dtk-tone-downcase ()
-  (dtk-tone 600 100 'force))
+(defsubst tts-tone-downcase ()
+  (tts-tone 600 100 'force))
 
 ;;;  helper: apply pronunciations
 
@@ -441,7 +441,7 @@ bound to \\[dtk-toggle-caps].")
 
 ;;;   Tones, Language, formatting speech etc.
 
-(defun dtk-silence (duration &optional force)
+(defun tts-silence (duration &optional force)
   "Produce `duration' ms of silence. "
   
   (unless dtk-quiet
@@ -449,7 +449,7 @@ bound to \\[dtk-toggle-caps].")
       (tts--protocol-silence duration
                              (if force "\nd" "")))))
 
-(defun dtk-tone (pitch duration &optional force)
+(defun tts-tone (pitch duration &optional force)
   "Produce a tone.
  Pitch   is  in hertz.
  Duration  is  in milliseconds.
@@ -2114,11 +2114,6 @@ When called interactively, CHAR defaults to the character after point."
 ;; until each corresponding implementation slice is migrated.
 (defalias 'tts-get-style #'dtk-get-style)
 (defalias 'tts-get-voice-for-face #'dtk-get-voice-for-face)
-(defalias 'tts-tone-deletion #'dtk-tone-deletion)
-(defalias 'tts-tone-upcase #'dtk-tone-upcase)
-(defalias 'tts-tone-downcase #'dtk-tone-downcase)
-(defalias 'tts-silence #'dtk-silence)
-(defalias 'tts-tone #'dtk-tone)
 (defalias 'tts-speak-using-voice #'dtk-speak-using-voice)
 (defalias 'tts-dispatch #'dtk-dispatch)
 (defalias 'tts-set-rate #'dtk-set-rate)

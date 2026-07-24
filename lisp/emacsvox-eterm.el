@@ -1115,7 +1115,7 @@ Use emacsvox-eterm-toggle-pointer-mode bound to
              (= new-row emacsvox-eterm-row)
              (= -1 (- new-column emacsvox-eterm-column)) current-char)
             (emacsvox-speak-this-char current-char) (delete-char 1)
-            (dtk-tone-deletion))
+            (tts-tone-deletion))
            ((and (= new-row emacsvox-eterm-row)
                  (= 1 (- new-column emacsvox-eterm-column)))
             (if (eq 32 last-command-event)

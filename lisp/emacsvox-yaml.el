@@ -76,7 +76,7 @@
   "speak."
   (let ((result (apply orig-fun args)))
     (when (ems-interactive-p 'yaml-electric-backspace)
-      (dtk-tone-deletion)
+      (tts-tone-deletion)
       (emacsvox-speak-this-char (preceding-char)))
     result))
 

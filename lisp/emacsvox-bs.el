@@ -78,8 +78,8 @@
                        list-buffers-directory)
                   (setq this-buffer-directory list-buffers-directory))))
                                         ;format and speak the line
-        (when this-buffer-modified-p (dtk-tone 700 100))
-        (when this-buffer-read-only (dtk-tone 250 100))
+        (when this-buffer-modified-p (tts-tone 700 100))
+        (when this-buffer-read-only (tts-tone 250 100))
         (tts-speak
          (concat 
           name " "

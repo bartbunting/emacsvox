@@ -194,13 +194,13 @@ personalities.")
      ((= (point) (point-max))
       (message "Sending EOF to comint process"))
      (t
-      (dtk-tone 500 100 'force)
+      (tts-tone 500 100 'force)
       (emacsvox-speak-char t)))))
 
 (defun emacsvox--advice-eshell-delete-backward-char-before (&rest _)
   "Speak character you're deleting."
   (when (ems-interactive-p 'eshell-delete-backward-char)
-    (dtk-tone 500 100 'force)
+    (tts-tone 500 100 'force)
     (emacsvox-speak-this-char (preceding-char))))
 
 (with-eval-after-load 'em-rebind

@@ -326,7 +326,7 @@
 (defun emacsvox--advice-lispy-delete-around (orig-fun &rest args)
   "Speak the character deleted by ORIG-FUN, which is called once."
   (when (ems-interactive-p 'lispy-delete)
-    (dtk-tone-deletion)
+    (tts-tone-deletion)
     (emacsvox-speak-char t))
   (apply orig-fun args))
 

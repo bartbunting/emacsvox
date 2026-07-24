@@ -23,7 +23,7 @@
     (goto-char (point-min))
     (let ((ems--interactive-fn-name 'sage-shell:delchar-or-maybe-eof)
           (calls 0))
-      (cl-letf (((symbol-function 'dtk-tone-deletion) #'ignore)
+      (cl-letf (((symbol-function 'tts-tone-deletion) #'ignore)
                 ((symbol-function 'emacsvox-speak-char) #'ignore))
         (should
          (eq 'deleted

@@ -413,7 +413,7 @@
   (let ((ems--interactive-fn-name 'org-delete-char)
         calls
         events)
-    (cl-letf (((symbol-function 'dtk-tone-deletion)
+    (cl-letf (((symbol-function 'tts-tone-deletion)
                (lambda () (push 'deletion-tone events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (delete-p) (push (list 'speak-char delete-p) events))))
@@ -436,7 +436,7 @@
   (let ((ems--interactive-fn-name nil)
         calls
         feedback)
-    (cl-letf (((symbol-function 'dtk-tone-deletion)
+    (cl-letf (((symbol-function 'tts-tone-deletion)
                (lambda () (setq feedback t)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (setq feedback t))))

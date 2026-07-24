@@ -538,7 +538,7 @@ Returns a string with appropriate personality."
   "speak"
   (when (ems-interactive-p 'widget-kill-line)
     (emacsvox-icon 'delete-object) (emacsvox-speak-current-kill 0)
-    (dtk-tone-deletion)))
+    (tts-tone-deletion)))
 
 (advice-add
  'widget-kill-line :after #'emacsvox--advice-widget-kill-line-after
