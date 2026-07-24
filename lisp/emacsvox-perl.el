@@ -43,38 +43,44 @@
 
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'perl-mode)
 
 ;;;   Advice electric insertion to talk:
+(defun emacsvox--advice-perl-electric-terminator-after (&rest _)
+  "Speak the character inserted by the legacy Perl electric command."
+  (when (ems-interactive-p 'perl-electric-terminator)
+    (emacsvox-speak-this-char last-input-event)))
+
 (unless (and (boundp 'post-self-insert-hook)
              post-self-insert-hook
              (memq 'emacsvox-post-self-insert-hook post-self-insert-hook))
-  (defadvice electric-perl-terminator  (after emacsvox pre act comp)
-    "Speak what you inserted."
-    (when (ems-interactive-p)
-      (emacsvox-speak-this-char last-input-event))))
+  (advice-add 'perl-electric-terminator :after
+              #'emacsvox--advice-perl-electric-terminator-after))
 
 ;;;   Program structure:
 
-(defun ems--mark-perl-function-after (&rest _)
+(defun emacsvox--advice-mark-perl-function-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'mark-perl-function)
     (emacsvox-icon 'mark-object) (message "Marked procedure")))
 
-(advice-add 'mark-perl-function :after #'ems--mark-perl-function-after)
+(advice-add 'mark-perl-function :after
+            #'emacsvox--advice-mark-perl-function-after)
 
-(defun ems--perl-beginning-of-function-after (&rest _)
+(defun emacsvox--advice-perl-beginning-of-function-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'perl-beginning-of-function)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'perl-beginning-of-function :after
-            #'ems--perl-beginning-of-function-after)
+            #'emacsvox--advice-perl-beginning-of-function-after)
 
-(defun ems--perl-end-of-function-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'large-movement)))
+(defun emacsvox--advice-perl-end-of-function-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'perl-end-of-function)
+    (emacsvox-icon 'large-movement)))
 
 (advice-add 'perl-end-of-function :after
-            #'ems--perl-end-of-function-after)
+            #'emacsvox--advice-perl-end-of-function-after)
 
 (provide  'emacsvox-perl)
-
