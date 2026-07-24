@@ -50,17 +50,31 @@
 
 ;;;  Advice Interactive Commands:
 
-(cl-loop
- for f in
- '(related-switch-forward related-switch-backward related-switch-buffer)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speech-enabled by emacsvox."
-     (when (ems-interactive-p)
-       (emacsvox-speak-mode-line)
-       (emacsvox-icon 'select-object)))))
+(defconst emacsvox-related--advice-targets
+  '(related-switch-forward related-switch-backward related-switch-buffer)
+  "Current Related commands that receive native advice.")
+
+(dolist (target emacsvox-related--advice-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Provide speech feedback after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-speak-mode-line)
+          (emacsvox-icon 'select-object))))))
+
+(defun emacsvox-related--install-advice ()
+  "Install native advice after Related loads."
+  (dolist (target emacsvox-related--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'related
+  (emacsvox-related--install-advice))
 
 (provide 'emacsvox-related)
 ;;;  end of file
-
