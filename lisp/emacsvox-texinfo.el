@@ -40,6 +40,7 @@
 
 ;;   Required modules: 
 (require 'emacsvox-preamble)
+(require 'texinfo)
 
 ;;; Commentary:
 
@@ -62,38 +63,37 @@
 
 ;;;  advice
 
-(defun ems--texinfo-insert-@end-after (&rest _)
+(defun emacsvox--advice-texinfo-insert-@end-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'texinfo-insert-@end)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
 (advice-add 'texinfo-insert-@end :after
-            #'ems--texinfo-insert-@end-after)
+            #'emacsvox--advice-texinfo-insert-@end-after)
 
-(defun ems--TeXinfo-insert-environment-after (&rest _)
+(defun emacsvox--advice-texinfo-insert-block-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'texinfo-insert-block)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-(advice-add 'TeXinfo-insert-environment :after
-            #'ems--TeXinfo-insert-environment-after)
+(advice-add 'texinfo-insert-block :after
+            #'emacsvox--advice-texinfo-insert-block-after)
 
-(defun ems--texinfo-insert-@item-after (&rest _)
+(defun emacsvox--advice-texinfo-insert-@item-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'texinfo-insert-@item)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
 
 (advice-add 'texinfo-insert-@item :after
-            #'ems--texinfo-insert-@item-after)
+            #'emacsvox--advice-texinfo-insert-@item-after)
 
-(defun ems--texinfo-insert-@node-after (&rest _)
+(defun emacsvox--advice-texinfo-insert-@node-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'texinfo-insert-@node)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
 (advice-add 'texinfo-insert-@node :after
-            #'ems--texinfo-insert-@node-after)
+            #'emacsvox--advice-texinfo-insert-@node-after)
 
 (provide 'emacsvox-texinfo)
 ;;;  end of file 
-
