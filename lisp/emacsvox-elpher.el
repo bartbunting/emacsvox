@@ -85,32 +85,57 @@
   elpher-view-raw
   )
 
+(defconst emacsvox-elpher--open-targets
+  '(elpher-back elpher-back-to-start elpher elpher-root-dir
+    elpher-follow-current-link elpher-jump
+    elpher-go elpher-go-current elpher-reload)
+  "Elpher commands that display a page.")
+
 (cl-loop
- for f in 
- '(
-   elpher-back elpher-back-to-start elpher elpher-root-dir
-   elpher-follow-current-link  elpher-jump
-   elpher-go elpher-go-current elpher-reload)
+ for target in emacsvox-elpher--open-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak after `%s' displays a page." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-speak-mode-line)
        (emacsvox-icon 'open-object)))))
 
+(defconst emacsvox-elpher--movement-targets
+  '(elpher-prev-link elpher-next-link)
+  "Elpher link navigation commands.")
+
 (cl-loop
- for f in 
- '(elpher-prev-link elpher-next-link)
+ for target in emacsvox-elpher--movement-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak the link selected by `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
        (dtk-speak
         (car (get-text-property (point) 'elpher-page)))))))
 
+(defconst emacsvox-elpher--advice-targets
+  (append emacsvox-elpher--open-targets
+          emacsvox-elpher--movement-targets)
+  "Current Elpher targets that receive native after advice.")
+
+(defun emacsvox-elpher--install-advice ()
+  "Install native advice after the optional Elpher package loads."
+  (dolist (target emacsvox-elpher--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'elpher
+  (emacsvox-elpher--install-advice))
+
 (provide 'emacsvox-elpher)
 ;;;  end of file
-
