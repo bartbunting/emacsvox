@@ -57,68 +57,64 @@
 
 ;;;  Interactive Commands: (rust-mode
 
+(defconst emacsvox-rust-mode--task-targets
+  '(rust-compile
+    rust-run
+    rust-test
+    rust-run-clippy
+    rust-promote-module-into-dir)
+  "Rust Mode commands that dispatch tasks.")
+
 (cl-loop
- for f in 
- '(
-   rust-compile rust-run rust-test
-   rust-run-clippy rust-promote-module-into-dir)
+ for target in emacsvox-rust-mode--task-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'task-done))))) 
 
-(defun ems--rust-dbg-wrap-or-unwrap-after (&rest _)
+(defun emacsvox--advice-rust-dbg-wrap-or-unwrap-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'rust-dbg-wrap-or-unwrap)
     (emacsvox-icon 'task-done) (emacsvox-speak-line)))
 
-(advice-add 'rust-dbg-wrap-or-unwrap :after
-            #'ems--rust-dbg-wrap-or-unwrap-after)
-
-(defun ems--rust-format-buffer-after (&rest _)
+(defun emacsvox--advice-rust-format-buffer-after (&rest _)
   "speak."
   (cond
    ((buffer-live-p (get-buffer rust-rustfmt-buffername))
     (emacsvox-icon 'open-object))
    (t (emacsvox-icon 'task-done))))
 
-(advice-add 'rust-format-buffer :after #'ems--rust-format-buffer-after)
-
-(defun ems--rust-goto-format-problem-after (&rest _)
+(defun emacsvox--advice-rust-goto-format-problem-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'rust-goto-format-problem)
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line) (emacsvox-icon 'large-movement))))
 
-(advice-add 'rust-goto-format-problem :after
-            #'ems--rust-goto-format-problem-after)
-
-(defun ems--rust-enable-format-on-save-after (&rest _)
+(defun emacsvox--advice-rust-enable-format-on-save-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'rust-enable-format-on-save)
     (emacsvox-icon 'on) (message "Enabled format on save")))
 
-(advice-add 'rust-enable-format-on-save :after
-            #'ems--rust-enable-format-on-save-after)
-
-(defun ems--rust-disable-format-on-save-after (&rest _)
+(defun emacsvox--advice-rust-disable-format-on-save-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'rust-disable-format-on-save)
     (emacsvox-icon 'off) (message "Disabled format on save")))
 
-(advice-add 'rust-disable-format-on-save :after
-            #'ems--rust-disable-format-on-save-after)
+(defconst emacsvox-rust-mode--navigation-targets
+  '(rust-beginning-of-defun rust-end-of-defun)
+  "Rust Mode definition navigation commands.")
 
 (cl-loop
- for f in
- '(rust-beginning-of-defun rust-end-of-defun)
+ for target in emacsvox-rust-mode--navigation-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'large-movement)
        (emacsvox-speak-line)))))
 
@@ -131,24 +127,51 @@
     (define-key rust-mode-map (kbd "C-c C-r")'rust-run)
     (define-key rust-mode-map (kbd "C-c C-t")'rust-test)))
 
-(emacsvox-rust-mode-setup)
-
 ;;; Interactive Commands: rustic
 
+(defconst emacsvox-rust-mode--rustic-targets
+  '(rustic-beginning-of-defun
+    rustic-end-of-defun
+    rustic-beginning-of-function)
+  "Current Rustic navigation commands.")
+
 (cl-loop
- for f in 
- '(
-   rustic-beginning-of-defun rustic-end-of-defun
-   rustic-beginning-of-function rustic-end-of-string)
+ for target in emacsvox-rust-mode--rustic-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (let ((emacsvox-show-point t))
          (emacsvox-icon 'large-movement)
          (emacsvox-speak-line))))))
 
+(defconst emacsvox-rust-mode--advice-targets
+  (append
+   emacsvox-rust-mode--task-targets
+   '(rust-dbg-wrap-or-unwrap
+     rust-format-buffer
+     rust-goto-format-problem
+     rust-enable-format-on-save
+     rust-disable-format-on-save)
+   emacsvox-rust-mode--navigation-targets
+   emacsvox-rust-mode--rustic-targets)
+  "Current Rust Mode and Rustic targets receiving native advice.")
+
+(defun emacsvox-rust-mode--install-advice ()
+  "Install advice for currently loaded Rust packages."
+  (dolist (target emacsvox-rust-mode--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox))))))
+  (when (featurep 'rust-mode)
+    (emacsvox-rust-mode-setup)))
+
+(dolist (feature '(rust-mode rustic))
+  (eval-after-load feature #'emacsvox-rust-mode--install-advice))
+
 (provide 'emacsvox-rust-mode)
 ;;;  end of file
-
