@@ -203,6 +203,7 @@
   (require 'emacsvox-exwm-tests)
   (require 'emacsvox-ffip-tests)
   (require 'emacsvox-forge-tests)
+  (require 'emacsvox-geiser-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
