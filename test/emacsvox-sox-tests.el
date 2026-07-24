@@ -37,5 +37,21 @@
             (funcall function))
           (should (equal (pop events) icon)))))))
 
+(ert-deftest emacsvox-sox-redraw-uses-current-face-symbols ()
+  "SoX applies current quoted face symbols to its file heading."
+  (with-temp-buffer
+    (sox-redraw
+     (make-sox-context :file "/tmp/emacsvox-audio.wav"))
+    (should
+     (eq
+      (get-text-property (point-min) 'face)
+      'font-lock-doc-face))
+    (goto-char (point-min))
+    (search-forward "/tmp/emacsvox-audio.wav")
+    (should
+     (eq
+      (get-text-property (1- (point)) 'face)
+      'font-lock-keyword-face))))
+
 (provide 'emacsvox-sox-tests)
 ;;; emacsvox-sox-tests.el ends here

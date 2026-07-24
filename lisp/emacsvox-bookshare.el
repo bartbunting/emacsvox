@@ -568,7 +568,7 @@ b Browse
     (goto-char (point-min))
     (insert "Browse And Read Bookshare Materials\n\n")
     (put-text-property start (point)
-                       'face font-lock-doc-face)
+                       'face 'font-lock-doc-face)
     (setq header-line-format "Bookshare Library")
     (cd-absolute emacsvox-bookshare-directory)))
 

@@ -308,7 +308,7 @@ Parameter `key' is the API  key."
     (setq buffer-undo-list  t)
     (goto-char (point-min))
     (insert "Google Maps Interaction")
-    (put-text-property start (point) 'face font-lock-doc-face)
+    (put-text-property start (point) 'face 'font-lock-doc-face)
     (insert "\n\f\n")
     (and gmaps-my-address (gmaps-set-current-location gmaps-my-address))
     (setq header-line-format
@@ -966,4 +966,3 @@ Place details need to have been expanded first."
 
 (provide 'gmaps)
 ;;;  end of file
-

@@ -298,7 +298,7 @@ Updated headlines found in emacsvox-webspace-headlines."
       (erase-buffer)
       (goto-char (point-min))
       (insert "Press enter to open stories.\n\n")
-      (put-text-property (point-min) (point) 'face font-lock-doc-face)
+      (put-text-property (point-min) (point) 'face 'font-lock-doc-face)
       (cl-loop
        for h in
        (delq nil
@@ -381,7 +381,7 @@ Optional interactive prefix arg forces a refresh."
       (erase-buffer)
       (goto-char (point-min))
       (insert "Press enter to open feeds.\n\n")
-      (put-text-property (point-min) (point) 'face font-lock-doc-face)
+      (put-text-property (point-min) (point) 'face 'font-lock-doc-face)
       (cl-loop
        for f in emacsvox-feeds
        and position  from 1 do
@@ -393,4 +393,3 @@ Optional interactive prefix arg forces a refresh."
 
 (provide 'emacsvox-webspace)
 ;;;  end of file
-

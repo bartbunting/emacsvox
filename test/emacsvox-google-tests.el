@@ -29,5 +29,15 @@
                 'details))))
         (should (= calls 1))))))
 
+(ert-deftest emacsvox-gmaps-mode-uses-current-face-symbol ()
+  "GMaps applies the current quoted face symbol to its heading."
+  (with-temp-buffer
+    (let ((gmaps-my-address nil))
+      (gmaps-mode))
+    (should
+     (eq
+      (get-text-property (point-min) 'face)
+      'font-lock-doc-face))))
+
 (provide 'emacsvox-google-tests)
 ;;; emacsvox-google-tests.el ends here
