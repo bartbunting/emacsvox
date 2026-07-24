@@ -1,6 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
-<!-- Copyright (C) 2003, 2005, 2006 Robert J. Chassell
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!-- Copyright © 2003, 2005, 2006 Robert J. Chassell
 
 In this essay, I suggest how to introduce Emacspeak to someone new,
 and I discuss some of the notions behind GNU Emacs, which underlies
@@ -20,8 +23,6 @@ of this entire document without royalty provided the
 copyright notice and this permission notice are preserved on
 all copies.
  -->
-<!-- Created by GNU Texinfo 5.2, http://www.gnu.org/software/texinfo/ -->
-<head>
 <title>Introducing Emacspeak</title>
 
 <meta name="description" content="Introducing Emacspeak">
@@ -29,55 +30,39 @@ all copies.
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <link href="#Top" rel="start" title="Top">
 <link href="dir.html#Top" rel="up" title="(dir)">
+<link href="#This-Essay" rel="next" title="This Essay">
+<link href="dir.html#Top" rel="prev" title="(dir)">
 <style type="text/css">
 <!--
-a.summary-letter {text-decoration: none}
-blockquote.smallquotation {font-size: smaller}
-div.display {margin-left: 3.2em}
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
-div.indentedblock {margin-left: 3.2em}
-div.lisp {margin-left: 3.2em}
-div.smalldisplay {margin-left: 3.2em}
-div.smallexample {margin-left: 3.2em}
-div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
-div.smalllisp {margin-left: 3.2em}
-kbd {font-style:oblique}
-pre.display {font-family: inherit}
-pre.format {font-family: inherit}
-pre.menu-comment {font-family: serif}
-pre.menu-preformatted {font-family: serif}
-pre.smalldisplay {font-family: inherit; font-size: smaller}
-pre.smallexample {font-size: smaller}
-pre.smallformat {font-family: inherit; font-size: smaller}
-pre.smalllisp {font-size: smaller}
-span.nocodebreak {white-space:nowrap}
-span.nolinebreak {white-space:nowrap}
-span.roman {font-family:serif; font-weight:normal}
-span.sansserif {font-family:sans-serif; font-weight:normal}
-ul.no-bullet {list-style: none}
+kbd.kbd {font-style: oblique}
+kbd.key {font-style: normal}
+span.r {font-family: initial; font-weight: normal; font-style: normal}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
 -->
 </style>
 
 
 </head>
 
-<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
-<h1 class="settitle" align="center">Introducing Emacspeak</h1>
+<body lang="en">
 
 
 
 
 
-<a name="Top"></a>
-<div class="header">
+<div class="top-level-extent" id="Top">
+<div class="nav-panel">
 <p>
 Next: <a href="#This-Essay" accesskey="n" rel="next">This Essay</a>, Previous: <a href="dir.html#Top" accesskey="p" rel="prev">(dir)</a>, Up: <a href="dir.html#Top" accesskey="u" rel="up">(dir)</a> &nbsp; </p>
 </div>
-<a name="Introducing-Emacspeak"></a>
-<h1 class="top">Introducing Emacspeak</h1>
+<h1 class="top" id="Introducing-Emacspeak"><span>Introducing Emacspeak<a class="copiable-link" href="#Introducing-Emacspeak"> &para;</a></span></h1>
 <p>Copyright &copy; 2003, 2005, 2006 Robert J. Chassell
 </p>
 <p>In this essay, I suggest how to introduce Emacspeak to someone new,
@@ -90,12 +75,12 @@ text-to-speech synthesizers and one method of installation.
 <p>Last updated on: 2006 Mar 18
 </p>
 
-<blockquote>
+<blockquote class="quotation">
 <p>This essay uses a verbatim license, since it is a statement of my
 recommendations.
 </p></blockquote>
 
-<blockquote>
+<blockquote class="quotation">
 <p>Permission is granted to make and distribute verbatim copies
 of this entire document without royalty provided the
 copyright notice and this permission notice are preserved on
@@ -103,36 +88,27 @@ all copies.
 </p>
 </blockquote>
 
-
 <p>This essay is about Emacspeak and how to introduce it to a friend.
 It is not a substitute for the Emacspeak manual, but an addendum.
 </p>
-<table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top">&bull; <a href="#This-Essay" accesskey="1">This Essay</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Questions" accesskey="2">Questions</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#How-to-Introduce-Emacspeak" accesskey="3">How to Introduce Emacspeak</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Free-Books" accesskey="4">Free Books</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#An-Initialization-File" accesskey="5">An Initialization File</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Software-Synthesizers" accesskey="6">Software Synthesizers</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Installation" accesskey="7">Installation</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-</table>
 
 
+<ul class="mini-toc">
+<li><a href="#This-Essay" accesskey="1">This Essay</a></li>
+<li><a href="#Questions" accesskey="2">Questions to Help Orient Yourself</a></li>
+<li><a href="#How-to-Introduce-Emacspeak" accesskey="3">How to Introduce Emacspeak</a></li>
+<li><a href="#Free-Books" accesskey="4">Free Books</a></li>
+<li><a href="#An-Initialization-File" accesskey="5">A <samp class="file">~/.emacs</samp> initialization and customization file</a></li>
+<li><a href="#Software-Synthesizers" accesskey="6">Two Software text-to-speech Synthesizers</a></li>
+<li><a href="#Installation" accesskey="7">Installation: Debian and <code class="code">espeakf</code></a></li>
+</ul>
 <hr>
-<a name="This-Essay"></a>
-<div class="header">
+<div class="unnumbered-level-extent" id="This-Essay">
+<div class="nav-panel">
 <p>
-Next: <a href="#Questions" accesskey="n" rel="next">Questions</a>, Previous: <a href="#Top" accesskey="p" rel="prev">Top</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
+Next: <a href="#Questions" accesskey="n" rel="next">Questions to Help Orient Yourself</a>, Previous: <a href="#Top" accesskey="p" rel="prev">Introducing Emacspeak</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
 </div>
-<a name="This-Essay-1"></a>
-<h2 class="unnumbered">This Essay</h2>
+<h2 class="unnumbered" id="This-Essay-1"><span>This Essay<a class="copiable-link" href="#This-Essay-1"> &para;</a></span></h2>
 
 
 <p>In this essay, I will recommend that you and your friend read parts of
@@ -152,7 +128,7 @@ is just harder.  This is how I learned Emacspeak.
 fifth and sixth parts are about particular software text-to-speech
 synthesizers and about one method of installation.
 </p>
-<ol>
+<ol class="enumerate">
 <li> Introduction
 
 <p>A short introductory segment, for orienting yourself.
@@ -164,10 +140,10 @@ I ask two rhetorical questions.
 </p>
 </li><li> A short digression:  free books and music
 
-<p>How to download texts, such as <cite>Alice in Wonderland</cite>, from the
+<p>How to download texts, such as <cite class="cite">Alice in Wonderland</cite>, from the
 Gutenberg Project.
 </p>
-</li><li> A sample <samp>.emacs</samp> initialization and customization file
+</li><li> A sample <samp class="file">.emacs</samp> initialization and customization file
 
 <p>I cannot imagine running Emacspeak without customizing it.
 </p>
@@ -176,16 +152,16 @@ Note that Flite support is now obsolete.
 
 
 
-<p>A discussion of <code>eflite</code> and <code>espeakf</code>.  When I first wrote
+<p>A discussion of <code class="code">eflite</code> and <code class="code">espeakf</code>.  When I first wrote
 this in April 2003, I had problems with them.  Now, in
 March 2006, they are good enough.
 </p>
 </li><li> Emacspeak Installation
 
 <p>This is a section on installing Emacspeak in Debian with both
-<code>eflite</code> and <code>espeakf</code>.  Even though I am now running two
-instances of Emacspeak, one using <code>eflite</code> and the other using
-<code>espeakf</code>, I am least certain about this part.  This is because
+<code class="code">eflite</code> and <code class="code">espeakf</code>.  Even though I am now running two
+instances of Emacspeak, one using <code class="code">eflite</code> and the other using
+<code class="code">espeakf</code>, I am least certain about this part.  This is because
 so much of my Emacs and other installation is from sources rather than
 from standard, precompiled binaries.  I don&rsquo;t know what a standard
 Debian or standard Emacspeak installation involves.  I think what I
@@ -193,13 +169,13 @@ describe is correct; but am not sure.
 </p></li></ol>
 
 <hr>
-<a name="Questions"></a>
-<div class="header">
-<p>
-Next: <a href="#How-to-Introduce-Emacspeak" accesskey="n" rel="next">How to Introduce Emacspeak</a>, Previous: <a href="#This-Essay" accesskey="p" rel="prev">This Essay</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
 </div>
-<a name="Questions-to-Help-Orient-Yourself"></a>
-<h2 class="unnumbered">Questions to Help Orient Yourself</h2>
+<div class="unnumbered-level-extent" id="Questions">
+<div class="nav-panel">
+<p>
+Next: <a href="#How-to-Introduce-Emacspeak" accesskey="n" rel="next">How to Introduce Emacspeak</a>, Previous: <a href="#This-Essay" accesskey="p" rel="prev">This Essay</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
+</div>
+<h2 class="unnumbered" id="Questions-to-Help-Orient-Yourself"><span>Questions to Help Orient Yourself<a class="copiable-link" href="#Questions-to-Help-Orient-Yourself"> &para;</a></span></h2>
 
 <p>My first question is whether you already know and use Emacspeak and
 are introducing someone else to an already running Emacspeak with
@@ -218,8 +194,8 @@ other matters.  But first, I would like to ask you what kind of
 text-to-speech facility you have?
 </p>
 <p>Are you using an external synthesizer, an internal hardware card for
-<em>text-to-speech</em> generation or do you expect to use a software
-text-to-speech package such as <code>eflite</code> or <code>espeakf</code>?  I do
+<em class="dfn">text-to-speech</em> generation or do you expect to use a software
+text-to-speech package such as <code class="code">eflite</code> or <code class="code">espeakf</code>?  I do
 not have a hard synthesizer, but run both those two software packages.
 In the installation section, I will talk about them.
 </p>
@@ -233,21 +209,21 @@ text-to-speech program.
 as do most contemporary personal computers.  You can try out Emacspeak
 without first investing in special hardware.  However, it is also
 worth bearing in mind that at the time I am writing this, in May 2005,
-<code>eflite</code> and <code>espeakf</code> have different virtues.  Neither is
+<code class="code">eflite</code> and <code class="code">espeakf</code> have different virtues.  Neither is
 as good as it might be.  For example, my installation of
-<code>espeakf</code> sometimes restarts its speaking of punctuation after I
+<code class="code">espeakf</code> sometimes restarts its speaking of punctuation after I
 shift back to a buffer, but not always.  On the other hand
-<code>espeakf</code> has voices, which I really like.  All in all, the two
+<code class="code">espeakf</code> has voices, which I really like.  All in all, the two
 software synthesizers are good enough.
 </p>
 <hr>
-<a name="How-to-Introduce-Emacspeak"></a>
-<div class="header">
-<p>
-Next: <a href="#Free-Books" accesskey="n" rel="next">Free Books</a>, Previous: <a href="#Questions" accesskey="p" rel="prev">Questions</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
 </div>
-<a name="How-to-Introduce-Emacspeak-1"></a>
-<h2 class="unnumbered">How to Introduce Emacspeak</h2>
+<div class="unnumbered-level-extent" id="How-to-Introduce-Emacspeak">
+<div class="nav-panel">
+<p>
+Next: <a href="#Free-Books" accesskey="n" rel="next">Free Books</a>, Previous: <a href="#Questions" accesskey="p" rel="prev">Questions to Help Orient Yourself</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
+</div>
+<h2 class="unnumbered" id="How-to-Introduce-Emacspeak-1"><span>How to Introduce Emacspeak<a class="copiable-link" href="#How-to-Introduce-Emacspeak-1"> &para;</a></span></h2>
 
 <p>Let me hope that you, the reader, already know and use Emacspeak and
 are introducing it to someone else.  You may not be that person, but
@@ -256,7 +232,7 @@ friend to Emacspeak.
 </p>
 <p>First of all, in Info, please listen together with your friend to the
 beginnings of the Emacspeak manual.  You might want to start with the
-Introduction node.  It is well written.  See <a href="emacspeak.html#Introduction">Introduction</a> in <cite>The Emacspeak User&rsquo;s Manual</cite>.  You can use the opportunity
+Introduction node.  It is well written.  See <a data-manual="emacspeak" href="emacspeak.html#Introduction">Introduction</a> in <cite class="cite">The Emacspeak User&rsquo;s Manual</cite>.  You can use the opportunity
 to introduce various Emacspeak commands and to discuss the philosophy
 or world-view behind Emacspeak.
 </p>
@@ -284,35 +260,26 @@ different.
 </p>
 <p>Emacspeak is a complete audio desktop; it is not a visual desktop.
 T. V. Raman describes it in his Emacspeak manual.
-See <a href="emacspeak.html#Top">Emacspeak</a> in <cite>The Emacspeak User&rsquo;s Manual</cite>.
+See <a data-manual="emacspeak" href="emacspeak.html#Top">Emacspeak</a> in <cite class="cite">The Emacspeak User&rsquo;s Manual</cite>.
 </p>
-<table class="menu" border="0" cellspacing="0">
-<tr><td align="left" valign="top">&bull; <a href="#Info-and-Help" accesskey="1">Info and Help</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Movement" accesskey="2">Movement</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Keybindings" accesskey="3">Keybindings</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#X-Windows-Keybindings" accesskey="4">X Windows Keybindings</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Speech-Rate" accesskey="5">Speech Rate</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Basic-Commands-Reference" accesskey="6">Basic Commands Reference</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Characteristics" accesskey="7">Characteristics</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Emacs-manual" accesskey="8">Emacs manual</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
-</td></tr>
-</table>
 
+<ul class="mini-toc">
+<li><a href="#Info-and-Help" accesskey="1">Info and Help</a></li>
+<li><a href="#Movement" accesskey="2">Movement</a></li>
+<li><a href="#Keybindings" accesskey="3">Keybindings</a></li>
+<li><a href="#X-Windows-Keybindings" accesskey="4">X Windows Keybindings</a></li>
+<li><a href="#Speech-Rate" accesskey="5">Setting the Speech Rate</a></li>
+<li><a href="#Basic-Commands-Reference" accesskey="6">Basic Commands Reference</a></li>
+<li><a href="#Characteristics" accesskey="7">Characteristics of GNU Emacs</a></li>
+<li><a href="#Emacs-manual" accesskey="8">Peculiarities of the Emacs manual</a></li>
+</ul>
 <hr>
-<a name="Info-and-Help"></a>
-<div class="header">
+<div class="unnumberedsec-level-extent" id="Info-and-Help">
+<div class="nav-panel">
 <p>
 Next: <a href="#Movement" accesskey="n" rel="next">Movement</a>, Previous: <a href="#How-to-Introduce-Emacspeak" accesskey="p" rel="prev">How to Introduce Emacspeak</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Info-and-Help-1"></a>
-<h3 class="unnumberedsec">Info and Help</h3>
+<h3 class="unnumberedsec" id="Info-and-Help-1"><span>Info and Help<a class="copiable-link" href="#Info-and-Help-1"> &para;</a></span></h3>
 
 <p>Your friend will want to learn a great many keystroke commands, but if
 he is like me, he will continually forget them, too.
@@ -323,18 +290,18 @@ This way, he can always learn more, or relearn what he has forgot.
 </p>
 <p>The first commands I learned were:
 </p>
-<dl compact="compact">
-<dt><code>Control-h Control-e</code></dt>
+<dl class="table">
+<dt><code class="code">Control-h Control-e</code></dt>
 <dd><p>Give a brief overview of Emacspeak.
 </p>
 <p>I use this command all the time,
 to remind me of other commands.
 </p>
-<p>(In most Emacs documentation, this command, <code>Control-h Control-e</code>
-is written as <code>C-h C-e</code>.)
+<p>(In most Emacs documentation, this command, <code class="code">Control-h Control-e</code>
+is written as <code class="code">C-h C-e</code>.)
 </p>
 </dd>
-<dt><code>Control-e left-brace</code></dt>
+<dt><code class="code">Control-e left-brace</code></dt>
 <dd><p>Speak paragraph.
 </p>
 <p>With a prefix arg, speak the rest of the current paragraph.  With a
@@ -342,36 +309,36 @@ negative prefix arg, read from the start of the current paragraph to
 the current position, that is, to point.
 </p>
 </dd>
-<dt><code>Control-u</code></dt>
-<dd><p>The <em>universal-argument</em>.  This is the prefix arg.
+<dt><code class="code">Control-u</code></dt>
+<dd><p>The <em class="dfn">universal-argument</em>.  This is the prefix arg.
 </p>
 <p>Use as a prefix to some interactive commands, such as
-<kbd><span class="nolinebreak">Control-u</span>&nbsp;<span class="nolinebreak">Control-e</span>&nbsp;<span class="nolinebreak">left-brace</span></kbd><!-- /@w -->, which speaks the rest of the
+<kbd class="kbd">Control-u&nbsp;Control-e&nbsp;left-brace</kbd><!-- /@w -->, which speaks the rest of the
 current paragraph.
 </p>
 <p>To read from the beginning of the current paragraph to point,
-type <kbd><span class="nolinebreak">Control-u</span>&nbsp;hyphen&nbsp;one&nbsp;<span class="nolinebreak">Control-e</span>&nbsp;<span class="nolinebreak">left-brace</span></kbd><!-- /@w -->.
+type <kbd class="kbd">Control-u&nbsp;hyphen&nbsp;one&nbsp;Control-e&nbsp;left-brace</kbd><!-- /@w -->.
 </p>
 </dd>
-<dt><code>Control-e left-angle-bracket</code></dt>
+<dt><code class="code">Control-e left-angle-bracket</code></dt>
 <dd><p>Speak a page.
 </p>
 <p>With a prefix arg, speak the rest of the current page.
 </p>
-<p>I often use the <kbd>Control-u Control-e left-angle-bracket</kbd> command.
+<p>I often use the <kbd class="kbd">Control-u Control-e left-angle-bracket</kbd> command.
 </p>
 </dd>
-<dt><code>Control-e s</code></dt>
+<dt><code class="code">Control-e s</code></dt>
 <dd><p>Stop speech.
 </p>
 </dd>
-<dt><code>Control-h i</code></dt>
+<dt><code class="code">Control-h i</code></dt>
 <dd><p>Start Info.
 </p>
-<p>In Info, press <kbd>h</kbd> for an Info tutorial.
+<p>In Info, press <kbd class="kbd">h</kbd> for an Info tutorial.
 </p>
 </dd>
-<dt><code>Control-h t</code></dt>
+<dt><code class="code">Control-h t</code></dt>
 <dd><p>Start the Emacs Tutorial.
 </p></dd>
 </dl>
@@ -384,31 +351,31 @@ to listen to Info and to use the online help.
 two places.  To hear them in Emacspeak, you must set the punctuation
 mode to all, with the command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-e d p all RET
+<div class="example smallexample">
+<pre class="example-preformatted">Control-e d p all RET
 </pre></div>
 
 <p>Otherwise, the brackets will not be spoken.
-(The <tt class="key">RET</tt> at the end of the command means to press the Return key
+(The <kbd class="key">RET</kbd> at the end of the command means to press the Return key
 after typing all.)
 </p>
 <p>In most Emacs documentation, a command such as Control-e left-brace
-command is written as <code>C-e {</code>.  If you are listening in
+command is written as <code class="code">C-e {</code>.  If you are listening in
 Emacspeak, you have to set the punctuation mode to all;
 otherwise, you will not hear the left-brace spoken.
 </p>
 <hr>
-<a name="Movement"></a>
-<div class="header">
+</div>
+<div class="unnumberedsec-level-extent" id="Movement">
+<div class="nav-panel">
 <p>
 Next: <a href="#Keybindings" accesskey="n" rel="next">Keybindings</a>, Previous: <a href="#Info-and-Help" accesskey="p" rel="prev">Info and Help</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Movement-1"></a>
-<h3 class="unnumberedsec">Movement</h3>
+<h3 class="unnumberedsec" id="Movement-1"><span>Movement<a class="copiable-link" href="#Movement-1"> &para;</a></span></h3>
 
 <p>As for movement:  incremental search is the most important way of
-moving around documents.  This command is bound to <kbd>Control-s</kbd>,
-which is usually written as <kbd>C-s</kbd>.  Often people do not think of a
+moving around documents.  This command is bound to <kbd class="kbd">Control-s</kbd>,
+which is usually written as <kbd class="kbd">C-s</kbd>.  Often people do not think of a
 search command as a movement command, but it is.
 </p>
 <p>Moreover, Emacs incremental search provides the single best user
@@ -419,9 +386,9 @@ Incremental search is nicer to use.
 </p>
 <p>The character and word movement keys, and the character and word
 deletion keys, are reasonably easy for English speakers to learn,
-since they use English language mnemonics:  <kbd>Control-f</kbd> to move
-forward a character, <kbd>Meta-f</kbd> to move forward a word.  (Meta-f is
-usually written as <kbd>M-f</kbd>.)  p is for previous, n is for next, b is
+since they use English language mnemonics:  <kbd class="kbd">Control-f</kbd> to move
+forward a character, <kbd class="kbd">Meta-f</kbd> to move forward a word.  (Meta-f is
+usually written as <kbd class="kbd">M-f</kbd>.)  p is for previous, n is for next, b is
 for backwards, and d is for delete.
 </p>
 <p>Control key commands are often (but not always) for character
@@ -429,25 +396,25 @@ movement;  Meta key commands are often (but not always) for word
 movement.
 </p>
 <hr>
-<a name="Keybindings"></a>
-<div class="header">
+</div>
+<div class="unnumberedsec-level-extent" id="Keybindings">
+<div class="nav-panel">
 <p>
 Next: <a href="#X-Windows-Keybindings" accesskey="n" rel="next">X Windows Keybindings</a>, Previous: <a href="#Movement" accesskey="p" rel="prev">Movement</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Keybindings-1"></a>
-<h3 class="unnumberedsec">Keybindings</h3>
+<h3 class="unnumberedsec" id="Keybindings-1"><span>Keybindings<a class="copiable-link" href="#Keybindings-1"> &para;</a></span></h3>
 
 <p>You will want to explain the use of Meta.  You might tell your friend
 that on many modern keyboards, a Meta key is what is now, generally
 and erroneously, labeled Alt, spelled A&nbsp;L&nbsp;T<!-- /@w -->, and usually written
-<tt class="key">ALT</tt>.  (Genuine Alt keys can and do exist; but the default
+<kbd class="key">ALT</kbd>.  (Genuine Alt keys can and do exist; but the default
 keybinding for many machines automatically makes the key labeled Alt
 be a Meta key.  Naturally, you should set up the machine so that a key
 labeled Alt takes on a Meta keybinding, for example with the
-<code><span class="nolinebreak">install-keymap</span>&nbsp;emacs2</code><!-- /@w --> command.)
+<code class="command">install-keymap&nbsp;emacs2</code><!-- /@w --> command.)
 </p>
 <p>Worse, in some cases, people press the Escape key to simulate a
-Meta keypress.  The Escape key is usually written <tt class="key">ESC</tt>.  No
+Meta keypress.  The Escape key is usually written <kbd class="key">ESC</kbd>.  No
 one in their right mind uses an Escape key, unless forced by a
 really old keyboard.
 </p>
@@ -464,72 +431,72 @@ change the keybindings.
 </p>
 <p>Generally, the proper keymap is in
 </p>
-<div class="smallexample">
-<pre class="smallexample">/usr/share/keymaps/i386/qwerty/emacs2.kmap.gz
-</pre><pre class="smallexample"><span class="roman">or</span>
-</pre><pre class="smallexample">/usr/share/kbd/keymaps/i386/qwerty/emacs2.kmap.gz
-</pre></div>
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">/usr/share/keymaps/i386/qwerty/emacs2.kmap.gz
+</pre><pre class="exdent"><span class="r">or</span>
+</pre><pre class="example-preformatted">/usr/share/kbd/keymaps/i386/qwerty/emacs2.kmap.gz
+</pre></div></div>
 
 <p>You can install the keymap permanently on your system for a console
 with the shell command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">install-keymap emacs2
+<div class="example smallexample">
+<pre class="example-preformatted">install-keymap emacs2
 </pre></div>
 
 <p>(This may be a Debian specific command; it copies the
-<samp>emacs2.kmap.gz</samp> file to the <samp>/etc/console/boottime.kmap.gz</samp>
+<samp class="file">emacs2.kmap.gz</samp> file to the <samp class="file">/etc/console/boottime.kmap.gz</samp>
 file, which is loaded into the kernel at boot-time.  The older and
-widely used command is <code>loadkeys</code>; when you run it, you have to
+widely used command is <code class="command">loadkeys</code>; when you run it, you have to
 specify the full path to the file.
 </p>
 <p>(For example, to install the proper keymap, you might type
 </p>
-<div class="smallexample">
-<pre class="smallexample">loadkeys /usr/share/keymaps/i386/qwerty/emacs2.kmap.gz
+<div class="example smallexample">
+<pre class="example-preformatted">loadkeys /usr/share/keymaps/i386/qwerty/emacs2.kmap.gz
 </pre></div>
 
-<p>(Note that since files in the <samp>/usr/</samp> directory are sometimes not
+<p>(Note that since files in the <samp class="file">/usr/</samp> directory are sometimes not
 available early during the boot process, it is a good idea to copy the
-<samp>/usr/share/keymaps/i386/qwerty/emacs2.kmap.gz</samp> to the
-<samp>/etc/console/boottime.kmap.gz</samp> file.  This is what the
-<code>install-keymap</code> command does.  If you don&rsquo;t have an
-<code>install-keymap</code> command, you can copy the file yourself and
-put a <code>loadkeys&nbsp;/etc/console/boottime.kmap.gz</code><!-- /@w --> command
+<samp class="file">/usr/share/keymaps/i386/qwerty/emacs2.kmap.gz</samp> to the
+<samp class="file">/etc/console/boottime.kmap.gz</samp> file.  This is what the
+<code class="command">install-keymap</code> command does.  If you don&rsquo;t have an
+<code class="command">install-keymap</code> command, you can copy the file yourself and
+put a <code class="command">loadkeys&nbsp;/etc/console/boottime.kmap.gz</code><!-- /@w --> command
 into one of your boot scripts.)
 </p>
 <hr>
-<a name="X-Windows-Keybindings"></a>
-<div class="header">
-<p>
-Next: <a href="#Speech-Rate" accesskey="n" rel="next">Speech Rate</a>, Previous: <a href="#Keybindings" accesskey="p" rel="prev">Keybindings</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="X-Windows-Keybindings-1"></a>
-<h3 class="unnumberedsec">X Windows Keybindings</h3>
+<div class="unnumberedsec-level-extent" id="X-Windows-Keybindings">
+<div class="nav-panel">
+<p>
+Next: <a href="#Speech-Rate" accesskey="n" rel="next">Setting the Speech Rate</a>, Previous: <a href="#Keybindings" accesskey="p" rel="prev">Keybindings</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
+</div>
+<h3 class="unnumberedsec" id="X-Windows-Keybindings-1"><span>X Windows Keybindings<a class="copiable-link" href="#X-Windows-Keybindings-1"> &para;</a></span></h3>
 
 <p>If you are using an X Windows graphical user interface, you may need
 to specify the keymap that X uses in addition to specifying the keymap
 used by a console.
 </p>
-<p>You can put the following commands in your <code>~/.xsession</code> or
-<code>~/.xinitrc</code> file:
+<p>You can put the following commands in your <code class="code">~/.xsession</code> or
+<code class="code">~/.xinitrc</code> file:
 </p>
-<div class="smallexample">
-<pre class="smallexample">xmodmap -e &quot;clear Lock&quot;
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">xmodmap -e &quot;clear Lock&quot;
 xmodmap -e &quot;add Control = Caps_Lock&quot;
-</pre></div>
+</pre></div></div>
 
 <p>Some systems reverse the meaning of the Help key, which is
-<kbd>Control-h</kbd>, and the Delete key.  The node <samp>Keyboard
-Translations</samp> in the <cite>Emacs manual</cite> describes what to do.
+<kbd class="kbd">Control-h</kbd>, and the Delete key.  The node <samp class="file">Keyboard
+Translations</samp> in the <cite class="cite">Emacs manual</cite> describes what to do.
 </p>
 <p>You can go directly to that node in Info by evaluating the following
 expression, that is to say, by positioning point after the final
-parenthesis and typing <kbd>Control-x Control-e</kbd>, which is usually
-written as <kbd>C-x C-e</kbd>:
+parenthesis and typing <kbd class="kbd">Control-x Control-e</kbd>, which is usually
+written as <kbd class="kbd">C-x C-e</kbd>:
 </p>
-<div class="smallexample">
-<pre class="smallexample">(info &quot;(emacs)Keyboard Translations&quot;)
+<div class="example smallexample">
+<pre class="example-preformatted">(info &quot;(emacs)Keyboard Translations&quot;)
 </pre></div>
 
 <p>(Please remember to note my use of the jargon word &lsquo;point&rsquo;; it needs
@@ -537,29 +504,29 @@ to be explained as the place in the text where editing commands
 operate.)
 </p>
 <hr>
-<a name="Speech-Rate"></a>
-<div class="header">
+</div>
+<div class="unnumberedsec-level-extent" id="Speech-Rate">
+<div class="nav-panel">
 <p>
 Next: <a href="#Basic-Commands-Reference" accesskey="n" rel="next">Basic Commands Reference</a>, Previous: <a href="#X-Windows-Keybindings" accesskey="p" rel="prev">X Windows Keybindings</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Setting-the-Speech-Rate"></a>
-<h3 class="unnumberedsec">Setting the Speech Rate</h3>
+<h3 class="unnumberedsec" id="Setting-the-Speech-Rate"><span>Setting the Speech Rate<a class="copiable-link" href="#Setting-the-Speech-Rate"> &para;</a></span></h3>
 
 <p>Returning to what you might talk about early on with your friend:
 </p>
 <p>He may want to set the voice synthesizer speech rate.  I use both the
-<code>dtk-set-predefined-speech-rate</code> command:
+<code class="command">tts-set-predefined-rate</code> command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-e d 1
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">Control-e d 1
 Control-e d 2
 Control-e d 3
-</pre></div>
+</pre></div></div>
 
-<p>and the <code>dtk-set-rate</code> command, such as
+<p>and the <code class="command">tts-set-rate</code> command, such as
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-e d r 230 RET
+<div class="example smallexample">
+<pre class="example-preformatted">Control-e d r 230 RET
 </pre></div>
 
 <p>Probably it is a good idea to pick one of these commands.  Two sets of
@@ -573,27 +540,27 @@ set the speech rate globally.  Otherwise, it is set only for the
 current buffer.
 </p>
 <p>Your friend may want to set rates globally, so it is worth telling
-him about typing <kbd>Control-u</kbd> first.
+him about typing <kbd class="kbd">Control-u</kbd> first.
 </p>
 <hr>
-<a name="Basic-Commands-Reference"></a>
-<div class="header">
-<p>
-Next: <a href="#Characteristics" accesskey="n" rel="next">Characteristics</a>, Previous: <a href="#Speech-Rate" accesskey="p" rel="prev">Speech Rate</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Basic-Commands-Reference-1"></a>
-<h3 class="unnumberedsec">Basic Commands Reference</h3>
+<div class="unnumberedsec-level-extent" id="Basic-Commands-Reference">
+<div class="nav-panel">
+<p>
+Next: <a href="#Characteristics" accesskey="n" rel="next">Characteristics of GNU Emacs</a>, Previous: <a href="#Speech-Rate" accesskey="p" rel="prev">Setting the Speech Rate</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
+</div>
+<h3 class="unnumberedsec" id="Basic-Commands-Reference-1"><span>Basic Commands Reference<a class="copiable-link" href="#Basic-Commands-Reference-1"> &para;</a></span></h3>
 
 <p>For a description of the basic commands, see the node &lsquo;Reading&rsquo; in the
 Info file emacspeak.info
 </p>
-<div class="smallexample">
-<pre class="smallexample">(info &quot;(emacspeak)Reading&quot;)
+<div class="example smallexample">
+<pre class="example-preformatted">(info &quot;(emacspeak)Reading&quot;)
 </pre></div>
 
 <p>(As I said earlier, you can go directly to that node by evaluating the
 Emacs Lisp expression: position point after the final parenthesis and
-type <kbd>Control-x Control-e</kbd>.)
+type <kbd class="kbd">Control-x Control-e</kbd>.)
 </p>
 <p>Perhaps evaluation is too much too soon, since it means remembering a
 new command as well as figuring out where &lsquo;point&rsquo; is.  On the other
@@ -603,8 +570,8 @@ up future possibilities.
 <p>Incidentally, you can go directly to the Introduction node of the
 Emacspeak manual by evaluating:
 </p>
-<div class="smallexample">
-<pre class="smallexample">(info &quot;(emacspeak)Introduction&quot;)
+<div class="example smallexample">
+<pre class="example-preformatted">(info &quot;(emacspeak)Introduction&quot;)
 </pre></div>
 
 <p>My hope is that you will inspire your friend to experiment with many
@@ -618,13 +585,13 @@ send it.  You may need to make sure his machine is properly configured
 for all this.
 </p>
 <hr>
-<a name="Characteristics"></a>
-<div class="header">
-<p>
-Next: <a href="#Emacs-manual" accesskey="n" rel="next">Emacs manual</a>, Previous: <a href="#Basic-Commands-Reference" accesskey="p" rel="prev">Basic Commands Reference</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Characteristics-of-GNU-Emacs"></a>
-<h3 class="unnumberedsec">Characteristics of GNU Emacs</h3>
+<div class="unnumberedsec-level-extent" id="Characteristics">
+<div class="nav-panel">
+<p>
+Next: <a href="#Emacs-manual" accesskey="n" rel="next">Peculiarities of the Emacs manual</a>, Previous: <a href="#Basic-Commands-Reference" accesskey="p" rel="prev">Basic Commands Reference</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
+</div>
+<h3 class="unnumberedsec" id="Characteristics-of-GNU-Emacs"><span>Characteristics of GNU Emacs<a class="copiable-link" href="#Characteristics-of-GNU-Emacs"> &para;</a></span></h3>
 
 <p>While listening to the Emacspeak Info manual, it is worth explaining
 some of the problems people have with the Emacs manual, to which he
@@ -651,8 +618,8 @@ at first, except write.
 use many of the features that Emacs provides.  I have described
 GNU Emacs as
 </p>
-<blockquote>
-<p><i>&hellip; like having a dragon&rsquo;s cave of treasures.</i>
+<blockquote class="quotation">
+<p><i class="i">&hellip; like having a dragon&rsquo;s cave of treasures.</i>
 </p></blockquote>
 
 <p>You should not try to be too greedy and over-stuff yourself all one
@@ -661,8 +628,8 @@ sitting.
 <p>(That quotation is from the Info node &quot;On Reading this Text&quot; in the
 Info manual that introduces programming in Emacs Lisp:
 </p>
-<div class="smallexample">
-<pre class="smallexample">(info &quot;(eintr)On Reading this Text&quot;)
+<div class="example smallexample">
+<pre class="example-preformatted">(info &quot;(eintr)On Reading this Text&quot;)
 </pre></div>
 
 <p>I wrote that text &quot;as an elementary introduction for people who are
@@ -672,25 +639,25 @@ he will keep it in mind for the future.)
 </p>
 
 <hr>
-<a name="Emacs-manual"></a>
-<div class="header">
-<p>
-Previous: <a href="#Characteristics" accesskey="p" rel="prev">Characteristics</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
 </div>
-<a name="Peculiarities-of-the-Emacs-manual"></a>
-<h3 class="unnumberedsec">Peculiarities of the Emacs manual</h3>
+<div class="unnumberedsec-level-extent" id="Emacs-manual">
+<div class="nav-panel">
+<p>
+Previous: <a href="#Characteristics" accesskey="p" rel="prev">Characteristics of GNU Emacs</a>, Up: <a href="#How-to-Introduce-Emacspeak" accesskey="u" rel="up">How to Introduce Emacspeak</a> &nbsp; </p>
+</div>
+<h3 class="unnumberedsec" id="Peculiarities-of-the-Emacs-manual"><span>Peculiarities of the Emacs manual<a class="copiable-link" href="#Peculiarities-of-the-Emacs-manual"> &para;</a></span></h3>
 
 <p>To listen to the Emacs manual in Emacspeak, you will need to set the
 punctuation mode to all with the command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-e d p all RET
+<div class="example smallexample">
+<pre class="example-preformatted">Control-e d p all RET
 </pre></div>
 
 <p>RMS, Richard M. Stallman, wrote the Emacs manual.
 </p>
 <p>Unfortunately, RMS thinks of editing as having a very large meaning.
-He writes as if using <code>ls</code> and <code>rm</code> in a command line
+He writes as if using <code class="command">ls</code> and <code class="command">rm</code> in a command line
 is the shell equivalent of editing in Emacspeak.  People who use a
 shell do not think of this as editing.
 </p>
@@ -699,16 +666,16 @@ actions in Dired mode are a kind of editing.  Indeed, the name Dired
 is a contraction for the phrase &lsquo;directory editor&rsquo;.
 </p>
 <p>But the kind of editing that goes on in Dired is not same kind of
-editing as people do in an editor like <code>vi</code> when they press
-the <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, and <kbd>l</kbd> keys to move around.
+editing as people do in an editor like <code class="command">vi</code> when they press
+the <kbd class="kbd">h</kbd>, <kbd class="kbd">j</kbd>, <kbd class="kbd">k</kbd>, and <kbd class="kbd">l</kbd> keys to move around.
 People are fooled by the language.
 </p>
-<p>The words <em>mode</em> and <em>library</em> are not confusing, but may not
+<p>The words <em class="dfn">mode</em> and <em class="dfn">library</em> are not confusing, but may not
 be understood immediately.  The two provide the features that programs
 have in other interfaces.  Thus Dired mode provides the same features
-in Emacs that the combination of <code>ls</code>, <code>mv</code>,
-<code>chown</code>, <code>chgrp</code>, <code>gzip</code>, <code>more</code>,
-<code>vi</code>, and <code>rm</code> provide in a shell.  A library provides
+in Emacs that the combination of <code class="command">ls</code>, <code class="command">mv</code>,
+<code class="command">chown</code>, <code class="command">chgrp</code>, <code class="command">gzip</code>, <code class="command">more</code>,
+<code class="command">vi</code>, and <code class="command">rm</code> provide in a shell.  A library provides
 a mode.
 </p>
 <p>Because of the adoption of Xerox Parc style windowing systems over the
@@ -750,7 +717,7 @@ would appear in another.
 <p>Indeed, many of the non-Emacs programs I use today in a graphic user
 interface still tend to put one set of contents, with its associated
 panels and tool bars, into one window: for example, XMMS, Mozilla, or
-<code>gnome-apt</code>.
+<code class="command">gnome-apt</code>.
 </p>
 <p>With Emacs, on the other hand, you could always put a directory
 listing, two files, and an email message into four different parts of
@@ -763,8 +730,8 @@ produced by an X or Sun user interface program.
 <p>Nowadays, you can start different frames in an instance of Emacspeak
 that is not running in a graphical user interface.  One frame overlies
 another.  The mode line will tell you which frame you are in.  (Type
-<kbd>Control-e m</kbd> to listen to the mode line.  That key chord calls the
-<code>emacspeak-speak-mode-line</code> command.  The frame number is
+<kbd class="kbd">Control-e m</kbd> to listen to the mode line.  That key chord calls the
+<code class="command">emacspeak-speak-mode-line</code> command.  The frame number is
 listed in the second and subsequent frames.)
 </p>
 <p>Emacs jargon can be brutal.  Some people are upset by the use of the
@@ -774,26 +741,26 @@ Emacs, an entity &lsquo;killed&rsquo; can be resurrected, which I think of as a
 Christian form of meaning.
 </p>
 <p>Some years ago, at the transition from Emacs version 18 to version 19,
-I offered to convert every use in Emacs of the word <code>kill</code> to
-<code>clip</code>.  There were more than 400 such uses.  You could <code>clip</code> a
+I offered to convert every use in Emacs of the word <code class="code">kill</code> to
+<code class="code">clip</code>.  There were more than 400 such uses.  You could <code class="code">clip</code> a
 segment of text, and if it were never put back, it would be deleted.
-Alternatively, you could yank the segment from the <code>clip-ring</code>.
-I picked <code>clip</code> as the replacement word since it has four letters
+Alternatively, you could yank the segment from the <code class="code">clip-ring</code>.
+I picked <code class="code">clip</code> as the replacement word since it has four letters
 and fits the older formatting and language without requiring much
 rewriting.
 </p>
 <p>Moreover, had I changed the term to &lsquo;cut&rsquo;, people would have expected
-me to replace the word <code>yank</code> with &lsquo;paste&rsquo;, to fit the phrase
+me to replace the word <code class="code">yank</code> with &lsquo;paste&rsquo;, to fit the phrase
 &lsquo;cut and paste&rsquo;.  But I do not like the word &lsquo;paste&rsquo;; I no longer
 literally paste clips onto a sheet of paper as I did when I was young.
-It makes more sense to me to <code>yank</code> a segment back from the
-<code>clip-ring</code>.
+It makes more sense to me to <code class="code">yank</code> a segment back from the
+<code class="code">clip-ring</code>.
 </p>
 <p>However, RMS never wanted me to make the replacement.  I think part of
 the reason is that at that time, RMS still enjoyed what I think of as
 a dead joke: the manual for version 18 Emacs said:
 </p>
-<blockquote>
+<blockquote class="quotation">
 <p>&hellip; you don&rsquo;t have to kill all the text in one command; you can
 keep killing line after line, or word after word, until you have
 killed it all, and you can still get it all back at once.  (Thus
@@ -804,7 +771,7 @@ we join television in leading people to kill thoughtlessly.)
 and the other wording slightly improved.)
 </p>
 <p>Perhaps more significantly, RMS asked many people whether they were
-bothered by the jargon use of <code>kill</code>.  They said &lsquo;no&rsquo;.  It turned out
+bothered by the jargon use of <code class="code">kill</code>.  They said &lsquo;no&rsquo;.  It turned out
 that RMS asked people he thought of as significant, namely people at
 M.I.T.  I think that was too narrow a group.  But that is what
 happened, and I still think it was a mistake.
@@ -818,37 +785,38 @@ catastrophic mistakes.
 <p>You can experiment and learn.
 </p>
 <hr>
-<a name="Free-Books"></a>
-<div class="header">
-<p>
-Next: <a href="#An-Initialization-File" accesskey="n" rel="next">An Initialization File</a>, Previous: <a href="#How-to-Introduce-Emacspeak" accesskey="p" rel="prev">How to Introduce Emacspeak</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
 </div>
-<a name="Free-Books-1"></a>
-<h2 class="unnumbered">Free Books</h2>
+</div>
+<div class="unnumbered-level-extent" id="Free-Books">
+<div class="nav-panel">
+<p>
+Next: <a href="#An-Initialization-File" accesskey="n" rel="next">A <samp class="file">~/.emacs</samp> initialization and customization file</a>, Previous: <a href="#How-to-Introduce-Emacspeak" accesskey="p" rel="prev">How to Introduce Emacspeak</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
+</div>
+<h2 class="unnumbered" id="Free-Books-1"><span>Free Books<a class="copiable-link" href="#Free-Books-1"> &para;</a></span></h2>
 
 <p>With Emacspeak, you can listen to your email, browse the Web, write
 reports, programs, novels, and poetry.
 </p>
 <p>You may also want to download various books, documents, and audio
 recordings from the Gutenberg Project archive, such as Jane Austen&rsquo;s
-novel <cite>Pride and Prejudice</cite>.
+novel <cite class="cite">Pride and Prejudice</cite>.
 </p>
 <p>You can visit the archive directory using W3 mode or W3M mode at
 </p>
-<div class="smallexample">
-<pre class="smallexample">ftp://metalab.unc.edu/pub/docs/books/gutenberg/
+<div class="example smallexample">
+<pre class="example-preformatted">ftp://metalab.unc.edu/pub/docs/books/gutenberg/
 </pre></div>
 
 <p>I just typed
 </p>
-<div class="smallexample">
-<pre class="smallexample">Meta-x w3m-goto-url
+<div class="example smallexample">
+<pre class="example-preformatted">Meta-x w3m-goto-url
 </pre></div>
 
 <p>and then the URL to reach that directory.  (Well, actually, I typed
 </p>
-<div class="smallexample">
-<pre class="smallexample">Meta-x w3m-got
+<div class="example smallexample">
+<pre class="example-preformatted">Meta-x w3m-got
 </pre></div>
 
 <p>and then pressed return.  Emacs automatically completed the name of
@@ -858,8 +826,8 @@ type it.  I hate typing and avoid it as much as possible.)
 </p>
 <p>The index is
 </p>
-<div class="smallexample">
-<pre class="smallexample">GUTINDEX.ALL
+<div class="example smallexample">
+<pre class="example-preformatted">GUTINDEX.ALL
 </pre></div>
 
 <p>and you can download it using W3M mode by positioning point on the
@@ -871,70 +839,70 @@ is 2 megabytes long and lists more than ten thousand books,
 documents, and audio recordings.  I saved my copy to a file, since I
 dislike long downloads.
 </p>
-<p>You may want to use Emacspeak to listen to <cite>Pride and Prejudice</cite>,
-<cite>Alice in Wonderland</cite>, <cite>The Federalist Papers</cite> or other of
+<p>You may want to use Emacspeak to listen to <cite class="cite">Pride and Prejudice</cite>,
+<cite class="cite">Alice in Wonderland</cite>, <cite class="cite">The Federalist Papers</cite> or other of
 the Gutenberg books, documents, and music.
 </p>
 <p>The text files from the Gutenberg Project that I have downloaded use
-the DOS &lsquo;<samp>carriage-return linefeed</samp>&rsquo; convention to mark ends of
-lines rather than the Unix &lsquo;<samp>newline</samp>&rsquo; convention.  This does not
+the DOS &lsquo;<samp class="samp">carriage-return linefeed</samp>&rsquo; convention to mark ends of
+lines rather than the Unix &lsquo;<samp class="samp">newline</samp>&rsquo; convention.  This does not
 really matter since Emacspeak automatically detects the convention and
 visits the file using the DOS end-of-line coding format.
 </p>
 <p>However, I prefer the Unix end-of-line format.  After visiting a file,
-I run the <code>set-buffer-file-coding-system</code> command on it:
+I run the <code class="command">set-buffer-file-coding-system</code> command on it:
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-x RET f unix RET
+<div class="example smallexample">
+<pre class="example-preformatted">Control-x RET f unix RET
 </pre></div>
 
 <p>and then save the file:
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-x Control-s
+<div class="example smallexample">
+<pre class="example-preformatted">Control-x Control-s
 </pre></div>
 
 <hr>
-<a name="An-Initialization-File"></a>
-<div class="header">
-<p>
-Next: <a href="#Software-Synthesizers" accesskey="n" rel="next">Software Synthesizers</a>, Previous: <a href="#Free-Books" accesskey="p" rel="prev">Free Books</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
 </div>
-<a name="A-_007e_002f_002eemacs-initialization-and-customization-file"></a>
-<h2 class="unnumbered">A <samp>~/.emacs</samp> initialization and customization file</h2>
+<div class="unnumbered-level-extent" id="An-Initialization-File">
+<div class="nav-panel">
+<p>
+Next: <a href="#Software-Synthesizers" accesskey="n" rel="next">Two Software text-to-speech Synthesizers</a>, Previous: <a href="#Free-Books" accesskey="p" rel="prev">Free Books</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
+</div>
+<h2 class="unnumbered" id="A-_007e_002f_002eemacs-initialization-and-customization-file"><span>A <samp class="file">~/.emacs</samp> initialization and customization file<a class="copiable-link" href="#A-_007e_002f_002eemacs-initialization-and-customization-file"> &para;</a></span></h2>
 
-<p>Here is a sample <samp>~/.emacs</samp> file to customize Emacspeak.  As far
+<p>Here is a sample <samp class="file">~/.emacs</samp> file to customize Emacspeak.  As far
 as I can figure, the only person who likes Emacs in its default
 configuration is Richard Stallman, who wrote it.  All the rest of
 us change it somewhat.
 </p>
-<p>I will not describe my full <samp>~/.emacs</samp> file since it is more than
+<p>I will not describe my full <samp class="file">~/.emacs</samp> file since it is more than
 180 kilobytes long.  Instead, I will create for you a much shorter,
-sample <samp>~/.emacs</samp> file that works &mdash; I tested it &ndash; and that has
+sample <samp class="file">~/.emacs</samp> file that works &mdash; I tested it &ndash; and that has
 a few of the customizations that I like.
 </p>
-<p>The following <samp>~/.emacs</samp> file contains left and right angle
+<p>The following <samp class="file">~/.emacs</samp> file contains left and right angle
 brackets.  To hear them in Emacspeak, you must set the punctuation
 mode to all with the command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">Control-e d p all RET
+<div class="example smallexample">
+<pre class="example-preformatted">Control-e d p all RET
 </pre></div>
 
-<p>In the <samp>~/.emacs</samp> file itself, I have set the global default mode
-to none.  To set a global default value of all in your <samp>~/.emacs</samp>
+<p>In the <samp class="file">~/.emacs</samp> file itself, I have set the global default mode
+to none.  To set a global default value of all in your <samp class="file">~/.emacs</samp>
 file, write the expression as:
 </p>
-<div class="smallexample">
-<pre class="smallexample">;; The `t' is optional and sets the global default value.
+<div class="example smallexample">
+<pre class="example-preformatted">;; The `t' is optional and sets the global default value.
 ;; Without it, the setting applied only to the local buffer.
-(dtk-set-punctuations 'all t)
+(tts-set-punctuations 'all t)
 </pre></div>
 
 <p>Here is the file:
 </p>
-<div class="smallexample">
-<pre class="smallexample">;;; ~/.emacs                          -*- mode: emacs-lisp -*-
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">;;; ~/.emacs                          -*- mode: emacs-lisp -*-
 
 ;; Robert J. Chassell, 2003 Apr 23, 2005 May 17
 
@@ -943,8 +911,9 @@ file, write the expression as:
 ;; Make Text mode the default, with autofill
 (setq default-major-mode 'text-mode)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Put two spaces after a colon with explicit fill commands
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Put two spaces after a colon with explicit fill commands
 (setq colon-double-space t)
 
 ;; Do not insert tabs
@@ -954,31 +923,35 @@ file, write the expression as:
 
 ;; Insert newline at the end of a buffer
 (setq next-line-add-newlines t)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Find existing buffer, even with different name
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Find existing buffer, even with different name
 ;  (Avoid problems with symbolic links.)
 (setq find-file-existing-other-name t)
 
 ;; Set command history list to 1000; it is 32 by default.
 (setq list-command-history-max 1000)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Enable numbered backups
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Enable numbered backups
 ; `t'     Make numbered backups.
 ; `nil'   Make numbered backups for files
 ;             that have numbered backups already.
 ;         Otherwise, make single backups.
 ; `never' Always make single backups.
 (setq version-control t)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; By default the following are disabled to prevent confusing novices
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; By default the following are disabled to prevent confusing novices
 
 ;; Enable goal column
 (put 'set-goal-column 'disabled nil)
 
 ;; Enable upcase region
 (put 'upcase-region 'disabled nil)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Enable downcase region
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Enable downcase region
 (put 'downcase-region 'disabled nil)
 
 ;; Enable narrowing
@@ -986,8 +959,9 @@ file, write the expression as:
 
 ;; Allow narrowing to a page.
 (put 'narrow-to-page 'disabled nil)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Run Ediff with its help window in the same frame
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Run Ediff with its help window in the same frame
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
 ;; Ignore case when using `grep'
@@ -996,8 +970,9 @@ file, write the expression as:
 ;    -n Prefix each line of output with line number
 ;    -e Protect patterns beginning with -.
 (setq grep-command &quot;grep  -i -n -e &quot;)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Reduce frequent garbage collections
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Reduce frequent garbage collections
 (setq gc-cons-threshold 600000)
 
 ;; Increase undo limit
@@ -1005,25 +980,29 @@ file, write the expression as:
 
 ;; Increase `max-specpdl-size'
 (setq max-specpdl-size 2500)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Load Info at start up rather than when you first use Info
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Load Info at start up rather than when you first use Info
 (load &quot;info&quot;)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;;; Custom keybindings
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;;; Custom keybindings
 
 ;; Binding for goto-line.
 (global-set-key &quot;\C-c\C-g&quot; 'goto-line)
 
 ;; Use `apropos' instead of `command-apropos'
 (global-set-key &quot;\C-ha&quot; 'apropos)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Binding for compile
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Binding for compile
 (global-set-key &quot;\C-xc&quot; 'compile)
 
 ;; Binding for occur
 (global-set-key &quot;\C-co&quot; 'occur)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; List all the function definitions and defvars and the like
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; List all the function definitions and defvars and the like
 ;; that are in an Emacs Lisp source file.
 (defun occurrences-of-def ()
   &quot;Run `occur' to find `^(def' from beginning of buffer or narrowed part.
@@ -1048,14 +1027,16 @@ occurrences of `^(def'.&quot;
     ))
 
 (global-set-key &quot;\C-cf&quot; 'occurrences-of-def)
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; For sighted people using GNU Emacs 21, turn off the blinking cursor!
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; For sighted people using GNU Emacs 21, turn off the blinking cursor!
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode -1))
 
 ;; Set the title for a frame
 (setq frame-title-format '(&quot;Emacspeak:  %b&quot;))
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;;; For Emacspeak specifically
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;;; For Emacspeak specifically
 
 ;; Make sure all Emacspeak code is in the load-path.
 ;; I commented this out since the load-path since is
@@ -1074,8 +1055,9 @@ occurrences of `^(def'.&quot;
 (global-font-lock-mode 1)
 (setq font-lock-global-modes t)
 ;; (setq global-voice-lock-mode t) ; not needed and obsolete in Emacs 21
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">;; Speak time in a reasonable format: `C-e t'
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">;; Speak time in a reasonable format: `C-e t'
 (setq emacspeak-speak-time-format-string
   &quot;The time is %_H hours %M minutes %Z on %A %_e %B %Y&quot;)
 
@@ -1096,44 +1078,44 @@ occurrences of `^(def'.&quot;
 ;;     With an interactive prefix argument, `C-u C-e d p',
 ;;     set the global default value.
 ;; In this sample, I have set the mode to 'none.
-(dtk-set-punctuations 'none t)
+(tts-set-punctuations 'none t)
 
 ;;;;;;;;;;;;;;;; end ~/.emacs ::::::::::::::::
-</pre></div>
+</pre></div></div>
 
 
 <hr>
-<a name="Software-Synthesizers"></a>
-<div class="header">
-<p>
-Next: <a href="#Installation" accesskey="n" rel="next">Installation</a>, Previous: <a href="#An-Initialization-File" accesskey="p" rel="prev">An Initialization File</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
 </div>
-<a name="Two-Software-text_002dto_002dspeech-Synthesizers"></a>
-<h2 class="unnumbered">Two Software text-to-speech Synthesizers</h2>
+<div class="unnumbered-level-extent" id="Software-Synthesizers">
+<div class="nav-panel">
+<p>
+Next: <a href="#Installation" accesskey="n" rel="next">Installation: Debian and <code class="code">espeakf</code></a>, Previous: <a href="#An-Initialization-File" accesskey="p" rel="prev">A <samp class="file">~/.emacs</samp> initialization and customization file</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
+</div>
+<h2 class="unnumbered" id="Two-Software-text_002dto_002dspeech-Synthesizers"><span>Two Software text-to-speech Synthesizers<a class="copiable-link" href="#Two-Software-text_002dto_002dspeech-Synthesizers"> &para;</a></span></h2>
 
 <p>At the time I write this in May 2005, I am running two instances of
-Emacspeak, one using the <code>eflite</code> software text-to-speech
-synthesizer and the other using the <code>espeakf</code> software
+Emacspeak, one using the <code class="code">eflite</code> software text-to-speech
+synthesizer and the other using the <code class="code">espeakf</code> software
 text-to-speech synthesizer.
 </p>
-<p>The current <code>espeakf</code> provides different voices, which my current
-version of <code>eflite</code> lacks.  Also, in my set up, it sometimes
+<p>The current <code class="code">espeakf</code> provides different voices, which my current
+version of <code class="code">eflite</code> lacks.  Also, in my set up, it sometimes
 speaks pronunciation when it should not; but not always.
 </p>
-<p>I prefer <code>espeakf</code>.
+<p>I prefer <code class="code">espeakf</code>.
 </p>
 <p>At the moment, I am using two different Emacspeak commands, one for
-starting Emacspeak with <code>eflite</code> and the other for starting Emacspeak
-with <code>espeakf</code>.  Right now, I am running both, each as its own instance
+starting Emacspeak with <code class="code">eflite</code> and the other for starting Emacspeak
+with <code class="code">espeakf</code>.  Right now, I am running both, each as its own instance
 of Emacspeak.
 </p>
 <p>The two starting commands are:
 </p>
-<div class="smallexample">
-<pre class="smallexample">emacspeak-eflite
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">emacspeak-eflite
 
 emacspeak-espeak
-</pre></div>
+</pre></div></div>
 
 <p>The two commands are shell scripts in the /usr/local/bin/ directory.
 </p>
@@ -1147,13 +1129,13 @@ Emacs version 20.7 owned by user &lsquo;root&rsquo;.  That way, I separate
 dangerous system administration task from ordinary work.)
 </p>
 <hr>
-<a name="Installation"></a>
-<div class="header">
-<p>
-Previous: <a href="#Software-Synthesizers" accesskey="p" rel="prev">Software Synthesizers</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; </p>
 </div>
-<a name="Installation_003a-Debian-and-espeakf"></a>
-<h2 class="unnumbered">Installation: Debian and <code>espeakf</code></h2>
+<div class="unnumbered-level-extent" id="Installation">
+<div class="nav-panel">
+<p>
+Previous: <a href="#Software-Synthesizers" accesskey="p" rel="prev">Two Software text-to-speech Synthesizers</a>, Up: <a href="#Top" accesskey="u" rel="up">Introducing Emacspeak</a> &nbsp; </p>
+</div>
+<h2 class="unnumbered" id="Installation_003a-Debian-and-espeakf"><span>Installation: Debian and <code class="code">espeakf</code><a class="copiable-link" href="#Installation_003a-Debian-and-espeakf"> &para;</a></span></h2>
 
 <p>Regarding installation:  if you have not installed Emacspeak recently,
 and plan to install the package again soon for someone else, please
@@ -1168,10 +1150,10 @@ ignorance.
 <p>In addition to a computer with a sound system, Emacspeak requires
 three packages:
 </p>
-<ul>
-<li> GNU Emacs,
-</li><li> Emacspeak, and
-</li><li> a text-to-speech synthesizer.
+<ul class="itemize mark-bullet">
+<li>GNU Emacs,
+</li><li>Emacspeak, and
+</li><li>a text-to-speech synthesizer.
 </li></ul>
 
 <p>A hardware text-to-speech synthesizer is best, but I do not
@@ -1180,136 +1162,136 @@ synthesizers, both of which are immature programs that make use of the
 more basic Festival text-to-speech program.
 </p>
 <p>Installation is extensively described in the Emacspeak manual.
-See <a href="emacspeak.html#Installation">Installation</a> in <cite>The Emacspeak User&rsquo;s Manual</cite>.
+See <a data-manual="emacspeak" href="emacspeak.html#Installation">Installation</a> in <cite class="cite">The Emacspeak User&rsquo;s Manual</cite>.
 </p>
 <p>Also, James R. Van Zandt has written an installation HOWTO that is now
 maintained by Sharon Snider.  It is in the Emacspeak sources and on
-the Web at <a href="http://www.tldp.org/HOWTO/Emacspeak-HOWTO/">http://www.tldp.org/HOWTO/Emacspeak-HOWTO/</a>.
+the Web at <a class="uref" href="http://www.tldp.org/HOWTO/Emacspeak-HOWTO/">http://www.tldp.org/HOWTO/Emacspeak-HOWTO/</a>.
 </p>
 <p>Please consider building and installing your software from source.
 This process is straightforward and I have done this in the past with
 great success.
 </p>
 <p>However, I am going to describe only what you do to install
-<code>espeakf</code>, which is not in Debian, and what you do in Debian to
-install <code>eflite</code>.  The process should be simple, but for some
+<code class="code">espeakf</code>, which is not in Debian, and what you do in Debian to
+install <code class="code">eflite</code>.  The process should be simple, but for some
 reason, possibly because I tend to use unstable, experimental
 software, I have not always found it so.
 </p>
 <p>In Debian, as of April 2003, to install Emacspeak using the eflite
 software text-to-speech synthesizer, type the following in a shell:
 </p>
-<div class="smallexample">
-<pre class="smallexample">apt-get install emacs21 emacs21-el emacspeak eflite
+<div class="example smallexample">
+<pre class="example-preformatted">apt-get install emacs21 emacs21-el emacspeak eflite
 </pre></div>
 
-<p>The <samp>emacs21-el</samp> package contains the Emacs Lisp source files
+<p>The <samp class="file">emacs21-el</samp> package contains the Emacs Lisp source files
 that Emacs uses.  In theory, you can run Emacs without them, but I
 have found them essential, if only for the extra documentation and
 commentary they provide.  It does not matter if some of the packages
 are already installed or will be installed automatically.
 </p>
-<p>After running <code>apt-get</code>, you should be able to run Emacspeak by
+<p>After running <code class="command">apt-get</code>, you should be able to run Emacspeak by
 typing
 </p>
-<div class="smallexample">
-<pre class="smallexample">emacspeak
+<div class="example smallexample">
+<pre class="example-preformatted">emacspeak
 </pre></div>
 
-<p>in a shell.  That command is a shell script in <samp>/usr/bin/emacspeak</samp>.
+<p>in a shell.  That command is a shell script in <samp class="file">/usr/bin/emacspeak</samp>.
 </p>
 <p>In theory, that is all there is to it.  And if you are not using the
 awkward, non-standard system that I am, but instead are using a well
 configured, modern, standard system, what I just told you should work.
 </p>
-<p>Since I run both the <code>eflite</code> and <code>espeakf</code> text-to-speech
+<p>Since I run both the <code class="code">eflite</code> and <code class="code">espeakf</code> text-to-speech
 synthesizers, and at this stage am running them in what amounts to a
 local experiment, I copied the shell script that starts Emacspeak with
 eflite from the /usr/bin/ directory to the /usr/local/bin/ directory
-and renamed it to <samp>/usr/local/bin/emacspeak-eflite</samp>.
+and renamed it to <samp class="file">/usr/local/bin/emacspeak-eflite</samp>.
 </p>
-<p>I start Emacspeak with <code>espeakf</code> with a different shell script,
-called <samp>/usr/local/bin/emacspeak-espeakf</samp>.  (These names are not
+<p>I start Emacspeak with <code class="code">espeakf</code> with a different shell script,
+called <samp class="file">/usr/local/bin/emacspeak-espeakf</samp>.  (These names are not
 very imaginative, but I can remember them.)
 </p>
-<p><code>espeakf</code> is available from CVS on SourceForge.  Fortunately, it
+<p><code class="code">espeakf</code> is available from CVS on SourceForge.  Fortunately, it
 is easy to download and install.
 </p>
 <p>First you need to decide on a directory in which you plan to keep the
-<code>espeakf</code> directory that you will download.  I use
+<code class="code">espeakf</code> directory that you will download.  I use
 </p>
-<div class="smallexample">
-<pre class="smallexample">/usr/local/src/
+<div class="example smallexample">
+<pre class="example-preformatted">/usr/local/src/
 </pre></div>
 
 <p>Make that directory if you do not have it already, then go to it.
 </p>
 <p>Here are the commands, which I run as the non-privileged user
-&lsquo;<samp>bob</samp>&rsquo; in a shell, such as one in Emacspeak that you can start
-with the <kbd>Meta-x term</kbd> command.
+&lsquo;<samp class="samp">bob</samp>&rsquo; in a shell, such as one in Emacspeak that you can start
+with the <kbd class="kbd">Meta-x term</kbd> command.
 </p>
 <p>This facility is described in
 </p>
-<div class="smallexample">
-<pre class="smallexample">(info &quot;(emacspeak)Running Terminal Based Applications&quot;)
+<div class="example smallexample">
+<pre class="example-preformatted">(info &quot;(emacspeak)Running Terminal Based Applications&quot;)
 </pre></div>
 
-<p>(Before you try <kbd>Meta-x term</kbd>, be sure to learn how to get out of
+<p>(Before you try <kbd class="kbd">Meta-x term</kbd>, be sure to learn how to get out of
 the buffer!  In Term mode, the usual commands for killing a buffer or
-switching buffers do not work.  I find <kbd>Control-c Control-f</kbd>, the
-new keybinding for <code>find-file</code> useful, as well as <kbd>Control-c
+switching buffers do not work.  I find <kbd class="kbd">Control-c Control-f</kbd>, the
+new keybinding for <code class="code">find-file</code> useful, as well as <kbd class="kbd">Control-c
 k</kbd>, which kills the buffer.)
 </p>
 <p>In a shell, I first switch to the appropriate directory, and then I
 run the CVS login command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">cd /usr/local/src/
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">cd /usr/local/src/
 cvs -d :pserver:anonymous@cvs.espeakf.sourceforge.net:/cvsroot/espeakf login
-</pre></div>
+</pre></div></div>
 
 <p>You need to login once for CVS.  The login command will ask for your
 password.  Just press your return key.  Then, type the following
 command:
 </p>
-<div class="smallexample">
-<pre class="smallexample">cvs -d :pserver:anonymous@cvs.espeakf.sourceforge.net:/cvsroot/espeakf co espeakf
+<div class="example smallexample">
+<pre class="example-preformatted">cvs -d :pserver:anonymous@cvs.espeakf.sourceforge.net:/cvsroot/espeakf co espeakf
 </pre></div>
 
-<p>These commands will create a <samp>/usr/local/src/espeakf/</samp> directory
-below your <samp>/usr/local/src/</samp> directory and fill it with several
-files and other directories.  To make use of the <code>espeakf</code>
+<p>These commands will create a <samp class="file">/usr/local/src/espeakf/</samp> directory
+below your <samp class="file">/usr/local/src/</samp> directory and fill it with several
+files and other directories.  To make use of the <code class="code">espeakf</code>
 text-to-speech synthesizer, Emacspeak runs an executable Perl script
-called <code>espeakf.pl</code>.  CVS installs that Perl script properly, so
+called <code class="code">espeakf.pl</code>.  CVS installs that Perl script properly, so
 you do not need to do anything.
 </p>
 <p>However, you do need to modify your
-<samp>/usr/local/bin/emacspeak-eflite</samp> and
-<samp>/usr/local/bin/emacspeak-espeakf</samp> start up scripts for the two
+<samp class="file">/usr/local/bin/emacspeak-eflite</samp> and
+<samp class="file">/usr/local/bin/emacspeak-espeakf</samp> start up scripts for the two
 different text-to-speech synthesizers.
 </p>
-<p>I use a variation on the <code>/usr/bin/emacspeak</code> script that
+<p>I use a variation on the <code class="code">/usr/bin/emacspeak</code> script that
 Emacspeak creates automatically.  That script uses information from a
-<samp>/etc/emacspeak.conf</samp> file.  I ignore that configuration file
+<samp class="file">/etc/emacspeak.conf</samp> file.  I ignore that configuration file
 because the configuration for Emacspeak with the two synthesizers is
 different.  Instead, I put all the configuration information into the
-two <samp>/usr/local/bin/</samp> scripts.
+two <samp class="file">/usr/local/bin/</samp> scripts.
 </p>
 <p>The two scripts contain sharp signs, exclamation marks, left and right
 brackets, and much else.  To listen to all the characters in them, you
 need to set Emacspeak&rsquo;s punctuation mode to all.  If you are
 listening to this in Emacspeak, you can evaluate the following
-expression by placing point after it and typing <kbd>Control-x
+expression by placing point after it and typing <kbd class="kbd">Control-x
 Control-e</kbd>:
 </p>
-<div class="smallexample">
-<pre class="smallexample">(dtk-set-punctuations 'all)
+<div class="example smallexample">
+<pre class="example-preformatted">(tts-set-punctuations 'all)
 </pre></div>
 
-<p>First, the <samp>/usr/local/bin/emacspeak-eflite</samp> script.
+<p>First, the <samp class="file">/usr/local/bin/emacspeak-eflite</samp> script.
 </p>
-<div class="smallexample">
-<pre class="smallexample">#!/bin/sh
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">#!/bin/sh
 ## /usr/local/bin/emacspeak-eflite - execute emacs with speech enhancements
 ## use EFLITE
 
@@ -1321,36 +1303,37 @@ if [ -f $HOME/.emacs ]
 then
         INITSTR=&quot;-l $HOME/.emacs&quot;
 fi
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">CL_ALL=&quot;&quot;
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">CL_ALL=&quot;&quot;
 for CL in $* ; do
         if [ &quot;$CL&quot; = &quot;-o&quot; ]; then
-                DTK_PROGRAM=outloud
-                export DTK_PROGRAM
+                TTS_PROGRAM=outloud
+                export TTS_PROGRAM
                 elif [ &quot;$CL&quot; = &quot;-d&quot; ]; then
-                DTK_PROGRAM=dtk-soft
-                export DTK_PROGRAM
+                TTS_PROGRAM=dtk-soft
+                export TTS_PROGRAM
         elif [ &quot;$CL&quot; = &quot;-q&quot; ]; then
                 INITSTR=&quot;&quot;
         else
                 CL_ALL=&quot;$CL_ALL $CL&quot;
         fi
 done
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">export EMACS_UNIBYTE=1
-export DTK_PROGRAM=/usr/local/bin/eflite
-export DTK_TCL=/usr/local/bin/eflite
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">export EMACS_UNIBYTE=1
+export TTS_PROGRAM=/usr/local/bin/eflite
 
 exec emacs -q \
            -l /usr/share/emacs/site-lisp/emacspeak/lisp/emacspeak-setup.el \
            $INITSTR $CL_ALL
 ### end /usr/local/bin/emacspeak-eflite
-</pre></div>
+</pre></div></div>
 
-<p>Second, the <samp>/usr/local/bin/emacspeak-espeakf</samp> script:
+<p>Second, the <samp class="file">/usr/local/bin/emacspeak-espeakf</samp> script:
 </p>
-<div class="smallexample">
-<pre class="smallexample">#!/bin/sh
+<div class="example smallexample">
+<div class="group"><pre class="example-preformatted">#!/bin/sh
 ## /usr/local/bin/emacspeak-espeakf - execute emacs with speech enhancements
 ## use ESPEAKF
 
@@ -1362,44 +1345,46 @@ if [ -f $HOME/.emacs ]
    then
         INITSTR=&quot;-l $HOME/.emacs&quot;
 fi
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">CL_ALL=&quot;&quot;
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">CL_ALL=&quot;&quot;
 for CL in $* ; do
         if [ &quot;$CL&quot; = &quot;-o&quot; ]; then
-                DTK_PROGRAM=/usr/local/src/espeakf/espeakf.pl
-                export DTK_PROGRAM
+                TTS_PROGRAM=/usr/local/src/espeakf/espeakf.pl
+                export TTS_PROGRAM
                 elif [ &quot;$CL&quot; = &quot;-d&quot; ]; then
-                DTK_PROGRAM=dtk-soft
-                export DTK_PROGRAM
+                TTS_PROGRAM=dtk-soft
+                export TTS_PROGRAM
         elif [ &quot;$CL&quot; = &quot;-q&quot; ]; then
                 INITSTR=&quot;&quot;
         else
                 CL_ALL=&quot;$CL_ALL $CL&quot;
         fi
 done
-</pre><pre class="smallexample">
-</pre><pre class="smallexample">export EMACS_UNIBYTE=1
-export DTK_PROGRAM=/usr/local/src/espeakf/espeakf.pl
-export DTK_TCL=/usr/bin/perl
+</pre></div><pre class="example-preformatted">
+
+</pre><div class="group"><pre class="example-preformatted">export EMACS_UNIBYTE=1
+export TTS_PROGRAM=/usr/local/src/espeakf/espeakf.pl
 
 exec emacs -q \
            -l /usr/share/emacs/site-lisp/emacspeak/lisp/emacspeak-setup.el \
            $INITSTR $CL_ALL
 ### end /usr/local/bin/emacspeak-espeakf
-</pre></div>
+</pre></div></div>
 
 <br>
 <p>Both these files need to be made executable.  I executed
 </p>
-<div class="smallexample">
-<pre class="smallexample">chmod 755 emacspeak-*
+<div class="example smallexample">
+<pre class="example-preformatted">chmod 755 emacspeak-*
 </pre></div>
 
-<p>in a shell as user &lsquo;<samp>root</samp>&rsquo;.
+<p>in a shell as user &lsquo;<samp class="samp">root</samp>&rsquo;.
 </p>
 <p>### End of document
 </p>
-<hr>
+</div>
+</div>
 
 
 

@@ -57,7 +57,6 @@ publish:
 
 introducing-emacspeak.html: introducing-emacspeak.texi
 	makeinfo --no-split --html  introducing-emacspeak.texi
-	perl add-css.pl introducing-emacspeak.html
 #For publishing to SF
 pub:  html/index.html introducing-emacspeak.html
 	rsync introducing-emacspeak.html ${SF_HOME}

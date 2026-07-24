@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-11-28 Sun 07:13 -->
+<!-- 2026-07-25 Sat 00:07 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>A Simple Introduction to Emacspeak</title>
@@ -11,7 +11,7 @@
 <meta name="description" content="A non-technical introduction to Emacspeak." />
 <meta name="keywords" content="Emacspeak audio desktop accessible linux editor authoring programming" />
 <meta name="generator" content="Org Mode" />
-<style>
+<style type="text/css">
   #content { max-width: 60em; margin: auto; }
   .title  { text-align: center;
              margin-bottom: .2em; }
@@ -59,6 +59,7 @@
   pre.src-asymptote:before { content: 'Asymptote'; }
   pre.src-awk:before { content: 'Awk'; }
   pre.src-authinfo::before { content: 'Authinfo'; }
+  pre.src-c:before { content: 'C'; }
   pre.src-C:before { content: 'C'; }
   /* pre.src-C++ doesn't work in CSS */
   pre.src-clojure:before { content: 'Clojure'; }
@@ -73,7 +74,7 @@
   pre.src-haskell:before { content: 'Haskell'; }
   pre.src-hledger:before { content: 'hledger'; }
   pre.src-java:before { content: 'Java'; }
-  pre.src-js:before { content: 'Javascript'; }
+  pre.src-js:before { content: 'JavaScript'; }
   pre.src-latex:before { content: 'LaTeX'; }
   pre.src-ledger:before { content: 'Ledger'; }
   pre.src-lisp:before { content: 'Lisp'; }
@@ -193,29 +194,40 @@
     { font-size: 10px; font-weight: bold; white-space: nowrap; }
   .org-info-js_search-highlight
     { background-color: #ffff00; color: #000000; font-weight: bold; }
-  .org-svg { width: 90%; }
+  .org-svg { }
 </style>
-<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        displayAlign: "center",
-        displayIndent: "0em",
-
-        "HTML-CSS": { scale: 100,
-                        linebreaks: { automatic: "false" },
-                        webFont: "TeX"
-                       },
-        SVG: {scale: 100,
-              linebreaks: { automatic: "false" },
-              font: "TeX"},
-        NativeMML: {scale: 100},
-        TeX: { equationNumbers: {autoNumber: "AMS"},
-               MultLineWidth: "85%",
-               TagSide: "right",
-               TagIndent: ".8em"
-             }
-});
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
 </head>
 <body>
 <div id="content" class="content">
@@ -224,120 +236,119 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org9a6455c">1. Introduction</a>
+<li><a href="#org7397f67">1. Introduction</a>
 <ul>
-<li><a href="#orgc797f7a">1.1. Who is this for?</a></li>
-<li><a href="#orgee4bdf6">1.2. How best to use this Tutorial</a></li>
-<li><a href="#org077cfd0">1.3. What is Emacs and obtaining information on it through Info.</a>
+<li><a href="#org4fbf73e">1.1. Who is this for?</a></li>
+<li><a href="#orgf4d0e0f">1.2. How best to use this Tutorial</a></li>
+<li><a href="#org380787c">1.3. What is Emacs and obtaining information on it through Info.</a>
 <ul>
-<li><a href="#org51bd119">1.3.1. The Emacs Help system</a></li>
-<li><a href="#org3312d1a">1.3.2. Using the menu bar to access help</a></li>
-<li><a href="#orgf948761">1.3.3. Hotkeys for getting help.</a></li>
+<li><a href="#orgd5395f2">1.3.1. The Emacs Help system</a></li>
+<li><a href="#orgbd7d63b">1.3.2. Using the menu bar to access help</a></li>
+<li><a href="#org542b9af">1.3.3. Hotkeys for getting help.</a></li>
 </ul>
 </li>
-<li><a href="#orgb08b717">1.4. What is Emacspeak and where to find the user's manual.</a>
+<li><a href="#orga82e9c6">1.4. What is Emacspeak and where to find the user's manual.</a>
 <ul>
-<li><a href="#orgec255e7">1.4.1. Emacspeak and getting help</a></li>
+<li><a href="#org0453716">1.4.1. Emacspeak and getting help</a></li>
 </ul>
 </li>
-<li><a href="#orged83ce0">1.5. Navigation</a>
+<li><a href="#org736059c">1.5. Navigation</a>
 <ul>
-<li><a href="#org510c8f0">1.5.1. Movement commands.</a></li>
-<li><a href="#org8086c6b">1.5.2. Reading Commands</a></li>
-<li><a href="#org072a17f">1.5.3. Other commands</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#org0714b72">2. Configuration</a>
-<ul>
-<li><a href="#orgb7e47f2">2.1. Setting up your environment</a>
-<ul>
-<li><a href="#org144c811">2.1.1. Voice rate, punctuation level and key echo</a></li>
-</ul>
-</li>
-<li><a href="#org30e6377">2.2. Customizing Emacs using Easy Customizations</a></li>
-<li><a href="#org608618b">2.3. Configuring Emacspeak on the fly</a>
-<ul>
-<li><a href="#org027c31f">2.3.1. Audible Icons</a></li>
-<li><a href="#org27c683c">2.3.2. A sample of a .emacs file's contents</a></li>
-</ul>
-</li>
-<li><a href="#orgeb749d5">2.4. Adding pluggins or extensions</a>
-<ul>
-<li><a href="#org3bbbac1">2.4.1. Adding packages through Synaptic</a></li>
-</ul>
-</li>
-<li><a href="#orgd9d5e30">2.5. Using Elpa  to extend your Emacs</a></li>
-</ul>
-</li>
-<li><a href="#orgcb7958d">3. Putting it to use.</a>
-<ul>
-<li><a href="#org6ca7ea3">3.1. First Launch of Emacspeak</a></li>
-<li><a href="#org4482072">3.2. Additional notes</a></li>
-</ul>
-</li>
-<li><a href="#org2e62318">4. Manipulating  text</a>
-<ul>
-<li><a href="#org2aab56b">4.1. Your first text file</a>
-<ul>
-<li><a href="#org1088c2f">4.1.1. But wait!  What about spell checking?</a></li>
-<li><a href="#orgb2f261f">4.1.2. Visiting files</a></li>
-</ul>
-</li>
-<li><a href="#org3e7cac9">4.2. Let's make a webpage!</a>
-<ul>
-<li><a href="#org2a6da47">4.2.1. Fil in the Sections</a></li>
-<li><a href="#orgeb278e5">4.2.2. Creating Links</a></li>
-<li><a href="#org1d6f9fe">4.2.3. Exercise:</a></li>
-<li><a href="#org10a9d53">4.2.4. Exporting to html</a></li>
-</ul>
-</li>
-<li><a href="#org7f74080">4.3. Let's write some code!</a>
-<ul>
-<li><a href="#orgceb5401">4.3.1. Exercise:</a></li>
+<li><a href="#orga1e6656">1.5.1. Movement commands.</a></li>
+<li><a href="#orgf3c73d0">1.5.2. Reading Commands</a></li>
+<li><a href="#org58c818e">1.5.3. Other commands</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org987bf3e">5. Onto the wide wide world:</a>
+<li><a href="#orgfb9d049">2. Configuration</a>
 <ul>
-<li><a href="#org6fc259e">5.1. How about a chat?</a>
+<li><a href="#orgb9ab959">2.1. Setting up your environment</a>
 <ul>
-<li><a href="#org64f930a">5.1.1. Actual chatting tips</a></li>
+<li><a href="#org088537f">2.1.1. Voice rate, punctuation level and key echo</a></li>
 </ul>
 </li>
-<li><a href="#org39e0711">5.2. Let's browse the web.</a>
+<li><a href="#org8ea0307">2.2. Customizing Emacs using Easy Customizations</a></li>
+<li><a href="#org0c6c003">2.3. Configuring Emacspeak on the fly</a>
 <ul>
-<li><a href="#org4b148fd">5.2.1. Url Templates</a></li>
-<li><a href="#orgfe8f7f9">5.2.2. Exercise.</a></li>
+<li><a href="#org040f2d6">2.3.1. Audible Icons</a></li>
+<li><a href="#org5c10758">2.3.2. A sample of a .emacs file's contents</a></li>
 </ul>
 </li>
-<li><a href="#orgd86ba6f">5.3. Sending e-mail</a></li>
+<li><a href="#orga3482f2">2.4. Adding pluggins or extensions</a>
+<ul>
+<li><a href="#orgb267b5a">2.4.1. Adding packages through Synaptic</a></li>
 </ul>
 </li>
-<li><a href="#org2f43f3e">6. Retreat into your shell, why don't you?</a></li>
-<li><a href="#org21cee48">7. File Management</a></li>
-<li><a href="#org4d49a54">8. Playing media files in Emacspeak</a></li>
-<li><a href="#orga37a243">9. Wrapping it up</a></li>
-<li><a href="#org1cd7808">10. Acknowledgements</a></li>
-<li><a href="#org1633df5">11. Appendices</a>
-<ul>
-<li><a href="#org0c0784f">11.1. Installing Emacspeak</a>
-<ul>
-<li><a href="#org0710214">11.1.1. Using Synaptic</a></li>
-<li><a href="#orge13a8b7">11.1.2. Using the command line</a></li>
+<li><a href="#org5fb7ba1">2.5. Using Elpa  to extend your Emacs</a></li>
 </ul>
 </li>
-<li><a href="#org9c7dd64">11.2. Emacs and Emacspeak links:  For when you want to go fishing</a></li>
+<li><a href="#org0df4608">3. Putting it to use.</a>
+<ul>
+<li><a href="#org2c3b867">3.1. First Launch of Emacspeak</a></li>
+<li><a href="#org8d5bd8a">3.2. Additional notes</a></li>
+</ul>
+</li>
+<li><a href="#orge827327">4. Manipulating  text</a>
+<ul>
+<li><a href="#orgccef63e">4.1. Your first text file</a>
+<ul>
+<li><a href="#org0793dcc">4.1.1. But wait!  What about spell checking?</a></li>
+<li><a href="#org50fb248">4.1.2. Visiting files</a></li>
+</ul>
+</li>
+<li><a href="#org63456c4">4.2. Let's make a webpage!</a>
+<ul>
+<li><a href="#org8452d7b">4.2.1. Fil in the Sections</a></li>
+<li><a href="#org098d85c">4.2.2. Creating Links</a></li>
+<li><a href="#org60ee796">4.2.3. Exercise:</a></li>
+<li><a href="#org8b5f5ec">4.2.4. Exporting to html</a></li>
+</ul>
+</li>
+<li><a href="#org9edfb62">4.3. Let's write some code!</a>
+<ul>
+<li><a href="#orge3c7a65">4.3.1. Exercise:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org131d615">5. Onto the wide wide world:</a>
+<ul>
+<li><a href="#org5d4a1d0">5.1. How about a chat?</a>
+<ul>
+<li><a href="#org16d5844">5.1.1. Actual chatting tips</a></li>
+</ul>
+</li>
+<li><a href="#orge206df3">5.2. Let's browse the web.</a>
+<ul>
+<li><a href="#org222539a">5.2.1. Url Templates</a></li>
+<li><a href="#org7033181">5.2.2. Exercise.</a></li>
+</ul>
+</li>
+<li><a href="#org43f1714">5.3. Sending e-mail</a></li>
+</ul>
+</li>
+<li><a href="#org88c730c">6. Retreat into your shell, why don't you?</a></li>
+<li><a href="#orga227b73">7. File Management</a></li>
+<li><a href="#orgefcee9e">8. Playing media files in Emacspeak</a></li>
+<li><a href="#org5812da2">9. Wrapping it up</a></li>
+<li><a href="#org439803e">10. Acknowledgements</a></li>
+<li><a href="#org9cde120">11. Appendices</a>
+<ul>
+<li><a href="#org1fc4d71">11.1. Installing Emacspeak</a>
+<ul>
+<li><a href="#orge8d6732">11.1.1. Using Synaptic</a></li>
+<li><a href="#org2830163">11.1.2. Using the command line</a></li>
+</ul>
+</li>
+<li><a href="#org3173e09">11.2. Emacs and Emacspeak links:  For when you want to go fishing</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-
-<div id="outline-container-org9a6455c" class="outline-2">
-<h2 id="org9a6455c"><span class="section-number-2">1.</span> Introduction</h2>
+<div id="outline-container-org7397f67" class="outline-2">
+<h2 id="org7397f67"><span class="section-number-2">1.</span> Introduction</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 In past years, there have been quite a few excellent reference
@@ -366,10 +377,8 @@ included in future versions, e-mail me directly or send an e-mail to
 the vinux support group at <a href="mailto:vinux-support@googlegroups.com">vinux-support@googlegroups.com</a>.
 </p>
 </div>
-
-
-<div id="outline-container-orgc797f7a" class="outline-3">
-<h3 id="orgc797f7a"><span class="section-number-3">1.1.</span> Who is this for?</h3>
+<div id="outline-container-org4fbf73e" class="outline-3">
+<h3 id="org4fbf73e"><span class="section-number-3">1.1.</span> Who is this for?</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 This tutorial is for anyone who is interested in adding another
@@ -431,7 +440,7 @@ cent for our efforts.  The best pay in the world someone who puts
 their time and mental resources into writing an informational resource
 for no monetary compensation can get is for someone to use that
 resource thereby making their time and efforts worthwhile.  "Hint hint
-&#x2026; nudge, nudge, know what I mean?"  Please tell me you know Monty
+&hellip; nudge, nudge, know what I mean?"  Please tell me you know Monty
 Python!  Ok, enough rabbit trails.
 </p>
 
@@ -454,10 +463,8 @@ all.  It is the price we gladly pay for free software.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-orgee4bdf6" class="outline-3">
-<h3 id="orgee4bdf6"><span class="section-number-3">1.2.</span> How best to use this Tutorial</h3>
+<div id="outline-container-orgf4d0e0f" class="outline-3">
+<h3 id="orgf4d0e0f"><span class="section-number-3">1.2.</span> How best to use this Tutorial</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
 The best way to use this tutorial is to read it using an application
@@ -491,10 +498,8 @@ and this is a good thing.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-org077cfd0" class="outline-3">
-<h3 id="org077cfd0"><span class="section-number-3">1.3.</span> What is Emacs and obtaining information on it through Info.</h3>
+<div id="outline-container-org380787c" class="outline-3">
+<h3 id="org380787c"><span class="section-number-3">1.3.</span> What is Emacs and obtaining information on it through Info.</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
 So, what is Emacs?  I thought we were learning about Emacspeak here.
@@ -540,9 +545,8 @@ hyperlinks and the like.  In fact, before we go any further, let's
 talk about the help system a bit.
 </p>
 </div>
-
-<div id="outline-container-org51bd119" class="outline-4">
-<h4 id="org51bd119"><span class="section-number-4">1.3.1.</span> The Emacs Help system</h4>
+<div id="outline-container-orgd5395f2" class="outline-4">
+<h4 id="orgd5395f2"><span class="section-number-4">1.3.1.</span> The Emacs Help system</h4>
 <div class="outline-text-4" id="text-1-3-1">
 <p>
 Emacs has been around a long time.  Because of this, and thanks to the
@@ -601,10 +605,8 @@ and reading it.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-org3312d1a" class="outline-4">
-<h4 id="org3312d1a"><span class="section-number-4">1.3.2.</span> Using the menu bar to access help</h4>
+<div id="outline-container-orgbd7d63b" class="outline-4">
+<h4 id="orgbd7d63b"><span class="section-number-4">1.3.2.</span> Using the menu bar to access help</h4>
 <div class="outline-text-4" id="text-1-3-2">
 <p>
 This is as good a time as any to formally introduce the menu bar.
@@ -663,9 +665,8 @@ pressing enter.
 </p>
 </div>
 </div>
-
-<div id="outline-container-orgf948761" class="outline-4">
-<h4 id="orgf948761"><span class="section-number-4">1.3.3.</span> Hotkeys for getting help.</h4>
+<div id="outline-container-org542b9af" class="outline-4">
+<h4 id="org542b9af"><span class="section-number-4">1.3.3.</span> Hotkeys for getting help.</h4>
 <div class="outline-text-4" id="text-1-3-3">
 <p>
 If you find the menu bar cumbersome, and, believe me you will
@@ -702,10 +703,8 @@ have no idea what to push to do it.  Give me a list of possibles."</li>
 </div>
 </div>
 </div>
-
-
-<div id="outline-container-orgb08b717" class="outline-3">
-<h3 id="orgb08b717"><span class="section-number-3">1.4.</span> What is Emacspeak and where to find the user's manual.</h3>
+<div id="outline-container-orga82e9c6" class="outline-3">
+<h3 id="orga82e9c6"><span class="section-number-3">1.4.</span> What is Emacspeak and where to find the user's manual.</h3>
 <div class="outline-text-3" id="text-1-4">
 <p>
 Emacspeak is an extension of Emacs written by Dr. T. V. Raman, a blind
@@ -741,10 +740,8 @@ under-the-hood knowledge so, learning a few things about Emacs will
 help you more easily learn how Emacspeak does what it does for you.
 </p>
 </div>
-
-
-<div id="outline-container-orgec255e7" class="outline-4">
-<h4 id="orgec255e7"><span class="section-number-4">1.4.1.</span> Emacspeak and getting help</h4>
+<div id="outline-container-org0453716" class="outline-4">
+<h4 id="org0453716"><span class="section-number-4">1.4.1.</span> Emacspeak and getting help</h4>
 <div class="outline-text-4" id="text-1-4-1">
 <p>
 Emacspeak also has a user's manual which can be accessed using the hot
@@ -775,10 +772,8 @@ by typing c-e cap F.  Note that this is a capital f.
 </div>
 </div>
 </div>
-
-
-<div id="outline-container-orged83ce0" class="outline-3">
-<h3 id="orged83ce0"><span class="section-number-3">1.5.</span> Navigation</h3>
+<div id="outline-container-org736059c" class="outline-3">
+<h3 id="org736059c"><span class="section-number-3">1.5.</span> Navigation</h3>
 <div class="outline-text-3" id="text-1-5">
 <p>
 Ok, now that the help system has been introduced, it's time to learn
@@ -793,9 +788,8 @@ can), you'll be at it for years and years and wind up giving up.  so,
 here we go:
 </p>
 </div>
-
-<div id="outline-container-org510c8f0" class="outline-4">
-<h4 id="org510c8f0"><span class="section-number-4">1.5.1.</span> Movement commands.</h4>
+<div id="outline-container-orga1e6656" class="outline-4">
+<h4 id="orga1e6656"><span class="section-number-4">1.5.1.</span> Movement commands.</h4>
 <div class="outline-text-4" id="text-1-5-1">
 <p>
 Where c- stands for control m- stands for meta or alt and s- stands
@@ -888,9 +882,8 @@ is about as far as I've gotten.
 </p>
 </div>
 </div>
-
-<div id="outline-container-org8086c6b" class="outline-4">
-<h4 id="org8086c6b"><span class="section-number-4">1.5.2.</span> Reading Commands</h4>
+<div id="outline-container-orgf3c73d0" class="outline-4">
+<h4 id="orgf3c73d0"><span class="section-number-4">1.5.2.</span> Reading Commands</h4>
 <div class="outline-text-4" id="text-1-5-2">
 <p>
 Here are some basic reading commands.  Please note that this is not an
@@ -929,7 +922,7 @@ moving your cursor:
 <tr>
 <td class="org-left">window</td>
 <td class="org-left">c-e c-p</td>
-<td class="org-left">&#xa0;</td>
+<td class="org-left">&nbsp;</td>
 <td class="org-left">c-e c-n</td>
 </tr>
 
@@ -957,9 +950,8 @@ moving your cursor:
 </table>
 </div>
 </div>
-
-<div id="outline-container-org072a17f" class="outline-4">
-<h4 id="org072a17f"><span class="section-number-4">1.5.3.</span> Other commands</h4>
+<div id="outline-container-org58c818e" class="outline-4">
+<h4 id="org58c818e"><span class="section-number-4">1.5.3.</span> Other commands</h4>
 <div class="outline-text-4" id="text-1-5-3">
 <p>
 Commands for moving through and reading files are not the only
@@ -1027,9 +1019,8 @@ y.</dd>
 </div>
 </div>
 </div>
-
-<div id="outline-container-org0714b72" class="outline-2">
-<h2 id="org0714b72"><span class="section-number-2">2.</span> Configuration</h2>
+<div id="outline-container-orgfb9d049" class="outline-2">
+<h2 id="orgfb9d049"><span class="section-number-2">2.</span> Configuration</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 Configuring Emacs and Emacspeak involves several things.  You may want
@@ -1038,9 +1029,8 @@ in certain situations.  You might also want to change how it loads
 when you launch Emacspeak.  We will discuss all of these next.
 </p>
 </div>
-
-<div id="outline-container-orgb7e47f2" class="outline-3">
-<h3 id="orgb7e47f2"><span class="section-number-3">2.1.</span> Setting up your environment</h3>
+<div id="outline-container-orgb9ab959" class="outline-3">
+<h3 id="orgb9ab959"><span class="section-number-3">2.1.</span> Setting up your environment</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 This section talks about how to set up how Emacspeak speaks to you and
@@ -1066,9 +1056,8 @@ of it underneath and just delete the -q from that one. When you are
 done, save your changes and you are ready to customize.
 </p>
 </div>
-
-<div id="outline-container-org144c811" class="outline-4">
-<h4 id="org144c811"><span class="section-number-4">2.1.1.</span> Voice rate, punctuation level and key echo</h4>
+<div id="outline-container-org088537f" class="outline-4">
+<h4 id="org088537f"><span class="section-number-4">2.1.1.</span> Voice rate, punctuation level and key echo</h4>
 <div class="outline-text-4" id="text-2-1-1">
 <p>
 Hopefully, your distribution came with emacspeak more or less
@@ -1084,9 +1073,8 @@ alternative method exists.
 </div>
 </div>
 </div>
-
-<div id="outline-container-org30e6377" class="outline-3">
-<h3 id="org30e6377"><span class="section-number-3">2.2.</span> Customizing Emacs using Easy Customizations</h3>
+<div id="outline-container-org8ea0307" class="outline-3">
+<h3 id="org8ea0307"><span class="section-number-3">2.2.</span> Customizing Emacs using Easy Customizations</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 As I mentioned previously, the fastest way to customize your Emacspeak
@@ -1147,9 +1135,8 @@ dedicated to Easy Customizations</a> in the Emacs Manual.
 </p>
 </div>
 </div>
-
-<div id="outline-container-org608618b" class="outline-3">
-<h3 id="org608618b"><span class="section-number-3">2.3.</span> Configuring Emacspeak on the fly</h3>
+<div id="outline-container-org0c6c003" class="outline-3">
+<h3 id="org0c6c003"><span class="section-number-3">2.3.</span> Configuring Emacspeak on the fly</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 If you don't want to mess around with the Easy Customizations section
@@ -1171,11 +1158,8 @@ Emacspeak's speaking behavior local to your current buffer.
 </ul></li>
 </ul>
 </div>
-
-
-
-<div id="outline-container-org027c31f" class="outline-4">
-<h4 id="org027c31f"><span class="section-number-4">2.3.1.</span> Audible Icons</h4>
+<div id="outline-container-org040f2d6" class="outline-4">
+<h4 id="org040f2d6"><span class="section-number-4">2.3.1.</span> Audible Icons</h4>
 <div class="outline-text-4" id="text-2-3-1">
 <p>
 As mentioned before, audible icons are sounds associated with behavior
@@ -1189,10 +1173,8 @@ on globally, type c-u c-e c-a.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-org27c683c" class="outline-4">
-<h4 id="org27c683c"><span class="section-number-4">2.3.2.</span> A sample of a .emacs file's contents</h4>
+<div id="outline-container-org5c10758" class="outline-4">
+<h4 id="org5c10758"><span class="section-number-4">2.3.2.</span> A sample of a .emacs file's contents</h4>
 <div class="outline-text-4" id="text-2-3-2">
 <p>
 Earlier, I told you that the easiest and fastest way to change your
@@ -1211,15 +1193,14 @@ echo, change the t to nill and vice versa for the applical line item.:
 <p>
 '(emacspeak-character-echo nil) '(emacspeak-line-echo t)
 '(emacspeak-word-echo nil) '(espeak-default-speech-rate 250)
-'(line-number-mode nil)) (dtk-toggle-split-caps t)
-(dtk-toggle-allcaps-beep t) #+END<sub>SRC</sub> emacs-lisp
+'(line-number-mode nil)) (tts-toggle-split-caps t)
+#+END<sub>SRC</sub> emacs-lisp
 </p>
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgeb749d5" class="outline-3">
-<h3 id="orgeb749d5"><span class="section-number-3">2.4.</span> Adding pluggins or extensions</h3>
+<div id="outline-container-orga3482f2" class="outline-3">
+<h3 id="orga3482f2"><span class="section-number-3">2.4.</span> Adding pluggins or extensions</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 There are two ways to add extensions to your Emacs which we will
@@ -1232,10 +1213,8 @@ two sections will show you how to add packages and extensions to your
 Emacs using these two solutions.
 </p>
 </div>
-
-
-<div id="outline-container-org3bbbac1" class="outline-4">
-<h4 id="org3bbbac1"><span class="section-number-4">2.4.1.</span> Adding packages through Synaptic</h4>
+<div id="outline-container-orgb267b5a" class="outline-4">
+<h4 id="orgb267b5a"><span class="section-number-4">2.4.1.</span> Adding packages through Synaptic</h4>
 <div class="outline-text-4" id="text-2-4-1">
 <p>
 Many of the extensions that have been written for Emacs can be added
@@ -1255,9 +1234,8 @@ where you can learn more about it
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgd9d5e30" class="outline-3">
-<h3 id="orgd9d5e30"><span class="section-number-3">2.5.</span> Using Elpa  to extend your Emacs</h3>
+<div id="outline-container-org5fb7ba1" class="outline-3">
+<h3 id="org5fb7ba1"><span class="section-number-3">2.5.</span> Using Elpa  to extend your Emacs</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
 Elpa is a system Emacs uses for downloading and installing extensions.
@@ -1312,9 +1290,8 @@ for Emacs.
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgcb7958d" class="outline-2">
-<h2 id="orgcb7958d"><span class="section-number-2">3.</span> Putting it to use.</h2>
+<div id="outline-container-org0df4608" class="outline-2">
+<h2 id="org0df4608"><span class="section-number-2">3.</span> Putting it to use.</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 Now that we have our emacspeak all set up the way we want it, let's
@@ -1336,10 +1313,8 @@ is that there are tons and tons of web resources for Emacs for you to
 consult.  Use them to the fullest extent possible.
 </p>
 </div>
-
-
-<div id="outline-container-org6ca7ea3" class="outline-3">
-<h3 id="org6ca7ea3"><span class="section-number-3">3.1.</span> First Launch of Emacspeak</h3>
+<div id="outline-container-org2c3b867" class="outline-3">
+<h3 id="org2c3b867"><span class="section-number-3">3.1.</span> First Launch of Emacspeak</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
 Let's back up a bit and describe what you can expect when you launch
@@ -1367,9 +1342,8 @@ the command prompt where you started.
 </p>
 </div>
 </div>
-
-<div id="outline-container-org4482072" class="outline-3">
-<h3 id="org4482072"><span class="section-number-3">3.2.</span> Additional notes</h3>
+<div id="outline-container-org8d5bd8a" class="outline-3">
+<h3 id="org8d5bd8a"><span class="section-number-3">3.2.</span> Additional notes</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
 Please note that I always show you how to use Emacspeak from a console
@@ -1438,9 +1412,8 @@ without further adieu, let's get started!
 </div>
 </div>
 </div>
-
-<div id="outline-container-org2e62318" class="outline-2">
-<h2 id="org2e62318"><span class="section-number-2">4.</span> Manipulating  text</h2>
+<div id="outline-container-orge827327" class="outline-2">
+<h2 id="orge827327"><span class="section-number-2">4.</span> Manipulating  text</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Emacs is the king of editors.  Yes, I know that sounds really pompous
@@ -1452,10 +1425,8 @@ step instructions on creating files which are, at the core, just text
 files but that do many different things.  Here we go!
 </p>
 </div>
-
-
-<div id="outline-container-org2aab56b" class="outline-3">
-<h3 id="org2aab56b"><span class="section-number-3">4.1.</span> Your first text file</h3>
+<div id="outline-container-orgccef63e" class="outline-3">
+<h3 id="orgccef63e"><span class="section-number-3">4.1.</span> Your first text file</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 In This section will show you how to create and edit your first plain
@@ -1484,31 +1455,19 @@ From the command prompt. do the following:
 <ol class="org-ol">
 <li>Make a directory from which to work.  So type this:</li>
 </ol>
-<p>
-#+BEGIN<sub>EXAMPLE</sub>
-</p>
+<pre class="example" id="org36ba2d1">
 
-<p>
 mkdir learn-emacspeak
-</p>
 
-<p>
-#+END<sub>EXAMPLE</sub>
-</p>
+</pre>
 <ol class="org-ol">
 <li>Now, move to it in order to work from there by typing:</li>
 </ol>
-<p>
-#+BEGIN<sub>EXAMPLE</sub>
-</p>
+<pre class="example" id="orgd6a1d29">
 
-<p>
 cd learn-emacspeak
-</p>
 
-<p>
-#+END<sub>EXAMPLE</sub>
-</p>
+</pre>
 <ol class="org-ol">
 <li>Now, we can begin.  Turn Speakup to quiet mode by holding down the numpad insert and pressing enter.  Espeak will say "You turned me off!"  It will hang around in the background and can be accessed using your number key pad but it won't announce changes in the screen anymore.  If you just want Speakup out of the picture, press print-screen and it will kill it.  Press print screen again to bring it back to life.</li>
 <li>The moment of truth is upon us!  We're going to bring Emacspeak up with a text file.  You do this by typing the following into a command prompt in the console:</li>
@@ -1566,9 +1525,8 @@ your text as single line paragraphs.
 When you are done with your file, Press c-x c-s to save your changes.
 </p>
 </div>
-
-<div id="outline-container-org1088c2f" class="outline-4">
-<h4 id="org1088c2f"><span class="section-number-4">4.1.1.</span> But wait!  What about spell checking?</h4>
+<div id="outline-container-org0793dcc" class="outline-4">
+<h4 id="org0793dcc"><span class="section-number-4">4.1.1.</span> But wait!  What about spell checking?</h4>
 <div class="outline-text-4" id="text-4-1-1">
 <p>
 Ok, so now that we have finished typing our text file and we've saved
@@ -1586,9 +1544,8 @@ c-x c-s to save and you are set.
 </p>
 </div>
 </div>
-
-<div id="outline-container-orgb2f261f" class="outline-4">
-<h4 id="orgb2f261f"><span class="section-number-4">4.1.2.</span> Visiting files</h4>
+<div id="outline-container-org50fb248" class="outline-4">
+<h4 id="org50fb248"><span class="section-number-4">4.1.2.</span> Visiting files</h4>
 <div class="outline-text-4" id="text-4-1-2">
 <p>
 To edit a new file from an already running emacs session or to open a
@@ -1613,10 +1570,8 @@ files as you go along.
 </div>
 </div>
 </div>
-
-
-<div id="outline-container-org3e7cac9" class="outline-3">
-<h3 id="org3e7cac9"><span class="section-number-3">4.2.</span> Let's make a webpage!</h3>
+<div id="outline-container-org63456c4" class="outline-3">
+<h3 id="org63456c4"><span class="section-number-3">4.2.</span> Let's make a webpage!</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 I am now going to teach you how to write your own homepage using
@@ -1687,9 +1642,8 @@ personal, technical, and other.  We can do this in three ways.
 Pick a method and create the heading names I assigned you above.
 </p>
 </div>
-
-<div id="outline-container-org2a6da47" class="outline-4">
-<h4 id="org2a6da47"><span class="section-number-4">4.2.1.</span> Fil in the Sections</h4>
+<div id="outline-container-org8452d7b" class="outline-4">
+<h4 id="org8452d7b"><span class="section-number-4">4.2.1.</span> Fil in the Sections</h4>
 <div class="outline-text-4" id="text-4-2-1">
 <p>
 Ok, now, we flesh out our page.  Using your arrows or c-p and c-n, get
@@ -1710,9 +1664,8 @@ Press enter twice and let's get ready to make our links.
 </p>
 </div>
 </div>
-
-<div id="outline-container-orgeb278e5" class="outline-4">
-<h4 id="orgeb278e5"><span class="section-number-4">4.2.2.</span> Creating Links</h4>
+<div id="outline-container-org098d85c" class="outline-4">
+<h4 id="org098d85c"><span class="section-number-4">4.2.2.</span> Creating Links</h4>
 <div class="outline-text-4" id="text-4-2-2">
 <p>
 As in the case of headings, there are three ways to put links into
@@ -1725,45 +1678,38 @@ are trying to keep it simple so we will restrict ourselves to three.
 </dl>
 <p>
 Example:
-#+BEGIN<sub>EXAMPLE</sub>
-www.vinux-project.org
 </p>
-<p>
-#+end<sub>EXAMPLE</sub> Press enter again and you are at a point where you can
+<pre class="example" id="orgf88ba47">
+www.vinux-project.org
+
+#+end_EXAMPLE Press enter again and you are at a point where you can
 enter a description.  This is where you enter the text you want to
 hehar telling you what that url is to.  Along the same vein as our
 example: Vinux home page.
-</p>
-<dl class="org-dl">
-<dt>A hotkey combination: </dt><dd>To add a link using hotkeys, we use the c-c prefix and then c-l.  So, c-c c-l and we are in the list of url types again.  Proceed as outlined above at this point.</dd>
-<dt>Using the link markup codes:</dt><dd>Again, this is my personal
-   favorite since I don't really like to interrupt my typing to mess
-with menus and lists and things.  To add a llink this way, we put in
-square brackets.  This is a square bracket: [.  You want two left
-square brackets one after the other.  Then we put the url in.  Next,
-we put in a right bracket to close the pair containing the url and
-follow it with a left square bracket. Here, we type the link's
-description.  When the description is finished, we put a right
-square bracket to close the description field and another to close
-the link addition.  When you press enter now, you have a link in
-your page!  You can test the link by arrowing up to it and noting
-that Emacspeak speaks it in the lower voice designated for links.
-You can also follow the link.  You can either do that with the menu
-bar or with the c-c c-o hotkey.</dd>
-</dl>
++  A hotkey combination:  ::  To add a link using hotkeys, we use the c-c prefix and then c-l.  So, c-c c-l and we are in the list of url types again.  Proceed as outlined above at this point.
++  Using the link markup codes: ::   Again, this is my personal
+     favorite since I don't really like to interrupt my typing to mess
+  with menus and lists and things.  To add a llink this way, we put in
+  square brackets.  This is a square bracket: [.  You want two left
+  square brackets one after the other.  Then we put the url in.  Next,
+  we put in a right bracket to close the pair containing the url and
+  follow it with a left square bracket. Here, we type the link's
+  description.  When the description is finished, we put a right
+  square bracket to close the description field and another to close
+  the link addition.  When you press enter now, you have a link in
+  your page!  You can test the link by arrowing up to it and noting
+  that Emacspeak speaks it in the lower voice designated for links.
+  You can also follow the link.  You can either do that with the menu
+  bar or with the c-c c-o hotkey.
 
-<p>
 Here is an example of some links you can put in your page's personal
 section:
-#+BEGIN<sub>EXAMPLE</sub>
-</p>
-<p>
-<a href="http://gmail.google.com">Check your Gmail account</a>
-<a href="http://www.twitter.com">Browse my Twitter page</a>
-<a href="http://www.facebook.com">My Facebook Page</a>
-<a href="http://www.sourceforge.net">Check my Source Forge Account</a>
-#+END<sub>EXAMPLE</sub>
-</p>
+#+BEGIN_EXAMPLE
+[[http://gmail.google.com][Check your Gmail account]]
+[[http://www.twitter.com][Browse my Twitter page]]
+[[http://www.facebook.com][My Facebook Page]]
+[[http://www.sourceforge.net][Check my Source Forge Account]]
+</pre>
 
 <p>
 We can put the links in a list.  It's really easy.  Just precede every
@@ -1797,11 +1743,8 @@ heading's children.
 </p>
 </div>
 </div>
-
-
-
-<div id="outline-container-org1d6f9fe" class="outline-4">
-<h4 id="org1d6f9fe"><span class="section-number-4">4.2.3.</span> Exercise:</h4>
+<div id="outline-container-org60ee796" class="outline-4">
+<h4 id="org60ee796"><span class="section-number-4">4.2.3.</span> Exercise:</h4>
 <div class="outline-text-4" id="text-4-2-3">
 <p>
 Now, it's your turn.  Using the example above, fill in the rest of
@@ -1811,10 +1754,8 @@ final heading, put in some other links of interest to you.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-org10a9d53" class="outline-4">
-<h4 id="org10a9d53"><span class="section-number-4">4.2.4.</span> Exporting to html</h4>
+<div id="outline-container-org8b5f5ec" class="outline-4">
+<h4 id="org8b5f5ec"><span class="section-number-4">4.2.4.</span> Exporting to html</h4>
 <div class="outline-text-4" id="text-4-2-4">
 <p>
 So, now we have our homepage all written up and we are ready to export
@@ -1841,11 +1782,8 @@ things this litttle gem inside of Emacs can do for you.
 </div>
 </div>
 </div>
-
-
-
-<div id="outline-container-org7f74080" class="outline-3">
-<h3 id="org7f74080"><span class="section-number-3">4.3.</span> Let's write some code!</h3>
+<div id="outline-container-org9edfb62" class="outline-3">
+<h3 id="org9edfb62"><span class="section-number-3">4.3.</span> Let's write some code!</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
 No document pretending to explain to someone how to use Emacs and
@@ -1923,10 +1861,8 @@ it by typing c-h m and then moving to the help buffer with c-x o.
 Incidentally, c-h b will give you a more compact list of hotkeys.
 </p>
 </div>
-
-
-<div id="outline-container-orgceb5401" class="outline-4">
-<h4 id="orgceb5401"><span class="section-number-4">4.3.1.</span> Exercise:</h4>
+<div id="outline-container-orge3c7a65" class="outline-4">
+<h4 id="orge3c7a65"><span class="section-number-4">4.3.1.</span> Exercise:</h4>
 <div class="outline-text-4" id="text-4-3-1">
 <p>
 From a command prompt, launch emacspeak with a new program in a
@@ -1937,9 +1873,8 @@ will talk in certain situations and with certain elements of code.
 </div>
 </div>
 </div>
-
-<div id="outline-container-org987bf3e" class="outline-2">
-<h2 id="org987bf3e"><span class="section-number-2">5.</span> Onto the wide wide world:</h2>
+<div id="outline-container-org131d615" class="outline-2">
+<h2 id="org131d615"><span class="section-number-2">5.</span> Onto the wide wide world:</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 Emacspeak lets you have access to all elements of the internet.
@@ -1950,10 +1885,8 @@ support for this functionality.  We will explore some of this in the
 next few sections.
 </p>
 </div>
-
-
-<div id="outline-container-org6fc259e" class="outline-3">
-<h3 id="org6fc259e"><span class="section-number-3">5.1.</span> How about a chat?</h3>
+<div id="outline-container-org5d4a1d0" class="outline-3">
+<h3 id="org5d4a1d0"><span class="section-number-3">5.1.</span> How about a chat?</h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 Chatting with Emacspeak is truly a breeze.  You won't believe how easy
@@ -2013,9 +1946,8 @@ shortcuts for when you don't know them but you can get away without
 ever visiting it.
 </p>
 </div>
-
-<div id="outline-container-org64f930a" class="outline-4">
-<h4 id="org64f930a"><span class="section-number-4">5.1.1.</span> Actual chatting tips</h4>
+<div id="outline-container-org16d5844" class="outline-4">
+<h4 id="org16d5844"><span class="section-number-4">5.1.1.</span> Actual chatting tips</h4>
 <div class="outline-text-4" id="text-5-1-1">
 <p>
 Once you have joined a channel, you will want to monitor it so you
@@ -2045,10 +1977,8 @@ your erc session.  And that's all there is to it!
 </div>
 </div>
 </div>
-
-
-<div id="outline-container-org39e0711" class="outline-3">
-<h3 id="org39e0711"><span class="section-number-3">5.2.</span> Let's browse the web.</h3>
+<div id="outline-container-orge206df3" class="outline-3">
+<h3 id="orge206df3"><span class="section-number-3">5.2.</span> Let's browse the web.</h3>
 <div class="outline-text-3" id="text-5-2">
 <p>
 In the words of Emacspeak's author DR. T. V. Raman, "There are many
@@ -2124,9 +2054,8 @@ one priceless gem you will find quite useful which I will discuss in
 the next subsection.
 </p>
 </div>
-
-<div id="outline-container-org4b148fd" class="outline-4">
-<h4 id="org4b148fd"><span class="section-number-4">5.2.1.</span> Url Templates</h4>
+<div id="outline-container-org222539a" class="outline-4">
+<h4 id="org222539a"><span class="section-number-4">5.2.1.</span> Url Templates</h4>
 <div class="outline-text-4" id="text-5-2-1">
 <p>
 One of Emacspeak's greatest strengths is how it presents you with
@@ -2166,8 +2095,8 @@ Bookshare search:
 </ol>
 </div>
 </div>
-<div id="outline-container-orgfe8f7f9" class="outline-4">
-<h4 id="orgfe8f7f9"><span class="section-number-4">5.2.2.</span> Exercise.</h4>
+<div id="outline-container-org7033181" class="outline-4">
+<h4 id="org7033181"><span class="section-number-4">5.2.2.</span> Exercise.</h4>
 <div class="outline-text-4" id="text-5-2-2">
 <ol class="org-ol">
 <li>There is a lot more to w3 and Emacspeak than what I covered here.  Take a few moments and explore it thoroughly using the info pages, and by googling for more information online.  Conveniently, there's a google search URL.  Try putting it to use in this way and use your newfound knowledge to browse the resultant page.</li>
@@ -2176,9 +2105,8 @@ Bookshare search:
 </div>
 </div>
 </div>
-
-<div id="outline-container-orgd86ba6f" class="outline-3">
-<h3 id="orgd86ba6f"><span class="section-number-3">5.3.</span> Sending e-mail</h3>
+<div id="outline-container-org43f1714" class="outline-3">
+<h3 id="org43f1714"><span class="section-number-3">5.3.</span> Sending e-mail</h3>
 <div class="outline-text-3" id="text-5-3">
 <p>
 If you have a setup on your linux box that enables you to send and
@@ -2234,9 +2162,8 @@ lists.
 </div>
 </div>
 </div>
-
-<div id="outline-container-org2f43f3e" class="outline-2">
-<h2 id="org2f43f3e"><span class="section-number-2">6.</span> Retreat into your shell, why don't you?</h2>
+<div id="outline-container-org88c730c" class="outline-2">
+<h2 id="org88c730c"><span class="section-number-2">6.</span> Retreat into your shell, why don't you?</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 Emacspeak grants you access to a shell from within Emacs by making it
@@ -2285,9 +2212,8 @@ convenient, right?
 </p>
 </div>
 </div>
-
-<div id="outline-container-org21cee48" class="outline-2">
-<h2 id="org21cee48"><span class="section-number-2">7.</span> File Management</h2>
+<div id="outline-container-orga227b73" class="outline-2">
+<h2 id="orga227b73"><span class="section-number-2">7.</span> File Management</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 Emacs has a very nice file management mode called dired Mode.  It's
@@ -2320,15 +2246,14 @@ choose by hitting alt grave.
 </p>
 </div>
 </div>
-
-<div id="outline-container-org4d49a54" class="outline-2">
-<h2 id="org4d49a54"><span class="section-number-2">8.</span> Playing media files in Emacspeak</h2>
+<div id="outline-container-orgefcee9e" class="outline-2">
+<h2 id="orgefcee9e"><span class="section-number-2">8.</span> Playing media files in Emacspeak</h2>
 <div class="outline-text-2" id="text-8">
 <p>
 Note: This section was written by Dave Hunt.  Some very minor
 modifications to sentence structure were made to fit into this
 tutorial as a whole but, I've changed as little as I could of his
-original content.  Thanks, Dave!&#x2014;Alex Midence
+original content.  Thanks, Dave!&mdash;Alex Midence
 </p>
 
 <p>
@@ -2347,7 +2272,7 @@ into '~/.emacs', here it is:
 
 <p>
 #+BEGIN<sub>SRC</sub> emacs-lisp 
-;;; mark here&#x2026;  Fore emms.  (require 'emms-setup) (emms-all)
+;;; mark here&hellip;  Fore emms.  (require 'emms-setup) (emms-all)
 ;;; (emms-default-players) (setq emms-source-file-default-directory
 ;;; "~/Music/") end lisp code #+END<sub>SRC</sub>
 </p>
@@ -2389,10 +2314,8 @@ where I use rhythmbox.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-orga37a243" class="outline-2">
-<h2 id="orga37a243"><span class="section-number-2">9.</span> Wrapping it up</h2>
+<div id="outline-container-org5812da2" class="outline-2">
+<h2 id="org5812da2"><span class="section-number-2">9.</span> Wrapping it up</h2>
 <div class="outline-text-2" id="text-9">
 <p>
 When I set out to write this little tutorial, it was out of a desire
@@ -2454,10 +2377,8 @@ such postings.
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-org1cd7808" class="outline-2">
-<h2 id="org1cd7808"><span class="section-number-2">10.</span> Acknowledgements</h2>
+<div id="outline-container-org439803e" class="outline-2">
+<h2 id="org439803e"><span class="section-number-2">10.</span> Acknowledgements</h2>
 <div class="outline-text-2" id="text-10">
 <p>
 I'd like to thank some people specifically for their help in filling
@@ -2485,14 +2406,12 @@ technical levels.</dd>
 </dl>
 </div>
 </div>
-
-
-<div id="outline-container-org1633df5" class="outline-2">
-<h2 id="org1633df5"><span class="section-number-2">11.</span> Appendices</h2>
+<div id="outline-container-org9cde120" class="outline-2">
+<h2 id="org9cde120"><span class="section-number-2">11.</span> Appendices</h2>
 <div class="outline-text-2" id="text-11">
 </div>
-<div id="outline-container-org0c0784f" class="outline-3">
-<h3 id="org0c0784f"><span class="section-number-3">11.1.</span> Installing Emacspeak</h3>
+<div id="outline-container-org1fc4d71" class="outline-3">
+<h3 id="org1fc4d71"><span class="section-number-3">11.1.</span> Installing Emacspeak</h3>
 <div class="outline-text-3" id="text-11-1">
 <p>
 This tutorial was written for users of the Vinux distribution of Linux
@@ -2502,8 +2421,8 @@ build it up yourself, the following supplemental sections will walk
 you through doing just that.
 </p>
 </div>
-<div id="outline-container-org0710214" class="outline-4">
-<h4 id="org0710214"><span class="section-number-4">11.1.1.</span> Using Synaptic</h4>
+<div id="outline-container-orge8d6732" class="outline-4">
+<h4 id="orge8d6732"><span class="section-number-4">11.1.1.</span> Using Synaptic</h4>
 <div class="outline-text-4" id="text-11-1-1">
 <p>
 This section assumes prior experience using the Synaptic package
@@ -2532,15 +2451,13 @@ line using emacspeak.</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-orge13a8b7" class="outline-4">
-<h4 id="orge13a8b7"><span class="section-number-4">11.1.2.</span> Using the command line</h4>
+<div id="outline-container-org2830163" class="outline-4">
+<h4 id="org2830163"><span class="section-number-4">11.1.2.</span> Using the command line</h4>
 <div class="outline-text-4" id="text-11-1-2">
 <p>
 In Vinux, installing Emacspeak is as easy as:
 #+BEGIN<sub>EXAMPLE</sub>
-</p>
-<p>
-sudo apt-get install emacspeak #+END<sub>EXAMPLE</sub>
+    sudo apt-get install emacspeak #+END<sub>EXAMPLE</sub>
 </p>
 
 <p>
@@ -2563,9 +2480,7 @@ follows:
 <p>
 example:
 #+BEGIN<sub>EXAMPLE</sub>
-</p>
-<p>
-apt-get install emacs apt-get install emacspeak #+END<sub>EXAMPLE</sub>
+    apt-get install emacs apt-get install emacspeak #+END<sub>EXAMPLE</sub>
 </p>
 
 <p>
@@ -2580,13 +2495,12 @@ able to launch Emacspeak from the console command prompt.
 </div>
 </div>
 </div>
-
-<div id="outline-container-org9c7dd64" class="outline-3">
-<h3 id="org9c7dd64"><span class="section-number-3">11.2.</span> Emacs and Emacspeak links:  For when you want to go fishing</h3>
+<div id="outline-container-org3173e09" class="outline-3">
+<h3 id="org3173e09"><span class="section-number-3">11.2.</span> Emacs and Emacspeak links:  For when you want to go fishing</h3>
 <div class="outline-text-3" id="text-11-2">
 <p>
 "Give someone a fish, and you have fed them for a meal.  Teach them to
-fish and you have fed them for life."&#x2013;Somebody very smart.
+fish and you have fed them for life."&ndash;Somebody very smart.
 </p>
 
 <p>
@@ -2627,7 +2541,7 @@ Now, go fish!
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Alex Midence</p>
-<p class="date">Created: 2021-11-28 Sun 07:13</p>
+<p class="date">Created: 2026-07-25 Sat 00:07</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
