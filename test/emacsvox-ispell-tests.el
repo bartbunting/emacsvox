@@ -141,5 +141,73 @@
     (should (= calls 1))
     (should (equal events '((call (3 12)))))))
 
+(ert-deftest emacsvox-ispell-word-advice-is-directly-registered ()
+  "Ispell word advice bypasses the compatibility bridge."
+  (should
+   (advice-member-p
+    #'emacsvox--advice-ispell-word-around
+    'ispell-word))
+  (should-not
+   (gethash
+    '(ispell-word :around emacsvox--advice-ispell-word-around)
+    ems--modern-advice-wrappers)))
+
+(ert-deftest emacsvox-ispell-word-runs-once-with-interactive-feedback ()
+  "Interactive word checking runs once and preserves feedback order."
+  (let ((ems--interactive-fn-name 'ispell-word)
+        (emacsvox-speak-messages t)
+        (calls 0)
+        events)
+    (cl-progv '(emacsvox-last-message) '("stale")
+      (cl-letf (((symbol-function 'emacsvox-speak-message-again)
+                 (lambda () (push 'speak-message events)))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events))))
+        (should
+         (eq
+          'word-result
+          (emacsvox--advice-ispell-word-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push
+              (list
+               'call arguments inhibit-message
+               emacsvox-speak-messages
+               (symbol-value 'emacsvox-last-message))
+              events)
+             'word-result)
+           t nil 'continue t)))))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((call (t nil continue t) t nil nil)
+        speak-message
+        (icon task-done))))))
+
+(ert-deftest emacsvox-ispell-word-programmatic-call-is-quiet ()
+  "Programmatic word checking runs once without changing message state."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        events)
+    (cl-progv '(emacsvox-last-message) '("stale")
+      (cl-letf (((symbol-function 'emacsvox-speak-message-again)
+                 (lambda () (push 'speak-message events)))
+                ((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events))))
+        (should
+         (eq
+          'word-result
+          (emacsvox--advice-ispell-word-around
+           (lambda (&rest arguments)
+             (cl-incf calls)
+             (push (list 'call arguments) events)
+             'word-result)
+           nil t))))
+      (should
+       (equal (symbol-value 'emacsvox-last-message) "stale")))
+    (should (= calls 1))
+    (should (equal events '((call (nil t)))))))
+
 (provide 'emacsvox-ispell-tests)
 ;;; emacsvox-ispell-tests.el ends here

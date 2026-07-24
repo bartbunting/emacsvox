@@ -58,6 +58,8 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 
+(defvar emacsvox-last-message)
+
 ;;;   ispell command cl-loop:
 
 ;; defun ispell-command-loop (miss guess word start end)
@@ -155,19 +157,21 @@ many available corrections."
  'ispell-region :around #'emacsvox--advice-ispell-region-around
  '((name . emacsvox)))
 
-(defun ems--ispell-word-around (orig-fun &rest args)
+(defun emacsvox--advice-ispell-word-around (original &rest arguments)
   "Produce auditory icons for ispell."
-  (let ((result (apply orig-fun args)))
-    
-    (cond
-     ((ems-interactive-p)
+  (if (ems-interactive-p 'ispell-word)
       (let ((dtk-stop-immediately t))
         (setq emacsvox-last-message nil)
-        (ems-with-messages-silenced (apply orig-fun args))
-        (emacsvox-speak-message-again) (emacsvox-icon 'task-done)))
-     (t (apply orig-fun args)))
-    result))
+        (let ((result
+               (ems-with-messages-silenced
+                 (apply original arguments))))
+          (emacsvox-speak-message-again)
+          (emacsvox-icon 'task-done)
+          result))
+    (apply original arguments)))
 
-(advice-add 'ispell-word :around #'ems--ispell-word-around)
+(advice-add
+ 'ispell-word :around #'emacsvox--advice-ispell-word-around
+ '((name . emacsvox)))
 
 (provide 'emacsvox-ispell)
