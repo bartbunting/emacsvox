@@ -46,6 +46,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'desktop)
 ;;; Interactive Command: Preserve buffer
 ;;;###autoload
 (defun emacsvox-desktop-preserve (buffer)
@@ -58,26 +59,30 @@
 
 ;;;   desktop
 
-(defun ems--desktop-clear-after (&rest _)
+(defun emacsvox--advice-desktop-clear-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'desktop-clear)
     (emacsvox-speak-mode-line) (dtk-notify "cleared desktop")
     (emacsvox-icon 'delete-object)))
 
-(advice-add 'desktop-clear :after #'ems--desktop-clear-after)
+(advice-add 'desktop-clear :after
+            #'emacsvox--advice-desktop-clear-after)
 
-(defun ems--desktop-save-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'save-object)))
+(defun emacsvox--advice-desktop-save-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'desktop-save)
+    (emacsvox-icon 'save-object)))
 
-(advice-add 'desktop-save :after #'ems--desktop-save-after)
+(advice-add 'desktop-save :after
+            #'emacsvox--advice-desktop-save-after)
 
-(defun ems--desktop-lazy-create-buffer-around (orig-fun &rest args)
+(defun emacsvox--advice-desktop-lazy-create-buffer-around
+    (orig-fun &rest args)
   "Silence messages."
   (ems-with-messages-silenced (apply orig-fun args)))
 
 (advice-add 'desktop-lazy-create-buffer :around
-            #'ems--desktop-lazy-create-buffer-around)
+            #'emacsvox--advice-desktop-lazy-create-buffer-around)
 
 (provide 'emacsvox-desktop)
 ;;;  end of file
-

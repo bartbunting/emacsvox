@@ -143,6 +143,7 @@
   (require 'emacsvox-gomoku-tests)
   (require 'emacsvox-eudc-tests)
   (require 'emacsvox-texinfo-tests)
+  (require 'emacsvox-desktop-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
