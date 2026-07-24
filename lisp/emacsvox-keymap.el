@@ -94,9 +94,6 @@
 (defvar emacsvox-keymap nil
   "Primary emacsvox keymap. ")
 
-(defvaralias 'emacsvox-dtk-submap 'emacsvox-tts-submap
-  "Legacy name for `emacsvox-tts-submap'.")
-
 (defvar emacsvox-tts-submap nil
   "Submap used for TTS commands. ")
 
@@ -107,8 +104,6 @@
 
 (define-prefix-command  'emacsvox-keymap)
 (define-prefix-command   'emacsvox-tts-submap)
-(declare-function emacsvox-tts-submap "emacsvox-keymap")
-(defalias 'emacsvox-dtk-submap #'emacsvox-tts-submap)
 (define-prefix-command  'emacsvox-table-submap-command
                         'emacsvox-table-submap)
 

@@ -10,6 +10,13 @@ Author: T. V. Raman <tv.raman.tv@gmail.com>
 
 This version requires Emacs-29.1 or later.
 
+** TTS Prefix Map Rename
+
+The generic speech prefix map is now ~emacsvox-tts-submap~.  The former
+~emacsvox-dtk-submap~ name has been removed without a compatibility alias.
+User configuration that binds or inspects that map must use the new name.
+The default _C-e d_ key sequence is unchanged.
+
 ** Search From Calendar
 
 You can perform before/after  Web and Youtube searches from within the

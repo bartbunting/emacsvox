@@ -15,13 +15,10 @@
   (should
    (eq (lookup-key emacsvox-keymap "d") 'emacsvox-tts-submap)))
 
-(ert-deftest emacsvox-keymap-retains-legacy-tts-prefix-alias ()
-  "The legacy public prefix name resolves to the canonical TTS map."
-  (should (eq emacsvox-dtk-submap emacsvox-tts-submap))
-  (should
-   (eq
-    (indirect-function 'emacsvox-dtk-submap)
-    (indirect-function 'emacsvox-tts-submap))))
+(ert-deftest emacsvox-keymap-removes-legacy-tts-prefix-name ()
+  "The legacy public prefix name is intentionally unavailable."
+  (should-not (boundp 'emacsvox-dtk-submap))
+  (should-not (fboundp 'emacsvox-dtk-submap)))
 
 (ert-deftest emacsvox-keymap-uses-canonical-tts-commands ()
   "Generic speech bindings use canonical commands; DECtalk remains explicit."

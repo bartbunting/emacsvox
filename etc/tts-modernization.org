@@ -62,6 +62,10 @@ Repository code moves completely to canonical names.  Legacy function and
 variable names are temporarily collected in one compatibility module rather
 than spread throughout the implementation.
 
+The prefix-map rename is an intentional immediate break:
+=emacsvox-dtk-submap= has no compatibility alias.  User configuration must use
+=emacsvox-tts-submap= instead; the default =C-e d= key sequence is unchanged.
+
 Variable aliases must preserve dynamic bindings, buffer-local values, default
 values, and Custom settings.  Function aliases preserve direct calls, but
 advice attached to a legacy alias does not intercept an internal call made

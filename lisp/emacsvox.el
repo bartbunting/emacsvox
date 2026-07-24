@@ -364,7 +364,7 @@ Commands invoked with prefix \\`C-e' provide the primary Emacsvox interface.
 
 Commands invoked with prefix \\`C-e d' control text-to-speech.
 
-\\{emacsvox-dtk-submap}
+\\{emacsvox-tts-submap}
 
 Emacsvox provides a set of additional keymaps to give easy access to
 Emacs' extensive facilities.  All of these bindings can be customized
