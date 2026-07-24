@@ -51,20 +51,33 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
- '(
-   typo-insert-quotation-mark typo-cycle-dashes typo-cycle-ellipsis
-   typo-cycle-left-angle-brackets typo-cycle-left-single-quotation-mark
-   typo-cycle-multiplication-signs typo-cycle-right-angle-brackets
-   typo-cycle-right-single-quotation-mark typo-cycle-spaces)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-this-char (preceding-char))))))
+(defconst emacsvox-typo--advice-targets
+  '(typo-insert-quotation-mark typo-cycle-dashes typo-cycle-ellipsis
+    typo-cycle-left-angle-brackets typo-cycle-left-single-quotation-mark
+    typo-cycle-multiplication-signs typo-cycle-right-angle-brackets
+    typo-cycle-right-single-quotation-mark typo-cycle-spaces)
+  "Current Typo commands that receive native advice.")
+
+(dolist (target emacsvox-typo--advice-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Speak the character inserted by `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-speak-this-char (preceding-char)))))))
+
+(defun emacsvox-typo--install-advice ()
+  "Install native advice after Typo loads."
+  (dolist (target emacsvox-typo--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'typo
+  (emacsvox-typo--install-advice))
 
 (provide 'emacsvox-typo)
 ;;;  end of file
-
