@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Eterm on 2026-07-24 on branch =bart=:
+Ispell and Widget on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 511 passing ERT tests;
+- the Emacs 31 suite contains 534 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -79,18 +79,24 @@ Eterm on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-eterm.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-ispell.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-widget.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         276 |    98 |
-| =ad-get-arg=        |          59 |   n/a |
+| =defadvice=         |         275 |    97 |
+| =ad-get-arg=        |          52 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          37 |   n/a |
-| =ad-return-value=   |          23 |   n/a |
-| =advice-add=        |        1349 |   157 |
-| =ems-interactive-p= |        1396 |   176 |
+| =ad-do-it=          |          31 |   n/a |
+| =ad-return-value=   |          21 |   n/a |
+| =advice-add=        |        1351 |   157 |
+| =ems-interactive-p= |        1395 |   176 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -111,10 +117,10 @@ Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
 integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, Eshell, and Which-Key are
-also converted, along with Eterm.
+also converted, along with Eterm, Ispell, and Widget.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 43 files still contain
+completely independent of the compatibility bridge; 41 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -274,6 +280,22 @@ only text inserted by that call, and preserves the original result.  The
 =term-emulate-terminal= wrapper receives its native =proc= and =str= arguments
 directly, retains the reference live-process gate and feedback cases, calls the
 terminal emulator exactly once, and preserves its result.
+
+The Ispell conversion covers all six current Emacs 31 targets.  Command-loop
+feedback now receives the native misspelling, choice, and buffer-position
+arguments directly.  Buffer, region, comments-and-strings, help, and word
+operations call their originals exactly once and preserve their return values.
+In particular, =ispell-word= no longer invokes the spelling operation up to
+three times while gathering interactive feedback.
+
+The Widget conversion covers all nine current Emacs 31 targets.  Motion,
+button, text-conversion, and setup advice now uses direct named registration
+and explicit interactive targets.  Echo-help, end-of-line, and ordinary button
+presses call their originals exactly once; the EWW custom button executor
+retains its reference-defined replacement semantics.  Text conversion
+preserves the widget returned by the original operation.  Widget setup now
+repairs the actual field and text keymaps rather than iterating over quoted
+keymap variable names, restoring the intended bindings.
 
 Continue by migrating remaining built-in integration modules before optional
 third-party integrations.  The compatibility bridge remains necessary until
