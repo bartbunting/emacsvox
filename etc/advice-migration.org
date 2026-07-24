@@ -38,9 +38,10 @@ must become conservative and test-driven before further bulk use.
 As of the completed core-file migration and built-in integration slices through
 Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris, CPerl, IDO,
 CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary, Transient,
-Archive Mode, Tar Mode, and Sh Script on 2026-07-24 on branch =bart=:
+Archive Mode, Tar Mode, Sh Script, Re Builder, Kmacro, Hideshow, Dired, NXML,
+EPA, Ruby, ERC, Info, and Solitaire on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 666 passing ERT tests;
+- the Emacs 31 suite contains 728 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -162,18 +163,48 @@ Archive Mode, Tar Mode, and Sh Script on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-sh-script.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-re-builder.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-kmacro.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-hideshow.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-dired.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-nxml.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-epa.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-ruby.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-erc.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-info.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-solitaire.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         260 |    92 |
-| =ad-get-arg=        |          38 |   n/a |
+| =defadvice=         |         250 |    89 |
+| =ad-get-arg=        |          34 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          27 |   n/a |
+| =ad-do-it=          |          26 |   n/a |
 | =ad-return-value=   |          17 |   n/a |
-| =advice-add=        |        1195 |   157 |
-| =ems-interactive-p= |        1200 |   176 |
+| =advice-add=        |        1189 |   157 |
+| =ems-interactive-p= |        1185 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -194,13 +225,13 @@ The previous checkpoint used "converted" for some modules at the
 native-advice-installed stage.  Those modules remain in this inventory until
 they satisfy the final-form gate.
 
-As of 2026-07-24, 32 Emacs-bundled integration modules remain: 15 legacy or
-positional modules and 17 helper-cleanup modules.
+As of 2026-07-24, 22 Emacs-bundled integration modules remain: 11 legacy or
+positional modules and 11 helper-cleanup modules.
 
 | State                | Modules |
 |----------------------+---------|
-| legacy or positional | =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =newsticker=, =nxml=, =perl=, =ruby=, =supercite=, =todo-mode=, =treesit= |
-| helper cleanup       | =calc=, =desktop=, =dired=, =eudc=, =flymake=, =hideshow=, =info=, =kmacro=, =package=, =re-builder=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tempo=, =texinfo=, =woman= |
+| legacy or positional | =eglot=, =enriched=, =flyspell=, =gomoku=, =gud=, =lua=, =newsticker=, =perl=, =supercite=, =todo-mode=, =treesit= |
+| helper cleanup       | =calc=, =desktop=, =eudc=, =flymake=, =package=, =ses=, =sgml-mode=, =sql=, =tempo=, =texinfo=, =woman= |
 
 =emacsvox-entertain.el= is tracked separately because it combines built-in
 Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
@@ -230,11 +261,13 @@ also converted, along with Eterm, Ispell, Widget, RST, RefTeX, BS, BibTeX, and
 Bookmark.  Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris,
 CPerl, IDO, CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary,
 Transient, Archive Mode, Tar Mode, and Sh Script are now also fully final-form.
+Re Builder, Kmacro, Hideshow, Dired, NXML, EPA, Ruby, ERC, Info, and Solitaire
+are now also fully final-form.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge; modules in the inventory above still require final-form
-work.  Repository-wide, 31 files still contain bridge compatibility symbols.
+work.  Repository-wide, 29 files still contain bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
@@ -521,6 +554,46 @@ registrations, moves here-document feedback to =sh--maybe-here-document=, and
 calls that hook exactly once.  Removed Sh-specific indentation and newline
 commands are covered by existing generic Emacsvox advice, while ordinary
 character echo remains handled by =emacsvox-post-self-insert-hook=.
+
+The Re Builder conversion covers all nine current targets.  Automatic regexp
+updates remain unconditional, while command feedback is explicitly
+target-aware.  The Kmacro conversion covers eight current targets and corrects
+two around wrappers that previously executed their keyboard macro twice.  Its
+module-specific =call-last-kbd-macro= helper now has a distinct name so it
+coexists with the core feedback for the same command.
+
+The Hideshow conversion covers seven current targets and omits the absent
+=hs-show-region= command.  Dired's remaining hand-written advice now uses
+direct named registration; sorting and file visiting call their original
+operations exactly once, and the removed =dired-quit= command remains
+unadvised.
+
+The NXML conversion covers 23 current commands and omits the noncommands
+=nxml-backward-single-paragraph= and
+=nxml-backward-single-balanced-item=.  Electric slash and completion wrappers
+call their originals exactly once.  The EPA conversion covers all 36 current
+targets: 26 operations use once-only message-silencing around advice and ten
+commands use direct target-aware after advice.
+
+The Ruby conversion covers eight callable Emacs 31 targets without recreating
+the removed =ruby-mark-defun=, =ruby-insert-end=,
+=ruby-reindent-then-newline-and-indent=, or =ruby-electric-brace= commands.
+Optional inferior-Ruby feedback is installed only after the external
+=inf-ruby= package loads.
+
+The ERC conversion moves message monitoring to the current =erc-insert-line=
+API and server-message silencing to =erc-parse-server-response=.  The parser
+now runs exactly once and preserves its result.  The conversion also corrects
+the old ambiguous =C-c SPC= spelling, which otherwise made the module fail to
+load before defining the remaining =C-c= prefix bindings.
+
+The Info conversion covers 28 current interactive commands.  It omits the
+noncommand =Info-select-node=, the variable =Info-menu-last-node=, and the
+obsolete =Info-exit= alias; Info quitting uses the existing core
+=quit-window= feedback.  The Solitaire conversion covers six live targets,
+retains unconditional feedback for completed stone moves, and relies on the
+existing =quit-window= integration in place of the removed =solitaire-quit=
+command.
 
 Continue by migrating remaining built-in integration modules before optional
 third-party integrations.  The compatibility bridge remains necessary until
