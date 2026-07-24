@@ -103,33 +103,50 @@
 
 ;;;  Advice Help:
 
-(defun ems--sage-shell-help:describe-symbol-after (&rest _)
+(defvar emacsvox-sage--advice nil
+  "Current Sage shell targets and their native advice functions.")
+(setq emacsvox-sage--advice nil)
+
+(defun emacsvox--advice-sage-shell-help:describe-symbol-after (&rest _)
   "speak."
   (with-current-buffer (window-buffer (selected-window))
     (emacsvox-icon 'help) (emacsvox-speak-buffer)))
 
-(advice-add 'sage-shell-help:describe-symbol :after
-            #'ems--sage-shell-help:describe-symbol-after)
+(push '(sage-shell-help:describe-symbol :after
+        emacsvox--advice-sage-shell-help:describe-symbol-after)
+      emacsvox-sage--advice)
 
-(cl-loop
- for f in
- '(
-   sage-shell-help:forward-history sage-shell-help:backward-history
+(defun emacsvox-sage--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-sage--advice))))
+
+(defun emacsvox-sage--help-feedback ()
+  "Speak a Sage help buffer."
+  (emacsvox-icon 'help)
+  (emacsvox-speak-buffer))
+
+(emacsvox-sage--register-after-group
+ '(sage-shell-help:forward-history sage-shell-help:backward-history
    sage-shell:help)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)
-       (emacsvox-speak-buffer)))))
+ #'emacsvox-sage--help-feedback)
 
 (emacsvox-icon 'help)
 
 ;;;  Advice sage-edit:
 
-(cl-loop
- for f in
+(defun emacsvox-sage--task-feedback ()
+  "Announce completion of a Sage task."
+  (emacsvox-icon 'task-done))
+
+(emacsvox-sage--register-after-group
  '(
    sage-shell-blocks:send-current
    sage-shell-edit:load-current-file
@@ -146,108 +163,104 @@
    sage-shell-edit:send-line-and-go
    sage-shell-edit:send-region
    sage-shell-edit:send-region-and-go)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+ #'emacsvox-sage--task-feedback)
 
-(cl-loop
- for f in
- '(sage-shell-edit:send-line sage-shell-edit:send-line*)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done))
-     (sit-for 0.1)
-     (emacsvox-sage-speak-output))))
+(dolist (target '(sage-shell-edit:send-line sage-shell-edit:send-line*))
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Speak output after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-icon 'task-done))
+        (sit-for 0.1)
+        (emacsvox-sage-speak-output)))
+    (push (list target :after advice-function) emacsvox-sage--advice)))
 
 ;;;  sage-mode navigation:
 
-(cl-loop
- for f in
+(defun emacsvox-sage--movement-feedback ()
+  "Speak after moving through Sage blocks."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-sage--register-after-group
  '(sage-shell-blocks:forward sage-shell-blocks:backward)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+ #'emacsvox-sage--movement-feedback)
 
 ;;;  sage comint interaction:
 
-(defun ems--sage-shell:list-outputs-after (&rest _)
+(defun emacsvox--advice-sage-shell:list-outputs-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sage-shell:list-outputs)
     (with-current-buffer (window-buffer (selected-window))
       (emacsvox-icon 'open-object) (emacsvox-speak-line))))
 
-(advice-add 'sage-shell:list-outputs :after
-            #'ems--sage-shell:list-outputs-after)
+(push '(sage-shell:list-outputs :after
+        emacsvox--advice-sage-shell:list-outputs-after)
+      emacsvox-sage--advice)
 
-(defun ems--sage-shell:delchar-or-maybe-eof-around
+(defun emacsvox--advice-sage-shell:delchar-or-maybe-eof-around
     (orig-fun &rest args)
-  "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (cond
-       ((= (point) (point-max))
-        (message "Sending EOF to comint process"))
-       (t (dtk-tone-deletion) (emacsvox-speak-char t)))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+  "Speak the character deleted by ORIG-FUN, which is called once."
+  (when (ems-interactive-p 'sage-shell:delchar-or-maybe-eof)
+    (if (= (point) (point-max))
+        (message "Sending EOF to comint process")
+      (dtk-tone-deletion)
+      (emacsvox-speak-char t)))
+  (apply orig-fun args))
 
-(advice-add 'sage-shell:delchar-or-maybe-eof :around
-            #'ems--sage-shell:delchar-or-maybe-eof-around)
+(push '(sage-shell:delchar-or-maybe-eof :around
+        emacsvox--advice-sage-shell:delchar-or-maybe-eof-around)
+      emacsvox-sage--advice)
 
-(defun ems--sage-shell:delete-output-after (&rest _)
+(defun emacsvox--advice-sage-shell:delete-output-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sage-shell:delete-output)
     (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
 
-(advice-add 'sage-shell:delete-output :after
-            #'ems--sage-shell:delete-output-after)
+(push '(sage-shell:delete-output :after
+        emacsvox--advice-sage-shell:delete-output-after)
+      emacsvox-sage--advice)
 
-(cl-loop
- for f in
+(defun emacsvox-sage--run-feedback ()
+  "Speak after starting a Sage process."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-sage--register-after-group
  '(sage-shell:run-new-sage sage-shell:run-sage)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-mode-line)))))
+ #'emacsvox-sage--run-feedback)
 
-(defun ems--sage-shell:copy-previous-output-to-kill-ring-after
+(defun emacsvox--advice-sage-shell:copy-previous-output-to-kill-ring-after
     (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sage-shell:copy-previous-output-to-kill-ring)
     (emacsvox-icon 'yank-object)
     (call-interactively #'emacsvox-speak-current-kill)))
 
-(advice-add 'sage-shell:copy-previous-output-to-kill-ring :after
-            #'ems--sage-shell:copy-previous-output-to-kill-ring-after)
+(push '(sage-shell:copy-previous-output-to-kill-ring :after
+        emacsvox--advice-sage-shell:copy-previous-output-to-kill-ring-after)
+      emacsvox-sage--advice)
 
-(defun ems--sage-shell:send-input-after (&rest _)
+(defun emacsvox--advice-sage-shell:send-input-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sage-shell:send-input)
     (sit-for 0.01) (accept-process-output)
     (emacsvox-sage-speak-output) (emacsvox-icon 'close-object)))
 
-(advice-add 'sage-shell:send-input :after
-            #'ems--sage-shell:send-input-after)
+(push '(sage-shell:send-input :after
+        emacsvox--advice-sage-shell:send-input-after)
+      emacsvox-sage--advice)
 
 ;;;  sage sagetext:
 
-(cl-loop
- for f in
+(defun emacsvox-sage--sagetex-feedback ()
+  "Speak after completing a SageTeX task."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-sage--register-after-group
  '(sage-shell-sagetex:compile-current-file
    sage-shell-sagetex:compile-file
    sage-shell-sagetex:error-mode
@@ -256,13 +269,19 @@
    sage-shell-sagetex:run-latex-and-load-current-file
    sage-shell-sagetex:run-latex-and-load-file
    sage-shell-sagetex:send-environment)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-mode-line)))))
+ #'emacsvox-sage--sagetex-feedback)
+
+(defun emacsvox-sage--install-advice ()
+  "Install advice for Sage shell features loaded so far."
+  (dolist (entry emacsvox-sage--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(sage-shell-mode sage-shell-blocks))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-sage--install-advice))))
 
 ;;;  Additional Interactive Commands:
 
@@ -294,4 +313,3 @@
 
 (provide 'emacsvox-sage)
 ;;;  end of file
-

@@ -228,6 +228,7 @@
   (require 'emacsvox-related-tests)
   (require 'emacsvox-rg-tests)
   (require 'emacsvox-rpm-spec-tests)
+  (require 'emacsvox-sage-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
