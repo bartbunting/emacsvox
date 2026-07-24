@@ -110,53 +110,74 @@
   eat-xterm-paste
   )
 
+(defconst emacsvox-eat--yank-targets
+  '(eat-yank eat-yank-from-kill-ring)
+  "Eat commands that yank terminal input.")
+
 (cl-loop
- for f in 
- '(eat-yank eat-yank-from-kill-ring)
+ for target in emacsvox-eat--yank-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Icon."
-     ad-do-it
-     (when (ems-interactive-p) (emacsvox-icon 'yank-object))
-     ad-return-value)))
+  `(defun ,advice-function (&rest _)
+     ,(format "Play a yank icon after `%s'." target)
+     (when (ems-interactive-p ',target)
+       (emacsvox-icon 'yank-object)))))
 
-(defun ems--eat-reload-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-eat-reload-after (&rest _)
+  "Speak after reloading Eat."
+  (when (ems-interactive-p 'eat-reload)
     (emacsvox-icon 'task-done) (dtk-speak "Reloaded Eat")))
 
-(advice-add 'eat-reload :after #'ems--eat-reload-after)
-
-(defun ems--eat-reset-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-eat-reset-after (&rest _)
+  "Speak after resetting Eat."
+  (when (ems-interactive-p 'eat-reset)
     (emacsvox-icon 'task-done) (dtk-speak "Reset Eat")))
 
-(advice-add 'eat-reset :after #'ems--eat-reset-after)
+(defconst emacsvox-eat--mode-targets
+  '(eat-blink-mode eat-char-mode eat-emacs-mode
+    eat-eshell-char-mode eat-eshell-emacs-mode eat-eshell-mode
+    eat-eshell-semi-char-mode eat-eshell-visual-command-mode
+    eat-line-mode eat-mode eat-semi-char-mode
+    eat-trace-mode eat-trace-replay-mode)
+  "Eat mode-switching commands that receive speech feedback.")
 
 (cl-loop
- for f in
- '(
-   eat-blink-mode eat-char-mode eat-emacs-mode
-   eat-eshell-char-mode eat-eshell-emacs-mode eat-eshell-mode
-   eat-eshell-semi-char-mode eat-eshell-visual-command-mode
-   eat-line-mode eat-mode eat-semi-char-mode
-   eat-trace-mode eat-trace-replay-mode)
+ for target in emacsvox-eat--mode-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak after `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'button)
-       (message "%s " ,(symbol-name f))))))
+       (message "%s " ,(symbol-name target))))))
 
-(defun ems--eat-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-eat-after (&rest _)
+  "Speak after opening Eat."
+  (when (ems-interactive-p 'eat)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'eat :after #'ems--eat-after)
+(defconst emacsvox-eat--advice-targets
+  (append emacsvox-eat--yank-targets
+          '(eat-reload eat-reset)
+          emacsvox-eat--mode-targets
+          '(eat))
+  "Current Eat targets that receive native after advice.")
+
+(defun emacsvox-eat--install-advice ()
+  "Install native advice after the optional Eat package loads."
+  (dolist (target emacsvox-eat--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'eat
+  (emacsvox-eat--install-advice))
 
 ;;; Speech-Enable Terminal Emulation:
 
