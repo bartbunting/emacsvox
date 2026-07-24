@@ -41,10 +41,10 @@ CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary, Transient,
 Archive Mode, Tar Mode, Sh Script, Re Builder, Kmacro, Hideshow, Dired, NXML,
 EPA, Ruby, ERC, Info, Solitaire, SQL, Flyspell, Supercite, Lua, SGML Mode,
 Newsticker, Calc, Gomoku, Package, EUDC, Texinfo, Desktop, Flymake, SES, Tempo,
-WoMan, Eglot, Enriched, GUD, Perl, Todo Mode, and Treesit on 2026-07-24 on
-branch =bart=:
+WoMan, Eglot, Enriched, GUD, Perl, Todo Mode, Treesit, and Entertainment on
+2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 802 passing ERT tests;
+- the Emacs 31 suite contains 809 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -262,17 +262,20 @@ branch =bart=:
 - =lisp/emacsvox-treesit.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-entertain.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         239 |    80 |
-| =ad-get-arg=        |          24 |   n/a |
+| =defadvice=         |         238 |    79 |
+| =ad-get-arg=        |          23 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          24 |   n/a |
-| =ad-return-value=   |          14 |   n/a |
-| =advice-add=        |        1188 |   158 |
+| =ad-do-it=          |          22 |   n/a |
+| =ad-return-value=   |          13 |   n/a |
+| =advice-add=        |        1189 |   158 |
 | =ems-interactive-p= |        1180 |   176 |
 
 ** Remaining Emacs-bundled inventory
@@ -295,10 +298,36 @@ native-advice-installed stage.  As of 2026-07-24, no Emacs-bundled integration
 module remains in either the legacy-or-positional or helper-cleanup state; all
 modules in this inventory satisfy the final-form gate.
 
-=emacsvox-entertain.el= is tracked separately because it combines built-in
-Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
-and removal of the compatibility bridge are also separate from this
+The separately tracked =emacsvox-entertain.el= integration is also final-form.
+Its built-in Doctor and Dunnet advice remains lazily loaded, and optional
+Hangman advice and bindings are deferred until that package loads.  Emacsvox
+core files and removal of the compatibility bridge remain separate from this
 integration-module count.
+
+** Remaining third-party inventory
+
+As of 2026-07-24, 92 third-party integrations remain: 80 legacy-or-positional
+modules and 12 helper-cleanup modules.
+
+The legacy-or-positional modules are:
+
+=2048=, =abc-mode=, =ace-window=, =annotate=, =auctex=, =avy=, =bbdb=,
+=calibredb=, =chess=, =cider=, =clojure=, =combobulate=, =consult=, =corfu=,
+=deadgrep=, =devdocs=, =dumb-jump=, =eat=, =ebuku=, =ein=, =elfeed=,
+=elisp-refs=, =ellama=, =elpher=, =elpy=, =emms=, =empv=, =enwc=, =ess=,
+=evil=, =exwm=, =ffip=, =flycheck=, =folding=, =forge=, =geiser=,
+=gh-explorer=, =go-mode=, =google=, =haskell=, =helpful=, =hide-lines=,
+=iedit=, =ivy=, =journalctl=, =js2=, =lispy=, =magit=, =markdown=, =mines=,
+=mu4e=, =multiple-cursors=, =muse=, =notmuch=, =nov=, =orgalist=, =paradox=,
+=pipewire=, =popup=, =projectile=, =py=, =racket=, =related=, =rg=,
+=rpm-spec=, =rust-mode=, =sage=, =sdcv=, =slime=, =smartparens=, =sudoku=,
+=syslog=, =threes=, =typo=, =vdiff=, =vertico=, =vterm=, =we=, =xkcd=, and
+=yasnippet=.
+
+The helper-cleanup modules are:
+
+=browse-kill-ring=, =company=, =denote=, =embark=, =gnuplot=, =gptel=, =helm=,
+=hydra=, =marginalia=, =maths=, =pydoc=, and =yaml=.
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -328,10 +357,12 @@ are now also fully final-form.  SQL, Flyspell, Supercite, Lua, SGML Mode,
 Newsticker, Calc, Gomoku, Package, EUDC, and Texinfo complete the next eleven
 built-in slices.  Desktop, Flymake, SES, Tempo, WoMan, Eglot, Enriched, GUD,
 Perl, Todo Mode, and Treesit complete the remaining bundled-module inventory.
+Entertainment completes the separately tracked Doctor, Dunnet, and optional
+Hangman integration.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
-compatibility bridge.  Repository-wide, 23 files still contain bridge
+compatibility bridge.  Repository-wide, 22 files still contain bridge
 compatibility symbols.
 
 The SQL conversion calls each send command exactly once and defers optional
