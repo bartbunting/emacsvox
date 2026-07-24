@@ -39,9 +39,11 @@ As of the completed core-file migration and built-in integration slices through
 Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris, CPerl, IDO,
 CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary, Transient,
 Archive Mode, Tar Mode, Sh Script, Re Builder, Kmacro, Hideshow, Dired, NXML,
-EPA, Ruby, ERC, Info, and Solitaire on 2026-07-24 on branch =bart=:
+EPA, Ruby, ERC, Info, Solitaire, SQL, Flyspell, Supercite, Lua, SGML Mode,
+Newsticker, Calc, Gomoku, Package, EUDC, and Texinfo on 2026-07-24 on branch
+=bart=:
 
-- the Emacs 31 suite contains 728 passing ERT tests;
+- the Emacs 31 suite contains 772 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -193,18 +195,51 @@ EPA, Ruby, ERC, Info, and Solitaire on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-solitaire.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-sql.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-flyspell.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-supercite.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-lua.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-sgml-mode.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-newsticker.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-calc.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-gomoku.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-package.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-eudc.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-texinfo.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         250 |    89 |
-| =ad-get-arg=        |          34 |   n/a |
+| =defadvice=         |         244 |    85 |
+| =ad-get-arg=        |          26 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          26 |   n/a |
+| =ad-do-it=          |          25 |   n/a |
 | =ad-return-value=   |          17 |   n/a |
-| =advice-add=        |        1189 |   157 |
-| =ems-interactive-p= |        1185 |   176 |
+| =advice-add=        |        1183 |   157 |
+| =ems-interactive-p= |        1180 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -225,13 +260,13 @@ The previous checkpoint used "converted" for some modules at the
 native-advice-installed stage.  Those modules remain in this inventory until
 they satisfy the final-form gate.
 
-As of 2026-07-24, 22 Emacs-bundled integration modules remain: 11 legacy or
-positional modules and 11 helper-cleanup modules.
+As of 2026-07-24, 11 Emacs-bundled integration modules remain: 6 legacy or
+positional modules and 5 helper-cleanup modules.
 
 | State                | Modules |
 |----------------------+---------|
-| legacy or positional | =eglot=, =enriched=, =flyspell=, =gomoku=, =gud=, =lua=, =newsticker=, =perl=, =supercite=, =todo-mode=, =treesit= |
-| helper cleanup       | =calc=, =desktop=, =eudc=, =flymake=, =package=, =ses=, =sgml-mode=, =sql=, =tempo=, =texinfo=, =woman= |
+| legacy or positional | =eglot=, =enriched=, =gud=, =perl=, =todo-mode=, =treesit= |
+| helper cleanup       | =desktop=, =flymake=, =ses=, =tempo=, =woman= |
 
 =emacsvox-entertain.el= is tracked separately because it combines built-in
 Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
@@ -262,12 +297,24 @@ Bookmark.  Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris,
 CPerl, IDO, CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary,
 Transient, Archive Mode, Tar Mode, and Sh Script are now also fully final-form.
 Re Builder, Kmacro, Hideshow, Dired, NXML, EPA, Ruby, ERC, Info, and Solitaire
-are now also fully final-form.
+are now also fully final-form.  SQL, Flyspell, Supercite, Lua, SGML Mode,
+Newsticker, Calc, Gomoku, Package, EUDC, and Texinfo complete the next eleven
+built-in slices.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge; modules in the inventory above still require final-form
-work.  Repository-wide, 29 files still contain bridge compatibility symbols.
+work.  Repository-wide, 25 files still contain bridge compatibility symbols.
+
+The SQL conversion calls each send command exactly once and defers optional
+SQLPlus advice until that package loads.  Flyspell similarly defers the
+optional Flyspell Correct integration and fixes the auto-correct wrapper's
+duplicate original calls.  Supercite, Calc, Gomoku, Package, and EUDC now
+preserve original return values while avoiding duplicate calls.  Newsticker
+targets the current Emacs 31 URL callback and omits obsolete callback and timer
+targets.  Texinfo replaces the removed =TeXinfo-insert-environment= command
+with the current =texinfo-insert-block= command.  Lua and SGML Mode now use
+direct, target-aware native advice throughout.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
