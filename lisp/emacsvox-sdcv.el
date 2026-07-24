@@ -133,12 +133,12 @@
    do
    (emacsvox-keymap-update sdcv-mode-map binding)))
 
-(defun ems--sdcv-quit-after (&rest _)
+(defun emacsvox--advice-sdcv-quit-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sdcv-quit)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'sdcv-quit :after #'ems--sdcv-quit-after)
+(advice-add 'sdcv-quit :after #'emacsvox--advice-sdcv-quit-after)
 
 (when (bound-and-true-p sdcv-mode-map)
   (emacsvox-sdcv-setup))

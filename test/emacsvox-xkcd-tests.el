@@ -30,6 +30,20 @@
           "comic.png" 42)))
     (should (= calls 1))))
 
+(ert-deftest emacsvox-xkcd-kill-feedback-is-target-aware ()
+  "XKCD close feedback is limited to its interactive command."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'mode-line events))))
+      (let ((ems--interactive-fn-name 'other-command))
+        (emacsvox--advice-xkcd-kill-buffer-after))
+      (should-not events)
+      (let ((ems--interactive-fn-name 'xkcd-kill-buffer))
+        (emacsvox--advice-xkcd-kill-buffer-after))
+      (should (equal (nreverse events) '(close-object mode-line))))))
+
 (ert-deftest emacsvox-xkcd-browser-advice-uses-url-argument ()
   "Browser advice sends URL to EWW without calling its original."
   (let ((original-calls 0)

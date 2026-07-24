@@ -128,5 +128,12 @@
           (should (equal result '(nil t))))
       (emacsvox-test--remove-native-advice target advice))))
 
+(ert-deftest emacsvox-unicode-cache-advice-is-native ()
+  "Unicode data caching uses its native around-advice function directly."
+  (should
+   (advice-member-p
+    #'emacsvox--advice-describe-char-unicode-data-around
+    'describe-char-unicode-data)))
+
 (provide 'emacsvox-advice-tests)
 ;;; emacsvox-advice-tests.el ends here

@@ -463,23 +463,28 @@ and return a suitable effect structure." name)
 
 (require 'emacsvox-preamble)
 
-(defun ems--sox-open-file-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'select-object)))
+(defun emacsvox--advice-sox-open-file-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'sox-open-file)
+    (emacsvox-icon 'select-object)))
 
-(advice-add 'sox-open-file :after #'ems--sox-open-file-after)
+(advice-add 'sox-open-file :after #'emacsvox--advice-sox-open-file-after)
 
-(defun ems--sox-refresh-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(defun emacsvox--advice-sox-refresh-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'sox-refresh)
+    (emacsvox-icon 'task-done)))
 
-(advice-add 'sox-refresh :after #'ems--sox-refresh-after)
+(advice-add 'sox-refresh :after #'emacsvox--advice-sox-refresh-after)
 
-(defun ems--sox-delete-effect-at-point-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
+(defun emacsvox--advice-sox-delete-effect-at-point-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'sox-delete-effect-at-point)
+    (emacsvox-icon 'delete-object)))
 
 (advice-add 'sox-delete-effect-at-point :after
-            #'ems--sox-delete-effect-at-point-after)
+            #'emacsvox--advice-sox-delete-effect-at-point-after)
 
 (provide 'emacsvox-sox)
 
 ;;;  end of file
-

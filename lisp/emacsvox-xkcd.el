@@ -60,7 +60,7 @@
 
 (defun emacsvox--advice-xkcd-kill-buffer-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'xkcd-kill-buffer)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
 (defvar xkcd-transcript nil

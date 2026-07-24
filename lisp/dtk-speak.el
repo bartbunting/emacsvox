@@ -1958,7 +1958,8 @@ dtk-unicode-untouched-charsets."
 (defvar dtk-unicode-cache (make-hash-table)
   "Cache for unicode data lookups.")
 
-(defun ems--describe-char-unicode-data-around (orig-fun char &rest args)
+(defun emacsvox--advice-describe-char-unicode-data-around
+    (orig-fun char &rest args)
   "Cache result."
   (let ((result (gethash char dtk-unicode-cache 'not-found)))
     (if (eq result 'not-found)
@@ -1968,7 +1969,7 @@ dtk-unicode-untouched-charsets."
       result)))
 
 (advice-add 'describe-char-unicode-data :around
-            #'ems--describe-char-unicode-data-around)
+            #'emacsvox--advice-describe-char-unicode-data-around)
 
 (defun dtk-unicode-name-for-char (char)
   "Return unicode name for character CHAR. "
