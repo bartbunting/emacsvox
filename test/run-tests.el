@@ -149,6 +149,7 @@
   (require 'emacsvox-woman-tests)
   (require 'emacsvox-eglot-tests)
   (require 'emacsvox-enriched-tests)
+  (require 'emacsvox-gud-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

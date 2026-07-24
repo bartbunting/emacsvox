@@ -43,10 +43,11 @@
 
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'gud)
 
 ;;;   Advise key helpers:
 
-(defun ems--gud-display-line-after (&rest _)
+(defun emacsvox--advice-gud-display-line-after (&rest _)
   "Speak the error line"
   
   (let ((marker gud-overlay-arrow-position))
@@ -56,32 +57,59 @@
            (set-buffer (marker-buffer marker))
            (goto-char (marker-position marker)) (emacsvox-speak-line)))))
 
-(advice-add 'gud-display-line :after #'ems--gud-display-line-after)
+(advice-add 'gud-display-line :after
+            #'emacsvox--advice-gud-display-line-after)
+
+(defconst emacsvox-gud--command-targets
+  '(gud-break
+    gud-tbreak
+    gud-remove
+    gud-step
+    gud-stepi
+    gud-next
+    gud-nexti
+    gud-cont
+    gud-finish
+    gud-jump)
+  "Debugger commands that receive quiet execution feedback.")
 
 (cl-loop
- for f in
- '(
-   gud-break
-   gud-tbreak
-   gud-remove
-   gud-step
-   gud-stepi
-   gud-next
-   gud-nexti
-   gud-cont
-   gud-finish
-   gud-jump
-   )
+ for target in emacsvox-gud--command-targets
+ for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Silence minibuffer message that echoes command."
+  `(defun ,function (orig-fun &rest args)
+     "Run a generated GUD command quietly, then cue its dispatch."
      (ems-with-messages-silenced
-      ad-do-it
-      (emacsvox-icon 'select-object)
-      ad-return-value))))
+      (let ((result (apply orig-fun args)))
+        (emacsvox-icon 'select-object)
+        result)))))
+
+(defun emacsvox-gud--install-command-advice ()
+  "Attach advice to the GUD commands defined by the active debugger."
+  (dolist (target emacsvox-gud--command-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :around function)))))
+
+(dolist
+    (hook
+     '(gud-gdb-mode-hook
+       sdb-mode-hook
+       dbx-mode-hook
+       xdb-mode-hook
+       perldb-mode-hook
+       pdb-mode-hook
+       guiler-mode-hook
+       jdb-mode-hook
+       lldb-mode-hook))
+  (add-hook hook #'emacsvox-gud--install-command-advice))
+
+;; Handle a debugger that was started before this integration loaded.
+(emacsvox-gud--install-command-advice)
 
 ;;;  Advise interactive commands:
 
 (provide  'emacsvox-gud)
-
