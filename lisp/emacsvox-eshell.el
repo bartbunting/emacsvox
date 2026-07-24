@@ -81,7 +81,7 @@
 (defun emacsvox--advice-eshell-after (&rest _)
   "Announce switching to shell mode.\nProvide an auditory icon if possible."
   (when (ems-interactive-p 'eshell)
-    (emacsvox-icon 'open-object) (dtk-set-punctuations 'all)
+    (emacsvox-icon 'open-object) (tts-set-punctuations 'all)
     (or dtk-split-caps (dtk-toggle-split-caps))
     (emacsvox-pronounce-refresh-pronunciations)
     (emacsvox-speak-line)))

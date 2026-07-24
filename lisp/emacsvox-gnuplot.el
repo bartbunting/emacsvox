@@ -149,7 +149,7 @@
 
 (add-hook 'gnuplot-mode-hook
           #'(lambda nil
-              (dtk-set-punctuations 'all)))
+              (tts-set-punctuations 'all)))
 
 (provide 'emacsvox-gnuplot)
 ;;;  end of file

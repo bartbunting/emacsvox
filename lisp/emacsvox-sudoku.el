@@ -357,7 +357,7 @@ s   Sub-square Distribution.
   "Speech-enable SuDoKu.\n  for details."
   (setq emacsvox-sudoku-history-stack nil)
   (when (ems-interactive-p 'sudoku)
-    (dtk-set-punctuations 'some) (emacsvox-icon 'open-object)
+    (tts-set-punctuations 'some) (emacsvox-icon 'open-object)
     (emacsvox-sudoku-speak-current-cell-value)))
 
 (defvar emacsvox-sudoku-history-stack nil

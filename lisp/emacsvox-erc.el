@@ -240,7 +240,7 @@ set the current local value to the result.")
           (when msg
             (emacsvox-icon 'progress)
             (message "%s" msg)
-            (tts-with-punctuations dtk-punctuation-mode
+            (tts-with-punctuations tts-punctuation-mode
               (tts-speak msg))))))))
 
 (advice-add 'erc-insert-line :after
@@ -351,7 +351,7 @@ set the current local value to the result.")
     #'(lambda (pattern)
         (format "%s wides "
                 (substring pattern 0 -1)))))
-  (dtk-set-punctuations 'some))
+  (tts-set-punctuations 'some))
 
 (provide 'emacsvox-erc)
 

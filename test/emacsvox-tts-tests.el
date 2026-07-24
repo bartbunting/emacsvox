@@ -58,15 +58,19 @@
     dtk-tone)
   "Removed DECtalk-era names for generic tones and silence.")
 
+(defconst emacsvox-test--legacy-punctuation-functions
+  '(dtk-set-punctuations
+    dtk-set-punctuations-to-all
+    dtk-set-punctuations-to-some
+    dtk-toggle-punctuation-mode)
+  "Removed DECtalk-era names for generic punctuation commands.")
+
 (defconst emacsvox-test--tts-public-aliases
   '((tts-get-style . dtk-get-style)
     (tts-get-voice-for-face . dtk-get-voice-for-face)
     (tts-speak-using-voice . dtk-speak-using-voice)
     (tts-dispatch . dtk-dispatch)
     (tts-set-rate . dtk-set-rate)
-    (tts-set-punctuations . dtk-set-punctuations)
-    (tts-set-punctuations-to-all . dtk-set-punctuations-to-all)
-    (tts-set-punctuations-to-some . dtk-set-punctuations-to-some)
     (tts-reset-state . dtk-reset-state)
     (tts-initialize . dtk-initialize)
     (tts-add-cleanup-pattern . dtk-add-cleanup-pattern)
@@ -79,7 +83,6 @@
     (tts-toggle-caps . dtk-toggle-caps)
     (tts-toggle-speak-nonprinting-chars
      . dtk-toggle-speak-nonprinting-chars)
-    (tts-toggle-punctuation-mode . dtk-toggle-punctuation-mode)
     (tts-select-server . dtk-select-server)
     (tts-cloud . dtk-cloud)
     (tts-local-server . dtk-local-server)
@@ -175,7 +178,7 @@
 
 (ert-deftest emacsvox-tts-protocol-synchronizes-buffer-state ()
   "The synchronization command snapshots the current speech state."
-  (let ((dtk-punctuation-mode 'none)
+  (let ((tts-punctuation-mode 'none)
         (dtk-split-caps t)
         (dtk-caps nil)
         (dtk-speech-rate 210))
@@ -283,6 +286,13 @@
   "Generic tones and silence no longer expose DECtalk-era names."
   (dolist (function emacsvox-test--legacy-audio-cue-functions)
     (should-not (fboundp function))))
+
+(ert-deftest emacsvox-tts-legacy-punctuation-api-is-removed ()
+  "Generic punctuation state and commands no longer expose DTK names."
+  (dolist (function emacsvox-test--legacy-punctuation-functions)
+    (should-not (fboundp function)))
+  (should-not (boundp 'dtk-punctuation-mode))
+  (should-not (boundp 'dtk-punctuation-mode-alist)))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."

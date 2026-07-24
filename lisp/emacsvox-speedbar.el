@@ -244,7 +244,7 @@ An automatically updating speedbar consumes resources.")
   "Actions taken when we enter the Speedbar"
   (cl-declare (special speedbar-mode-map
                        speedbar-hide-button-brackets-flag))
-  (dtk-set-punctuations 'all)
+  (tts-set-punctuations 'all)
   (setq speedbar-hide-button-brackets-flag t)
   (define-key speedbar-mode-map "f"
               'emacsvox-speedbar-click)

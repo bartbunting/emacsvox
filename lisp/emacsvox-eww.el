@@ -298,7 +298,7 @@
 ;; @item *
 ;; @command{eww-add-bookmark}
 ;; Bookmark current Web page.
-;; @item = @command{dtk-toggle-punctuation-mode}
+;; @item = @command{tts-toggle-punctuation-mode}
 ;; Toggle punctuation mode.
 ;; @item ?
 ;; @command{emacsvox-google-similar-to-this-page}
@@ -634,7 +634,7 @@ Safari/537.36"
      ("*" eww-add-bookmark)
      ("," emacsvox-eww-previous-h)
      ("." emacsvox-eww-next-h)
-     ("/" dtk-toggle-punctuation-mode)
+     ("/" tts-toggle-punctuation-mode)
      ("1" emacsvox-eww-next-h1)
      ("2" emacsvox-eww-next-h2)
      ("3" emacsvox-eww-next-h3)
@@ -831,14 +831,14 @@ are available are cued by an auditory icon on the header line."
          (s emacsvox-eww-style))
       (kill-buffer)
       (add-hook 'emacsvox-eww-post-hook
-                #'(lambda nil (dtk-set-punctuations 'all)
+                #'(lambda nil (tts-set-punctuations 'all)
                     (dtk-set-rate r))
                 'at-end)
       (emacsvox-feeds-feed-display u s 'speak)))
    ((and (eww-current-url) emacsvox-eww-url-template)
     (let ((n emacsvox-eww-url-template) (r dtk-speech-rate))
       (add-hook 'emacsvox-eww-post-hook
-                #'(lambda nil (dtk-set-punctuations 'all)
+                #'(lambda nil (tts-set-punctuations 'all)
                     (dtk-set-rate r))
                 'at-end)
       (kill-buffer)
@@ -1005,7 +1005,7 @@ are available are cued by an auditory icon on the header line."
        
        (setq emacsvox-we-xpath-filter
              emacsvox-we-paragraphs-xpath-filter)
-       (dtk-set-punctuations-to-some)
+       (tts-set-punctuations-to-some)
        (emacsvox-speak-windowful))
    'at-end))
 
@@ -2330,7 +2330,7 @@ via command `org-insert-link' bound to \\[org-insert-link]."
   (interactive)
   
   (dtk-set-rate (+ dtk-speech-rate-base (* dtk-speech-rate-step  3)))
-  (dtk-set-punctuations 'all)
+  (tts-set-punctuations 'all)
   (when dtk-split-caps(dtk-toggle-split-caps))
   (emacsvox-speak-rest-of-buffer))
 

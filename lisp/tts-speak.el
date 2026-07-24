@@ -80,14 +80,10 @@
   "Canonical name for the shared character pronunciation table.")
 (defvaralias 'tts-caps 'dtk-caps
   "Canonical name for buffer-local capitalization feedback.")
-(defvaralias 'tts-punctuation-mode-alist 'dtk-punctuation-mode-alist
-  "Canonical name for supported punctuation modes.")
 (defvaralias 'tts-speech-rate 'dtk-speech-rate
   "Canonical name for the current buffer-local speech rate.")
 (defvaralias 'tts-stop-immediately 'dtk-stop-immediately
   "Canonical name for immediate speech interruption state.")
-(defvaralias 'tts-punctuation-mode 'dtk-punctuation-mode
-  "Canonical name for buffer-local punctuation state.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
 (defvaralias 'tts-chunk-separator-syntax 'dtk-chunk-separator-syntax
@@ -113,13 +109,13 @@ mac for MAC TTS (default on Mac)")
 (defmacro tts-with-punctuations (setting &rest body)
   "Set punctuation  and exec   body."
   (declare (indent 1) (debug t))
-  `(let ((save-punctuation-mode dtk-punctuation-mode))
+  `(let ((save-punctuation-mode tts-punctuation-mode))
      (unless (eq ,setting save-punctuation-mode)
        (tts--protocol-set-punctuations ,setting)
-       (setq dtk-punctuation-mode ,setting))
+       (setq tts-punctuation-mode ,setting))
      ,@body
      (unless (eq ,setting save-punctuation-mode)
-       (setq dtk-punctuation-mode save-punctuation-mode)
+       (setq tts-punctuation-mode save-punctuation-mode)
        (tts--protocol-set-punctuations save-punctuation-mode))))
 
 ;;;;  silence
@@ -179,7 +175,7 @@ mac for MAC TTS (default on Mac)")
   (process-send-string
    tts-speaker-process
    (format "tts_sync_state %s %s %s %s\n"
-           dtk-punctuation-mode
+           tts-punctuation-mode
            (if dtk-split-caps 1 0)
            (if dtk-caps 1 0)
            dtk-speech-rate)))
@@ -319,7 +315,7 @@ Capitalized words are preceded by `cap', and upper-case words are
 Use dtk-toggle-caps
 bound to \\[dtk-toggle-caps].")
 
-(defconst dtk-punctuation-mode-alist
+(defconst tts-punctuation-mode-alist
   '("some" "all" "none")
   "List of  punctuation modes.")
 
@@ -1030,7 +1026,7 @@ value, and then set the current local value to the result.")
 Interactive PREFIX arg means toggle the global default
 value, and then set the current local value to the result.")
 
-(defun dtk-set-punctuations (mode &optional prefix)
+(defun tts-set-punctuations (mode &optional prefix)
   "Set punctuation mode to MODE.
 Possible values are `some', `all', or `none'.
 Interactive PREFIX arg means set   the global default value, and then set the
@@ -1039,49 +1035,49 @@ current local  value to the result."
    (list
     (intern
      (completing-read "Enter punctuation mode: "
-                      dtk-punctuation-mode-alist
+                      tts-punctuation-mode-alist
                       nil
                       t))
     current-prefix-arg))
   (when (process-live-p tts-speaker-process)
     (cond
      (prefix
-      (setq dtk-punctuation-mode mode)
-      (setq-default dtk-punctuation-mode mode))
-     (t (make-local-variable 'dtk-punctuation-mode)
-        (setq dtk-punctuation-mode mode)))
+      (setq tts-punctuation-mode mode)
+      (setq-default tts-punctuation-mode mode))
+     (t (make-local-variable 'tts-punctuation-mode)
+        (setq tts-punctuation-mode mode)))
     (tts--protocol-set-punctuations mode)
     (when (called-interactively-p 'interactive)
       (message "set punctuation mode to %s %s"
                mode
                (if prefix "" "locally")))))
 
-(defun dtk-set-punctuations-to-all (&optional prefix)
+(defun tts-set-punctuations-to-all (&optional prefix)
   "Set punctuation  mode to all.
 Interactive PREFIX arg sets punctuation mode globally."
   (interactive "P")
-  (dtk-set-punctuations 'all prefix))
+  (tts-set-punctuations 'all prefix))
 
-(defun dtk-set-punctuations-to-some (&optional prefix)
+(defun tts-set-punctuations-to-some (&optional prefix)
   "Set punctuation  mode to some.
 Interactive PREFIX arg sets punctuation mode globally."
   (interactive "P")
-  (dtk-set-punctuations 'some prefix))
+  (tts-set-punctuations 'some prefix))
 
-(defun dtk-toggle-punctuation-mode (&optional prefix)
+(defun tts-toggle-punctuation-mode (&optional prefix)
   "Toggle punctuation mode between \"some\" and \"all\".
 Interactive PREFIX arg makes the new setting global."
   (interactive "P")
   
   (cond
-   ((eq 'all dtk-punctuation-mode)
-    (dtk-set-punctuations-to-some prefix))
-   ((eq 'some dtk-punctuation-mode)
-    (dtk-set-punctuations-to-all prefix)))
+   ((eq 'all tts-punctuation-mode)
+    (tts-set-punctuations-to-some prefix))
+   ((eq 'some tts-punctuation-mode)
+    (tts-set-punctuations-to-all prefix)))
   (when (called-interactively-p 'interactive)
     (emacsvox-icon 'button)
     (message "set punctuation mode to %s %s"
-             dtk-punctuation-mode
+             tts-punctuation-mode
              (if prefix "" "locally"))))
 
 (defun dtk-reset-state ()
@@ -1108,9 +1104,9 @@ important to be interrupted.")
 (defvar tts-notify-process nil
   "Notify speaker  process handle.")
 
-(defvar-local dtk-punctuation-mode 'all
+(defvar-local tts-punctuation-mode 'all
   "Punctuation state (some, all or none).
-Set by \\[dtk-set-punctuations].")
+Set by \\[tts-set-punctuations].")
 
 (defvar dtk-servers-alist nil
   "Speech servers.")
@@ -1663,7 +1659,7 @@ unless   `dtk-quiet' is set to t. "
           (dtk-scratch-buffer (get-buffer-create " *dtk-scratch-buffer* "))
           (start 1)
           (end nil)
-          (mode dtk-punctuation-mode)
+          (mode tts-punctuation-mode)
           (voice-lock voice-lock-mode)) ; done snapshotting
       (with-current-buffer dtk-scratch-buffer
         (setq buffer-undo-list  t)
@@ -1680,7 +1676,7 @@ unless   `dtk-quiet' is set to t. "
          buffer-invisibility-spec invisibility-spec
          dtk-chunk-separator-syntax chunk-sep
          dtk-speech-rate speech-rate
-         dtk-punctuation-mode mode
+         tts-punctuation-mode mode
          dtk-split-caps split-caps
          dtk-caps caps
          dtk-speak-nonprinting-chars inherit-speak-nonprinting-chars
@@ -2117,9 +2113,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-speak-using-voice #'dtk-speak-using-voice)
 (defalias 'tts-dispatch #'dtk-dispatch)
 (defalias 'tts-set-rate #'dtk-set-rate)
-(defalias 'tts-set-punctuations #'dtk-set-punctuations)
-(defalias 'tts-set-punctuations-to-all #'dtk-set-punctuations-to-all)
-(defalias 'tts-set-punctuations-to-some #'dtk-set-punctuations-to-some)
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)
 (defalias 'tts-add-cleanup-pattern #'dtk-add-cleanup-pattern)
@@ -2133,7 +2126,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias
  'tts-toggle-speak-nonprinting-chars
  #'dtk-toggle-speak-nonprinting-chars)
-(defalias 'tts-toggle-punctuation-mode #'dtk-toggle-punctuation-mode)
 (defalias 'tts-select-server #'dtk-select-server)
 (defalias 'tts-cloud #'dtk-cloud)
 (defalias 'tts-local-server #'dtk-local-server)

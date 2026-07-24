@@ -178,7 +178,7 @@
 
 (add-hook 'cperl-mode-hook
           #'(lambda ()
-              (dtk-set-punctuations 'all)
+              (tts-set-punctuations 'all)
               (or dtk-split-caps
                   (dtk-toggle-split-caps))
               (or emacsvox-audio-indentation

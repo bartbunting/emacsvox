@@ -88,7 +88,7 @@ many available corrections."
                                             (line-end-position))))
     (with-temp-buffer
       (setq voice-lock-mode t) (setq buffer-undo-list t)
-      (dtk-set-punctuations 'all) (insert line)
+      (tts-set-punctuations 'all) (insert line)
       (cond
        ((< (length choices) emacsvox-ispell-max-choices)
         (cl-loop for choice in choices and position from 0 do

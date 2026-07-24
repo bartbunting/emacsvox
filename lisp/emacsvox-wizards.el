@@ -388,7 +388,7 @@ To leave, press \\[keyboard-quit]."
   (interactive)
   (describe-function 'emacsvox)
   (switch-to-buffer "*Help*")
-  (dtk-set-punctuations 'all)
+  (tts-set-punctuations 'all)
   (emacsvox-speak-buffer))
 
 ;;;  Frame Nav:

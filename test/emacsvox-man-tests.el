@@ -43,7 +43,7 @@
   "Man mode setup runs for normal internal mode initialization."
   (with-temp-buffer
     (let (events)
-      (cl-letf (((symbol-function 'dtk-set-punctuations)
+      (cl-letf (((symbol-function 'tts-set-punctuations)
                  (lambda (value) (push (list 'punctuations value) events)))
                 ((symbol-function
                   'emacsvox-pronounce-refresh-pronunciations)

@@ -41,7 +41,7 @@
   "Entering Sh mode configures speech and announces the mode."
   (let ((emacsvox-audio-indentation nil)
         events)
-    (cl-letf (((symbol-function 'dtk-set-punctuations)
+    (cl-letf (((symbol-function 'tts-set-punctuations)
                (lambda (value) (push (list 'punctuation value) events)))
               ((symbol-function 'emacsvox-toggle-audio-indentation)
                (lambda ()

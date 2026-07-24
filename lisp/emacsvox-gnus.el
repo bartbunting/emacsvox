@@ -113,7 +113,7 @@ instead you hear only the first screenful."
 
 (defun emacsvox-gnus-speak-article-body ()
   (cl-declare (special emacsvox-gnus-large-article
-                       voice-lock-mode dtk-punctuation-mode
+                       voice-lock-mode tts-punctuation-mode
                        gnus-article-buffer))
   (with-current-buffer gnus-article-buffer
     (goto-char (point-min))
@@ -748,7 +748,7 @@ Helps to prevent words from being spelled instead of spoken."
  (add-hook
   hook 
   #'(lambda ()
-      (dtk-set-punctuations emacsvox-gnus-punctuation-mode)
+      (tts-set-punctuations emacsvox-gnus-punctuation-mode)
       (emacsvox-pronounce-refresh-pronunciations))))
 
 ;;;  rdc: mapping font faces to personalities 

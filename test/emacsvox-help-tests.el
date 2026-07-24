@@ -266,7 +266,7 @@
   "Interactive tutorial display configures and speaks its window in order."
   (let ((ems--interactive-fn-name 'help-with-tutorial)
         events)
-    (cl-letf (((symbol-function 'dtk-set-punctuations)
+    (cl-letf (((symbol-function 'tts-set-punctuations)
                (lambda (mode) (push (list 'punctuations mode) events)))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))

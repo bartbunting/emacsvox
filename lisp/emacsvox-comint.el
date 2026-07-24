@@ -129,7 +129,7 @@ Interactive PREFIX arg means toggle the global default value. ")
            (propertize "Autospeak" 'personality voice-lighten))
          (when (> (length (window-list)) 1)
            (format "%s" (length (window-list)))))))))
-  (dtk-set-punctuations 'all)
+  (tts-set-punctuations 'all)
   (emacsvox-pronounce-add-dictionary-entry
    'comint-mode
    emacsvox-pronounce-uuid-pattern

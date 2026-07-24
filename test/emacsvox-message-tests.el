@@ -36,7 +36,7 @@
         (ems--message-filter "\\`never-match\\'")
         (minibuffer-message-overlay nil)
         (inhibit-message nil)
-        (dtk-punctuation-mode 'all)
+        (tts-punctuation-mode 'all)
         (calls 0)
         events)
     (cl-letf (((symbol-function 'current-message)

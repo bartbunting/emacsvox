@@ -54,7 +54,7 @@
 (ert-deftest emacsvox-wdired-finish-feedback-preserves-order ()
   "Committing Wdired changes cues before speaking confirmation."
   (let ((ems--interactive-fn-name 'wdired-finish-edit)
-        (dtk-punctuation-mode 'some)
+        (tts-punctuation-mode 'some)
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
@@ -70,7 +70,7 @@
 (ert-deftest emacsvox-wdired-word-feedback-is-target-aware ()
   "Only the matching interactive Wdired case command speaks."
   (let ((ems--interactive-fn-name 'wdired-capitalize-word)
-        (dtk-punctuation-mode 'some)
+        (tts-punctuation-mode 'some)
         events)
     (cl-letf (((symbol-function 'tts-speak)
                (lambda (text) (push text events))))

@@ -673,7 +673,7 @@
   (let ((ems--interactive-fn-name 'battery)
         (emacsvox-speak-messages t)
         (inhibit-message nil)
-        (dtk-punctuation-mode 'some)
+        (tts-punctuation-mode 'some)
         (calls 0)
         events)
     (cl-letf (((symbol-function 'tts-speak)

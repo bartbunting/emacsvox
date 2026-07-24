@@ -322,7 +322,7 @@ Optional interactive prefix arg prompts for a filename."
   (dtk-set-rate
    (+ dtk-speech-rate-base
       (* dtk-speech-rate-step  3)))
-  (dtk-set-punctuations 'some)
+  (tts-set-punctuations 'some)
   (emacsvox-icon 'open-object)
   (emacsvox-pronounce-add-local-entry "0" "o")
   (emacsvox-2048-speak-board))

@@ -66,7 +66,7 @@
   (with-temp-buffer
     (insert "bad line")
     (let (spoken)
-      (cl-letf (((symbol-function 'dtk-set-punctuations)
+      (cl-letf (((symbol-function 'tts-set-punctuations)
                  (lambda (&rest _)))
                 ((symbol-function 'tts-speak)
                  (lambda (text) (setq spoken text))))

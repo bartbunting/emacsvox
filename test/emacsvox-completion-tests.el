@@ -257,7 +257,7 @@
   (with-temp-buffer
     (insert "foo")
     (let ((ems--interactive-fn-name 'minibuffer-complete)
-          (dtk-punctuation-mode 'all)
+          (tts-punctuation-mode 'all)
           (calls 0)
           events)
       (cl-letf (((symbol-function 'emacsvox-kill-buffer-carefully)
@@ -301,7 +301,7 @@
   (with-temp-buffer
     (insert "foo")
     (let ((ems--interactive-fn-name nil)
-          (dtk-punctuation-mode 'all)
+          (tts-punctuation-mode 'all)
           (calls 0)
           events)
       (cl-letf (((symbol-function 'tts-speak)
@@ -361,7 +361,7 @@
   "Interactive dabbrev feedback waits for output before speaking expansion."
   (let ((ems--interactive-fn-name 'dabbrev-expand)
         (dabbrev--last-expansion "expanded")
-        (dtk-punctuation-mode 'all)
+        (tts-punctuation-mode 'all)
         events)
     (cl-letf (((symbol-function 'accept-process-output)
                (lambda (&rest _) (push 'accept-output events)))

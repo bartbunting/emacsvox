@@ -27,13 +27,13 @@
 (ert-deftest emacsvox-eval-result-feedback-is-target-aware ()
   "Only the matching evaluation command speaks and returns its result."
   (let ((ems--interactive-fn-name 'eval-last-sexp)
-        (dtk-punctuation-mode 'all)
+        (tts-punctuation-mode 'all)
         events)
     (cl-letf (((symbol-function 'tts-speak)
                (lambda (text)
                  (push
                   (list 'speak text
-                        dtk-punctuation-mode
+                        tts-punctuation-mode
                         dtk-chunk-separator-syntax)
                   events))))
       (should
