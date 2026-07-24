@@ -40,6 +40,7 @@
 ;;   Required modules:
 
 (require 'emacsvox-preamble)
+(require 'nxml-mode)
 
 :
 ;;; Commentary:
@@ -140,98 +141,102 @@
 
 ;;;  Advice interactive commands
 
-(defun ems--nxml-electric-slash-around (orig-fun &rest args)
+(defun emacsvox--advice-nxml-electric-slash-around
+    (orig-fun &rest args)
   "Speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))
-        (when (= (preceding-char) 62) (emacsvox-icon 'close-object))))
-     (t (apply orig-fun args)))
-    result))
+  (if (ems-interactive-p 'nxml-electric-slash)
+      (let ((start (point))
+            result)
+        (setq result (apply orig-fun args))
+        (emacsvox-speak-region start (point))
+        (when (= (preceding-char) ?>)
+          (emacsvox-icon 'close-object))
+        result)
+    (apply orig-fun args)))
 
 (advice-add 'nxml-electric-slash :around
-            #'ems--nxml-electric-slash-around)
+            #'emacsvox--advice-nxml-electric-slash-around)
 
-(defun ems--nxml-complete-around (orig-fun &rest args)
+(defun emacsvox--advice-nxml-complete-around (orig-fun &rest args)
   "Speak."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((start (point)))
-        (apply orig-fun args) (emacsvox-speak-region start (point))))
-     (t (apply orig-fun args)))
-    result))
+  (if (ems-interactive-p 'nxml-complete)
+      (let ((start (point))
+            result)
+        (setq result (apply orig-fun args))
+        (emacsvox-speak-region start (point))
+        result)
+    (apply orig-fun args)))
 
-(advice-add 'nxml-complete :around #'ems--nxml-complete-around)
+(advice-add 'nxml-complete :around
+            #'emacsvox--advice-nxml-complete-around)
 
-(defun ems--nxml-insert-xml-declaration-after (&rest _)
-  "Speak." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-nxml-insert-xml-declaration-after (&rest _)
+  "Speak."
+  (when (ems-interactive-p 'nxml-insert-xml-declaration)
+    (emacsvox-speak-line)))
 
 (advice-add 'nxml-insert-xml-declaration :after
-            #'ems--nxml-insert-xml-declaration-after)
+            #'emacsvox--advice-nxml-insert-xml-declaration-after)
 
-(cl-loop for f in 
-         '(nxml-backward-up-element
-           nxml-forward-balanced-item
-           nxml-up-element
-           nxml-forward-paragraph
-           nxml-backward-paragraph
-           nxml-backward-single-paragraph
-           nxml-backward-single-balanced-item
-           nxml-forward-element
-           nxml-backward-element)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'large-movement)
-               (emacsvox-speak-line)))))
+(defmacro emacsvox-nxml--define-after-advice
+    (targets docstring &rest body)
+  "Define native after advice for TARGETS using DOCSTRING and BODY."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (advice-add ',target :after #',function))))
+        targets)))
 
-(cl-loop for f in 
-         '(nxml-balanced-close-start-tag-block
-           nxml-finish-element
-           nxml-balanced-close-start-tag-inline)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'close-object)
-               (dtk-speak
-                (format "Closed %s"
-                        (xmltok-start-tag-qname)))))))
+(emacsvox-nxml--define-after-advice
+    (nxml-backward-up-element
+     nxml-forward-balanced-item
+     nxml-up-element
+     nxml-forward-paragraph
+     nxml-backward-paragraph
+     nxml-forward-element
+     nxml-backward-element)
+    "Speak the destination."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-nxml--define-after-advice
+    (nxml-balanced-close-start-tag-block
+     nxml-finish-element
+     nxml-balanced-close-start-tag-inline)
+    "Speak the closed element."
+  (emacsvox-icon 'close-object)
+  (dtk-speak
+   (format "Closed %s" (xmltok-start-tag-qname))))
+
 ;;;  speech enable outliner 
 
-(cl-loop for f in
-         '(nxml-hide-all-text-content 
-           nxml-hide-direct-text-content 
-           nxml-hide-other 
-           nxml-hide-subheadings 
-           nxml-hide-text-content)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Provide auditory icon."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'close-object)
-               (emacsvox-speak-line)))))
+(emacsvox-nxml--define-after-advice
+    (nxml-hide-all-text-content
+     nxml-hide-direct-text-content
+     nxml-hide-other
+     nxml-hide-subheadings
+     nxml-hide-text-content)
+    "Announce hidden outline content."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-line))
 
-(cl-loop for f in
-         '(nxml-show 
-           nxml-show-all 
-           nxml-show-direct-subheadings 
-           nxml-show-direct-text-content 
-           nxml-show-subheadings)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Provide auditory icon."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'open-object)
-               (emacsvox-speak-line)))))
+(emacsvox-nxml--define-after-advice
+    (nxml-show
+     nxml-show-all
+     nxml-show-direct-subheadings
+     nxml-show-direct-text-content
+     nxml-show-subheadings)
+    "Announce exposed outline content."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
 ;;;  Outline summarizer:
 
@@ -256,4 +261,3 @@
 
 (provide 'emacsvox-nxml)
 ;;;  end of file 
-

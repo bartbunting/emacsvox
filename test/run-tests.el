@@ -127,6 +127,7 @@
   (require 'emacsvox-re-builder-tests)
   (require 'emacsvox-kmacro-tests)
   (require 'emacsvox-hideshow-tests)
+  (require 'emacsvox-nxml-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
