@@ -418,7 +418,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (when (and (fboundp target)
                  (not (advice-member-p function target)))
-        (advice-add target where function '((name . emacsvox)))))))
+        (advice-add target where function '((name . emacsvox-py)))))))
 
 (emacsvox-py--install-advice)
 (dolist (feature '(python-mode pydoc))
