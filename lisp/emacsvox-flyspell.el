@@ -61,6 +61,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'flyspell)
 
 ;;;  define personalities
 
@@ -78,42 +79,41 @@ fly spell checking."
 
 ;;;  advice
 
-(defun ems--flyspell-buffer-around (orig-fun &rest args)
+(defun emacsvox--advice-flyspell-buffer-around (orig-fun &rest args)
   "Silence icon."
   (let ((emacsvox-use-icons nil)) (apply orig-fun args)))
 
-(advice-add 'flyspell-buffer :around #'ems--flyspell-buffer-around)
+(advice-add 'flyspell-buffer :around
+            #'emacsvox--advice-flyspell-buffer-around)
 
-(defun ems--flyspell-region-around (orig-fun &rest args)
+(defun emacsvox--advice-flyspell-region-around (orig-fun &rest args)
   "Silence icon."
   (let ((emacsvox-use-icons nil)) (apply orig-fun args)))
 
-(advice-add 'flyspell-region :around #'ems--flyspell-region-around)
+(advice-add 'flyspell-region :around
+            #'emacsvox--advice-flyspell-region-around)
 
-(defun ems--flyspell-auto-correct-word-around (orig-fun &rest args)
+(defun emacsvox--advice-flyspell-auto-correct-word-around
+    (orig-fun &rest args)
   "Speak the correction we inserted."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (ems-with-messages-silenced (apply orig-fun args)
-                                  (dtk-speak
-                                   (car (flyspell-get-word nil)))
-                                  (when (sit-for 1)
-                                    (dtk-notify
-                                     (cl-second
-                                      flyspell-auto-correct-ring)))
-                                  (when (sit-for 1)
-                                    (emacsvox-speak-message-again))
-                                  (emacsvox-icon 'select-object)))
-     (t (apply orig-fun args)))
-    result))
+  (if (ems-interactive-p 'flyspell-auto-correct-word)
+      (ems-with-messages-silenced
+        (let ((result (apply orig-fun args)))
+          (dtk-speak (car (flyspell-get-word nil)))
+          (when (sit-for 1)
+            (dtk-notify (cl-second flyspell-auto-correct-ring)))
+          (when (sit-for 1)
+            (emacsvox-speak-message-again))
+          (emacsvox-icon 'select-object)
+          result))
+    (apply orig-fun args)))
 
 (advice-add 'flyspell-auto-correct-word :around
-            #'ems--flyspell-auto-correct-word-around)
+            #'emacsvox--advice-flyspell-auto-correct-word-around)
 
-(defun ems--flyspell-unhighlight-at-before (&rest _)
+(defun emacsvox--advice-flyspell-unhighlight-at-before (position)
   "handle highlight/unhighlight."
-  (let ((overlay-list (overlays-at (ad-get-arg 0))) (o nil))
+  (let ((overlay-list (overlays-at position)) (o nil))
     (while overlay-list
       (setq o (car overlay-list))
       (when (flyspell-overlay-p o)
@@ -122,7 +122,7 @@ fly spell checking."
       (setq overlay-list (cdr overlay-list)))))
 
 (advice-add 'flyspell-unhighlight-at :before
-            #'ems--flyspell-unhighlight-at-before)
+            #'emacsvox--advice-flyspell-unhighlight-at-before)
 
 (add-hook
  'flyspell-incorrect-hook
@@ -152,21 +152,49 @@ fly spell checking."
   (define-key flyspell-mode-map (kbd "C-;") 'flyspell-correct-wrapper)
   (require emacsvox-flyspell-correct))
 
-(cl-loop
- for f in
- '(flyspell-correct-next flyspell-correct-previous flyspell-correct-at-point)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak word."
-     (when (ems-interactive-p)
-       (dtk-speak (car (flyspell-get-word nil)))))))
+(defconst emacsvox-flyspell--correct-targets
+  '(flyspell-correct-next
+    flyspell-correct-previous
+    flyspell-correct-at-point)
+  "Commands supplied by the optional flyspell-correct package.")
 
-(defun ems--flyspell-goto-next-error-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defmacro emacsvox-flyspell--define-correct-feedback (targets)
+  "Define feedback functions for flyspell-correct TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(defun ,function (&rest _)
+               "Speak the corrected word."
+               (when (ems-interactive-p ',target)
+                 (dtk-speak (car (flyspell-get-word nil)))))))
+        targets)))
+
+(emacsvox-flyspell--define-correct-feedback
+    (flyspell-correct-next
+     flyspell-correct-previous
+     flyspell-correct-at-point))
+
+(defun emacsvox-flyspell--install-correct-advice ()
+  "Attach feedback to available flyspell-correct commands."
+  (dolist (target emacsvox-flyspell--correct-targets)
+    (when (fboundp target)
+      (advice-add
+       target :after
+       (intern (format "emacsvox--advice-%s-after" target))))))
+
+(with-eval-after-load 'flyspell-correct
+  (emacsvox-flyspell--install-correct-advice))
+
+(defun emacsvox--advice-flyspell-goto-next-error-after (&rest _)
+  "Speak the destination after interactive error movement."
+  (when (ems-interactive-p 'flyspell-goto-next-error)
+    (emacsvox-speak-line)))
 
 (advice-add 'flyspell-goto-next-error :after
-            #'ems--flyspell-goto-next-error-after)
+            #'emacsvox--advice-flyspell-goto-next-error-after)
 
 (provide 'emacsvox-flyspell)
 ;;;  emacs local variables
