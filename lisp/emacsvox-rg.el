@@ -69,41 +69,59 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in
- '(rg rg-dwim rg-project
-      rg-rerun-change-dir rg-rerun-change-regexp rg-rerun-change-files
-      rg-rerun-toggle-ignore rg-rerun-toggle-case)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+(defvar emacsvox-rg--advice nil
+  "Current rg targets and their native advice functions.")
+(setq emacsvox-rg--advice nil)
 
-(cl-loop
- for f in
- '(rg-next-file
-   rg-prev-file)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-rg--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-rg--advice))))
 
-(cl-loop
- for f in
+(defun emacsvox-rg--task-feedback ()
+  "Announce completion of an rg search task."
+  (emacsvox-icon 'task-done))
+
+(emacsvox-rg--register-after-group
+ '(rg rg-dwim rg-project rg-rerun-change-dir rg-rerun-change-regexp
+   rg-rerun-change-files rg-rerun-toggle-ignore rg-rerun-toggle-case)
+ #'emacsvox-rg--task-feedback)
+
+(defun emacsvox-rg--file-feedback ()
+  "Speak the selected rg file."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-line))
+
+(emacsvox-rg--register-after-group
+ '(rg-next-file rg-prev-file)
+ #'emacsvox-rg--file-feedback)
+
+(defun emacsvox-rg--save-feedback ()
+  "Speak after saving an rg search."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-rg--register-after-group
  '(rg-save-search-as-name rg-save-search)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-mode-line)))))
+ #'emacsvox-rg--save-feedback)
+
+(defun emacsvox-rg--install-advice ()
+  "Install native advice after rg loads."
+  (dolist (entry emacsvox-rg--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'rg
+  (emacsvox-rg--install-advice))
 
 (provide 'emacsvox-rg)
 ;;;  end of file
-
