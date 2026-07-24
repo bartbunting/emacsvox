@@ -48,6 +48,9 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 
+(defvar tts-default-speech-rate)
+(defvar tts-default-voice)
+
 ;;;  Customizations:
 
 (defcustom dectalk-default-speech-rate 225
@@ -353,8 +356,6 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun dectalk-configure-tts ()
   "Configures   to use Dectalk."
-  (cl-declare (special  dectalk-default-speech-rate
-                        tts-default-speech-rate tts-default-voice))
   (setq tts-default-voice 'paul)
   (fset 'tts-voice-defined-p 'dectalk-voice-defined-p)
   (fset 'tts-get-voice-command 'dectalk-get-voice-command)
