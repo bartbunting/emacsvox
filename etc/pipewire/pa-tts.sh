@@ -4,7 +4,7 @@
 
 # A tts_mono_right and tts_mono_left device
 # See https://www.freedesktop.org/wiki/Software/PulseAudio/Documentation/User/Modules/#module-remap-sink
-# Emacspeak will use the first as the notification device.
+# Emacsvox will use the first as the notification device.
 pactl load-module module-remap-sink sink_name=tts_mono_right  master=binaural channels=2 master_channel_map=front-right,front-right, channel_map=front-left,front-right remix=no
 pactl load-module module-remap-sink sink_name=tts_mono_left  master=binaural channels=2 master_channel_map=front-left,front-left, channel_map=front-left,front-right remix=no
 

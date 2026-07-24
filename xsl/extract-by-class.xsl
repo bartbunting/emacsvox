@@ -5,7 +5,7 @@ Copyright: (C) T. V. Raman, 2001 - 2024,   All Rights Reserved.
 License: GPL
 Extract content that has a specified class attribute.
 Param class specifies the class to extract.
-Note that Emacspeak now uses the more generic xpath-filter.xsl
+Note that Emacsvox now uses the more generic xpath-filter.xsl
 This style-sheet is here mostly as  a sample template.
 
 -->

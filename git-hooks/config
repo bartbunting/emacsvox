@@ -8,7 +8,7 @@
   hooksPath = ./git-hooks/
 [branch "master"]
 [remote "origin"]
-	url = https://github.com/tvraman/emacspeak/
+	url = https://github.com/robertmeta/emacsvox/
 	fetch = +refs/heads/*:refs/remotes/origin/*
 [branch "master"]
 	remote = origin

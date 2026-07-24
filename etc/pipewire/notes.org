@@ -12,7 +12,7 @@ These notes document what broke and how I fix them.
   - No left or right TTS devices.
   - Auditory Icons go back to using aplay rather than paplay with samples loaded
   - X-Windows bell went away ---
-  - Volume in emacspeak minor mode line went away
+  - Volume in the Emacsvox minor mode line went away
   - ToDo: Implement all customizations from default.pa in native pipewire.
 
 * Cautionary Notes
@@ -28,7 +28,7 @@ These notes document what broke and how I fix them.
   - CLI tool pactl, pamixer work in pipewire, even when there is no
     pulseaudio daemon running, as long as you have pipewire-pulse installed.
   - Use wpctl as the Pipewire way of manipulating the audio environment.
-  - To get ~tts_left~ and ~ tts_right~ devices for Emacspeak, execute
+  - To get ~tts_left~ and ~tts_right~ devices for Emacsvox, execute
     the corresponding pactl commands by hand at the shell for now, ie
     examine default.pa from the pulseaudio lines, then pass them to
     pactl.
@@ -40,7 +40,7 @@ pactl load-module module-ladspa-sink sink_name=binaural  sink_master=@DEFAULT_SI
 # Use binaural as the default sink:
 pactl #set-default-sink  binaural 
 # A tts_right and tts_left device
-# Emacspeak will use the first as the notification device.
+# Emacsvox will use the first as the notification device.
 pactl load-module module-remap-sink sink_name=tts_right  master=binaural channels=2 master_channel_map=front-right,front-right, channel_map=front-left,front-right remix=no
 pactl load-module module-remap-sink sink_name=tts_left  master=binaural channels=2 master_channel_map=front-left,front-left, channel_map=front-left,front-right remix=no
 #+end_src

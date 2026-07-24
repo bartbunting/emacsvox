@@ -18,9 +18,9 @@ This is optimized for headphone listening.
   1. Create a bs2b sink
   2. Make that sink the default sink for all clients
 
-** Sinks For Emacspeak Notifications 
+** Sinks For Emacsvox Notifications
 
-emacspeak sends speech notifications to the right ear by default.
+Emacsvox sends speech notifications to the right ear by default.
 Enable this by creating devices ~tts_left~ and  ~tts_right~.
 
 
@@ -30,8 +30,8 @@ Enable this by creating devices ~tts_left~ and  ~tts_right~.
 
   1.   Unplugging headphones  initially left  speaker muted and
      vice-versa. After plugging/unplugging headphones, press _C-e ( C-j_
-     in emacspeak if necessary. See asound.state here for my
-     sound-card; I place it in _~/.emacs.d~ for emacspeak to find
+     in Emacsvox if necessary. See asound.state here for my
+     sound-card; I place it in _~/.emacs.d~ for Emacsvox to find
      it. Once asound.state is configured to taste,
      unplugging/plugging-in headphones does not have any issues.
 
@@ -39,6 +39,6 @@ Enable this by creating devices ~tts_left~ and  ~tts_right~.
 
   1. The default latency assigned by Pulseaudio to alsa->pulse devices
      is not optimal; too high for responsive eeTS
-  2. To work-around this issue, recompile the Emacspeak linux-outloud
+  2. To work around this issue, recompile the Emacsvox linux-outloud
      speech server which has been updated with ALSA configuration
      logic to request lower latency.

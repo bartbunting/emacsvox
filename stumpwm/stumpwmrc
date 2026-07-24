@@ -1,31 +1,33 @@
 ;;; -*- mode: stumpwm -*-
 ;;; StumpWmRC: 
 ;;; $Author: tv.raman.tv $
-;;; Keywords: StumpWM, Emacspeak, Audio Desktop
+;;; Keywords: StumpWM, Emacsvox, Audio Desktop
 (in-package :stumpwm)
 ;;{{{Variables:
 ;;; Avoid focus getting stolen due to activity.
 
 (setq *deny-raise-request* t)
-(defvar *emacspeak-dir* "/home/raman/emacs/lisp/emacspeak"
-  "Root directory of Emacspeak installation.")
+(defvar *emacsvox-dir*
+  (or (sb-ext:posix-getenv "EMACSVOX_DIR")
+      "/usr/share/emacs/site-lisp/emacsvox")
+  "Root directory of the Emacsvox installation.")
 (defvar *tts-window-icon*
   (concatenate 'string
-               *emacspeak-dir*
+               *emacsvox-dir*
                "/"
                "sounds/chimes/window-resize.ogg")
   "Window change icon.")
 
 (defvar *tts-off-icon*
   (concatenate 'string
-               *emacspeak-dir*
+               *emacsvox-dir*
                "/"
                "sounds/chimes/off.ogg")
   "Off icon.")
 
 (defvar *tts-on-icon*
   (concatenate 'string
-               *emacspeak-dir*
+               *emacsvox-dir*
                "/"
                "sounds/chimes/on.ogg")
   "On icon.")
@@ -40,12 +42,12 @@
 
 (load
  (concatenate 'string
-              *emacspeak-dir*
+              *emacsvox-dir*
               "/"
               "stumpwm/tts.lisp"))
 
 (setq *tts-engine*
-(concatenate 'string   *emacspeak-dir* "/servers/dtk-soft"))
+(concatenate 'string *emacsvox-dir* "/servers/dtk-soft"))
 
 (tts-say "TTS: Ready to talk! ")
 (tts-rate 300)
@@ -143,7 +145,8 @@
 ;;{{{wallpaper:
 
 (stumpwm:run-shell-command  
-    " feh --no-fehbg --bg-center '/home/raman/emacs/lisp/emacspeak/etc/tilden-face.jpg' ")
+ (format nil "feh --no-fehbg --bg-center '~a/etc/tilden-face.jpg'"
+         *emacsvox-dir*))
 
 ;;}}}
 ;;{{{Emacs local variables
@@ -155,4 +158,3 @@
 ;;; end:
 
 ;;}}}
-

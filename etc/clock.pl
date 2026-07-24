@@ -2,13 +2,15 @@
 # To install, first search for xxxxx and  update appropriately.
 
 use strict;
+use FindBin qw($RealBin);
 $ENV{LADSPA_PATH} = "/usr/lib/ladspa";
 # update xxxxx below for the loged-in user.
 
 $ENV{XDG_RUNTIME_DIR}="/run/user/xxxxx";
 
-# Update  sounds location  to match your installation:
-my $sounds="$ENV{HOME}/emacs/lisp/emacspeak/sounds/clock";
+# Set EMACSVOX_DIR to override the checkout inferred from this script.
+my $root = $ENV{EMACSVOX_DIR} // "$RealBin/..";
+my $sounds="$root/sounds/clock";
 my ($sec,$min,$hour,$mDay,$mon,$year,$wDay,$yDay,$isdst) = localtime();
 my %chimes =(
     0 => [qw(Sun Mon Tue Wed Thu Fri Sat)],

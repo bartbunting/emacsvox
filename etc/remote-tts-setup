@@ -1,5 +1,6 @@
 #!/bin/sh
-# usage: remote-tts-setup server-script synthesizer-server 
+# usage: REMOTE=host EMACSVOX_DIR=/path/to/emacsvox \
+#          remote-tts-setup [server-script] [tts-server]
 # Also see .. bash-scripts/remote on GitHub
 # starts a local server, then ssh to remote-host,
 # and set up reverse port forwarding.
@@ -8,13 +9,16 @@
 # remote-tts-setup 32-speech-server 32-outloud 
 # remote-tts-setup speech-server mac
 
-REMOTE=#host.example.com
-EMACSPEAK=#emacspeak install directory 
+: "${REMOTE:?Set REMOTE to the SSH host}"
+: "${EMACSVOX_DIR:?Set EMACSVOX_DIR to the Emacsvox installation}"
 
-SDIR=$EMACSPEAK/servers 
+SPEECH_SERVER=${1:-speech-server}
+TTS_SERVER=${2:-outloud}
+SDIR=$EMACSVOX_DIR/servers
 # Primary server listens on 2222
-$SDIR/speech-server  2222 $SDIR/outloud  &
+"$SDIR/$SPEECH_SERVER" 2222 "$SDIR/$TTS_SERVER" &
 #notification stream listens on 3333
-(export ALSA_DEFAULT="tts_mono_left"; $SDIR/speech-server  3333 $SDIR/outloud  &)
+(export ALSA_DEFAULT="tts_mono_left"; \
+  "$SDIR/$SPEECH_SERVER" 3333 "$SDIR/$TTS_SERVER" &)
 beep -f 800 -l 50
-ssh-agent ssh -R 2222:localhost:2222  -R 3333:localhost:3333 $REMOTE
+ssh-agent ssh -R 2222:localhost:2222 -R 3333:localhost:3333 "$REMOTE"

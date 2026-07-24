@@ -1,8 +1,8 @@
-;;; tts.lisp -- Common Lisp interface  to Emacspeak speech servers
+;;; tts.lisp -- Common Lisp interface to Emacsvox speech servers
 ;;; $Id: tts.lisp 7078 2011-06-29 22:07:46Z tv.raman.tv $
 ;;; $Author: tv.raman.tv $
-;;; Description:   Interface Common Lisp (SBCL)  to Emacspeak TTS servers
-;;; Keywords: stumpwm, Emacspeak, Audio Desktop
+;;; Description: Interface Common Lisp (SBCL) to Emacsvox TTS servers
+;;; Keywords: stumpwm, Emacsvox, Audio Desktop
 ;;{{{   LCD Archive entry:
 
 ;;; LCD Archive Entry:
@@ -39,24 +39,26 @@
 ;;{{{  Introduction:
 
 ;;; Commentary:
-;;; Interface Common  Lisp  to Emacspeak TTS servers
+;;; Interface Common Lisp to Emacsvox TTS servers
 
 ;;}}} 
 (in-package :stumpwm)
 ;;{{{  Settings
 
-(defvar *emacspeak* "/usr/share/emacs/site-lisp/emacspeak/"
-  "Root of Emacspeak installation.")
+(defvar *emacsvox*
+  (or (sb-ext:posix-getenv "EMACSVOX_DIR")
+      "/usr/share/emacs/site-lisp/emacsvox")
+  "Root of the Emacsvox installation.")
 
 (defvar *tts-process* nil
   "Handle to tts server connection.")
 
 (defvar *tts-dtk*
-  (concatenate 'string   *emacspeak* "servers/dtk-exp")
+  (concatenate 'string *emacsvox* "/servers/dtk-exp")
   "DTK tcl server")
 
 (defvar *tts-outloud*
-  (concatenate 'string   *emacspeak* "servers/outloud")
+  (concatenate 'string *emacsvox* "/servers/outloud")
   "Outloud tcl server")
 
 (defvar *tts-engine* *tts-dtk*

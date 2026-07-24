@@ -1,5 +1,6 @@
 #!/bin/sh
 . ${HOME}/.bash_profile
+EMACSVOX_DIR=${EMACSVOX_DIR:-${HOME}/src/emacsvox}
 # one-time action for 4k display:
 
 xrandr --output eDP-1 --mode 1680x1050 
@@ -17,10 +18,11 @@ export GPG_AGENT_INFO
 export GNOME_KEYRING_PID  
 ${HOME}/bin/export_x_info &
 light -S 5
-mplayer -really-quiet   ${HOME}/emacs/lisp/emacspeak/sounds/prompts/launch-wm.mp3 & 2>&1 > /dev/null
+mpv --no-video --really-quiet \
+  "${EMACSVOX_DIR}/sounds/prompts/launch-wm.ogg" >/dev/null 2>&1 &
 espeak-ng "Launching Window Manager" &
 ~/.fehbg & # wallpaper
-${HOME}/emacs/lisp/emacspeak/tvr/xcape.sh &
+"${EMACSVOX_DIR}/tvr/xcape.sh" &
 #ssh-agent dbus-launch --exit-with-session /usr/bin/gnome-session
 ssh-agent dbus-launch --exit-with-session /usr/local/bin/stumpwm
 #ssh-agent dbus-launch --exit-with-session /usr/local/bin/emacs

@@ -1,10 +1,10 @@
 * Installation:
 
-To install a specific version of Emacspeak:
+To install a specific version of Emacsvox:
 
-  1. Download and unpack the release tarball.
-  2. make config && make to build Emacspeak
+  1. Clone the repository and check out the desired tag or commit.
+  2. Run =make config && make= to build Emacsvox.
   3. Optional: make espeak to build espeak support.
   4. Optional: make outloud to build ViaVoice outloud support.
-  5.  copy the resulting  emacspeak directory to the install location.
-6. Set up emacs to load file =lisp/emacspeak-setup.el= from that install location.
+  5. Copy the resulting =emacsvox= directory to the install location.
+  6. Load =lisp/emacsvox-setup.el= from that installation.

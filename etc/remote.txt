@@ -9,7 +9,7 @@ Reverse port forwarding is the solution I have been using since approx
 
 This is legacy and is here for historical reasons, it has not been
 used in a long time. Port-forwarding is the recommended solution for
-using remote-emacspeak.
+using the old remote Emacspeak facility.
 
 
 0) Make sure you can ssh from the remote machine to the local
@@ -17,7 +17,7 @@ machine without providing a password.
 
 1)  Test the ssh speech server by starting 
 it from a shell buffer:
-tcl <emacspeak-location>/servers/ssh-<synth>
+tcl <emacsvox-location>/servers/ssh-<synth>
 --where <synth> is either dtk-exp or outloud 
 
 2) If you hear the speech server start up cleanly on the
@@ -30,6 +30,6 @@ tcl <emacspeak-location>/servers/ssh-<synth>
 ** Caveats:
 
 Note that there are some problems you may encounter  when running
-simultaneous local and remote sessions of Emacspeak.
+simultaneous local and remote sessions of Emacsvox.
 
 Here is a summary:

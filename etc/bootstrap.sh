@@ -1,36 +1,31 @@
 #!/bin/bash
-# Author: <github.com/tvraman> License: GPL
-# Usage: ./bootstrap [version] 
-# On a well-installed Linux system,
-# This should let a user bootstrap into a talking Emacs.
-# Not intended for daily use.
+# Bootstrap a talking Emacsvox checkout from Git.
+# Usage: ./bootstrap.sh [git-ref] [destination]
+# Prerequisites: Git, Emacs 31+, make, eSpeak NG, and its development headers.
 
-#  Prerequisites: espeak, libespeak libespeak-dev
-# libespeak-ng-libespeak-dev libespeak-ng-dev espeak-ng-espeak
-# Downloads,  builds and runs specified version.
-latest=60.0
-v=$1
+set -euo pipefail
 
-if [ ! -n "$1" ]
-then
-  v=$latest
-fi  
+ref=${1:-master}
+destination=${2:-emacsvox}
+repository=${EMACSVOX_REPOSITORY:-https://github.com/robertmeta/emacsvox.git}
+emacs=${EMACS:-emacs}
 
-u="https://github.com/tvraman/emacspeak/releases/download/${v}/emacspeak-${v}.tar.bz2"
-
-# Download and unpack if needed:
-if [ ! -d "emacspeak-$v" ]
-then
-  wget $u;
-  tar xfj "emacspeak-${v}.tar.bz2"
+if [ ! -d "$destination/.git" ]; then
+  git clone --branch "$ref" --depth 1 "$repository" "$destination"
 fi
 
-# Build it:
-cd "emacspeak-${v}"
-make config && make
-(cd servers/native-espeak &&  make )
-#Run out of this directory.
-# Default to using espeak unless TTS_PROGRAM is set.
-#
-export TTS_PROGRAM="espeak"
-emacs -q -l ./lisp/emacspeak-setup.el -l $HOME/.emacs
+cd "$destination"
+"$emacs" --batch --quick --eval '(princ emacs-major-version)' |
+  grep -Eq '^3[1-9]|^[4-9][0-9]' ||
+  {
+    echo "Emacsvox requires Emacs 31 or newer." >&2
+    exit 1
+  }
+
+make config EMACS="$emacs"
+make EMACS="$emacs"
+make espeak
+
+export EMACSVOX_DIR=$PWD
+export TTS_PROGRAM=${TTS_PROGRAM:-espeak}
+exec "$emacs" -q -l "$EMACSVOX_DIR/lisp/emacsvox-setup.el" -l "$HOME/.emacs"

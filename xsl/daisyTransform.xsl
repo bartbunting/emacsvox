@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Originally from Bookshare.
 Fri Feb 11 08:02:56 PST 2011
-Cloning here to possibly improve for use with Emacspeak.
+Cloning here to possibly improve for use with Emacsvox.
 -->
 
 <!--******************************

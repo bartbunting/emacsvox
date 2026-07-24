@@ -9,7 +9,7 @@ load-module module-ladspa-sink sink_name=binaural  sink_master=@DEFAULT_SINK@ pl
 #set-default-sink  binaural 
 
 # A tts_right and tts_left device
-# Emacspeak will use the first as the notification device.
+# Emacsvox will use the first as the notification device.
 
 load-module module-remap-sink sink_name=tts_right  master=binaural channels=2 master_channel_map=front-right,front-right, channel_map=front-left,front-right remix=no
 load-module module-remap-sink sink_name=tts_left  master=binaural channels=2 master_channel_map=front-left,front-left, channel_map=front-left,front-right remix=no
@@ -17,8 +17,7 @@ load-module module-remap-sink sink_name=tts_left  master=binaural channels=2 mas
 # X11 Bell:
 load-module module-x11-bell
 load-sample bell-window-system /usr/share/sounds/freedesktop/stereo/bell.oga
-load-sample-dir-lazy  /home/raman/emacs/lisp/emacspeak/sounds/chimes
+load-sample-dir-lazy /usr/share/emacs/site-lisp/emacsvox/sounds/chimes
 # device: snoop -- to record and play
 load-module module-combine-sink sink_name=snoop  sink_properties=device.description="Record-and-Play"
-
 
