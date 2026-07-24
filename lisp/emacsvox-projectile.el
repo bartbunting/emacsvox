@@ -58,55 +58,74 @@
 
 ;;;  Speech-enable Interactive Commands:
 
-(defun ems--projectile-vc-after (&rest _)
+(defvar emacsvox-projectile--advice nil
+  "Current Projectile targets and their native advice functions.")
+(setq emacsvox-projectile--advice nil)
+
+(defun emacsvox--advice-projectile-vc-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'projectile-vc)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'projectile-vc :after #'ems--projectile-vc-after)
+(push '(projectile-vc :after emacsvox--advice-projectile-vc-after)
+      emacsvox-projectile--advice)
 
-(cl-loop
- for f in
- '(projectile-ag
-   projectile-cleanup-known-projects
-   projectile-clear-known-projects
-   projectile-compile-project
-   projectile-regenerate-tags
+(defun emacsvox-projectile--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-projectile--advice))))
+
+(defun emacsvox-projectile--task-feedback ()
+  "Speak after completing a Projectile task."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-line))
+
+(emacsvox-projectile--register-after-group
+ '(projectile-ag projectile-cleanup-known-projects
+   projectile-clear-known-projects projectile-compile-project
    projectile-run-async-shell-command-in-root
-   projectile-run-command-in-root
-   projectile-run-project
-   projectile-run-shell-command-in-root
-   projectile-test-project
-   projectile-ibuffer
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-line)))))
+   projectile-run-command-in-root projectile-run-project
+   projectile-run-shell-command-in-root projectile-test-project
+   projectile-ibuffer)
+ #'emacsvox-projectile--task-feedback)
 (add-hook 'projectile-find-file-hook 'emacsvox-projectile-file-action)
 
-(defun ems--projectile-edit-dir-locals-after (&rest _)
+(defun emacsvox--advice-projectile-edit-dir-locals-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'projectile-edit-dir-locals)
     (emacsvox-icon 'open-object) (emacsvox-speak-line)))
 
-(advice-add 'projectile-edit-dir-locals :after
-            #'ems--projectile-edit-dir-locals-after)
+(push '(projectile-edit-dir-locals :after
+        emacsvox--advice-projectile-edit-dir-locals-after)
+      emacsvox-projectile--advice)
 
-(cl-loop
- for f in
+(defun emacsvox-projectile--shell-feedback ()
+  "Speak a newly opened Projectile shell."
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'open-object))
+
+(emacsvox-projectile--register-after-group
  '(projectile-run-shell projectile-run-eshell projectile-run-term)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-mode-line)
-       (emacsvox-icon 'open-object)))))
+ #'emacsvox-projectile--shell-feedback)
+
+(defun emacsvox-projectile--install-advice ()
+  "Install native advice after Projectile loads."
+  (dolist (entry emacsvox-projectile--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'projectile
+  (emacsvox-projectile--install-advice))
 
 (provide 'emacsvox-projectile)
 ;;;  end of file
-
