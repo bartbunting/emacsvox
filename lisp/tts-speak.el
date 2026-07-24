@@ -110,7 +110,7 @@ outloud     For IBM ViaVoice Outloud
 espeak      For eSpeak (default on Linux)
 mac for MAC TTS (default on Mac)")
 
-;;; Importing dtk-interp by inclusion:
+;;; Speech-server protocol:
 
 ;;;;  macros
 
@@ -119,16 +119,16 @@ mac for MAC TTS (default on Mac)")
   (declare (indent 1) (debug t))
   `(let ((save-punctuation-mode dtk-punctuation-mode))
      (unless (eq ,setting save-punctuation-mode)
-       (dtk-interp-set-punctuations ,setting)
+       (tts--protocol-set-punctuations ,setting)
        (setq dtk-punctuation-mode ,setting))
      ,@body
      (unless (eq ,setting save-punctuation-mode)
        (setq dtk-punctuation-mode save-punctuation-mode)
-       (dtk-interp-set-punctuations save-punctuation-mode))))
+       (tts--protocol-set-punctuations save-punctuation-mode))))
 
 ;;;;  silence
 
-(defsubst dtk-interp-silence (duration &optional force)
+(defsubst tts--protocol-silence (duration &optional force)
   
   (process-send-string dtk-speaker-process
                        (format "sh %d%s\n"
@@ -137,7 +137,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   tone
 
-(defsubst dtk-interp-tone (pitch duration &optional force)
+(defsubst tts--protocol-tone (pitch duration &optional force)
   
   (process-send-string
    dtk-speaker-process
@@ -147,24 +147,24 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   queue
 
-(defsubst dtk-interp-queue (text)
+(defsubst tts--protocol-queue-text (text)
   
   (unless (string-match "^[[:space:]]+$" text)
     (process-send-string dtk-speaker-process (format "q {%s }\n" text))))
 
-(defsubst dtk-interp-queue-code (code)
+(defsubst tts--protocol-queue-code (code)
   
   (process-send-string dtk-speaker-process (format "c {%s }\n" code)))
 
 ;;;;   speak
 
-(defsubst dtk-interp-speak ()
+(defsubst tts--protocol-dispatch ()
   
   (process-send-string dtk-speaker-process "d\n"))
 
 ;;;;  say
 
-(defsubst dtk-interp-say (string)
+(defsubst tts--protocol-say (string)
   
   (process-send-string
    dtk-speaker-process
@@ -172,13 +172,13 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  stop
 
-(defsubst dtk-interp-stop ()
+(defsubst tts--protocol-stop ()
   
   (process-send-string dtk-speaker-process "s\n"))
 
 ;;;;  sync
 
-(defsubst dtk-interp-sync ()
+(defsubst tts--protocol-sync ()
   "Synchronize speech state with running server"
   (process-send-string
    dtk-speaker-process
@@ -190,7 +190,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   letter
 
-(defsubst dtk-interp-letter (letter)
+(defsubst tts--protocol-letter (letter)
   
   (process-send-string
    dtk-speaker-process
@@ -198,25 +198,25 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   language
 
-(defsubst dtk-interp-next-language (&optional say_it)
+(defsubst tts--protocol-next-language (&optional say_it)
   
   (process-send-string
    dtk-speaker-process
    (format "set_next_lang %s\n" say_it)))
 
-(defsubst dtk-interp-previous-language (&optional say_it)
+(defsubst tts--protocol-previous-language (&optional say_it)
   
   (process-send-string
    dtk-speaker-process
    (format "set_previous_lang %s\n" say_it)))
 
-(defsubst dtk-interp-language (language say_it)
+(defsubst tts--protocol-set-language (language say_it)
   
   (process-send-string
    dtk-speaker-process
    (format "set_lang %s %s \n" language say_it)))
 
-(defsubst dtk-interp-preferred-language (alias language)
+(defsubst tts--protocol-set-preferred-language (alias language)
   
   (process-send-string
    dtk-speaker-process
@@ -224,11 +224,11 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   Version, rate
 
-(defsubst dtk-interp-say-version ()
+(defsubst tts--protocol-version ()
   
   (process-send-string dtk-speaker-process "version\n"))
 
-(defsubst dtk-interp-set-rate (rate)
+(defsubst tts--protocol-set-rate (rate)
   
   (process-send-string
    dtk-speaker-process
@@ -236,7 +236,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  character scale
 
-(defsubst dtk-interp-set-character-scale (factor)
+(defsubst tts--protocol-set-character-scale (factor)
   
   (process-send-string dtk-speaker-process
                        (format "tts_set_character_scale %s\n"
@@ -244,7 +244,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   split caps
 
-(defsubst dtk-interp-toggle-split-caps (flag)
+(defsubst tts--protocol-set-split-caps (flag)
   
   (process-send-string
    dtk-speaker-process
@@ -252,7 +252,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  punctuations
 
-(defsubst dtk-interp-set-punctuations (mode)
+(defsubst tts--protocol-set-punctuations (mode)
   
   (process-send-string
    dtk-speaker-process
@@ -260,7 +260,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  reset
 
-(defsubst dtk-interp-reset-state ()
+(defsubst tts--protocol-reset ()
   
   (process-send-string dtk-speaker-process "tts_reset \n"))
 
@@ -450,8 +450,8 @@ bound to \\[dtk-toggle-caps].")
   
   (unless dtk-quiet
     (when (process-live-p dtk-speaker-process)
-      (dtk-interp-silence duration
-                          (if force "\nd" "")))))
+      (tts--protocol-silence duration
+                             (if force "\nd" "")))))
 
 (defun dtk-tone (pitch duration &optional force)
   "Produce a tone.
@@ -460,7 +460,7 @@ bound to \\[dtk-toggle-caps].")
 Uses a 5ms fade-in and fade-out. "
   
   (unless (or dtk-quiet (not (process-live-p dtk-speaker-process)))
-    (dtk-interp-tone pitch duration force)))
+    (tts--protocol-tone pitch duration force)))
 
 (defun dtk-set-language (lang)
   "Set language. If your server supports it, also set the synthesis
@@ -471,8 +471,8 @@ Uses a 5ms fade-in and fade-out. "
   (when (process-live-p dtk-speaker-process)
     (unless (eq dtk-speaker-process (dtk-notify-process))
       (let ((dtk-speaker-process (dtk-notify-process)))
-        (dtk-interp-language lang nil)))
-    (dtk-interp-language lang (called-interactively-p 'interactive))))
+        (tts--protocol-set-language lang nil)))
+    (tts--protocol-set-language lang (called-interactively-p 'interactive))))
 
 (defun dtk-set-next-language ()
   "Switch to  next  language"
@@ -481,8 +481,8 @@ Uses a 5ms fade-in and fade-out. "
   (when (process-live-p dtk-speaker-process)
     (unless (eq dtk-speaker-process (dtk-notify-process))
       (let ((dtk-speaker-process (dtk-notify-process)))
-        (dtk-interp-next-language nil)))
-    (dtk-interp-next-language (called-interactively-p 'interactive))))
+        (tts--protocol-next-language nil)))
+    (tts--protocol-next-language (called-interactively-p 'interactive))))
 
 (defun dtk-set-previous-language ()
   "Switch to  previous  language"
@@ -491,8 +491,8 @@ Uses a 5ms fade-in and fade-out. "
   (when (process-live-p dtk-speaker-process)
     (unless (eq dtk-speaker-process (dtk-notify-process))
       (let ((dtk-speaker-process (dtk-notify-process)))
-        (dtk-interp-previous-language nil)))
-    (dtk-interp-previous-language (called-interactively-p 'interactive))))
+        (tts--protocol-previous-language nil)))
+    (tts--protocol-previous-language (called-interactively-p 'interactive))))
 
 (defun dtk-set-preferred-language (alias lang)
   "Set language by alias."
@@ -501,8 +501,8 @@ Uses a 5ms fade-in and fade-out. "
   (when (process-live-p dtk-speaker-process)
     (unless (eq dtk-speaker-process (dtk-notify-process))
       (let ((dtk-speaker-process (dtk-notify-process)))
-        (dtk-interp-preferred-language alias lang)))
-    (dtk-interp-preferred-language alias lang)))
+        (tts--protocol-set-preferred-language alias lang)))
+    (tts--protocol-set-preferred-language alias lang)))
 
 ;; helper function:
 ;; Quote the string in current buffer so tcl does not barf.
@@ -740,7 +740,7 @@ Argument COMPLEMENT  is the complement of separator."
               (and (listp voice) (memq 'inaudible voice)))
     ;; ensure text is a  string
     (unless (stringp text) (setq text (format "%s" text)))
-    (dtk-interp-queue-code
+    (tts--protocol-queue-code
      (cond
       ((symbolp voice)
        (tts-get-voice-command
@@ -757,8 +757,8 @@ Argument COMPLEMENT  is the complement of separator."
         voice
         " "))
       (t "")))
-    (dtk-interp-queue text)
-    (dtk-interp-queue-code (tts-voice-reset-code))))
+    (tts--protocol-queue-text text)
+    (tts--protocol-queue-code (tts-voice-reset-code))))
 
 ;; Internal function used by dtk-speak to send text out.
 ;; Handles voice locking etc.
@@ -811,12 +811,12 @@ Argument COMPLEMENT  is the complement of separator."
   (when (and emacsvox-use-icons
              (get-text-property start 'auditory-icon))
     (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
-  (dtk-interp-queue-code (tts-voice-reset-code))
+  (tts--protocol-queue-code (tts-voice-reset-code))
   (when-let* ((pause (get-text-property start 'pause)))
-    (dtk-interp-silence pause))
+    (tts--protocol-silence pause))
   (cond
    ((not voice-lock-mode)
-    (dtk-interp-queue (buffer-substring-no-properties start end)))
+    (tts--protocol-queue-text (buffer-substring-no-properties start end)))
    (t                                   ; voiceify as we go
     (let ((last nil)
           (personality (dtk-get-style start)))
@@ -827,12 +827,14 @@ Argument COMPLEMENT  is the complement of separator."
         (if personality
             (dtk-speak-using-voice
              personality (buffer-substring-no-properties start last))
-          (dtk-interp-queue (buffer-substring-no-properties start last)))
+          (tts--protocol-queue-text
+           (buffer-substring-no-properties start last)))
         (setq
          start last
          personality (dtk-get-style last))
         (when (get-text-property start 'pause)
-          (dtk-interp-silence (get-text-property start 'pause) nil)))))))
+          (tts--protocol-silence
+           (get-text-property start 'pause) nil)))))))
 
 ;; Write out the string to the tts via TCL.
 ;; No quoting is done,
@@ -842,13 +844,13 @@ Argument COMPLEMENT  is the complement of separator."
   "Send request  to speech server."
   (unless dtk-quiet
     (when (process-live-p dtk-speaker-process)
-      (dtk-interp-say string))))
+      (tts--protocol-say string))))
 
 (defun dtk-stop (&optional all)
   "Stop speech.  Optional arg `all' or interactive call silences
 notification stream as well."
   (interactive "P")
-  (when (process-live-p dtk-speaker-process) (dtk-interp-stop))
+  (when (process-live-p dtk-speaker-process) (tts--protocol-stop))
   (when
       (and (dtk-notify-process)
            (or all (called-interactively-p 'interactive)))
@@ -891,7 +893,7 @@ this pattern if previously added.    "
         (setq-default ,switch (not ,switch))
         (setq ,switch (default-value ',switch)))
        (t (setq ,switch (not ,switch))))
-      (dtk-interp-sync)
+      (tts--protocol-sync)
       (when (called-interactively-p 'interactive)
         (emacsvox-icon (if ,switch 'on 'off))
         (message
@@ -918,7 +920,7 @@ current local  value to the result."
       (setq-default dtk-speech-rate rate)
       (setq dtk-speech-rate rate))
      (t (setq dtk-speech-rate rate)))
-    (dtk-interp-set-rate rate)
+    (tts--protocol-set-rate rate)
     (when (called-interactively-p 'interactive)
       (message "Set speech rate to %s %s"
                rate
@@ -989,7 +991,7 @@ then set the current local value to the result."
       (setq dtk-character-scale factor))
      (t (make-local-variable 'dtk-character-scale)
         (setq dtk-character-scale factor)))
-    (dtk-interp-set-character-scale dtk-character-scale)
+    (tts--protocol-set-character-scale dtk-character-scale)
     (when (called-interactively-p 'interactive)
       (message "Set character scale factor to %s %s"
                dtk-character-scale
@@ -1052,7 +1054,7 @@ current local  value to the result."
       (setq-default dtk-punctuation-mode mode))
      (t (make-local-variable 'dtk-punctuation-mode)
         (setq dtk-punctuation-mode mode)))
-    (dtk-interp-set-punctuations mode)
+    (tts--protocol-set-punctuations mode)
     (when (called-interactively-p 'interactive)
       (message "set punctuation mode to %s %s"
                mode
@@ -1090,12 +1092,12 @@ Interactive PREFIX arg makes the new setting global."
   "Reset TTS engine."
   (interactive)
   (when (process-live-p dtk-speaker-process)
-    (dtk-interp-reset-state)))
+    (tts--protocol-reset)))
 
 (defun tts-speak-version ()
   "Speak version."
   (interactive)
-  (dtk-interp-say-version))
+  (tts--protocol-version))
 
 ;;;   Internal variables:
 
@@ -1566,7 +1568,7 @@ For swiftmac, set this to `left' or `right'."
   
   (dtk-initialize)
   (when (process-live-p dtk-speaker-process)
-    (dtk-interp-sync)))
+    (tts--protocol-sync)))
 
 ;;;   interactively select how text is split:
 
@@ -1689,7 +1691,7 @@ unless   `dtk-quiet' is set to t. "
          tts-strip-octals inherit-strip-octals
          voice-lock-mode voice-lock)
         (set-syntax-table syntax-table)
-        (dtk-interp-sync)
+        (tts--protocol-sync)
         (insert-for-yank text)          ; insert and pre-process text
         (dtk--delete-invisible-text)
         (dtk-handle-repeating-patterns mode)
@@ -1713,7 +1715,7 @@ unless   `dtk-quiet' is set to t. "
         (unless (= start (point-max))
           (skip-syntax-forward " ")     ;skip leading whitespace
           (unless (eobp) (dtk-audio-format (point) (point-max))))))
-    (dtk-interp-speak)))
+    (tts--protocol-dispatch)))
 
 (defmacro ems-with-messages-silenced (&rest body)
   "Evaluate body  after temporarily silencing messages."
@@ -1777,7 +1779,7 @@ grouping"
   "Speak a LETTER."
   (unless dtk-quiet
     (when (process-live-p dtk-speaker-process)
-      (dtk-interp-letter letter))))
+      (tts--protocol-letter letter))))
 ;;;  Notify:
 
 (defun dtk-notify-process ()
@@ -2110,39 +2112,10 @@ When called interactively, CHAR defaults to the character after point."
           (when props
             (set-text-properties pos (point) props)))))))
 
-;;;   Canonical TTS function aliases:
+;;;   Transitional public TTS function aliases:
 
-;; During the consumer migration canonical calls resolve through the legacy
-;; functions.  This preserves advice and test interception attached to the
-;; established symbols.  The alias direction reverses only after all repository
-;; callers use the canonical API.
-
-;; Speech-server protocol.
-(defalias 'tts--protocol-silence #'dtk-interp-silence)
-(defalias 'tts--protocol-tone #'dtk-interp-tone)
-(defalias 'tts--protocol-queue-text #'dtk-interp-queue)
-(defalias 'tts--protocol-queue-code #'dtk-interp-queue-code)
-(defalias 'tts--protocol-dispatch #'dtk-interp-speak)
-(defalias 'tts--protocol-say #'dtk-interp-say)
-(defalias 'tts--protocol-stop #'dtk-interp-stop)
-(defalias 'tts--protocol-sync #'dtk-interp-sync)
-(defalias 'tts--protocol-letter #'dtk-interp-letter)
-(defalias 'tts--protocol-next-language #'dtk-interp-next-language)
-(defalias 'tts--protocol-previous-language #'dtk-interp-previous-language)
-(defalias 'tts--protocol-set-language #'dtk-interp-language)
-(defalias
- 'tts--protocol-set-preferred-language #'dtk-interp-preferred-language)
-(defalias 'tts--protocol-version #'dtk-interp-say-version)
-(defalias 'tts--protocol-set-rate #'dtk-interp-set-rate)
-(defalias
- 'tts--protocol-set-character-scale #'dtk-interp-set-character-scale)
-(defalias
- 'tts--protocol-set-split-caps #'dtk-interp-toggle-split-caps)
-(defalias
- 'tts--protocol-set-punctuations #'dtk-interp-set-punctuations)
-(defalias 'tts--protocol-reset #'dtk-interp-reset-state)
-
-;; Public speech and state operations.
+;; Public speech and state operations still resolve through legacy definitions
+;; until each corresponding implementation slice is migrated.
 (defalias 'tts-get-style #'dtk-get-style)
 (defalias 'tts-get-voice-for-face #'dtk-get-voice-for-face)
 (defalias 'tts-tone-deletion #'dtk-tone-deletion)

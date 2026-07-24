@@ -149,7 +149,7 @@
      (t
       (dtk-speak-using-voice
        voice-annotate (format "indent %s" (current-column)))
-      (dtk-interp-speak))))
+      (tts--protocol-dispatch))))
   (apply orig-fun args))
 
 (advice-add

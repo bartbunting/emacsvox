@@ -75,7 +75,7 @@
       (dtk-speak-using-voice
        voice-annotate
        (format "indent %s" (current-column)))
-      (dtk-interp-speak)))
+      (tts--protocol-dispatch)))
   (apply original arguments))
 
 (advice-add

@@ -86,7 +86,7 @@
       (cl-letf (((symbol-function 'dtk-speak-using-voice)
                  (lambda (voice text)
                    (push (list 'speech voice text) events)))
-                ((symbol-function 'dtk-interp-speak)
+                ((symbol-function 'tts--protocol-dispatch)
                  (lambda () (push 'speak events))))
         (should
          (eq

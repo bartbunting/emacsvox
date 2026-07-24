@@ -19,27 +19,27 @@
 (require 'swiftmac-voices)
 (require 'voice-setup)
 
-(defconst emacsvox-test--tts-protocol-aliases
-  '((tts--protocol-silence . dtk-interp-silence)
-    (tts--protocol-tone . dtk-interp-tone)
-    (tts--protocol-queue-text . dtk-interp-queue)
-    (tts--protocol-queue-code . dtk-interp-queue-code)
-    (tts--protocol-dispatch . dtk-interp-speak)
-    (tts--protocol-say . dtk-interp-say)
-    (tts--protocol-stop . dtk-interp-stop)
-    (tts--protocol-sync . dtk-interp-sync)
-    (tts--protocol-letter . dtk-interp-letter)
-    (tts--protocol-next-language . dtk-interp-next-language)
-    (tts--protocol-previous-language . dtk-interp-previous-language)
-    (tts--protocol-set-language . dtk-interp-language)
-    (tts--protocol-set-preferred-language . dtk-interp-preferred-language)
-    (tts--protocol-version . dtk-interp-say-version)
-    (tts--protocol-set-rate . dtk-interp-set-rate)
-    (tts--protocol-set-character-scale . dtk-interp-set-character-scale)
-    (tts--protocol-set-split-caps . dtk-interp-toggle-split-caps)
-    (tts--protocol-set-punctuations . dtk-interp-set-punctuations)
-    (tts--protocol-reset . dtk-interp-reset-state))
-  "Canonical protocol aliases and their legacy implementations.")
+(defconst emacsvox-test--legacy-protocol-functions
+  '(dtk-interp-silence
+    dtk-interp-tone
+    dtk-interp-queue
+    dtk-interp-queue-code
+    dtk-interp-speak
+    dtk-interp-say
+    dtk-interp-stop
+    dtk-interp-sync
+    dtk-interp-letter
+    dtk-interp-next-language
+    dtk-interp-previous-language
+    dtk-interp-language
+    dtk-interp-preferred-language
+    dtk-interp-say-version
+    dtk-interp-set-rate
+    dtk-interp-set-character-scale
+    dtk-interp-toggle-split-caps
+    dtk-interp-set-punctuations
+    dtk-interp-reset-state)
+  "Removed DECtalk-era names for the generic speech-server protocol.")
 
 (defconst emacsvox-test--tts-public-aliases
   '((tts-get-style . dtk-get-style)
@@ -113,9 +113,9 @@
    (equal
     (emacsvox-test--tts-capture-protocol
      (lambda ()
-       (dtk-interp-queue "hello")
-       (dtk-interp-queue-code "voice")
-       (dtk-interp-queue "   ")))
+       (tts--protocol-queue-text "hello")
+       (tts--protocol-queue-code "voice")
+       (tts--protocol-queue-text "   ")))
     '((speaker "q {hello }\n")
       (speaker "c {voice }\n")))))
 
@@ -125,11 +125,11 @@
    (equal
     (emacsvox-test--tts-capture-protocol
      (lambda ()
-       (dtk-interp-speak)
-       (dtk-interp-say "hello")
-       (dtk-interp-letter "x")
-       (dtk-interp-stop)
-       (dtk-interp-say-version)))
+       (tts--protocol-dispatch)
+       (tts--protocol-say "hello")
+       (tts--protocol-letter "x")
+       (tts--protocol-stop)
+       (tts--protocol-version)))
     '((speaker "d\n")
       (speaker "tts_say { hello}\n")
       (speaker "l {x}\n")
@@ -142,10 +142,10 @@
    (equal
     (emacsvox-test--tts-capture-protocol
      (lambda ()
-       (dtk-interp-tone 440 100)
-       (dtk-interp-tone 880 50 t)
-       (dtk-interp-silence 25)
-       (dtk-interp-silence 30 t)))
+       (tts--protocol-tone 440 100)
+       (tts--protocol-tone 880 50 t)
+       (tts--protocol-silence 25)
+       (tts--protocol-silence 30 t)))
     '((speaker "t 440 100\n")
       (speaker "t 880 50\nd\n")
       (speaker "sh 25\n")
@@ -157,12 +157,12 @@
    (equal
     (emacsvox-test--tts-capture-protocol
      (lambda ()
-       (dtk-interp-set-rate 175)
-       (dtk-interp-set-character-scale 1.5)
-       (dtk-interp-toggle-split-caps t)
-       (dtk-interp-toggle-split-caps nil)
-       (dtk-interp-set-punctuations 'some)
-       (dtk-interp-reset-state)))
+       (tts--protocol-set-rate 175)
+       (tts--protocol-set-character-scale 1.5)
+       (tts--protocol-set-split-caps t)
+       (tts--protocol-set-split-caps nil)
+       (tts--protocol-set-punctuations 'some)
+       (tts--protocol-reset)))
     '((speaker "tts_set_speech_rate 175\n")
       (speaker "tts_set_character_scale 1.5\n")
       (speaker "tts_split_caps 1\n")
@@ -178,7 +178,7 @@
         (dtk-speech-rate 210))
     (should
      (equal
-      (emacsvox-test--tts-capture-protocol #'dtk-interp-sync)
+      (emacsvox-test--tts-capture-protocol #'tts--protocol-sync)
       '((speaker "tts_sync_state none 1 0 210\n"))))))
 
 (ert-deftest emacsvox-tts-protocol-dispatches-language-operations ()
@@ -187,10 +187,10 @@
    (equal
     (emacsvox-test--tts-capture-protocol
      (lambda ()
-       (dtk-interp-next-language t)
-       (dtk-interp-previous-language nil)
-       (dtk-interp-language "en-gb" t)
-       (dtk-interp-preferred-language "en" "en-gb")))
+       (tts--protocol-next-language t)
+       (tts--protocol-previous-language nil)
+       (tts--protocol-set-language "en-gb" t)
+       (tts--protocol-set-preferred-language "en" "en-gb")))
     '((speaker "set_next_lang t\n")
       (speaker "set_previous_lang nil\n")
       (speaker "set_lang en-gb t \n")
@@ -203,9 +203,9 @@
     (cl-letf (((symbol-function 'process-send-string)
                (lambda (process string)
                  (push (list process string) writes))))
-      (dtk-interp-stop)
+      (tts--protocol-stop)
       (let ((dtk-speaker-process 'notification))
-        (dtk-interp-stop)))
+        (tts--protocol-stop)))
     (should
      (equal
       (nreverse writes)
@@ -224,13 +224,9 @@
        "notice"))
     (should (eq selected 'notification))))
 
-(ert-deftest emacsvox-tts-canonical-function-aliases-are-installed ()
-  "Canonical protocol and public functions resolve through legacy entry points."
-  (dolist
-      (entry
-       (append
-        emacsvox-test--tts-protocol-aliases
-        emacsvox-test--tts-public-aliases))
+(ert-deftest emacsvox-tts-transitional-public-aliases-are-installed ()
+  "Public functions not yet migrated resolve through transitional aliases."
+  (dolist (entry emacsvox-test--tts-public-aliases)
     (should (eq (symbol-function (car entry)) (cdr entry)))))
 
 (ert-deftest emacsvox-tts-canonical-protocol-preserves-wire-format ()
@@ -246,16 +242,21 @@
       (speaker "tts_set_speech_rate 180\n")
       (speaker "d\n")))))
 
-(ert-deftest emacsvox-tts-canonical-aliases-preserve-legacy-advice ()
-  "Advice on a legacy entry point still observes canonical calls."
+(ert-deftest emacsvox-tts-protocol-functions-support-native-advice ()
+  "Canonical protocol functions remain directly adviceable."
   (let* ((calls 0)
          (advice (lambda (&rest _) (cl-incf calls))))
     (unwind-protect
         (progn
-          (advice-add 'dtk-interp-stop :before advice)
+          (advice-add 'tts--protocol-stop :before advice)
           (emacsvox-test--tts-capture-protocol #'tts--protocol-stop)
           (should (= calls 1)))
-      (advice-remove 'dtk-interp-stop advice))))
+      (advice-remove 'tts--protocol-stop advice))))
+
+(ert-deftest emacsvox-tts-legacy-protocol-functions-are-removed ()
+  "The generic protocol no longer exposes DECtalk-era function names."
+  (dolist (function emacsvox-test--legacy-protocol-functions)
+    (should-not (fboundp function))))
 
 (ert-deftest emacsvox-tts-canonical-speech-preserves-legacy-interception ()
   "Replacing the legacy speech function still intercepts canonical speech."

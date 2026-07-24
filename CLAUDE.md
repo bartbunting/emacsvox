@@ -65,7 +65,8 @@ cd lisp && make clean # Remove compiled files
    - Preprocesses text (handles pronunciations, invisible text, caps)
    - Chunks text and applies voice personalities based on text properties
    - Core function: `tts-speak` - sends text to TTS server
-   - Process commands: `dtk-interp-queue`, `dtk-interp-speak`, `dtk-interp-silence`
+   - Private protocol commands: `tts--protocol-queue-text`,
+     `tts--protocol-dispatch`, `tts--protocol-silence`
 
 3. **Voice System** (`voice-setup.el`, `voice-defs.el`)
    - "Voices" = audio properties (pitch, rate, stress) - analogous to fonts

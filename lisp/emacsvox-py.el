@@ -137,7 +137,7 @@
   (when (ems-interactive-p 'py-newline-and-indent)
     (dtk-speak-using-voice voice-annotate
                            (format "indent %s" (current-column)))
-    (dtk-interp-speak)))
+    (tts--protocol-dispatch)))
 
 (defun emacsvox--advice-py-shift-region-left-after (&rest _)
   "Speak number of lines that were shifted"
