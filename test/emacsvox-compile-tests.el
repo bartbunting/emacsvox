@@ -31,22 +31,16 @@
   "Compilation functions using individually named native advice.")
 
 (ert-deftest emacsvox-compile-advice-is-directly-registered ()
-  "Migrated compilation advice bypasses the compatibility bridge."
+  "Migrated compilation advice uses native advice directly."
   (dolist (target emacsvox-test--compile-navigation-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-test--compile-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-compile-navigation-feedback-is-target-aware ()
   "Interactive error navigation stops speech before cueing and speaking."

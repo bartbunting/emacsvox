@@ -54,28 +54,19 @@
   "Completion commands migrated to directly registered native advice.")
 
 (ert-deftest emacsvox-completion-advice-is-directly-registered ()
-  "Migrated completion advice bypasses the compatibility bridge."
+  "Migrated completion advice uses native advice directly."
   (dolist (target emacsvox-test--completion-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--completion-around-targets)
     (let ((function (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-test--completion-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-completion-at-point-calls-original-once ()
   "Interactive completion calls once, preserves its result, then speaks."

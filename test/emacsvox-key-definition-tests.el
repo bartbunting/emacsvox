@@ -15,16 +15,13 @@
   "Definition commands using native before advice with interactive specs.")
 
 (ert-deftest emacsvox-key-definition-advice-is-directly-registered ()
-  "Migrated definition advice bypasses the compatibility bridge."
+  "Migrated definition advice uses native advice directly."
   (dolist (target emacsvox-test--key-definition-before-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-before" target))))
       (should (fboundp function))
       (should (commandp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :before function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-local-set-key-uses-spoken-prompts ()
   "Interactive local binding uses the Emacsvox key and command prompts."

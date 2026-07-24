@@ -15,10 +15,7 @@
          (enriched-mode emacsvox--advice-enriched-mode-after)))
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-enriched-decode-uses-native-bounds ()
   (let (bounds)

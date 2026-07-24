@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-chess-advice-is-current-and-direct ()
-  "Current Chess targets bypass the compatibility bridge."
+  "Current Chess targets use native advice directly."
   (dolist (entry emacsvox-chess--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-chess-movement-calls-original-once ()
   "Movement advice preserves the result without repeating the command."

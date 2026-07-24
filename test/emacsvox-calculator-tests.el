@@ -50,19 +50,13 @@
            (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--calculator-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-calculator-launch-calls-original-once ()
   "Calculator launch preserves its result and suppresses the header once."

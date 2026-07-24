@@ -16,14 +16,11 @@
   "Customize functions using individually named native advice.")
 
 (ert-deftest emacsvox-customize-advice-is-directly-registered ()
-  "Migrated Customize advice bypasses the compatibility bridge."
+  "Migrated Customize advice uses native advice directly."
   (dolist (entry emacsvox-test--customize-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     (if (featurep 'emacsvox-custom)

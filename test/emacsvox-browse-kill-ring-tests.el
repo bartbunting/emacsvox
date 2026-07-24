@@ -19,13 +19,10 @@
     (should (fboundp (car entry)))))
 
 (ert-deftest emacsvox-browse-kill-ring-advice-is-directly-registered ()
-  "Browse Kill Ring advice bypasses the compatibility bridge."
+  "Browse Kill Ring advice uses native advice directly."
   (dolist (entry emacsvox-browse-kill-ring--advice)
     (pcase-let ((`(,target ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-browse-kill-ring-feedback-is-target-aware ()
   "Only the matching interactive command produces feedback."

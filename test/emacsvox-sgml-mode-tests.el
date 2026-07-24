@@ -22,10 +22,7 @@
              (intern (format "emacsvox--advice-%s-%s"
                              target (substring (symbol-name where) 1)))))
         (should (commandp target))
-        (should (advice-member-p function target))
-        (should-not
-         (gethash (list target where function)
-                  ems--modern-advice-wrappers))))))
+        (should (advice-member-p function target))))))
 
 (ert-deftest emacsvox-sgml-navigation-feedback-is-target-aware ()
   (let ((ems--interactive-fn-name 'sgml-skip-tag-backward) events)

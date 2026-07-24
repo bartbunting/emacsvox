@@ -27,15 +27,12 @@
   "FFAP commands using generated native after advice.")
 
 (ert-deftest emacsvox-ffap-advice-is-directly-registered ()
-  "Migrated FFAP advice bypasses the compatibility bridge."
+  "Migrated FFAP advice uses native advice directly."
   (dolist (target emacsvox-test--ffap-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ffap-feedback-is-target-aware ()
   "Only the matching interactive FFAP command produces feedback."

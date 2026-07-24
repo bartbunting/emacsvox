@@ -19,14 +19,11 @@
   "Cleanup functions using individually named native advice.")
 
 (ert-deftest emacsvox-cleanup-advice-is-directly-registered ()
-  "Migrated cleanup advice bypasses the compatibility bridge."
+  "Migrated cleanup advice uses native advice directly."
   (dolist (entry emacsvox-test--cleanup-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-whitespace-cleanup-calls-original-once ()
   "Whitespace cleanup calls once, quietly, and preserves args and result."

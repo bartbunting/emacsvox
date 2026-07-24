@@ -36,10 +36,7 @@
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'Man-quit)))
 
 (ert-deftest emacsvox-man-mode-setup-remains-unconditional ()

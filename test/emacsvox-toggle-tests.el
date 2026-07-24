@@ -16,15 +16,12 @@
   "State toggle commands using native after advice.")
 
 (ert-deftest emacsvox-toggle-advice-is-directly-registered ()
-  "Migrated state-toggle advice bypasses the compatibility bridge."
+  "Migrated state-toggle advice uses native advice directly."
   (dolist (target emacsvox-test--toggle-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-debug-on-quit-feedback-uses-quit-state ()
   "The debug-on-quit icon follows its own state, not debug-on-error."

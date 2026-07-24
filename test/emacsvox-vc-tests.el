@@ -41,14 +41,11 @@
   "Version-control functions using individually defined native advice.")
 
 (ert-deftest emacsvox-vc-advice-is-directly-registered ()
-  "Migrated VC advice bypasses the compatibility bridge."
+  "Migrated VC advice uses native advice directly."
   (dolist (entry emacsvox-test--vc-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-vc-toggle-advice-calls-original-once ()
   "An interactive VC toggle uses pre-call state and preserves the result."

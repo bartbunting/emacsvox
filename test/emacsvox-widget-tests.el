@@ -52,14 +52,11 @@
       (should (equal (help-function-arglist target t) arguments)))))
 
 (ert-deftest emacsvox-widget-motion-advice-is-directly-registered ()
-  "Widget motion and setup advice bypasses the compatibility bridge."
+  "Widget motion and setup advice uses native advice directly."
   (dolist (entry emacsvox-test--widget-motion-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-widget-echo-help-calls-original-once ()
   "Help echo calls once, suppresses its message, and preserves its result."
@@ -140,17 +137,11 @@
         'emacsvox-widget-update-from-minibuffer)))))
 
 (ert-deftest emacsvox-widget-button-advice-is-directly-registered ()
-  "Widget button advice bypasses the compatibility bridge."
+  "Widget button advice uses native advice directly."
   (should
    (advice-member-p
     #'emacsvox--advice-widget-button-press-around
-    'widget-button-press))
-  (should-not
-   (gethash
-    '(widget-button-press
-      :around
-      emacsvox--advice-widget-button-press-around)
-    ems--modern-advice-wrappers)))
+    'widget-button-press)))
 
 (ert-deftest emacsvox-widget-button-press-calls-original-once ()
   "Ordinary button activation calls once, preserves args, and summarizes."
@@ -263,17 +254,11 @@
         (execute emacsvox-we-url-expand-and-execute))))))
 
 (ert-deftest emacsvox-widget-convert-text-advice-is-directly-registered ()
-  "Widget text conversion advice bypasses the compatibility bridge."
+  "Widget text conversion advice uses native advice directly."
   (should
    (advice-member-p
     #'emacsvox--advice-widget-convert-text-around
-    'widget-convert-text))
-  (should-not
-   (gethash
-    '(widget-convert-text
-      :around
-      emacsvox--advice-widget-convert-text-around)
-    ems--modern-advice-wrappers)))
+    'widget-convert-text)))
 
 (ert-deftest emacsvox-widget-convert-text-preserves-personality-and-result ()
   "Text conversion calls once, restores personality, and returns its widget."

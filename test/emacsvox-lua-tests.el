@@ -20,9 +20,7 @@
   (dolist (target emacsvox-test--lua-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-lua-navigation-feedback-is-target-aware ()
   (let ((ems--interactive-fn-name 'lua-end-of-proc) events)

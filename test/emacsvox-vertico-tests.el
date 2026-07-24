@@ -14,9 +14,7 @@
   (dolist (entry emacsvox-vertico--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-vertico-insert-calls-original-once ()
   "Vertico insertion advice preserves the result and calls once."

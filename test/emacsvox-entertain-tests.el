@@ -23,10 +23,7 @@
           :around emacsvox--advice-dun-unix-parse-around)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-entertain-doctor-uses-native-answer ()
   (let (spoken)
@@ -109,10 +106,7 @@
                   emacsvox--advice-hm-self-guess-char-after)
                  (hangman emacsvox--advice-hangman-after)))
             (pcase-let ((`(,target ,function) entry))
-              (should (advice-member-p function target))
-              (should-not
-               (gethash (list target :after function)
-                        ems--modern-advice-wrappers))))
+              (should (advice-member-p function target))))
           (should
            (eq (lookup-key map " ")
                'emacsvox-hangman-speak-guess))

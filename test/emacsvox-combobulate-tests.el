@@ -10,14 +10,12 @@
       nil nil)
 
 (ert-deftest emacsvox-combobulate-advice-is-current-and-direct ()
-  "Current Combobulate targets bypass the compatibility bridge."
+  "Current Combobulate targets use native advice directly."
   (dolist (target emacsvox-combobulate--advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (removed '(combobulate-navigate-backward
                      combobulate-navigate-down-list-maybe
                      combobulate-navigate-forward

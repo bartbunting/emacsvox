@@ -14,9 +14,7 @@
   (dolist (target emacsvox-forge--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (provide 'emacsvox-forge-tests)
 ;;; emacsvox-forge-tests.el ends here

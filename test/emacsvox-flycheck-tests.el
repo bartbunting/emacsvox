@@ -19,13 +19,10 @@
     (should (fboundp (car entry)))))
 
 (ert-deftest emacsvox-flycheck-advice-is-directly-registered ()
-  "Flycheck advice bypasses the compatibility bridge."
+  "Flycheck advice uses native advice directly."
   (dolist (entry emacsvox-flycheck--advice)
     (pcase-let ((`(,target ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-flycheck-navigation-is-target-aware ()
   "Only matching interactive Flycheck navigation speaks."

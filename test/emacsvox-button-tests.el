@@ -17,14 +17,11 @@
   "Button creation functions using individually named native advice.")
 
 (ert-deftest emacsvox-button-advice-is-directly-registered ()
-  "Migrated button creation advice bypasses the compatibility bridge."
+  "Migrated button creation advice uses native advice directly."
   (dolist (entry emacsvox-test--button-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-button-advice-marks-explicit-range ()
   "Button creation feedback marks the native start and end range."

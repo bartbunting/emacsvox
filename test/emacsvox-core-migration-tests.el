@@ -103,24 +103,18 @@
   "Core commands migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-core-migrated-after-advice-is-directly-registered ()
-  "Generated movement and newline advice bypasses the compatibility bridge."
+  "Generated movement and newline advice uses native advice directly."
   (dolist (target emacsvox-test--core-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
-(ert-deftest emacsvox-core-migrated-direct-advice-bypasses-bridge ()
+(ert-deftest emacsvox-core-migrated-advice-is-native ()
   "Individually migrated editing advice is native and inspectable."
   (dolist (entry emacsvox-test--core-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-psession-advice-registers-after-package-load ()
   "The delayed psession installer registers inspectable native advice."
@@ -134,11 +128,7 @@
         (progn
           (fset target (lambda (&rest _) 'psession-result))
           (emacsvox--enable-psession-advice)
-          (should (advice-member-p function target))
-          (should-not
-           (gethash
-            (list target :around function)
-            ems--modern-advice-wrappers)))
+          (should (advice-member-p function target)))
       (advice-remove target function)
       (if had-definition
           (fset target old-definition)
@@ -171,10 +161,7 @@
   (dolist (target emacsvox-test--core-before-targets)
     (let ((function (intern (format "emacsvox--advice-%s-before" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :before function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-core-delete-advice-calls-original-exactly-once ()
   "Forward deletion preserves feedback order, arguments, and return value."
@@ -768,7 +755,7 @@
       '((icon select-object) speak-mode-line)))))
 
 (ert-deftest emacsvox-core-display-buffer-advice-uses-explicit-argument ()
-  "Display feedback names its argument without compatibility bridge state."
+  "Display feedback names its explicit argument."
   (let ((ems--interactive-fn-name 'display-buffer)
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)

@@ -15,9 +15,7 @@
   (dolist (entry emacsvox-xkcd--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-xkcd-image-advice-calls-original-once ()
   "Graphical image insertion calls its original once and returns its result."

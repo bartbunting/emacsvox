@@ -17,10 +17,7 @@
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'electric-perl-terminator))
   (should (fboundp 'emacsvox--advice-perl-electric-terminator-after))
   (if (memq 'emacsvox-post-self-insert-hook post-self-insert-hook)

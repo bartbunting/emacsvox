@@ -47,10 +47,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-transient-feedback-is-target-aware ()
   "Only feedback for the matching Transient command is emitted."

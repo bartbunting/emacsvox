@@ -39,28 +39,18 @@
   (intern (format "emacsvox--advice-%s-after" target)))
 
 (ert-deftest emacsvox-mail-converted-advice-is-directly-registered ()
-  "Every converted Mail advice bypasses the compatibility bridge."
+  "Every converted Mail advice uses native advice directly."
   (dolist (target emacsvox-test--mail-compose-targets)
     (should
-     (advice-member-p #'emacsvox--mail-compose-after target))
-    (should-not
-     (gethash
-      (list target :after #'emacsvox--mail-compose-after)
-      ems--modern-advice-wrappers)))
+     (advice-member-p #'emacsvox--mail-compose-after target)))
   (dolist (target emacsvox-test--mail-field-targets)
     (let ((function (emacsvox-test--mail-field-advice-function target)))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--mail-action-targets)
     (let ((function (emacsvox-test--mail-field-advice-function target)))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-mail-compose-advice-preserves-feedback-and-point ()
   "Composition feedback speaks the first line without moving point."

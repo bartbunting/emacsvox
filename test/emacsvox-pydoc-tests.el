@@ -18,13 +18,9 @@
   (should (equal (help-function-arglist 'pydoc t) '(name))))
 
 (ert-deftest emacsvox-pydoc-advice-is-directly-registered ()
-  "Pydoc advice bypasses the compatibility bridge."
+  "Pydoc advice uses native advice directly."
   (should
-   (advice-member-p #'emacsvox--advice-pydoc-after 'pydoc))
-  (should-not
-   (gethash
-    '(pydoc :after emacsvox--advice-pydoc-after)
-    ems--modern-advice-wrappers)))
+   (advice-member-p #'emacsvox--advice-pydoc-after 'pydoc)))
 
 (ert-deftest emacsvox-pydoc-feedback-is-target-aware ()
   "Only an interactive Pydoc invocation announces help."

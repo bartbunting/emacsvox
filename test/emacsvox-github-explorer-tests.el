@@ -21,14 +21,11 @@
    (equal (help-function-arglist 'github-explorer-at-point t) nil)))
 
 (ert-deftest emacsvox-github-explorer-advice-is-directly-registered ()
-  "GitHub Explorer advice bypasses the compatibility bridge."
+  "GitHub Explorer advice uses native advice directly."
   (dolist (target emacsvox-github-explorer--advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-github-explorer-feedback-is-target-aware ()
   "Only the matching interactive entry command announces its buffer."

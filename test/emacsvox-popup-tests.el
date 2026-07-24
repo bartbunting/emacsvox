@@ -14,9 +14,7 @@
   (dolist (entry emacsvox-popup--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-popup-event-loop-preserves-result ()
   "Popup event-loop advice calls its original once and returns its value."

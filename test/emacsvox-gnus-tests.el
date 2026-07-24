@@ -46,32 +46,21 @@
   "Gnus startup commands with direct around advice.")
 
 (ert-deftest emacsvox-gnus-startup-group-advice-is-directly-registered ()
-  "Gnus startup and group advice bypasses the compatibility bridge."
+  "Gnus startup and group advice uses native advice directly."
   (dolist (target emacsvox-test--gnus-startup-group-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-test--gnus-startup-group-around-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-gnus-group-customize-before
-    'gnus-group-customize))
-  (should-not
-   (gethash
-    '(gnus-group-customize :before
-      emacsvox--advice-gnus-group-customize-before)
-    ems--modern-advice-wrappers)))
+    'gnus-group-customize)))
 
 (ert-deftest emacsvox-gnus-startup-calls-original-once ()
   "Gnus startup silences one original call and preserves its result."
@@ -210,7 +199,7 @@
   "Gnus summary marking and navigation commands with direct after advice.")
 
 (ert-deftest emacsvox-gnus-summary-navigation-advice-is-directly-registered ()
-  "Gnus summary marking and navigation bypass the compatibility bridge."
+  "Gnus summary marking and navigation use native advice directly."
   (dolist
       (target
        (append
@@ -220,19 +209,13 @@
            (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--gnus-summary-navigation-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-gnus-does-not-create-removed-unread-commands ()
   "Loading the integration does not recreate removed Gnus mark commands."
@@ -362,24 +345,18 @@
   "Gnus summary article-display commands with direct after advice.")
 
 (ert-deftest emacsvox-gnus-summary-article-advice-is-directly-registered ()
-  "Gnus summary article-display advice bypasses the bridge."
+  "Gnus summary article-display advice uses native advice directly."
   (dolist (target '(gnus-summary-read-group gnus-summary-show-article))
     (let ((function
            (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--gnus-summary-article-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   ;; Both differently named advice must coexist on this target.
   (should
    (advice-member-p
@@ -467,7 +444,7 @@
   "Current Gnus server commands with direct after advice.")
 
 (ert-deftest emacsvox-gnus-article-server-advice-is-directly-registered ()
-  "Gnus article and server advice bypasses the compatibility bridge."
+  "Gnus article and server advice uses native advice directly."
   (dolist
       (target
        (append
@@ -477,28 +454,15 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-gnus-article-press-button-before
     'gnus-article-press-button))
-  (should-not
-   (gethash
-    '(gnus-article-press-button :before
-      emacsvox--advice-gnus-article-press-button-before)
-    ems--modern-advice-wrappers))
   (should
    (advice-member-p
     #'emacsvox--advice-auth-source-do-debug-around
-    'auth-source-do-debug))
-  (should-not
-   (gethash
-    '(auth-source-do-debug :around
-      emacsvox--advice-auth-source-do-debug-around)
-    ems--modern-advice-wrappers)))
+    'auth-source-do-debug)))
 
 (ert-deftest emacsvox-gnus-does-not-create-obsolete-article-server-targets ()
   "Loading the integration does not recreate removed Gnus commands."

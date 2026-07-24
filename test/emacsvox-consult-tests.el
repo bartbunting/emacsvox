@@ -11,14 +11,12 @@
       nil nil)
 
 (ert-deftest emacsvox-consult-advice-is-current-and-direct ()
-  "Current Consult targets bypass the compatibility bridge."
+  "Current Consult targets use native advice directly."
   (dolist (target emacsvox-consult--advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-consult-feedback-is-target-aware ()
   "Only the matching interactive Consult command speaks."

@@ -37,25 +37,17 @@
   "Foldout commands expected to use direct native after advice.")
 
 (ert-deftest emacsvox-outline-advice-is-directly-registered ()
-  "Outline advice bypasses the compatibility bridge."
+  "Outline advice uses native advice directly."
   (dolist (target emacsvox-test--outline-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-outline-flag-region-around
-    'outline-flag-region))
-  (should-not
-   (gethash
-    '(outline-flag-region :around
-      emacsvox--advice-outline-flag-region-around)
-    ems--modern-advice-wrappers)))
+    'outline-flag-region)))
 
 (ert-deftest emacsvox-outline-navigation-feedback-is-target-aware ()
   "Only the matching navigation command cues and speaks its line."
@@ -136,16 +128,13 @@
     (should-not (get-text-property (point-min) 'invisible))))
 
 (ert-deftest emacsvox-foldout-advice-is-directly-registered ()
-  "Optional Foldout advice bypasses the compatibility bridge."
+  "Optional Foldout advice uses native advice directly."
   (dolist (target emacsvox-test--foldout-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-foldout-zoom-feedback-preserves-content ()
   "Interactive Foldout zoom reports the heading and visible line count."

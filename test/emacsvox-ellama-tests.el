@@ -15,9 +15,7 @@
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-ellama--removed-targets)
     (should-not (fboundp target))))
 

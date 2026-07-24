@@ -14,9 +14,7 @@
   (dolist (target emacsvox-orgalist--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (provide 'emacsvox-orgalist-tests)
 ;;; emacsvox-orgalist-tests.el ends here

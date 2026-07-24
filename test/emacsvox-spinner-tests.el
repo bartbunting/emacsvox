@@ -16,14 +16,11 @@
   "Spinner lifecycle functions using individually named native advice.")
 
 (ert-deftest emacsvox-spinner-advice-is-directly-registered ()
-  "Migrated spinner advice bypasses the compatibility bridge."
+  "Migrated spinner advice uses native advice directly."
   (dolist (entry emacsvox-test--spinner-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-spinner-lifecycle-cues-are-unconditional ()
   "Spinner start and stop always produce their lifecycle cues."

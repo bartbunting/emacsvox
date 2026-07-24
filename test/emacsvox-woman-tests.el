@@ -13,10 +13,7 @@
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-woman-feedback-is-target-aware ()
   (let ((ems--interactive-fn-name 'WoMan-previous-manpage) events)

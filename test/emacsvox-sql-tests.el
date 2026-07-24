@@ -13,9 +13,7 @@
   (dolist (target '(sql-send-region sql-send-buffer))
     (let ((function (intern (format "emacsvox--advice-%s-around" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :around function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-sql-defers-optional-sqlplus-advice ()
   (dolist (target emacsvox-sql--sqlplus-targets)

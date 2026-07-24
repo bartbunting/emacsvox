@@ -21,9 +21,7 @@
          (sc-open-line :after emacsvox--advice-sc-open-line-after)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-supercite-region-feedback-uses-native-bounds ()
   (with-temp-buffer

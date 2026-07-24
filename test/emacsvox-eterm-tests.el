@@ -78,27 +78,18 @@
     '(proc str))))
 
 (ert-deftest emacsvox-eterm-simple-advice-is-directly-registered ()
-  "Simple Eterm advice bypasses the compatibility bridge."
+  "Simple Eterm advice uses native advice directly."
   (dolist (entry emacsvox-test--eterm-simple-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eterm-completion-advice-is-directly-registered ()
-  "Term completion advice bypasses the compatibility bridge."
+  "Term completion advice uses native advice directly."
   (should
    (advice-member-p
     #'emacsvox--advice-term-dynamic-complete-around
-    'term-dynamic-complete))
-  (should-not
-   (gethash
-    '(term-dynamic-complete
-      :around
-      emacsvox--advice-term-dynamic-complete-around)
-    ems--modern-advice-wrappers)))
+    'term-dynamic-complete)))
 
 (ert-deftest emacsvox-eterm-completion-calls-original-once ()
   "Term completion calls once, returns its result, and speaks inserted text."
@@ -123,17 +114,11 @@
       (should (equal events '("ho"))))))
 
 (ert-deftest emacsvox-eterm-output-advice-is-directly-registered ()
-  "Term output advice bypasses the compatibility bridge."
+  "Term output advice uses native advice directly."
   (should
    (advice-member-p
     #'emacsvox--advice-term-emulate-terminal-around
-    'term-emulate-terminal))
-  (should-not
-   (gethash
-    '(term-emulate-terminal
-      :around
-      emacsvox--advice-term-emulate-terminal-around)
-    ems--modern-advice-wrappers)))
+    'term-emulate-terminal)))
 
 (ert-deftest emacsvox-eterm-output-skips-a-dead-process ()
   "Term output preserves the reference behavior for a dead process."

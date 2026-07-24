@@ -24,14 +24,11 @@
   "Native after-advice registrations in the Tabulated List integration.")
 
 (ert-deftest emacsvox-tabulated-list-advice-is-directly-registered ()
-  "Tabulated List advice bypasses the compatibility bridge."
+  "Tabulated List advice uses native advice directly."
   (dolist (entry emacsvox-test--tabulated-list-after-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-tabulated-list-feedback-is-target-aware ()
   "Only the matching column movement cues and speaks the selected cell."

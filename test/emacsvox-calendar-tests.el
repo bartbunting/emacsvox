@@ -93,14 +93,11 @@
   "Native advice registrations in the Calendar integration.")
 
 (ert-deftest emacsvox-calendar-advice-is-directly-registered ()
-  "Calendar advice uses current Emacs APIs and bypasses the bridge."
+  "Calendar advice uses current Emacs APIs and uses native advice directly."
   (dolist (entry emacsvox-test--calendar-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-calendar-movement-feedback-is-target-aware ()
   "Only the matching interactive Calendar movement produces feedback."
@@ -174,7 +171,7 @@
     (should observed)))
 
 (ert-deftest emacsvox-calendar-mark-visible-date-uses-explicit-date ()
-  "Calendar marking receives DATE directly rather than through the bridge."
+  "Calendar marking receives DATE directly."
   (let (seen)
     (cl-letf (((symbol-function 'calendar-date-is-valid-p)
                (lambda (date)

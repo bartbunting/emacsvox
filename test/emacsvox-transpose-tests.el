@@ -15,15 +15,12 @@
   "Transpose commands using generated native after advice.")
 
 (ert-deftest emacsvox-transpose-advice-is-directly-registered ()
-  "Migrated transpose advice bypasses the compatibility bridge."
+  "Migrated transpose advice uses native advice directly."
   (dolist (target emacsvox-test--transpose-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-transpose-feedback-is-target-aware ()
   "Only the matching transpose command cues and speaks its text unit."

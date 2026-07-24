@@ -61,16 +61,13 @@
   "Current Eshell editing commands and their direct advice.")
 
 (ert-deftest emacsvox-eshell-selection-advice-is-directly-registered ()
-  "Eshell selection advice bypasses the compatibility bridge."
+  "Eshell selection advice uses native advice directly."
   (dolist (target emacsvox-test--eshell-selection-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eshell-history-feedback-is-target-aware ()
   "Only matching interactive Eshell history movement gives feedback."
@@ -110,10 +107,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eshell-emacs31-replacement-targets-and-bindings-exist ()
   "Emacs 31 Eshell uses the current line, completion, and output commands."

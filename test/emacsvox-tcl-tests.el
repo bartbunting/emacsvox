@@ -34,10 +34,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-tcl-electric-feedback-is-target-aware ()
   "Only the matching Tcl electric command speaks the input event."

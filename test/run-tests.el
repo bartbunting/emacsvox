@@ -11,6 +11,8 @@
 (when (< emacs-major-version 31)
   (error "Emacsvox tests require Emacs 31 or later"))
 
+(setq load-prefer-newer t)
+
 (let* ((test-directory
         (file-name-directory (or load-file-name buffer-file-name)))
        (root-directory (expand-file-name "../" test-directory))

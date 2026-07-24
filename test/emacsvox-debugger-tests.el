@@ -31,14 +31,11 @@
   "Native advice registrations in the Debugger integration.")
 
 (ert-deftest emacsvox-debugger-advice-is-directly-registered ()
-  "Debugger advice bypasses the compatibility bridge."
+  "Debugger advice uses native advice directly."
   (dolist (entry emacsvox-test--debugger-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-debugger-navigation-feedback-is-target-aware ()
   "Only the matching interactive backtrace command produces feedback."

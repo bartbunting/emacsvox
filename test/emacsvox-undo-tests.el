@@ -15,15 +15,12 @@
   "Undo commands using generated native after advice.")
 
 (ert-deftest emacsvox-undo-advice-is-directly-registered ()
-  "Migrated undo advice bypasses the compatibility bridge."
+  "Migrated undo advice uses native advice directly."
   (dolist (target emacsvox-test--undo-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-undo-feedback-is-target-aware ()
   "Only the matching undo command speaks with point highlighted."

@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-corfu-advice-is-current-and-direct ()
-  "Current Corfu targets bypass the compatibility bridge."
+  "Current Corfu targets use native advice directly."
   (dolist (entry emacsvox-corfu--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-corfu-navigation-is-target-aware ()
   "Only the matching interactive Corfu navigation command speaks."

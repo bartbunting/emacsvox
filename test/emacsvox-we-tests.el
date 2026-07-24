@@ -12,9 +12,7 @@
   (dolist (target emacsvox-we--url-advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :around function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-we-url-advice-preserves-result ()
   "URL advice calls its original once and preserves the return value."

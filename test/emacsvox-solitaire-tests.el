@@ -33,10 +33,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-solitaire-omits-removed-quit-command ()
   "The integration does not recreate the removed Solitaire quit command."

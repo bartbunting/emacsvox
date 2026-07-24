@@ -15,9 +15,7 @@
   (dolist (entry emacsvox-geiser--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-geiser-around-advice-calls-original-once ()
   "Geiser REPL advice preserves the result without duplicate sends."

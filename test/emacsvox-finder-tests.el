@@ -19,14 +19,11 @@
   "Finder commands using individually named native advice.")
 
 (ert-deftest emacsvox-finder-advice-is-directly-registered ()
-  "Migrated Finder advice bypasses the compatibility bridge."
+  "Migrated Finder advice uses native advice directly."
   (dolist (entry emacsvox-test--finder-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-finder-commentary-feedback-preserves-order ()
   "Interactive Finder commentary speaks before its opening cue."

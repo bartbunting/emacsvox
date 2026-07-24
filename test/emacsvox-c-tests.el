@@ -57,14 +57,11 @@
   "CC Mode deletion and electric advice registrations.")
 
 (ert-deftest emacsvox-c-deletion-advice-is-directly-registered ()
-  "CC Mode deletion advice bypasses the compatibility bridge."
+  "CC Mode deletion advice uses native advice directly."
   (dolist (entry emacsvox-test--c-deletion-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-c-forward-delete-runs-once-after-feedback ()
   "Interactive forward deletion speaks first and invokes CC Mode once."
@@ -129,16 +126,13 @@
   "CC Mode navigation commands with direct after advice.")
 
 (ert-deftest emacsvox-c-navigation-advice-is-directly-registered ()
-  "CC Mode navigation advice bypasses the compatibility bridge."
+  "CC Mode navigation advice uses native advice directly."
   (dolist (target emacsvox-test--c-navigation-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-c-navigation-feedback-is-target-aware ()
   "Only matching interactive C navigation speaks and cues."
@@ -188,16 +182,13 @@
   "CC Mode formatting and toggle commands with direct after advice.")
 
 (ert-deftest emacsvox-c-formatting-advice-is-directly-registered ()
-  "CC Mode formatting advice bypasses the compatibility bridge."
+  "CC Mode formatting advice uses native advice directly."
   (dolist (target emacsvox-test--c-formatting-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-c-context-line-feedback-preserves-reference-order ()
   "Contextual line insertion speaks before its opening cue."

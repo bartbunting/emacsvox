@@ -80,16 +80,13 @@
   "Native after-advice targets in the Org capture slice.")
 
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
-  "Org structure advice bypasses the compatibility bridge."
+  "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-item-feedback-is-target-aware ()
   "Only the matching Org item movement cues and speaks the item."
@@ -160,16 +157,13 @@
     (should (equal events '(speak-line)))))
 
 (ert-deftest emacsvox-org-agenda-table-advice-is-directly-registered ()
-  "Org agenda and table advice bypasses the compatibility bridge."
+  "Org agenda and table advice uses native advice directly."
   (dolist (target emacsvox-test--org-agenda-table-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-timestamp-feedback-is-target-aware ()
   "Only the matching timestamp command cues and speaks its value."
@@ -245,16 +239,13 @@
       '(table-cell speak-line (icon select-object))))))
 
 (ert-deftest emacsvox-org-editing-advice-is-directly-registered ()
-  "Org editing advice bypasses the compatibility bridge."
+  "Org editing advice uses native advice directly."
   (dolist (target emacsvox-test--org-editing-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-heading-edit-feedback-preserves-order ()
   "Org heading edits speak the line before the open cue."
@@ -343,16 +334,13 @@
       '((icon button) "DONE")))))
 
 (ert-deftest emacsvox-org-capture-advice-is-directly-registered ()
-  "Org capture advice bypasses the compatibility bridge."
+  "Org capture advice uses native advice directly."
   (dolist (target emacsvox-test--org-capture-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-last-capture-feedback-is-target-aware ()
   "Visiting the last capture only reports an interactive invocation."
@@ -407,7 +395,7 @@
       '((icon task-done) mode-line)))))
 
 (ert-deftest emacsvox-org-risky-advice-is-directly-registered ()
-  "Org deletion and export advice bypasses the compatibility bridge."
+  "Org deletion and export advice uses native advice directly."
   (dolist
       (entry
        '((org-delete-char :around emacsvox--advice-org-delete-char-around)
@@ -418,10 +406,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-delete-char-calls-original-once ()
   "Interactive Org deletion gives feedback, then calls the command once."

@@ -26,21 +26,15 @@
   "File commands using generated native after advice.")
 
 (ert-deftest emacsvox-file-advice-is-directly-registered ()
-  "Migrated file advice bypasses the compatibility bridge."
+  "Migrated file advice uses native advice directly."
   (dolist (target emacsvox-test--file-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-test--file-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-byte-compile-advice-calls-original-once ()
   "Interactive compilation is silenced, announced, and called exactly once."

@@ -37,10 +37,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (entry
        '((tetris :around emacsvox--advice-tetris-around)
@@ -49,10 +46,7 @@
          (tetris-draw-score :override
           emacsvox--advice-tetris-draw-score-override)))
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-tetris-programmatic-launch-calls-original-once ()
   "A programmatic Tetris launch preserves its result without feedback."

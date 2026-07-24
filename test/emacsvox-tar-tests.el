@@ -34,10 +34,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'tar-quit)))
 
 (ert-deftest emacsvox-tar-navigation-feedback-is-target-aware ()

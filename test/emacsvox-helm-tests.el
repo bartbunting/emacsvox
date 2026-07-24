@@ -27,13 +27,10 @@
       (should (equal (help-function-arglist target t) arguments)))))
 
 (ert-deftest emacsvox-helm-advice-is-directly-registered ()
-  "Helm advice bypasses the compatibility bridge."
+  "Helm advice uses native advice directly."
   (dolist (entry emacsvox-helm--advice)
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-helm-yank-feedback-is-target-aware ()
   "Only interactive Helm yanking announces the result."

@@ -23,14 +23,11 @@
   "Message functions using individually defined native advice.")
 
 (ert-deftest emacsvox-message-advice-is-directly-registered ()
-  "Migrated message advice bypasses the compatibility bridge."
+  "Migrated message advice uses native advice directly."
   (dolist (entry emacsvox-test--message-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-message-advice-calls-original-once ()
   "A new message calls once, preserves its result, and emits ordered feedback."

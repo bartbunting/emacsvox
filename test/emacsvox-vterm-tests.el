@@ -20,9 +20,7 @@
   (dolist (entry emacsvox-vterm--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (provide 'emacsvox-vterm-tests)
 ;;; emacsvox-vterm-tests.el ends here

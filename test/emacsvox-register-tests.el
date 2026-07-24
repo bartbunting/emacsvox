@@ -30,14 +30,11 @@
   "Register commands using individually named native advice.")
 
 (ert-deftest emacsvox-register-advice-is-directly-registered ()
-  "Migrated register advice bypasses the compatibility bridge."
+  "Migrated register advice uses native advice directly."
   (dolist (entry emacsvox-test--register-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-copy-to-register-uses-explicit-range ()
   "An interactive multi-line copy reports its native range and register."

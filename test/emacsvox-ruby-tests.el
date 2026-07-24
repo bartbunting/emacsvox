@@ -34,10 +34,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ruby-does-not-recreate-removed-commands ()
   "Loading the integration does not create obsolete Ruby commands."

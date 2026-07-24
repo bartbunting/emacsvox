@@ -18,14 +18,11 @@
   "Evaluation commands using individually named native advice.")
 
 (ert-deftest emacsvox-eval-advice-is-directly-registered ()
-  "Migrated evaluation advice bypasses the compatibility bridge."
+  "Migrated evaluation advice uses native advice directly."
   (dolist (entry emacsvox-test--eval-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eval-result-feedback-is-target-aware ()
   "Only the matching evaluation command speaks and returns its result."

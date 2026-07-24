@@ -13,9 +13,7 @@
   (dolist (entry gweb--completion-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest gweb-completion-advice-calls-original-once ()
   "Ordinary completion calls its original once and preserves its result."

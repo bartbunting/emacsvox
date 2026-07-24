@@ -18,14 +18,11 @@
   "Browser commands using individually named native advice.")
 
 (ert-deftest emacsvox-browser-advice-is-directly-registered ()
-  "Migrated browser advice bypasses the compatibility bridge."
+  "Migrated browser advice uses native advice directly."
   (dolist (entry emacsvox-test--browser-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-browser-interactive-call-preserves-order ()
   "Interactive browsing prepares speech before one original call."

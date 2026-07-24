@@ -28,13 +28,10 @@
     'company-complete-number)))
 
 (ert-deftest emacsvox-company-advice-is-directly-registered ()
-  "Company advice bypasses the compatibility bridge."
+  "Company advice uses native advice directly."
   (dolist (entry emacsvox-company--advice)
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-company-completion-feedback-is-target-aware ()
   "Only matching interactive completion speaks."

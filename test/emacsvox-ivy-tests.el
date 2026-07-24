@@ -19,13 +19,10 @@
     (should (fboundp (car entry)))))
 
 (ert-deftest emacsvox-ivy-advice-is-directly-registered ()
-  "Ivy advice bypasses the compatibility bridge."
+  "Ivy advice uses native advice directly."
   (dolist (entry emacsvox-ivy--advice)
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ivy-read-uses-explicit-prompt ()
   "Ivy prompt advice uses its native PROMPT argument."

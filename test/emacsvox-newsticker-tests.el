@@ -21,15 +21,11 @@
   (dolist (target emacsvox-test--newsticker-silent-targets)
     (let ((function (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--newsticker-navigation-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-newsticker-silent-operation-runs-once ()
   (let ((calls 0))

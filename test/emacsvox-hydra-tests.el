@@ -22,13 +22,10 @@
   (should (equal (help-function-arglist 'lv-delete-window t) nil)))
 
 (ert-deftest emacsvox-hydra-advice-is-directly-registered ()
-  "Hydra's LV advice bypasses the compatibility bridge."
+  "Hydra's LV advice uses native advice directly."
   (dolist (entry emacsvox-hydra--advice)
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-hydra-delete-window-feedback-is-unconditional ()
   "LV window deletion retains its unconditional stop and icon cues."

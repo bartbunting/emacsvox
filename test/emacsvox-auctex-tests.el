@@ -11,13 +11,11 @@
       nil nil)
 
 (ert-deftest emacsvox-auctex-advice-is-current-and-direct ()
-  "Every retained AUCTeX target exists and bypasses the bridge."
+  "Every retained AUCTeX target exists and uses native advice directly."
   (dolist (entry emacsvox-auctex--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (removed
        '(LaTeX-format-paragraph

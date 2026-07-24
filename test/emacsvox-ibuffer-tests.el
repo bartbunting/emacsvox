@@ -58,16 +58,13 @@
   "Ibuffer entry and navigation commands with direct after advice.")
 
 (ert-deftest emacsvox-ibuffer-entry-navigation-advice-is-directly-registered ()
-  "Ibuffer entry and navigation advice bypasses the compatibility bridge."
+  "Ibuffer entry and navigation advice uses native advice directly."
   (dolist (target emacsvox-test--ibuffer-entry-navigation-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (entry
        '((ibuffer-bury-buffer
@@ -75,10 +72,7 @@
          (quit-window
           emacsvox--advice-ibuffer-quit-window-around)))
     (pcase-let ((`(,target ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (when (fboundp 'emacsvox--advice-quit-window-after)
     (should
      (advice-member-p
@@ -203,16 +197,13 @@
   "Ibuffer marking and buffer operations with direct after advice.")
 
 (ert-deftest emacsvox-ibuffer-mark-operation-advice-is-directly-registered ()
-  "Ibuffer marking and operation advice bypasses the bridge."
+  "Ibuffer marking and operation advice uses native advice directly."
   (dolist (target emacsvox-test--ibuffer-mark-operation-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ibuffer-mark-feedback-is-target-aware ()
   "Only the matching interactive mark command cues and speaks."
@@ -283,16 +274,13 @@
   "Ibuffer filtering and sorting commands with direct after advice.")
 
 (ert-deftest emacsvox-ibuffer-filter-sort-advice-is-directly-registered ()
-  "Ibuffer filter and sorting advice bypasses the bridge."
+  "Ibuffer filter and sorting advice uses native advice directly."
   (dolist (target emacsvox-test--ibuffer-filter-sort-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (entry
        '((ibuffer-pop-filter-group
@@ -300,10 +288,7 @@
          (ibuffer-yank-filter-group
           emacsvox--advice-ibuffer-yank-filter-group-around)))
     (pcase-let ((`(,target ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ibuffer-filter-feedback-is-target-aware ()
   "Only the matching interactive filter command emits its cue."
@@ -439,16 +424,13 @@
   "Ibuffer BS and utility commands with direct after advice.")
 
 (ert-deftest emacsvox-ibuffer-bs-utility-advice-is-directly-registered ()
-  "Ibuffer BS and utility advice bypasses the bridge."
+  "Ibuffer BS and utility advice uses native advice directly."
   (dolist (target emacsvox-test--ibuffer-bs-utility-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ibuffer-bs-visibility-feedback-is-target-aware ()
   "Only the matching interactive BS visibility command emits feedback."

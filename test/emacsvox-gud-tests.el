@@ -13,10 +13,6 @@
    (advice-member-p
     #'emacsvox--advice-gud-display-line-after
     'gud-display-line))
-  (should-not
-   (gethash
-    '(gud-display-line :after emacsvox--advice-gud-display-line-after)
-    ems--modern-advice-wrappers))
   (dolist (target emacsvox-gud--command-targets)
     (should
      (fboundp

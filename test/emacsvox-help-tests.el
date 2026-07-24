@@ -71,30 +71,21 @@
   "Apropos commands using generated native after advice.")
 
 (ert-deftest emacsvox-help-advice-is-directly-registered ()
-  "Migrated Help advice bypasses the compatibility bridge."
+  "Migrated Help advice uses native advice directly."
   (dolist (entry emacsvox-test--help-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--help-description-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--apropos-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-describe-mode-feedback-preserves-order ()
   "Interactive mode help announces its message before the Help icon."

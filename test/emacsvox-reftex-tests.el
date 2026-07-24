@@ -55,10 +55,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-reftex-obsolete-index-toggles-remain-absent ()
   "Loading RefTeX support does not recreate removed index toggles."

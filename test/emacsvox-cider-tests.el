@@ -15,13 +15,11 @@
       nil nil)
 
 (ert-deftest emacsvox-cider-advice-is-current-and-direct ()
-  "Current CIDER targets bypass the compatibility bridge."
+  "Current CIDER targets use native advice directly."
   (dolist (entry emacsvox-cider--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (removed '(cider-visit-error-buffer
                      cider-assoc-buffer-with-connection
                      cider-assoc-project-with-connection

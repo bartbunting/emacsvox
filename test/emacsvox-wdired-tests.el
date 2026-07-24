@@ -30,14 +30,11 @@
   "Native after-advice registrations in the Wdired integration.")
 
 (ert-deftest emacsvox-wdired-advice-is-directly-registered ()
-  "Wdired advice bypasses the compatibility bridge."
+  "Wdired advice uses native advice directly."
   (dolist (entry emacsvox-test--wdired-after-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-wdired-navigation-feedback-is-target-aware ()
   "Only the matching interactive Wdired movement produces feedback."

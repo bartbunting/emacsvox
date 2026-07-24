@@ -15,9 +15,7 @@
   (dolist (entry emacsvox-gnuplot--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-gnuplot-removed-targets-remain-absent ()
   "Retired Gnuplot commands are not recreated as phantom targets."

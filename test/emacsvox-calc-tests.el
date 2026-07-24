@@ -21,9 +21,7 @@
           :after emacsvox--advice-calc-trail-here-after)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-calc-command-feedback-is-target-aware ()
   (let ((ems--interactive-fn-name 'calc-quit) events)

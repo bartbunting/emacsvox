@@ -15,9 +15,7 @@
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-elisp-refs-feedback-is-target-aware ()
   "Only the matching interactive Elisp Refs command speaks."

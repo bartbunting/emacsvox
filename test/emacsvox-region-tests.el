@@ -24,14 +24,11 @@
   "Region-editing commands using individually named native advice.")
 
 (ert-deftest emacsvox-region-advice-is-directly-registered ()
-  "Migrated region advice bypasses the compatibility bridge."
+  "Migrated region advice uses native advice directly."
   (dolist (entry emacsvox-test--region-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-region-deletion-calls-original-once ()
   "Interactive deletion counts first, calls once, and preserves its result."

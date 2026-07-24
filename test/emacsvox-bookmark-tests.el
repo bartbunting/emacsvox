@@ -51,10 +51,7 @@
          (when (eq advice function)
            (setq registrations (1+ registrations))))
        target)
-      (should (= registrations 1))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (= registrations 1)))))
 
 (ert-deftest emacsvox-bookmark-obsolete-targets-are-not-advised ()
   "Bookmark support does not recreate or advise superseded commands."

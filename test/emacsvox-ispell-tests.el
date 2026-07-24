@@ -48,24 +48,18 @@
       (should (equal (help-function-arglist target t) arguments)))))
 
 (ert-deftest emacsvox-ispell-simple-advice-is-directly-registered ()
-  "Simple Ispell advice bypasses the compatibility bridge."
+  "Simple Ispell advice uses native advice directly."
   (dolist (entry emacsvox-test--ispell-simple-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ispell-session-advice-is-directly-registered ()
-  "Ispell session advice bypasses the compatibility bridge."
+  "Ispell session advice uses native advice directly."
   (dolist (entry emacsvox-test--ispell-session-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-ispell-command-loop-uses-native-arguments ()
   "Correction feedback receives choices and source bounds directly."
@@ -142,15 +136,11 @@
     (should (equal events '((call (3 12)))))))
 
 (ert-deftest emacsvox-ispell-word-advice-is-directly-registered ()
-  "Ispell word advice bypasses the compatibility bridge."
+  "Ispell word advice uses native advice directly."
   (should
    (advice-member-p
     #'emacsvox--advice-ispell-word-around
-    'ispell-word))
-  (should-not
-   (gethash
-    '(ispell-word :around emacsvox--advice-ispell-word-around)
-    ems--modern-advice-wrappers)))
+    'ispell-word)))
 
 (ert-deftest emacsvox-ispell-word-runs-once-with-interactive-feedback ()
   "Interactive word checking runs once and preserves feedback order."

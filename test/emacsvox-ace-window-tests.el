@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-ace-window-advice-is-current-and-direct ()
-  "Current Ace Window targets bypass the bridge."
+  "Current Ace Window targets use native advice directly."
   (dolist (target emacsvox-ace-window--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'ace-maximize-window)))
 
 (ert-deftest emacsvox-ace-window-selection-is-target-aware ()

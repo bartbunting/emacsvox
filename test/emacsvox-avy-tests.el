@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-avy-advice-is-current-and-direct ()
-  "Current Avy targets bypass the bridge."
+  "Current Avy targets use native advice directly."
   (dolist (target emacsvox-avy--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'avy-kill-ring-save)))
 
 (ert-deftest emacsvox-avy-jump-feedback-is-target-aware ()

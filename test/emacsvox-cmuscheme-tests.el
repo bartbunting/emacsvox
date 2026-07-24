@@ -38,10 +38,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-cmuscheme-launch-uses-native-command ()
   "Scheme launch feedback reports the command passed by Emacs."

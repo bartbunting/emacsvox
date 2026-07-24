@@ -66,14 +66,11 @@
   "Native after-advice registrations in the View integration.")
 
 (ert-deftest emacsvox-view-advice-is-directly-registered ()
-  "View advice bypasses the compatibility bridge."
+  "View advice uses native advice directly."
   (dolist (entry emacsvox-test--view-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-view-exit-feedback-is-target-aware ()
   "Only the matching interactive View exit produces feedback."
@@ -136,7 +133,7 @@
       '((icon scroll) speak-windowful)))))
 
 (ert-deftest emacsvox-view-goto-line-uses-native-argument ()
-  "Native View line advice speaks its explicit argument without the bridge."
+  "Native View line advice speaks its explicit argument."
   (let ((ems--interactive-fn-name 'View-goto-line)
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)

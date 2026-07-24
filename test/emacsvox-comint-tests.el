@@ -62,16 +62,13 @@
   "Comint navigation and history commands with direct after advice.")
 
 (ert-deftest emacsvox-comint-navigation-history-advice-is-directly-registered ()
-  "Comint navigation and history advice bypasses the bridge."
+  "Comint navigation and history advice uses native advice directly."
   (dolist (target emacsvox-test--comint-navigation-history-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-comint-navigation-feedback-is-target-aware ()
   "Only matching interactive Comint navigation speaks and cues."
@@ -89,7 +86,7 @@
       '(line (icon item))))))
 
 (ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
-  "Comint output and subprocess advice bypasses the bridge."
+  "Comint output and subprocess advice uses native advice directly."
   (dolist
       (entry
        '((comint-delete-output
@@ -107,10 +104,7 @@
          (comint-interrupt-subjob
           :after emacsvox--advice-comint-interrupt-subjob-after)))
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-comint-dirstack-message-calls-original-once ()
   "Shell directory-stack reporting preserves one silenced call."
@@ -159,7 +153,7 @@
         '((original test-process "chunk") (speak "chunk")))))))
 
 (ert-deftest emacsvox-comint-completion-history-advice-is-directly-registered ()
-  "Comint completion and history-display advice bypasses the bridge."
+  "Comint completion and history-display advice uses native advice directly."
   (dolist
       (entry
        '((comint-dynamic-list-completions
@@ -172,10 +166,7 @@
           :after
           emacsvox--advice-comint-dynamic-list-filename-completions-after)))
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-comint-completion-list-replaces-stock-display ()
   "The accessible completion list sorts entries without calling the original."
@@ -241,7 +232,7 @@
     (should (equal messages '("No history")))))
 
 (ert-deftest emacsvox-comint-input-advice-is-directly-registered ()
-  "Comint input advice bypasses the compatibility bridge."
+  "Comint input advice uses native advice directly."
   (dolist
       (entry
        '((comint-magic-space
@@ -259,10 +250,7 @@
          (comint-kill-input
           :before emacsvox--advice-comint-kill-input-before)))
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-comint-magic-space-calls-original-once ()
   "Interactive magic space preserves one original call and its result."

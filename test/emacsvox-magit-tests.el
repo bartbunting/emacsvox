@@ -37,14 +37,11 @@
     (should-not (fboundp target))))
 
 (ert-deftest emacsvox-magit-advice-is-directly-registered ()
-  "Magit advice bypasses the compatibility bridge."
+  "Magit advice uses native advice directly."
   (dolist (target emacsvox-magit--simple-advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function)
-                ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-magit-diff-show-or-scroll-up-around

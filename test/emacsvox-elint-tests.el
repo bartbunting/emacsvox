@@ -18,14 +18,11 @@
   "Elint commands using individually named native advice.")
 
 (ert-deftest emacsvox-elint-advice-is-directly-registered ()
-  "Migrated Elint advice bypasses the compatibility bridge."
+  "Migrated Elint advice uses native advice directly."
   (dolist (entry emacsvox-test--elint-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-elint-interactive-call-preserves-order ()
   "Interactive Elint calls once, quietly, then announces and returns."

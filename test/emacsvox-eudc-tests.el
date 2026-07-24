@@ -20,9 +20,7 @@
           :around emacsvox--advice-eudc-print-attribute-value-around)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eudc-navigation-feedback-is-target-aware ()
   (let ((ems--interactive-fn-name 'eudc-move-to-previous-record) events)

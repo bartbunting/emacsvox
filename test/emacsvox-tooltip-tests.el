@@ -21,14 +21,11 @@
   "Tooltip functions using individually named native advice.")
 
 (ert-deftest emacsvox-tooltip-advice-is-directly-registered ()
-  "Migrated tooltip advice bypasses the compatibility bridge."
+  "Migrated tooltip advice uses native advice directly."
   (dolist (entry emacsvox-test--tooltip-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-tooltip-around-preserves-one-silenced-call ()
   "Tooltip around advice calls once, quietly, then speaks and returns."

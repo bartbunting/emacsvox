@@ -16,15 +16,12 @@
   "Abbrev commands using generated native after advice.")
 
 (ert-deftest emacsvox-abbrev-advice-is-directly-registered ()
-  "Migrated Abbrev advice bypasses the compatibility bridge."
+  "Migrated Abbrev advice uses native advice directly."
   (dolist (target emacsvox-test--abbrev-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-abbrev-save-feedback-is-target-aware ()
   "Only an interactive abbrev save cues and speaks completion."

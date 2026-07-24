@@ -16,15 +16,12 @@
   "Editing functions using native after advice.")
 
 (ert-deftest emacsvox-editing-advice-is-directly-registered ()
-  "Migrated editing advice bypasses the compatibility bridge."
+  "Migrated editing advice uses native advice directly."
   (dolist (target emacsvox-test--editing-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-matching-delimiter-feedback-is-unconditional ()
   "The internal matching-delimiter callback always speaks its match."

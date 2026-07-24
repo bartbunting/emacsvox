@@ -33,21 +33,15 @@
   "Input readers migrated with individually defined native advice.")
 
 (ert-deftest emacsvox-input-advice-is-directly-registered ()
-  "Migrated input advice bypasses the compatibility bridge."
+  "Migrated input advice uses native advice directly."
   (dolist (target emacsvox-test--input-before-targets)
     (let ((function (intern (format "emacsvox--advice-%s-before" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :before function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-test--input-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-read-event-advice-uses-explicit-prompt ()
   "Event-reading feedback uses its prompt argument directly."

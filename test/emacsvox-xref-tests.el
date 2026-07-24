@@ -35,15 +35,12 @@
   "Native after-advice registrations in the Xref integration.")
 
 (ert-deftest emacsvox-xref-advice-is-directly-registered ()
-  "Xref advice uses current targets and bypasses the compatibility bridge."
+  "Xref advice uses current targets and uses native advice directly."
   (dolist (entry emacsvox-test--xref-after-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-xref-movement-feedback-is-target-aware ()
   "Only the matching Xref movement speaks and cues in upstream order."

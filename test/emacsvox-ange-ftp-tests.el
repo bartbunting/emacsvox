@@ -13,18 +13,13 @@
 (defvar ange-ftp-last-percent)
 
 (ert-deftest emacsvox-ange-ftp-advice-is-directly-registered ()
-  "Migrated Ange FTP advice bypasses the compatibility bridge."
+  "Migrated Ange FTP advice uses native advice directly."
   (should
    (fboundp 'emacsvox--advice-ange-ftp-process-handle-hash-around))
   (should
    (advice-member-p
     #'emacsvox--advice-ange-ftp-process-handle-hash-around
-    'ange-ftp-process-handle-hash))
-  (should-not
-   (gethash
-    '(ange-ftp-process-handle-hash :around
-      emacsvox--advice-ange-ftp-process-handle-hash-around)
-    ems--modern-advice-wrappers)))
+    'ange-ftp-process-handle-hash)))
 
 (ert-deftest emacsvox-ange-ftp-progress-preserves-original-result ()
   "FTP progress feedback runs quietly after one call and returns its string."

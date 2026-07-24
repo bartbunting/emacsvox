@@ -11,14 +11,11 @@
       nil nil)
 
 (ert-deftest emacsvox-py-current-advice-is-direct ()
-  "Every available Python Mode target bypasses the bridge."
+  "Every available Python Mode target uses native advice directly."
   (dolist (entry emacsvox-py--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (when (fboundp target)
-        (should (advice-member-p function target))
-        (should-not
-         (gethash (list target where function)
-                  ems--modern-advice-wrappers))))))
+        (should (advice-member-p function target))))))
 
 (ert-deftest emacsvox-py-electric-delete-calls-original-once ()
   "Electric deletion invokes its original command exactly once."

@@ -14,9 +14,7 @@
   (dolist (entry emacsvox-evil--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-evil-feedback-is-target-aware ()
   "Only the matching interactive Evil movement command speaks."

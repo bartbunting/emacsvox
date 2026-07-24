@@ -15,15 +15,12 @@
   "Display commands using native after advice.")
 
 (ert-deftest emacsvox-display-advice-is-directly-registered ()
-  "Migrated display advice bypasses the compatibility bridge."
+  "Migrated display advice uses native advice directly."
   (dolist (target emacsvox-test--display-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-shell-feedback-is-target-aware ()
   "Interactive shell startup cues before speaking its mode line."

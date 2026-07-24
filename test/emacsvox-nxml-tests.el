@@ -47,10 +47,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (entry
        '((nxml-electric-slash
@@ -58,10 +55,7 @@
          (nxml-complete emacsvox--advice-nxml-complete-around)))
     (pcase-let ((`(,target ,function) entry))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (commandp 'nxml-backward-single-paragraph))
   (should-not (commandp 'nxml-backward-single-balanced-item)))
 

@@ -33,15 +33,12 @@
   "Native after-advice registrations in the Forms integration.")
 
 (ert-deftest emacsvox-forms-advice-is-directly-registered ()
-  "Forms advice uses current targets and bypasses the compatibility bridge."
+  "Forms advice uses current targets and uses native advice directly."
   (dolist (entry emacsvox-test--forms-after-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not
    (advice-member-p 'ems--forms-next-field-around 'forms-next-field)))
 

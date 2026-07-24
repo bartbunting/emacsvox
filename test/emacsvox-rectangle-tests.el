@@ -28,14 +28,11 @@
   "Rectangle commands using individually named native advice.")
 
 (ert-deftest emacsvox-rectangle-advice-is-directly-registered ()
-  "Migrated rectangle advice bypasses the compatibility bridge."
+  "Migrated rectangle advice uses native advice directly."
   (dolist (entry emacsvox-test--rectangle-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-rectangle-vertical-feedback-is-target-aware ()
   "Only the matching vertical rectangle command speaks its line."

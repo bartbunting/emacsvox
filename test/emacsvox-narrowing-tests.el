@@ -22,14 +22,11 @@
   "Narrowing commands using individually named native advice.")
 
 (ert-deftest emacsvox-narrowing-advice-is-directly-registered ()
-  "Migrated narrowing advice bypasses the compatibility bridge."
+  "Migrated narrowing advice uses native advice directly."
   (dolist (entry emacsvox-test--narrowing-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-page-narrowing-counts-accessible-restriction ()
   "Page narrowing reports accessible lines without requiring a mark."

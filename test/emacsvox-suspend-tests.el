@@ -11,15 +11,11 @@
 (require 'emacsvox-advice)
 
 (ert-deftest emacsvox-suspend-advice-is-directly-registered ()
-  "Migrated suspend advice bypasses the compatibility bridge."
+  "Migrated suspend advice uses native advice directly."
   (should (fboundp 'emacsvox--advice-suspend-emacs-around))
   (should
    (advice-member-p
-    #'emacsvox--advice-suspend-emacs-around 'suspend-emacs))
-  (should-not
-   (gethash
-    '(suspend-emacs :around emacsvox--advice-suspend-emacs-around)
-    ems--modern-advice-wrappers)))
+    #'emacsvox--advice-suspend-emacs-around 'suspend-emacs)))
 
 (ert-deftest emacsvox-suspend-confirmation-calls-original-once ()
   "Confirmed suspension calls the original once with unchanged arguments."

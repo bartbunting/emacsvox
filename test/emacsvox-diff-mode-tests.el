@@ -23,15 +23,12 @@
   "Diff Mode commands using generated native after advice.")
 
 (ert-deftest emacsvox-diff-mode-advice-is-directly-registered ()
-  "Migrated Diff Mode advice bypasses the compatibility bridge."
+  "Migrated Diff Mode advice uses native advice directly."
   (dolist (target emacsvox-test--diff-mode-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-diff-mode-feedback-is-target-aware ()
   "Only the matching interactive Diff Mode command produces feedback."

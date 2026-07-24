@@ -22,23 +22,17 @@
   "Point-editing commands using generated native after advice.")
 
 (ert-deftest emacsvox-position-advice-is-directly-registered ()
-  "Migrated point and display advice bypasses the compatibility bridge."
+  "Migrated point and display advice uses native advice directly."
   (dolist (target emacsvox-test--position-before-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-before" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :before function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--position-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-recenter-feedback-is-target-aware ()
   "Only the matching interactive recenter command speaks before movement."

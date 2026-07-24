@@ -23,15 +23,12 @@
   "Package commands using generated native after advice.")
 
 (ert-deftest emacsvox-package-advice-is-directly-registered ()
-  "Migrated Package advice bypasses the compatibility bridge."
+  "Migrated Package advice uses native advice directly."
   (dolist (target emacsvox-test--package-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (entry
        '((package-menu-describe-package
@@ -42,10 +39,7 @@
           :after emacsvox--advice-package-menu-mark-upgrades-after)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-package-feedback-is-target-aware ()
   "Only the matching interactive Package command produces feedback."

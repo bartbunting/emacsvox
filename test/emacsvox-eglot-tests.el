@@ -18,10 +18,7 @@
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-eldoc-doc-buffer-after

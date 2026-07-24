@@ -24,14 +24,11 @@
   "Formatting commands using individually named native advice.")
 
 (ert-deftest emacsvox-formatting-advice-is-directly-registered ()
-  "Migrated formatting advice bypasses the compatibility bridge."
+  "Migrated formatting advice uses native advice directly."
   (dolist (entry emacsvox-test--formatting-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-center-line-feedback-is-target-aware ()
   "Only an interactive `center-line' invocation announces completion."

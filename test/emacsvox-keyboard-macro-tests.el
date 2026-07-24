@@ -17,14 +17,11 @@
   "Keyboard macro commands using individually named native advice.")
 
 (ert-deftest emacsvox-keyboard-macro-lifecycle-advice-is-directly-registered ()
-  "Migrated keyboard macro advice bypasses the compatibility bridge."
+  "Migrated keyboard macro advice uses native advice directly."
   (dolist (entry emacsvox-test--keyboard-macro-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-keyboard-macro-start-feedback-preserves-order ()
   "Starting a macro cues opening before speaking its announcement."

@@ -40,10 +40,7 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox-custom--advice-customize-after
@@ -58,10 +55,7 @@
          (customize-save-customized
           emacsvox--advice-customize-save-customized-around)))
     (pcase-let ((`(,target ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-custom-ui-removed-custom-set-remains-absent ()
   "Customize support does not recreate the removed `custom-set' command."

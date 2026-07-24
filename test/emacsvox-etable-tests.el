@@ -38,14 +38,11 @@
   "Native advice registrations in the table integration.")
 
 (ert-deftest emacsvox-etable-advice-is-directly-registered ()
-  "Table advice bypasses the compatibility bridge."
+  "Table advice uses native advice directly."
   (dolist (entry emacsvox-test--etable-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-etable-delete-char-calls-original-once-after-feedback ()
   "Interactive forward deletion cues once before one original call."

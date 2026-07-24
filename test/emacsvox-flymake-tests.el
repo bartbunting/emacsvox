@@ -23,15 +23,12 @@
   "Flymake commands using generated native after advice.")
 
 (ert-deftest emacsvox-flymake-advice-is-directly-registered ()
-  "Migrated Flymake advice bypasses the compatibility bridge."
+  "Migrated Flymake advice uses native advice directly."
   (dolist (target emacsvox-test--flymake-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-flymake-defers-legacy-backend-advice ()
   "The optional bundled legacy backend is not created as a placeholder."
@@ -68,12 +65,7 @@
   (should
    (advice-member-p
     #'emacsvox--advice-flymake-proc-compile-after
-    'flymake-proc-compile))
-  (should-not
-   (gethash
-    '(flymake-proc-compile
-      :after emacsvox--advice-flymake-proc-compile-after)
-    ems--modern-advice-wrappers)))
+    'flymake-proc-compile)))
 
 (provide 'emacsvox-flymake-tests)
 ;;; emacsvox-flymake-tests.el ends here

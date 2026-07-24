@@ -53,10 +53,7 @@
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-which-key-page-display-remains-unconditional ()
   "Internal page display speaks whenever automatic speech is enabled."

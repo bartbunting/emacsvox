@@ -27,13 +27,10 @@
       (should (equal (help-function-arglist target t) arguments)))))
 
 (ert-deftest emacsvox-yaml-advice-is-directly-registered ()
-  "YAML advice bypasses the compatibility bridge."
+  "YAML advice uses native advice directly."
   (dolist (entry emacsvox-yaml--advice)
     (pcase-let ((`(,target ,where ,function) entry))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function)
-                ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-yaml-backspace-calls-original-once ()
   "Electric backspace calls once, passes ARG, and preserves its result."

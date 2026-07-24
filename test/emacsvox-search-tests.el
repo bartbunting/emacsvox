@@ -41,35 +41,23 @@
   "Search and replacement functions using individually defined native advice.")
 
 (ert-deftest emacsvox-replace-advice-is-directly-registered ()
-  "Migrated replacement advice bypasses the compatibility bridge."
+  "Migrated replacement advice uses native advice directly."
   (dolist (target emacsvox-test--replace-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--search-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-test--isearch-after-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-test--replace-direct-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-query-replace-feedback-is-interactive-only ()
   "Query replacement completion is announced once only when interactive."

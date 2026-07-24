@@ -55,10 +55,7 @@
          (when (eq advice function)
            (setq registrations (1+ registrations))))
        target)
-      (should (= registrations 1))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (= registrations 1)))))
 
 (ert-deftest emacsvox-bibtex-obsolete-targets-remain-absent ()
   "Loading BibTeX support does not recreate superseded command names."

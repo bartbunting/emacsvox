@@ -31,16 +31,13 @@
   "EWW navigation and UI targets expected to use direct native advice.")
 
 (ert-deftest emacsvox-eww-ui-advice-is-directly-registered ()
-  "EWW navigation and UI advice bypasses the compatibility bridge."
+  "EWW navigation and UI advice uses native advice directly."
   (dolist (target emacsvox-test--eww-ui-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eww-does-not-create-obsolete-quit-command ()
   "Loading the integration does not recreate removed `eww-quit'."
@@ -143,33 +140,20 @@
   "EWW URL functions expected to use direct native around advice.")
 
 (ert-deftest emacsvox-eww-url-advice-is-directly-registered ()
-  "EWW URL and media advice bypasses the compatibility bridge."
+  "EWW URL and media advice uses native advice directly."
   (dolist (entry emacsvox-test--eww-url-around-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-url-http-user-agent-string-filter-return
     'url-http-user-agent-string))
-  (should-not
-   (gethash
-    '(url-http-user-agent-string :filter-return
-      emacsvox--advice-url-http-user-agent-string-filter-return)
-    ems--modern-advice-wrappers))
   (dolist (target
            '(url-retrieve-internal url-truncate-url-for-viewing eww))
     (should
      (advice-member-p
-      #'emacsvox--advice-google-url-filter-args target))
-    (should-not
-     (gethash
-      (list target :filter-args
-            'emacsvox--advice-google-url-filter-args)
-      ems--modern-advice-wrappers))))
+      #'emacsvox--advice-google-url-filter-args target))))
 
 (ert-deftest emacsvox-eww-user-agent-filter-reflects-masquerade ()
   "The user-agent result filter selects the configured identity."
@@ -318,17 +302,14 @@
   "SHR renderers expected to receive Emacsvox tag-property advice.")
 
 (ert-deftest emacsvox-eww-shr-advice-is-directly-registered ()
-  "SHR tag and DOM property advice bypasses the compatibility bridge."
+  "SHR tag and DOM property advice uses native advice directly."
   (dolist (tag emacsvox-test--eww-shr-tags)
     (let* ((target (intern (format "shr-tag-%s" tag)))
            (function
             (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (entry
            '((shr-tag-table-1
               emacsvox--advice-shr-tag-table-1-around)
@@ -336,10 +317,7 @@
               emacsvox--advice-shr-tag-div-dom-around)))
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'shr-tag-form))
   (should-not (fboundp 'shr-tag-it)))
 
@@ -412,14 +390,11 @@
   "Remaining EWW lifecycle advice and its native placement.")
 
 (ert-deftest emacsvox-eww-lifecycle-advice-is-directly-registered ()
-  "EWW lifecycle advice bypasses the compatibility bridge."
+  "EWW lifecycle advice uses native advice directly."
   (dolist (entry emacsvox-test--eww-lifecycle-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-eww-reload-calls-default-original-once ()
   "Ordinary EWW reload preserves one original call and its result."

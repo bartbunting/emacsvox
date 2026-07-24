@@ -18,9 +18,7 @@
   (dolist (target emacsvox-test--gomoku-navigation-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (commandp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (entry
        '((gomoku-emacs-plays :after emacsvox--advice-gomoku-emacs-plays-after)
@@ -29,9 +27,7 @@
          (gomoku :after emacsvox--advice-gomoku-after)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-gomoku-navigation-feedback-is-target-aware ()
   (let ((ems--interactive-fn-name 'gomoku-move-ne) events)

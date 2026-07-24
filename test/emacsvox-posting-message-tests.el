@@ -49,20 +49,11 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-message-beginning-of-line-before
-    'message-beginning-of-line))
-  (should-not
-   (gethash
-    '(message-beginning-of-line
-      :before
-      emacsvox--advice-message-beginning-of-line-before)
-    ems--modern-advice-wrappers)))
+    'message-beginning-of-line)))
 
 (ert-deftest emacsvox-posting-message-send-feedback-is-target-aware ()
   "Only the matching Message send command produces feedback."

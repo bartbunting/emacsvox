@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-2048-advice-is-current-and-direct ()
-  "Every 2048 target exists and bypasses the bridge."
+  "Every 2048 target exists and uses native advice directly."
   (dolist (target emacsvox-2048--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-2048-movement-is-target-aware ()
   "Only matching interactive movement announces the board."

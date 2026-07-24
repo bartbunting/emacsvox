@@ -10,14 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-markdown-current-advice-is-direct ()
-  "Every available Markdown target bypasses the bridge."
+  "Every available Markdown target uses native advice directly."
   (dolist (entry emacsvox-markdown--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (when (fboundp target)
-        (should (advice-member-p function target))
-        (should-not
-         (gethash (list target where function)
-                  ems--modern-advice-wrappers))))))
+        (should (advice-member-p function target))))))
 
 (ert-deftest emacsvox-markdown-speak-line-calls-original-once ()
   "Ordinary buffers delegate to the original speaker exactly once."

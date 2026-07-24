@@ -12,13 +12,11 @@
       nil nil)
 
 (ert-deftest emacsvox-bbdb-advice-is-current-and-direct ()
-  "Current BBDB targets bypass the compatibility bridge."
+  "Current BBDB targets use native advice directly."
   (dolist (entry emacsvox-bbdb--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (obsolete '(bbdb-delete-current-field-or-record
                       bbdb-edit-current-field
                       bbdb-send-mail

@@ -15,15 +15,12 @@
   "Splash screen commands using generated native after advice.")
 
 (ert-deftest emacsvox-splash-advice-is-directly-registered ()
-  "Migrated splash screen advice bypasses the compatibility bridge."
+  "Migrated splash screen advice uses native advice directly."
   (dolist (target emacsvox-test--splash-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-splash-feedback-uses-selected-window-buffer ()
   "Only the matching command speaks, using the selected window's buffer."

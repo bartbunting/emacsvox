@@ -21,15 +21,12 @@
   "Project commands using generated native after advice.")
 
 (ert-deftest emacsvox-project-advice-is-directly-registered ()
-  "Migrated Project advice bypasses the compatibility bridge."
+  "Migrated Project advice uses native advice directly."
   (dolist (target emacsvox-test--project-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-project-feedback-is-target-aware ()
   "Only the matching interactive Project command produces feedback."

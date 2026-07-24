@@ -74,16 +74,13 @@
   "Tab selection, creation, and closing commands with direct advice.")
 
 (ert-deftest emacsvox-tab-bar-lifecycle-advice-is-directly-registered ()
-  "Tab lifecycle advice bypasses the compatibility bridge."
+  "Tab lifecycle advice uses native advice directly."
   (dolist (target emacsvox-test--tab-bar-lifecycle-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-tab-bar-alias-feedback-is-target-aware ()
   "Only the interactively invoked tab-selection alias gives feedback."
@@ -135,16 +132,13 @@
   "Emacs 31 Tab Switcher commands with direct advice.")
 
 (ert-deftest emacsvox-tab-switcher-advice-is-directly-registered ()
-  "Current Tab Switcher advice bypasses the compatibility bridge."
+  "Current Tab Switcher advice uses native advice directly."
   (dolist (target emacsvox-test--tab-switcher-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-tab-switcher-movement-is-target-aware ()
   "Only matching interactive Tab Switcher movement speaks and cues."

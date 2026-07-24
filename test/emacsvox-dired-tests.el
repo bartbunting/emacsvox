@@ -45,14 +45,11 @@
   (intern (format "emacsvox--dired-%s-after" target)))
 
 (ert-deftest emacsvox-dired-converted-advice-is-directly-registered ()
-  "Every converted Dired advice bypasses the compatibility bridge."
+  "Every converted Dired advice uses native advice directly."
   (dolist (target emacsvox-test--dired-advice-targets)
     (let ((function (emacsvox-test--dired-advice-function target)))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (defun emacsvox-test--dired-feedback (target)
   "Call TARGET's migrated advice and return its semantic feedback events."
@@ -102,15 +99,12 @@
     (should-not called)))
 
 (ert-deftest emacsvox-dired-handwritten-advice-is-directly-registered ()
-  "Hand-written Dired advice bypasses the compatibility bridge."
+  "Hand-written Dired advice uses native advice directly."
   (dolist (entry emacsvox-test--dired-handwritten-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (should-not (fboundp 'dired-quit))
   (should (eq (lookup-key dired-mode-map "q") 'quit-window)))
 

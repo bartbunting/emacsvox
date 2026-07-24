@@ -15,15 +15,12 @@
   "Emacs server commands using generated native after advice.")
 
 (ert-deftest emacsvox-server-advice-is-directly-registered ()
-  "Migrated Emacs server advice bypasses the compatibility bridge."
+  "Migrated Emacs server advice uses native advice directly."
   (dolist (target emacsvox-test--server-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-server-feedback-is-target-aware ()
   "Only the matching interactive server command produces feedback."

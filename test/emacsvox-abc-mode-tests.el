@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-abc-mode-advice-is-current-and-direct ()
-  "Every ABC Mode target exists and bypasses the bridge."
+  "Every ABC Mode target exists and uses native advice directly."
   (dolist (target emacsvox-abc-mode--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-abc-mode-navigation-is-target-aware ()
   "Only matching interactive song navigation speaks."

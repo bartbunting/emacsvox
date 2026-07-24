@@ -34,14 +34,11 @@
   "Native advice registrations in the Proced integration.")
 
 (ert-deftest emacsvox-proced-advice-is-directly-registered ()
-  "Proced advice bypasses the compatibility bridge."
+  "Proced advice uses native advice directly."
   (dolist (entry emacsvox-test--proced-advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-proced-mark-feedback-is-target-aware ()
   "Only the matching interactive mark command produces feedback."

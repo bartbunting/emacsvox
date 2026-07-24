@@ -29,14 +29,11 @@
   "Native after-advice registrations in the Net Utils integration.")
 
 (ert-deftest emacsvox-net-utils-advice-is-directly-registered ()
-  "Net Utils advice bypasses the compatibility bridge."
+  "Net Utils advice uses native advice directly."
   (dolist (entry emacsvox-test--net-utils-after-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-net-utils-feedback-is-target-aware ()
   "Only the matching network command announces its displayed results."

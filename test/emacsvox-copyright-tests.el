@@ -15,15 +15,12 @@
   "Copyright commands using generated native after advice.")
 
 (ert-deftest emacsvox-copyright-advice-is-directly-registered ()
-  "Migrated copyright advice bypasses the compatibility bridge."
+  "Migrated copyright advice uses native advice directly."
   (dolist (target emacsvox-test--copyright-after-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-copyright-feedback-is-target-aware ()
   "Only the matching copyright command cues and speaks its updated line."

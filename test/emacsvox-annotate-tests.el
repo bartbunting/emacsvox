@@ -10,13 +10,11 @@
       nil nil)
 
 (ert-deftest emacsvox-annotate-advice-is-current-and-direct ()
-  "Every Annotate target exists and bypasses the bridge."
+  "Every Annotate target exists and uses native advice directly."
   (dolist (target emacsvox-annotate--advice-targets)
     (let ((function (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target :after function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-annotate-add-feedback-is-target-aware ()
   "Annotation creation is announced only interactively."

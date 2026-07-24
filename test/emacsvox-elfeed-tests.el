@@ -15,9 +15,7 @@
   (dolist (entry emacsvox-elfeed--advice)
     (pcase-let ((`(,target ,where ,function) entry))
       (should (fboundp target))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash (list target where function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist (target emacsvox-elfeed--removed-targets)
     (should-not (fboundp target))))
 

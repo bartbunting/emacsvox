@@ -37,18 +37,12 @@
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (fboundp target))
       (should (fboundp function))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :after function) ems--modern-advice-wrappers))))
+      (should (advice-member-p function target))))
   (dolist
       (target '(cperl-electric-backspace cperl-linefeed))
     (let ((function
            (intern (format "emacsvox--advice-%s-around" target))))
-      (should (advice-member-p function target))
-      (should-not
-       (gethash
-        (list target :around function) ems--modern-advice-wrappers)))))
+      (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-cperl-backspace-calls-original-once ()
   "CPerl backspace speaks before one original call and preserves result."
