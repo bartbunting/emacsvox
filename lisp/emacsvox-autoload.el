@@ -46,10 +46,9 @@
    ((locate-library "loaddefs-gen")     ; emacs 29
     (loaddefs-generate emacsvox-lisp-directory "emacsvox-loaddefs.el"))
    (t (require 'autoload)
-      (let ((dtk-quiet t)
+      (let ((tts-quiet t)
             (generated-autoload-file emacsvox-auto-autoloads-file))
         (update-directory-autoloads emacsvox-lisp-directory)))))
 
 (provide 'emacsvox-autoload)
 ;;;  end of file
-

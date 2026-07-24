@@ -53,7 +53,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'voice-setup)
 (require 'voice-defs)
-(require 'dtk-speak)
+(require 'tts-speak)
 (require 'emacsvox-pronounce)
 (require 'emacsvox-sounds)
 (require 'sox-gen)

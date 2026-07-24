@@ -191,7 +191,7 @@
 (mapc
  #'require
  '(
-   dtk-speak voice-setup voice-defs
+   tts-speak voice-setup voice-defs
    emacsvox-pronounce emacsvox-keymap emacsvox-speak emacsvox-sounds))
 
 ;;;  Interactive Check Implementation Explained:

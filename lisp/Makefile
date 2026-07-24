@@ -56,7 +56,7 @@ COMPILE =  -f batch-byte-compile
 TTS_OBJECTS =  \
 emacsvox-preamble.elc \
 emacsvox-loaddefs.elc \
-dtk-speak.elc		dectalk-voices.elc\
+tts-speak.elc		dectalk-voices.elc\
 plain-voices.elc espeak-voices.elc \
 outloud-voices.elc  mac-voices.elc \
 swiftmac-voices.elc

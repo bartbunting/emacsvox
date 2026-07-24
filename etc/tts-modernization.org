@@ -56,24 +56,28 @@ Names that identify an actual DECtalk backend remain valid, including
 =dectalk-voices.el=, =servers/dtk-exp=, =servers/dtk-soft=,
 =servers/software-dtk=, and =cloud-dtk=.
 
-* Compatibility Policy
+* Breaking-Change Policy
 
-Repository code moves completely to canonical names.  Legacy function and
-variable names are temporarily collected in one compatibility module rather
-than spread throughout the implementation.
+Repository code moves completely to canonical names.  Legacy generic function,
+variable, file, and feature names are removed rather than retained in a
+compatibility module.  In particular, there is no =dtk-speak.el= loader and no
+=dtk-speak= feature after the file rename.
+
+The aliases introduced to keep the branch runnable during migration are
+strictly transitional development scaffolding.  They are removed as canonical
+definitions take ownership, and are not part of the completed migration.
 
 The prefix-map rename is an intentional immediate break:
 =emacsvox-dtk-submap= has no compatibility alias.  User configuration must use
 =emacsvox-tts-submap= instead; the default =C-e d= key sequence is unchanged.
 
-Variable aliases must preserve dynamic bindings, buffer-local values, default
-values, and Custom settings.  Function aliases preserve direct calls, but
-advice attached to a legacy alias does not intercept an internal call made
-through the canonical symbol.  That compatibility boundary must be documented
-and tested before internal calls change.
+The environment variable =DTK_PROGRAM= is also removed; configuration must use
+=TTS_PROGRAM=.
 
-=TTS_PROGRAM= takes precedence over =DTK_PROGRAM=.  The latter remains a
-documented fallback for a transition period.
+These are intentional breaking changes.  User configuration must replace
+=dtk-*= generic names with their =tts-*= equivalents and require =tts-speak=
+instead of =dtk-speak=.  Names that identify the DECtalk backend itself remain
+valid as described above.
 
 * Test Gates
 
@@ -125,17 +129,11 @@ Migrate launchers and generic server configuration from =DTK_*= to =TTS_*=,
 with tested fallback behavior.  Update source documentation and regenerate
 derived manuals separately.
 
-** 7. File and feature rename
+** 7. File, feature, and compatibility removal
 
-Move the generic implementation to =tts-speak.el= and provide a small
-=dtk-speak= compatibility loader.  File moves and compatibility removal are
-reviewed explicitly before they occur.
-
-** 8. Compatibility retirement
-
-After a transition release, remove the compatibility module and require a zero
-legacy audit outside files that describe real DECtalk backends or historical
-archives.
+Move the generic implementation to =tts-speak.el=, provide only =tts-speak=,
+remove transitional aliases, and require a zero legacy audit outside files
+that describe real DECtalk backends or historical archives.
 
 * Completion Criteria
 
@@ -145,4 +143,4 @@ archives.
 - The Emacs 31 suite, semantic traces, full build, and startup smoke pass.
 - Generic server configuration prefers =TTS_*= variables.
 - Remaining =dtk-= names identify DECtalk itself or are explicitly historical.
-- The compatibility layer is isolated and has a documented removal point.
+- The breaking namespace and feature changes are documented.

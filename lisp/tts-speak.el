@@ -1,4 +1,4 @@
-;;; dtk-speak.el --- Interface to speech server -*- lexical-binding: t; -*-
+;;; tts-speak.el --- Interface to speech server -*- lexical-binding: t; -*-
 ;;
 ;; $Author: tv.raman.tv $
 ;; Description:  Emacs interface to TTS
@@ -39,8 +39,7 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Commentary:
-;; This module defines the TTS interface.
-;; Here, prefix dtk is synonymous with tts.
+;; This module defines the generic TTS interface.
 ;;; Code:
 ;;
 
@@ -2201,8 +2200,8 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-notify-icon #'dtk-notify-icon)
 (defalias 'tts-notify-initialize #'dtk-notify-initialize)
 
-;;; dtk-unicode.el ends here
+;;; tts-speak.el ends here
 
-(provide 'dtk-speak)
+(provide 'tts-speak)
 
 ;; coding: utf-8

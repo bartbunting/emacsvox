@@ -113,7 +113,7 @@
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
-(require 'dtk-speak)
+(require 'tts-speak)
 
 ;;;  sox-gen-p:
 
@@ -666,4 +666,3 @@ remix - fade 0 4 .1 norm -1 channels 2"
 
 (provide 'sox-gen)
 ;;;  end of file
-

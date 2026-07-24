@@ -60,11 +60,11 @@ cd lisp && make clean # Remove compiled files
    - Functions like `emacspeak-speak-line`, `emacspeak-speak-region`, `emacspeak-speak-buffer`
    - Used by all speech-enabling modules
 
-2. **TTS Interface Layer** (`dtk-speak.el`)
+2. **TTS Interface Layer** (`tts-speak.el`)
    - Manages external TTS server process via stdin/stdout
    - Preprocesses text (handles pronunciations, invisible text, caps)
    - Chunks text and applies voice personalities based on text properties
-   - Core function: `dtk-speak` - sends text to TTS server
+   - Core function: `tts-speak` - sends text to TTS server
    - Process commands: `dtk-interp-queue`, `dtk-interp-speak`, `dtk-interp-silence`
 
 3. **Voice System** (`voice-setup.el`, `voice-defs.el`)
@@ -99,7 +99,7 @@ The codebase uses Emacs' modern `advice-add` system extensively (fully migrated 
 
 - `lisp/emacspeak.el` - Main entry point, package extension registry
 - `lisp/emacspeak-setup.el` - Initialization entry point
-- `lisp/dtk-speak.el` - TTS interface layer (~1800 lines)
+- `lisp/tts-speak.el` - TTS interface layer
 - `lisp/emacspeak-speak.el` - High-level speech API (~2300 lines)
 - `lisp/emacspeak-advice.el` - Core Emacs function wrapping
 - `lisp/emacspeak-preamble.el` - Paths and initialization

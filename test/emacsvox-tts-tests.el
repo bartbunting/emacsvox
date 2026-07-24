@@ -10,7 +10,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'dectalk-voices)
-(require 'dtk-speak)
+(require 'tts-speak)
 (require 'emacsvox-sounds)
 (require 'espeak-voices)
 (require 'mac-voices)

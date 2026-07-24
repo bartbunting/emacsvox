@@ -93,7 +93,7 @@
 ;;  Required modules: 
 
 (eval-when-compile (require 'cl-lib))
-(require 'dtk-speak)
+(require 'tts-speak)
 (eval-when-compile (require 'easy-mmode))
 
 ;;;  customization group
