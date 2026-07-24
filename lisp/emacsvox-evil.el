@@ -60,60 +60,70 @@
 
 ;;;  Interactive Commands:
 
+(defvar emacsvox-evil--advice nil
+  "Current Evil targets and their native advice functions.")
+(setq emacsvox-evil--advice nil)
+
+(defun emacsvox-evil--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-evil--advice))))
+
 ;;;  Switching Buffers:
 
-(cl-loop
- for f in
+(defun emacsvox-evil--mode-line-feedback ()
+  "Speak the mode line after switching Evil buffers."
+  (emacsvox-speak-mode-line))
+
+(emacsvox-evil--register-after-group
  '(evil-next-buffer evil-prev-buffer)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-mode-line)))))
+ #'emacsvox-evil--mode-line-feedback)
 
 ;;;  Structured  Motion:
 
-(cl-loop
- for f in
- '(
-   evil-beginning-of-line evil-end-of-line
-   evil-ret evil-window-top)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-evil--selected-line-feedback ()
+  "Speak the selected Evil line."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-line))
+
+(emacsvox-evil--register-after-group
+ '(evil-beginning-of-line evil-end-of-line evil-ret evil-window-top)
+ #'emacsvox-evil--selected-line-feedback)
 
 ;; we want the next set to be a little less noisy and not play
 ;; auditory icons when they execute
-(cl-loop
- for f in
+(defun emacsvox-evil--line-feedback ()
+  "Speak the current line."
+  (emacsvox-speak-line))
+
+(emacsvox-evil--register-after-group
  '(evil-next-line evil-previous-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)))))
+ #'emacsvox-evil--line-feedback)
 
 ;; read visual lines when moving in visual lines 
-(cl-loop
- for f in
- '(evil-next-visual-line evil-previous-visual-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-visual-line)))))
+(defun emacsvox-evil--visual-line-feedback ()
+  "Speak the current visual line."
+  (emacsvox-speak-visual-line))
 
-(cl-loop
- for f in
- '(
-   evil-goto-mark evil-goto-mark-line
+(emacsvox-evil--register-after-group
+ '(evil-next-visual-line evil-previous-visual-line)
+ #'emacsvox-evil--visual-line-feedback)
+
+(defun emacsvox-evil--large-movement-feedback ()
+  "Speak after a large Evil movement."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
+
+(emacsvox-evil--register-after-group
+ '(evil-goto-mark evil-goto-mark-line
    evil-goto-definition evil-goto-first-line evil-goto-line
    evil-forward-section-begin evil-forward-section-end
    evil-backward-paragraph evil-forward-paragraph
@@ -124,146 +134,146 @@
    evil-jump-backward evil-jump-forward evil-jump-to-tag
    evil-forward-sentence-begin evil-first-non-blank
    evil-backward-sentence-begin)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-icon 'large-movement)
-         (emacsvox-speak-line))))))
+ #'emacsvox-evil--large-movement-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-evil--scroll-feedback ()
+  "Speak the current window after an Evil scroll."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-current-window))
+
+(emacsvox-evil--register-after-group
  '(evil-scroll-down evil-scroll-up)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-current-window)))))
+ #'emacsvox-evil--scroll-feedback)
 
 ;;;  Word Motion
 
-(cl-loop
- for f in
- '(
-   evil-backward-word-begin evil-backward-word-end
+(defun emacsvox-evil--word-feedback ()
+  "Speak the current word after Evil word motion."
+  (emacsvox-speak-word))
+
+(emacsvox-evil--register-after-group
+ '(evil-backward-word-begin evil-backward-word-end
    evil-forward-word-begin evil-forward-word-end)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-word)))))
+ #'emacsvox-evil--word-feedback)
 
 ;;;  Char Motion :
 
-(defun ems--evil-backward-char-after (&rest _)
-  "Speak char."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-evil-backward-char-after (&rest _)
+  "Speak the character selected by backward Evil motion."
+  (when (ems-interactive-p 'evil-backward-char)
     (emacsvox-speak-this-char (following-char))))
 
-(advice-add 'evil-backward-char :after #'ems--evil-backward-char-after)
+(push '(evil-backward-char :after
+        emacsvox--advice-evil-backward-char-after)
+      emacsvox-evil--advice)
 
-(defun ems--evil-forward-char-after (&rest _)
-  "Speak char."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-evil-forward-char-after (&rest _)
+  "Speak the character selected by forward Evil motion."
+  (when (ems-interactive-p 'evil-forward-char)
     (emacsvox-speak-this-char (following-char))))
 
-(advice-add 'evil-forward-char :after #'ems--evil-forward-char-after)
+(push '(evil-forward-char :after
+        emacsvox--advice-evil-forward-char-after)
+      emacsvox-evil--advice)
 
 ;;;  Deletion:
 
-(defun ems--evil-delete-char-before (&rest _)
+(defun emacsvox--advice-evil-delete-char-before (&rest _)
   "Speak char we are deleting."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'evil-delete-char)
     (emacsvox-speak-char t) (dtk-tone-deletion)))
 
-(advice-add 'evil-delete-char :before #'ems--evil-delete-char-before)
+(push '(evil-delete-char :before
+        emacsvox--advice-evil-delete-char-before)
+      emacsvox-evil--advice)
 
-(defun ems--evil-delete-backward-char-before (&rest _)
+(defun emacsvox--advice-evil-delete-backward-char-before (&rest _)
   "Speak char we are deleting."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'evil-delete-backward-char)
     (emacsvox-speak-this-char (preceding-char)) (dtk-tone-deletion)))
 
-(advice-add 'evil-delete-backward-char :before
-            #'ems--evil-delete-backward-char-before)
+(push '(evil-delete-backward-char :before
+        emacsvox--advice-evil-delete-backward-char-before)
+      emacsvox-evil--advice)
 
-(defun ems--evil-delete-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-evil-delete-line-after (&rest _)
+  "Report deleting to the end of the line."
+  (when (ems-interactive-p 'evil-delete-line)
     (dtk-speak "Deleted to end of line.")
     (emacsvox-icon 'delete-object)))
 
-(advice-add 'evil-delete-line :after #'ems--evil-delete-line-after)
+(push '(evil-delete-line :after
+        emacsvox--advice-evil-delete-line-after)
+      emacsvox-evil--advice)
 
-(defun ems--evil-delete-before (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-evil-delete-before (beg end &rest _)
+  "Speak the Evil deletion between BEG and END."
+  (when (ems-interactive-p 'evil-delete)
     (emacsvox-icon 'delete-object)
-    (emacsvox-speak-region (ad-get-arg 0) (ad-get-arg 1))))
+    (emacsvox-speak-region beg end)))
 
-(advice-add 'evil-delete :before #'ems--evil-delete-before)
+(push '(evil-delete :before emacsvox--advice-evil-delete-before)
+      emacsvox-evil--advice)
 
 ;;;  Searching:
-(cl-loop
- for f in
+(defun emacsvox-evil--search-feedback ()
+  "Speak an Evil search match with point highlighted."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)
+    (emacsvox-icon 'search-hit)))
+
+(emacsvox-evil--register-after-group
  '(evil-search-next evil-search-previous)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak line with point highlighted."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line)
-         (emacsvox-icon 'search-hit))))))
+ #'emacsvox-evil--search-feedback)
 
 ;;;  Completion:
 
 (cl-loop
- for f in
+ for target in
  '(evil-complete-next evil-complete-previous)
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Speak what was completed."
-     (cond
-      ((ems-interactive-p)
-       (let ((orig (save-excursion (skip-syntax-backward "^ >") (point))))
-         (ems-with-messages-silenced
-          ad-do-it
-          (emacsvox-icon 'complete)
-          (if (< orig (point))
-              (dtk-speak (buffer-substring orig (point)))
-            (dtk-speak (word-at-point))))))
-      (t ad-do-it))
-     ad-return-value)))
+  `(defun ,advice-function (original &rest args)
+     ,(format "Call `%s' and speak the completed text." target)
+     (if (ems-interactive-p ',target)
+         (let ((start
+                (save-excursion
+                  (skip-syntax-backward "^ >")
+                  (point))))
+           (ems-with-messages-silenced
+            (let ((result (apply original args)))
+              (emacsvox-icon 'complete)
+              (if (< start (point))
+                  (dtk-speak (buffer-substring start (point)))
+                (dtk-speak (word-at-point)))
+              result)))
+       (apply original args))))
+ (push (list target :around advice-function) emacsvox-evil--advice))
 
-(cl-loop
- for f in
+(defun emacsvox-evil--line-completion-feedback ()
+  "Speak a line completed by Evil."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'complete)
+    (emacsvox-speak-line)))
+
+(emacsvox-evil--register-after-group
  '(evil-complete-next-line evil-complete-previous-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak completed line."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-icon 'complete)
-         (emacsvox-speak-line))))))
+ #'emacsvox-evil--line-completion-feedback)
 
 ;;;  Marks:
 
-(defun ems--evil-set-marker-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-evil-set-marker-after (char &rest _)
+  "Speak after setting Evil marker CHAR."
+  (when (ems-interactive-p 'evil-set-marker)
     (emacsvox-icon 'mark-object)
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line)
-      (dtk-notify (format "Marker %c" (ad-get-arg 0))))))
+      (dtk-notify (format "Marker %c" char)))))
 
-(advice-add 'evil-set-marker :after #'ems--evil-set-marker-after)
+(push '(evil-set-marker :after emacsvox--advice-evil-set-marker-after)
+      emacsvox-evil--advice)
 
 ;;;  Update keymaps:
 
@@ -324,13 +334,25 @@
  do
  (add-hook hook #'emacsvox-evil-state-change-hook))
 
-(defun ems--evil-exit-emacs-state-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-evil-exit-emacs-state-after (&rest _)
+  "Report leaving Evil's Emacs state."
+  (when (ems-interactive-p 'evil-exit-emacs-state)
     (emacsvox-icon 'open-object) (dtk-notify "Leaving Emacs state.")))
 
-(advice-add 'evil-exit-emacs-state :after
-            #'ems--evil-exit-emacs-state-after)
+(push '(evil-exit-emacs-state :after
+        emacsvox--advice-evil-exit-emacs-state-after)
+      emacsvox-evil--advice)
+
+(defun emacsvox-evil--install-advice ()
+  "Install native advice after the optional Evil package loads."
+  (dolist (entry emacsvox-evil--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'evil
+  (emacsvox-evil--install-advice))
 
 ;;;  Additional Commands:
 
@@ -349,4 +371,3 @@
 
 (provide 'emacsvox-evil)
 ;;;  end of file
-
