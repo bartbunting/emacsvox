@@ -64,7 +64,7 @@
               ((symbol-function 'sox-tones)
                (lambda (&rest arguments)
                  (push (list 'tones arguments) events)))
-              ((symbol-function 'dtk-speak-list)
+              ((symbol-function 'tts-speak-list)
                (lambda (items) (push (list 'speak-list items) events))))
       (emacsvox--advice-read-multiple-choice-before
        "Continue? "

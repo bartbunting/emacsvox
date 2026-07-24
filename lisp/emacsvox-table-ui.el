@@ -272,7 +272,7 @@ Full List Of Keybindings:
                            emacsvox-table)))))
     (cond
      ((zerop (length content))
-      (dtk-speak-list "blank")
+      (tts-speak-list "blank")
       (sox-sin 0.1 400))
      (t (message content)))))
 

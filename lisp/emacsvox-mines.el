@@ -137,7 +137,7 @@ to beginning of board before searching."
                   ((and v (numberp n))  (format "%d" n))
                   ((eq '@ v)  "at")
                   (t (message "Should not  get here"))))))))
-    (dtk-speak-list cells mines-number-cols)))
+    (tts-speak-list cells mines-number-cols)))
 
 (defun emacsvox-mines-init ()
   "Setup additional keys for playing minesweeper."
@@ -204,7 +204,7 @@ to beginning of board before searching."
       ((= 5 count) ;;; left/right edge
        '(2 1 2))
       (t '(3 2 3))))
-    (dtk-speak-list (nreverse result) group)))
+    (tts-speak-list (nreverse result) group)))
 (defun emacsvox-mines-beginning-of-row  ()
   "Move to beginning of row"
   (interactive)

@@ -188,7 +188,7 @@
   (cl-assert (eq major-mode 'chess-display-mode) t "Not in a Chess  display.")
   (let ((index (get-text-property (point) 'chess-coord)))
     (cl-assert index t "Not on a valid square.")
-    (dtk-speak-list  (emacsvox-chess-describe-square index))))
+    (tts-speak-list  (emacsvox-chess-describe-square index))))
 
 (defun emacsvox-chess-speak-that-square (coord)
   "Speak square at specified coord."
@@ -196,7 +196,7 @@
   (cl-assert (eq major-mode 'chess-display-mode) t "Not in a Chess  display.")
   (let ((index (chess-coord-to-index coord)))
     (cl-assert index t "Not  a valid square.")
-    (dtk-speak-list  (emacsvox-chess-describe-square index) 2)))
+    (tts-speak-list  (emacsvox-chess-describe-square index) 2)))
 
 ;;; Board Navigation:
 
@@ -319,14 +319,14 @@
 (defun emacsvox-chess-speak-board ()
   "Speak complete board. Only useful in end-states."
   (interactive)
-  (dtk-speak-list (emacsvox-chess-collect-all-squares) 2))
+  (tts-speak-list (emacsvox-chess-collect-all-squares) 2))
 
 (defun emacsvox-chess-look-north ()
   "Look north "
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-north)
    2))
 
@@ -335,7 +335,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-south)
    2))
 
@@ -344,7 +344,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-west)
    2))
 
@@ -353,7 +353,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-east)
    2))
 
@@ -362,7 +362,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-northwest)
    2))
 
@@ -371,7 +371,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-southwest)
    2))
 
@@ -380,7 +380,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-northeast)
    2))
 
@@ -389,7 +389,7 @@
   (interactive)
   
   (emacsvox-icon 'task-done)
-  (dtk-speak-list
+  (tts-speak-list
    (emacsvox-chess-collect-squares chess-direction-southeast)
    2))
 
@@ -457,7 +457,7 @@
 (defun emacsvox-chess-look-knight ()
   "Look along non-empty squares reachable by a knight from current position. "
   (interactive)
-  (dtk-speak-list (emacsvox-chess-collect-knight-squares) 2)
+  (tts-speak-list (emacsvox-chess-collect-knight-squares) 2)
   (emacsvox-icon 'task-done))
 
 (defun emacsvox-chess-collect-king-squares ()
@@ -491,7 +491,7 @@
 (defun emacsvox-chess-look-king ()
   "Look along non-empty squares reachable by the king  from current position. "
   (interactive)
-  (dtk-speak-list (emacsvox-chess-collect-king-squares) 2)
+  (tts-speak-list (emacsvox-chess-collect-king-squares) 2)
   (emacsvox-icon 'task-done))
 
 (defun emacsvox-chess-square-name (index)
@@ -559,7 +559,7 @@
   `w' for all whites pieces,  `l' for all black pieces,
 and `a' for entire board.."
   (interactive (list (read-char  "Piece:")))
-  (dtk-speak-list (emacsvox-chess-piece-squares piece)))
+  (tts-speak-list (emacsvox-chess-piece-squares piece)))
 
 (defun emacsvox-chess-target-squares (piece)
   "Return a description of pieces that target  current square."
@@ -598,7 +598,7 @@ and `a' for entire board.."
 Argument `piece' specifies  piece-or-color as in command
   emacsvox-chess-speak-piece-squares"
   (interactive (list (read-char  "Piece:")))
-  (dtk-speak-list (emacsvox-chess-target-squares piece)))
+  (tts-speak-list (emacsvox-chess-target-squares piece)))
 
 (defun emacsvox-chess-view-rank-or-file ()
   "View a complete rank or file from white's perspective."
@@ -773,7 +773,7 @@ specifies index of move, default is final index."
     (when (ems-interactive-p 'chess-display-select-piece)
       (cond
        ((consp chess-display-last-selected)
-        (dtk-speak-list (emacsvox-chess-describe-square square))
+        (tts-speak-list (emacsvox-chess-describe-square square))
         (emacsvox-icon 'select-object))
        ((and (consp previous-selection)
              (= (point) (car previous-selection)))

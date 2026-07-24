@@ -187,7 +187,7 @@
 (defun emacsvox-transient--history-feedback (target)
   "Speak history when TARGET is the interactive command."
   (when (ems-interactive-p target)
-    (dtk-speak-list (minibuffer-contents))
+    (tts-speak-list (minibuffer-contents))
     (emacsvox-icon 'select-object)))
 
 (defun emacsvox--advice-transient-history-next-after (&rest _)

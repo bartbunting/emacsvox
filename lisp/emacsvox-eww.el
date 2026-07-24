@@ -2094,7 +2094,7 @@ The %s is automatically spoken if there is no user activity."
   (interactive)
   (let ((tags (emacsvox-eww-here-tags)))
     (print tags)
-    (dtk-speak-list tags)))
+    (tts-speak-list tags)))
 
 ;;;  Handling Media (audio/video)
 

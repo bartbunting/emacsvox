@@ -233,13 +233,13 @@ Optional interactive prefix arg prompts for a filename."
   "Speak board."
   (interactive)
   
-  (dtk-speak-list (append *2048-board* nil) *2048-columns*))
+  (tts-speak-list (append *2048-board* nil) *2048-columns*))
 
 (defun emacsvox-2048-speak-transposed-board ()
   "Speak board column-wise."
   (interactive)
   
-  (dtk-speak-list
+  (tts-speak-list
    (cl-loop for col from 0 to (- *2048-columns*  1)
             collect
             (cl-loop for row from 0 to (- *2048-rows*  1)

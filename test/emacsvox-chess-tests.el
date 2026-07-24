@@ -46,7 +46,7 @@
                  (lambda (icon) (push icon events)))
                 ((symbol-function 'emacsvox-chess-describe-square)
                  (lambda (_square) '("a1" "rook")))
-                ((symbol-function 'dtk-speak-list)
+                ((symbol-function 'tts-speak-list)
                  (lambda (description &rest _)
                    (push description events))))
         (should

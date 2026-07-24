@@ -97,7 +97,7 @@ s   Sub-square Distribution.
                       do
                       (if (> v 0)
                           (cl-incf (aref counts (1- v))))))
-    (dtk-speak-list
+    (tts-speak-list
      (cl-loop for i across counts collect i)
      3)))
 
@@ -105,7 +105,7 @@ s   Sub-square Distribution.
   "Summarize rows --- speaks number of remaining cells."
   (interactive)
   
-  (dtk-speak-list
+  (tts-speak-list
    (cl-loop for r in current-board
             collect  (cl-count 0 r))
    3))
@@ -114,7 +114,7 @@ s   Sub-square Distribution.
   "Summarize columns --- speaks number of remaining cells."
   (interactive)
   
-  (dtk-speak-list
+  (tts-speak-list
    (cl-loop for c from 0 to 8
             collect  (cl-count 0 (sudoku-column current-board c)))
    3))
@@ -123,7 +123,7 @@ s   Sub-square Distribution.
   "Summarize sub-squares --- speaks number of remaining cells."
   (interactive)
   
-  (dtk-speak-list
+  (tts-speak-list
    (cl-loop for s from 0 to 8
             collect  (cl-count 0 (sudoku-subsquare current-board s)))
    3))
@@ -143,7 +143,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak-list (sudoku-row current-board
+    (tts-speak-list (sudoku-row current-board
                                 (cl-second cell))
                     3)))
 
@@ -152,7 +152,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak-list (sudoku-column  current-board
+    (tts-speak-list (sudoku-column  current-board
                                     (cl-first cell))
                     3)))
 
@@ -168,7 +168,7 @@ s   Sub-square Distribution.
   (interactive)
   
   (let ((cell (sudoku-get-cell-from-point (point))))
-    (dtk-speak-list
+    (tts-speak-list
      (sudoku-subsquare  current-board
                         (emacsvox-sudoku-cell-sub-square cell))
      3)))
@@ -192,7 +192,7 @@ s   Sub-square Distribution.
                      (cl-second cell))))
     (cond
      (possibles 
-      (dtk-speak-list possibles))
+      (tts-speak-list possibles))
      (t (message "Dead End")))))
 
 (defun emacsvox-sudoku-speak-remaining-in-row ()

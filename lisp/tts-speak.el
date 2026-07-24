@@ -1724,7 +1724,7 @@ unless   `dtk-quiet' is set to t. "
            (inhibit-message t))
        ,@body)))
 
-(defun dtk-speak-list (text &optional group)
+(defun tts-speak-list (text &optional group)
   "Speak a  list of strings.
  Optional argument group specifies grouping for intonation.  If
 `group' is a list, it should specify split points where clause
@@ -2160,7 +2160,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-unicode-char-untouched-p #'dtk-unicode-char-untouched-p)
 (defalias 'tts-unicode-name-for-char #'dtk-unicode-name-for-char)
 (defalias 'tts-unicode-full-name-for-char #'dtk-unicode-full-name-for-char)
-(defalias 'tts-speak-list #'dtk-speak-list)
 (defalias 'tts-letter #'dtk-letter)
 (defalias 'tts-notify-process #'dtk-notify-process)
 (defalias 'tts-notify-stop #'dtk-notify-stop)

@@ -135,7 +135,7 @@
         (next
          (list (propertize
                 (format "%s" threes-next-number) 'personality voice-bolden))))
-    (dtk-speak-list (append cells next) 4)
+    (tts-speak-list (append cells next) 4)
     (emacsvox-icon 'select-object)))
 
 (defun emacsvox-threes-speak-empty-count ()
@@ -158,7 +158,7 @@
   "Speak the board by columns."
   (interactive)
   
-  (dtk-speak-list   (threes-cells-transpose threes-cells) 4)
+  (tts-speak-list   (threes-cells-transpose threes-cells) 4)
   (emacsvox-icon 'progress))
 
 (defun emacsvox-threes-setup ()

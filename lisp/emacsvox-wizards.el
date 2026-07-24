@@ -2427,7 +2427,7 @@ Optional interactive prefix arg reverse-geocodes using Google Maps."
         (tts-speak
          (gmaps-reverse-geocode
           `((lat . ,.latitude) (lng . ,.longitude ))))
-      (dtk-speak-list (list  .city .region_name)))))
+      (tts-speak-list (list  .city .region_name)))))
 
 ;;;  Open Frame On Remote Emacs:
 

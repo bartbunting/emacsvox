@@ -85,7 +85,6 @@
     (tts-unicode-char-untouched-p . dtk-unicode-char-untouched-p)
     (tts-unicode-name-for-char . dtk-unicode-name-for-char)
     (tts-unicode-full-name-for-char . dtk-unicode-full-name-for-char)
-    (tts-speak-list . dtk-speak-list)
     (tts-letter . dtk-letter)
     (tts-notify-process . dtk-notify-process)
     (tts-notify-stop . dtk-notify-stop)
@@ -263,6 +262,10 @@
 (ert-deftest emacsvox-tts-legacy-stop-function-is-removed ()
   "The speech stop entry point no longer exposes its DECtalk-era name."
   (should-not (fboundp 'dtk-stop)))
+
+(ert-deftest emacsvox-tts-legacy-speak-list-function-is-removed ()
+  "List speech no longer exposes its DECtalk-era function name."
+  (should-not (fboundp 'dtk-speak-list)))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
