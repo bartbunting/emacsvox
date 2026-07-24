@@ -989,20 +989,35 @@ used as well."
 
 ;;;   URL Advice: 
 
-(cl-loop
- for f in
- '(
-   url-write-global-history url-history-save-history
-   url-http-chunked-encoding-after-change-function url-cookie-handle-set-cookie
-   url-retrieve-internal
-   url-lazy-message url-cookie-write-file)
- do
- (eval
-  `(defadvice   ,f (around emacsvox pre act comp)
-     "Silence messages while this function executes"
-     (let ((url-show-status nil))
-       (ems-with-messages-silenced ad-do-it)))))
+(defconst emacsvox-we--url-advice-targets
+  '(url-history-save-history
+    url-http-chunked-encoding-after-change-function
+    url-cookie-handle-set-cookie url-retrieve-internal
+    url-lazy-message url-cookie-write-file)
+  "Current URL functions whose routine messages are silenced.")
+
+(dolist (target emacsvox-we--url-advice-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    (eval
+     `(defun ,advice-function (orig-fun &rest args)
+        ,(format "Call `%s' while silencing routine URL messages." target)
+        (let ((url-show-status nil))
+          (ems-with-messages-silenced
+           (apply orig-fun args)))))))
+
+(defun emacsvox-we--install-url-advice ()
+  "Install native advice for URL features loaded so far."
+  (dolist (target emacsvox-we--url-advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox)))))))
+
+(dolist (feature '(url url-cookie url-history url-http))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-we--install-url-advice))))
 
 (provide 'emacsvox-we)
 ;;;  end of file
-

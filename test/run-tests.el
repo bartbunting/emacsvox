@@ -238,6 +238,7 @@
   (require 'emacsvox-vdiff-tests)
   (require 'emacsvox-vertico-tests)
   (require 'emacsvox-vterm-tests)
+  (require 'emacsvox-we-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
