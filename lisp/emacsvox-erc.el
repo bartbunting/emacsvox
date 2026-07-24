@@ -49,6 +49,7 @@
 ;;  required modules
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'erc)
 ;;;   variables
 
 (cl-declaim (special emacsvox-sounds-dir))
@@ -90,34 +91,30 @@ server."
  'erc-mode
  emacsvox-pronounce-internet-smileys-pronunciations)
 
-(defun ems--erc-mode-after (&rest _)
-  "Turn on voice lock mode." 
+(defvar voice-lock-mode)
+
+(defun emacsvox--advice-erc-mode-after (&rest _)
+  "Turn on voice lock mode."
   (emacsvox-pronounce-refresh-pronunciations)
   (setq voice-lock-mode t))
 
-(advice-add 'erc-mode :after #'ems--erc-mode-after)
+(advice-add 'erc-mode :after #'emacsvox--advice-erc-mode-after)
 
-(defun ems--erc-select-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-erc-select-after (&rest _)
+  "Announce an interactively selected ERC buffer."
+  (when (ems-interactive-p 'erc-select)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'erc-select :after #'ems--erc-select-after)
+(advice-add 'erc-select :after #'emacsvox--advice-erc-select-after)
 
-(defun ems--erc-send-current-line-after (&rest _)
+(defun emacsvox--advice-erc-send-current-line-after (&rest _)
   "Provide auditory icon."
-  (when (ems-interactive-p) (emacsvox-icon 'select-object)))
+  (when (ems-interactive-p 'erc-send-current-line)
+    (emacsvox-icon 'select-object)))
 
 (advice-add 'erc-send-current-line :after
-            #'ems--erc-send-current-line-after)
+            #'emacsvox--advice-erc-send-current-line-after)
 
-(defun ems--erc-send-paragraph-after (&rest _)
-  "Provide auditory icon."
-  (when (ems-interactive-p) (emacsvox-icon 'paragraph)))
-
-(advice-add 'erc-send-paragraph :after #'ems--erc-send-paragraph-after)
-
-(provide 'emacsvox-erc)
 ;;;  monitoring chatrooms 
 (defvar emacsvox-erc-room-monitor nil
   "Local to each chat room. If turned on,
@@ -200,10 +197,6 @@ Optional interactive prefix  arg defines a pronunciation that
 (defun emacsvox-erc-compute-message (string _buffer)
   "Uses environment of buffer to decide what message to
 display. String is the original message."
-  (cl-declare (special emacsvox-erc-people-to-monitor
-                       emacsvox-erc-my-nick
-                       emacsvox-erc-speak-all-participants
-                       emacsvox-erc-monitor-my-messages))
   (let ((who-from (car (split-string string)))
         (case-fold-search t))
     (cond
@@ -230,48 +223,28 @@ Interactive
 PREFIX arg means toggle the global default value, and then
 set the current local value to the result.")
 
-(defun ems--erc-display-line-buffer-after (&rest _)
-  "Speech-enable ERC."
-  (cl-declare
-   (special emacsvox-erc-room-monitor
-            emacsvox-erc-monitor-my-messages emacsvox-erc-my-nick))
-  (let ((buffer (ad-get-arg 1)) (case-fold-search t))
+(defun emacsvox--advice-erc-insert-line-after (string buffer)
+  "Speak monitored ERC message STRING inserted in BUFFER."
+  (setq buffer
+        (or buffer
+            (and (boundp 'erc-server-process)
+                 (processp erc-server-process)
+                 (process-buffer erc-server-process))))
+  (when (and (stringp string) (buffer-live-p buffer))
     (with-current-buffer buffer
-      (when
-          (and emacsvox-erc-room-monitor
-               emacsvox-erc-monitor-my-messages)
-        (let
-            ((emacsvox-speak-messages nil)
-             (msg
-              (emacsvox-erc-compute-message (ad-get-arg 0) buffer)))
+      (when (and emacsvox-erc-room-monitor
+                 emacsvox-erc-monitor-my-messages)
+        (let ((emacsvox-speak-messages nil)
+              (case-fold-search t)
+              (msg (emacsvox-erc-compute-message string buffer)))
           (when msg
-            (emacsvox-icon 'progress) (message msg)
+            (emacsvox-icon 'progress)
+            (message "%s" msg)
             (tts-with-punctuations dtk-punctuation-mode
-                                   (dtk-speak msg))))))))
+              (dtk-speak msg))))))))
 
-(advice-add 'erc-display-line-buffer :after
-            #'ems--erc-display-line-buffer-after)
-
-(defun ems--erc-display-line-1-after (&rest _)
-  "Speech-enable ERC."
-  (cl-declare
-   (special emacsvox-erc-room-monitor
-            emacsvox-erc-monitor-my-messages emacsvox-erc-my-nick))
-  (let ((buffer (ad-get-arg 1)) (case-fold-search t))
-    (save-current-buffer
-      (set-buffer buffer)
-      (when
-          (and emacsvox-erc-room-monitor
-               emacsvox-erc-monitor-my-messages)
-        (let
-            ((msg
-              (emacsvox-erc-compute-message (ad-get-arg 0) buffer)))
-          (when msg
-            (emacsvox-icon 'progress) (message (format "%s" msg))
-            (tts-with-punctuations dtk-punctuation-mode
-                                   (dtk-speak msg))))))))
-
-(advice-add 'erc-display-line-1 :after #'ems--erc-display-line-1-after)
+(advice-add 'erc-insert-line :after
+            #'emacsvox--advice-erc-insert-line-after)
 
 (ems-generate-switcher 'emacsvox-erc-toggle-room-monitor
                        'emacsvox-erc-room-monitor
@@ -288,22 +261,21 @@ set the current local value to the result.")
 
 ;;;  silence server messages 
 
-(defun ems--erc-parse-line-from-server-around (orig-fun &rest args)
-  "Silence server messages."
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages nil))
-      (apply orig-fun args) result)
-    result))
+(defun emacsvox--advice-erc-parse-server-response-around
+    (orig-fun &rest args)
+  "Run the ERC server parser once with automatic message speech silenced."
+  (let ((emacsvox-speak-messages nil))
+    (apply orig-fun args)))
 
-(advice-add 'erc-parse-line-from-server :around
-            #'ems--erc-parse-line-from-server-around)
+(advice-add 'erc-parse-server-response :around
+            #'emacsvox--advice-erc-parse-server-response-around)
 
 ;;;  define emacsvox keys
 (cl-declaim (special erc-mode-map))
 (when (and (boundp 'erc-mode-map)
            (keymapp erc-mode-map))
   (define-key erc-mode-map
-              (kbd "C-c ") 'emacsvox-erc-toggle-speak-all-participants)
+              (kbd "C-c SPC") 'emacsvox-erc-toggle-speak-all-participants)
   (define-key erc-mode-map (kbd "C-c m")
               'emacsvox-erc-toggle-my-monitor)
   (define-key erc-mode-map (kbd "C-c C-m") 'emacsvox-erc-toggle-room-monitor)
@@ -381,5 +353,6 @@ set the current local value to the result.")
                 (substring pattern 0 -1)))))
   (dtk-set-punctuations 'some))
 
-;;;  end of file
+(provide 'emacsvox-erc)
 
+;;;  end of file
