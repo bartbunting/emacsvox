@@ -352,7 +352,7 @@ more results."
              (libxml-parse-xml-region (point-min) (point-max))
              'title)))
       (when title
-        (setq title (dom-text (cl-first title)))
+        (setq title (dom-inner-text (cl-first title)))
         (setq title (replace-regexp-in-string " +" "-" title)))
       (kill-buffer)
       (expand-file-name
@@ -380,4 +380,3 @@ more results."
 
 (provide 'emacsvox-librivox)
 ;;;  end of file
-

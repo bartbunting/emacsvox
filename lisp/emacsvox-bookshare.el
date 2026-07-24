@@ -155,7 +155,7 @@ This is used by the various Bookshare view commands to display
   "Extract text from specified tag, and clean up entity references."
   (xml-substitute-special
    (xml-substitute-numeric-entities
-    (dom-text (dom-by-tag dom tag)))))
+    (dom-inner-text (dom-by-tag dom tag)))))
 
 (defsubst emacsvox-bookshare-assert ()
   "Error out if not in Bookshare mode."
@@ -344,7 +344,7 @@ Optional argument `no-auth' says we dont need a user auth."
             'result)))
       (cl-loop
        for r in result collect
-       (url-encode-url (dom-text (dom-by-tag r  'name))))))))
+       (url-encode-url (dom-inner-text (dom-by-tag r 'name))))))))
 
 ;;  Following actions return book metadata:
 
@@ -669,7 +669,7 @@ b Browse
   "Handle messages element."
   
   (let ((start (point)))
-    (mapc #'insert(dom-text   (dom-child-by-tag messages 'string)))
+    (insert (dom-inner-text (dom-child-by-tag messages 'string)))
     (insert "\t")
     (insert
      (mapconcat
@@ -686,9 +686,9 @@ b Browse
   "Handlestatus-code element."
   
   (let ((start (point)))
-    (message "Status-Code: %s" (dom-text    status-code))
+    (message "Status-Code: %s" (dom-inner-text status-code))
     (insert "Status Code: ")
-    (mapc #'insert (dom-text    status-code))
+    (insert (dom-inner-text status-code))
     (insert "\t")
     (insert
      (mapconcat
@@ -703,15 +703,15 @@ b Browse
 
 (defun emacsvox-bookshare-page-handler (page)
   "Handle page element."
-  (insert (format "Page: %s\t" (dom-text page))))
+  (insert (format "Page: %s\t" (dom-inner-text page))))
 
 (defun emacsvox-bookshare-limit-handler (limit)
   "Handle limit element."
-  (insert (format "Limit: %s\t" (dom-text limit))))
+  (insert (format "Limit: %s\t" (dom-inner-text limit))))
 
 (defun emacsvox-bookshare-num-pages-handler (num-pages)
   "Handle num-pages element."
-  (insert (format "Num-Pages: %s\n" (dom-text num-pages))))
+  (insert (format "Num-Pages: %s\n" (dom-inner-text num-pages))))
 
 (defun emacsvox-bookshare-display-setting (result)
   "Display user setting result."
@@ -725,7 +725,7 @@ b Browse
     (emacsvox-bookshare-display-setting result))
    (t ;Book Result
     (let ((start (point))
-          (id (dom-text (dom-child-by-tag result 'id)))
+          (id (dom-inner-text (dom-child-by-tag result 'id)))
           (title (emacsvox-bookshare-dom-clean-text result 'title))
           (author (emacsvox-bookshare-dom-clean-text result 'author))
           (directory nil)
@@ -805,7 +805,7 @@ b Browse
             (format "%s\n"
                     (xml-substitute-special
                      (xml-substitute-numeric-entities
-                      (dom-text child)))))
+                      (dom-inner-text child)))))
            (fill-region-as-paragraph start (point))))
      (sort
       display
@@ -814,7 +814,7 @@ b Browse
                                         ; Show availability:
     (insert
      (format "Available: %s"
-             (mapconcat #'dom-text available " ")))))
+             (mapconcat #'dom-inner-text available " ")))))
 
 ;;;  Generate Declarations:
 (declare-function emacsvox-bookshare-get-author    "emacsvox-bookshare" nil)
@@ -1365,4 +1365,3 @@ Useful for fulltext search in a book."
 
 (provide 'emacsvox-bookshare)
 ;;;  end of file
-

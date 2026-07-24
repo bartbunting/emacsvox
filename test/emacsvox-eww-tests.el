@@ -472,5 +472,29 @@
       'image-buffer))
     (should (= calls 1))))
 
+(ert-deftest emacsvox-eww-dom-filter-matches-nested-text ()
+  "DOM filtering searches text nested inside inline elements."
+  (let ((dom
+         '(html nil
+                (body nil
+                      (p ((id . "match"))
+                         "Read " (strong nil "accessible") " text")
+                      (p ((id . "miss")) "Unrelated text"))))
+        selected)
+    (cl-letf (((symbol-function 'emacsvox-eww-current-dom)
+               (lambda () dom))
+              ((symbol-function 'eww-current-url)
+               (lambda () "https://example.test/"))
+              ((symbol-function 'dom-html-from-nodes)
+               (lambda (nodes _url)
+                 (setq selected nodes)
+                 "<html></html>"))
+              ((symbol-function 'emacsvox-eww-view-helper) #'ignore)
+              ((symbol-function 'emacsvox-icon) #'ignore)
+              ((symbol-function 'emacsvox-speak-header-line) #'ignore))
+      (eww-view-dom-element-having-text 'p "accessible"))
+    (should (= (length selected) 1))
+    (should (equal (dom-attr (car selected) 'id) "match"))))
+
 (provide 'emacsvox-eww-tests)
 ;;; emacsvox-eww-tests.el ends here
