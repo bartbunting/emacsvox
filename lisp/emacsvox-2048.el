@@ -247,14 +247,18 @@ Optional interactive prefix arg prompts for a filename."
                      (aref  *2048-board*  (+ col (* 4 row)))))
    *2048-rows*))
 
+(defconst emacsvox-2048--move-targets
+  '(2048-left 2048-right 2048-down 2048-up)
+  "2048 movement commands that receive spoken board feedback.")
+
 (cl-loop
- for f in
- '(2048-left 2048-right 2048-down 2048-up)
+ for target in emacsvox-2048--move-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak"
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (cond
         ((cl-some #'identity *2048-combines-this-move*)
          (emacsvox-icon 'item))
@@ -264,11 +268,24 @@ Optional interactive prefix arg prompts for a filename."
         ((2048-game-was-won) (emacsvox-icon 'task-done))
         ((2048-game-was-lost) (emacsvox-icon 'alarm)))))))
 
-(defun ems--2048-insert-random-cell-after (&rest _)
+(defun emacsvox--advice-2048-insert-random-cell-after (&rest _)
   "Provide auditory icon" (emacsvox-icon 'item))
 
-(advice-add '2048-insert-random-cell :after
-            #'ems--2048-insert-random-cell-after)
+(defconst emacsvox-2048--advice-targets
+  (append emacsvox-2048--move-targets '(2048-insert-random-cell))
+  "Current 2048 targets that receive native after advice.")
+
+(defun emacsvox-2048--install-advice ()
+  "Install advice after the optional 2048 package loads."
+  (dolist (target emacsvox-2048--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load '2048-game
+  (emacsvox-2048--install-advice))
 
 (defun emacsvox-2048-score ()
   "Show total on board."
@@ -329,4 +346,3 @@ Optional interactive prefix arg prompts for a filename."
 
 (provide 'emacsvox-2048)
 ;;;  end of file
-

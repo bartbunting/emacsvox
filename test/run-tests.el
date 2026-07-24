@@ -170,6 +170,7 @@
   (require 'emacsvox-rust-mode-tests)
   (require 'emacsvox-markdown-tests)
   (require 'emacsvox-py-tests)
+  (require 'emacsvox-2048-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
