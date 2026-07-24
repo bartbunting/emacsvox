@@ -91,6 +91,11 @@
 
 ;;;   hangman
 
+(defvar hm-current-guess-string)
+(defvar hm-current-word)
+(defvar hm-map nil)
+(defvar hm-win-statistics)
+
 (defun emacsvox-hangman-speak-statistics ()
   "Speak statistics."
   (interactive)
@@ -107,17 +112,14 @@
             (not emacsvox-pronounce-table))
     (emacsvox-pronounce-toggle-dictionaries)))
 
-(defun ems--hm-self-guess-char-after (&rest _)
+(defun emacsvox--advice-hm-self-guess-char-after (&rest _)
   "Speak the char."
-  (when (ems-interactive-p) (emacsvox-icon 'select-object)))
-
-(advice-add 'hm-self-guess-char :after #'ems--hm-self-guess-char-after)
+  (when (ems-interactive-p 'hm-self-guess-char)
+    (emacsvox-icon 'select-object)))
 
 (defun emacsvox-hangman-speak-guess ()
   "Speak current guessed string. "
   (interactive)
-  (cl-declare (special hm-current-guess-string
-                       hm-current-word))
   (let ((string (make-string  (length hm-current-word)
                               ?\))))
     (cl-loop for i from 0 to (1- (length hm-current-word))
@@ -128,20 +130,25 @@
               (length string)
               (downcase string))))
 
-(defun ems--hangman-after (&rest _)
+(defun emacsvox--advice-hangman-after (&rest _)
   "Speech enable hangman."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'hangman)
     (emacsvox-hangman-setup-pronunciations)
     (emacsvox-icon 'open-object)))
 
-(advice-add 'hangman :after #'ems--hangman-after)
+(defun emacsvox-hangman--install ()
+  "Install advice and bindings after the optional Hangman package loads."
+  (when (fboundp 'hm-self-guess-char)
+    (advice-add 'hm-self-guess-char :after
+                #'emacsvox--advice-hm-self-guess-char-after))
+  (when (fboundp 'hangman)
+    (advice-add 'hangman :after #'emacsvox--advice-hangman-after))
+  (when (and (boundp 'hm-map) (keymapp hm-map))
+    (define-key hm-map " " #'emacsvox-hangman-speak-guess)
+    (define-key hm-map "=" #'emacsvox-hangman-speak-statistics)))
 
-(cl-declaim (special hm-map))
-(when (boundp 'hm-map)
-  (cl-declaim (special hm-map))
-  (define-key hm-map " " 'emacsvox-hangman-speak-guess)
-  (define-key hm-map "=" 'emacsvox-hangman-speak-statistics)
-  )
+(with-eval-after-load 'hangman
+  (emacsvox-hangman--install))
 
 (provide 'emacsvox-entertain)
 ;;;  end of file
