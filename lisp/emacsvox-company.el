@@ -93,32 +93,43 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--company-complete-selection-before (&rest _)
+(defun emacsvox--advice-company-complete-selection-before (&rest _)
   "Speak the selection."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'company-complete-selection)
     (emacsvox-icon 'select-object) (dtk-speak (ems-company-current))))
 
-(advice-add 'company-complete-selection :before
-            #'ems--company-complete-selection-before)
-
-(defun ems--company-complete-number-after (&rest _)
+(defun emacsvox--advice-company-complete-tooltip-row-after (&rest _)
   "Speak what we completed."
-  (when (ems-interactive-p) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'company-complete-tooltip-row)
+    (emacsvox-speak-line)))
 
-(advice-add 'company-complete-number :after
-            #'ems--company-complete-number-after)
-
-(defun ems--company-show-doc-buffer-before (&rest _)
+(defun emacsvox--advice-company-show-doc-buffer-before (&rest _)
   "Speak."
-  (let*
-      ((selected (nth company-selection company-candidates))
+  (let* ((selection (or company-selection 0))
+       (selected (nth selection company-candidates))
        (doc-buffer
         (or (company-call-backend 'doc-buffer selected)
             (error "No documentation available"))))
+    (when (consp doc-buffer)
+      (setq doc-buffer (car doc-buffer)))
     (with-current-buffer doc-buffer (dtk-speak (buffer-string)))))
 
-(advice-add 'company-show-doc-buffer :before
-            #'ems--company-show-doc-buffer-before)
+(defconst emacsvox-company--advice
+  '((company-complete-selection :before
+     emacsvox--advice-company-complete-selection-before)
+    (company-complete-tooltip-row :after
+     emacsvox--advice-company-complete-tooltip-row-after)
+    (company-show-doc-buffer :before
+     emacsvox--advice-company-show-doc-buffer-before))
+  "Current Company targets and their native advice functions.")
+
+(defun emacsvox-company--install-advice ()
+  "Install advice for the current Company API."
+  (dolist (entry emacsvox-company--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
 ;;;  Company Setup For Emacsvox:
 
@@ -134,7 +145,8 @@
    'company-completion-finished-hook
    #'(lambda (&rest _ignore) (emacsvox-icon 'close-object))))
 
-(eval-after-load "company" #'emacsvox-company-setup)
+(with-eval-after-load 'company
+  (emacsvox-company--install-advice)
+  (emacsvox-company-setup))
 (provide 'emacsvox-company)
 ;;;  end of file
-

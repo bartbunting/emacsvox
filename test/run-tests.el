@@ -155,6 +155,7 @@
   (require 'emacsvox-treesit-tests)
   (require 'emacsvox-entertain-tests)
   (require 'emacsvox-browse-kill-ring-tests)
+  (require 'emacsvox-company-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
