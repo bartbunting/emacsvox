@@ -65,152 +65,93 @@
 
 ;;;   Marking structured objects:
 
-(defun ems--LaTeX-fill-paragraph-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'fill-object)))
+(defvar emacsvox-auctex--advice nil
+  "Current AUCTeX targets and their native advice functions.")
 
-(advice-add 'LaTeX-fill-paragraph :after
-            #'ems--LaTeX-fill-paragraph-after)
+(defun emacsvox--advice-LaTeX-fill-paragraph-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'LaTeX-fill-paragraph)
+    (emacsvox-icon 'fill-object)))
 
-(defun ems--LaTeX-mark-section-after (&rest _)
+(defun emacsvox--advice-LaTeX-mark-section-after (&rest _)
   "Speak the first line. \nAlso provide an auditory icon. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'LaTeX-mark-section)
     (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
 
-(advice-add 'LaTeX-mark-section :after #'ems--LaTeX-mark-section-after)
-
-(defun ems--LaTeX-mark-environment-after (&rest _)
+(defun emacsvox--advice-LaTeX-mark-environment-after (&rest _)
   "Speak the first line. \nAlso provide an auditory icon. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'LaTeX-mark-environment)
     (emacsvox-speak-line) (emacsvox-icon 'mark-object)))
-
-(advice-add 'LaTeX-mark-environment :after
-            #'ems--LaTeX-mark-environment-after)
-
-(defun ems--LaTeX-format-paragraph-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'fill-object) (message "Filled current paragraph")))
-
-(advice-add 'LaTeX-format-paragraph :after
-            #'ems--LaTeX-format-paragraph-after)
-
-(defun ems--LaTeX-format-region-around (orig-fun &rest args)
-  "Ask for confirmation.\nspeak after formatting region"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((and (ems-interactive-p) (y-or-n-p "Really format region? "))
-      (apply orig-fun args) (emacsvox-icon 'fill-object)
-      (message "Reformatted region"))
-     ((not (ems-interactive-p)) (apply orig-fun args)))
-    result))
-
-(advice-add 'LaTeX-format-region :around
-            #'ems--LaTeX-format-region-around)
 
 ;;;   delimiter matching:
 
-(defun ems--LaTeX-find-matching-begin-after (&rest _)
-  "speak. " (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-LaTeX-find-matching-begin-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'LaTeX-find-matching-begin)
+    (emacsvox-speak-line)))
 
-(advice-add 'LaTeX-find-matching-begin :after
-            #'ems--LaTeX-find-matching-begin-after)
+(defun emacsvox--advice-LaTeX-find-matching-end-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'LaTeX-find-matching-end)
+    (emacsvox-speak-line)))
 
-(defun ems--LaTeX-find-matching-end-after (&rest _)
-  "speak. " (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'LaTeX-find-matching-end :after
-            #'ems--LaTeX-find-matching-end-after)
-
-(defun ems--LaTeX-close-environment-after (&rest _)
+(defun emacsvox--advice-LaTeX-close-environment-after (&rest _)
   "Speak the inserted line. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'LaTeX-close-environment)
     (emacsvox-icon 'close-object) (emacsvox-read-previous-line)))
 
-(advice-add 'LaTeX-close-environment :after
-            #'ems--LaTeX-close-environment-after)
-
 (cl-loop
- for f in 
+ for target in
  '(TeX-insert-dollar TeX-insert-quote)
+ for advice-function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defadvice ,f(around emacsvox pre act com)
+  `(defun ,advice-function (original &rest arguments)
      "Speak quotes that were inserted."
-     (cond
-      ((ems-interactive-p)
-       (let ((orig (point)))
-         ad-do-it
-         (emacsvox-speak-region orig (point))))
-      (t ad-do-it))
-     ad-return-value)))
+     (let ((origin (point))
+           (result (apply original arguments)))
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-region origin (point)))
+       result)))
+ (push (list target :around advice-function) emacsvox-auctex--advice))
 
 ;;;   Inserting structures
 
-(defun ems--TeX-newline-after (&rest _)
+(defun emacsvox--advice-TeX-newline-after (&rest _)
   "speak to indicate indentation."
-  (when (ems-interactive-p) (emacsvox-speak-line)))
+  (when (ems-interactive-p 'TeX-newline)
+    (emacsvox-speak-line)))
 
-(advice-add 'TeX-newline :after #'ems--TeX-newline-after)
+(defun emacsvox--advice-LaTeX-insert-item-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'LaTeX-insert-item)
+    (emacsvox-speak-line)))
 
-(defun ems--LaTeX-insert-item-after (&rest _)
-  "speak. " (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'LaTeX-insert-item :after #'ems--LaTeX-insert-item-after)
-
-(defun ems--LaTeX-environment-after (&rest _)
+(defun emacsvox--advice-LaTeX-environment-after (&rest _)
   "speak, by speaking\nthe opening line of the newly inserted environment. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'LaTeX-environment)
     (emacsvox-icon 'open-object) (emacsvox-read-previous-line)))
 
-(advice-add 'LaTeX-environment :after #'ems--LaTeX-environment-after)
-
-(defun ems--TeX-insert-macro-around (orig-fun &rest args)
+(defun emacsvox--advice-TeX-insert-macro-around (orig-fun &rest args)
   "Speak."
-  (let ((opoint (point)))
-    (apply orig-fun args) (emacsvox-speak-region opoint (point))))
-
-(advice-add 'TeX-insert-macro :around #'ems--TeX-insert-macro-around)
+  (let ((origin (point))
+        (result (apply orig-fun args)))
+    (emacsvox-speak-region origin (point))
+    result))
 
 ;;;   Commenting chunks:
 
-(defun ems--TeX-comment-region-after (&rest _)
+(defun emacsvox--advice-TeX-comment-or-uncomment-paragraph-after (&rest _)
   "Provide spoken and auditory feedback. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'TeX-comment-or-uncomment-paragraph)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'TeX-comment-region :after #'ems--TeX-comment-region-after)
-
-(defun ems--TeX-un-comment-after (&rest _)
-  "Provide spoken and auditory feedback. "
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'TeX-un-comment :after #'ems--TeX-un-comment-after)
-
-(defun ems--TeX-un-comment-region-after (&rest _)
-  "Provide spoken and auditory feedback. "
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'TeX-un-comment-region :after
-            #'ems--TeX-un-comment-region-after)
-
-(defun ems--TeX-comment-paragraph-after (&rest _)
-  "Provide spoken and auditory feedback. "
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'TeX-comment-paragraph :after
-            #'ems--TeX-comment-paragraph-after)
 
 ;;;   Debugging tex
 
-(defun ems--TeX-next-error-after (&rest _)
+(defun emacsvox--advice-TeX-next-error-after (&rest _)
   "Speak the error line. "
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'TeX-next-error)
     (emacsvox-icon 'item) (emacsvox-speak-line)))
-
-(advice-add 'TeX-next-error :after #'ems--TeX-next-error-after)
 
 ;;;   Hooks
 
@@ -231,19 +172,53 @@
 
 ;;;  advice font changes 
 
-(defun ems--TeX-font-around (orig-fun &rest args)
+(defun emacsvox--advice-TeX-font-around (orig-fun replace what)
   "Speak the font we inserted"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((orig (point)))
-        (apply orig-fun args)
-        (if (ad-get-arg 0) (emacsvox-speak-line)
-          (emacsvox-speak-region orig (point)))))
-     (t (apply orig-fun args)))
+  (let ((origin (point))
+        (result (funcall orig-fun replace what)))
+    (when (ems-interactive-p 'TeX-font)
+      (if replace
+          (emacsvox-speak-line)
+        (emacsvox-speak-region origin (point))))
     result))
 
-(advice-add 'TeX-font :around #'ems--TeX-font-around)
+(dolist
+    (entry
+     '((LaTeX-fill-paragraph :after
+        emacsvox--advice-LaTeX-fill-paragraph-after)
+       (LaTeX-mark-section :after
+        emacsvox--advice-LaTeX-mark-section-after)
+       (LaTeX-mark-environment :after
+        emacsvox--advice-LaTeX-mark-environment-after)
+       (LaTeX-find-matching-begin :after
+        emacsvox--advice-LaTeX-find-matching-begin-after)
+       (LaTeX-find-matching-end :after
+        emacsvox--advice-LaTeX-find-matching-end-after)
+       (LaTeX-close-environment :after
+        emacsvox--advice-LaTeX-close-environment-after)
+       (TeX-newline :after emacsvox--advice-TeX-newline-after)
+       (LaTeX-insert-item :after
+        emacsvox--advice-LaTeX-insert-item-after)
+       (LaTeX-environment :after
+        emacsvox--advice-LaTeX-environment-after)
+       (TeX-insert-macro :around
+        emacsvox--advice-TeX-insert-macro-around)
+       (TeX-comment-or-uncomment-paragraph :after
+        emacsvox--advice-TeX-comment-or-uncomment-paragraph-after)
+       (TeX-next-error :after emacsvox--advice-TeX-next-error-after)
+       (TeX-font :around emacsvox--advice-TeX-font-around)))
+  (push entry emacsvox-auctex--advice))
+
+(defun emacsvox-auctex--install-advice ()
+  "Install advice for functions present in current AUCTeX."
+  (dolist (entry emacsvox-auctex--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(tex latex))
+  (eval-after-load feature #'emacsvox-auctex--install-advice))
 
 ;;;  tex utils:
 
@@ -279,4 +254,3 @@
   (forward-word 1))
 
 (provide  'emacsvox-auctex)
-
