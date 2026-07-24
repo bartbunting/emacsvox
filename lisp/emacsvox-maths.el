@@ -575,10 +575,10 @@ For use on Wikipedia pages  for example."
 
 ;;;  Advice Preview:
 
-(defun ems--preview-at-point-after (&rest _)
+(defun emacsvox--advice-preview-at-point-after (&rest _)
   "Also preview using speech."
   (when
-      (and (ems-interactive-p) emacsvox-maths
+      (and (ems-interactive-p 'preview-at-point) emacsvox-maths
            (process-live-p
             (emacsvox-maths-client-process emacsvox-maths)))
     (let
@@ -588,8 +588,22 @@ For use on Wikipedia pages  for example."
       (when (cl-some #'identity preview-state)
         (emacsvox-maths-enter (emacsvox-maths-guess-tex))))))
 
-(advice-add 'preview-at-point :after #'ems--preview-at-point-after)
+(defconst emacsvox-maths--advice
+  '((preview-at-point :after emacsvox--advice-preview-at-point-after))
+  "Current Maths integration targets and their native advice functions.")
+
+(defun emacsvox-maths--install-advice ()
+  "Install native advice for loaded preview commands."
+  (dolist (entry emacsvox-maths--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox-maths)))))))
+
+(with-eval-after-load 'preview
+  (emacsvox-maths--install-advice))
+
+(emacsvox-maths--install-advice)
 
 (provide 'emacsvox-maths)
 ;;;  end of file
-
