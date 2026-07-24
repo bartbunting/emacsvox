@@ -4,7 +4,7 @@
 @cindex Emacs Keyboard Commands
 
 This chapter gives an overview of all the keymaps used by Emacspeak.  For
-a complete reference, see @xref{emacspeak}.  For basic usage, see
+a complete reference, see @xref{emacsvox}.  For basic usage, see
 @xref{Basic Usage}.
 
 Emacspeak uses the following keymaps, each of which are invoked by a

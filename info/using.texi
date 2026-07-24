@@ -3,7 +3,7 @@
 @chapter Basic Usage.
 
 This chapter gives an overview of how to use Emacspeak; for a full
-listing of Emacspeak keybindings, see @xref{emacspeak}.  Note: This
+listing of Emacspeak keybindings, see @xref{emacsvox}.  Note: This
 documentation should be used in conjunction with the online Emacs info
 pages that extensively document Emacs itself.  These sections briefly
 describe the speech-enabling extensions.  However, they should not be
@@ -58,7 +58,7 @@ language) within specific contexts. Emacspeak maintains pronunciation
 dictionaries for this purpose, which may be customized by the
 user. Moreover, individual dictionaries can be activated selectively,
 depending for example on the current major mode or the name of the
-file which is being visited @xref{emacspeak-pronounce}.
+file which is being visited @xref{emacsvox-pronounce}.
 
 In addition to spoken feedback, Emacspeak can generate ``auditory
 icons'' @MDash{} short sound cues which alert the user to significant
@@ -69,7 +69,7 @@ spoken interface, and are especially valuable to the experienced user
 in facilitating rapid interaction. Note that in order to support
 auditory icons, the computer must be equipped with sound hardware for
 which the operating system has been correctly configured
-@xref{emacspeak-sounds}.
+@xref{emacsvox-sounds}.
 
 @node Working
 @section  Using Emacs Buffers

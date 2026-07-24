@@ -16,6 +16,7 @@ packages.texi eterm.texi docs.texi keyboard.texi tts-server.texi inc-turning-twe
 acknowledge.texi intro-docs.texi documents.texi structure.texi web-browsing.texi tts.texi
 
 MAKEINFO = makeinfo 
+STRIP_TRAILING_WHITESPACE = perl -pi -e 's/[ \t]+$$//'
 CSS=--css-ref="http://www.w3.org/StyleSheets/Core/Modernist"
 EMACS=emacs
 
@@ -25,12 +26,15 @@ info: emacspeak.info
 
 emacspeak.info: emacspeak.texi $(INCLUDES)
 	$(MAKEINFO) emacspeak.texi
+	$(STRIP_TRAILING_WHITESPACE) emacspeak.info*
 
 introducing-emacspeak.info: introducing-emacspeak.texi
 	$(MAKEINFO) introducing-emacspeak.texi	
+	$(STRIP_TRAILING_WHITESPACE) introducing-emacspeak.info
 
 turning-twenty.info: turning-twenty.texi
 	$(MAKEINFO) turning-twenty.texi
+	$(STRIP_TRAILING_WHITESPACE) turning-twenty.info
 force:
 
 docs.texi:force

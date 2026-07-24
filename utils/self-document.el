@@ -66,16 +66,16 @@
 
 (add-to-list 'load-path self-document-lisp-directory)
 
-(load "emacspeak-preamble")
+(load "emacsvox-preamble")
 (load "plain-voices")
 (load "voice-setup")
-(load "emacspeak-loaddefs")
+(load "emacsvox-loaddefs")
 
 (defconst self-document-files
   (directory-files self-document-lisp-directory nil "\\.elc$")
   "List of elisp modules  to document.")
 
-(defvar emacspeak-muggles-activate-p t)
+(defvar emacsvox-muggles-activate-p t)
 (defvar self-document-fn-key
   "<XF86WakeUp>"
   "Notation for Laptop <fn> key.")
@@ -88,19 +88,19 @@
 
 (defun self-document-load-modules ()
   "Load all Emacspeak modules"
-  (cl-declare (special dtk-program self-document-files
-                       emacspeak-use-auditory-icons))
+  (cl-declare (special tts-program self-document-files
+                       emacsvox-use-icons))
   (let ((file-name-handler-alist nil)
         (load-source-file-function  nil)
-        (dtk-program "log-null"))
+        (tts-program "log-null"))
     (package-initialize)              ; bootstrap emacs package system
-    ;; Silently Bootstrap Emacspeak 
-    (load-library "emacspeak-setup")
-    (setq-default emacspeak-use-auditory-icons nil)
-    ;; Load all Emacspeak modules:
+    ;; Silently Bootstrap Emacsvox.
+    (load-library "emacsvox-setup")
+    (setq-default emacsvox-use-icons nil)
+    ;; Load all Emacsvox modules:
     (cl-loop
      for f in  self-document-files do
-     (unless (string-match "emacspeak-setup" f) ; avoid loading setup twice :
+     (unless (string-match "emacsvox-setup" f) ; avoid loading setup twice :
        (condition-case nil
            (load-library f)
          (error (message  "Warn: Did not load  %s" f)))))))
@@ -109,8 +109,8 @@
   (concat "^"
           (regexp-opt
            '("amixer"
-             "dectalk" "dtk" "espeak" "mac-"
-             "emacspeak" "xbacklight-" "light-" "extra-muggles"
+             "dectalk" "espeak" "mac-"
+             "emacspeak" "emacsvox" "xbacklight-" "light-" "extra-muggles"
              "g-"    "gm-" "gmap"  "gweb" "omaps"
              "ladspa" "pip-"  "soundscape" "outloud" "sox-"   "tts-" "voice-")))
   "Patterns to match command names.")
@@ -313,10 +313,10 @@
 
 ;;; Document Keybindings For Various Prefix Maps:
 
-(cl-declaim (special emacspeak-prefix))
+(cl-declaim (special emacsvox-prefix))
 (defvar sd-emacspeak-prefixes
   (list
-   emacspeak-prefix
+   emacsvox-prefix
    (kbd "C-;") (kbd "C-'") (kbd "C-.") (kbd "C-,") (kbd "C-z")
    (kbd "C-e x") (kbd "C-e y" )   (kbd "C-e z") (kbd "C-e '"))
   "Key prefixes  for which we generate a help section."
@@ -343,7 +343,7 @@
 ;;;  Iterate over all modules
 
 (declare-function
- emacspeak-url-template-generate-texinfo-documentation
+ emacsvox-url-template-generate-texinfo-documentation
  (buffer))
 (defun self-document-fix-quotes ()
   "Fix UTF8 curved quotes since makeinfo doesn't handle them well."
@@ -413,12 +413,13 @@ This chapter documents a total of %d commands and %d options.\n\n"
         (cl-loop
          for k in keys do
          (self-document-module (gethash k self-document-map)))
-        (emacspeak-url-template-generate-texinfo-documentation (current-buffer))
+        (emacsvox-url-template-generate-texinfo-documentation (current-buffer))
         (texinfo-all-menus-update)
         (self-document-update-menu-entries)
         (flush-lines "^Commentary: *$" (point-min) (point-max))
         (self-document-fix-fn-key)
         (self-document-fix-bs)
+        (delete-trailing-whitespace (point-min) (point-max))
         (shell-command-on-region        ; squeeze blanks
          (point-min) (point-max)
          "cat -s" (current-buffer) 'replace)
@@ -441,11 +442,11 @@ This chapter documents a total of %d commands and %d options.\n\n"
 
 (defvar self-document-keymap-list
   '(
-    emacspeak-keymap emacspeak-dtk-submap
-    emacspeak-hyper-keymap emacspeak-super-keymap emacspeak-alt-keymap
-    emacspeak-multi-keymap
-    emacspeak-v-keymap emacspeak-x-keymap
-    emacspeak-y-keymap  emacspeak-z-keymap
+    emacsvox-keymap emacsvox-tts-submap
+    emacsvox-hyper-keymap emacsvox-super-keymap emacsvox-alt-keymap
+    emacsvox-multi-keymap
+    emacsvox-v-keymap emacsvox-x-keymap
+    emacsvox-y-keymap  emacsvox-z-keymap
     )
   "List of keymaps that we document.")
 
@@ -479,6 +480,7 @@ This chapter documents a total of %d commands and %d options.\n\n"
        (setq title (format "Emacspeak Keybindings On %s" (symbol-name keymap)))
        (insert (format "\n@node %s\n @section %s\n\n" title title))
        (self-document-keymap (symbol-value keymap)))
+      (delete-trailing-whitespace (point-min) (point-max))
       (shell-command-on-region          ; squeeze blanks
        (point-min) (point-max)
        "cat -s" (current-buffer) 'replace)

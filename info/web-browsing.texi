@@ -2,7 +2,7 @@
 
 Note that there is newer material at 
 @url{http://emacspeak.blogspot.com/2014/05/emacspeak-eww-updates-for-complete.html}
-and in @xref{emacspeak-eww}.
+and in @xref{emacsvox-eww}.
 For Emacs 24.4 and later, note that the built-in Web browser EWW is also
 the browser of choice for emacspeak. 
 Finally, note that Emacs/W3 is now considered obsolete, and
@@ -474,8 +474,8 @@ Module @code{emacspeak-websearch} is complemented by module
 module provides URL templates that prompt for and retrieve  the relevant
 information from complex Web pages.
 
-@xref{emacspeak-websearch,emacspeak-websearch},
-and @xref{emacspeak-url-template, emacspeak-url-template},
+@xref{emacsvox-websearch,emacsvox-websearch},
+and @xref{emacsvox-url-template, emacsvox-url-template},
 for more information.
 
 @anchor{bmk-mgr}
@@ -508,6 +508,5 @@ you will not be sorry.
 
 In the end, no one makes you use a hammer to drive nails but it sure
 beats using a banana.
-
 
 
