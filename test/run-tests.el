@@ -224,6 +224,7 @@
   (require 'emacsvox-pipewire-tests)
   (require 'emacsvox-popup-tests)
   (require 'emacsvox-projectile-tests)
+  (require 'emacsvox-racket-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

@@ -60,57 +60,73 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in
+(defvar emacsvox-racket--advice nil
+  "Current Racket mode targets and their native advice functions.")
+(setq emacsvox-racket--advice nil)
+
+(defun emacsvox-racket--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-racket--advice))))
+
+(defun emacsvox-racket--selection-feedback ()
+  "Speak a selection in Racket's open-require-path UI."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-line))
+
+(emacsvox-racket--register-after-group
  '(racket--orp/enter racket--orp/next racket--orp/prev racket--orp/quit)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+ #'emacsvox-racket--selection-feedback)
 
-(cl-loop
- for f in
- '(
-   racket--profile-next
-   racket--profile-prev racket--profile-quit
-   racket--profile-refresh racket--profile-show-zero
-   racket--profile-sort racket--profile-visit)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-racket--profile-feedback ()
+  "Speak an updated Racket profile view."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in
- '(
-   racket-visit-module racket-visit-definition
+(emacsvox-racket--register-after-group
+ '(racket-profile-refresh racket-profile-show-zero racket-profile-visit)
+ #'emacsvox-racket--profile-feedback)
+
+(defun emacsvox-racket--movement-feedback ()
+  "Speak after moving through Racket source."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'large-movement))
+
+(emacsvox-racket--register-after-group
+ '(racket-visit-module racket-visit-definition
    racket-smart-open-bracket racket-insert-lambda racket-insert-closing
-   racket-indent-line racket-check-syntax-mode-goto-def
-   racket-check-syntax-mode-goto-next-def racket-check-syntax-mode-goto-next-use
-   racket-check-syntax-mode-goto-prev-def racket-check-syntax-mode-goto-prev-use
-   racket-backward-up-list)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+   racket-indent-line racket-xp-next-definition racket-xp-previous-definition
+   racket-xp-next-use racket-xp-previous-use racket-backward-up-list)
+ #'emacsvox-racket--movement-feedback)
 
-(defun ems--racket-describe-after (&rest _)
+(defun emacsvox--advice-racket-describe-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'racket-describe)
     (emacsvox-icon 'help)
     (with-current-buffer "*Racket Describe*" (emacsvox-speak-buffer))))
 
-(advice-add 'racket-describe :after #'ems--racket-describe-after)
+(push '(racket-describe :after emacsvox--advice-racket-describe-after)
+      emacsvox-racket--advice)
+
+(defun emacsvox-racket--install-advice ()
+  "Install advice for Racket mode features loaded so far."
+  (dolist (entry emacsvox-racket--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(racket-mode racket-collection racket-profile
+                   racket-xp))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-racket--install-advice))))
 
 (provide 'emacsvox-racket)
 ;;;  end of file
-
