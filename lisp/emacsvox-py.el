@@ -135,7 +135,7 @@
 (defun emacsvox--advice-py-newline-and-indent-after (&rest _)
   "Speak line so we know current indentation"
   (when (ems-interactive-p 'py-newline-and-indent)
-    (dtk-speak-using-voice voice-annotate
+    (tts-speak-using-voice voice-annotate
                            (format "indent %s" (current-column)))
     (tts--protocol-dispatch)))
 

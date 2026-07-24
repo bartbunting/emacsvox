@@ -147,7 +147,7 @@
     (cond
      (emacsvox-line-echo (emacsvox-speak-line))
      (t
-      (dtk-speak-using-voice
+      (tts-speak-using-voice
        voice-annotate (format "indent %s" (current-column)))
       (tts--protocol-dispatch))))
   (apply orig-fun args))

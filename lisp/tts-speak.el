@@ -314,25 +314,25 @@ bound to \\[tts-toggle-caps].")
 ;;; Style Helpers:
 
 ;; helper: Identify (a . b).
-(defsubst dtk-plain-cons-p (value)
+(defsubst tts-plain-cons-p (value)
   (and (consp value) (not (proper-list-p value))))
 
 ;; Helper: Get face->voice mapping
 
-(defun dtk-get-voice-for-face  (value)
+(defun tts-get-voice-for-face  (value)
     "Face->voice map"
     (when value
       (cond
        ((symbolp value) (voice-setup-get-voice-for-face value))
-       ((dtk-plain-cons-p value)) ;;pass on plain cons
+       ((tts-plain-cons-p value)) ;;pass on plain cons
        ((listp value)
         (delq nil (mapcar   #'voice-setup-get-voice-for-face value))))))
 
-(defsubst dtk-get-style (&optional pos)
+(defsubst tts-get-style (&optional pos)
   " Return  style based on personality or face at `POS'.   "
   (or
    (get-text-property (or pos (point)) 'personality)
-   (dtk-get-voice-for-face (get-text-property (or pos (point)) 'face))))
+   (tts-get-voice-for-face (get-text-property (or pos (point)) 'face))))
 
 ;;;  Tone Helpers:
 
@@ -515,7 +515,7 @@ specifies the current pronunciation mode --- See
             (personality nil))
         (while (re-search-forward dtk-bracket-regexp nil t)
           (setq start (match-beginning 0))
-          (setq personality (dtk-get-style (match-beginning 0)))
+          (setq personality (tts-get-style (match-beginning 0)))
           (cond
            ((= 10 (char-after (match-beginning 0))) ; newline
             (replace-match " "))
@@ -628,7 +628,7 @@ specifies the current pronunciation mode --- See
          (personality nil)
          (replacement nil))
     (while (re-search-forward reg nil t)
-      (setq personality (dtk-get-style (match-beginning 0)))
+      (setq personality (tts-get-style (match-beginning 0)))
       (setq replacement
             (if (eq 'all mode)
                 (format
@@ -708,7 +708,7 @@ Argument COMPLEMENT  is the complement of separator."
         (skip-syntax-forward separator))
      0))
 
-(defun dtk-speak-using-voice (voice text)
+(defun tts-speak-using-voice (voice text)
   "Use voice VOICE to speak text TEXT."
   
   (unless (or (eq 'inaudible voice)
@@ -748,7 +748,7 @@ Argument COMPLEMENT  is the complement of separator."
 ;; Similarly, property pause at the start of a clause specifies
 ;; amount of pause to insert.
 
-(defsubst dtk-next-single-property-change (start prop object limit)
+(defsubst tts-next-single-property-change (start prop object limit)
   (let ((initial-value (get-text-property start prop object)))
     (cond
      ((atom initial-value)
@@ -764,7 +764,7 @@ Argument COMPLEMENT  is the complement of separator."
 ;; Get position of previous style change from start to end. Here, style
 ;; change is any change in property personality, face or font-lock-face.
 
-(defsubst dtk-previous-style-change (start &optional end)
+(defsubst tts-previous-style-change (start &optional end)
   (or end (setq end (point-min)))
   (max
    (previous-single-property-change start 'personality (current-buffer) end)
@@ -774,15 +774,15 @@ Argument COMPLEMENT  is the complement of separator."
 
 ;; Get position of next style change from start   to end.
 ;; Here,  change is any change in property personality, face.
-(defsubst dtk-next-style-change (start &optional end)
+(defsubst tts-next-style-change (start &optional end)
   (or end (setq end (point-max)))
   (min
-   (dtk-next-single-property-change start 'personality (current-buffer) end)
-   (dtk-next-single-property-change start 'face (current-buffer) end)
-   (dtk-next-single-property-change
+   (tts-next-single-property-change start 'personality (current-buffer) end)
+   (tts-next-single-property-change start 'face (current-buffer) end)
+   (tts-next-single-property-change
     start 'font-lock-face (current-buffer) end)))
 
-(defun dtk-audio-format (start end)
+(defun tts-audio-format (start end)
   "Format and speak text from `start' to `end'. "
   (when (and emacsvox-use-icons
              (get-text-property start 'auditory-icon))
@@ -795,19 +795,19 @@ Argument COMPLEMENT  is the complement of separator."
     (tts--protocol-queue-text (buffer-substring-no-properties start end)))
    (t                                   ; voiceify as we go
     (let ((last nil)
-          (personality (dtk-get-style start)))
+          (personality (tts-get-style start)))
       (while
           (and
            (< start end)
-           (setq last (dtk-next-style-change start end)))
+           (setq last (tts-next-style-change start end)))
         (if personality
-            (dtk-speak-using-voice
+            (tts-speak-using-voice
              personality (buffer-substring-no-properties start last))
           (tts--protocol-queue-text
            (buffer-substring-no-properties start last)))
         (setq
          start last
-         personality (dtk-get-style last))
+         personality (tts-get-style last))
         (when (get-text-property start 'pause)
           (tts--protocol-silence
            (get-text-property start 'pause) nil)))))))
@@ -1685,12 +1685,12 @@ unless   `tts-quiet' is set to t. "
                    (not (= 32 (char-syntax (following-char)))))
             (skip-syntax-forward "-") ;skip  trailing whitespace
             (setq end (point))
-            (dtk-audio-format start end)
+            (tts-audio-format start end)
             (setq start end)))     ; end while
         ;; process trailing text
         (unless (= start (point-max))
           (skip-syntax-forward " ")     ;skip leading whitespace
-          (unless (eobp) (dtk-audio-format (point) (point-max))))))
+          (unless (eobp) (tts-audio-format (point) (point-max))))))
     (tts--protocol-dispatch)))
 
 (defmacro ems-with-messages-silenced (&rest body)
@@ -2092,9 +2092,6 @@ When called interactively, CHAR defaults to the character after point."
 
 ;; Public speech and state operations still resolve through legacy definitions
 ;; until each corresponding implementation slice is migrated.
-(defalias 'tts-get-style #'dtk-get-style)
-(defalias 'tts-get-voice-for-face #'dtk-get-voice-for-face)
-(defalias 'tts-speak-using-voice #'dtk-speak-using-voice)
 (defalias 'tts-dispatch #'dtk-dispatch)
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)

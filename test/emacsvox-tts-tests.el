@@ -82,11 +82,19 @@
     dtk-toggle-speak-nonprinting-chars)
   "Removed DECtalk-era names for generic speech behavior.")
 
+(defconst emacsvox-test--legacy-style-functions
+  '(dtk-get-style
+    dtk-get-voice-for-face
+    dtk-speak-using-voice
+    dtk-next-single-property-change
+    dtk-next-style-change
+    dtk-previous-style-change
+    dtk-plain-cons-p
+    dtk-audio-format)
+  "Removed DECtalk-era names for generic styled speech.")
+
 (defconst emacsvox-test--tts-public-aliases
-  '((tts-get-style . dtk-get-style)
-    (tts-get-voice-for-face . dtk-get-voice-for-face)
-    (tts-speak-using-voice . dtk-speak-using-voice)
-    (tts-dispatch . dtk-dispatch)
+  '((tts-dispatch . dtk-dispatch)
     (tts-reset-state . dtk-reset-state)
     (tts-initialize . dtk-initialize)
     (tts-add-cleanup-pattern . dtk-add-cleanup-pattern)
@@ -329,6 +337,11 @@
          dtk-caps-prefix
          dtk-allcaps-prefix))
     (should-not (boundp variable))))
+
+(ert-deftest emacsvox-tts-legacy-style-api-is-removed ()
+  "Generic styled speech no longer exposes DECtalk-era names."
+  (dolist (function emacsvox-test--legacy-style-functions)
+    (should-not (fboundp function))))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."

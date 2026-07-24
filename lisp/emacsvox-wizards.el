@@ -513,7 +513,7 @@ meaning of `next'."
   "Show value of property personality (and possibly face) at point."
   (interactive)
   (let ((f (get-text-property (point) 'face))
-        (style (dtk-get-style))
+        (style (tts-get-style))
         (msg nil))
     (setq msg
           (concat
@@ -2471,7 +2471,7 @@ When called interactively, `personality' defaults to first
 personality at point. "
   (interactive
    (list
-    (let* ((v (dtk-get-style)))
+    (let* ((v (tts-get-style)))
       (setq v
             (if (listp v)
                 (mapcar #'symbol-name v)

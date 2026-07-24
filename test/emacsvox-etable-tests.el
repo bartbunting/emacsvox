@@ -112,7 +112,7 @@
   (let ((ems--interactive-fn-name '*table--cell-newline-and-indent)
         (emacsvox-line-echo nil)
         events)
-    (cl-letf (((symbol-function 'dtk-speak-using-voice)
+    (cl-letf (((symbol-function 'tts-speak-using-voice)
                (lambda (_voice text) (push (list 'speak text) events)))
               ((symbol-function 'tts--protocol-dispatch)
                (lambda () (push 'speak-now events))))

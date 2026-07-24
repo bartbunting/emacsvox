@@ -83,7 +83,7 @@
           (voice-annotate 'annotation)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'dtk-speak-using-voice)
+      (cl-letf (((symbol-function 'tts-speak-using-voice)
                  (lambda (voice text)
                    (push (list 'speech voice text) events)))
                 ((symbol-function 'tts--protocol-dispatch)

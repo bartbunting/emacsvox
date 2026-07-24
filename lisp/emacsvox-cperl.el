@@ -72,7 +72,7 @@
   (when (ems-interactive-p 'cperl-linefeed)
     (if emacsvox-line-echo
         (emacsvox-speak-line)
-      (dtk-speak-using-voice
+      (tts-speak-using-voice
        voice-annotate
        (format "indent %s" (current-column)))
       (tts--protocol-dispatch)))

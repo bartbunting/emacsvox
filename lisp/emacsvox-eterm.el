@@ -485,7 +485,7 @@ Optional argument COUNT specifies how many changes to skip."
   (interactive "p")
   
   (setq count (or count 1))
-  (let ((current (dtk-get-style emacsvox-eterm-pointer))
+  (let ((current (tts-get-style emacsvox-eterm-pointer))
         (found nil))
     (save-excursion
       (goto-char emacsvox-eterm-pointer)
@@ -504,7 +504,7 @@ Optional argument COUNT specifies how many changes to skip."
   (interactive "p")
   
   (setq count (or count 1))
-  (let ((current (dtk-get-style emacsvox-eterm-pointer))
+  (let ((current (tts-get-style emacsvox-eterm-pointer))
         (found nil))
     (save-excursion
       (goto-char emacsvox-eterm-pointer)
