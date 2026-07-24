@@ -64,51 +64,68 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--syslog-whois-reverse-lookup-after (&rest _)
+(defun emacsvox--advice-syslog-whois-reverse-lookup-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'syslog-whois-reverse-lookup)
     (emacsvox-audit 'task-done)
     (message "Displayed WhoIs data in other window.")))
 
-(advice-add 'syslog-whois-reverse-lookup :after
-            #'ems--syslog-whois-reverse-lookup-after)
-
-(defun ems--syslog-filter-dates-after (&rest _)
+(defun emacsvox--advice-syslog-filter-dates-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'syslog-filter-dates)
     (forward-line -2) (what-line) (emacsvox-icon 'ellipses)))
 
-(advice-add 'syslog-filter-dates :after
-            #'ems--syslog-filter-dates-after)
-
-(defun ems--syslog-filter-lines-after (&rest _)
+(defun emacsvox--advice-syslog-filter-lines-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'syslog-filter-lines)
     (emacsvox-speak-line) (emacsvox-icon 'ellipses)))
 
-(advice-add 'syslog-filter-lines :after
-            #'ems--syslog-filter-lines-after)
-
-(defun ems--syslog-boot-start-after (&rest _)
+(defun emacsvox--advice-syslog-boot-start-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'syslog-boot-start)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-(advice-add 'syslog-boot-start :after #'ems--syslog-boot-start-after)
+(defconst emacsvox-syslog--file-targets
+  '(syslog-append-files
+    syslog-prepend-files
+    syslog-next-file
+    syslog-previous-file
+    syslog-move-next-file
+    syslog-move-previous-file
+    syslog-open-files)
+  "Syslog commands that open or move between log files.")
 
 (cl-loop
- for f in 
- '(
-   syslog-append-files syslog-prepend-files 
-   syslog-next-file syslog-previous-file
-   syslog-move-next-file syslog-move-previous-file syslog-open-files)
+ for target in emacsvox-syslog--file-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-speak-mode-line)
        (emacsvox-icon 'open-object)))))
+
+(defconst emacsvox-syslog--advice-targets
+  (append
+   '(syslog-whois-reverse-lookup
+     syslog-filter-dates
+     syslog-filter-lines
+     syslog-boot-start)
+   emacsvox-syslog--file-targets)
+  "Current Syslog targets that receive native after advice.")
+
+(defun emacsvox-syslog--install-advice ()
+  "Install advice after the optional Syslog Mode package loads."
+  (dolist (target emacsvox-syslog--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'syslog-mode
+  (emacsvox-syslog--install-advice))
 
 ;;; keymap setup:
 (defun emacsvox-syslog-setup ()
@@ -121,4 +138,3 @@
 
 (provide 'emacsvox-syslog)
 ;;;  end of file
-
