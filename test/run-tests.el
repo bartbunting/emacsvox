@@ -100,6 +100,7 @@
   (require 'emacsvox-eterm-tests)
   (require 'emacsvox-ispell-tests)
   (require 'emacsvox-widget-tests)
+  (require 'emacsvox-rst-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

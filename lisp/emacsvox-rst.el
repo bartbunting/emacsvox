@@ -69,118 +69,101 @@
    ))
 
 ;;;  Speech-enable interactive commands:
-(cl-loop
- for f in
- '(rst-promote-region
-   rst-shift-region)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
 
-(cl-loop
- for f in
- '(rst-goto-section rst-forward-section rst-backward-section
-                    rst-forward-indented-block)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'section)
-       (emacsvox-speak-line)))))
+(defmacro emacsvox-rst--define-after-advice (target &rest body)
+  "Define direct after advice for interactive RST TARGET using BODY."
+  (declare (indent 1))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback after `%s'." target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target :after #',function '((name . emacsvox))))))
 
-(cl-loop
- for f in
- '(rst-compile rst-compile-alt-toolset
-               rst-adjust rst-adjust-section-title
-               rst-compile-find-conf rst-compile-pdf-preview
-               rst-compile-pseudo-region rst-compile-slides-preview
-               rst-display-adornments-hierarchy)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-line)))))
+(emacsvox-rst--define-after-advice rst-shift-region
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
 
-(defun ems--rst-toc-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+(dolist
+    (target
+     '(rst-goto-section
+       rst-forward-section
+       rst-backward-section
+       rst-forward-indented-block))
+  (eval
+   `(emacsvox-rst--define-after-advice ,target
+      (emacsvox-icon 'section)
+      (emacsvox-speak-line))))
 
-(advice-add 'rst-toc :after #'ems--rst-toc-after)
+(dolist
+    (target
+     '(rst-compile
+       rst-compile-alt-toolset
+       rst-adjust
+       rst-adjust-section-title
+       rst-compile-find-conf
+       rst-compile-pdf-preview
+       rst-compile-pseudo-region
+       rst-compile-slides-preview
+       rst-display-adornments-hierarchy))
+  (eval
+   `(emacsvox-rst--define-after-advice ,target
+      (emacsvox-icon 'task-done)
+      (emacsvox-speak-line))))
 
-(defun ems--rst-toc-mode-goto-section-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(emacsvox-rst--define-after-advice rst-toc
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'rst-toc-mode-goto-section :after
-            #'ems--rst-toc-mode-goto-section-after)
+(emacsvox-rst--define-after-advice rst-toc-mode-goto-section
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
 
-(defun ems--rst-toc-quit-window-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+(emacsvox-rst--define-after-advice rst-toc-quit-window
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-(advice-add 'rst-toc-quit-window :after
-            #'ems--rst-toc-quit-window-after)
+(emacsvox-rst--define-after-advice rst-force-fill-paragraph
+  (emacsvox-icon 'fill-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--rst-force-fill-paragraph-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'fill-object) (emacsvox-speak-mode-line)))
+(emacsvox-rst--define-after-advice rst-mark-section
+  (emacsvox-icon 'mark-object)
+  (emacsvox-speak-line))
 
-(advice-add 'rst-force-fill-paragraph :after
-            #'ems--rst-force-fill-paragraph-after)
+(dolist
+    (target
+     '(rst-bullet-list-region
+       rst-convert-bullets-to-enumeration
+       rst-enumerate-region))
+  (eval
+   `(emacsvox-rst--define-after-advice ,target
+      (emacsvox-icon 'item)
+      (message "Bulletized. "))))
 
-(defun ems--rst-mark-section-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
+(dolist
+    (target
+     '(rst-insert-list
+       rst-insert-list-new-item
+       rst-toc-insert))
+  (eval
+   `(emacsvox-rst--define-after-advice ,target
+      (emacsvox-icon 'open-object)
+      (emacsvox-speak-line))))
 
-(advice-add 'rst-mark-section :after #'ems--rst-mark-section-after)
-
-(cl-loop
- for f in
- '(
-   rst-bullet-list-region rst-convert-bullets-to-enumeration
-   rst-enumerate-region)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'item)
-       (message "Bulletized. ")))))
-
-(cl-loop
- for f in
- '(rst-insert-list rst-insert-list-new-item rst-toc-insert)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
-(cl-loop
- for f in
- '(rst-join-paragraph rst-line-block-region
-                      rst-straighten-adornments rst-straighten-bullets-region)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-line)))))
+(dolist
+    (target
+     '(rst-join-paragraph
+       rst-line-block-region
+       rst-straighten-adornments
+       rst-straighten-bullets-region))
+  (eval
+   `(emacsvox-rst--define-after-advice ,target
+      (emacsvox-icon 'task-done)
+      (emacsvox-speak-line))))
 
 (provide 'emacsvox-rst)
 ;;;  end of file
-
