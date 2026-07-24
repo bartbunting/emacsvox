@@ -55,37 +55,58 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
- '(sdcv-
-   search-input sdcv-search-input+ sdcv-search-pointer sdcv-search-pointer+)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+(defvar emacsvox-sdcv--advice nil
+  "Current SDCV targets and their native advice functions.")
+(setq emacsvox-sdcv--advice nil)
 
-(cl-loop
- for f in
+(defun emacsvox-sdcv--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-sdcv--advice))))
+
+(defun emacsvox-sdcv--task-feedback ()
+  "Announce completion of an SDCV search."
+  (emacsvox-icon 'task-done))
+
+(emacsvox-sdcv--register-after-group
+ '(sdcv-search-input sdcv-search-input+ sdcv-search-pointer
+   sdcv-search-pointer+)
+ #'emacsvox-sdcv--task-feedback)
+
+(defun emacsvox-sdcv--dictionary-feedback ()
+  "Speak the selected SDCV dictionary."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'large-movement))
+
+(emacsvox-sdcv--register-after-group
  '(sdcv-previous-dictionary sdcv-next-dictionary)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+ #'emacsvox-sdcv--dictionary-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-sdcv--line-feedback ()
+  "Play the selection icon after SDCV line movement."
+  (emacsvox-icon 'select-object))
+
+(emacsvox-sdcv--register-after-group
  '(sdcv-next-line sdcv-prev-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)))))
+ #'emacsvox-sdcv--line-feedback)
+
+(defun emacsvox-sdcv--install-advice ()
+  "Install native advice after SDCV loads."
+  (dolist (entry emacsvox-sdcv--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'sdcv
+  (emacsvox-sdcv--install-advice))
 
 (defun emacsvox-sdcv-update-dictionary-list ()
   "Update sdcv dictionary lists if necessary by examining
@@ -124,4 +145,3 @@
 
 (provide 'emacsvox-sdcv)
 ;;;  end of file
-
