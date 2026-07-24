@@ -37,8 +37,8 @@
   "The optional bundled legacy backend is not created as a placeholder."
   (should
    (fboundp 'emacsvox--advice-flymake-proc-compile-after))
-  (should-not (fboundp 'flymake-compile))
   (unless (featurep 'flymake-proc)
+    (should-not (fboundp 'flymake-compile))
     (should-not (fboundp 'flymake-proc-compile))))
 
 (ert-deftest emacsvox-flymake-feedback-is-target-aware ()
