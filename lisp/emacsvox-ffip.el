@@ -49,18 +49,33 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in
- '(find-file-in-project ffip
-                        find-file-in-project-at-point
-                        find-file-in-project-by-selected)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+(defconst emacsvox-ffip--advice-targets
+  '(find-file-in-project ffip
+    find-file-in-project-at-point
+    find-file-in-project-by-selected)
+  "Current FFIP commands that receive native advice.")
+
+(dolist (target emacsvox-ffip--advice-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Provide speech feedback after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-icon 'open-object)
+          (emacsvox-speak-mode-line))))))
+
+(defun emacsvox-ffip--install-advice ()
+  "Install native advice after FFIP loads."
+  (dolist (target emacsvox-ffip--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'find-file-in-project
+  (emacsvox-ffip--install-advice))
 
 (provide 'emacsvox-ffip)
 ;;;  end of file
@@ -68,4 +83,3 @@
                                         ; 
                                         ; 
                                         ; 
-

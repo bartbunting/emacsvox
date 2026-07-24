@@ -201,6 +201,7 @@
   (require 'emacsvox-ess-tests)
   (require 'emacsvox-evil-tests)
   (require 'emacsvox-exwm-tests)
+  (require 'emacsvox-ffip-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
