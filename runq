@@ -3,4 +3,4 @@
 # Default to using espeak unless TTS_PROGRAM is set.
 #
 [ -z "$TTS_PROGRAM" ] && export TTS_PROGRAM="espeak"
-emacs -q -l ./lisp/emacspeak-setup.el 
+exec emacs -q -l ./lisp/emacsvox-setup.el "$@"

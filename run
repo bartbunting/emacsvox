@@ -2,6 +2,7 @@
 #Run out of this directory.
 # Default to using espeak unless TTS_PROGRAM is set.
 #
-:${TTS_PROGRAM} ? "Using ${TTS_PROGRAM}" : export TTS_PROGRAM="espeak"
-export EMACSPEAK_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+[ -z "$TTS_PROGRAM" ] && export TTS_PROGRAM="espeak"
+EMACSPEAK_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" > /dev/null 2>&1 && pwd)
+export EMACSPEAK_DIR
 emacs "$@"
