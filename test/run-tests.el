@@ -165,6 +165,7 @@
   (require 'emacsvox-github-explorer-tests)
   (require 'emacsvox-ivy-tests)
   (require 'emacsvox-magit-tests)
+  (require 'emacsvox-marginalia-tests)
   (require 'emacsvox-yasnippet-tests)
   (require 'emacsvox-syslog-tests)
   (require 'emacsvox-rust-mode-tests)

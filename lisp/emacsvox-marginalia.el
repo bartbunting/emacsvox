@@ -84,22 +84,37 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--marginalia-mode-after (&rest _)
+(defun emacsvox--advice-marginalia-mode-after (&rest _)
   "Announce marginalia-mode state."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'marginalia-mode)
     (emacsvox-icon (if marginalia-mode 'on 'off))
     (message "Turned %s marginalia mode."
              (if marginalia-mode "on" "off"))))
 
-(advice-add 'marginalia-mode :after #'ems--marginalia-mode-after)
-
-(defun ems--marginalia-cycle-after (&rest _)
+(defun emacsvox--advice-marginalia-cycle-after (&rest _)
   "Announce the new annotator after cycling."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'marginalia-cycle)
     (emacsvox-icon 'select-object)
     (dtk-speak "Cycled marginalia annotator.")))
 
-(advice-add 'marginalia-cycle :after #'ems--marginalia-cycle-after)
+(defconst emacsvox-marginalia--advice
+  '((marginalia-mode :after emacsvox--advice-marginalia-mode-after)
+    (marginalia-cycle :after emacsvox--advice-marginalia-cycle-after))
+  "Current Marginalia targets and their native advice functions.")
+
+(defun emacsvox-marginalia--install-advice ()
+  "Install native advice for loaded Marginalia commands."
+  (dolist (entry emacsvox-marginalia--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function
+                    '((name . emacsvox-marginalia)))))))
+
+(with-eval-after-load 'marginalia
+  (emacsvox-marginalia--install-advice))
+
+(emacsvox-marginalia--install-advice)
 
 (provide 'emacsvox-marginalia)
 ;;;  end of file
