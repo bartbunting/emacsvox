@@ -71,26 +71,48 @@
         (goto-char (point-min))
         (emacsvox-speak-line)))))
 
-(cl-loop
- for f in
- '(helpful-callable helpful-function helpful-macro helpful-command
-   helpful-variable helpful-key helpful-symbol helpful-at-point)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the help."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)
-       (ems--helpful-speak-first-line)))))
+(defconst emacsvox-helpful--help-targets
+  '(helpful-callable helpful-function helpful-macro helpful-command
+    helpful-variable helpful-key helpful-symbol helpful-at-point)
+  "Helpful commands that display a help buffer.")
 
-(defun ems--helpful-kill-buffers-after (&rest _)
+(dolist (target emacsvox-helpful--help-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Speak help displayed by `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-icon 'help)
+          (ems--helpful-speak-first-line))))))
+
+(defun emacsvox--advice-helpful-kill-buffers-after (&rest _)
   "Announce that helpful buffers were closed."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'helpful-kill-buffers)
     (emacsvox-icon 'close-object)
     (dtk-speak "help buffers closed")))
 
-(advice-add 'helpful-kill-buffers :after
-            #'ems--helpful-kill-buffers-after)
+(defconst emacsvox-helpful--advice
+  (append
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-helpful--help-targets)
+   '((helpful-kill-buffers :after
+      emacsvox--advice-helpful-kill-buffers-after)))
+  "Current Helpful targets and their native advice functions.")
+
+(defun emacsvox-helpful--install-advice ()
+  "Install native advice after Helpful loads."
+  (dolist (entry emacsvox-helpful--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'helpful
+  (emacsvox-helpful--install-advice))
 
 (provide 'emacsvox-helpful)
 ;;;  end of file
