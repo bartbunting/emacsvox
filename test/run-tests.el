@@ -214,6 +214,7 @@
   (require 'emacsvox-js2-tests)
   (require 'emacsvox-lispy-tests)
   (require 'emacsvox-mines-tests)
+  (require 'emacsvox-mu4e-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

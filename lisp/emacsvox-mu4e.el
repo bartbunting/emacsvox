@@ -149,190 +149,169 @@
 
 ;;;  Headers View -- Navigation:
 
-(defun ems--mu4e-headers-next-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-mu4e-speak-header-summary)))
+(defvar emacsvox-mu4e--advice nil
+  "Current Mu4e targets and their native advice functions.")
+(setq emacsvox-mu4e--advice nil)
 
-(advice-add 'mu4e-headers-next :after #'ems--mu4e-headers-next-after)
+(defun emacsvox-mu4e--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback ',target))))
+      (push (list target :after advice-function) emacsvox-mu4e--advice))))
 
-(defun ems--mu4e-headers-prev-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object)
-    (emacsvox-mu4e-speak-header-summary)))
+(defun emacsvox-mu4e--header-selection-feedback (_target)
+  "Speak the selected Mu4e header."
+  (emacsvox-icon 'select-object)
+  (emacsvox-mu4e-speak-header-summary))
 
-(advice-add 'mu4e-headers-prev :after #'ems--mu4e-headers-prev-after)
+(emacsvox-mu4e--register-after-group
+ '(mu4e-headers-next mu4e-headers-prev)
+ #'emacsvox-mu4e--header-selection-feedback)
 
-;;;  Headers View -- Open/Close Message:
+(defun emacsvox-mu4e--message-selection-feedback (_target)
+  "Speak the selected Mu4e message."
+  (emacsvox-icon 'select-object)
+  (emacsvox-mu4e-speak-message-summary))
 
-(defun ems--mu4e-headers-view-message-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (emacsvox-mu4e-speak-message-summary)))
+(emacsvox-mu4e--register-after-group
+ '(mu4e-view-headers-next mu4e-view-headers-prev)
+ #'emacsvox-mu4e--message-selection-feedback)
 
-(advice-add 'mu4e-headers-view-message :after
-            #'ems--mu4e-headers-view-message-after)
+(defun emacsvox-mu4e--open-message-feedback (_target)
+  "Speak a newly opened Mu4e message."
+  (emacsvox-icon 'open-object)
+  (emacsvox-mu4e-speak-message-summary))
 
-(defun ems--mu4e-view-quit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (emacsvox-speak-mode-line)))
+(emacsvox-mu4e--register-after-group
+ '(mu4e-headers-view-message)
+ #'emacsvox-mu4e--open-message-feedback)
 
-(advice-add 'mu4e-view-quit :after #'ems--mu4e-view-quit-after)
+(defun emacsvox-mu4e--close-feedback (_target)
+  "Announce closing a Mu4e view."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-;;;  Compose Actions:
+(emacsvox-mu4e--register-after-group
+ '(mu4e-view-quit mu4e-quit)
+ #'emacsvox-mu4e--close-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-mu4e--compose-feedback (target)
+  "Announce Mu4e compose command TARGET."
+  (emacsvox-icon 'open-object)
+  (dtk-speak
+   (format "Compose %s"
+           (substring (symbol-name target) (length "mu4e-compose-"))))
+  (emacsvox-speak-mode-line))
+
+(emacsvox-mu4e--register-after-group
  '(mu4e-compose-new mu4e-compose-reply mu4e-compose-forward
    mu4e-compose-edit mu4e-compose-resend)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (dtk-speak
-        (format "Compose %s"
-                ,(substring (symbol-name f)
-                            (length "mu4e-compose-"))))
-       (emacsvox-speak-mode-line)))))
+ #'emacsvox-mu4e--compose-feedback)
 
-;;;  Send:
-
-(defun ems--message-send-and-exit-after (&rest _)
-  "Announce send in mu4e compose buffers."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-message-send-and-exit-after (&rest _)
+  "Announce send in Mu4e compose buffers."
+  (when (ems-interactive-p 'message-send-and-exit)
     (emacsvox-icon 'close-object)
     (dtk-speak "Message sent")))
 
-(advice-add 'message-send-and-exit :after
-            #'ems--message-send-and-exit-after)
+(push '(message-send-and-exit :after
+        emacsvox--advice-message-send-and-exit-after)
+      emacsvox-mu4e--advice)
 
-;;;  Search and Filter:
+(defun emacsvox-mu4e--search-feedback (_target)
+  "Speak a newly displayed or edited Mu4e search."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--mu4e-headers-search-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (emacsvox-speak-mode-line)))
+(emacsvox-mu4e--register-after-group
+ '(mu4e-search mu4e-search-edit)
+ #'emacsvox-mu4e--search-feedback)
 
-(advice-add 'mu4e-headers-search :after
-            #'ems--mu4e-headers-search-after)
-
-(defun ems--mu4e-headers-search-narrow-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-mu4e-search-narrow-after (&rest _)
+  "Announce a narrowed Mu4e search."
+  (when (ems-interactive-p 'mu4e-search-narrow)
     (emacsvox-icon 'open-object)
     (dtk-speak "Narrowed search")
     (emacsvox-speak-mode-line)))
 
-(advice-add 'mu4e-headers-search-narrow :after
-            #'ems--mu4e-headers-search-narrow-after)
+(push '(mu4e-search-narrow :after
+        emacsvox--advice-mu4e-search-narrow-after)
+      emacsvox-mu4e--advice)
 
-(defun ems--mu4e-headers-search-edit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'open-object)
-    (emacsvox-speak-mode-line)))
+(defun emacsvox-mu4e--delete-mark-feedback (_target)
+  "Speak a destructive Mu4e header mark."
+  (emacsvox-icon 'delete-object)
+  (emacsvox-mu4e-speak-header-summary))
 
-(advice-add 'mu4e-headers-search-edit :after
-            #'ems--mu4e-headers-search-edit-after)
-
-;;;  Mark Actions:
-
-(cl-loop
- for f in
+(emacsvox-mu4e--register-after-group
  '(mu4e-headers-mark-for-delete mu4e-headers-mark-for-trash
    mu4e-headers-mark-for-move mu4e-headers-mark-for-refile)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'delete-object)
-       (emacsvox-mu4e-speak-header-summary)))))
+ #'emacsvox-mu4e--delete-mark-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-mu4e--mark-feedback (_target)
+  "Speak a non-destructive Mu4e header mark."
+  (emacsvox-icon 'mark-object)
+  (emacsvox-mu4e-speak-header-summary))
+
+(emacsvox-mu4e--register-after-group
  '(mu4e-headers-mark-for-read mu4e-headers-mark-for-unread
    mu4e-headers-mark-for-flag mu4e-headers-mark-for-unflag)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'mark-object)
-       (emacsvox-mu4e-speak-header-summary)))))
+ #'emacsvox-mu4e--mark-feedback)
 
-(defun ems--mu4e-headers-mark-for-unmark-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-mu4e-speak-header-summary)))
+(defun emacsvox-mu4e--unmark-feedback (_target)
+  "Speak an unmarked Mu4e header."
+  (emacsvox-icon 'deselect-object)
+  (emacsvox-mu4e-speak-header-summary))
 
-(advice-add 'mu4e-headers-mark-for-unmark :after
-            #'ems--mu4e-headers-mark-for-unmark-after)
+(emacsvox-mu4e--register-after-group
+ '(mu4e-headers-mark-for-unmark)
+ #'emacsvox-mu4e--unmark-feedback)
 
-;;;  Execute Marks:
+(defun emacsvox-mu4e--execute-feedback (_target)
+  "Announce execution of all Mu4e marks."
+  (emacsvox-icon 'task-done)
+  (dtk-speak "Executed all marks"))
 
-(defun ems--mu4e-mark-execute-all-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'task-done)
-    (dtk-speak "Executed all marks")))
+(emacsvox-mu4e--register-after-group
+ '(mu4e-mark-execute-all)
+ #'emacsvox-mu4e--execute-feedback)
 
-(advice-add 'mu4e-mark-execute-all :after
-            #'ems--mu4e-mark-execute-all-after)
+(defun emacsvox-mu4e--open-feedback (_target)
+  "Speak the Mu4e main view."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
 
-;;;  Main View:
+(emacsvox-mu4e--register-after-group
+ '(mu4e)
+ #'emacsvox-mu4e--open-feedback)
 
-(cl-loop
- for f in
- '(mu4e mu4e-main-view)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
+(defun emacsvox-mu4e--update-feedback (_target)
+  "Announce a Mu4e mail update."
+  (emacsvox-icon 'progress)
+  (dtk-speak "Updating mail"))
 
-;;;  Update and Quit:
+(emacsvox-mu4e--register-after-group
+ '(mu4e-update-mail-and-index)
+ #'emacsvox-mu4e--update-feedback)
 
-(defun ems--mu4e-update-mail-and-index-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'progress)
-    (dtk-speak "Updating mail")))
+(defun emacsvox-mu4e--install-advice ()
+  "Install advice for Mu4e features loaded so far."
+  (dolist (entry emacsvox-mu4e--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(advice-add 'mu4e-update-mail-and-index :after
-            #'ems--mu4e-update-mail-and-index-after)
-
-(defun ems--mu4e-quit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (emacsvox-speak-mode-line)))
-
-(advice-add 'mu4e-quit :after #'ems--mu4e-quit-after)
-
-;;;  View Mode Navigation:
-
-(cl-loop
- for f in
- '(mu4e-view-headers-next mu4e-view-headers-prev)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-mu4e-speak-message-summary)))))
+(dolist (feature '(message mu4e mu4e-compose mu4e-headers mu4e-mark
+                   mu4e-search mu4e-update mu4e-view))
+  (eval `(with-eval-after-load ',feature
+           (emacsvox-mu4e--install-advice))))
 
 (provide 'emacsvox-mu4e)
 ;;;  end of file
