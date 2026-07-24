@@ -40,10 +40,11 @@ Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris, CPerl, IDO,
 CMU Scheme, Speedbar, Tcl, Man, Python, Make Mode, Dictionary, Transient,
 Archive Mode, Tar Mode, Sh Script, Re Builder, Kmacro, Hideshow, Dired, NXML,
 EPA, Ruby, ERC, Info, Solitaire, SQL, Flyspell, Supercite, Lua, SGML Mode,
-Newsticker, Calc, Gomoku, Package, EUDC, and Texinfo on 2026-07-24 on branch
-=bart=:
+Newsticker, Calc, Gomoku, Package, EUDC, Texinfo, Desktop, Flymake, SES, Tempo,
+WoMan, Eglot, Enriched, GUD, Perl, Todo Mode, and Treesit on 2026-07-24 on
+branch =bart=:
 
-- the Emacs 31 suite contains 772 passing ERT tests;
+- the Emacs 31 suite contains 802 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -228,17 +229,50 @@ Newsticker, Calc, Gomoku, Package, EUDC, and Texinfo on 2026-07-24 on branch
 - =lisp/emacsvox-texinfo.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-desktop.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-flymake.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-ses.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-tempo.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-woman.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-eglot.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-enriched.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-gud.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-perl.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-todo-mode.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-treesit.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         244 |    85 |
-| =ad-get-arg=        |          26 |   n/a |
+| =defadvice=         |         239 |    80 |
+| =ad-get-arg=        |          24 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          25 |   n/a |
-| =ad-return-value=   |          17 |   n/a |
-| =advice-add=        |        1183 |   157 |
+| =ad-do-it=          |          24 |   n/a |
+| =ad-return-value=   |          14 |   n/a |
+| =advice-add=        |        1188 |   158 |
 | =ems-interactive-p= |        1180 |   176 |
 
 ** Remaining Emacs-bundled inventory
@@ -257,16 +291,9 @@ different states:
   legacy or bridge compatibility constructs remain.
 
 The previous checkpoint used "converted" for some modules at the
-native-advice-installed stage.  Those modules remain in this inventory until
-they satisfy the final-form gate.
-
-As of 2026-07-24, 11 Emacs-bundled integration modules remain: 6 legacy or
-positional modules and 5 helper-cleanup modules.
-
-| State                | Modules |
-|----------------------+---------|
-| legacy or positional | =eglot=, =enriched=, =gud=, =perl=, =todo-mode=, =treesit= |
-| helper cleanup       | =desktop=, =flymake=, =ses=, =tempo=, =woman= |
+native-advice-installed stage.  As of 2026-07-24, no Emacs-bundled integration
+module remains in either the legacy-or-positional or helper-cleanup state; all
+modules in this inventory satisfy the final-form gate.
 
 =emacsvox-entertain.el= is tracked separately because it combines built-in
 Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
@@ -299,12 +326,13 @@ Transient, Archive Mode, Tar Mode, and Sh Script are now also fully final-form.
 Re Builder, Kmacro, Hideshow, Dired, NXML, EPA, Ruby, ERC, Info, and Solitaire
 are now also fully final-form.  SQL, Flyspell, Supercite, Lua, SGML Mode,
 Newsticker, Calc, Gomoku, Package, EUDC, and Texinfo complete the next eleven
-built-in slices.
+built-in slices.  Desktop, Flymake, SES, Tempo, WoMan, Eglot, Enriched, GUD,
+Perl, Todo Mode, and Treesit complete the remaining bundled-module inventory.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
-compatibility bridge; modules in the inventory above still require final-form
-work.  Repository-wide, 25 files still contain bridge compatibility symbols.
+compatibility bridge.  Repository-wide, 23 files still contain bridge
+compatibility symbols.
 
 The SQL conversion calls each send command exactly once and defers optional
 SQLPlus advice until that package loads.  Flyspell similarly defers the
@@ -315,6 +343,17 @@ targets the current Emacs 31 URL callback and omits obsolete callback and timer
 targets.  Texinfo replaces the removed =TeXinfo-insert-environment= command
 with the current =texinfo-insert-block= command.  Lua and SGML Mode now use
 direct, target-aware native advice throughout.
+
+The final bundled batch also removes several phantom targets.  Eglot help now
+uses Emacs 31's =eldoc-doc-buffer= command and is scoped to managed Eglot
+buffers.  Flymake defers feedback for the optional bundled legacy backend to
+the real =flymake-proc-compile= command, while Tempo defers its optional
+HTML Helper advice.  GUD installs direct wrappers only after a debugger has
+generated its commands.  Perl targets =perl-electric-terminator= only when the
+normal Emacsvox post-insert hook is unavailable.  Todo Mode omits its removed
+next/previous category aliases.  Enriched advice now receives native decode
+bounds and relies on native =:after= return preservation.  Desktop, SES, WoMan,
+and Treesit use direct target-aware advice throughout.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
