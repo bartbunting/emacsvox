@@ -35,7 +35,7 @@ in bash should show that the ~node~ executable is found under ~$HOME/.nvm/...~.
 
    type 
 : npm install  
-in ~$EMACSPEAK_DIR/js/node~ to install dependencies.
+in ~$EMACSVOX_DIR/js/node~ to install dependencies.
 
 ** Test the server at the shell
 
@@ -48,13 +48,13 @@ Then, from a different shell window, connect to the server.
 If all goes well, you'll see an S-expression printed out. Hit _C-d_ to
 close client and server.
 
-** Connect From Within Emacspeak
+** Connect From Within Emacsvox
 
   - First time: M-x package-install nvm  to configure Emacs to find
     the right ~node~ executable.
-  - M-x load-library emacspeak-maths
-  - M-x emacspeak-maths-start --- start the server/client.
-  - Invoke the /Maths Navigator/ AKA emacspeak-maths muggle using key
+  - M-x load-library emacsvox-maths
+  - M-x emacsvox-maths-start --- start the server/client.
+  - Invoke the /Maths Navigator/ AKA emacsvox-maths muggle using key
     _s-SPC_ --- here _s-_ means press the Windows key.
-  - Read the docs and profit --- see info node /emacspeak-maths/ in
-    the emacspeak manual.
+  - Read the docs and profit --- see info node /emacsvox-maths/ in
+    the Emacsvox manual.

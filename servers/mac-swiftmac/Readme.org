@@ -1,12 +1,12 @@
 * SwiftMac
 
-This is a server for Emacspeak for modern macs using
+This is a server for Emacsvox for modern macs using
 swift 5.9+.
 
 Project: https://github.com/robertmeta/swiftmac
 
 ** Quick Install (requires swift compiler)
- - make swiftmac (from emacspeak root, ignore warnings)
+ - make swiftmac (from the Emacsvox root; ignore warnings)
  - Change the server in your configuration to "swiftmac"
  - Restart emacs
 
@@ -14,16 +14,16 @@ Project: https://github.com/robertmeta/swiftmac
 #+BEGIN_SRC emacs-lisp
   ; pick your favorite voice 
   (setopt swiftmac-default-voice-string "[{voice :Alex}] [[pitch 1]]")
-  ; general emacspeak stuff not specific to swiftmac
-  (setq-default load-path (cons "~/.emacspeak/lisp" load-path)) 
+  ; general Emacsvox setup not specific to SwiftMac
+  (add-to-list 'load-path "/path/to/emacsvox/lisp")
   ; stops doubletalk (when emacs supports it)
   (setopt mac-ignore-accessibility 't) 
   ; choose swiftmac
   (setopt tts-program "swiftmac")
   ; for notifications: set to right or left
   (setopt tts-notification-device "right") 
-  ; initialize Emacspeak
-  (require 'emacspeak-setup)
+  ; initialize Emacsvox
+  (require 'emacsvox-setup)
   ; more options: https://github.com/robertmeta/swiftmac/
 #+END_SRC
 

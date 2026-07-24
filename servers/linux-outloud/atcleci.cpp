@@ -36,7 +36,7 @@
  * --this allows a compiled version of this speech server to be
  * distributed without violating the IBM Viavoice license. This
  * means that end-users only need install the Viavoice RTK
- * (Runtime toolkit) to use Emacspeak with the ViaVoice TTS
+ * (Runtime toolkit) to use Emacsvox with the ViaVoice TTS
  * engine.
  *
  * February 2005 TVR: Updating to use alsalib output routines

@@ -26,7 +26,7 @@ class Logger {
       }
 
       backgroundQueue = DispatchQueue(
-        label: "org.emacspeak.server.swiftmac.logger", qos: .background)
+        label: "org.emacsvox.server.swiftmac.logger", qos: .background)
     }
 
     func log(_ m: String) {

@@ -1,6 +1,6 @@
 * Introduction
 
-This module implements  the Emacspeak speech server for software
+This module implements  the Emacsvox speech server for software
 Dectalk.
 
 * Getting Software Dectalk:
@@ -21,7 +21,7 @@ Dectalk.
    dic entries ---  copy over the DECtalk.conf file from this
    directory to /opt/dectalk/
 
-* Build The Emacspeak Side
+* Build The Emacsvox Side
 
 #+begin_src 
 cd servers/software-dectalk && make
@@ -30,8 +30,8 @@ cd servers/software-dectalk && make
 
 * Test, Then Use Server
 
-1. In a shell, run ./servers/dtk-soft from the emacspeak directory.
-2. If it works, then ask Emacspeak to use it as you would with any
+1. In a shell, run ./servers/dtk-soft from the emacsvox directory.
+2. If it works, then ask Emacsvox to use it as you would with any
    other speech server.
 #+options: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
 #+options: author:t broken-links:nil c:nil creator:nil

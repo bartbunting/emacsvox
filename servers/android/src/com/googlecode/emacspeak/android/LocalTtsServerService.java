@@ -35,7 +35,7 @@ import java.util.ArrayList;
 
 /**
  * LocalTtsServerService is a background service that implements a local speech
- * server on Android which follows the emacspeak speech server specs as
+ * server on Android which follows the Emacsvox speech-server protocol as
  * documented here:
  * http://emacspeak.sourceforge.net/info/TTS-Servers.html#TTS-Servers
  *

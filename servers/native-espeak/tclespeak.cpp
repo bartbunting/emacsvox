@@ -1,7 +1,7 @@
 /*Id: This code comes from atcleci.cpp 4231 2006-10-13 02:43:46Z tv.raman.tv */
 
 // Jan 2007 Gilles Casse <gcasse@oralux.org>
-// * eSpeak server for emacspeak
+// * eSpeak server for emacsvox
 //
 // Mar 2007
 // * Language switching.
@@ -96,7 +96,7 @@ int Tclespeak_Init(Tcl_Interp *interp) {
     return TCL_ERROR;
   }
   espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, 512, NULL, 0);
-  // Disable espeak's capitals support as this function is handled by emacspeak
+  // Disable espeak's capitals support as this function is handled by emacsvox
   espeak_SetParameter(espeakCAPITALS, 0, 0);
 
   //>

@@ -3,12 +3,12 @@
 *.el~
 *.o
 # ignore generated files:
-etc/emacspeak.sh
+etc/emacsvox.sh
 README
 README.md
-lisp/emacspeak-cus-load.el
-lisp/emacspeak-finder-inf.el
-lisp/emacspeak-loaddefs.el
+lisp/emacsvox-cus-load.el
+lisp/emacsvox-finder-inf.el
+lisp/emacsvox-loaddefs.el
 lisp/TAGS
 info/TAGS
 js/node/node_modules

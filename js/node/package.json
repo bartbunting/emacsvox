@@ -1,18 +1,18 @@
 {
     "name": "emacs-math-speak",
     "version": "0.1.0",
-    "description": "Math extension for Emacspeak",
+    "description": "Math extension for Emacsvox",
     "main": "math-server.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/tvraman/emacspeak.git"
+        "url": "git+https://github.com/robertmeta/emacsvox.git"
     },
     "keywords": [
         "Maths",
-        "Emacspeak",
+        "Emacsvox",
         "Audio Formatting",
         "Complete Audio Desktop"
     ],
@@ -21,7 +21,7 @@
     "bugs": {
         "url": "https://github.com/zorkow/emacs-math-speak/issues"
     },
-    "homepage": "https://github.com/tvraman/emacspeak",
+    "homepage": "https://github.com/robertmeta/emacsvox",
     "dependencies": {
         "mathjax": "^3.1.2",
         "net": ">=1.0.2",

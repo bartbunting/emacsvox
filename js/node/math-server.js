@@ -19,7 +19,7 @@
  * @fileoverview Server for connecting Emacs to the Speech-Rule-Engine.
  * @author tv.raman.tv@gmail.com (T. V. Raman)
  *
- *  Expose a simple REPL as a server to emacspeak-maths.
+ *  Expose a simple REPL as a server to emacsvox-maths.
  *
  *  Usage Model:
  *

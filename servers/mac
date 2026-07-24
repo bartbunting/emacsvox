@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # E-Mac-Speak
-# Emacspeak on Mac.
+# Emacsvox on Mac.
 
 __author__ = "David Tseng, Bart Bunting, Robert Melton"
 
@@ -49,10 +49,10 @@ debugLevel = 0
 # Should debug output also be written to STDOUT?
 debugToSTDOUT = 1
 
-# A debug file to place sample tts text sent by emacspeak.
+# A debug file for sample TTS text sent by Emacsvox.
 if debugLevel > 0:
     DEBUGFILE = tempfile.NamedTemporaryFile(
-        dir="/tmp", mode="w", prefix="emacspeak.servers.mac_log"
+        dir="/tmp", mode="w", prefix="emacsvox.servers.mac_log"
     )
 
     # Insecure version; used for easier debugging.
@@ -318,7 +318,7 @@ def writeDebugLog(level, output):
         DEBUGFILE.flush()
 
 
-# Object that implements the Emacspeak TTS protocol.
+# Object that implements the Emacsvox TTS protocol.
 class _ProtocolHandler:
     # Enables singleton behavior.
     def __call__(self):
