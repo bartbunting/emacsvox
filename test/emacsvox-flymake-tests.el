@@ -33,6 +33,14 @@
        (gethash
         (list target :after function) ems--modern-advice-wrappers)))))
 
+(ert-deftest emacsvox-flymake-defers-legacy-backend-advice ()
+  "The optional bundled legacy backend is not created as a placeholder."
+  (should
+   (fboundp 'emacsvox--advice-flymake-proc-compile-after))
+  (should-not (fboundp 'flymake-compile))
+  (unless (featurep 'flymake-proc)
+    (should-not (fboundp 'flymake-proc-compile))))
+
 (ert-deftest emacsvox-flymake-feedback-is-target-aware ()
   "Only the matching interactive Flymake command produces feedback."
   (let ((ems--interactive-fn-name 'flymake-goto-next-error)
@@ -47,6 +55,25 @@
      (equal
       (nreverse events)
       '((icon large-movement) speak-line)))))
+
+(ert-deftest emacsvox-flymake-legacy-compile-feedback-is-target-aware ()
+  (let ((ems--interactive-fn-name 'flymake-proc-compile) events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-flymake-proc-compile-after))
+    (should (equal events '(task-done)))))
+
+(ert-deftest emacsvox-flymake-proc-advice-registers-after-load ()
+  (require 'flymake-proc)
+  (should
+   (advice-member-p
+    #'emacsvox--advice-flymake-proc-compile-after
+    'flymake-proc-compile))
+  (should-not
+   (gethash
+    '(flymake-proc-compile
+      :after emacsvox--advice-flymake-proc-compile-after)
+    ems--modern-advice-wrappers)))
 
 (provide 'emacsvox-flymake-tests)
 ;;; emacsvox-flymake-tests.el ends here
