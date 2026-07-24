@@ -54,30 +54,27 @@
 
 ;;;  Interactive Commands:
 
-;; in fond memory of the past:
-;; See obsolete emacsvox-fix-interactive in our attic.
+(defun emacsvox--advice-ebuku--search-helper-filter-args (args)
+  "Return ARGS with the optional exclude term disabled."
+  (let ((result
+         (append args (make-list (max 0 (- 4 (length args))) nil))))
+    (setf (nth 3 result) "")
+    result))
 
-(defun ems--ebuku-search-before (&rest _)
-  "Advice prompt to speak" (interactive (list (read-char "n,l,r,t"))))
-
-(advice-add 'ebuku-search :before #'ems--ebuku-search-before)
-
-(defun ems--ebuku--search-helper-before (&rest _)
-  "Avoid exclude to speed up interaction.." (ad-set-arg 3 ""))
-
-(advice-add 'ebuku--search-helper :before
-            #'ems--ebuku--search-helper-before)
+(defconst emacsvox-ebuku--search-targets
+  '(ebuku-search-on-any ebuku-search-on-all
+    ebuku-search ebuku-search-on-reg ebuku-search-on-tag)
+  "Ebuku search commands that receive speech feedback.")
 
 (cl-loop
- for f in
- '(
-   ebuku-search-on-any ebuku-search-on-all
-   ebuku-search ebuku-search-on-reg ebuku-search-on-tag)
+ for target in emacsvox-ebuku--search-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak search results after `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'task-done)
        (emacsvox-speak-line)
        (save-excursion
@@ -85,43 +82,71 @@
          (forward-word 2)
          (dtk-notify (word-at-point)))))))
 
-(defun ems--ebuku-show-all-after (&rest _)
-  "speak."
-  (when (ems-interactive-p) (dtk-speak "Showing all bookmarks")))
+(defun emacsvox--advice-ebuku-show-all-after (&rest _)
+  "Speak after showing every bookmark."
+  (when (ems-interactive-p 'ebuku-show-all)
+    (dtk-speak "Showing all bookmarks")))
 
-(advice-add 'ebuku-show-all :after #'ems--ebuku-show-all-after)
-
-(defun ems--ebuku-toggle-results-limit-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ebuku-toggle-results-limit-after (&rest _)
+  "Report the new Ebuku results limit."
+  (when (ems-interactive-p 'ebuku-toggle-results-limit)
     (message "Results limit: %s" ebuku-results-limit)
     (emacsvox-icon 'button)))
 
-(advice-add 'ebuku-toggle-results-limit :after
-            #'ems--ebuku-toggle-results-limit-after)
+(defconst emacsvox-ebuku--movement-targets
+  '(ebuku-previous-bookmark ebuku-next-bookmark)
+  "Ebuku bookmark navigation commands.")
 
 (cl-loop
- for f in
- '(ebuku-previous-bookmark ebuku-next-bookmark)
+ for target in emacsvox-ebuku--movement-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak after `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (emacsvox-read-previous-line)))))
 
-(defun ems--ebuku-open-url-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
+(defun emacsvox--advice-ebuku-open-url-after (&rest _)
+  "Play a button icon after opening an Ebuku URL."
+  (when (ems-interactive-p 'ebuku-open-url)
+    (emacsvox-icon 'button)))
 
-(advice-add 'ebuku-open-url :after #'ems--ebuku-open-url-after)
-
-(defun ems--ebuku-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ebuku-after (&rest _)
+  "Speak after opening Ebuku."
+  (when (ems-interactive-p 'ebuku)
     (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
 
-(advice-add 'ebuku :after #'ems--ebuku-after)
+(defconst emacsvox-ebuku--after-targets
+  (append emacsvox-ebuku--search-targets
+          '(ebuku-show-all ebuku-toggle-results-limit)
+          emacsvox-ebuku--movement-targets
+          '(ebuku-open-url ebuku))
+  "Current Ebuku targets that receive native after advice.")
+
+(defconst emacsvox-ebuku--advice
+  (append
+   '((ebuku--search-helper :filter-args
+      emacsvox--advice-ebuku--search-helper-filter-args))
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-ebuku--after-targets))
+  "Current Ebuku native advice specifications.")
+
+(defun emacsvox-ebuku--install-advice ()
+  "Install native advice after the optional Ebuku package loads."
+  (dolist (entry emacsvox-ebuku--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'ebuku
+  (emacsvox-ebuku--install-advice))
 
 ;;; Additional Keybindings:
 
