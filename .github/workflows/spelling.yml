@@ -1,0 +1,28 @@
+name: Spelling
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spelling-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codespell:
+    name: Check maintained source
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: codespell-project/actions-codespell@v2
+        with:
+          path: >-
+            lisp test utils .github Readme.org README Makefile
+          ignore_words_file: codespell.txt
