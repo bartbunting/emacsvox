@@ -117,6 +117,7 @@
   (require 'emacsvox-speedbar-tests)
   (require 'emacsvox-tcl-tests)
   (require 'emacsvox-man-tests)
+  (require 'emacsvox-python-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
