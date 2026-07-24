@@ -360,7 +360,7 @@ When on a close delimiter, speak matching delimiter after a small delay. "
     "Speak the line."
   (emacsvox-icon 'large-movement)
   (emacsvox-speak-line)
-  (tts-notify (emacsvox-get-current-percentage-verbously)))
+  (tts-notify (emacsvox-get-current-percentage-verbosely)))
 
 (emacsvox-advice--define-interactive-after-advice
     (tab-to-tab-stop indent-for-tab-command reindent-then-newline-and-indent

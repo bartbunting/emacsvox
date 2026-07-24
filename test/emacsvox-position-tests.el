@@ -21,6 +21,10 @@
     line-number-mode column-number-mode)
   "Point-editing commands using generated native after advice.")
 
+(ert-deftest emacsvox-percentage-helper-is-verbosely-named ()
+  "The verbosely named percentage helper remains available."
+  (should (fboundp 'emacsvox-get-current-percentage-verbosely)))
+
 (ert-deftest emacsvox-position-advice-is-directly-registered ()
   "Migrated point and display advice uses native advice directly."
   (dolist (target emacsvox-test--position-before-targets)

@@ -430,7 +430,7 @@ current local  value to the result.")
                     (/ (+ (/ total 2) (* 100 (1- pos))) (max total 1)))))
     percent))
 
-(defun emacsvox-get-current-percentage-verbously ()
+(defun emacsvox-get-current-percentage-verbosely ()
   "Return percentage of position into current buffer as a string."
   (let ((percent (emacsvox-get-current-percentage-into-buffer)))
     (propertize
@@ -1470,7 +1470,7 @@ Interactive prefix arg speaks buffer info."
              dir-info
              (propertize (buffer-name) 'personality
                          voice-lighten-medium)
-             (emacsvox-get-current-percentage-verbously)
+             (emacsvox-get-current-percentage-verbosely)
              (when window-count
                (propertize window-count 'personality voice-smoothen))
              (when vc-mode
