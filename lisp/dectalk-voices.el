@@ -56,8 +56,8 @@
   :type 'integer
   :set #'(lambda(sym val)
            (set-default sym val)
-           (when (string-match "dtk" dtk-program)
-             (setq-default dtk-speech-rate val))))
+           (when (string-match "dtk" tts-program)
+             (setq-default tts-speech-rate val))))
 
 ;;;   Top-level TTS  switcher
 
@@ -67,8 +67,8 @@
   (interactive)
   (dectalk-configure-tts)
   (ems--fastload "voice-defs")
-  (dtk-select-server "dtk-exp")
-  (dtk-initialize))
+  (tts-select-server "dtk-exp")
+  (tts-initialize))
 
 ;;;###autoload
 (defun dectalk-soft ()
@@ -77,16 +77,16 @@
   (let ((coding-system-for-write  'iso-8859-1))
     (dectalk-configure-tts)
     (ems--fastload "voice-defs")
-    (dtk-select-server "dtk-soft")
-    (dtk-initialize)
-    (dtk-set-rate dectalk-default-speech-rate 'global)))
+    (tts-select-server "dtk-soft")
+    (tts-initialize)
+    (tts-set-rate dectalk-default-speech-rate 'global)))
 
 ;;;  Forward declarations:
 
-;; From dtk-speak.el:
+;; From the TTS runtime:
 
-(defvar dtk-speech-rate-step)
-(defvar dtk-speech-rate-base)
+(defvar tts-speech-rate-step)
+(defvar tts-speech-rate-base)
 
 ;;;   voice table
 
@@ -362,14 +362,13 @@ and TABLE gives the values along that dimension."
    'tts-define-voice-from-acss 'dectalk-define-voice-from-acss)
   (setq tts-default-speech-rate dectalk-default-speech-rate)
   (set-default 'tts-default-speech-rate dectalk-default-speech-rate)
-  (setq dtk-speech-rate-step 50
-        dtk-speech-rate-base 150)
-  (setq-default dtk-speech-rate-step 50
-                dtk-speech-rate-base 150)
-  (dtk-set-character-scale 1.5 'default)
-  (setq dtk-handle-unicode t)
-  (dtk-unicode-update-untouched-charsets
+  (setq tts-speech-rate-step 50
+        tts-speech-rate-base 150)
+  (setq-default tts-speech-rate-step 50
+                tts-speech-rate-base 150)
+  (tts-set-character-scale 1.5 'default)
+  (setq tts-handle-unicode t)
+  (tts-unicode-update-untouched-charsets
    '(ascii latin-iso8859-1 latin-iso8859-15 latin-iso8859-9 eight-bit-graphic)))
 
 (provide 'dectalk-voices)
-

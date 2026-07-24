@@ -2184,6 +2184,8 @@ When called interactively, CHAR defaults to the character after point."
  'tts-chunk-on-white-space-and-punctuations
  #'dtk-chunk-on-white-space-and-punctuations)
 (defalias 'tts-char-to-speech #'dtk-char-to-speech)
+(defalias 'tts-unicode-update-untouched-charsets
+  #'dtk-unicode-update-untouched-charsets)
 (defalias 'tts-unicode-char-untouched-p #'dtk-unicode-char-untouched-p)
 (defalias 'tts-unicode-name-for-char #'dtk-unicode-name-for-char)
 (defalias 'tts-unicode-full-name-for-char #'dtk-unicode-full-name-for-char)

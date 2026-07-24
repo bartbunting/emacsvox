@@ -9,6 +9,7 @@
 
 (require 'cl-lib)
 (require 'ert)
+(require 'dectalk-voices)
 (require 'dtk-speak)
 (require 'emacsvox-sounds)
 (require 'voice-setup)
@@ -75,6 +76,8 @@
     (tts-chunk-on-white-space-and-punctuations
      . dtk-chunk-on-white-space-and-punctuations)
     (tts-char-to-speech . dtk-char-to-speech)
+    (tts-unicode-update-untouched-charsets
+     . dtk-unicode-update-untouched-charsets)
     (tts-unicode-char-untouched-p . dtk-unicode-char-untouched-p)
     (tts-unicode-name-for-char . dtk-unicode-name-for-char)
     (tts-unicode-full-name-for-char . dtk-unicode-full-name-for-char)
@@ -310,6 +313,91 @@
       (nreverse writes)
       '((canonical "a /sounds/queued.ogg\n")
         (canonical "p /sounds/served.ogg\n"))))))
+
+(ert-deftest emacsvox-tts-dectalk-soft-uses-canonical-runtime ()
+  "The software DECtalk selector uses the generic TTS runtime API."
+  (let (events)
+    (cl-letf (((symbol-function 'dectalk-configure-tts)
+               (lambda () (push 'configure events)))
+              ((symbol-function 'ems--fastload)
+               (lambda (file) (push (list 'fastload file) events)))
+              ((symbol-function 'tts-select-server)
+               (lambda (server) (push (list 'select server) events)))
+              ((symbol-function 'tts-initialize)
+               (lambda () (push 'initialize events)))
+              ((symbol-function 'tts-set-rate)
+               (lambda (rate scope)
+                 (push (list 'rate rate scope) events))))
+      (dectalk-soft))
+    (should
+     (equal
+      (nreverse events)
+      `(configure
+        (fastload "voice-defs")
+        (select "dtk-soft")
+        initialize
+        (rate ,dectalk-default-speech-rate global))))))
+
+(ert-deftest emacsvox-tts-dectalk-configures-canonical-state ()
+  "The DECtalk adapter configures generic TTS state and dispatch."
+  (let ((saved-state
+         (mapcar
+          (lambda (symbol)
+            (list symbol
+                  (boundp symbol)
+                  (and (boundp symbol) (symbol-value symbol))))
+          '(tts-default-voice tts-default-speech-rate
+            tts-speech-rate-step tts-speech-rate-base
+            tts-handle-unicode)))
+        defaults
+        character-scale
+        untouched-charsets)
+    (unwind-protect
+        (cl-letf (((symbol-function 'set-default)
+                   (lambda (symbol value)
+                     (push (cons symbol value) defaults)))
+                  ((symbol-function 'tts-set-character-scale)
+                   (lambda (scale scope)
+                     (setq character-scale (list scale scope))))
+                  ((symbol-function 'tts-unicode-update-untouched-charsets)
+                   (lambda (charsets)
+                     (setq untouched-charsets charsets)))
+                  ((symbol-function 'tts-voice-defined-p) #'ignore)
+                  ((symbol-function 'tts-get-voice-command) #'ignore)
+                  ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+          (dectalk-configure-tts)
+          (should (eq (symbol-value 'tts-default-voice) 'paul))
+          (should
+           (= (symbol-value 'tts-default-speech-rate)
+              dectalk-default-speech-rate))
+          (should (= (symbol-value 'tts-speech-rate-step) 50))
+          (should (= (symbol-value 'tts-speech-rate-base) 150))
+          (should (symbol-value 'tts-handle-unicode))
+          (should
+           (eq (symbol-function 'tts-voice-defined-p)
+               'dectalk-voice-defined-p))
+          (should
+           (eq (symbol-function 'tts-get-voice-command)
+               'dectalk-get-voice-command))
+          (should
+           (eq (symbol-function 'tts-define-voice-from-acss)
+               'dectalk-define-voice-from-acss)))
+      (dolist (entry saved-state)
+        (if (nth 1 entry)
+            (set (car entry) (nth 2 entry))
+          (makunbound (car entry)))))
+    (should
+     (equal
+      (nreverse defaults)
+      `((tts-default-speech-rate . ,dectalk-default-speech-rate)
+        (tts-speech-rate-step . 50)
+        (tts-speech-rate-base . 150))))
+    (should (equal character-scale '(1.5 default)))
+    (should
+     (equal
+      untouched-charsets
+      '(ascii latin-iso8859-1 latin-iso8859-15
+              latin-iso8859-9 eight-bit-graphic)))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."
