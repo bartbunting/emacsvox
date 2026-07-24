@@ -98,6 +98,38 @@ The syntax-aware repository audit currently reports:
 | =advice-add=        |        1351 |   157 |
 | =ems-interactive-p= |        1395 |   176 |
 
+** Remaining Emacs-bundled inventory
+
+For progress reporting, "native advice installed" and "fully final-form" are
+different states:
+
+- *legacy or positional* means a module still contains executable
+  =defadvice= or uses =ad-get-arg=, =ad-set-arg=, =ad-do-it=, or
+  =ad-return-value=;
+- *helper cleanup* means the module uses =advice-add= but still has
+  bridge-recognized =ems--= advice helpers or argument-less
+  =ems-interactive-p= checks;
+- *fully final-form* means advice is directly registered under distinct
+  =emacsvox--= names, interactive targets are explicit, and none of the
+  legacy or bridge compatibility constructs remain.
+
+The previous checkpoint used "converted" for some modules at the
+native-advice-installed stage.  Those modules remain in this inventory until
+they satisfy the final-form gate.
+
+As of 2026-07-24, 57 Emacs-bundled integration modules remain: 28 legacy or
+positional modules and 29 helper-cleanup modules.
+
+| State                | Modules |
+|----------------------+---------|
+| legacy or positional | =buff-menu=, =cmuscheme=, =cperl=, =custom=, =ediff=, =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =message=, =newsticker=, =nxml=, =perl=, =python=, =reftex=, =rst=, =ruby=, =sh-script=, =speedbar=, =supercite=, =tetris=, =todo-mode=, =transient=, =treesit= |
+| helper cleanup       | =arc=, =bibtex=, =bookmark=, =bs=, =calc=, =calculator=, =desktop=, =dictionary=, =dired=, =eudc=, =flymake=, =hideshow=, =ido=, =info=, =kmacro=, =make-mode=, =man=, =package=, =re-builder=, =rmail=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tar=, =tcl=, =tempo=, =texinfo=, =woman= |
+
+=emacsvox-entertain.el= is tracked separately because it combines built-in
+Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
+and removal of the compatibility bridge are also separate from this
+integration-module count.
+
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
 messages, overlays, timers, source navigation, property search, Help
@@ -119,9 +151,11 @@ Outline and its optional Foldout integration, and EWW with its SHR rendering
 integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, Eshell, and Which-Key are
 also converted, along with Eterm, Ispell, and Widget.
 Each module has direct-registration and target-aware feedback tests, and each
-conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 41 files still contain
-bridge compatibility symbols.
+conversion is an independently revertible commit.  The modules explicitly
+listed as clean earlier in this checkpoint are completely independent of the
+compatibility bridge; modules in the inventory above still require final-form
+work.  Repository-wide, 41 files still contain positional bridge compatibility
+symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
