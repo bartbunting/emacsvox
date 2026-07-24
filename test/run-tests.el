@@ -154,6 +154,7 @@
   (require 'emacsvox-todo-mode-tests)
   (require 'emacsvox-treesit-tests)
   (require 'emacsvox-entertain-tests)
+  (require 'emacsvox-browse-kill-ring-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

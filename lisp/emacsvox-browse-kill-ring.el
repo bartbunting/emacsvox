@@ -50,88 +50,117 @@
 
 ;;;  speech-enable interactive commands
 
-(defun ems--browse-kill-ring-undo-other-window-after (&rest _)
+(defun emacsvox--advice-browse-kill-ring-undo-other-window-after (&rest _)
   "speak."
-  (when (ems-interactive-p) (emacsvox-icon 'unmodified-object)))
+  (when (ems-interactive-p 'browse-kill-ring-undo-other-window)
+    (emacsvox-icon 'unmodified-object)))
 
-(advice-add 'browse-kill-ring-undo-other-window :after
-            #'ems--browse-kill-ring-undo-other-window-after)
-
-(defun ems--browse-kill-ring-insert-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'yank-object)))
-
-(advice-add 'browse-kill-ring-insert :after
-            #'ems--browse-kill-ring-insert-after)
-
-(defun ems--browse-kill-ring-insert-and-quit-after (&rest _)
+(defun emacsvox--advice-browse-kill-ring-insert-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'browse-kill-ring-insert)
+    (emacsvox-icon 'yank-object)))
+
+(defun emacsvox--advice-browse-kill-ring-insert-and-quit-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-insert-and-quit)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)
     (emacsvox-icon 'close-object)))
 
-(advice-add 'browse-kill-ring-insert-and-quit :after
-            #'ems--browse-kill-ring-insert-and-quit-after)
-
-(defun ems--browse-kill-ring-delete-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'delete-object)))
-
-(advice-add 'browse-kill-ring-delete :after
-            #'ems--browse-kill-ring-delete-after)
-
-(defun ems--browse-kill-ring-forward-after (&rest _)
+(defun emacsvox--advice-browse-kill-ring-delete-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'browse-kill-ring-delete)
+    (emacsvox-icon 'delete-object)))
+
+(defun emacsvox--advice-browse-kill-ring-forward-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-forward)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-(advice-add 'browse-kill-ring-forward :after
-            #'ems--browse-kill-ring-forward-after)
-
-(defun ems--browse-kill-ring-previous-after (&rest _)
+(defun emacsvox--advice-browse-kill-ring-previous-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'browse-kill-ring-previous)
     (emacsvox-speak-line) (emacsvox-icon 'select-object)))
 
-(advice-add 'browse-kill-ring-previous :after
-            #'ems--browse-kill-ring-previous-after)
-
-(defun ems--browse-kill-ring-quit-after (&rest _)
+(defun emacsvox--advice-browse-kill-ring-quit-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'browse-kill-ring-quit)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'browse-kill-ring-quit :after
-            #'ems--browse-kill-ring-quit-after)
-
-(defun ems--browse-kill-ring-edit-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
-
-(advice-add 'browse-kill-ring-edit :after
-            #'ems--browse-kill-ring-edit-after)
-
-(defun ems--browse-kill-ring-edit-finish-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'close-object)))
-
-(advice-add 'browse-kill-ring-edit-finish :after
-            #'ems--browse-kill-ring-edit-finish-after)
-
-(defun ems--browse-kill-ring-occur-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'open-object)))
-
-(advice-add 'browse-kill-ring-occur :after
-            #'ems--browse-kill-ring-occur-after)
-
-(defun ems--browse-kill-ring-update-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'browse-kill-ring-update :after
-            #'ems--browse-kill-ring-update-after)
-
-(defun ems--browse-kill-ring-after (&rest _)
+(defun emacsvox--advice-browse-kill-ring-edit-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'browse-kill-ring-edit)
+    (emacsvox-icon 'open-object)))
+
+(defun emacsvox--advice-browse-kill-ring-edit-finish-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-edit-finish)
+    (emacsvox-icon 'close-object)))
+
+(defun emacsvox--advice-browse-kill-ring-occur-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-occur)
+    (emacsvox-icon 'open-object)))
+
+(defun emacsvox--advice-browse-kill-ring-update-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-update)
+    (emacsvox-icon 'task-done)))
+
+(defun emacsvox--advice-browse-kill-ring-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'browse-kill-ring :after #'ems--browse-kill-ring-after)
+(defun emacsvox--advice-browse-kill-ring-search-forward-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-search-forward)
+    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
+
+(defun emacsvox--advice-browse-kill-ring-search-backward-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'browse-kill-ring-search-backward)
+    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
+
+(defconst emacsvox-browse-kill-ring--advice
+  '((browse-kill-ring-undo-other-window
+     emacsvox--advice-browse-kill-ring-undo-other-window-after)
+    (browse-kill-ring-insert
+     emacsvox--advice-browse-kill-ring-insert-after)
+    (browse-kill-ring-insert-and-quit
+     emacsvox--advice-browse-kill-ring-insert-and-quit-after)
+    (browse-kill-ring-delete
+     emacsvox--advice-browse-kill-ring-delete-after)
+    (browse-kill-ring-forward
+     emacsvox--advice-browse-kill-ring-forward-after)
+    (browse-kill-ring-previous
+     emacsvox--advice-browse-kill-ring-previous-after)
+    (browse-kill-ring-quit
+     emacsvox--advice-browse-kill-ring-quit-after)
+    (browse-kill-ring-edit
+     emacsvox--advice-browse-kill-ring-edit-after)
+    (browse-kill-ring-edit-finish
+     emacsvox--advice-browse-kill-ring-edit-finish-after)
+    (browse-kill-ring-occur
+     emacsvox--advice-browse-kill-ring-occur-after)
+    (browse-kill-ring-update
+     emacsvox--advice-browse-kill-ring-update-after)
+    (browse-kill-ring emacsvox--advice-browse-kill-ring-after)
+    (browse-kill-ring-search-forward
+     emacsvox--advice-browse-kill-ring-search-forward-after)
+    (browse-kill-ring-search-backward
+     emacsvox--advice-browse-kill-ring-search-backward-after))
+  "Browse Kill Ring targets and their native advice functions.")
+
+(defun emacsvox-browse-kill-ring--install-advice ()
+  "Install Browse Kill Ring advice after the optional package loads."
+  (dolist (entry emacsvox-browse-kill-ring--advice)
+    (pcase-let ((`(,target ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'browse-kill-ring
+  (emacsvox-browse-kill-ring--install-advice))
 
 ;;;  add keybinding on emacsvox desktop
 (cl-eval-when (load)
@@ -139,20 +168,3 @@
 
 (provide 'emacsvox-browse-kill-ring)
 ;;;  end of file
-
-(defun ems--browse-kill-ring-search-forward-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'browse-kill-ring-search-forward :after
-            #'ems--browse-kill-ring-search-forward-after)
-
-(defun ems--browse-kill-ring-search-backward-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'browse-kill-ring-search-backward :after
-            #'ems--browse-kill-ring-search-backward-after)
-
