@@ -58,25 +58,43 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--annotate-annotate-after (&rest _)
-  "speak." (when (ems-interactive-p) (dtk-notify "Added annotation")))
-
-(advice-add 'annotate-annotate :after #'ems--annotate-annotate-after)
+(defun emacsvox--advice-annotate-annotate-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'annotate-annotate)
+    (dtk-notify "Added annotation")))
 
 (cl-loop
- for f in 
+ for target in
  '(annotate-goto-next-annotation
    annotate-goto-previous-annotation)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (let ((o (cl-first (overlays-at (point)))))
          (emacsvox-icon 'large-movement)
          (emacsvox-speak-line)
          (dtk-notify (overlay-get o 'annotation)))))))
 
+(defconst emacsvox-annotate--advice-targets
+  '(annotate-annotate
+    annotate-goto-next-annotation
+    annotate-goto-previous-annotation)
+  "Current Annotate targets that receive native after advice.")
+
+(defun emacsvox-annotate--install-advice ()
+  "Install advice after the optional Annotate package loads."
+  (dolist (target emacsvox-annotate--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'annotate
+  (emacsvox-annotate--install-advice))
+
 (provide 'emacsvox-annotate)
 ;;;  end of file
-

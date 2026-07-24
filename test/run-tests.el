@@ -173,6 +173,7 @@
   (require 'emacsvox-2048-tests)
   (require 'emacsvox-abc-mode-tests)
   (require 'emacsvox-ace-window-tests)
+  (require 'emacsvox-annotate-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
