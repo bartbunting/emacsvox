@@ -58,66 +58,69 @@
 
 ;;;  Advice
 
-(defun ems--tar-quit-after (&rest _)
+(defun emacsvox--advice-tar-next-line-after (&rest _)
+  "Speak."
+  (when (ems-interactive-p 'tar-next-line)
+    (emacsvox-tar-speak-line)))
+
+(advice-add 'tar-next-line :after
+            #'emacsvox--advice-tar-next-line-after)
+
+(defun emacsvox--advice-tar-previous-line-after (&rest _)
+  "Speak."
+  (when (ems-interactive-p 'tar-previous-line)
+    (emacsvox-tar-speak-line)))
+
+(advice-add 'tar-previous-line :after
+            #'emacsvox--advice-tar-previous-line-after)
+
+(defun emacsvox--advice-tar-flag-deleted-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'tar-quit :after #'ems--tar-quit-after)
-
-(defun ems--tar-next-line-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-tar-speak-line)))
-
-(advice-add 'tar-next-line :after #'ems--tar-next-line-after)
-
-(defun ems--tar-previous-line-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-tar-speak-line)))
-
-(advice-add 'tar-previous-line :after #'ems--tar-previous-line-after)
-
-(defun ems--tar-flag-deleted-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'tar-flag-deleted)
     (emacsvox-icon 'delete-object) (emacsvox-tar-speak-line)))
 
-(advice-add 'tar-flag-deleted :after #'ems--tar-flag-deleted-after)
+(advice-add 'tar-flag-deleted :after
+            #'emacsvox--advice-tar-flag-deleted-after)
 
-(defun ems--tar-unflag-after (&rest _)
+(defun emacsvox--advice-tar-unflag-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'tar-unflag)
     (emacsvox-icon 'yank-object) (emacsvox-tar-speak-line)))
 
-(advice-add 'tar-unflag :after #'ems--tar-unflag-after)
+(advice-add 'tar-unflag :after
+            #'emacsvox--advice-tar-unflag-after)
 
-(defun ems--tar-unflag-backwards-after (&rest _)
+(defun emacsvox--advice-tar-unflag-backwards-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'tar-unflag-backwards)
     (emacsvox-icon 'yank-object) (emacsvox-tar-speak-line)))
 
 (advice-add 'tar-unflag-backwards :after
-            #'ems--tar-unflag-backwards-after)
+            #'emacsvox--advice-tar-unflag-backwards-after)
 
-(defun ems--tar-extract-after (&rest _)
+(defun emacsvox--advice-tar-extract-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'tar-extract)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'tar-extract :after #'ems--tar-extract-after)
+(advice-add 'tar-extract :after
+            #'emacsvox--advice-tar-extract-after)
 
-(defun ems--tar-extract-other-window-after (&rest _)
+(defun emacsvox--advice-tar-extract-other-window-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'tar-extract-other-window)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'tar-extract-other-window :after
-            #'ems--tar-extract-other-window-after)
+            #'emacsvox--advice-tar-extract-other-window-after)
 
-(defun ems--tar-view-after (&rest _)
+(defun emacsvox--advice-tar-view-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'tar-view)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'tar-view :after #'ems--tar-view-after)
+(advice-add 'tar-view :after
+            #'emacsvox--advice-tar-view-after)
 
 ;;;  additional interactive commands
 
@@ -195,4 +198,3 @@
 
 (provide 'emacsvox-tar)
 ;;;  end of file
-
