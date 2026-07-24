@@ -47,6 +47,7 @@
 
 ;;; Code:
 (require 'emacsvox-preamble)
+(require 'newsticker)
 
 ;;;  define personalities 
 (voice-setup-add-map
@@ -58,35 +59,27 @@
 
 ;;;  advice functions
 
-(defun ems--newsticker--cache-remove-around (orig-fun &rest args)
-  "Silence messages temporarily to avoid chatter."
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages nil))
-      (apply orig-fun args) result)
-    result))
+(defmacro emacsvox-newsticker--define-silent-advice (targets)
+  "Define once-only message-silencing advice for TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (orig-fun &rest args)
+                 "Run one Newsticker operation without automatic speech."
+                 (let ((emacsvox-speak-messages nil))
+                   (apply orig-fun args)))
+               (advice-add ',target :around #',function))))
+        targets)))
 
-(advice-add 'newsticker--cache-remove :around
-            #'ems--newsticker--cache-remove-around)
-
-(defun ems--newsticker-callback-enter-around (orig-fun &rest args)
-  "Silence messages temporarily to avoid chatter."
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages nil))
-      (apply orig-fun args) result)
-    result))
-
-(advice-add 'newsticker-callback-enter :around
-            #'ems--newsticker-callback-enter-around)
-
-(defun ems--newsticker-retrieval-tick-around (orig-fun &rest args)
-  "Silence messages temporarily to avoid chatter."
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages nil))
-      (apply orig-fun args) result)
-    result))
-
-(advice-add 'newsticker-retrieval-tick :around
-            #'ems--newsticker-retrieval-tick-around)
+(emacsvox-newsticker--define-silent-advice
+    (newsticker--cache-remove
+     newsticker--get-news-by-url-callback
+     newsticker-get-news
+     newsticker--cache-save))
 
 ;;;  advice interactive commands
 
@@ -94,33 +87,30 @@
   "Summarize current item."
   (emacsvox-speak-line))
 
-(cl-loop for f in
-         '(newsticker-next-item newsticker-previous-item
-                                newsticker-next-new-item
-                                newsticker-previous-new-item
-                                newsticker-previous-feed newsticker-next-feed
-                                )
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'large-movement)
-               (emacsvox-newsticker-summarize-item)))))
+(defmacro emacsvox-newsticker--define-navigation-advice (targets)
+  "Define native after advice for Newsticker navigation TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 "Speak the current Newsticker item after navigation."
+                 (when (ems-interactive-p ',target)
+                   (emacsvox-icon 'large-movement)
+                   (emacsvox-newsticker-summarize-item)))
+               (advice-add ',target :after #',function))))
+        targets)))
 
-;;;   silence auto activity
-
-(cl-loop for f in
-         '(newsticker-get-news-with-delay
-           newsticker-get-news
-           newsticker--cache-save)
-         do
-         (eval
-          `(defadvice  ,f (around emacsvox pre act comp)
-             "Silence messages."
-             (let ((emacsvox-speak-messages nil))
-               ad-do-it))))
+(emacsvox-newsticker--define-navigation-advice
+    (newsticker-next-item
+     newsticker-previous-item
+     newsticker-next-new-item
+     newsticker-previous-new-item
+     newsticker-previous-feed
+     newsticker-next-feed))
 
 (provide 'emacsvox-newsticker)
 ;;;  end of file
-
