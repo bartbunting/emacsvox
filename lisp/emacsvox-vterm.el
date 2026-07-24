@@ -72,28 +72,35 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--vterm-clear-after (&rest _)
+(defvar emacsvox-vterm--advice nil
+  "Current Vterm targets and their native advice functions.")
+(setq emacsvox-vterm--advice nil)
+
+(defun emacsvox--advice-vterm-clear-after (&rest _)
   "speak." (emacsvox-vterm-snapshot)
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'vterm-clear)
     (emacsvox-icon 'scroll) (message "Cleared screen")))
 
-(advice-add 'vterm-clear :after #'ems--vterm-clear-after)
+(push '(vterm-clear :after emacsvox--advice-vterm-clear-after)
+      emacsvox-vterm--advice)
 
-(defun ems--vterm-clear-scrollback-after (&rest _)
+(defun emacsvox--advice-vterm-clear-scrollback-after (&rest _)
   "speak." (emacsvox-vterm-snapshot)
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'vterm-clear-scrollback)
     (emacsvox-icon 'scroll) (message "Cleared scrollback")))
 
-(advice-add 'vterm-clear-scrollback :after
-            #'ems--vterm-clear-scrollback-after)
+(push '(vterm-clear-scrollback :after
+        emacsvox--advice-vterm-clear-scrollback-after)
+      emacsvox-vterm--advice)
 
-(defun ems--vterm-copy-mode-done-after (&rest _)
+(defun emacsvox--advice-vterm-copy-mode-done-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'vterm-copy-mode-done)
     (emacsvox-icon 'close-object) (emacsvox-speak-line)))
 
-(advice-add 'vterm-copy-mode-done :after
-            #'ems--vterm-copy-mode-done-after)
+(push '(vterm-copy-mode-done :after
+        emacsvox--advice-vterm-copy-mode-done-after)
+      emacsvox-vterm--advice)
 
 (with-eval-after-load "vterm"
   (cl-declaim (special vterm-mode-map vterm-copy-mode-map))
@@ -101,47 +108,46 @@
               'emacsvox-keymap)
   (define-key vterm-copy-mode-map (kbd "C-e") 'emacsvox-keymap))
 
-(defun ems--vterm-after (&rest _)
+(defun emacsvox--advice-vterm-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'vterm)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'vterm :after #'ems--vterm-after)
+(push '(vterm :after emacsvox--advice-vterm-after)
+      emacsvox-vterm--advice)
 
-(cl-loop
- for f in
- '(vterm-end-of-line vterm-beginning-of-line)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+(defun emacsvox-vterm--register-movement-group (targets)
+  "Define and register movement advice for TARGETS."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (emacsvox-icon 'large-movement)
+            (emacsvox-speak-line))))
+      (push (list target :after advice-function) emacsvox-vterm--advice))))
 
-(defun ems--vterm-reset-cursor-point-after (&rest _)
+(emacsvox-vterm--register-movement-group
+ '(vterm-end-of-line vterm-beginning-of-line
+   vterm-previous-prompt vterm-next-prompt))
+
+(defun emacsvox--advice-vterm-reset-cursor-point-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'vterm-reset-cursor-point)
     (emacsvox-icon 'select-object) (emacsvox-speak-line)))
 
-(advice-add 'vterm-reset-cursor-point :after
-            #'ems--vterm-reset-cursor-point-after)
+(push '(vterm-reset-cursor-point :after
+        emacsvox--advice-vterm-reset-cursor-point-after)
+      emacsvox-vterm--advice)
 
-(defun ems--vterm-send-return-after (&rest _)
+(defun emacsvox--advice-vterm-send-return-after (&rest _)
   "speak." (emacsvox-vterm-snapshot))
 
-(advice-add 'vterm-send-return :after #'ems--vterm-send-return-after)
-
-(cl-loop
- for f in
- '(vterm-previous-prompt vterm-next-prompt)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+(push '(vterm-send-return :after
+        emacsvox--advice-vterm-send-return-after)
+      emacsvox-vterm--advice)
 
 ;;; Speech-enable term emulation:
 
@@ -176,18 +182,19 @@
         ems--vterm-char (preceding-char))
   )
 
-(defun ems--vterm--flush-output-before (&rest _)
+(defun emacsvox--advice-vterm--flush-output-before (&rest _)
   "Cache state before input event is processed."
   (emacsvox-vterm-snapshot))
 
-(advice-add 'vterm--flush-output :before
-            #'ems--vterm--flush-output-before)
+(push '(vterm--flush-output :before
+        emacsvox--advice-vterm--flush-output-before)
+      emacsvox-vterm--advice)
 
 ;; speech-enable term update loop, using previously cached state.
 (defvar emacsvox-vterm-debug nil
   "Debug flag")
 
-(defun ems--vterm--redraw-after (&rest _)
+(defun emacsvox--advice-vterm--redraw-after (&rest _)
   "Speech-enable term emulation."
   (let
       ((current-char ems--vterm-char) (opoint ems--vterm-opoint)
@@ -227,8 +234,19 @@
                  (buffer-substring (1+ opoint) (point)))))))
         (emacsvox-speak-line))))))
 
-(advice-add 'vterm--redraw :after #'ems--vterm--redraw-after)
+(push '(vterm--redraw :after emacsvox--advice-vterm--redraw-after)
+      emacsvox-vterm--advice)
+
+(defun emacsvox-vterm--install-advice ()
+  "Install advice for Vterm functions loaded so far."
+  (dolist (entry emacsvox-vterm--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'vterm
+  (emacsvox-vterm--install-advice))
 
 (provide 'emacsvox-vterm)
 ;;;  end of file
-
