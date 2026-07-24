@@ -41,9 +41,10 @@ Avy, BBDB, Calibredb, Chess, CIDER, Clojure Mode, Combobulate, Consult, Corfu,
 Deadgrep, DevDocs, Dumb Jump, Eat, Ebuku, EIN, Elfeed, Elisp Refs, Ellama,
 Elpher, Elpy, EMMS, EMPV, ENWC, ESS, Evil, and the remaining 40
 legacy-or-positional third-party integrations, plus the standalone Gweb add-on,
+and the final six third-party helper-cleanup integrations,
 on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 992 passing ERT tests and one Mu4e contract test
+- the Emacs 31 suite contains 1005 passing ERT tests and one Mu4e contract test
   skipped until the system Mu4e package is installed;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
@@ -266,7 +267,7 @@ on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-entertain.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
-- the 70 completed third-party integrations contain no =defadvice=,
+- the 76 completed third-party integrations contain no =defadvice=,
   positional compatibility accessors, bridge-era =ems--= advice helpers, or
   implicit interactive-target checks.
 
@@ -279,7 +280,7 @@ The syntax-aware repository audit currently reports:
 | =ad-set-arg=        |           1 |   n/a |
 | =ad-do-it=          |           0 |   n/a |
 | =ad-return-value=   |           3 |   n/a |
-| =advice-add=        |         963 |   183 |
+| =advice-add=        |         937 |   183 |
 | =ems-interactive-p= |         994 |   176 |
 
 ** Remaining Emacs-bundled inventory
@@ -311,9 +312,10 @@ integration-module count.
 ** Remaining third-party inventory
 
 As of 2026-07-24, no third-party legacy-or-positional integration remains.
-Six third-party integrations remain at the helper-cleanup stage.
+No third-party integration remains at the helper-cleanup stage; all 76
+third-party integrations satisfy the final-form gate.
 
-The helper-cleanup modules are:
+The final helper-cleanup batch was:
 
 =denote=, =embark=, =gnuplot=, =gptel=, =marginalia=, and =maths=.
 
@@ -326,7 +328,7 @@ The final completed legacy-or-positional batch was:
 =sage=, =sdcv=, =slime=, =smartparens=, =sudoku=, =threes=, =typo=, =vdiff=,
 =vertico=, =vterm=, =we=, and =xkcd=.
 
-All 70 completed third-party migrations use only current package APIs and install
+All 76 completed third-party migrations use only current package APIs and install
 their native advice after the relevant optional feature loads.  Removed command
 names remain absent.  The focused tests also cover one-call and return-value
 semantics where the old around advice repeated its original operation,
@@ -370,16 +372,22 @@ Hangman integration.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
-compatibility bridge.  The six helper-cleanup modules above still use
-bridge-era helper naming or implicit interactive checks.  The syntax-aware
-legacy audit reports compatibility symbols only in =emacsvox-preamble.el=
-itself.
+compatibility bridge.  The final six helper-cleanup modules now use distinct
+native advice names and explicit interactive targets.  The syntax-aware legacy
+audit reports compatibility symbols only in =emacsvox-preamble.el= itself.
 
 The standalone Gweb conversion preserves its conditional completion behavior:
 Google completion inserts a literal space without calling normal completion,
 while ordinary completion invokes the original command exactly once.  Both
 paths speak the resulting word and preserve their return value.  IDO advice is
 installed only after IDO loads.
+
+The final helper-cleanup batch covers Denote, Embark, Gnuplot, GPTel,
+Marginalia, and Maths.  Gnuplot follows the package's current comint-buffer
+command names, omits its removed private completion command, and fixes a
+bridge-era wrapper that called deletion twice.  GPTel installs menu advice
+after =gptel-transient= owns that command, and Maths defers preview advice until
+AUCTeX's =preview= feature loads.
 
 The SQL conversion calls each send command exactly once and defers optional
 SQLPlus advice until that package loads.  Flyspell similarly defers the
@@ -728,9 +736,10 @@ retains unconditional feedback for completed stone moves, and relies on the
 existing =quit-window= integration in place of the removed =solitaire-quit=
 command.
 
-Continue with the six third-party helper-cleanup modules.  The compatibility
-bridge remains necessary until those changes leave no integration dependent on
-its helper naming or implicit interactive-target behavior.
+All integration modules are now final-form.  The next migration slice is to
+remove the compatibility bridge from =emacsvox-preamble.el=, then rerun the
+complete Emacs 31 suite, semantic trace comparison, full Lisp build, startup
+smoke test, and syntax-aware audit.
 
 * Working Principles
 
