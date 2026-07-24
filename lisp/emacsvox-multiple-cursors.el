@@ -53,53 +53,47 @@
 
 (defvar mc/num-cursors)
 
-;;;  Advice Mark Commands:
+(defvar emacsvox-multiple-cursors--advice nil
+  "Current multiple-cursors targets and native advice functions.")
+(setq emacsvox-multiple-cursors--advice nil)
 
-(cl-loop
- for f in
+(defun emacsvox-multiple-cursors--register-after-group (targets icon)
+  "Define and register after advice for TARGETS using ICON."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Report cursor count after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (dtk-speak (format "%s cursors" mc/num-cursors))
+            (emacsvox-icon ',icon))))
+      (push (list target :after advice-function)
+            emacsvox-multiple-cursors--advice))))
+
+(emacsvox-multiple-cursors--register-after-group
  '(mc/mark-next-like-this mc/mark-previous-like-this
-   mc/mark-all-like-this mc/mark-all-in-region)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-speak (format "%s cursors" mc/num-cursors))
-       (emacsvox-icon 'mark-object)))))
+   mc/mark-all-like-this mc/mark-all-in-region mc/edit-lines)
+ 'mark-object)
 
-;;;  Advice Unmark Commands:
-
-(cl-loop
- for f in
+(emacsvox-multiple-cursors--register-after-group
  '(mc/unmark-next-like-this mc/unmark-previous-like-this)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-speak (format "%s cursors" mc/num-cursors))
-       (emacsvox-icon 'deselect-object)))))
+ 'deselect-object)
 
-;;;  Advice Skip Commands:
-
-(cl-loop
- for f in
+(emacsvox-multiple-cursors--register-after-group
  '(mc/skip-to-next-like-this mc/skip-to-previous-like-this)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (dtk-speak (format "%s cursors" mc/num-cursors))
-       (emacsvox-icon 'select-object)))))
+ 'select-object)
 
-;;;  Advice Edit Lines:
+(defun emacsvox-multiple-cursors--install-advice ()
+  "Install native advice after multiple-cursors loads."
+  (dolist (entry emacsvox-multiple-cursors--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(defadvice mc/edit-lines (after emacsvox pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak (format "%s cursors" mc/num-cursors))
-    (emacsvox-icon 'mark-object)))
+(with-eval-after-load 'multiple-cursors
+  (emacsvox-multiple-cursors--install-advice))
 
 (provide 'emacsvox-multiple-cursors)
 ;;;  end of file
