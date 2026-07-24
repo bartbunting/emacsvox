@@ -13,7 +13,7 @@
 ;;       exception at present).
 ;;    7. The startup file contains functions with prefix  tvr-.
 ;;    8. The only top-level call is (tvr-emacs).
-;;    9. Function tvr-emacs starts up Emacspeak, and sets up two hooks:
+;;    9. Function tvr-emacs starts up Emacsvox, and sets up two hooks:
 ;;       - after-init-hook to do the bulk of the work.
 ;;       - emacs-startup-hook to set up  initial window configuration.
 ;;    10. Function tvr-after-init on after-init-hook:
@@ -60,7 +60,6 @@ Produce timing information as the last step."
 ;; Emacs @HEAD is broken:
 (defvar font-lock-reference-face 'font-lock-constant-face)
 (advice-add 'system-users :override #'(lambda () (list user-real-login-name)))
-;(defadvice shell-command (before o pre act comp) (message "%s" (ad-get-arg 0)))
 
 ;;;  tvr-shell-bind-keys:
 
@@ -93,11 +92,11 @@ Produce timing information as the last step."
 Configure dbus and set up tabs.
 Reset gc-cons-threshold to a smaller value  and play
 startup sound."
-  (emacspeak-dbus-setup)
+  (emacsvox-dbus-setup)
   (setq gc-cons-threshold 64000000)
   (tvr-tabs)
   (switch-to-buffer "Home")
-  (emacspeak-icon 'tvr-emacs)
+  (emacsvox-icon 'tvr-emacs)
   (message
    "<Emacs started for %s in %.2f  seconds with %s gcs (%.2f seconds)>"
    user-login-name (read (emacs-init-time)) gcs-done gc-elapsed))
@@ -107,7 +106,7 @@ startup sound."
 Use Custom to customize where possible. "
   (cl-declare (special
                custom-file global-mode-string outline-minor-mode-prefix
-               outline-mode-prefix-map emacspeak-directory))
+               outline-mode-prefix-map emacsvox-directory))
   (setenv "PULSE_SINK" "effect_input.spatializer") ; for mplayer
   (unless (battery--upower-devices) (display-battery-mode -1)) ; turnoff
   (load-theme 'ef-maris-dark t)
@@ -129,12 +128,12 @@ Use Custom to customize where possible. "
      (  "C-x r a"  append-to-register)
      ("C-x r p"  prepend-to-register)
      ("<f3>" bury-buffer)
-     ("<f4>" emacspeak-kill-buffer-quietly)
+     ("<f4>" emacsvox-kill-buffer-quietly)
      ("<f2>" set-selective-display)
      ("M--" undo-only)
      ("M-C-c" calendar)
      ("M-C-j" imenu)
-     ("M-e" emacspeak-wizards-end-of-word)
+     ("M-e" emacsvox-wizards-end-of-word)
      ("M-r" replace-string)
      ( "M-#" calc-dispatch)
      ("M-C-v" vm-visit-folder))
@@ -144,7 +143,7 @@ Use Custom to customize where possible. "
   (cl-loop ;; shell wizard
    for i from 0 to 9 do
    (global-set-key
-    (kbd (format "C-c %s" i)) 'emacspeak-wizards-shell-by-key))
+    (kbd (format "C-c %s" i)) 'emacsvox-wizards-shell-by-key))
   ;; Smarten up ctl-x-map
   (define-key ctl-x-map "c" 'compile)
   (define-key ctl-x-map "j" 'pop-global-mark)
@@ -186,22 +185,22 @@ Use Custom to customize where possible. "
     (diminish 'yas-minor-mode ""))
   (tvr-time-load
       (tvr-customize)
-    (load "emacspeak-muggles"))
-  (emacspeak-wizards-project-shells-initialize)
+    (load "emacsvox-muggles"))
+  (emacsvox-wizards-project-shells-initialize)
   (when (featurep  'auctex-autoloads) (load-library "tex-site")))
   
   (declare-function battery--upower-devices "battery" nil)
 
 (declare-function
- emacspeak-pronounce-toggle-dictionaries
- "emacspeak-pronounce" (&optional state))
+ emacsvox-pronounce-toggle-dictionaries
+ "emacsvox-pronounce" (&optional state))
 
 (defun tvr-text-mode-hook ()
   "TVR:text-mode"
   (cl-declare (special auto-correct-predicate))
   (outline-minor-mode 1)
   (auto-fill-mode)
-  (emacspeak-pronounce-toggle-dictionaries t)
+  (emacsvox-pronounce-toggle-dictionaries t)
   (setq auto-correct-predicate #'(lambda (&rest _) t))
   ;; company-wordfreq setup:
   (setq-local company-backends '(company-wordfreq))
@@ -229,33 +228,33 @@ Use Custom to customize where possible. "
 
 (defun tvr-emacs ()
   "Start up emacs.
-This function loads Emacspeak. Emacs customization and library
+This function loads Emacsvox. Emacs customization and library
 configuration happens via the after-init-hook. "
-  (cl-declare (special emacspeak-directory ))
-  (unless (featurep 'emacspeak)
+  (cl-declare (special emacsvox-directory ))
+  (unless (featurep 'emacsvox)
     (setopt tts-notification-device "tts_mono_right")
-    (tvr-time-load                      ; load emacspeak:
-        (load ;; setenv EMACSPEAK_DIR if you want to load a different version
+    (tvr-time-load                      ; load emacsvox:
+        (load ;; setenv EMACSVOX_DIR if you want to load a different version
          (expand-file-name
-          "lisp/emacspeak-setup"
-          (or (getenv  "EMACSPEAK_DIR") "~/emacs/lisp/emacspeak")))))
-  (push (expand-file-name "tvr/" emacspeak-directory) load-path)
-  (push (expand-file-name "aster-math/ui" emacspeak-directory) load-path)
+          "lisp/emacsvox-setup"
+          (or (getenv  "EMACSVOX_DIR") "~/emacs/lisp/emacsvox")))))
+  (push (expand-file-name "tvr/" emacsvox-directory) load-path)
+  (push (expand-file-name "aster-math/ui" emacsvox-directory) load-path)
   (add-hook 'after-init-hook #'tvr-after-init)
   (add-hook 'emacs-startup-hook #'tvr-emacs-startup-hook))
 
 (tvr-emacs)
 
 ;;;  Forward Function Declarations:
-(declare-function emacspeak-icon "emacspeak-sounds" (icon))
+(declare-function emacsvox-icon "emacsvox-sounds" (icon))
 
 (declare-function yas--load-snippet-dirs "yasnippet" (&optional nojit))
-(declare-function emacspeak-dbus-setup "emacspeak-dbus" nil)
+(declare-function emacsvox-dbus-setup "emacsvox-dbus" nil)
 
 
 (declare-function
- emacspeak-wizards-project-shells-initialize
- "emacspeak-wizards" nil)
+ emacsvox-wizards-project-shells-initialize
+ "emacsvox-wizards" nil)
 
 ;;; quick tts rescue:
 

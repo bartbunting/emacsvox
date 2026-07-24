@@ -1,15 +1,15 @@
 ;;; pickup.el --- Speech-enable PICKUP  -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
 ;; Description:  Speech-enable PICKUP An Emacs Interface to pickup
-;; Keywords: Emacspeak,  Audio Desktop pickup
+;; Keywords: Emacsvox,  Audio Desktop pickup
 ;;{{{  LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |raman@cs.cornell.edu
+;; emacsvox| T. V. Raman |raman@cs.cornell.edu
 ;; A speech interface to Emacs |
 ;; $Date: 2007-05-03 18:13:44 -0700 (Thu, 03 May 2007) $ |
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/robertmeta/emacsvox
 ;;
 
 ;;}}}

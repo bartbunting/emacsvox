@@ -1,7 +1,7 @@
 (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand)
 (defun conditionally-enable-lispy ()
   (when (memq this-command
-              '(eval-expression emacspeak-wizards-show-eval-result))
+              '(eval-expression emacsvox-wizards-show-eval-result))
     (lispy-mode 1)))
 (with-eval-after-load "lispy"
   (cl-declare (special lispy-mode-map lispy-mode-map-lispy))
@@ -10,7 +10,7 @@
   (define-key lispy-mode-map-lispy (kbd "C-,") nil)
   (define-key lispy-mode-map (kbd "C-<return>") 'complete)
   (define-key lispy-mode-map "\M-m" nil)
-  (define-key lispy-mode-map "\C-y" 'emacspeak-muggles-yank-pop/yank)
+  (define-key lispy-mode-map "\C-y" 'emacsvox-muggles-yank-pop/yank)
   (define-key lispy-mode-map ";" 'self-insert-command)
   (define-key lispy-mode-map ":" 'self-insert-command)
   (define-key lispy-mode-map "\M-;" 'lispy-comment)

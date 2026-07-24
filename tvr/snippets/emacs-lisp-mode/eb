@@ -2,7 +2,9 @@
 # name: ems-before
 # key: eb
 # --
-(defadvice ${1:fun} (before emacspeak pre act comp)
-  "speak."
+(defun ems--${1:fun}-before (&rest _)
+  "Provide speech feedback before `${1:fun}'."
   (when (ems-interactive-p)
-  $0))
+    $0))
+
+(advice-add '${1:fun} :before #'ems--${1:fun}-before)

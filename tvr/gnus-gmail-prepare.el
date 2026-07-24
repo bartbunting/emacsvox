@@ -7,8 +7,8 @@
 ;;Using  a file-based creds store.
 ;;; specials:
 (require 'cl-lib)
-(cl-declaim (special emacspeak-z-keymap gnus-summary-mode-map
-                     emacspeak-y-keymap smtpmail-auth-supported
+(cl-declaim (special emacsvox-z-keymap gnus-summary-mode-map
+                     emacsvox-y-keymap smtpmail-auth-supported
                      gnus-auto-subscribed-groups smtpmail-smtp-service
                      smtpmail-smtp-server smtpmail-stream-type
                      s smtpmail-smtp-user
@@ -91,14 +91,14 @@ This moves them into the Spam folder."
     (make-thread
      #'(lambda ()
          (gnus-summary-move-article nil "nnimap+imap.gmail.com:[Gmail]/Spam")
-         (emacspeak-icon 'task-done))))
+         (emacsvox-icon 'task-done))))
   (defun gmail-unspam ()
     "Move incorrectly marked spam to inbox"
     (interactive)
     (make-thread
      #'(lambda ()
          (gnus-summary-move-article nil "nnimap+imap.gmail.com:[Gmail]/inbox")
-         (emacspeak-icon 'task-done))))
+         (emacsvox-icon 'task-done))))
 
   (define-key gnus-summary-mode-map "$" 'gmail-report-spam)
   
@@ -109,10 +109,10 @@ This moves them into the Spam folder."
     (cl-declare (special auth-source-xoauth2-creds))
     (kill-buffer (find-file-noselect auth-source-xoauth2-creds))
     (tts-stop)
-    (emacspeak-icon 'task-done))
+    (emacsvox-icon 'task-done))
 
-  (when (keymapp emacspeak-z-keymap )
-    (define-key emacspeak-z-keymap "u" 'tvr-unlock-xoauth))
+  (when (keymapp emacsvox-z-keymap )
+    (define-key emacsvox-z-keymap "u" 'tvr-unlock-xoauth))
   
   (setq mm-file-name-rewrite-functions
         '(mm-file-name-trim-whitespace

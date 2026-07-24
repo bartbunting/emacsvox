@@ -4,7 +4,7 @@ EMACS=emacs
 BATCH = -batch -q -no-site-file      
 COMPILE = -f batch-byte-compile
 COMMON_OPTS=	-f package-initialize  -l ./emacs-startup.elc \
- -l ../lisp/emacspeak-loaddefs.el  -f tvr-after-init
+ -l ../lisp/emacsvox-loaddefs.el  -f tvr-after-init
 TEST=-batch  --eval '(setq force-load-messages t  debug-on-error t)'
 Q_TEST=-batch  --eval '(setq debug-on-error t)'
 #files we will load on startup:

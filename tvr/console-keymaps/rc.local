@@ -4,8 +4,8 @@
 # And symlink it in /etc/rc2.d as S99local
 ogg123 -q /usr/share/sounds/ubuntu/stereo/desktop-login.ogg &
 #espeak "system startup complete"
-/usr/local/bin/play -q   /home/raman/emacs/lisp/emacspeak/sounds/prompts/startup.mp3 &
-# It also sets up the console with emacspeak friendly keymaps
+/usr/local/bin/play -q /home/raman/emacs/lisp/emacsvox/sounds/prompts/startup.ogg &
+# It also sets up the console with Emacsvox-friendly keymaps.
 loadkeys /usr/share/keymaps/i386/qwerty/emacs2.kmap.gz
 loadkeys /usr/share/keymaps/i386/qwerty/emacspeak.kmap.gz 
 

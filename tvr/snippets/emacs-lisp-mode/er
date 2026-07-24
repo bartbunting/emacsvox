@@ -2,11 +2,10 @@
 # name: ems-around
 # key: er
 # --
-(defadvice ${1:fun} (around emacspeak pre act comp)
-  "speak."
-  (cond
-   ((ems-interactive-p)
-    $0
-    ad-do-it)
-   (t ad-do-it))
-  ad-return-value)
+(defun ems--${1:fun}-around (orig-fun &rest args)
+  "Provide speech feedback around `${1:fun}'."
+  (when (ems-interactive-p)
+    $0)
+  (apply orig-fun args))
+
+(advice-add '${1:fun} :around #'ems--${1:fun}-around)

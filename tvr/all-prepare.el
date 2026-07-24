@@ -7,8 +7,8 @@
 ;;Using  a file-based creds store.
 ;;; specials:
 (require 'cl-lib)
-(cl-declaim (special emacspeak-z-keymap gnus-summary-mode-map
-                     emacspeak-y-keymap smtpmail-auth-supported
+(cl-declaim (special emacsvox-z-keymap gnus-summary-mode-map
+                     emacsvox-y-keymap smtpmail-auth-supported
                      gnus-auto-subscribed-groups smtpmail-smtp-service
                      smtpmail-smtp-server smtpmail-stream-type
                      s smtpmail-smtp-user
@@ -91,14 +91,14 @@ This moves them into the Spam folder."
     (make-thread
      #'(lambda ()
          (gnus-summary-move-article nil "nnimap+imap.gmail.com:[Gmail]/Spam")
-         (emacspeak-icon 'task-done))))
+         (emacsvox-icon 'task-done))))
   (defun gmail-unspam ()
     "Move incorrectly marked spam to inbox"
     (interactive)
     (make-thread
      #'(lambda ()
          (gnus-summary-move-article nil "nnimap+imap.gmail.com:[Gmail]/inbox")
-         (emacspeak-icon 'task-done))))
+         (emacsvox-icon 'task-done))))
 
   (define-key gnus-summary-mode-map "$" 'gmail-report-spam)
   
@@ -109,10 +109,10 @@ This moves them into the Spam folder."
     (cl-declare (special auth-source-xoauth2-creds))
     (kill-buffer (find-file-noselect auth-source-xoauth2-creds))
     (tts-stop)
-    (emacspeak-icon 'task-done))
+    (emacsvox-icon 'task-done))
 
-  (when (keymapp emacspeak-z-keymap )
-    (define-key emacspeak-z-keymap "u" 'tvr-unlock-xoauth))
+  (when (keymapp emacsvox-z-keymap )
+    (define-key emacsvox-z-keymap "u" 'tvr-unlock-xoauth))
   
   (setq mm-file-name-rewrite-functions
         '(mm-file-name-trim-whitespace
@@ -140,14 +140,13 @@ Uses the go oauth tool found in the xoauth git repo."
 ;; local variables:
 ;; folded-file: t
 ;; end:
-
 ;;; Jump to Emacs Git Logs At HEAD:
 (defalias 'tvr-km-emacs-log
   (kmacro "C-c 3 C-; d F u C-; d l l n"))
-(define-key emacspeak-y-keymap "3" 'tvr-km-emacs-log)
+(define-key emacsvox-y-keymap "3" 'tvr-km-emacs-log)
 (defalias 'tvr-km-morning
   (kmacro "C-<tab> C-e M-e b hindu <tab> <return> n n e c"))
-(define-key emacspeak-y-keymap "0" 'tvr-km-morning)
+(define-key emacsvox-y-keymap "0" 'tvr-km-morning)
 (setq
                                         ;pre-redisplay-function nil
  x-wait-for-event-timeout 0
@@ -159,41 +158,41 @@ Uses the go oauth tool found in the xoauth git repo."
   "Open Google Calendar in Chrome"
   (interactive)
   (browse-url-chrome "calendar/"))
-(define-key emacspeak-v-keymap "c" 'tvr-calendar)
+(define-key emacsvox-v-keymap "c" 'tvr-calendar)
 
 (defun tvr-chat ()
   "Open Google Chat in Chrome"
   (interactive)
   (browse-url-chrome "go/chat/"))
 
-(define-key emacspeak-v-keymap " " 'tvr-chat)
+(define-key emacsvox-v-keymap " " 'tvr-chat)
 
 (defun tvr-mail ()
   "Open Google Mail in Chrome"
   (interactive)
   (browse-url-chrome "https://mail//"))
 
-(define-key emacspeak-v-keymap "m" 'tvr-mail)
+(define-key emacsvox-v-keymap "m" 'tvr-mail)
 
 (defun tvr-snippets ()
   "Open Google Snippets in Chrome"
   (interactive)
   (browse-url-chrome "go/snippets"))
 
-(define-key emacspeak-v-keymap "s" 'tvr-snippets)
+(define-key emacsvox-v-keymap "s" 'tvr-snippets)
 
 (defun tvr-time-off ()
   "Open time-off in Chrome"
   (interactive)
   (browse-url-chrome "go/tom"))
 
-(define-key emacspeak-v-keymap "t" 'tvr-time-off)
+(define-key emacsvox-v-keymap "t" 'tvr-time-off)
 
 (provide 'laptop-local)
 (define-key emacs-lisp-mode-map (kbd "C-c e") 'macrostep-expand)
 (defun conditionally-enable-lispy ()
   (when (memq this-command
-              '(eval-expression emacspeak-wizards-show-eval-result))
+              '(eval-expression emacsvox-wizards-show-eval-result))
     (lispy-mode 1)))
 (with-eval-after-load "lispy"
   (cl-declare (special lispy-mode-map lispy-mode-map-lispy))
@@ -202,7 +201,7 @@ Uses the go oauth tool found in the xoauth git repo."
   (define-key lispy-mode-map-lispy (kbd "C-,") nil)
   (define-key lispy-mode-map (kbd "C-<return>") 'complete)
   (define-key lispy-mode-map "\M-m" nil)
-  (define-key lispy-mode-map "\C-y" 'emacspeak-muggles-yank-pop/yank)
+  (define-key lispy-mode-map "\C-y" 'emacsvox-muggles-yank-pop/yank)
   (define-key lispy-mode-map ";" 'self-insert-command)
   (define-key lispy-mode-map ":" 'self-insert-command)
   (define-key lispy-mode-map "\M-;" 'lispy-comment)

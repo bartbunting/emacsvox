@@ -2,7 +2,9 @@
 # name: ems-after
 # key: ea
 # --
-(defadvice ${1:fun} (after emacspeak pre act comp)
-  "speak."
+(defun ems--${1:fun}-after (&rest _)
+  "Provide speech feedback after `${1:fun}'."
   (when (ems-interactive-p)
-  $0))
+    $0))
+
+(advice-add '${1:fun} :after #'ems--${1:fun}-after)

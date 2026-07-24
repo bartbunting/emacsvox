@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #XCape ==xcape -- reassign modifier keys
-#Control by itself gives emacspeak modifier.
+# Control by itself gives the Emacsvox modifier.
 # Blog Articles:
 # https://emacspeak.blogspot.com/2023/09/return-to-controlright-using-xmodmap.html
 # https://emacspeak.blogspot.com/2023/09/emacs-ergonomics-dont-punish-your.html
