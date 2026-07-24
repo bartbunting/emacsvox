@@ -62,38 +62,50 @@
 
 ;;;  Advice Interactive Commands:
 
-(defadvice ace-window (after emacsvox pre act comp)
+(defun emacsvox--advice-ace-window-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ace-window)
     (emacsvox-icon 'select-object)
     (emacsvox-speak-mode-line)))
 
-(defadvice ace-swap-window (after emacsvox pre act comp)
+(defun emacsvox--advice-ace-swap-window-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ace-swap-window)
     (dtk-speak "Swapped windows")
     (emacsvox-icon 'task-done)))
 
-(defadvice ace-delete-window (after emacsvox pre act comp)
+(defun emacsvox--advice-ace-delete-window-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ace-delete-window)
     (dtk-speak "Deleted window")
     (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
-(defadvice ace-delete-other-windows (after emacsvox pre act comp)
+(defun emacsvox--advice-ace-delete-other-windows-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ace-delete-other-windows)
     (dtk-speak "One window")
     (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
-(defadvice ace-maximize-window (after emacsvox pre act comp)
-  "speak."
-  (when (ems-interactive-p)
-    (dtk-speak "Maximized window")
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+(defconst emacsvox-ace-window--advice-targets
+  '(ace-window
+    ace-swap-window
+    ace-delete-window
+    ace-delete-other-windows)
+  "Current Ace Window commands that receive native advice.")
+
+(defun emacsvox-ace-window--install-advice ()
+  "Install advice after the optional Ace Window package loads."
+  (dolist (target emacsvox-ace-window--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'ace-window
+  (emacsvox-ace-window--install-advice))
 
 (provide 'emacsvox-ace-window)
 ;;;  end of file
