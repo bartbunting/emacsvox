@@ -995,17 +995,21 @@ activity within the filter window."
 (defvar eterm-current-personality nil
   "Current personality for eterm. ")
 
-(defun ems--term-before (&rest _)
+(defun emacsvox--advice-term-before (&rest _)
   "Single window please!" (delete-other-windows))
 
-(advice-add 'term :before #'ems--term-before)
+(advice-add
+ 'term :before #'emacsvox--advice-term-before
+ '((name . emacsvox)))
 
-(defun ems--ansi-term-before (&rest _)
+(defun emacsvox--advice-ansi-term-before (&rest _)
   "Single window please!" (delete-other-windows))
 
-(advice-add 'ansi-term :before #'ems--ansi-term-before)
+(advice-add
+ 'ansi-term :before #'emacsvox--advice-ansi-term-before
+ '((name . emacsvox)))
 
-(defun ems--term-mode-after (&rest _)
+(defun emacsvox--advice-term-mode-after (&rest _)
   "Customize eterm to work with Emacsvox.\nAdditional commands provided by emacsvox under eterm are\navailable with the prefix emacsvox-eterm-prefix and are listed below:\n\\{emacsvox-eterm-keymap}"
   
   (emacsvox-eterm-setup-keys) (emacsvox-eterm-setup-raw-keys)
@@ -1017,7 +1021,9 @@ activity within the filter window."
   (make-local-variable 'emacsvox-eterm-marker)
   (setq emacsvox-eterm-marker (copy-marker (point))))
 
-(advice-add 'term-mode :after #'ems--term-mode-after)
+(advice-add
+ 'term-mode :after #'emacsvox--advice-term-mode-after
+ '((name . emacsvox)))
 
 (defvar emacsvox-eterm-row nil
   "Record the eterm row last spoken")
@@ -1162,123 +1168,135 @@ there is terminal activity.")
    (term-underline voice-brighten-medium)
    ))
 
-(defun ems--term-line-mode-after (&rest _)
+(defun emacsvox--advice-term-line-mode-after (&rest _)
   "Announce that you entered line mode. "
   (make-local-variable 'eterm-line-mode)
   (setq mode-line-process '("line"))
   (setq eterm-char-mode nil eterm-line-mode t)
-  (when (ems-interactive-p) (dtk-speak "Terminal line mode ")))
+  (when (ems-interactive-p 'term-line-mode)
+    (dtk-speak "Terminal line mode ")))
 
-(advice-add 'term-line-mode :after #'ems--term-line-mode-after)
+(advice-add
+ 'term-line-mode :after #'emacsvox--advice-term-line-mode-after
+ '((name . emacsvox)))
 
-(defun ems--term-char-mode-after (&rest _)
+(defun emacsvox--advice-term-char-mode-after (&rest _)
   "Announce you entered character mode. "
   (setq mode-line-process '("char"))
   (setq eterm-char-mode t eterm-line-mode nil)
   (emacsvox-eterm-setup-raw-keys)
-  (when (ems-interactive-p) (dtk-speak "Terminal character mode ")))
+  (when (ems-interactive-p 'term-char-mode)
+    (dtk-speak "Terminal character mode ")))
 
-(advice-add 'term-char-mode :after #'ems--term-char-mode-after)
+(advice-add
+ 'term-char-mode :after #'emacsvox--advice-term-char-mode-after
+ '((name . emacsvox)))
 
 ;;;   Advice term functions 
 
-(defun ems--term-next-input-after (&rest _)
-  "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
+(cl-loop
+ for target in
+ '(term-next-input
+   term-next-matching-input
+   term-previous-input
+   term-previous-matching-input)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after interactive Term input-history movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'term-next-input :after #'ems--term-next-input-after)
+(defun emacsvox--advice-term-send-input-after (&rest _)
+  "Flush any ongoing speech."
+  (when (ems-interactive-p 'term-send-input)
+    (dtk-stop)))
 
-(defun ems--term-next-matching-input-after (&rest _)
-  "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
+(advice-add
+ 'term-send-input :after #'emacsvox--advice-term-send-input-after
+ '((name . emacsvox)))
 
-(advice-add 'term-next-matching-input :after
-            #'ems--term-next-matching-input-after)
+(cl-loop
+ for target in '(term-previous-prompt term-next-prompt)
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Cue and speak after interactive Term prompt movement."
+       (when (ems-interactive-p ',target)
+         (emacsvox-icon 'item)
+         (if (eolp)
+             (emacsvox-speak-line)
+           (emacsvox-speak-line 1))))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(defun ems--term-previous-input-after (&rest _)
-  "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'term-previous-input :after
-            #'ems--term-previous-input-after)
-
-(defun ems--term-previous-matching-input-after (&rest _)
-  "Speak the line. " (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'term-previous-matching-input :after
-            #'ems--term-previous-matching-input-after)
-
-(defun ems--term-send-input-after (&rest _)
-  "Flush any ongoing speech" (when (ems-interactive-p) (dtk-stop)))
-
-(advice-add 'term-send-input :after #'ems--term-send-input-after)
-
-(defun ems--term-previous-prompt-after (&rest _)
-  "Speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'item)
-    (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
-
-(advice-add 'term-previous-prompt :after
-            #'ems--term-previous-prompt-after)
-
-(defun ems--term-next-prompt-after (&rest _)
-  "Speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'item)
-    (if (eolp) (emacsvox-speak-line) (emacsvox-speak-line 1))))
-
-(advice-add 'term-next-prompt :after #'ems--term-next-prompt-after)
-
-(defun ems--term-dynamic-list-input-ring-after (&rest _)
+(defun emacsvox--advice-term-dynamic-list-input-ring-after (&rest _)
   "speak"
   (message "Switch to the other window to browse the input history "))
 
-(advice-add 'term-dynamic-list-input-ring :after
-            #'ems--term-dynamic-list-input-ring-after)
+(advice-add
+ 'term-dynamic-list-input-ring :after
+ #'emacsvox--advice-term-dynamic-list-input-ring-after
+ '((name . emacsvox)))
 
-(defun ems--term-kill-output-after (&rest _)
+(defun emacsvox--advice-term-kill-output-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'term-kill-output)
     (emacsvox-icon 'delete-object)
     (message "Nuked output of last command ")))
 
-(advice-add 'term-kill-output :after #'ems--term-kill-output-after)
+(advice-add
+ 'term-kill-output :after #'emacsvox--advice-term-kill-output-after
+ '((name . emacsvox)))
 
-(defun ems--term-quit-subjob-after (&rest _)
-  "speak"
-  (when (ems-interactive-p) (message "Sent quit signal to subjob ")))
+(cl-loop
+ for (target message) in
+ '((term-quit-subjob "Sent quit signal to subjob ")
+   (term-stop-subjob "Stopped the subjob")
+   (term-interrupt-subjob "Interrupted  the subjob"))
+ for function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (&rest _)
+       "Announce an interactive signal sent to a Term subjob."
+       (when (ems-interactive-p ',target)
+         (message ,message)))
+     (advice-add
+      ',target :after #',function '((name . emacsvox))))))
 
-(advice-add 'term-quit-subjob :after #'ems--term-quit-subjob-after)
-
-(defun ems--term-stop-subjob-after (&rest _)
-  "speak" (when (ems-interactive-p) (message "Stopped the subjob")))
-
-(advice-add 'term-stop-subjob :after #'ems--term-stop-subjob-after)
-
-(defun ems--term-interrupt-subjob-after (&rest _)
-  "speak"
-  (when (ems-interactive-p) (message "Interrupted  the subjob")))
-
-(advice-add 'term-interrupt-subjob :after
-            #'ems--term-interrupt-subjob-after)
-
-(defun ems--term-kill-input-before (&rest _)
+(defun emacsvox--advice-term-kill-input-before (&rest _)
   "Speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'term-kill-input)
     (let
         ((pmark (process-mark (get-buffer-process (current-buffer)))))
       (when (> (point) (marker-position pmark))
         (emacsvox-icon 'delete-object)
         (emacsvox-speak-region pmark (point))))))
 
-(advice-add 'term-kill-input :before #'ems--term-kill-input-before)
+(advice-add
+ 'term-kill-input :before #'emacsvox--advice-term-kill-input-before
+ '((name . emacsvox)))
 
-(defun ems--term-dynamic-list-filename-completions-after (&rest _)
+(defun emacsvox--advice-term-dynamic-list-filename-completions-after
+    (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'term-dynamic-list-filename-completions)
     (message
      "Switch to the completions window to browse the possible\ncompletions for filename at point")))
 
-(advice-add 'term-dynamic-list-filename-completions :after
-            #'ems--term-dynamic-list-filename-completions-after)
+(advice-add
+ 'term-dynamic-list-filename-completions :after
+ #'emacsvox--advice-term-dynamic-list-filename-completions-after
+ '((name . emacsvox)))
 
 (provide 'emacsvox-eterm)
-

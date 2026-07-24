@@ -97,6 +97,7 @@
   (require 'emacsvox-c-tests)
   (require 'emacsvox-eshell-tests)
   (require 'emacsvox-which-key-tests)
+  (require 'emacsvox-eterm-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
