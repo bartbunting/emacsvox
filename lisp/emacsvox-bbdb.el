@@ -39,6 +39,7 @@
 
 ;;;   Required libraries
 (require 'emacsvox-preamble)
+(declare-function bbdb-record-list "bbdb-com" (records &optional full))
 
 ;;; Commentary:
 ;; Speech-enables BBDB.
@@ -70,141 +71,129 @@
 
 ;;;  Advice:
 
-(defun ems--bbdb-delete-current-field-or-record-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-bbdb-delete-field-or-record-after (&rest _)
+  "Speak after deleting a BBDB field or record."
+  (when (ems-interactive-p 'bbdb-delete-field-or-record)
     (emacsvox-icon 'delete-object)
     (save-excursion
       (when (looking-at "\\?") (forward-line 1))
       (emacsvox-speak-line))))
 
-(advice-add 'bbdb-delete-current-field-or-record :after
-            #'ems--bbdb-delete-current-field-or-record-after)
+(defun emacsvox--advice-bbdb-edit-field-before (&rest _)
+  "Provide an auditory icon before editing a BBDB field."
+  (when (ems-interactive-p 'bbdb-edit-field)
+    (emacsvox-icon 'open-object)))
 
-(defun ems--bbdb-edit-current-field-before (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'open-object)))
-
-(advice-add 'bbdb-edit-current-field :before
-            #'ems--bbdb-edit-current-field-before)
-
-(defun ems--bbdb-send-mail-before (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (let
-        ((to
-          (if (consp (ad-get-arg 0))
-              (bbdb-dwim-net-address (car (ad-get-arg 0)))
-            (bbdb-dwim-net-address (ad-get-arg 0))))
-         (subject (ad-get-arg 1)))
+(defun emacsvox--advice-bbdb-mail-before
+    (records &optional subject _n _verbose)
+  "Announce mail to RECORDS about SUBJECT."
+  (when (ems-interactive-p 'bbdb-mail)
+    (let* ((record-list (bbdb-record-list records))
+           (to (and record-list (bbdb-dwim-mail (car record-list)))))
       (emacsvox-icon 'open-object)
-      (message "Starting an email message  %s to %s %s "
-               (if subject (format "about %s" subject) "") to
-               (if (consp (ad-get-arg 0)) " and others " " ")))))
+      (message "Starting an email message %s to %s%s"
+               (if subject (format "about %s" subject) "")
+               (or to "no recipient")
+               (if (cdr record-list) " and others" "")))))
 
-(advice-add 'bbdb-send-mail :before #'ems--bbdb-send-mail-before)
-
-(defun ems--bbdb-next-record-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-bbdb-next-record-after (&rest _)
+  "Speak after moving to the next BBDB record."
+  (when (ems-interactive-p 'bbdb-next-record)
     (emacsvox-icon 'large-movement)
     (save-excursion
       (when (looking-at "\\?") (forward-line 1))
       (emacsvox-speak-line))))
 
-(advice-add 'bbdb-next-record :after #'ems--bbdb-next-record-after)
-
-(defun ems--bbdb-prev-record-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-bbdb-prev-record-after (&rest _)
+  "Speak after moving to the previous BBDB record."
+  (when (ems-interactive-p 'bbdb-prev-record)
     (emacsvox-icon 'large-movement)
     (save-excursion
       (when (looking-at "\\?") (forward-line 1))
       (emacsvox-speak-line))))
 
-(advice-add 'bbdb-prev-record :after #'ems--bbdb-prev-record-after)
+(defun emacsvox--advice-bbdb-omit-record-after (&rest _)
+  "Speak after omitting a BBDB record."
+  (when (ems-interactive-p 'bbdb-omit-record)
+    (emacsvox-icon 'close-object)
+    (emacsvox-speak-line)))
 
-(defun ems--bbdb-omit-record-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-line)))
+(defun emacsvox--advice-bbdb-toggle-records-layout-after (&rest _)
+  "Confirm a change to the BBDB record layout."
+  (when (ems-interactive-p 'bbdb-toggle-records-layout)
+    (message "Toggled record display")))
 
-(advice-add 'bbdb-omit-record :after #'ems--bbdb-omit-record-after)
+(defun emacsvox--advice-bbdb-transpose-fields-after (&rest _)
+  "Speak after transposing BBDB fields."
+  (when (ems-interactive-p 'bbdb-transpose-fields)
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
 
-(defun ems--bbdb-bury-buffer-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'bbdb-bury-buffer :after #'ems--bbdb-bury-buffer-after)
-
-(defun ems--bbdb-elide-record-after (&rest _)
-  "speak"
-  (when (ems-interactive-p) (message "Toggled  record display")))
-
-(advice-add 'bbdb-elide-record :after #'ems--bbdb-elide-record-after)
-
-(defun ems--bbdb-transpose-fields-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'bbdb-transpose-fields :after
-            #'ems--bbdb-transpose-fields-after)
-
-(defun ems--bbdb-complete-name-around (orig-fun &rest args)
-  "Speak"
-  (let ((result (apply orig-fun args)))
-    
-    (cond
-     ((ems-interactive-p)
-      (let
-          ((prior (point)) (completion-ignore-case t)
-           (completions nil) (buffer (current-buffer)))
-        (apply orig-fun args)
-        (cond
-         ((and (setq completions (get-buffer "*Completions*"))
-               (window-live-p (get-buffer-window completions)))
-          (switch-to-completions)
-          (setq completion-reference-buffer buffer)
-          (unless (get-text-property (point) 'mouse-face)
-            (goto-char
-             (next-single-property-change (point) 'mouse-face)))
-          (dtk-speak (emacsvox-get-current-completion)))
-         (t (dtk-speak (buffer-substring prior (point)))))))
-     (t (apply orig-fun args)))
+(defun emacsvox--advice-bbdb-complete-mail-around (original &rest arguments)
+  "Speak the completion produced by ORIGINAL with ARGUMENTS."
+  (let* ((prior (point))
+         (buffer (current-buffer))
+         (completion-ignore-case t)
+         (result (apply original arguments)))
+    (when (ems-interactive-p 'bbdb-complete-mail)
+      (let ((completions (get-buffer "*Completions*")))
+        (if (and completions
+                 (window-live-p (get-buffer-window completions)))
+            (progn
+              (switch-to-completions)
+              (setq completion-reference-buffer buffer)
+              (unless (get-text-property (point) 'mouse-face)
+                (goto-char
+                 (next-single-property-change (point) 'mouse-face)))
+              (dtk-speak (emacsvox-get-current-completion)))
+          (dtk-speak
+           (with-current-buffer buffer
+             (buffer-substring prior (point)))))))
     result))
 
-(advice-add 'bbdb-complete-name :around
-            #'ems--bbdb-complete-name-around)
+;;;   Advice mail-ua specific hooks
 
-;;;   Advice mail-ua  specific hooks
+(defun emacsvox--advice-bbdb-mua-display-sender-after (&rest _)
+  "Speak the BBDB record displayed for the message sender."
+  (when (ems-interactive-p 'bbdb-mua-display-sender)
+    (emacsvox-speak-other-window)))
 
-(defun ems--bbdb/vm-show-sender-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-speak-other-window)))
+;;;  Silence messages
 
-(advice-add 'bbdb/vm-show-sender :after
-            #'ems--bbdb/vm-show-sender-after)
+(defun emacsvox--advice-bbdb-update-records-around (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS while silencing messages."
+  (ems-with-messages-silenced
+   (apply original arguments)))
 
-(defun ems--bbdb/rmail-show-sender-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-speak-other-window)))
+(defconst emacsvox-bbdb--advice
+  '((bbdb-delete-field-or-record :after
+     emacsvox--advice-bbdb-delete-field-or-record-after)
+    (bbdb-edit-field :before emacsvox--advice-bbdb-edit-field-before)
+    (bbdb-mail :before emacsvox--advice-bbdb-mail-before)
+    (bbdb-next-record :after emacsvox--advice-bbdb-next-record-after)
+    (bbdb-prev-record :after emacsvox--advice-bbdb-prev-record-after)
+    (bbdb-omit-record :after emacsvox--advice-bbdb-omit-record-after)
+    (bbdb-toggle-records-layout :after
+     emacsvox--advice-bbdb-toggle-records-layout-after)
+    (bbdb-transpose-fields :after
+     emacsvox--advice-bbdb-transpose-fields-after)
+    (bbdb-complete-mail :around
+     emacsvox--advice-bbdb-complete-mail-around)
+    (bbdb-mua-display-sender :after
+     emacsvox--advice-bbdb-mua-display-sender-after)
+    (bbdb-update-records :around
+     emacsvox--advice-bbdb-update-records-around))
+  "Current BBDB targets and their native advice functions.")
 
-(advice-add 'bbdb/rmail-show-sender :after
-            #'ems--bbdb/rmail-show-sender-after)
+(defun emacsvox-bbdb--install-advice ()
+  "Install advice for functions present in current BBDB."
+  (dolist (entry emacsvox-bbdb--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(defun ems--bbdb/mh-show-sender-after (&rest _)
-  "Speak" (when (ems-interactive-p) (emacsvox-speak-other-window)))
-
-(advice-add 'bbdb/mh-show-sender :after
-            #'ems--bbdb/mh-show-sender-after)
-
-;;;  silence messages 
-
-(defun ems--bbdb-update-records-around (orig-fun &rest args)
-  "Silence messages."
-  (ems-with-messages-silenced (apply orig-fun args)))
-
-(advice-add 'bbdb-update-records :around
-            #'ems--bbdb-update-records-around)
+(dolist (feature '(bbdb bbdb-com bbdb-mua))
+  (eval-after-load feature #'emacsvox-bbdb--install-advice))
 
 (provide  'emacsvox-bbdb)
-

@@ -176,6 +176,7 @@
   (require 'emacsvox-annotate-tests)
   (require 'emacsvox-auctex-tests)
   (require 'emacsvox-avy-tests)
+  (require 'emacsvox-bbdb-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
