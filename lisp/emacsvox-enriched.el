@@ -43,6 +43,7 @@
 
 ;;  required modules
 (require 'emacsvox-preamble)
+(require 'enriched)
 
 ;;;  voiceify-faces 
 (defvar emacsvox-enriched-font-faces-to-voiceify
@@ -107,19 +108,19 @@ Useful in voiceifying rich text."
 
 ;;;  advice enriched to automatically map faces to voices
 
-(defun ems--enriched-decode-after (&rest _)
-  "Map faces to voices. "
-  (let ((start (ad-get-arg 0)) (end (ad-get-arg 1)))
-    (emacsvox-enriched-voiceify-faces start end) ad-return-value))
+(defun emacsvox--advice-enriched-decode-after (from to)
+  "Map faces to voices between FROM and TO."
+  (emacsvox-enriched-voiceify-faces from to))
 
-(advice-add 'enriched-decode :after #'ems--enriched-decode-after)
+(advice-add 'enriched-decode :after
+            #'emacsvox--advice-enriched-decode-after)
 
-(defun ems--enriched-mode-after (&rest _)
-  "Map faces to voices. "
-  (emacsvox-enriched-voiceify-faces (point-min) (point-max))
-  ad-return-value)
+(defun emacsvox--advice-enriched-mode-after (&rest _)
+  "Map faces to voices in the current buffer."
+  (emacsvox-enriched-voiceify-faces (point-min) (point-max)))
 
-(advice-add 'enriched-mode :after #'ems--enriched-mode-after)
+(advice-add 'enriched-mode :after
+            #'emacsvox--advice-enriched-mode-after)
 
 ;;;  hooks
 (add-hook 'enriched-mode-hook
@@ -128,4 +129,3 @@ Useful in voiceifying rich text."
                   (emacsvox-toggle-audio-indentation))))
 
 (provide  'emacsvox-enriched)
-
