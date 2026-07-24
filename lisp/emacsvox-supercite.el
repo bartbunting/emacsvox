@@ -46,65 +46,56 @@
 
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'supercite)
 
 ;;;  Advice
 
-(defun ems--sc-cite-region-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (message "Cited region containing %s lines"
-             (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
+(defmacro emacsvox-supercite--define-region-advice (target verb)
+  "Define native region feedback for TARGET using past-tense VERB."
+  (declare (indent 1) (debug (symbolp stringp)))
+  (let ((function (intern (format "emacsvox--advice-%s-after" target))))
+    `(progn
+       (defun ,function (start end &rest _)
+         "Announce a completed interactive Supercite region operation."
+         (when (ems-interactive-p ',target)
+           (emacsvox-icon 'mark-object)
+           (message ,(format "%s region containing %%s lines" verb)
+                    (count-lines start end))))
+       (advice-add ',target :after #',function))))
 
-(advice-add 'sc-cite-region :after #'ems--sc-cite-region-after)
+(emacsvox-supercite--define-region-advice sc-cite-region "Cited")
+(emacsvox-supercite--define-region-advice sc-recite-region "Re-cited")
+(emacsvox-supercite--define-region-advice sc-uncite-region "Uncited")
 
-(defun ems--sc-recite-region-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (message "Re-cited region containing %s lines"
-             (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
-
-(advice-add 'sc-recite-region :after #'ems--sc-recite-region-after)
-
-(defun ems--sc-uncite-region-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (message "Uncited region containing %s lines"
-             (count-lines (ad-get-arg 0) (ad-get-arg 1)))))
-
-(advice-add 'sc-uncite-region :after #'ems--sc-uncite-region-after)
-
-(defun ems--sc-insert-reference-around (orig-fun &rest args)
+(defun emacsvox--advice-sc-insert-reference-around (orig-fun &rest args)
   "Speak what we inserted"
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((opoint (point)))
-        (apply orig-fun args) (emacsvox-speak-region opoint (point))
-        (emacsvox-icon 'yank-object)))
-     (t (apply orig-fun args)))
-    result))
+  (if (ems-interactive-p 'sc-insert-reference)
+      (let ((opoint (point))
+            (result (apply orig-fun args)))
+        (emacsvox-speak-region opoint (point))
+        (emacsvox-icon 'yank-object)
+        result)
+    (apply orig-fun args)))
 
 (advice-add 'sc-insert-reference :around
-            #'ems--sc-insert-reference-around)
+            #'emacsvox--advice-sc-insert-reference-around)
 
-(defun ems--sc-insert-citation-after (&rest _)
+(defun emacsvox--advice-sc-insert-citation-after (&rest _)
   "Speak what we inserted"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sc-insert-citation)
     (emacsvox-speak-line) (emacsvox-icon 'yank-object)))
 
-(advice-add 'sc-insert-citation :after #'ems--sc-insert-citation-after)
+(advice-add 'sc-insert-citation :after
+            #'emacsvox--advice-sc-insert-citation-after)
 
-(defun ems--sc-open-line-after (&rest _)
+(defun emacsvox--advice-sc-open-line-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sc-open-line)
     (emacsvox-icon 'open-object) (dtk-speak "Opened a blank line")))
 
-(advice-add 'sc-open-line :after #'ems--sc-open-line-after)
+(advice-add 'sc-open-line :after
+            #'emacsvox--advice-sc-open-line-after)
 
 (provide 'emacsvox-supercite)
 
 ;;;  end of file 
-

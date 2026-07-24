@@ -135,6 +135,7 @@
   (require 'emacsvox-solitaire-tests)
   (require 'emacsvox-sql-tests)
   (require 'emacsvox-flyspell-tests)
+  (require 'emacsvox-supercite-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
