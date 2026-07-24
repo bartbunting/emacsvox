@@ -133,55 +133,74 @@
 
 ;;; Interactive Commands:
 
+(defvar emacsvox-empv--advice nil
+  "Current EMPV targets and their native advice functions.")
+(setq emacsvox-empv--advice nil)
+
+(defconst emacsvox-empv--toggle-targets
+  '(empv-current-loop-off empv-current-loop-on empv-lyrics-current
+    empv-toggle empv-pause
+    empv-file-loop-off empv-file-loop-on
+    empv-playlist-loop-off empv-playlist-loop-on)
+  "EMPV commands that toggle playback state.")
+
 (cl-loop
- for f in
- '(
-   aempv-current-loop-off empv-current-loop-on empv-lyrics-current
-   empv-toggle empv-pause
-   empv-file-loop-off empv-file-loop-on
-   empv-playlist-loop-off empv-playlist-loop-on) do
+ for target in emacsvox-empv--toggle-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Provide feedback after `%s'." target)
+     (when (ems-interactive-p ',target)
        (dtk-stop 'all)
-       (emacsvox-icon 'button)))))
+       (emacsvox-icon 'button))))
+ (push (list target :after advice-function) emacsvox-empv--advice))
 
-(defun ems--empv-lyrics-display-mode-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-empv-lyrics-display-mode-after (&rest _)
+  "Speak after displaying EMPV lyrics."
+  (when (ems-interactive-p 'empv-lyrics-display-mode)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'empv-lyrics-display-mode :after
-            #'ems--empv-lyrics-display-mode-after)
+(push '(empv-lyrics-display-mode :after
+        emacsvox--advice-empv-lyrics-display-mode-after)
+      emacsvox-empv--advice)
 
-(defun ems--empv-youtube-results-play-current-before (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
+(defun emacsvox--advice-empv-youtube-results-play-current-before (&rest _)
+  "Play an icon before playing the selected YouTube result."
+  (when (ems-interactive-p 'empv-youtube-results-play-current)
+    (emacsvox-icon 'button)))
 
-(advice-add 'empv-youtube-results-play-current :before
-            #'ems--empv-youtube-results-play-current-before)
+(push '(empv-youtube-results-play-current :before
+        emacsvox--advice-empv-youtube-results-play-current-before)
+      emacsvox-empv--advice)
 
-(defun ems--empv-youtube-results-inspect-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-empv-youtube-results-inspect-after (&rest _)
+  "Speak after inspecting a YouTube result."
+  (when (ems-interactive-p 'empv-youtube-results-inspect)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'empv-youtube-results-inspect :after
-            #'ems--empv-youtube-results-inspect-after)
+(push '(empv-youtube-results-inspect :after
+        emacsvox--advice-empv-youtube-results-inspect-after)
+      emacsvox-empv--advice)
 
-(defun ems--empv-youtube-tabulated-before (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'button)))
+(defun emacsvox--advice-empv-youtube-before (&rest _)
+  "Play an icon before starting an EMPV YouTube search."
+  (when (ems-interactive-p 'empv-youtube)
+    (emacsvox-icon 'button)))
 
-(advice-add 'empv-youtube-tabulated :before
-            #'ems--empv-youtube-tabulated-before)
+(push '(empv-youtube :before emacsvox--advice-empv-youtube-before)
+      emacsvox-empv--advice)
 
-(defun ems--empv-exit-after (&rest _)
-  "Icon." (repeat-exit)
-  (when (ems-interactive-p)
+(defun emacsvox--advice-empv-exit-after (&rest _)
+  "Speak after exiting EMPV."
+  (repeat-exit)
+  (when (ems-interactive-p 'empv-exit)
     (dtk-stop 'all) (emacsvox-icon 'close-object)
     (emacsvox-speak-mode-line)))
 
-(advice-add 'empv-exit :after #'ems--empv-exit-after)
+(push '(empv-exit :after emacsvox--advice-empv-exit-after)
+      emacsvox-empv--advice)
 
 ;;; Additional Commands:
 
@@ -204,19 +223,19 @@
   (add-to-history 'emacsvox-empv-history url emacsvox-empv-history-max)
   (empv-play url))
 
-(defun ems--empv-play-before (&rest _)
-  "Record history."
+(defun emacsvox--advice-empv-play-before (url &rest _)
+  "Record URL in EMPV history."
   (cl-declare
    (special emacsvox-empv-history-max emacsvox-empv-history))
-  (let ((url (ad-get-arg 0)))
-    (when
-        (and url (stringp url)
-             (string-prefix-p (emacsvox-google-result-url-prefix) url))
-      (setq url (emacsvox-google-canonicalize-result-url url)))
-    (add-to-history 'emacsvox-empv-history url
-                    emacsvox-empv-history-max)))
+  (when
+      (and url (stringp url)
+           (string-prefix-p (emacsvox-google-result-url-prefix) url))
+    (setq url (emacsvox-google-canonicalize-result-url url)))
+  (add-to-history 'emacsvox-empv-history url
+                  emacsvox-empv-history-max))
 
-(advice-add 'empv-play :before #'ems--empv-play-before)
+(push '(empv-play :before emacsvox--advice-empv-play-before)
+      emacsvox-empv--advice)
 
 (defun emacsvox-empv-play-last ()
   "Play most recently played URL."
@@ -249,23 +268,27 @@ If already playing, then read an empv key and invoke its command."
 (defun emacsvox-empv-yt-search (query)
   "Tabulated results from Youtube search but with completion."
   (interactive (list (gweb-youtube-autocomplete)))
-  (funcall-interactively #'empv-youtube-tabulated query))
+  (funcall-interactively #'empv-youtube query))
 
 (defun emacsvox-empv-accumulate-to-register ()
   "Accumulate media links to register u"
   (interactive)
   (emacsvox-accumulate-to-register ?u
-                                   'empv-youtube-results--current-video-url))
+                                   'empv-youtube-results--current-item-url))
 (declare-function emacsvox-eww-yt-dl "emacsvox-eww" (url))
 
 ;;; Lyrics:
 ;; Let's use our Google searcher:
 (declare-function emacsvox-websearch-google-lite "emacsvox-empv" t)
-(with-no-warnings
-  (defadvice empv--lyrics-on-not-found (around emacsvox pre act comp)
-    "Override to use our own implementation."
-    (setq ad-return-value nil)
-    (funcall #'emacsvox-websearch-google-lite (ad-get-arg 0))))
+(defun emacsvox--advice-empv--lyrics-on-not-found-around
+    (_original song)
+  "Search the Web for lyrics to SONG and suppress EMPV's fallback."
+  (funcall #'emacsvox-websearch-google-lite song)
+  nil)
+
+(push '(empv--lyrics-on-not-found :around
+        emacsvox--advice-empv--lyrics-on-not-found-around)
+      emacsvox-empv--advice)
 
 ;;; Seekers:
 (defun emacsvox-empv-time-pos ()
@@ -363,31 +386,28 @@ If already playing, then read an empv key and invoke its command."
   (emacsvox-icon 'select-object)
   (message (cdr (assq 'title (empv-youtube-results--current-item)))))
 
-(defun ems--empv-youtube-results-copy-current-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-empv-youtube-results-copy-current-after (&rest _)
+  "Speak after copying the current YouTube result."
+  (when (ems-interactive-p 'empv-youtube-results-copy-current)
     (emacsvox-icon 'yank-object)
     (message (current-kill 0 'dont-move))))
 
-(advice-add 'empv-youtube-results-copy-current :after
-            #'ems--empv-youtube-results-copy-current-after)
+(push '(empv-youtube-results-copy-current :after
+        emacsvox--advice-empv-youtube-results-copy-current-after)
+      emacsvox-empv--advice)
 
-(defun ems--empv--youtube-tabulated-entries-append-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'scroll)
-    (dtk-notify
-     (format "%s: %s results"
-             (cdr
-              (assoc 'title
-                     (cl-first
-                      (empv--yt-search-results
-                       empv--last-youtube-search))))
-             (length
-              (empv--yt-search-results empv--last-youtube-search))))))
+(defun emacsvox--advice-empv--youtube-tabulated-entries-put-after
+    (search candidates &rest _)
+  "Report CANDIDATES displayed for YouTube SEARCH."
+  (emacsvox-icon 'scroll)
+  (dtk-notify
+   (format "%s: %s results"
+           (empv--yt-search-query search)
+           (length candidates))))
 
-(advice-add 'empv--youtube-tabulated-entries-append :after
-            #'ems--empv--youtube-tabulated-entries-append-after)
+(push '(empv--youtube-tabulated-entries-put :after
+        emacsvox--advice-empv--youtube-tabulated-entries-put-after)
+      emacsvox-empv--advice)
 
 (defun emacsvox-empv-setup ()
   "Emacsvox setup for empv."
@@ -539,7 +559,7 @@ The default value is suitable for classical instrumental music."
                  (cl-first (calendar-cursor-to-date))
                  (cl-second (calendar-cursor-to-date)))))
     (funcall-interactively
-     'empv-youtube-tabulated
+     'empv-youtube
      (concat (read-from-minibuffer "YT Search After") date))))
 
 (defun emacsvox-empv-yt-before ()
@@ -552,8 +572,26 @@ The default value is suitable for classical instrumental music."
                  (cl-first (calendar-cursor-to-date))
                  (cl-second (calendar-cursor-to-date)))))
     (funcall-interactively
-     'empv-youtube-tabulated
+     'empv-youtube
      (concat (read-from-minibuffer "YT Search Before") date))))
+
+(defconst emacsvox-empv--removed-targets
+  '(aempv-current-loop-off
+    empv-youtube-tabulated
+    empv--youtube-tabulated-entries-append
+    empv-youtube-results--current-video-url)
+  "Obsolete or misspelled EMPV names removed during migration.")
+
+(defun emacsvox-empv--install-advice ()
+  "Install native advice after the optional EMPV package loads."
+  (dolist (entry emacsvox-empv--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'empv
+  (emacsvox-empv--install-advice))
 
 (provide 'emacsvox-empv)
 ;;;  end of file

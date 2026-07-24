@@ -196,6 +196,7 @@
   (require 'emacsvox-elpher-tests)
   (require 'emacsvox-elpy-tests)
   (require 'emacsvox-emms-tests)
+  (require 'emacsvox-empv-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
