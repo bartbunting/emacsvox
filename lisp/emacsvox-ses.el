@@ -134,30 +134,30 @@
   
   )
 
-(defun ems--ses-forward-or-insert-after (&rest _)
+(defun emacsvox--advice-ses-forward-or-insert-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ses-forward-or-insert)
     (emacsvox-icon 'large-movement)
     (emacsvox-ses-summarize-current-cell)))
 
 (advice-add 'ses-forward-or-insert :after
-            #'ems--ses-forward-or-insert-after)
+            #'emacsvox--advice-ses-forward-or-insert-after)
 
-(defun ems--ses-recalculate-cell-after (&rest _)
+(defun emacsvox--advice-ses-recalculate-cell-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ses-recalculate-cell)
     (emacsvox-ses-summarize-current-cell) (emacsvox-icon 'task-done)))
 
 (advice-add 'ses-recalculate-cell :after
-            #'ems--ses-recalculate-cell-after)
+            #'emacsvox--advice-ses-recalculate-cell-after)
 
-(defun ems--ses-jump-after (&rest _)
+(defun emacsvox--advice-ses-jump-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ses-jump)
     (emacsvox-icon 'large-movement)
     (emacsvox-ses-summarize-current-cell)))
 
-(advice-add 'ses-jump :after #'ems--ses-jump-after)
+(advice-add 'ses-jump :after #'emacsvox--advice-ses-jump-after)
 
 ;;;  Setup:
 
@@ -165,4 +165,3 @@
 
 (provide 'emacsvox-ses)
 ;;;  end of file
-
