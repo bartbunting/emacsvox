@@ -60,27 +60,48 @@
 
 ;;; Interactive Commands:
 
-(defun ems--pipewire-after (&rest _)
+(defun emacsvox--advice-pipewire-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'pipewire)
     (emacsvox-toggle-audio-indentation) (emacsvox-icon 'open-object)
     (emacsvox-speak-mode-line)))
 
-(advice-add 'pipewire :after #'ems--pipewire-after)
+(defconst emacsvox-pipewire--control-targets
+  '(pipewire-decrease-volume pipewire-decrease-volume-single
+    pipewire-set-volume pipewire-set-profile
+    pipewire-increase-volume pipewire-increase-volume-single)
+  "Current Pipewire controls that receive native advice.")
 
-(cl-loop
- for f in 
- '(
-   pipewire-decrease-volume pipewire-decrease-volume-single
-   pipewire-set-volume pipewire-set-profile
-   pipewire-increase-volume pipewire-increase-volume-single)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'button)))))
+(dolist (target emacsvox-pipewire--control-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Provide speech feedback after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-speak-line)
+          (emacsvox-icon 'button))))))
+
+(defconst emacsvox-pipewire--advice
+  (cons
+   '(pipewire :after emacsvox--advice-pipewire-after)
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-pipewire--control-targets))
+  "Current Pipewire targets and their native advice functions.")
+
+(defun emacsvox-pipewire--install-advice ()
+  "Install native advice after Pipewire loads."
+  (dolist (entry emacsvox-pipewire--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'pipewire
+  (emacsvox-pipewire--install-advice))
 
 (provide 'emacsvox-pipewire)
 ;; end of file
