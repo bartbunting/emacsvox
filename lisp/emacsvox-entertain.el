@@ -51,11 +51,14 @@
 
 ;;;  doctar
 
-(defun ems--doctor-txtype-after (&rest _)
+(defun emacsvox--advice-doctor-txtype-after (answer)
+  "Speak Doctor's ANSWER after it is inserted."
   (dtk-speak
-   (mapconcat #'(lambda (s) (format "%s" s)) (ad-get-arg 0) " ")))
+   (mapconcat (lambda (item) (format "%s" item)) answer " ")))
 
-(advice-add 'doctor-txtype :after #'ems--doctor-txtype-after)
+(with-eval-after-load 'doctor
+  (advice-add 'doctor-txtype :after
+              #'emacsvox--advice-doctor-txtype-after))
 
 ;;;  mpuz
 (voice-setup-add-map
@@ -66,19 +69,25 @@
 
 ;;;  dunnet
 (cl-loop
- for f in
- '(dun-parse dun-unix-parse) do 
+ for target in '(dun-parse dun-unix-parse)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
  (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "speak"
-     (cond
-      ((ems-interactive-p)
-       (let ((orig (point)))
-         ad-do-it
+  `(defun ,function (orig-fun &rest args)
+     "Run a Dunnet parser once and speak its interactively inserted output."
+     (if (not (ems-interactive-p ',target))
+         (apply orig-fun args)
+       (let ((start (point))
+             (result (apply orig-fun args)))
          (emacsvox-icon 'mark-object)
-         (emacsvox-speak-region orig (point))))
-      (t ad-do-it))
-     ad-return-value)))
+         (emacsvox-speak-region start (point))
+         result)))))
+
+(with-eval-after-load 'dunnet
+  (dolist (target '(dun-parse dun-unix-parse))
+    (advice-add
+     target :around
+     (intern (format "emacsvox--advice-%s-around" target)))))
 
 ;;;   hangman
 
@@ -136,4 +145,3 @@
 
 (provide 'emacsvox-entertain)
 ;;;  end of file
-

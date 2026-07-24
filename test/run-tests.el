@@ -153,6 +153,7 @@
   (require 'emacsvox-perl-tests)
   (require 'emacsvox-todo-mode-tests)
   (require 'emacsvox-treesit-tests)
+  (require 'emacsvox-entertain-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
