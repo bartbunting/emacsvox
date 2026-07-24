@@ -122,6 +122,103 @@
       (should (= calls 1))
       (should (equal events '("ho"))))))
 
+(ert-deftest emacsvox-eterm-output-advice-is-directly-registered ()
+  "Term output advice bypasses the compatibility bridge."
+  (should
+   (advice-member-p
+    #'emacsvox--advice-term-emulate-terminal-around
+    'term-emulate-terminal))
+  (should-not
+   (gethash
+    '(term-emulate-terminal
+      :around
+      emacsvox--advice-term-emulate-terminal-around)
+    ems--modern-advice-wrappers)))
+
+(ert-deftest emacsvox-eterm-output-skips-a-dead-process ()
+  "Term output preserves the reference behavior for a dead process."
+  (let ((calls 0))
+    (cl-letf (((symbol-function 'process-live-p)
+               (lambda (_proc) nil)))
+      (should-not
+       (emacsvox--advice-term-emulate-terminal-around
+        (lambda (&rest _)
+          (cl-incf calls))
+        'dead-process
+        "ignored")))
+    (should (= calls 0))))
+
+(ert-deftest emacsvox-eterm-output-uses-explicit-arguments-once ()
+  "Term output passes PROC and STR once and preserves the result."
+  (with-temp-buffer
+    (insert ">")
+    (let ((buffer (current-buffer))
+          (calls 0)
+          received)
+      (cl-letf (((symbol-function 'process-live-p)
+                 (lambda (_proc) t))
+                ((symbol-function 'process-buffer)
+                 (lambda (_proc) buffer))
+                ((symbol-function 'get-buffer-window)
+                 (lambda (&rest _) nil))
+                ((symbol-function 'term-current-row)
+                 (lambda () 0))
+                ((symbol-function 'term-current-column)
+                 (lambda () 1)))
+        (should
+         (eq
+          'emulated
+          (emacsvox--advice-term-emulate-terminal-around
+           (lambda (proc str)
+             (cl-incf calls)
+             (setq received (list proc str))
+             'emulated)
+           'fake-process
+           "payload"))))
+      (should (= calls 1))
+      (should (equal received '(fake-process "payload"))))))
+
+(ert-deftest emacsvox-eterm-line-output-speaks-after-one-call ()
+  "Line-mode output speaks its changed range after one original call."
+  (with-temp-buffer
+    (insert ">")
+    (let ((buffer (current-buffer))
+          (calls 0)
+          events
+          (emacsvox-eterm-autospeak t)
+          (emacsvox-eterm-focus-window nil)
+          (emacsvox-eterm-filter-window nil)
+          (emacsvox-eterm-pointer-mode t)
+          (eterm-line-mode t)
+          (eterm-char-mode nil))
+      (cl-letf (((symbol-function 'process-live-p)
+                 (lambda (_proc) t))
+                ((symbol-function 'process-buffer)
+                 (lambda (_proc) buffer))
+                ((symbol-function 'get-buffer-window)
+                 (lambda (&rest _) 'term-window))
+                ((symbol-function 'window-live-p)
+                 (lambda (window) (eq window 'term-window)))
+                ((symbol-function 'term-current-row)
+                 (lambda () 0))
+                ((symbol-function 'term-current-column)
+                 (lambda () 1))
+                ((symbol-function 'emacsvox-speak-region)
+                 (lambda (start end)
+                   (push (list start end) events))))
+        (should
+         (eq
+          'emulated
+          (emacsvox--advice-term-emulate-terminal-around
+           (lambda (_proc _str)
+             (cl-incf calls)
+             (insert "ok")
+             'emulated)
+           'fake-process
+           "ok"))))
+      (should (= calls 1))
+      (should (equal events '((1 3)))))))
+
 (ert-deftest emacsvox-eterm-launch-feedback-remains-unconditional ()
   "Programmatic terminal launch still requests a single window."
   (let (events)

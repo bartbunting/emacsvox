@@ -1067,79 +1067,79 @@ Use emacsvox-eterm-toggle-pointer-mode bound to
    (cons (term-current-column) (term-current-row))
    window))
 
-(defun ems--term-emulate-terminal-around (orig-fun &rest args)
+(defun emacsvox--advice-term-emulate-terminal-around
+    (original proc str)
   "Record position, emulate, then speak what happened.\nAlso keep track of terminal highlighting etc.  Feedback is\nlimited to current window If a `current window` is set (see\ncommand emacsvox-eterm-set-filter-window bound to\n\\[emacsvox-eterm-set-filter-window].  How output is spoken\ndepends on whether the terminal is in character or line mode.\n\nWhen in character mode, output is spoken like off a real\nterminal.  When in line mode, behavior resembles that of comint\nmode; i.e. you hear the output if emacsvox-eterm-autospeak is t.\nDo not set this variable by hand: See command\nemacsvox-toggle-eterm-autospeak bound to\n\\[emacsvox-toggle-eterm-autospeak]"
-  (cl-declare
-   (special emacsvox-eterm-row emacsvox-eterm-column eterm-line-mode
-            eterm-char-mode emacsvox-eterm-filter-window
-            emacsvox-eterm-pointer-mode emacsvox-eterm-autospeak))
-  (when (process-live-p (ad-get-arg 0))
+  (when (process-live-p proc)
     (let
         ((emacsvox-eterm-window
-          (get-buffer-window (process-buffer (ad-get-arg 0))))
+          (get-buffer-window (process-buffer proc)))
          (emacsvox-eterm-row (term-current-row))
          (emacsvox-eterm-column (term-current-column))
          (current-char (preceding-char)) (new-row nil)
          (new-column nil) (old-point (point))
          (dtk-stop-immediately (not eterm-line-mode))
          (inhibit-read-only t))
-      (apply orig-fun args)
-      (setq new-row (term-current-row) new-column
-            (term-current-column))
-      (when
-          (and emacsvox-eterm-autospeak
-               (window-live-p emacsvox-eterm-window)
-               (or (not emacsvox-eterm-focus-window)
-                   (emacsvox-eterm-activity-window
-                    emacsvox-eterm-focus-window)
-                   (emacsvox-eterm-activity-window
-                    emacsvox-eterm-filter-window)))
-        (cond
-         ((and eterm-char-mode emacsvox-eterm-filter-window
-               (not
-                (and
-                 (emacsvox-eterm-coordinate-within-window-p
-                  (cons new-column new-row)
-                  emacsvox-eterm-filter-window)
-                 (emacsvox-eterm-coordinate-within-window-p
-                  (cons (term-current-column) (term-current-row))
-                  emacsvox-eterm-filter-window))))
-          nil)
-         ((and eterm-line-mode emacsvox-eterm-autospeak)
-          (setq dtk-stop-immediately nil)
-          (condition-case nil
-              (emacsvox-speak-region (1- old-point) (1- (point)))
-            (error nil)))
-         (emacsvox-eterm-focus-window
-          (emacsvox-eterm-speak-window emacsvox-eterm-focus-window))
-         ((and
-           (or (eq last-command-event 127)
-               (eq last-command-event 'backspace))
-           (= new-row emacsvox-eterm-row)
-           (= -1 (- new-column emacsvox-eterm-column)) current-char)
-          (emacsvox-speak-this-char current-char) (delete-char 1)
-          (dtk-tone-deletion))
-         ((and (= new-row emacsvox-eterm-row)
-               (= 1 (- new-column emacsvox-eterm-column)))
-          (if (eq 32 last-command-event)
-              (save-excursion
-                (backward-char 2) (emacsvox-speak-word nil))
-            (emacsvox-speak-this-char (preceding-char))))
-         ((and (= new-row emacsvox-eterm-row)
-               (= 1 (abs (- new-column emacsvox-eterm-column))))
-          (emacsvox-speak-this-char (following-char)))
-         ((= emacsvox-eterm-row new-row)
-          (if (= 32 (following-char))
-              (save-excursion (forward-char 1) (emacsvox-speak-word))
-            (emacsvox-speak-word)))
-         (t (emacsvox-speak-line)))
+      (let ((result (funcall original proc str)))
+        (setq new-row (term-current-row) new-column
+              (term-current-column))
         (when
-            (and (not emacsvox-eterm-pointer-mode)
-                 emacsvox-eterm-pointer)
-          (emacsvox-eterm-pointer-to-cursor))))))
+            (and emacsvox-eterm-autospeak
+                 (window-live-p emacsvox-eterm-window)
+                 (or (not emacsvox-eterm-focus-window)
+                     (emacsvox-eterm-activity-window
+                      emacsvox-eterm-focus-window)
+                     (emacsvox-eterm-activity-window
+                      emacsvox-eterm-filter-window)))
+          (cond
+           ((and eterm-char-mode emacsvox-eterm-filter-window
+                 (not
+                  (and
+                   (emacsvox-eterm-coordinate-within-window-p
+                    (cons new-column new-row)
+                    emacsvox-eterm-filter-window)
+                   (emacsvox-eterm-coordinate-within-window-p
+                    (cons (term-current-column) (term-current-row))
+                    emacsvox-eterm-filter-window))))
+            nil)
+           ((and eterm-line-mode emacsvox-eterm-autospeak)
+            (setq dtk-stop-immediately nil)
+            (condition-case nil
+                (emacsvox-speak-region (1- old-point) (1- (point)))
+              (error nil)))
+           (emacsvox-eterm-focus-window
+            (emacsvox-eterm-speak-window emacsvox-eterm-focus-window))
+           ((and
+             (or (eq last-command-event 127)
+                 (eq last-command-event 'backspace))
+             (= new-row emacsvox-eterm-row)
+             (= -1 (- new-column emacsvox-eterm-column)) current-char)
+            (emacsvox-speak-this-char current-char) (delete-char 1)
+            (dtk-tone-deletion))
+           ((and (= new-row emacsvox-eterm-row)
+                 (= 1 (- new-column emacsvox-eterm-column)))
+            (if (eq 32 last-command-event)
+                (save-excursion
+                  (backward-char 2) (emacsvox-speak-word nil))
+              (emacsvox-speak-this-char (preceding-char))))
+           ((and (= new-row emacsvox-eterm-row)
+                 (= 1 (abs (- new-column emacsvox-eterm-column))))
+            (emacsvox-speak-this-char (following-char)))
+           ((= emacsvox-eterm-row new-row)
+            (if (= 32 (following-char))
+                (save-excursion (forward-char 1) (emacsvox-speak-word))
+              (emacsvox-speak-word)))
+           (t (emacsvox-speak-line)))
+          (when
+              (and (not emacsvox-eterm-pointer-mode)
+                   emacsvox-eterm-pointer)
+            (emacsvox-eterm-pointer-to-cursor)))
+        result))))
 
-(advice-add 'term-emulate-terminal :around
-            #'ems--term-emulate-terminal-around)
+(advice-add
+ 'term-emulate-terminal :around
+ #'emacsvox--advice-term-emulate-terminal-around
+ '((name . emacsvox)))
 
 (ems-generate-switcher 'emacsvox-eterm-toggle-pointer-mode
                        'emacsvox-eterm-pointer-mode
