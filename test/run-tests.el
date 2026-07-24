@@ -208,6 +208,7 @@
   (require 'emacsvox-google-tests)
   (require 'emacsvox-haskell-tests)
   (require 'emacsvox-helpful-tests)
+  (require 'emacsvox-hide-lines-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
