@@ -64,13 +64,15 @@
 (defvar emacsvox-ido-cache nil
   "Cached value of ido-current-directory.")
 
-(defun ems--ido-set-current-directory-before (&rest _)
+(defun emacsvox--advice-ido-set-current-directory-before (&rest _)
   "Cache previous value of ido-current-directory."
   (emacsvox-icon 'item)
   (setq emacsvox-ido-cache ido-current-directory))
 
-(advice-add 'ido-set-current-directory :before
-            #'ems--ido-set-current-directory-before)
+(advice-add
+ 'ido-set-current-directory :before
+ #'emacsvox--advice-ido-set-current-directory-before
+ '((name . emacsvox--advice-ido-set-current-directory-before)))
 
 (defgroup emacsvox-ido nil
   "IDO Completions On The emacsvox Audio Desktop."
@@ -79,7 +81,7 @@
 (defvar emacsvox-ido-typing-delay 0.15
   "How long we wait before speaking completions.")
 
-(defun ems--ido-exhibit-after (&rest _)
+(defun emacsvox--advice-ido-exhibit-after (&rest _)
   "Speak ido minibuffer intelligently."
   (when ido-matches
     (when (> (length ido-matches) ido-max-prospects)
@@ -95,66 +97,58 @@
                (format "In %s"
                        (abbreviate-file-name ido-current-directory)))))))
 
-(advice-add 'ido-exhibit :after #'ems--ido-exhibit-after)
+(advice-add
+ 'ido-exhibit :after
+ #'emacsvox--advice-ido-exhibit-after
+ '((name . emacsvox--advice-ido-exhibit-after)))
 
 ;;;  speech-enable interactive commands:
 
-(defun ems--ido-mode-after (&rest _)
-  "speak.\nTip: Use M-x customize to set ido-max-prospects to a small value\n  when using Emacsvox --- I set it to 3.\nThe default value of 12 is too high for using ido effectively with speech. "
-  (when (ems-interactive-p)
-    (emacsvox-icon (if ido-mode 'on 'off))
-    (dtk-speak (format "IDo set to %s" ido-mode))))
+(defmacro emacsvox-ido--define-advice (target where &rest body)
+  "Define direct WHERE advice for interactive IDO TARGET."
+  (declare (indent 2))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-%s"
+                         target
+                         (substring (symbol-name where) 1)))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback %s `%s'." where target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target ,where #',function
+        '((name . ,function))))))
 
-(advice-add 'ido-mode :after #'ems--ido-mode-after)
+(emacsvox-ido--define-advice ido-mode :after
+  (emacsvox-icon (if ido-mode 'on 'off))
+  (dtk-speak (format "IDo set to %s" ido-mode)))
 
-(defun ems--ido-everywhere-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (if ido-everywhere 'on 'off))
-    (dtk-speak
-     (format "Turned %s IDo everywhere."
-             (if ido-everywhere " on " " off ")))))
+(emacsvox-ido--define-advice ido-everywhere :after
+  (emacsvox-icon (if ido-everywhere 'on 'off))
+  (dtk-speak
+   (format "Turned %s IDo everywhere."
+           (if ido-everywhere " on " " off "))))
 
-(advice-add 'ido-everywhere :after #'ems--ido-everywhere-after)
+(emacsvox-ido--define-advice ido-toggle-case :after
+  (emacsvox-icon (if ido-case-fold 'on 'off))
+  (dtk-speak (format "Case %s" (if ido-case-fold 'on 'off))))
 
-(defun ems--ido-toggle-case-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (if ido-case-fold 'on 'off))
-    (dtk-speak (format "Case %s" (if ido-case-fold 'on 'off)))))
+(emacsvox-ido--define-advice ido-toggle-regexp :after
+  (emacsvox-icon (if ido-enable-regexp 'on 'off))
+  (dtk-speak (format "Regexp %s" (if ido-enable-regexp 'on 'off))))
 
-(advice-add 'ido-toggle-case :after #'ems--ido-toggle-case-after)
+(emacsvox-ido--define-advice ido-toggle-prefix :after
+  (emacsvox-icon (if ido-enable-prefix 'on 'off))
+  (dtk-speak (format "Prefix %s" (if ido-enable-prefix 'on 'off))))
 
-(defun ems--ido-toggle-regexp-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (if ido-enable-regexp 'on 'off))
-    (dtk-speak (format "Regexp %s" (if ido-enable-regexp 'on 'off)))))
+(emacsvox-ido--define-advice ido-toggle-ignore :after
+  (emacsvox-icon (if ido-ignore-files 'on 'off))
+  (dtk-speak
+   (format "File ignoring  %s" (if ido-ignore-files 'on 'off))))
 
-(advice-add 'ido-toggle-regexp :after #'ems--ido-toggle-regexp-after)
-
-(defun ems--ido-toggle-prefix-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (if ido-enable-prefix 'on 'off))
-    (dtk-speak (format "Prefix %s" (if ido-enable-prefix 'on 'off)))))
-
-(advice-add 'ido-toggle-prefix :after #'ems--ido-toggle-prefix-after)
-
-(defun ems--ido-toggle-ignore-after (&rest _)
-  "speak." 
-  (when (ems-interactive-p)
-    (emacsvox-icon (if ido-ignore-files 'on 'off))
-    (dtk-speak
-     (format "File ignoring  %s" (if ido-ignore-files 'on 'off)))))
-
-(advice-add 'ido-toggle-ignore :after #'ems--ido-toggle-ignore-after)
-
-(defun ems--ido-complete-after (&rest _)
-  "Speak completion at the head of the list."
-  (when (ems-interactive-p) (dtk-speak (car ido-matches))))
-
-(advice-add 'ido-complete :after #'ems--ido-complete-after)
+(emacsvox-ido--define-advice ido-complete :after
+  (dtk-speak (car ido-matches)))
 
 (cl-loop
  for target in
@@ -174,36 +168,21 @@
          (emacsvox-icon 'open-object)
          (emacsvox-speak-mode-line)))
      (advice-add
-      ',target :after #',function '((name . emacsvox))))))
+      ',target :after #',function '((name . ,function))))))
 
-(defun ems--ido-bury-buffer-at-head-after (&rest _)
-  "Provide auditory icon."
-  (when (ems-interactive-p) (emacsvox-icon 'close-object)))
+(dolist
+    (target '(ido-bury-buffer-at-head ido-kill-buffer-at-head))
+  (eval
+   `(emacsvox-ido--define-advice ,target :after
+      (emacsvox-icon 'close-object))))
 
-(advice-add 'ido-bury-buffer-at-head :after
-            #'ems--ido-bury-buffer-at-head-after)
+(emacsvox-ido--define-advice ido-kill-buffer :after
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--ido-kill-buffer-after (&rest _)
-  "Provide auditory icon."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'ido-kill-buffer :after #'ems--ido-kill-buffer-after)
-
-(defun ems--ido-kill-buffer-at-head-after (&rest _)
-  "Provide auditory icon."
-  (when (ems-interactive-p) (emacsvox-icon 'close-object)))
-
-(advice-add 'ido-kill-buffer-at-head :after
-            #'ems--ido-kill-buffer-at-head-after)
-
-(defun ems--ido-fallback-command-before (&rest _)
-  "Provide auditory cue to indicate we are closing out the IDO   minibuffer."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-icon 'open-object)))
-
-(advice-add 'ido-fallback-command :before
-            #'ems--ido-fallback-command-before)
+(emacsvox-ido--define-advice ido-fallback-command :before
+  (emacsvox-icon 'close-object)
+  (emacsvox-icon 'open-object))
 
 ;;;  define personalities 
 
