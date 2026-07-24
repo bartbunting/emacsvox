@@ -198,6 +198,7 @@
   (require 'emacsvox-emms-tests)
   (require 'emacsvox-empv-tests)
   (require 'emacsvox-enwc-tests)
+  (require 'emacsvox-ess-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

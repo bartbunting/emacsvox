@@ -50,105 +50,127 @@
 
 ;;;  Advice edeitor to speak
 
-(defun ems--ess-indent-command-after (&rest _)
-  "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defvar emacsvox-ess--advice nil
+  "Current ESS targets and their native advice functions.")
+(setq emacsvox-ess--advice nil)
 
-(advice-add 'ess-indent-command :after #'ems--ess-indent-command-after)
+(defun emacsvox--advice-ess-indent-command-after (&rest _)
+  "Speak the line after interactive ESS indentation."
+  (when (ems-interactive-p 'ess-indent-command)
+    (emacsvox-speak-line)))
 
-(defun ems--ess-smart-underscore-around (orig-fun &rest args)
-  "Speak what you inserted."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
-      (let ((orig (point)))
-        (apply orig-fun args)
-        (dtk-speak (buffer-substring orig (point)))))
-     (t (apply orig-fun args)))
+(push '(ess-indent-command :after
+        emacsvox--advice-ess-indent-command-after)
+      emacsvox-ess--advice)
+
+(defun emacsvox--advice-ess-smart-underscore-around
+    (original &rest args)
+  "Call ORIGINAL once with ARGS and speak inserted text."
+  (let ((start (point))
+        (result (apply original args)))
+    (when (ems-interactive-p 'ess-smart-underscore)
+      (dtk-speak (buffer-substring start (point))))
     result))
 
-(advice-add 'ess-smart-underscore :around
-            #'ems--ess-smart-underscore-around)
-
-(unless (and (boundp 'post-self-insert-hook)
-             post-self-insert-hook
-             (memq 'emacsvox-post-self-insert-hook post-self-insert-hook))
-  (defadvice ess-electric-brace (after emacsvox pre act comp)
-    "Speak what you inserted.
-Cue electric insertion with a tone."
-    (when (ems-interactive-p)
-      (let ((emacsvox-speak-messages nil))
-        (emacsvox-speak-this-char last-input-event)
-        (dtk-tone 800 100 t)))))
+(push '(ess-smart-underscore :around
+        emacsvox--advice-ess-smart-underscore-around)
+      emacsvox-ess--advice)
 
 ;;;  Structure commands 
 
-(cl-loop for f in
-         '(ess-beginning-of-function ess-end-of-function)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Produce auditory feedback."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'large-movement)
-               (emacsvox-speak-line)))))
+(defun emacsvox-ess--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-ess--advice))))
 
-(defun ems--ess-mark-function-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox-ess--structure-feedback ()
+  "Speak after moving across an ESS function."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-ess--register-after-group
+ '(ess-beginning-of-function ess-end-of-function)
+ #'emacsvox-ess--structure-feedback)
+
+(defun emacsvox--advice-ess-mark-function-after (&rest _)
+  "Report the ESS function selected by the mark."
+  (when (ems-interactive-p 'ess-mark-function)
     (emacsvox-icon 'select-object)
     (message "Marked function containing %s lines."
              (count-lines (point) (mark)))))
 
-(advice-add 'ess-mark-function :after #'ems--ess-mark-function-after)
+(push '(ess-mark-function :after emacsvox--advice-ess-mark-function-after)
+      emacsvox-ess--advice)
 
-(defun ems--ess-indent-exp-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ess-indent-exp-after (&rest _)
+  "Report indenting an ESS expression."
+  (when (ems-interactive-p 'ess-indent-exp)
     (emacsvox-icon 'fill-object)
     (message "Indented current s expression ")))
 
-(advice-add 'ess-indent-exp :after #'ems--ess-indent-exp-after)
+(push '(ess-indent-exp :after emacsvox--advice-ess-indent-exp-after)
+      emacsvox-ess--advice)
 
 ;;;  Evaluators
 
-(cl-loop for f in
-         '(
-           ess-eval-function ess-eval-buffer
-           ess-eval-function-and-go ess-eval-buffer-and-go
-           ess-eval-chunk ess-eval-chunk-and-go
-           ess-eval-line ess-eval-line-and-go
-           ess-eval-paragraph ess-eval-paragraph-and-go
-           ess-eval-paragraph-and-step
-           ess-eval-region ess-eval-region-and-go
-           ess-eval-line-and-step ess-eval-function-or-paragraph-and-step)
-         do
-         (eval
-          `
-          (defadvice ,f (after emacsvox pre act comp)
-            "speak."
-            (when (ems-interactive-p)
-              (emacsvox-icon 'select-object)))))
+(defun emacsvox-ess--evaluation-feedback ()
+  "Confirm evaluation of ESS code."
+  (emacsvox-icon 'select-object))
+
+(emacsvox-ess--register-after-group
+ '(ess-eval-function ess-eval-buffer
+   ess-eval-function-and-go ess-eval-buffer-and-go
+   ess-eval-line ess-eval-line-and-go
+   ess-eval-paragraph ess-eval-paragraph-and-go
+   ess-eval-paragraph-and-step
+   ess-eval-region ess-eval-region-and-go
+   ess-eval-line-and-step ess-eval-function-or-paragraph-and-step)
+ #'emacsvox-ess--evaluation-feedback)
 
 ;;;  Switchers
 
-(defun ems--ess-display-help-on-object-after (&rest _)
+(defun emacsvox--advice-ess-display-help-on-object-after (&rest _)
   "Announce help."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'ess-display-help-on-object)
     (emacsvox-icon 'help) (message "Displayed help in other window.")))
 
-(advice-add 'ess-display-help-on-object :after
-            #'ems--ess-display-help-on-object-after)
+(push '(ess-display-help-on-object :after
+        emacsvox--advice-ess-display-help-on-object-after)
+      emacsvox-ess--advice)
 
-(cl-loop for f in
-         '(
-           ess-switch-to-ess ess-switch-to-end-of-ESS)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'select-object)
-               (emacsvox-speak-mode-line)))))
+(defun emacsvox-ess--switch-feedback ()
+  "Speak after switching between ESS buffers."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-ess--register-after-group
+ '(ess-switch-to-ESS ess-switch-to-end-of-ESS)
+ #'emacsvox-ess--switch-feedback)
+
+(defconst emacsvox-ess--removed-targets
+  '(ess-electric-brace ess-eval-chunk ess-eval-chunk-and-go
+    ess-switch-to-ess)
+  "Obsolete ESS commands removed or renamed in current releases.")
+
+(defun emacsvox-ess--install-advice ()
+  "Install native advice for currently loaded ESS features."
+  (dolist (entry emacsvox-ess--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(ess-site ess-mode ess-inf ess-help))
+  (eval
+   `(with-eval-after-load ',feature
+      (emacsvox-ess--install-advice))))
 
 ;;;  set up programming mode:
 
@@ -156,4 +178,3 @@ Cue electric insertion with a tone."
 
 (provide 'emacsvox-ess)
 ;;;  end of file
-
