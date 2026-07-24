@@ -158,6 +158,7 @@
   (require 'emacsvox-company-tests)
   (require 'emacsvox-helm-tests)
   (require 'emacsvox-hydra-tests)
+  (require 'emacsvox-pydoc-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

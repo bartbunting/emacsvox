@@ -67,13 +67,22 @@
 
 ;;;  Advice Interactive Commands:
 
-(defun ems--pydoc-after (&rest _)
+(defun emacsvox--advice-pydoc-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'pydoc)
     (emacsvox-icon 'help) (emacsvox-speak-buffer)))
 
-(advice-add 'pydoc :after #'ems--pydoc-after)
+(defun emacsvox-pydoc--install-advice ()
+  "Install advice after the optional Pydoc package loads."
+  (when (and (fboundp 'pydoc)
+             (not (advice-member-p
+                   #'emacsvox--advice-pydoc-after 'pydoc)))
+    (advice-add
+     'pydoc :after #'emacsvox--advice-pydoc-after
+     '((name . emacsvox)))))
+
+(with-eval-after-load 'pydoc
+  (emacsvox-pydoc--install-advice))
 
 (provide 'emacsvox-pydoc)
 ;;;  end of file
-
