@@ -73,108 +73,104 @@
 
 ;;;  Advice new interactive commands:
 
-(defun ems--js2-jump-to-definition-after (&rest _)
+(defvar emacsvox-js2--advice nil
+  "Current JS2 targets and their native advice functions.")
+(setq emacsvox-js2--advice nil)
+
+(defun emacsvox-js2--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback ',target))))
+      (push (list target :after advice-function) emacsvox-js2--advice))))
+
+(defun emacsvox-js2--movement-feedback (_target)
+  "Speak after moving through JavaScript source."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'large-movement)
+    (emacsvox-speak-line)))
+
+(emacsvox-js2--register-after-group
+ '(js2-jump-to-definition js2-mode-forward-sexp
+   js2-mode-backward-sibling js2-next-error)
+ #'emacsvox-js2--movement-feedback)
+
+(defun emacsvox-js2--mark-feedback (_target)
+  "Speak the marked JavaScript definition."
+  (emacsvox-icon 'mark-object)
+  (emacsvox-speak-line))
+
+(emacsvox-js2--register-after-group
+ '(js2-mark-defun)
+ #'emacsvox-js2--mark-feedback)
+
+(defun emacsvox-js2--line-feedback (_target)
+  "Speak the current JavaScript line."
+  (emacsvox-speak-line))
+
+(emacsvox-js2--register-after-group
+ '(js2-beginning-of-line js2-indent-line js2-forward-sws
+   js2-backward-sws js2-end-of-line)
+ #'emacsvox-js2--line-feedback)
+
+(defun emacsvox-js2--hide-feedback (target)
+  "Announce the item hidden by JS2 command TARGET."
+  (emacsvox-icon 'close-object)
+  (message "Hid %s"
+           (substring (symbol-name target) (length "js2-mode-hide-"))))
+
+(emacsvox-js2--register-after-group
+ '(js2-mode-hide-comments js2-mode-hide-element
+   js2-mode-hide-functions js2-mode-hide-warnings-and-errors)
+ #'emacsvox-js2--hide-feedback)
+
+(defun emacsvox-js2--show-feedback (target)
+  "Announce the item shown by JS2 command TARGET."
+  (emacsvox-icon 'open-object)
+  (message "Showed %s"
+           (substring (symbol-name target) (length "js2-mode-show-"))))
+
+(emacsvox-js2--register-after-group
+ '(js2-mode-show-all js2-mode-show-comments
+   js2-mode-show-element js2-mode-show-functions)
+ #'emacsvox-js2--show-feedback)
+
+(defun emacsvox-js2--toggle-feedback (target)
+  "Announce the item toggled by JS2 command TARGET."
+  (emacsvox-icon 'button)
+  (message "Toggled %s"
+           (substring (symbol-name target) (length "js2-mode-toggle-"))))
+
+(emacsvox-js2--register-after-group
+ '(js2-mode-toggle-warnings-and-errors js2-mode-toggle-hide-functions
+   js2-mode-toggle-hide-comments js2-mode-toggle-element)
+ #'emacsvox-js2--toggle-feedback)
+
+(defun emacsvox--advice-js2-narrow-to-defun-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
-    (let ((emacsvox-show-point t))
-      (emacsvox-icon 'large-movement) (emacsvox-speak-line))))
-
-(advice-add 'js2-jump-to-definition :after
-            #'ems--js2-jump-to-definition-after)
-
-(defun ems--js2-mark-defun-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object) (emacsvox-speak-line)))
-
-(advice-add 'js2-mark-defun :after #'ems--js2-mark-defun-after)
-
-(cl-loop for f in
-         '(js2-mode-forward-sexp js2-mode-backward-sibling js2-next-error)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (let ((emacsvox-show-point t))
-                 (emacsvox-icon 'large-movement)
-                 (emacsvox-speak-line))))))
-
-(cl-loop for f in
-         '(
-           js2-beginning-of-line js2-indent-line
-           js2-indent-bounce-backwards js2-forward-sws
-           js2-backward-sws js2-enter-key
-           js2-end-of-line
-           js2-mode-match-single-quote js2-mode-match-paren
-           js2-mode-match-double-quote js2-mode-match-curly
-           js2-mode-match-bracket js2-mode-magic-close-paren
-           js2-insert-and-indent)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-line)))))
-
-(cl-loop for f in
-         '(
-           js2-mode-hide-comments js2-mode-hide-element
-           js2-mode-hide-functions js2-mode-hide-warnings-and-errors)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'close-object)
-               (message "Hid %s"
-                        ,(substring (symbol-name f)
-                                    (length "js2-mode-hide-")))))))
-
-(cl-loop for f in
-         '(js2-mode-show-all js2-mode-show-comments
-                             js2-mode-show-element js2-mode-show-functions)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'open-object)
-               (message "Showed %s"
-                        ,(substring (symbol-name f)
-                                    (length "js2-mode-show-")))))))
-
-(cl-loop
- for f in
- '(
-   js2-mode-toggle-warnings-and-errors
-   js2-mode-toggle-hide-functions
-   js2-mode-toggle-hide-comments                    js2-mode-toggle-element)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'button)
-       (message "Toggled %s"
-                ,(substring (symbol-name f)
-                            (length "js2-mode-toggle-")))))))
-
-(defun ems--js2-narrow-to-defun-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'js2-narrow-to-defun)
     (emacsvox-icon 'mark-object)
     (message "Narrowed to current function.")))
 
-(advice-add 'js2-narrow-to-defun :after
-            #'ems--js2-narrow-to-defun-after)
+(push '(js2-narrow-to-defun :after
+        emacsvox--advice-js2-narrow-to-defun-after)
+      emacsvox-js2--advice)
 
-(defun ems--js2-next-error-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
+(defun emacsvox-js2--install-advice ()
+  "Install native advice after JS2 mode loads."
+  (dolist (entry emacsvox-js2--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(advice-add 'js2-next-error :after #'ems--js2-next-error-after)
+(with-eval-after-load 'js2-mode
+  (emacsvox-js2--install-advice))
 
 ;;;  js2-mode hook
 
@@ -191,4 +187,3 @@
 
 (provide 'emacsvox-js2)
 ;;;  end of file
-
