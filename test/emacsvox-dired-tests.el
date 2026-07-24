@@ -21,6 +21,17 @@
     locate locate-with-filter)
   "Dired and Locate commands converted to native advice in this slice.")
 
+(defconst emacsvox-test--dired-handwritten-advice
+  '((dired-sort-toggle-or-edit
+     :around emacsvox--advice-dired-sort-toggle-or-edit-around)
+    (dired-query :before emacsvox--advice-dired-query-before)
+    (dired-find-file :around emacsvox--advice-dired-find-file-around)
+    (dired-mark :after emacsvox--advice-dired-mark-after)
+    (dired-flag-file-deletion
+     :after emacsvox--advice-dired-flag-file-deletion-after)
+    (dired-unmark :after emacsvox--advice-dired-unmark-after))
+  "Remaining hand-written Dired advice migrated to final native form.")
+
 (let ((module
        (expand-file-name
         "../lisp/emacsvox-dired.el"
@@ -89,6 +100,125 @@
                (lambda () (setq called t))))
       (emacsvox--dired-dired-next-line-after))
     (should-not called)))
+
+(ert-deftest emacsvox-dired-handwritten-advice-is-directly-registered ()
+  "Hand-written Dired advice bypasses the compatibility bridge."
+  (dolist (entry emacsvox-test--dired-handwritten-advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target))
+      (should-not
+       (gethash
+        (list target where function) ems--modern-advice-wrappers))))
+  (should-not (fboundp 'dired-quit))
+  (should (eq (lookup-key dired-mode-map "q") 'quit-window)))
+
+(ert-deftest emacsvox-dired-sort-calls-original-once ()
+  "Interactive sorting runs once with messages silenced before feedback."
+  (let ((ems--interactive-fn-name 'dired-sort-toggle-or-edit)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'mode-line events))))
+      (should
+       (eq
+        'result
+        (emacsvox--advice-dired-sort-toggle-or-edit-around
+         (lambda (&rest arguments)
+           (setq calls (1+ calls))
+           (push
+            (list 'original arguments
+                  emacsvox-speak-messages inhibit-message)
+            events)
+           'result)
+         3))))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((original (3) nil t) (icon task-done) mode-line)))))
+
+(ert-deftest emacsvox-dired-programmatic-sort-runs-once-quietly ()
+  "Programmatic sorting runs once without Dired-specific feedback."
+  (let ((calls 0)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (&rest arguments) (push arguments events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'mode-line events))))
+      (should
+       (eq
+        'result
+        (emacsvox--advice-dired-sort-toggle-or-edit-around
+         (lambda (&rest arguments)
+           (setq calls (1+ calls))
+           (should (equal arguments '(2)))
+           'result)
+         2))))
+    (should (= calls 1))
+    (should-not events)))
+
+(ert-deftest emacsvox-dired-find-file-inspects-before-one-call ()
+  "File opening detects a directory before calling the original once."
+  (let ((ems--interactive-fn-name 'dired-find-file)
+        (calls 0)
+        events)
+    (cl-letf (((symbol-function 'dired-get-filename)
+               (lambda (&rest arguments)
+                 (push (list 'filename arguments) events)
+                 "/tmp/directory"))
+              ((symbol-function 'file-directory-p)
+               (lambda (filename)
+                 (push (list 'directory filename) events)
+                 t))
+              ((symbol-function 'emacsvox-dired-label-fields)
+               (lambda () (push 'label events)))
+              ((symbol-function 'emacsvox-speak-mode-line)
+               (lambda () (push 'mode-line events)))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events))))
+      (should
+       (eq
+        'result
+        (emacsvox--advice-dired-find-file-around
+         (lambda ()
+           (setq calls (1+ calls))
+           (push 'original events)
+           'result)))))
+    (should (= calls 1))
+    (should
+     (equal
+      (nreverse events)
+      '((filename (t t))
+        (directory "/tmp/directory")
+        original label mode-line (icon open-object))))))
+
+(ert-deftest emacsvox-dired-marking-feedback-is-target-aware ()
+  "Only feedback for the matching Dired marking command is emitted."
+  (let ((ems--interactive-fn-name 'dired-flag-file-deletion)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-dired-speak-line)
+               (lambda () (push 'line events))))
+      (emacsvox--advice-dired-mark-after)
+      (emacsvox--advice-dired-flag-file-deletion-after)
+      (emacsvox--advice-dired-unmark-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon delete-object) line)))))
+
+(ert-deftest emacsvox-dired-query-cue-remains-unconditional ()
+  "Dired queries always cue before deciding whether prompting is needed."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (emacsvox--advice-dired-query-before))
+    (should (equal events '(ask-short-question)))))
 
 (provide 'emacsvox-dired-tests)
 ;;; emacsvox-dired-tests.el ends here
