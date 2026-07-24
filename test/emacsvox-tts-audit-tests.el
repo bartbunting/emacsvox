@@ -57,6 +57,14 @@
           "(tts-speak (getenv \"TTS_PROGRAM\"))\n")))
     (should (ems-tts-audit-clean-p result))))
 
+(ert-deftest emacsvox-tts-audit-active-text-excludes-only-explicit-history ()
+  "The text gate includes active support files and excludes named history."
+  (should (ems-tts-audit--active-text-path-p "servers/tts-lib.tcl"))
+  (should (ems-tts-audit--active-text-path-p "tvr/emacs-startup.el"))
+  (should-not (ems-tts-audit--active-text-path-p "announcements/old.org"))
+  (should-not (ems-tts-audit--active-text-path-p "etc/NEWS-59.0"))
+  (should-not (ems-tts-audit--active-text-path-p "test/example.el")))
+
 (ert-deftest emacsvox-tts-audit-identifies-definitions ()
   "Legacy definitions are distinguished from ordinary references."
   (let ((result

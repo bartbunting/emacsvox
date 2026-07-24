@@ -29,6 +29,16 @@
   '("emacsvox-loaddefs.el")
   "Generated Lisp files excluded from namespace audits.")
 
+(defconst ems-tts-audit-active-text-exclusions
+  '("announcements/"
+    "blog-archive/"
+    "etc/NEWS"
+    "etc/tts-modernization.org"
+    "lisp/"
+    "test/"
+    "utils/tts-audit.el")
+  "Path prefixes excluded from the active non-Lisp text audit.")
+
 (defun ems-tts-audit--legacy-symbol-p (object)
   "Return non-nil when OBJECT is a legacy generic TTS symbol."
   (and
@@ -221,6 +231,66 @@
    (null (plist-get audit :symbol-counts))
    (null (plist-get audit :string-counts))))
 
+(defun ems-tts-audit--active-text-path-p (filename)
+  "Return non-nil when tracked FILENAME belongs in the active text audit."
+  (not
+   (seq-some
+    (lambda (prefix) (string-prefix-p prefix filename))
+    ems-tts-audit-active-text-exclusions)))
+
+(defun ems-tts-audit--tracked-files (directory)
+  "Return tracked files relative to Git DIRECTORY."
+  (let ((default-directory
+         (file-name-as-directory (expand-file-name directory))))
+    (process-lines "git" "ls-files")))
+
+(defun ems-tts-audit-active-text (directory)
+  "Audit tracked active non-Lisp text files below Git DIRECTORY."
+  (let* ((root (file-name-as-directory (expand-file-name directory)))
+         (files
+          (cl-remove-if-not
+           #'ems-tts-audit--active-text-path-p
+           (ems-tts-audit--tracked-files root)))
+         matches)
+    (dolist (relative files)
+      (let ((filename (expand-file-name relative root)))
+        (when (file-regular-p filename)
+          (with-temp-buffer
+            (insert-file-contents-literally filename)
+            (unless (save-excursion (search-forward "\0" nil t))
+              (goto-char (point-min))
+              (let ((line 1))
+                (while (not (eobp))
+                  (let ((text
+                         (buffer-substring-no-properties
+                          (line-beginning-position) (line-end-position))))
+                    (dolist (name (ems-tts-audit--legacy-string-names text))
+                      (push (list relative line name) matches)))
+                  (forward-line 1)
+                  (cl-incf line))))))))
+    (list
+     :directory root
+     :file-count (length files)
+     :matches (nreverse matches))))
+
+(defun ems-tts-audit-active-text-clean-p (audit)
+  "Return non-nil when active-text AUDIT has no generic legacy names."
+  (null (plist-get audit :matches)))
+
+(defun ems-tts-audit-active-text-format (audit)
+  "Return a concise human-readable report for active-text AUDIT."
+  (let ((matches (plist-get audit :matches)))
+    (concat
+     (format "Active text audit: %d tracked files\n"
+             (plist-get audit :file-count))
+     (format "generic legacy names: %d occurrences\n" (length matches))
+     (mapconcat
+      (lambda (match)
+        (format "  %s:%d: %s" (nth 0 match) (nth 1 match) (nth 2 match)))
+      matches
+      "\n")
+     (when matches "\n"))))
+
 (defun ems-tts-audit-format (audit)
   "Return a concise human-readable report for AUDIT."
   (let ((symbols (plist-get audit :symbol-counts))
@@ -242,11 +312,17 @@
       "\n")
      "\n")))
 
-(defun ems-tts-audit-batch (directory)
-  "Audit DIRECTORY, print the inventory, and fail if legacy names remain."
-  (let ((audit (ems-tts-audit-directory directory)))
-    (princ (ems-tts-audit-format audit))
-    (unless (ems-tts-audit-clean-p audit)
+(defun ems-tts-audit-batch (directory &optional repository)
+  "Audit Lisp DIRECTORY and active text in REPOSITORY.
+Print the inventories and fail if generic legacy names remain."
+  (let ((lisp-audit (ems-tts-audit-directory directory))
+        (text-audit (ems-tts-audit-active-text (or repository "."))))
+    (princ (ems-tts-audit-format lisp-audit))
+    (princ (ems-tts-audit-active-text-format text-audit))
+    (unless
+        (and
+         (ems-tts-audit-clean-p lisp-audit)
+         (ems-tts-audit-active-text-clean-p text-audit))
       (kill-emacs 1))))
 
 (provide 'tts-audit)

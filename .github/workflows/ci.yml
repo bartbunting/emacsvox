@@ -28,6 +28,6 @@ jobs:
             -l emacsvox-preamble.el \
             -l emacsvox-loaddefs.el \
             -f batch-byte-compile \
-            emacsvox.el dtk-speak.el voice-setup.el voice-defs.el \
+            emacsvox.el tts-speak.el voice-setup.el voice-defs.el \
             emacsvox-speak.el emacsvox-advice.el emacsvox-sounds.el \
             emacsvox-keymap.el emacsvox-pronounce.el
