@@ -57,108 +57,105 @@
 
 ;;;  Speech-enable Editing:
 
-(defun ems--clojure-toggle-keyword-string-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'button)))
+(defvar emacsvox-clojure--advice nil
+  "Current Clojure Mode targets and their native advice functions.")
 
-(advice-add 'clojure-toggle-keyword-string :after
-            #'ems--clojure-toggle-keyword-string-after)
+(defun emacsvox-clojure--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-clojure--advice))))
 
-(cl-loop
- for f in 
- '(clojure-cycle-not clojure-cycle-when)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'button)
-       (emacsvox-speak-line)))))
+(defun emacsvox-clojure--button-feedback ()
+  "Speak an edited Clojure form."
+  (emacsvox-icon 'button)
+  (emacsvox-speak-line))
+(emacsvox-clojure--register-after-group
+ '(clojure-toggle-keyword-string clojure-cycle-not clojure-cycle-when)
+ #'emacsvox-clojure--button-feedback)
 
-(cl-loop
- for f in 
+(defun emacsvox-clojure--view-feedback ()
+  "Speak a Clojure reference view."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-buffer))
+(emacsvox-clojure--register-after-group
  '(clojure-view-cheatsheet
-   clojure-view-grimoire
    clojure-view-guide
    clojure-view-reference-section
    clojure-view-style-guide)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-buffer)))))
+ #'emacsvox-clojure--view-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-clojure--movement-feedback ()
+  "Speak after logical Clojure movement."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+(emacsvox-clojure--register-after-group
  '(clojure-forward-logical-sexp clojure-backward-logical-sexp)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+ #'emacsvox-clojure--movement-feedback)
 
-(defun ems--clojure-align-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'fill-object)))
+(defun emacsvox-clojure--align-feedback ()
+  "Confirm alignment of a Clojure form."
+  (emacsvox-icon 'fill-object))
+(emacsvox-clojure--register-after-group
+ '(clojure-align) #'emacsvox-clojure--align-feedback)
 
-(advice-add 'clojure-align :after #'ems--clojure-align-after)
-
-(cl-loop
- for f in
+(defun emacsvox-clojure--insert-feedback ()
+  "Speak an inserted Clojure namespace form."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
+(emacsvox-clojure--register-after-group
  '(clojure-insert-ns-form-at-point clojure-insert-ns-form)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Provide Auditory feedback."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'select-object)))))
-(cl-loop
- for f in
- '(
-   clojure-cycle-if clojure-cycle-privacy
-   clojure-introduce-let clojure-move-to-let
-   clojure-let-backward-slurp-sexp clojure-let-forward-slurp-sexp)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)))))
-;; Catch-all for now:
+ #'emacsvox-clojure--insert-feedback)
 
-(cl-loop
- for f in
- '(
-   clojure-thread clojure-thread-first-all clojure-thread-last-all
-   clojure-unwind clojure-unwind-all)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Provide place-holder auditory feedback."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)))))
+(defun emacsvox-clojure--line-feedback ()
+  "Speak the current Clojure form."
+  (emacsvox-speak-line))
+(emacsvox-clojure--register-after-group
+ '(clojure-cycle-if
+   clojure-cycle-privacy
+   clojure-introduce-let
+   clojure-move-to-let
+   clojure-let-backward-slurp-sexp
+   clojure-let-forward-slurp-sexp
+   clojure-thread
+   clojure-thread-first-all
+   clojure-thread-last-all
+   clojure-unwind
+   clojure-unwind-all)
+ #'emacsvox-clojure--line-feedback)
 
 ;;;  Speech-Enable Refactoring:
 
-(cl-loop
- for f in
- '(
-   clojure-convert-collection-to-list clojure-convert-collection-to-map
-   clojure-convert-collection-to-quoted-list clojure-convert-collection-to-set
-   clojure-convert-collection-to-vector) do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let ((begin (point)))
-         (forward-sexp)
-         (dtk-speak(buffer-substring begin (point))))))))
+(defun emacsvox-clojure--collection-feedback ()
+  "Speak the converted Clojure collection at point."
+  (let ((begin (point)))
+    (forward-sexp)
+    (dtk-speak (buffer-substring begin (point)))))
+(emacsvox-clojure--register-after-group
+ '(clojure-convert-collection-to-list
+   clojure-convert-collection-to-map
+   clojure-convert-collection-to-quoted-list
+   clojure-convert-collection-to-set
+   clojure-convert-collection-to-vector)
+ #'emacsvox-clojure--collection-feedback)
+
+(defun emacsvox-clojure--install-advice ()
+  "Install advice after the optional Clojure Mode package loads."
+  (dolist (entry emacsvox-clojure--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'clojure-mode
+  (emacsvox-clojure--install-advice))
 
 (provide 'emacsvox-clojure)
 ;;;  end of file
-

@@ -180,6 +180,7 @@
   (require 'emacsvox-calibredb-tests)
   (require 'emacsvox-chess-tests)
   (require 'emacsvox-cider-tests)
+  (require 'emacsvox-clojure-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
