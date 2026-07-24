@@ -42,6 +42,8 @@
 (require 'emacsvox-preamble)
 (require 'gomoku)
 
+(defvar emacsvox-last-message)
+
 ;;;   Introduction 
 ;;; Commentary:
 ;; Auditory interface to gomoku
@@ -114,8 +116,6 @@
 (defun emacsvox-gomoku-show-current-positive-diagonal ()
   "Aurally display current positively sloped diagonal"
   (interactive)
-  (cl-declare (special gomoku-board-height
-                       gomoku-board-width))
   (let ((row (gomoku-point-y))
         (column (gomoku-point-x))
         (diag-start-x nil)
@@ -145,8 +145,6 @@
 (defun emacsvox-gomoku-show-current-negative-diagonal ()
   "Aurally display current negative sloped diagonal "
   (interactive)
-  (cl-declare (special gomoku-board-height
-                       gomoku-board-width))
   (let ((row (gomoku-point-y))
         (column (gomoku-point-x))
         (diag-start-x nil)
@@ -179,9 +177,6 @@
 (defun emacsvox-gomoku-display-statistics ()
   "Display statistics from previous games"
   (interactive)
-  (cl-declare (special gomoku-number-of-human-wins
-                       gomoku-number-of-emacs-wins
-                       gomoku-number-of-draws))
   (message (format "Wins %d losses %d%s"
                    gomoku-number-of-human-wins
                    gomoku-number-of-emacs-wins
@@ -230,47 +225,61 @@
 
 ;;;   advice all navigation
 
-(cl-loop
- for f in
- '(
-   gomoku-beginning-of-line gomoku-end-of-line
-   gomoku-move-down gomoku-move-up gomoku-move-left gomoku-move-right 
-   gomoku-move-ne gomoku-move-nw gomoku-move-se gomoku-move-sw)
- do
- (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "speak"
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-gomoku-speak-square)))))
+(defmacro emacsvox-gomoku--define-navigation-advice (targets)
+  "Define native navigation feedback for Gomoku TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 "Speak the selected Gomoku square."
+                 (when (ems-interactive-p ',target)
+                   (emacsvox-icon 'select-object)
+                   (emacsvox-gomoku-speak-square)))
+               (advice-add ',target :after #',function))))
+        targets)))
 
-(defun ems--gomoku-emacs-plays-after (&rest _)
+(emacsvox-gomoku--define-navigation-advice
+    (gomoku-beginning-of-line
+     gomoku-end-of-line
+     gomoku-move-down
+     gomoku-move-up
+     gomoku-move-left
+     gomoku-move-right
+     gomoku-move-ne
+     gomoku-move-nw
+     gomoku-move-se
+     gomoku-move-sw))
+
+(defun emacsvox--advice-gomoku-emacs-plays-after (&rest _)
   "Tell me where you played" (emacsvox-icon 'mark-object)
   (emacsvox-gomoku-speak-square))
 
-(advice-add 'gomoku-emacs-plays :after #'ems--gomoku-emacs-plays-after)
+(advice-add 'gomoku-emacs-plays :after
+            #'emacsvox--advice-gomoku-emacs-plays-after)
 
-(defun ems--gomoku-terminate-game-around (orig-fun &rest args)
+(defun emacsvox--advice-gomoku-terminate-game-around
+    (orig-fun result)
   "speak"
-  (let ((result (apply orig-fun args)))
-    (cl-declare
-     (special emacsvox-last-message gomoku-number-of-moves))
-    (let ((result (ad-get-arg 0)))
-      (apply orig-fun args)
-      (dtk-speak
-       (format "%s in %s moves  %s " result gomoku-number-of-moves
-               emacsvox-last-message))
-      (sit-for 2))
-    result))
+  (let ((return-value (funcall orig-fun result)))
+    (dtk-speak
+     (format "%s in %s moves  %s " result gomoku-number-of-moves
+             emacsvox-last-message))
+    (sit-for 2)
+    return-value))
 
 (advice-add 'gomoku-terminate-game :around
-            #'ems--gomoku-terminate-game-around)
+            #'emacsvox--advice-gomoku-terminate-game-around)
 
-(defun ems--gomoku-after (&rest _)
+(defun emacsvox--advice-gomoku-after (&rest _)
   "Speech enable gomoku"
-  (when (ems-interactive-p) (emacsvox-gomoku-setup-keys)))
+  (when (ems-interactive-p 'gomoku)
+    (emacsvox-gomoku-setup-keys)))
 
-(advice-add 'gomoku :after #'ems--gomoku-after)
+(advice-add 'gomoku :after #'emacsvox--advice-gomoku-after)
 
 ;;;  keybindings
 
@@ -314,4 +323,3 @@
 
 (provide 'emacsvox-gomoku)
 ;;;  end of file 
-
