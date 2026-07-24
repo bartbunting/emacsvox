@@ -44,7 +44,7 @@ Newsticker, Calc, Gomoku, Package, EUDC, Texinfo, Desktop, Flymake, SES, Tempo,
 WoMan, Eglot, Enriched, GUD, Perl, Todo Mode, Treesit, and Entertainment on
 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 809 passing ERT tests;
+- the Emacs 31 suite contains 860 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -270,13 +270,13 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         238 |    79 |
-| =ad-get-arg=        |          23 |   n/a |
-| =ad-set-arg=        |           2 |   n/a |
-| =ad-do-it=          |          22 |   n/a |
+| =defadvice=         |         210 |    69 |
+| =ad-get-arg=        |          21 |   n/a |
+| =ad-set-arg=        |           3 |   n/a |
+| =ad-do-it=          |          21 |   n/a |
 | =ad-return-value=   |          13 |   n/a |
-| =advice-add=        |        1189 |   158 |
-| =ems-interactive-p= |        1180 |   176 |
+| =advice-add=        |        1122 |   160 |
+| =ems-interactive-p= |        1178 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -306,8 +306,8 @@ integration-module count.
 
 ** Remaining third-party inventory
 
-As of 2026-07-24, 92 third-party integrations remain: 80 legacy-or-positional
-modules and 12 helper-cleanup modules.
+As of 2026-07-24, 76 third-party integrations remain: 70 legacy-or-positional
+modules and 6 helper-cleanup modules.
 
 The legacy-or-positional modules are:
 
@@ -315,19 +315,16 @@ The legacy-or-positional modules are:
 =calibredb=, =chess=, =cider=, =clojure=, =combobulate=, =consult=, =corfu=,
 =deadgrep=, =devdocs=, =dumb-jump=, =eat=, =ebuku=, =ein=, =elfeed=,
 =elisp-refs=, =ellama=, =elpher=, =elpy=, =emms=, =empv=, =enwc=, =ess=,
-=evil=, =exwm=, =ffip=, =flycheck=, =folding=, =forge=, =geiser=,
-=gh-explorer=, =go-mode=, =google=, =haskell=, =helpful=, =hide-lines=,
-=iedit=, =ivy=, =journalctl=, =js2=, =lispy=, =magit=, =markdown=, =mines=,
+=evil=, =exwm=, =ffip=, =forge=, =geiser=, =go-mode=, =google=, =haskell=,
+=helpful=, =hide-lines=, =iedit=, =journalctl=, =js2=, =lispy=, =mines=,
 =mu4e=, =multiple-cursors=, =muse=, =notmuch=, =nov=, =orgalist=, =paradox=,
-=pipewire=, =popup=, =projectile=, =py=, =racket=, =related=, =rg=,
-=rpm-spec=, =rust-mode=, =sage=, =sdcv=, =slime=, =smartparens=, =sudoku=,
-=syslog=, =threes=, =typo=, =vdiff=, =vertico=, =vterm=, =we=, =xkcd=, and
-=yasnippet=.
+=pipewire=, =popup=, =projectile=, =racket=, =related=, =rg=, =rpm-spec=,
+=sage=, =sdcv=, =slime=, =smartparens=, =sudoku=, =threes=, =typo=, =vdiff=,
+=vertico=, =vterm=, =we=, and =xkcd=.
 
 The helper-cleanup modules are:
 
-=browse-kill-ring=, =company=, =denote=, =embark=, =gnuplot=, =gptel=, =helm=,
-=hydra=, =marginalia=, =maths=, =pydoc=, and =yaml=.
+=denote=, =embark=, =gnuplot=, =gptel=, =marginalia=, and =maths=.
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
