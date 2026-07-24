@@ -112,4 +112,4 @@ To add package support:
 
 Emacsvox intentionally provides no compatibility layer for the removed
 `emacspeak-*`, generic `dtk-*`, `EMACSPEAK_DIR`, `EMACSPEAK_PLAY`, or
-`DTK_PROGRAM` interfaces.
+generic DTK environment interfaces.
