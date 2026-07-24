@@ -146,6 +146,7 @@
   (require 'emacsvox-desktop-tests)
   (require 'emacsvox-ses-tests)
   (require 'emacsvox-tempo-tests)
+  (require 'emacsvox-woman-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
