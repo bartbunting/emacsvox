@@ -36,9 +36,10 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-RST, RefTeX, BS, BibTeX, and Bookmark on 2026-07-24 on branch =bart=:
+Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris, CPerl, IDO,
+and CMU Scheme on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 559 passing ERT tests;
+- the Emacs 31 suite contains 611 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -100,18 +101,48 @@ RST, RefTeX, BS, BibTeX, and Bookmark on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-bookmark.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-message.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-calculator.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-buff-menu.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
+- =lisp/emacsvox-rmail.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-custom.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-ediff.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-tetris.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-cperl.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-ido.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-cmuscheme.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         269 |    96 |
-| =ad-get-arg=        |          50 |   n/a |
+| =defadvice=         |         268 |    95 |
+| =ad-get-arg=        |          41 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
 | =ad-do-it=          |          31 |   n/a |
-| =ad-return-value=   |          21 |   n/a |
-| =advice-add=        |        1302 |   157 |
-| =ems-interactive-p= |        1340 |   176 |
+| =ad-return-value=   |          19 |   n/a |
+| =advice-add=        |        1173 |   157 |
+| =ems-interactive-p= |        1210 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -132,13 +163,13 @@ The previous checkpoint used "converted" for some modules at the
 native-advice-installed stage.  Those modules remain in this inventory until
 they satisfy the final-form gate.
 
-As of 2026-07-24, 52 Emacs-bundled integration modules remain: 26 legacy or
-positional modules and 26 helper-cleanup modules.
+As of 2026-07-24, 42 Emacs-bundled integration modules remain: 19 legacy or
+positional modules and 23 helper-cleanup modules.
 
 | State                | Modules |
 |----------------------+---------|
-| legacy or positional | =buff-menu=, =cmuscheme=, =cperl=, =custom=, =ediff=, =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =message=, =newsticker=, =nxml=, =perl=, =python=, =ruby=, =sh-script=, =speedbar=, =supercite=, =tetris=, =todo-mode=, =transient=, =treesit= |
-| helper cleanup       | =arc=, =calc=, =calculator=, =desktop=, =dictionary=, =dired=, =eudc=, =flymake=, =hideshow=, =ido=, =info=, =kmacro=, =make-mode=, =man=, =package=, =re-builder=, =rmail=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tar=, =tcl=, =tempo=, =texinfo=, =woman= |
+| legacy or positional | =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =newsticker=, =nxml=, =perl=, =python=, =ruby=, =sh-script=, =speedbar=, =supercite=, =todo-mode=, =transient=, =treesit= |
+| helper cleanup       | =arc=, =calc=, =desktop=, =dictionary=, =dired=, =eudc=, =flymake=, =hideshow=, =info=, =kmacro=, =make-mode=, =man=, =package=, =re-builder=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tar=, =tcl=, =tempo=, =texinfo=, =woman= |
 
 =emacsvox-entertain.el= is tracked separately because it combines built-in
 Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
@@ -165,13 +196,13 @@ View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
 integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, Eshell, and Which-Key are
 also converted, along with Eterm, Ispell, Widget, RST, RefTeX, BS, BibTeX, and
-Bookmark.
+Bookmark.  Message, Calculator, Buffer Menu, Rmail, Customize, Ediff, Tetris,
+CPerl, IDO, and CMU Scheme are now also fully final-form.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge; modules in the inventory above still require final-form
-work.  Repository-wide, 40 files still contain positional bridge compatibility
-symbols.
+work.  Repository-wide, 34 files still contain bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
 evaluation can speak the result without changing the value returned to callers.
@@ -373,6 +404,55 @@ obsolete alias.  Removed bookmark-name insertion commands and the removed
 Bookmark-specific quit command are omitted instead of advising noninteractive
 or global replacements, and the duplicated annotation-edit definition is
 collapsed to one registration.
+
+The Message conversion covers 24 current Emacs 31 message-composition targets.
+Sending, field movement, body movement, and formatting feedback now uses direct
+named registration and explicit interactive targets.
+
+The Calculator conversion covers its 21 current registrations.  Native around
+wrappers for launch, insertion, selection, and backspace now invoke their
+original operation exactly once and preserve its result.  The remaining
+post-command feedback uses distinct direct registrations where a target has
+more than one advice.
+
+The Buffer Menu conversion expresses =list-buffers= result handling as
+=:filter-return= advice, uses native arguments for modified-state feedback, and
+scopes global =quit-window= feedback to Buffer Menu mode.  The removed
+=Buffer-menu-quit= command remains unadvised.
+
+The Rmail conversion makes message navigation, deletion, output, summary, and
+label feedback target-aware.  Labeled movement wrappers now call the original
+operation exactly once on both successful and unsuccessful searches and remain
+quiet for programmatic calls.
+
+The Customize conversion uses current Emacs 31 Custom APIs and omits the dead
+=custom-set= target.  Saving calls the original once, and a stable native advice
+identity lets the module-specific Customize feedback replace the generic core
+advice without producing duplicate cues.
+
+The Ediff conversion replaces removed vertical scrolling targets with the
+current =ediff-scroll-vertically= API and derives direction from the command
+event.  Session, navigation, copy, and refinement feedback is now directly
+registered and target-aware.
+
+The Tetris conversion preserves the reference-defined score display override
+and models full-row transformation as =:filter-return=.  It uses the current
+tick-period API, removes a dead variable assignment, and ensures programmatic
+launches call the original game exactly once.
+
+The CPerl conversion moves editing, navigation, indentation, and mode feedback
+to direct named advice with native arguments.  Backspace and linefeed wrappers
+now call their original command exactly once.
+
+The IDO conversion removes its remaining bridge-era helpers and implicit
+interactive checks.  Directory and candidate-exhibit feedback retains its
+intentional unconditional behaviour, while command feedback identifies its
+interactive target explicitly.
+
+The CMU Scheme conversion covers all 12 current Emacs 31 targets.  Launch,
+region, and file operations receive their native command, bounds, and file-name
+arguments directly; switching and evaluation feedback uses direct target-aware
+registration.
 
 Continue by migrating remaining built-in integration modules before optional
 third-party integrations.  The compatibility bridge remains necessary until
