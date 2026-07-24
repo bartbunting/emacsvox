@@ -129,6 +129,7 @@
   (require 'emacsvox-hideshow-tests)
   (require 'emacsvox-nxml-tests)
   (require 'emacsvox-epa-tests)
+  (require 'emacsvox-ruby-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

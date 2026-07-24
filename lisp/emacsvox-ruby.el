@@ -46,82 +46,100 @@
 ;;  required modules 
 
 (require 'emacsvox-preamble)
+(require 'ruby-mode)
 
 ;;;  Advice navigation:
 
-(cl-loop for command   in
-         '(
-           ruby-mark-defun
-           ruby-beginning-of-defun 
-           ruby-end-of-defun 
-           ruby-beginning-of-block 
-           ruby-end-of-block 
-           ruby-forward-sexp
-           ruby-backward-sexp
-           )
-         do
-         (eval
-          `(defadvice ,command (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-line)
-               (emacsvox-icon 'paragraph)))))
+(defmacro emacsvox-ruby--define-after-advice
+    (targets docstring &rest body)
+  "Define native after advice for TARGETS using DOCSTRING and BODY."
+  (declare (indent 2) (debug (sexp stringp body)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,docstring
+                 (when (ems-interactive-p ',target)
+                   ,@body))
+               (when (fboundp ',target)
+                 (advice-add ',target :after #',function)))))
+        targets)))
+
+(emacsvox-ruby--define-after-advice
+    (ruby-beginning-of-defun
+     ruby-end-of-defun
+     ruby-beginning-of-block
+     ruby-end-of-block
+     ruby-forward-sexp
+     ruby-backward-sexp)
+    "Speak the Ruby navigation destination."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'paragraph))
 
 ;;;  Advice insertion and electric:
 
-(defun ems--ruby-insert-end-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object)
-    (save-excursion (ruby-beginning-of-block) (emacsvox-speak-line))))
+(defun emacsvox--advice-ruby-indent-line-after (&rest _)
+  "Speak an interactively indented Ruby line."
+  (when (ems-interactive-p 'ruby-indent-line)
+    (emacsvox-speak-line)))
 
-(advice-add 'ruby-insert-end :after #'ems--ruby-insert-end-after)
+(advice-add 'ruby-indent-line :after
+            #'emacsvox--advice-ruby-indent-line-after)
 
-(defun ems--ruby-reindent-then-newline-and-indent-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'ruby-reindent-then-newline-and-indent :after
-            #'ems--ruby-reindent-then-newline-and-indent-after)
-
-(defun ems--ruby-indent-line-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
-
-(advice-add 'ruby-indent-line :after #'ems--ruby-indent-line-after)
-
-(defun ems--ruby-indent-exp-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-ruby-indent-exp-after (&rest _)
+  "Speak an interactively indented Ruby expression."
+  (when (ems-interactive-p 'ruby-indent-exp)
     (emacsvox-speak-line) (emacsvox-icon 'fill-object)))
 
-(advice-add 'ruby-indent-exp :after #'ems--ruby-indent-exp-after)
-
-(unless (and (boundp 'post-self-insert-hook)
-             post-self-insert-hook
-             (memq 'emacsvox-post-self-insert-hook post-self-insert-hook))
-  (defadvice ruby-electric-brace (after emacsvox pre act comp)
-    "Speak what you inserted.
-Cue electric insertion with a tone."
-    (when (ems-interactive-p)
-      (let ((emacsvox-speak-messages nil))
-        (emacsvox-speak-this-char last-input-event)
-        (dtk-tone 800 100 t)))))
+(advice-add 'ruby-indent-exp :after
+            #'emacsvox--advice-ruby-indent-exp-after)
 
 ;;;  Advice inferior ruby:
-(cl-loop for command in
-         '(
-           ruby-run
-           switch-to-ruby
-           ruby-send-region-and-go
-           ruby-send-block-and-go
-           ruby-send-definition-and-go
-           )
-         do
-         (eval
-          `(defadvice ,command (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'select-object)
-               (emacsvox-speak-line)))))
+
+;; Inferior Ruby is supplied by the external inf-ruby package.  Do not create
+;; placeholder functions when it is absent; install its advice if it is loaded.
+(defconst emacsvox-ruby--inferior-targets
+  '(ruby-run
+    switch-to-ruby
+    ruby-send-region-and-go
+    ruby-send-block-and-go
+    ruby-send-definition-and-go)
+  "Commands supplied by the optional inf-ruby package.")
+
+(defmacro emacsvox-ruby--define-inferior-feedback (targets)
+  "Define feedback functions for the inf-ruby commands in TARGETS."
+  (declare (indent 1) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(defun ,function (&rest _)
+               "Announce the inferior Ruby destination."
+               (when (ems-interactive-p ',target)
+                 (emacsvox-icon 'select-object)
+                 (emacsvox-speak-line)))))
+        targets)))
+
+(emacsvox-ruby--define-inferior-feedback
+    (ruby-run
+     switch-to-ruby
+     ruby-send-region-and-go
+     ruby-send-block-and-go
+     ruby-send-definition-and-go))
+
+(defun emacsvox-ruby--install-inferior-advice ()
+  "Attach speech feedback to available inf-ruby commands."
+  (dolist (target emacsvox-ruby--inferior-targets)
+    (when (fboundp target)
+      (advice-add
+       target :after
+       (intern (format "emacsvox--advice-%s-after" target))))))
+
+(with-eval-after-load 'inf-ruby
+  (emacsvox-ruby--install-inferior-advice))
 
 (provide  'emacsvox-ruby)
-
