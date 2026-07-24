@@ -326,7 +326,7 @@
   (with-temp-buffer
     (insert "foo")
     (goto-char (point-min))
-    (let ((dtk-stop-immediately nil)
+    (let ((tts-stop-immediately nil)
           (calls 0)
           events)
       (cl-letf (((symbol-function 'emacsvox-kill-buffer-carefully)
@@ -342,7 +342,7 @@
            (lambda (&rest arguments)
              (cl-incf calls)
              (push
-              (list 'original arguments dtk-stop-immediately)
+              (list 'original arguments tts-stop-immediately)
               events)
              (goto-char (point-max))
              'semantic-result)
@@ -355,7 +355,7 @@
         '((kill-buffer "*Completions*")
           (original (argument) t)
           speak-rest)))
-      (should-not dtk-stop-immediately))))
+      (should-not tts-stop-immediately))))
 
 (ert-deftest emacsvox-dabbrev-advice-preserves-feedback-order ()
   "Interactive dabbrev feedback waits for output before speaking expansion."

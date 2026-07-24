@@ -82,7 +82,7 @@ DOCSTRING and BODY define the feedback function for each command."
 (defun emacsvox-compilation-speak-error ()
   "Speech feedback about the compilation error. "
   (interactive)
-  (let ((dtk-stop-immediately nil)
+  (let ((tts-stop-immediately nil)
         (emacsvox-show-point t))
     (emacsvox-speak-line)))
 

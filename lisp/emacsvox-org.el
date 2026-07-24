@@ -244,7 +244,7 @@
         ((org-at-table-p 'any)
          (funcall emacsvox-org-table-after-movement-function))
         (t
-         (let ((dtk-stop-immediately nil))
+         (let ((tts-stop-immediately nil))
            (when (ems-interactive-p ',target)
              (emacsvox-speak-line))))))
      (advice-add
@@ -343,7 +343,7 @@
 (defun emacsvox--advice-org-complete-around (original &rest arguments)
   "Call legacy Org completion once, then speak its result."
   (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
-        (dtk-stop-immediately t))
+        (tts-stop-immediately t))
     (let ((result (apply original arguments)))
       (if (> (point) prior)
           (tts-with-punctuations

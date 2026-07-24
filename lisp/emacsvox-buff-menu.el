@@ -76,7 +76,7 @@
   (let((buffer (Buffer-menu-buffer t)))
     (cond
      ((get-buffer buffer)
-      (when dtk-stop-immediately (tts-stop))
+      (when tts-stop-immediately (tts-stop))
       (let ((name (buffer-name buffer))
             (file (buffer-file-name buffer))
             this-buffer-read-only
@@ -84,7 +84,7 @@
             this-buffer-size
             this-buffer-mode-name
             this-buffer-directory
-            (dtk-stop-immediately nil))
+            (tts-stop-immediately nil))
         (save-current-buffer
           (set-buffer buffer)
           (setq this-buffer-read-only buffer-read-only)

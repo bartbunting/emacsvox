@@ -365,7 +365,7 @@
     (orig-fun process output)
   "Make comint in Python speak its output. "
   (let ((prior (point))
-        (dtk-stop-immediately nil)
+        (tts-stop-immediately nil)
         (result (funcall orig-fun process output)))
       (when
           (and emacsvox-comint-autospeak

@@ -157,7 +157,7 @@
                (defun ,function (&rest _)
                  "Announce an interactive move around the Solitaire board."
                  (when (ems-interactive-p ',target)
-                   (let ((dtk-stop-immediately nil))
+                   (let ((tts-stop-immediately nil))
                      (emacsvox-icon 'select-object)
                      (when emacsvox-solitaire-autoshow
                        (,show-function))

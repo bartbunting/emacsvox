@@ -82,8 +82,6 @@
   "Canonical name for buffer-local capitalization feedback.")
 (defvaralias 'tts-speech-rate 'dtk-speech-rate
   "Canonical name for the current buffer-local speech rate.")
-(defvaralias 'tts-stop-immediately 'dtk-stop-immediately
-  "Canonical name for immediate speech interruption state.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
 (defvaralias 'tts-chunk-separator-syntax 'dtk-chunk-separator-syntax
@@ -1093,7 +1091,7 @@ Interactive PREFIX arg makes the new setting global."
 
 ;;;   Internal variables:
 
-(defvar dtk-stop-immediately t
+(defvar tts-stop-immediately t
   "If t, speech stopped immediately when new speech received.
 Emacsvox sets this to nil if the current message being spoken is too
 important to be interrupted.")
@@ -1632,7 +1630,7 @@ unless   `dtk-quiet' is set to t. "
       (or dtk-quiet (not (process-live-p tts-speaker-process))
           (null text) (zerop (length text)))
     ;; flush previous speech if asked to
-    (when dtk-stop-immediately
+    (when tts-stop-immediately
       (when (process-live-p tts-notify-process) (tts-notify-stop))
       (tts-stop))
     (when selective-display

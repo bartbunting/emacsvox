@@ -109,7 +109,7 @@ many available corrections."
     (target original arguments)
   "Call ORIGINAL with ARGUMENTS and announce interactive TARGET completion."
   (if (ems-interactive-p target)
-      (let ((dtk-stop-immediately t))
+      (let ((tts-stop-immediately t))
         (let ((result
                (ems-with-messages-silenced
                  (apply original arguments))))
@@ -130,7 +130,7 @@ many available corrections."
 
 (defun emacsvox--advice-ispell-help-before (&rest _)
   "Speak the help message. "
-  (let ((dtk-stop-immediately nil))
+  (let ((tts-stop-immediately nil))
     (tts-speak (documentation 'ispell-help))))
 
 (advice-add
@@ -160,7 +160,7 @@ many available corrections."
 (defun emacsvox--advice-ispell-word-around (original &rest arguments)
   "Produce auditory icons for ispell."
   (if (ems-interactive-p 'ispell-word)
-      (let ((dtk-stop-immediately t))
+      (let ((tts-stop-immediately t))
         (setq emacsvox-last-message nil)
         (let ((result
                (ems-with-messages-silenced

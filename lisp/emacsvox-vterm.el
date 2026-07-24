@@ -224,7 +224,7 @@
         (emacsvox-speak-word)))
      (t
       (if emacsvox-comint-autospeak
-          (let ((dtk-stop-immediately nil))
+          (let ((tts-stop-immediately nil))
             (tts-speak
              (string-trim
               (ansi-color-filter-apply

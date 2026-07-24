@@ -132,7 +132,7 @@
   (when (ems-interactive-p '*table--cell-newline)
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
-          (t (if dtk-stop-immediately (tts-stop))
+          (t (if tts-stop-immediately (tts-stop))
              (tts-tone 225 120 'force)))))
 
 (advice-add

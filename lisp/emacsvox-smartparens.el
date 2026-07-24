@@ -101,8 +101,8 @@
 (defun emacsvox--advice-sp-backward-kill-word-before (&rest _)
   "Speak word before killing it."
   (when (ems-interactive-p 'sp-backward-kill-word)
-    (when dtk-stop-immediately (tts-stop 'all))
-    (let ((start (point)) (dtk-stop-immediately nil))
+    (when tts-stop-immediately (tts-stop 'all))
+    (let ((start (point)) (tts-stop-immediately nil))
       (save-excursion
         (forward-word -1) (emacsvox-icon 'delete-object)
         (emacsvox-speak-region (point) start)))))

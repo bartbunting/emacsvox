@@ -1078,7 +1078,7 @@ Use emacsvox-eterm-toggle-pointer-mode bound to
          (emacsvox-eterm-column (term-current-column))
          (current-char (preceding-char)) (new-row nil)
          (new-column nil) (old-point (point))
-         (dtk-stop-immediately (not eterm-line-mode))
+         (tts-stop-immediately (not eterm-line-mode))
          (inhibit-read-only t))
       (let ((result (funcall original proc str)))
         (setq new-row (term-current-row) new-column
@@ -1103,7 +1103,7 @@ Use emacsvox-eterm-toggle-pointer-mode bound to
                     emacsvox-eterm-filter-window))))
             nil)
            ((and eterm-line-mode emacsvox-eterm-autospeak)
-            (setq dtk-stop-immediately nil)
+            (setq tts-stop-immediately nil)
             (condition-case nil
                 (emacsvox-speak-region (1- old-point) (1- (point)))
               (error nil)))

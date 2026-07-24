@@ -193,7 +193,7 @@
      (concat
       "Difference ai "
       (emacsvox-overlay-get-text a-overlay)))
-    (let ((dtk-stop-immediately nil))
+    (let ((tts-stop-immediately nil))
       (sit-for 2)
       (setq key
             (read-key-sequence "Press any key to continue")))

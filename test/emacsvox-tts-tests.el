@@ -310,25 +310,25 @@
 (ert-deftest emacsvox-tts-canonical-state-aliases-share-storage ()
   "Canonical and legacy global state names address the same values."
   (let ((dtk-program "legacy")
-        (dtk-stop-immediately t)
         (tts-speaker-process 'primary)
         (dtk-character-to-speech-table ["legacy"]))
     (should (equal tts-program "legacy"))
-    (should tts-stop-immediately)
     (should (eq tts-speaker-process 'primary))
     (should (equal tts-character-to-speech-table ["legacy"]))
     (setq tts-program "canonical"
-          tts-stop-immediately nil
           tts-speaker-process 'replacement
           tts-character-to-speech-table ["canonical"])
     (should (equal dtk-program "canonical"))
-    (should-not dtk-stop-immediately)
     (should (eq tts-speaker-process 'replacement))
     (should (equal dtk-character-to-speech-table ["canonical"]))))
 
 (ert-deftest emacsvox-tts-legacy-speaker-process-state-is-removed ()
   "The primary speech process no longer exposes its DECtalk-era state name."
   (should-not (boundp 'dtk-speaker-process)))
+
+(ert-deftest emacsvox-tts-legacy-immediate-stop-state-is-removed ()
+  "Immediate-stop state no longer exposes its DECtalk-era variable name."
+  (should-not (boundp 'dtk-stop-immediately)))
 
 (ert-deftest emacsvox-tts-auditory-icons-use-canonical-process ()
   "Queued and served icons write through the canonical TTS process."
