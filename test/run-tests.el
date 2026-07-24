@@ -227,6 +227,7 @@
   (require 'emacsvox-racket-tests)
   (require 'emacsvox-related-tests)
   (require 'emacsvox-rg-tests)
+  (require 'emacsvox-rpm-spec-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
