@@ -45,6 +45,7 @@
 
 ;;; Code:
 (require 'emacsvox-preamble)
+(require 'kmacro)
 
 ;;;  bind keys 
 
@@ -53,79 +54,85 @@
 
 ;;;  Advice interactive commands
 
-(defun ems--kmacro-start-macro-before (&rest _)
+(defun emacsvox--advice-kmacro-start-macro-before (&rest _)
   "Provide auditory icon."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kmacro-start-macro)
     (emacsvox-icon 'open-object) (message "Defining new kbd macro.")))
 
 (advice-add 'kmacro-start-macro :before
-            #'ems--kmacro-start-macro-before)
+            #'emacsvox--advice-kmacro-start-macro-before)
 
-(defun ems--kmacro-start-macro-or-insert-counter-before (&rest _)
+(defun emacsvox--advice-kmacro-start-macro-or-insert-counter-before
+    (&rest _)
   "Provide auditory icon if new macro is being defined."
   (when
-      (and (ems-interactive-p) (not defining-kbd-macro)
-           (not executing-kbd-macro))
+      (and
+       (ems-interactive-p 'kmacro-start-macro-or-insert-counter)
+       (not defining-kbd-macro)
+       (not executing-kbd-macro))
     (emacsvox-icon 'yank-object) (message "Defining new kbd macro.")))
 
 (advice-add 'kmacro-start-macro-or-insert-counter :before
-            #'ems--kmacro-start-macro-or-insert-counter-before)
+            #'emacsvox--advice-kmacro-start-macro-or-insert-counter-before)
 
-(defun ems--kmacro-end-or-call-macro-before (&rest _)
+(defun emacsvox--advice-kmacro-end-or-call-macro-before (&rest _)
   "speak about we are about to do."
   (cond
-   ((and (ems-interactive-p) defining-kbd-macro)
+   ((and
+     (ems-interactive-p 'kmacro-end-or-call-macro)
+     defining-kbd-macro)
     (emacsvox-icon 'close-object)
     (message "Finished defining kbd macro."))
    (t (emacsvox-icon 'open-object) (message "Calling macro."))))
 
 (advice-add 'kmacro-end-or-call-macro :before
-            #'ems--kmacro-end-or-call-macro-before)
+            #'emacsvox--advice-kmacro-end-or-call-macro-before)
 
-(defun ems--kmacro-end-or-call-macro-repeat-before (&rest _)
+(defun emacsvox--advice-kmacro-end-or-call-macro-repeat-before
+    (&rest _)
   "speak about we are about to do."
   (cond
-   ((and (ems-interactive-p) defining-kbd-macro)
+   ((and
+     (ems-interactive-p 'kmacro-end-or-call-macro-repeat)
+     defining-kbd-macro)
     (message "Finished defining kbd macro."))
    (t (emacsvox-icon 'select-object) (message "Calling macro."))))
 
 (advice-add 'kmacro-end-or-call-macro-repeat :before
-            #'ems--kmacro-end-or-call-macro-repeat-before)
+            #'emacsvox--advice-kmacro-end-or-call-macro-repeat-before)
 
-(defun ems--kmacro-edit-macro-repeat-after (&rest _)
+(defun emacsvox--advice-kmacro-edit-macro-repeat-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kmacro-edit-macro-repeat)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
 (advice-add 'kmacro-edit-macro-repeat :after
-            #'ems--kmacro-edit-macro-repeat-after)
+            #'emacsvox--advice-kmacro-edit-macro-repeat-after)
 
-(defun ems--kmacro-call-ring-2nd-repeat-before (&rest _)
+(defun emacsvox--advice-kmacro-call-ring-2nd-repeat-before (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'kmacro-call-ring-2nd-repeat)
     (message "Calling  second macro from ring.")))
 
 (advice-add 'kmacro-call-ring-2nd-repeat :before
-            #'ems--kmacro-call-ring-2nd-repeat-before)
+            #'emacsvox--advice-kmacro-call-ring-2nd-repeat-before)
 
-(defun ems--kmacro-call-macro-around (orig-fun &rest args)
+(defun emacsvox--advice-kmacro-call-macro-around (orig-fun &rest args)
   "Speech-enabled by emacsvox."
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages nil))
-      (apply orig-fun args) result)
-    result))
+  (let ((emacsvox-speak-messages nil))
+    (apply orig-fun args)))
 
-(advice-add 'kmacro-call-macro :around #'ems--kmacro-call-macro-around)
+(advice-add 'kmacro-call-macro :around
+            #'emacsvox--advice-kmacro-call-macro-around)
 
-(defun ems--call-last-kbd-macro-around (orig-fun &rest args)
+(defun emacsvox--advice-kmacro-call-last-kbd-macro-around
+    (orig-fun &rest args)
   "Speech-enabled by emacsvox."
-  (let ((result (apply orig-fun args)))
-    (let ((emacsvox-speak-messages t)) (apply orig-fun args) result)
-    result))
+  (let ((emacsvox-speak-messages t))
+    (apply orig-fun args)))
 
 (advice-add 'call-last-kbd-macro :around
-            #'ems--call-last-kbd-macro-around)
+            #'emacsvox--advice-kmacro-call-last-kbd-macro-around)
 
 (provide 'emacsvox-kmacro)
 ;;;  end of file
-

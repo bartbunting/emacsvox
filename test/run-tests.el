@@ -125,6 +125,7 @@
   (require 'emacsvox-tar-tests)
   (require 'emacsvox-sh-script-tests)
   (require 'emacsvox-re-builder-tests)
+  (require 'emacsvox-kmacro-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
