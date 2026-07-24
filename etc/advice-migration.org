@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Ispell and Widget on 2026-07-24 on branch =bart=:
+RST, RefTeX, BS, BibTeX, and Bookmark on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 534 passing ERT tests;
+- the Emacs 31 suite contains 559 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -85,18 +85,33 @@ Ispell and Widget on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-widget.el= contains no =defadvice=, positional compatibility
   accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
   checks.
+- =lisp/emacsvox-rst.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-reftex.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-bs.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-bibtex.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
+- =lisp/emacsvox-bookmark.el= contains no =defadvice=, positional
+  compatibility accessors, bridge-era =ems--= advice helpers, or implicit
+  interactive-target checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         275 |    97 |
-| =ad-get-arg=        |          52 |   n/a |
+| =defadvice=         |         269 |    96 |
+| =ad-get-arg=        |          50 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
 | =ad-do-it=          |          31 |   n/a |
 | =ad-return-value=   |          21 |   n/a |
-| =advice-add=        |        1351 |   157 |
-| =ems-interactive-p= |        1395 |   176 |
+| =advice-add=        |        1302 |   157 |
+| =ems-interactive-p= |        1340 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -117,13 +132,13 @@ The previous checkpoint used "converted" for some modules at the
 native-advice-installed stage.  Those modules remain in this inventory until
 they satisfy the final-form gate.
 
-As of 2026-07-24, 57 Emacs-bundled integration modules remain: 28 legacy or
-positional modules and 29 helper-cleanup modules.
+As of 2026-07-24, 52 Emacs-bundled integration modules remain: 26 legacy or
+positional modules and 26 helper-cleanup modules.
 
 | State                | Modules |
 |----------------------+---------|
-| legacy or positional | =buff-menu=, =cmuscheme=, =cperl=, =custom=, =ediff=, =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =message=, =newsticker=, =nxml=, =perl=, =python=, =reftex=, =rst=, =ruby=, =sh-script=, =speedbar=, =supercite=, =tetris=, =todo-mode=, =transient=, =treesit= |
-| helper cleanup       | =arc=, =bibtex=, =bookmark=, =bs=, =calc=, =calculator=, =desktop=, =dictionary=, =dired=, =eudc=, =flymake=, =hideshow=, =ido=, =info=, =kmacro=, =make-mode=, =man=, =package=, =re-builder=, =rmail=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tar=, =tcl=, =tempo=, =texinfo=, =woman= |
+| legacy or positional | =buff-menu=, =cmuscheme=, =cperl=, =custom=, =ediff=, =eglot=, =enriched=, =epa=, =erc=, =flyspell=, =gomoku=, =gud=, =lua=, =message=, =newsticker=, =nxml=, =perl=, =python=, =ruby=, =sh-script=, =speedbar=, =supercite=, =tetris=, =todo-mode=, =transient=, =treesit= |
+| helper cleanup       | =arc=, =calc=, =calculator=, =desktop=, =dictionary=, =dired=, =eudc=, =flymake=, =hideshow=, =ido=, =info=, =kmacro=, =make-mode=, =man=, =package=, =re-builder=, =rmail=, =ses=, =sgml-mode=, =solitaire=, =sql=, =tar=, =tcl=, =tempo=, =texinfo=, =woman= |
 
 =emacsvox-entertain.el= is tracked separately because it combines built-in
 Doctor and Dunnet support with optional Hangman support.  Emacsvox core files
@@ -149,12 +164,13 @@ Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
 integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, Eshell, and Which-Key are
-also converted, along with Eterm, Ispell, and Widget.
+also converted, along with Eterm, Ispell, Widget, RST, RefTeX, BS, BibTeX, and
+Bookmark.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge; modules in the inventory above still require final-form
-work.  Repository-wide, 41 files still contain positional bridge compatibility
+work.  Repository-wide, 40 files still contain positional bridge compatibility
 symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -330,6 +346,33 @@ retains its reference-defined replacement semantics.  Text conversion
 preserves the widget returned by the original operation.  Widget setup now
 repairs the actual field and text keymaps rather than iterating over quoted
 keymap variable names, restoring the intended bindings.
+
+The RST conversion covers 29 current Emacs 31 targets and omits the removed
+=rst-promote-region= command.  Navigation, compilation, TOC, marking, list, and
+paragraph feedback now uses direct named registration and explicit interactive
+targets.
+
+The RefTeX conversion covers 26 current Emacs 31 targets and omits the removed
+=reftex-index-toggle-labels= and =reftex-index-toggle-file-boundary= commands.
+Highlight feedback receives the native =begin= and =end= arguments rather than
+reading positional bridge state.
+
+The BS conversion covers all 23 current Emacs 31 targets.  Mode setup retains
+its reference-defined unconditional voice-lock behaviour, while selection,
+marking, deletion, navigation, and cycling feedback uses direct target-aware
+advice.
+
+The BibTeX conversion covers 22 current Emacs 31 targets.  It moves feedback to
+the current entry-navigation, OPT/ALT removal, field-killing, =bibtex-String=,
+and =bibtex-Preamble= APIs, and collapses the duplicated
+=bibtex-InProceedings= definition to one registration.
+
+The Bookmark conversion covers 18 current Emacs 31 targets.  Annotation
+confirmation now follows =bookmark-edit-annotation-confirm= rather than its
+obsolete alias.  Removed bookmark-name insertion commands and the removed
+Bookmark-specific quit command are omitted instead of advising noninteractive
+or global replacements, and the duplicated annotation-edit definition is
+collapsed to one registration.
 
 Continue by migrating remaining built-in integration modules before optional
 third-party integrations.  The compatibility bridge remains necessary until
