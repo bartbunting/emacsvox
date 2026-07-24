@@ -11,8 +11,7 @@
 (require 'emacsvox-advice)
 
 (defconst emacsvox-test--customize-direct-advice
-  '((customize :after emacsvox--advice-customize-after)
-    (customize-save-variable :around
+  '((customize-save-variable :around
      emacsvox--advice-customize-save-variable-around))
   "Customize functions using individually named native advice.")
 
@@ -24,7 +23,13 @@
       (should (advice-member-p function target))
       (should-not
        (gethash
-        (list target where function) ems--modern-advice-wrappers)))))
+        (list target where function) ems--modern-advice-wrappers))))
+  (should
+   (advice-member-p
+    (if (featurep 'emacsvox-custom)
+        #'emacsvox-custom--advice-customize-after
+      #'emacsvox--advice-customize-after)
+    'customize)))
 
 (ert-deftest emacsvox-customize-feedback-is-target-aware ()
   "Only an interactive Customize command produces status feedback."
