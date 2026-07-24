@@ -57,49 +57,62 @@
   yaml-narrow-to-block-literal
   )
 
-(defun ems--yaml-indent-line-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-yaml-indent-line-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'yaml-indent-line)
+    (emacsvox-speak-line)))
 
-(advice-add 'yaml-indent-line :after #'ems--yaml-indent-line-after)
-
-(defun ems--yaml-mode-after (&rest _)
+(defun emacsvox--advice-yaml-mode-after (&rest _)
   "speak."
   (unless emacsvox-audio-indentation
     (emacsvox-toggle-audio-indentation)))
 
-(advice-add 'yaml-mode :after #'ems--yaml-mode-after)
+(defun emacsvox--advice-yaml-fill-paragraph-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'yaml-fill-paragraph)
+    (emacsvox-icon 'fill-object)))
 
-(defun ems--yaml-fill-paragraph-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'fill-object)))
-
-(advice-add 'yaml-fill-paragraph :after
-            #'ems--yaml-fill-paragraph-after)
-
-(defun ems--yaml-electric-backspace-around (orig-fun &rest args)
+(defun emacsvox--advice-yaml-electric-backspace-around (orig-fun &rest args)
   "speak."
   (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone-deletion)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
+    (when (ems-interactive-p 'yaml-electric-backspace)
+      (dtk-tone-deletion)
+      (emacsvox-speak-this-char (preceding-char)))
     result))
 
-(advice-add 'yaml-electric-backspace :around
-            #'ems--yaml-electric-backspace-around)
+(defun emacsvox--advice-yaml-electric-bar-and-angle-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'yaml-electric-bar-and-angle)
+    (emacsvox-speak-line)))
 
-(defun ems--yaml-electric-bar-and-angle-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-yaml-electric-dash-and-dot-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'yaml-electric-dash-and-dot)
+    (emacsvox-speak-line)))
 
-(advice-add 'yaml-electric-bar-and-angle :after
-            #'ems--yaml-electric-bar-and-angle-after)
+(defconst emacsvox-yaml--advice
+  '((yaml-indent-line :after emacsvox--advice-yaml-indent-line-after)
+    (yaml-mode :after emacsvox--advice-yaml-mode-after)
+    (yaml-fill-paragraph :after
+     emacsvox--advice-yaml-fill-paragraph-after)
+    (yaml-electric-backspace :around
+     emacsvox--advice-yaml-electric-backspace-around)
+    (yaml-electric-bar-and-angle :after
+     emacsvox--advice-yaml-electric-bar-and-angle-after)
+    (yaml-electric-dash-and-dot :after
+     emacsvox--advice-yaml-electric-dash-and-dot-after))
+  "Current YAML Mode targets and their native advice functions.")
 
-(defun ems--yaml-electric-dash-and-dot-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox-yaml--install-advice ()
+  "Install advice after the optional YAML Mode package loads."
+  (dolist (entry emacsvox-yaml--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(advice-add 'yaml-electric-dash-and-dot :after
-            #'ems--yaml-electric-dash-and-dot-after)
+(with-eval-after-load 'yaml-mode
+  (emacsvox-yaml--install-advice))
 
 (provide 'emacsvox-yaml)
 ;;;  end of file
-
