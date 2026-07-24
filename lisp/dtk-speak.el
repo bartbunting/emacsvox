@@ -2107,6 +2107,64 @@ When called interactively, CHAR defaults to the character after point."
           (when props
             (set-text-properties pos (point) props)))))))
 
+;;;   Canonical TTS function aliases:
+
+;; During the consumer migration canonical calls resolve through the legacy
+;; functions.  This preserves advice and test interception attached to the
+;; established symbols.  The alias direction reverses only after all repository
+;; callers use the canonical API.
+
+;; Speech-server protocol.
+(defalias 'tts--protocol-silence #'dtk-interp-silence)
+(defalias 'tts--protocol-tone #'dtk-interp-tone)
+(defalias 'tts--protocol-queue-text #'dtk-interp-queue)
+(defalias 'tts--protocol-queue-code #'dtk-interp-queue-code)
+(defalias 'tts--protocol-dispatch #'dtk-interp-speak)
+(defalias 'tts--protocol-say #'dtk-interp-say)
+(defalias 'tts--protocol-stop #'dtk-interp-stop)
+(defalias 'tts--protocol-sync #'dtk-interp-sync)
+(defalias 'tts--protocol-letter #'dtk-interp-letter)
+(defalias 'tts--protocol-next-language #'dtk-interp-next-language)
+(defalias 'tts--protocol-previous-language #'dtk-interp-previous-language)
+(defalias 'tts--protocol-set-language #'dtk-interp-language)
+(defalias
+ 'tts--protocol-set-preferred-language #'dtk-interp-preferred-language)
+(defalias 'tts--protocol-version #'dtk-interp-say-version)
+(defalias 'tts--protocol-set-rate #'dtk-interp-set-rate)
+(defalias
+ 'tts--protocol-set-character-scale #'dtk-interp-set-character-scale)
+(defalias
+ 'tts--protocol-set-split-caps #'dtk-interp-toggle-split-caps)
+(defalias
+ 'tts--protocol-set-punctuations #'dtk-interp-set-punctuations)
+(defalias 'tts--protocol-reset #'dtk-interp-reset-state)
+
+;; Public speech and state operations.
+(defalias 'tts-get-style #'dtk-get-style)
+(defalias 'tts-tone-deletion #'dtk-tone-deletion)
+(defalias 'tts-tone-upcase #'dtk-tone-upcase)
+(defalias 'tts-tone-downcase #'dtk-tone-downcase)
+(defalias 'tts-silence #'dtk-silence)
+(defalias 'tts-tone #'dtk-tone)
+(defalias 'tts-speak-using-voice #'dtk-speak-using-voice)
+(defalias 'tts-dispatch #'dtk-dispatch)
+(defalias 'tts-stop #'dtk-stop)
+(defalias 'tts-set-rate #'dtk-set-rate)
+(defalias 'tts-set-punctuations #'dtk-set-punctuations)
+(defalias 'tts-set-punctuations-to-all #'dtk-set-punctuations-to-all)
+(defalias 'tts-set-punctuations-to-some #'dtk-set-punctuations-to-some)
+(defalias 'tts-reset-state #'dtk-reset-state)
+(defalias 'tts-initialize #'dtk-initialize)
+(defalias 'tts-speak #'dtk-speak)
+(defalias 'tts-speak-list #'dtk-speak-list)
+(defalias 'tts-letter #'dtk-letter)
+(defalias 'tts-notify-process #'dtk-notify-process)
+(defalias 'tts-notify-stop #'dtk-notify-stop)
+(defalias 'tts-notify-apply #'dtk-notify-apply)
+(defalias 'tts-notify #'dtk-notify)
+(defalias 'tts-notify-icon #'dtk-notify-icon)
+(defalias 'tts-notify-initialize #'dtk-notify-initialize)
+
 ;;; dtk-unicode.el ends here
 
 (provide 'dtk-speak)

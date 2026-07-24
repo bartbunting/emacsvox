@@ -12,6 +12,55 @@
 (require 'dtk-speak)
 (require 'voice-setup)
 
+(defconst emacsvox-test--tts-protocol-aliases
+  '((tts--protocol-silence . dtk-interp-silence)
+    (tts--protocol-tone . dtk-interp-tone)
+    (tts--protocol-queue-text . dtk-interp-queue)
+    (tts--protocol-queue-code . dtk-interp-queue-code)
+    (tts--protocol-dispatch . dtk-interp-speak)
+    (tts--protocol-say . dtk-interp-say)
+    (tts--protocol-stop . dtk-interp-stop)
+    (tts--protocol-sync . dtk-interp-sync)
+    (tts--protocol-letter . dtk-interp-letter)
+    (tts--protocol-next-language . dtk-interp-next-language)
+    (tts--protocol-previous-language . dtk-interp-previous-language)
+    (tts--protocol-set-language . dtk-interp-language)
+    (tts--protocol-set-preferred-language . dtk-interp-preferred-language)
+    (tts--protocol-version . dtk-interp-say-version)
+    (tts--protocol-set-rate . dtk-interp-set-rate)
+    (tts--protocol-set-character-scale . dtk-interp-set-character-scale)
+    (tts--protocol-set-split-caps . dtk-interp-toggle-split-caps)
+    (tts--protocol-set-punctuations . dtk-interp-set-punctuations)
+    (tts--protocol-reset . dtk-interp-reset-state))
+  "Canonical protocol aliases and their legacy implementations.")
+
+(defconst emacsvox-test--tts-public-aliases
+  '((tts-get-style . dtk-get-style)
+    (tts-tone-deletion . dtk-tone-deletion)
+    (tts-tone-upcase . dtk-tone-upcase)
+    (tts-tone-downcase . dtk-tone-downcase)
+    (tts-silence . dtk-silence)
+    (tts-tone . dtk-tone)
+    (tts-speak-using-voice . dtk-speak-using-voice)
+    (tts-dispatch . dtk-dispatch)
+    (tts-stop . dtk-stop)
+    (tts-set-rate . dtk-set-rate)
+    (tts-set-punctuations . dtk-set-punctuations)
+    (tts-set-punctuations-to-all . dtk-set-punctuations-to-all)
+    (tts-set-punctuations-to-some . dtk-set-punctuations-to-some)
+    (tts-reset-state . dtk-reset-state)
+    (tts-initialize . dtk-initialize)
+    (tts-speak . dtk-speak)
+    (tts-speak-list . dtk-speak-list)
+    (tts-letter . dtk-letter)
+    (tts-notify-process . dtk-notify-process)
+    (tts-notify-stop . dtk-notify-stop)
+    (tts-notify-apply . dtk-notify-apply)
+    (tts-notify . dtk-notify)
+    (tts-notify-icon . dtk-notify-icon)
+    (tts-notify-initialize . dtk-notify-initialize))
+  "Canonical public aliases and their legacy implementations.")
+
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
   (let ((dtk-speaker-process 'speaker)
@@ -138,6 +187,47 @@
        (lambda (_text) (setq selected dtk-speaker-process))
        "notice"))
     (should (eq selected 'notification))))
+
+(ert-deftest emacsvox-tts-canonical-function-aliases-are-installed ()
+  "Canonical protocol and public functions resolve through legacy entry points."
+  (dolist
+      (entry
+       (append
+        emacsvox-test--tts-protocol-aliases
+        emacsvox-test--tts-public-aliases))
+    (should (eq (symbol-function (car entry)) (cdr entry)))))
+
+(ert-deftest emacsvox-tts-canonical-protocol-preserves-wire-format ()
+  "Canonical protocol entry points produce the established commands."
+  (should
+   (equal
+    (emacsvox-test--tts-capture-protocol
+     (lambda ()
+       (tts--protocol-queue-text "hello")
+       (tts--protocol-set-rate 180)
+       (tts--protocol-dispatch)))
+    '((speaker "q {hello }\n")
+      (speaker "tts_set_speech_rate 180\n")
+      (speaker "d\n")))))
+
+(ert-deftest emacsvox-tts-canonical-aliases-preserve-legacy-advice ()
+  "Advice on a legacy entry point still observes canonical calls."
+  (let* ((calls 0)
+         (advice (lambda (&rest _) (cl-incf calls))))
+    (unwind-protect
+        (progn
+          (advice-add 'dtk-interp-stop :before advice)
+          (emacsvox-test--tts-capture-protocol #'tts--protocol-stop)
+          (should (= calls 1)))
+      (advice-remove 'dtk-interp-stop advice))))
+
+(ert-deftest emacsvox-tts-canonical-speech-preserves-legacy-interception ()
+  "Replacing the legacy speech function still intercepts canonical speech."
+  (let (spoken)
+    (cl-letf (((symbol-function 'dtk-speak)
+               (lambda (text) (setq spoken text))))
+      (tts-speak "hello"))
+    (should (equal spoken "hello"))))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
