@@ -20,7 +20,8 @@ The read-only inventory on 2026-07-24 found:
 - 196 references in 75 test files;
 - 47 active references to legacy =DTK_*= environment variables;
 - 262 tracked, non-archive files containing a =dtk-= or =DTK_= name;
-- a stale tracked copy at =lisp/dtk-speak.el.final-warn=.
+- a stale tracked copy at =lisp/dtk-speak.el.final-warn= (removed in the
+  first migration slice).
 
 Run the syntax-aware Lisp inventory with:
 
