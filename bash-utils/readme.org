@@ -1,17 +1,17 @@
-* Bash Utilities For Use With Emacspeak --- see [[https://github.com/tvraman/emacspeak/blob/master/bash-utils/readme.org#L1][bash-utils/Readme.org]].
+* Bash Utilities For Use With Emacsvox
 
 This directory contains useful Bash functions and Bash scripts.
 
 
   - audio-effects :: Bash functions to apply audio effects to sound files.
   - e-askpass  :: Appropriate for use as  the value of environment variable _SSH_ASKPASS_.
-  - emcloud ::  Have Emacspeak connect to a remote TTS server.
+  - emcloud ::  Have Emacsvox connect to a remote TTS server.
   - emlock  ::  Lock screen via a DBus  call
   - emnotify ::  Notify  from outside Emacs.
-  - emplayer :: Hand-off stream URL to Emacspeak MPlayer.
-  - emsay :: Use  Emacspeak  to speak a string from outside Emacs.
+  - emplayer :: Hand-off stream URL to Emacsvox MPlayer.
+  - emsay :: Use Emacsvox to speak a string from outside Emacs.
   - emstatus  ::  Call speak mode line from outside Emacs
-  - emstop :: Silence Emacspeak from outside Emacs.
+  - emstop :: Silence Emacsvox from outside Emacs.
   - esr ::Emergency reader using espeak  
   - nm-tools  ::  Bash functions to manage wifi 
   - prompt  :: Useful bash functions for  smart prompts.

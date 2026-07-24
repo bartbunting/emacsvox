@@ -1,5 +1,5 @@
 #!/bin/sh
-# Silence emacspeak from outside 
+# Silence Emacsvox from outside.
 #Usage emstop 
 
 pidof -q `which emacs` && \

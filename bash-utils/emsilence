@@ -1,6 +1,6 @@
 #!/bin/sh
-# Silence emacspeak (speech, media)from outside 
+# Silence Emacsvox speech and media from outside.
 #Usage emsilence 
 
 pidof -q `which emacs` &&\
- emacsclient -n -e "(emacspeak-silence)"  2>&1 > /dev/null
+ emacsclient -n -e "(emacsvox-silence)"  2>&1 > /dev/null

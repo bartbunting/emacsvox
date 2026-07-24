@@ -1,6 +1,6 @@
-video/*; ${EMACSPEAK_DIR}/bash-utils/emplay %s
-audio/*; ${EMACSPEAK_DIR}/bash-utils/emplay %s
+video/*; ${EMACSVOX_DIR}/bash-utils/emplayer %s
+audio/*; ${EMACSVOX_DIR}/bash-utils/emplayer %s
 application/pdf; pdftotext -layout %s -
-application/atom+xml; xsltproc ${EMACSPEAK_DIR}/xsl/atom.xsl %s
-application/rss+xml; xsltproc ${EMACSPEAK_DIR}/xsl/rss.xsl %s
-application/xhtml+xml; xsltproc ${EMACSPEAK_DIR}/xsl/identity.xsl %s
+application/atom+xml; xsltproc ${EMACSVOX_DIR}/xsl/atom.xsl %s
+application/rss+xml; xsltproc ${EMACSVOX_DIR}/xsl/rss.xsl %s
+application/xhtml+xml; xsltproc ${EMACSVOX_DIR}/xsl/identity.xsl %s

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Notify via  emacspeak from outside 
+# Notify via Emacsvox from outside.
 #Usage emsnotify <text> 
 l="$@"
 pidof -q `which emacs` &&\

@@ -3,4 +3,4 @@
 #Usage emstatus 
 
 pidof -q `which emacs` &&  \
-emacsclient -n -e "(emacspeak-speak-mode-line)"  2>&1 > /dev/null
+emacsclient -n -e "(emacsvox-speak-mode-line)"  2>&1 > /dev/null

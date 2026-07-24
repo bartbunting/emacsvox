@@ -3,5 +3,7 @@
 #Usage emsicon<icon>
 l="$@"
 pidof -q `which emacs` && \
-emacsclient -n -e "(emacspeak-icon '$l)"   2>&1 > /dev/null ||
-        paplay ${HOME}/emacs/lisp/emacspeak/sounds/chimes/$l.ogg
+emacsclient -n -e "(emacsvox-icon '$l)"   2>&1 > /dev/null || {
+        : "${EMACSVOX_DIR:?Set EMACSVOX_DIR to the Emacsvox checkout}"
+        paplay "$EMACSVOX_DIR/sounds/chimes/$l.ogg"
+}

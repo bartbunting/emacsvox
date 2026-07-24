@@ -4,7 +4,7 @@
 INSTALL = install
 PREFIX = /usr
 LIBPARENTDIR = ${PREFIX}/share/emacs/site-lisp
-LIBDIR =$(LIBPARENTDIR)/emacspeak/servers/linux-outloud
+LIBDIR =$(LIBPARENTDIR)/emacsvox/servers/linux-outloud
 
 TCL_VERSION=8.6
 TCL_INCLUDE=/usr/include/tcl$(TCL_VERSION)

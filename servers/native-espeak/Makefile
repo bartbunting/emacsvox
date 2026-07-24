@@ -3,7 +3,7 @@
 INSTALL = install
 PREFIX = /usr
 LIBPARENTDIR = ${PREFIX}/share/emacs/site-lisp
-LIBDIR =$(LIBPARENTDIR)/emacspeak/servers/native-espeak
+LIBDIR =$(LIBPARENTDIR)/emacsvox/servers/native-espeak
 
 CXXFLAGS+= -g    -O2 -fPIC  -DPIC  -pedantic -ansi \
 -Wall -Wno-long-long --std=c++11
@@ -35,4 +35,3 @@ tidy:
 install: $(TTS)
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL) $< $(DESTDIR)$(LIBDIR)
-

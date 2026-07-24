@@ -4,7 +4,7 @@
 INSTALL = install
 PREFIX = /usr
 LIBPARENTDIR = ${PREFIX}/share/emacs/site-lisp
-LIBDIR =$(LIBPARENTDIR)/emacspeak/servers/mac-swiftmac
+LIBDIR =$(LIBPARENTDIR)/emacsvox/servers/mac-swiftmac
 
 SWIFT=swift
 TTS=../

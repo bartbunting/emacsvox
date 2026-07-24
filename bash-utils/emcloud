@@ -1,5 +1,5 @@
 #!/bin/sh
-# Have emacspeak connect to a TTS server in the cloud 
+# Have Emacsvox connect to a TTS server in the cloud.
 #Usage emcloud 
 
 pidof -q `which emacs` &&\
