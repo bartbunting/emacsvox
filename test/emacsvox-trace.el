@@ -76,7 +76,7 @@ used."
                (lambda (letter)
                  (emacsvox-trace--record
                   'letter (substring-no-properties letter))))
-              ((symbol-function 'dtk-dispatch)
+              ((symbol-function 'tts-dispatch)
                (lambda (string)
                  (emacsvox-trace--record
                   'dispatch (substring-no-properties string))))

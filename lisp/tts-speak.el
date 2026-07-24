@@ -55,21 +55,18 @@
 (declare-function emacsvox-icon "emacsvox-sounds.el" (icon))
 (declare-function emacsvox-queue-icon "emacsvox-sounds.el" (icon))
 
-;;;   Canonical TTS state aliases:
+;;;   TTS server configuration:
 
-;; Keep the established variables as storage during the consumer migration.
-;; Declaring aliases first satisfies the byte compiler and preserves existing
-;; buffer-local bindings in live sessions.
-(defvaralias 'tts-program 'dtk-program
-  "Canonical name for the selected speech-server program.")
-(defvaralias 'tts-servers-alist 'dtk-servers-alist
-  "Canonical name for the available speech-server list.")
-(defvar dtk-program
+(defun tts--default-program ()
+  "Return the configured speech-server program."
   (or
-   (getenv "DTK_PROGRAM")
+   (getenv "TTS_PROGRAM")
    (cond
     ((eq system-type 'darwin) "mac")
-    (t "espeak")))
+    (t "espeak"))))
+
+(defvar tts-program
+  (tts--default-program)
   "Speech-server.
 Choices:
 dtk-exp     For the Dectalk Express.
@@ -242,13 +239,13 @@ mac for MAC TTS (default on Mac)")
   "Strip all octal chars. ")
 
 (defcustom tts-speech-rate-base
-  (if (string-match "dtk" dtk-program) 180 50)
+  (if (string-match "dtk" tts-program) 180 50)
   "Value of lowest speech rate."
   :type 'integer
   :group 'tts)
 
 (defcustom tts-speech-rate-step
-  (if (string-match "dtk" dtk-program) 50 8)
+  (if (string-match "dtk" tts-program) 50 8)
   "Speech rate step used by `tts-set-predefined-rate'."
   :type 'integer
   :group 'tts)
@@ -429,7 +426,7 @@ Uses a 5ms fade-in and fade-out. "
   (unless (or tts-quiet (not (process-live-p tts-speaker-process)))
     (tts--protocol-tone pitch duration force)))
 
-(defun dtk-set-language (lang)
+(defun tts-set-language (lang)
   "Set language. If your server supports it, also set the synthesis
  voice, using the syntax language:voice , where language can be
  omitted."
@@ -441,7 +438,7 @@ Uses a 5ms fade-in and fade-out. "
         (tts--protocol-set-language lang nil)))
     (tts--protocol-set-language lang (called-interactively-p 'interactive))))
 
-(defun dtk-set-next-language ()
+(defun tts-set-next-language ()
   "Switch to  next  language"
   (interactive)
   
@@ -451,7 +448,7 @@ Uses a 5ms fade-in and fade-out. "
         (tts--protocol-next-language nil)))
     (tts--protocol-next-language (called-interactively-p 'interactive))))
 
-(defun dtk-set-previous-language ()
+(defun tts-set-previous-language ()
   "Switch to  previous  language"
   (interactive)
   
@@ -461,7 +458,7 @@ Uses a 5ms fade-in and fade-out. "
         (tts--protocol-previous-language nil)))
     (tts--protocol-previous-language (called-interactively-p 'interactive))))
 
-(defun dtk-set-preferred-language (alias lang)
+(defun tts-set-preferred-language (alias lang)
   "Set language by alias."
   (interactive "s")
   
@@ -807,7 +804,7 @@ Argument COMPLEMENT  is the complement of separator."
 ;; No quoting is done,
 ;; ifyou want to quote the text, see tts-speak
 
-(defun dtk-dispatch (string)
+(defun tts-dispatch (string)
   "Send request  to speech server."
   (unless tts-quiet
     (when (process-live-p tts-speaker-process)
@@ -823,9 +820,9 @@ notification stream as well."
            (or all (called-interactively-p 'interactive)))
     (tts-notify-stop)))
 
-(defun dtk-reset-default-voice ()
+(defun tts-reset-default-voice ()
   
-  (dtk-dispatch (tts-get-voice-command tts-default-voice)))
+  (tts-dispatch (tts-get-voice-command tts-default-voice)))
 
 ;;;   adding cleanup patterns:
 
@@ -1055,7 +1052,7 @@ Interactive PREFIX arg makes the new setting global."
              tts-punctuation-mode
              (if prefix "" "locally"))))
 
-(defun dtk-reset-state ()
+(defun tts-reset-state ()
   "Reset TTS engine."
   (interactive)
   (when (process-live-p tts-speaker-process)
@@ -1083,7 +1080,7 @@ important to be interrupted.")
   "Punctuation state (some, all or none).
 Set by \\[tts-set-punctuations].")
 
-(defvar dtk-servers-alist nil
+(defvar tts-servers-alist nil
   "Speech servers.")
 
 (defun tts-setup-servers-alist ()
@@ -1104,7 +1101,7 @@ Set by \\[tts-set-punctuations].")
                  (line-beginning-position) (line-end-position)))
           (push this result))
         (forward-line 1)))
-    (setq dtk-servers-alist result)))
+    (setq tts-servers-alist result)))
 
 ;;;   Mapping characters to speech:
 
@@ -1387,7 +1384,7 @@ Set by \\[tts-set-punctuations].")
 ;;;   interactively selecting the server:
 
 ;; These functions will be reset on a per TTS engine basis
-;; via `voice-setup' called by `dtk-initialize'.
+;; via `voice-setup' called by `tts-initialize'.
 (defalias 'tts-get-voice-command (lambda (&rest _) ""))
 (defalias 'tts-define-voice-from-acss #'ignore)
 (defalias 'tts-voice-defined-p (lambda (&rest _) t))
@@ -1399,7 +1396,7 @@ Set by \\[tts-set-punctuations].")
 (defvar tts-device "default"
   "Name of  sound device.")
 
-(defcustom dtk-cloud-server "cloud-outloud"
+(defcustom tts-cloud-server "cloud-outloud"
   "Set this to your preferred cloud TTS server."
   :type '(string
           (choice
@@ -1409,17 +1406,17 @@ Set by \\[tts-set-punctuations].")
            (:const "cloud-mac" :tag "Mac Variants")))
   :group 'dtk)
 
-(defun dtk-select-server (program )
+(defun tts-select-server (program )
   "Select  speech server `program'. "
   (interactive
    (list
     (completing-read
      "Speech server:"
-     (or dtk-servers-alist (tts-setup-servers-alist))
+     (or tts-servers-alist (tts-setup-servers-alist))
      nil t)))
-  (setq dtk-program program)
+  (setq tts-program program)
   (ems--fastload "voice-setup")
-  (dtk-initialize))
+  (tts-initialize))
 
 (defvar tts-multi-engines
   '("espeak"  "outloud"   "dtk-soft" "sharpwin" "swiftmac")
@@ -1432,60 +1429,60 @@ Set by \\[tts-set-punctuations].")
    (not (string= tts-notification-device "default"))
    (cl-find-if #'(lambda (e) (string-match e engine)) tts-multi-engines)))
 
-(defun dtk-cloud ()
+(defun tts-cloud ()
   "Select  Cloud TTS server."
   (interactive)
   
-  (dtk-select-server dtk-cloud-server)
+  (tts-select-server tts-cloud-server)
   (setq emacsvox-play-program nil)
-  (dtk-initialize)
-  (when (tts-multistream-p dtk-cloud-server)
+  (tts-initialize)
+  (when (tts-multistream-p tts-cloud-server)
     (tts-notify-initialize)))
 
-(defvar dtk-local-server-process nil
+(defvar tts-local-server-process nil
   "Local server process.")
 
-(defvar dtk-speech-server-program "speech-server"
+(defvar tts-speech-server-program "speech-server"
   "Local speech server script.")
-(defvar dtk-local-server-port "2222"
+(defvar tts-local-server-port "2222"
   "Port where we run our local server.")
 
-(defcustom dtk-local-engine "outloud"
+(defcustom tts-local-engine "outloud"
   "Engine we use  for our local TTS  server."
   :type '(choice
           (const :tag "Dectalk Express" "dtk-exp")
           (const :tag "Viavoice Outloud" "outloud"))
   :group 'dtk)
 
-(defun dtk-local-server (program &optional prompt-port)
+(defun tts-local-server (program &optional prompt-port)
   "Select and start an local speech server interactively. Local server
 lets Emacsvox on a remote host connect back via SSH port forwarding
 for instance. Argument PROGRAM specifies the speech server
-program. Port defaults to dtk-local-server-port"
+program. Port defaults to tts-local-server-port"
   (interactive
    (list
     (completing-read
      "Select speech server:"
-     (or dtk-servers-alist
+     (or tts-servers-alist
          (tts-setup-servers-alist))
      nil
      t
      nil nil
-     dtk-program)
+     tts-program)
     current-prefix-arg))
   (setq
-   dtk-local-server-process
+   tts-local-server-process
    (start-process
     "LocalTTS"
     "localTTS*"
-    (expand-file-name dtk-speech-server-program emacsvox-servers-directory)
+    (expand-file-name tts-speech-server-program emacsvox-servers-directory)
     (if prompt-port
         (read-from-minibuffer "Port:" "3333")
-      dtk-local-server-port)
+      tts-local-server-port)
     (expand-file-name program emacsvox-servers-directory))))
 
 ;;;   initialize the speech process
-(defconst dtk-pamixer (executable-find "pamixer") "pamixer")
+(defconst tts-pamixer (executable-find "pamixer") "pamixer")
 
 (defcustom tts-notification-device
   nil
@@ -1498,13 +1495,13 @@ For swiftmac, set this to `left' or `right'."
           (string :value ""))
   :group 'tts)
 
-;; Helper: dtk-make-process:
-(defun dtk-make-process (name)
+;; Helper: tts-make-process:
+(defun tts-make-process (name)
   "Make a  TTS process called name."
   
   (let ((process-connection-type nil)
         (default-directory (expand-file-name "~/"))
-        (program (expand-file-name dtk-program emacsvox-servers-directory))
+        (program (expand-file-name tts-program emacsvox-servers-directory))
         (process nil))
     (setq process
           (start-process name nil program))
@@ -1513,17 +1510,17 @@ For swiftmac, set this to `left' or `right'."
     process))
 
 (declare-function voice-setup "voice-setup" ())
-(defun dtk-initialize ()
+(defun tts-initialize ()
   "Initialize speech system."
   
   ;; fallback of fallbacks
-  (unless dtk-program (setq dtk-program "espeak"))
-  (let ((new (dtk-make-process "Speaker")))
+  (unless tts-program (setq tts-program "espeak"))
+  (let ((new (tts-make-process "Speaker")))
     ;; success, so nuke old server
     (when (processp tts-speaker-process) (delete-process tts-speaker-process))
     (setq tts-speaker-process new)
-    (when (tts-multistream-p dtk-program) (tts-notify-initialize))
-    (when (string-match "cloud" dtk-program) ; we'll serve icons.
+    (when (tts-multistream-p tts-program) (tts-notify-initialize))
+    (when (string-match "cloud" tts-program) ; we'll serve icons.
       (setq emacsvox-play-program nil))
     ;; `voice-setup' requires us, so we can't require it at top-level.
     (require 'voice-setup)
@@ -1533,7 +1530,7 @@ For swiftmac, set this to `left' or `right'."
   "Restart TTS server."
   (interactive)
   
-  (dtk-initialize)
+  (tts-initialize)
   (when (process-live-p tts-speaker-process)
     (tts--protocol-sync)))
 
@@ -1599,7 +1596,7 @@ unless   `tts-quiet' is set to t. "
   ;; ensure text is a  string
   (unless (stringp text) (when text (setq text (format "%s" text))))
   ;; ensure  the process  is live
-  (unless (process-live-p tts-speaker-process) (dtk-initialize))
+  (unless (process-live-p tts-speaker-process) (tts-initialize))
   ;; If you dont want me to talk,or my server is not running,
   ;; I will remain silent.
   ;; I also do nothing if text is nil or ""
@@ -1794,19 +1791,19 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   (interactive)
   
   (let ((new nil)
-        (dtk-program
-         (if (string-match "cloud" dtk-program) "cloud-notify" dtk-program)))
+        (tts-program
+         (if (string-match "cloud" tts-program) "cloud-notify" tts-program)))
     (when (and tts-notify-process (process-live-p tts-notify-process))
       (delete-process tts-notify-process))
     (unless
-        (and (not (string-match "cloud" dtk-program))
+        (and (not (string-match "cloud" tts-program))
              (zerop (length tts-notification-device)))
       (with-environment-variables
           (("ALSA_DEFAULT" tts-notification-device)
            ("SWIFTMAC_AUDIO_TARGET" tts-notification-device)
            ("SHARPWIN_AUDIO_TARGET" tts-notification-device)
            ("PULSE_SINK" tts-notification-device))
-        (setq  new (dtk-make-process "Notify"))
+        (setq  new (tts-make-process "Notify"))
         (when (process-live-p new)
           (setq tts-notify-process new))))))
 
@@ -2076,20 +2073,6 @@ When called interactively, CHAR defaults to the character after point."
           (replace-match replacement t t nil)
           (when props
             (set-text-properties pos (point) props)))))))
-
-;;;   Transitional public TTS function aliases:
-
-;; Public speech and state operations still resolve through legacy definitions
-;; until each corresponding implementation slice is migrated.
-(defalias 'tts-dispatch #'dtk-dispatch)
-(defalias 'tts-reset-state #'dtk-reset-state)
-(defalias 'tts-initialize #'dtk-initialize)
-(defalias 'tts-select-server #'dtk-select-server)
-(defalias 'tts-cloud #'dtk-cloud)
-(defalias 'tts-local-server #'dtk-local-server)
-(defalias 'tts-set-language #'dtk-set-language)
-(defalias 'tts-set-next-language #'dtk-set-next-language)
-(defalias 'tts-set-previous-language #'dtk-set-previous-language)
 
 ;;; tts-speak.el ends here
 

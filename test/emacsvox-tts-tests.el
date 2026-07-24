@@ -135,17 +135,20 @@
     dtk-unicode-replace-chars)
   "Removed DECtalk-era names for generic character pronunciation.")
 
-(defconst emacsvox-test--tts-public-aliases
-  '((tts-dispatch . dtk-dispatch)
-    (tts-reset-state . dtk-reset-state)
-    (tts-initialize . dtk-initialize)
-    (tts-select-server . dtk-select-server)
-    (tts-cloud . dtk-cloud)
-    (tts-local-server . dtk-local-server)
-    (tts-set-language . dtk-set-language)
-    (tts-set-next-language . dtk-set-next-language)
-    (tts-set-previous-language . dtk-set-previous-language))
-  "Canonical public aliases and their legacy implementations.")
+(defconst emacsvox-test--legacy-server-functions
+  '(dtk-set-language
+    dtk-set-next-language
+    dtk-set-previous-language
+    dtk-set-preferred-language
+    dtk-dispatch
+    dtk-reset-default-voice
+    dtk-reset-state
+    dtk-select-server
+    dtk-cloud
+    dtk-local-server
+    dtk-make-process
+    dtk-initialize)
+  "Removed DECtalk-era names for generic server lifecycle operations.")
 
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
@@ -274,11 +277,6 @@
        "notice"))
     (should (eq selected 'notification))))
 
-(ert-deftest emacsvox-tts-transitional-public-aliases-are-installed ()
-  "Public functions not yet migrated resolve through transitional aliases."
-  (dolist (entry emacsvox-test--tts-public-aliases)
-    (should (eq (symbol-function (car entry)) (cdr entry)))))
-
 (ert-deftest emacsvox-tts-canonical-protocol-preserves-wire-format ()
   "Canonical protocol entry points produce the established commands."
   (should
@@ -400,6 +398,31 @@
          dtk-unicode-cache))
     (should-not (boundp variable))))
 
+(ert-deftest emacsvox-tts-legacy-server-api-is-removed ()
+  "Generic server lifecycle no longer exposes DECtalk-era names."
+  (dolist (function emacsvox-test--legacy-server-functions)
+    (should-not (fboundp function)))
+  (dolist
+      (variable
+       '(dtk-program
+         dtk-servers-alist
+         dtk-cloud-server
+         dtk-local-server-process
+         dtk-speech-server-program
+         dtk-local-server-port
+         dtk-local-engine
+         dtk-pamixer))
+    (should-not (boundp variable))))
+
+(ert-deftest emacsvox-tts-program-uses-canonical-environment-variable ()
+  "TTS_PROGRAM selects the server and the removed DTK variable is ignored."
+  (let ((process-environment (copy-sequence process-environment)))
+    (setenv "TTS_PROGRAM" "plain")
+    (setenv "DTK_PROGRAM" "legacy")
+    (should (equal (tts--default-program) "plain"))
+    (setenv "TTS_PROGRAM" nil)
+    (should-not (equal (tts--default-program) "legacy"))))
+
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."
   (let ((default-quiet (default-value 'tts-quiet))
@@ -412,17 +435,6 @@
     (with-temp-buffer
       (should (eq tts-quiet default-quiet))
       (should (= tts-speech-rate default-rate)))))
-
-(ert-deftest emacsvox-tts-canonical-state-aliases-share-storage ()
-  "Canonical and legacy global state names address the same values."
-  (let ((dtk-program "legacy")
-        (tts-speaker-process 'primary))
-    (should (equal tts-program "legacy"))
-    (should (eq tts-speaker-process 'primary))
-    (setq tts-program "canonical"
-          tts-speaker-process 'replacement)
-    (should (equal dtk-program "canonical"))
-    (should (eq tts-speaker-process 'replacement))))
 
 (ert-deftest emacsvox-tts-legacy-speaker-process-state-is-removed ()
   "The primary speech process no longer exposes its DECtalk-era state name."

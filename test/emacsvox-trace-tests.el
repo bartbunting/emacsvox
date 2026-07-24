@@ -18,7 +18,7 @@
              (lambda ()
                (funcall (symbol-function 'tts-speak) spoken)
                (funcall (symbol-function 'tts-letter) "h")
-               (funcall (symbol-function 'dtk-dispatch) "punctuation")
+               (funcall (symbol-function 'tts-dispatch) "punctuation")
                (funcall (symbol-function 'emacsvox-icon) 'select-object)
                (funcall (symbol-function 'tts-tone) 440 100 t)
                (funcall (symbol-function 'tts-silence) 50 nil)
