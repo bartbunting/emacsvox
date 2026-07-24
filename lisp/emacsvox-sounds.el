@@ -257,7 +257,7 @@ Used by TTS layer to play icons that are found as text property
 This is a private function and  might go away."
   
   (process-send-string
-   dtk-speaker-process
+   tts-speaker-process
    (format "a %s\n" (emacsvox-sounds-resource icon))))
 
 ;;;;   serve an auditory icon
@@ -265,7 +265,7 @@ This is a private function and  might go away."
   "Serve auditory icon ICON."
   
   (process-send-string
-   dtk-speaker-process
+   tts-speaker-process
    (format "p %s\n" (emacsvox-sounds-cache-get icon))))
 
 ;;;;   Play an icon

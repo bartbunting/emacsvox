@@ -10,6 +10,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'dtk-speak)
+(require 'emacsvox-sounds)
 (require 'voice-setup)
 
 (defconst emacsvox-test--tts-protocol-aliases
@@ -290,6 +291,25 @@
     (should (eq dtk-speaker-process 'canonical)))
   (let ((dtk-speaker-process 'legacy))
     (should (eq tts-speaker-process 'legacy))))
+
+(ert-deftest emacsvox-tts-auditory-icons-use-canonical-process ()
+  "Queued and served icons write through the canonical TTS process."
+  (let ((tts-speaker-process 'canonical)
+        (emacsvox-sounds-cache (make-hash-table))
+        writes)
+    (puthash 'served "/sounds/served.ogg" emacsvox-sounds-cache)
+    (cl-letf (((symbol-function 'process-send-string)
+               (lambda (process string)
+                 (push (list process string) writes)))
+              ((symbol-function 'emacsvox-sounds-resource)
+               (lambda (_icon) "/sounds/queued.ogg")))
+      (emacsvox-queue-icon 'queued)
+      (emacsvox-serve-icon 'served))
+    (should
+     (equal
+      (nreverse writes)
+      '((canonical "a /sounds/queued.ogg\n")
+        (canonical "p /sounds/served.ogg\n"))))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."
