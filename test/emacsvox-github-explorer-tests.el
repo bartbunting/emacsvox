@@ -1,4 +1,4 @@
-;;; emacsvox-gh-explorer-tests.el --- GitHub Explorer advice tests -*- lexical-binding: t; -*-
+;;; emacsvox-github-explorer-tests.el --- GitHub Explorer advice tests -*- lexical-binding: t; -*-
 
 ;;; Code:
 
@@ -9,20 +9,20 @@
 
 (load
  (expand-file-name
-  "../lisp/emacsvox-gh-explorer.el"
+  "../lisp/emacsvox-github-explorer.el"
   (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
 
-(ert-deftest emacsvox-gh-explorer-current-target-contracts ()
+(ert-deftest emacsvox-github-explorer-current-target-contracts ()
   "GitHub Explorer advice follows the installed package API."
   (should
    (equal (help-function-arglist 'github-explorer t) '(&optional repo)))
   (should
    (equal (help-function-arglist 'github-explorer-at-point t) nil)))
 
-(ert-deftest emacsvox-gh-explorer-advice-is-directly-registered ()
+(ert-deftest emacsvox-github-explorer-advice-is-directly-registered ()
   "GitHub Explorer advice bypasses the compatibility bridge."
-  (dolist (target emacsvox-gh-explorer--advice-targets)
+  (dolist (target emacsvox-github-explorer--advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (advice-member-p function target))
@@ -30,7 +30,7 @@
        (gethash (list target :after function)
                 ems--modern-advice-wrappers)))))
 
-(ert-deftest emacsvox-gh-explorer-feedback-is-target-aware ()
+(ert-deftest emacsvox-github-explorer-feedback-is-target-aware ()
   "Only the matching interactive entry command announces its buffer."
   (let ((ems--interactive-fn-name 'github-explorer-at-point)
         events)
@@ -42,16 +42,16 @@
       (emacsvox--advice-github-explorer-at-point-after))
     (should (equal (nreverse events) '(mode-line open-object)))))
 
-(ert-deftest emacsvox-gh-explorer-navigation-bindings-installed ()
+(ert-deftest emacsvox-github-explorer-navigation-bindings-installed ()
   "The package mode map uses Emacsvox navigation commands."
   (should
    (eq
     (lookup-key github-explorer-mode-map "n")
-    #'emacsvox-gh-explorer-next))
+    #'emacsvox-github-explorer-next))
   (should
    (eq
     (lookup-key github-explorer-mode-map "p")
-    #'emacsvox-gh-explorer-previous)))
+    #'emacsvox-github-explorer-previous)))
 
-(provide 'emacsvox-gh-explorer-tests)
-;;; emacsvox-gh-explorer-tests.el ends here
+(provide 'emacsvox-github-explorer-tests)
+;;; emacsvox-github-explorer-tests.el ends here

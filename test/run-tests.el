@@ -162,7 +162,7 @@
   (require 'emacsvox-yaml-tests)
   (require 'emacsvox-flycheck-tests)
   (require 'emacsvox-folding-tests)
-  (require 'emacsvox-gh-explorer-tests)
+  (require 'emacsvox-github-explorer-tests)
   (require 'emacsvox-ivy-tests)
   (require 'emacsvox-magit-tests)
   (require 'emacsvox-yasnippet-tests)

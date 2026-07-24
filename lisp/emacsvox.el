@@ -163,7 +163,7 @@
     ("forms" emacsvox-forms)
     ("gdb-ui" emacsvox-gud)
     ("geiser" emacsvox-geiser)
-    ("github-explorer" emacsvox-gh-explorer)
+    ("github-explorer" emacsvox-github-explorer)
     ("gnuplot" emacsvox-gnuplot)
     ("gnus" emacsvox-gnus)
     ("go-mode" emacsvox-go-mode)

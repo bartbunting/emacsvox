@@ -156,7 +156,7 @@ emacsvox-folding.elc \
 emacsvox-forge.elc \
 emacsvox-forms.elc \
 emacsvox-geiser.elc \
-emacsvox-gh-explorer.elc \
+emacsvox-github-explorer.elc \
 emacsvox-gnuplot.elc \
 emacsvox-gnus.elc\
 emacsvox-go-mode.elc \

@@ -1,7 +1,7 @@
-;;; emacsvox-gh-explorer.el --- GH-EXPLORER  -*- lexical-binding: t; -*-
+;;; emacsvox-github-explorer.el --- GitHub Explorer  -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
-;; Description:  Speech-enable GH-EXPLORER An Emacs Interface to gh-explorer
-;; Keywords: Emacsvox,  Audio Desktop gh-explorer
+;; Description: Speech-enable the github-explorer package
+;; Keywords: Emacsvox, Audio Desktop, github-explorer
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
@@ -68,7 +68,7 @@
        (emacsvox-speak-mode-line)
        (emacsvox-icon 'open-object)))))
 
-(defun emacsvox-gh-explorer--navigate (direction)
+(defun emacsvox-github-explorer--navigate (direction)
   "Move forward/back based on `direction' and speak current entry."
   (emacsvox-icon 'select-object)
   (forward-line direction)
@@ -83,24 +83,24 @@
          (propertize path 'personality
                      (when (string= type "tree") voice-bolden-medium))))))))
 
-(defun emacsvox-gh-explorer-next ()
+(defun emacsvox-github-explorer-next ()
   "Move forward and speak current entry."
   (interactive)
-  (emacsvox-gh-explorer--navigate 1))
+  (emacsvox-github-explorer--navigate 1))
 
-(defun emacsvox-gh-explorer-previous ()
+(defun emacsvox-github-explorer-previous ()
   "Moveback and speak current entry."
   (interactive)
   
-  (emacsvox-gh-explorer--navigate -1))
+  (emacsvox-github-explorer--navigate -1))
 
-(defconst emacsvox-gh-explorer--advice-targets
+(defconst emacsvox-github-explorer--advice-targets
   '(github-explorer github-explorer-at-point)
   "Current GitHub Explorer targets that receive native advice.")
 
-(defun emacsvox-gh-explorer--setup ()
+(defun emacsvox-github-explorer--setup ()
   "Install GitHub Explorer advice and Emacsvox navigation bindings."
-  (dolist (target emacsvox-gh-explorer--advice-targets)
+  (dolist (target emacsvox-github-explorer--advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (when (and (fboundp target)
@@ -108,12 +108,12 @@
         (advice-add target :after function '((name . emacsvox))))))
   (when (boundp 'github-explorer-mode-map)
     (define-key
-     github-explorer-mode-map "p" #'emacsvox-gh-explorer-previous)
+     github-explorer-mode-map "p" #'emacsvox-github-explorer-previous)
     (define-key
-     github-explorer-mode-map "n" #'emacsvox-gh-explorer-next)))
+     github-explorer-mode-map "n" #'emacsvox-github-explorer-next)))
 
 (with-eval-after-load 'github-explorer
-  (emacsvox-gh-explorer--setup))
+  (emacsvox-github-explorer--setup))
 
-(provide 'emacsvox-gh-explorer)
+(provide 'emacsvox-github-explorer)
 ;;;  end of file
