@@ -53,13 +53,11 @@
 
 ;;;  Setup Helm Hooks:
 
-(defun ems--helm-mode-after (&rest _)
+(defun emacsvox--advice-helm-mode-after (&rest _)
   "Cue state of helm mode."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'helm-mode)
     (emacsvox-icon (if helm-mode 'on 'off))
     (message "Turned %s helm-mode" (if helm-mode "on" "off"))))
-
-(advice-add 'helm-mode :after #'ems--helm-mode-after)
 
 (declare-function emacsvox-minibuffer-setup-hook "emacsvox-advice" nil)
 
@@ -96,7 +94,7 @@
 
 (declare-function eww-display-dom-by-id-list  "emacsvox-eww.el" (id-list))
 
-(defun ems--helm-google-suggest-before (&rest _)
+(defun emacsvox--advice-helm-google-suggest-before (&rest _)
   "setup emacsvox post-processing-hook"
   (add-hook 'emacsvox-eww-post-hook
             #'(lambda nil
@@ -105,29 +103,41 @@
                       (emacsvox-google-toolbelt)))
                   (eww-display-dom-by-id-list '("center_col" "rhs"))))))
 
-(advice-add 'helm-google-suggest :before
-            #'ems--helm-google-suggest-before)
-
 ;;;  Advice helm-recenter-top-bottom-other-window:
 
-(defun ems--helm-recenter-top-bottom-other-window-after (&rest _)
+(defun emacsvox--advice-helm-recenter-top-bottom-other-window-after (&rest _)
   "Speak current selection."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'helm-recenter-top-bottom-other-window)
     (with-current-buffer (helm-buffer-get)
       (emacsvox-icon 'scroll) (emacsvox-speak-line))))
 
-(advice-add 'helm-recenter-top-bottom-other-window :after
-            #'ems--helm-recenter-top-bottom-other-window-after)
-
 ;;;  Advice helm-yank-selection
 
-(defun ems--helm-yank-selection-after (&rest _)
+(defun emacsvox--advice-helm-yank-selection-after (&rest _)
   "Speak minibuffer after yanking."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'helm-yank-selection)
     (emacsvox-icon 'yank-object) (emacsvox-speak-line)))
 
-(advice-add 'helm-yank-selection :after
-            #'ems--helm-yank-selection-after)
+(defconst emacsvox-helm--advice
+  '((helm-mode :after emacsvox--advice-helm-mode-after)
+    (helm-google-suggest :before
+     emacsvox--advice-helm-google-suggest-before)
+    (helm-recenter-top-bottom-other-window :after
+     emacsvox--advice-helm-recenter-top-bottom-other-window-after)
+    (helm-yank-selection :after
+     emacsvox--advice-helm-yank-selection-after))
+  "Current Helm targets and their native advice functions.")
+
+(defun emacsvox-helm--install-advice ()
+  "Install advice for the Helm functions that are currently loaded."
+  (dolist (entry emacsvox-helm--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature '(helm-core helm-mode helm-net))
+  (eval-after-load feature #'emacsvox-helm--install-advice))
 
 ;;;  Support helm-help
 (add-hook
@@ -146,4 +156,3 @@
 
 (provide 'emacsvox-helm)
 ;;;  end of file
-
