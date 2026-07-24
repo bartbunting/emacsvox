@@ -63,142 +63,120 @@
   (message
    (cdr (assq 'name (emms-playlist-current-selected-track)))))
 
-(cl-loop for f in
-         '(emms-next emms-next-noerror emms-previous)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Speak track name."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'select-object)))))
+(defvar emacsvox-emms--advice nil
+  "Current EMMS targets and their native advice functions.")
+(setq emacsvox-emms--advice nil)
 
-;; these commands should not be made to talk since that would  interferes
-;; with real work.
-(cl-loop for f in
-         '(emms-start emms-stop emms-sort
-                      emms-shuffle emms-random emms-playlist-mode-play-smart)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Provide auditory icon."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'select-object)))))
+(defun emacsvox-emms--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-emms--advice))))
 
-(cl-loop
- for f in
+(defun emacsvox-emms--selection-feedback ()
+  "Play a selection icon after an EMMS operation."
+  (emacsvox-icon 'select-object))
+
+(emacsvox-emms--register-after-group
+ '(emms-next emms-next-noerror emms-previous
+   emms-start emms-stop emms-sort emms-shuffle emms-random
+   emms-playlist-mode-play-smart)
+ #'emacsvox-emms--selection-feedback)
+
+(defun emacsvox-emms--large-movement-feedback ()
+  "Speak after moving to the end of an EMMS playlist."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-emms--register-after-group
  '(emms-playlist-first emms-playlist-last
-                       emms-playlist-mode-first emms-playlist-mode-last)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
-(cl-loop for f in
-         '(emms-browser emms-browser-next-filter
-                        emms-browser-previous-filter)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-mode-line)
-               (emacsvox-icon 'open-object)))))
+   emms-playlist-mode-first emms-playlist-mode-last)
+ #'emacsvox-emms--large-movement-feedback)
 
-(defun ems--emms-browser-bury-buffer-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'close-object)))
+(defun emacsvox-emms--open-feedback ()
+  "Speak after opening an EMMS browser."
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'open-object))
 
-(advice-add 'emms-browser-bury-buffer :after
-            #'ems--emms-browser-bury-buffer-after)
+(emacsvox-emms--register-after-group
+ '(emms-browser)
+ #'emacsvox-emms--open-feedback)
 
-;;; Playlists
-(cl-loop for f in
-         '(emms-playlist-mode-go
-           emms-playlist-mode-next
-           emms-playlist-mode-previous
-           emms-playlist-mode-switch-buffer
-           )
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-mode-line)))))
+(defun emacsvox-emms--close-feedback ()
+  "Speak after closing an EMMS browser."
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'close-object))
 
-(cl-loop for f in
-         '(emms-playlist-clear emms-playlist-mode-kill-track)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-icon 'task-done)))))
+(emacsvox-emms--register-after-group
+ '(emms-browser-bury-buffer)
+ #'emacsvox-emms--close-feedback)
 
-;;;  Module emms-streaming:
-(cl-declaim (special emms-stream-mode-map))
+(defun emacsvox-emms--mode-line-feedback ()
+  "Speak the current mode line after an EMMS command."
+  (emacsvox-speak-mode-line))
 
-(defun ems--emms-stream-mode-after (&rest _)
-  "Update keymaps."
-  (define-key emms-stream-mode-map "" 'emacsvox-keymap))
+(emacsvox-emms--register-after-group
+ '(emms-playlist-mode-go
+   emms-playlist-mode-next
+   emms-playlist-mode-previous
+   emms-playlist-mode-switch-buffer
+   emms-streams)
+ #'emacsvox-emms--mode-line-feedback)
 
-(advice-add 'emms-stream-mode :after #'ems--emms-stream-mode-after)
+(defun emacsvox-emms--task-feedback ()
+  "Confirm an EMMS playlist operation."
+  (emacsvox-icon 'task-done))
 
-(defun ems--emms-stream-delete-bookmark-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-line)))
+(emacsvox-emms--register-after-group
+ '(emms-playlist-clear emms-playlist-mode-kill-track)
+ #'emacsvox-emms--task-feedback)
 
-(advice-add 'emms-stream-delete-bookmark :after
-            #'ems--emms-stream-delete-bookmark-after)
+(defun emacsvox-emms--bury-playlist-feedback ()
+  "Announce the buffer selected after burying an EMMS playlist."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-mode-line))
 
-(defun ems--emms-stream-save-bookmarks-file-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'save-object) (message "Saved stream bookmarks.")))
+(emacsvox-emms--register-after-group
+ '(emms-playlist-mode-bury-buffer)
+ #'emacsvox-emms--bury-playlist-feedback)
 
-(advice-add 'emms-stream-save-bookmarks-file :after
-            #'ems--emms-stream-save-bookmarks-file-after)
+(defun emacsvox--advice-emms-info-really-initialize-track-around
+    (original &rest args)
+  "Call ORIGINAL with ARGS while silencing metadata chatter."
+  (ems-with-messages-silenced
+   (apply original args)))
 
-(cl-loop for f in
-         '(emms-streams emms-stream-quit
-                        emms-stream-popup emms-stream-popup-revert
-                        )
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-mode-line)))))
+(push '(emms-info-really-initialize-track :around
+        emacsvox--advice-emms-info-really-initialize-track-around)
+      emacsvox-emms--advice)
 
-(cl-loop for f in
-         '(emms-stream-next-line emms-stream-previous-line)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "speak."
-             (when (ems-interactive-p)
-               (emacsvox-speak-line)))))
+(defconst emacsvox-emms--removed-targets
+  '(emms-browser-next-filter emms-browser-previous-filter
+    emms-stream-mode emms-stream-delete-bookmark
+    emms-stream-save-bookmarks-file emms-stream-quit
+    emms-stream-popup emms-stream-popup-revert
+    emms-stream-next-line emms-stream-previous-line)
+  "Commands removed by current EMMS browser and streams implementations.")
 
-(defun ems--emms-playlist-mode-bury-buffer-after (&rest _)
-  "Announce the buffer that becomes current."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
+(defun emacsvox-emms--install-advice ()
+  "Install native advice for currently loaded EMMS features."
+  (dolist (entry emacsvox-emms--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
 
-(advice-add 'emms-playlist-mode-bury-buffer :after
-            #'ems--emms-playlist-mode-bury-buffer-after)
-
-;;;  silence chatter from info
-
-(defun ems--emms-info-really-initialize-track-around
-    (orig-fun &rest args)
-  "Silence messages."
-  (ems-with-messages-silenced (apply orig-fun args)))
-
-(advice-add 'emms-info-really-initialize-track :around
-            #'ems--emms-info-really-initialize-track-around)
+(dolist (feature
+         '(emms emms-browser emms-info emms-playlist-mode emms-streams))
+  (eval
+   `(with-eval-after-load ',feature
+      (emacsvox-emms--install-advice))))
 
 ;;;  pause/resume if needed
 
@@ -214,4 +192,3 @@ emacsvox-silence-hook."
 
 (provide 'emacsvox-emms)
 ;;;  end of file
-
