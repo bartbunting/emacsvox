@@ -2,8 +2,8 @@ This directory contains XSL transformations for producing
 different views of HTML  content.
 
 They can be applied to WWW content before being displayed on
-the Emacspeak Desktop 
----see commands emacspeak-w3-xsl-toggle and friends.
+the Emacsvox desktop
+---see command emacsvox-we-xsl-toggle and related Web Extractor commands.
 
 Acknowledgments:
 
@@ -16,7 +16,7 @@ accessible version of their XSLT book.
 
 Finally, I'd like to thank the W3C XSLT working group for
 producing a  wel-structured document that was readily
-accessible from the Emacspeak desktop.
+accessible from the Emacsvox desktop.
 
 List Of Stylesheets:
 

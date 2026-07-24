@@ -24,6 +24,7 @@ make EMACS=/path/to/emacs
 make test EMACS=/path/to/emacs
 make trace-test EMACS=/path/to/emacs
 make advice-audit EMACS=/path/to/emacs
+make name-audit EMACS=/path/to/emacs
 make tts-audit EMACS=/path/to/emacs
 ```
 

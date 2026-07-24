@@ -164,6 +164,9 @@ The migration completed on 2026-07-25.
   unchanged.
 - =make tts-audit= reports 0 legacy Lisp files, definitions, symbols, strings,
   and active-text occurrences; a negative fixture exits with status 1.
+- =make name-audit= rejects removed =emacspeak-*= APIs, =EMACSPEAK_*=
+  environment names, and legacy installation paths in active tracked files,
+  while preserving explicit historical and upstream-comparison material.
 - The Emacs 31 suite passes 1065 of 1066 tests, with the one Mu4e dependency
   test skipped as expected, and all 27 semantic traces match.
 - The complete Lisp and Info builds pass.  Info generation retains its
