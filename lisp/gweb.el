@@ -160,18 +160,45 @@ Uses corpus found in gweb-completion-corpus"
   "Autocomplete using News Search corpus."
   (let ((gweb-completion-corpus "n"))
     (gweb--autocomplete-helper (or prompt "News: "))))
-(cl-loop
- for f in
- '(ido-complete-space minibuffer-complete-word) do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "Fix up ido-complete-space for use with Google autocomplete."
-     (cond
-      (gweb-completion-flag (insert-char ?\ ))
-      (t ad-do-it))
-     (emacsvox-speak-word)
-     ad-return-value)))
+(defun gweb--completion-around (orig-fun args)
+  "Handle Google completion before calling ORIG-FUN with ARGS.
+When `gweb-completion-flag' is non-nil, insert a literal space instead
+of invoking the normal completion command.  Speak the resulting word
+and preserve the return value of the selected operation."
+  (prog1
+      (if gweb-completion-flag
+          (insert-char ?\s)
+        (apply orig-fun args))
+    (emacsvox-speak-word)))
+
+(defun gweb--advice-ido-complete-space-around (orig-fun &rest args)
+  "Adapt `ido-complete-space' for Google completion."
+  (gweb--completion-around orig-fun args))
+
+(defun gweb--advice-minibuffer-complete-word-around (orig-fun &rest args)
+  "Adapt `minibuffer-complete-word' for Google completion."
+  (gweb--completion-around orig-fun args))
+
+(defconst gweb--completion-advice
+  '((ido-complete-space :around
+     gweb--advice-ido-complete-space-around)
+    (minibuffer-complete-word :around
+     gweb--advice-minibuffer-complete-word-around))
+  "Current completion targets and their native Gweb advice functions.")
+
+(defun gweb--install-completion-advice ()
+  "Install Gweb advice for completion features loaded so far."
+  (dolist (entry gweb--completion-advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . gweb)))))))
+
+(dolist (feature '(ido minibuffer))
+  (eval `(with-eval-after-load ',feature
+           (gweb--install-completion-advice))))
+
+(gweb--install-completion-advice)
 
 (provide 'gweb)
 ;;;  end of file
-
