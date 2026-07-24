@@ -207,7 +207,7 @@
    ("C-@" emacsvox-speak-current-mark)
    ("C-M-c" emacsvox-clipfile-copy)
    ("C-M-q" emacsvox-toggle-speak-messages)
-   ("C-M-y" emacsvox-clipboard-paste)
+   ("C-M-y" emacsvox-clipfile-paste)
    ("C-SPC" emacsvox-speak-current-mark)
    ("C-a" emacsvox-toggle-icons)
    ("C-b" emacsvox-bookshare)

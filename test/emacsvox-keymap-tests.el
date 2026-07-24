@@ -20,6 +20,17 @@
   (should-not (boundp 'emacsvox-dtk-submap))
   (should-not (fboundp 'emacsvox-dtk-submap)))
 
+(ert-deftest emacsvox-keymap-uses-live-clipboard-commands ()
+  "The Emacsvox clipboard bindings name the implemented commands."
+  (should
+   (eq
+    (lookup-key emacsvox-keymap (kbd "C-M-c"))
+    'emacsvox-clipfile-copy))
+  (should
+   (eq
+    (lookup-key emacsvox-keymap (kbd "C-M-y"))
+    'emacsvox-clipfile-paste)))
+
 (ert-deftest emacsvox-keymap-uses-canonical-tts-commands ()
   "Generic speech bindings use canonical commands; DECtalk remains explicit."
   (dolist
