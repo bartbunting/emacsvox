@@ -60,37 +60,60 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
- '(journalctl-boot journalctl
-                   journalctl-unit journalctl-user-unit)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(defvar emacsvox-journalctl--advice nil
+  "Current journalctl-mode targets and their native advice functions.")
+(setq emacsvox-journalctl--advice nil)
 
-(cl-loop
- for f in 
- '(
-   journalctl-scroll-up journalctl-scroll-down
-   journalctl-previous-chunk journalctl-next-chunkfunctions)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'scroll)
-       (emacsvox-speak-line)))))
+(defun emacsvox-journalctl--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-journalctl--advice))))
 
-(defun ems--journalctl-quit-after (&rest _)
+(defun emacsvox-journalctl--open-feedback ()
+  "Speak a newly opened journal."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
+
+(emacsvox-journalctl--register-after-group
+ '(journalctl)
+ #'emacsvox-journalctl--open-feedback)
+
+(defun emacsvox-journalctl--scroll-feedback ()
+  "Speak after moving through journal output."
+  (emacsvox-icon 'scroll)
+  (emacsvox-speak-line))
+
+(emacsvox-journalctl--register-after-group
+ '(journalctl-scroll-up journalctl-scroll-down
+   journalctl-previous-chunk journalctl-next-chunk)
+ #'emacsvox-journalctl--scroll-feedback)
+
+(defun emacsvox--advice-journalctl-quit-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'journalctl-quit)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'journalctl-quit :after #'ems--journalctl-quit-after)
+(push '(journalctl-quit :after emacsvox--advice-journalctl-quit-after)
+      emacsvox-journalctl--advice)
+
+(defun emacsvox-journalctl--install-advice ()
+  "Install native advice after journalctl-mode loads."
+  (dolist (entry emacsvox-journalctl--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'journalctl-mode
+  (emacsvox-journalctl--install-advice))
 
 (provide 'emacsvox-journalctl)
 ;;;  end of file
@@ -98,4 +121,3 @@
                                         ; 
                                         ; 
                                         ; 
-
