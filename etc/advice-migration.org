@@ -36,9 +36,9 @@ must become conservative and test-driven before further bulk use.
 * Progress Checkpoint
 
 As of the completed core-file migration and built-in integration slices through
-Which-Key on 2026-07-24 on branch =bart=:
+Eterm on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 499 passing ERT tests;
+- the Emacs 31 suite contains 511 passing ERT tests;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
@@ -76,18 +76,21 @@ Which-Key on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-which-key.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
+- =lisp/emacsvox-eterm.el= contains no =defadvice=, positional compatibility
+  accessors, bridge-era =ems--= advice helpers, or implicit interactive-target
+  checks.
 
 The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
 | =defadvice=         |         276 |    98 |
-| =ad-get-arg=        |          61 |   n/a |
+| =ad-get-arg=        |          59 |   n/a |
 | =ad-set-arg=        |           2 |   n/a |
 | =ad-do-it=          |          37 |   n/a |
 | =ad-return-value=   |          23 |   n/a |
-| =advice-add=        |        1355 |   157 |
-| =ems-interactive-p= |        1402 |   176 |
+| =advice-add=        |        1349 |   157 |
+| =ems-interactive-p= |        1396 |   176 |
 
 Converted core areas include movement and editing, buffers and windows,
 minibuffer and completion, search and replacement, file and process lifecycle,
@@ -108,10 +111,10 @@ Diff Mode, Project, Flymake, Package, Info, Debugger, table editing, Proced,
 View, Calendar, Wdired, Tabulated List, Net Utils, Forms, Xref, and Org.
 Outline and its optional Foldout integration, and EWW with its SHR rendering
 integration, Gnus, Ibuffer, Comint, Tab Bar, C Mode, Eshell, and Which-Key are
-also converted.
+also converted, along with Eterm.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  These modules are now
-completely independent of the compatibility bridge; 44 files still contain
+completely independent of the compatibility bridge; 43 files still contain
 bridge compatibility symbols.
 
 The Debugger conversion uses native =:filter-return= advice so interactive
@@ -259,6 +262,18 @@ corresponding Which-Key module, so the existing Emacsvox implementation is the
 behavioural contract.  Internal =which-key--show-page= calls continue to speak
 unconditionally when automatic speech is enabled, while popup, paging, help,
 undo, and display commands now use explicit interactive targets.
+
+The Eterm conversion covers all 21 advised targets, which remain present and
+current in Emacs 31.  Command, mode, history, prompt, job-control, completion,
+and terminal-output advice now uses direct named registration.  Launch and
+input-ring notices retain their reference-defined unconditional behaviour,
+while interactive command feedback names its target explicitly.
+
+The completion wrapper now calls =term-dynamic-complete= exactly once, speaks
+only text inserted by that call, and preserves the original result.  The
+=term-emulate-terminal= wrapper receives its native =proc= and =str= arguments
+directly, retains the reference live-process gate and feedback cases, calls the
+terminal emulator exactly once, and preserves its result.
 
 Continue by migrating remaining built-in integration modules before optional
 third-party integrations.  The compatibility bridge remains necessary until
