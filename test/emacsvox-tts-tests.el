@@ -50,6 +50,12 @@
     (tts-set-punctuations-to-some . dtk-set-punctuations-to-some)
     (tts-reset-state . dtk-reset-state)
     (tts-initialize . dtk-initialize)
+    (tts-chunk-on-white-space-and-punctuations
+     . dtk-chunk-on-white-space-and-punctuations)
+    (tts-char-to-speech . dtk-char-to-speech)
+    (tts-unicode-char-untouched-p . dtk-unicode-char-untouched-p)
+    (tts-unicode-name-for-char . dtk-unicode-name-for-char)
+    (tts-unicode-full-name-for-char . dtk-unicode-full-name-for-char)
     (tts-speak . dtk-speak)
     (tts-speak-list . dtk-speak-list)
     (tts-letter . dtk-letter)
@@ -267,17 +273,23 @@
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."
   (let ((default-quiet (default-value 'dtk-quiet))
-        (default-rate (default-value 'dtk-speech-rate)))
+        (default-rate (default-value 'dtk-speech-rate))
+        (default-separators (default-value 'dtk-chunk-separator-syntax)))
     (with-temp-buffer
       (setq tts-quiet (not default-quiet)
-            tts-speech-rate (1+ default-rate))
+            tts-speech-rate (1+ default-rate)
+            tts-chunk-separator-syntax "canonical")
       (should (eq dtk-quiet (not default-quiet)))
       (should (= dtk-speech-rate (1+ default-rate)))
+      (should (equal dtk-chunk-separator-syntax "canonical"))
       (should (local-variable-p 'tts-quiet))
-      (should (local-variable-p 'dtk-quiet)))
+      (should (local-variable-p 'dtk-quiet))
+      (should (local-variable-p 'tts-chunk-separator-syntax))
+      (should (local-variable-p 'dtk-chunk-separator-syntax)))
     (with-temp-buffer
       (should (eq tts-quiet default-quiet))
-      (should (= tts-speech-rate default-rate)))))
+      (should (= tts-speech-rate default-rate))
+      (should (equal tts-chunk-separator-syntax default-separators)))))
 
 (ert-deftest emacsvox-tts-voice-setup-selects-engine-adapter ()
   "Each speech-server name selects the corresponding voice adapter."

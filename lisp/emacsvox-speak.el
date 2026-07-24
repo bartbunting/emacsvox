@@ -76,7 +76,7 @@
 (defun emacsvox-speak-adjust-clause-boundaries ()
   "Adjust clause boundaries so that newlines dont delimit clauses."
   
-  (setq dtk-chunk-separator-syntax ".)$\""))
+  (setq tts-chunk-separator-syntax ".)$\""))
 ;;; Helper: Read URL
 
 (defun ems--read-url (&optional history)
@@ -128,7 +128,7 @@
 
 (defsubst emacsvox-speak-frame-title ()
   "Speak Frame Title"
-  (dtk-speak (cdr (assq 'name (frame-parameters))) ))
+  (tts-speak (cdr (assq 'name (frame-parameters))) ))
 
 ;;;   line, Word and Character echo
 
@@ -173,15 +173,15 @@ current local  value to the result.")
 See  command emacsvox-toggle-word-echo bound to
 \\[emacsvox-toggle-word-echo].
 Speech flushes as you type."
-  (when buffer-read-only (dtk-speak "Buffer is read-only. "))
+  (when buffer-read-only (tts-speak "Buffer is read-only. "))
   (when
       (and (eq (preceding-char) last-command-event) ; Sanity check.
            (not executing-kbd-macro)
            (not noninteractive))
     (let ((display (get-char-property (1- (point)) 'display)))
-      (dtk-stop 'all)
+      (tts-stop 'all)
       (cond
-       ((stringp display) (dtk-speak display))
+       ((stringp display) (tts-speak display))
        ((and emacsvox-word-echo
              (= (char-syntax last-command-event)32))
         (save-excursion
@@ -220,7 +220,7 @@ message area.  You can use command
       (ems-with-messages-silenced
        (shell-command command output))
       (emacsvox-icon 'open-object)
-      (dtk-speak (buffer-string)))))
+      (tts-speak (buffer-string)))))
 
 ;;;  Utility command to run and tabulate shell output
 
@@ -284,7 +284,7 @@ message area.  You can use command
            (window-live-p (get-buffer-window completions)))
       (with-minibuffer-completions-window
         (emacsvox-icon 'help)
-        (dtk-chunk-on-white-space-and-punctuations)
+        (tts-chunk-on-white-space-and-punctuations)
         (next-completion 1)
         (tts-with-punctuations
          'all (emacsvox-speak-line))))
@@ -605,7 +605,7 @@ the sense of the filter. "
   (when-let* ((there (cl-fourth (show-paren--default))))
     (save-excursion
       (goto-char there)
-      (dtk-speak
+      (tts-speak
        (buffer-substring              ; left or right context
         (if (eolp) (line-beginning-position) there)
         (line-end-position))))))
@@ -617,7 +617,7 @@ the sense of the filter. "
   (interactive)
   (let ((beg (save-excursion (skip-syntax-backward " ")))
         (end (save-excursion (skip-syntax-forward " "))))
-    (dtk-notify  (format "%s spaces " (+ (- end beg))))))
+    (tts-notify  (format "%s spaces " (+ (- end beg))))))
 
 (defvar ems--large-text-size 40000
   "Upper limit on what we attempt to speak in one shot.")
@@ -634,7 +634,7 @@ the sense of the filter. "
         (narrow-to-region start end)
         (emacsvox-speak-voice-annotate-paragraphs)))
     (if (< (abs (- start end )) ems--large-text-size)
-        (dtk-speak (buffer-substring start end))
+        (tts-speak (buffer-substring start end))
       (call-interactively #' emacsvox-speak-windowful))))
 
 (defun emacsvox-speak-extent (beg end &optional no-case)
@@ -710,7 +710,7 @@ before-string, or after-string) is indicated with auditory icon
 `left', `right', or `more' as appropriate.  These can then be
 spoken using command \\[emacsvox-speak-overlay-properties]."
   (interactive "P")
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (when (listp arg) (setq arg (car arg)))
   (let* ((inhibit-field-text-motion t)
          (inhibit-read-only t)
@@ -767,18 +767,18 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
     (cond
      ;; C1..C5
      ((string-equal "" line)
-      (dtk-tone 130.8 150 'force))
+      (tts-tone 130.8 150 'force))
      ((string-match emacsvox-speak-blank-line-regexp line) ;only white space
-      (dtk-tone 261.6 150 'force))
-     ((and (not (eq 'all dtk-punctuation-mode))
+      (tts-tone 261.6 150 'force))
+     ((and (not (eq 'all tts-punctuation-mode))
            (string-match emacsvox-horizontal-rule line))
-      (dtk-tone 523.3 150 t))
-     ((and (not (eq 'all dtk-punctuation-mode))
+      (tts-tone 523.3 150 t))
+     ((and (not (eq 'all tts-punctuation-mode))
            (string-match emacsvox-decoration-rule line))
-      (dtk-tone 1047 150 t))
-     ((and (not (eq 'all dtk-punctuation-mode))
+      (tts-tone 1047 150 t))
+     ((and (not (eq 'all tts-punctuation-mode))
            (string-match emacsvox-unspeakable-rule line))
-      (dtk-tone 2093 150 t))
+      (tts-tone 2093 150 t))
      (t
       (let*
           ((l (length line))
@@ -808,7 +808,7 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
             (setq linenum (format "%d" linenum))
             (setq linenum (propertize linenum 'personality voice-lighten))
             (setq line (concat linenum line)))
-          (dtk-speak line)))))))
+          (tts-speak line)))))))
 
 (defun ems--display-props-get ()
   "Return  speakable display, before-string or after-string property if any."
@@ -843,7 +843,7 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
       (message disp))
      (t
       (emacsvox-icon icon)
-      (dtk-speak result)))))
+      (tts-speak result)))))
 
 (defun emacsvox-speak-visual-line ()
   "Speaks current visual line.
@@ -871,7 +871,7 @@ Cues the start of a physical line with auditory icon `left'."
                  orig (1+ orig)
                  voice-animate (buffer-substring start end))
               (buffer-substring start end)))
-      (dtk-speak line))))
+      (tts-speak line))))
 
 (defvar-local emacsvox-speak-last-spoken-word-position nil
   "Records position of the last word spoken  .
@@ -894,7 +894,7 @@ Local to each buffer.  Used to decide if we  spell or speak the word. ")
              (setq result
                    (concat result
                            char-string)))
-    (dtk-speak result)))
+    (tts-speak result)))
 
 (defun emacsvox-speak-spell-current-word ()
   "Spell word at  point."
@@ -916,7 +916,7 @@ spelled out  instead of being spoken."
           (inhibit-field-text-motion  t)
           (start nil)
           (end nil)
-          (speaker 'dtk-speak))
+          (speaker 'tts-speak))
       (forward-word 1)
       (setq end (point))
       (backward-word 1)
@@ -937,7 +937,7 @@ spelled out  instead of being spoken."
 (defsubst emacsvox-is-alpha-p (c)
   "Check if `C' is an alphabetic char."
   (and (= ?w (char-syntax c))
-       (dtk-unicode-char-untouched-p c)))
+       (tts-unicode-char-untouched-p c)))
 
 ;;;   phonemic table
 
@@ -1014,7 +1014,7 @@ char is assumed to be one of a--z."
   (let ((char-string (char-to-string char)))
     (or (cdr
          (assoc char-string emacsvox-char-to-phonetic-table))
-        (dtk-unicode-full-name-for-char char)
+        (tts-unicode-full-name-for-char char)
         char-string)))
 
 ;;;  Speak Chars:
@@ -1023,9 +1023,9 @@ char is assumed to be one of a--z."
   "Speak this CHAR."
   (when char
     (cond
-     ((emacsvox-is-alpha-p char) (dtk-letter (char-to-string char)))
-     ((and dtk-handle-unicode (> char 128)) (emacsvox-speak-char-name char))
-     (t (dtk-dispatch (dtk-char-to-speech char))))))
+     ((emacsvox-is-alpha-p char) (tts-letter (char-to-string char)))
+     ((and tts-handle-unicode (> char 128)) (emacsvox-speak-char-name char))
+     (t (tts-dispatch (tts-char-to-speech char))))))
 
 (defun emacsvox-speak-char (&optional prefix)
   "Speak character under point.
@@ -1040,10 +1040,10 @@ Pronounces character phonetically unless  called with a PREFIX arg."
       (and (listp display) (message "%s" (car display))))
     (when char
       (cond
-       ((stringp display) (dtk-speak display))
+       ((stringp display) (tts-speak display))
        ((and (not prefix)
              (emacsvox-is-alpha-p char))
-        (dtk-speak (emacsvox-get-phonetic-string char)))
+        (tts-speak (emacsvox-get-phonetic-string char)))
        (t (emacsvox-speak-this-char char))))))
 
 (defun emacsvox-speak-preceding-char ()
@@ -1053,14 +1053,14 @@ Pronounces character phonetically unless  called with a PREFIX arg."
         (display (get-char-property (max (point-min) (1- (point))) 'display)))
     (when char
       (cond
-       ((stringp display) (dtk-speak display))
+       ((stringp display) (tts-speak display))
        ((> char 128) (emacsvox-speak-char-name char))
        (t (emacsvox-speak-this-char char))))))
 
 (defun emacsvox-speak-char-name (char)
   "tell me what this is"
   (interactive)
-  (dtk-speak (dtk-unicode-name-for-char char)))
+  (tts-speak (tts-unicode-name-for-char char)))
 
 (defun emacsvox-speak-sentence (&optional arg)
   "Speak current sentence.
@@ -1081,7 +1081,7 @@ Negative prefix arg speaks from start of sentence to point."
        ((null arg))
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
-      (dtk-speak (buffer-substring start end)))))
+      (tts-speak (buffer-substring start end)))))
 
 (defun emacsvox-speak-sexp (&optional arg)
   "Speak current sexp.
@@ -1107,7 +1107,7 @@ Negative prefix arg speaks from start of sexp to point. "
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
       (emacsvox-icon 'select-object)
-      (dtk-speak (buffer-substring start end)))))
+      (tts-speak (buffer-substring start end)))))
 
 (defun emacsvox-speak-page (&optional arg)
   "Speak a page.
@@ -1126,7 +1126,7 @@ Negative prefix arg will read from start of current page to point. "
        ((null arg))
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
-      (dtk-speak (buffer-substring start end)))))
+      (tts-speak (buffer-substring start end)))))
 
 (defun emacsvox-speak-paragraph (&optional arg)
   "Speak paragraph.
@@ -1146,7 +1146,7 @@ Negative prefix arg will read from start of current paragraph to point. "
        ((null arg))
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
-      (dtk-speak (buffer-substring start end)))))
+      (tts-speak (buffer-substring start end)))))
 
 ;;;   Speak buffer objects such as help, completions minibuffer etc
 
@@ -1161,7 +1161,7 @@ Negative prefix arg speaks from start of buffer to point. "
        (not emacsvox-speak-voice-annotated-paragraphs))
     (emacsvox-speak-voice-annotate-paragraphs))
   (when (listp arg) (setq arg (car arg)))
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (let ((start nil)
         (end nil))
     (cond
@@ -1174,7 +1174,7 @@ Negative prefix arg speaks from start of buffer to point. "
      (t (setq start (point-min)
               end (point))))
     (if (< (abs (- start end )) ems--large-text-size)
-        (dtk-speak (buffer-substring start end))
+        (tts-speak (buffer-substring start end))
       (emacsvox-speak-windowful))))
 
 (defun emacsvox-speak-other-buffer (buffer)
@@ -1204,7 +1204,7 @@ Useful to listen to a buffer without switching  contexts."
             (display-buffer help-buffer))
         (select-window (get-buffer-window help-buffer))
         (call-interactively #'emacsvox-speak-windowful))
-    (dtk-speak "First ask for help")))
+    (tts-speak "First ask for help")))
 
 (defun emacsvox-get-current-completion ()
   "Return the completion under point in the *Completions* buffer."
@@ -1415,7 +1415,7 @@ Speaks header-line if that is set when called non-interactively.
 Interactive prefix arg speaks buffer info."
   (interactive "P")
   (with-current-buffer (window-buffer (selected-window))
-    (dtk-stop)
+    (tts-stop)
     (force-mode-line-update)
     (when
         (or
@@ -1450,7 +1450,7 @@ Interactive prefix arg speaks buffer info."
         (setq window-count ;;; int->string
               (if (> window-count 1) (format " %s " window-count) nil))
         (cond
-         ((stringp mode-line-format) (dtk-speak (downcase mode-line-format)))
+         ((stringp mode-line-format) (tts-speak (downcase mode-line-format)))
          (t                             ;process modeline
           (unless (zerop (length global-info))
             (put-text-property
@@ -1464,7 +1464,7 @@ Interactive prefix arg speaks buffer info."
               (emacsvox-icon 'unmodified-object)))
           (tts-with-punctuations
            'all
-           (dtk-speak
+           (tts-speak
             (concat
              autospeak
              dir-info
@@ -1500,7 +1500,7 @@ Interactive prefix arg speaks buffer info."
 (defun emacsvox-speak-current-buffer-name ()
   "Speak name of current buffer."
   (tts-with-punctuations 'all
-                         (dtk-speak
+                         (tts-speak
                           (buffer-name))))
 
 (defconst ems--vol-cmd
@@ -1528,7 +1528,7 @@ Optional interactive prefix arg `log-msg' logs spoken info to
          (info (format-mode-line minor-mode-alist)))
     (when log-msg (ems--log-message info))
     (tts-with-punctuations 'some
-                           (dtk-speak  info))))
+                           (tts-speak  info))))
 
 (defun emacsvox-speak-buffer-filename (&optional filename)
   "Speak name of file being visited in current buffer.
@@ -1537,12 +1537,12 @@ buffer is not visiting any file.  Interactive prefix arg
 `filename' speaks only the final path component.  The result is
 put in the kill ring for convenience."
   (interactive "P")
-  (let ((dtk-caps t)
+  (let ((tts-caps t)
         (location (or (buffer-file-name) default-directory)))
     (when filename
       (setq location (file-name-nondirectory location)))
     (kill-new location)
-    (dtk-speak location)))
+    (tts-speak location)))
 
 ;;;  Speak header-line
 
@@ -1563,9 +1563,9 @@ Displays name of current buffer.")
     (let ((window-count (length (window-list))))
       (emacsvox-icon 'item)
       (when (> window-count 1) (emacsvox--sox-multiwindow))
-      (dtk-notify (format-mode-line header-line-format))))
+      (tts-notify (format-mode-line header-line-format))))
    (t
-    (dtk-notify
+    (tts-notify
      (concat
       (propertize (buffer-name) 'personality voice-smoothen)
       (format-time-string emacsvox-speak-time-brief-format))))))
@@ -1592,7 +1592,7 @@ offset. Default  is to speak the previous line. "
      ((zerop arg) (emacsvox-speak-line))
      ((zerop (forward-line arg))
       (emacsvox-speak-line))
-     (t (dtk-speak "Not that many lines in buffer ")))))
+     (t (tts-speak "Not that many lines in buffer ")))))
 
 (defun emacsvox-read-previous-line (&optional arg)
   "Read previous line, specified by an offset, without moving.
@@ -1616,7 +1616,7 @@ offset. Default  is to speak the previous word. "
      ((forward-word arg)
       (skip-syntax-forward " ")
       (emacsvox-speak-word 1))
-     (t (dtk-speak "Not that many words ")))))
+     (t (tts-speak "Not that many words ")))))
 
 ;;;   Speak misc information e.g. time, version, current-kill  etc
 
@@ -1684,7 +1684,7 @@ Second interactive prefix sets clock to new timezone."
     (let ((time-string
            (format-time-string emacsvox-speak-time-format
                                (current-time) (getenv "TZ"))))
-      (dtk-notify time-string)))))
+      (tts-notify time-string)))))
 
 (defsubst ems--seconds-to-duration (sec)
   "Return seconds formatted as time if valid, otherwise return as is."
@@ -1773,13 +1773,13 @@ arg to give to command yank."
          (format "kill %s "
                  (if current-prefix-arg (+ 1 count) 1))))
     (put-text-property 0 (length context) 'personality voice-annotate context)
-    (dtk-speak
+    (tts-speak
      (concat context (current-kill (if current-prefix-arg count 0) t)))))
 
 (defun emacsvox-zap-tts ()
   "Send this command to the TTS directly."
   (interactive)
-  (dtk-dispatch
+  (tts-dispatch
    (read-from-minibuffer "Enter TTS command string: ")))
 
 (defun emacsvox-speak-string-to-phone-number (string)
@@ -1853,7 +1853,7 @@ location of the mark is indicated by an aural highlight. "
       (ems-set-personality-temporarily
        pos (1+ pos) voice-animate
        (setq line (ems--this-line)))
-      (dtk-speak
+      (tts-speak
        (concat context line)))))
 
 ;;;  speaking personality chunks
@@ -1926,10 +1926,10 @@ location of the mark is indicated by an aural highlight. "
        (t (setq pos (point))
           (setq key (read-key message))
           (when (not (= 32 key))
-            (dtk-stop 'all)
+            (tts-stop 'all)
             (setq continue nil))))
       (emacsvox-icon 'repeat-end)
-      (dtk-speak "Exited continuous mode "))))
+      (tts-speak "Exited continuous mode "))))
 
 (defun emacsvox-speak-continuously ()
   "Speak a buffer continuously.
@@ -1967,7 +1967,7 @@ was spoken.  Pressing SPC  continues to speak the buffer; any other
 (defun emacsvox-speak-field ()
   "Speak current field."
   (interactive)
-  (dtk-speak (field-string (point))))
+  (tts-speak (field-string (point))))
 
 (defun emacsvox-speak-next-field ()
   "Move to and speak next field."
@@ -2011,7 +2011,7 @@ The message is also placed in the kill ring for convenient yanking "
   (when  (and emacsvox-last-message (called-interactively-p 'interactive))
     (kill-new emacsvox-last-message))
   (cond
-   (from-message-cache (dtk-speak emacsvox-last-message))
+   (from-message-cache (tts-speak emacsvox-last-message))
    (t
     (save-current-buffer
       (set-buffer "*Messages*")
@@ -2037,7 +2037,7 @@ The message is also placed in the kill ring for convenient yanking "
   (delete-other-windows)
   (recenter 0)
   (emacsvox-icon 'scroll)
-  (dtk-speak (emacsvox-get-window-contents)))
+  (tts-speak (emacsvox-get-window-contents)))
 
 (defun emacsvox-speak-window-information ()
   "Speaks information about current window."
@@ -2236,7 +2236,7 @@ Rectangle is delimited by point and mark.  When call from a
 program, arguments specify the START and END of the rectangle."
   (interactive "r")
   (require 'rect)
-  (dtk-speak-list (extract-rectangle start end)))
+  (tts-speak-list (extract-rectangle start end)))
 
 ;;;   Auxiliary functions:
 
@@ -2323,7 +2323,7 @@ char, or dont move. "
               (search-backward input nil t))
       (skip-syntax-forward " ")
       (emacsvox-icon 'search-hit))
-    (dtk-speak (emacsvox-get-current-completion))))
+    (tts-speak (emacsvox-get-current-completion))))
 
 (defun emacsvox-completion-setup-hook ()
   "Set things up for emacsvox."
@@ -2386,7 +2386,7 @@ See documentation for command run-at-time for details on time-spec."
   (run-at-time
    time nil
    #'(lambda (m)
-       (dtk-notify m)
+       (tts-notify m)
        (when emacsvox-use-icons (emacsvox-icon 'alarm))
        (sox-tones))
    message)
@@ -2435,7 +2435,7 @@ streams. Runs `emacsvox-silence-hook' which can be used to
 configure which media players get silenced or paused/resumed."
   (interactive)
   
-  (dtk-stop 'all)
+  (tts-stop 'all)
   (run-hooks 'emacsvox-silence-hook))
 
 ;;;  Smart date prompe:
@@ -2559,7 +2559,7 @@ displayed buffers."
           (concat w " with top left " tl " and bottom right " br))))
       (t (mapcar #'buffer-name (mapcar #'window-buffer window-list)))))
     (emacsvox--sox-multiwindow )
-    (dtk-speak (concat description (mapconcat #'identity windows " ")))))
+    (tts-speak (concat description (mapconcat #'identity windows " ")))))
 
 (defun emacsvox-select-window-by-name (buffer-name)
   "Select window by the name of the buffer it displays.
@@ -2637,7 +2637,7 @@ but quickly switch to a window by name."
    ((= (point) (point-max)) (call-interactively 'beginning-of-buffer))
    (t (call-interactively 'beginning-of-buffer)))
   (when (called-interactively-p 'interactive)
-    (dtk-notify
+    (tts-notify
      (format "%s%%" (emacsvox-get-current-percentage-into-buffer)))))
 
 ;;; Utility: Accumulate
@@ -2815,7 +2815,7 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
   "Speak text, either using piper or regular notification stream."
   (cond
    ((featurep 'pip) (pip-speak text))
-   (t (dtk-notify text))))
+   (t (tts-notify text))))
 
 ;;; Bug Reporter:
 (defconst emacsvox-bug-address "emacsvox@emacsvox.net" "List address")
@@ -2831,8 +2831,8 @@ Use `,' and `.' to continuously decrease/increase `selective-display'.
            '(
              window-system window-system-version emacs-version system-type
              emacsvox-version emacsvox-show-point
-             dtk-program dtk-speech-rate dtk-character-scale
-             dtk-split-caps dtk-punctuation-mode visual-line-mode
+             tts-program tts-speech-rate tts-character-scale
+             tts-split-caps tts-punctuation-mode visual-line-mode
              emacsvox-line-echo  emacsvox-word-echo emacsvox-character-echo
              emacsvox-audio-indentation)))
       (mapc

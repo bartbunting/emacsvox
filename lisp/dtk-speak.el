@@ -93,6 +93,8 @@
   "Canonical name for buffer-local punctuation state.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
   "Canonical name for the available speech-server list.")
+(defvaralias 'tts-chunk-separator-syntax 'dtk-chunk-separator-syntax
+  "Canonical name for the buffer-local speech chunk separators.")
 
 (defvar dtk-program
   (or
@@ -2155,6 +2157,13 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-set-punctuations-to-some #'dtk-set-punctuations-to-some)
 (defalias 'tts-reset-state #'dtk-reset-state)
 (defalias 'tts-initialize #'dtk-initialize)
+(defalias
+ 'tts-chunk-on-white-space-and-punctuations
+ #'dtk-chunk-on-white-space-and-punctuations)
+(defalias 'tts-char-to-speech #'dtk-char-to-speech)
+(defalias 'tts-unicode-char-untouched-p #'dtk-unicode-char-untouched-p)
+(defalias 'tts-unicode-name-for-char #'dtk-unicode-name-for-char)
+(defalias 'tts-unicode-full-name-for-char #'dtk-unicode-full-name-for-char)
 (defalias 'tts-speak #'dtk-speak)
 (defalias 'tts-speak-list #'dtk-speak-list)
 (defalias 'tts-letter #'dtk-letter)
