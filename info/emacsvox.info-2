@@ -1,21 +1,21 @@
-This is emacspeak.info, produced by makeinfo version 7.2 from
-emacspeak.texi.
+This is emacsvox.info, produced by makeinfo version 7.2 from
+emacsvox.texi.
 
 INFO-DIR-SECTION Accessibility
 START-INFO-DIR-ENTRY
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 END-INFO-DIR-ENTRY
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 END-INFO-DIR-ENTRY
 
-This manual documents *Emacspeak, The Complete Audio Desktop* and was
+This manual documents *Emacsvox, The Complete Audio Desktop* and was
 last updated on July 25, 2026.
 
 
-File: emacspeak.info,  Node: emacsvox-google,  Next: emacsvox-gptel,  Prev: emacsvox-gomoku,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-google,  Next: emacsvox-gptel,  Prev: emacsvox-gomoku,  Up: Emacsvox Commands And Options
 
 12.94 emacsvox-google
 =====================
@@ -206,7 +206,7 @@ e.g.  blog search are tbm=
 
 
 
-File: emacspeak.info,  Node: emacsvox-gptel,  Next: emacsvox-gridtext,  Prev: emacsvox-google,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-gptel,  Next: emacsvox-gridtext,  Prev: emacsvox-google,  Up: Emacsvox Commands And Options
 
 12.95 emacsvox-gptel
 ====================
@@ -228,7 +228,7 @@ speech-enables gptel.
      Re-read the last gptel response.
 
 
-File: emacspeak.info,  Node: emacsvox-gridtext,  Next: emacsvox-gud,  Prev: emacsvox-gptel,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-gridtext,  Next: emacsvox-gud,  Prev: emacsvox-gptel,  Up: Emacsvox Commands And Options
 
 12.96 emacsvox-gridtext
 =======================
@@ -280,7 +280,7 @@ list of (start end) tuples..
      (fn FILE)
 
 
-File: emacspeak.info,  Node: emacsvox-gud,  Next: emacsvox-haskell,  Prev: emacsvox-gridtext,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-gud,  Next: emacsvox-haskell,  Prev: emacsvox-gridtext,  Up: Emacsvox Commands And Options
 
 12.97 emacsvox-gud
 ==================
@@ -288,7 +288,7 @@ File: emacspeak.info,  Node: emacsvox-gud,  Next: emacsvox-haskell,  Prev: emacs
 Provide additional advice to ease debugger interaction with gud
 
 
-File: emacspeak.info,  Node: emacsvox-haskell,  Next: emacsvox-helm,  Prev: emacsvox-gud,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-haskell,  Next: emacsvox-helm,  Prev: emacsvox-gud,  Up: Emacsvox Commands And Options
 
 12.98 emacsvox-haskell
 ======================
@@ -296,7 +296,7 @@ File: emacspeak.info,  Node: emacsvox-haskell,  Next: emacsvox-helm,  Prev: emac
 Speech-enable package haskell-mode
 
 
-File: emacspeak.info,  Node: emacsvox-helm,  Next: emacsvox-helpful,  Prev: emacsvox-haskell,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-helm,  Next: emacsvox-helpful,  Prev: emacsvox-haskell,  Up: Emacsvox Commands And Options
 
 12.99 emacsvox-helm
 ===================
@@ -307,7 +307,7 @@ my helm setup.  that file provides convenient emacsvox-centric
 keybindings for Helm interaction.
 
 
-File: emacspeak.info,  Node: emacsvox-helpful,  Next: emacsvox-hide,  Prev: emacsvox-helm,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-helpful,  Next: emacsvox-hide,  Prev: emacsvox-helm,  Up: Emacsvox Commands And Options
 
 12.100 emacsvox-helpful
 =======================
@@ -317,7 +317,7 @@ auditory feedback for richer help buffers showing source, references,
 and more.
 
 
-File: emacspeak.info,  Node: emacsvox-hide,  Next: emacsvox-hide-lines,  Prev: emacsvox-helpful,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-hide,  Next: emacsvox-hide-lines,  Prev: emacsvox-helpful,  Up: Emacsvox Commands And Options
 
 12.101 emacsvox-hide
 ====================
@@ -359,7 +359,7 @@ filladapt.el
      Speaks current block after stripping its prefix.
 
 
-File: emacspeak.info,  Node: emacsvox-hide-lines,  Next: emacsvox-hideshow,  Prev: emacsvox-hide,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-hide-lines,  Next: emacsvox-hideshow,  Prev: emacsvox-hide,  Up: Emacsvox Commands And Options
 
 12.102 emacsvox-hide-lines
 ==========================
@@ -367,7 +367,7 @@ File: emacspeak.info,  Node: emacsvox-hide-lines,  Next: emacsvox-hideshow,  Pre
 HIDE-LINES == hide/show lines from melpa
 
 
-File: emacspeak.info,  Node: emacsvox-hideshow,  Next: emacsvox-hydra,  Prev: emacsvox-hide-lines,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-hideshow,  Next: emacsvox-hydra,  Prev: emacsvox-hide-lines,  Up: Emacsvox Commands And Options
 
 12.103 emacsvox-hideshow
 ========================
@@ -375,7 +375,7 @@ File: emacspeak.info,  Node: emacsvox-hideshow,  Next: emacsvox-hydra,  Prev: em
 speech-enable hideshow.el
 
 
-File: emacspeak.info,  Node: emacsvox-hydra,  Next: emacsvox-ibuffer,  Prev: emacsvox-hideshow,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-hydra,  Next: emacsvox-ibuffer,  Prev: emacsvox-hideshow,  Up: Emacsvox Commands And Options
 
 12.104 emacsvox-hydra
 =====================
@@ -394,7 +394,7 @@ emacsvox-muggles::.
      Toggle hydra-is-helpful
 
 
-File: emacspeak.info,  Node: emacsvox-ibuffer,  Next: emacsvox-ido,  Prev: emacsvox-hydra,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ibuffer,  Next: emacsvox-ido,  Prev: emacsvox-hydra,  Up: Emacsvox Commands And Options
 
 12.105 emacsvox-ibuffer
 =======================
@@ -412,7 +412,7 @@ speech-enable ibuffer.el this is an alternative to buffer-menu
      Speak information about this buffer
 
 
-File: emacspeak.info,  Node: emacsvox-ido,  Next: emacsvox-iedit,  Prev: emacsvox-ibuffer,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ido,  Next: emacsvox-iedit,  Prev: emacsvox-ibuffer,  Up: Emacsvox Commands And Options
 
 12.106 emacsvox-ido
 ===================
@@ -424,13 +424,13 @@ updating set of choices?  current strategy is to walk the list using c-s
 and c-r as provided by ido Set number matches shown (ido-max-prospects)
 to 2 or 3 using Custom so you dont hear the entire list.  You can also
 customize IDO-DECORATIONS to taste.  See
-<https://emacsvox.blogspot.com/2018/06/\
+<https://emacspeak.blogspot.com/2018/06/\
 effective-suggest-and-complete-in-eyes.html>, for an article on how to
 reason about designing good auditory interfaces for these types of
 situations.
 
 
-File: emacspeak.info,  Node: emacsvox-iedit,  Next: emacsvox-info,  Prev: emacsvox-ido,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-iedit,  Next: emacsvox-info,  Prev: emacsvox-ido,  Up: Emacsvox Commands And Options
 
 12.107 emacsvox-iedit
 =====================
@@ -438,7 +438,7 @@ File: emacspeak.info,  Node: emacsvox-iedit,  Next: emacsvox-info,  Prev: emacsv
 IEDIT == Edit multiple regions This module speech-enables iedit.
 
 
-File: emacspeak.info,  Node: emacsvox-info,  Next: emacsvox-ispell,  Prev: emacsvox-iedit,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-info,  Next: emacsvox-ispell,  Prev: emacsvox-iedit,  Up: Emacsvox Commands And Options
 
 12.108 emacsvox-info
 ====================
@@ -499,7 +499,7 @@ This module speech-enables the Emacs Info Reader.
 
 
 
-File: emacspeak.info,  Node: emacsvox-ispell,  Next: emacsvox-ivy,  Prev: emacsvox-info,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ispell,  Next: emacsvox-ivy,  Prev: emacsvox-info,  Up: Emacsvox Commands And Options
 
 12.109 emacsvox-ispell
 ======================
@@ -528,7 +528,7 @@ corrections with C-r and C-s.
 
 
 
-File: emacspeak.info,  Node: emacsvox-ivy,  Next: emacsvox-journalctl,  Prev: emacsvox-ispell,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ivy,  Next: emacsvox-journalctl,  Prev: emacsvox-ispell,  Up: Emacsvox Commands And Options
 
 12.110 emacsvox-ivy
 ===================
@@ -537,7 +537,7 @@ IVY == One More Smart Completion Technique Speech-enable ivy-style
 completion.  This is still experimental and preliminary.
 
 
-File: emacspeak.info,  Node: emacsvox-journalctl,  Next: emacsvox-js2,  Prev: emacsvox-ivy,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-journalctl,  Next: emacsvox-js2,  Prev: emacsvox-ivy,  Up: Emacsvox Commands And Options
 
 12.111 emacsvox-journalctl
 ==========================
@@ -546,7 +546,7 @@ JOURNALCTL == SystemD Journal From emacs See
 https://github.com/SebastianMeisel/journalctl-mode
 
 
-File: emacspeak.info,  Node: emacsvox-js2,  Next: emacsvox-keymap,  Prev: emacsvox-journalctl,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-js2,  Next: emacsvox-keymap,  Prev: emacsvox-journalctl,  Up: Emacsvox Commands And Options
 
 12.112 emacsvox-js2
 ===================
@@ -555,7 +555,7 @@ JS2-mode http://js2-mode.googlecode.com/svn/trunk is a new, powerful
 Emacs mode for working with JavaScript.  This module speech-enables js2.
 
 
-File: emacspeak.info,  Node: emacsvox-keymap,  Next: emacsvox-kmacro,  Prev: emacsvox-js2,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-keymap,  Next: emacsvox-kmacro,  Prev: emacsvox-js2,  Up: Emacsvox Commands And Options
 
 12.113 emacsvox-keymap
 ======================
@@ -763,7 +763,7 @@ found on laptops is denoted <fn>
 
 
 
-File: emacspeak.info,  Node: emacsvox-kmacro,  Next: emacsvox-librivox,  Prev: emacsvox-keymap,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-kmacro,  Next: emacsvox-librivox,  Prev: emacsvox-keymap,  Up: Emacsvox Commands And Options
 
 12.114 emacsvox-kmacro
 ======================
@@ -773,7 +773,7 @@ Introduction speech-enables kmacro -- a kbd macro interface
    required modules
 
 
-File: emacspeak.info,  Node: emacsvox-librivox,  Next: emacsvox-lispy,  Prev: emacsvox-kmacro,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-librivox,  Next: emacsvox-lispy,  Prev: emacsvox-kmacro,  Up: Emacsvox Commands And Options
 
 12.115 emacsvox-librivox
 ========================
@@ -864,7 +864,7 @@ accessing the book.
 
 
 
-File: emacspeak.info,  Node: emacsvox-lispy,  Next: emacsvox-lua,  Prev: emacsvox-librivox,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-lispy,  Next: emacsvox-lua,  Prev: emacsvox-librivox,  Up: Emacsvox Commands And Options
 
 12.116 emacsvox-lispy
 =====================
@@ -887,7 +887,7 @@ following:
    • Indicate with an auditory icon if point did not move.
 
 
-File: emacspeak.info,  Node: emacsvox-lua,  Next: emacsvox-m-player,  Prev: emacsvox-lispy,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-lua,  Next: emacsvox-m-player,  Prev: emacsvox-lispy,  Up: Emacsvox Commands And Options
 
 12.117 emacsvox-lua
 ===================
@@ -895,7 +895,7 @@ File: emacspeak.info,  Node: emacsvox-lua,  Next: emacsvox-m-player,  Prev: emac
 LUA == lua-mode Speech-enable lua-mode.
 
 
-File: emacspeak.info,  Node: emacsvox-m-player,  Next: emacsvox-magit,  Prev: emacsvox-lua,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-m-player,  Next: emacsvox-magit,  Prev: emacsvox-lua,  Up: Emacsvox Commands And Options
 
 12.118 emacsvox-m-player
 ========================
@@ -1784,7 +1784,7 @@ you can achieve the same by pressing ‘C-e ; v’.  Press ‘C-h b’ in the
 
 
 
-File: emacspeak.info,  Node: emacsvox-magit,  Next: emacsvox-make-mode,  Prev: emacsvox-m-player,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-magit,  Next: emacsvox-make-mode,  Prev: emacsvox-m-player,  Up: Emacsvox Commands And Options
 
 12.119 emacsvox-magit
 =====================
@@ -1795,7 +1795,7 @@ git://github.com/magit/magit.git
    Required modules:
 
 
-File: emacspeak.info,  Node: emacsvox-make-mode,  Next: emacsvox-man,  Prev: emacsvox-magit,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-make-mode,  Next: emacsvox-man,  Prev: emacsvox-magit,  Up: Emacsvox Commands And Options
 
 12.120 emacsvox-make-mode
 =========================
@@ -1803,7 +1803,7 @@ File: emacspeak.info,  Node: emacsvox-make-mode,  Next: emacsvox-man,  Prev: ema
 This module speech enables make-mode
 
 
-File: emacspeak.info,  Node: emacsvox-man,  Next: emacsvox-marginalia,  Prev: emacsvox-make-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-man,  Next: emacsvox-marginalia,  Prev: emacsvox-make-mode,  Up: Emacsvox Commands And Options
 
 12.121 emacsvox-man
 ===================
@@ -1828,7 +1828,7 @@ Provide additional advice to man-mode
      Speak current section
 
 
-File: emacspeak.info,  Node: emacsvox-marginalia,  Next: emacsvox-markdown,  Prev: emacsvox-man,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-marginalia,  Next: emacsvox-markdown,  Prev: emacsvox-man,  Up: Emacsvox Commands And Options
 
 12.122 emacsvox-marginalia
 ==========================
@@ -1840,7 +1840,7 @@ completion UIs like Vertico and Consult.  This module maps marginalia
 faces to voice personalities.
 
 
-File: emacspeak.info,  Node: emacsvox-markdown,  Next: emacsvox-maths,  Prev: emacsvox-marginalia,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-markdown,  Next: emacsvox-maths,  Prev: emacsvox-marginalia,  Up: Emacsvox Commands And Options
 
 12.123 emacsvox-markdown
 ========================
@@ -1892,7 +1892,7 @@ heading with level - C-c C-s r: Toggle reading mode
 
 
 
-File: emacspeak.info,  Node: emacsvox-maths,  Next: emacsvox-message,  Prev: emacsvox-markdown,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-maths,  Next: emacsvox-message,  Prev: emacsvox-markdown,  Up: Emacsvox Commands And Options
 
 12.124 emacsvox-maths
 =====================
@@ -2071,7 +2071,7 @@ and backward-page can be used to move through each chunk of output.
      Move up in current Math expression. (auto-generated)
 
 
-File: emacspeak.info,  Node: emacsvox-message,  Next: emacsvox-mines,  Prev: emacsvox-maths,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-message,  Next: emacsvox-mines,  Prev: emacsvox-maths,  Up: Emacsvox Commands And Options
 
 12.125 emacsvox-message
 =======================
@@ -2079,7 +2079,7 @@ File: emacspeak.info,  Node: emacsvox-message,  Next: emacsvox-mines,  Prev: ema
 advice for posting message commands
 
 
-File: emacspeak.info,  Node: emacsvox-mines,  Next: emacsvox-mu4e,  Prev: emacsvox-message,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-mines,  Next: emacsvox-mu4e,  Prev: emacsvox-message,  Up: Emacsvox Commands And Options
 
 12.126 emacsvox-mines
 =====================
@@ -2174,7 +2174,7 @@ auditory icon.
      Speak number of uncovered cells.
 
 
-File: emacspeak.info,  Node: emacsvox-mu4e,  Next: emacsvox-muggles,  Prev: emacsvox-mines,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-mu4e,  Next: emacsvox-muggles,  Prev: emacsvox-mines,  Up: Emacsvox Commands And Options
 
 12.127 emacsvox-mu4e
 ====================
@@ -2186,7 +2186,7 @@ covers the four main mu4e views: - Main view (dashboard) - Headers view
 (writing a message)
 
 
-File: emacspeak.info,  Node: emacsvox-muggles,  Next: emacsvox-multiple-cursors,  Prev: emacsvox-mu4e,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-muggles,  Next: emacsvox-multiple-cursors,  Prev: emacsvox-mu4e,  Up: Emacsvox Commands And Options
 
 12.128 emacsvox-muggles
 =======================
@@ -2420,7 +2420,7 @@ binds ‘s’ to this command.
      The body can be accessed via ‘emacsvox-muggles-yank-pop/body’.
 
 
-File: emacspeak.info,  Node: emacsvox-multiple-cursors,  Next: emacsvox-muse,  Prev: emacsvox-muggles,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-multiple-cursors,  Next: emacsvox-muse,  Prev: emacsvox-muggles,  Up: Emacsvox Commands And Options
 
 12.129 emacsvox-multiple-cursors
 ================================
@@ -2430,7 +2430,7 @@ editing with multiple cursors.  Provides auditory feedback when adding,
 removing, and skipping cursors.
 
 
-File: emacspeak.info,  Node: emacsvox-muse,  Next: emacsvox-net-utils,  Prev: emacsvox-multiple-cursors,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-muse,  Next: emacsvox-net-utils,  Prev: emacsvox-multiple-cursors,  Up: Emacsvox Commands And Options
 
 12.130 emacsvox-muse
 ====================
@@ -2438,7 +2438,7 @@ File: emacspeak.info,  Node: emacsvox-muse,  Next: emacsvox-net-utils,  Prev: em
 Speech enable Muse
 
 
-File: emacspeak.info,  Node: emacsvox-net-utils,  Next: emacsvox-newsticker,  Prev: emacsvox-muse,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-net-utils,  Next: emacsvox-newsticker,  Prev: emacsvox-muse,  Up: Emacsvox Commands And Options
 
 12.131 emacsvox-net-utils
 =========================
@@ -2446,7 +2446,7 @@ File: emacspeak.info,  Node: emacsvox-net-utils,  Next: emacsvox-newsticker,  Pr
 This module speech enables net-utils
 
 
-File: emacspeak.info,  Node: emacsvox-newsticker,  Next: emacsvox-nm,  Prev: emacsvox-net-utils,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-newsticker,  Next: emacsvox-nm,  Prev: emacsvox-net-utils,  Up: Emacsvox Commands And Options
 
 12.132 emacsvox-newsticker
 ==========================
@@ -2457,7 +2457,7 @@ Provides functionality similar to amphetadesk -but in pure elisp
    required modules
 
 
-File: emacspeak.info,  Node: emacsvox-nm,  Next: emacsvox-notmuch,  Prev: emacsvox-newsticker,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-nm,  Next: emacsvox-notmuch,  Prev: emacsvox-newsticker,  Up: Emacsvox Commands And Options
 
 12.133 emacsvox-nm
 ==================
@@ -2475,7 +2475,7 @@ happening.  Functions you would like to run when network is connected:
 down.")))
 
 
-File: emacspeak.info,  Node: emacsvox-notmuch,  Next: emacsvox-nov,  Prev: emacsvox-nm,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-notmuch,  Next: emacsvox-nov,  Prev: emacsvox-nm,  Up: Emacsvox Commands And Options
 
 12.134 emacsvox-notmuch
 =======================
@@ -2483,7 +2483,7 @@ File: emacspeak.info,  Node: emacsvox-notmuch,  Next: emacsvox-nov,  Prev: emacs
 NOTMUCH == Emacs interface to notmuch mail
 
 
-File: emacspeak.info,  Node: emacsvox-nov,  Next: emacsvox-nxml,  Prev: emacsvox-notmuch,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-nov,  Next: emacsvox-nxml,  Prev: emacsvox-notmuch,  Up: Emacsvox Commands And Options
 
 12.135 emacsvox-nov
 ===================
@@ -2496,7 +2496,7 @@ That file can set book-specific settings such as speech-rate and
 punctuation-mode among others.
 
 
-File: emacspeak.info,  Node: emacsvox-nxml,  Next: emacsvox-ocr,  Prev: emacsvox-nov,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-nxml,  Next: emacsvox-ocr,  Prev: emacsvox-nov,  Up: Emacsvox Commands And Options
 
 12.136 emacsvox-nxml
 ====================
@@ -2515,7 +2515,7 @@ available from the Emacs package archive.
      Intelligent spoken display of current outline entry.
 
 
-File: emacspeak.info,  Node: emacsvox-ocr,  Next: emacsvox-org,  Prev: emacsvox-nxml,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ocr,  Next: emacsvox-org,  Prev: emacsvox-nxml,  Up: Emacsvox Commands And Options
 
 12.137 emacsvox-ocr
 ===================
@@ -2872,7 +2872,7 @@ an OCR engine that can take acquired images and produce text.
 
 
 
-File: emacspeak.info,  Node: emacsvox-org,  Next: emacsvox-orgalist,  Prev: emacsvox-ocr,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-org,  Next: emacsvox-orgalist,  Prev: emacsvox-ocr,  Up: Emacsvox Commands And Options
 
 12.138 emacsvox-org
 ===================
@@ -3000,7 +3000,7 @@ http://orgmode.org/
 
 
 
-File: emacspeak.info,  Node: emacsvox-orgalist,  Next: emacsvox-outline,  Prev: emacsvox-org,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-orgalist,  Next: emacsvox-outline,  Prev: emacsvox-org,  Up: Emacsvox Commands And Options
 
 12.139 emacsvox-orgalist
 ========================
@@ -3008,7 +3008,7 @@ File: emacspeak.info,  Node: emacsvox-orgalist,  Next: emacsvox-outline,  Prev: 
 Speech-enable orgalist -- create org-like lists everywhere.
 
 
-File: emacspeak.info,  Node: emacsvox-outline,  Next: emacsvox-package,  Prev: emacsvox-orgalist,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-outline,  Next: emacsvox-package,  Prev: emacsvox-orgalist,  Up: Emacsvox Commands And Options
 
 12.140 emacsvox-outline
 =======================
@@ -3058,7 +3058,7 @@ Provide additional advice to outline-mode
      Speak current outline section starting from point
 
 
-File: emacspeak.info,  Node: emacsvox-package,  Next: emacsvox-paradox,  Prev: emacsvox-outline,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-package,  Next: emacsvox-paradox,  Prev: emacsvox-outline,  Up: Emacsvox Commands And Options
 
 12.141 emacsvox-package
 =======================
@@ -3093,7 +3093,7 @@ package.el with a few convenience commands.
      Succinct Summary.
 
 
-File: emacspeak.info,  Node: emacsvox-paradox,  Next: emacsvox-perl,  Prev: emacsvox-package,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-paradox,  Next: emacsvox-perl,  Prev: emacsvox-package,  Up: Emacsvox Commands And Options
 
 12.142 emacsvox-paradox
 =======================
@@ -3115,7 +3115,7 @@ commands.
      Succinct Summary.
 
 
-File: emacspeak.info,  Node: emacsvox-perl,  Next: emacsvox-pipewire,  Prev: emacsvox-paradox,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-perl,  Next: emacsvox-pipewire,  Prev: emacsvox-paradox,  Up: Emacsvox Commands And Options
 
 12.143 emacsvox-perl
 ====================
@@ -3123,7 +3123,7 @@ File: emacspeak.info,  Node: emacsvox-perl,  Next: emacsvox-pipewire,  Prev: ema
 Provide additional advice to perl-mode
 
 
-File: emacspeak.info,  Node: emacsvox-pipewire,  Next: emacsvox-popup,  Prev: emacsvox-perl,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-pipewire,  Next: emacsvox-popup,  Prev: emacsvox-perl,  Up: Emacsvox Commands And Options
 
 12.144 emacsvox-pipewire
 ========================
@@ -3131,7 +3131,7 @@ File: emacspeak.info,  Node: emacsvox-pipewire,  Next: emacsvox-popup,  Prev: em
 PIPEWIRE == Pipewire Interaction from Emacs.
 
 
-File: emacspeak.info,  Node: emacsvox-popup,  Next: emacsvox-preamble,  Prev: emacsvox-pipewire,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-popup,  Next: emacsvox-preamble,  Prev: emacsvox-pipewire,  Up: Emacsvox Commands And Options
 
 12.145 emacsvox-popup
 =====================
@@ -3139,7 +3139,7 @@ File: emacspeak.info,  Node: emacsvox-popup,  Next: emacsvox-preamble,  Prev: em
 POPUP == popup.el from MELPA
 
 
-File: emacspeak.info,  Node: emacsvox-preamble,  Next: emacsvox-proced,  Prev: emacsvox-popup,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-preamble,  Next: emacsvox-proced,  Prev: emacsvox-popup,  Up: Emacsvox Commands And Options
 
 12.146 emacsvox-preamble
 ========================
@@ -3149,7 +3149,7 @@ macros.  2.  Defines location-related variables.  Define locations of
 executables.;;; Code:
 
 
-File: emacspeak.info,  Node: emacsvox-proced,  Next: emacsvox-project,  Prev: emacsvox-preamble,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-proced,  Next: emacsvox-project,  Prev: emacsvox-preamble,  Up: Emacsvox Commands And Options
 
 12.147 emacsvox-proced
 ======================
@@ -3232,7 +3232,7 @@ of emacs 23.
      (fn &optional POSITION)
 
 
-File: emacspeak.info,  Node: emacsvox-project,  Next: emacsvox-projectile,  Prev: emacsvox-proced,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-project,  Next: emacsvox-projectile,  Prev: emacsvox-proced,  Up: Emacsvox Commands And Options
 
 12.148 emacsvox-project
 =======================
@@ -3240,7 +3240,7 @@ File: emacspeak.info,  Node: emacsvox-project,  Next: emacsvox-projectile,  Prev
 Speech-enable project.el
 
 
-File: emacspeak.info,  Node: emacsvox-projectile,  Next: emacsvox-pronounce,  Prev: emacsvox-project,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-projectile,  Next: emacsvox-pronounce,  Prev: emacsvox-project,  Up: Emacsvox Commands And Options
 
 12.149 emacsvox-projectile
 ==========================
@@ -3249,7 +3249,7 @@ PROJECTILE == ‘M-x package-install projectile’.  Project management in
 Emacs.
 
 
-File: emacspeak.info,  Node: emacsvox-pronounce,  Next: emacsvox-py,  Prev: emacsvox-projectile,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-pronounce,  Next: emacsvox-py,  Prev: emacsvox-projectile,  Up: Emacsvox Commands And Options
 
 12.150 emacsvox-pronounce
 =========================
@@ -3417,7 +3417,7 @@ given file.
 
 
 
-File: emacspeak.info,  Node: emacsvox-py,  Next: emacsvox-pydoc,  Prev: emacsvox-pronounce,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-py,  Next: emacsvox-pydoc,  Prev: emacsvox-pronounce,  Up: Emacsvox Commands And Options
 
 12.151 emacsvox-py
 ==================
@@ -3425,7 +3425,7 @@ File: emacspeak.info,  Node: emacsvox-py,  Next: emacsvox-pydoc,  Prev: emacsvox
 This speech-enables python-mode available on sourceforge and ELPA
 
 
-File: emacspeak.info,  Node: emacsvox-pydoc,  Next: emacsvox-python,  Prev: emacsvox-py,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-pydoc,  Next: emacsvox-python,  Prev: emacsvox-py,  Up: Emacsvox Commands And Options
 
 12.152 emacsvox-pydoc
 =====================
@@ -3433,7 +3433,7 @@ File: emacspeak.info,  Node: emacsvox-pydoc,  Next: emacsvox-python,  Prev: emac
 PYDOC == Python Documentation Viewer
 
 
-File: emacspeak.info,  Node: emacsvox-python,  Next: emacsvox-racket,  Prev: emacsvox-pydoc,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-python,  Next: emacsvox-racket,  Prev: emacsvox-pydoc,  Up: Emacsvox Commands And Options
 
 12.153 emacsvox-python
 ======================
@@ -3441,7 +3441,7 @@ File: emacspeak.info,  Node: emacsvox-python,  Next: emacsvox-racket,  Prev: ema
 This speech-enables python-mode bundled with Emacs
 
 
-File: emacspeak.info,  Node: emacsvox-racket,  Next: emacsvox-re-builder,  Prev: emacsvox-python,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-racket,  Next: emacsvox-re-builder,  Prev: emacsvox-python,  Up: Emacsvox Commands And Options
 
 12.154 emacsvox-racket
 ======================
@@ -3449,7 +3449,7 @@ File: emacspeak.info,  Node: emacsvox-racket,  Next: emacsvox-re-builder,  Prev:
 racket-mode implements an IDE for racket, a dialect of scheme.
 
 
-File: emacspeak.info,  Node: emacsvox-re-builder,  Next: emacsvox-reftex,  Prev: emacsvox-racket,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-re-builder,  Next: emacsvox-reftex,  Prev: emacsvox-racket,  Up: Emacsvox Commands And Options
 
 12.155 emacsvox-re-builder
 ==========================
@@ -3461,7 +3461,7 @@ setting up outline regexp wizards
    required modules
 
 
-File: emacspeak.info,  Node: emacsvox-reftex,  Next: emacsvox-related,  Prev: emacsvox-re-builder,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-reftex,  Next: emacsvox-related,  Prev: emacsvox-re-builder,  Up: Emacsvox Commands And Options
 
 12.156 emacsvox-reftex
 ======================
@@ -3470,7 +3470,7 @@ This module speech-enables refteex - reftex is a minor mode that makes
 navigation of TeX documents possible via a table of contents buffer.
 
 
-File: emacspeak.info,  Node: emacsvox-related,  Next: emacsvox-rg,  Prev: emacsvox-reftex,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-related,  Next: emacsvox-rg,  Prev: emacsvox-reftex,  Up: Emacsvox Commands And Options
 
 12.157 emacsvox-related
 =======================
@@ -3479,7 +3479,7 @@ RELATED == Switch among related buffers (melpa).  Speech-enable
 interactive commands.
 
 
-File: emacspeak.info,  Node: emacsvox-rg,  Next: emacsvox-rmail,  Prev: emacsvox-related,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-rg,  Next: emacsvox-rmail,  Prev: emacsvox-related,  Up: Emacsvox Commands And Options
 
 12.158 emacsvox-rg
 ==================
@@ -3487,7 +3487,7 @@ File: emacspeak.info,  Node: emacsvox-rg,  Next: emacsvox-rmail,  Prev: emacsvox
 RG == Emacs front-end to ripgrep (rg).
 
 
-File: emacspeak.info,  Node: emacsvox-rmail,  Next: emacsvox-rpm-spec,  Prev: emacsvox-rg,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-rmail,  Next: emacsvox-rpm-spec,  Prev: emacsvox-rg,  Up: Emacsvox Commands And Options
 
 12.159 emacsvox-rmail
 =====================
@@ -3512,7 +3512,7 @@ emacsvox extensions to rmail
      Summarize current message
 
 
-File: emacspeak.info,  Node: emacsvox-rpm-spec,  Next: emacsvox-rst,  Prev: emacsvox-rmail,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-rpm-spec,  Next: emacsvox-rst,  Prev: emacsvox-rmail,  Up: Emacsvox Commands And Options
 
 12.160 emacsvox-rpm-spec
 ========================
@@ -3520,7 +3520,7 @@ File: emacspeak.info,  Node: emacsvox-rpm-spec,  Next: emacsvox-rst,  Prev: emac
 speech-enable rpm-spec-mode -part of Emacs 21 on RH 7.3
 
 
-File: emacspeak.info,  Node: emacsvox-rst,  Next: emacsvox-ruby,  Prev: emacsvox-rpm-spec,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-rst,  Next: emacsvox-ruby,  Prev: emacsvox-rpm-spec,  Up: Emacsvox Commands And Options
 
 12.161 emacsvox-rst
 ===================
@@ -3529,7 +3529,7 @@ RST == rst-mode for editing rst text files.  This module speech-enables
 rst-mode.
 
 
-File: emacspeak.info,  Node: emacsvox-ruby,  Next: emacsvox-rust-mode,  Prev: emacsvox-rst,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ruby,  Next: emacsvox-rust-mode,  Prev: emacsvox-rst,  Up: Emacsvox Commands And Options
 
 12.162 emacsvox-ruby
 ====================
@@ -3537,7 +3537,7 @@ File: emacspeak.info,  Node: emacsvox-ruby,  Next: emacsvox-rust-mode,  Prev: em
 Provide additional advice to Ruby mode
 
 
-File: emacspeak.info,  Node: emacsvox-rust-mode,  Next: emacsvox-sage,  Prev: emacsvox-ruby,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-rust-mode,  Next: emacsvox-sage,  Prev: emacsvox-ruby,  Up: Emacsvox Commands And Options
 
 12.163 emacsvox-rust-mode
 =========================
@@ -3545,7 +3545,7 @@ File: emacspeak.info,  Node: emacsvox-rust-mode,  Next: emacsvox-sage,  Prev: em
 Speech-enable rust-mode
 
 
-File: emacspeak.info,  Node: emacsvox-sage,  Next: emacsvox-sdcv,  Prev: emacsvox-rust-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sage,  Next: emacsvox-sdcv,  Prev: emacsvox-rust-mode,  Up: Emacsvox Commands And Options
 
 12.164 emacsvox-sage
 ====================
@@ -3588,7 +3588,7 @@ Software System.
      Speak last output from Sage.
 
 
-File: emacspeak.info,  Node: emacsvox-sdcv,  Next: emacsvox-ses,  Prev: emacsvox-sage,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sdcv,  Next: emacsvox-ses,  Prev: emacsvox-sage,  Up: Emacsvox Commands And Options
 
 12.165 emacsvox-sdcv
 ====================
@@ -3600,7 +3600,7 @@ https://wiki.archlinux.org/index.php/sdcv This module sets up Emacs
 module sdcv to use all the installed dictionaries found on the system.
 
 
-File: emacspeak.info,  Node: emacsvox-ses,  Next: emacsvox-setup,  Prev: emacsvox-sdcv,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ses,  Next: emacsvox-setup,  Prev: emacsvox-sdcv,  Up: Emacsvox Commands And Options
 
 12.166 emacsvox-ses
 ===================
@@ -3658,7 +3658,7 @@ speech-enables ses
      (fn &rest IGNORE)
 
 
-File: emacspeak.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-ses,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-setup,  Next: emacsvox-sgml-mode,  Prev: emacsvox-ses,  Up: Emacsvox Commands And Options
 
 12.167 emacsvox-setup
 =====================
@@ -3671,7 +3671,7 @@ your .emacs file.  See tvr/emacs-startup.el in the Emacsvox Git
 repository for my setup.
 
 
-File: emacspeak.info,  Node: emacsvox-sgml-mode,  Next: emacsvox-sh-script,  Prev: emacsvox-setup,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sgml-mode,  Next: emacsvox-sh-script,  Prev: emacsvox-setup,  Up: Emacsvox Commands And Options
 
 12.168 emacsvox-sgml-mode
 =========================
@@ -3679,7 +3679,7 @@ File: emacspeak.info,  Node: emacsvox-sgml-mode,  Next: emacsvox-sh-script,  Pre
 emacsvox extensions to sgml mode
 
 
-File: emacspeak.info,  Node: emacsvox-sh-script,  Next: emacsvox-slime,  Prev: emacsvox-sgml-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sh-script,  Next: emacsvox-slime,  Prev: emacsvox-sgml-mode,  Up: Emacsvox Commands And Options
 
 12.169 emacsvox-sh-script
 =========================
@@ -3687,7 +3687,7 @@ File: emacspeak.info,  Node: emacsvox-sh-script,  Next: emacsvox-slime,  Prev: e
 This module speech-enables sh-script.el
 
 
-File: emacspeak.info,  Node: emacsvox-slime,  Next: emacsvox-smartparens,  Prev: emacsvox-sh-script,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-slime,  Next: emacsvox-smartparens,  Prev: emacsvox-sh-script,  Up: Emacsvox Commands And Options
 
 12.170 emacsvox-slime
 =====================
@@ -3698,7 +3698,7 @@ modern than package ILisp that I used as a graduate student when
 developing AsTeR.
 
 
-File: emacspeak.info,  Node: emacsvox-smartparens,  Next: emacsvox-solitaire,  Prev: emacsvox-slime,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-smartparens,  Next: emacsvox-solitaire,  Prev: emacsvox-slime,  Up: Emacsvox Commands And Options
 
 12.171 emacsvox-smartparens
 ===========================
@@ -3710,7 +3710,7 @@ Structured navigation speaks the current line with the position of point
 aurally highlighted.
 
 
-File: emacspeak.info,  Node: emacsvox-solitaire,  Next: emacsvox-sounds,  Prev: emacsvox-smartparens,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-solitaire,  Next: emacsvox-sounds,  Prev: emacsvox-smartparens,  Up: Emacsvox Commands And Options
 
 12.172 emacsvox-solitaire
 =========================
@@ -3756,7 +3756,7 @@ Auditory interface to solitaire
      Speak number of stones remaining.
 
 
-File: emacspeak.info,  Node: emacsvox-sounds,  Next: emacsvox-speak,  Prev: emacsvox-solitaire,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sounds,  Next: emacsvox-speak,  Prev: emacsvox-solitaire,  Up: Emacsvox Commands And Options
 
 12.173 emacsvox-sounds
 ======================
@@ -3859,7 +3859,7 @@ play them using a local player.
 
 
 
-File: emacspeak.info,  Node: emacsvox-speak,  Next: emacsvox-speedbar,  Prev: emacsvox-sounds,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-speak,  Next: emacsvox-speedbar,  Prev: emacsvox-sounds,  Up: Emacsvox Commands And Options
 
 12.174 emacsvox-speak
 =====================
@@ -4080,6 +4080,7 @@ of emacsvox from becoming dependent on the speech server modules
      Continuously adjust selective-display.
      Use ‘,’ and ‘.’ to continuously decrease/increase ‘selective-display’.
       If not specified, ‘arg’ defaults to current-column.
+
      (fn &optional ARG)
 
 12.174.1.22 emacsvox-shell-command
@@ -4975,7 +4976,7 @@ of emacsvox from becoming dependent on the speech server modules
 
 
 
-File: emacspeak.info,  Node: emacsvox-speedbar,  Next: emacsvox-sql,  Prev: emacsvox-speak,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-speedbar,  Next: emacsvox-sql,  Prev: emacsvox-speak,  Up: Emacsvox Commands And Options
 
 12.175 emacsvox-speedbar
 ========================
@@ -5005,7 +5006,7 @@ adds an Emacsvox environment specific entry point to speedbar
      Switch to the speedbar
 
 
-File: emacspeak.info,  Node: emacsvox-sql,  Next: emacsvox-sudoku,  Prev: emacsvox-speedbar,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sql,  Next: emacsvox-sudoku,  Prev: emacsvox-speedbar,  Up: Emacsvox Commands And Options
 
 12.176 emacsvox-sql
 ===================
@@ -5015,7 +5016,7 @@ archive.  sql-mode.el implemented by the above package sets up an Emacs
 to SQL interface where you can interactively evaluate SQL expressions.
 
 
-File: emacspeak.info,  Node: emacsvox-sudoku,  Next: emacsvox-supercite,  Prev: emacsvox-sql,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-sudoku,  Next: emacsvox-supercite,  Prev: emacsvox-sql,  Up: Emacsvox Commands And Options
 
 12.177 emacsvox-sudoku
 ======================
@@ -5202,7 +5203,7 @@ feedback one needs for this task.
      Move to top-left corner of  sub-square above current one.
 
 
-File: emacspeak.info,  Node: emacsvox-supercite,  Next: emacsvox-syslog,  Prev: emacsvox-sudoku,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-supercite,  Next: emacsvox-syslog,  Prev: emacsvox-sudoku,  Up: Emacsvox Commands And Options
 
 12.178 emacsvox-supercite
 =========================
@@ -5210,7 +5211,7 @@ File: emacspeak.info,  Node: emacsvox-supercite,  Next: emacsvox-syslog,  Prev: 
 Speech-enable supercite.
 
 
-File: emacspeak.info,  Node: emacsvox-syslog,  Next: emacsvox-tab-bar,  Prev: emacsvox-supercite,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-syslog,  Next: emacsvox-tab-bar,  Prev: emacsvox-supercite,  Up: Emacsvox Commands And Options
 
 12.179 emacsvox-syslog
 ======================
@@ -5219,7 +5220,7 @@ SYSLOG-MODE == Working with various log files.  Install package
 syslog-mode from melpa.
 
 
-File: emacspeak.info,  Node: emacsvox-tab-bar,  Next: emacsvox-table,  Prev: emacsvox-syslog,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tab-bar,  Next: emacsvox-table,  Prev: emacsvox-syslog,  Up: Emacsvox Commands And Options
 
 12.180 emacsvox-tab-bar
 =======================
@@ -5230,7 +5231,7 @@ EWW open Web pages in a new buffer, then set
 EWW-BROWSE-URL-NEW-WINDOW-IS-TAB to nil to avoid leaking tabs.
 
 
-File: emacspeak.info,  Node: emacsvox-table,  Next: emacsvox-table-ui,  Prev: emacsvox-tab-bar,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-table,  Next: emacsvox-table-ui,  Prev: emacsvox-tab-bar,  Up: Emacsvox Commands And Options
 
 12.181 emacsvox-table
 =====================
@@ -5239,7 +5240,7 @@ Implements a module that provides a high level interface to tabulated
 information.
 
 
-File: emacspeak.info,  Node: emacsvox-table-ui,  Next: emacsvox-tabulate,  Prev: emacsvox-table,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-table-ui,  Next: emacsvox-tabulate,  Prev: emacsvox-table,  Up: Emacsvox Commands And Options
 
 12.182 emacsvox-table-ui
 ========================
@@ -5706,7 +5707,7 @@ User interface to tables
      (fn URL &optional BUFFER-NAME)
 
 
-File: emacspeak.info,  Node: emacsvox-tabulate,  Next: emacsvox-tabulated-list,  Prev: emacsvox-table-ui,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tabulate,  Next: emacsvox-tabulated-list,  Prev: emacsvox-table-ui,  Up: Emacsvox Commands And Options
 
 12.183 emacsvox-tabulate
 ========================
@@ -5715,7 +5716,7 @@ This module is a simple table recognizer.  Can recognize the columns in
 tabulated output, e.g.  ps, ls output
 
 
-File: emacspeak.info,  Node: emacsvox-tabulated-list,  Next: emacsvox-tar,  Prev: emacsvox-tabulate,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tabulated-list,  Next: emacsvox-tar,  Prev: emacsvox-tabulate,  Up: Emacsvox Commands And Options
 
 12.184 emacsvox-tabulated-list
 ==============================
@@ -5748,7 +5749,7 @@ provide commands for intelligent spoken output
      Speak current cell.
 
 
-File: emacspeak.info,  Node: emacsvox-tar,  Next: emacsvox-tcl,  Prev: emacsvox-tabulated-list,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tar,  Next: emacsvox-tcl,  Prev: emacsvox-tabulated-list,  Up: Emacsvox Commands And Options
 
 12.185 emacsvox-tar
 ===================
@@ -5780,7 +5781,7 @@ Auditory interface to tar mode
      Speak size of file current entry
 
 
-File: emacspeak.info,  Node: emacsvox-tcl,  Next: emacsvox-tempo,  Prev: emacsvox-tar,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tcl,  Next: emacsvox-tempo,  Prev: emacsvox-tar,  Up: Emacsvox Commands And Options
 
 12.186 emacsvox-tcl
 ===================
@@ -5788,7 +5789,7 @@ File: emacspeak.info,  Node: emacsvox-tcl,  Next: emacsvox-tempo,  Prev: emacsvo
 Provide additional advice to tcl-mode
 
 
-File: emacspeak.info,  Node: emacsvox-tempo,  Next: emacsvox-tetris,  Prev: emacsvox-tcl,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tempo,  Next: emacsvox-tetris,  Prev: emacsvox-tcl,  Up: Emacsvox Commands And Options
 
 12.187 emacsvox-tempo
 =====================
@@ -5798,7 +5799,7 @@ used by html-helper-mode to allow for easy writing of HTML This module
 extends Emacsvox to provide fluent spoken feedback
 
 
-File: emacspeak.info,  Node: emacsvox-tetris,  Next: emacsvox-texinfo,  Prev: emacsvox-tempo,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-tetris,  Next: emacsvox-texinfo,  Prev: emacsvox-tempo,  Up: Emacsvox Commands And Options
 
 12.188 emacsvox-tetris
 ======================
@@ -5888,7 +5889,7 @@ Speech-enables tetris.
      Speak current position
 
 
-File: emacspeak.info,  Node: emacsvox-texinfo,  Next: emacsvox-threes,  Prev: emacsvox-tetris,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-texinfo,  Next: emacsvox-threes,  Prev: emacsvox-tetris,  Up: Emacsvox Commands And Options
 
 12.189 emacsvox-texinfo
 =======================
@@ -5896,7 +5897,7 @@ File: emacspeak.info,  Node: emacsvox-texinfo,  Next: emacsvox-threes,  Prev: em
 This module speech enables net-texinfo mode
 
 
-File: emacspeak.info,  Node: emacsvox-threes,  Next: emacsvox-todo-mode,  Prev: emacsvox-texinfo,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-threes,  Next: emacsvox-todo-mode,  Prev: emacsvox-texinfo,  Up: Emacsvox Commands And Options
 
 12.190 emacsvox-threes
 ======================
@@ -6045,7 +6046,7 @@ is spoken after the current state of the board.  You can use ‘SPC’ and
      Speak the board by columns.
 
 
-File: emacspeak.info,  Node: emacsvox-todo-mode,  Next: emacsvox-transient,  Prev: emacsvox-threes,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-todo-mode,  Next: emacsvox-transient,  Prev: emacsvox-threes,  Up: Emacsvox Commands And Options
 
 12.191 emacsvox-todo-mode
 =========================
@@ -6054,7 +6055,7 @@ todo-mode (part of Emacs 21) provides todo-lists that can be integrated
 with the Emacs calendar.  This module speech-enables todo-mode
 
 
-File: emacspeak.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-todo-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-transient,  Next: emacsvox-treesit,  Prev: emacsvox-todo-mode,  Up: Emacsvox Commands And Options
 
 12.192 emacsvox-transient
 =========================
@@ -6131,7 +6132,7 @@ transient; Pressing ‘C-q’ quits the transient.
      Previous transient section.
 
 
-File: emacspeak.info,  Node: emacsvox-treesit,  Next: emacsvox-typo,  Prev: emacsvox-transient,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-treesit,  Next: emacsvox-typo,  Prev: emacsvox-transient,  Up: Emacsvox Commands And Options
 
 12.193 emacsvox-treesit
 =======================
@@ -6149,7 +6150,7 @@ TREESIT == Syntax Trees Speech-enable treesit navigation commands.
      If inspect-mode is on, speak current node.
 
 
-File: emacspeak.info,  Node: emacsvox-typo,  Next: emacsvox-url-template,  Prev: emacsvox-treesit,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-typo,  Next: emacsvox-url-template,  Prev: emacsvox-treesit,  Up: Emacsvox Commands And Options
 
 12.194 emacsvox-typo
 ====================
@@ -6159,7 +6160,7 @@ Typo-mode's magic insertion commands are speech-enabled to speak the
 inserted char.
 
 
-File: emacspeak.info,  Node: emacsvox-url-template,  Next: emacsvox-vdiff,  Prev: emacsvox-typo,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-url-template,  Next: emacsvox-vdiff,  Prev: emacsvox-typo,  Up: Emacsvox Commands And Options
 
 12.195 emacsvox-url-template
 ============================
@@ -6237,7 +6238,7 @@ presently defined.
 
 
 
-File: emacspeak.info,  Node: emacsvox-vdiff,  Next: emacsvox-vertico,  Prev: emacsvox-url-template,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-vdiff,  Next: emacsvox-vertico,  Prev: emacsvox-url-template,  Up: Emacsvox Commands And Options
 
 12.196 emacsvox-vdiff
 =====================
@@ -6277,7 +6278,7 @@ provides commands that speak the current hunk.  These are bound in
      Speak VDiff hunk under point.
 
 
-File: emacspeak.info,  Node: emacsvox-vertico,  Next: emacsvox-view,  Prev: emacsvox-vdiff,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-vertico,  Next: emacsvox-view,  Prev: emacsvox-vdiff,  Up: Emacsvox Commands And Options
 
 12.197 emacsvox-vertico
 =======================
@@ -6286,7 +6287,7 @@ Vertico is a modern completion UI that uses Emacs's native completion
 engine This module speech-enables Vertico's UI
 
 
-File: emacspeak.info,  Node: emacsvox-view,  Next: emacsvox-vterm,  Prev: emacsvox-vertico,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-view,  Next: emacsvox-vterm,  Prev: emacsvox-vertico,  Up: Emacsvox Commands And Options
 
 12.198 emacsvox-view
 ====================
@@ -6305,7 +6306,7 @@ Provide additional advice to view-mode
      Move current line to top of window
 
 
-File: emacspeak.info,  Node: emacsvox-vterm,  Next: emacsvox-wdired,  Prev: emacsvox-view,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-vterm,  Next: emacsvox-wdired,  Prev: emacsvox-view,  Up: Emacsvox Commands And Options
 
 12.199 emacsvox-vterm
 =====================
@@ -6322,7 +6323,7 @@ VTERM == vterm using native vterm library
      ‘C-c C-t’.
 
 
-File: emacspeak.info,  Node: emacsvox-wdired,  Next: emacsvox-we,  Prev: emacsvox-vterm,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-wdired,  Next: emacsvox-we,  Prev: emacsvox-vterm,  Up: Emacsvox Commands And Options
 
 12.200 emacsvox-wdired
 ======================
@@ -6330,7 +6331,7 @@ File: emacspeak.info,  Node: emacsvox-wdired,  Next: emacsvox-we,  Prev: emacsvo
 Speech-enable wdired to permit in-place renaming of groups of files.
 
 
-File: emacspeak.info,  Node: emacsvox-we,  Next: emacsvox-websearch,  Prev: emacsvox-wdired,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-we,  Next: emacsvox-websearch,  Prev: emacsvox-wdired,  Up: Emacsvox Commands And Options
 
 12.201 emacsvox-we
 ==================
@@ -6746,7 +6747,7 @@ browse-url to handle Web pages.
 
 
 
-File: emacspeak.info,  Node: emacsvox-websearch,  Next: emacsvox-webspace,  Prev: emacsvox-we,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-websearch,  Next: emacsvox-webspace,  Prev: emacsvox-we,  Up: Emacsvox Commands And Options
 
 12.202 emacsvox-websearch
 =========================
@@ -6908,7 +6909,7 @@ This module provides utility functions for searching the WWW
      (fn QUERY)
 
 
-File: emacspeak.info,  Node: emacsvox-webspace,  Next: emacsvox-which-key,  Prev: emacsvox-websearch,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-webspace,  Next: emacsvox-which-key,  Prev: emacsvox-websearch,  Up: Emacsvox Commands And Options
 
 12.203 emacsvox-webspace
 ========================
@@ -7015,7 +7016,7 @@ WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
 
 
 
-File: emacspeak.info,  Node: emacsvox-which-key,  Next: emacsvox-widget,  Prev: emacsvox-webspace,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-which-key,  Next: emacsvox-widget,  Prev: emacsvox-webspace,  Up: Emacsvox Commands And Options
 
 12.204 emacsvox-which-key
 =========================
@@ -7043,7 +7044,7 @@ speaking the current binding options.
      Toggle automatic speaking of which-key popups.
 
 
-File: emacspeak.info,  Node: emacsvox-widget,  Next: emacsvox-windmove,  Prev: emacsvox-which-key,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-widget,  Next: emacsvox-windmove,  Prev: emacsvox-which-key,  Up: Emacsvox Commands And Options
 
 12.205 emacsvox-widget
 ======================
@@ -7099,7 +7100,7 @@ widgets.
      (fn POS)
 
 
-File: emacspeak.info,  Node: emacsvox-windmove,  Next: emacsvox-wizards,  Prev: emacsvox-widget,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-windmove,  Next: emacsvox-wizards,  Prev: emacsvox-widget,  Up: Emacsvox Commands And Options
 
 12.206 emacsvox-windmove
 ========================
@@ -7110,7 +7111,7 @@ navigating to windows based on relative position.
    required modules
 
 
-File: emacspeak.info,  Node: emacsvox-wizards,  Next: emacsvox-woman,  Prev: emacsvox-windmove,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-wizards,  Next: emacsvox-woman,  Prev: emacsvox-windmove,  Up: Emacsvox Commands And Options
 
 12.207 emacsvox-wizards
 =======================
@@ -8223,7 +8224,7 @@ Contains various wizards for the Emacsvox desktop.
 
 
 
-File: emacspeak.info,  Node: emacsvox-woman,  Next: emacsvox-xkcd,  Prev: emacsvox-wizards,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-woman,  Next: emacsvox-xkcd,  Prev: emacsvox-wizards,  Up: Emacsvox Commands And Options
 
 12.208 emacsvox-woman
 =====================
@@ -8231,7 +8232,7 @@ File: emacspeak.info,  Node: emacsvox-woman,  Next: emacsvox-xkcd,  Prev: emacsv
 WOMAN == Man pages implemented in Emacs Lisp
 
 
-File: emacspeak.info,  Node: emacsvox-xkcd,  Next: emacsvox-xref,  Prev: emacsvox-woman,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-xkcd,  Next: emacsvox-xref,  Prev: emacsvox-woman,  Up: Emacsvox Commands And Options
 
 12.209 emacsvox-xkcd
 ====================
@@ -8252,7 +8253,7 @@ xkcd Augments it by displaying the alt text and the transcript.
      Open explanation of current xkcd in default browser
 
 
-File: emacspeak.info,  Node: emacsvox-xref,  Next: emacsvox-xslt,  Prev: emacsvox-xkcd,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-xref,  Next: emacsvox-xslt,  Prev: emacsvox-xkcd,  Up: Emacsvox Commands And Options
 
 12.210 emacsvox-xref
 ====================
@@ -8263,7 +8264,7 @@ This module speech-enables xref
    Required modules:
 
 
-File: emacspeak.info,  Node: emacsvox-xslt,  Next: emacsvox-yaml,  Prev: emacsvox-xref,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-xslt,  Next: emacsvox-yaml,  Prev: emacsvox-xref,  Up: Emacsvox Commands And Options
 
 12.211 emacsvox-xslt
 ====================
@@ -8335,7 +8336,7 @@ transformations using xsltproc
      (fn STYLE URL &optional UNESCAPE-CHARENT)
 
 
-File: emacspeak.info,  Node: emacsvox-yaml,  Next: emacsvox-yasnippet,  Prev: emacsvox-xslt,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-yaml,  Next: emacsvox-yasnippet,  Prev: emacsvox-xslt,  Up: Emacsvox Commands And Options
 
 12.212 emacsvox-yaml
 ====================
@@ -8344,7 +8345,7 @@ YAML == Yet Another Markup Language This module speech-enables
 yaml-mode.
 
 
-File: emacspeak.info,  Node: emacsvox-yasnippet,  Next: espeak-voices,  Prev: emacsvox-yaml,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-yasnippet,  Next: espeak-voices,  Prev: emacsvox-yaml,  Up: Emacsvox Commands And Options
 
 12.213 emacsvox-yasnippet
 =========================
@@ -8352,7 +8353,7 @@ File: emacspeak.info,  Node: emacsvox-yasnippet,  Next: espeak-voices,  Prev: em
 YASNIPPET == Template based editing using snippets.
 
 
-File: emacspeak.info,  Node: espeak-voices,  Next: extra-muggles,  Prev: emacsvox-yasnippet,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: espeak-voices,  Next: extra-muggles,  Prev: emacsvox-yasnippet,  Up: Emacsvox Commands And Options
 
 12.214 espeak-voices
 ====================
@@ -8383,7 +8384,7 @@ ESpeak TTS engine.
 
 
 
-File: emacspeak.info,  Node: extra-muggles,  Next: g-utils,  Prev: espeak-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: extra-muggles,  Next: g-utils,  Prev: espeak-voices,  Up: Emacsvox Commands And Options
 
 12.215 extra-muggles
 ====================
@@ -8721,7 +8722,7 @@ binds ‘s’ to this command.
      The body can be accessed via ‘emacsvox-origami/body’.
 
 
-File: emacspeak.info,  Node: g-utils,  Next: gm-nnir,  Prev: extra-muggles,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: g-utils,  Next: gm-nnir,  Prev: extra-muggles,  Up: Emacsvox Commands And Options
 
 12.216 g-utils
 ==============
@@ -8742,7 +8743,7 @@ gblogger etc.
 
 
 
-File: emacspeak.info,  Node: gm-nnir,  Next: gmaps,  Prev: g-utils,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: gm-nnir,  Next: gmaps,  Prev: g-utils,  Up: Emacsvox Commands And Options
 
 12.217 gm-nnir
 ==============
@@ -8766,7 +8767,7 @@ extensions.
      (fn QUERY)
 
 
-File: emacspeak.info,  Node: gmaps,  Next: ladspa,  Prev: gm-nnir,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: gmaps,  Next: ladspa,  Prev: gm-nnir,  Up: Emacsvox Commands And Options
 
 12.218 gmaps
 ============
@@ -8981,7 +8982,7 @@ Implements the Google Maps API
 
 
 
-File: emacspeak.info,  Node: ladspa,  Next: light,  Prev: gmaps,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: ladspa,  Next: light,  Prev: gmaps,  Up: Emacsvox Commands And Options
 
 12.219 ladspa
 =============
@@ -9049,7 +9050,7 @@ invada-studio-plugins-ladspa fil-plugins
      p		previous-line
 
 
-File: emacspeak.info,  Node: light,  Next: mac-voices,  Prev: ladspa,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: light,  Next: mac-voices,  Prev: ladspa,  Up: Emacsvox Commands And Options
 
 12.220 light
 ============
@@ -9107,7 +9108,7 @@ easily used in conjunction with hydra: M-x package-install hydra
      White screen.
 
 
-File: emacspeak.info,  Node: mac-voices,  Next: omaps,  Prev: light,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: mac-voices,  Next: omaps,  Prev: light,  Up: Emacsvox Commands And Options
 
 12.221 mac-voices
 =================
@@ -9127,7 +9128,7 @@ TTS.
 
 
 
-File: emacspeak.info,  Node: omaps,  Next: outloud-voices,  Prev: mac-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: omaps,  Next: outloud-voices,  Prev: mac-voices,  Up: Emacsvox Commands And Options
 
 12.222 omaps
 ============
@@ -9135,7 +9136,7 @@ File: emacspeak.info,  Node: omaps,  Next: outloud-voices,  Prev: mac-voices,  U
 Implements geocoding via the Open Street Maps API https://nominatim.org/
 
 
-File: emacspeak.info,  Node: outloud-voices,  Next: pip,  Prev: omaps,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: outloud-voices,  Next: pip,  Prev: omaps,  Up: Emacsvox Commands And Options
 
 12.223 outloud-voices
 =====================
@@ -9166,7 +9167,7 @@ specific.
 
 
 
-File: emacspeak.info,  Node: pip,  Next: plain-voices,  Prev: outloud-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: pip,  Next: plain-voices,  Prev: outloud-voices,  Up: Emacsvox Commands And Options
 
 12.224 pip
 ==========
@@ -9204,7 +9205,7 @@ Piper TTS to Emacs.
      (fn TEXT)
 
 
-File: emacspeak.info,  Node: plain-voices,  Next: soundscape,  Prev: pip,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: plain-voices,  Next: soundscape,  Prev: pip,  Up: Emacsvox Commands And Options
 
 12.226 plain-voices
 ===================
@@ -9216,7 +9217,7 @@ appropriate voice-locking controls
    required modules
 
 
-File: emacspeak.info,  Node: soundscape,  Next: sox,  Prev: plain-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: soundscape,  Next: sox,  Prev: plain-voices,  Up: Emacsvox Commands And Options
 
 12.227 soundscape
 =================
@@ -9270,7 +9271,7 @@ email, IM, ...  map to the same *mood*.
      Run command M-x soundscape-theme to see the default mode->mood mapping.
 
 
-File: emacspeak.info,  Node: sox,  Next: sox-gen,  Prev: soundscape,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: sox,  Next: sox-gen,  Prev: soundscape,  Up: Emacsvox Commands And Options
 
 12.228 sox
 ==========
@@ -9392,7 +9393,7 @@ always work.  This module can be used independent of Emacsvox.
      Stop currently playing  sound from current context.
 
 
-File: emacspeak.info,  Node: sox-gen,  Next: swiftmac-voices,  Prev: sox,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: sox-gen,  Next: swiftmac-voices,  Prev: sox,  Up: Emacsvox Commands And Options
 
 12.229 sox-gen
 ==============
@@ -9585,7 +9586,7 @@ binaural beats.
 
 
 
-File: emacspeak.info,  Node: swiftmac-voices,  Next: tetris,  Prev: sox-gen,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: swiftmac-voices,  Next: tetris,  Prev: sox-gen,  Up: Emacsvox Commands And Options
 
 12.230 swiftmac-voices
 ======================
@@ -9594,13 +9595,13 @@ This module defines the various voices used in voice-lock mode by
 SwiftMac.
 
 
-File: emacspeak.info,  Node: tetris,  Next: tts-speak,  Prev: swiftmac-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: tetris,  Next: tts-speak,  Prev: swiftmac-voices,  Up: Emacsvox Commands And Options
 
 12.231 tetris
 =============
 
 
-File: emacspeak.info,  Node: tts-speak,  Next: voice-defs,  Prev: tetris,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: tts-speak,  Next: voice-defs,  Prev: tetris,  Up: Emacsvox Commands And Options
 
 12.232 tts-speak
 ================
@@ -10081,7 +10082,7 @@ This module defines the generic TTS interface.
 
 
 
-File: emacspeak.info,  Node: voice-defs,  Next: voice-setup,  Prev: tts-speak,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: voice-defs,  Next: voice-setup,  Prev: tts-speak,  Up: Emacsvox Commands And Options
 
 12.233 voice-defs
 =================
@@ -10333,7 +10334,7 @@ unique voices defined in this module.
 
 
 
-File: emacspeak.info,  Node: voice-setup,  Next: xbacklight,  Prev: voice-defs,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: voice-setup,  Next: xbacklight,  Prev: voice-defs,  Up: Emacsvox Commands And Options
 
 12.234 voice-setup
 ==================

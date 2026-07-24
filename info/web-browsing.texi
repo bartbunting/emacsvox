@@ -4,17 +4,17 @@ Note that there is newer material at
 @url{http://emacspeak.blogspot.com/2014/05/emacspeak-eww-updates-for-complete.html}
 and in @xref{emacsvox-eww}.
 For Emacs 24.4 and later, note that the built-in Web browser EWW is also
-the browser of choice for emacspeak. 
+the browser of choice for emacsvox.
 Finally, note that Emacs/W3 is now considered obsolete, and
-Emacspeak support for w3m is no longer maintained.
+Emacsvox support for w3m is no longer maintained.
 
 
 
 @MDash{} 
  T. V. Raman, October 2014.
 
-This document, ``The State of Web Browsing in Emacspeak'' describes
-the primary web browsers in use under emacspeak and ways they might be
+This document, ``The State of Web Browsing in Emacsvox'' describes
+the primary web browsers in use under emacsvox and ways they might be
 used more efficiently.  
 
 Version 1.0 @MDash{}   February, 2007.
@@ -31,7 +31,7 @@ Copyright @copyright{} 2007 Robert D. Crawford @email{rdc1x@@comcast.net}
 @node Intro
 @subsection Intro
 
-Web browsing in emacspeak can be made as simple or as complicated as
+Web browsing in emacsvox can be made as simple or as complicated as
 you wish to make it.  On the one hand, all that need be done is to
 open a web browser and fetch a particular url.  This works fine in
 many cases with exceptions being things like html tables.  On the
@@ -51,16 +51,16 @@ remedy that here.
 
 @heading  Who this document is intended for
 
-While this document is geared toward emacspeak users, it might be
+While this document is geared toward emacsvox users, it might be
 helpful for other users as well.  I have tried to note where functions
-are specific to emacspeak.
+are specific to emacsvox.
 
 @heading Assumptions
 
 This document assumes emacs is installed.  If reading the section on a
 particular browser and trying out the associated functions, it, of
 course, assumes that the browser is installed and working. For
-features specific to emacspeak, a working install of emacspeak is
+features specific to emacsvox, a working install of emacsvox is
 necessary.  It is far beyond the scope of this document to help with
 the installation of these programs.
 
@@ -76,7 +76,7 @@ emacs/w3 - the mailing list for w3 is pretty dead.  Sorry.
 The documentation is, however, not terrible.
 
 @item
-emacspeak - see @url{http://emacspeak.sf.net}
+Emacspeak historical resources - see @url{http://emacspeak.sf.net}
 @end itemize
 
 It is highly suggested that the mailing list archives, google, and the
@@ -94,7 +94,7 @@ run commands, navigating documents, and the like are not covered.
 @subsection emacs-w3
 
 emacs/w3 is a web browser (now obsolete and replaced by EWW) written completely in emacs lisp.  It has
-some really nice features applicable to the emacspeak community such
+some really nice features applicable to the emacsvox community such
 as the ability to navigate tables and support for the w3c's aural
 cascading stylesheets.  
 
@@ -118,13 +118,13 @@ because it is written in lisp... something I mentioned just above as a
 strength.  It is a trade-off, but one that some see as worth it.
 There are, however,  some things that can be done to speed up the browsing
 process.  See
-@xref{xsl-transform,,@code{emacspeak-w3-xsl-transform}},
+@xref{xsl-transform,,@code{emacsvox-w3-xsl-transform}},
 for more information.
 
 Another disadvantage is that emacs/w3 chokes on some pages.  Sometimes
 it gives error messages and doesn't display anything.  Sometimes it
 does this to some people and doesn't do it to others as we saw on the
-emacspeak mailing list a short time ago.  Sometimes it gives error
+Emacspeak mailing list a short time ago.  Sometimes it gives error
 messages and renders the page anyway.
 
 One other major annoyance of emacs/w3 is that sometimes it simply
@@ -137,7 +137,7 @@ it therefore is not a problem.
 emacs/w3 also has no bookmark functionality.  This can be remedied in
 several ways.  One simple way, mentioned below, is to use the emacs
 package bmk-mgr.  Another way is to use org mode with remember which
-is the method used by Dr. Raman, the author of emacspeak.  See
+is the method used by Dr. Raman, the creator of the original Emacspeak.  See
 @xref{bmk-mgr,,bmk-mgr}, later in this manual, for more information.
 
 History back and next in the browser also seem to be broken but this
@@ -223,9 +223,9 @@ Here is a list of table navigation commands:
 
 As you can see, table navigation in w3 can be easy and fun.
 
-@heading emacspeak specific functions for emacs/w3 
+@heading emacsvox specific functions for emacs/w3
 
-An incredible amount of work has been done by the emacspeak community
+An incredible amount of work has been done by the emacsvox community
 to make emacs/w3 accessible to those with visual impairments.  Here is
 an explanation of some of those functions.
 
@@ -272,7 +272,7 @@ through the trouble of configuring your feed reader to fetch the feed.
 It might also be useful to grab the headlines from a page and present
 them in a more concise, readable format.  If using the sort-tables xsl
 transform, there will be a link at the top of the page if there is an
-rss feed available.  See @xref{rss,, emacspeak atom and emacspeak rss},
+rss feed available.  See @xref{rss,, emacsvox atom and emacsvox rss},
 for more information. 
 
 Google provides many useful tools for web surfers.  The following
@@ -343,7 +343,7 @@ opened from that point on will have the transform applied.
 
 @anchor{xsl-transform}
 There is the variable
-@code{emacspeak-w3-xsl-transform} that can be set via the usual
+@code{emacsvox-w3-xsl-transform} that can be set via the usual
 methods.  This variable specifies a transform to use before displaying
 a web page.  There is an advantage to turning on xsl transforms all
 the time.  If you use the @file{identity.xsl}, the
@@ -388,7 +388,7 @@ If there is no executor defined for a current buffer, hitting @key{TAB}
 after @kbd{e e} will give you a list of possibilities to choose from.
 One nice feature of this function is that it can be used for any
 function.  If you cannot remember the keystroke that will play the url
-under point in @code{emacspeak-m-player}, but you know what it is called, you
+under point in @code{emacsvox-m-player}, but you know what it is called, you
 can hit @kbd{e e} and then enter the name of the function.  Nice.
 
 The @kbd{e f} command will run the current page through an XPath filter
@@ -423,11 +423,11 @@ under point in the kill-ring.
 @node Add-ons
 @subsection Add-ons
 
-Some of these are emacspeak specific, some are not.  You can usually
+Some of these are emacsvox specific, some are not.  You can usually
 tell by the name.
 
-@anchor{emacspeak url template}
-@heading emacspeak url template
+@anchor{emacsvox url template}
+@heading emacsvox url template
 
 I love this package.  Since changing my primary browser to emacs/w3 I
 have really been giving the @code{url-template} package a workout.  The
@@ -446,31 +446,31 @@ By the way, the ones I find most useful are the ``Google Hits'',
 ``emacswiki search'' ``NPR On Demand'' and ``Weather forecast from Weather
 Underground''.
 
-@heading  emacspeak atom and emacspeak rss
+@heading  emacsvox atom and emacsvox rss
 
 @anchor{rss}
-These are fairly simple rss and atom browsers for the emacspeak
+These are fairly simple rss and atom browsers for the emacsvox
 desktop.  Using the Customize interface you add feeds in the form of
 titles and urls.  Then you call the readers with @kbd{C-e C-u} for rss
-feeds and use @kbd{M-x emacspeak-atom-browse} for atom feeds.  There is also
-emacspeak support for newsticker, an rss / atom reader that is a part
+feeds and use @kbd{M-x emacsvox-atom-browse} for atom feeds.  There is also
+emacsvox support for newsticker, an rss / atom reader that is a part
 of emacs 22, but I have never used it.
 
 I personally use @xref{Top,gnus,gnus}, for rss feeds but setting gnus up for only that
 purpose is like hunting rabbits with a bazooka. 
 
-@heading  emacspeak websearch
+@heading  emacsvox websearch
 
-@code{emacspeak-websearch} provides more search options than you can shake a
-stick at;  @code{emacspeak-websearch} provides search for dictionaries, news
+@code{emacsvox-websearch} provides more search options than you can shake a
+stick at;  @code{emacsvox-websearch} provides search for dictionaries, news
 sites, software sites, google tools, weather, currency converter and
 much more.  It can be accessed with the keystroke @kbd{C-e ?}.  At the
 prompt, you can enter another question mark to get a list of the
 available search options.  You will then be prompted for the necessary
 information.  One of the nice things about this package is that it attempts to jump to and read the most relevant information
 on the result page.
-Module @code{emacspeak-websearch} is complemented by module
-@code{emacspeak-url-template}; that 
+Module @code{emacsvox-websearch} is complemented by module
+@code{emacsvox-url-template}; that
 module provides URL templates that prompt for and retrieve  the relevant
 information from complex Web pages.
 
@@ -481,8 +481,8 @@ for more information.
 @anchor{bmk-mgr}
 @heading  bmk-mgr
 
-This is a newcomer to the emacspeak world.  In the interest of full
-disclosure, I am the one that wrote the emacspeak module that makes
+This is a newcomer to the emacsvox world.  In the interest of full
+disclosure, I am the one that wrote the emacsvox module that makes
 this package accessible.  It is a bookmarks manager that works with
 both emacs/w3 and emacs-w3m.  As of the writing of this document there
 are still some issues, especially when using it on emacs version 22,
@@ -496,7 +496,7 @@ information.
 @node Conclusion
 @subsection Conclusion
 
-emacspeak makes the internet not only accessible to those with visual
+emacsvox makes the internet not only accessible to those with visual
 impairments, but it makes browsing and information retrieval quick and
 efficient.  If a user will spend a little time up front to learn the
 tools available to access the web, the increase in efficiency and
@@ -508,5 +508,3 @@ you will not be sorry.
 
 In the end, no one makes you use a hammer to drive nails but it sure
 beats using a banana.
-
-

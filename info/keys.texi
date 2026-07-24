@@ -1,8 +1,8 @@
-@node Emacspeak Keymaps
- @chapter Emacspeak Keymaps
+@node Emacsvox Keymaps
+ @chapter Emacsvox Keymaps
 
-@node Emacspeak Keybindings On emacsvox-keymap
- @section Emacspeak Keybindings On emacsvox-keymap
+@node Emacsvox Keybindings On emacsvox-keymap
+ @section Emacsvox Keybindings On emacsvox-keymap
 
 @table @kbd
 @item C-@@  emacsvox-speak-current-mark
@@ -81,8 +81,8 @@
 @item C  emacsvox-customize
 @end table
 
-@node Emacspeak Keybindings On emacsvox-tts-submap
- @section Emacspeak Keybindings On emacsvox-tts-submap
+@node Emacsvox Keybindings On emacsvox-tts-submap
+ @section Emacsvox Keybindings On emacsvox-tts-submap
 
 @table @kbd
 @item C-c  tts-cloud
@@ -133,8 +133,8 @@
 @item z  emacsvox-zap-tts
 @end table
 
-@node Emacspeak Keybindings On emacsvox-hyper-keymap
- @section Emacspeak Keybindings On emacsvox-hyper-keymap
+@node Emacsvox Keybindings On emacsvox-hyper-keymap
+ @section Emacsvox Keybindings On emacsvox-hyper-keymap
 
 @table @kbd
 @item C-a  ansi-term
@@ -164,8 +164,8 @@
 @item DEL  emacsvox-wizards-snarf-sexp
 @end table
 
-@node Emacspeak Keybindings On emacsvox-super-keymap
- @section Emacspeak Keybindings On emacsvox-super-keymap
+@node Emacsvox Keybindings On emacsvox-super-keymap
+ @section Emacsvox Keybindings On emacsvox-super-keymap
 
 @table @kbd
 @item SPC  scratch-buffer
@@ -188,8 +188,8 @@
 @item u  soundscape-update-mood
 @end table
 
-@node Emacspeak Keybindings On emacsvox-alt-keymap
- @section Emacspeak Keybindings On emacsvox-alt-keymap
+@node Emacsvox Keybindings On emacsvox-alt-keymap
+ @section Emacsvox Keybindings On emacsvox-alt-keymap
 
 @table @kbd
 @item C-l  ellama-chat
@@ -212,8 +212,8 @@
 @item w  define-word
 @end table
 
-@node Emacspeak Keybindings On emacsvox-multi-keymap
- @section Emacspeak Keybindings On emacsvox-multi-keymap
+@node Emacsvox Keybindings On emacsvox-multi-keymap
+ @section Emacsvox Keybindings On emacsvox-multi-keymap
 
 @table @kbd
 @item '  emacsvox-pianobar
@@ -226,8 +226,8 @@
 @item y  emacsvox-google-yt-feed
 @end table
 
-@node Emacspeak Keybindings On emacsvox-v-keymap
- @section Emacspeak Keybindings On emacsvox-v-keymap
+@node Emacsvox Keybindings On emacsvox-v-keymap
+ @section Emacsvox Keybindings On emacsvox-v-keymap
 
 @table @kbd
 @item SPC  emacsvox-speak-spaces
@@ -239,8 +239,8 @@
 @item x  emacsvox-xslt-view-file
 @end table
 
-@node Emacspeak Keybindings On emacsvox-x-keymap
- @section Emacspeak Keybindings On emacsvox-x-keymap
+@node Emacsvox Keybindings On emacsvox-x-keymap
+ @section Emacsvox Keybindings On emacsvox-x-keymap
 
 @table @kbd
 @item C-c  emacsvox-wizards-color-wheel
@@ -279,8 +279,8 @@
 @item DEL  desktop-clear
 @end table
 
-@node Emacspeak Keybindings On emacsvox-y-keymap
- @section Emacspeak Keybindings On emacsvox-y-keymap
+@node Emacsvox Keybindings On emacsvox-y-keymap
+ @section Emacsvox Keybindings On emacsvox-y-keymap
 
 @table @kbd
 @item b  emacsvox-bookshare-eww
@@ -293,8 +293,8 @@
 @item y  emacsvox-empv-play-url
 @end table
 
-@node Emacspeak Keybindings On emacsvox-z-keymap
- @section Emacspeak Keybindings On emacsvox-z-keymap
+@node Emacsvox Keybindings On emacsvox-z-keymap
+ @section Emacsvox Keybindings On emacsvox-z-keymap
 
 @table @kbd
 @item SPC  flyspell-mode

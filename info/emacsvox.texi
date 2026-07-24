@@ -1,21 +1,21 @@
 \input texinfo
 @c$Id$
 @finalout
-@setfilename./emacspeak.info
+@setfilename ./emacsvox.info
 @include style.texi
-@settitle Emacspeak User's Manual --- 2nd Edition.
+@settitle Emacsvox User's Manual --- 2nd Edition.
 @dircategory Accessibility
 @direntry
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 @end direntry
 @dircategory Emacs
 @direntry
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 @end direntry
 
 @titlepage
 
-@title Emacspeak@*The Complete Audio Desktop
+@title Emacsvox@*The Complete Audio Desktop
 @subtitle User Manual
 @author T. V. Raman
 Last Updated: @today{}
@@ -30,7 +30,7 @@ notice are preserved on all copies.
 
 @end titlepage
 
-This manual documents @strong{Emacspeak, The Complete Audio Desktop}
+This manual documents @strong{Emacsvox, The Complete Audio Desktop}
 and  was last updated on @today{}.
 
 @summarycontents

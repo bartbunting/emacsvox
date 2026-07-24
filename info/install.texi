@@ -3,32 +3,22 @@
 @chapter Installation Instructions
 
 This chapter gives brief and detailed installation instructions
-for configuring, installing and starting Emacspeak.
+for configuring, installing and starting Emacsvox.
 
 @menu
-* Obtaining Emacspeak::         Obtaining Emacspeak.
+* Obtaining Emacsvox::         Obtaining Emacsvox.
 * Quick Installation::          Default installation  and startup.
 * Building And Testing The Speech Server::
 @end menu
 
-@node Obtaining Emacspeak
-@section Obtaining Emacspeak
+@node Obtaining Emacsvox
+@section Obtaining Emacsvox
 
-Emacspeak is available on the Internet at:
+Emacsvox is available on the Internet at:
 @table @b
-@item WWW
-@url{http://emacspeak.sourceforge.net}
 @item Git Repository
-@url{https://github.com/tvraman/emacspeak}
-@item Mail List
-@email{emacspeak@@emacspeak.net}
-@item List Request
-@email{emacspeak-request@@emacspeak.net}
+@url{https://github.com/robertmeta/emacsvox}
 @end table
-
-The Emacspeak mailing list is maintained by Greg E. Priest-Dorman.  If
-you are using Emacspeak, you should join the list by sending mail to
-the request address, @url{mailto:emacspeak-request@@emacspeak.net}.
 
 @node Quick Installation
 @section Quick Installation
@@ -36,24 +26,19 @@ the request address, @url{mailto:emacspeak-request@@emacspeak.net}.
 Here are the quick installation instructions.  See the next section
 for detailed installation instructions.
 
-Packages for Linux distributions such as Debian typically become
-available on the WWW a few weeks or months after a new version is
-released.  The instructions below are for building and installing
-Emacspeak from the source distribution.  If you install one of the
-prepackaged distributions, use the install instructions that come
-with that package.
+Emacsvox requires Emacs 31 or later.  The instructions below build it
+from the source checkout.
 
 @itemize @bullet
 @item
-Obtain the source code @MDash{} either by downloading the tar.bz2 file
-for the latest release @MDash{} or by cloning the git repository.
+Clone the source repository.
 
 @example
-git clone https://github.com/tvraman/emacspeak
+git clone https://github.com/robertmeta/emacsvox
 @end example
 
 @item
-Change to the @code{emacspeak} directory.
+Change to the @code{emacsvox} directory.
 
 @item
 Type @samp{make config} to configure the sources.
@@ -68,7 +53,7 @@ proceed to install that engine.  Your choices are:
 @itemize @bullet
 @item
 Open Source ESpeak on Linux.  Install the ESpeak packages for your
-system, then compile the Emacspeak ESpeak server by doing:
+system, then compile the Emacsvox ESpeak server by doing:
 
 @example
 cd servers/native-espeak
@@ -79,19 +64,18 @@ make
 ViaVoice Outloud (AKA Eloquent).  You need to purchase this engine
 from the voxin site --- note that the Vocalizer voices available from
 that site are not supported.  That purchase will give you
-install-ready packages for installing the speech engine as well as
-Emacspeak.  See @url{https://voxin.oralux.net/rss.xml} for the latest
-packages, and @url{https://voxin.oralux.net} for the main Voxin Web
-site.
+install-ready packages for the speech engine.  See
+@url{https://voxin.oralux.net/rss.xml} for the latest packages, and
+@url{https://voxin.oralux.net} for the main Voxin Web site.
 
 @item
-On the Mac, you can use the builtin Mac TTS engine @MDash{} emacspeak
+On the Mac, you can use the builtin Mac TTS engine @MDash{} Emacsvox
 comes with a speech server for that TTS engine written in @code{swift}.
 @end itemize
 
 @item
 Having installed and configured the TTS engine of your choice, and
-having built the associated speech server, set Emacspeak up to use that
+having built the associated speech server, set Emacsvox up to use that
 engine by setting environment variable @env{TTS_PROGRAM}.  If using @command{bash}
 as your shell, add the line
 
@@ -111,12 +95,12 @@ export TTS_PROGRAM=espeak
 Run it by adding the line
 
 @lisp
-(load-file "@var{<emacspeak-dir>}/lisp/emacspeak-setup.el")
+(load-file "@var{<emacsvox-dir>}/lisp/emacsvox-setup.el")
 @end lisp
 
 to the top of your .emacs file.
 
-In the above, @var{<emacspeak-dir>} refers to the directory where you
+In the above, @var{<emacsvox-dir>} refers to the directory where you
 unpacked the sources.
 @end itemize
 
@@ -127,7 +111,7 @@ server.
 @section Building And Testing The Speech Server
 @subsection Speech Servers
 
-Speech servers are located in the @code{emacspeak/servers} directory.
+Speech servers are located in the @code{emacsvox/servers} directory.
 
 @itemize @bullet
 @item
@@ -137,7 +121,8 @@ in @code{servers/native-espeak/}.
 @item
 Dectalk: @code{servers/dtk-exp}.  This is a TCL script that does not
 depend on any native code.
-@item Software Dectalk: @code{servers/dtk-soft} See @url{https://github.com/tvraman/emacspeak/blob/master/servers/software-dtk/Readme.org}.
+@item Software Dectalk: @code{servers/dtk-soft}.  See
+@url{https://github.com/robertmeta/emacsvox/blob/master/servers/software-dtk/Readme.org}.
 @item
 Outloud: @code{servers/outloud} 
   This is a TCL script that uses the library built in

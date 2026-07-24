@@ -2,9 +2,9 @@
 @node TTS Servers
 @chapter TTS Servers
 
-Emacspeak produces spoken output by communicating with one of many
+Emacsvox produces spoken output by communicating with one of many
 speech servers.  This section documents the communication protocol
-between the client application i.e. Emacspeak, and the Text to Speech
+between the client application i.e. Emacsvox, and the Text to Speech
 (@acronym{TTS}) server. This section is primarily intended for
 developers wishing to:
 
@@ -14,11 +14,12 @@ Create new speech servers that comply with this communication protocol
 
 @item
 Developers of other client applications who wish to use the various
-Emacspeak speech servers.
+Emacsvox speech servers.
 @end itemize
 
 For additional notes on how to log and view @acronym{TTS} server
 commands when developing a speech server, see
+the original Emacspeak article at
 @url{http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html}.
 
 @section High-level Overview
@@ -61,7 +62,7 @@ acknowledge that the request has been completely processed. This is a
 non-blocking operation, i.e., if the client application generates
 additional requests, these are processed @strong{immediately}.
 
-The above design allows the Emacspeak @acronym{TTS} server to be
+The above design allows the Emacsvox @acronym{TTS} server to be
 @strong{highly} responsive; Client applications can queue large
 amounts of text (typically queued a clause at a time to achieve the
 best prosody), ask the @acronym{TTS} server to start speaking, and
@@ -294,4 +295,3 @@ set_preferred_lang alias lang
 
 @strong{Immediately} set an alias in the TTS server mapping for
 example "en" to "en_GB". This can later be used by set_lang.
-

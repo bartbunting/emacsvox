@@ -2,11 +2,11 @@
 # Note: Building the info pages requires package hydra to be installed.
 # Built info pages are checked into GitHub.
 # You should need to rebuild info files
-#*only* if you change the Emacspeak Lisp sources.
-#http://emacspeak.sf.net/info
+#*only* if you change the Emacsvox Lisp sources.
+# Historical Emacspeak documents retain their original names.
 SF_HOME= raman,emacspeak@web.sourceforge.net:/home/groups/e/em/emacspeak/htdocs/info
-#https://tvraman.github.io/emacspeak/manual
-GH_PAGES=../../gh-pages-emacspeak/manual
+# Emacsvox manual publication checkout.
+GH_PAGES=../../gh-pages-emacsvox/manual
 BATCH = -batch -q -no-site-file     \
 --eval '(setq file-name-handler-alist nil gc-cons-threshold 128000000)'
 FILES=*.texi
@@ -20,13 +20,13 @@ STRIP_TRAILING_WHITESPACE = perl -pi -e 's/[ \t]+$$//'
 CSS=--css-ref="http://www.w3.org/StyleSheets/Core/Modernist"
 EMACS=emacs
 
-all: info  introducing-emacspeak.info turning-twenty.info #emacspeak.pdf
+all: info  introducing-emacspeak.info turning-twenty.info #emacsvox.pdf
 
-info: emacspeak.info
+info: emacsvox.info
 
-emacspeak.info: emacspeak.texi $(INCLUDES)
-	$(MAKEINFO) emacspeak.texi
-	$(STRIP_TRAILING_WHITESPACE) emacspeak.info*
+emacsvox.info: emacsvox.texi $(INCLUDES)
+	$(MAKEINFO) emacsvox.texi
+	$(STRIP_TRAILING_WHITESPACE) emacsvox.info*
 
 introducing-emacspeak.info: introducing-emacspeak.texi
 	$(MAKEINFO) introducing-emacspeak.texi	
@@ -39,21 +39,21 @@ force:
 
 docs.texi:force
 	$(EMACS) $(BATCH) -l ../utils/self-document.el -f self-document-all-modules
-pdf: emacspeak.pdf
-	cp emacspeak.pdf ../../gh-pages-emacspeak/manual/
-emacspeak.pdf: emacspeak.texi $(INCLUDES)
-	makeinfo --pdf emacspeak.texi
-	\rm emacspeak.aux emacspeak.cp emacspeak.cps emacspeak.fn \
-emacspeak.fns emacspeak.ky emacspeak.kys emacspeak.log \
-emacspeak.toc  emacspeak.vr emacspeak.vrs
+pdf: emacsvox.pdf
+	cp emacsvox.pdf $(GH_PAGES)/
+emacsvox.pdf: emacsvox.texi $(INCLUDES)
+	makeinfo --pdf emacsvox.texi
+	\rm emacsvox.aux emacsvox.cp emacsvox.cps emacsvox.fn \
+emacsvox.fns emacsvox.ky emacsvox.kys emacsvox.log \
+emacsvox.toc emacsvox.vr emacsvox.vrs
 
 man:
-	makeinfo -o ${GH_PAGES}  --html  ${CSS} emacspeak.texi
+	makeinfo -o ${GH_PAGES} --html ${CSS} emacsvox.texi
 	tidy -q -utf8 -mic -asxml  ${GH_PAGES}/*.html 2>&1 > /dev/null  || echo tidy
 	@echo "Commit and push updated HTML files from gh-pages!"
 
 publish:
-	cd ../../gh-pages-emacspeak && make
+	cd ../../gh-pages-emacsvox && make
 
 introducing-emacspeak.html: introducing-emacspeak.texi
 	makeinfo --no-split --html  introducing-emacspeak.texi
@@ -63,8 +63,8 @@ pub:  html/index.html introducing-emacspeak.html
 	rsync -avz  html ${SF_HOME}/info/
 
 
-clean: 
-	\rm *.info *.pdf || echo "all clean"
+clean:
+	\rm emacsvox.info* emacsvox.pdf || echo "all clean"
 
 spell:
 	codespell -I .codespell *.texi

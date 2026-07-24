@@ -1,15 +1,15 @@
 ;;; self-document.el --- Documentation Generator   -*- lexical-binding: t; -*-
 ;; $Author: tv.raman.tv $
 ;; Description:  Documentation Generator
-;; Keywords: Emacspeak,  Audio Desktop self-document
+;; Keywords: Emacsvox, Audio Desktop self-document
 ;;;   LCD Archive entry:
 
 ;; LCD Archive Entry:
-;; emacspeak| T. V. Raman |raman@cs.cornell.edu
+;; emacsvox| T. V. Raman |raman@cs.cornell.edu
 ;; A speech interface to Emacs |
 ;; $Date: 2007-05-03 18:13:44 -0700 (Thu, 03 May 2007) $ |
 ;;  $Revision: 4532 $ |
-;; Location https://github.com/tvraman/emacspeak
+;; Location https://github.com/robertmeta/emacsvox
 ;;
 
 
@@ -42,7 +42,7 @@
 
 ;;; Commentary:
 
-;; Generate documentation for Emacspeak command and options.
+;; Generate documentation for Emacsvox commands and options.
 
 ;;; Code:
 
@@ -62,7 +62,7 @@
 ;; Setup load-path
 (defconst self-document-lisp-directory
   (expand-file-name "../lisp" (file-name-directory load-file-name))
-  "Emacspeak lisp directory")
+  "Emacsvox Lisp directory.")
 
 (add-to-list 'load-path self-document-lisp-directory)
 
@@ -87,7 +87,7 @@
 (cl-defstruct self-document name commentary commands options)
 
 (defun self-document-load-modules ()
-  "Load all Emacspeak modules"
+  "Load all Emacsvox modules."
   (cl-declare (special tts-program self-document-files
                        emacsvox-use-icons))
   (let ((file-name-handler-alist nil)
@@ -110,7 +110,7 @@
           (regexp-opt
            '("amixer"
              "dectalk" "espeak" "mac-"
-             "emacspeak" "emacsvox" "xbacklight-" "light-" "extra-muggles"
+             "emacsvox" "xbacklight-" "light-" "extra-muggles"
              "g-"    "gm-" "gmap"  "gweb" "omaps"
              "ladspa" "pip-"  "soundscape" "outloud" "sox-"   "tts-" "voice-")))
   "Patterns to match command names.")
@@ -146,10 +146,10 @@
   (cl-declare (special self-document-map))
   (let ((file  (symbol-file f 'defun))
         (entry nil))
-    (unless file (setq file "emacspeak")) ; capture orphans if any
+    (unless file (setq file "emacsvox")) ; capture orphans if any
     (when file
       (setq file (file-name-sans-extension(file-name-nondirectory file )))
-      (when (string-match "loaddefs" file) (setq file "emacspeak"))
+      (when (string-match "loaddefs" file) (setq file "emacsvox"))
       (setq entry  (gethash file self-document-map))
       (unless entry (message "Warn: %s: Entry not found for file %s" f file))
       (when entry (push f (self-document-commands  entry))))))
@@ -159,8 +159,8 @@
   (cl-declare (special self-document-map))
   (let ((file  (symbol-file f 'defvar))
         (entry nil))
-    (unless file (setq file "emacspeak")); capture orphans if any
-    (when (string-match "loaddefs" file) (setq file "emacspeak"))
+    (unless file (setq file "emacsvox")); capture orphans if any
+    (when (string-match "loaddefs" file) (setq file "emacsvox"))
     (when file
       (setq file (file-name-sans-extension(file-name-nondirectory file)))
       (setq entry  (gethash file self-document-map))
@@ -314,7 +314,7 @@
 ;;; Document Keybindings For Various Prefix Maps:
 
 (cl-declaim (special emacsvox-prefix))
-(defvar sd-emacspeak-prefixes
+(defvar sd-emacsvox-prefixes
   (list
    emacsvox-prefix
    (kbd "C-;") (kbd "C-'") (kbd "C-.") (kbd "C-,") (kbd "C-z")
@@ -324,13 +324,13 @@
 ;; not used:
 (defun sd-describe-keys (buffer)
   "Generate a Texinfo section in `buffer' listing commands bound
- to prefix in `sd-emacspeak-prefixes'."
-  (cl-declare (special sd-emacspeak-prefixes))
+ to prefix in `sd-emacsvox-prefixes'."
+  (cl-declare (special sd-emacsvox-prefixes))
   (with-current-buffer buffer
     (insert "@section Commands Organized By Keymaps\n")
     (insert "@node Commands Organized By Keymaps\n\n")
     (cl-loop
-     for prefix in sd-emacspeak-prefixes
+     for prefix in sd-emacsvox-prefixes
      do
      (insert
       (format "@subsection Commands on prefix %s" (key-description prefix)))
@@ -405,8 +405,8 @@
         (insert "@c Auto-generated, do not hand-edit.\n")
         (insert
          (format
-          "@node Emacspeak Commands And Options \n
-@chapter Emacspeak Commands And Options \n\n
+          "@node Emacsvox Commands And Options \n
+@chapter Emacsvox Commands And Options \n\n
 @include intro-docs.texi\n\n
 This chapter documents a total of %d commands and %d options.\n\n"
           self-document-command-count self-document-option-count ))
@@ -467,17 +467,17 @@ This chapter documents a total of %d commands and %d options.\n\n"
     (insert "@end table\n")))
 
 (defun self-document-all-keymaps()
-  "Generate documentation for all Emacspeak keymaps."
+  "Generate documentation for all Emacsvox keymaps."
   (cl-declare (special self-document-keymap-list))
   (let ((output (find-file-noselect "keys.texi"))
         (title nil))
     (with-current-buffer output
       (erase-buffer)
       (texinfo-mode)
-      (insert "@node Emacspeak Keymaps\n @chapter Emacspeak Keymaps\n\n ")
+      (insert "@node Emacsvox Keymaps\n @chapter Emacsvox Keymaps\n\n ")
       (cl-loop
        for keymap in self-document-keymap-list do
-       (setq title (format "Emacspeak Keybindings On %s" (symbol-name keymap)))
+       (setq title (format "Emacsvox Keybindings On %s" (symbol-name keymap)))
        (insert (format "\n@node %s\n @section %s\n\n" title title))
        (self-document-keymap (symbol-value keymap)))
       (delete-trailing-whitespace (point-min) (point-max))
@@ -535,8 +535,8 @@ This chapter documents a total of %d commands and %d options.\n\n"
     (with-current-buffer output
       (insert
        (format
-        "@node Emacspeak Commands And Options \n
-@chapter Emacspeak Commands And Options \n\n
+        "@node Emacsvox Commands And Options \n
+@chapter Emacsvox Commands And Options \n\n
 This chapter documents a total of %d commands and %d options.\n\n"
         self-document-command-count self-document-option-count ))
       (cl-loop

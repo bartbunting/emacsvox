@@ -8,15 +8,15 @@ programs from within Emacs.  You open a terminal emulator buffer using
 @kbd{M-x term}, with an extra carriage return to accept the default shell
 (such as @command{bash}).  (Incidentally, don't confuse this command with @kbd{M-x
 terminal-emulator}, which starts an older terminal emulator mode not
-supported by Emacspeak.)
+supported by Emacsvox.)
 
 Three kinds of commands are used within the terminal emulator.  Normal
-term commands use a prefix of @kbd{C-c}.  The emacspeak commands for
+term commands use a prefix of @kbd{C-c}.  The emacsvox commands for
 eterm mode use a prefix of @kbd{C-t}.  Anything else is a normal shell
 command.
 
 There are two sub-modes of term mode: char sub-mode and line sub-mode.
-In char sub-mode, emacspeak will only speak the final chunk of output
+In char sub-mode, emacsvox will only speak the final chunk of output
 @MDash{} typically the last line displayed.  Each character typed
 (except `term-escape-char`) is sent immediately.  Use char sub-mode
 for screen oriented programs like @command{vi} or @command{pine}.

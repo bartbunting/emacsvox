@@ -2,7 +2,7 @@
 @node Copyright
 @chapter Copyright
 
-This manual documents Emacspeak, a speech extension to Emacs. 
+This manual documents Emacsvox, a speech extension to Emacs.
 
 Copyright (C)1994 @NDash{} 2024 T. V. Raman
 All Rights Reserved. 

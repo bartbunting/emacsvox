@@ -1,21 +1,21 @@
-This is emacspeak.info, produced by makeinfo version 7.2 from
-emacspeak.texi.
+This is emacsvox.info, produced by makeinfo version 7.2 from
+emacsvox.texi.
 
 INFO-DIR-SECTION Accessibility
 START-INFO-DIR-ENTRY
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 END-INFO-DIR-ENTRY
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 END-INFO-DIR-ENTRY
 
-This manual documents *Emacspeak, The Complete Audio Desktop* and was
+This manual documents *Emacsvox, The Complete Audio Desktop* and was
 last updated on July 25, 2026.
 
 
-File: emacspeak.info,  Node: xbacklight,  Next: URL Templates,  Prev: voice-setup,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: xbacklight,  Next: URL Templates,  Prev: voice-setup,  Up: Emacsvox Commands And Options
 
 12.235 xbacklight
 =================
@@ -75,7 +75,7 @@ package-install hydra
      White screen.
 
 
-File: emacspeak.info,  Node: URL Templates,  Prev: xbacklight,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: URL Templates,  Prev: xbacklight,  Up: Emacsvox Commands And Options
 
 12.236 URL Templates
 ====================
@@ -304,7 +304,7 @@ following steps:
      News From Yahoo As RSS.
 
 
-File: emacspeak.info,  Node: Running Terminal Based Applications,  Next: Emacspeak Keyboard Commands,  Prev: Emacspeak Commands And Options,  Up: Top
+File: emacsvox.info,  Node: Running Terminal Based Applications,  Next: Emacsvox Keyboard Commands,  Prev: Emacsvox Commands And Options,  Up: Top
 
 13 Running Terminal Based Applications.
 ***************************************
@@ -314,16 +314,16 @@ programs from within Emacs.  You open a terminal emulator buffer using
 ‘M-x term’, with an extra carriage return to accept the default shell
 (such as ‘bash’).  (Incidentally, don't confuse this command with ‘M-x
 terminal-emulator’, which starts an older terminal emulator mode not
-supported by Emacspeak.)
+supported by Emacsvox.)
 
    Three kinds of commands are used within the terminal emulator.
-Normal term commands use a prefix of ‘C-c’.  The emacspeak commands for
+Normal term commands use a prefix of ‘C-c’.  The emacsvox commands for
 eterm mode use a prefix of ‘C-t’.  Anything else is a normal shell
 command.
 
    There are two sub-modes of term mode: char sub-mode and line
-sub-mode.  In char sub-mode, emacspeak will only speak the final chunk
-of output -- typically the last line displayed.  Each character typed
+sub-mode.  In char sub-mode, emacsvox will only speak the final chunk of
+output -- typically the last line displayed.  Each character typed
 (except 'term-escape-char') is sent immediately.  Use char sub-mode for
 screen oriented programs like ‘vi’ or ‘pine’.
 
@@ -514,78 +514,77 @@ comma speaks the pointer location.  A period moves the pointer to the
 terminal cursor.  Return to normal term mode by typing ‘q’.
 
 
-File: emacspeak.info,  Node: Emacspeak Keyboard Commands,  Next: TTS Servers,  Prev: Running Terminal Based Applications,  Up: Top
+File: emacsvox.info,  Node: Emacsvox Keyboard Commands,  Next: TTS Servers,  Prev: Running Terminal Based Applications,  Up: Top
 
-14 Emacspeak Keyboard Commands.
-*******************************
+14 Emacsvox Keyboard Commands.
+******************************
 
-This chapter gives an overview of all the keymaps used by Emacspeak.
-For a complete reference, see *Note emacsvox::.  For basic usage, see
-*Note Basic Usage::.
+This chapter gives an overview of all the keymaps used by Emacsvox.  For
+a complete reference, see *Note emacsvox::.  For basic usage, see *Note
+Basic Usage::.
 
-   Emacspeak uses the following keymaps, each of which are invoked by a
+   Emacsvox uses the following keymaps, each of which are invoked by a
 specific prefix key.
 ‘C-e’
-     The main Emacspeak keymap.
+     The main Emacsvox keymap.
 ‘C-e d’
      The text-to-speech keymap.
 ‘C-;’
-     The Emacspeak hyper keymap.
+     The Emacsvox hyper keymap.
 ‘C-'’
-     The emacspeak super keymap.
+     The emacsvox super keymap.
 ‘C-,’
-     The Emacspeak alt keymap.
+     The Emacsvox alt keymap.
 ‘C-.’
-     The Emacspeak super keymap.
+     The Emacsvox super keymap.
 ‘C-e x’
-     The emacspeak ‘x’ keymap.
+     The emacsvox ‘x’ keymap.
 ‘C-e C-x’
-     The Emacspeak ‘C-x’ keymap.
+     The Emacsvox ‘C-x’ keymap.
 
-   Primary Emacspeak commands start with ‘C-e’.  Following ‘C-e’ with
-‘d’ invokes commands that control the text-to-speech engine.  Note that
+   Primary Emacsvox commands start with ‘C-e’.  Following ‘C-e’ with ‘d’
+invokes commands that control the text-to-speech engine.  Note that
 silencing speech is an exception to this rule -- Speech silence commands
-are placed directly on the primary emacspeak-keymap (‘C-e s’ and ‘C-e
+are placed directly on the primary emacsvox-keymap (‘C-e s’ and ‘C-e
 .’).
 
-   In addition, Emacspeak introduces five additional keymaps for binding
+   In addition, Emacsvox introduces five additional keymaps for binding
 its extensive set of facilities to convenient keystrokes.
 
    When running under a windowing system, Emacs automatically receives
 keys ‘C-;’, ‘C-'’, ‘C-,’ and ‘C-.’.  When running on the Linux console,
 these keys become available after loading the custom Linux keymap found
-in ‘emacspeak/tvr/console-keymaps’ after checking out the emacspeak
-repository from <https://github.com/tvraman/emacspeak>.
+in ‘emacsvox/tvr/console-keymaps’ after checking out the emacsvox
+repository from <https://github.com/robertmeta/emacsvox>.
 
-   Emacspeak defines personal keymaps accessible via ‘C-e x’ and ‘C-e
-C-x’.  For now, emacspeak does not bind any commands in keymap ‘C-e C-x’
+   Emacsvox defines personal keymaps accessible via ‘C-e x’ and ‘C-e
+C-x’.  For now, emacsvox does not bind any commands in keymap ‘C-e C-x’
 -- this keymap is left for end-user personalization.
 
    Note that the information presented in the following subsections can
 also be viewed via Emacs' built-in Help system; e.g., Press ‘C-; C-h’ to
 get a ‘*Help*’ buffer that displays all keys bound in
-‘emacspeak-hyper-keymap’.
+‘emacsvox-hyper-keymap’.
 
 
-File: emacspeak.info,  Node: TTS Servers,  Next: Emacspeak At Twenty,  Prev: Emacspeak Keyboard Commands,  Up: Top
+File: emacsvox.info,  Node: TTS Servers,  Next: Emacspeak At Twenty,  Prev: Emacsvox Keyboard Commands,  Up: Top
 
 15 TTS Servers
 **************
 
-Emacspeak produces spoken output by communicating with one of many
-speech servers.  This section documents the communication protocol
-between the client application i.e.  Emacspeak, and the Text to Speech
-(TTS) server.  This section is primarily intended for developers wishing
-to:
+Emacsvox produces spoken output by communicating with one of many speech
+servers.  This section documents the communication protocol between the
+client application i.e.  Emacsvox, and the Text to Speech (TTS) server.
+This section is primarily intended for developers wishing to:
 
    • Create new speech servers that comply with this communication
      protocol
 
    • Developers of other client applications who wish to use the various
-     Emacspeak speech servers.
+     Emacsvox speech servers.
 
    For additional notes on how to log and view TTS server commands when
-developing a speech server, see
+developing a speech server, see the original Emacspeak article at
 <http://emacspeak.blogspot.com/2015/04/howto-log-speech-server-output-to-aid.html>.
 
 15.1 High-level Overview
@@ -622,7 +621,7 @@ request has been completely processed.  This is a non-blocking
 operation, i.e., if the client application generates additional
 requests, these are processed *immediately*.
 
-   The above design allows the Emacspeak TTS server to be *highly*
+   The above design allows the Emacsvox TTS server to be *highly*
 responsive; Client applications can queue large amounts of text
 (typically queued a clause at a time to achieve the best prosody), ask
 the TTS server to start speaking, and interrupt the spoken output at any
@@ -792,7 +791,7 @@ selected.
 to "en_GB". This can later be used by set_lang.
 
 
-File: emacspeak.info,  Node: Emacspeak At Twenty,  Next: Acknowledgments,  Prev: TTS Servers,  Up: Top
+File: emacsvox.info,  Node: Emacspeak At Twenty,  Next: Acknowledgments,  Prev: TTS Servers,  Up: Top
 
 16 Emacspeak At Twenty.
 ***********************
@@ -823,7 +822,7 @@ emacspeak distribution.
 * References::
 
 
-File: emacspeak.info,  Node: Turning Twenty,  Next: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Turning Twenty,  Next: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
 
 16.1 Turning Twenty
 ===================
@@ -838,7 +837,7 @@ Learning To Program In 10 Years (http://norvig.com/21-days.html) by
 Peter Norvig for some of its inspiration.
 
 
-File: emacspeak.info,  Node: Using UNIX With Speech Output --- 1994,  Next: Key Enabler --- Emacs And Lisp Advice,  Prev: Turning Twenty,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Using UNIX With Speech Output --- 1994,  Next: Key Enabler --- Emacs And Lisp Advice,  Prev: Turning Twenty,  Up: Emacspeak At Twenty
 
 16.2 Using UNIX With Speech Output -- 1994
 ==========================================
@@ -873,7 +872,7 @@ Emacs' default behavior to _speak_ -- within about 4 hours, version 0.01
 of Emacspeak was up and running.
 
 
-File: emacspeak.info,  Node: Key Enabler --- Emacs And Lisp Advice,  Next: Key Component --- Text To Speech (TTS),  Prev: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Key Enabler --- Emacs And Lisp Advice,  Next: Key Component --- Text To Speech (TTS),  Prev: Using UNIX With Speech Output --- 1994,  Up: Emacspeak At Twenty
 
 16.3 Key Enabler -- Emacs And Lisp Advice
 =========================================
@@ -893,7 +892,7 @@ in the book Beautiful Code
 from O'Reilly.
 
 
-File: emacspeak.info,  Node: Key Component --- Text To Speech (TTS),  Next: Emacspeak And Software Development,  Prev: Key Enabler --- Emacs And Lisp Advice,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Key Component --- Text To Speech (TTS),  Next: Emacspeak And Software Development,  Prev: Key Enabler --- Emacs And Lisp Advice,  Up: Emacspeak At Twenty
 
 16.4 Key Component -- Text To Speech (TTS)
 ==========================================
@@ -936,7 +935,7 @@ renderings that were possible with the admittedly less-natural sounding
 DECTalk!
 
 
-File: emacspeak.info,  Node: Emacspeak And Software Development,  Next: Emacspeak And Authoring Documents,  Prev: Key Component --- Text To Speech (TTS),  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Emacspeak And Software Development,  Next: Emacspeak And Authoring Documents,  Prev: Key Component --- Text To Speech (TTS),  Up: Emacspeak At Twenty
 
 16.5 Emacspeak And Software Development
 =======================================
@@ -989,7 +988,7 @@ content being accessed.
 * Programming Defensively::
 
 
-File: emacspeak.info,  Node: Programming Defensively,  Up: Emacspeak And Software Development
+File: emacsvox.info,  Node: Programming Defensively,  Up: Emacspeak And Software Development
 
 16.5.1 Programming Defensively
 ------------------------------
@@ -1015,7 +1014,7 @@ other key features of the Emacspeak code-base:
      without any loss of functionality.
 
 
-File: emacspeak.info,  Node: Emacspeak And Authoring Documents,  Next: Emacspeak And The Early Days Of The Web,  Prev: Emacspeak And Software Development,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Emacspeak And Authoring Documents,  Next: Emacspeak And The Early Days Of The Web,  Prev: Emacspeak And Software Development,  Up: Emacspeak At Twenty
 
 16.6 Emacspeak And Authoring Documents
 ======================================
@@ -1045,7 +1044,7 @@ published in 2002; all of the content, including the drawings were
 created by me using Emacs.
 
 
-File: emacspeak.info,  Node: Emacspeak And The Early Days Of The Web,  Next: Audio Formatting --- Generalizing Aural CSS,  Prev: Emacspeak And Authoring Documents,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Emacspeak And The Early Days Of The Web,  Next: Audio Formatting --- Generalizing Aural CSS,  Prev: Emacspeak And Authoring Documents,  Up: Emacspeak At Twenty
 
 16.7 Emacspeak And The Early Days Of The Web
 ============================================
@@ -1101,7 +1100,7 @@ package *eww*
 with support for DOM filtering and quick content navigation.
 
 
-File: emacspeak.info,  Node: Audio Formatting --- Generalizing Aural CSS,  Next: Conversational Gestures For The Audio Desktop,  Prev: Emacspeak And The Early Days Of The Web,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Audio Formatting --- Generalizing Aural CSS,  Next: Conversational Gestures For The Audio Desktop,  Prev: Emacspeak And The Early Days Of The Web,  Up: Emacspeak At Twenty
 
 16.8 Audio Formatting -- Generalizing Aural CSS
 ===============================================
@@ -1152,7 +1151,7 @@ Today, Emacspeak's audio formatted output is the only way I can
 correctly write *else if* vs *elsif* in various programming languages!
 
 
-File: emacspeak.info,  Node: Conversational Gestures For The Audio Desktop,  Next: Accessing Media Streams,  Prev: Audio Formatting --- Generalizing Aural CSS,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Conversational Gestures For The Audio Desktop,  Next: Accessing Media Streams,  Prev: Audio Formatting --- Generalizing Aural CSS,  Up: Emacspeak At Twenty
 
 16.9 Conversational Gestures For The Audio Desktop
 ==================================================
@@ -1210,7 +1209,7 @@ with two-dimensional data.
 * Speech-Enabling Interactive Games::
 
 
-File: emacspeak.info,  Node: Speech-Enabling Interactive Games,  Up: Conversational Gestures For The Audio Desktop
+File: emacsvox.info,  Node: Speech-Enabling Interactive Games,  Up: Conversational Gestures For The Audio Desktop
 
 16.9.1 Speech-Enabling Interactive Games
 ----------------------------------------
@@ -1242,7 +1241,7 @@ model in Emacspeak, and those innovations typically make their way to
 the rest of the environment.
 
 
-File: emacspeak.info,  Node: Accessing Media Streams,  Next: EBooks --- Ubiquitous Access To Books,  Prev: Conversational Gestures For The Audio Desktop,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Accessing Media Streams,  Next: EBooks --- Ubiquitous Access To Books,  Prev: Conversational Gestures For The Audio Desktop,  Up: Emacspeak At Twenty
 
 16.10 Accessing Media Streams
 =============================
@@ -1277,7 +1276,7 @@ smarter ways of navigating the filesystem using completions, e.g.,
 package *ido*, these types of actions become even more efficient!
 
 
-File: emacspeak.info,  Node: EBooks --- Ubiquitous Access To Books,  Next: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Prev: Accessing Media Streams,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: EBooks --- Ubiquitous Access To Books,  Next: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Prev: Accessing Media Streams,  Up: Emacspeak At Twenty
 
 16.11 EBooks -- Ubiquitous Access To Books
 ==========================================
@@ -1322,7 +1321,7 @@ and browse books, along with an integrated *EPub mode* for reading
 books.
 
 
-File: emacspeak.info,  Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Next: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Prev: EBooks --- Ubiquitous Access To Books,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Next: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Prev: EBooks --- Ubiquitous Access To Books,  Up: Emacspeak At Twenty
 
 16.12 Leveraging Computational Tools -- From SQL And R To IPython Notebooks
 ===========================================================================
@@ -1353,7 +1352,7 @@ since editing program source code in an eyes-free environment is far
 smoother in Emacs than in a browser-based editor.
 
 
-File: emacspeak.info,  Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Next: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Prev: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Next: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Prev: Leveraging Computational Tools --- From SQL And R To IPython Notebooks,  Up: Emacspeak At Twenty
 
 16.13 Social Web -- EMail, Instant Messaging, Blogging And Tweeting Using Open Protocols
 ========================================================================================
@@ -1407,7 +1406,7 @@ package provides Emacs wrappers for Google services that provide a
 RESTful API.
 
 
-File: emacspeak.info,  Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Next: Mashing It Up --- Leveraging Evolving Web APIs,  Prev: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Next: Mashing It Up --- Leveraging Evolving Web APIs,  Prev: Social Web --- EMail Instant Messaging Blogging And Tweeting Using Open Protocols,  Up: Emacspeak At Twenty
 
 16.14 The RESTful Web -- Web Wizards And URL Templates For Faster Access
 ========================================================================
@@ -1473,7 +1472,7 @@ including a continuously updating ticker of headlines taken from the
 user's collection of subscribed feeds.
 
 
-File: emacspeak.info,  Node: Mashing It Up --- Leveraging Evolving Web APIs,  Next: Conclusion --- Turning Twenty,  Prev: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Mashing It Up --- Leveraging Evolving Web APIs,  Next: Conclusion --- Turning Twenty,  Prev: The RESTful Web --- Web Wizards And URL Templates For Faster Access,  Up: Emacspeak At Twenty
 
 16.15 Mashing It Up -- Leveraging Evolving Web APIs
 ===================================================
@@ -1517,7 +1516,7 @@ potential of this design pattern remains to be fully realized given
 today's tight association of the Web to the Web Browser.
 
 
-File: emacspeak.info,  Node: Conclusion --- Turning Twenty,  Next: References,  Prev: Mashing It Up --- Leveraging Evolving Web APIs,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: Conclusion --- Turning Twenty,  Next: References,  Prev: Mashing It Up --- Leveraging Evolving Web APIs,  Up: Emacspeak At Twenty
 
 16.16 Conclusion -- Turning Twenty
 ==================================
@@ -1542,7 +1541,7 @@ alongside visual interaction when this comes to pass.
    -T.V. Raman, San Jose, CA, September 12, 2014
 
 
-File: emacspeak.info,  Node: References,  Prev: Conclusion --- Turning Twenty,  Up: Emacspeak At Twenty
+File: emacsvox.info,  Node: References,  Prev: Conclusion --- Turning Twenty,  Up: Emacspeak At Twenty
 
 16.17 References
 ================
@@ -1565,7 +1564,7 @@ File: emacspeak.info,  Node: References,  Prev: Conclusion --- Turning Twenty,  
      Neal Stephenson
 
 
-File: emacspeak.info,  Node: Acknowledgments,  Next: Concept Index,  Prev: Emacspeak At Twenty,  Up: Top
+File: emacsvox.info,  Node: Acknowledgments,  Next: Concept Index,  Prev: Emacspeak At Twenty,  Up: Top
 
 17 Acknowledgments
 ******************
@@ -1573,7 +1572,7 @@ File: emacspeak.info,  Node: Acknowledgments,  Next: Concept Index,  Prev: Emacs
 Thanks.
 
 
-File: emacspeak.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgments,  Up: Top
+File: emacsvox.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgments,  Up: Top
 
 18 Concept Index
 ****************
@@ -1598,7 +1597,7 @@ File: emacspeak.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgm
 * Document Authoring:                    Document Authoring.   (line  6)
 * Document Creation:                     Creating Well-formatted Documents.
                                                                (line  6)
-* Emacs Keyboard Commands:               Emacspeak Keyboard Commands.
+* Emacs Keyboard Commands:               Emacsvox Keyboard Commands.
                                                                (line  6)
 * Emacs Packages:                        Emacs Packages.       (line  6)
 * Finding:                               Context-Sensitive Interaction.
@@ -1631,7 +1630,7 @@ File: emacspeak.info,  Node: Concept Index,  Next: Key Index,  Prev: Acknowledgm
 * word echo:                             Controlling Echo.     (line  6)
 
 
-File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept Index,  Up: Top
+File: emacsvox.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept Index,  Up: Top
 
 19 Key Index
 ************
@@ -1648,9 +1647,9 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * <f1> C-s:                              emacsvox-wizards.   (line  382)
 * <f1> C-v:                              emacsvox-wizards.   (line  395)
 * <f1> M:                                emacsvox-wizards.   (line  210)
-* <f1> N:                                emacsvox-speak.     (line 1048)
+* <f1> N:                                emacsvox-speak.     (line 1049)
 * <f1> TAB:                              emacsvox-info.      (line   38)
-* <fn>:                                  emacsvox-speak.     (line  249)
+* <fn>:                                  emacsvox-speak.     (line  250)
 * <help> ,:                              emacsvox-wizards.   (line  313)
 * <help> ":                              emacsvox-extras.    (line  128)
 * <help> \:                              emacsvox-wizards.   (line  323)
@@ -1660,12 +1659,12 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * <help> C-s:                            emacsvox-wizards.   (line  383)
 * <help> C-v:                            emacsvox-wizards.   (line  396)
 * <help> M:                              emacsvox-wizards.   (line  211)
-* <help> N:                              emacsvox-speak.     (line 1049)
+* <help> N:                              emacsvox-speak.     (line 1050)
 * <help> TAB:                            emacsvox-info.      (line   39)
 * <print>:                               emacsvox-muggles.   (line   49)
-* <silence>:                             emacsvox-speak.     (line  238)
+* <silence>:                             emacsvox-speak.     (line  239)
 * <XF86AudioLowerVolume>:                amixer.             (line   62)
-* <XF86AudioPlay>:                       emacsvox-speak.     (line  239)
+* <XF86AudioPlay>:                       emacsvox-speak.     (line  240)
 * <XF86AudioRaiseVolume>:                amixer.             (line   74)
 * C-, /:                                 extra-muggles.      (line  323)
 * C-, a:                                 emacsvox-feeds.     (line   34)
@@ -1699,6 +1698,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-. n:                                 emacsvox-wizards.   (line  599)
 * C-. o:                                 extra-muggles.      (line  190)
 * C-. R:                                 emacsvox-webspace.  (line   16)
+* C-. s:                                 emacsvox.           (line   22)
 * C-. t:                                 soundscape.         (line   49)
 * C-. v:                                 extra-muggles.      (line  263)
 * C-' l:                                 emacsvox-m-player.  (line  365)
@@ -1770,9 +1770,9 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e (:                                 amixer.             (line   24)
 * C-e ):                                 emacsvox-sounds.    (line   73)
 * C-e [:                                 Reading.            (line  121)
-* C-e [ <1>:                             emacsvox-speak.     (line  671)
-* C-e ]:                                 emacsvox-speak.     (line  649)
-* C-e @:                                 emacsvox-speak.     (line  552)
+* C-e [ <1>:                             emacsvox-speak.     (line  672)
+* C-e ]:                                 emacsvox-speak.     (line  650)
+* C-e @:                                 emacsvox-speak.     (line  553)
 * C-e /:                                 Reading.            (line   91)
 * C-e / ?:                               emacsvox-websearch. (line  123)
 * C-e / a:                               emacsvox-websearch. (line   73)
@@ -1787,65 +1787,65 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e / u:                               emacsvox-websearch. (line  133)
 * C-e / w:                               emacsvox-websearch. (line  145)
 * C-e / y:                               emacsvox-websearch. (line  157)
-* C-e \:                                 emacsvox-speak.     (line 1019)
+* C-e \:                                 emacsvox-speak.     (line 1020)
 * C-e &:                                 emacsvox-wizards.   (line  813)
 * C-e # a:                               emacsvox-gridtext.  (line   27)
 * C-e # l:                               emacsvox-gridtext.  (line   37)
 * C-e # s:                               emacsvox-gridtext.  (line   47)
 * C-e %:                                 Status Information. (line   92)
-* C-e % <1>:                             emacsvox-speak.     (line  377)
-* C-e `:                                 emacsvox-speak.     (line  606)
+* C-e % <1>:                             emacsvox-speak.     (line  378)
+* C-e `:                                 emacsvox-speak.     (line  607)
 * C-e ^:                                 emacsvox-filtertext.
                                                              (line   24)
-* C-e <backspace>:                       emacsvox-speak.     (line  539)
-* C-e <delete>:                          emacsvox-speak.     (line  540)
+* C-e <backspace>:                       emacsvox-speak.     (line  540)
+* C-e <delete>:                          emacsvox-speak.     (line  541)
 * C-e <down>:                            emacsvox-speak.     (line  183)
 * C-e <f1>:                              emacsvox-wizards.   (line   70)
 * C-e <f11>:                             emacsvox-wizards.   (line  847)
-* C-e <fn>:                              emacsvox-speak.     (line  250)
+* C-e <fn>:                              emacsvox-speak.     (line  251)
 * C-e <left>:                            emacsvox-wizards.   (line  256)
 * C-e <right>:                           emacsvox-wizards.   (line  230)
 * C-e <up>:                              emacsvox-speak.     (line  194)
 * C-e =:                                 Status Information. (line   87)
-* C-e = <1>:                             emacsvox-speak.     (line  337)
-* C-e |:                                 emacsvox-speak.     (line  499)
-* C-e 1:                                 emacsvox-speak.     (line  836)
-* C-e 2:                                 emacsvox-speak.     (line  633)
+* C-e = <1>:                             emacsvox-speak.     (line  338)
+* C-e |:                                 emacsvox-speak.     (line  500)
+* C-e 1:                                 emacsvox-speak.     (line  837)
+* C-e 2:                                 emacsvox-speak.     (line  634)
 * C-e 3:                                 amixer.             (line   52)
 * C-e 4:                                 amixer.             (line   51)
 * C-e a:                                 Status Information. (line    8)
 * C-e A:                                 emacsvox-calendar.  (line   18)
-* C-e a <1>:                             emacsvox-speak.     (line  538)
+* C-e a <1>:                             emacsvox-speak.     (line  539)
 * C-e b:                                 Reading.            (line   76)
-* C-e b <1>:                             emacsvox-speak.     (line  258)
-* C-e B:                                 emacsvox-speak.     (line  284)
+* C-e b <1>:                             emacsvox-speak.     (line  259)
+* C-e B:                                 emacsvox-speak.     (line  285)
 * C-e c:                                 Reading.            (line   15)
-* C-e c <1>:                             emacsvox-speak.     (line  295)
+* C-e c <1>:                             emacsvox-speak.     (line  296)
 * C-e C:                                 emacsvox-wizards.   (line   44)
-* C-e C-.:                               emacsvox-speak.     (line  423)
+* C-e C-.:                               emacsvox-speak.     (line  424)
 * C-e C-@:                               Status Information. (line   71)
-* C-e C-@ <1>:                           emacsvox-speak.     (line  361)
+* C-e C-@ <1>:                           emacsvox-speak.     (line  362)
 * C-e C-/:                               emacsvox-wizards.   (line  241)
 * C-e C-<left>:                          emacsvox-wizards.   (line  139)
-* C-e C-<return>:                        emacsvox-speak.     (line  323)
+* C-e C-<return>:                        emacsvox-speak.     (line  324)
 * C-e C-<right>:                         emacsvox-wizards.   (line  114)
 * C-e C-a:                               emacsvox-sounds.    (line   83)
 * C-e C-b:                               emacsvox-bookshare. (line   53)
 * C-e C-c:                               emacsvox-speak.     (line  218)
-* C-e C-d:                               emacsvox-speak.     (line 1009)
-* C-e C-f:                               emacsvox-dired.     (line  164)
+* C-e C-d:                               emacsvox-speak.     (line 1010)
+* C-e C-f:                               emacsvox-dired.     (line  165)
 * C-e C-j:                               emacsvox-hide.      (line   39)
 * C-e C-l:                               Status Information. (line   82)
 * C-e C-M-c:                             emacsvox-extras.    (line   30)
-* C-e C-M-q:                             emacsvox-speak.     (line 1029)
-* C-e C-M-SPC:                           emacsvox-speak.     (line  821)
+* C-e C-M-q:                             emacsvox-speak.     (line 1030)
+* C-e C-M-SPC:                           emacsvox-speak.     (line  822)
 * C-e C-n:                               Reading.            (line  138)
 * C-e C-o:                               emacsvox-ocr.       (line   18)
 * C-e C-p:                               Reading.            (line  143)
 * C-e C-q:                               emacsvox-comint.    (line   35)
 * C-e C-s:                               Miscellaneous.      (line   26)
 * C-e C-s <1>:                           tts-speak.          (line   97)
-* C-e C-SPC:                             emacsvox-speak.     (line  360)
+* C-e C-SPC:                             emacsvox-speak.     (line  361)
 * C-e C-t ,:                             emacsvox-table-ui.  (line   43)
 * C-e C-t .:                             emacsvox-table-ui.  (line  388)
 * C-e C-t #:                             emacsvox-table-ui.  (line  353)
@@ -1891,10 +1891,10 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e C-t x:                             emacsvox-table-ui.  (line   24)
 * C-e C-u:                               emacsvox-feeds.     (line   45)
 * C-e C-w:                               Status Information. (line   28)
-* C-e C-w <1>:                           emacsvox-speak.     (line  892)
-* C-e C-x:                               emacsvox-speak.     (line  445)
+* C-e C-w <1>:                           emacsvox-speak.     (line  893)
+* C-e C-x:                               emacsvox-speak.     (line  446)
 * C-e cap V:                             Status Information. (line   38)
-* C-e d cap V:                           Miscellaneous.      (line   80)
+* C-e d cap V:                           Miscellaneous.      (line   79)
 * C-e d -:                               tts-speak.          (line   76)
 * C-e d ,:                               tts-speak.          (line  273)
 * C-e d .:                               tts-speak.          (line   68)
@@ -1910,7 +1910,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e d 7:                               tts-speak.          (line  162)
 * C-e d 8:                               tts-speak.          (line  161)
 * C-e d 9:                               tts-speak.          (line  160)
-* C-e d a:                               Miscellaneous.      (line   37)
+* C-e d a:                               Miscellaneous.      (line   36)
 * C-e d a <1>:                           tts-speak.          (line   16)
 * C-e d c:                               Speech Output Control.
                                                              (line   58)
@@ -1922,7 +1922,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e d C-n:                             tts-speak.          (line   60)
 * C-e d C-o:                             outloud-voices.     (line   17)
 * C-e d C-s:                             dectalk-voices.     (line   25)
-* C-e d d:                               Miscellaneous.      (line   49)
+* C-e d d:                               Miscellaneous.      (line   48)
 * C-e d d <1>:                           tts-speak.          (line  105)
 * C-e d DIGIT:                           Speech Output Control.
                                                              (line   36)
@@ -1931,11 +1931,11 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e d f <1>:                           tts-speak.          (line  115)
 * C-e d i:                               Speech Output Control.
                                                              (line   69)
-* C-e d i <1>:                           emacsvox-speak.     (line  956)
+* C-e d i <1>:                           emacsvox-speak.     (line  957)
 * C-e d k:                               Controlling Echo.   (line   18)
-* C-e d k <1>:                           emacsvox-speak.     (line  970)
+* C-e d k <1>:                           emacsvox-speak.     (line  971)
 * C-e d l:                               Controlling Echo.   (line   32)
-* C-e d l <1>:                           emacsvox-speak.     (line  987)
+* C-e d l <1>:                           emacsvox-speak.     (line  988)
 * C-e d L:                               tts-speak.          (line   47)
 * C-e d N:                               tts-speak.          (line  152)
 * C-e d n:                               tts-speak.          (line  294)
@@ -1950,88 +1950,88 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
                                                              (line   16)
 * C-e d R:                               tts-speak.          (line   89)
 * C-e d r <1>:                           tts-speak.          (line  232)
-* C-e d <RETURN>:                        Miscellaneous.      (line   72)
+* C-e d <RETURN>:                        Miscellaneous.      (line   71)
 * C-e d s:                               Speech Output Control.
                                                              (line   50)
 * C-e d S:                               tts-speak.          (line  140)
 * C-e d s <1>:                           tts-speak.          (line  304)
-* C-e d <SPACE>:                         Miscellaneous.      (line   56)
+* C-e d <SPACE>:                         Miscellaneous.      (line   55)
 * C-e d SPC:                             tts-speak.          (line  316)
 * C-e d V:                               tts-speak.          (line  244)
 * C-e d v:                               voice-setup.        (line   62)
 * C-e d w:                               Controlling Echo.   (line   25)
-* C-e d w <1>:                           emacsvox-speak.     (line 1037)
-* C-e d z:                               Miscellaneous.      (line   86)
-* C-e d z <1>:                           emacsvox-speak.     (line 1057)
+* C-e d w <1>:                           emacsvox-speak.     (line 1038)
+* C-e d z:                               Miscellaneous.      (line   85)
+* C-e d z <1>:                           emacsvox-speak.     (line 1058)
 * C-e DIGIT:                             Reading.            (line  129)
 * C-e <DOWN>:                            Reading.            (line   49)
 * C-e f:                                 Status Information. (line   43)
-* C-e f <1>:                             emacsvox-speak.     (line  270)
+* C-e f <1>:                             emacsvox-speak.     (line  271)
 * C-e h:                                 Status Information. (line   50)
-* C-e h <1>:                             emacsvox-speak.     (line  453)
-* C-e i:                                 emacsvox-speak.     (line  757)
+* C-e h <1>:                             emacsvox-speak.     (line  454)
+* C-e i:                                 emacsvox-speak.     (line  758)
 * C-e j:                                 emacsvox-hide.      (line   27)
 * C-e k:                                 Status Information. (line   57)
-* C-e k <1>:                             emacsvox-speak.     (line  345)
+* C-e k <1>:                             emacsvox-speak.     (line  346)
 * C-e l:                                 Reading.            (line   29)
-* C-e l <1>:                             emacsvox-speak.     (line  461)
-* C-e L:                                 emacsvox-speak.     (line  488)
+* C-e l <1>:                             emacsvox-speak.     (line  462)
+* C-e L:                                 emacsvox-speak.     (line  489)
 * C-e <LEFT>:                            Reading.            (line  105)
 * C-e m:                                 Status Information. (line   13)
-* C-e M:                                 emacsvox-speak.     (line  582)
-* C-e m <1>:                             emacsvox-speak.     (line  594)
+* C-e M:                                 emacsvox-speak.     (line  583)
+* C-e m <1>:                             emacsvox-speak.     (line  595)
 * C-e M-;:                               emacsvox-eww.       (line  674)
 * C-e M-%:                               emacsvox-speak.     (line  108)
-* C-e M-a:                               emacsvox-speak.     (line  541)
-* C-e M-b:                               emacsvox-speak.     (line  622)
+* C-e M-a:                               emacsvox-speak.     (line  542)
+* C-e M-b:                               emacsvox-speak.     (line  623)
 * C-e M-c:                               emacsvox-wizards.   (line   30)
 * C-e M-d:                               emacsvox-pronounce. (line   56)
 * C-e M-e:                               emacsvox-epub.      (line  143)
 * C-e M-h:                               emacsvox-wizards.   (line  201)
-* C-e M-l:                               emacsvox-speak.     (line  641)
-* C-e M-m:                               emacsvox-speak.     (line  997)
+* C-e M-l:                               emacsvox-speak.     (line  642)
+* C-e M-m:                               emacsvox-speak.     (line  998)
 * C-e M-o:                               emacsvox-comint.    (line   26)
 * C-e M-p:                               emacsvox-wizards.   (line  150)
-* C-e M-r:                               emacsvox-speak.     (line  403)
+* C-e M-r:                               emacsvox-speak.     (line  404)
 * C-e M-s:                               emacsvox-wizards.   (line  267)
-* C-e M-SPC:                             emacsvox-speak.     (line  315)
+* C-e M-SPC:                             emacsvox-speak.     (line  316)
 * C-e M-t:                               emacsvox-speak.     (line   82)
 * C-e M-u:                               emacsvox-feeds.     (line   16)
 * C-e M-v:                               emacsvox-wizards.   (line  161)
-* C-e M-w:                               emacsvox-speak.     (line  883)
+* C-e M-w:                               emacsvox-speak.     (line  884)
 * C-e meta C-@:                          Reading.            (line  183)
 * C-e n:                                 Reading.            (line   86)
 * C-e n <1>:                             emacsvox-speak.     (line   36)
 * C-e N:                                 emacsvox-wizards.   (line  280)
 * C-e p:                                 Reading.            (line   55)
 * C-e p <1>:                             emacsvox-speak.     (line   35)
-* C-e P:                                 emacsvox-speak.     (line  683)
+* C-e P:                                 emacsvox-speak.     (line  684)
 * C-e r:                                 Reading.            (line   63)
-* C-e R:                                 emacsvox-speak.     (line  735)
-* C-e r <1>:                             emacsvox-speak.     (line  747)
+* C-e R:                                 emacsvox-speak.     (line  736)
+* C-e r <1>:                             emacsvox-speak.     (line  748)
 * C-e RET:                               emacsvox-websearch. (line   47)
 * C-e <RIGHT>:                           Reading.            (line  113)
 * C-e s:                                 Miscellaneous.      (line   12)
 * C-e s <1>:                             tts-speak.          (line  252)
 * C-e SPC:                               Status Information. (line   23)
-* C-e SPC <1>:                           emacsvox-speak.     (line  900)
+* C-e SPC <1>:                           emacsvox-speak.     (line  901)
 * C-e t:                                 Status Information. (line   33)
-* C-e t <1>:                             emacsvox-speak.     (line  844)
+* C-e t <1>:                             emacsvox-speak.     (line  845)
 * C-e T:                                 emacsvox-wizards.   (line  288)
 * C-e TAB:                               emacsvox-speak.     (line  128)
 * C-e u:                                 emacsvox-url-template.
                                                              (line   20)
 * C-e <UP>:                              Reading.            (line   43)
 * C-e v:                                 Status Information. (line   66)
-* C-e V:                                 emacsvox-speak.     (line  858)
+* C-e V:                                 emacsvox-speak.     (line  859)
 * C-e v a:                               emacsvox-xslt.      (line   27)
 * C-e v o:                               emacsvox-feeds.     (line   74)
 * C-e v r:                               emacsvox-xslt.      (line   57)
-* C-e v SPC:                             emacsvox-speak.     (line  813)
+* C-e v SPC:                             emacsvox-speak.     (line  814)
 * C-e v x:                               emacsvox-xslt.      (line   37)
 * C-e w:                                 Reading.            (line   21)
 * C-e W:                                 emacsvox-speak.     (line  205)
-* C-e w <1>:                             emacsvox-speak.     (line  908)
+* C-e w <1>:                             emacsvox-speak.     (line  909)
 * C-e x ,:                               emacsvox-wizards.   (line  839)
 * C-e x ;:                               emacsvox-m-player.  (line  655)
 * C-e x ::                               emacsvox-m-player.  (line  379)
@@ -2048,7 +2048,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-e x 5:                               emacsvox-wizards.   (line  790)
 * C-e x 7:                               emacsvox-wizards.   (line  814)
 * C-e x C-c:                             emacsvox-wizards.   (line  334)
-* C-e x d:                               emacsvox-speak.     (line  518)
+* C-e x d:                               emacsvox-speak.     (line  519)
 * C-e x e ]:                             emacsvox-we.        (line  316)
 * C-e x e a:                             emacsvox-we.        (line  369)
 * C-e x e b:                             emacsvox-we.        (line  245)
@@ -2109,7 +2109,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-h C-s:                               emacsvox-wizards.   (line  381)
 * C-h C-v:                               emacsvox-wizards.   (line  394)
 * C-h M:                                 emacsvox-wizards.   (line  209)
-* C-h N:                                 emacsvox-speak.     (line 1047)
+* C-h N:                                 emacsvox-speak.     (line 1048)
 * C-h TAB:                               emacsvox-info.      (line   37)
 * C-M-y:                                 emacsvox-muggles.   (line   96)
 * C-x @ a /:                             extra-muggles.      (line  324)
@@ -2144,6 +2144,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * C-x @ s n:                             emacsvox-wizards.   (line  600)
 * C-x @ s o:                             extra-muggles.      (line  191)
 * C-x @ s R:                             emacsvox-webspace.  (line   17)
+* C-x @ s s:                             emacsvox.           (line   23)
 * C-x @ s t:                             soundscape.         (line   50)
 * C-x @ s v:                             extra-muggles.      (line  264)
 * C-x r C-e:                             emacsvox-eww.       (line  413)
@@ -2172,7 +2173,7 @@ File: emacspeak.info,  Node: Key Index,  Next: Variable Index,  Prev: Concept In
 * s-o:                                   emacsvox-dbus.      (line   92)
 
 
-File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
+File: emacsvox.info,  Node: Function Index,  Next: Variable Index,  Prev: Key Index,  Up: Top
 
  [index ]
 * Menu:
@@ -2193,50 +2194,6 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * dectalk <1>:                           dectalk-voices.     (line   18)
 * dectalk-soft:                          dectalk-voices.     (line   23)
 * dectalk-soft <1>:                      dectalk-voices.     (line   26)
-* emacspeak-owindow-next-line:           Reading.            (line  160)
-* emacspeak-owindow-previous-line:       Reading.            (line  154)
-* emacspeak-owindow-scroll-down:         Reading.            (line  172)
-* emacspeak-owindow-scroll-up:           Reading.            (line  166)
-* emacspeak-read-next-line:              Reading.            (line   49)
-* emacspeak-read-previous-line:          Reading.            (line   43)
-* emacspeak-speak-buffer:                Reading.            (line   76)
-* emacspeak-speak-buffer-filename:       Status Information. (line   43)
-* emacspeak-speak-char:                  Reading.            (line   15)
-* emacspeak-speak-current-column:        Status Information. (line   87)
-* emacspeak-speak-current-kill:          Status Information. (line   57)
-* emacspeak-speak-current-mark:          Status Information. (line   71)
-* emacspeak-speak-current-percentage:    Status Information. (line   92)
-* emacspeak-speak-header-line:           Status Information. (line   23)
-* emacspeak-speak-help:                  Status Information. (line   50)
-* emacspeak-speak-line:                  Reading.            (line   29)
-* emacspeak-speak-line-number:           Status Information. (line   82)
-* emacspeak-speak-message-again:         Status Information. (line    8)
-* emacspeak-speak-minor-mode-line:       Status Information. (line   18)
-* emacspeak-speak-mode-line:             Status Information. (line   13)
-* emacspeak-speak-next-window:           Reading.            (line  138)
-* emacspeak-speak-other-window:          Reading.            (line  148)
-* emacspeak-speak-page:                  Reading.            (line  121)
-* emacspeak-speak-paragraph:             Reading.            (line   55)
-* emacspeak-speak-predefined-window:     Reading.            (line  129)
-* emacspeak-speak-previous-window:       Reading.            (line  143)
-* emacspeak-speak-rectangle:             Reading.            (line   69)
-* emacspeak-speak-region:                Reading.            (line   63)
-* emacspeak-speak-rest-of-buffer:        Reading.            (line   86)
-* emacspeak-speak-sexp:                  Reading.            (line  178)
-* emacspeak-speak-spaces-at-point:       Reading.            (line  183)
-* emacspeak-speak-this-buffer-next-display: Reading.         (line  113)
-* emacspeak-speak-this-buffer-other-window-display: Reading. (line   91)
-* emacspeak-speak-this-buffer-previous-display: Reading.     (line  105)
-* emacspeak-speak-time:                  Status Information. (line   33)
-* emacspeak-speak-version:               Status Information. (line   38)
-* emacspeak-speak-window-information:    Status Information. (line   28)
-* emacspeak-speak-word:                  Reading.            (line   21)
-* emacspeak-toggle-audio-indentation:    Speech Output Control.
-                                                             (line   69)
-* emacspeak-toggle-character-echo:       Controlling Echo.   (line   18)
-* emacspeak-toggle-line-echo:            Controlling Echo.   (line   32)
-* emacspeak-toggle-word-echo:            Controlling Echo.   (line   25)
-* emacspeak-view-register:               Status Information. (line   66)
 * emacsvox--advice-global-set-key-before: emacsvox-advice.   (line   19)
 * emacsvox--advice-global-set-key-before <1>: emacsvox-advice.
                                                              (line   20)
@@ -2549,36 +2506,36 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * emacsvox-dired-eww-open <1>:           emacsvox-dired.     (line   40)
 * emacsvox-dired-label-fields:           emacsvox-dired.     (line   46)
 * emacsvox-dired-label-fields <1>:       emacsvox-dired.     (line   47)
-* emacsvox-dired-md-open:                emacsvox-dired.     (line   54)
-* emacsvox-dired-md-open <1>:            emacsvox-dired.     (line   55)
-* emacsvox-dired-midi-play:              emacsvox-dired.     (line   61)
-* emacsvox-dired-midi-play <1>:          emacsvox-dired.     (line   62)
-* emacsvox-dired-open-this-directory:    emacsvox-dired.     (line   68)
-* emacsvox-dired-open-this-directory <1>: emacsvox-dired.    (line   69)
-* emacsvox-dired-open-this-file:         emacsvox-dired.     (line   75)
-* emacsvox-dired-open-this-file <1>:     emacsvox-dired.     (line   76)
-* emacsvox-dired-pdf-open:               emacsvox-dired.     (line   83)
-* emacsvox-dired-pdf-open <1>:           emacsvox-dired.     (line   84)
-* emacsvox-dired-play-duration:          emacsvox-dired.     (line   90)
-* emacsvox-dired-play-duration <1>:      emacsvox-dired.     (line   91)
-* emacsvox-dired-rpm-query-in-dired:     emacsvox-dired.     (line  100)
-* emacsvox-dired-rpm-query-in-dired <1>: emacsvox-dired.     (line  101)
-* emacsvox-dired-show-file-type:         emacsvox-dired.     (line  107)
-* emacsvox-dired-show-file-type <1>:     emacsvox-dired.     (line  109)
-* emacsvox-dired-speak-file-access-time: emacsvox-dired.     (line  119)
-* emacsvox-dired-speak-file-access-time <1>: emacsvox-dired. (line  120)
+* emacsvox-dired-md-open:                emacsvox-dired.     (line   55)
+* emacsvox-dired-md-open <1>:            emacsvox-dired.     (line   56)
+* emacsvox-dired-midi-play:              emacsvox-dired.     (line   62)
+* emacsvox-dired-midi-play <1>:          emacsvox-dired.     (line   63)
+* emacsvox-dired-open-this-directory:    emacsvox-dired.     (line   69)
+* emacsvox-dired-open-this-directory <1>: emacsvox-dired.    (line   70)
+* emacsvox-dired-open-this-file:         emacsvox-dired.     (line   76)
+* emacsvox-dired-open-this-file <1>:     emacsvox-dired.     (line   77)
+* emacsvox-dired-pdf-open:               emacsvox-dired.     (line   84)
+* emacsvox-dired-pdf-open <1>:           emacsvox-dired.     (line   85)
+* emacsvox-dired-play-duration:          emacsvox-dired.     (line   91)
+* emacsvox-dired-play-duration <1>:      emacsvox-dired.     (line   92)
+* emacsvox-dired-rpm-query-in-dired:     emacsvox-dired.     (line  101)
+* emacsvox-dired-rpm-query-in-dired <1>: emacsvox-dired.     (line  102)
+* emacsvox-dired-show-file-type:         emacsvox-dired.     (line  108)
+* emacsvox-dired-show-file-type <1>:     emacsvox-dired.     (line  110)
+* emacsvox-dired-speak-file-access-time: emacsvox-dired.     (line  120)
+* emacsvox-dired-speak-file-access-time <1>: emacsvox-dired. (line  121)
 * emacsvox-dired-speak-file-modification-time: emacsvox-dired.
-                                                             (line  126)
-* emacsvox-dired-speak-file-modification-time <1>: emacsvox-dired.
                                                              (line  127)
-* emacsvox-dired-speak-file-permissions: emacsvox-dired.     (line  133)
-* emacsvox-dired-speak-file-permissions <1>: emacsvox-dired. (line  134)
-* emacsvox-dired-speak-file-size:        emacsvox-dired.     (line  140)
-* emacsvox-dired-speak-file-size <1>:    emacsvox-dired.     (line  141)
-* emacsvox-dired-speak-header-line:      emacsvox-dired.     (line  148)
-* emacsvox-dired-speak-header-line <1>:  emacsvox-dired.     (line  149)
-* emacsvox-dired-speak-symlink-target:   emacsvox-dired.     (line  155)
-* emacsvox-dired-speak-symlink-target <1>: emacsvox-dired.   (line  156)
+* emacsvox-dired-speak-file-modification-time <1>: emacsvox-dired.
+                                                             (line  128)
+* emacsvox-dired-speak-file-permissions: emacsvox-dired.     (line  134)
+* emacsvox-dired-speak-file-permissions <1>: emacsvox-dired. (line  135)
+* emacsvox-dired-speak-file-size:        emacsvox-dired.     (line  141)
+* emacsvox-dired-speak-file-size <1>:    emacsvox-dired.     (line  142)
+* emacsvox-dired-speak-header-line:      emacsvox-dired.     (line  149)
+* emacsvox-dired-speak-header-line <1>:  emacsvox-dired.     (line  150)
+* emacsvox-dired-speak-symlink-target:   emacsvox-dired.     (line  156)
+* emacsvox-dired-speak-symlink-target <1>: emacsvox-dired.   (line  157)
 * emacsvox-ediff-speak-current-difference: emacsvox-ediff.   (line   25)
 * emacsvox-ediff-speak-current-difference <1>: emacsvox-ediff.
                                                              (line   26)
@@ -2999,8 +2956,8 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line   49)
 * emacsvox-filtertext-revert <1>:        emacsvox-filtertext.
                                                              (line   50)
-* emacsvox-find-dired:                   emacsvox-dired.     (line  162)
-* emacsvox-find-dired <1>:               emacsvox-dired.     (line  165)
+* emacsvox-find-dired:                   emacsvox-dired.     (line  163)
+* emacsvox-find-dired <1>:               emacsvox-dired.     (line  166)
 * emacsvox-forms-find-file:              emacsvox-forms.     (line   14)
 * emacsvox-forms-find-file <1>:          emacsvox-forms.     (line   15)
 * emacsvox-forms-flush-unwanted-records: emacsvox-forms.     (line   23)
@@ -3158,9 +3115,9 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line   33)
 * emacsvox-list-buffers-speak-name:      emacsvox-buff-menu. (line   39)
 * emacsvox-list-buffers-speak-name <1>:  emacsvox-buff-menu. (line   40)
-* emacsvox-locate-play-results-as-playlist: emacsvox-dired.  (line  170)
+* emacsvox-locate-play-results-as-playlist: emacsvox-dired.  (line  171)
 * emacsvox-locate-play-results-as-playlist <1>: emacsvox-dired.
-                                                             (line  172)
+                                                             (line  173)
 * emacsvox-m-player:                     emacsvox-m-player.  (line   35)
 * emacsvox-m-player <1>:                 emacsvox-m-player.  (line   36)
 * emacsvox-m-player-add-autopan:         emacsvox-m-player.  (line   48)
@@ -3514,14 +3471,18 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line   39)
 * emacsvox-outline-speak-this-heading:   emacsvox-outline.   (line   46)
 * emacsvox-outline-speak-this-heading <1>: emacsvox-outline. (line   47)
-* emacsvox-owindow-next-line:            emacsvox-speak.     (line  134)
-* emacsvox-owindow-next-line <1>:        emacsvox-speak.     (line  137)
-* emacsvox-owindow-previous-line:        emacsvox-speak.     (line  145)
-* emacsvox-owindow-previous-line <1>:    emacsvox-speak.     (line  148)
-* emacsvox-owindow-scroll-down:          emacsvox-speak.     (line  156)
-* emacsvox-owindow-scroll-down <1>:      emacsvox-speak.     (line  159)
-* emacsvox-owindow-scroll-up:            emacsvox-speak.     (line  165)
-* emacsvox-owindow-scroll-up <1>:        emacsvox-speak.     (line  168)
+* emacsvox-owindow-next-line:            Reading.            (line  160)
+* emacsvox-owindow-next-line <1>:        emacsvox-speak.     (line  134)
+* emacsvox-owindow-next-line <2>:        emacsvox-speak.     (line  137)
+* emacsvox-owindow-previous-line:        Reading.            (line  154)
+* emacsvox-owindow-previous-line <1>:    emacsvox-speak.     (line  145)
+* emacsvox-owindow-previous-line <2>:    emacsvox-speak.     (line  148)
+* emacsvox-owindow-scroll-down:          Reading.            (line  172)
+* emacsvox-owindow-scroll-down <1>:      emacsvox-speak.     (line  156)
+* emacsvox-owindow-scroll-down <2>:      emacsvox-speak.     (line  159)
+* emacsvox-owindow-scroll-up:            Reading.            (line  166)
+* emacsvox-owindow-scroll-up <1>:        emacsvox-speak.     (line  165)
+* emacsvox-owindow-scroll-up <2>:        emacsvox-speak.     (line  168)
 * emacsvox-owindow-speak-line:           emacsvox-speak.     (line  174)
 * emacsvox-owindow-speak-line <1>:       emacsvox-speak.     (line  175)
 * emacsvox-package-next-line:            emacsvox-package.   (line   17)
@@ -3587,10 +3548,12 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line  107)
 * emacsvox-pronounce-toggle-voice:       emacsvox-pronounce. (line  115)
 * emacsvox-pronounce-toggle-voice <1>:   emacsvox-pronounce. (line  116)
-* emacsvox-read-next-line:               emacsvox-speak.     (line  181)
-* emacsvox-read-next-line <1>:           emacsvox-speak.     (line  184)
-* emacsvox-read-previous-line:           emacsvox-speak.     (line  192)
-* emacsvox-read-previous-line <1>:       emacsvox-speak.     (line  195)
+* emacsvox-read-next-line:               Reading.            (line   49)
+* emacsvox-read-next-line <1>:           emacsvox-speak.     (line  181)
+* emacsvox-read-next-line <2>:           emacsvox-speak.     (line  184)
+* emacsvox-read-previous-line:           Reading.            (line   43)
+* emacsvox-read-previous-line <1>:       emacsvox-speak.     (line  192)
+* emacsvox-read-previous-line <2>:       emacsvox-speak.     (line  195)
 * emacsvox-rmail-speak-current-message-labels: emacsvox-rmail.
                                                              (line   14)
 * emacsvox-rmail-speak-current-message-labels <1>: emacsvox-rmail.
@@ -3638,14 +3601,14 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * emacsvox-ses-summarize-cell <1>:       emacsvox-ses.       (line   44)
 * emacsvox-ses-summarize-current-cell:   emacsvox-ses.       (line   52)
 * emacsvox-ses-summarize-current-cell <1>: emacsvox-ses.     (line   53)
-* emacsvox-shell-command:                emacsvox-speak.     (line  227)
-* emacsvox-shell-command <1>:            emacsvox-speak.     (line  228)
+* emacsvox-shell-command:                emacsvox-speak.     (line  228)
+* emacsvox-shell-command <1>:            emacsvox-speak.     (line  229)
 * emacsvox-show-property-at-point:       emacsvox-wizards.   (line  148)
 * emacsvox-show-property-at-point <1>:   emacsvox-wizards.   (line  151)
 * emacsvox-show-style-at-point:          emacsvox-wizards.   (line  159)
 * emacsvox-show-style-at-point <1>:      emacsvox-wizards.   (line  162)
-* emacsvox-silence:                      emacsvox-speak.     (line  236)
-* emacsvox-silence <1>:                  emacsvox-speak.     (line  240)
+* emacsvox-silence:                      emacsvox-speak.     (line  237)
+* emacsvox-silence <1>:                  emacsvox-speak.     (line  241)
 * emacsvox-skip-blank-lines-backward:    emacsvox-wizards.   (line  167)
 * emacsvox-skip-blank-lines-backward <1>: emacsvox-wizards.  (line  170)
 * emacsvox-skip-blank-lines-forward:     emacsvox-wizards.   (line  175)
@@ -3667,172 +3630,205 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * emacsvox-solitaire-speak-stones <1>:   emacsvox-solitaire. (line   43)
 * emacsvox-sounds-select-theme:          emacsvox-sounds.    (line   71)
 * emacsvox-sounds-select-theme <1>:      emacsvox-sounds.    (line   74)
-* emacsvox-speak-brief-time:             emacsvox-speak.     (line  247)
-* emacsvox-speak-brief-time <1>:         emacsvox-speak.     (line  251)
-* emacsvox-speak-buffer:                 emacsvox-speak.     (line  256)
-* emacsvox-speak-buffer <1>:             emacsvox-speak.     (line  259)
-* emacsvox-speak-buffer-filename:        emacsvox-speak.     (line  268)
-* emacsvox-speak-buffer-filename <1>:    emacsvox-speak.     (line  271)
-* emacsvox-speak-buffer-interactively:   emacsvox-speak.     (line  282)
-* emacsvox-speak-buffer-interactively <1>: emacsvox-speak.   (line  285)
-* emacsvox-speak-char:                   emacsvox-speak.     (line  293)
-* emacsvox-speak-char <1>:               emacsvox-speak.     (line  296)
-* emacsvox-speak-char-name:              emacsvox-speak.     (line  304)
-* emacsvox-speak-char-name <1>:          emacsvox-speak.     (line  305)
-* emacsvox-speak-completions-if-available: emacsvox-speak.   (line  313)
+* emacsvox-speak-brief-time:             emacsvox-speak.     (line  248)
+* emacsvox-speak-brief-time <1>:         emacsvox-speak.     (line  252)
+* emacsvox-speak-buffer:                 Reading.            (line   76)
+* emacsvox-speak-buffer <1>:             emacsvox-speak.     (line  257)
+* emacsvox-speak-buffer <2>:             emacsvox-speak.     (line  260)
+* emacsvox-speak-buffer-filename:        Status Information. (line   43)
+* emacsvox-speak-buffer-filename <1>:    emacsvox-speak.     (line  269)
+* emacsvox-speak-buffer-filename <2>:    emacsvox-speak.     (line  272)
+* emacsvox-speak-buffer-interactively:   emacsvox-speak.     (line  283)
+* emacsvox-speak-buffer-interactively <1>: emacsvox-speak.   (line  286)
+* emacsvox-speak-char:                   Reading.            (line   15)
+* emacsvox-speak-char <1>:               emacsvox-speak.     (line  294)
+* emacsvox-speak-char <2>:               emacsvox-speak.     (line  297)
+* emacsvox-speak-char-name:              emacsvox-speak.     (line  305)
+* emacsvox-speak-char-name <1>:          emacsvox-speak.     (line  306)
+* emacsvox-speak-completions-if-available: emacsvox-speak.   (line  314)
 * emacsvox-speak-completions-if-available <1>: emacsvox-speak.
-                                                             (line  316)
-* emacsvox-speak-continuously:           emacsvox-speak.     (line  321)
-* emacsvox-speak-continuously <1>:       emacsvox-speak.     (line  324)
-* emacsvox-speak-current-column:         emacsvox-speak.     (line  335)
-* emacsvox-speak-current-column <1>:     emacsvox-speak.     (line  338)
-* emacsvox-speak-current-kill:           emacsvox-speak.     (line  343)
-* emacsvox-speak-current-kill <1>:       emacsvox-speak.     (line  346)
-* emacsvox-speak-current-mark:           emacsvox-speak.     (line  358)
-* emacsvox-speak-current-mark <1>:       emacsvox-speak.     (line  362)
-* emacsvox-speak-current-percentage:     emacsvox-speak.     (line  375)
-* emacsvox-speak-current-percentage <1>: emacsvox-speak.     (line  378)
-* emacsvox-speak-current-window:         emacsvox-speak.     (line  383)
-* emacsvox-speak-current-window <1>:     emacsvox-speak.     (line  384)
-* emacsvox-speak-date-as-seconds:        emacsvox-speak.     (line  391)
-* emacsvox-speak-date-as-seconds <1>:    emacsvox-speak.     (line  392)
-* emacsvox-speak-extent:                 emacsvox-speak.     (line  401)
-* emacsvox-speak-extent <1>:             emacsvox-speak.     (line  404)
-* emacsvox-speak-face-backward:          emacsvox-speak.     (line  414)
-* emacsvox-speak-face-backward <1>:      emacsvox-speak.     (line  415)
-* emacsvox-speak-face-browse:            emacsvox-speak.     (line  421)
-* emacsvox-speak-face-browse <1>:        emacsvox-speak.     (line  424)
-* emacsvox-speak-face-forward:           emacsvox-speak.     (line  429)
-* emacsvox-speak-face-forward <1>:       emacsvox-speak.     (line  430)
-* emacsvox-speak-field:                  emacsvox-speak.     (line  436)
-* emacsvox-speak-field <1>:              emacsvox-speak.     (line  437)
-* emacsvox-speak-header-line:            emacsvox-speak.     (line  443)
-* emacsvox-speak-header-line <1>:        emacsvox-speak.     (line  446)
-* emacsvox-speak-help:                   emacsvox-speak.     (line  451)
-* emacsvox-speak-help <1>:               emacsvox-speak.     (line  454)
+                                                             (line  317)
+* emacsvox-speak-continuously:           emacsvox-speak.     (line  322)
+* emacsvox-speak-continuously <1>:       emacsvox-speak.     (line  325)
+* emacsvox-speak-current-column:         Status Information. (line   87)
+* emacsvox-speak-current-column <1>:     emacsvox-speak.     (line  336)
+* emacsvox-speak-current-column <2>:     emacsvox-speak.     (line  339)
+* emacsvox-speak-current-kill:           Status Information. (line   57)
+* emacsvox-speak-current-kill <1>:       emacsvox-speak.     (line  344)
+* emacsvox-speak-current-kill <2>:       emacsvox-speak.     (line  347)
+* emacsvox-speak-current-mark:           Status Information. (line   71)
+* emacsvox-speak-current-mark <1>:       emacsvox-speak.     (line  359)
+* emacsvox-speak-current-mark <2>:       emacsvox-speak.     (line  363)
+* emacsvox-speak-current-percentage:     Status Information. (line   92)
+* emacsvox-speak-current-percentage <1>: emacsvox-speak.     (line  376)
+* emacsvox-speak-current-percentage <2>: emacsvox-speak.     (line  379)
+* emacsvox-speak-current-window:         emacsvox-speak.     (line  384)
+* emacsvox-speak-current-window <1>:     emacsvox-speak.     (line  385)
+* emacsvox-speak-date-as-seconds:        emacsvox-speak.     (line  392)
+* emacsvox-speak-date-as-seconds <1>:    emacsvox-speak.     (line  393)
+* emacsvox-speak-extent:                 emacsvox-speak.     (line  402)
+* emacsvox-speak-extent <1>:             emacsvox-speak.     (line  405)
+* emacsvox-speak-face-backward:          emacsvox-speak.     (line  415)
+* emacsvox-speak-face-backward <1>:      emacsvox-speak.     (line  416)
+* emacsvox-speak-face-browse:            emacsvox-speak.     (line  422)
+* emacsvox-speak-face-browse <1>:        emacsvox-speak.     (line  425)
+* emacsvox-speak-face-forward:           emacsvox-speak.     (line  430)
+* emacsvox-speak-face-forward <1>:       emacsvox-speak.     (line  431)
+* emacsvox-speak-field:                  emacsvox-speak.     (line  437)
+* emacsvox-speak-field <1>:              emacsvox-speak.     (line  438)
+* emacsvox-speak-header-line:            Status Information. (line   23)
+* emacsvox-speak-header-line <1>:        emacsvox-speak.     (line  444)
+* emacsvox-speak-header-line <2>:        emacsvox-speak.     (line  447)
+* emacsvox-speak-help:                   Status Information. (line   50)
+* emacsvox-speak-help <1>:               emacsvox-speak.     (line  452)
+* emacsvox-speak-help <2>:               emacsvox-speak.     (line  455)
 * emacsvox-speak-hostname:               emacsvox-wizards.   (line  199)
 * emacsvox-speak-hostname <1>:           emacsvox-wizards.   (line  202)
-* emacsvox-speak-line:                   emacsvox-speak.     (line  459)
-* emacsvox-speak-line <1>:               emacsvox-speak.     (line  462)
-* emacsvox-speak-line-interactively:     emacsvox-speak.     (line  486)
-* emacsvox-speak-line-interactively <1>: emacsvox-speak.     (line  489)
-* emacsvox-speak-line-set-column-filter: emacsvox-speak.     (line  497)
-* emacsvox-speak-line-set-column-filter <1>: emacsvox-speak. (line  500)
-* emacsvox-speak-load-directory-settings: emacsvox-speak.    (line  516)
+* emacsvox-speak-line:                   Reading.            (line   29)
+* emacsvox-speak-line <1>:               emacsvox-speak.     (line  460)
+* emacsvox-speak-line <2>:               emacsvox-speak.     (line  463)
+* emacsvox-speak-line-interactively:     emacsvox-speak.     (line  487)
+* emacsvox-speak-line-interactively <1>: emacsvox-speak.     (line  490)
+* emacsvox-speak-line-number:            Status Information. (line   82)
+* emacsvox-speak-line-set-column-filter: emacsvox-speak.     (line  498)
+* emacsvox-speak-line-set-column-filter <1>: emacsvox-speak. (line  501)
+* emacsvox-speak-load-directory-settings: emacsvox-speak.    (line  517)
 * emacsvox-speak-load-directory-settings <1>: emacsvox-speak.
-                                                             (line  519)
-* emacsvox-speak-load-filter-settings:   emacsvox-speak.     (line  529)
-* emacsvox-speak-load-filter-settings <1>: emacsvox-speak.   (line  530)
-* emacsvox-speak-message-again:          emacsvox-speak.     (line  536)
-* emacsvox-speak-message-again <1>:      emacsvox-speak.     (line  542)
-* emacsvox-speak-message-at-time:        emacsvox-speak.     (line  550)
-* emacsvox-speak-message-at-time <1>:    emacsvox-speak.     (line  553)
-* emacsvox-speak-microseconds-since-epoch: emacsvox-speak.   (line  562)
+                                                             (line  520)
+* emacsvox-speak-load-filter-settings:   emacsvox-speak.     (line  530)
+* emacsvox-speak-load-filter-settings <1>: emacsvox-speak.   (line  531)
+* emacsvox-speak-message-again:          Status Information. (line    8)
+* emacsvox-speak-message-again <1>:      emacsvox-speak.     (line  537)
+* emacsvox-speak-message-again <2>:      emacsvox-speak.     (line  543)
+* emacsvox-speak-message-at-time:        emacsvox-speak.     (line  551)
+* emacsvox-speak-message-at-time <1>:    emacsvox-speak.     (line  554)
+* emacsvox-speak-microseconds-since-epoch: emacsvox-speak.   (line  563)
 * emacsvox-speak-microseconds-since-epoch <1>: emacsvox-speak.
-                                                             (line  563)
-* emacsvox-speak-milliseconds-since-epoch: emacsvox-speak.   (line  571)
+                                                             (line  564)
+* emacsvox-speak-milliseconds-since-epoch: emacsvox-speak.   (line  572)
 * emacsvox-speak-milliseconds-since-epoch <1>: emacsvox-speak.
-                                                             (line  572)
-* emacsvox-speak-minor-mode-line:        emacsvox-speak.     (line  580)
-* emacsvox-speak-minor-mode-line <1>:    emacsvox-speak.     (line  583)
-* emacsvox-speak-mode-line:              emacsvox-speak.     (line  592)
-* emacsvox-speak-mode-line <1>:          emacsvox-speak.     (line  595)
-* emacsvox-speak-net-id:                 emacsvox-speak.     (line  604)
-* emacsvox-speak-net-id <1>:             emacsvox-speak.     (line  607)
-* emacsvox-speak-next-field:             emacsvox-speak.     (line  613)
-* emacsvox-speak-next-field <1>:         emacsvox-speak.     (line  614)
-* emacsvox-speak-other-buffer:           emacsvox-speak.     (line  620)
-* emacsvox-speak-other-buffer <1>:       emacsvox-speak.     (line  623)
-* emacsvox-speak-other-window:           emacsvox-speak.     (line  631)
-* emacsvox-speak-other-window <1>:       emacsvox-speak.     (line  634)
-* emacsvox-speak-overlay-properties:     emacsvox-speak.     (line  639)
-* emacsvox-speak-overlay-properties <1>: emacsvox-speak.     (line  642)
-* emacsvox-speak-page:                   emacsvox-speak.     (line  647)
-* emacsvox-speak-page <1>:               emacsvox-speak.     (line  650)
-* emacsvox-speak-page-interactively:     emacsvox-speak.     (line  659)
-* emacsvox-speak-page-interactively <1>: emacsvox-speak.     (line  660)
-* emacsvox-speak-paragraph:              emacsvox-speak.     (line  669)
-* emacsvox-speak-paragraph <1>:          emacsvox-speak.     (line  672)
-* emacsvox-speak-paragraph-interactively: emacsvox-speak.    (line  681)
+                                                             (line  573)
+* emacsvox-speak-minor-mode-line:        Status Information. (line   18)
+* emacsvox-speak-minor-mode-line <1>:    emacsvox-speak.     (line  581)
+* emacsvox-speak-minor-mode-line <2>:    emacsvox-speak.     (line  584)
+* emacsvox-speak-mode-line:              Status Information. (line   13)
+* emacsvox-speak-mode-line <1>:          emacsvox-speak.     (line  593)
+* emacsvox-speak-mode-line <2>:          emacsvox-speak.     (line  596)
+* emacsvox-speak-net-id:                 emacsvox-speak.     (line  605)
+* emacsvox-speak-net-id <1>:             emacsvox-speak.     (line  608)
+* emacsvox-speak-next-field:             emacsvox-speak.     (line  614)
+* emacsvox-speak-next-field <1>:         emacsvox-speak.     (line  615)
+* emacsvox-speak-next-window:            Reading.            (line  138)
+* emacsvox-speak-other-buffer:           emacsvox-speak.     (line  621)
+* emacsvox-speak-other-buffer <1>:       emacsvox-speak.     (line  624)
+* emacsvox-speak-other-window:           Reading.            (line  148)
+* emacsvox-speak-other-window <1>:       emacsvox-speak.     (line  632)
+* emacsvox-speak-other-window <2>:       emacsvox-speak.     (line  635)
+* emacsvox-speak-overlay-properties:     emacsvox-speak.     (line  640)
+* emacsvox-speak-overlay-properties <1>: emacsvox-speak.     (line  643)
+* emacsvox-speak-page:                   Reading.            (line  121)
+* emacsvox-speak-page <1>:               emacsvox-speak.     (line  648)
+* emacsvox-speak-page <2>:               emacsvox-speak.     (line  651)
+* emacsvox-speak-page-interactively:     emacsvox-speak.     (line  660)
+* emacsvox-speak-page-interactively <1>: emacsvox-speak.     (line  661)
+* emacsvox-speak-paragraph:              Reading.            (line   55)
+* emacsvox-speak-paragraph <1>:          emacsvox-speak.     (line  670)
+* emacsvox-speak-paragraph <2>:          emacsvox-speak.     (line  673)
+* emacsvox-speak-paragraph-interactively: emacsvox-speak.    (line  682)
 * emacsvox-speak-paragraph-interactively <1>: emacsvox-speak.
-                                                             (line  684)
-* emacsvox-speak-persist-filter-settings: emacsvox-speak.    (line  692)
+                                                             (line  685)
+* emacsvox-speak-persist-filter-settings: emacsvox-speak.    (line  693)
 * emacsvox-speak-persist-filter-settings <1>: emacsvox-speak.
-                                                             (line  693)
+                                                             (line  694)
 * emacsvox-speak-popup-messages:         emacsvox-wizards.   (line  207)
 * emacsvox-speak-popup-messages <1>:     emacsvox-wizards.   (line  212)
-* emacsvox-speak-preceding-char:         emacsvox-speak.     (line  699)
-* emacsvox-speak-preceding-char <1>:     emacsvox-speak.     (line  700)
-* emacsvox-speak-predefined-window:      emacsvox-speak.     (line  706)
+* emacsvox-speak-preceding-char:         emacsvox-speak.     (line  700)
+* emacsvox-speak-preceding-char <1>:     emacsvox-speak.     (line  701)
+* emacsvox-speak-predefined-window:      Reading.            (line  129)
 * emacsvox-speak-predefined-window <1>:  emacsvox-speak.     (line  707)
-* emacsvox-speak-previous-field:         emacsvox-speak.     (line  717)
-* emacsvox-speak-previous-field <1>:     emacsvox-speak.     (line  718)
-* emacsvox-speak-range:                  emacsvox-speak.     (line  724)
-* emacsvox-speak-range <1>:              emacsvox-speak.     (line  725)
-* emacsvox-speak-rectangle:              emacsvox-speak.     (line  733)
-* emacsvox-speak-rectangle <1>:          emacsvox-speak.     (line  736)
-* emacsvox-speak-region:                 emacsvox-speak.     (line  745)
-* emacsvox-speak-region <1>:             emacsvox-speak.     (line  748)
-* emacsvox-speak-rest-of-buffer:         emacsvox-speak.     (line  755)
-* emacsvox-speak-rest-of-buffer <1>:     emacsvox-speak.     (line  758)
-* emacsvox-speak-seconds-since-epoch:    emacsvox-speak.     (line  763)
-* emacsvox-speak-seconds-since-epoch <1>: emacsvox-speak.    (line  764)
-* emacsvox-speak-sentence:               emacsvox-speak.     (line  772)
-* emacsvox-speak-sentence <1>:           emacsvox-speak.     (line  773)
-* emacsvox-speak-sexp:                   emacsvox-speak.     (line  783)
+* emacsvox-speak-predefined-window <2>:  emacsvox-speak.     (line  708)
+* emacsvox-speak-previous-field:         emacsvox-speak.     (line  718)
+* emacsvox-speak-previous-field <1>:     emacsvox-speak.     (line  719)
+* emacsvox-speak-previous-window:        Reading.            (line  143)
+* emacsvox-speak-range:                  emacsvox-speak.     (line  725)
+* emacsvox-speak-range <1>:              emacsvox-speak.     (line  726)
+* emacsvox-speak-rectangle:              Reading.            (line   69)
+* emacsvox-speak-rectangle <1>:          emacsvox-speak.     (line  734)
+* emacsvox-speak-rectangle <2>:          emacsvox-speak.     (line  737)
+* emacsvox-speak-region:                 Reading.            (line   63)
+* emacsvox-speak-region <1>:             emacsvox-speak.     (line  746)
+* emacsvox-speak-region <2>:             emacsvox-speak.     (line  749)
+* emacsvox-speak-rest-of-buffer:         Reading.            (line   86)
+* emacsvox-speak-rest-of-buffer <1>:     emacsvox-speak.     (line  756)
+* emacsvox-speak-rest-of-buffer <2>:     emacsvox-speak.     (line  759)
+* emacsvox-speak-seconds-since-epoch:    emacsvox-speak.     (line  764)
+* emacsvox-speak-seconds-since-epoch <1>: emacsvox-speak.    (line  765)
+* emacsvox-speak-sentence:               emacsvox-speak.     (line  773)
+* emacsvox-speak-sentence <1>:           emacsvox-speak.     (line  774)
+* emacsvox-speak-sexp:                   Reading.            (line  178)
 * emacsvox-speak-sexp <1>:               emacsvox-speak.     (line  784)
-* emacsvox-speak-sexp-interactively:     emacsvox-speak.     (line  794)
-* emacsvox-speak-sexp-interactively <1>: emacsvox-speak.     (line  795)
-* emacsvox-speak-skim-buffer:            emacsvox-speak.     (line  804)
-* emacsvox-speak-skim-buffer <1>:        emacsvox-speak.     (line  805)
-* emacsvox-speak-spaces:                 emacsvox-speak.     (line  811)
-* emacsvox-speak-spaces <1>:             emacsvox-speak.     (line  814)
-* emacsvox-speak-spaces-at-point:        emacsvox-speak.     (line  819)
-* emacsvox-speak-spaces-at-point <1>:    emacsvox-speak.     (line  822)
-* emacsvox-speak-spell-current-word:     emacsvox-speak.     (line  827)
-* emacsvox-speak-spell-current-word <1>: emacsvox-speak.     (line  828)
+* emacsvox-speak-sexp <2>:               emacsvox-speak.     (line  785)
+* emacsvox-speak-sexp-interactively:     emacsvox-speak.     (line  795)
+* emacsvox-speak-sexp-interactively <1>: emacsvox-speak.     (line  796)
+* emacsvox-speak-skim-buffer:            emacsvox-speak.     (line  805)
+* emacsvox-speak-skim-buffer <1>:        emacsvox-speak.     (line  806)
+* emacsvox-speak-spaces:                 emacsvox-speak.     (line  812)
+* emacsvox-speak-spaces <1>:             emacsvox-speak.     (line  815)
+* emacsvox-speak-spaces-at-point:        Reading.            (line  183)
+* emacsvox-speak-spaces-at-point <1>:    emacsvox-speak.     (line  820)
+* emacsvox-speak-spaces-at-point <2>:    emacsvox-speak.     (line  823)
+* emacsvox-speak-spell-current-word:     emacsvox-speak.     (line  828)
+* emacsvox-speak-spell-current-word <1>: emacsvox-speak.     (line  829)
 * emacsvox-speak-telephone-directory:    emacsvox-wizards.   (line  217)
 * emacsvox-speak-telephone-directory <1>: emacsvox-wizards.  (line  220)
-* emacsvox-speak-this-buffer-next-display: emacsvox-wizards. (line  228)
+* emacsvox-speak-this-buffer-next-display: Reading.          (line  113)
 * emacsvox-speak-this-buffer-next-display <1>: emacsvox-wizards.
+                                                             (line  228)
+* emacsvox-speak-this-buffer-next-display <2>: emacsvox-wizards.
                                                              (line  231)
-* emacsvox-speak-this-buffer-other-window-display: emacsvox-wizards.
-                                                             (line  239)
+* emacsvox-speak-this-buffer-other-window-display: Reading.  (line   91)
 * emacsvox-speak-this-buffer-other-window-display <1>: emacsvox-wizards.
+                                                             (line  239)
+* emacsvox-speak-this-buffer-other-window-display <2>: emacsvox-wizards.
                                                              (line  242)
-* emacsvox-speak-this-buffer-previous-display: emacsvox-wizards.
-                                                             (line  254)
+* emacsvox-speak-this-buffer-previous-display: Reading.      (line  105)
 * emacsvox-speak-this-buffer-previous-display <1>: emacsvox-wizards.
+                                                             (line  254)
+* emacsvox-speak-this-buffer-previous-display <2>: emacsvox-wizards.
                                                              (line  257)
-* emacsvox-speak-this-window:            emacsvox-speak.     (line  834)
-* emacsvox-speak-this-window <1>:        emacsvox-speak.     (line  837)
-* emacsvox-speak-time:                   emacsvox-speak.     (line  842)
-* emacsvox-speak-time <1>:               emacsvox-speak.     (line  845)
-* emacsvox-speak-version:                emacsvox-speak.     (line  856)
-* emacsvox-speak-version <1>:            emacsvox-speak.     (line  859)
-* emacsvox-speak-visual-line:            emacsvox-speak.     (line  864)
-* emacsvox-speak-visual-line <1>:        emacsvox-speak.     (line  865)
-* emacsvox-speak-voice-annotate-paragraphs: emacsvox-speak.  (line  872)
+* emacsvox-speak-this-window:            emacsvox-speak.     (line  835)
+* emacsvox-speak-this-window <1>:        emacsvox-speak.     (line  838)
+* emacsvox-speak-time:                   Status Information. (line   33)
+* emacsvox-speak-time <1>:               emacsvox-speak.     (line  843)
+* emacsvox-speak-time <2>:               emacsvox-speak.     (line  846)
+* emacsvox-speak-version:                Status Information. (line   38)
+* emacsvox-speak-version <1>:            emacsvox-speak.     (line  857)
+* emacsvox-speak-version <2>:            emacsvox-speak.     (line  860)
+* emacsvox-speak-visual-line:            emacsvox-speak.     (line  865)
+* emacsvox-speak-visual-line <1>:        emacsvox-speak.     (line  866)
+* emacsvox-speak-voice-annotate-paragraphs: emacsvox-speak.  (line  873)
 * emacsvox-speak-voice-annotate-paragraphs <1>: emacsvox-speak.
-                                                             (line  873)
-* emacsvox-speak-which-function:         emacsvox-speak.     (line  881)
-* emacsvox-speak-which-function <1>:     emacsvox-speak.     (line  884)
-* emacsvox-speak-window-information:     emacsvox-speak.     (line  890)
-* emacsvox-speak-window-information <1>: emacsvox-speak.     (line  893)
-* emacsvox-speak-windowful:              emacsvox-speak.     (line  898)
-* emacsvox-speak-windowful <1>:          emacsvox-speak.     (line  901)
-* emacsvox-speak-word:                   emacsvox-speak.     (line  906)
-* emacsvox-speak-word <1>:               emacsvox-speak.     (line  909)
-* emacsvox-speak-word-interactively:     emacsvox-speak.     (line  920)
-* emacsvox-speak-word-interactively <1>: emacsvox-speak.     (line  921)
-* emacsvox-speak-world-clock:            emacsvox-speak.     (line  930)
-* emacsvox-speak-world-clock <1>:        emacsvox-speak.     (line  931)
+                                                             (line  874)
+* emacsvox-speak-which-function:         emacsvox-speak.     (line  882)
+* emacsvox-speak-which-function <1>:     emacsvox-speak.     (line  885)
+* emacsvox-speak-window-information:     Status Information. (line   28)
+* emacsvox-speak-window-information <1>: emacsvox-speak.     (line  891)
+* emacsvox-speak-window-information <2>: emacsvox-speak.     (line  894)
+* emacsvox-speak-windowful:              emacsvox-speak.     (line  899)
+* emacsvox-speak-windowful <1>:          emacsvox-speak.     (line  902)
+* emacsvox-speak-word:                   Reading.            (line   21)
+* emacsvox-speak-word <1>:               emacsvox-speak.     (line  907)
+* emacsvox-speak-word <2>:               emacsvox-speak.     (line  910)
+* emacsvox-speak-word-interactively:     emacsvox-speak.     (line  921)
+* emacsvox-speak-word-interactively <1>: emacsvox-speak.     (line  922)
+* emacsvox-speak-world-clock:            emacsvox-speak.     (line  931)
+* emacsvox-speak-world-clock <1>:        emacsvox-speak.     (line  932)
 * emacsvox-speedbar-click:               emacsvox-speedbar.  (line   19)
 * emacsvox-speedbar-click <1>:           emacsvox-speedbar.  (line   20)
 * emacsvox-speedbar-goto-speedbar:       emacsvox-speedbar.  (line   26)
 * emacsvox-speedbar-goto-speedbar <1>:   emacsvox-speedbar.  (line   27)
-* emacsvox-submit-bug:                   emacsvox-speak.     (line  940)
-* emacsvox-submit-bug <1>:               emacsvox-speak.     (line  941)
+* emacsvox-submit-bug:                   emacsvox-speak.     (line  941)
+* emacsvox-submit-bug <1>:               emacsvox-speak.     (line  942)
 * emacsvox-sudoku-board-columns-summarize: emacsvox-sudoku.  (line   17)
 * emacsvox-sudoku-board-columns-summarize <1>: emacsvox-sudoku.
                                                              (line   18)
@@ -3896,8 +3892,8 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line  177)
 * emacsvox-sudoku-up-sub-square:         emacsvox-sudoku.    (line  183)
 * emacsvox-sudoku-up-sub-square <1>:     emacsvox-sudoku.    (line  184)
-* emacsvox-switch-to-reference-buffer:   emacsvox-speak.     (line  947)
-* emacsvox-switch-to-reference-buffer <1>: emacsvox-speak.   (line  948)
+* emacsvox-switch-to-reference-buffer:   emacsvox-speak.     (line  948)
+* emacsvox-switch-to-reference-buffer <1>: emacsvox-speak.   (line  949)
 * emacsvox-symlink-current-file:         emacsvox-wizards.   (line  265)
 * emacsvox-symlink-current-file <1>:     emacsvox-wizards.   (line  268)
 * emacsvox-table-copy-current-element-to-kill-ring: emacsvox-table-ui.
@@ -4055,10 +4051,13 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * emacsvox-threes-speak-transposed-board: emacsvox-threes.   (line  145)
 * emacsvox-threes-speak-transposed-board <1>: emacsvox-threes.
                                                              (line  146)
-* emacsvox-toggle-audio-indentation:     emacsvox-speak.     (line  954)
-* emacsvox-toggle-audio-indentation <1>: emacsvox-speak.     (line  957)
-* emacsvox-toggle-character-echo:        emacsvox-speak.     (line  968)
-* emacsvox-toggle-character-echo <1>:    emacsvox-speak.     (line  971)
+* emacsvox-toggle-audio-indentation:     Speech Output Control.
+                                                             (line   69)
+* emacsvox-toggle-audio-indentation <1>: emacsvox-speak.     (line  955)
+* emacsvox-toggle-audio-indentation <2>: emacsvox-speak.     (line  958)
+* emacsvox-toggle-character-echo:        Controlling Echo.   (line   18)
+* emacsvox-toggle-character-echo <1>:    emacsvox-speak.     (line  969)
+* emacsvox-toggle-character-echo <2>:    emacsvox-speak.     (line  972)
 * emacsvox-toggle-comint-autospeak:      emacsvox-comint.    (line   14)
 * emacsvox-toggle-comint-autospeak <1>:  emacsvox-comint.    (line   15)
 * emacsvox-toggle-comint-output-monitor: emacsvox-comint.    (line   24)
@@ -4066,27 +4065,29 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line   27)
 * emacsvox-toggle-eterm-autospeak:       emacsvox-eterm.     (line  375)
 * emacsvox-toggle-eterm-autospeak <1>:   emacsvox-eterm.     (line  376)
-* emacsvox-toggle-header-line:           emacsvox-speak.     (line  978)
-* emacsvox-toggle-header-line <1>:       emacsvox-speak.     (line  979)
+* emacsvox-toggle-header-line:           emacsvox-speak.     (line  979)
+* emacsvox-toggle-header-line <1>:       emacsvox-speak.     (line  980)
 * emacsvox-toggle-icons:                 emacsvox-sounds.    (line   81)
 * emacsvox-toggle-icons <1>:             emacsvox-sounds.    (line   84)
 * emacsvox-toggle-inaudible-or-comint-autospeak: emacsvox-comint.
                                                              (line   33)
 * emacsvox-toggle-inaudible-or-comint-autospeak <1>: emacsvox-comint.
                                                              (line   36)
-* emacsvox-toggle-line-echo:             emacsvox-speak.     (line  985)
-* emacsvox-toggle-line-echo <1>:         emacsvox-speak.     (line  988)
-* emacsvox-toggle-mail-alert:            emacsvox-speak.     (line  995)
-* emacsvox-toggle-mail-alert <1>:        emacsvox-speak.     (line  998)
-* emacsvox-toggle-show-point:            emacsvox-speak.     (line 1007)
-* emacsvox-toggle-show-point <1>:        emacsvox-speak.     (line 1010)
-* emacsvox-toggle-speak-line-invert-filter: emacsvox-speak.  (line 1017)
+* emacsvox-toggle-line-echo:             Controlling Echo.   (line   32)
+* emacsvox-toggle-line-echo <1>:         emacsvox-speak.     (line  986)
+* emacsvox-toggle-line-echo <2>:         emacsvox-speak.     (line  989)
+* emacsvox-toggle-mail-alert:            emacsvox-speak.     (line  996)
+* emacsvox-toggle-mail-alert <1>:        emacsvox-speak.     (line  999)
+* emacsvox-toggle-show-point:            emacsvox-speak.     (line 1008)
+* emacsvox-toggle-show-point <1>:        emacsvox-speak.     (line 1011)
+* emacsvox-toggle-speak-line-invert-filter: emacsvox-speak.  (line 1018)
 * emacsvox-toggle-speak-line-invert-filter <1>: emacsvox-speak.
-                                                             (line 1020)
-* emacsvox-toggle-speak-messages:        emacsvox-speak.     (line 1027)
-* emacsvox-toggle-speak-messages <1>:    emacsvox-speak.     (line 1030)
-* emacsvox-toggle-word-echo:             emacsvox-speak.     (line 1035)
-* emacsvox-toggle-word-echo <1>:         emacsvox-speak.     (line 1038)
+                                                             (line 1021)
+* emacsvox-toggle-speak-messages:        emacsvox-speak.     (line 1028)
+* emacsvox-toggle-speak-messages <1>:    emacsvox-speak.     (line 1031)
+* emacsvox-toggle-word-echo:             Controlling Echo.   (line   25)
+* emacsvox-toggle-word-echo <1>:         emacsvox-speak.     (line 1036)
+* emacsvox-toggle-word-echo <2>:         emacsvox-speak.     (line 1039)
 * emacsvox-transient-mode:               emacsvox-transient. (line   55)
 * emacsvox-transient-mode <1>:           emacsvox-transient. (line   56)
 * emacsvox-transient-next-section:       emacsvox-transient. (line   66)
@@ -4128,8 +4129,9 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * emacsvox-view-emacsvox-tips <1>:       emacsvox-wizards.   (line  289)
 * emacsvox-view-line-to-top:             emacsvox-view.      (line   14)
 * emacsvox-view-line-to-top <1>:         emacsvox-view.      (line   16)
-* emacsvox-view-notifications:           emacsvox-speak.     (line 1045)
-* emacsvox-view-notifications <1>:       emacsvox-speak.     (line 1050)
+* emacsvox-view-notifications:           emacsvox-speak.     (line 1046)
+* emacsvox-view-notifications <1>:       emacsvox-speak.     (line 1051)
+* emacsvox-view-register:                Status Information. (line   66)
 * emacsvox-we-class-follow-and-filter:   emacsvox-we.        (line   17)
 * emacsvox-we-class-follow-and-filter <1>: emacsvox-we.      (line   21)
 * emacsvox-we-class-follow-and-filter-link: emacsvox-we.     (line   31)
@@ -4503,9 +4505,9 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * emacsvox-xslt-view-rss-file <1>:       emacsvox-xslt.      (line   58)
 * emacsvox-xslt-view-xml:                emacsvox-xslt.      (line   65)
 * emacsvox-xslt-view-xml <1>:            emacsvox-xslt.      (line   67)
-* emacsvox-zap-tts:                      Miscellaneous.      (line   86)
-* emacsvox-zap-tts <1>:                  emacsvox-speak.     (line 1055)
-* emacsvox-zap-tts <2>:                  emacsvox-speak.     (line 1058)
+* emacsvox-zap-tts:                      Miscellaneous.      (line   85)
+* emacsvox-zap-tts <1>:                  emacsvox-speak.     (line 1056)
+* emacsvox-zap-tts <2>:                  emacsvox-speak.     (line 1059)
 * emacsvox-zoxide:                       emacsvox-comint.    (line   43)
 * emacsvox-zoxide <1>:                   emacsvox-comint.    (line   47)
 * espeak:                                espeak-voices.      (line   15)
@@ -4572,6 +4574,12 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * outloud <1>:                           outloud-voices.     (line   18)
 * pip-speak:                             pip.                (line   31)
 * pip-speak <1>:                         pip.                (line   33)
+* soundscape:                            emacsvox.           (line   20)
+* soundscape <1>:                        emacsvox.           (line   24)
+* soundscape-kill:                       emacsvox.           (line   31)
+* soundscape-kill <1>:                   emacsvox.           (line   32)
+* soundscape-stop:                       emacsvox.           (line   38)
+* soundscape-stop <1>:                   emacsvox.           (line   39)
 * soundscape-toggle:                     soundscape.         (line   46)
 * soundscape-toggle <1>:                 soundscape.         (line   51)
 * sox-add-effect:                        sox.                (line   26)
@@ -4616,7 +4624,7 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * sox-turn-down <1>:                     sox-gen.            (line  158)
 * sox-wind-down:                         sox-gen.            (line  166)
 * sox-wind-down <1>:                     sox-gen.            (line  167)
-* tts-add-cleanup-pattern:               Miscellaneous.      (line   37)
+* tts-add-cleanup-pattern:               Miscellaneous.      (line   36)
 * tts-add-cleanup-pattern <1>:           tts-speak.          (line   14)
 * tts-add-cleanup-pattern <2>:           tts-speak.          (line   17)
 * tts-cloud:                             tts-speak.          (line   26)
@@ -4636,14 +4644,14 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * tts-restart:                           Miscellaneous.      (line   26)
 * tts-restart <1>:                       tts-speak.          (line   95)
 * tts-restart <2>:                       tts-speak.          (line   98)
-* tts-select-server:                     Miscellaneous.      (line   49)
+* tts-select-server:                     Miscellaneous.      (line   48)
 * tts-select-server <1>:                 tts-speak.          (line  103)
 * tts-select-server <2>:                 tts-speak.          (line  106)
 * tts-set-character-scale:               Speech Output Control.
                                                              (line   23)
 * tts-set-character-scale <1>:           tts-speak.          (line  113)
 * tts-set-character-scale <2>:           tts-speak.          (line  116)
-* tts-set-chunk-separator-syntax:        Miscellaneous.      (line   72)
+* tts-set-chunk-separator-syntax:        Miscellaneous.      (line   71)
 * tts-set-chunk-separator-syntax <1>:    tts-speak.          (line  127)
 * tts-set-chunk-separator-syntax <2>:    tts-speak.          (line  130)
 * tts-set-language:                      tts-speak.          (line  138)
@@ -4670,7 +4678,7 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line   16)
 * tts-set-rate <1>:                      tts-speak.          (line  230)
 * tts-set-rate <2>:                      tts-speak.          (line  233)
-* tts-speak-version:                     Miscellaneous.      (line   80)
+* tts-speak-version:                     Miscellaneous.      (line   79)
 * tts-speak-version <1>:                 tts-speak.          (line  242)
 * tts-speak-version <2>:                 tts-speak.          (line  245)
 * tts-stop:                              Miscellaneous.      (line   12)
@@ -4691,7 +4699,7 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
                                                              (line   50)
 * tts-toggle-split-caps <1>:             tts-speak.          (line  302)
 * tts-toggle-split-caps <2>:             tts-speak.          (line  305)
-* tts-toggle-splitting-on-white-space:   Miscellaneous.      (line   56)
+* tts-toggle-splitting-on-white-space:   Miscellaneous.      (line   55)
 * tts-toggle-splitting-on-white-space <1>: tts-speak.        (line  314)
 * tts-toggle-splitting-on-white-space <2>: tts-speak.        (line  317)
 * tts-toggle-strip-octals:               tts-speak.          (line  322)
@@ -4720,7 +4728,7 @@ File: emacspeak.info,  Node: Function Index,  Next: Variable Index,  Prev: Key I
 * xbacklight-white <1>:                  xbacklight.         (line   57)
 
 
-File: emacspeak.info,  Node: Variable Index,  Prev: Key Index,  Up: Top
+File: emacsvox.info,  Node: Variable Index,  Prev: Key Index,  Up: Top
 
 Variable Index
 **************
@@ -4730,123 +4738,126 @@ Variable Index
 
 * User Option:                           amixer.             (line   84)
 * User Option <1>:                       dectalk-voices.     (line   31)
-* User Option <2>:                       emacsvox.           (line   17)
-* User Option <3>:                       emacsvox-advice.    (line   46)
-* User Option <4>:                       emacsvox-advice.    (line   54)
-* User Option <5>:                       emacsvox-bookshare. (line  474)
-* User Option <6>:                       emacsvox-bookshare. (line  484)
-* User Option <7>:                       emacsvox-comint.    (line   56)
-* User Option <8>:                       emacsvox-empv.      (line  288)
-* User Option <9>:                       emacsvox-epub.      (line  453)
-* User Option <10>:                      emacsvox-epub.      (line  461)
-* User Option <11>:                      emacsvox-epub.      (line  469)
-* User Option <12>:                      emacsvox-epub.      (line  477)
-* User Option <13>:                      emacsvox-epub.      (line  485)
-* User Option <14>:                      emacsvox-erc.       (line   74)
-* User Option <15>:                      emacsvox-erc.       (line   83)
-* User Option <16>:                      emacsvox-erc.       (line   91)
-* User Option <17>:                      emacsvox-eww.       (line 1049)
-* User Option <18>:                      emacsvox-eww.       (line 1059)
-* User Option <19>:                      emacsvox-extras.    (line  163)
-* User Option <20>:                      emacsvox-extras.    (line  173)
-* User Option <21>:                      emacsvox-feeds.     (line  110)
-* User Option <22>:                      emacsvox-flyspell.  (line   21)
-* User Option <23>:                      emacsvox-gnus.      (line   40)
-* User Option <24>:                      emacsvox-gnus.      (line   51)
-* User Option <25>:                      emacsvox-google.    (line  183)
-* User Option <26>:                      emacsvox-info.      (line   50)
-* User Option <27>:                      emacsvox-ispell.    (line   20)
-* User Option <28>:                      emacsvox-keymap.    (line   12)
-* User Option <29>:                      emacsvox-keymap.    (line   37)
-* User Option <30>:                      emacsvox-keymap.    (line   56)
-* User Option <31>:                      emacsvox-keymap.    (line   89)
-* User Option <32>:                      emacsvox-keymap.    (line  104)
-* User Option <33>:                      emacsvox-keymap.    (line  129)
-* User Option <34>:                      emacsvox-keymap.    (line  143)
-* User Option <35>:                      emacsvox-keymap.    (line  151)
-* User Option <36>:                      emacsvox-keymap.    (line  193)
-* User Option <37>:                      emacsvox-librivox.  (line   83)
-* User Option <38>:                      emacsvox-m-player.  (line  865)
-* User Option <39>:                      emacsvox-m-player.  (line  873)
-* User Option <40>:                      emacsvox-m-player.  (line  881)
-* User Option <41>:                      emacsvox-markdown.  (line   44)
-* User Option <42>:                      emacsvox-ocr.       (line  260)
-* User Option <43>:                      emacsvox-ocr.       (line  268)
-* User Option <44>:                      emacsvox-ocr.       (line  276)
-* User Option <45>:                      emacsvox-ocr.       (line  284)
-* User Option <46>:                      emacsvox-ocr.       (line  292)
-* User Option <47>:                      emacsvox-ocr.       (line  300)
-* User Option <48>:                      emacsvox-ocr.       (line  308)
-* User Option <49>:                      emacsvox-ocr.       (line  316)
-* User Option <50>:                      emacsvox-ocr.       (line  324)
-* User Option <51>:                      emacsvox-ocr.       (line  332)
-* User Option <52>:                      emacsvox-ocr.       (line  340)
-* User Option <53>:                      emacsvox-ocr.       (line  348)
-* User Option <54>:                      emacsvox-org.       (line  112)
-* User Option <55>:                      emacsvox-org.       (line  120)
-* User Option <56>:                      emacsvox-pronounce. (line  122)
-* User Option <57>:                      emacsvox-pronounce. (line  130)
-* User Option <58>:                      emacsvox-pronounce. (line  148)
-* User Option <59>:                      emacsvox-sounds.    (line   92)
-* User Option <60>:                      emacsvox-speak.     (line 1063)
-* User Option <61>:                      emacsvox-speak.     (line 1072)
-* User Option <62>:                      emacsvox-speak.     (line 1081)
-* User Option <63>:                      emacsvox-speak.     (line 1090)
-* User Option <64>:                      emacsvox-speak.     (line 1098)
-* User Option <65>:                      emacsvox-speak.     (line 1106)
-* User Option <66>:                      emacsvox-url-template.
+* User Option <2>:                       emacsvox.           (line   47)
+* User Option <3>:                       emacsvox.           (line   55)
+* User Option <4>:                       emacsvox.           (line   63)
+* User Option <5>:                       emacsvox.           (line   71)
+* User Option <6>:                       emacsvox-advice.    (line   46)
+* User Option <7>:                       emacsvox-advice.    (line   54)
+* User Option <8>:                       emacsvox-bookshare. (line  474)
+* User Option <9>:                       emacsvox-bookshare. (line  484)
+* User Option <10>:                      emacsvox-comint.    (line   56)
+* User Option <11>:                      emacsvox-empv.      (line  288)
+* User Option <12>:                      emacsvox-epub.      (line  453)
+* User Option <13>:                      emacsvox-epub.      (line  461)
+* User Option <14>:                      emacsvox-epub.      (line  469)
+* User Option <15>:                      emacsvox-epub.      (line  477)
+* User Option <16>:                      emacsvox-epub.      (line  485)
+* User Option <17>:                      emacsvox-erc.       (line   74)
+* User Option <18>:                      emacsvox-erc.       (line   83)
+* User Option <19>:                      emacsvox-erc.       (line   91)
+* User Option <20>:                      emacsvox-eww.       (line 1049)
+* User Option <21>:                      emacsvox-eww.       (line 1059)
+* User Option <22>:                      emacsvox-extras.    (line  163)
+* User Option <23>:                      emacsvox-extras.    (line  173)
+* User Option <24>:                      emacsvox-feeds.     (line  110)
+* User Option <25>:                      emacsvox-flyspell.  (line   21)
+* User Option <26>:                      emacsvox-gnus.      (line   40)
+* User Option <27>:                      emacsvox-gnus.      (line   51)
+* User Option <28>:                      emacsvox-google.    (line  183)
+* User Option <29>:                      emacsvox-info.      (line   50)
+* User Option <30>:                      emacsvox-ispell.    (line   20)
+* User Option <31>:                      emacsvox-keymap.    (line   12)
+* User Option <32>:                      emacsvox-keymap.    (line   37)
+* User Option <33>:                      emacsvox-keymap.    (line   56)
+* User Option <34>:                      emacsvox-keymap.    (line   89)
+* User Option <35>:                      emacsvox-keymap.    (line  104)
+* User Option <36>:                      emacsvox-keymap.    (line  129)
+* User Option <37>:                      emacsvox-keymap.    (line  143)
+* User Option <38>:                      emacsvox-keymap.    (line  151)
+* User Option <39>:                      emacsvox-keymap.    (line  193)
+* User Option <40>:                      emacsvox-librivox.  (line   83)
+* User Option <41>:                      emacsvox-m-player.  (line  865)
+* User Option <42>:                      emacsvox-m-player.  (line  873)
+* User Option <43>:                      emacsvox-m-player.  (line  881)
+* User Option <44>:                      emacsvox-markdown.  (line   44)
+* User Option <45>:                      emacsvox-ocr.       (line  260)
+* User Option <46>:                      emacsvox-ocr.       (line  268)
+* User Option <47>:                      emacsvox-ocr.       (line  276)
+* User Option <48>:                      emacsvox-ocr.       (line  284)
+* User Option <49>:                      emacsvox-ocr.       (line  292)
+* User Option <50>:                      emacsvox-ocr.       (line  300)
+* User Option <51>:                      emacsvox-ocr.       (line  308)
+* User Option <52>:                      emacsvox-ocr.       (line  316)
+* User Option <53>:                      emacsvox-ocr.       (line  324)
+* User Option <54>:                      emacsvox-ocr.       (line  332)
+* User Option <55>:                      emacsvox-ocr.       (line  340)
+* User Option <56>:                      emacsvox-ocr.       (line  348)
+* User Option <57>:                      emacsvox-org.       (line  112)
+* User Option <58>:                      emacsvox-org.       (line  120)
+* User Option <59>:                      emacsvox-pronounce. (line  122)
+* User Option <60>:                      emacsvox-pronounce. (line  130)
+* User Option <61>:                      emacsvox-pronounce. (line  148)
+* User Option <62>:                      emacsvox-sounds.    (line   92)
+* User Option <63>:                      emacsvox-speak.     (line 1064)
+* User Option <64>:                      emacsvox-speak.     (line 1073)
+* User Option <65>:                      emacsvox-speak.     (line 1082)
+* User Option <66>:                      emacsvox-speak.     (line 1091)
+* User Option <67>:                      emacsvox-speak.     (line 1099)
+* User Option <68>:                      emacsvox-speak.     (line 1107)
+* User Option <69>:                      emacsvox-url-template.
                                                              (line   68)
-* User Option <67>:                      emacsvox-we.        (line  408)
-* User Option <68>:                      emacsvox-webspace.  (line   99)
-* User Option <69>:                      emacsvox-wizards.   (line 1061)
-* User Option <70>:                      emacsvox-wizards.   (line 1069)
-* User Option <71>:                      emacsvox-wizards.   (line 1078)
-* User Option <72>:                      emacsvox-wizards.   (line 1086)
-* User Option <73>:                      emacsvox-wizards.   (line 1094)
-* User Option <74>:                      emacsvox-wizards.   (line 1102)
-* User Option <75>:                      espeak-voices.      (line   23)
-* User Option <76>:                      g-utils.            (line   12)
-* User Option <77>:                      gmaps.              (line  198)
-* User Option <78>:                      gmaps.              (line  206)
-* User Option <79>:                      mac-voices.         (line   12)
-* User Option <80>:                      outloud-voices.     (line   23)
-* User Option <81>:                      sox-gen.            (line   34)
-* User Option <82>:                      sox-gen.            (line  175)
-* User Option <83>:                      sox-gen.            (line  184)
-* User Option <84>:                      tts-speak.          (line  355)
-* User Option <85>:                      tts-speak.          (line  363)
-* User Option <86>:                      tts-speak.          (line  371)
-* User Option <87>:                      tts-speak.          (line  379)
-* User Option <88>:                      tts-speak.          (line  387)
-* User Option <89>:                      tts-speak.          (line  398)
-* User Option <90>:                      tts-speak.          (line  406)
-* User Option <91>:                      tts-speak.          (line  414)
-* User Option <92>:                      tts-speak.          (line  452)
-* User Option <93>:                      tts-speak.          (line  472)
-* User Option <94>:                      voice-defs.         (line   52)
-* User Option <95>:                      voice-defs.         (line   60)
-* User Option <96>:                      voice-defs.         (line   68)
-* User Option <97>:                      voice-defs.         (line   76)
-* User Option <98>:                      voice-defs.         (line   84)
-* User Option <99>:                      voice-defs.         (line   92)
-* User Option <100>:                     voice-defs.         (line  100)
-* User Option <101>:                     voice-defs.         (line  108)
-* User Option <102>:                     voice-defs.         (line  116)
-* User Option <103>:                     voice-defs.         (line  124)
-* User Option <104>:                     voice-defs.         (line  132)
-* User Option <105>:                     voice-defs.         (line  140)
-* User Option <106>:                     voice-defs.         (line  148)
-* User Option <107>:                     voice-defs.         (line  156)
-* User Option <108>:                     voice-defs.         (line  164)
-* User Option <109>:                     voice-defs.         (line  172)
-* User Option <110>:                     voice-defs.         (line  180)
-* User Option <111>:                     voice-defs.         (line  188)
-* User Option <112>:                     voice-defs.         (line  196)
-* User Option <113>:                     voice-defs.         (line  204)
-* User Option <114>:                     voice-defs.         (line  212)
-* User Option <115>:                     voice-defs.         (line  220)
-* User Option <116>:                     voice-defs.         (line  228)
-* User Option <117>:                     voice-defs.         (line  236)
-* User Option <118>:                     voice-defs.         (line  244)
-* User Option <119>:                     voice-setup.        (line   98)
+* User Option <70>:                      emacsvox-we.        (line  408)
+* User Option <71>:                      emacsvox-webspace.  (line   99)
+* User Option <72>:                      emacsvox-wizards.   (line 1061)
+* User Option <73>:                      emacsvox-wizards.   (line 1069)
+* User Option <74>:                      emacsvox-wizards.   (line 1078)
+* User Option <75>:                      emacsvox-wizards.   (line 1086)
+* User Option <76>:                      emacsvox-wizards.   (line 1094)
+* User Option <77>:                      emacsvox-wizards.   (line 1102)
+* User Option <78>:                      espeak-voices.      (line   23)
+* User Option <79>:                      g-utils.            (line   12)
+* User Option <80>:                      gmaps.              (line  198)
+* User Option <81>:                      gmaps.              (line  206)
+* User Option <82>:                      mac-voices.         (line   12)
+* User Option <83>:                      outloud-voices.     (line   23)
+* User Option <84>:                      sox-gen.            (line   34)
+* User Option <85>:                      sox-gen.            (line  175)
+* User Option <86>:                      sox-gen.            (line  184)
+* User Option <87>:                      tts-speak.          (line  355)
+* User Option <88>:                      tts-speak.          (line  363)
+* User Option <89>:                      tts-speak.          (line  371)
+* User Option <90>:                      tts-speak.          (line  379)
+* User Option <91>:                      tts-speak.          (line  387)
+* User Option <92>:                      tts-speak.          (line  398)
+* User Option <93>:                      tts-speak.          (line  406)
+* User Option <94>:                      tts-speak.          (line  414)
+* User Option <95>:                      tts-speak.          (line  452)
+* User Option <96>:                      tts-speak.          (line  472)
+* User Option <97>:                      voice-defs.         (line   52)
+* User Option <98>:                      voice-defs.         (line   60)
+* User Option <99>:                      voice-defs.         (line   68)
+* User Option <100>:                     voice-defs.         (line   76)
+* User Option <101>:                     voice-defs.         (line   84)
+* User Option <102>:                     voice-defs.         (line   92)
+* User Option <103>:                     voice-defs.         (line  100)
+* User Option <104>:                     voice-defs.         (line  108)
+* User Option <105>:                     voice-defs.         (line  116)
+* User Option <106>:                     voice-defs.         (line  124)
+* User Option <107>:                     voice-defs.         (line  132)
+* User Option <108>:                     voice-defs.         (line  140)
+* User Option <109>:                     voice-defs.         (line  148)
+* User Option <110>:                     voice-defs.         (line  156)
+* User Option <111>:                     voice-defs.         (line  164)
+* User Option <112>:                     voice-defs.         (line  172)
+* User Option <113>:                     voice-defs.         (line  180)
+* User Option <114>:                     voice-defs.         (line  188)
+* User Option <115>:                     voice-defs.         (line  196)
+* User Option <116>:                     voice-defs.         (line  204)
+* User Option <117>:                     voice-defs.         (line  212)
+* User Option <118>:                     voice-defs.         (line  220)
+* User Option <119>:                     voice-defs.         (line  228)
+* User Option <120>:                     voice-defs.         (line  236)
+* User Option <121>:                     voice-defs.         (line  244)
+* User Option <122>:                     voice-setup.        (line   98)
 

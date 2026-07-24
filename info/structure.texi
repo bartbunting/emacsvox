@@ -6,7 +6,7 @@ interaction.  We described mode @strong{AUCTeX} @MDash{} a specialized
 interface to authoring @LaTeX{} documents as a special instance of such
 structured editing in @pxref{Document Authoring}.
 
-The Emacspeak desktop allows the user to efficiently author and
+The Emacsvox desktop allows the user to efficiently author and
 maintain an electronic document based either on the structure present
 in the markup (as in the case of mode AUCTeX) or on special outlining
 constructs that allow the user to impose a desired logical structure
@@ -45,7 +45,7 @@ subtrees can be deleted or copied.  Outline editing thus provides an
 efficient means of obtaining quick overviews of a document.
 
 The visual interface displays such hidden content as a series of
-ellipses following the visible outline heading.  Emacspeak produces
+ellipses following the visible outline heading.  Emacsvox produces
 auditory icon @strong{ellipses} when speaking such outline headings.
 
 The basic @strong{outline mode} allows the user to specify the syntax
@@ -65,8 +65,8 @@ produces auditory icon @strong{open-object}.  For details on using mode
 manual.
 
 The basic outline facility described above is applicable to all
-content being edited or browsed on the Emacspeak desktop.  In
-addition, Emacspeak has other specialized outline editing modes such
+content being edited or browsed on the Emacsvox desktop.  In
+addition, Emacsvox has other specialized outline editing modes such
 as @strong{folding mode} that provide extended outlining facilities.  In
 mode @strong{folding}, the user can create (possibly nested)
 @strong{folds} @MDash{} logical containers of content that are delimited
@@ -96,12 +96,12 @@ each fold with the function signatures and documentation for the
 functions in each section.  When I am satisfied with the overall
 architecture of the module, I fill in the function skeletons with
 actual program code.  This technique is used extensively in
-maintaining the Emacspeak code base.
+maintaining the Emacsvox code base.
 
 @node Template-based Authoring
 @subsection Template-based Authoring
 
-Emacspeak supports two powerful template-based authoring subsystems that
+Emacsvox supports two powerful template-based authoring subsystems that
 enable the user to quickly create and fill in templates.  @strong{Dmacro}
 (short for ``dynamic macros'') allows the user to define and invoke
 template-based macros that are specialized for creating different types
@@ -109,7 +109,7 @@ of content.  For example, when programming in C, the user can invoke
 dynamic macros that insert skeletons of standard C constructs with a few
 keystrokes.  This form of editing has numerous advantages in creating
 consistently structured code when developing large software modules.
-Emacspeak speech-enables mode @strong{dmacro} to provide succinct spoken
+Emacsvox speech-enables mode @strong{dmacro} to provide succinct spoken
 feedback as templates are created and filled.  The user invokes @strong{
 dmacro} via command @strong{insert dmacro}, which is typically bound to a
 single key.  This results in a dialog where the user is prompted to

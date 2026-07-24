@@ -199,7 +199,7 @@
 ;; The implementation from 2014 worked for emacsvox.  it has been
 ;; moved to obsolete/old-emacsvox-preamble.el to avoid the fragility
 ;; from using backtrace-frame.  See
-;; http://tvraman.github.io/emacsvox/blog/ems-interactive-p.html for
+;; http://tvraman.github.io/emacspeak/blog/ems-interactive-p.html for
 ;; the version that depended on calling backtrace-frame.
 
 ;; This updated implementation avoids that call and was contributed

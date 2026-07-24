@@ -1,6 +1,6 @@
 @c $Id$
 
-The Emacspeak environment provides a rich collection of structured
+The Emacsvox environment provides a rich collection of structured
 document authoring tools.  These are well-suited for working in an
 eyes-free environment @MDash{} you clearly do not want to use a
 @b{What You See Is What You Get} (WYSIWYG) authoring tool if you
@@ -27,7 +27,7 @@ Wiki-like text document that can be easily published to multiple
 output formats including HTML.
 
 Packages @code{org-mode} and @code{nxml-mode} are speech-enabled by
-Emacspeak to provide auditory icons, structured navigation and
+Emacsvox to provide auditory icons, structured navigation and
 outlines, as well as voice locking for audio formatted feedback as you
 work.
 
@@ -47,12 +47,12 @@ authoring and maintaining structured documents in @TeX{} and @LaTeX{}.
 Package @code{bibtex} facilitates maintenance and use of @code{bibtex}
 bibliography databases.  The Texinfo package allows creation of
 software documentation that is suitable for both printing as well as
-online viewing as hypertext.  Emacspeak speech-enables packages
+online viewing as hypertext.  Emacsvox speech-enables packages
 @code{AUCTeX}, @code{bibtex} and @code{texinfo} to provide convenient
 spoken feedback as you create documents.  For details on using these
 packages, see their accompanying online info documentation.
 
-As the document preparation system of choice, Emacspeak supports a
+As the document preparation system of choice, Emacsvox supports a
 fluent speech-enabled interface to editing and formatting @LaTeX{}
 documents.  This interface is provided by speech-enabling
 @strong{AUCTeX} mode.
@@ -62,15 +62,15 @@ documents.  This interface is provided by speech-enabling
 Mode @strong{AUCTeX} provides efficient keyboard shortcuts for inserting
 and maintaining @LaTeX{} markup as a document is being authored.  All of
 these editing commands provide succinct auditory feedback when used
-with Emacspeak.  The syntax coloring provided by this mode is extended
-to provide @strong{voice locking} @MDash{} consequently, Emacspeak uses
+with Emacsvox.  The syntax coloring provided by this mode is extended
+to provide @strong{voice locking} @MDash{} consequently, Emacsvox uses
 different voices to speak the embedded markup to set it apart from the
 content.
 
 Mode @strong{AUCTeX} can be used to create empty document templates and
 to insert document content at the appropriate places in the template.
 The mode also enables structured navigation of the document as it is
-being edited.  Emacspeak speech-enables these template creation and
+being edited.  Emacsvox speech-enables these template creation and
 structured navigation commands to produce auditory icons and succinct
 spoken feedback.  For example, while editing, the user can quickly
 browse through the sections of the document and have each section
@@ -99,7 +99,7 @@ shorter) search string.
 
 All of the user commands available during incremental search are
 documented in the online Emacs info manual.  These are speech-enabled
-by Emacspeak to provide spoken prompts as the dialog begins; auditory
+by Emacsvox to provide spoken prompts as the dialog begins; auditory
 icons indicate a search hit or search miss as the search progresses.
 Along with auditory icons @strong{search-hit} and @strong{search-miss} the
 user also hears the current line spoken, and in the case of a search
@@ -112,7 +112,7 @@ to the current match.
 Search and replace actions are an extension to the basic
 conversational gestures of a search dialog.  In addition to specifying
 a search string, the user also specifies a replacement string.  On the
-Emacspeak desktop, this functionality is provided by command
+Emacsvox desktop, this functionality is provided by command
 @strong{query-replace}.  The speech-enabled version of this interaction
 prompts the user for the search and replacement texts.  The auditory
 feedback during the interactive search and replacement process
@@ -157,23 +157,23 @@ user to pick a correction Once a correction is selected, the user is
 offered the choice of interactively replacing the erroneous word with
 the correction.
 
-The spell checking interface on the Emacspeak desktop is
+The spell checking interface on the Emacsvox desktop is
 speech-enabled to provide fluent auditory feedback.  The visual
 interface parallels that described above and is provided by package
 @code{ispell} which is part of the standard Emacs distribution.
-Emacspeak provides a spoken prompt that is composed of the line
+Emacsvox provides a spoken prompt that is composed of the line
 containing the possibly erroneous word (which is aurally highlighted
 to set it apart from the rest of the text on that line) and the
 available corrections.  Each correction is prefixed with a number that
 the user can use to select it.  Once a correction is selected, the
 interaction continues with the query and replace interaction described
 earlier.  The speech interface to the spell checker is as fluent as
-the visual interface.  Notice that Emacspeak users do not need to
+the visual interface.  Notice that Emacsvox users do not need to
 concern themselves with the details of the visual display such as
 ``the corrections are displayed in a window at the top of the
 screen''.
 
 In addition to the standard spell checker described above, newer
 versions of Emacs include an ``on-the-fly'' spell checker that flags
-erroneous words as they are typed.  Emacspeak speech-enables package
+erroneous words as they are typed.  Emacsvox speech-enables package
 @code{flyspell} so that such erroneous words are aurally highlighted.

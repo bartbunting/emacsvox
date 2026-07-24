@@ -236,9 +236,9 @@
 * URL Templates ::
 @end menu
 
-@node Emacspeak Commands And Options
+@node Emacsvox Commands And Options
 
-@chapter Emacspeak Commands And Options
+@chapter Emacsvox Commands And Options
 
 @include intro-docs.texi
 
@@ -442,6 +442,46 @@ system.
 programming modes.
 @end itemize
 
+@subsection Emacsvox Commands
+
+@subsubsection soundscape
+@deffn {Command} soundscape  (scape)
+@table @kbd
+@item C-. s
+@kindex C-. s
+@item C-x @@ s s
+@kindex C-x @@ s s
+@end table
+
+@findex soundscape
+
+@format
+Play soundscape.
+
+(fn SCAPE)
+@end format
+@end deffn
+
+@subsubsection soundscape-kill
+@deffn {Command} soundscape-kill
+@findex soundscape-kill
+
+@format
+Stop all running soundscapes.
+@end format
+@end deffn
+
+@subsubsection soundscape-stop
+@deffn {Command} soundscape-stop  (scape)
+@findex soundscape-stop
+
+@format
+Stop running Soundscape.
+
+(fn SCAPE)
+@end format
+@end deffn
+
 @subsection emacsvox Options
 
 @defvar {User Option} emacsvox-pip-enable
@@ -453,6 +493,49 @@ Default Value:
 @verbatim
 
 nil
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} soundscape-data
+@verbatim
+Soundscape data directory.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"/home/bart/.boodler/Collection"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} soundscape-device
+@verbatim
+Alsa sound device to use for soundscapes.
+@end verbatim
+
+Default Value:
+@verbatim
+
+"default"
+
+@end verbatim
+
+@end defvar
+
+@defvar {User Option} soundscape-manager-options
+@verbatim
+User customizable options list passed to boodler.
+Defaults specify alsa as the output and set master volume
+@end verbatim
+
+Default Value:
+@verbatim
+
+("-o" "pulse" "-m" "0.15")
 
 @end verbatim
 
@@ -2484,6 +2567,7 @@ Open HTML file on current dired line.
 @subsubsection emacsvox-dired-label-fields
 @deffn {Command} emacsvox-dired-label-fields
 @findex emacsvox-dired-label-fields
+
 @format
 Labels the fields of the listing in the dired buffer.
 Currently is a no-op  unless
@@ -7137,7 +7221,7 @@ the list using c-s and c-r as provided by ido Set number matches
 shown (ido-max-prospects) to 2 or 3 using Custom so you dont hear the
 entire list. You can also customize @var{ido-decorations} to taste.
 See
-@url{https://emacsvox.blogspot.com/2018/06/\
+@url{https://emacspeak.blogspot.com/2018/06/\
 effective-suggest-and-complete-in-eyes.html},
 for an article on how to reason about designing  good auditory
 interfaces for these types of situations.
@@ -11396,6 +11480,7 @@ but quickly switch to a window by name.
 Continuously adjust selective-display.
 Use ‘,’ and ‘.’ to continuously decrease/increase ‘selective-display’.
  If not specified, ‘arg’ defaults to current-column.
+
 (fn &optional ARG)
 @end format
 @end deffn

@@ -1,6 +1,6 @@
 @c $Id$
 @node Top
-@top Emacspeak
+@top Emacsvox
 
 @ifinfo 
 The manual is divided into the following chapters:
@@ -17,12 +17,12 @@ The manual is divided into the following chapters:
 * Voice Lock: Voice Lock.
 * Using Online Help: Using Online Help.
 * Emacs Packages:  Emacs Packages.
-* Emacspeak Keymaps: Emacspeak Keymaps.
-* Emacspeak Commands And Options:  Emacspeak Commands And Options.
+* Emacsvox Keymaps: Emacsvox Keymaps.
+* Emacsvox Commands And Options:  Emacsvox Commands And Options.
 * Running Terminal Based Applications: Running Terminal Based Applications.
-* Emacspeak Keyboard Commands: Emacspeak Keyboard Commands.
+* Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.
-*  Emacspeak At Twenty: Emacspeak At Twenty.
+* Emacspeak At Twenty: Emacspeak At Twenty.
 * Acknowledgments: Acknowledgments.
 
 Indices:

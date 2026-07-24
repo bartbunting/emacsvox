@@ -1,24 +1,24 @@
-This is emacspeak.info, produced by makeinfo version 7.2 from
-emacspeak.texi.
+This is emacsvox.info, produced by makeinfo version 7.2 from
+emacsvox.texi.
 
 INFO-DIR-SECTION Accessibility
 START-INFO-DIR-ENTRY
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 END-INFO-DIR-ENTRY
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Emacspeak:(emacspeak).		Speech-enabled Audio Desktop.
+* Emacsvox:(emacsvox).		Speech-enabled Audio Desktop.
 END-INFO-DIR-ENTRY
 
-This manual documents *Emacspeak, The Complete Audio Desktop* and was
+This manual documents *Emacsvox, The Complete Audio Desktop* and was
 last updated on July 25, 2026.
 
 
-File: emacspeak.info,  Node: Top,  Next: Copyright,  Up: (dir)
+File: emacsvox.info,  Node: Top,  Next: Copyright,  Up: (dir)
 
-Emacspeak
-*********
+Emacsvox
+********
 
 The manual is divided into the following chapters:
 
@@ -34,12 +34,12 @@ The manual is divided into the following chapters:
 * Voice Lock: Voice Lock.
 * Using Online Help: Using Online Help.
 * Emacs Packages:  Emacs Packages.
-* Emacspeak Keymaps: Emacspeak Keymaps.
-* Emacspeak Commands And Options:  Emacspeak Commands And Options.
+* Emacsvox Keymaps: Emacsvox Keymaps.
+* Emacsvox Commands And Options:  Emacsvox Commands And Options.
 * Running Terminal Based Applications: Running Terminal Based Applications.
-* Emacspeak Keyboard Commands: Emacspeak Keyboard Commands.
+* Emacsvox Keyboard Commands: Emacsvox Keyboard Commands.
 * TTS Servers:  TTS Servers.
-*  Emacspeak At Twenty: Emacspeak At Twenty.
+* Emacspeak At Twenty: Emacspeak At Twenty.
 * Acknowledgments: Acknowledgments.
 
 Indices:
@@ -49,12 +49,12 @@ Indices:
 * Variable Index: Variable Index.
 
 
-File: emacspeak.info,  Node: Copyright,  Next: Announce,  Prev: Top,  Up: Top
+File: emacsvox.info,  Node: Copyright,  Next: Announce,  Prev: Top,  Up: Top
 
 1 Copyright
 ***********
 
-This manual documents Emacspeak, a speech extension to Emacs.
+This manual documents Emacsvox, a speech extension to Emacs.
 
    Copyright (C)1994 - 2024 T. V. Raman All Rights Reserved.
 
@@ -65,7 +65,7 @@ auto-generated from the source code, and the documentation inherits the
 same license as the original source code.
 
 
-File: emacspeak.info,  Node: Announce,  Next: Background,  Prev: Copyright,  Up: Top
+File: emacsvox.info,  Node: Announce,  Next: Background,  Prev: Copyright,  Up: Top
 
 2 Announcing Emacspeak Manual 2nd Edition As An Open Source Project
 *******************************************************************
@@ -81,7 +81,7 @@ complete audio desktop.
 * Credits: Credits.
 
 
-File: emacspeak.info,  Node: Contributing,  Next: Authoring Guidelines,  Up: Announce
+File: emacsvox.info,  Node: Contributing,  Next: Authoring Guidelines,  Up: Announce
 
 2.1 How To Contribute To This Manual
 ====================================
@@ -95,7 +95,7 @@ chapter to which you are contributing.  When you feel you have something
 to submit, send out a Github Pull Request.
 
 
-File: emacspeak.info,  Node: Authoring Guidelines,  Next: Credits,  Prev: Contributing,  Up: Announce
+File: emacsvox.info,  Node: Authoring Guidelines,  Next: Credits,  Prev: Contributing,  Up: Announce
 
 2.2 Authoring Guidelines
 ========================
@@ -114,7 +114,7 @@ files through ‘makeinfo’ -- badly created or malformed texinfo source
 takes more time to fix than marking up straight text.
 
 
-File: emacspeak.info,  Node: Credits,  Prev: Authoring Guidelines,  Up: Announce
+File: emacsvox.info,  Node: Credits,  Prev: Authoring Guidelines,  Up: Announce
 
 2.3 Credits
 ===========
@@ -125,7 +125,7 @@ Authors who contribute complete sections will be acknowledged here as
 well as in the specific section they author.
 
 
-File: emacspeak.info,  Node: Background,  Next: Introduction,  Prev: Announce,  Up: Top
+File: emacsvox.info,  Node: Background,  Next: Introduction,  Prev: Announce,  Up: Top
 
 3 Background
 ************
@@ -147,7 +147,7 @@ impact of the work.
 * Summary::
 
 
-File: emacspeak.info,  Node: Speech-Enabling Applications,  Next: Audio Formatting And Aural CSS,  Up: Background
+File: emacsvox.info,  Node: Speech-Enabling Applications,  Next: Audio Formatting And Aural CSS,  Up: Background
 
 3.1 Speech-Enabling Applications
 ================================
@@ -175,7 +175,7 @@ on Emacspeak in the OReilly publication entitled Beautiful Code
 (http://emacspeak.sourceforge.net/raman/publications/bc-emacspeak/publish-emacspeak-bc.html).
 
 
-File: emacspeak.info,  Node: Audio Formatting And Aural CSS,  Next: Auditory Icons,  Prev: Speech-Enabling Applications,  Up: Background
+File: emacsvox.info,  Node: Audio Formatting And Aural CSS,  Next: Auditory Icons,  Prev: Speech-Enabling Applications,  Up: Background
 
 3.2 Audio Formatting And Aural CSS
 ==================================
@@ -198,7 +198,7 @@ implementation was overhauled to use Aural CSS for all aspects of
 voice-locking, rather than just for Web content.
 
 
-File: emacspeak.info,  Node: Auditory Icons,  Next: Summary,  Prev: Audio Formatting And Aural CSS,  Up: Background
+File: emacsvox.info,  Node: Auditory Icons,  Next: Summary,  Prev: Audio Formatting And Aural CSS,  Up: Background
 
 3.3 Auditory Icons
 ==================
@@ -213,7 +213,7 @@ entitled _Conversational Gestures For The Audio Desktop_ that details
 how one can play Tetris on the Emacspeak desktop.
 
 
-File: emacspeak.info,  Node: Summary,  Prev: Auditory Icons,  Up: Background
+File: emacsvox.info,  Node: Summary,  Prev: Auditory Icons,  Up: Background
 
 3.4 Summary
 ===========
@@ -233,12 +233,12 @@ highlights:
    And many more than will fit this margin.
 
 
-File: emacspeak.info,  Node: Introduction,  Next: Installation,  Prev: Background,  Up: Top
+File: emacsvox.info,  Node: Introduction,  Next: Installation,  Prev: Background,  Up: Top
 
 4 Introduction
 **************
 
-Emacspeak provides a complete audio desktop by speech-enabling all of
+Emacsvox provides a complete audio desktop by speech-enabling all of
 Emacs.
 
    In the past, screen reading programs have allowed visually impaired
@@ -253,75 +253,64 @@ the late 80's by PC terminal emulators running a DOS screenreader.  This
 means that most visually impaired computer users face the additional
 handicap of being DOS-impaired -- a far more serious problem:-)
 
-   Emacspeak is an emacs subsystem that provides complete speech access.
+   Emacsvox is an emacs subsystem that provides complete speech access.
 It is *not* a screen-reader -- rather, it is a complete user environment
-with built-in speech feedback.  Emacspeak has a significant advantage;
+with built-in speech feedback.  Emacsvox has a significant advantage;
 since it runs inside Emacs, a structure-sensitive, fully customizable
-environment, Emacspeak has more context-specific information about what
-it is speaking than its screenreader counterparts.  This is why
-Emacspeak is not a "screenreader", it is a system that produces speech
-output.
+environment, Emacsvox has more context-specific information about what
+it is speaking than its screenreader counterparts.  This is why Emacsvox
+is not a "screenreader", it is a system that produces speech output.
 
    A Traditional screen-reader speaks the content of the screen, leaving
-it to the user to interpret the visual layout.  Emacspeak, on the other
+it to the user to interpret the visual layout.  Emacsvox, on the other
 hand, treats speech as a first-class output modality; it speaks the
 information in a manner that is easy to comprehend when listening.
 
-   The basic concepts used by Emacspeak are simple; all interactive
-Emacs commands have been adapted to provide speech feedback.  Hence, you
-use Emacs as normal; Emacspeak works behind the scene to give audio
-feedback in addition to updating the screen.
+   The basic concepts used by Emacsvox are simple; all interactive Emacs
+commands have been adapted to provide speech feedback.  Hence, you use
+Emacs as normal; Emacsvox works behind the scene to give audio feedback
+in addition to updating the screen.
 
-   Emacspeak consists of a core speech system that provides speech and
-audio services to the rest of the Emacspeak desktop;
-application-specific extensions provide context-specific spoken feedback
-using these services.  Emacspeak currently comes with speech extensions
-for several popular Emacs subsystems and editing modes.  I would like to
-thank their respective authors for their wonderful work which makes
-Emacs more than a text editor(1).
+   Emacsvox consists of a core speech system that provides speech and
+audio services to the rest of the Emacsvox desktop; application-specific
+extensions provide context-specific spoken feedback using these
+services.  Emacsvox currently comes with speech extensions for several
+popular Emacs subsystems and editing modes.  I would like to thank their
+respective authors for their wonderful work which makes Emacs more than
+a text editor(1).
 
    ---------- Footnotes ----------
 
-   (1) I have now been using Emacspeak under Linux as the only source of
+   (1) I have now been using Emacsvox under Linux as the only source of
 speech feedback since 1994.
 
 
-File: emacspeak.info,  Node: Installation,  Next: Basic Usage,  Prev: Introduction,  Up: Top
+File: emacsvox.info,  Node: Installation,  Next: Basic Usage,  Prev: Introduction,  Up: Top
 
 5 Installation Instructions
 ***************************
 
 This chapter gives brief and detailed installation instructions for
-configuring, installing and starting Emacspeak.
+configuring, installing and starting Emacsvox.
 
 * Menu:
 
-* Obtaining Emacspeak::         Obtaining Emacspeak.
+* Obtaining Emacsvox::         Obtaining Emacsvox.
 * Quick Installation::          Default installation  and startup.
 * Building And Testing The Speech Server::
 
 
-File: emacspeak.info,  Node: Obtaining Emacspeak,  Next: Quick Installation,  Up: Installation
+File: emacsvox.info,  Node: Obtaining Emacsvox,  Next: Quick Installation,  Up: Installation
 
-5.1 Obtaining Emacspeak
-=======================
+5.1 Obtaining Emacsvox
+======================
 
-Emacspeak is available on the Internet at:
-WWW
-     <http://emacspeak.sourceforge.net>
+Emacsvox is available on the Internet at:
 Git Repository
-     <https://github.com/tvraman/emacspeak>
-Mail List
-     <emacspeak@emacspeak.net>
-List Request
-     <emacspeak-request@emacspeak.net>
-
-   The Emacspeak mailing list is maintained by Greg E. Priest-Dorman.
-If you are using Emacspeak, you should join the list by sending mail to
-the request address, <mailto:emacspeak-request@emacspeak.net>.
+     <https://github.com/robertmeta/emacsvox>
 
 
-File: emacspeak.info,  Node: Quick Installation,  Next: Building And Testing The Speech Server,  Prev: Obtaining Emacspeak,  Up: Installation
+File: emacsvox.info,  Node: Quick Installation,  Next: Building And Testing The Speech Server,  Prev: Obtaining Emacsvox,  Up: Installation
 
 5.2 Quick Installation
 ======================
@@ -329,19 +318,14 @@ File: emacspeak.info,  Node: Quick Installation,  Next: Building And Testing The
 Here are the quick installation instructions.  See the next section for
 detailed installation instructions.
 
-   Packages for Linux distributions such as Debian typically become
-available on the WWW a few weeks or months after a new version is
-released.  The instructions below are for building and installing
-Emacspeak from the source distribution.  If you install one of the
-prepackaged distributions, use the install instructions that come with
-that package.
+   Emacsvox requires Emacs 31 or later.  The instructions below build it
+from the source checkout.
 
-   • Obtain the source code -- either by downloading the tar.bz2 file
-     for the latest release -- or by cloning the git repository.
+   • Clone the source repository.
 
-          git clone https://github.com/tvraman/emacspeak
+          git clone https://github.com/robertmeta/emacsvox
 
-   • Change to the ‘emacspeak’ directory.
+   • Change to the ‘emacsvox’ directory.
 
    • Type ‘make config’ to configure the sources.
 
@@ -351,8 +335,7 @@ that package.
      proceed to install that engine.  Your choices are:
 
         • Open Source ESpeak on Linux.  Install the ESpeak packages for
-          your system, then compile the Emacspeak ESpeak server by
-          doing:
+          your system, then compile the Emacsvox ESpeak server by doing:
 
                cd servers/native-espeak
                make
@@ -360,17 +343,17 @@ that package.
         • ViaVoice Outloud (AKA Eloquent).  You need to purchase this
           engine from the voxin site -- note that the Vocalizer voices
           available from that site are not supported.  That purchase
-          will give you install-ready packages for installing the speech
-          engine as well as Emacspeak.  See
-          <https://voxin.oralux.net/rss.xml> for the latest packages,
-          and <https://voxin.oralux.net> for the main Voxin Web site.
+          will give you install-ready packages for the speech engine.
+          See <https://voxin.oralux.net/rss.xml> for the latest
+          packages, and <https://voxin.oralux.net> for the main Voxin
+          Web site.
 
-        • On the Mac, you can use the builtin Mac TTS engine --
-          emacspeak comes with a speech server for that TTS engine
-          written in ‘swift’.
+        • On the Mac, you can use the builtin Mac TTS engine -- Emacsvox
+          comes with a speech server for that TTS engine written in
+          ‘swift’.
 
    • Having installed and configured the TTS engine of your choice, and
-     having built the associated speech server, set Emacspeak up to use
+     having built the associated speech server, set Emacsvox up to use
      that engine by setting environment variable ‘TTS_PROGRAM’.  If
      using ‘bash’ as your shell, add the line
 
@@ -384,18 +367,18 @@ that package.
 
    • Run it by adding the line
 
-          (load-file "<EMACSPEAK-DIR>/lisp/emacspeak-setup.el")
+          (load-file "<EMACSVOX-DIR>/lisp/emacsvox-setup.el")
 
      to the top of your .emacs file.
 
-     In the above, <EMACSPEAK-DIR> refers to the directory where you
+     In the above, <EMACSVOX-DIR> refers to the directory where you
      unpacked the sources.
 
    See the next section for details on building and testing the speech
 server.
 
 
-File: emacspeak.info,  Node: Building And Testing The Speech Server,  Prev: Quick Installation,  Up: Installation
+File: emacsvox.info,  Node: Building And Testing The Speech Server,  Prev: Quick Installation,  Up: Installation
 
 5.3 Building And Testing The Speech Server
 ==========================================
@@ -403,15 +386,15 @@ File: emacspeak.info,  Node: Building And Testing The Speech Server,  Prev: Quic
 5.3.1 Speech Servers
 --------------------
 
-Speech servers are located in the ‘emacspeak/servers’ directory.
+Speech servers are located in the ‘emacsvox/servers’ directory.
 
    • ESpeak: ‘servers/espeak’.  This is a TCL script that uses a library
      built in ‘servers/native-espeak/’.
 
    • Dectalk: ‘servers/dtk-exp’.  This is a TCL script that does not
      depend on any native code.
-   • Software Dectalk: ‘servers/dtk-soft’ See
-     <https://github.com/tvraman/emacspeak/blob/master/servers/software-dtk/Readme.org>.
+   • Software Dectalk: ‘servers/dtk-soft’.  See
+     <https://github.com/robertmeta/emacsvox/blob/master/servers/software-dtk/Readme.org>.
    • Outloud: ‘servers/outloud’ This is a TCL script that uses the
      library built in ‘servers/linux-outloud’.  Note that a checkout
      from GitHub gives you a prebuilt library -- however you will need
@@ -444,73 +427,73 @@ execute it.
    Quit this TCL session by typing ‘C-d’ (an end-of-file character).
 
 
-File: emacspeak.info,  Node: Basic Usage,  Next: Audio Desktop,  Prev: Installation,  Up: Top
+File: emacsvox.info,  Node: Basic Usage,  Next: Audio Desktop,  Prev: Installation,  Up: Top
 
 6 Basic Usage.
 **************
 
-This chapter gives an overview of how to use Emacspeak; for a full
-listing of Emacspeak keybindings, see *Note emacsvox::.  Note: This
+This chapter gives an overview of how to use Emacsvox; for a full
+listing of Emacsvox keybindings, see *Note emacsvox::.  Note: This
 documentation should be used in conjunction with the online Emacs info
 pages that extensively document Emacs itself.  These sections briefly
 describe the speech-enabling extensions.  However, they should not be
 considered a substitute for reading the Emacs manual.  How successfully
-you use Emacspeak will depend on how well you learn your Emacs.
+you use Emacsvox will depend on how well you learn your Emacs.
 
    All Emacs navigation and editing commands have been speech enabled.
 Thus, moving to the next or previous word, line or paragraph results in
 the text around point being spoken.  Exactly how much text is spoken is
 determined by the amount by which you moved.
 
-   In addition, Emacspeak provides basic reading functions that can be
+   In addition, Emacsvox provides basic reading functions that can be
 invoked to listen to chunks of text without moving.
 
 * Menu:
 
 * Overview::                     Basic Overview.
-* Working::                      Working in Emacspeak.
+* Working::                      Working in Emacsvox.
 * Reading::                      Reading chunks of information.
 * Speech System::                Controlling Speech Output.
 * Voice-lock::                   Audio Formatting.
 * Status Information::           Speaking Status Information.
 
 
-File: emacspeak.info,  Node: Overview,  Next: Working,  Up: Basic Usage
+File: emacsvox.info,  Node: Overview,  Next: Working,  Up: Basic Usage
 
-6.1 Emacspeak Overview
-======================
+6.1 Emacsvox Overview
+=====================
 
-Emacspeak provides a small number of core services around which the
+Emacsvox provides a small number of core services around which the
 remainder of the audio interface is constructed.  These essential
 features of the software are briefly outlined in the following
 paragraphs; the commands by which they can be controlled will be
 described later in the manual.
 
    Apart from providing a fluent spoken interface to all of Emacs' basic
-editing functions, Emacspeak also includes software modules which add
+editing functions, Emacsvox also includes software modules which add
 speech feedback to a range of applications that can be run from within
-Emacs.  In this sense, Emacspeak amounts to much more than a talking
-text editor; indeed, it can more aptly be characterized as a true "audio
+Emacs.  In this sense, Emacsvox amounts to much more than a talking text
+editor; indeed, it can more aptly be characterized as a true "audio
 desktop", in which speech is treated as a first-class output modality.
 
-   Emacspeak implements a special minor mode, known as "voice lock mode"
+   Emacsvox implements a special minor mode, known as "voice lock mode"
 (*note Voice-lock::) which uses distinct speech characteristics to
 provide aural highlighting of specific textual constructs, such as
 comments in program code, quoted strings and reserved words *Note Voice
-Lock::.  This facility is further extended when Emacspeak is used with
+Lock::.  This facility is further extended when Emacsvox is used with
 the ‘EWW’ and ‘W3’ Web browsers, to enable the semantic and structural
 distinctions captured by the HTML markup to be communicated efficiently
 *Note Web Browsing::.
 
    It is often desirable to exercise control over the pronunciation of a
 word (E.G. a technical term or a reserved word in a programming
-language) within specific contexts.  Emacspeak maintains pronunciation
+language) within specific contexts.  Emacsvox maintains pronunciation
 dictionaries for this purpose, which may be customized by the user.
 Moreover, individual dictionaries can be activated selectively,
 depending for example on the current major mode or the name of the file
 which is being visited *Note emacsvox-pronounce::.
 
-   In addition to spoken feedback, Emacspeak can generate "auditory
+   In addition to spoken feedback, Emacsvox can generate "auditory
 icons" -- short sound cues which alert the user to significant events,
 for example the opening or deletion of a file, the completion of an
 action, the arrival of an electronic mail message or the creation of a
@@ -521,13 +504,13 @@ icons, the computer must be equipped with sound hardware for which the
 operating system has been correctly configured *Note emacsvox-sounds::.
 
 
-File: emacspeak.info,  Node: Working,  Next: Reading,  Prev: Overview,  Up: Basic Usage
+File: emacsvox.info,  Node: Working,  Next: Reading,  Prev: Overview,  Up: Basic Usage
 
 6.2 Using Emacs Buffers
 =======================
 
 While typing in an Emacs buffer, hitting space speaks the recently typed
-word.  I use completion all the time; so Emacspeak will speak the
+word.  I use completion all the time; so Emacsvox will speak the
 completion just inserted as well as the next possible completion.  In
 Emacs, use ‘M-x load-library <RETURN> completion <RETURN>’ for loading
 the completion package.
@@ -537,51 +520,52 @@ Emacs prompts with available lists of completions in response to partial
 input wherever appropriate -- all forms of completion provide speech
 feedback.
 
-   In addition, Emacspeak provides a number of commands for reading
+   In addition, Emacsvox provides a number of commands for reading
 portions of the current buffer, getting status information, and
-modifying Emacspeak's state.
+modifying Emacsvox's state.
 
    All of the commands are documented in the subsequent sections.  They
 can be classified into types:
 
-   • Emacspeak commands for listening to chunks of information.  The
+   • Emacsvox commands for listening to chunks of information.  The
      names of these commands all start with the common prefix
-     ‘emacspeak-speak-’.  All Emacspeak commands are bound to the keymap
-     EMACSPEAK-KEYMAP and are accessed with the key ‘C-e’(1).  Thus, the
-     Emacspeak command “emacspeak-speak-line” is bound to ‘l’ in keymap
-     EMACSPEAK-KEYMAP and can be accessed with the keystroke ‘C-e l’.
-     If for some reason you wish to use some key other than ‘C-e’ as the
-     common keyboard prefix for all Emacspeak commands, set the variable
-     EMACSPEAK-PREFIX.
+     ‘emacsvox-speak-’.  All Emacsvox commands are bound to the keymap
+     EMACSVOX-KEYMAP and are accessed with the key ‘C-e’(1).  Thus, the
+     Emacsvox command “emacsvox-speak-line” is bound to ‘l’ in keymap
+     EMACSVOX-KEYMAP and can be accessed with the keystroke ‘C-e l’.  If
+     for some reason you wish to use some key other than ‘C-e’ as the
+     common keyboard prefix for all Emacsvox commands, set the variable
+     EMACSVOX-PREFIX.
 
-   • The second category of commands provided by Emacspeak manipulate
-     the state of the speech device.  The names of these commands start
-     with the common prefix ‘tts-’ and are bound in keymap
+   • The second category of commands provided by Emacsvox manipulate the
+     state of the speech device.  The names of these commands start with
+     the common prefix ‘tts-’ and are bound in keymap
      EMACSVOX-TTS-SUBMAP.
 
      You can access these commands via the prefix ‘C-e d’ (2).  Thus,
      the command “tts-set-rate” is bound to ‘r’ in keymap
      EMACSVOX-TTS-SUBMAP and can be executed by pressing ‘C-e d r’.
 
-   Emacs has extensive online help; so does emacspeak.  Please use it.
+   Emacs has extensive online help; so does emacsvox.  Please use it.
 
    This info manual is only to get you started.  You can get a summary
-of Emacspeak's features by pressing ‘C-h C-e’
+of Emacsvox's features by pressing ‘C-h C-e’
 
    ---------- Footnotes ----------
 
-   (1) C-e is mnemonic for Emacspeak.
+   (1) The prefix is inherited from Emacspeak, where C-e was mnemonic
+for the project name.
 
    (2) Historically, d was mnemonic for Dectalk; note that nothing in
-Emacspeak is DECTalk specific.
+Emacsvox is DECTalk specific.
 
 
-File: emacspeak.info,  Node: Reading,  Next: Speech System,  Prev: Working,  Up: Basic Usage
+File: emacsvox.info,  Node: Reading,  Next: Speech System,  Prev: Working,  Up: Basic Usage
 
 6.3 Reading Without Moving
 ==========================
 
-Emacspeak speaks information as you move around within a buffer.  How
+Emacsvox speaks information as you move around within a buffer.  How
 much text is spoken depends on how you move, thus, when you move by
 words, you hear the current word; when you move by paragraphs, you hear
 the current paragraph spoken.  In addition, the following commands allow
@@ -591,13 +575,13 @@ terminology for the editing cursor).
    Reading without moving point:
 
 ‘C-e c’
-     ‘emacspeak-speak-char’
+     ‘emacsvox-speak-char’
 
      Speak character under point.  Pronounces character phonetically
      unless called with a PREFIX arg.
 
 ‘C-e w’
-     ‘emacspeak-speak-word’
+     ‘emacsvox-speak-word’
 
      Speak current word.  With prefix ARG, speaks the rest of the word
      from point.  Negative prefix arg speaks from start of word to
@@ -605,33 +589,33 @@ terminology for the editing cursor).
      word is spelled instead of being spoken.
 
 ‘C-e l’
-     ‘emacspeak-speak-line’
+     ‘emacsvox-speak-line’
 
      Speaks current line.  With prefix ARG, speaks the rest of the line
      from point.  Negative prefix optional arg speaks from start of line
      to point.  Voicifies if option 'voice-lock-mode' is on.  Indicates
      indentation with a tone or a spoken cue if audio indentation is in
      use.  Indicates position of point with an aural highlight if option
-     'emacspeak-show-point' is turned on -- see command
-     ‘emacspeak-show-point’ bound to ‘C-e C-d’.  Lines that start hidden
+     'emacsvox-show-point' is turned on -- see command
+     ‘emacsvox-show-point’ bound to ‘C-e C-d’.  Lines that start hidden
      blocks of text, e.g.  outline header lines, or header lines of
-     blocks created by command 'emacspeak-hide-or-expose-block' are
+     blocks created by command 'emacsvox-hide-or-expose-block' are
      indicated with auditory icon ellipses.
 
 ‘C-e <UP>’
-     ‘emacspeak-read-previous-line’
+     ‘emacsvox-read-previous-line’
 
      Read previous line, specified by an offset, without moving.
      Default is to read the previous line.
 
 ‘C-e <DOWN>’
-     ‘emacspeak-read-next-line’
+     ‘emacsvox-read-next-line’
 
      Read next line, specified by an offset, without moving.  Default is
      to read the next line.
 
 ‘C-e p’
-     ‘emacspeak-speak-paragraph’
+     ‘emacsvox-speak-paragraph’
 
      Speak paragraph.  With prefix arg, speaks rest of current
      paragraph.  Negative prefix arg will read from start of current
@@ -639,35 +623,35 @@ terminology for the editing cursor).
      defined personality.
 
 ‘C-e r’
-     ‘emacspeak-speak-region’
+     ‘emacsvox-speak-region’
 
      Speak current region delimited by “point” and “mark”.  When called
      from a program, argument START and END specify region to speak.
 
 ‘C-e cap R’
-     ‘emacspeak-speak-rectangle’
+     ‘emacsvox-speak-rectangle’
 
      Speak a rectangle of text.  Rectangle is delimited by point and
      mark.  When call from a program, arguments specify the START and
      END of the rectangle.
 
 ‘C-e b’
-     ‘emacspeak-speak-buffer’
+     ‘emacsvox-speak-buffer’
 
      Speak current buffer contents.  With prefix ARG, speaks the rest of
      the buffer from point.  Negative prefix arg speaks from start of
      buffer to point.  If voice lock mode is on, the paragraphs in the
      buffer are voice annotated first, see command
-     ‘emacspeak-speak-voice-annotate-paragraphs’.  This provides the
+     ‘emacsvox-speak-voice-annotate-paragraphs’.  This provides the
      auditory equivalent of *dropped caps* from visual typography.
 
 ‘C-e n’
-     ‘emacspeak-speak-rest-of-buffer’
+     ‘emacsvox-speak-rest-of-buffer’
 
      Speak remainder of the buffer starting at point
 
 ‘C-e /’
-     ‘emacspeak-speak-this-buffer-other-window-display’
+     ‘emacsvox-speak-this-buffer-other-window-display’
 
      Speak this buffer as displayed in a different frame.  Emacs allows
      you to display the same buffer in multiple windows or frames.
@@ -681,23 +665,23 @@ terminology for the editing cursor).
      specifies the display to speak.
 
 ‘C-e <LEFT>’
-     ‘emacspeak-speak-this-buffer-previous-display’
+     ‘emacsvox-speak-this-buffer-previous-display’
 
      Speak this buffer as displayed in a 'previous' window.  See
      documentation for command
-     ‘emacspeak-speak-this-buffer-other-window-display’ for the meaning
+     ‘emacsvox-speak-this-buffer-other-window-display’ for the meaning
      of 'previous'.
 
 ‘C-e <RIGHT>’
-     ‘emacspeak-speak-this-buffer-next-display’
+     ‘emacsvox-speak-this-buffer-next-display’
 
      Speak this buffer as displayed in a 'previous' window.  See
      documentation for command
-     ‘emacspeak-speak-this-buffer-other-window-display’ for the meaning
+     ‘emacsvox-speak-this-buffer-other-window-display’ for the meaning
      of 'previous'.
 
 ‘C-e [’
-     ‘emacspeak-speak-page’
+     ‘emacsvox-speak-page’
 
      Speak a page.  With prefix ARG, speaks rest of current page.
      Negative prefix arg will read from start of current page to point.
@@ -705,7 +689,7 @@ terminology for the editing cursor).
      personality.
 
 ‘C-e DIGIT’
-     ‘emacspeak-speak-predefined-window’
+     ‘emacsvox-speak-predefined-window’
 
      Speak one of the first 10 windows on the screen.  In general,
      you'll never have Emacs split the screen into more than two or
@@ -714,60 +698,60 @@ terminology for the editing cursor).
      is the same as for the builtin Emacs command 'other-window'.
 
 ‘C-e C-n’
-     ‘emacspeak-speak-next-window’
+     ‘emacsvox-speak-next-window’
 
      Speak the next window.
 
 ‘C-e C-p’
-     ‘emacspeak-speak-previous-window’
+     ‘emacsvox-speak-previous-window’
 
      Speak the previous window.
 
-‘emacspeak-speak-other-window’
+‘emacsvox-speak-other-window’
      Speak contents of 'other' window.  Speaks entire window
      irrespective of point.  Semantics of 'other' is the same as for the
      builtin Emacs command 'other-window'.  Optional argument ARG
      specifies 'other' window to speak.
 
 ‘<ESCAPE> <UP>’
-     ‘emacspeak-owindow-previous-line’
+     ‘emacsvox-owindow-previous-line’
 
      Move to the next line in the other window and speak it.  Numeric
      prefix arg COUNT specifies number of lines to move.
 
 ‘<ESCAPE> <DOWN>’
-     ‘emacspeak-owindow-next-line’
+     ‘emacsvox-owindow-next-line’
 
      Move to the next line in the other window and speak it.  Numeric
      prefix arg COUNT can specify number of lines to move.
 
 ‘<ESCAPE> next’
-     ‘emacspeak-owindow-scroll-up’
+     ‘emacsvox-owindow-scroll-up’
 
      Scroll up the window that command 'other-window' would move to.
      Speak the window contents after scrolling.
 
 ‘<ESCAPE> prior’
-     ‘emacspeak-owindow-scroll-down’
+     ‘emacsvox-owindow-scroll-down’
 
      Scroll down the window that command 'other-window' would move to.
      Speak the window contents after scrolling.
 
-‘emacspeak-speak-sexp’
+‘emacsvox-speak-sexp’
      Speak current sexp.  With prefix ARG, speaks the rest of the sexp
      from point.  Negative prefix arg speaks from start of sexp to
      point.
 
 ‘C-e meta C-@’
-     ‘emacspeak-speak-spaces-at-point’ Speak the white space at point.
+     ‘emacsvox-speak-spaces-at-point’ Speak the white space at point.
 
 
-File: emacspeak.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  Up: Basic Usage
+File: emacsvox.info,  Node: Speech System,  Next: Voice-lock,  Prev: Reading,  Up: Basic Usage
 
 6.4 Speech System Commands
 ==========================
 
-This section documents Emacspeak's various user commands for controlling
+This section documents Emacsvox's various user commands for controlling
 the text to speech (TTS) system.
 
 * Menu:
@@ -777,15 +761,15 @@ the text to speech (TTS) system.
 * Miscellaneous:: Miscellaneous TTS Commands.
 
 
-File: emacspeak.info,  Node: Controlling Echo,  Next: Speech Output Control,  Up: Speech System
+File: emacsvox.info,  Node: Controlling Echo,  Next: Speech Output Control,  Up: Speech System
 
 6.4.1 Character, Word And Line Echo.
 ------------------------------------
 
-By default, Emacspeak speaks characters as they are typed -- this is
+By default, Emacsvox speaks characters as they are typed -- this is
 called character echo; Words are spoken as they are completed -- this is
-called word echo.  Emacspeak can also optionally speak each line as it
-is typed -- this is called line echo.
+called word echo.  Emacsvox can also optionally speak each line as it is
+typed -- this is called line echo.
 
    Character, word and line echo can be toggled -- either in the current
 buffer -- or for all buffers (globally).  To toggle the specific echo
@@ -795,36 +779,36 @@ using the common Emacs terminology of *prefix arg* or *interactive
 prefix arg*.
 
 ‘C-e d k’
-     ‘emacspeak-toggle-character-echo’
+     ‘emacsvox-toggle-character-echo’
 
-     Toggle state of Emacspeak character echo.  Interactive PREFIX arg
+     Toggle state of Emacsvox character echo.  Interactive PREFIX arg
      means toggle the global default value, and then set the current
      local value to the result.
 
 ‘C-e d w’
-     ‘emacspeak-toggle-word-echo’
+     ‘emacsvox-toggle-word-echo’
 
-     Toggle state of Emacspeak word echo.  Interactive PREFIX arg means
+     Toggle state of Emacsvox word echo.  Interactive PREFIX arg means
      toggle the global default value, and then set the current local
      value to the result.
 
 ‘C-e d l’
-     ‘emacspeak-toggle-line-echo’
+     ‘emacsvox-toggle-line-echo’
 
-     Toggle state of Emacspeak line echo.  Interactive PREFIX arg means
+     Toggle state of Emacsvox line echo.  Interactive PREFIX arg means
      toggle the global default value, and then set the current local
      value to the result.
 
 
-File: emacspeak.info,  Node: Speech Output Control,  Next: Miscellaneous,  Prev: Controlling Echo,  Up: Speech System
+File: emacsvox.info,  Node: Speech Output Control,  Next: Miscellaneous,  Prev: Controlling Echo,  Up: Speech System
 
 6.4.2 Setting TTS Characteristics.
 ----------------------------------
 
-Emacspeak user commands can set different characteristics of the speech
+Emacsvox user commands can set different characteristics of the speech
 output such as speech rate and punctuations mode.
 
-   Emacspeak provides a number of settings that affect how attributes of
+   Emacsvox provides a number of settings that affect how attributes of
 the text such as capitalization are conveyed.  These include settings
 that produce a short tone for each upper case letter, as well as a smart
 mode for speaking mixed case words which is especially useful when
@@ -848,7 +832,7 @@ applied to all buffers by preceding these commands with ‘C-u’.
 
      This function is advised.
 
-     Before-advice 'emacspeak-auto': Automatically defined advice to
+     Before-advice 'emacsvox-auto': Automatically defined advice to
      speak interactive prompts.
 
 ‘C-e d DIGIT’
@@ -880,19 +864,19 @@ applied to all buffers by preceding these commands with ‘C-u’.
      global default value, and then set the current local value to the
      result.
 
-   In addition, Emacspeak can convey the indentation of lines as they
-are spoken -- This is relevant when programming and is the default when
+   In addition, Emacsvox can convey the indentation of lines as they are
+spoken -- This is relevant when programming and is the default when
 working with program source.
 
 ‘C-e d i’
-     ‘emacspeak-toggle-audio-indentation’
+     ‘emacsvox-toggle-audio-indentation’
 
-     Toggle state of Emacspeak audio indentation.  Interactive PREFIX
-     arg means toggle the global default value, and then set the current
+     Toggle state of Emacsvox audio indentation.  Interactive PREFIX arg
+     means toggle the global default value, and then set the current
      local value to the result.
 
 
-File: emacspeak.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Speech System
+File: emacsvox.info,  Node: Miscellaneous,  Prev: Speech Output Control,  Up: Speech System
 
 6.4.3 Miscellaneous Speech Commands
 -----------------------------------
@@ -913,7 +897,7 @@ speech server.
 
      Toggle state of the speech device between being quiet and
      talkative.  Useful if you want to continue using an Emacs session
-     that has emacspeak loaded but wish to make the speech shut up.
+     that has emacsvox loaded but wish to make the speech shut up.
      Optional argument PREFIX specifies whether speech is turned off in
      the current buffer or in all buffers.
 
@@ -922,8 +906,7 @@ speech server.
 
      Use this to stop the currently running speech server and restart
      it.  Useful if you want to switch to another synthesizer while
-     emacspeak is running.  Also useful for emergency stopping of
-     speech.
+     emacsvox is running.  Also useful for emergency stopping of speech.
 
    Finally, here are the remaining commands available via the TTS
 related keymap ‘C-e d’.
@@ -934,11 +917,11 @@ related keymap ‘C-e d’.
      Add this pattern to the list of repeating patterns that are cleaned
      up.  Optional interactive prefix arg deletes this pattern if
      previously added.  Cleaning up repeated patterns results in
-     emacspeak speaking the pattern followed by a repeat count instead
-     of speaking all the characters making up the pattern.  Thus, by
-     adding the repeating pattern '.'  (this is already added by
-     default) emacspeak will say "aw fifteen dot" when speaking the
-     string "..............."  instead of "period period period period".
+     emacsvox speaking the pattern followed by a repeat count instead of
+     speaking all the characters making up the pattern.  Thus, by adding
+     the repeating pattern '.'  (this is already added by default)
+     emacsvox will say "aw fifteen dot" when speaking the string
+     "..............."  instead of "period period period period".
 
 ‘C-e d d’
      ‘tts-select-server’
@@ -951,15 +934,15 @@ related keymap ‘C-e d’.
      ‘tts-toggle-splitting-on-white-space’
 
      Toggle splitting of speech on white space.  This affects the
-     internal state of emacspeak that decides if we split text purely by
+     internal state of emacsvox that decides if we split text purely by
      clause boundaries, or also include whitespace.  By default,
-     emacspeak sends a clause at a time to the speech device.  This
+     emacsvox sends a clause at a time to the speech device.  This
      produces fluent speech for normal use.  However in modes such as
      'shell-mode' and some programming language modes, clause markers
      appear infrequently, and this can result in large amounts of text
      being sent to the speech device at once, making the system
      unresponsive when asked to stop talking.  Splitting on white space
-     makes emacspeak's stop command responsive.  However, when splitting
+     makes emacsvox's stop command responsive.  However, when splitting
      on white space, the speech sounds choppy since the synthesizer is
      getting a word at a time.
 
@@ -983,7 +966,7 @@ related keymap ‘C-e d’.
      Send this command to the TTS engine directly.
 
 
-File: emacspeak.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech System,  Up: Basic Usage
+File: emacsvox.info,  Node: Voice-lock,  Next: Status Information,  Prev: Speech System,  Up: Basic Usage
 
 6.5 Voice Lock Mode
 ===================
@@ -992,9 +975,9 @@ The status of voice lock mode can be toggled on and off in the current
 buffer by issuing the command ‘C-e d v’ (M-x voice-lock-toggle).
 
    Voice-lock is turned on automatically in all buffers that support it
-when Emacspeak is started.
+when Emacsvox is started.
 
-   Emacspeak can be set to disable voice lock in all of the major modes
+   Emacsvox can be set to disable voice lock in all of the major modes
 that support it.  To do so, insert the following statement into your
 Emacs initialization file:
 
@@ -1004,21 +987,21 @@ Emacs initialization file:
 voice lock mode vary according to the capabilities of the speech
 synthesizer.  The definitions applicable to the Dectalk family of
 synthesizers are contained in ‘dectalk-voices.el’, which is supplied as
-part of the Emacspeak distribution.  The Emacspeak distribution also
+part of the Emacsvox distribution.  The Emacsvox distribution also
 contains voice definitions for many other synthesizers.
 
-   Using voice lock mode, Emacspeak also supports many of the aural
-style properties defined in level 2 of the World Wide Web Consortium's
+   Using voice lock mode, Emacsvox also supports many of the aural style
+properties defined in level 2 of the World Wide Web Consortium's
 Cascading Style Sheet specification (see
-<http://www.w3.org/TR/REC-CSS2/>.  Thus, when Emacspeak is running in
+<http://www.w3.org/TR/REC-CSS2/>.  Thus, when Emacsvox is running in
 conjunction with a cooperating user agent, such as William Perry's
-Emacspeak/W3 web browser, the rendering of HTML documents can be
+Emacsvox/W3 web browser, the rendering of HTML documents can be
 regulated by style sheets.  Examples of style rules which employ the CSS
 audio properties can be found in the default style sheet which is
 supplied in the Emacs/W3 distribution.
 
 
-File: emacspeak.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
+File: emacsvox.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic Usage
 
 6.6 Status Commands
 ===================
@@ -1026,56 +1009,56 @@ File: emacspeak.info,  Node: Status Information,  Prev: Voice-lock,  Up: Basic U
 The following commands provide miscellaneous information.
 
 ‘C-e a’
-     ‘emacspeak-speak-message-again’
+     ‘emacsvox-speak-message-again’
 
      Speak the last message from Emacs once again.
 
 ‘C-e m’
-     ‘emacspeak-speak-mode-line’
+     ‘emacsvox-speak-mode-line’
 
      Speak the mode-line.
 
 ‘C-e cap M’
-     ‘emacspeak-speak-minor-mode-line’
+     ‘emacsvox-speak-minor-mode-line’
 
      Speak the minor mode-information.
 
 ‘C-e SPC’
-     ‘emacspeak-speak-header-line’
+     ‘emacsvox-speak-header-line’
 
      Speak the header-line.
 
 ‘C-e C-w’
-     ‘emacspeak-speak-window-information’
+     ‘emacsvox-speak-window-information’
 
      Speaks information about current windows.
 
 ‘C-e t’
-     ‘emacspeak-speak-time’
+     ‘emacsvox-speak-time’
 
      Speak the time.
 
 ‘C-e cap V’
-     ‘emacspeak-speak-version’
+     ‘emacsvox-speak-version’
 
-     Announce version information for running Emacspeak.
+     Announce version information for running Emacsvox.
 
 ‘C-e f’
-     ‘emacspeak-speak-buffer-filename’
+     ‘emacsvox-speak-buffer-filename’
 
      Speak name of file being visited in current buffer.  Speak default
      directory if invoked in a dired buffer, or when the buffer is not
      visiting any file.
 
 ‘C-e h’
-     ‘emacspeak-speak-help’
+     ‘emacsvox-speak-help’
 
      Speak help buffer if one present.  With prefix arg, speaks the rest
      of the buffer from point.  Negative prefix arg speaks from start of
      buffer to point.
 
 ‘C-e k’
-     ‘emacspeak-speak-current-kill’
+     ‘emacsvox-speak-current-kill’
 
      Speak the current kill entry.  This is the text that will be yanked
      in by the next ‘C-y’.  Prefix numeric arg, COUNT, specifies that
@@ -1084,12 +1067,12 @@ The following commands provide miscellaneous information.
      numeric prefix arg to give to command ‘yank’.
 
 ‘C-e v’
-     ‘emacspeak-view-register’
+     ‘emacsvox-view-register’
 
      Display the contents of a register, and then speak it.
 
 ‘C-e C-@’
-     ‘emacspeak-speak-current-mark’
+     ‘emacsvox-speak-current-mark’
 
      Speak the line containing the mark.  With no argument, speaks the
      line containing the mark -- this is where 'exchange-point-and-mark'
@@ -1100,27 +1083,27 @@ The following commands provide miscellaneous information.
      highlight achieved by a change in voice personality.
 
 ‘C-e C-l’
-     ‘emacspeak-speak-line-number’
+     ‘emacsvox-speak-line-number’
 
      Speak the line number of the current line.
 
 ‘C-e =’
-     ‘emacspeak-speak-current-column’
+     ‘emacsvox-speak-current-column’
 
      Speak the current column.
 
 ‘C-e %’
-     ‘emacspeak-speak-current-percentage’
+     ‘emacsvox-speak-current-percentage’
 
      Announce the percentage into the current buffer.
 
 
-File: emacspeak.info,  Node: Audio Desktop,  Next: Voice Lock,  Prev: Basic Usage,  Up: Top
+File: emacsvox.info,  Node: Audio Desktop,  Next: Voice Lock,  Prev: Basic Usage,  Up: Top
 
-7 The Emacspeak Audio Desktop.
-******************************
+7 The Emacsvox Audio Desktop.
+*****************************
 
-This chapter describes the Emacspeak audio desktop and gives tips and
+This chapter describes the Emacsvox audio desktop and gives tips and
 tricks for making use of many of Emacs' powerful features.
 
    The desktop is the work area where you organize the tools of your
@@ -1136,14 +1119,14 @@ arranged in a two-dimensional area where such an organization is
 optimized for the available "conversational gestures" of pointing and
 clicking is an artifact of visual interaction.
 
-   In the spirit of a truly speech-enabled application, Emacspeak does
+   In the spirit of a truly speech-enabled application, Emacsvox does
 not simply provide you spoken access to a particular presentation of
 your work environment that was initially designed with the "sign
-language" of visual interaction in mind.  Instead, Emacspeak enables you
+language" of visual interaction in mind.  Instead, Emacsvox enables you
 to work with documents and other information objects in a manner that is
 optimized to aural, eyes-free interaction.  A necessary consequence of
 this setup is that users accustomed to the purely visual manifestation
-of today's electronic desktop do not immediately perceive the Emacspeak
+of today's electronic desktop do not immediately perceive the Emacsvox
 environment as an electronic desktop.  This section of the manual hopes
 to introduce you to a work-style that encourages a different perspective
 on how one interacts with the computer in performing day-to-day
@@ -1159,12 +1142,12 @@ productivity.
 * Context-Sensitive Interaction:: Context-Sensitive Interaction
 
 
-File: emacspeak.info,  Node: Desktop Objects,  Next: Object Oriented Desktop,  Up: Audio Desktop
+File: emacsvox.info,  Node: Desktop Objects,  Next: Object Oriented Desktop,  Up: Audio Desktop
 
-7.1 Objects Making Up The Emacspeak Desktop
-===========================================
+7.1 Objects Making Up The Emacsvox Desktop
+==========================================
 
-A "buffer" is the basic building block of the Emacspeak desktop.  Any
+A "buffer" is the basic building block of the Emacsvox desktop.  Any
 information presented by Emacs is placed in a "buffer".  For example,
 when perusing this manual within Emacs, the "file" containing the
 documentation is presented in a "buffer".  All information objects such
@@ -1178,7 +1161,7 @@ types of user-interaction that is optimized for a specific class of
 information.
 
 
-File: emacspeak.info,  Node: Object Oriented Desktop,  Next: Context-Sensitive Interaction,  Prev: Desktop Objects,  Up: Audio Desktop
+File: emacsvox.info,  Node: Object Oriented Desktop,  Next: Context-Sensitive Interaction,  Prev: Desktop Objects,  Up: Audio Desktop
 
 7.2 An Object-Oriented Desktop
 ==============================
@@ -1194,13 +1177,13 @@ languages, markup source e.g.  HTML (Hypertext Markup Language) or LaTeX
 documents and so on.
 
 
-File: emacspeak.info,  Node: Context-Sensitive Interaction,  Prev: Object Oriented Desktop,  Up: Audio Desktop
+File: emacsvox.info,  Node: Context-Sensitive Interaction,  Prev: Object Oriented Desktop,  Up: Audio Desktop
 
-7.3 Emacspeak Specializes Aural Interaction
-===========================================
+7.3 Emacsvox Specializes Aural Interaction
+==========================================
 
 The content-specific user interaction described above is a very powerful
-feature of Emacs, and this is where Emacspeak derives its power.
+feature of Emacs, and this is where Emacsvox derives its power.
 Traditionally, the ability to create buffers specialized for working
 with specific content-types has been used by the Emacs community to
 develop versatile programming environments, messaging applications such
@@ -1208,16 +1191,16 @@ as mail and news readers, and authoring environments.  The clean design
 present in all of these Emacs extensions in terms of separating
 application functionality from the user-interface, combined with the
 availability of the entire source code making up these packages under
-the open-source model has laid the ground-work for developing Emacspeak
+the open-source model has laid the ground-work for developing Emacsvox
 as a versatile aural counterpart to the product of years of software
 engineering that has been invested by the Emacs community.  In short,
-Emacspeak would not exist in its present shape or form without this
-prior effort.
+Emacsvox would not exist in its present shape or form without this prior
+effort.
 
 7.3.1 Audio Formatted Output
 ----------------------------
 
-Emacspeak takes advantage of the content-specific knowledge available
+Emacsvox takes advantage of the content-specific knowledge available
 within specialized buffers to produce "audio formatted" output designed
 to optimize user interaction.  A basic consequence of the above is
 "voice locking" in specialized modes; a more interesting consequence is
@@ -1227,12 +1210,12 @@ with the Emacs EWW (Emacs Web Wowser) and W3 Web browsers.
 7.3.2 Structured Navigation:
 ----------------------------
 
-Emacspeak also exploits content-specific knowledge to provide structured
+Emacsvox also exploits content-specific knowledge to provide structured
 navigation of different types of electronic content.  In many cases,
 such structured navigation is an extension of what Emacs provides by
-default; in other cases, Emacspeak implements the necessary extensions
-to provide the level of structural navigation needed to work efficiently
-in an eyes-free environment.
+default; in other cases, Emacsvox implements the necessary extensions to
+provide the level of structural navigation needed to work efficiently in
+an eyes-free environment.
 
    Notable among such structured navigation is Emacs' powerful outline
 feature.
@@ -1247,9 +1230,9 @@ program source code.
 7.3.3 Navigating The Desktop
 ----------------------------
 
-In addition to navigating individual information objects, the Emacspeak
+In addition to navigating individual information objects, the Emacsvox
 environment provides speech-enabled navigation of the various buffers
-that are currently open on the Emacspeak desktop via Emacs' built-in
+that are currently open on the Emacsvox desktop via Emacs' built-in
 list-buffers feature.  Emacs' dired -- directory editor -- for browsing
 the file system, along with the new speedbar package that combines
 features from dired and imenu round off the suite of navigational tools.
@@ -1262,11 +1245,11 @@ building block for the entire desktop.  Every Emacs buffer is searchable
 via a uniform and powerful search interface.  Emacs' incremental search
 works efficiently and consistently to enable you locate "objects" of
 interest either within a given document or to locate a given object from
-among the various objects that are currently open on the Emacspeak
+among the various objects that are currently open on the Emacsvox
 desktop.  This is very powerful -- where a GUI (Graphical User
 Interface) user is typically limited to quickly locating an object from
 a relatively small collection -- the size of the collection being a
-direct function of available display real-estate -- the Emacspeak user
+direct function of available display real-estate -- the Emacsvox user
 can typically work with a far larger collection of objects.  This is
 well-suited to the eyes-free environment, where display real-estate has
 no meaning; so bringing up a list of currently open buffers and
@@ -1293,18 +1276,18 @@ through all the controls on a WWW page, or using the sub-optimal find
 dialog.
 
 
-File: emacspeak.info,  Node: Voice Lock,  Next: Using Online Help,  Prev: Audio Desktop,  Up: Top
+File: emacsvox.info,  Node: Voice Lock,  Next: Using Online Help,  Prev: Audio Desktop,  Up: Top
 
 8 Voice Lock
 ************
 
 See <http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html>
-for a high-level overview of how Emacspeak Voice-Lock has evolved over
+for a high-level overview of how Emacsvox Voice-Lock has evolved over
 the years.
 
-  1. Emacspeak defines a number of voice overlays such as
-     ‘voice-bolden’, and ‘voice-lighten’ that can be applied to a given
-     voice to change what it sounds like.
+  1. Emacsvox defines a number of voice overlays such as ‘voice-bolden’,
+     and ‘voice-lighten’ that can be applied to a given voice to change
+     what it sounds like.
 
   2. Voice overlays are defined in terms of Aural CSS (ACSS
      (http://www.w3.org/tr/css2/aural.html)) to keep them independent of
@@ -1334,20 +1317,19 @@ interface.
 
   2. Discovering what to customize:
 
-   Command ‘emacspeak-show-personality-at-point’ (bound by default to
-C-e M-v) will show you the value of properties personality and face at
+   Command ‘emacsvox-show-personality-at-point’ (bound by default to C-e
+M-v) will show you the value of properties personality and face at
 point.  Describe-variable on these names should tell you what to
 customize; so as an example:
 
    Put point on a comment line, and hit ‘C-e M-v’: you will hear
 
-     Personality emacspeak-voice-lock-comment-personality
+     Personality emacsvox-voice-lock-comment-personality
      Face font-lock-comment-delimiter-face
 
-   Describe-variable of ‘emacspeak-voice-lock-comment-personality’
-gives:
+   Describe-variable of ‘emacsvox-voice-lock-comment-personality’ gives:
 
-     emacspeak-voice-lock-comment-personality's value is acss-p0-s0-all
+     emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
 
      Documentation: Personality used for font-lock-comment-face This
      personality uses voice-monotone whose effect can be changed globally
@@ -1359,7 +1341,7 @@ gives:
 * What this gives.::
 
 
-File: emacspeak.info,  Node: How It All Works.,  Next: What this gives.,  Up: Voice Lock
+File: emacsvox.info,  Node: How It All Works.,  Next: What this gives.,  Up: Voice Lock
 
 8.1 How It All Works
 ====================
@@ -1390,7 +1372,7 @@ its associated ‘voice-bolden-settings’.
         • Finally, ‘voice-bolden’ is assigned the above symbol.
 
 
-File: emacspeak.info,  Node: What this gives.,  Prev: How It All Works.,  Up: Voice Lock
+File: emacsvox.info,  Node: What this gives.,  Prev: How It All Works.,  Up: Voice Lock
 
 8.2 What this gives
 ===================
@@ -1404,24 +1386,24 @@ File: emacspeak.info,  Node: What this gives.,  Prev: How It All Works.,  Up: Vo
    The following additional commands from module *Note
 emacsvox-wizards::, are useful when designing aural styles.
 
-  1. ‘emacspeak-wizards-generate-voice-sampler’
+  1. ‘emacsvox-wizards-generate-voice-sampler’
 
      Generate a buffer containing text that demonstrates the effect of
      various aural settings.
 
-  2. ‘emacspeak-wizards-voice-sampler’
+  2. ‘emacsvox-wizards-voice-sampler’
 
      Applied specified aural style to text in current region.
 
 
-File: emacspeak.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Voice Lock,  Up: Top
+File: emacsvox.info,  Node: Using Online Help,  Next: Emacs Packages,  Prev: Voice Lock,  Up: Top
 
-9 Using Online Help With Emacspeak.
-***********************************
+9 Using Online Help With Emacsvox.
+**********************************
 
 Emacs provides an extensive online help system for helping you learn
-about various aspects of using Emacs.  Emacspeak provides online help
-for its various extensions using this same help system.  This chapter
+about various aspects of using Emacs.  Emacsvox provides online help for
+its various extensions using this same help system.  This chapter
 explains how to use the online help facilities in order to empower you
 in discovering powerful and versatile working techniques that will make
 you more and more productive in your day to day computing.
@@ -1432,29 +1414,29 @@ designate the kind of help desired.  For example, ‘C-h t’
 ‘help-with-tutorial’ visits the Emacs tutorial in a new buffer; ‘C-h i’
 ‘info’ enters the Info documentation system, from which you can read
 Texinfo manuals that have been installed on your system, including the
-Emacs and Emacspeak documentation; and ‘C-h k’ ‘describe-key’ provides a
+Emacs and Emacsvox documentation; and ‘C-h k’ ‘describe-key’ provides a
 description of the Emacs function which is bound to the next key that
 you type.  For learning about the various options that are available via
 the ‘C-h’ mechanism described above, view the online help for command
 ‘help-for-help’ bound to ‘C-h C-h’ -- using what has been described so
 far, you would achieve this by pressing ‘C-h k’ followed by ‘C-h C-h’.
 
-   Emacspeak users should note that online help is typically displayed
-in a separate Emacs window.  Where it makes sense to do so, Emacspeak
-will automatically speak the displayed help.  Once you've asked for
-help, you can hear the displayed documentation as many times as you wish
-using Emacspeak command ‘emacspeak-speak-help’ bound to ‘C-e h’.  If you
-want to move through the displayed help a line at a time, switch to the
-buffer where the help is displayed -- the buffer is called ‘*Help*’.
+   Emacsvox users should note that online help is typically displayed in
+a separate Emacs window.  Where it makes sense to do so, Emacsvox will
+automatically speak the displayed help.  Once you've asked for help, you
+can hear the displayed documentation as many times as you wish using
+Emacsvox command ‘emacsvox-speak-help’ bound to ‘C-e h’.  If you want to
+move through the displayed help a line at a time, switch to the buffer
+where the help is displayed -- the buffer is called ‘*Help*’.
 
    Often, in adding an auditory interface to an Emacs extension, such as
-a web browser or mail reader, Emacspeak defines additional commands and
+a web browser or mail reader, Emacsvox defines additional commands and
 key bindings which enhance the functionality of the spoken feedback
 provided by the application.  This manual does not purport to document
 all such commands.  It is important, therefore, when learning to use the
 various Emacs extensions which comprise the 'audio desktop' (*note Audio
 Desktop::) that you take advantage of online help to obtain details of
-any context-specific features provided by Emacspeak.  The following two
+any context-specific features provided by Emacsvox.  The following two
 commands are of particular importance in this regard:
 
    • ‘C-h m’ ‘describe-mode’ explains which major and minor modes are
@@ -1466,31 +1448,31 @@ commands are of particular importance in this regard:
 
    The importance of these help functions can be illustrated by the
 Emacs/W3 web browser.  When point is positioned inside a table, certain
-key bindings are established with which you can access Emacspeak
-commands that make it possible to read the rows and columns of the table
-and explore its structure efficiently.  To get a description of these
-key bindings, you can use W3 to visit the sample HTML file supplied as
-part of the Emacspeak distribution, and, after having moved point onto
-the first row of the table, issue the command ‘C-h m’ ‘describe-mode’ to
+key bindings are established with which you can access Emacsvox commands
+that make it possible to read the rows and columns of the table and
+explore its structure efficiently.  To get a description of these key
+bindings, you can use W3 to visit the sample HTML file supplied as part
+of the Emacsvox distribution, and, after having moved point onto the
+first row of the table, issue the command ‘C-h m’ ‘describe-mode’ to
 create a help buffer containing an explanation of the features offered
 by W3 mode.
 
-   Emacspeak supplements the online help facilities available within
+   Emacsvox supplements the online help facilities available within
 Emacs by defining several commands of its own, as follows:
 
-   • ‘C-h c-e’ ‘describe-emacspeak’ presents a list of standard
-     Emacspeak commands.
+   • ‘C-h c-e’ ‘describe-emacsvox’ presents a list of standard Emacsvox
+     commands.
 
-   • ‘C-e F’ ‘emacspeak-view-emacspeak-faq’ opens a new buffer
-     containing the Emacspeak FAQ, a list of frequently asked questions
-     about Emacspeak together with their answers.
+   • ‘C-e F’ ‘emacsvox-view-emacsvox-faq’ opens a new buffer containing
+     the Emacsvox FAQ, a list of frequently asked questions about
+     Emacsvox together with their answers.
 
-   • ‘C-e <F1>’ ‘emacspeak-learn-mode’ enters a mode in which the
+   • ‘C-e <F1>’ ‘emacsvox-learn-mode’ enters a mode in which the
      function of every key that you type is spoken; this mode can be
      terminated with the ‘C-g’ ‘keyboard-quit’ command.
 
 
-File: emacspeak.info,  Node: Emacs Packages,  Next: Emacspeak Keymaps,  Prev: Using Online Help,  Up: Top
+File: emacsvox.info,  Node: Emacs Packages,  Next: Emacsvox Keymaps,  Prev: Using Online Help,  Up: Top
 
 10 Emacs Packages.
 ******************
@@ -1505,10 +1487,10 @@ sections that each pertain to a specific class of tasks; in individual
 subsections within a section give a brief overview of particular Emacs
 packages that have been speech-enabled.
 
-   For a categorized list of speech-enabled applications on theEmacspeak
-desktop, see <http://emacspeak.sf.net/applications.html>.  In Emacs 24
-and later, you can use Emacs' builtin package manager to install and
-update packages.
+   For a categorized list of speech-enabled applications on theEmacsvox
+desktop, see the original Emacspeak application list at
+<http://emacspeak.sf.net/applications.html>.  In Emacs 24 and later, you
+can use Emacs' builtin package manager to install and update packages.
 
 * Menu:
 
@@ -1524,12 +1506,12 @@ update packages.
 * Desktop Applications::
 
 
-File: emacspeak.info,  Node: Document Authoring,  Next: Structured Editing,  Up: Emacs Packages
+File: emacsvox.info,  Node: Document Authoring,  Next: Structured Editing,  Up: Emacs Packages
 
 10.1 Document Authoring
 =======================
 
-The Emacspeak environment provides a rich collection of structured
+The Emacsvox environment provides a rich collection of structured
 document authoring tools.  These are well-suited for working in an
 eyes-free environment -- you clearly do not want to use a What You See
 Is What You Get (WYSIWYG) authoring tool if you cannot see what you're
@@ -1543,7 +1525,7 @@ computer.
 * Search replace and spell check:: Fixing errors.
 
 
-File: emacspeak.info,  Node: Creating Well-formatted Documents,  Next: Search replace and spell check,  Up: Document Authoring
+File: emacsvox.info,  Node: Creating Well-formatted Documents,  Next: Search replace and spell check,  Up: Document Authoring
 
 10.1.1 Creating Well-formatted Documents
 ----------------------------------------
@@ -1556,9 +1538,9 @@ with the help of package ‘nxml-mode’ for editing XML documents.  Another
 option is to use ‘org-mode’ to create a Wiki-like text document that can
 be easily published to multiple output formats including HTML.
 
-   Packages ‘org-mode’ and ‘nxml-mode’ are speech-enabled by Emacspeak
-to provide auditory icons, structured navigation and outlines, as well
-as voice locking for audio formatted feedback as you work.
+   Packages ‘org-mode’ and ‘nxml-mode’ are speech-enabled by Emacsvox to
+provide auditory icons, structured navigation and outlines, as well as
+voice locking for audio formatted feedback as you work.
 
    If the document being authored is more complex, you are usually
 better off creating it in LaTeX.  Note that LaTeX documents can be
@@ -1575,26 +1557,26 @@ and maintaining structured documents in TeX and LaTeX.  Package ‘bibtex’
 facilitates maintenance and use of ‘bibtex’ bibliography databases.  The
 Texinfo package allows creation of software documentation that is
 suitable for both printing as well as online viewing as hypertext.
-Emacspeak speech-enables packages ‘AUCTeX’, ‘bibtex’ and ‘texinfo’ to
+Emacsvox speech-enables packages ‘AUCTeX’, ‘bibtex’ and ‘texinfo’ to
 provide convenient spoken feedback as you create documents.  For details
 on using these packages, see their accompanying online info
 documentation.
 
-   As the document preparation system of choice, Emacspeak supports a
+   As the document preparation system of choice, Emacsvox supports a
 fluent speech-enabled interface to editing and formatting LaTeX
 documents.  This interface is provided by speech-enabling *AUCTeX* mode.
 
    Mode *AUCTeX* provides efficient keyboard shortcuts for inserting and
 maintaining LaTeX markup as a document is being authored.  All of these
 editing commands provide succinct auditory feedback when used with
-Emacspeak.  The syntax coloring provided by this mode is extended to
-provide *voice locking* -- consequently, Emacspeak uses different voices
+Emacsvox.  The syntax coloring provided by this mode is extended to
+provide *voice locking* -- consequently, Emacsvox uses different voices
 to speak the embedded markup to set it apart from the content.
 
    Mode *AUCTeX* can be used to create empty document templates and to
 insert document content at the appropriate places in the template.  The
 mode also enables structured navigation of the document as it is being
-edited.  Emacspeak speech-enables these template creation and structured
+edited.  Emacsvox speech-enables these template creation and structured
 navigation commands to produce auditory icons and succinct spoken
 feedback.  For example, while editing, the user can quickly browse
 through the sections of the document and have each section title spoken.
@@ -1604,7 +1586,7 @@ an eyes-free environment where the user needs to select logical parts of
 the document without having to point at portions of a visual display.
 
 
-File: emacspeak.info,  Node: Search replace and spell check,  Prev: Creating Well-formatted Documents,  Up: Document Authoring
+File: emacsvox.info,  Node: Search replace and spell check,  Prev: Creating Well-formatted Documents,  Up: Document Authoring
 
 10.1.2 Searching, Replacing, And Spell Checking
 -----------------------------------------------
@@ -1621,7 +1603,7 @@ number of ways including specifying a longer (or shorter) search string.
 
    All of the user commands available during incremental search are
 documented in the online Emacs info manual.  These are speech-enabled by
-Emacspeak to provide spoken prompts as the dialog begins; auditory icons
+Emacsvox to provide spoken prompts as the dialog begins; auditory icons
 indicate a search hit or search miss as the search progresses.  Along
 with auditory icons *search-hit* and *search-miss* the user also hears
 the current line spoken, and in the case of a search hit, the matching
@@ -1633,7 +1615,7 @@ single line; the user is unambiguously cued to the current match.
    Search and replace actions are an extension to the basic
 conversational gestures of a search dialog.  In addition to specifying a
 search string, the user also specifies a replacement string.  On the
-Emacspeak desktop, this functionality is provided by command
+Emacsvox desktop, this functionality is provided by command
 *query-replace*.  The speech-enabled version of this interaction prompts
 the user for the search and replacement texts.  The auditory feedback
 during the interactive search and replacement process parallels that
@@ -1674,10 +1656,10 @@ user to pick a correction Once a correction is selected, the user is
 offered the choice of interactively replacing the erroneous word with
 the correction.
 
-   The spell checking interface on the Emacspeak desktop is
+   The spell checking interface on the Emacsvox desktop is
 speech-enabled to provide fluent auditory feedback.  The visual
 interface parallels that described above and is provided by package
-‘ispell’ which is part of the standard Emacs distribution.  Emacspeak
+‘ispell’ which is part of the standard Emacs distribution.  Emacsvox
 provides a spoken prompt that is composed of the line containing the
 possibly erroneous word (which is aurally highlighted to set it apart
 from the rest of the text on that line) and the available corrections.
@@ -1685,17 +1667,17 @@ Each correction is prefixed with a number that the user can use to
 select it.  Once a correction is selected, the interaction continues
 with the query and replace interaction described earlier.  The speech
 interface to the spell checker is as fluent as the visual interface.
-Notice that Emacspeak users do not need to concern themselves with the
+Notice that Emacsvox users do not need to concern themselves with the
 details of the visual display such as "the corrections are displayed in
 a window at the top of the screen".
 
    In addition to the standard spell checker described above, newer
 versions of Emacs include an "on-the-fly" spell checker that flags
-erroneous words as they are typed.  Emacspeak speech-enables package
+erroneous words as they are typed.  Emacsvox speech-enables package
 ‘flyspell’ so that such erroneous words are aurally highlighted.
 
 
-File: emacspeak.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
+File: emacsvox.info,  Node: Structured Editing,  Next: Browsing Structure,  Prev: Document Authoring,  Up: Emacs Packages
 
 10.2 Structured Editing And Templates
 =====================================
@@ -1706,7 +1688,7 @@ We described mode *AUCTeX* -- a specialized interface to authoring LaTeX
 documents as a special instance of such structured editing in *note
 Document Authoring::.
 
-   The Emacspeak desktop allows the user to efficiently author and
+   The Emacsvox desktop allows the user to efficiently author and
 maintain an electronic document based either on the structure present in
 the markup (as in the case of mode AUCTeX) or on special outlining
 constructs that allow the user to impose a desired logical structure on
@@ -1735,7 +1717,7 @@ instance of such structured data editing.
 * Maintaining Structured Data::   Structured Data.
 
 
-File: emacspeak.info,  Node: Outline Editing,  Next: Template-based Authoring,  Up: Structured Editing
+File: emacsvox.info,  Node: Outline Editing,  Next: Template-based Authoring,  Up: Structured Editing
 
 10.2.1 Outline Editing
 ----------------------
@@ -1748,7 +1730,7 @@ copied.  Outline editing thus provides an efficient means of obtaining
 quick overviews of a document.
 
    The visual interface displays such hidden content as a series of
-ellipses following the visible outline heading.  Emacspeak produces
+ellipses following the visible outline heading.  Emacsvox produces
 auditory icon *ellipses* when speaking such outline headings.
 
    The basic *outline mode* allows the user to specify the syntax and
@@ -1767,8 +1749,8 @@ icon *open-object*.  For details on using mode ‘outline’, see the
 relevant section of the online Emacs info manual.
 
    The basic outline facility described above is applicable to all
-content being edited or browsed on the Emacspeak desktop.  In addition,
-Emacspeak has other specialized outline editing modes such as *folding
+content being edited or browsed on the Emacsvox desktop.  In addition,
+Emacsvox has other specialized outline editing modes such as *folding
 mode* that provide extended outlining facilities.  In mode *folding*,
 the user can create (possibly nested) *folds* -- logical containers of
 content that are delimited by a special *fold mark*.  The fold mark is
@@ -1795,15 +1777,15 @@ components of that module.  Next, I populate each fold with the function
 signatures and documentation for the functions in each section.  When I
 am satisfied with the overall architecture of the module, I fill in the
 function skeletons with actual program code.  This technique is used
-extensively in maintaining the Emacspeak code base.
+extensively in maintaining the Emacsvox code base.
 
 
-File: emacspeak.info,  Node: Template-based Authoring,  Next: Maintaining Structured Data,  Prev: Outline Editing,  Up: Structured Editing
+File: emacsvox.info,  Node: Template-based Authoring,  Next: Maintaining Structured Data,  Prev: Outline Editing,  Up: Structured Editing
 
 10.2.2 Template-based Authoring
 -------------------------------
 
-Emacspeak supports two powerful template-based authoring subsystems that
+Emacsvox supports two powerful template-based authoring subsystems that
 enable the user to quickly create and fill in templates.  *Dmacro*
 (short for "dynamic macros") allows the user to define and invoke
 template-based macros that are specialized for creating different types
@@ -1811,7 +1793,7 @@ of content.  For example, when programming in C, the user can invoke
 dynamic macros that insert skeletons of standard C constructs with a few
 keystrokes.  This form of editing has numerous advantages in creating
 consistently structured code when developing large software modules.
-Emacspeak speech-enables mode *dmacro* to provide succinct spoken
+Emacsvox speech-enables mode *dmacro* to provide succinct spoken
 feedback as templates are created and filled.  The user invokes *
 dmacro* via command *insert dmacro*, which is typically bound to a
 single key.  This results in a dialog where the user is prompted to pick
@@ -1827,7 +1809,7 @@ tools for specific markup languages; a good example is mode
 publishing on the WWW (see *note Document Authoring::).
 
 
-File: emacspeak.info,  Node: Maintaining Structured Data,  Prev: Template-based Authoring,  Up: Structured Editing
+File: emacsvox.info,  Node: Maintaining Structured Data,  Prev: Template-based Authoring,  Up: Structured Editing
 
 10.2.3 Maintaining Structured Data
 ----------------------------------
@@ -1856,7 +1838,7 @@ row and column headers prove a succinct way of implicitly displaying the
 record.
 
 
-File: emacspeak.info,  Node: Browsing Structure,  Next: Web Browsing,  Prev: Structured Editing,  Up: Emacs Packages
+File: emacsvox.info,  Node: Browsing Structure,  Next: Web Browsing,  Prev: Structured Editing,  Up: Emacs Packages
 
 10.3 Browsing Structure
 =======================
@@ -1867,7 +1849,7 @@ Structured Editing::, in that they are typically used for working with
 content that is read-only e.g., online documentation.
 
 
-File: emacspeak.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
+File: emacsvox.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Structure,  Up: Emacs Packages
 
 10.4 Web Browsing
 =================
@@ -1875,14 +1857,14 @@ File: emacspeak.info,  Node: Web Browsing,  Next: Messaging,  Prev: Browsing Str
 Note that there is newer material at
 <http://emacspeak.blogspot.com/2014/05/emacspeak-eww-updates-for-complete.html>
 and in *Note emacsvox-eww::.  For Emacs 24.4 and later, note that the
-built-in Web browser EWW is also the browser of choice for emacspeak.
-Finally, note that Emacs/W3 is now considered obsolete, and Emacspeak
+built-in Web browser EWW is also the browser of choice for emacsvox.
+Finally, note that Emacs/W3 is now considered obsolete, and Emacsvox
 support for w3m is no longer maintained.
 
    -- T. V. Raman, October 2014.
 
-   This document, "The State of Web Browsing in Emacspeak" describes the
-primary web browsers in use under emacspeak and ways they might be used
+   This document, "The State of Web Browsing in Emacsvox" describes the
+primary web browsers in use under emacsvox and ways they might be used
 more efficiently.
 
    Version 1.0 -- February, 2007.
@@ -1897,12 +1879,12 @@ more efficiently.
 * Conclusion::          Wrapping it up
 
 
-File: emacspeak.info,  Node: Intro,  Next: emacs-w3,  Up: Web Browsing
+File: emacsvox.info,  Node: Intro,  Next: emacs-w3,  Up: Web Browsing
 
 10.4.1 Intro
 ------------
 
-Web browsing in emacspeak can be made as simple or as complicated as you
+Web browsing in emacsvox can be made as simple or as complicated as you
 wish to make it.  On the one hand, all that need be done is to open a
 web browser and fetch a particular url.  This works fine in many cases
 with exceptions being things like html tables.  On the other hand, if
@@ -1923,9 +1905,9 @@ remedy that here.
 Who this document is intended for
 =================================
 
-While this document is geared toward emacspeak users, it might be
-helpful for other users as well.  I have tried to note where functions
-are specific to emacspeak.
+While this document is geared toward emacsvox users, it might be helpful
+for other users as well.  I have tried to note where functions are
+specific to emacsvox.
 
 Assumptions
 ===========
@@ -1933,9 +1915,9 @@ Assumptions
 This document assumes emacs is installed.  If reading the section on a
 particular browser and trying out the associated functions, it, of
 course, assumes that the browser is installed and working.  For features
-specific to emacspeak, a working install of emacspeak is necessary.  It
-is far beyond the scope of this document to help with the installation
-of these programs.
+specific to emacsvox, a working install of emacsvox is necessary.  It is
+far beyond the scope of this document to help with the installation of
+these programs.
 
    For help with installing any of the above bits of software, the
 following mailing lists and / or newsgroups are available:
@@ -1945,7 +1927,7 @@ following mailing lists and / or newsgroups are available:
    • emacs/w3 - the mailing list for w3 is pretty dead.  Sorry.  The
      documentation is, however, not terrible.
 
-   • emacspeak - see <http://emacspeak.sf.net>
+   • Emacspeak historical resources - see <http://emacspeak.sf.net>
 
    It is highly suggested that the mailing list archives, google, and
 the relevant documentation be consulted before posting messages to any
@@ -1958,14 +1940,14 @@ itself.  Understanding the convention for communicating keystrokes to
 run commands, navigating documents, and the like are not covered.
 
 
-File: emacspeak.info,  Node: emacs-w3,  Next: Add-ons,  Prev: Intro,  Up: Web Browsing
+File: emacsvox.info,  Node: emacs-w3,  Next: Add-ons,  Prev: Intro,  Up: Web Browsing
 
 10.4.2 emacs-w3
 ---------------
 
 emacs/w3 is a web browser (now obsolete and replaced by EWW) written
 completely in emacs lisp.  It has some really nice features applicable
-to the emacspeak community such as the ability to navigate tables and
+to the emacsvox community such as the ability to navigate tables and
 support for the w3c's aural cascading stylesheets.
 
 emacs/w3 advantages
@@ -1989,13 +1971,13 @@ slow.  That might be a slight exaggeration, but slow it is.  This is
 because it is written in lisp...  something I mentioned just above as a
 strength.  It is a trade-off, but one that some see as worth it.  There
 are, however, some things that can be done to speed up the browsing
-process.  See *Note ‘emacspeak-w3-xsl-transform’: xsl-transform, for
-more information.
+process.  See *Note ‘emacsvox-w3-xsl-transform’: xsl-transform, for more
+information.
 
    Another disadvantage is that emacs/w3 chokes on some pages.
 Sometimes it gives error messages and doesn't display anything.
 Sometimes it does this to some people and doesn't do it to others as we
-saw on the emacspeak mailing list a short time ago.  Sometimes it gives
+saw on the Emacspeak mailing list a short time ago.  Sometimes it gives
 error messages and renders the page anyway.
 
    One other major annoyance of emacs/w3 is that sometimes it simply
@@ -2008,8 +1990,8 @@ therefore is not a problem.
    emacs/w3 also has no bookmark functionality.  This can be remedied in
 several ways.  One simple way, mentioned below, is to use the emacs
 package bmk-mgr.  Another way is to use org mode with remember which is
-the method used by Dr.  Raman, the author of emacspeak.  See *Note
-bmk-mgr: bmk-mgr, later in this manual, for more information.
+the method used by Dr.  Raman, the creator of the original Emacspeak.
+See *Note bmk-mgr: bmk-mgr, later in this manual, for more information.
 
    History back and next in the browser also seem to be broken but this
 is not generally a problem for me as I never look back.
@@ -2084,10 +2066,10 @@ rows and columns are uniform.
 
    As you can see, table navigation in w3 can be easy and fun.
 
-emacspeak specific functions for emacs/w3
-=========================================
+emacsvox specific functions for emacs/w3
+========================================
 
-An incredible amount of work has been done by the emacspeak community to
+An incredible amount of work has been done by the emacsvox community to
 make emacs/w3 accessible to those with visual impairments.  Here is an
 explanation of some of those functions.
 
@@ -2134,7 +2116,7 @@ of configuring your feed reader to fetch the feed.  It might also be
 useful to grab the headlines from a page and present them in a more
 concise, readable format.  If using the sort-tables xsl transform, there
 will be a link at the top of the page if there is an rss feed available.
-See *Note emacspeak atom and emacspeak rss: rss, for more information.
+See *Note emacsvox atom and emacsvox rss: rss, for more information.
 
    Google provides many useful tools for web surfers.  The following
 commands are useful to access much google goodness.
@@ -2200,9 +2182,9 @@ you can use the command ‘e s’ to select a transform and then ‘e o’ to
 turn xslt on (the same command will turn xslt off).  Then, every page
 opened from that point on will have the transform applied.
 
-   There is the variable ‘emacspeak-w3-xsl-transform’ that can be set
-via the usual methods.  This variable specifies a transform to use
-before displaying a web page.  There is an advantage to turning on xsl
+   There is the variable ‘emacsvox-w3-xsl-transform’ that can be set via
+the usual methods.  This variable specifies a transform to use before
+displaying a web page.  There is an advantage to turning on xsl
 transforms all the time.  If you use the ‘identity.xsl’, the
 ‘linearize-tables.xsl’ or the ‘sort-tables.xsl’ it can actually speed up
 rendering of the page.  This is because the transforms provide clean and
@@ -2244,7 +2226,7 @@ playing the program you are interested in.
 after ‘e e’ will give you a list of possibilities to choose from.  One
 nice feature of this function is that it can be used for any function.
 If you cannot remember the keystroke that will play the url under point
-in ‘emacspeak-m-player’, but you know what it is called, you can hit ‘e
+in ‘emacsvox-m-player’, but you know what it is called, you can hit ‘e
 e’ and then enter the name of the function.  Nice.
 
    The ‘e f’ command will run the current page through an XPath filter
@@ -2277,16 +2259,16 @@ emacs-w3m.  The counterpart to this command, ‘cap K’ puts the url under
 point in the kill-ring.
 
 
-File: emacspeak.info,  Node: Add-ons,  Next: Conclusion,  Prev: emacs-w3,  Up: Web Browsing
+File: emacsvox.info,  Node: Add-ons,  Next: Conclusion,  Prev: emacs-w3,  Up: Web Browsing
 
 10.4.3 Add-ons
 --------------
 
-Some of these are emacspeak specific, some are not.  You can usually
-tell by the name.
+Some of these are emacsvox specific, some are not.  You can usually tell
+by the name.
 
-emacspeak url template
-======================
+emacsvox url template
+=====================
 
 I love this package.  Since changing my primary browser to emacs/w3 I
 have really been giving the ‘url-template’ package a workout.  The
@@ -2305,32 +2287,32 @@ Templates: URL Templates, and read it.  I'll wait here.
 "emacswiki search" "NPR On Demand" and "Weather forecast from Weather
 Underground".
 
-emacspeak atom and emacspeak rss
-================================
+emacsvox atom and emacsvox rss
+==============================
 
-These are fairly simple rss and atom browsers for the emacspeak desktop.
+These are fairly simple rss and atom browsers for the emacsvox desktop.
 Using the Customize interface you add feeds in the form of titles and
 urls.  Then you call the readers with ‘C-e C-u’ for rss feeds and use
-‘M-x emacspeak-atom-browse’ for atom feeds.  There is also emacspeak
+‘M-x emacsvox-atom-browse’ for atom feeds.  There is also emacsvox
 support for newsticker, an rss / atom reader that is a part of emacs 22,
 but I have never used it.
 
    I personally use *Note gnus: Top, for rss feeds but setting gnus up
 for only that purpose is like hunting rabbits with a bazooka.
 
-emacspeak websearch
-===================
+emacsvox websearch
+==================
 
-‘emacspeak-websearch’ provides more search options than you can shake a
-stick at; ‘emacspeak-websearch’ provides search for dictionaries, news
+‘emacsvox-websearch’ provides more search options than you can shake a
+stick at; ‘emacsvox-websearch’ provides search for dictionaries, news
 sites, software sites, google tools, weather, currency converter and
 much more.  It can be accessed with the keystroke ‘C-e ?’.  At the
 prompt, you can enter another question mark to get a list of the
 available search options.  You will then be prompted for the necessary
 information.  One of the nice things about this package is that it
 attempts to jump to and read the most relevant information on the result
-page.  Module ‘emacspeak-websearch’ is complemented by module
-‘emacspeak-url-template’; that module provides URL templates that prompt
+page.  Module ‘emacsvox-websearch’ is complemented by module
+‘emacsvox-url-template’; that module provides URL templates that prompt
 for and retrieve the relevant information from complex Web pages.
 
    *Note emacsvox-websearch: emacsvox-websearch, and *Note
@@ -2339,8 +2321,8 @@ emacsvox-url-template: emacsvox-url-template, for more information.
 bmk-mgr
 =======
 
-This is a newcomer to the emacspeak world.  In the interest of full
-disclosure, I am the one that wrote the emacspeak module that makes this
+This is a newcomer to the emacsvox world.  In the interest of full
+disclosure, I am the one that wrote the emacsvox module that makes this
 package accessible.  It is a bookmarks manager that works with both
 emacs/w3 and emacs-w3m.  As of the writing of this document there are
 still some issues, especially when using it on emacs version 22, but
@@ -2351,12 +2333,12 @@ See <http://www.emacswiki.org/cgi-bin/wiki/EmacsBmkMgr>, for more
 information.
 
 
-File: emacspeak.info,  Node: Conclusion,  Prev: Add-ons,  Up: Web Browsing
+File: emacsvox.info,  Node: Conclusion,  Prev: Add-ons,  Up: Web Browsing
 
 10.4.4 Conclusion
 -----------------
 
-emacspeak makes the internet not only accessible to those with visual
+emacsvox makes the internet not only accessible to those with visual
 impairments, but it makes browsing and information retrieval quick and
 efficient.  If a user will spend a little time up front to learn the
 tools available to access the web, the increase in efficiency and
@@ -2370,20 +2352,20 @@ you will not be sorry.
 beats using a banana.
 
 
-File: emacspeak.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
+File: emacsvox.info,  Node: Messaging,  Next: Editing Code,  Prev: Web Browsing,  Up: Emacs Packages
 
 10.5 Messaging
 ==============
 
 Working with messaging applications involves both authoring and browsing
-content.  Emacspeak provides a rich set of speech-enabled messaging
+content.  Emacsvox provides a rich set of speech-enabled messaging
 tools.  Further, all of the tools described in the previous sections
 integrate smoothly with the messaging applications described here; this
 means that you do not need to re-learn a new set of work habits when
 dealing with content in your messaging application.
 
 
-File: emacspeak.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
+File: emacsvox.info,  Node: Editing Code,  Next: Development Environment,  Prev: Messaging,  Up: Emacs Packages
 
 10.6 Editing Code
 =================
@@ -2396,15 +2378,15 @@ well-structured and adhere to a fairly stringent syntax.
 
    The Emacs environment provides editing modes that are specific to
 creating and maintaining software written in most popular programming
-languages.  Many of these editing modes are speech-enabled by Emacspeak.
+languages.  Many of these editing modes are speech-enabled by Emacsvox.
 Speech-enabling these modes includes providing a rich set of
 navigational commands that allow you to move through the source
-efficiently.  In addition, Emacspeak's core voice-lock facilities are
+efficiently.  In addition, Emacsvox's core voice-lock facilities are
 used to produce audio formatted output -- this helps you spot errors
 quickly.
 
 
-File: emacspeak.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
+File: emacsvox.info,  Node: Development Environment,  Next: Desktop Management,  Prev: Editing Code,  Up: Emacs Packages
 
 10.7 Development Environment
 ============================
@@ -2413,11 +2395,11 @@ In addition to providing specialized editing modes for creating and
 maintaining program source, Emacs provides a rich set of software
 development tools that can be combined to create powerful Integrated
 Development Environments (IDE).  These IDEs are speech-enabled by
-Emacspeak to provide a versatile and powerful environment for eyes-free
+Emacsvox to provide a versatile and powerful environment for eyes-free
 software development.
 
 
-File: emacspeak.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
+File: emacsvox.info,  Node: Desktop Management,  Next: Personal Information Management,  Prev: Development Environment,  Up: Emacs Packages
 
 10.8 Desktop Management
 =======================
@@ -2427,13 +2409,13 @@ day-to-day computing tasks ranging from electronic messaging to software
 development.  The environment derives its power from the fact that this
 integration allows for content to be handled across different tasks in a
 seamless manner.  In order to work effectively with large Emacs sessions
-with many documents and applications open at the same time, the
-Emacspeak desktop provides a powerful collection of desktop management
-tools designed to help the user easily locate objects that pertain to a
-given task.
+with many documents and applications open at the same time, the Emacsvox
+desktop provides a powerful collection of desktop management tools
+designed to help the user easily locate objects that pertain to a given
+task.
 
 
-File: emacspeak.info,  Node: Personal Information Management,  Next: Desktop Applications,  Prev: Desktop Management,  Up: Emacs Packages
+File: emacsvox.info,  Node: Personal Information Management,  Next: Desktop Applications,  Prev: Desktop Management,  Up: Emacs Packages
 
 10.9 Personal Information Management
 ====================================
@@ -2442,7 +2424,7 @@ This section describes speech-enabled tools designed to aid in personal
 information management such as maintaining a daily calendar.
 
 
-File: emacspeak.info,  Node: Desktop Applications,  Prev: Personal Information Management,  Up: Emacs Packages
+File: emacsvox.info,  Node: Desktop Applications,  Prev: Personal Information Management,  Up: Emacs Packages
 
 10.10 Desktop Applications
 ==========================
@@ -2452,7 +2434,7 @@ File: emacspeak.info,  Node: Desktop Applications,  Prev: Personal Information M
 
 Spreadsheet applications present a two dimensional view of structured
 data where the field values are (possibly) mutually dependent.  On the
-Emacspeak desktop, a speech-enabled spreadsheet application can be used
+Emacsvox desktop, a speech-enabled spreadsheet application can be used
 to manipulate such data-driven documents ranging from simple cheque
 books and expense reports to complex investment portfolios.  Where the
 traditional visual interface to spreadsheets is typically independent of
@@ -2493,21 +2475,20 @@ forms-mode section of the online Emacs info documentation.
 10.10.3 OCR -- Reading Print Documents
 --------------------------------------
 
-Module ‘emacspeak-ocr’ implements an OCR (Optical Character Recognition)
-front-end for the Emacspeak desktop.
+Module ‘emacsvox-ocr’ implements an OCR (Optical Character Recognition)
+front-end for the Emacsvox desktop.
 
    Page image is acquired using tools from package ‘SANE’ (Scanner
 Access Now Easy).  The acquired image is run through the OCR engine if
 one is available, and the results placed in a buffer that is suitable
 for browsing the results.  This buffer is placed in mode
-‘emacspeak-ocr-mode’ a specialized mode for reading and scanning
+‘emacsvox-ocr-mode’ a specialized mode for reading and scanning
 documents.
 
-10.10.3.1 Emacspeak OCR Mode
-............................
+10.10.3.1 Emacsvox OCR Mode
+...........................
 
-Emacspeak OCR mode is a special major mode for document scanning and
-OCR.
+Emacsvox OCR mode is a special major mode for document scanning and OCR.
 
    Pre-requisites:
 
@@ -2517,23 +2498,23 @@ OCR.
 
    Make sure your scanner back-end works, and that you have the
 utilities to scan a document and acquire an image as a tiff file.  Then
-set variable EMACSPEAK-OCR-SCAN-IMAGE-PROGRAM to point at this utility.
+set variable EMACSVOX-OCR-SCAN-IMAGE-PROGRAM to point at this utility.
 By default, this is set to 'scanimage' which is the image scanning
 utility provided by SANE.
 
    By default, this front-end attempts to compress the acquired tiff
 image; make sure you have a utility like ‘tiffcp’.  Variable
-EMACSPEAK-OCR-COMPRESS-IMAGE is set to 'tiffcp' by default; if you use
+EMACSVOX-OCR-COMPRESS-IMAGE is set to 'tiffcp' by default; if you use
 something else, you should customize this variable.
 
    Next, make sure you have an OCR engine installed and working.  By
 default this front-end assumes that OCR is available as ‘/usr/bin/ocr’.
 
    Once you have ensured that acquiring an image and applying OCR to it
-work independently of Emacs, you can use this Emacspeak front-end to
-enable easy OCR access from within Emacspeak.
+work independently of Emacs, you can use this Emacsvox front-end to
+enable easy OCR access from within Emacsvox.
 
-   The Emacspeak OCR front-end is launched by command “emacspeak-ocr”
+   The Emacsvox OCR front-end is launched by command “emacsvox-ocr”
 bound to ‘C-e C-o’.
 
    This command switches to a special buffer that has OCR commands
@@ -2541,105 +2522,104 @@ bounds to single keystrokes -- see the key-binding list at the end of
 this description.  Use Emacs online help facility to look up help on
 these commands.
 
-   Mode “emacspeak-ocr-mode” provides the necessary functionality to
+   Mode “emacsvox-ocr-mode” provides the necessary functionality to
 scan, OCR, read and save documents.  By default, scanned images and the
 resulting text are saved under directory ‘~/ocr’; see variable
-EMACSPEAK-OCR-WORKING-DIRECTORY.  Invoking command
-“emacspeak-ocr-open-working-directory” bound to ‘d’ will open this
+EMACSVOX-OCR-WORKING-DIRECTORY.  Invoking command
+“emacsvox-ocr-open-working-directory” bound to ‘d’ will open this
 directory.
 
    By default, the document being scanned is named 'untitled'.  You can
-name the document by using command “emacspeak-ocr-name-document” bound
-to ‘n’.  The document name is used in constructing the name of the image
+name the document by using command “emacsvox-ocr-name-document” bound to
+‘n’.  The document name is used in constructing the name of the image
 and text files.
 
-   Here is a list of all emacspeak OCR commands along with their
+   Here is a list of all emacsvox OCR commands along with their
 key-bindings and a brief description:
 
 ‘digit’
-     “emacspeak-ocr-page” Jumps to specified page in the OCR output.
+     “emacsvox-ocr-page” Jumps to specified page in the OCR output.
 
 ‘c’
-     “emacspeak-ocr-set-compress-image-options” Interactively update
+     “emacsvox-ocr-set-compress-image-options” Interactively update
      image compression options.  Prompts with current setting in the
      minibuffer.  Setting persists for current Emacs session.
 
 ‘i’
-     “emacspeak-ocr-set-scan-image-options” Interactively update scan
+     “emacsvox-ocr-set-scan-image-options” Interactively update scan
      image options.  Prompts with current setting in the minibuffer.
      Setting persists for current Emacs session.
 
 ‘spc’
-     “emacspeak-ocr-read-current-page” Speaks current page.
+     “emacsvox-ocr-read-current-page” Speaks current page.
 
 ‘s’
-     “emacspeak-ocr-save-current-page” Saves current page as a text
-     file.
+     “emacsvox-ocr-save-current-page” Saves current page as a text file.
 
 ‘p’
-     “emacspeak-ocr-page” Prompts for a page number and moves to the
+     “emacsvox-ocr-page” Prompts for a page number and moves to the
      specified page.
 
 ‘]’
-     “emacspeak-ocr-forward-page” Move forward to the next page.
+     “emacsvox-ocr-forward-page” Move forward to the next page.
 
 ‘[’
-     “emacspeak-ocr-backward-page” Move back to the previous page.
+     “emacsvox-ocr-backward-page” Move back to the previous page.
 
 ‘d’
-     “emacspeak-ocr-open-working-directory” Open directory containing
-     the results of OCR.
+     “emacsvox-ocr-open-working-directory” Open directory containing the
+     results of OCR.
 
 ‘n’
-     “emacspeak-ocr-name-document” Name current document.
+     “emacsvox-ocr-name-document” Name current document.
 
 ‘o’
-     “emacspeak-ocr-recognize-image” Launch OCR engine on a scanned
+     “emacsvox-ocr-recognize-image” Launch OCR engine on a scanned
      image.
 
 ‘i’
-     “emacspeak-ocr-scan-image” Acquire an image using ‘scanimage’.
+     “emacsvox-ocr-scan-image” Acquire an image using ‘scanimage’.
 
 ‘RET’
-     “emacspeak-ocr-scan-and-recognize” Scan and recognize a page.
+     “emacsvox-ocr-scan-and-recognize” Scan and recognize a page.
 
 ‘w’
-     “emacspeak-ocr-write-document” Write all pages of current document
+     “emacsvox-ocr-write-document” Write all pages of current document
      to a text file.
 
 ‘q’
      “bury-buffer” Bury the OCR buffer.
 
 ‘c’
-     “emacspeak-ocr-customize” Customize Emacspeak OCR settings.
+     “emacsvox-ocr-customize” Customize Emacsvox OCR settings.
 
 ‘?’
      “describe-mode” Describe OCR mode.
 
 
-File: emacspeak.info,  Node: Emacspeak Keymaps,  Next: Emacspeak Commands And Options,  Prev: Emacs Packages,  Up: Top
+File: emacsvox.info,  Node: Emacsvox Keymaps,  Next: Emacsvox Commands And Options,  Prev: Emacs Packages,  Up: Top
 
-11 Emacspeak Keymaps
-********************
+11 Emacsvox Keymaps
+*******************
 
 * Menu:
 
-* Emacspeak Keybindings On emacsvox-keymap::
-* Emacspeak Keybindings On emacsvox-tts-submap::
-* Emacspeak Keybindings On emacsvox-hyper-keymap::
-* Emacspeak Keybindings On emacsvox-super-keymap::
-* Emacspeak Keybindings On emacsvox-alt-keymap::
-* Emacspeak Keybindings On emacsvox-multi-keymap::
-* Emacspeak Keybindings On emacsvox-v-keymap::
-* Emacspeak Keybindings On emacsvox-x-keymap::
-* Emacspeak Keybindings On emacsvox-y-keymap::
-* Emacspeak Keybindings On emacsvox-z-keymap::
+* Emacsvox Keybindings On emacsvox-keymap::
+* Emacsvox Keybindings On emacsvox-tts-submap::
+* Emacsvox Keybindings On emacsvox-hyper-keymap::
+* Emacsvox Keybindings On emacsvox-super-keymap::
+* Emacsvox Keybindings On emacsvox-alt-keymap::
+* Emacsvox Keybindings On emacsvox-multi-keymap::
+* Emacsvox Keybindings On emacsvox-v-keymap::
+* Emacsvox Keybindings On emacsvox-x-keymap::
+* Emacsvox Keybindings On emacsvox-y-keymap::
+* Emacsvox Keybindings On emacsvox-z-keymap::
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-keymap,  Next: Emacspeak Keybindings On emacsvox-tts-submap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-keymap,  Next: Emacsvox Keybindings On emacsvox-tts-submap,  Up: Emacsvox Keymaps
 
-11.1 Emacspeak Keybindings On emacsvox-keymap
-=============================================
+11.1 Emacsvox Keybindings On emacsvox-keymap
+============================================
 
 ‘C-@ emacsvox-speak-current-mark’
 ‘C-a emacsvox-toggle-icons’
@@ -2717,10 +2697,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-keymap,  Next: Em
 ‘C emacsvox-customize’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-tts-submap,  Next: Emacspeak Keybindings On emacsvox-hyper-keymap,  Prev: Emacspeak Keybindings On emacsvox-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-tts-submap,  Next: Emacsvox Keybindings On emacsvox-hyper-keymap,  Prev: Emacsvox Keybindings On emacsvox-keymap,  Up: Emacsvox Keymaps
 
-11.2 Emacspeak Keybindings On emacsvox-tts-submap
-=================================================
+11.2 Emacsvox Keybindings On emacsvox-tts-submap
+================================================
 
 ‘C-c tts-cloud’
 ‘C-d dectalk’
@@ -2770,10 +2750,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-tts-submap,  Next
 ‘z emacsvox-zap-tts’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-hyper-keymap,  Next: Emacspeak Keybindings On emacsvox-super-keymap,  Prev: Emacspeak Keybindings On emacsvox-tts-submap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-hyper-keymap,  Next: Emacsvox Keybindings On emacsvox-super-keymap,  Prev: Emacsvox Keybindings On emacsvox-tts-submap,  Up: Emacsvox Keymaps
 
-11.3 Emacspeak Keybindings On emacsvox-hyper-keymap
-===================================================
+11.3 Emacsvox Keybindings On emacsvox-hyper-keymap
+==================================================
 
 ‘C-a ansi-term’
 ‘C-b eww-list-bookmarks’
@@ -2802,10 +2782,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-hyper-keymap,  Ne
 ‘DEL emacsvox-wizards-snarf-sexp’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-super-keymap,  Next: Emacspeak Keybindings On emacsvox-alt-keymap,  Prev: Emacspeak Keybindings On emacsvox-hyper-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-super-keymap,  Next: Emacsvox Keybindings On emacsvox-alt-keymap,  Prev: Emacsvox Keybindings On emacsvox-hyper-keymap,  Up: Emacsvox Keymaps
 
-11.4 Emacspeak Keybindings On emacsvox-super-keymap
-===================================================
+11.4 Emacsvox Keybindings On emacsvox-super-keymap
+==================================================
 
 ‘SPC scratch-buffer’
 ‘. emacsvox-wizards-shell-directory-reset’
@@ -2827,10 +2807,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-super-keymap,  Ne
 ‘u soundscape-update-mood’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-alt-keymap,  Next: Emacspeak Keybindings On emacsvox-multi-keymap,  Prev: Emacspeak Keybindings On emacsvox-super-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-alt-keymap,  Next: Emacsvox Keybindings On emacsvox-multi-keymap,  Prev: Emacsvox Keybindings On emacsvox-super-keymap,  Up: Emacsvox Keymaps
 
-11.5 Emacspeak Keybindings On emacsvox-alt-keymap
-=================================================
+11.5 Emacsvox Keybindings On emacsvox-alt-keymap
+================================================
 
 ‘C-l ellama-chat’
 ‘SPC emacsvox-eww-smart-tabs’
@@ -2852,10 +2832,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-alt-keymap,  Next
 ‘w define-word’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-multi-keymap,  Next: Emacspeak Keybindings On emacsvox-v-keymap,  Prev: Emacspeak Keybindings On emacsvox-alt-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-multi-keymap,  Next: Emacsvox Keybindings On emacsvox-v-keymap,  Prev: Emacsvox Keybindings On emacsvox-alt-keymap,  Up: Emacsvox Keymaps
 
-11.6 Emacspeak Keybindings On emacsvox-multi-keymap
-===================================================
+11.6 Emacsvox Keybindings On emacsvox-multi-keymap
+==================================================
 
 ‘' emacsvox-pianobar’
 ‘d sdcv-search-input’
@@ -2867,10 +2847,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-multi-keymap,  Ne
 ‘y emacsvox-google-yt-feed’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-v-keymap,  Next: Emacspeak Keybindings On emacsvox-x-keymap,  Prev: Emacspeak Keybindings On emacsvox-multi-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-v-keymap,  Next: Emacsvox Keybindings On emacsvox-x-keymap,  Prev: Emacsvox Keybindings On emacsvox-multi-keymap,  Up: Emacsvox Keymaps
 
-11.7 Emacspeak Keybindings On emacsvox-v-keymap
-===============================================
+11.7 Emacsvox Keybindings On emacsvox-v-keymap
+==============================================
 
 ‘SPC emacsvox-speak-spaces’
 ‘a emacsvox-xslt-view-atom-file’
@@ -2881,10 +2861,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-v-keymap,  Next: 
 ‘x emacsvox-xslt-view-file’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-x-keymap,  Next: Emacspeak Keybindings On emacsvox-y-keymap,  Prev: Emacspeak Keybindings On emacsvox-v-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-x-keymap,  Next: Emacsvox Keybindings On emacsvox-y-keymap,  Prev: Emacsvox Keybindings On emacsvox-v-keymap,  Up: Emacsvox Keymaps
 
-11.8 Emacspeak Keybindings On emacsvox-x-keymap
-===============================================
+11.8 Emacsvox Keybindings On emacsvox-x-keymap
+==============================================
 
 ‘C-c emacsvox-wizards-color-wheel’
 ‘, emacsvox-wizards-shell-directory-set’
@@ -2922,10 +2902,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-x-keymap,  Next: 
 ‘DEL desktop-clear’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-y-keymap,  Next: Emacspeak Keybindings On emacsvox-z-keymap,  Prev: Emacspeak Keybindings On emacsvox-x-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-y-keymap,  Next: Emacsvox Keybindings On emacsvox-z-keymap,  Prev: Emacsvox Keybindings On emacsvox-x-keymap,  Up: Emacsvox Keymaps
 
-11.9 Emacspeak Keybindings On emacsvox-y-keymap
-===============================================
+11.9 Emacsvox Keybindings On emacsvox-y-keymap
+==============================================
 
 ‘b emacsvox-bookshare-eww’
 ‘d empv-download-youtube’
@@ -2937,10 +2917,10 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-y-keymap,  Next: 
 ‘y emacsvox-empv-play-url’
 
 
-File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-z-keymap,  Prev: Emacspeak Keybindings On emacsvox-y-keymap,  Up: Emacspeak Keymaps
+File: emacsvox.info,  Node: Emacsvox Keybindings On emacsvox-z-keymap,  Prev: Emacsvox Keybindings On emacsvox-y-keymap,  Up: Emacsvox Keymaps
 
-11.10 Emacspeak Keybindings On emacsvox-z-keymap
-================================================
+11.10 Emacsvox Keybindings On emacsvox-z-keymap
+===============================================
 
 ‘SPC flyspell-mode’
 ‘b emacsvox-wizards-view-buffers-filtered-by-this-mode’
@@ -3192,38 +3172,38 @@ File: emacspeak.info,  Node: Emacspeak Keybindings On emacsvox-z-keymap,  Prev: 
 * URL Templates ::
 
 
-File: emacspeak.info,  Node: Emacspeak Commands And Options,  Next: Running Terminal Based Applications,  Prev: Emacspeak Keymaps,  Up: Top
+File: emacsvox.info,  Node: Emacsvox Commands And Options,  Next: Running Terminal Based Applications,  Prev: Emacsvox Keymaps,  Up: Top
 
-12 Emacspeak Commands And Options
-*********************************
+12 Emacsvox Commands And Options
+********************************
 
 Overview
 ========
 
-This chapter documents the various Emacspeak modules and is
-auto-generated from the Emacspeak source code.  It is meant to be a
-complete reference to the emacspeak implementation while also providing
-high-level usage summaries of some of the larger Emacspeak modules.
+This chapter documents the various Emacsvox modules and is
+auto-generated from the Emacsvox source code.  It is meant to be a
+complete reference to the emacsvox implementation while also providing
+high-level usage summaries of some of the larger Emacsvox modules.
 
    Each section provides a high-level overview of that module, followed
 by detailed description of the commands and options defined in that
 module.
 
-   Emacspeak modules can be classified as follows:
+   Emacsvox modules can be classified as follows:
   1. Modules that interface with various TTS engines, e.g.
      ‘espeak-voices’ and ‘dectalk-voices’.
 
-  2. Modules that implement core Emacspeak functionality, e.g.,
-     ‘emacspeak-speak’, ‘emacspeak-keymap’, ‘voice-lock’ and
-     ‘emacspeak-advice’.
+  2. Modules that implement core Emacsvox functionality, e.g.,
+     ‘emacsvox-speak’, ‘emacsvox-keymap’, ‘voice-lock’ and
+     ‘emacsvox-advice’.
 
-  3. Emacspeak extensions that speech-enable various emacs packages,
-     these are all named using the convention ‘emacspeak-<PACKAGENAME>’.
+  3. Emacsvox extensions that speech-enable various emacs packages,
+     these are all named using the convention ‘emacsvox-<PACKAGENAME>’.
 
    The first two of the above are mostly of interest when extending
-Emacspeak, or to learn how things are implemented.  The third category
-is useful in understanding how emacspeak works with a given package;
-thus, when learning to use the Emacs Web Browser (EWW), read the *Note
+Emacsvox, or to learn how things are implemented.  The third category is
+useful in understanding how emacsvox works with a given package; thus,
+when learning to use the Emacs Web Browser (EWW), read the *Note
 (emacs)EWW:: documentation, then *Note emacsvox-eww::.
 
    This chapter documents a total of 1118 commands and 122 options.
@@ -3466,7 +3446,7 @@ thus, when learning to use the Emacs Web Browser (EWW), read the *Note
 * URL Templates::
 
 
-File: emacspeak.info,  Node: amixer,  Next: dectalk-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: amixer,  Next: dectalk-voices,  Up: Emacsvox Commands And Options
 
 12.1 amixer
 ===========
@@ -3558,7 +3538,7 @@ To reset all controls to their default values, Press ‘C-j’.
 
 
 
-File: emacspeak.info,  Node: dectalk-voices,  Next: dom-addons,  Prev: amixer,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: dectalk-voices,  Next: dom-addons,  Prev: amixer,  Up: Emacsvox Commands And Options
 
 12.2 dectalk-voices
 ===================
@@ -3597,7 +3577,7 @@ module is Dectalk specific.
 
 
 
-File: emacspeak.info,  Node: dom-addons,  Next: emacsvox,  Prev: dectalk-voices,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: dom-addons,  Next: emacsvox,  Prev: dectalk-voices,  Up: Emacsvox Commands And Options
 
 12.3 dom-addons
 ===============
@@ -3605,7 +3585,7 @@ File: emacspeak.info,  Node: dom-addons,  Next: emacsvox,  Prev: dectalk-voices,
 Useful additional functions for dom.el
 
 
-File: emacspeak.info,  Node: emacsvox,  Next: emacsvox-2048,  Prev: dom-addons,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox,  Next: emacsvox-2048,  Prev: dom-addons,  Up: Emacsvox Commands And Options
 
 12.4 emacsvox
 =============
@@ -3618,7 +3598,37 @@ the main emacsvox module.  It actually does very little:
    • It provides affordances for setting up consistent behavior in
      programming modes.
 
-12.4.1 emacsvox Options
+12.4.1 Emacsvox Commands
+------------------------
+
+12.4.1.1 soundscape
+...................
+
+ -- Command: soundscape (scape)
+     ‘C-. s’
+     ‘C-x @ s s’
+
+     Play soundscape.
+
+     (fn SCAPE)
+
+12.4.1.2 soundscape-kill
+........................
+
+ -- Command: soundscape-kill
+
+     Stop all running soundscapes.
+
+12.4.1.3 soundscape-stop
+........................
+
+ -- Command: soundscape-stop (scape)
+
+     Stop running Soundscape.
+
+     (fn SCAPE)
+
+12.4.2 emacsvox Options
 -----------------------
 
  -- Variable: User Option emacsvox-pip-enable
@@ -3629,8 +3639,33 @@ the main emacsvox module.  It actually does very little:
      nil
 
 
+ -- Variable: User Option soundscape-data
+     Soundscape data directory.
+
+     Default Value:
+
+     "/home/bart/.boodler/Collection"
+
+
+ -- Variable: User Option soundscape-device
+     Alsa sound device to use for soundscapes.
+
+     Default Value:
+
+     "default"
+
+
+ -- Variable: User Option soundscape-manager-options
+     User customizable options list passed to boodler.
+     Defaults specify alsa as the output and set master volume
+
+     Default Value:
+
+     ("-o" "pulse" "-m" "0.15")
+
+
 
-File: emacspeak.info,  Node: emacsvox-2048,  Next: emacsvox-abc-mode,  Prev: emacsvox,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-2048,  Next: emacsvox-abc-mode,  Prev: emacsvox,  Up: Emacsvox Commands And Options
 
 12.5 emacsvox-2048
 ==================
@@ -3743,7 +3778,7 @@ Speech-enable 2048 Game
      Speak board column-wise.
 
 
-File: emacspeak.info,  Node: emacsvox-abc-mode,  Next: emacsvox-ace-window,  Prev: emacsvox-2048,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-abc-mode,  Next: emacsvox-ace-window,  Prev: emacsvox-2048,  Up: Emacsvox Commands And Options
 
 12.6 emacsvox-abc-mode
 ======================
@@ -3753,7 +3788,7 @@ ABC-MODE == Specialized mode for editing ABC Music notation.  See
 package speech-enables abc-mode.
 
 
-File: emacspeak.info,  Node: emacsvox-ace-window,  Next: emacsvox-add-log,  Prev: emacsvox-abc-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ace-window,  Next: emacsvox-add-log,  Prev: emacsvox-abc-mode,  Up: Emacsvox Commands And Options
 
 12.7 emacsvox-ace-window
 ========================
@@ -3763,7 +3798,7 @@ switching.  Provides auditory feedback when selecting, swapping,
 deleting, and maximizing windows.
 
 
-File: emacspeak.info,  Node: emacsvox-add-log,  Next: emacsvox-advice,  Prev: emacsvox-ace-window,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-add-log,  Next: emacsvox-advice,  Prev: emacsvox-ace-window,  Up: Emacsvox Commands And Options
 
 12.8 emacsvox-add-log
 =====================
@@ -3771,7 +3806,7 @@ File: emacspeak.info,  Node: emacsvox-add-log,  Next: emacsvox-advice,  Prev: em
 Speech-enable Changelog mode
 
 
-File: emacspeak.info,  Node: emacsvox-advice,  Next: emacsvox-amark,  Prev: emacsvox-add-log,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-advice,  Next: emacsvox-amark,  Prev: emacsvox-add-log,  Up: Emacsvox Commands And Options
 
 12.9 emacsvox-advice
 ====================
@@ -3833,7 +3868,7 @@ forms not needed in Emacs 22.
 
 
 
-File: emacspeak.info,  Node: emacsvox-amark,  Next: emacsvox-annotate,  Prev: emacsvox-advice,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-amark,  Next: emacsvox-annotate,  Prev: emacsvox-advice,  Up: Emacsvox Commands And Options
 
 12.10 emacsvox-amark
 ====================
@@ -3940,7 +3975,7 @@ directory containing mp3 files where Amarks have been created - see
      Save buffer-local AMarks in  currently playing directory.
 
 
-File: emacspeak.info,  Node: emacsvox-annotate,  Next: emacsvox-arc,  Prev: emacsvox-amark,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-annotate,  Next: emacsvox-arc,  Prev: emacsvox-amark,  Up: Emacsvox Commands And Options
 
 12.11 emacsvox-annotate
 =======================
@@ -3949,7 +3984,7 @@ ANNOTATE == annotate.el from melpa Speech-enable creation and navigation
 of annotations.
 
 
-File: emacspeak.info,  Node: emacsvox-arc,  Next: emacsvox-auctex,  Prev: emacsvox-annotate,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-arc,  Next: emacsvox-auctex,  Prev: emacsvox-annotate,  Up: Emacsvox Commands And Options
 
 12.12 emacsvox-arc
 ==================
@@ -3989,7 +4024,7 @@ files such as .zip and .jar files.
      Speak the size of the file on current line
 
 
-File: emacspeak.info,  Node: emacsvox-auctex,  Next: emacsvox-avy,  Prev: emacsvox-arc,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-auctex,  Next: emacsvox-avy,  Prev: emacsvox-arc,  Up: Emacsvox Commands And Options
 
 12.13 emacsvox-auctex
 =====================
@@ -4033,7 +4068,7 @@ been my authoring environment of choice for writing LaTeX since 1991.
      (fn N)
 
 
-File: emacspeak.info,  Node: emacsvox-avy,  Next: emacsvox-bbdb,  Prev: emacsvox-auctex,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-avy,  Next: emacsvox-bbdb,  Prev: emacsvox-auctex,  Up: Emacsvox Commands And Options
 
 12.14 emacsvox-avy
 ==================
@@ -4042,7 +4077,7 @@ AVY == Jump to visible text using a char-based decision tree.  This
 module speech-enables avy navigation commands.
 
 
-File: emacspeak.info,  Node: emacsvox-bbdb,  Next: emacsvox-bibtex,  Prev: emacsvox-avy,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-bbdb,  Next: emacsvox-bibtex,  Prev: emacsvox-avy,  Up: Emacsvox Commands And Options
 
 12.15 emacsvox-bbdb
 ===================
@@ -4051,7 +4086,7 @@ Speech-enables BBDB. I have used BBDB to manage email address and
 contact information since 1991.
 
 
-File: emacspeak.info,  Node: emacsvox-bibtex,  Next: emacsvox-bookmark,  Prev: emacsvox-bbdb,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-bibtex,  Next: emacsvox-bookmark,  Prev: emacsvox-bbdb,  Up: Emacsvox Commands And Options
 
 12.16 emacsvox-bibtex
 =====================
@@ -4059,7 +4094,7 @@ File: emacspeak.info,  Node: emacsvox-bibtex,  Next: emacsvox-bookmark,  Prev: e
 Speech extensions for bibtex mode.
 
 
-File: emacspeak.info,  Node: emacsvox-bookmark,  Next: emacsvox-bookshare,  Prev: emacsvox-bibtex,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-bookmark,  Next: emacsvox-bookshare,  Prev: emacsvox-bibtex,  Up: Emacsvox Commands And Options
 
 12.17 emacsvox-bookmark
 =======================
@@ -4067,7 +4102,7 @@ File: emacspeak.info,  Node: emacsvox-bookmark,  Next: emacsvox-bookshare,  Prev
 Speech enable bookmarks
 
 
-File: emacspeak.info,  Node: emacsvox-bookshare,  Next: emacsvox-browse-kill-ring,  Prev: emacsvox-bookmark,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-bookshare,  Next: emacsvox-browse-kill-ring,  Prev: emacsvox-bookmark,  Up: Emacsvox Commands And Options
 
 12.18 emacsvox-bookshare
 ========================
@@ -4559,7 +4594,7 @@ Assuming you have correctly setup your API key:
 
 
 
-File: emacspeak.info,  Node: emacsvox-browse-kill-ring,  Next: emacsvox-bs,  Prev: emacsvox-bookshare,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-browse-kill-ring,  Next: emacsvox-bs,  Prev: emacsvox-bookshare,  Up: Emacsvox Commands And Options
 
 12.19 emacsvox-browse-kill-ring
 ===============================
@@ -4568,7 +4603,7 @@ Browse the kill ring using browse-kill-ring.el - interactively insert
 items from kill-ring
 
 
-File: emacspeak.info,  Node: emacsvox-bs,  Next: emacsvox-buff-menu,  Prev: emacsvox-browse-kill-ring,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-bs,  Next: emacsvox-buff-menu,  Prev: emacsvox-browse-kill-ring,  Up: Emacsvox Commands And Options
 
 12.20 emacsvox-bs
 =================
@@ -4586,7 +4621,7 @@ speech-enable bs.el - an alternative to Emacs' default list-buffers
      Speak information about this buffer
 
 
-File: emacspeak.info,  Node: emacsvox-buff-menu,  Next: emacsvox-c,  Prev: emacsvox-bs,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-buff-menu,  Next: emacsvox-c,  Prev: emacsvox-bs,  Up: Emacsvox Commands And Options
 
 12.21 emacsvox-buff-menu
 ========================
@@ -4629,7 +4664,7 @@ Speech-enable buffer-menus.
      Speak the name of the buffer on this line
 
 
-File: emacspeak.info,  Node: emacsvox-c,  Next: emacsvox-calc,  Prev: emacsvox-buff-menu,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-c,  Next: emacsvox-calc,  Prev: emacsvox-buff-menu,  Up: Emacsvox Commands And Options
 
 12.22 emacsvox-c
 ================
@@ -4648,7 +4683,7 @@ and the excellent cc-mode
      Speak the C semantics of this line.
 
 
-File: emacspeak.info,  Node: emacsvox-calc,  Next: emacsvox-calculator,  Prev: emacsvox-c,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-calc,  Next: emacsvox-calculator,  Prev: emacsvox-c,  Up: Emacsvox Commands And Options
 
 12.23 emacsvox-calc
 ===================
@@ -4658,7 +4693,7 @@ force a calc-load-everything, And use an after advice on this function
 To fix all of calc's interactive functions
 
 
-File: emacspeak.info,  Node: emacsvox-calculator,  Next: emacsvox-calendar,  Prev: emacsvox-calc,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-calculator,  Next: emacsvox-calendar,  Prev: emacsvox-calc,  Up: Emacsvox Commands And Options
 
 12.24 emacsvox-calculator
 =========================
@@ -4666,7 +4701,7 @@ File: emacspeak.info,  Node: emacsvox-calculator,  Next: emacsvox-calendar,  Pre
 Speech enable desktop calculator
 
 
-File: emacspeak.info,  Node: emacsvox-calendar,  Next: emacsvox-calibredb,  Prev: emacsvox-calculator,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-calendar,  Next: emacsvox-calibredb,  Prev: emacsvox-calculator,  Up: Emacsvox Commands And Options
 
 12.25 emacsvox-calendar
 =======================
@@ -4711,7 +4746,7 @@ advantages of speech-enabled interaction.
      (fn ADDRESS &optional ARG)
 
 
-File: emacspeak.info,  Node: emacsvox-calibredb,  Next: emacsvox-chess,  Prev: emacsvox-calendar,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-calibredb,  Next: emacsvox-chess,  Prev: emacsvox-calendar,  Up: Emacsvox Commands And Options
 
 12.26 emacsvox-calibredb
 ========================
@@ -4733,7 +4768,7 @@ CALIBREDB == Browse And Search Local Calibre Library
      (fn &optional BROKEN-NCX)
 
 
-File: emacspeak.info,  Node: emacsvox-chess,  Next: emacsvox-cider,  Prev: emacsvox-calibredb,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-chess,  Next: emacsvox-cider,  Prev: emacsvox-calibredb,  Up: Emacsvox Commands And Options
 
 12.27 emacsvox-chess
 ====================
@@ -5004,7 +5039,7 @@ move* being displayed.
      Move west one step.
 
 
-File: emacspeak.info,  Node: emacsvox-cider,  Next: emacsvox-clojure,  Prev: emacsvox-chess,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-cider,  Next: emacsvox-clojure,  Prev: emacsvox-chess,  Up: Emacsvox Commands And Options
 
 12.28 emacsvox-cider
 ====================
@@ -5012,7 +5047,7 @@ File: emacspeak.info,  Node: emacsvox-cider,  Next: emacsvox-clojure,  Prev: ema
 Speech-Enable CIDER -- Clojure IDE
 
 
-File: emacspeak.info,  Node: emacsvox-clojure,  Next: emacsvox-cmuscheme,  Prev: emacsvox-cider,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-clojure,  Next: emacsvox-cmuscheme,  Prev: emacsvox-cider,  Up: Emacsvox Commands And Options
 
 12.29 emacsvox-clojure
 ======================
@@ -5020,7 +5055,7 @@ File: emacspeak.info,  Node: emacsvox-clojure,  Next: emacsvox-cmuscheme,  Prev:
 CLOJURE-mode: Specialized mode for Clojure programming.
 
 
-File: emacspeak.info,  Node: emacsvox-cmuscheme,  Next: emacsvox-combobulate,  Prev: emacsvox-clojure,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-cmuscheme,  Next: emacsvox-combobulate,  Prev: emacsvox-clojure,  Up: Emacsvox Commands And Options
 
 12.30 emacsvox-cmuscheme
 ========================
@@ -5028,7 +5063,7 @@ File: emacspeak.info,  Node: emacsvox-cmuscheme,  Next: emacsvox-combobulate,  P
 speech-enable scheme support
 
 
-File: emacspeak.info,  Node: emacsvox-combobulate,  Next: emacsvox-comint,  Prev: emacsvox-cmuscheme,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-combobulate,  Next: emacsvox-comint,  Prev: emacsvox-cmuscheme,  Up: Emacsvox Commands And Options
 
 12.31 emacsvox-combobulate
 ==========================
@@ -5037,7 +5072,7 @@ COMBOBULATE: Navigate, Manipulate code with tree-sitter's concrete-tree;
 https://github.com/mickeynp/combobulate.git (push)
 
 
-File: emacspeak.info,  Node: emacsvox-comint,  Next: emacsvox-company,  Prev: emacsvox-combobulate,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-comint,  Next: emacsvox-company,  Prev: emacsvox-combobulate,  Up: Emacsvox Commands And Options
 
 12.32 emacsvox-comint
 =====================
@@ -5107,7 +5142,7 @@ comint == command interaction.  Advice comint and friends to speak.
 
 
 
-File: emacspeak.info,  Node: emacsvox-company,  Next: emacsvox-compile,  Prev: emacsvox-comint,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-company,  Next: emacsvox-compile,  Prev: emacsvox-comint,  Up: Emacsvox Commands And Options
 
 12.33 emacsvox-company
 ======================
@@ -5123,7 +5158,7 @@ leaves it to other frontends on COMPANY-FRONTENDS to generate their own
 feedback.
 
 
-File: emacspeak.info,  Node: emacsvox-compile,  Next: emacsvox-consult,  Prev: emacsvox-company,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-compile,  Next: emacsvox-consult,  Prev: emacsvox-company,  Up: Emacsvox Commands And Options
 
 12.34 emacsvox-compile
 ======================
@@ -5141,7 +5176,7 @@ This module makes compiling code from inside Emacs speech friendly.
      Speech feedback about the compilation error.
 
 
-File: emacspeak.info,  Node: emacsvox-consult,  Next: emacsvox-corfu,  Prev: emacsvox-compile,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-consult,  Next: emacsvox-corfu,  Prev: emacsvox-compile,  Up: Emacsvox Commands And Options
 
 12.35 emacsvox-consult
 ======================
@@ -5157,7 +5192,7 @@ CONSULT == A modern completing-read
    • Setup: Put consult commands on ‘C-/’
 
 
-File: emacspeak.info,  Node: emacsvox-corfu,  Next: emacsvox-cperl,  Prev: emacsvox-consult,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-corfu,  Next: emacsvox-cperl,  Prev: emacsvox-consult,  Up: Emacsvox Commands And Options
 
 12.37 emacsvox-corfu
 ====================
@@ -5166,7 +5201,7 @@ CORFU == Completion Overlay Region FUnction.  This module speech-enables
 corfu.
 
 
-File: emacspeak.info,  Node: emacsvox-cperl,  Next: emacsvox-custom,  Prev: emacsvox-corfu,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-cperl,  Next: emacsvox-custom,  Prev: emacsvox-corfu,  Up: Emacsvox Commands And Options
 
 12.38 emacsvox-cperl
 ====================
@@ -5174,7 +5209,7 @@ File: emacspeak.info,  Node: emacsvox-cperl,  Next: emacsvox-custom,  Prev: emac
 Provide additional advice to CPerl mode
 
 
-File: emacspeak.info,  Node: emacsvox-custom,  Next: emacsvox-dbus,  Prev: emacsvox-cperl,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-custom,  Next: emacsvox-dbus,  Prev: emacsvox-cperl,  Up: Emacsvox Commands And Options
 
 12.39 emacsvox-custom
 =====================
@@ -5200,7 +5235,7 @@ emacsvox-widget.el which speech-enables the widget libraries.
      Jump to custom toolbar when in a customization buffer.
 
 
-File: emacspeak.info,  Node: emacsvox-dbus,  Next: emacsvox-deadgrep,  Prev: emacsvox-custom,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-dbus,  Next: emacsvox-deadgrep,  Prev: emacsvox-custom,  Up: Emacsvox Commands And Options
 
 12.40 emacsvox-dbus
 ===================
@@ -5308,7 +5343,7 @@ appropriately named hook functions.
      final or penultimate step during initialization.
 
 
-File: emacspeak.info,  Node: emacsvox-deadgrep,  Next: emacsvox-debugger,  Prev: emacsvox-dbus,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-deadgrep,  Next: emacsvox-debugger,  Prev: emacsvox-dbus,  Up: Emacsvox Commands And Options
 
 12.41 emacsvox-deadgrep
 =======================
@@ -5316,7 +5351,7 @@ File: emacspeak.info,  Node: emacsvox-deadgrep,  Next: emacsvox-debugger,  Prev:
 DEADGREP == Front-end to ripgrep.
 
 
-File: emacspeak.info,  Node: emacsvox-debugger,  Next: emacsvox-denote,  Prev: emacsvox-deadgrep,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-debugger,  Next: emacsvox-denote,  Prev: emacsvox-deadgrep,  Up: Emacsvox Commands And Options
 
 12.42 emacsvox-debugger
 =======================
@@ -5325,7 +5360,7 @@ DEBUGGER == Emacs Interactive Debugger.  Speech-enable the debugger by
 speech-enabling interactive commands.
 
 
-File: emacspeak.info,  Node: emacsvox-denote,  Next: emacsvox-desktop,  Prev: emacsvox-debugger,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-denote,  Next: emacsvox-desktop,  Prev: emacsvox-debugger,  Up: Emacsvox Commands And Options
 
 12.43 emacsvox-denote
 =====================
@@ -5335,7 +5370,7 @@ denote for creating, linking, and managing notes using a strict
 file-naming scheme with org/markdown/text.
 
 
-File: emacspeak.info,  Node: emacsvox-desktop,  Next: emacsvox-devdocs,  Prev: emacsvox-denote,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-desktop,  Next: emacsvox-devdocs,  Prev: emacsvox-denote,  Up: Emacsvox Commands And Options
 
 12.44 emacsvox-desktop
 ======================
@@ -5356,7 +5391,7 @@ advice desktop package
      (fn BUFFER)
 
 
-File: emacspeak.info,  Node: emacsvox-devdocs,  Next: emacsvox-dictionary,  Prev: emacsvox-desktop,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-devdocs,  Next: emacsvox-dictionary,  Prev: emacsvox-desktop,  Up: Emacsvox Commands And Options
 
 12.45 emacsvox-devdocs
 ======================
@@ -5364,7 +5399,7 @@ File: emacspeak.info,  Node: emacsvox-devdocs,  Next: emacsvox-dictionary,  Prev
 DEVDOCS == Browse DevDocs
 
 
-File: emacspeak.info,  Node: emacsvox-dictionary,  Next: emacsvox-diff-mode,  Prev: emacsvox-devdocs,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-dictionary,  Next: emacsvox-diff-mode,  Prev: emacsvox-devdocs,  Up: Emacsvox Commands And Options
 
 12.46 emacsvox-dictionary
 =========================
@@ -5373,7 +5408,7 @@ Speech-enables emacs client for accessing dictionary server at
 dict.org:2628
 
 
-File: emacspeak.info,  Node: emacsvox-diff-mode,  Next: emacsvox-dired,  Prev: emacsvox-dictionary,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-diff-mode,  Next: emacsvox-dired,  Prev: emacsvox-dictionary,  Up: Emacsvox Commands And Options
 
 12.47 emacsvox-diff-mode
 ========================
@@ -5381,7 +5416,7 @@ File: emacspeak.info,  Node: emacsvox-diff-mode,  Next: emacsvox-dired,  Prev: e
 DIFF-MODE support.
 
 
-File: emacspeak.info,  Node: emacsvox-dired,  Next: emacsvox-dumb-jump,  Prev: emacsvox-diff-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-dired,  Next: emacsvox-dumb-jump,  Prev: emacsvox-diff-mode,  Up: Emacsvox Commands And Options
 
 12.48 emacsvox-dired
 ====================
@@ -5427,6 +5462,7 @@ buffer Voicification is used to indicate directories, marked files etc.
 .....................................
 
  -- Command: emacsvox-dired-label-fields
+
      Labels the fields of the listing in the dired buffer.
      Currently is a no-op  unless
      unless ‘dired-listing-switches’ contains -l
@@ -5559,7 +5595,7 @@ buffer Voicification is used to indicate directories, marked files etc.
      (fn &optional SHUFFLE)
 
 
-File: emacspeak.info,  Node: emacsvox-dumb-jump,  Next: emacsvox-eat,  Prev: emacsvox-dired,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-dumb-jump,  Next: emacsvox-eat,  Prev: emacsvox-dired,  Up: Emacsvox Commands And Options
 
 12.49 emacsvox-dumb-jump
 ========================
@@ -5568,7 +5604,7 @@ DUMB-JUMP == Jump to imputed cross-references in source code.  This
 module speech-enables dumb-jump
 
 
-File: emacspeak.info,  Node: emacsvox-eat,  Next: emacsvox-ebuku,  Prev: emacsvox-dumb-jump,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-eat,  Next: emacsvox-ebuku,  Prev: emacsvox-dumb-jump,  Up: Emacsvox Commands And Options
 
 12.50 emacsvox-eat
 ==================
@@ -5576,7 +5612,7 @@ File: emacspeak.info,  Node: emacsvox-eat,  Next: emacsvox-ebuku,  Prev: emacsvo
 EAT == Emacs Terminal Emulator
 
 
-File: emacspeak.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacsvox-eat,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacsvox-eat,  Up: Emacsvox Commands And Options
 
 12.51 emacsvox-ebuku
 ====================
@@ -5584,7 +5620,7 @@ File: emacspeak.info,  Node: emacsvox-ebuku,  Next: emacsvox-ediff,  Prev: emacs
 EBUKU == Emacs Buku front-end to manage bookmarks.
 
 
-File: emacspeak.info,  Node: emacsvox-ediff,  Next: emacsvox-eglot,  Prev: emacsvox-ebuku,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ediff,  Next: emacsvox-eglot,  Prev: emacsvox-ebuku,  Up: Emacsvox Commands And Options
 
 12.52 emacsvox-ediff
 ====================
@@ -5613,7 +5649,7 @@ always displays Ediff windows in a single frame.
      Speak the current difference
 
 
-File: emacspeak.info,  Node: emacsvox-eglot,  Next: emacsvox-ein,  Prev: emacsvox-ediff,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-eglot,  Next: emacsvox-ein,  Prev: emacsvox-ediff,  Up: Emacsvox Commands And Options
 
 12.53 emacsvox-eglot
 ====================
@@ -5621,7 +5657,7 @@ File: emacspeak.info,  Node: emacsvox-eglot,  Next: emacsvox-ein,  Prev: emacsvo
 EGLOT == LSP Support for emacs
 
 
-File: emacspeak.info,  Node: emacsvox-ein,  Next: emacsvox-elfeed,  Prev: emacsvox-eglot,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ein,  Next: emacsvox-elfeed,  Prev: emacsvox-eglot,  Up: Emacsvox Commands And Options
 
 12.54 emacsvox-ein
 ==================
@@ -5640,7 +5676,7 @@ module speech-enables EIN
      Speak current cell.
 
 
-File: emacspeak.info,  Node: emacsvox-elfeed,  Next: emacsvox-elisp-refs,  Prev: emacsvox-ein,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-elfeed,  Next: emacsvox-elisp-refs,  Prev: emacsvox-ein,  Up: Emacsvox Commands And Options
 
 12.55 emacsvox-elfeed
 =====================
@@ -5689,7 +5725,7 @@ elfeed
      Speak entry at point.
 
 
-File: emacspeak.info,  Node: emacsvox-elisp-refs,  Next: emacsvox-ellama,  Prev: emacsvox-elfeed,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-elisp-refs,  Next: emacsvox-ellama,  Prev: emacsvox-elfeed,  Up: Emacsvox Commands And Options
 
 12.56 emacsvox-elisp-refs
 =========================
@@ -5697,7 +5733,7 @@ File: emacspeak.info,  Node: emacsvox-elisp-refs,  Next: emacsvox-ellama,  Prev:
 Speech-enable package elisp-refs.  ELISP-REFS ==
 
 
-File: emacspeak.info,  Node: emacsvox-ellama,  Next: emacsvox-elpher,  Prev: emacsvox-elisp-refs,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ellama,  Next: emacsvox-elpher,  Prev: emacsvox-elisp-refs,  Up: Emacsvox Commands And Options
 
 12.57 emacsvox-ellama
 =====================
@@ -5706,7 +5742,7 @@ ELLAMA == Emacs LLM Interaction.  ellama uses package llm, and this
 module speech-enables ellama.
 
 
-File: emacspeak.info,  Node: emacsvox-elpher,  Next: emacsvox-elpy,  Prev: emacsvox-ellama,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-elpher,  Next: emacsvox-elpy,  Prev: emacsvox-ellama,  Up: Emacsvox Commands And Options
 
 12.58 emacsvox-elpher
 =====================
@@ -5715,7 +5751,7 @@ ELPHER == gopher/gemini client Let's see if we can rescue the
 Content-Oriented Web
 
 
-File: emacspeak.info,  Node: emacsvox-elpy,  Next: emacsvox-embark,  Prev: emacsvox-elpher,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-elpy,  Next: emacsvox-embark,  Prev: emacsvox-elpher,  Up: Emacsvox Commands And Options
 
 12.59 emacsvox-elpy
 ===================
@@ -5723,7 +5759,7 @@ File: emacspeak.info,  Node: emacsvox-elpy,  Next: emacsvox-embark,  Prev: emacs
 ELPY == Emacs Lisp Python IDE Speech-enables all aspects of elpy.
 
 
-File: emacspeak.info,  Node: emacsvox-embark,  Next: emacsvox-emms,  Prev: emacsvox-elpy,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-embark,  Next: emacsvox-emms,  Prev: emacsvox-elpy,  Up: Emacsvox Commands And Options
 
 12.60 emacsvox-embark
 =====================
@@ -5733,7 +5769,7 @@ Embark provides a context-action framework for Emacs, similar to a
 right-click menu.  It works with vertico/consult for completion actions.
 
 
-File: emacspeak.info,  Node: emacsvox-emms,  Next: emacsvox-empv,  Prev: emacsvox-embark,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-emms,  Next: emacsvox-empv,  Prev: emacsvox-embark,  Up: Emacsvox Commands And Options
 
 12.61 emacsvox-emms
 ===================
@@ -5754,7 +5790,7 @@ command M-x emacsvox-cvs-gnu-get-project-snapshot RET emms RET
      Speak current track.
 
 
-File: emacspeak.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emms,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-empv,  Next: emacsvox-enriched,  Prev: emacsvox-emms,  Up: Emacsvox Commands And Options
 
 12.62 emacsvox-empv
 ===================
@@ -6051,7 +6087,7 @@ select few for interactive use.
 
 
 
-File: emacspeak.info,  Node: emacsvox-enriched,  Next: emacsvox-entertain,  Prev: emacsvox-empv,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-enriched,  Next: emacsvox-entertain,  Prev: emacsvox-empv,  Up: Emacsvox Commands And Options
 
 12.63 emacsvox-enriched
 =======================
@@ -6072,7 +6108,7 @@ emacsvox extensions to voiceify rich text.
      (fn START END)
 
 
-File: emacspeak.info,  Node: emacsvox-entertain,  Next: emacsvox-enwc,  Prev: emacsvox-enriched,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-entertain,  Next: emacsvox-enwc,  Prev: emacsvox-enriched,  Up: Emacsvox Commands And Options
 
 12.64 emacsvox-entertain
 ========================
@@ -6097,7 +6133,7 @@ Auditory interface to misc games
      Speak statistics.
 
 
-File: emacspeak.info,  Node: emacsvox-enwc,  Next: emacsvox-epa,  Prev: emacsvox-entertain,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-enwc,  Next: emacsvox-epa,  Prev: emacsvox-entertain,  Up: Emacsvox Commands And Options
 
 12.65 emacsvox-enwc
 ===================
@@ -6105,7 +6141,7 @@ File: emacspeak.info,  Node: emacsvox-enwc,  Next: emacsvox-epa,  Prev: emacsvox
 ENWC == Emacs Network Client Work easily with NM and friends.
 
 
-File: emacspeak.info,  Node: emacsvox-epa,  Next: emacsvox-epub,  Prev: emacsvox-enwc,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-epa,  Next: emacsvox-epub,  Prev: emacsvox-enwc,  Up: Emacsvox Commands And Options
 
 12.66 emacsvox-epa
 ==================
@@ -6114,7 +6150,7 @@ EPA == EasyPG Assistant Integrate GPG functionality into Emacs.
 Speech-enable all interactive commands.
 
 
-File: emacspeak.info,  Node: emacsvox-epub,  Next: emacsvox-erc,  Prev: emacsvox-epa,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-epub,  Next: emacsvox-erc,  Prev: emacsvox-epa,  Up: Emacsvox Commands And Options
 
 12.67 emacsvox-epub
 ===================
@@ -6607,7 +6643,7 @@ table of contents.
 
 
 
-File: emacspeak.info,  Node: emacsvox-erc,  Next: emacsvox-eshell,  Prev: emacsvox-epub,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-erc,  Next: emacsvox-eshell,  Prev: emacsvox-epub,  Up: Emacsvox Commands And Options
 
 12.68 emacsvox-erc
 ==================
@@ -6706,7 +6742,7 @@ http://www.cs.cmu.edu/~berez/irc/erc.el
 
 
 
-File: emacspeak.info,  Node: emacsvox-eshell,  Next: emacsvox-ess,  Prev: emacsvox-erc,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-eshell,  Next: emacsvox-ess,  Prev: emacsvox-erc,  Up: Emacsvox Commands And Options
 
 12.69 emacsvox-eshell
 =====================
@@ -6716,7 +6752,7 @@ emacs 21 -and can also be used under Emacs 20.  This module
 speech-enables EShell
 
 
-File: emacspeak.info,  Node: emacsvox-ess,  Next: emacsvox-etable,  Prev: emacsvox-eshell,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ess,  Next: emacsvox-etable,  Prev: emacsvox-eshell,  Up: Emacsvox Commands And Options
 
 12.70 emacsvox-ess
 ==================
@@ -6724,7 +6760,7 @@ File: emacspeak.info,  Node: emacsvox-ess,  Next: emacsvox-etable,  Prev: emacsv
 ESS == Emacs Speaks Statistics This module makes ESS speak.
 
 
-File: emacspeak.info,  Node: emacsvox-etable,  Next: emacsvox-eterm,  Prev: emacsvox-ess,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-etable,  Next: emacsvox-eterm,  Prev: emacsvox-ess,  Up: Emacsvox Commands And Options
 
 12.71 emacsvox-etable
 =====================
@@ -6743,7 +6779,7 @@ speech-enables table.el
      Speak current cell.
 
 
-File: emacspeak.info,  Node: emacsvox-eterm,  Next: emacsvox-eudc,  Prev: emacsvox-etable,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-eterm,  Next: emacsvox-eudc,  Prev: emacsvox-etable,  Up: Emacsvox Commands And Options
 
 12.72 emacsvox-eterm
 ====================
@@ -7126,7 +7162,7 @@ move around the terminal and have different parts spoken.
      then set the current local value to the result.
 
 
-File: emacspeak.info,  Node: emacsvox-eudc,  Next: emacsvox-evil,  Prev: emacsvox-eterm,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-eudc,  Next: emacsvox-evil,  Prev: emacsvox-eterm,  Up: Emacsvox Commands And Options
 
 12.73 emacsvox-eudc
 ===================
@@ -7145,7 +7181,7 @@ directory servers e.g.  ldap servers this module speech enables eudc
      Send email to the address given by the current record.
 
 
-File: emacspeak.info,  Node: emacsvox-evil,  Next: emacsvox-eww,  Prev: emacsvox-eudc,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-evil,  Next: emacsvox-eww,  Prev: emacsvox-eudc,  Up: Emacsvox Commands And Options
 
 12.74 emacsvox-evil
 ===================
@@ -7163,7 +7199,7 @@ EVIL == VIM In Emacs This is work-in-progress and is not complete.
      Interactively toggle evil-mode.
 
 
-File: emacspeak.info,  Node: emacsvox-eww,  Next: emacsvox-extras,  Prev: emacsvox-evil,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-eww,  Next: emacsvox-extras,  Prev: emacsvox-evil,  Up: Emacsvox Commands And Options
 
 12.75 emacsvox-eww
 ==================
@@ -8230,7 +8266,7 @@ success on various Web sites.
 
 
 
-File: emacspeak.info,  Node: emacsvox-extras,  Next: emacsvox-exwm,  Prev: emacsvox-eww,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-extras,  Next: emacsvox-exwm,  Prev: emacsvox-eww,  Up: Emacsvox Commands And Options
 
 12.76 emacsvox-extras
 =====================
@@ -8411,7 +8447,7 @@ Infrequently used wizards archived for posterity.
 
 
 
-File: emacspeak.info,  Node: emacsvox-exwm,  Next: emacsvox-feeds,  Prev: emacsvox-extras,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-exwm,  Next: emacsvox-feeds,  Prev: emacsvox-extras,  Up: Emacsvox Commands And Options
 
 12.77 emacsvox-exwm
 ===================
@@ -8430,7 +8466,7 @@ EXWM on the Emacsvox Audio Desktop
      Cycle to next workspace, with wrap-around
 
 
-File: emacspeak.info,  Node: emacsvox-feeds,  Next: emacsvox-ffap,  Prev: emacsvox-exwm,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-feeds,  Next: emacsvox-ffap,  Prev: emacsvox-exwm,  Up: Emacsvox Commands And Options
 
 12.78 emacsvox-feeds
 ====================
@@ -8551,7 +8587,7 @@ This module provides Feeds support for Emacsvox required modules
 
 
 
-File: emacspeak.info,  Node: emacsvox-ffap,  Next: emacsvox-ffip,  Prev: emacsvox-feeds,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ffap,  Next: emacsvox-ffip,  Prev: emacsvox-feeds,  Up: Emacsvox Commands And Options
 
 12.79 emacsvox-ffap
 ===================
@@ -8559,7 +8595,7 @@ File: emacspeak.info,  Node: emacsvox-ffap,  Next: emacsvox-ffip,  Prev: emacsvo
 FFAP == Find file at point and friends
 
 
-File: emacspeak.info,  Node: emacsvox-ffip,  Next: emacsvox-filtertext,  Prev: emacsvox-ffap,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-ffip,  Next: emacsvox-filtertext,  Prev: emacsvox-ffap,  Up: Emacsvox Commands And Options
 
 12.80 emacsvox-ffip
 ===================
@@ -8567,7 +8603,7 @@ File: emacspeak.info,  Node: emacsvox-ffip,  Next: emacsvox-filtertext,  Prev: e
 FFIP == find-file-in-project
 
 
-File: emacspeak.info,  Node: emacsvox-filtertext,  Next: emacsvox-flycheck,  Prev: emacsvox-ffip,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-filtertext,  Next: emacsvox-flycheck,  Prev: emacsvox-ffip,  Up: Emacsvox Commands And Options
 
 12.81 emacsvox-filtertext
 =========================
@@ -8620,7 +8656,7 @@ intermediate filters.
      Revert to original text.
 
 
-File: emacspeak.info,  Node: emacsvox-flycheck,  Next: emacsvox-flymake,  Prev: emacsvox-filtertext,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-flycheck,  Next: emacsvox-flymake,  Prev: emacsvox-filtertext,  Up: Emacsvox Commands And Options
 
 12.82 emacsvox-flycheck
 =======================
@@ -8628,7 +8664,7 @@ File: emacspeak.info,  Node: emacsvox-flycheck,  Next: emacsvox-flymake,  Prev: 
 FLYCHECK == On-the-fly checking.
 
 
-File: emacspeak.info,  Node: emacsvox-flymake,  Next: emacsvox-flyspell,  Prev: emacsvox-flycheck,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-flymake,  Next: emacsvox-flyspell,  Prev: emacsvox-flycheck,  Up: Emacsvox Commands And Options
 
 12.83 emacsvox-flymake
 ======================
@@ -8636,7 +8672,7 @@ File: emacspeak.info,  Node: emacsvox-flymake,  Next: emacsvox-flyspell,  Prev: 
 Speech-enable flymake
 
 
-File: emacspeak.info,  Node: emacsvox-flyspell,  Next: emacsvox-folding,  Prev: emacsvox-flymake,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-flyspell,  Next: emacsvox-folding,  Prev: emacsvox-flymake,  Up: Emacsvox Commands And Options
 
 12.84 emacsvox-flyspell
 =======================
@@ -8665,7 +8701,7 @@ popup and helm.
 
 
 
-File: emacspeak.info,  Node: emacsvox-folding,  Next: emacsvox-forge,  Prev: emacsvox-flyspell,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-folding,  Next: emacsvox-forge,  Prev: emacsvox-flyspell,  Up: Emacsvox Commands And Options
 
 12.85 emacsvox-folding
 ======================
@@ -8676,7 +8712,7 @@ defines some advice forms for folding mode Think of a fold as a
 container.
 
 
-File: emacspeak.info,  Node: emacsvox-forge,  Next: emacsvox-forms,  Prev: emacsvox-folding,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-forge,  Next: emacsvox-forms,  Prev: emacsvox-folding,  Up: Emacsvox Commands And Options
 
 12.86 emacsvox-forge
 ====================
@@ -8685,7 +8721,7 @@ FORGE == Work with Github, Gitlab etc from inside magit.  This module
 speech-enables magit/forge.
 
 
-File: emacspeak.info,  Node: emacsvox-forms,  Next: emacsvox-geiser,  Prev: emacsvox-forge,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-forms,  Next: emacsvox-geiser,  Prev: emacsvox-forge,  Up: Emacsvox Commands And Options
 
 12.87 emacsvox-forms
 ====================
@@ -8741,7 +8777,7 @@ Provide additional advice to forms-mode
      Summarize current record
 
 
-File: emacspeak.info,  Node: emacsvox-geiser,  Next: emacsvox-github-explorer,  Prev: emacsvox-forms,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-geiser,  Next: emacsvox-github-explorer,  Prev: emacsvox-forms,  Up: Emacsvox Commands And Options
 
 12.88 emacsvox-geiser
 =====================
@@ -8752,7 +8788,7 @@ geiser->scheme REPL. This is used by racket-mode for racket interaction,
 And also for interacting with Guile.
 
 
-File: emacspeak.info,  Node: emacsvox-github-explorer,  Next: emacsvox-gnuplot,  Prev: emacsvox-geiser,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-github-explorer,  Next: emacsvox-gnuplot,  Prev: emacsvox-geiser,  Up: Emacsvox Commands And Options
 
 12.89 emacsvox-github-explorer
 ==============================
@@ -8778,7 +8814,7 @@ Explorer.
      Moveback and speak current entry.
 
 
-File: emacspeak.info,  Node: emacsvox-gnuplot,  Next: emacsvox-gnus,  Prev: emacsvox-github-explorer,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-gnuplot,  Next: emacsvox-gnus,  Prev: emacsvox-github-explorer,  Up: Emacsvox Commands And Options
 
 12.90 emacsvox-gnuplot
 ======================
@@ -8788,7 +8824,7 @@ fluent interaction with gnuplot.  Use gnuplot to generate plots of
 mathematical functions for inclusion in documents.
 
 
-File: emacspeak.info,  Node: emacsvox-gnus,  Next: emacsvox-go-mode,  Prev: emacsvox-gnuplot,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-gnus,  Next: emacsvox-go-mode,  Prev: emacsvox-gnuplot,  Up: Emacsvox Commands And Options
 
 12.91 emacsvox-gnus
 ===================
@@ -8847,7 +8883,7 @@ news.
 
 
 
-File: emacspeak.info,  Node: emacsvox-go-mode,  Next: emacsvox-gomoku,  Prev: emacsvox-gnus,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-go-mode,  Next: emacsvox-gomoku,  Prev: emacsvox-gnus,  Up: Emacsvox Commands And Options
 
 12.92 emacsvox-go-mode
 ======================
@@ -8855,7 +8891,7 @@ File: emacspeak.info,  Node: emacsvox-go-mode,  Next: emacsvox-gomoku,  Prev: em
 GO-MODE == Go Language support in emacs
 
 
-File: emacspeak.info,  Node: emacsvox-gomoku,  Next: emacsvox-google,  Prev: emacsvox-go-mode,  Up: Emacspeak Commands And Options
+File: emacsvox.info,  Node: emacsvox-gomoku,  Next: emacsvox-google,  Prev: emacsvox-go-mode,  Up: Emacsvox Commands And Options
 
 12.93 emacsvox-gomoku
 =====================

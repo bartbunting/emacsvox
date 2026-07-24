@@ -4,12 +4,12 @@
 
 See
 @url{http://tvraman.github.io/emacspeak/blog/voice-lock-refreshed.html}
-for a high-level overview of how Emacspeak Voice-Lock has evolved over
+for a high-level overview of how Emacsvox Voice-Lock has evolved over
 the years.
 
 @enumerate
 @item
-Emacspeak defines a number of voice overlays such as
+Emacsvox defines a number of voice overlays such as
 @code{voice-bolden}, and @code{voice-lighten} that can be applied to a
 given voice to change what it sounds like.
 
@@ -51,7 +51,7 @@ ensures that all voices that are defined in terms of
 Discovering what to customize:
 @end enumerate
 
-Command @code{emacspeak-show-personality-at-point} (bound by default
+Command @code{emacsvox-show-personality-at-point} (bound by default
 to C-e M-v) will show you the value of properties personality and
 face at point.  Describe-variable on these names should tell you
 what to customize; so as an example:
@@ -59,14 +59,14 @@ what to customize; so as an example:
 Put point on a comment line, and hit @kbd{C-e M-v}: you will hear
 
 @example
-Personality emacspeak-voice-lock-comment-personality
+Personality emacsvox-voice-lock-comment-personality
 Face font-lock-comment-delimiter-face
 @end example
 
-Describe-variable of @code{emacspeak-voice-lock-comment-personality} gives:
+Describe-variable of @code{emacsvox-voice-lock-comment-personality} gives:
 
 @example
-emacspeak-voice-lock-comment-personality's value is acss-p0-s0-all
+emacsvox-voice-lock-comment-personality's value is acss-p0-s0-all
 
 Documentation: Personality used for font-lock-comment-face This
 personality uses voice-monotone whose effect can be changed globally
@@ -136,13 +136,13 @@ are  useful when designing aural styles.
 @enumerate
 
 @item
-@code{emacspeak-wizards-generate-voice-sampler}
+@code{emacsvox-wizards-generate-voice-sampler}
 
 Generate a buffer containing text that demonstrates the effect of
 various aural settings.
 
 @item
-@code{emacspeak-wizards-voice-sampler}
+@code{emacsvox-wizards-voice-sampler}
 
 Applied specified aural style to text in current region.
 @end enumerate

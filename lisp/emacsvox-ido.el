@@ -47,7 +47,7 @@
 ;; shown (ido-max-prospects) to 2 or 3 using Custom so you dont hear the
 ;; entire list. You can also customize @var{ido-decorations} to taste.
 ;; See
-;; @url{https://emacsvox.blogspot.com/2018/06/\
+;; @url{https://emacspeak.blogspot.com/2018/06/\
 ;;effective-suggest-and-complete-in-eyes.html},
 ;; for an article on how to reason about designing  good auditory
 ;; interfaces for these types of situations.
