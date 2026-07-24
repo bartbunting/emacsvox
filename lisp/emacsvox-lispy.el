@@ -108,7 +108,7 @@
       (let ((emacsvox-show-point t))
         (cond
          ((eq origin (point))
-          (dtk-notify "Did not move")
+          (tts-notify "Did not move")
           (emacsvox-icon 'tick-tick))
          ((= ?\) (char-syntax (preceding-char)))
           (emacsvox-icon 'select-object)

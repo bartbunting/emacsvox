@@ -86,7 +86,7 @@
   (when ido-matches
     (when (> (length ido-matches) ido-max-prospects)
       (emacsvox-icon 'ellipses))
-    (dtk-notify
+    (tts-notify
      (concat (minibuffer-contents)
              (format " %d choices: " (length ido-matches))
              (if

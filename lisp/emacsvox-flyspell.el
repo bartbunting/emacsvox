@@ -101,7 +101,7 @@ fly spell checking."
         (let ((result (apply orig-fun args)))
           (tts-speak (car (flyspell-get-word nil)))
           (when (sit-for 1)
-            (dtk-notify (cl-second flyspell-auto-correct-ring)))
+            (tts-notify (cl-second flyspell-auto-correct-ring)))
           (when (sit-for 1)
             (emacsvox-speak-message-again))
           (emacsvox-icon 'select-object)

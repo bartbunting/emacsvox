@@ -262,7 +262,7 @@ If already playing, then read an empv key and invoke its command."
    ((null file)                         ; we're already playing
     (call-interactively
      (lookup-key  empv-map  (read-key-sequence "EMpv Key:"))))
-   (t (dtk-notify (file-name-base file))
+   (t (tts-notify (file-name-base file))
       (empv-play file))))
 
 (defun emacsvox-empv-yt-search (query)
@@ -400,7 +400,7 @@ If already playing, then read an empv key and invoke its command."
     (search candidates &rest _)
   "Report CANDIDATES displayed for YouTube SEARCH."
   (emacsvox-icon 'scroll)
-  (dtk-notify
+  (tts-notify
    (format "%s: %s results"
            (empv--yt-search-query search)
            (length candidates))))

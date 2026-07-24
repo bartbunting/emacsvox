@@ -651,7 +651,7 @@ which becomes buffer-local."
   "TTS line using network TTS.
 Use default voice for buffer."
   (interactive "P")
-  (dtk-notify (format "%d" (line-number-at-pos (point))))
+  (tts-notify (format "%d" (line-number-at-pos (point))))
   (emacsvox-google-tts-region
    (line-beginning-position) (line-end-position) lang))
 
@@ -662,7 +662,7 @@ Use default voice for buffer."
   (interactive)
   (forward-line 1)
   (skip-syntax-forward "^w_")
-  (dtk-notify (format "%d" (line-number-at-pos (point))))
+  (tts-notify (format "%d" (line-number-at-pos (point))))
   (emacsvox-google-tts-region
    (line-beginning-position) (line-end-position)))
 
@@ -674,7 +674,7 @@ Use default voice for buffer."
   (forward-line -1)
   (skip-syntax-backward "^w_")
   (goto-char (line-beginning-position))
-  (dtk-notify (format "%d" (line-number-at-pos (point))))
+  (tts-notify (format "%d" (line-number-at-pos (point))))
   (emacsvox-google-tts-region
    (line-beginning-position) (line-end-position)))
 

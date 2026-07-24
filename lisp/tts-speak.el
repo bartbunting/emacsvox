@@ -86,8 +86,6 @@
   "Canonical name for the current buffer-local speech rate.")
 (defvaralias 'tts-stop-immediately 'dtk-stop-immediately
   "Canonical name for immediate speech interruption state.")
-(defvaralias 'tts-notify-process 'dtk-notify-process
-  "Canonical name for the notification speech-server process.")
 (defvaralias 'tts-punctuation-mode 'dtk-punctuation-mode
   "Canonical name for buffer-local punctuation state.")
 (defvaralias 'tts-servers-alist 'dtk-servers-alist
@@ -467,8 +465,8 @@ Uses a 5ms fade-in and fade-out. "
   (interactive "sEnter language: \n")
   
   (when (process-live-p tts-speaker-process)
-    (unless (eq tts-speaker-process (dtk-notify-process))
-      (let ((tts-speaker-process (dtk-notify-process)))
+    (unless (eq tts-speaker-process (tts-notify-process))
+      (let ((tts-speaker-process (tts-notify-process)))
         (tts--protocol-set-language lang nil)))
     (tts--protocol-set-language lang (called-interactively-p 'interactive))))
 
@@ -477,8 +475,8 @@ Uses a 5ms fade-in and fade-out. "
   (interactive)
   
   (when (process-live-p tts-speaker-process)
-    (unless (eq tts-speaker-process (dtk-notify-process))
-      (let ((tts-speaker-process (dtk-notify-process)))
+    (unless (eq tts-speaker-process (tts-notify-process))
+      (let ((tts-speaker-process (tts-notify-process)))
         (tts--protocol-next-language nil)))
     (tts--protocol-next-language (called-interactively-p 'interactive))))
 
@@ -487,8 +485,8 @@ Uses a 5ms fade-in and fade-out. "
   (interactive)
   
   (when (process-live-p tts-speaker-process)
-    (unless (eq tts-speaker-process (dtk-notify-process))
-      (let ((tts-speaker-process (dtk-notify-process)))
+    (unless (eq tts-speaker-process (tts-notify-process))
+      (let ((tts-speaker-process (tts-notify-process)))
         (tts--protocol-previous-language nil)))
     (tts--protocol-previous-language (called-interactively-p 'interactive))))
 
@@ -497,8 +495,8 @@ Uses a 5ms fade-in and fade-out. "
   (interactive "s")
   
   (when (process-live-p tts-speaker-process)
-    (unless (eq tts-speaker-process (dtk-notify-process))
-      (let ((tts-speaker-process (dtk-notify-process)))
+    (unless (eq tts-speaker-process (tts-notify-process))
+      (let ((tts-speaker-process (tts-notify-process)))
         (tts--protocol-set-preferred-language alias lang)))
     (tts--protocol-set-preferred-language alias lang)))
 
@@ -850,9 +848,9 @@ notification stream as well."
   (interactive "P")
   (when (process-live-p tts-speaker-process) (tts--protocol-stop))
   (when
-      (and (dtk-notify-process)
+      (and (tts-notify-process)
            (or all (called-interactively-p 'interactive)))
-    (dtk-notify-stop)))
+    (tts-notify-stop)))
 
 (defun dtk-reset-default-voice ()
   
@@ -912,8 +910,8 @@ current local  value to the result."
   (when (process-live-p tts-speaker-process)
     (cond
      (prefix
-      (unless (eq tts-speaker-process (dtk-notify-process))
-        (let ((tts-speaker-process (dtk-notify-process)))
+      (unless (eq tts-speaker-process (tts-notify-process))
+        (let ((tts-speaker-process (tts-notify-process)))
           (dtk-set-rate rate prefix)))
       (setq-default dtk-speech-rate rate)
       (setq dtk-speech-rate rate))
@@ -1107,7 +1105,7 @@ important to be interrupted.")
 (defvar tts-speaker-process nil
   "Speaker process handle.")
 
-(defvar dtk-notify-process nil
+(defvar tts-notify-process nil
   "Notify speaker  process handle.")
 
 (defvar-local dtk-punctuation-mode 'all
@@ -1471,7 +1469,7 @@ Set by \\[dtk-set-punctuations].")
   (setq emacsvox-play-program nil)
   (dtk-initialize)
   (when (tts-multistream-p dtk-cloud-server)
-    (dtk-notify-initialize)))
+    (tts-notify-initialize)))
 
 (defvar dtk-local-server-process nil
   "Local server process.")
@@ -1553,7 +1551,7 @@ For swiftmac, set this to `left' or `right'."
     ;; success, so nuke old server
     (when (processp tts-speaker-process) (delete-process tts-speaker-process))
     (setq tts-speaker-process new)
-    (when (tts-multistream-p dtk-program) (dtk-notify-initialize))
+    (when (tts-multistream-p dtk-program) (tts-notify-initialize))
     (when (string-match "cloud" dtk-program) ; we'll serve icons.
       (setq emacsvox-play-program nil))
     ;; `voice-setup' requires us, so we can't require it at top-level.
@@ -1639,7 +1637,7 @@ unless   `dtk-quiet' is set to t. "
           (null text) (zerop (length text)))
     ;; flush previous speech if asked to
     (when dtk-stop-immediately
-      (when (process-live-p dtk-notify-process) (dtk-notify-stop))
+      (when (process-live-p tts-notify-process) (tts-notify-stop))
       (tts-stop))
     (when selective-display
       (let ((ctrl-m (string-match "\015" text)))
@@ -1780,55 +1778,55 @@ grouping"
       (tts--protocol-letter letter))))
 ;;;  Notify:
 
-(defun dtk-notify-process ()
+(defun tts-notify-process ()
   "Return  Notification TTS handle or tts-speaker-process. "
   
   (cond
-   ((null dtk-notify-process) tts-speaker-process)
-   ((and (processp dtk-notify-process)
-         (memq (process-status dtk-notify-process) '(open run)))
-    dtk-notify-process)
+   ((null tts-notify-process) tts-speaker-process)
+   ((and (processp tts-notify-process)
+         (memq (process-status tts-notify-process) '(open run)))
+    tts-notify-process)
    (t tts-speaker-process)))
 
-(defun dtk-notify-stop ()
+(defun tts-notify-stop ()
   "Stop  speech on notification stream."
   (interactive)
-  (let ((tts-speaker-process (dtk-notify-process)))
+  (let ((tts-speaker-process (tts-notify-process)))
     (when tts-speaker-process (tts-stop))))
 
-(defun dtk-notify-apply (func text)
+(defun tts-notify-apply (func text)
   " Applies func to text with tts-speaker-process set to notification stream."
-  (let ((tts-speaker-process (dtk-notify-process)))
+  (let ((tts-speaker-process (tts-notify-process)))
     (funcall func text)))
 (declare-function emacsvox-log-notification "emacsvox-speak" (text))
 
-(defun dtk-notify (text &optional dont-log)
+(defun tts-notify (text &optional dont-log)
   "Speak text on notification stream.
 Notification is logged in the notifications buffer unless `dont-log' is T. "
   
   (unless dont-log (emacsvox-log-notification text))
   (setq emacsvox-last-message text)
   (cond
-   ((dtk-notify-process)                ; we have a live notifier
-    (dtk-notify-apply #'tts-speak text))
+   ((tts-notify-process)                ; we have a live notifier
+    (tts-notify-apply #'tts-speak text))
    (t (tts-speak text)))
   text)
 
-(defun dtk-notify-icon (icon)
+(defun tts-notify-icon (icon)
   "Play icon  on notification stream. "
   (cond
-   ((dtk-notify-process)                ; we have a live notifier
-    (dtk-notify-apply #'emacsvox-icon icon))))
+   ((tts-notify-process)                ; we have a live notifier
+    (tts-notify-apply #'emacsvox-icon icon))))
 
-(defun dtk-notify-initialize ()
+(defun tts-notify-initialize ()
   "Initialize notification TTS stream."
   (interactive)
   
   (let ((new nil)
         (dtk-program
          (if (string-match "cloud" dtk-program) "cloud-notify" dtk-program)))
-    (when (and dtk-notify-process (process-live-p dtk-notify-process))
-      (delete-process dtk-notify-process))
+    (when (and tts-notify-process (process-live-p tts-notify-process))
+      (delete-process tts-notify-process))
     (unless
         (and (not (string-match "cloud" dtk-program))
              (zerop (length tts-notification-device)))
@@ -1839,7 +1837,7 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
            ("PULSE_SINK" tts-notification-device))
         (setq  new (dtk-make-process "Notify"))
         (when (process-live-p new)
-          (setq dtk-notify-process new))))))
+          (setq tts-notify-process new))))))
 
 ;; Include dtk-unicode.el
 
@@ -2161,12 +2159,6 @@ When called interactively, CHAR defaults to the character after point."
 (defalias 'tts-unicode-name-for-char #'dtk-unicode-name-for-char)
 (defalias 'tts-unicode-full-name-for-char #'dtk-unicode-full-name-for-char)
 (defalias 'tts-letter #'dtk-letter)
-(defalias 'tts-notify-process #'dtk-notify-process)
-(defalias 'tts-notify-stop #'dtk-notify-stop)
-(defalias 'tts-notify-apply #'dtk-notify-apply)
-(defalias 'tts-notify #'dtk-notify)
-(defalias 'tts-notify-icon #'dtk-notify-icon)
-(defalias 'tts-notify-initialize #'dtk-notify-initialize)
 
 ;;; tts-speak.el ends here
 

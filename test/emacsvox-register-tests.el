@@ -42,7 +42,7 @@
     (insert "one\ntwo\nthree\n")
     (let ((ems--interactive-fn-name 'copy-to-register)
           notifications)
-      (cl-letf (((symbol-function 'dtk-notify)
+      (cl-letf (((symbol-function 'tts-notify)
                  (lambda (text &rest _)
                    (push text notifications))))
         (emacsvox--advice-copy-to-register-after

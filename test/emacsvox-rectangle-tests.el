@@ -60,7 +60,7 @@
   (let ((ems--interactive-fn-name 'rectangle-mark-mode)
         (rectangle-mark-mode t)
         events)
-    (cl-letf (((symbol-function 'dtk-notify)
+    (cl-letf (((symbol-function 'tts-notify)
                (lambda (text &rest _)
                  (push (list 'notify text) events)))
               ((symbol-function 'emacsvox-icon)

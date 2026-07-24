@@ -625,14 +625,14 @@ If optional arg property is not supplied, read it interactively. "
 (defun emacsvox-skip-space-forwar ()
   "Skip forward across blanks."
   (interactive)
-  (dtk-notify  (skip-syntax-forward " "))
+  (tts-notify  (skip-syntax-forward " "))
   (emacsvox-speak-char t))
 
 ;;;###autoload
 (defun emacsvox-skip-space-backward ()
   "Skip back across blanks."
   (interactive)
-  (dtk-notify  (skip-syntax-backward " "))
+  (tts-notify  (skip-syntax-backward " "))
   (emacsvox-speak-preceding-char))
 
 ;;;  ansi term

@@ -61,7 +61,7 @@
 (defun emacsvox--advice-annotate-annotate-after (&rest _)
   "speak."
   (when (ems-interactive-p 'annotate-annotate)
-    (dtk-notify "Added annotation")))
+    (tts-notify "Added annotation")))
 
 (cl-loop
  for target in
@@ -76,7 +76,7 @@
        (let ((o (cl-first (overlays-at (point)))))
          (emacsvox-icon 'large-movement)
          (emacsvox-speak-line)
-         (dtk-notify (overlay-get o 'annotation)))))))
+         (tts-notify (overlay-get o 'annotation)))))))
 
 (defconst emacsvox-annotate--advice-targets
   '(annotate-annotate

@@ -219,7 +219,7 @@
 (defun emacsvox--advice-magit-section-cycle-global-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-section-cycle-global)
-    (dtk-notify "Cycling global visibility of sections")))
+    (tts-notify "Cycling global visibility of sections")))
 
 (cl-loop
  for target in '(magit-section-toggle magit-section-cycle)

@@ -104,7 +104,7 @@
           events)
       (cl-letf (((symbol-function 'dtk-tone)
                  (lambda (&rest _) (push 'tone events)))
-                ((symbol-function 'dtk-notify)
+                ((symbol-function 'tts-notify)
                  (lambda (text) (push (list 'notify text) events))))
         (should
          (eq

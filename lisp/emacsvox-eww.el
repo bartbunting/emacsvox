@@ -1797,7 +1797,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
     (unless target  (user-error   "No  audio/video elements"))
     (goto-char target)
     (emacsvox-speak-line)
-    (dtk-notify "Press ; to play")
+    (tts-notify "Press ; to play")
     (emacsvox-icon 'large-movement)))
 
 (defun emacsvox-eww-previous-audio/video ()
@@ -1809,7 +1809,7 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
     (unless target  (user-error   "No  audio/video elements"))
     (goto-char target)
     (emacsvox-speak-line)
-    (dtk-notify "Press ; to play")
+    (tts-notify "Press ; to play")
     (emacsvox-icon 'large-movement)))
 
 (defvar emacsvox-eww-el-nav-history nil

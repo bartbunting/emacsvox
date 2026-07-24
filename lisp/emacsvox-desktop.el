@@ -62,7 +62,7 @@
 (defun emacsvox--advice-desktop-clear-after (&rest _)
   "speak."
   (when (ems-interactive-p 'desktop-clear)
-    (emacsvox-speak-mode-line) (dtk-notify "cleared desktop")
+    (emacsvox-speak-mode-line) (tts-notify "cleared desktop")
     (emacsvox-icon 'delete-object)))
 
 (advice-add 'desktop-clear :after

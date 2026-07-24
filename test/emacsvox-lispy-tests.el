@@ -21,7 +21,7 @@
   (with-temp-buffer
     (let ((ems--interactive-fn-name 'lispy-forward)
           (calls 0))
-      (cl-letf (((symbol-function 'dtk-notify) #'ignore)
+      (cl-letf (((symbol-function 'tts-notify) #'ignore)
                 ((symbol-function 'emacsvox-icon) #'ignore))
         (should
          (eq 'moved

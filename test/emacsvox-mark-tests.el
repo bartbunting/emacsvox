@@ -90,7 +90,7 @@
                    (push
                     (list 'speak-line emacsvox-show-point)
                     events)))
-                ((symbol-function 'dtk-notify)
+                ((symbol-function 'tts-notify)
                  (lambda (text) (push (list 'notify text) events))))
         (emacsvox--advice-pop-global-mark-after))
       (should-not emacsvox-show-point)

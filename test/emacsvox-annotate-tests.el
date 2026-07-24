@@ -19,7 +19,7 @@
 (ert-deftest emacsvox-annotate-add-feedback-is-target-aware ()
   "Annotation creation is announced only interactively."
   (let ((ems--interactive-fn-name 'annotate-annotate) events)
-    (cl-letf (((symbol-function 'dtk-notify)
+    (cl-letf (((symbol-function 'tts-notify)
                (lambda (text) (push text events))))
       (emacsvox--advice-annotate-annotate-after))
     (should (equal events '("Added annotation")))))

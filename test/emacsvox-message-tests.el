@@ -43,7 +43,7 @@
                (lambda () "  Hello world  "))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (text &optional mode)
                  (push (list 'notify text mode) events))))
       (should
@@ -77,7 +77,7 @@
                (lambda () "Repeated"))
               ((symbol-function 'emacsvox-icon)
                (lambda (&rest _) (setq feedback t)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (&rest _) (setq feedback t))))
       (should
        (eq
@@ -99,7 +99,7 @@
         inspected)
     (cl-letf (((symbol-function 'current-message)
                (lambda () (setq inspected t)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (&rest _) (setq inspected t))))
       (should
        (eq
@@ -121,7 +121,7 @@
         (calls 0)
         events)
     (unwind-protect
-        (cl-letf (((symbol-function 'dtk-notify)
+        (cl-letf (((symbol-function 'tts-notify)
                    (lambda (text &rest _)
                      (push (list 'notify text) events))))
           (should
@@ -149,7 +149,7 @@
         (inhibit-message nil)
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'dtk-notify)
+    (cl-letf (((symbol-function 'tts-notify)
                (lambda (text &rest _)
                  (push
                   (list 'notify text emacsvox-speak-messages

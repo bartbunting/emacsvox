@@ -142,7 +142,7 @@ This is set to nil when playing Internet  streams.")
   "Mode-line for M-Player buffers."
   (interactive)
   
-  (dtk-notify
+  (tts-notify
    (cond
     ((eq 'run (process-status emacsvox-m-player-process))
      (let ((info (emacsvox-m-player-get-position)))
@@ -524,7 +524,7 @@ dynamic playlist. "
            (y-or-n-p "Stop "))
     (emacsvox-m-player-quit)
     (setq emacsvox-m-player-process nil))
-  (dtk-notify (file-name-base resource))
+  (tts-notify (file-name-base resource))
   (let ((buffer (get-buffer-create "*M-Player*"))
         (process-connection-type nil)
         (playlist-p
@@ -1793,7 +1793,7 @@ Optional interactive prefix arg prompts for name to use for  player."
        'unique))
     (when (called-interactively-p 'interactive)
       (emacsvox-icon 'task-done)
-      (dtk-notify
+      (tts-notify
        "persisted current process. You can now start another player."))))
 
 (defun emacsvox-m-player-restore-process ()

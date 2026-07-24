@@ -819,7 +819,7 @@ arg just opens the file"
     (setq choices
           (cond ((null first-key) entries)
                 (t (cl-caddr (assoc first-key entries)))))
-    (dtk-notify
+    (tts-notify
      (mapconcat
       #'(lambda (e) (format "%c: %s\n" (cl-first e) (cl-second e)))
       choices "\n"))
@@ -1073,7 +1073,7 @@ Press `y' to play to next amark."
 (defun emacsvox--advice-org-export-to-file-after (_backend file &rest _)
   "Cue and report the Org export output FILE."
   (emacsvox-icon 'save-object)
-  (dtk-notify (format "Wrote %s" file)))
+  (tts-notify (format "Wrote %s" file)))
 
 (advice-add
  'org-export-to-file :after #'emacsvox--advice-org-export-to-file-after

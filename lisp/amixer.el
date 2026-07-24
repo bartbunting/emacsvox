@@ -328,7 +328,7 @@ Interactive prefix arg `PROMPT' reads percentage as a number"
                  (read-number "Volume Step:")
                amixer-volume-step)))
     (amixer-build-db)
-    (dtk-notify (ems--show-current-volume))
+    (tts-notify (ems--show-current-volume))
     (emacsvox-icon 'right)))
 
 (defun amixer-volume-down (&optional prompt)
@@ -346,7 +346,7 @@ Interactive prefix arg `PROMPT' reads percentage as a number"
                amixer-volume-step)))
     (amixer-build-db)
     (emacsvox-icon 'left)
-    (dtk-notify (ems--show-current-volume))))
+    (tts-notify (ems--show-current-volume))))
 
 ;;;###autoload
 (defun amixer-volume-adjust ()

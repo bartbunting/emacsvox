@@ -91,7 +91,7 @@
                (lambda (directory) directory))
               ((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (text) (push (list 'notify text) events))))
       (emacsvox--advice-ido-exhibit-after))
     (should

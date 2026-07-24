@@ -164,7 +164,7 @@
   (when (ems-interactive-p 'package-menu-mark-upgrades)
     (let ((upgrades (package-menu--find-upgrades)))
       (when upgrades
-        (dtk-notify (format "%s" (mapcar #'car upgrades)))))))
+        (tts-notify (format "%s" (mapcar #'car upgrades)))))))
 
 (advice-add 'package-menu-mark-upgrades :after
             #'emacsvox--advice-package-menu-mark-upgrades-after)

@@ -67,7 +67,7 @@
 (defsubst emacsvox-tab-bar-speak-tab-name ()
   "Speak name of current tab."
   (emacsvox-icon 'tick-tick)
-  (dtk-notify
+  (tts-notify
    (format "%s"
            (alist-get 'name (alist-get 'current-tab (tab-bar-tabs))))))
 

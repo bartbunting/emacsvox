@@ -80,7 +80,7 @@
         notifications)
     (cl-letf (((symbol-function 'package-menu--find-upgrades)
                (lambda () '((alpha . old) (beta . old))))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (text) (push text notifications))))
       (emacsvox--advice-package-menu-mark-upgrades-after))
     (should (equal notifications '("(alpha beta)")))))

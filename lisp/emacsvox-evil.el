@@ -270,7 +270,7 @@
     (emacsvox-icon 'mark-object)
     (let ((emacsvox-show-point t))
       (emacsvox-speak-line)
-      (dtk-notify (format "Marker %c" char)))))
+      (tts-notify (format "Marker %c" char)))))
 
 (push '(evil-set-marker :after emacsvox--advice-evil-set-marker-after)
       emacsvox-evil--advice)
@@ -321,7 +321,7 @@
   (when (and evil-previous-state evil-next-state
              (not (eq evil-previous-state evil-next-state)))
     (emacsvox-icon 'select-object)
-    (dtk-notify
+    (tts-notify
      (format "Changing state from %s to %s"
              evil-previous-state evil-next-state))))
 
@@ -337,7 +337,7 @@
 (defun emacsvox--advice-evil-exit-emacs-state-after (&rest _)
   "Report leaving Evil's Emacs state."
   (when (ems-interactive-p 'evil-exit-emacs-state)
-    (emacsvox-icon 'open-object) (dtk-notify "Leaving Emacs state.")))
+    (emacsvox-icon 'open-object) (tts-notify "Leaving Emacs state.")))
 
 (push '(evil-exit-emacs-state :after
         emacsvox--advice-evil-exit-emacs-state-after)

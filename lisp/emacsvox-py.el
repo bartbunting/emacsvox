@@ -63,7 +63,7 @@
         (dtk-tone 500 100 'force)
         (unless ws (emacsvox-speak-this-char (preceding-char)))
         (when ws
-          (dtk-notify (format "Indent %s " result))
+          (tts-notify (format "Indent %s " result))
           (emacsvox-icon 'close-object) (sit-for 0.2)
           (save-excursion
             (py-beginning-of-block) (emacsvox-speak-line)))))

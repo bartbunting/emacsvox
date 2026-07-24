@@ -80,7 +80,7 @@
        (save-excursion
          (forward-line -2)
          (forward-word 2)
-         (dtk-notify (word-at-point)))))))
+         (tts-notify (word-at-point)))))))
 
 (defun emacsvox--advice-ebuku-show-all-after (&rest _)
   "Speak after showing every bookmark."

@@ -41,6 +41,15 @@
     dtk-interp-reset-state)
   "Removed DECtalk-era names for the generic speech-server protocol.")
 
+(defconst emacsvox-test--legacy-notification-functions
+  '(dtk-notify-process
+    dtk-notify-stop
+    dtk-notify-apply
+    dtk-notify
+    dtk-notify-icon
+    dtk-notify-initialize)
+  "Removed DECtalk-era names for generic notification speech.")
+
 (defconst emacsvox-test--tts-public-aliases
   '((tts-get-style . dtk-get-style)
     (tts-get-voice-for-face . dtk-get-voice-for-face)
@@ -85,13 +94,7 @@
     (tts-unicode-char-untouched-p . dtk-unicode-char-untouched-p)
     (tts-unicode-name-for-char . dtk-unicode-name-for-char)
     (tts-unicode-full-name-for-char . dtk-unicode-full-name-for-char)
-    (tts-letter . dtk-letter)
-    (tts-notify-process . dtk-notify-process)
-    (tts-notify-stop . dtk-notify-stop)
-    (tts-notify-apply . dtk-notify-apply)
-    (tts-notify . dtk-notify)
-    (tts-notify-icon . dtk-notify-icon)
-    (tts-notify-initialize . dtk-notify-initialize))
+    (tts-letter . dtk-letter))
   "Canonical public aliases and their legacy implementations.")
 
 (defun emacsvox-test--tts-capture-protocol (thunk)
@@ -212,11 +215,11 @@
 (ert-deftest emacsvox-tts-notification-apply-selects-notification-process ()
   "Notification calls dynamically use the live notification process."
   (let ((tts-speaker-process 'primary)
-        (dtk-notify-process 'notification)
+        (tts-notify-process 'notification)
         selected)
     (cl-letf (((symbol-function 'processp) (lambda (_) t))
               ((symbol-function 'process-status) (lambda (_) 'run)))
-      (dtk-notify-apply
+      (tts-notify-apply
        (lambda (_text) (setq selected tts-speaker-process))
        "notice"))
     (should (eq selected 'notification))))
@@ -266,6 +269,12 @@
 (ert-deftest emacsvox-tts-legacy-speak-list-function-is-removed ()
   "List speech no longer exposes its DECtalk-era function name."
   (should-not (fboundp 'dtk-speak-list)))
+
+(ert-deftest emacsvox-tts-legacy-notification-api-is-removed ()
+  "Notification speech no longer exposes DECtalk-era names."
+  (dolist (function emacsvox-test--legacy-notification-functions)
+    (should-not (fboundp function)))
+  (should-not (boundp 'dtk-notify-process)))
 
 (ert-deftest emacsvox-tts-state-remains-buffer-local ()
   "Changing speech state in one buffer does not alter another buffer."

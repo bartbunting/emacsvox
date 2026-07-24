@@ -25,7 +25,7 @@
                (lambda (icon) (push icon events)))
               ((symbol-function 'emacsvox-speak-mode-line)
                (lambda () (push 'mode-line events)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (text) (push text events))))
       (emacsvox--advice-desktop-clear-after)
       (emacsvox--advice-desktop-save-after))

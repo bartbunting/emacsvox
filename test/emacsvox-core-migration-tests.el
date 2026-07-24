@@ -393,7 +393,7 @@
                (lambda () "50%"))
               ((symbol-function 'tts-speak)
                (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (text)
                  (push
                   (list 'notify (substring-no-properties text)

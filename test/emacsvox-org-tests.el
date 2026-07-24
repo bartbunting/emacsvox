@@ -478,7 +478,7 @@
   (let ((entries '((?a "Alpha") (?b "Beta")))
         notified
         waited)
-    (cl-letf (((symbol-function 'dtk-notify)
+    (cl-letf (((symbol-function 'tts-notify)
                (lambda (text) (setq notified text)))
               ((symbol-function 'sit-for)
                (lambda (seconds) (setq waited seconds))))
@@ -492,7 +492,7 @@
   (let (events)
     (cl-letf (((symbol-function 'emacsvox-icon)
                (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'dtk-notify)
+              ((symbol-function 'tts-notify)
                (lambda (text) (push (list 'notify text) events))))
       (emacsvox--advice-org-export-to-file-after
        'html "/tmp/report.html" nil nil nil nil nil nil))

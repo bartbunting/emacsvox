@@ -127,7 +127,7 @@ Stop apps that use the network."
         (mapcar #'car (network-interface-list)))
   (emacsvox-icon 'network-down)
   (message (mapconcat #'identity emacsvox-speak-network-interfaces-list ""))
-  (dtk-notify "Network down"))
+  (tts-notify "Network down"))
 
 (add-hook 'nm-connected-hook 'emacsvox-dbus-nm-connected)
 (add-hook 'nm-disconnected-hook 'emacsvox-dbus-nm-disconnected)

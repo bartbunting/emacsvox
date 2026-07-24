@@ -119,7 +119,7 @@
           (emacsvox-speak-this-char (preceding-char)))
         (prog1 (funcall orig-fun arg)
           (when ws
-            (dtk-notify (format "Indent %s " (current-column))))))
+            (tts-notify (format "Indent %s " (current-column))))))
     (funcall orig-fun arg)))
 
 (advice-add 'python-indent-dedent-line-backspace :around
