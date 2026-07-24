@@ -52,149 +52,135 @@
 
 ;;;   electric editing
 
-(defun ems--py-electric-backspace-around (orig-fun &rest args)
+(defvar emacsvox-py--advice nil
+  "Python Mode targets and their native advice functions.")
+
+(defun emacsvox--advice-py-electric-backspace-around (orig-fun &rest args)
   "Speak character you're deleting.\nProvide contextual feedback when closing blocks"
   (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p)
+    (when (ems-interactive-p 'py-electric-backspace)
       (let ((ws (= (char-syntax (preceding-char)) 32)))
         (dtk-tone 500 100 'force)
         (unless ws (emacsvox-speak-this-char (preceding-char)))
-        (apply orig-fun args)
         (when ws
           (dtk-notify (format "Indent %s " result))
           (emacsvox-icon 'close-object) (sit-for 0.2)
           (save-excursion
             (py-beginning-of-block) (emacsvox-speak-line)))))
-     (t (apply orig-fun args)))
     result))
 
-(advice-add 'py-electric-backspace :around
-            #'ems--py-electric-backspace-around)
+(push '(py-electric-backspace :around
+        emacsvox--advice-py-electric-backspace-around)
+      emacsvox-py--advice)
 
-(defun ems--py-electric-delete-around (orig-fun &rest args)
+(defun emacsvox--advice-py-electric-delete-around (orig-fun &rest args)
   "Speak character you're deleting."
   (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone 500 100 'force)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
+    (when (ems-interactive-p 'py-electric-delete)
+      (dtk-tone 500 100 'force)
+      (emacsvox-speak-this-char (preceding-char)))
     result))
 
-(advice-add 'py-electric-delete :around
-            #'ems--py-electric-delete-around)
+(push '(py-electric-delete :around
+        emacsvox--advice-py-electric-delete-around)
+      emacsvox-py--advice)
 
 ;;;  interactive programming
 
-(defun ems--py-shell-after (&rest _)
+(defun emacsvox--advice-py-shell-after (&rest _)
   "speak"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-shell)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'py-shell :after #'ems--py-shell-after)
+(cl-loop
+ for target in '(py-clear-queue py-execute-region py-execute-buffer)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     "Cue successful Python execution."
+     (when (ems-interactive-p ',target)
+       (emacsvox-icon 'task-done))))
+ (push (list target :after advice-function) emacsvox-py--advice))
 
-(defun ems--py-clear-queue-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(cl-loop
+ for target in '(py-goto-exception py-down-exception py-up-exception)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     "Speak the exception destination."
+     (when (ems-interactive-p ',target)
+       (emacsvox-icon 'large-movement)
+       (emacsvox-speak-line))))
+ (push (list target :after advice-function) emacsvox-py--advice))
 
-(advice-add 'py-clear-queue :after #'ems--py-clear-queue-after)
-
-(defun ems--py-execute-region-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'py-execute-region :after #'ems--py-execute-region-after)
-
-(defun ems--py-execute-buffer-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-icon 'task-done)))
-
-(advice-add 'py-execute-buffer :after #'ems--py-execute-buffer-after)
-
-(defun ems--py-goto-exception-after (&rest _)
-  "Speak line you moved to"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'py-goto-exception :after #'ems--py-goto-exception-after)
-
-(defun ems--py-down-exception-after (&rest _)
-  "Speak line you moved to"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'py-down-exception :after #'ems--py-down-exception-after)
-
-(defun ems--py-up-exception-after (&rest _)
-  "Speak line you moved to"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
-
-(advice-add 'py-up-exception :after #'ems--py-up-exception-after)
+(push '(py-shell :after emacsvox--advice-py-shell-after)
+      emacsvox-py--advice)
 
 ;;;   whitespace management and indentation
 
 (cl-loop
- for f in
+ for target in
  (list 'py-fill-paragraph 'py-fill-comment 'py-fill-string)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'fill-object)))))
+     (when (ems-interactive-p ',target)
+       (emacsvox-icon 'fill-object))))
+ (push (list target :after advice-function) emacsvox-py--advice))
 
-(defun ems--py-newline-and-indent-after (&rest _)
+(defun emacsvox--advice-py-newline-and-indent-after (&rest _)
   "Speak line so we know current indentation"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-newline-and-indent)
     (dtk-speak-using-voice voice-annotate
                            (format "indent %s" (current-column)))
     (dtk-interp-speak)))
 
-(advice-add 'py-newline-and-indent :after
-            #'ems--py-newline-and-indent-after)
-
-(defun ems--py-shift-region-left-after (&rest _)
+(defun emacsvox--advice-py-shift-region-left-after (&rest _)
   "Speak number of lines that were shifted"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-shift-region-left)
     (emacsvox-icon 'left)
     (dtk-speak
      (format "Left shifted block  containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
-(advice-add 'py-shift-region-left :after
-            #'ems--py-shift-region-left-after)
-
-(defun ems--py-shift-region-right-after (&rest _)
+(defun emacsvox--advice-py-shift-region-right-after (&rest _)
   "Speak number of lines that were shifted"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-shift-region-right)
     (dtk-speak
      (format "Right shifted block  containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
-(advice-add 'py-shift-region-right :after
-            #'ems--py-shift-region-right-after)
-
-(defun ems--py-indent-region-after (&rest _)
+(defun emacsvox--advice-py-indent-region-after (&rest _)
   "Speak number of lines that were shifted"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-indent-region)
     (emacsvox-icon 'right)
     (dtk-speak
      (format "Indented region   containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
-(advice-add 'py-indent-region :after #'ems--py-indent-region-after)
-
-(defun ems--py-comment-region-after (&rest _)
+(defun emacsvox--advice-py-comment-region-after (&rest _)
   "Speak number of lines that were shifted"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-comment-region)
     (dtk-speak
      (format "Commented  block  containing %s lines"
              (count-lines (region-beginning) (region-end))))))
 
-(advice-add 'py-comment-region :after #'ems--py-comment-region-after)
+(dolist
+    (entry
+     '((py-newline-and-indent emacsvox--advice-py-newline-and-indent-after)
+       (py-shift-region-left emacsvox--advice-py-shift-region-left-after)
+       (py-shift-region-right emacsvox--advice-py-shift-region-right-after)
+       (py-indent-region emacsvox--advice-py-indent-region-after)
+       (py-comment-region emacsvox--advice-py-comment-region-after)))
+  (push (list (car entry) :after (cadr entry)) emacsvox-py--advice))
 
 ;;;   buffer navigation
 (cl-loop
- for f in
+ for target in
  '(
    py-goto-block-or-clause-up py-goto-clause-up
    py-previous-class py-previous-clause py-previous-def-or-class
@@ -292,16 +278,18 @@
    py-backward-def py-forward-def
    py-backward-def-or-class py-forward-def-or-class
    py-beginning-of-def-or-class py-end-of-def-or-class)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak current statement after moving"
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-speak-line)
-       (emacsvox-icon 'paragraph)))))
+       (emacsvox-icon 'paragraph))))
+ (push (list target :after advice-function) emacsvox-py--advice))
 
 (cl-loop
- for  f in
+ for target in
  '(
    py-mark-class-bol py-mark-clause py-mark-clause-bol py-mark-comment
    py-mark-comment-bol py-mark-def py-mark-def-bol
@@ -313,78 +301,82 @@
    py-mark-partial-expression-bol py-mark-section py-mark-statement
    py-mark-statement-bol py-mark-top-level py-mark-top-level-bol
    py-mark-try-block py-mark-try-block-bol)
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak number of lines marked"
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (dtk-speak
         (format
          "Marked block containing %s lines"
          (count-lines (region-beginning) (region-end))))
-       (emacsvox-icon 'mark-object)))))
+       (emacsvox-icon 'mark-object))))
+ (push (list target :after advice-function) emacsvox-py--advice))
 
 (cl-loop
- for f in
+ for target in
  '(
-
-   Possible completions are:
-   py-narrow-to-block  py-narrow-to-block-or-clause    py-narrow-to-class
+   py-narrow-to-block py-narrow-to-block-or-clause py-narrow-to-class
    py-narrow-to-clause         py-narrow-to-def
    py-narrow-to-def-or-class
    py-narrow-to-statement
    )
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (message "Narrowed  %s lines"
-                (count-lines (point-min) (point-max)))))))
+                (count-lines (point-min) (point-max))))))
+ (push (list target :after advice-function) emacsvox-py--advice))
 
-(defun ems--py-mark-def-or-class-after (&rest _)
+(defun emacsvox--advice-py-mark-def-or-class-after (&rest _)
   "Speak number of lines marked"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-mark-def-or-class)
     (dtk-speak
      (format "Marked block containing %s lines"
              (count-lines (region-beginning) (region-end))))
     (emacsvox-icon 'mark-object)))
 
-(advice-add 'py-mark-def-or-class :after
-            #'ems--py-mark-def-or-class-after)
-
-(defun ems--py-forward-into-nomenclature-after (&rest _)
+(defun emacsvox--advice-py-forward-into-nomenclature-after (&rest _)
   "Speak rest of current word"
-  (when (ems-interactive-p) (emacsvox-speak-word 1)))
+  (when (ems-interactive-p 'py-forward-into-nomenclature)
+    (emacsvox-speak-word 1)))
 
-(advice-add 'py-forward-into-nomenclature :after
-            #'ems--py-forward-into-nomenclature-after)
-
-(defun ems--py-backward-into-nomenclature-after (&rest _)
+(defun emacsvox--advice-py-backward-into-nomenclature-after (&rest _)
   "Speak rest of current word"
-  (when (ems-interactive-p) (emacsvox-speak-word 1)))
+  (when (ems-interactive-p 'py-backward-into-nomenclature)
+    (emacsvox-speak-word 1)))
 
-(advice-add 'py-backward-into-nomenclature :after
-            #'ems--py-backward-into-nomenclature-after)
+(dolist
+    (entry
+     '((py-mark-def-or-class emacsvox--advice-py-mark-def-or-class-after)
+       (py-forward-into-nomenclature
+        emacsvox--advice-py-forward-into-nomenclature-after)
+       (py-backward-into-nomenclature
+        emacsvox--advice-py-backward-into-nomenclature-after)))
+  (push (list (car entry) :after (cadr entry)) emacsvox-py--advice))
 
 ;;;  the process buffer
 
-(defun ems--py-process-filter-around (orig-fun &rest args)
+(defun emacsvox--advice-py-process-filter-around
+    (orig-fun process output)
   "Make comint in Python speak its output. "
-  (let ((result (apply orig-fun args)))
-    
-    (let ((prior (point)) (dtk-stop-immediately nil))
-      (apply orig-fun args)
+  (let ((prior (point))
+        (dtk-stop-immediately nil)
+        (result (funcall orig-fun process output)))
       (when
           (and emacsvox-comint-autospeak
                (window-live-p
-                (get-buffer-window (process-buffer (ad-get-arg 0)))))
+                (get-buffer-window (process-buffer process))))
         (condition-case nil (emacsvox-speak-region prior (point))
           (error (emacsvox-icon 'scroll) (dtk-stop 'all))))
-      result)
     result))
 
-(advice-add 'py-process-filter :around #'ems--py-process-filter-around)
+(push '(py-process-filter :around emacsvox--advice-py-process-filter-around)
+      emacsvox-py--advice)
 
 ;;;  Voice Mappings:
 (voice-setup-add-map
@@ -405,20 +397,32 @@
 
 ;;;  pydoc advice:
 
-(defun ems--pydoc-after (&rest _)
+(defun emacsvox--advice-py-pydoc-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'pydoc)
     (emacsvox-icon 'open-object) (emacsvox-speak-rest-of-buffer)))
 
-(advice-add 'pydoc :after #'ems--pydoc-after)
-
-(defun ems--py-help-at-point-after (&rest _)
+(defun emacsvox--advice-py-help-at-point-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'py-help-at-point)
     (emacsvox-icon 'help) (dtk-stop 'all) (emacsvox-speak-buffer)))
 
-(advice-add 'py-help-at-point :after #'ems--py-help-at-point-after)
+(push '(pydoc :after emacsvox--advice-py-pydoc-after)
+      emacsvox-py--advice)
+(push '(py-help-at-point :after emacsvox--advice-py-help-at-point-after)
+      emacsvox-py--advice)
+
+(defun emacsvox-py--install-advice ()
+  "Install advice for functions present in Python Mode and Pydoc."
+  (dolist (entry emacsvox-py--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(emacsvox-py--install-advice)
+(dolist (feature '(python-mode pydoc))
+  (eval-after-load feature #'emacsvox-py--install-advice))
 
 (provide 'emacsvox-py)
 ;;;  end of file
-
