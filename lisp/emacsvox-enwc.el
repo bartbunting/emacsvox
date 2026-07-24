@@ -72,23 +72,42 @@
   enwc-toggle-wired
   )
 
-(defun ems--enwc-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-enwc-after (&rest _)
+  "Speak after opening ENWC."
+  (when (ems-interactive-p 'enwc)
     (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'enwc :after #'ems--enwc-after)
+(defconst emacsvox-enwc--connection-targets
+  '(enwc-connect-to-network-at-point enwc-connect-to-network
+    enwc-connect-to-network-essid)
+  "ENWC commands that connect to a network.")
 
 (cl-loop
- for f in 
- '(enwc-connect-to-network-at-point enwc-connect-to-network
-                                    enwc-connect-to-network-essid)
+ for target in emacsvox-enwc--connection-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Provide feedback after `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)))))
+
+(defconst emacsvox-enwc--advice-targets
+  (cons 'enwc emacsvox-enwc--connection-targets)
+  "Current ENWC targets that receive native after advice.")
+
+(defun emacsvox-enwc--install-advice ()
+  "Install native advice after the optional ENWC package loads."
+  (dolist (target emacsvox-enwc--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'enwc
+  (emacsvox-enwc--install-advice))
 
 (provide 'emacsvox-enwc)
 ;;;  end of file
