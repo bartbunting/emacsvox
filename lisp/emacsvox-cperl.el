@@ -53,138 +53,126 @@
 
 ;;;   Advice electric insertion to talk:
 
-(defun ems--cperl-electric-backspace-around (orig-fun &rest args)
+(defun emacsvox--advice-cperl-electric-backspace-around
+    (original &rest arguments)
   "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (cond
-     ((ems-interactive-p) (dtk-tone 500 100 'force)
-      (emacsvox-speak-this-char (preceding-char))
-      (apply orig-fun args))
-     (t (apply orig-fun args)))
-    result))
+  (when (ems-interactive-p 'cperl-electric-backspace)
+    (dtk-tone 500 100 'force)
+    (emacsvox-speak-this-char (preceding-char)))
+  (apply original arguments))
 
-(advice-add 'cperl-electric-backspace :around
-            #'ems--cperl-electric-backspace-around)
+(advice-add
+ 'cperl-electric-backspace :around
+ #'emacsvox--advice-cperl-electric-backspace-around
+ '((name . emacsvox--advice-cperl-electric-backspace-around)))
 
-(defun ems--cperl-linefeed-around (orig-fun &rest args)
+(defun emacsvox--advice-cperl-linefeed-around
+    (original &rest arguments)
   "Speak the previous line if line echo is on. \n  See command \\[emacsvox-toggle-line-echo].\nOtherwise cue user to the line just created. "
-  (let ((result (apply orig-fun args)))
-    
-    (cond
-     ((ems-interactive-p)
-      (cond (emacsvox-line-echo (emacsvox-speak-line))
-            (t
-             (dtk-speak-using-voice voice-annotate
-                                    (format "indent %s"
-                                            (current-column)))
-             (dtk-interp-speak)))))
-    (apply orig-fun args) result))
+  (when (ems-interactive-p 'cperl-linefeed)
+    (if emacsvox-line-echo
+        (emacsvox-speak-line)
+      (dtk-speak-using-voice
+       voice-annotate
+       (format "indent %s" (current-column)))
+      (dtk-interp-speak)))
+  (apply original arguments))
 
-(advice-add 'cperl-linefeed :around #'ems--cperl-linefeed-around)
+(advice-add
+ 'cperl-linefeed :around
+ #'emacsvox--advice-cperl-linefeed-around
+ '((name . emacsvox--advice-cperl-linefeed-around)))
 
-(defun ems--cperl-indent-exp-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'fill-object)
-    (message "Indented current s expression ")))
+(defmacro emacsvox-cperl--define-advice (target where &rest body)
+  "Define direct WHERE advice for interactive CPerl TARGET."
+  (declare (indent 2))
+  (let ((function
+         (intern (format "emacsvox--advice-%s-%s"
+                         target
+                         (substring (symbol-name where) 1)))))
+    `(progn
+       (defun ,function (&rest _)
+         ,(format "Provide spoken feedback %s `%s'." where target)
+         (when (ems-interactive-p ',target)
+           ,@body))
+       (advice-add
+        ',target ,where #',function
+        '((name . ,function))))))
 
-(advice-add 'cperl-indent-exp :after #'ems--cperl-indent-exp-after)
+(emacsvox-cperl--define-advice cperl-indent-exp :after
+  (emacsvox-icon 'fill-object)
+  (message "Indented current s expression "))
 
 ;;;  Advice info to talk:
 
-(defun ems--cperl-info-on-current-command-after (&rest _)
-  "Speak the displayed info"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'help) (message "Displayed info in other window")))
+(emacsvox-cperl--define-advice cperl-info-on-current-command :after
+  (emacsvox-icon 'help)
+  (message "Displayed info in other window"))
 
-(advice-add 'cperl-info-on-current-command :after
-            #'ems--cperl-info-on-current-command-after)
-
-(defun ems--cperl-info-on-command-after (&rest _)
-  "Speak the displayed info"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'help) (message "Displayed help in other window.")))
-
-(advice-add 'cperl-info-on-command :after
-            #'ems--cperl-info-on-command-after)
+(emacsvox-cperl--define-advice cperl-info-on-command :after
+  (emacsvox-icon 'help)
+  (message "Displayed help in other window."))
 
 ;;;  structured editing
 
-(defun ems--cperl-invert-if-unless-after (&rest _)
-  "Speak updated line"
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
+(emacsvox-cperl--define-advice cperl-invert-if-unless :after
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
 
-(advice-add 'cperl-invert-if-unless :after
-            #'ems--cperl-invert-if-unless-after)
+(defmacro emacsvox-cperl--define-comment-advice
+    (target negative-label positive-label)
+  "Define region feedback for TARGET using its native arguments."
+  (let ((function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    `(progn
+       (defun ,function (begin end prefix &rest _)
+         ,(format "Report the region changed by `%s'." target)
+         (when (ems-interactive-p ',target)
+           (message
+            "%s region containing %s lines"
+            (if (and prefix (< prefix 0))
+                ,negative-label
+              ,positive-label)
+            (count-lines begin end))))
+       (advice-add
+        ',target :after #',function
+        '((name . ,function))))))
 
-(defun ems--cperl-comment-region-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (let ((prefix-arg (ad-get-arg 2)))
-      (message "%s region containing %s lines"
-               (if (and prefix-arg (< prefix-arg 0)) "Uncommented"
-                 "Commented")
-               (count-lines (point) (mark))))))
+(emacsvox-cperl--define-comment-advice
+ cperl-comment-region "Uncommented" "Commented")
+(emacsvox-cperl--define-comment-advice
+ cperl-uncomment-region "Commented" "Uncommented")
 
-(advice-add 'cperl-comment-region :after
-            #'ems--cperl-comment-region-after)
+(emacsvox-cperl--define-advice cperl-indent-command :after
+  (emacsvox-speak-line)
+  (emacsvox-icon 'large-movement))
 
-(defun ems--cperl-uncomment-region-after (&rest _)
-  "Speak."
-  (when (ems-interactive-p)
-    (let ((prefix-arg (ad-get-arg 2)))
-      (message "%s region containing %s lines"
-               (if (and prefix-arg (< prefix-arg 0)) "Commented"
-                 "Uncommented")
-               (count-lines (point) (mark))))))
-
-(advice-add 'cperl-uncomment-region :after
-            #'ems--cperl-uncomment-region-after)
-
-(defun ems--cperl-indent-command-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'large-movement)))
-
-(advice-add 'cperl-indent-command :after
-            #'ems--cperl-indent-command-after)
-
-(defun ems--cperl-indent-region-after (&rest _)
-  "speak when done"
-  (when (ems-interactive-p)
+(defun emacsvox--advice-cperl-indent-region-after
+    (start end &rest _)
+  "Report the region indented by `cperl-indent-region'."
+  (when (ems-interactive-p 'cperl-indent-region)
     (emacsvox-icon 'fill-object)
     (message "Filled region containing %s lines"
-             (count-lines (region-beginning) (region-end)))))
+             (count-lines start end))))
 
-(advice-add 'cperl-indent-region :after
-            #'ems--cperl-indent-region-after)
+(advice-add
+ 'cperl-indent-region :after
+ #'emacsvox--advice-cperl-indent-region-after
+ '((name . emacsvox--advice-cperl-indent-region-after)))
 
-(defun ems--cperl-fill-paragraph-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'fill-object) (message "Filled current paragraph")))
-
-(advice-add 'cperl-fill-paragraph :after
-            #'ems--cperl-fill-paragraph-after)
+(emacsvox-cperl--define-advice cperl-fill-paragraph :after
+  (emacsvox-icon 'fill-object)
+  (message "Filled current paragraph"))
 
 ;;;   misc
 
-(defun ems--cperl-switch-to-doc-buffer-after (&rest _)
-  "speak"
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
+(emacsvox-cperl--define-advice cperl-switch-to-doc-buffer :after
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'open-object))
 
-(advice-add 'cperl-switch-to-doc-buffer :after
-            #'ems--cperl-switch-to-doc-buffer-after)
-
-(defun ems--cperl-find-bad-style-after (&rest _)
-  "speak when done."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'task-done)))
-
-(advice-add 'cperl-find-bad-style :after
-            #'ems--cperl-find-bad-style-after)
+(emacsvox-cperl--define-advice cperl-find-bad-style :after
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'task-done))
 
 ;;;  set up hooks 
 
@@ -197,4 +185,3 @@
                   (emacsvox-toggle-audio-indentation))))
 
 (provide  'emacsvox-cperl)
-
