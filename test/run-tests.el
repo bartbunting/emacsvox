@@ -186,6 +186,7 @@
   (require 'emacsvox-corfu-tests)
   (require 'emacsvox-deadgrep-tests)
   (require 'emacsvox-devdocs-tests)
+  (require 'emacsvox-dumb-jump-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

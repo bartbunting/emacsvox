@@ -50,26 +50,40 @@
 
 ;;;  Interactive Commands:
 
+(defconst emacsvox-dumb-jump--advice-targets
+  '(dumb-jump-back
+    dumb-jump-go
+    dumb-jump-go-current-window
+    dumb-jump-go-other-window
+    dumb-jump-go-prefer-external
+    dumb-jump-go-prefer-external-other-window
+    dumb-jump-go-prompt)
+  "Current Dumb Jump commands that receive speech feedback.")
+
 (cl-loop
- for f in 
- '(
-   dumb-jump-back
-   dumb-jump-go
-   dumb-jump-go-current-window
-   dumb-jump-go-other-window
-   dumb-jump-go-prefer-external
-   dumb-jump-go-prefer-external-other-window
-   dumb-jump-go-prompt
-   )
+ for target in emacsvox-dumb-jump--advice-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak after `%s'." target)
+     (when (ems-interactive-p ',target)
        (let ((emacsvox-show-point t))
          (emacsvox-speak-line))
        (emacsvox-icon 'large-movement)))))
 
+(defun emacsvox-dumb-jump--install-advice ()
+  "Install native advice after the optional Dumb Jump package loads."
+  (dolist (target emacsvox-dumb-jump--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'dumb-jump
+  (emacsvox-dumb-jump--install-advice))
+
 (provide 'emacsvox-dumb-jump)
 ;;;  end of file
-
