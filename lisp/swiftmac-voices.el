@@ -48,6 +48,9 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
 
+(defvar tts-default-speech-rate)
+(defvar tts-default-voice)
+
 ;;; swiftmac:
 ;;;###autoload
 (defun swiftmac ()
@@ -55,8 +58,8 @@
   (interactive)
   (swiftmac-configure-tts)
   (ems--fastload "voice-defs")
-  (dtk-select-server "swiftmac")
-  (dtk-initialize))
+  (tts-select-server "swiftmac")
+  (tts-initialize))
 
 ;;;  Customizations:
 
@@ -66,12 +69,12 @@
   :type 'float
   :set #'(lambda(sym val)
            (set-default sym val)
-           (when (string-match "swiftmac\\'"dtk-program)
-             (setq-default dtk-speech-rate val))))
+           (when (string-match "swiftmac\\'" tts-program)
+             (setq-default tts-speech-rate val))))
 
 ;;;   voice table
 
-                                        ; when this is set it makes dtk-set-language do nothing 
+                                        ; when this is set it makes tts-set-language do nothing
                                         ; (defvar swiftmac-default-voice-string "[{voice en-US:Alex}]"
 (defvar swiftmac-default-voice-string "[{voice :Alex}] [[pitch 1]]"
   "Default swiftmac tag for  default . Empty uses system default")
@@ -283,15 +286,13 @@ and TABLE gives the values along that dimension."
 ;;;###autoload
 (defun swiftmac-configure-tts ()
   "Configure TTS  to use swiftmac."
-  (cl-declare (special tts-default-speech-rate
-                       tts-default-voice swiftmac-default-speech-rate))
   (setq tts-default-voice 'paul)
   (fset 'tts-voice-defined-p 'swiftmac-voice-defined-p)
   (fset 'tts-get-voice-command 'swiftmac-get-voice-command)
   (fset 'tts-define-voice-from-acss 'swiftmac-define-voice-from-acss)
   (setq tts-default-speech-rate swiftmac-default-speech-rate)
   (set-default 'tts-default-speech-rate swiftmac-default-speech-rate)
-  (dtk-unicode-update-untouched-charsets
+  (tts-unicode-update-untouched-charsets
    '(ascii latin-iso8859-1 latin-iso8859-15 latin-iso8859-9
            eight-bit-graphic))
   (setq emacsvox-play-program nil))
@@ -299,4 +300,3 @@ and TABLE gives the values along that dimension."
 ;;;  tts-env for Mac:
 
 (provide 'swiftmac-voices)
-

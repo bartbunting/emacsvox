@@ -14,6 +14,7 @@
 (require 'emacsvox-sounds)
 (require 'espeak-voices)
 (require 'outloud-voices)
+(require 'swiftmac-voices)
 (require 'voice-setup)
 
 (defconst emacsvox-test--tts-protocol-aliases
@@ -552,6 +553,68 @@
       `((tts-default-speech-rate . ,espeak-default-speech-rate))))
     (should character-table-setup)
     (should (equal untouched-charsets '(ascii latin-iso8859-1)))))
+
+(ert-deftest emacsvox-tts-swiftmac-uses-canonical-runtime ()
+  "The SwiftMac selector uses the generic TTS runtime API."
+  (let (events)
+    (cl-letf (((symbol-function 'swiftmac-configure-tts)
+               (lambda () (push 'configure events)))
+              ((symbol-function 'ems--fastload)
+               (lambda (file) (push (list 'fastload file) events)))
+              ((symbol-function 'tts-select-server)
+               (lambda (server) (push (list 'select server) events)))
+              ((symbol-function 'tts-initialize)
+               (lambda () (push 'initialize events))))
+      (swiftmac))
+    (should
+     (equal
+      (nreverse events)
+      '(configure
+        (fastload "voice-defs")
+        (select "swiftmac")
+        initialize)))))
+
+(ert-deftest emacsvox-tts-swiftmac-configures-canonical-state ()
+  "The SwiftMac adapter configures generic TTS state and dispatch."
+  (let (defaults
+        untouched-charsets)
+    (cl-progv
+        '(tts-default-voice tts-default-speech-rate
+          emacsvox-play-program)
+        '(unset 1 local-player)
+      (cl-letf (((symbol-function 'set-default)
+                 (lambda (symbol value)
+                   (push (cons symbol value) defaults)))
+                ((symbol-function 'tts-unicode-update-untouched-charsets)
+                 (lambda (charsets)
+                   (setq untouched-charsets charsets)))
+                ((symbol-function 'tts-voice-defined-p) #'ignore)
+                ((symbol-function 'tts-get-voice-command) #'ignore)
+                ((symbol-function 'tts-define-voice-from-acss) #'ignore))
+        (swiftmac-configure-tts)
+        (should (eq (symbol-value 'tts-default-voice) 'paul))
+        (should
+         (= (symbol-value 'tts-default-speech-rate)
+            swiftmac-default-speech-rate))
+        (should-not (symbol-value 'emacsvox-play-program))
+        (should
+         (eq (symbol-function 'tts-voice-defined-p)
+             'swiftmac-voice-defined-p))
+        (should
+         (eq (symbol-function 'tts-get-voice-command)
+             'swiftmac-get-voice-command))
+        (should
+         (eq (symbol-function 'tts-define-voice-from-acss)
+             'swiftmac-define-voice-from-acss))))
+    (should
+     (equal
+      defaults
+      `((tts-default-speech-rate . ,swiftmac-default-speech-rate))))
+    (should
+     (equal
+      untouched-charsets
+      '(ascii latin-iso8859-1 latin-iso8859-15
+              latin-iso8859-9 eight-bit-graphic)))))
 
 (ert-deftest emacsvox-tts-canonical-state-aliases-remain-buffer-local ()
   "Canonical buffer-local state shares legacy storage without leaking."
