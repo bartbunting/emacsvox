@@ -332,53 +332,64 @@ s   Sub-square Distribution.
 
 ;;;  advice motion:
 
-(cl-loop for f   in
-         '(
-           sudoku-move-point-left 
-           sudoku-move-point-leftmost 
-           sudoku-move-point-right 
-           sudoku-move-point-rightmost 
-           sudoku-move-point-up 
-           sudoku-move-point-upmost 
-           sudoku-move-point-down 
-           sudoku-move-point-downmost)
-         do
-         (eval
-          `(defadvice ,f (after emacsvox pre act comp)
-             "Produce auditory output."
-             (when (ems-interactive-p)
-               (emacsvox-sudoku-speak-current-cell-value)
-               (if (eq (get-text-property  (point) 'face) 'bold)
-                   (emacsvox-icon 'item)
-                 (emacsvox-icon 'select-object))))))
+(defconst emacsvox-sudoku--movement-targets
+  '(sudoku-move-point-left sudoku-move-point-leftmost
+    sudoku-move-point-right sudoku-move-point-rightmost
+    sudoku-move-point-up sudoku-move-point-upmost
+    sudoku-move-point-down sudoku-move-point-downmost)
+  "Current Sudoku movement commands that receive native advice.")
+
+(dolist (target emacsvox-sudoku--movement-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Speak the Sudoku cell selected by `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-sudoku-speak-current-cell-value)
+          (if (eq (get-text-property (point) 'face) 'bold)
+              (emacsvox-icon 'item)
+            (emacsvox-icon 'select-object)))))))
 
 ;;;  advice interaction:
 
-(defun ems--sudoku-after (&rest _)
+(defun emacsvox--advice-sudoku-after (&rest _)
   "Speech-enable SuDoKu.\n  for details."
-  (when (ems-interactive-p)
+  (setq emacsvox-sudoku-history-stack nil)
+  (when (ems-interactive-p 'sudoku)
     (dtk-set-punctuations 'some) (emacsvox-icon 'open-object)
     (emacsvox-sudoku-speak-current-cell-value)))
-
-(advice-add 'sudoku :after #'ems--sudoku-after)
 
 (defvar emacsvox-sudoku-history-stack nil
   "Holds history of interesting board configurations.")
 
-(defun ems--sudoku-new-after (&rest _)
-  "Reset history stack."
-  
-  (setq emacsvox-sudoku-history-stack nil))
-
-(advice-add 'sudoku-new :after #'ems--sudoku-new-after)
-
-(defun ems--sudoku-restart-after (&rest _)
+(defun emacsvox--advice-sudoku-restart-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'sudoku-restart)
     (emacsvox-icon 'open-object)
     (emacsvox-sudoku-speak-current-cell-value)))
 
-(advice-add 'sudoku-restart :after #'ems--sudoku-restart-after)
+(defconst emacsvox-sudoku--advice
+  (append
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-sudoku--movement-targets)
+   '((sudoku :after emacsvox--advice-sudoku-after)
+     (sudoku-restart :after emacsvox--advice-sudoku-restart-after)))
+  "Current Sudoku targets and their native advice functions.")
+
+(defun emacsvox-sudoku--install-advice ()
+  "Install native advice after Sudoku loads."
+  (dolist (entry emacsvox-sudoku--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'sudoku
+  (emacsvox-sudoku--install-advice))
 
 ;;;  implement history stack:
 
@@ -457,4 +468,3 @@ s   Sub-square Distribution.
 
 (provide 'emacsvox-sudoku)
 ;;;  end of file 
-
