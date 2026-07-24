@@ -71,62 +71,89 @@
 
   )
 
-(defun ems--iedit-mode-after (&rest _)
+(defvar emacsvox-iedit--advice nil
+  "Current Iedit targets and their native advice functions.")
+(setq emacsvox-iedit--advice nil)
+
+(defun emacsvox--advice-iedit-mode-after (&rest _)
   "speak." 
-  (when (ems-interactive-p) (emacsvox-icon (if iedit-mode 'on 'off))))
+  (when (ems-interactive-p 'iedit-mode)
+    (emacsvox-icon (if iedit-mode 'on 'off))))
 
-(advice-add 'iedit-mode :after #'ems--iedit-mode-after)
+(push '(iedit-mode :after emacsvox--advice-iedit-mode-after)
+      emacsvox-iedit--advice)
 
-(defun ems--iedit-done-after (&rest _)
+(defun emacsvox--advice-iedit-done-after (&rest _)
   "speak." (emacsvox-icon 'close-object) (message "IEdit done"))
 
-(advice-add 'iedit-done :after #'ems--iedit-done-after)
+(push '(iedit-done :after emacsvox--advice-iedit-done-after)
+      emacsvox-iedit--advice)
 
-(cl-loop
- for f in
- '(
-   iedit-prev-occurrence iedit-next-occurrence
-   iedit-goto-last-occurrence iedit-goto-first-occurrence
-   iedit-goto-last-occurrence)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
-(cl-loop
- for f in
+(defun emacsvox-iedit--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback ',target))))
+      (push (list target :after advice-function)
+            emacsvox-iedit--advice))))
+
+(defun emacsvox-iedit--movement-feedback (_target)
+  "Speak after moving to another Iedit occurrence."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
+
+(emacsvox-iedit--register-after-group
+ '(iedit-prev-occurrence iedit-next-occurrence
+   iedit-goto-last-occurrence iedit-goto-first-occurrence)
+ #'emacsvox-iedit--movement-feedback)
+
+(defun emacsvox-iedit--help-feedback (_target)
+  "Play the help icon after an Iedit help command."
+  (emacsvox-icon 'help))
+
+(emacsvox-iedit--register-after-group
  '(iedit-describe-bindings iedit-describe-key iedit-describe-mode)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'help)))))
+ #'emacsvox-iedit--help-feedback)
 
-(cl-loop
- for f in
- '(
-   iedit-upcase-occurrences iedit-downcase-occurrences
+(defun emacsvox-iedit--task-feedback (target)
+  "Announce completion of Iedit command TARGET."
+  (emacsvox-icon 'task-done)
+  (message "%s" target))
+
+(emacsvox-iedit--register-after-group
+ '(iedit-upcase-occurrences iedit-downcase-occurrences
    iedit-blank-occurrences iedit-delete-occurrences)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (message "%s"  ,(symbol-name f))))))
+ #'emacsvox-iedit--task-feedback)
 
-(defun ems--iedit-show/hide-unmatched-lines-after (&rest _)
+(defun emacsvox--advice-iedit-show/hide-lines-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (memq ems--interactive-fn-name
+              '(iedit-show/hide-context-lines
+                iedit-show/hide-occurrence-lines))
     (emacsvox-speak-line)
-    (emacsvox-icon (if iedit-unmatched-lines-invisible 'on 'off))))
+    (emacsvox-icon (if iedit-hiding 'on 'off))))
 
-(advice-add 'iedit-show/hide-unmatched-lines :after
-            #'ems--iedit-show/hide-unmatched-lines-after)
+(dolist (target '(iedit-show/hide-context-lines
+                  iedit-show/hide-occurrence-lines))
+  (push (list target :after
+              'emacsvox--advice-iedit-show/hide-lines-after)
+        emacsvox-iedit--advice))
+
+(defun emacsvox-iedit--install-advice ()
+  "Install native advice after Iedit loads."
+  (dolist (entry emacsvox-iedit--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'iedit
+  (emacsvox-iedit--install-advice))
 
 (provide 'emacsvox-iedit)
 ;;;  end of file
-

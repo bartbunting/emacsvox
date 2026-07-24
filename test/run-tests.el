@@ -209,6 +209,7 @@
   (require 'emacsvox-haskell-tests)
   (require 'emacsvox-helpful-tests)
   (require 'emacsvox-hide-lines-tests)
+  (require 'emacsvox-iedit-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
