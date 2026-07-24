@@ -116,6 +116,7 @@
   (require 'emacsvox-cmuscheme-tests)
   (require 'emacsvox-speedbar-tests)
   (require 'emacsvox-tcl-tests)
+  (require 'emacsvox-man-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

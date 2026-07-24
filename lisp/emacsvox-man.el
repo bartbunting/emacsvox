@@ -66,7 +66,7 @@
 
 ;;;   advice interactive commands 
 
-(defun ems--Man-mode-after (&rest _)
+(defun emacsvox--advice-Man-mode-after (&rest _)
   "Fixup variables paragraph-start and paragraph-separate.\nAlso provide an auditory icon"
   (setq paragraph-start "^[     \n\f]*$" paragraph-separate
         "^[     \n\f]*$")
@@ -77,78 +77,77 @@
   (dtk-set-punctuations 'all)
   (emacsvox-pronounce-refresh-pronunciations) (emacsvox-icon 'help))
 
-(advice-add 'Man-mode :after #'ems--Man-mode-after)
+(advice-add 'Man-mode :after #'emacsvox--advice-Man-mode-after)
 
-(defun ems--Man-goto-section-after (&rest _)
+(defun emacsvox--advice-Man-goto-section-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-goto-section)
     (emacsvox-icon 'section) (emacsvox-speak-line)))
 
-(advice-add 'Man-goto-section :after #'ems--Man-goto-section-after)
+(advice-add 'Man-goto-section :after
+            #'emacsvox--advice-Man-goto-section-after)
 
-(defun ems--Man-goto-page-after (&rest _)
+(defun emacsvox--advice-Man-goto-page-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-goto-page)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-(advice-add 'Man-goto-page :after #'ems--Man-goto-page-after)
+(advice-add 'Man-goto-page :after
+            #'emacsvox--advice-Man-goto-page-after)
 
-(defun ems--Man-next-manpage-after (&rest _)
+(defun emacsvox--advice-Man-next-manpage-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-next-manpage)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
-(advice-add 'Man-next-manpage :after #'ems--Man-next-manpage-after)
+(advice-add 'Man-next-manpage :after
+            #'emacsvox--advice-Man-next-manpage-after)
 
-(defun ems--Man-previous-manpage-after (&rest _)
+(defun emacsvox--advice-Man-previous-manpage-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-previous-manpage)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'Man-previous-manpage :after
-            #'ems--Man-previous-manpage-after)
+            #'emacsvox--advice-Man-previous-manpage-after)
 
-(defun ems--Man-next-section-after (&rest _)
+(defun emacsvox--advice-Man-next-section-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-next-section)
     (emacsvox-icon 'section) (emacsvox-speak-line)))
 
-(advice-add 'Man-next-section :after #'ems--Man-next-section-after)
+(advice-add 'Man-next-section :after
+            #'emacsvox--advice-Man-next-section-after)
 
-(defun ems--Man-previous-section-after (&rest _)
+(defun emacsvox--advice-Man-previous-section-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-previous-section)
     (emacsvox-icon 'section) (emacsvox-speak-line)))
 
 (advice-add 'Man-previous-section :after
-            #'ems--Man-previous-section-after)
+            #'emacsvox--advice-Man-previous-section-after)
 
-(defun ems--Man-goto-see-also-section-after (&rest _)
+(defun emacsvox--advice-Man-goto-see-also-section-after (&rest _)
   "Speak the line"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-goto-see-also-section)
     (emacsvox-icon 'large-movement) (emacsvox-speak-line)))
 
 (advice-add 'Man-goto-see-also-section :after
-            #'ems--Man-goto-see-also-section-after)
+            #'emacsvox--advice-Man-goto-see-also-section-after)
 
-(defun ems--Man-quit-after (&rest _)
+(defun emacsvox--advice-Man-kill-after (&rest _)
   "Announce buffer that is current"
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'Man-kill)
     (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'Man-quit :after #'ems--Man-quit-after)
+(advice-add 'Man-kill :after #'emacsvox--advice-Man-kill-after)
 
-(defun ems--Man-kill-after (&rest _)
-  "Announce buffer that is current"
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+(defun emacsvox--advice-man-after (&rest _)
+  "Speak the displayed manual page's mode line."
+  (when (ems-interactive-p 'man)
+    (emacsvox-speak-mode-line)))
 
-(advice-add 'Man-kill :after #'ems--Man-kill-after)
-
-(defun ems--man-after (&rest _)
-  "speak" (when (ems-interactive-p) (emacsvox-speak-mode-line)))
-
-(advice-add 'man :after #'ems--man-after)
+(advice-add 'man :after #'emacsvox--advice-man-after)
 
 ;;;   Additional commands
 
@@ -188,4 +187,3 @@
 (define-key Man-mode-map "]" 'forward-paragraph)
 
 (provide  'emacsvox-man)
-
