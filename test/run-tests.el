@@ -179,6 +179,7 @@
   (require 'emacsvox-bbdb-tests)
   (require 'emacsvox-calibredb-tests)
   (require 'emacsvox-chess-tests)
+  (require 'emacsvox-cider-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

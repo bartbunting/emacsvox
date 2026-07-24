@@ -46,6 +46,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(defvar cider-repl-use-pretty-printing)
 
 ;;;  Map Faces:
 
@@ -84,292 +85,281 @@
    (cider-warning-highlight-face voice-animate-extra)
    ))
 
-;;;  Apropos:
+;;; Advice:
 
-(cl-loop
- for f in
- '(
-   cider-visit-error-buffer
-   cider-selector cider-scratch
-   cider-switch-to-last-clojure-buffer cider-switch-to-repl-buffer
-   cider-apropos cider-apropos-documentation
-   cider-apropos-documentation-select cider-apropos-select)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-mode-line)
-       (emacsvox-icon 'open-object)))))
+(defvar emacsvox-cider--advice nil
+  "Current CIDER targets and their native advice functions.")
 
-;;;  Associate Connection:
+(defun emacsvox-cider--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function)
+            emacsvox-cider--advice))))
 
-(cl-loop
- for f in
- '(
-   cider-assoc-buffer-with-connection cider-assoc-project-with-connection
-   cider-format-buffer cider-format-region
-   cider-format-edn-region cider-format-edn-buffer
-   cider-undef)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+(defun emacsvox-cider--open-feedback ()
+  "Speak the mode line after opening a CIDER view."
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'open-object))
 
-;;;  Browse:
+(defconst emacsvox-cider--open-targets
+  '(cider-selector
+    cider-scratch
+    cider-switch-to-last-clojure-buffer
+    cider-switch-to-repl-buffer
+    cider-apropos
+    cider-apropos-documentation
+    cider-apropos-documentation-select
+    cider-apropos-select
+    cider-connect-clj
+    cider-connect-cljs
+    cider-connect-clj&cljs)
+  "CIDER commands that open a buffer, view, or connection.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--open-targets #'emacsvox-cider--open-feedback)
 
-(cl-loop
- for f in
- '(
-   cider-browse-instrumented-defs cider-browse-ns cider-browse-ns-all
-   cider-browse-ns-operate-at-point cider-browse-ns-doc-at-point
-   cider-classpath-operate-on-point
-   cider-browse-ns-find-at-point cider-classpath cider-doc)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (with-current-buffer (window-buffer (selected-window))
-         (emacsvox-icon 'open-object)
-         (emacsvox-speak-line))))))
+(defun emacsvox-cider--task-done-feedback ()
+  "Confirm completion of a CIDER operation."
+  (emacsvox-icon 'task-done))
 
-;;;  Speech-enable Eval:
+(defconst emacsvox-cider--task-done-targets
+  '(cider-format-buffer
+    cider-format-region
+    cider-format-edn-region
+    cider-format-edn-buffer
+    cider-undef
+    cider-eval-defun-at-point
+    cider-eval-defun-to-comment
+    cider-eval-file
+    cider-eval-last-sexp
+    cider-eval-last-sexp-and-replace
+    cider-eval-last-sexp-to-repl
+    cider-eval-ns-form
+    cider-eval-print-last-sexp
+    cider-eval-buffer
+    cider-eval-region
+    cider-eval-sexp-at-point)
+  "CIDER formatting and evaluation commands.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--task-done-targets #'emacsvox-cider--task-done-feedback)
 
-(cl-loop
- for f in
- '(
-   cider-eval-defun-at-point cider-eval-defun-to-comment cider-eval-file
-   cider-eval-last-sexp cider-eval-last-sexp-and-replace
-   cider-eval-last-sexp-to-repl cider-eval-ns-form cider-eval-print-last-sexp
-   cider-eval-buffer cider-eval-region cider-eval-sexp-at-point)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)))))
+(defun emacsvox-cider--browse-feedback ()
+  "Speak the selected line in a CIDER browser."
+  (with-current-buffer (window-buffer (selected-window))
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-line)))
 
-;;;  cider-repl:
+(defconst emacsvox-cider--browse-targets
+  '(cider-browse-instrumented-defs
+    cider-browse-ns
+    cider-browse-ns-all
+    cider-browse-ns-operate-at-point
+    cider-browse-ns-doc-at-point
+    cider-classpath-operate-on-point
+    cider-browse-ns-find-at-point
+    cider-classpath
+    cider-doc)
+  "CIDER browsing commands.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--browse-targets #'emacsvox-cider--browse-feedback)
 
-;;; Navigators:
+(defun emacsvox-cider--movement-feedback ()
+  "Speak after navigating through CIDER REPL input."
+  (emacsvox-icon 'large-movement)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in
- '(
-   cider-repl-previous-prompt cider-repl-previous-matching-input
-   cider-repl-previous-input cider-repl-next-prompt
-   cider-repl-next-matching-input cider-repl-next-input
-   cider-repl-forward-input  cider-repl-backward-input
-   cider-repl-end-of-defun cider-repl-beginning-of-defun
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
-(cl-loop
- for f in
- '(cider-repl-closing-return cider-repl-return)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (save-excursion
-         (goto-char
-          (previous-single-property-change (point)   'face nil (point-min)))
-         (emacsvox-speak-range))
-       (emacsvox-icon 'close-object)))))
+(defconst emacsvox-cider--movement-targets
+  '(cider-repl-previous-prompt
+    cider-repl-previous-matching-input
+    cider-repl-previous-input
+    cider-repl-next-prompt
+    cider-repl-next-matching-input
+    cider-repl-next-input
+    cider-repl-forward-input
+    cider-repl-backward-input
+    cider-repl-end-of-defun
+    cider-repl-beginning-of-defun)
+  "CIDER REPL navigation commands.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--movement-targets #'emacsvox-cider--movement-feedback)
 
-(cl-loop
- for f in
- '(
-   cider-clear-compilation-highlights cider-repl-kill-input
-   cider-scratch-reset
-   cider -repl-clear-banners cider-repl-clear-buffer
-   cider-find-and-clear-repl-output
-   cider-repl-clear-help-banner cider-repl-clear-output)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'delete-object)))))
+(defun emacsvox-cider--return-feedback ()
+  "Speak output inserted by a CIDER REPL return."
+  (save-excursion
+    (goto-char
+     (previous-single-property-change (point) 'face nil (point-min)))
+    (emacsvox-speak-range))
+  (emacsvox-icon 'close-object))
 
-(cl-loop
- for f in
- '(
-   cider-repl-tab cider-repl-indent-and-complete-symbol
-   cider-repl-newline-and-indent cider-repl-bol-mark)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'select-object)))))
+(defconst emacsvox-cider--return-targets
+  '(cider-repl-closing-return cider-repl-return)
+  "CIDER REPL return commands.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--return-targets #'emacsvox-cider--return-feedback)
 
-(defun ems--cider-repl-switch-to-other-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'select-object)))
+(defun emacsvox-cider--delete-feedback ()
+  "Confirm deletion of CIDER output or input."
+  (emacsvox-icon 'delete-object))
 
-(advice-add 'cider-repl-switch-to-other :after
-            #'ems--cider-repl-switch-to-other-after)
+(defconst emacsvox-cider--delete-targets
+  '(cider-clear-compilation-highlights
+    cider-repl-kill-input
+    cider-scratch-reset
+    cider-repl-clear-buffer
+    cider-find-and-clear-repl-output
+    cider-repl-clear-help-banner
+    cider-repl-clear-output)
+  "CIDER commands that clear input, output, or highlighting.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--delete-targets #'emacsvox-cider--delete-feedback)
 
-(defun ems--cider-repl-set-ns-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
+(defun emacsvox-cider--line-selection-feedback ()
+  "Speak the current line and confirm selection."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'select-object))
 
-(advice-add 'cider-repl-set-ns :after #'ems--cider-repl-set-ns-after)
+(defconst emacsvox-cider--line-selection-targets
+  '(cider-repl-tab
+    cider-repl-indent-and-complete-symbol
+    cider-repl-newline-and-indent
+    cider-repl-bol-mark
+    cider-repl-set-ns)
+  "CIDER REPL commands that select or modify the current line.")
+(emacsvox-cider--register-after-group
+ emacsvox-cider--line-selection-targets
+ #'emacsvox-cider--line-selection-feedback)
 
-(defun ems--cider-repl-toggle-pretty-printing-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon (f cider-repl-use-pretty-printing 'on 'off))
-    (message "Turned  %s pretty printing."
-             (if cider-repl-use-pretty-printing 'on 'off))))
+(defun emacsvox-cider--switch-feedback ()
+  "Speak after switching to another CIDER REPL."
+  (emacsvox-speak-mode-line)
+  (emacsvox-icon 'select-object))
+(emacsvox-cider--register-after-group
+ '(cider-repl-switch-to-other) #'emacsvox-cider--switch-feedback)
 
-(advice-add 'cider-repl-toggle-pretty-printing :after
-            #'ems--cider-repl-toggle-pretty-printing-after)
+(defun emacsvox-cider--pretty-printing-feedback ()
+  "Report the current CIDER REPL pretty-printing state."
+  (emacsvox-icon (if cider-repl-use-pretty-printing 'on 'off))
+  (message "Turned %s pretty printing."
+           (if cider-repl-use-pretty-printing 'on 'off)))
+(emacsvox-cider--register-after-group
+ '(cider-repl-toggle-pretty-printing)
+ #'emacsvox-cider--pretty-printing-feedback)
 
-;;;  find:
-
-(cl-loop
- for f in
+(defun emacsvox-cider--line-feedback ()
+  "Speak the current line."
+  (emacsvox-speak-line))
+(emacsvox-cider--register-after-group
  '(cider-find-var cider-find-resource cider-find-ns)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."(when (ems-interactive-p)
-               (emacsvox-speak-line)))))
+ #'emacsvox-cider--line-feedback)
 
-;;;  misc commands:
-(cl-loop
- for f in
- '(cider-popup-buffer-quit-function cider-popup-buffer-quit)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (with-current-buffer (window-buffer (selected-window))
-         (emacsvox-icon 'close-object)
-         (emacsvox-speak-mode-line))))))
-
-(defun ems--cider-connections-goto-connection-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
-
-(advice-add 'cider-connections-goto-connection :after
-            #'ems--cider-connections-goto-connection-after)
-
-(defun ems--cider-connect-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'open-object)))
-
-(advice-add 'cider-connect :after #'ems--cider-connect-after)
-
-(defun ems--cider-close-nrepl-session-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'close-object) (message "Closed Repl Session")))
-
-(advice-add 'cider-close-nrepl-session :after
-            #'ems--cider-close-nrepl-session-after)
-
-(defun ems--cider-close-ancillary-buffers-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox-cider--close-view-feedback ()
+  "Speak after closing a CIDER popup."
+  (with-current-buffer (window-buffer (selected-window))
     (emacsvox-icon 'close-object)
-    (message "Closed ancillary buffers")))
+    (emacsvox-speak-mode-line)))
+(emacsvox-cider--register-after-group
+ '(cider-popup-buffer-quit-function cider-popup-buffer-quit)
+ #'emacsvox-cider--close-view-feedback)
 
-(advice-add 'cider-close-ancillary-buffers :after
-            #'ems--cider-close-ancillary-buffers-after)
+(defun emacsvox-cider--close-session-feedback ()
+  "Confirm that a CIDER REPL session closed."
+  (emacsvox-icon 'close-object)
+  (message "Closed REPL session"))
+(emacsvox-cider--register-after-group
+ '(cider-quit) #'emacsvox-cider--close-session-feedback)
 
-(cl-loop
- for f in
- '(cider-describe-nrepl-session cider-connection-browser
-                                cider-display-connection-info)
- do
- (eval
-  `(defadvice ,f  (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (message "Displayed in other window.")))))
+(defun emacsvox-cider--close-ancillary-feedback ()
+  "Confirm that CIDER ancillary buffers closed."
+  (emacsvox-icon 'close-object)
+  (message "Closed ancillary buffers"))
+(emacsvox-cider--register-after-group
+ '(cider-close-ancillary-buffers)
+ #'emacsvox-cider--close-ancillary-feedback)
 
-;;;  Speech-enable Debug:
-(cl-loop
- for f in
+(defun emacsvox-cider--describe-feedback ()
+  "Confirm display of CIDER connection information."
+  (emacsvox-icon 'open-object)
+  (message "Displayed in other window."))
+(emacsvox-cider--register-after-group
+ '(cider-describe-nrepl-session cider-describe-connection)
+ #'emacsvox-cider--describe-feedback)
+
+(defun emacsvox-cider--debug-feedback ()
+  "Speak the current CIDER debugger line."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'button))
+(emacsvox-cider--register-after-group
  '(cider-debug-defun-at-point cider-debug-move-here cider-debug-toggle-locals)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'button)))))
+ #'emacsvox-cider--debug-feedback)
 
-;;;  Speech-enable Insert:
+(defun emacsvox-cider--insert-feedback ()
+  "Speak text inserted into the CIDER REPL."
+  (emacsvox-speak-line)
+  (emacsvox-icon 'yank-object))
+(emacsvox-cider--register-after-group
+ '(cider-insert-defun-in-repl
+   cider-insert-last-sexp-in-repl
+   cider-insert-ns-form-in-repl
+   cider-insert-region-in-repl)
+ #'emacsvox-cider--insert-feedback)
 
-(cl-loop
- for f in
- '(
-   cider-insert-defun-in-repl cider-insert-last-sexp-in-repl
-   cider-insert-ns-form-in-repl cider-insert-region-in-repl)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'yank-object)))))
+(defun emacsvox-cider--inspect-feedback ()
+  "Speak after opening or refreshing the CIDER inspector."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-mode-line))
+(emacsvox-cider--register-after-group
+ '(cider-inspector-refresh
+   cider-inspect
+   cider-inspect-defun-at-point
+   cider-inspect-expr
+   cider-inspect-last-result
+   cider-inspect-last-sexp
+   cider-inspector-pop)
+ #'emacsvox-cider--inspect-feedback)
 
-;;;  Inspect And Inspector:
-
-(cl-loop
- for f in
- '(
-   cider-inspector-refresh
-   cider-inspect cider-inspect-defun-at-point
-   cider-inspect-expr cider-inspect-last-result
-   cider-inspect-last-sexp cider-inspect-read-and-inspect cider-inspector-pop)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-mode-line)))))
-(cl-loop
- for f in
- '(
-   cider-inspector-next-inspectable-object cider-inspector-next-page
-   cider-inspector-operate-on-click cider-inspector-operate-on-point
-   cider-inspector-prev-page cider-inspector-previous-inspectable-object
-   cider-stacktrace-cycle-current-cause cider-stacktrace-cycle-all-causes
-   cider-stacktrace-cycle-cause-1 cider-stacktrace-cycle-cause-2
-   cider-stacktrace-cycle-cause-3 cider-stacktrace-cycle-cause-4
+(defun emacsvox-cider--inspect-navigation-feedback ()
+  "Speak after navigating the CIDER inspector or stacktrace."
+  (emacsvox-icon 'select-object)
+  (emacsvox-speak-line))
+(emacsvox-cider--register-after-group
+ '(cider-inspector-next-inspectable-object
+   cider-inspector-next-page
+   cider-inspector-operate-on-click
+   cider-inspector-operate-on-point
+   cider-inspector-prev-page
+   cider-inspector-previous-inspectable-object
+   cider-stacktrace-cycle-current-cause
+   cider-stacktrace-cycle-all-causes
+   cider-stacktrace-cycle-cause-1
+   cider-stacktrace-cycle-cause-2
+   cider-stacktrace-cycle-cause-3
+   cider-stacktrace-cycle-cause-4
    cider-stacktrace-cycle-cause-5
-   cider-stacktrace-next-cause cider-stacktrace-previous-cause
+   cider-stacktrace-next-cause
+   cider-stacktrace-previous-cause
    cider-stacktrace-jump)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+ #'emacsvox-cider--inspect-navigation-feedback)
+
+(defun emacsvox-cider--install-advice ()
+  "Install advice for functions present in current CIDER."
+  (dolist (entry emacsvox-cider--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(dolist (feature
+         '(cider cider-apropos cider-browse-ns cider-classpath cider-connection
+           cider-debug cider-doc cider-eval cider-format cider-inspector
+           cider-mode cider-popup cider-repl cider-scratch cider-selector
+           cider-stacktrace))
+  (eval-after-load feature #'emacsvox-cider--install-advice))
 
 (provide 'emacsvox-cider)
 ;;;  end of file
-
