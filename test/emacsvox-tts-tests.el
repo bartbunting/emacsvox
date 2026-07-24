@@ -98,7 +98,7 @@
 
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
-  (let ((dtk-speaker-process 'speaker)
+  (let ((tts-speaker-process 'speaker)
         writes)
     (cl-letf (((symbol-function 'process-send-string)
                (lambda (process string)
@@ -197,13 +197,13 @@
 
 (ert-deftest emacsvox-tts-process-routing-honors-dynamic-binding ()
   "Temporarily selecting another process redirects protocol writes."
-  (let ((dtk-speaker-process 'primary)
+  (let ((tts-speaker-process 'primary)
         writes)
     (cl-letf (((symbol-function 'process-send-string)
                (lambda (process string)
                  (push (list process string) writes))))
       (tts--protocol-stop)
-      (let ((dtk-speaker-process 'notification))
+      (let ((tts-speaker-process 'notification))
         (tts--protocol-stop)))
     (should
      (equal
@@ -213,13 +213,13 @@
 
 (ert-deftest emacsvox-tts-notification-apply-selects-notification-process ()
   "Notification calls dynamically use the live notification process."
-  (let ((dtk-speaker-process 'primary)
+  (let ((tts-speaker-process 'primary)
         (dtk-notify-process 'notification)
         selected)
     (cl-letf (((symbol-function 'processp) (lambda (_) t))
               ((symbol-function 'process-status) (lambda (_) 'run)))
       (dtk-notify-apply
-       (lambda (_text) (setq selected dtk-speaker-process))
+       (lambda (_text) (setq selected tts-speaker-process))
        "notice"))
     (should (eq selected 'notification))))
 
@@ -278,7 +278,7 @@
   "Canonical and legacy global state names address the same values."
   (let ((dtk-program "legacy")
         (dtk-stop-immediately t)
-        (dtk-speaker-process 'primary)
+        (tts-speaker-process 'primary)
         (dtk-character-to-speech-table ["legacy"]))
     (should (equal tts-program "legacy"))
     (should tts-stop-immediately)
@@ -290,15 +290,12 @@
           tts-character-to-speech-table ["canonical"])
     (should (equal dtk-program "canonical"))
     (should-not dtk-stop-immediately)
-    (should (eq dtk-speaker-process 'replacement))
+    (should (eq tts-speaker-process 'replacement))
     (should (equal dtk-character-to-speech-table ["canonical"]))))
 
-(ert-deftest emacsvox-tts-canonical-state-aliases-preserve-dynamic-routing ()
-  "Binding either process name is visible through its corresponding alias."
-  (let ((tts-speaker-process 'canonical))
-    (should (eq dtk-speaker-process 'canonical)))
-  (let ((dtk-speaker-process 'legacy))
-    (should (eq tts-speaker-process 'legacy))))
+(ert-deftest emacsvox-tts-legacy-speaker-process-state-is-removed ()
+  "The primary speech process no longer exposes its DECtalk-era state name."
+  (should-not (boundp 'dtk-speaker-process)))
 
 (ert-deftest emacsvox-tts-auditory-icons-use-canonical-process ()
   "Queued and served icons write through the canonical TTS process."
