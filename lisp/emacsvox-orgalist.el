@@ -48,23 +48,35 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
- '(
-   orgalist--cycle-indentation orgalist-check-item orgalist-cycle-bullet
-   orgalist-indent-item orgalist-indent-item-tree orgalist-insert-item
-   orgalist-insert-radio-list orgalist-move-item-down orgalist-move-item-up
-   orgalist-next-item orgalist-outdent-item orgalist-outdent-item-tree
-   orgalist-previous-item
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'select-object)))))
+(defconst emacsvox-orgalist--advice-targets
+  '(orgalist--cycle-indentation orgalist-check-item orgalist-cycle-bullet
+    orgalist-indent-item orgalist-indent-item-tree orgalist-insert-item
+    orgalist-insert-radio-list orgalist-move-item-down orgalist-move-item-up
+    orgalist-next-item orgalist-outdent-item orgalist-outdent-item-tree
+    orgalist-previous-item)
+  "Current Orgalist commands that receive native advice.")
+
+(dolist (target emacsvox-orgalist--advice-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Provide speech feedback after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-speak-line)
+          (emacsvox-icon 'select-object))))))
+
+(defun emacsvox-orgalist--install-advice ()
+  "Install native advice after Orgalist loads."
+  (dolist (target emacsvox-orgalist--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'orgalist
+  (emacsvox-orgalist--install-advice))
 
 (provide 'emacsvox-orgalist)
 ;;;  end of file
-
