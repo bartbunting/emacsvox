@@ -5951,6 +5951,11 @@ Emacsvox sessions running on  different machines.
 
 @subsubsection emacsvox-clipfile-paste
 @deffn {Command} emacsvox-clipfile-paste  (&optional paste-table)
+@table @kbd
+@item C-e C-M-y
+@kindex C-e C-M-y
+@end table
+
 @findex emacsvox-clipfile-paste
 
 @format

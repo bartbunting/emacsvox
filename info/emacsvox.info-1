@@ -8306,6 +8306,7 @@ Infrequently used wizards archived for posterity.
 .................................
 
  -- Command: emacsvox-clipfile-paste (&optional paste-table)
+     ‘C-e C-M-y’
 
      Yank contents of the Emacsvox clipboard at point.
 
