@@ -110,6 +110,7 @@
   (require 'emacsvox-buff-menu-tests)
   (require 'emacsvox-rmail-tests)
   (require 'emacsvox-custom-ui-tests)
+  (require 'emacsvox-ediff-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
