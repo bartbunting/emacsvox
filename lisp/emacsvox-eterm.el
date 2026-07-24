@@ -46,6 +46,24 @@
 ;; To move around the terminal and have different parts spoken.
 
 ;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar buffer-read-only)
+(defvar emacsvox-eterm-keymap)
+(defvar emacsvox-eterm-marker)
+(defvar emacsvox-eterm-maximum-windows)
+(defvar emacsvox-eterm-pointer)
+(defvar emacsvox-eterm-prefix)
+(defvar emacsvox-eterm-raw-prefix)
+(defvar emacsvox-eterm-review-p)
+(defvar emacsvox-eterm-window-table)
+(defvar emacsvox-prefix)
+(defvar eterm-char-mode)
+(defvar term-home-marker)
+(defvar term-mode-map)
+(defvar term-raw-escape-map)
+(defvar term-raw-map)
 ;;;  required packages:
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
@@ -67,8 +85,6 @@
 
 (defun emacsvox-eterm-setup-keys()
   "Make eterm usable with emacsvox"
-  (cl-declare (special emacsvox-prefix emacsvox-eterm-prefix
-                       emacsvox-eterm-keymap  term-mode-map))
   (define-prefix-command 'emacsvox-eterm-prefix-command
                          'emacsvox-eterm-keymap)
   (define-key term-mode-map emacsvox-eterm-prefix
@@ -147,10 +163,6 @@ Useful when eterm is in review mode.")
 
 (defun emacsvox-eterm-setup-raw-keys ()
   "Setup emacsvox keys for raw terminal mode."
-  (cl-declare (special term-raw-map
-                       emacsvox-prefix term-raw-escape-map
-                       emacsvox-eterm-keymap
-                       emacsvox-eterm-raw-prefix))
   (when term-raw-map
     (define-key term-raw-map emacsvox-prefix 'emacsvox-keymap)
     (define-key term-raw-map (concat emacsvox-prefix emacsvox-prefix)
@@ -303,8 +315,6 @@ Pronounces character phonetically unless  called with a PREFIX arg."
   "Move the pointer up a line.
 Argument COUNT .specifies number of lines by which to move."
   (interactive "P")
-  (cl-declare (special emacsvox-eterm-pointer
-                       term-home-marker))
   (setq count (or count 1))
   (save-excursion
     (goto-char emacsvox-eterm-pointer)
@@ -422,8 +432,6 @@ Argument COUNT specifies number of words by which to move."
 (defun emacsvox-eterm-goto-line (line)
   "Move emacsvox eterm pointer to a specified LINE."
   (interactive "nGo to line:")
-  (cl-declare (special emacsvox-eterm-pointer
-                       term-home-marker))
   (save-excursion
     (goto-char term-home-marker)
     (forward-line line)
@@ -447,8 +455,6 @@ Argument COUNT specifies number of words by which to move."
   "Prompt for a string,
 and try and locate it on the terminal.
 If found, the Emacsvox pointer is left at the hit. "
-  (cl-declare (special emacsvox-eterm-pointer
-                       term-home-marker))
   (let ((found nil)
         (start nil)
         (end nil)
@@ -533,9 +539,6 @@ Use \\[emacsvox-eterm-toggle-review].")
 In review mode, you can move around the terminal and listen to the contents
 without sending input to the terminal itself."
   (interactive)
-  (cl-declare (special emacsvox-eterm-review-p
-                       eterm-char-mode
-                       buffer-read-only emacsvox-eterm-keymap term-raw-map))
   (emacsvox-eterm-nuke-cached-info)
   (setq mode-line-process
         '("review"))
@@ -563,8 +566,6 @@ without sending input to the terminal itself."
 This sets  the emacsvox eterm marker to the position pointed
 to by the emacsvox eterm pointer."
   (interactive)
-  (cl-declare (special emacsvox-eterm-pointer
-                       emacsvox-eterm-marker))
   (let ((coordinates nil))
     (set-marker emacsvox-eterm-marker
                 (marker-position emacsvox-eterm-pointer))
@@ -584,8 +585,6 @@ This copies  region delimited by the emacsvox eterm marker
 set by command \\[emacsvox-eterm-set-marker] and the
 emacsvox eterm pointer."
   (interactive)
-  (cl-declare (special emacsvox-eterm-marker
-                       emacsvox-eterm-pointer))
   (kill-ring-save (marker-position emacsvox-eterm-marker)
                   (marker-position emacsvox-eterm-pointer))
   (emacsvox-icon 'mark-object)
@@ -599,8 +598,6 @@ This copies  region delimited by the emacsvox eterm marker
 set by command \\[emacsvox-eterm-set-marker] and the
 emacsvox eterm pointer to a register."
   (interactive (list (register-read-with-preview "Copy to register: ")))
-  (cl-declare (special emacsvox-eterm-marker
-                       emacsvox-eterm-pointer))
   (copy-to-register register
                     (marker-position emacsvox-eterm-marker)
                     (marker-position emacsvox-eterm-pointer)
@@ -784,8 +781,6 @@ Argument TOP-LEFT  specifies top-left of window.
 Argument BOTTOM-RIGHT  specifies bottom right of window.
 Optional argument RIGHT-STRETCH  specifies if the window stretches to the right.
 Optional argument LEFT-STRETCH  specifies if the window stretches to the left."
-  (cl-declare (special emacsvox-eterm-window-table
-                       emacsvox-eterm-maximum-windows))
   (cl-assert (< window-id emacsvox-eterm-maximum-windows)  t
              "Your installation of Emacsvox only supports %d windows"
              emacsvox-eterm-maximum-windows)
@@ -796,8 +791,6 @@ Optional argument LEFT-STRETCH  specifies if the window stretches to the left."
 (defun emacsvox-eterm-get-window (id)
   "Retrieve a window.
 Argument ID specifies window whose definition is being requested."
-  (cl-declare (special emacsvox-eterm-window-table
-                       emacsvox-eterm-maximum-windows))
   (cl-assert (<  id emacsvox-eterm-maximum-windows)  t
              "Your installation of Emacsvox only supports %d windows"
              emacsvox-eterm-maximum-windows)
@@ -812,8 +805,6 @@ be used when emacsvox is set to review mode inside an
 eterm."
 
   (interactive "nDefine window: ")
-  (cl-declare (special emacsvox-eterm-marker emacsvox-eterm-pointer
-                       emacsvox-eterm-maximum-windows))
   (cl-assert (<  id emacsvox-eterm-maximum-windows)  t
              "Your installation of Emacsvox only supports %d windows"
              emacsvox-eterm-maximum-windows)
@@ -845,8 +836,6 @@ and bottom right at %s %s"
   "Speak an eterm window.
 Argument ID specifies the window."
   (interactive "nSpeak window")
-  (cl-declare (special emacsvox-eterm-maximum-windows
-                       term-home-marker))
   (cl-assert (<  id emacsvox-eterm-maximum-windows)  t
              "Your installation of Emacsvox only supports %d windows"
              emacsvox-eterm-maximum-windows)
@@ -860,8 +849,6 @@ Argument ID specifies the window."
 (defun emacsvox-eterm-yank-window (id)
   "Yank contents of  an eterm window at point."
   (interactive "nYank contents of window")
-  (cl-declare (special emacsvox-eterm-maximum-windows
-                       term-home-marker))
   (cl-assert (<  id emacsvox-eterm-maximum-windows)  t
              "Your installation of Emacsvox only supports %d windows"
              emacsvox-eterm-maximum-windows)

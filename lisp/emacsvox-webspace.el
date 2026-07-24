@@ -43,6 +43,17 @@
 ;; WEBSPACE == Smart Web Gadgets For The Emacsvox Desktop
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-curl)
+(defvar emacsvox-webspace-feeds)
+(defvar emacsvox-webspace-headlines)
+(defvar emacsvox-webspace-headlines-buffer)
+(defvar emacsvox-webspace-headlines-period)
+(defvar emacsvox-xslt)
+(defvar emacsvox-xslt-directory)
+(defvar g-curl-options)
+
 ;;  Required modules: 
 
 (eval-when-compile (require 'cl-lib))
@@ -156,8 +167,6 @@ Generates auditory and visual display."
   "How often we fetch from a feed.")
 (defun emacsvox-webspace-feed-titles (feed-url)
   "Return a list  `((title url)...) given an RSS/Atom  feed  URL."
-  (cl-declare (special emacsvox-xslt-directory emacsvox-xslt
-                       emacsvox-curl g-curl-options))
   (with-temp-buffer
     (shell-command
      (format "%s %s %s | %s %s - "
@@ -174,8 +183,6 @@ Generates auditory and visual display."
 (defun emacsvox-webspace-headlines-fetch (feed)
   "Add headlines from specified feed to our cache.
 Newly found headlines are inserted into the ring within our feedstore."
-  (cl-declare (special emacsvox-webspace-headlines
-                       emacsvox-webspace-headlines-period))
   (let* ((last-update (get-text-property 0 'last-update feed))
          (titles (emacsvox-webspace-fs-titles emacsvox-webspace-headlines))
          (new-titles nil))
@@ -262,8 +269,6 @@ Updated headlines found in emacsvox-webspace-headlines."
 (defun emacsvox-webspace-headlines ()
   "Startup Headlines ticker using RSS/Atom  feeds."
   (interactive)
-  (cl-declare (special emacsvox-webspace-headlines
-                       emacsvox-webspace-feeds))
   (cl-assert
    emacsvox-webspace-feeds
    t "First add some feeds to emacsvox-webspace-feeds.")
@@ -284,8 +289,6 @@ Updated headlines found in emacsvox-webspace-headlines."
 (defun emacsvox-webspace-headlines-browse ()
   "Display buffer of browsable headlines."
   (interactive)
-  (cl-declare (special emacsvox-webspace-headlines
-                       emacsvox-webspace-headlines-buffer))
   (unless emacsvox-webspace-headlines
     (error "No cached headlines in this Emacs session."))
   (with-current-buffer

@@ -46,6 +46,15 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-use-icons)
+(defvar sd-emacsvox-prefixes)
+(defvar self-document-files)
+(defvar self-document-keymap-list)
+(defvar self-document-map)
+(defvar self-document-patterns)
+(defvar tts-program)
 
 ;;;   Required modules
 
@@ -88,8 +97,6 @@
 
 (defun self-document-load-modules ()
   "Load all Emacsvox modules."
-  (cl-declare (special tts-program self-document-files
-                       emacsvox-use-icons))
   (let ((file-name-handler-alist nil)
         (load-source-file-function  nil)
         (tts-program "log-null"))
@@ -120,7 +127,6 @@
 
 (defsubst self-document-command-p (f)
   "Predicate to check if  this command it to be documented."
-  (cl-declare (special self-document-patterns))
   (when (and (fboundp f) (commandp f)
              (string-match self-document-patterns (symbol-name f)) ; candidate
              (if  (string-match  "/" (symbol-name f)) ; filter repeat muggles
@@ -134,7 +140,6 @@
 
 (defsubst self-document-option-p (o)
   "Predicate to test if we document this option."
-  (cl-declare (special self-document-patterns))
   (when (and
          (custom-variable-p o)
          (string-match self-document-patterns (symbol-name o)))
@@ -143,7 +148,6 @@
 
 (defun self-document-map-command (f)
   "Add   this command symbol to our sym->file map."
-  (cl-declare (special self-document-map))
   (let ((file  (symbol-file f 'defun))
         (entry nil))
     (unless file (setq file "emacsvox")) ; capture orphans if any
@@ -156,7 +160,6 @@
 
 (defun self-document-map-option (f)
   "Add this option symbol to our map."
-  (cl-declare (special self-document-map))
   (let ((file  (symbol-file f 'defvar))
         (entry nil))
     (unless file (setq file "emacsvox")); capture orphans if any
@@ -168,7 +171,6 @@
 
 (defun self-document-map-symbol (f)
   "Map command and options to its defining module."
-  (cl-declare (special self-document-map))
   (when (self-document-command-p f) (self-document-map-command f))
   (when (self-document-option-p f) (self-document-map-option f)))
 
@@ -325,7 +327,6 @@
 (defun sd-describe-keys (buffer)
   "Generate a Texinfo section in `buffer' listing commands bound
  to prefix in `sd-emacsvox-prefixes'."
-  (cl-declare (special sd-emacsvox-prefixes))
   (with-current-buffer buffer
     (insert "@section Commands Organized By Keymaps\n")
     (insert "@node Commands Organized By Keymaps\n\n")
@@ -388,7 +389,6 @@
       (forward-line 1))))
 (defun self-document-all-modules()
   "Generate documentation for all modules."
-  (cl-declare (special self-document-map))
   (self-document-all-keymaps)
   (let ((file-name-handler-alist nil)
         (output (find-file-noselect "docs.texi"))
@@ -468,7 +468,6 @@ This chapter documents a total of %d commands and %d options.\n\n"
 
 (defun self-document-all-keymaps()
   "Generate documentation for all Emacsvox keymaps."
-  (cl-declare (special self-document-keymap-list))
   (let ((output (find-file-noselect "keys.texi"))
         (title nil))
     (with-current-buffer output
@@ -527,7 +526,6 @@ This chapter documents a total of %d commands and %d options.\n\n"
 
 (defun self-document-module-test ()
   "Test documentation generator."
-  (cl-declare (special self-document-map))
   (setq debug-on-error t)
   (let ((output (find-file-noselect (make-temp-file "doc" nil ".texi"))))
     (self-document-load-modules)

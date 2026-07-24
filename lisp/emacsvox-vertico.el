@@ -33,6 +33,12 @@
 ;; This module speech-enables Vertico's UI
 
 ;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar vertico--allow-prompt)
+(defvar vertico--base)
+(defvar vertico--index)
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -68,8 +74,6 @@
 
 (defun emacsvox--advice-vertico--exhibit-after (&rest _)
   "speak."
-  (cl-declare
-   (special vertico--allow-prompt vertico--index vertico--base))
   (let
       ((new-cand
         (substring (vertico--candidate)

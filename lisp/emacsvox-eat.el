@@ -41,6 +41,13 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar eat-char-mode-map)
+(defvar eat-line-mode-map)
+(defvar eat-mode-map)
+(defvar eat-semi-char-mode-map)
+
 ;;   Required modules:
 
 (eval-when-compile  (require 'cl-lib))
@@ -61,8 +68,6 @@
 
 (defun emacsvox-eat-mode-setup ()
   "Placed on eat-mode-hook to do Emacsvox setup."
-  (cl-declare (special eat-semi-char-mode-map eat-mode-map
-                       eat-line-mode-map  eat-char-mode-map))
   (define-key eat-semi-char-mode-map emacsvox-prefix 'emacsvox-keymap)
   (cl-loop
    for map in

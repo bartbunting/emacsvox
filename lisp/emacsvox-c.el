@@ -45,6 +45,12 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar c-mode-base-map)
+(defvar c-mode-map)
+(defvar outline-regexp)
+
 ;;   Required modules:
 
 (require 'emacsvox-preamble)
@@ -522,8 +528,6 @@ and their meanings. ")
 (add-hook
  'c-mode-common-hook
  #'(lambda ()
-     (cl-declare (special c-mode-map c-mode-base-map
-                          outline-regexp))
      (setq outline-regexp "^//< ")
      (define-key c-mode-map "\C-cs" 'emacsvox-c-speak-semantics)
      (define-key c-mode-map "\M-n" 'c-next-statement)

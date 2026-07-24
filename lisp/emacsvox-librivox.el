@@ -62,6 +62,12 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-curl)
+(defvar emacsvox-xslt)
+(defvar g-curl-options)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -360,8 +366,6 @@ more results."
   (interactive
    (list
     (ems--read-url)))
-  (cl-declare (special emacsvox-curl g-curl-options
-                       emacsvox-xslt))
   (let ((file  (make-temp-file "librivox" nil ".rss"))
         (m3u-file nil))
     (shell-command

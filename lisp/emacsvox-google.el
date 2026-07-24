@@ -48,6 +48,11 @@
 ;; Now, some specialized searches, e.g. blog search are tbm=
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-google-query)
+(defvar emacsvox-websearch-google-options)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -468,8 +473,6 @@ current page."
 (defun emacsvox-google-show-toolbelt()
   "Reload search page with toolbelt showing."
   (interactive)
-  (cl-declare (special emacsvox-google-query
-                       emacsvox-websearch-google-options))
   (let ((emacsvox-websearch-google-options "&tbo=1"))
     (emacsvox-websearch-google emacsvox-google-query)))
 

@@ -71,6 +71,11 @@
 ;; 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-dbus-screen-lock-handle)
+(defvar emacsvox-screen-saver-saved-conf)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -373,8 +378,6 @@ already disabled."
 
 (defun emacsvox-dbus-watch-screen-lock ()
   "Register a handler to watch screen lock/unlock."
-  (cl-declare (special emacsvox-dbus-screen-lock-handle
-                       emacsvox-screen-saver-saved-conf))
   (setq
    emacsvox-dbus-screen-lock-handle
    (dbus-register-signal

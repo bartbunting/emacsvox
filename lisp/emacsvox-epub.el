@@ -164,6 +164,27 @@
 ;; @end table
 
 ;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar emacsvox-epub-calibre-results)
+(defvar emacsvox-epub-calibre-root-dir)
+(defvar emacsvox-epub-db)
+(defvar emacsvox-epub-db-file)
+(defvar emacsvox-epub-gutenberg-cat)
+(defvar emacsvox-epub-gutenberg-catalog-url)
+(defvar emacsvox-epub-gutenberg-mirror)
+(defvar emacsvox-epub-gutenberg-suffix)
+(defvar emacsvox-epub-interaction-buffer)
+(defvar emacsvox-epub-library-directory)
+(defvar emacsvox-epub-this-epub)
+(defvar emacsvox-epub-unzip)
+(defvar emacsvox-epub-wget)
+(defvar emacsvox-epub-zipinfo)
+(defvar emacsvox-speak-directory-settings)
+(defvar emacsvox-we-url-executor)
+(defvar epub-this-epub)
+(defvar eww-data)
 ;; Required Modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -371,9 +392,6 @@
     (add-hook
      'emacsvox-eww-post-hook
      #'(lambda nil
-         (cl-declare (special emacsvox-we-url-executor
-                              emacsvox-epub-this-epub
-                              emacsvox-speak-directory-settings))
          (emacsvox-speak-load-directory-settings)
          (setq emacsvox-epub-this-epub epub
                emacsvox-we-url-executor 'emacsvox-epub-url-executor)
@@ -406,8 +424,6 @@ Useful if table of contents in toc.ncx is empty."
       (add-hook
        'emacsvox-eww-post-hook
        #'(lambda nil
-           (cl-declare (special emacsvox-we-url-executor
-                                emacsvox-epub-this-epub))
            (setq emacsvox-epub-this-epub epub
                  emacsvox-we-url-executor 'emacsvox-epub-url-executor)
            (emacsvox-speak-buffer))
@@ -427,8 +443,6 @@ Useful if table of contents in toc.ncx is empty."
 (defun emacsvox-epub-url-executor (url)
   "Custom URL executor for use in EPub Mode."
   (interactive "sURL: ")
-  (cl-declare (special emacsvox-epub-this-epub
-                       emacsvox-speak-directory-settings))
   (unless emacsvox-epub-this-epub (error "Not an EPub document."))
   (cond
    ((not (string-match "^http://" url)) ; relative url
@@ -591,8 +605,6 @@ Letters do not insert themselves; instead, they are commands.
 
 (defun emacsvox-epub-bookshelf-update ()
   "Update bookshelf metadata."
-  (cl-declare (special emacsvox-epub-db-file emacsvox-epub-db
-                       emacsvox-epub-library-directory))
   (let ((updated nil)
         (filename nil))
     (cl-loop
@@ -814,9 +826,6 @@ No book files are deleted."
 When opened, displays a bookshelf consisting of  epubs found at the
 root directory,see \\[emacsvox-epub-mode]"
   (interactive)
-  (cl-declare (special emacsvox-epub-interaction-buffer
-                       emacsvox-epub-zipinfo
-                       emacsvox-epub-unzip))
   (unless emacsvox-epub-unzip
     (error "Please install unzip."))
   (unless emacsvox-epub-zipinfo
@@ -866,8 +875,6 @@ in the epub file."
           emacsvox-epub-library-directory
           "\\.epub$" 'include-dirs)))))
     current-prefix-arg))
-  (cl-declare (special emacsvox-speak-directory-settings eww-data
-                       epub-this-epub emacsvox-epub-this-epub))
   (let* ((emacsvox-speak-messages nil)
          (directory
           (string-trim
@@ -976,8 +983,6 @@ to find Epubs  having full viewability.")
 
 (defun emacsvox-epub-gutenberg-download-uri (book-id)
   "Return URL  for downloading Gutenberg EBook."
-  (cl-declare (special emacsvox-epub-gutenberg-suffix
-                       emacsvox-epub-gutenberg-mirror))
   (format "%s%s%s"
           emacsvox-epub-gutenberg-mirror
           book-id
@@ -985,7 +990,6 @@ to find Epubs  having full viewability.")
 
 (defun emacsvox-epub-gutenberg-browse-uri (book-id)
   "Return URL  for browsing Gutenberg EBook."
-  (cl-declare (emacsvox-epub-gutenberg-suffix emacsvox-epub-gutenberg-mirror))
   (format "%s%s"
           emacsvox-epub-gutenberg-mirror book-id))
 
@@ -1026,9 +1030,6 @@ With interactive prefix arg `download', download the epub."
   "Open Gutenberg catalog.
 Fetch if needed, or if refresh is T."
   (interactive "P")
-  (cl-declare (special emacsvox-epub-gutenberg-catalog-url
-                       emacsvox-epub-gutenberg-cat
-                       emacsvox-epub-wget))
   (unless emacsvox-epub-wget
     (error "Please install wget. "))
   (unless
@@ -1143,8 +1144,6 @@ Searches for matches in both  Title and Author."
 (defun emacsvox-epub-bookshelf-calibre-search (pattern)
   "Add results of an title/author search to current bookshelf."
   (interactive "sSearch For: ")
-  (cl-declare (special emacsvox-epub-calibre-root-dir
-                       emacsvox-epub-calibre-results))
   (unless (eq major-mode 'emacsvox-epub-mode)
     (error "Not in an Emacsvox Epub Bookshelf."))
   (let ((emacsvox-speak-messages nil)
@@ -1164,8 +1163,6 @@ Searches for matches in both  Title and Author."
 (defun emacsvox-epub-bookshelf-calibre-author (pattern)
   "Add results of an author search to current bookshelf."
   (interactive "sAuthor: ")
-  (cl-declare (special emacsvox-epub-calibre-root-dir
-                       emacsvox-epub-calibre-results))
   (unless (eq major-mode 'emacsvox-epub-mode)
     (error "Not in an Emacsvox Epub Bookshelf."))
   (let ((emacsvox-speak-messages nil)
@@ -1185,8 +1182,6 @@ Searches for matches in both  Title and Author."
 (defun emacsvox-epub-bookshelf-calibre-title (pattern)
   "Add results of an title search to current bookshelf."
   (interactive "sTitle: ")
-  (cl-declare (special emacsvox-epub-calibre-root-dir
-                       emacsvox-epub-calibre-results))
   (unless (eq major-mode 'emacsvox-epub-mode)
     (error "Not in an Emacsvox Epub Bookshelf."))
   (let ((emacsvox-speak-messages nil)
@@ -1284,4 +1279,3 @@ in emacsvox-epub-mode")
 
 (provide 'emacsvox-epub)
 ;;;  end of file
-

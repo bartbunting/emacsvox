@@ -77,6 +77,12 @@
 ;; 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-threes-game-stack)
+(defvar threes-cells)
+(defvar threes-game-over-p)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -262,8 +268,6 @@
 (defun emacsvox-threes-pop-state ()
   "Reset state from stack."
   (interactive)
-  (cl-declare (special emacsvox-threes-game-stack threes-cells
-                       threes-game-over-p))
   (cond
    ((null emacsvox-threes-game-stack) (error "No saved  states."))
    (t

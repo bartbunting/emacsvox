@@ -117,6 +117,13 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar chess-display-index)
+(defvar chess-module-game)
+(defvar emacsvox-chess-blacks)
+(defvar emacsvox-chess-whites)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -152,8 +159,6 @@
   "Return an audio formatted description of square at given index
   as a list.  Argument index is an integer between 0 and 63 as in
   package chess."
-  (cl-declare (special chess-module-game chess-display-index
-                       emacsvox-chess-whites))
   (cl-assert (eq major-mode 'chess-display-mode) t "Not in a Chess  display.")
   (let ((position (chess-game-pos chess-module-game chess-display-index))
         (piece nil)
@@ -518,8 +523,6 @@
 
 (defun emacsvox-chess-piece-squares (piece)
   "Return a description of where a given piece is on the board."
-  (cl-declare (special chess-display-index chess-module-game
-                       emacsvox-chess-whites emacsvox-chess-blacks))
   (cl-assert (eq major-mode 'chess-display-mode) t "Not  a Chess display.")
   (cl-assert
    (memq piece

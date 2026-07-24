@@ -1,4 +1,10 @@
 ;;; This is for setting variables customized via custom.
+
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar emacs-personal-library)
 (defmacro c-setq (variable value)
   "Exactly like setq, but handles custom."
   `(funcall (or (get ',variable 'custom-set) 'set-default) ',variable ,value))
@@ -6,7 +12,6 @@
   "add directory to load path. Path is resolved relative to `whence'
 which defaults to emacs-personal-library."
   (interactive "Denter directory name: ")
-  (cl-declare (special emacs-personal-library))
   (unless (and library (locate-library library))
     (add-to-list
      'load-path

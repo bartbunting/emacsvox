@@ -58,6 +58,11 @@
 ;; intermediate filters.
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar case-fold-search)
+(defvar emacsvox-filtertext-info)
+
 ;;;   structures 
 
 (cl-defstruct (emacsvox-filtertext
@@ -88,8 +93,6 @@
 (defun emacsvox-filtertext(start end)
   "Copy over text in region to special filtertext buffer to  filter text. "
   (interactive "r")
-  (cl-declare (special emacsvox-filtertext-info
-                       case-fold-search))
   (let ((this (buffer-substring-no-properties start end))
         (buffer (get-buffer-create
                  (format "filter-%s" (buffer-name)))))

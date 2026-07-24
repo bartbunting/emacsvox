@@ -44,6 +44,13 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-eww-masquerade)
+(defvar emacsvox-google-toolbelt)
+(defvar emacsvox-websearch-google-lite)
+(defvar ems--google-filter)
+
 
 ;;  required modules
 (eval-when-compile (require 'cl-lib))
@@ -208,9 +215,6 @@ prefix arg is equivalent to hitting the I'm Feeling Lucky button on Google. "
   "Use Google Lite.
 Optional prefix arg prompts for toolbelt options."
   (interactive (list (gweb-google-autocomplete "Q: ") current-prefix-arg))
-  (cl-declare (special emacsvox-eww-masquerade ems--google-filter
-                         emacsvox-websearch-google-lite
-                         emacsvox-google-toolbelt))
   (setq emacsvox-google-toolbelt nil)
   (let ((emacsvox-eww-masquerade t)
         (toolbelt (emacsvox-google-toolbelt)))

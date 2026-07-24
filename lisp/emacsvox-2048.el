@@ -43,6 +43,14 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar *2048-board*)
+(defvar *2048-columns*)
+(defvar *2048-rows*)
+(defvar *2048-score*)
+(defvar emacsvox-2048-game-stack)
+
 ;;; Commentary:
 ;; 2048 ==
 
@@ -64,8 +72,6 @@
 (defun emacsvox-2048-push-state ()
   "Push current game state on stack."
   (interactive)
-  (cl-declare (special emacsvox-2048-game-stack
-                       *2048-board* *2048-score* *2048-rows* *2048-columns*))
   (push
    (make-emacsvox-2048-game-state
     :board (copy-sequence *2048-board*)
@@ -79,8 +85,6 @@
 (defun emacsvox-2048-pop-state ()
   "Reset state from stack."
   (interactive)
-  (cl-declare (special emacsvox-2048-game-stack
-                       *2048-board* *2048-score* *2048-rows* *2048-columns*))
   (cond
    ((null emacsvox-2048-game-stack) (error "No saved  states."))
    (t

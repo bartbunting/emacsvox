@@ -52,6 +52,11 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar speedbar-hide-button-brackets-flag)
+(defvar speedbar-mode-map)
+
 ;;   Required modules:
 
 (require 'emacsvox-preamble)
@@ -242,8 +247,6 @@ An automatically updating speedbar consumes resources.")
   )
 (defun emacsvox-speedbar-enter-hook ()
   "Actions taken when we enter the Speedbar"
-  (cl-declare (special speedbar-mode-map
-                       speedbar-hide-button-brackets-flag))
   (tts-set-punctuations 'all)
   (setq speedbar-hide-button-brackets-flag t)
   (define-key speedbar-mode-map "f"

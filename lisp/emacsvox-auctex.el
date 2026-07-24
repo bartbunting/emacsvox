@@ -45,6 +45,11 @@
 ;; since 1991.
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar imenu-create-index-function)
+(defvar imenu-generic-expression)
+
 ;;;  voice locking:
 
 ;; faces from AUCTeX 11
@@ -159,8 +164,6 @@
 
 (add-hook  'LaTeX-mode-hook
            #'(lambda ()
-               (cl-declare (special imenu-generic-expression
-                                    imenu-create-index-function))
                (require 'imenu)
                (setq imenu-create-index-function
                      'imenu-default-create-index-function)

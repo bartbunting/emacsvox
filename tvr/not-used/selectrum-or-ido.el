@@ -1,4 +1,10 @@
 ;;; Switch between selectrum and ido/ido-ubiquitous
+
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar selectrum-or-ido)
 (require 'cl-lib)
 
 (defvar selectrum-or-ido 'ido
@@ -7,7 +13,6 @@
 (defun toggle-selectrum-or-ido ()
   "Toggle between using ido and selectrum."
   (interactive)
-  (cl-declare (special selectrum-or-ido))
   (cond
    ((eq selectrum-or-ido 'ido)
     (setq selectrum-or-ido 'selectrum))

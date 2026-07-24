@@ -6,6 +6,12 @@
 ;; This module sets things up for GMail.
 ;;Using  a file-based creds store.
 ;;; specials:
+
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar auth-source-xoauth2-creds)
 (require 'cl-lib)
 (cl-declaim (special emacsvox-z-keymap gnus-summary-mode-map
                      emacsvox-y-keymap smtpmail-auth-supported
@@ -106,7 +112,6 @@ This moves them into the Spam folder."
   (defun tvr-unlock-xoauth ()
     "Unlock xoauth creds if gpg-agent has timed out."
     (interactive )
-    (cl-declare (special auth-source-xoauth2-creds))
     (kill-buffer (find-file-noselect auth-source-xoauth2-creds))
     (tts-stop)
     (emacsvox-icon 'task-done))

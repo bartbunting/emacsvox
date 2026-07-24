@@ -45,6 +45,13 @@
 ;; using xsltproc
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-xslt)
+(defvar emacsvox-xslt-keep-errors)
+(defvar emacsvox-xslt-options)
+(defvar modification-flag)
+
 ;;   Required modules:
 
 (require 'emacsvox-preamble)
@@ -129,8 +136,6 @@ pipeline. Argument `specs' is a list of elements of the form `(xsl params)'."
 ;;;###autoload
 (defun emacsvox-xslt-region (xsl start end &optional params no-comment)
   "Apply XSLT transformation to region and replace it with the result.  "
-  (cl-declare (special emacsvox-xslt emacsvox-xslt-options
-                       emacsvox-xslt-keep-errors modification-flag))
   (save-excursion
     (with-silent-modifications
       (let ((command nil)
@@ -190,8 +195,6 @@ Region defaults to entire buffer."
 (defun emacsvox-xslt-url (xsl url &optional params no-comment)
   "Apply XSLT transformation to url
 and return the results in a newly created buffer. "
-  (cl-declare (special emacsvox-xslt
-                       emacsvox-xslt-keep-errors))
   (let ((result (get-buffer-create " *xslt result*"))
         (command nil)
         (parameters (when params
@@ -245,8 +248,6 @@ Argument `specs' is a list of elements of the form
 `(xsl xpath)'.
   This uses XSLT processor xsltproc available as
 part of the libxslt package."
-  (cl-declare (special emacsvox-xslt
-                       emacsvox-xslt-keep-errors))
   (let ((result (url-retrieve-synchronously url))
         (command ""))
     (setq command
@@ -294,8 +295,6 @@ part of the libxslt package."
 (defun emacsvox-xslt-xml-url (xsl url &optional params)
   "Apply XSLT transformation to XML url
 and return the results in a newly created buffer. "
-  (cl-declare (special emacsvox-xslt
-                       emacsvox-xslt-keep-errors))
   (let ((result (get-buffer-create " *xslt result*"))
         (command nil)
         (parameters

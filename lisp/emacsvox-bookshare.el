@@ -80,6 +80,21 @@
 ;; @end itemize
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-bookshare-browser-function)
+(defvar emacsvox-bookshare-directory)
+(defvar emacsvox-bookshare-html-to-text-command)
+(defvar emacsvox-bookshare-md5-cached-token)
+(defvar emacsvox-bookshare-this-book)
+(defvar emacsvox-bookshare-toc-xslt)
+(defvar emacsvox-bookshare-user-id)
+(defvar emacsvox-bookshare-xslt)
+(defvar emacsvox-speak-directory-settings)
+(defvar emacsvox-xslt)
+(defvar emacsvox-xslt-directory)
+(defvar eww-data)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -154,8 +169,6 @@ This is used by the various Bookshare view commands to display
   "User password.
 Get user and secret from auth-sources, and memoize the user and
 the MD5-encoded secret."
-  (cl-declare (special emacsvox-bookshare-user-id
-                       emacsvox-bookshare-md5-cached-token))
   (unless emacsvox-bookshare-md5-cached-token
     (let ((auth-info (emacsvox-bookshare-get-auth-info)))
       (setq emacsvox-bookshare-user-id (car auth-info))
@@ -1081,8 +1094,6 @@ Target location is generated from author and title."
 
 (defun emacsvox-bookshare-xslt (directory)
   "Return suitable XSL  transform."
-  (cl-declare (special emacsvox-bookshare-xslt
-                       emacsvox-xslt-directory))
   (let ((xsl (expand-file-name emacsvox-bookshare-xslt directory)))
     (cond
      ((file-exists-p xsl) xsl)
@@ -1094,8 +1105,6 @@ Target location is generated from author and title."
 
 (defun emacsvox-bookshare-toc-xslt ()
   "Return suitable XSL  transform for TOC."
-  (cl-declare (special emacsvox-bookshare-toc-xslt
-                       emacsvox-xslt-directory))
 
   (expand-file-name emacsvox-bookshare-toc-xslt emacsvox-xslt-directory))
 (declare-function emacsvox-xslt-view-file "emacsvox-xslt" (style file))
@@ -1173,8 +1182,6 @@ Make sure it's downloaded and unpacked first."
 (defun emacsvox-bookshare-extract-and-view (url)
   "Extract content referred to by link under point, and render via the browser."
   (interactive "sURL: ")
-  (cl-declare (special emacsvox-bookshare-browser-function
-                       emacsvox-xslt-directory))
   (let ((result (emacsvox-bookshare-extract-xml url))
         (browse-url-browser-function emacsvox-bookshare-browser-function))
     (save-current-buffer
@@ -1260,8 +1267,6 @@ Useful for fulltext search in a book."
                                  (dired-get-filename))
                                emacsvox-bookshare-directory)))))
   
-  (cl-declare (special emacsvox-bookshare-html-to-text-command
-                       emacsvox-bookshare-directory))
   (let ((xsl (emacsvox-bookshare-xslt directory))
         (buffer (get-buffer-create "Full Text"))
         (command nil)
@@ -1303,10 +1308,6 @@ Useful for fulltext search in a book."
              #'(lambda (f) (string-match "\\.ncx$" f))
              (directory-files d))
             ))))))
-  (cl-declare (special eww-data
-                       emacsvox-xslt emacsvox-bookshare-directory
-                       emacsvox-speak-directory-settings
-                       emacsvox-bookshare-this-book))
   (let ((xsl (emacsvox-bookshare-xslt directory))
         (buffer (get-buffer-create "Full Text"))
         (command nil)

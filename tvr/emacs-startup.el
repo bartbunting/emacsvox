@@ -26,6 +26,21 @@
 ;; 
 ;;;   libs, vars:
 
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar auto-correct-predicate)
+(defvar custom-file)
+(defvar emacsvox-directory)
+(defvar global-mode-string)
+(defvar outline-minor-mode-prefix)
+(defvar outline-mode-prefix-map)
+(defvar shell-mode-map)
+(defvar tts-caps)
+(defvar tts-notify-process)
+(defvar tts-speaker-process)
+(defvar tvr-libs)
 (require 'cl-lib)
 (defvar tvr-site-lib (expand-file-name "~/emacs/lisp/site-lisp")
   "Local library.")
@@ -65,7 +80,6 @@ Produce timing information as the last step."
 
 (defsubst tvr-shell-bind-keys ()
   "Set up  shell mode keys."
-  (cl-declare (special shell-mode-map))
   (cl-loop
    for b in
    '(
@@ -104,9 +118,6 @@ startup sound."
 (defun tvr-customize ()
   "Customize my emacs.
 Use Custom to customize where possible. "
-  (cl-declare (special
-               custom-file global-mode-string outline-minor-mode-prefix
-               outline-mode-prefix-map emacsvox-directory))
   (setenv "PULSE_SINK" "effect_input.spatializer") ; for mplayer
   (unless (battery--upower-devices) (display-battery-mode -1)) ; turnoff
   (load-theme 'ef-maris-dark t)
@@ -176,7 +187,6 @@ Use Custom to customize where possible. "
 (defun tvr-after-init ()
   "Actions to take after Emacs is up and ready."
   ;; load  library-specific settings, customize, then start things.
-  (cl-declare (special  tvr-libs ))
 ;;; load  settings   not  customizable via custom.
   (tvr-time-load (load tvr-libs))
   (with-eval-after-load 'yasnippet
@@ -197,7 +207,6 @@ Use Custom to customize where possible. "
 
 (defun tvr-text-mode-hook ()
   "TVR:text-mode"
-  (cl-declare (special auto-correct-predicate))
   (outline-minor-mode 1)
   (auto-fill-mode)
   (emacsvox-pronounce-toggle-dictionaries t)
@@ -210,7 +219,6 @@ Use Custom to customize where possible. "
 
 (defun tvr-prog-mode-hook ()
   "TVR:prog-mode"
-  (cl-declare (special tts-caps))
   (outline-minor-mode 1)
   (local-set-key "\C-m" 'newline-and-indent)
   (company-mode)
@@ -230,7 +238,6 @@ Use Custom to customize where possible. "
   "Start up emacs.
 This function loads Emacsvox. Emacs customization and library
 configuration happens via the after-init-hook. "
-  (cl-declare (special emacsvox-directory ))
   (unless (featurep 'emacsvox)
     (setopt tts-notification-device "tts_mono_right")
     (tvr-time-load                      ; load emacsvox:
@@ -262,7 +269,6 @@ configuration happens via the after-init-hook. "
 ;;live: so reuse it as the speaker
 (defun n2s ()
   (interactive)
-  (cl-declare (special tts-speaker-process tts-notify-process))
   (setq tts-speaker-process tts-notify-process))
 
 (provide 'emacs-startup)

@@ -44,6 +44,11 @@
 ;;  required modules
 
 ;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar emacsvox-feeds)
+(defvar emacsvox-feeds-archive-file)
 (eval-when-compile (require 'cl-lib))
 (require 'cl-extra)
 (require 'emacsvox-preamble)
@@ -159,8 +164,6 @@ The feed list is persisted to file saved-feeds on exit."
   "Archive list of subscribed fees to personal resource directory.
 Archiving is useful when synchronizing feeds across multiple machines."
   (interactive)
-  (cl-declare (special emacsvox-feeds-archive-file
-                       emacsvox-feeds))
   (let ((buffer (find-file-noselect emacsvox-feeds-archive-file))
         (print-level nil)
         (print-length nil))

@@ -50,6 +50,13 @@
 ;; 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar ems--vterm-char)
+(defvar ems--vterm-column)
+(defvar ems--vterm-opoint)
+(defvar ems--vterm-row)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -173,8 +180,6 @@
 
 (defsubst emacsvox-vterm-snapshot ()
   "Snapshot VTerm state."
-  (cl-declare (special ems--vterm-char ems--vterm-opoint
-                       ems--vterm-row ems--vterm-column))
   (setq ems--vterm-row(1+ (count-lines (point-min) (point))) ;;; line number
         ems--vterm-column (current-column) ;;; column number
         ems--vterm-opoint (point)

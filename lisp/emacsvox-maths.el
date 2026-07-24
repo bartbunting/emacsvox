@@ -86,6 +86,12 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-maths)
+(defvar emacsvox-maths-inferior-program)
+(defvar emacsvox-maths-server-program)
+
 ;;   Required modules:
 (require 'emacsvox-preamble)
 (eval-when-compile (require 'cl-lib))
@@ -319,8 +325,6 @@ left for next run."
 (defun emacsvox-maths-start ()
   "Start Maths server bridge."
   (interactive)
-  (cl-declare (special emacsvox-maths-inferior-program
-                       emacsvox-maths emacsvox-maths-server-program))
   (cl-assert emacsvox-maths-inferior-program nil "No node executable found.")
   (let ((server
          (make-comint

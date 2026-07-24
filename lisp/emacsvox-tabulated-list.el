@@ -44,6 +44,10 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar tabulated-list-format)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -61,7 +65,6 @@
 (defun emacsvox-tabulated-list-speak-cell ()
   "Speak current cell. "
   (interactive)
-  (cl-declare (tabulated-list-format))
   (when (bobp) (error "Beginning  of buffer"))
   (when (eobp) (error "End of buffer"))
   (save-excursion

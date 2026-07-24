@@ -43,6 +43,11 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar outline-mode-prefix-map)
+(defvar outline-navigation-repeat-map)
+
 ;;;  requires
 
 (require 'emacsvox-preamble)
@@ -243,8 +248,6 @@ except that the outline section is  spoken"
 
 (defun emacsvox-outline-setup-keys ()
   "Bind keys in outline minor mode map"
-  (cl-declare (special outline-mode-prefix-map
-                       outline-navigation-repeat-map))
   (cl-loop
    for map in
    (if (and (bound-and-true-p outline-navigation-repeat-map)

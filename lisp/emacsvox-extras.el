@@ -41,6 +41,11 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-curl)
+(defvar emacsvox-curl-cookie-store)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -386,8 +391,6 @@ annotation is inserted into the working buffer when complete."
 (defun emacsvox-curl (url)
   "Grab URL using Curl, and preview it with a browser ."
   (interactive "sURL: ")
-  (cl-declare (special emacsvox-curl
-                       emacsvox-curl-cookie-store))
   (with-temp-buffer
     (shell-command
      (format

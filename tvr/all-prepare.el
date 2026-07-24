@@ -6,6 +6,16 @@
 ;; This module sets things up for GMail.
 ;;Using  a file-based creds store.
 ;;; specials:
+
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar auth-source-xoauth2-creds)
+(defvar lispy-mode-map)
+(defvar lispy-mode-map-lispy)
+(defvar sdcv-dictionary-complete-list)
+(defvar sdcv-dictionary-simple-list)
 (require 'cl-lib)
 (cl-declaim (special emacsvox-z-keymap gnus-summary-mode-map
                      emacsvox-y-keymap smtpmail-auth-supported
@@ -106,7 +116,6 @@ This moves them into the Spam folder."
   (defun tvr-unlock-xoauth ()
     "Unlock xoauth creds if gpg-agent has timed out."
     (interactive )
-    (cl-declare (special auth-source-xoauth2-creds))
     (kill-buffer (find-file-noselect auth-source-xoauth2-creds))
     (tts-stop)
     (emacsvox-icon 'task-done))
@@ -195,7 +204,6 @@ Uses the go oauth tool found in the xoauth git repo."
               '(eval-expression emacsvox-wizards-show-eval-result))
     (lispy-mode 1)))
 (with-eval-after-load "lispy"
-  (cl-declare (special lispy-mode-map lispy-mode-map-lispy))
   (define-key lispy-mode-map (kbd "C-a") 'move-beginning-of-line)
   (define-key lispy-mode-map (kbd "C-,") nil)
   (define-key lispy-mode-map-lispy (kbd "C-,") nil)
@@ -268,8 +276,6 @@ Uses the go oauth tool found in the xoauth git repo."
   (defun tvr-sdcv-update-dictionary-list ()
     "Update sdcv dictionary lists if necessary by examining
 /usr/share/sdcv/dict"
-    (cl-declare (special sdcv-dictionary-complete-list
-                         sdcv-dictionary-simple-list))
     (let ((installed (split-string (shell-command-to-string "sdcv -l") "\n"))
           (dictionaires nil))
       (pop installed)                   ; nuke header line

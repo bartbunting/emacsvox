@@ -51,6 +51,14 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-atom-xsl)
+(defvar emacsvox-curl)
+(defvar emacsvox-we-paragraphs-xpath-filter)
+(defvar emacsvox-we-xpath-filter)
+(defvar g-curl-options)
+
 ;;  required modules
 (eval-when-compile (require 'cl-lib))
 (eval-when-compile (require 'subr-x))
@@ -328,8 +336,6 @@ Press `y' on Episode links to play them with MPV."
 
 (defun emacsvox-url-template-setup-content-filter ()
   "Set up content filter in displayed page."
-  c  (cl-declare
-      (special emacsvox-we-xpath-filter emacsvox-we-paragraphs-xpath-filter))
   (setq emacsvox-we-xpath-filter emacsvox-we-paragraphs-xpath-filter))
 ;;; AcuWeather:
 (emacsvox-url-template-define
@@ -446,8 +452,6 @@ Press `y' on Episode links to play them with MPV."
 
 (defun emacsvox-url-template-google-atom-news-display (feed-url)
   "View Google Atom news feed pulled using Curl."
-  (cl-declare (special emacsvox-atom-xsl
-                       emacsvox-curl g-curl-options))
   (emacsvox-eww-autospeak)
   (g-display-result
    (format

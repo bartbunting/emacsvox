@@ -55,6 +55,14 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-amark-file)
+(defvar emacsvox-amark-list)
+(defvar emacsvox-m-player-process)
+(defvar locate-command)
+(defvar locate-make-command-line)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -128,8 +136,6 @@ given name, it is updated with path and position."
 
 (defun emacsvox-amark-load ()
   "Load AMarks file from  current  media directory."
-  (cl-declare (special emacsvox-amark-list emacsvox-amark-file
-                       emacsvox-m-player-process))
   (let* ((buff nil)
          (find-file-hook nil)
          (def default-directory)
@@ -265,8 +271,6 @@ used to filter the amarks files to show.  Use
 \\[emacsvox-dired-open-this-file] to open the AMark Browser on
 current file."
   (interactive "P")
-  (cl-declare (special emacsvox-amark-file locate-command
-                       locate-make-command-line))
   (when pattern (setq pattern (read-from-minibuffer "Filter Pattern:")))
   (let ((case-fold-search t)
         (locate-make-command-line

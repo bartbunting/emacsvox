@@ -39,6 +39,13 @@
 ;; User interface to tables
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-table)
+(defvar emacsvox-table-speak-column-filter)
+(defvar emacsvox-table-speak-row-filter)
+(defvar major-mode)
+
 ;;;  requires
 (eval-when-compile (require 'cl-lib))
 (eval-when-compile
@@ -445,8 +452,6 @@ Optional prefix arg prompts for a new filter."
   "Speaks a table column after applying a specified column filter.
 Optional prefix arg prompts for a new filter."
   (interactive "P")
-  (cl-declare (special emacsvox-table-speak-column-filter
-                       emacsvox-table))
   (unless (and  emacsvox-table-speak-column-filter
                 (listp emacsvox-table-speak-column-filter)
                 (not prefix))
@@ -1075,8 +1080,6 @@ markup to use."
 (defun emacsvox-table-sort-on-current-column ()
   "Sort table on current column. "
   (interactive)
-  (cl-declare (special major-mode emacsvox-table
-                       emacsvox-table-speak-row-filter))
   (cl-assert (eq major-mode  'emacsvox-table-mode) nil "Not in table mode.")
   (let* ((column  (emacsvox-table-current-column emacsvox-table))
          (row-head   nil)

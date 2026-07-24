@@ -49,6 +49,16 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-we-filters-rename-buffer)
+(defvar emacsvox-we-id-filter)
+(defvar emacsvox-we-recent-xpath-junk)
+(defvar emacsvox-we-url-rewrite-rule)
+(defvar emacsvox-we-xpath-junk)
+(defvar emacsvox-we-xsl-filter)
+(defvar emacsvox-we-xsl-junk)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -251,8 +261,6 @@ from Web page -- default is the current page being viewed."
     (read-from-minibuffer "XPath: ")
     (ems--read-url)
     current-prefix-arg))
-  (cl-declare (special emacsvox-we-xsl-filter
-                       emacsvox-we-filters-rename-buffer))
   (let ((params (emacsvox-xslt-params-from-xpath  path url)))
     (when emacsvox-we-filters-rename-buffer
       (emacsvox-we-rename-buffer (format "Filtered %s" path)))
@@ -761,8 +769,6 @@ used as well."
       (setq emacsvox-we-id-filter
             (read-from-minibuffer "Id: "))))
     current-prefix-arg))
-  (cl-declare (special emacsvox-we-id-filter
-                       emacsvox-we-url-rewrite-rule))
   (emacsvox-eww-browser-check)
   (let ((url (funcall emacsvox-eww-url-at-point))
         (redirect nil))
@@ -913,10 +919,6 @@ XPath can be set locally for a buffer, and overridden with an
 interactive prefix arg. If there is a known rewrite url rule, that is
 used as well."
   (interactive "P")
-  (cl-declare (special emacsvox-we-xpath-junk
-                       emacsvox-we-xsl-junk
-                       emacsvox-we-recent-xpath-junk
-                       emacsvox-we-url-rewrite-rule))
   (emacsvox-eww-browser-check)
   (let ((url (funcall emacsvox-eww-url-at-point))
         (redirect nil))

@@ -120,6 +120,13 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-empv-history)
+(defvar emacsvox-empv-history-max)
+(defvar empv-map)
+(defvar empv-youtube-results-mode-map)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -214,8 +221,6 @@
 (defun emacsvox-empv-play-url (url)
   "Play URL using mpv. "
   (interactive (list (ems--read-url 'emacsvox-empv-history)))
-  (cl-declare (special emacsvox-empv-history-max
-                       emacsvox-empv-history))
   (when
       (and url (stringp url)
            (string-prefix-p (emacsvox-google-result-url-prefix) url))
@@ -225,8 +230,6 @@
 
 (defun emacsvox--advice-empv-play-before (url &rest _)
   "Record URL in EMPV history."
-  (cl-declare
-   (special emacsvox-empv-history-max emacsvox-empv-history))
   (when
       (and url (stringp url)
            (string-prefix-p (emacsvox-google-result-url-prefix) url))
@@ -411,8 +414,6 @@ If already playing, then read an empv key and invoke its command."
 
 (defun emacsvox-empv-setup ()
   "Emacsvox setup for empv."
-  (cl-declare (special empv-map
-                       empv-youtube-results-mode-map))
   (define-key empv-youtube-results-mode-map
               (kbd "t") 'emacsvox-empv-current-title)
   (define-key empv-youtube-results-mode-map

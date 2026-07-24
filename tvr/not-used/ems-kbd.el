@@ -3,6 +3,12 @@
 ;; simplified kbd function:
 ;; Uses split-string to  simplify tokenizer.
 
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar ems--kbd-char-table)
+(defvar ems--kbd-mod-table)
 (defvar ems--kbd-char-table
   '(
     ("NUL" . "\0")
@@ -26,7 +32,6 @@
 
 (defun emskbd (string )
   "Like function kbd, but returns a vector."
-  (cl-declare (special ems--kbd-mod-table ems--kbd-char-table))
   (let ((res [])
         (mod+char "^[ACHMsS]-.")
         (mod+angle-reg "^\\(\\([ACHMsS]-\\)*\\)<\\(.+\\)>$"))

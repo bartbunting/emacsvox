@@ -45,6 +45,12 @@
 ;; This module speech-enables EShell
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar eshell-last-input-end)
+(defvar eshell-last-output-end)
+(defvar eshell-last-output-start)
+
 ;;  required modules
 
 (require 'emacsvox-preamble)
@@ -67,8 +73,6 @@
 
 (defun emacsvox-eshell-speak-output  ()
   "Speak eshell output."
-  (cl-declare (special eshell-last-input-end eshell-last-output-end
-                       eshell-last-output-start))
   (emacsvox-speak-region eshell-last-input-end eshell-last-output-end))
 
 (add-hook 

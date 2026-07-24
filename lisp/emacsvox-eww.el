@@ -460,6 +460,22 @@
 ;; variable levels of success on various Web sites.
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-eww-autospeak)
+(defvar emacsvox-eww-el-cache)
+(defvar emacsvox-eww-el-nav-history)
+(defvar emacsvox-eww-filter-renderers)
+(defvar emacsvox-eww-pre-process-hook)
+(defvar emacsvox-eww-rename-buffer)
+(defvar emacsvox-we-xsl-p)
+(defvar emacsvox-we-xsl-transform)
+(defvar eww-class-cache)
+(defvar eww-id-cache)
+(defvar eww-itemprop-cache)
+(defvar eww-property-cache)
+(defvar eww-role-cache)
+
 ;;  Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -1046,9 +1062,6 @@ Note that the Web browser should reset this hook after using it.")
 
 (defun emacsvox--advice-eww-display-html-before (&rest _)
   "Apply XSLT transform if requested."
-  (cl-declare
-   (special emacsvox-eww-pre-process-hook emacsvox-we-xsl-transform
-            emacsvox-we-xsl-p))
   (save-excursion
     (cond
      (emacsvox-eww-pre-process-hook
@@ -1350,8 +1363,6 @@ for use as a DOM filter."
 
 (defun emacsvox-eww-view-helper  (filtered-dom)
   "View helper called by various filtering viewers."
-  (cl-declare (special emacsvox-eww-rename-buffer
-                       emacsvox-eww-filter-renderers))
   (let ((emacsvox-eww-rename-buffer nil)
         (url (eww-current-url))
         (title  (format "%s: Filtered" (emacsvox-eww-current-title)))
@@ -1430,8 +1441,6 @@ Optional interactive arg `multi' prompts for multiple ids."
 
 (defun emacsvox-eww-read-attr-and-value ()
   "Read attr-value pair and return as a list."
-  (cl-declare (special eww-id-cache eww-class-cache eww-role-cache
-                       eww-property-cache eww-itemprop-cache))
   (unless (or eww-role-cache eww-id-cache eww-class-cache
               eww-itemprop-cache eww-property-cache)
     (error "No attributes to filter."))
@@ -1827,8 +1836,6 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
         emacsvox-eww-el-cache nil 'must-match
         nil 'emacsvox-eww-el-cache)))
     current-prefix-arg))
-  (cl-declare (special eww- element-cache emacsvox-eww-el-nav-history
-                       emacsvox-eww-autospeak))
   (when (eq el 'li) ;; if element is li, use shr-indentation
     (setq el 'shr-continuation-indentation))
   (let* ((start (next-single-property-change (point) el))
@@ -1852,9 +1859,6 @@ Optional interactive prefix arg `multi' prompts for multiple elements."
         "Element: " emacsvox-eww-el-cache nil 'must-match
         nil 'emacsvox-eww-ell-cache)))
     current-prefix-arg))
-  (cl-declare (special emacsvox-eww-el-cache
-                       emacsvox-eww-el-nav-history
-                       emacsvox-eww-autospeak))
   (when (eq el 'li) ;; if element is li, use shr-indentation
     (setq el 'shr-continuation-indentation))
   (let* ((start (previous-single-property-change (point) el))

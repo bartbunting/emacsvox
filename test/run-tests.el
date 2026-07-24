@@ -26,6 +26,7 @@
         nil nil)
   (require 'emacsvox-advice-tests)
   (require 'emacsvox-advice-audit-tests)
+  (require 'emacsvox-cl-declare-tests)
   (require 'emacsvox-name-audit-tests)
   (require 'emacsvox-tts-audit-tests)
   (require 'emacsvox-tts-tests)

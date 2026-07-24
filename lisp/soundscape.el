@@ -81,6 +81,22 @@
 ;; communication == email, IM, ... map to  the same @strong{mood}.
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar soundscape--auto)
+(defvar soundscape--filters)
+(defvar soundscape--last-mode)
+(defvar soundscape--remote)
+(defvar soundscape--scapes)
+(defvar soundscape-default-theme)
+(defvar soundscape-device)
+(defvar soundscape-idle-delay)
+(defvar soundscape-listener-process)
+(defvar soundscape-manager-options)
+(defvar soundscape-processes)
+(defvar soundscape-remote-control)
+(defvar soundscape-volume)
+
 ;; Automatic switching of soundscapes happens by sending a message to
 ;; a UNIX domain socket in /tmp.  This socket is created by Boodler on
 ;; startup ls /tmp/soundscape* to find the named pipe.  To make sure
@@ -203,8 +219,6 @@ Default is to return NullAgent if name not found."
 (defun soundscape (scape)
   "Play soundscape."
   (interactive (list (soundscape-read)))
-  (cl-declare (special soundscape-processes
-                       soundscape-device soundscape-manager-options))
   (let ((process-connection-type  nil)
         (proc (gethash scape soundscape-processes)))
     (unless (process-live-p proc)
@@ -414,9 +428,6 @@ Optional interactive prefix arg `prompt-mode' prompts for the mode."
 Listener is loaded with all Soundscapes defined in `soundscape-default-theme' .
 Optional interactive prefix arg restarts the listener."
   (interactive "P")
-  (cl-declare (special soundscape-listener-process soundscape--remote
-                       soundscape-manager-options soundscape-device
-                       soundscape-remote-control soundscape-default-theme))
   (let ((process-connection-type nil))
     (cond
      ((or restart (not (process-live-p soundscape-listener-process)))
@@ -446,8 +457,6 @@ Optional interactive prefix arg restarts the listener."
 (defun soundscape-listener-shutdown ()
   "Shutdown listener."
   (interactive)
-  (cl-declare (special soundscape-listener-process soundscape-remote-control
-                       soundscape--scapes))
   (setq soundscape--scapes nil)
   (when (process-live-p soundscape-listener-process)
     (delete-process soundscape-listener-process))
@@ -545,8 +554,6 @@ before soundscapes are synchronized with current mode.")
   "Toggle automatic SoundScapes.
 Run command \\[soundscape-theme] to see the default mode->mood mapping."
   (interactive)
-  (cl-declare (special soundscape--auto soundscape--scapes
-                       soundscape-idle-delay soundscape--last-mode))
   (cond
    (soundscape--auto
     (cancel-timer soundscape--auto)
@@ -577,10 +584,6 @@ Run command \\[soundscape-theme] to see the default mode->mood mapping."
 With prefix arg `prompt', prompt for a alsa/ladspa device and volume.
 The  is then saved to soundscape-device for future use."
   (interactive "P")
-  (cl-declare (special soundscape--last-mode  soundscape--scapes
-                       soundscape--filters soundscape--auto
-                       soundscape-volume soundscape-manager-options
-                       soundscape-device))
   (setq soundscape--scapes nil soundscape--last-mode nil)
   (when  prompt
     (setq soundscape-volume

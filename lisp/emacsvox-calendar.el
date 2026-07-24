@@ -41,6 +41,14 @@
 ;; of the advantages of speech-enabled interaction.
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar calendar-latitude)
+(defvar calendar-longitude)
+(defvar calendar-standard-time-zone-name)
+(defvar gmaps-my-address)
+(defvar gmaps-my-location)
+
 ;;  required modules
 ;;; Code:
 (require 'emacsvox-preamble)
@@ -381,8 +389,6 @@
    (list
     (read-from-minibuffer "Address: ")
     current-prefix-arg))
-  (cl-declare (special calendar-standard-time-zone-name
-                       calendar-longitude calendar-latitude))
   (let* ((geo (gmaps-address-geocode address))
          (calendar-latitude (g-json-get 'lat geo))
          (calendar-longitude (g-json-get 'lng geo))
@@ -476,8 +482,6 @@
   "Set up geo-coordinates using Google Maps reverse geocoding.
 To use, configure variable gmaps-my-address via M-x customize-variable."
   (interactive)
-  (cl-declare (special  gmaps-my-address gmaps-my-location
-                        calendar-latitude calendar-longitude))
   (cond
    ((null gmaps-my-location)
     (message "First customize gmaps-my-address."))

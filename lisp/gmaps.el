@@ -51,6 +51,14 @@
 ;; Implements the Google Maps API
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar gmaps-api-key)
+(defvar gmaps-current-filter)
+(defvar gmaps-current-location)
+(defvar gmaps-geocoder-base)
+(defvar gmaps-places-radius)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -170,8 +178,6 @@
 
 (defun gmaps-reverse-geocoder-url (location)
   "Return URL   for reverse geocoding location."
-  (cl-declare (special gmaps-geocoder-base
-                       gmaps-api-key))
   (format "%slatlng=%s&sensor=false&key=%s"
           gmaps-geocoder-base location gmaps-api-key))
 
@@ -707,8 +713,6 @@ Optional interactive prefix arg prompts for all filter fields."
   "Find places near current location.
 Uses default radius. optional interactive prefix arg clears any active filters."
   (interactive "P")
-  (cl-declare (special gmaps-current-location gmaps-current-filter
-                       gmaps-api-key gmaps-places-radius))
   (unless gmaps-current-location (error "Set current location."))
   (and clear-filter (setq gmaps-current-filter nil))
   (goto-char (point-max))

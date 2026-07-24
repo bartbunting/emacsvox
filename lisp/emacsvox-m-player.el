@@ -69,6 +69,36 @@
 ;;
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar ansi-color-control-seq-regexp)
+(defvar clip-end)
+(defvar clip-start)
+(defvar default-directory)
+(defvar emacsvox-m-player-active-filters)
+(defvar emacsvox-m-player-clips)
+(defvar emacsvox-m-player-cue-info)
+(defvar emacsvox-m-player-default-options)
+(defvar emacsvox-m-player-directory)
+(defvar emacsvox-m-player-equalizer)
+(defvar emacsvox-m-player-filters)
+(defvar emacsvox-m-player-hotkey-p)
+(defvar emacsvox-m-player-openal-options)
+(defvar emacsvox-m-player-options)
+(defvar emacsvox-m-player-process)
+(defvar emacsvox-m-player-reverb-filter)
+(defvar emacsvox-m-player-reverb-table)
+(defvar emacsvox-m-player-tap-reverbs)
+(defvar emacsvox-media)
+(defvar emacsvox-media-directory-regexp)
+(defvar emacsvox-media-dynamic-playlist)
+(defvar emacsvox-media-extensions)
+(defvar emacsvox-media-history)
+(defvar ems--media-data)
+(defvar locate-command)
+(defvar locate-make-command-line)
+(defvar sox-sox)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -331,8 +361,6 @@ Controls media playback when already playing.
             ,(format "Launch media from directory %s. Prefix arg
 plays result as a directory." directory)
             (interactive)
-            (cl-declare  (special
-                          default-directory emacsvox-m-player-directory))
             (let ((default-directory ,directory))
               (setq emacsvox-m-player-directory ,directory)
               (emacsvox-m-player-hotkey ,directory))))))
@@ -356,8 +384,6 @@ plays result as a directory." directory)
 2.  If default directory contains media files, then use it.
 3. If default directory contains directory emacsvox-media --- then use it.
 4. Otherwise use emacsvox-media-shortcuts as the fallback."
-  (cl-declare (special emacsvox-media-directory-regexp
-                       emacsvox-media emacsvox-m-player-hotkey-p))
   (let ((case-fold-search t))
     (cond
      ((or (eq major-mode 'dired-mode) (eq major-mode 'locate-mode)) nil)
@@ -424,8 +450,6 @@ rather than completing over all subfiles."
 (defun emacsvox-media-read-resource (&optional prefix)
   "Read resource from minibuffer.
 If a dynamic playlist exists, just use it."
-  (cl-declare (special emacsvox-media-dynamic-playlist emacsvox-media-history
-                       emacsvox-m-player-hotkey-p))
   (cond
    (emacsvox-media-dynamic-playlist nil) ; do nothing if dynamic playlist
    (emacsvox-m-player-hotkey-p (emacsvox-media-local-resource prefix))
@@ -469,8 +493,6 @@ If a dynamic playlist exists, just use it."
 (defun ems--mp-filter (process output)
   "Filter function to captures metadata.
  Cleanup ANSI escape sequences."
-  (cl-declare (special emacsvox-m-player-cue-info
-                       ansi-color-control-seq-regexp))
   (when (process-live-p process)
     (with-current-buffer (process-buffer process)
       (when (and ems--media-data
@@ -495,8 +517,6 @@ If a dynamic playlist exists, just use it."
 (defun emacsvox-m-player-amark-save ()
   "Save amarks."
   (interactive)
-  (cl-declare (special emacsvox-m-player-process
-                       emacsvox-m-player-directory))
   (when
       (and  emacsvox-m-player-directory
             (process-live-p emacsvox-m-player-process))
@@ -600,8 +620,6 @@ dynamic playlist. "
 (defun emacsvox-m-player-using-openal ()
   "Use openal.  "
   (interactive)
-  (cl-declare (special emacsvox-m-player-options
-                       emacsvox-m-player-openal-options))
   (let ((emacsvox-m-player-options
          (append emacsvox-m-player-options
                  emacsvox-m-player-openal-options)))
@@ -964,8 +982,6 @@ The time position can also be specified as HH:MM:SS."
       (completing-read "Filter:"
                        (or emacsvox-m-player-active-filters
                            emacsvox-m-player-filters nil nil)))))
-  (cl-declare (special emacsvox-m-player-filters
-                       emacsvox-m-player-active-filters))
   (with-current-buffer (process-buffer emacsvox-m-player-process)
     (let* ((result (ems--mp-send (format "af_del %s" filter))))
       (setq emacsvox-m-player-active-filters
@@ -984,8 +1000,6 @@ The time position can also be specified as HH:MM:SS."
   "Speak and display metadata.
 Interactive prefix arg toggles automatic cueing of ICY info updates."
   (interactive "P")
-  (cl-declare (special ems--media-data
-                       emacsvox-m-player-cue-info))
   (with-current-buffer (process-buffer emacsvox-m-player-process)
     (unless   ems--media-data  (error "No metadata"))
     (let* ((m (ems--media-data-info  ems--media-data))
@@ -1083,8 +1097,6 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
                      emacsvox-m-player-filters
                      nil nil)
     current-prefix-arg))
-  (cl-declare (special emacsvox-m-player-process
-                       emacsvox-m-player-active-filters))
   (when edit
     (setq filter-name
           (read-from-minibuffer
@@ -1123,8 +1135,6 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
 (defun emacsvox-m-player-clear-filters ()
   "Clear all filters"
   (interactive)
-  (cl-declare (special emacsvox-m-player-process
-                       emacsvox-m-player-active-filters))
   (setq emacsvox-m-player-active-filters nil)
   (when (process-live-p emacsvox-m-player-process)
     (ems--mp-send "af_clr")
@@ -1213,8 +1223,6 @@ Interactive prefix arg toggles automatic cueing of ICY info updates."
 (defun emacsvox-m-player-reset-options ()
   "Reset MPlayer options."
   (interactive)
-  (cl-declare (special emacsvox-m-player-default-options
-                       emacsvox-m-player-options))
   (setq emacsvox-m-player-options
         (copy-sequence emacsvox-m-player-default-options))
   (message "Reset options."))
@@ -1329,8 +1337,6 @@ Applies  the resulting value at each step."
 is made, and the final effect set by pressing RET.  Interactive prefix
 arg `reset' starts with all filters set to 0."
   (interactive "P")
-  (cl-declare (special emacsvox-m-player-process emacsvox-m-player-equalizer
-                       emacsvox-m-player-active-filters))
   (cond
    ((eq 'run  (process-status emacsvox-m-player-process))
     (emacsvox-m-player-eq-controls
@@ -1688,10 +1694,6 @@ As the default, use current position."
       (completing-read "Preset: "
                        emacsvox-m-player-tap-reverbs
                        nil 'must-match))))
-  (cl-declare (special emacsvox-m-player-tap-reverbs
-                       emacsvox-m-player-reverb-table
-                       emacsvox-m-player-process
-                       emacsvox-m-player-reverb-filter))
   (let ((setting (assoc preset emacsvox-m-player-tap-reverbs))
         (ladspa (getenv "LADSPA_PATH"))
         (filter-spec nil)
@@ -1754,8 +1756,6 @@ played as a play-list by pressing [RET] on the first line, see
  \\[emacsvox-dired-open-this-file] locally bound to C-RET
 to play  tracks."
   (interactive "sSearch Pattern: ")
-  (cl-declare  (special emacsvox-media-extensions
-                        locate-command locate-make-command-line))
   (let ((inhibit-read-only t)
         (case-fold-search t)
         (locate-make-command-line
@@ -1921,8 +1921,6 @@ our pre-defined filters if appropriate."
 (defun emacsvox-m-player-write-clip ()
   "Split selected range using SoX"
   (interactive)
-  (cl-declare (special sox-sox emacsvox-m-player-clips
-                       clip-end clip-start))
   (cl-assert
    sox-sox  nil "SoX needs to be installed to use this command.")
   (cl-assert

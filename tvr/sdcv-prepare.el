@@ -1,11 +1,15 @@
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar sdcv-dictionary-complete-list)
+(defvar sdcv-dictionary-simple-list)
 (with-eval-after-load
     "sdcv"
 
   (defun tvr-sdcv-update-dictionary-list ()
     "Update sdcv dictionary lists if necessary by examining
 /usr/share/sdcv/dict"
-    (cl-declare (special sdcv-dictionary-complete-list
-                         sdcv-dictionary-simple-list))
     (let ((installed (split-string (shell-command-to-string "sdcv -l") "\n"))
           (dictionaires nil))
       (pop installed)                   ; nuke header line
@@ -19,4 +23,3 @@
              (mapconcat #'identity (butlast d) " ")))))
   (tvr-sdcv-update-dictionary-list)
   )
-

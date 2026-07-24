@@ -46,6 +46,16 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-gnus-large-article)
+(defvar gnus-article-buffer)
+(defvar gnus-article-mode-map)
+(defvar gnus-group-mmode-map)
+(defvar gnus-summary-mode-map)
+(defvar tts-punctuation-mode)
+(defvar voice-lock-mode)
+
 ;;;  requires
 
 (eval-when-compile (require 'cl-lib))
@@ -84,9 +94,6 @@ instead you hear only the first screenful."
 ;; Keybindings 
 (defun emacsvox-gnus-setup-keys ()
   "Setup Emacsvox keys."
-  (cl-declare (special gnus-summary-mode-map
-                       gnus-group-mmode-map
-                       gnus-article-mode-map))
   (define-key gnus-summary-mode-map "\C-t" 'gnus-summary-toggle-header)
   (define-key gnus-summary-mode-map "t" 'gnus-summary-toggle-header)
   (define-key
@@ -112,9 +119,6 @@ instead you hear only the first screenful."
   (tts-speak (gnus-summary-article-subject)))
 
 (defun emacsvox-gnus-speak-article-body ()
-  (cl-declare (special emacsvox-gnus-large-article
-                       voice-lock-mode tts-punctuation-mode
-                       gnus-article-buffer))
   (with-current-buffer gnus-article-buffer
     (goto-char (point-min))
     (search-forward "\n\n")

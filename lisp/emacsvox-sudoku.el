@@ -48,6 +48,13 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar current-board)
+(defvar emacsvox-sudoku-history-stack)
+(defvar start-board)
+(defvar sudoku-onscreen-instructions)
+
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'sudoku "sudoku" 'no-error)
@@ -270,8 +277,6 @@ s   Sub-square Distribution.
 
 (defun emacsvox-sudoku-erase-these-cells (cell-list)
   "Erase cells in cell-list taking account of original values."
-  (cl-declare (special start-board current-board
-                       sudoku-onscreen-instructions))
   (let ((original (sudoku-get-cell-from-point (point))))
     (cl-loop for cell in cell-list
              do
@@ -398,8 +403,6 @@ s   Sub-square Distribution.
 (defun emacsvox-sudoku-history-push ()
   "Push current state on to history stack."
   (interactive)
-  (cl-declare (special emacsvox-sudoku-history-stack
-                       current-board))
   (push current-board emacsvox-sudoku-history-stack)
   (emacsvox-icon 'mark-object)
   (message "Saved state on history stack."))
@@ -407,10 +410,6 @@ s   Sub-square Distribution.
 (defun emacsvox-sudoku-history-pop ()
   "Pop saved state off stack and redraw board."
   (interactive)
-  (cl-declare (special emacsvox-sudoku-history-stack
-                       sudoku-onscreen-instructions
-                       start-board
-                       current-board))
   (let ((original (sudoku-get-cell-from-point (point))))
     (cond
      ((null emacsvox-sudoku-history-stack) ;start board

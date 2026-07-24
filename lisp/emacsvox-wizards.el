@@ -44,6 +44,33 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar default-directory)
+(defvar emacsvox-copy-associated-location)
+(defvar emacsvox-copy-file-location-history)
+(defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
+(defvar emacsvox-pronounce-date-yyyy-mm-dd-pattern)
+(defvar emacsvox-pronounce-date-yyyymmdd-pattern)
+(defvar emacsvox-wizards--project-shell-directory)
+(defvar emacsvox-wizards--shells-table)
+(defvar emacsvox-wizards-content-extensions)
+(defvar emacsvox-wizards-mm-dd-yyyy-date-pronounce)
+(defvar emacsvox-wizards-pdf-to-text-options)
+(defvar emacsvox-wizards-pdf-to-text-program)
+(defvar emacsvox-wizards-vc-console)
+(defvar emacsvox-wizards-vc-viewer-command)
+(defvar emacsvox-wizards-yyyy-mm-dd-date-pronounce)
+(defvar emacsvox-wizards-yyyymmdd-date-pronounce)
+(defvar gmaps-location-table)
+(defvar gmaps-my-address)
+(defvar last-input-event)
+(defvar locate-command)
+(defvar locate-make-command-line)
+(defvar major-mode)
+(defvar minibuffer-history)
+(defvar temporary-file-directory)
+
 ;;   Required modules:
 
 (eval-when-compile
@@ -167,9 +194,6 @@ Prompts for the new location and preserves modification time
   used.  Asks for confirmation if the copy will result in an
   existing file being overwritten."
   (interactive)
-  (cl-declare (special emacsvox-copy-file-location-history
-                       minibuffer-history
-                       emacsvox-copy-associated-location))
   (let ((file (or (buffer-file-name)
                   (error "Current buffer is not visiting any file")))
         (location (read-file-name
@@ -206,8 +230,6 @@ Prompts for the new location and preserves modification time
   a file in an existing directory, the specified name is
   used.  Signals an error if target already exists."
   (interactive)
-  (cl-declare (special emacsvox-copy-file-location-history
-                       emacsvox-copy-associated-location))
   (let ((file (or (buffer-file-name)
                   (error "Current buffer is not visiting any file")))
         (location (read-file-name
@@ -240,8 +262,6 @@ Prompts for the new location and preserves modification time
   a file in an existing directory, the specified name is
   used.  Signals an error if target already exists."
   (interactive)
-  (cl-declare (special emacsvox-copy-file-location-history
-                       emacsvox-copy-associated-location))
   (let ((file (or (buffer-file-name)
                   (error "Current buffer is not visiting any file")))
         (location (read-file-name
@@ -682,8 +702,6 @@ Optional interactive prefix arg ask-pwd prompts for password."
         "PDF: "
         (directory-files-recursively default-directory "\\.pdf$" 'dirs))))
     current-prefix-arg))
-  (cl-declare (special emacsvox-wizards-pdf-to-text-options
-                       emacsvox-wizards-pdf-to-text-program))
   (cl-assert (string-match ".pdf$"filename) t "Not a PDF file.")
   (let ((passwd (when ask-pwd (read-passwd "User Password:")))
         (output-buffer
@@ -850,9 +868,6 @@ Ubuntu and Debian this is group `tty'.")
 (defun emacsvox-wizards-vc-viewer (console)
   "View contents of  virtual console."
   (interactive "nConsole:")
-  (cl-declare (special emacsvox-wizards-vc-viewer-command
-                       emacsvox-wizards-vc-console
-                       temporary-file-directory))
   (ems-with-messages-silenced
    (let ((command
           (format emacsvox-wizards-vc-viewer-command
@@ -1072,8 +1087,6 @@ dates.")
 (defun emacsvox-wizards-toggle-mm-dd-yyyy-date-pronouncer ()
   "Toggle pronunciation of mm-dd-yyyy dates."
   (interactive)
-  (cl-declare (special emacsvox-wizards-mm-dd-yyyy-date-pronounce
-                       emacsvox-pronounce-date-mm-dd-yyyy-pattern))
   (cond
    (emacsvox-wizards-mm-dd-yyyy-date-pronounce
     (setq emacsvox-wizards-mm-dd-yyyy-date-pronounce nil)
@@ -1096,8 +1109,6 @@ dates.")
 (defun emacsvox-wizards-toggle-yyyy-mm-dd-date-pronouncer ()
   "Toggle pronunciation of yyyy-mm-dd dates."
   (interactive)
-  (cl-declare (special emacsvox-wizards-yyyy-mm-dd-date-pronounce
-                       emacsvox-pronounce-date-yyyy-mm-dd-pattern))
   (cond
    (emacsvox-wizards-yyyy-mm-dd-date-pronounce
     (setq emacsvox-wizards-yyyy-mm-dd-date-pronounce nil)
@@ -1120,8 +1131,6 @@ dates.")
 (defun emacsvox-wizards-toggle-yyyymmdd-date-pronouncer ()
   "Toggle pronunciation of yyyymmdd  dates."
   (interactive)
-  (cl-declare (special emacsvox-wizards-yyyymmdd-date-pronounce
-                       emacsvox-pronounce-date-yyyymmdd-pattern))
   (cond
    (emacsvox-wizards-yyyymmdd-date-pronounce
     (setq emacsvox-wizards-yyyymmdd-date-pronounce nil)
@@ -1259,8 +1268,6 @@ of the source buffer."
   \\[emacsvox-wizards-shell-re-key] for an explanation of how
   re-keying works."
   (interactive "P")
-  (cl-declare (special last-input-event emacsvox-wizards--shells-table
-                       major-mode default-directory))
   (unless (emacsvox-wizards-get-shells) (shell))
   (emacsvox-wizards--build-shells-table)
   (cond
@@ -1343,8 +1350,6 @@ the current directory."
 (defun emacsvox-wizards-shell-re-key (key buffer)
   "Re-key shell-buffer `buffer' to be accessed via key `key'. The old shell
 buffer keyed by `key'gets the key of buffer `buffer'."
-  (cl-declare (special emacsvox-wizards--shells-table
-                       emacsvox-wizards--project-shell-directory))
   (cond
    ((eq buffer (gethash key emacsvox-wizards--shells-table))
     (message "Rekey: Nothing to do"))
@@ -2265,8 +2270,6 @@ Location is a Lat/Lng pair retrieved from Google Maps API."
 
 (defun ems--noaa-get-data (ask)
   "Internal function that gets NOAA data and returns a results buffer."
-  (cl-declare (special gmaps-my-address
-                       gmaps-location-table))
   (let* ((buffer (get-buffer-create "*NOAA Weather*"))
          (inhibit-read-only t)
          (emacsvox-speak-messages nil)
@@ -2664,8 +2667,6 @@ before brightness is checked.")
   "Locate content matching  pattern.  The results can be
  opened by \\[emacsvox-dired-open-this-file] locally bound to C-RET ."
   (interactive "sSearch Pattern: ")
-  (cl-declare  (special emacsvox-wizards-content-extensions
-                        locate-command locate-make-command-line))
   (let ((inhibit-read-only t)
         (locate-make-command-line
          #'(lambda (s) (list locate-command "-i" "--regexp" s))))

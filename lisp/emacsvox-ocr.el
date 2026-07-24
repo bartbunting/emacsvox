@@ -55,6 +55,32 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar buffer-read-only)
+(defvar emacsvox-ocr-compress-image)
+(defvar emacsvox-ocr-compress-image-options)
+(defvar emacsvox-ocr-compress-photo)
+(defvar emacsvox-ocr-current-page-number)
+(defvar emacsvox-ocr-document-name)
+(defvar emacsvox-ocr-engine)
+(defvar emacsvox-ocr-engine-options)
+(defvar emacsvox-ocr-image-extension)
+(defvar emacsvox-ocr-image-flipflop)
+(defvar emacsvox-ocr-jpeg-metadata-writer)
+(defvar emacsvox-ocr-keep-uncompressed-image)
+(defvar emacsvox-ocr-last-page-number)
+(defvar emacsvox-ocr-page-positions)
+(defvar emacsvox-ocr-photo-compress-options)
+(defvar emacsvox-ocr-process)
+(defvar emacsvox-ocr-scan-image)
+(defvar emacsvox-ocr-scan-image-options)
+(defvar emacsvox-ocr-scan-photo-options)
+(defvar emacsvox-ocr-working-directory)
+(defvar emacsvox-speak-messages)
+(defvar major-mode)
+(defvar mode-line-format)
+
 ;;  required modules
 (require 'emacsvox-preamble)
 
@@ -175,8 +201,6 @@ will be placed."
 
 (defun emacsvox-ocr-get-image-name (extension)
   "Return name of current image."
-  (cl-declare (special emacsvox-ocr-document-name
-                       emacsvox-ocr-last-page-number))
   (format "%s-p%s%s"
           emacsvox-ocr-document-name
           (1+ emacsvox-ocr-last-page-number)
@@ -184,8 +208,6 @@ will be placed."
 
 (defun emacsvox-ocr-get-page-name ()
   "Return name of current page."
-  (cl-declare (special emacsvox-ocr-document-name
-                       emacsvox-ocr-current-page-number))
   (format "%s-p%s.txt"
           emacsvox-ocr-document-name
           emacsvox-ocr-current-page-number))
@@ -202,8 +224,6 @@ will be placed."
 
 (defun emacsvox-ocr-get-mode-line-format ()
   "Return string suitable for use as the mode line."
-  (cl-declare (special major-mode
-                       emacsvox-ocr-current-page-number))
   (format "%s Page-%s/%s %s"
           (buffer-name)
           emacsvox-ocr-current-page-number
@@ -337,9 +357,6 @@ For detailed help, invoke command emacsvox-ocr bound to
 \\[emacsvox-ocr] to launch emacsvox-ocr-mode, and press
 `?' to display mode-specific help for emacsvox-ocr-mode."
   (interactive)
-  (cl-declare (special emacsvox-ocr-working-directory
-                       emacsvox-ocr-document-name
-                       buffer-read-only))
   (let  ((buffer (emacsvox-ocr-get-buffer)))
     (with-current-buffer buffer
       (emacsvox-ocr-mode)
@@ -364,8 +381,6 @@ Pick a short but meaningful name."
   (interactive
    (list
     (read-from-minibuffer "Document name: ")))
-  (cl-declare (special emacsvox-ocr-document-name
-                       mode-line-format))
   (setq emacsvox-ocr-document-name name)
   (rename-buffer
    (format "*%s-ocr*" name)
@@ -377,15 +392,6 @@ Pick a short but meaningful name."
 (defun emacsvox-ocr-scan-image ()
   "Acquire page image."
   (interactive)
-  (cl-declare (special emacsvox-speak-messages
-                       emacsvox-ocr-last-page-number
-                       emacsvox-ocr-image-extension
-                       emacsvox-ocr-keep-uncompressed-image
-                       emacsvox-ocr-scan-image
-                       emacsvox-ocr-scan-image-options
-                       emacsvox-ocr-compress-image
-                       emacsvox-ocr-compress-image-options
-                       emacsvox-ocr-document-name))
   (let ((image-name (emacsvox-ocr-get-image-name
                      emacsvox-ocr-image-extension)))
     (let ((emacsvox-speak-messages nil))
@@ -417,15 +423,6 @@ Pick a short but meaningful name."
   "Scan in a photograph.
 The scanned image is converted to JPEG."
   (interactive "P")
-  (cl-declare (special emacsvox-speak-messages
-                       emacsvox-ocr-jpeg-metadata-writer
-                       emacsvox-ocr-photo-compress-options
-                       emacsvox-ocr-scan-photo-options
-                       emacsvox-ocr-keep-uncompressed-image
-                       emacsvox-ocr-scan-image
-                       emacsvox-ocr-compress-photo
-                       emacsvox-ocr-image-extension
-                       emacsvox-ocr-document-name))
   (let (
         (jpg (emacsvox-ocr-get-image-name ".jpg"))
         (pnm (emacsvox-ocr-get-image-name ".pnm")))
@@ -476,8 +473,6 @@ The scanned image is converted to JPEG."
   "Writes out recognized text from current page
 to an appropriately named file."
   (interactive)
-  (cl-declare (special emacsvox-ocr-current-page-number
-                       emacsvox-ocr-page-positions))
   (cond
    ((= 0 emacsvox-ocr-current-page-number)
     (message "No pages in current document."))
@@ -494,9 +489,6 @@ to an appropriately named file."
 
 (defun emacsvox-ocr-process-sentinel  (_process _state)
   "Alert user when OCR is complete."
-  (cl-declare (special emacsvox-ocr-page-positions
-                       emacsvox-ocr-last-page-number
-                       emacsvox-ocr-current-page-number))
   (setq emacsvox-ocr-current-page-number
         emacsvox-ocr-last-page-number)
   (emacsvox-icon 'task-done)
@@ -511,12 +503,6 @@ to an appropriately named file."
 Prompts for image file if file corresponding to the expected
 `current page' is not found."
   (interactive)
-  (cl-declare (special emacsvox-ocr-engine
-                       emacsvox-ocr-engine-options
-                       emacsvox-ocr-process
-                       emacsvox-ocr-last-page-number
-                       emacsvox-ocr-page-positions
-                       emacsvox-ocr-image-extension))
   (let ((inhibit-read-only t)
         (image-name
          (if
@@ -558,13 +544,6 @@ need the imagemagik family of tools --- we use mogrify to
 transform the image.  Prompts for image file if file
 corresponding to the expected `current page' is not found."
   (interactive)
-  (cl-declare (special emacsvox-ocr-engine
-                       emacsvox-ocr-image-flipflop
-                       emacsvox-ocr-engine-options
-                       emacsvox-ocr-process
-                       emacsvox-ocr-last-page-number
-                       emacsvox-ocr-page-positions
-                       emacsvox-ocr-image-extension))
   (let ((inhibit-read-only t)
         (image-name
          (if
@@ -618,9 +597,6 @@ correctly by themselves."
 (defun emacsvox-ocr-forward-page (&optional _count-ignored)
   "Like forward page, but tracks page number of current document."
   (interactive "p")
-  (cl-declare (special emacsvox-ocr-page-positions
-                       emacsvox-ocr-last-page-number
-                       emacsvox-ocr-current-page-number))
   (cond
    ((= 0 emacsvox-ocr-current-page-number)
     (message "No pages in current document."))
@@ -641,8 +617,6 @@ correctly by themselves."
 (defun emacsvox-ocr-backward-page (&optional _count-ignored)
   "Like backward page, but tracks page number of current document."
   (interactive "p")
-  (cl-declare (special emacsvox-ocr-page-positions
-                       emacsvox-ocr-current-page-number))
   (cond
    ((= 0 emacsvox-ocr-current-page-number)
     (message "No pages in current document."))
@@ -694,9 +668,6 @@ correctly by themselves."
 (defun emacsvox-ocr-read-current-page ()
   "Speaks current page."
   (interactive)
-  (cl-declare (special emacsvox-ocr-page-positions
-                       emacsvox-ocr-current-page-number
-                       emacsvox-ocr-last-page-number))
   (cond
    ((= emacsvox-ocr-current-page-number
        emacsvox-ocr-last-page-number)

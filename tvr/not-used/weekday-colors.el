@@ -1,3 +1,8 @@
+;;; Code:
+
+;;; Forward variable declarations:
+
+(defvar tvr-weekday-color-map)
 (require  'cl-lib)
 ;;{{{Weekday Colors:
 
@@ -13,7 +18,6 @@
 
 (defsubst tvr-set-color-for-today ()
   "Set color pair for today."
-  (cl-declare (special tvr-weekday-color-map))
   (let ((pair (aref tvr-weekday-color-map (read (format-time-string "%w")))))
     (set-background-color (car pair))
     (set-foreground-color (cdr pair))))
