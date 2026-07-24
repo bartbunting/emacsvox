@@ -92,22 +92,40 @@
   (let ((emacsvox-show-point  t))
     (emacsvox-speak-line)))
 
+(defconst emacsvox-combobulate--advice-targets
+  '(combobulate-navigate-beginning-of-defun
+    combobulate-navigate-down
+    combobulate-navigate-end-of-defun
+    combobulate-navigate-logical-next
+    combobulate-navigate-logical-previous
+    combobulate-navigate-next
+    combobulate-navigate-previous
+    combobulate-navigate-up)
+  "Current Combobulate navigation commands.")
+
 (cl-loop
- for f in 
- '(
-   combobulate-navigate-backward combobulate-navigate-beginning-of-defun
-   combobulate-navigate-down combobulate-navigate-down-list-maybe
-   combobulate-navigate-end-of-defun combobulate-navigate-forward
-   combobulate-navigate-logical-next combobulate-navigate-logical-previous
-   combobulate-navigate-next combobulate-navigate-previous
-   combobulate-navigate-up combobulate-navigate-up-list-maybe)
+ for target in emacsvox-combobulate--advice-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak after navigating with Combobulate."
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (emacsvox-combobulate-speak-line)))))
+
+(defun emacsvox-combobulate--install-advice ()
+  "Install advice after the optional Combobulate package loads."
+  (dolist (target emacsvox-combobulate--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'combobulate
+  (emacsvox-combobulate--install-advice))
 
 (provide 'emacsvox-combobulate)
 ;;;  end of file
@@ -115,4 +133,3 @@
                                         ; 
                                         ; 
                                         ; 
-
