@@ -40,9 +40,10 @@ the third-party slices through 2048, ABC Mode, Ace Window, Annotate, AUCTeX,
 Avy, BBDB, Calibredb, Chess, CIDER, Clojure Mode, Combobulate, Consult, Corfu,
 Deadgrep, DevDocs, Dumb Jump, Eat, Ebuku, EIN, Elfeed, Elisp Refs, Ellama,
 Elpher, Elpy, EMMS, EMPV, ENWC, ESS, Evil, and the remaining 40
-legacy-or-positional third-party integrations on 2026-07-24 on branch =bart=:
+legacy-or-positional third-party integrations, plus the standalone Gweb add-on,
+on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 989 passing ERT tests and one Mu4e contract test
+- the Emacs 31 suite contains 992 passing ERT tests and one Mu4e contract test
   skipped until the system Mu4e package is installed;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
@@ -273,12 +274,12 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |           2 |     2 |
+| =defadvice=         |           1 |     1 |
 | =ad-get-arg=        |           1 |   n/a |
 | =ad-set-arg=        |           1 |   n/a |
-| =ad-do-it=          |           1 |   n/a |
-| =ad-return-value=   |           4 |   n/a |
-| =advice-add=        |         962 |   182 |
+| =ad-do-it=          |           0 |   n/a |
+| =ad-return-value=   |           3 |   n/a |
+| =advice-add=        |         963 |   183 |
 | =ems-interactive-p= |         994 |   176 |
 
 ** Remaining Emacs-bundled inventory
@@ -371,8 +372,14 @@ conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
 compatibility bridge.  The six helper-cleanup modules above still use
 bridge-era helper naming or implicit interactive checks.  The syntax-aware
-legacy audit reports compatibility symbols only in =emacsvox-preamble.el= and
-the standalone =gweb.el= add-on.
+legacy audit reports compatibility symbols only in =emacsvox-preamble.el=
+itself.
+
+The standalone Gweb conversion preserves its conditional completion behavior:
+Google completion inserts a literal space without calling normal completion,
+while ordinary completion invokes the original command exactly once.  Both
+paths speak the resulting word and preserve their return value.  IDO advice is
+installed only after IDO loads.
 
 The SQL conversion calls each send command exactly once and defers optional
 SQLPlus advice until that package loads.  Flyspell similarly defers the
@@ -721,9 +728,9 @@ retains unconditional feedback for completed stone moves, and relies on the
 existing =quit-window= integration in place of the removed =solitaire-quit=
 command.
 
-Continue with the six third-party helper-cleanup modules, then migrate the
-standalone =gweb.el= add-on.  The compatibility bridge remains necessary until
-those changes leave the repository-wide legacy audit clean.
+Continue with the six third-party helper-cleanup modules.  The compatibility
+bridge remains necessary until those changes leave no integration dependent on
+its helper naming or implicit interactive-target behavior.
 
 * Working Principles
 
