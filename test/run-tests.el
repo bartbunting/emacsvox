@@ -161,6 +161,7 @@
   (require 'emacsvox-pydoc-tests)
   (require 'emacsvox-yaml-tests)
   (require 'emacsvox-flycheck-tests)
+  (require 'emacsvox-folding-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
