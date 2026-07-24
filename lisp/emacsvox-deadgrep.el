@@ -59,49 +59,75 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--deadgrep-toggle-file-results-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-deadgrep-toggle-file-results-after (&rest _)
+  "Report whether the current Deadgrep file results are visible."
+  (when (ems-interactive-p 'deadgrep-toggle-file-results)
     (emacsvox-speak-line)
     (emacsvox-icon
      (if (get-text-property (1+ (line-end-position)) 'invisible) 'off
        'on))))
 
-(advice-add 'deadgrep-toggle-file-results :after
-            #'ems--deadgrep-toggle-file-results-after)
+(defun emacsvox--advice-deadgrep-after (&rest _)
+  "Speak after opening a Deadgrep results buffer."
+  (when (ems-interactive-p 'deadgrep)
+    (emacsvox-speak-mode-line)))
 
-(defun ems--deadgrep-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-speak-mode-line)))
-
-(advice-add 'deadgrep :after #'ems--deadgrep-after)
+(defconst emacsvox-deadgrep--visit-targets
+  '(deadgrep-visit-result-other-window deadgrep-visit-result)
+  "Deadgrep commands that visit a result.")
 
 (cl-loop
- for f in 
- '(deadgrep-visit-result-other-window deadgrep-visit-result )
+ for target in emacsvox-deadgrep--visit-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak after visiting a Deadgrep result."
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (emacsvox-speak-line)
        (emacsvox-icon 'open-object)))))
 
+(defconst emacsvox-deadgrep--movement-targets
+  '(deadgrep-forward-match
+    deadgrep-forward
+    deadgrep-backward-match
+    deadgrep-backward
+    deadgrep-forward-filename
+    deadgrep-backward-filename)
+  "Deadgrep result navigation commands.")
+
 (cl-loop
- for f in 
- '(
-   deadgrep-forward-match deadgrep-forward
-   deadgrep-backward-match deadgrep-backward
-   deadgrep-forward-filename deadgrep-backward-filename)
+ for target in emacsvox-deadgrep--movement-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     "Speak after moving through Deadgrep results."
+     (when (ems-interactive-p ',target)
        (let ((emacsvox-show-point t))
          (emacsvox-icon 'large-movement)
          (emacsvox-speak-line))))))
 
+(defconst emacsvox-deadgrep--advice-targets
+  (append '(deadgrep-toggle-file-results deadgrep)
+          emacsvox-deadgrep--visit-targets
+          emacsvox-deadgrep--movement-targets)
+  "Current Deadgrep targets that receive native after advice.")
+
+(defun emacsvox-deadgrep--install-advice ()
+  "Install advice after the optional Deadgrep package loads."
+  (dolist (target emacsvox-deadgrep--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'deadgrep
+  (emacsvox-deadgrep--install-advice))
+
 (provide 'emacsvox-deadgrep)
 ;;;  end of file
-

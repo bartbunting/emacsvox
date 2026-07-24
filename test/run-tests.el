@@ -184,6 +184,7 @@
   (require 'emacsvox-combobulate-tests)
   (require 'emacsvox-consult-tests)
   (require 'emacsvox-corfu-tests)
+  (require 'emacsvox-deadgrep-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
