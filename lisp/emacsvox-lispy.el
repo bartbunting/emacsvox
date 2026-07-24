@@ -96,281 +96,306 @@
 
 ;;;  Advice Navigation:
 
-(cl-loop ;;; Navigators:
- for f in
- '(
-   lispy-goto-symbol lispy-splice lispy-view
-   lispy-stringify lispy-ace-paren lispy-ace-symbol lispy-teleport
-   lispy-ace-char lispy-ace-subword lispy-move-up lispy-move-down lispy-undo
-   lispy-right-nostring lispy-left lispy-right lispy-up lispy-down lispy-back
-   lispy-different lispy-backward lispy-forward lispy-flow
-   lispy-to-defun lispy-beginning-of-defun)
- do
- (eval
-  `(defadvice ,f (around emacsvox pre act comp)
-     "speak.
-Speak sexp when at the beginning of a sexp.
-Speak line if at end of sexp.
-Indicate  no movement if we did not move."
-     (cond
-      ((ems-interactive-p)
-       (let ((emacsvox-show-point t)
-             (orig (point)))
-         ad-do-it
-         (cond
-          ((eq orig (point))
-           (dtk-notify "Did not move")
-           (emacsvox-icon 'tick-tick))
-          ((= ?\) (char-syntax (preceding-char)))
-           (emacsvox-icon 'select-object)
-           (emacsvox-speak-line))
-          (t (emacsvox-icon 'select-object)
-             (emacsvox-speak-sexp)))))
-      (t ad-do-it))
-     ad-return-value)))
+(defvar emacsvox-lispy--advice nil
+  "Current Lispy targets and their native advice functions.")
+(setq emacsvox-lispy--advice nil)
 
-(defun ems--lispy-move-beginning-of-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'left)))
+(defun emacsvox-lispy--navigation-around (target orig-fun &rest args)
+  "Call ORIG-FUN once and report movement for Lispy TARGET."
+  (let ((origin (point))
+        (result (apply orig-fun args)))
+    (when (ems-interactive-p target)
+      (let ((emacsvox-show-point t))
+        (cond
+         ((eq origin (point))
+          (dtk-notify "Did not move")
+          (emacsvox-icon 'tick-tick))
+         ((= ?\) (char-syntax (preceding-char)))
+          (emacsvox-icon 'select-object)
+          (emacsvox-speak-line))
+         (t
+          (emacsvox-icon 'select-object)
+          (emacsvox-speak-sexp)))))
+    result))
 
-(advice-add 'lispy-move-beginning-of-line :after
-            #'ems--lispy-move-beginning-of-line-after)
+(dolist
+    (target
+     '(lispy-goto-symbol lispy-splice lispy-view lispy-stringify
+       lispy-ace-paren lispy-ace-symbol lispy-teleport lispy-ace-char
+       lispy-ace-subword lispy-move-up lispy-move-down lispy-undo
+       lispy-right-nostring lispy-left lispy-right lispy-up lispy-down
+       lispy-back lispy-different lispy-backward lispy-forward lispy-flow
+       lispy-to-defun lispy-beginning-of-defun))
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-around" target))))
+    (eval
+     `(defun ,advice-function (orig-fun &rest args)
+        ,(format "Provide movement feedback around `%s'." target)
+        (apply #'emacsvox-lispy--navigation-around
+               ',target orig-fun args)))
+    (push (list target :around advice-function) emacsvox-lispy--advice)))
 
-(defun ems--lispy-move-beginning-of-line-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-speak-line) (emacsvox-icon 'right)))
+(defun emacsvox--advice-lispy-move-beginning-of-line-after (&rest _)
+  "Speak after moving to the beginning of a Lispy line."
+  (when (ems-interactive-p 'lispy-move-beginning-of-line)
+    (emacsvox-speak-line)
+    (emacsvox-icon 'left)))
 
-(advice-add 'lispy-move-beginning-of-line :after
-            #'ems--lispy-move-beginning-of-line-after)
+(push '(lispy-move-beginning-of-line :after
+        emacsvox--advice-lispy-move-beginning-of-line-after)
+      emacsvox-lispy--advice)
+
+(defun emacsvox--advice-lispy-move-end-of-line-after (&rest _)
+  "Speak after moving to the end of a Lispy line."
+  (when (ems-interactive-p 'lispy-move-end-of-line)
+    (emacsvox-speak-line)
+    (emacsvox-icon 'right)))
+
+(push '(lispy-move-end-of-line :after
+        emacsvox--advice-lispy-move-end-of-line-after)
+      emacsvox-lispy--advice)
 
 ;;; Advice Insertions:
 
-(defun ems--lispy-clone-after (&rest _)
+(defun emacsvox--advice-lispy-clone-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-clone)
     (emacsvox-speak-sexp) (emacsvox-icon 'yank-object)))
 
-(advice-add 'lispy-clone :after #'ems--lispy-clone-after)
+(push '(lispy-clone :after emacsvox--advice-lispy-clone-after)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy-comment-after (&rest _)
+(defun emacsvox--advice-lispy-comment-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-comment)
     (emacsvox-icon 'select-object)
     (cond
      ((use-region-p)
       (emacsvox-speak-region (region-beginning) (region-end)))
      (t (emacsvox-speak-line)))))
 
-(advice-add 'lispy-comment :after #'ems--lispy-comment-after)
+(push '(lispy-comment :after emacsvox--advice-lispy-comment-after)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy-backtick-after (&rest _)
+(defun emacsvox--advice-lispy-backtick-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-backtick)
     (let ((emacsvox-show-point t)) (emacsvox-speak-line))))
 
-(advice-add 'lispy-backtick :after #'ems--lispy-backtick-after)
+(push '(lispy-backtick :after emacsvox--advice-lispy-backtick-after)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy-tick-after (&rest _)
+(defun emacsvox--advice-lispy-tick-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-tick)
     (cond
      ((region-active-p)
       (emacsvox-speak-region (region-beginning) (region-end)))
      (t (emacsvox-speak-line)))))
 
-(advice-add 'lispy-tick :after #'ems--lispy-tick-after)
+(push '(lispy-tick :after emacsvox--advice-lispy-tick-after)
+      emacsvox-lispy--advice)
 
-(cl-loop
- for f in
+(defun emacsvox-lispy--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-lispy--advice))))
+
+(defun emacsvox-lispy--insert-char-feedback ()
+  "Speak the character inserted by Lispy."
+  (emacsvox-speak-this-char (preceding-char)))
+
+(emacsvox-lispy--register-after-group
  '(lispy-at lispy-colon lispy-hash lispy-hat)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-this-char (preceding-char))))))
+ #'emacsvox-lispy--insert-char-feedback)
 
-(cl-loop
- for f in
+(defun emacsvox-lispy--insert-pair-feedback ()
+  "Speak the paired expression inserted by Lispy."
+  (emacsvox-icon 'item)
+  (save-excursion
+    (forward-char 1)
+    (emacsvox-speak-sexp)))
+
+(emacsvox-lispy--register-after-group
  '(lispy-parens lispy-braces lispy-brackets)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'item)
-       (save-excursion
-         (forward-char 1)
-         (emacsvox-speak-sexp))))))
+ #'emacsvox-lispy--insert-pair-feedback)
 
 ;;;  Slurp and barf:
 
-(cl-loop
- for f in
- '(
-   lispy-barf lispy-slurp lispy-join lispy-split
-   lispy-quotes lispy-alt-multiline
-   lispy-out-forward-newline lispy-parens-down lispy-meta-return)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak line with show-point turned on."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-icon 'select-object)
-         (emacsvox-speak-line))))))
+(defun emacsvox-lispy--structure-feedback ()
+  "Speak the line after a Lispy structure edit."
+  (let ((emacsvox-show-point t))
+    (emacsvox-icon 'select-object)
+    (emacsvox-speak-line)))
+
+(emacsvox-lispy--register-after-group
+ '(lispy-barf lispy-slurp lispy-join lispy-split lispy-quotes
+   lispy-alt-multiline lispy-out-forward-newline lispy-parens-down
+   lispy-meta-return)
+ #'emacsvox-lispy--structure-feedback)
 
 ;;; Advice Marking:
 
-(cl-loop
- for f in
- '(lispy-mark-list lispy-mark)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'mark-object)
-       (emacsvox-speak-region (region-beginning) (region-end))))))
+(defun emacsvox-lispy--mark-feedback ()
+  "Speak the region marked by Lispy."
+  (emacsvox-icon 'mark-object)
+  (emacsvox-speak-region (region-beginning) (region-end)))
 
-(defun ems--lispy-mark-symbol-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
-    (emacsvox-icon 'mark-object)
-    (emacsvox-speak-region (region-beginning) (region-end))))
-
-(advice-add 'lispy-mark-symbol :after #'ems--lispy-mark-symbol-after)
+(emacsvox-lispy--register-after-group
+ '(lispy-mark-list lispy-mark lispy-mark-symbol)
+ #'emacsvox-lispy--mark-feedback)
 
 ;;; Advice WhiteSpace Manipulation:
 
-(defun ems--lispy-fill-after (&rest _)
+(defun emacsvox--advice-lispy-fill-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-fill)
     (emacsvox-icon 'fill-object) (emacsvox-speak-line)))
 
-(advice-add 'lispy-fill :after #'ems--lispy-fill-after)
+(push '(lispy-fill :after emacsvox--advice-lispy-fill-after)
+      emacsvox-lispy--advice)
 
-(cl-loop
- for f in
+(defun emacsvox-lispy--newline-feedback ()
+  "Speak the new Lispy line."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)))
+
+(emacsvox-lispy--register-after-group
  '(lispy-newline-and-indent lispy-newline-and-indent-plain)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line))))))
+ #'emacsvox-lispy--newline-feedback)
 
-(defun ems--lispy-tab-after (&rest _)
+(defun emacsvox--advice-lispy-tab-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-tab)
     (emacsvox-icon 'fill-object)
     (when (buffer-modified-p) (emacsvox-icon 'modified-object))
     (emacsvox-speak-line)))
 
-(advice-add 'lispy-tab :after #'ems--lispy-tab-after)
+(push '(lispy-tab :after emacsvox--advice-lispy-tab-after)
+      emacsvox-lispy--advice)
 
 ;;; Advice Kill/Yank:
 
-(defun ems--lispy-new-copy-after (&rest _)
+(defun emacsvox--advice-lispy-new-copy-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-new-copy)
     (emacsvox-icon 'mark-object)
     (message "region containing %s chars copied to kill ring "
              (length (current-kill 0)))))
 
-(advice-add 'lispy-new-copy :after #'ems--lispy-new-copy-after)
+(push '(lispy-new-copy :after emacsvox--advice-lispy-new-copy-after)
+      emacsvox-lispy--advice)
 
-(cl-loop
- for f in
+(defun emacsvox-lispy--kill-feedback ()
+  "Speak text killed by Lispy."
+  (emacsvox-icon 'delete-object)
+  (dtk-speak (current-kill 0 nil)))
+
+(emacsvox-lispy--register-after-group
  '(lispy-kill lispy-kill-word lispy-backward-kill-word
-              lispy-kill-sentence lispy-kill-at-point)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'delete-object)
-       (dtk-speak (current-kill 0 nil))))))
+   lispy-kill-sentence lispy-kill-at-point)
+ #'emacsvox-lispy--kill-feedback)
 
-(defun ems--lispy-yank-after (&rest _)
+(defun emacsvox--advice-lispy-yank-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-yank)
     (emacsvox-icon 'yank-object)
     (emacsvox-speak-region (region-beginning) (region-end))))
 
-(advice-add 'lispy-yank :after #'ems--lispy-yank-after)
+(push '(lispy-yank :after emacsvox--advice-lispy-yank-after)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy-delete-backward-around (orig-fun &rest args)
-  "speak."
-  (cond
-   ((ems-interactive-p) (emacsvox-icon 'delete-object)
-    (emacsvox-speak-this-char (preceding-char)) ad-do-it)
-   (t ad-do-it)))
+(defun emacsvox--advice-lispy-delete-backward-around (orig-fun &rest args)
+  "Speak the character deleted by ORIG-FUN, which is called once."
+  (when (ems-interactive-p 'lispy-delete-backward)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-this-char (preceding-char)))
+  (apply orig-fun args))
 
-(advice-add 'lispy-delete-backward :around
-            #'ems--lispy-delete-backward-around)
+(push '(lispy-delete-backward :around
+        emacsvox--advice-lispy-delete-backward-around)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy-delete-around (orig-fun &rest args)
-  "speak."
-  (cond
-   ((ems-interactive-p) (dtk-tone-deletion) (emacsvox-speak-char t)
-    ad-do-it)
-   (t ad-do-it)))
+(defun emacsvox--advice-lispy-delete-around (orig-fun &rest args)
+  "Speak the character deleted by ORIG-FUN, which is called once."
+  (when (ems-interactive-p 'lispy-delete)
+    (dtk-tone-deletion)
+    (emacsvox-speak-char t))
+  (apply orig-fun args))
 
-(advice-add 'lispy-delete :around #'ems--lispy-delete-around)
+(push '(lispy-delete :around emacsvox--advice-lispy-delete-around)
+      emacsvox-lispy--advice)
 
 ;;; Advice Help:
 
-(defun ems--lispy-describe-inline-after (&rest _)
+(defun emacsvox--advice-lispy-describe-inline-after (&rest _)
   "speak."
   (when
-      (and (ems-interactive-p)
+      (and (ems-interactive-p 'lispy-describe-inline)
            (buffer-live-p (get-buffer "*lispy-help*"))
            (window-live-p (get-buffer-window "*lispy-help*")))
     (with-current-buffer "*lispy-help*"
       (emacsvox-icon 'help) (emacsvox-speak-buffer))))
 
-(advice-add 'lispy-describe-inline :after
-            #'ems--lispy-describe-inline-after)
+(push '(lispy-describe-inline :after
+        emacsvox--advice-lispy-describe-inline-after)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy--show-before (&rest _)
-  "speak." (emacsvox-icon 'help) (dtk-speak (ad-get-arg 0)))
+(defun emacsvox--advice-lispy--show-before (string)
+  "Speak STRING before Lispy displays it."
+  (emacsvox-icon 'help)
+  (dtk-speak string))
 
-(advice-add 'lispy--show :before #'ems--lispy--show-before)
+(push '(lispy--show :before emacsvox--advice-lispy--show-before)
+      emacsvox-lispy--advice)
 
 ;;; Advice Outliner:
 
-(defun ems--lispy-narrow-after (&rest _)
+(defun emacsvox--advice-lispy-narrow-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-narrow)
     (emacsvox-icon 'mark-object)
     (message "Narrowed editing region to %s lines"
              (count-lines (region-beginning) (region-end)))))
 
-(advice-add 'lispy-narrow :after #'ems--lispy-narrow-after)
+(push '(lispy-narrow :after emacsvox--advice-lispy-narrow-after)
+      emacsvox-lispy--advice)
 
-(defun ems--lispy-widen-after (&rest _)
+(defun emacsvox--advice-lispy-widen-after (&rest _)
   "Announce yourself."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'lispy-widen)
     (emacsvox-icon 'open-object)
     (message "You can now edit the entire buffer ")))
 
-(advice-add 'lispy-widen :after #'ems--lispy-widen-after)
+(push '(lispy-widen :after emacsvox--advice-lispy-widen-after)
+      emacsvox-lispy--advice)
 
-(cl-loop
- for f in
+(defun emacsvox-lispy--outline-feedback ()
+  "Speak after moving through a Lispy outline."
+  (let ((emacsvox-show-point t))
+    (emacsvox-speak-line)))
+
+(emacsvox-lispy--register-after-group
  '(lispy-outline-next lispy-outline-prev lispy-shifttab)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (let ((emacsvox-show-point t))
-         (emacsvox-speak-line))))))
+ #'emacsvox-lispy--outline-feedback)
+
+(defun emacsvox-lispy--install-advice ()
+  "Install native advice after Lispy loads."
+  (dolist (entry emacsvox-lispy--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'lispy
+  (emacsvox-lispy--install-advice))
 
 (provide 'emacsvox-lispy)
 ;;;  end of file
-
