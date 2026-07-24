@@ -218,6 +218,7 @@
   (require 'emacsvox-multiple-cursors-tests)
   (require 'emacsvox-muse-tests)
   (require 'emacsvox-notmuch-tests)
+  (require 'emacsvox-nov-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)

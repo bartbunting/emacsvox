@@ -57,33 +57,51 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in 
- '(
-   nov-browse-url
-   nov-display-metadata
-   nov-goto-toc
-   nov-next-document
-   nov-previous-document
-   )
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-buffer)))))
+(defvar emacsvox-nov--advice nil
+  "Current Nov targets and their native advice functions.")
+(setq emacsvox-nov--advice nil)
 
-(cl-loop
- for f in
- '(nov-scroll-up  nov-scroll-down)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "Speak the next screenful."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'scroll)
-       (dtk-speak (emacsvox-get-window-contents))))))
+(defun emacsvox-nov--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-nov--advice))))
+
+(defun emacsvox-nov--open-feedback ()
+  "Speak the newly displayed Nov document."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-buffer))
+
+(emacsvox-nov--register-after-group
+ '(nov-browse-url nov-display-metadata nov-goto-toc
+   nov-next-document nov-previous-document)
+ #'emacsvox-nov--open-feedback)
+
+(defun emacsvox-nov--scroll-feedback ()
+  "Speak the visible Nov window after scrolling."
+  (emacsvox-icon 'scroll)
+  (dtk-speak (emacsvox-get-window-contents)))
+
+(emacsvox-nov--register-after-group
+ '(nov-scroll-up nov-scroll-down)
+ #'emacsvox-nov--scroll-feedback)
+
+(defun emacsvox-nov--install-advice ()
+  "Install native advice after Nov loads."
+  (dolist (entry emacsvox-nov--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'nov
+  (emacsvox-nov--install-advice))
 
 ;;; Mode Hook:
 
@@ -96,4 +114,3 @@
 
 (provide 'emacsvox-nov)
 ;;;  end of file
-
