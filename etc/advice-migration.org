@@ -39,14 +39,17 @@ As of the completed core-file migration, all built-in integration slices, and
 the third-party slices through 2048, ABC Mode, Ace Window, Annotate, AUCTeX,
 Avy, BBDB, Calibredb, Chess, CIDER, Clojure Mode, Combobulate, Consult, Corfu,
 Deadgrep, DevDocs, Dumb Jump, Eat, Ebuku, EIN, Elfeed, Elisp Refs, Ellama,
-Elpher, Elpy, EMMS, EMPV, ENWC, ESS, and Evil on 2026-07-24 on branch =bart=:
+Elpher, Elpy, EMMS, EMPV, ENWC, ESS, Evil, and the remaining 40
+legacy-or-positional third-party integrations on 2026-07-24 on branch =bart=:
 
-- the Emacs 31 suite contains 935 passing ERT tests;
+- the Emacs 31 suite contains 989 passing ERT tests and one Mu4e contract test
+  skipped until the system Mu4e package is installed;
 - all 27 structured core speech traces match;
 - the pinned Emacspeak reference is commit
   =7482f8e2713b5b8ea87132d9d2fcea6664ff4037=;
-- the complete 236-file default Lisp object set byte-compiles with Emacs
-  31.0.90, with warnings but no errors;
+- the complete default Lisp object set builds with Emacs 31.0.90, with warnings
+  but no errors: 233 unique object targets are checked and 232 =.elc= files are
+  emitted because the generated loaddefs target remains source-only;
 - the real =~/bin/emacsvox-test= launcher loads Emacsvox under Emacs 31.0.90;
 - =lisp/emacsvox-loaddefs.el= is generated, ignored, and not tracked;
 - =lisp/emacsvox-advice.el= contains no =defadvice=, =ad-get-arg=,
@@ -262,7 +265,7 @@ Elpher, Elpy, EMMS, EMPV, ENWC, ESS, and Evil on 2026-07-24 on branch =bart=:
 - =lisp/emacsvox-entertain.el= contains no =defadvice=, positional
   compatibility accessors, bridge-era =ems--= advice helpers, or implicit
   interactive-target checks.
-- the 30 third-party integrations listed above contain no =defadvice=,
+- the 70 completed third-party integrations contain no =defadvice=,
   positional compatibility accessors, bridge-era =ems--= advice helpers, or
   implicit interactive-target checks.
 
@@ -270,13 +273,13 @@ The syntax-aware repository audit currently reports:
 
 | Pattern             | Occurrences | Files |
 |---------------------+-------------+-------|
-| =defadvice=         |         108 |    40 |
-| =ad-get-arg=        |           8 |   n/a |
+| =defadvice=         |           2 |     2 |
+| =ad-get-arg=        |           1 |   n/a |
 | =ad-set-arg=        |           1 |   n/a |
-| =ad-do-it=          |          11 |   n/a |
-| =ad-return-value=   |           7 |   n/a |
-| =advice-add=        |        1039 |   169 |
-| =ems-interactive-p= |        1083 |   176 |
+| =ad-do-it=          |           1 |   n/a |
+| =ad-return-value=   |           4 |   n/a |
+| =advice-add=        |         962 |   182 |
+| =ems-interactive-p= |         994 |   176 |
 
 ** Remaining Emacs-bundled inventory
 
@@ -306,10 +309,14 @@ integration-module count.
 
 ** Remaining third-party inventory
 
-As of 2026-07-24, 46 third-party integrations remain: 40 legacy-or-positional
-modules and 6 helper-cleanup modules.
+As of 2026-07-24, no third-party legacy-or-positional integration remains.
+Six third-party integrations remain at the helper-cleanup stage.
 
-The legacy-or-positional modules are:
+The helper-cleanup modules are:
+
+=denote=, =embark=, =gnuplot=, =gptel=, =marginalia=, and =maths=.
+
+The final completed legacy-or-positional batch was:
 
 =exwm=, =ffip=, =forge=, =geiser=, =go-mode=, =google=, =haskell=, =helpful=,
 =hide-lines=, =iedit=, =journalctl=, =js2=, =lispy=, =mines=, =mu4e=,
@@ -318,11 +325,7 @@ The legacy-or-positional modules are:
 =sage=, =sdcv=, =slime=, =smartparens=, =sudoku=, =threes=, =typo=, =vdiff=,
 =vertico=, =vterm=, =we=, and =xkcd=.
 
-The helper-cleanup modules are:
-
-=denote=, =embark=, =gnuplot=, =gptel=, =marginalia=, and =maths=.
-
-The first 30 third-party migrations use only current package APIs and install
+All 70 completed third-party migrations use only current package APIs and install
 their native advice after the relevant optional feature loads.  Removed command
 names remain absent.  The focused tests also cover one-call and return-value
 semantics where the old around advice repeated its original operation,
@@ -366,8 +369,10 @@ Hangman integration.
 Each module has direct-registration and target-aware feedback tests, and each
 conversion is an independently revertible commit.  The modules explicitly
 listed as clean earlier in this checkpoint are completely independent of the
-compatibility bridge.  Repository-wide, 22 files still contain bridge
-compatibility symbols.
+compatibility bridge.  The six helper-cleanup modules above still use
+bridge-era helper naming or implicit interactive checks.  The syntax-aware
+legacy audit reports compatibility symbols only in =emacsvox-preamble.el= and
+the standalone =gweb.el= add-on.
 
 The SQL conversion calls each send command exactly once and defers optional
 SQLPlus advice until that package loads.  Flyspell similarly defers the
@@ -716,9 +721,9 @@ retains unconditional feedback for completed stone moves, and relies on the
 existing =quit-window= integration in place of the removed =solitaire-quit=
 command.
 
-Continue by migrating remaining built-in integration modules before optional
-third-party integrations.  The compatibility bridge remains necessary until
-the repository-wide legacy audit is clean.
+Continue with the six third-party helper-cleanup modules, then migrate the
+standalone =gweb.el= add-on.  The compatibility bridge remains necessary until
+those changes leave the repository-wide legacy audit clean.
 
 * Working Principles
 
