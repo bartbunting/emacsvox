@@ -107,67 +107,78 @@
 
 ;;;  Interactive Commands:
 
-(cl-loop
- for f in
- '(
-   vdiff-receive-changes vdiff-receive-changes-and-step
-   vdiff-send-changes vdiff-send-changes-and-step)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-vdiff-speak-this-hunk)))))
+(defvar emacsvox-vdiff--advice nil
+  "Current VDiff targets and their native advice functions.")
+(setq emacsvox-vdiff--advice nil)
 
-(defun ems--vdiff-switch-buffer-after (&rest _)
+(defun emacsvox-vdiff--register-after-group (targets feedback)
+  "Define and register after advice for TARGETS using FEEDBACK."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Provide speech feedback after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (,feedback))))
+      (push (list target :after advice-function) emacsvox-vdiff--advice))))
+
+(defun emacsvox-vdiff--change-feedback ()
+  "Speak a VDiff hunk after transferring changes."
+  (emacsvox-icon 'task-done)
+  (emacsvox-vdiff-speak-this-hunk))
+
+(emacsvox-vdiff--register-after-group
+ '(vdiff-receive-changes vdiff-receive-changes-and-step
+   vdiff-send-changes vdiff-send-changes-and-step)
+ #'emacsvox-vdiff--change-feedback)
+
+(defun emacsvox--advice-vdiff-switch-buffer-after (&rest _)
   "speak."
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'vdiff-switch-buffer)
     (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
 
-(advice-add 'vdiff-switch-buffer :after
-            #'ems--vdiff-switch-buffer-after)
+(push '(vdiff-switch-buffer :after
+        emacsvox--advice-vdiff-switch-buffer-after)
+      emacsvox-vdiff--advice)
 
-(defun ems--vdiff-refine-all-hunks-after (&rest _)
-  "speak." (when (ems-interactive-p) (emacsvox-icon 'task-done)))
+(defun emacsvox--advice-vdiff-refine-all-hunks-after (&rest _)
+  "speak."
+  (when (ems-interactive-p 'vdiff-refine-all-hunks)
+    (emacsvox-icon 'task-done)))
 
-(advice-add 'vdiff-refine-all-hunks :after
-            #'ems--vdiff-refine-all-hunks-after)
+(push '(vdiff-refine-all-hunks :after
+        emacsvox--advice-vdiff-refine-all-hunks-after)
+      emacsvox-vdiff--advice)
 
-(cl-loop
- for f in
- '(vdiff-buffers vdiff-buffers3 vdiff-magit-compare
-                 vdiff-current-file vdiff-files vdiff-files3)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-mode-line)))))
+(defun emacsvox-vdiff--open-feedback ()
+  "Speak a newly opened VDiff session."
+  (emacsvox-icon 'task-done)
+  (emacsvox-speak-mode-line))
+
+(emacsvox-vdiff--register-after-group
+ '(vdiff-buffers vdiff-buffers3 vdiff-current-file
+   vdiff-files vdiff-files3)
+ #'emacsvox-vdiff--open-feedback)
 
 ;;;  open/close Folds:
-(cl-loop
- for f in
- '(vdiff-open-all-folds vdiff-open-fold)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'open-object)
-       (emacsvox-speak-line)))))
+(defun emacsvox-vdiff--open-fold-feedback ()
+  "Speak an opened VDiff fold."
+  (emacsvox-icon 'open-object)
+  (emacsvox-speak-line))
 
-(cl-loop
- for f in
+(emacsvox-vdiff--register-after-group
+ '(vdiff-open-all-folds vdiff-open-fold)
+ #'emacsvox-vdiff--open-fold-feedback)
+
+(defun emacsvox-vdiff--close-fold-feedback ()
+  "Speak a closed VDiff fold."
+  (emacsvox-icon 'close-object)
+  (emacsvox-speak-line))
+
+(emacsvox-vdiff--register-after-group
  '(vdiff-close-all-folds vdiff-close-fold vdiff-close-other-folds)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-icon 'close-object)
-       (emacsvox-speak-line)))))
+ #'emacsvox-vdiff--close-fold-feedback)
 
 ;;;  Navigation:
 
@@ -175,16 +186,25 @@
 ;;   "Silence messages."
 ;;   (ems-with-messages-silenced ad-do-it))
 
-(cl-loop
- for f in
+(defun emacsvox-vdiff--movement-feedback ()
+  "Speak the selected VDiff hunk."
+  (emacsvox-vdiff-speak-this-hunk)
+  (emacsvox-icon 'large-movement))
+
+(emacsvox-vdiff--register-after-group
  '(vdiff-next-fold vdiff-next-hunk vdiff-previous-fold vdiff-previous-hunk)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-vdiff-speak-this-hunk)
-       (emacsvox-icon 'large-movement)))))
+ #'emacsvox-vdiff--movement-feedback)
+
+(defun emacsvox-vdiff--install-advice ()
+  "Install native advice after VDiff loads."
+  (dolist (entry emacsvox-vdiff--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'vdiff
+  (emacsvox-vdiff--install-advice))
 
 ;;;  Setup:
 
@@ -202,4 +222,3 @@
 
 (provide 'emacsvox-vdiff)
 ;;;  end of file
-

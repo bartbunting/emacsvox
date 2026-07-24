@@ -235,6 +235,7 @@
   (require 'emacsvox-sudoku-tests)
   (require 'emacsvox-threes-tests)
   (require 'emacsvox-typo-tests)
+  (require 'emacsvox-vdiff-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
