@@ -184,12 +184,10 @@
   (define-key threes-mode-map "f" 'threes-right)
   (define-key threes-mode-map "b" 'threes-left))
 
-(defun ems--threes-after (&rest _)
+(defun emacsvox--advice-threes-after (&rest _)
   "speak." (setq threes-game-over-p nil) (random t)
-  (when (ems-interactive-p)
+  (when (ems-interactive-p 'threes)
     (emacsvox-icon 'open-object) (emacsvox-threes-speak-board)))
-
-(advice-add 'threes :after #'ems--threes-after)
 
 (declare-function threes-cells-score "threes" nil)
 (declare-function threes-cells-transpose "threes" (cells))
@@ -199,22 +197,45 @@
   (interactive)
   (message (format "Score: %s" (number-to-string (threes-cells-score)))))
 
-(cl-loop
- for f in
- '(threes-up threes-down threes-left threes-right)
- do
- (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak"
-     (when (ems-interactive-p)
-       (emacsvox-threes-speak-board)))))
+(defconst emacsvox-threes--movement-targets
+  '(threes-up threes-down threes-left threes-right)
+  "Current Threes movement commands that receive native advice.")
 
-(defun ems--threes-check-before-move-before (&rest _)
+(dolist (target emacsvox-threes--movement-targets)
+  (let ((advice-function
+         (intern (format "emacsvox--advice-%s-after" target))))
+    (eval
+     `(defun ,advice-function (&rest _)
+        ,(format "Speak the board after `%s'." target)
+        (when (ems-interactive-p ',target)
+          (emacsvox-threes-speak-board))))))
+
+(defun emacsvox--advice-threes-check-before-move-before (&rest _)
   "Cache max"
   (setq emacsvox-threes-rows-max (emacsvox-threes-get-rows-max)))
 
-(advice-add 'threes-check-before-move :before
-            #'ems--threes-check-before-move-before)
+(defconst emacsvox-threes--advice
+  (append
+   '((threes :after emacsvox--advice-threes-after)
+     (threes-check-before-move :before
+      emacsvox--advice-threes-check-before-move-before))
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    emacsvox-threes--movement-targets))
+  "Current Threes targets and their native advice functions.")
+
+(defun emacsvox-threes--install-advice ()
+  "Install native advice after Threes loads."
+  (dolist (entry emacsvox-threes--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'threes
+  (emacsvox-threes--install-advice))
 
 (when (boundp 'threes-mode-map)
   (emacsvox-threes-setup))
@@ -312,4 +333,3 @@ Optional interactive prefix arg prompts for a filename."
 
 (provide 'emacsvox-threes)
 ;;;  end of file
-

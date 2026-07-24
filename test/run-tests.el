@@ -233,6 +233,7 @@
   (require 'emacsvox-slime-tests)
   (require 'emacsvox-smartparens-tests)
   (require 'emacsvox-sudoku-tests)
+  (require 'emacsvox-threes-tests)
   (require 'emacsvox-trace-tests))
 
 (ert-run-tests-batch-and-exit)
