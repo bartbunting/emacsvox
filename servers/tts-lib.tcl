@@ -174,9 +174,9 @@ proc tts_selftest {} {
 
 proc which_os {} {
     global env
-    #if env variable DTK_OS is set, use it;
-    if {[info exists env(DTK_OS)] } {
-        return  $env(DTK_OS)
+    #if env variable TTS_OS is set, use it;
+    if {[info exists env(TTS_OS)] } {
+        return  $env(TTS_OS)
     }
     set machine [exec uname -a]
     #os hostname version
@@ -205,8 +205,8 @@ proc which_os {} {
 
 proc which_port {{os Linux}} {
     global env
-    if {[info exists env(DTK_PORT)] } {
-        set port $env(DTK_PORT)
+    if {[info exists env(TTS_PORT)] } {
+        set port $env(TTS_PORT)
         puts stdout "Set port to $port"
     } else {
         switch -exact  -- $os {
@@ -292,7 +292,7 @@ proc tts_initialize {} {
         set tts(play)  $env(EMACSPEAK_PLAY)
     }
     #optional debuggin output
-    if {[info exists env(DTK_DEBUG)] } {
+    if {[info exists env(TTS_DEBUG)] } {
         set tts(debug) 1
     } else {
         set tts(debug) 0
