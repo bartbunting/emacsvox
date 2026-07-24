@@ -69,25 +69,33 @@
 
 ;;;  Interactive Commands:
 
+(defconst emacsvox-ivy--switch-targets
+  '(ivy-switch-buffer-other-window ivy-switch-buffer)
+  "Ivy commands that switch buffers.")
+
 (cl-loop
- for f  in
- '(ivy-switch-buffer-other-window ivy-switch-buffer)
+ for target in emacsvox-ivy--switch-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (with-current-buffer (window-buffer (selected-window))
          (emacsvox-speak-mode-line))))))
 
+(defconst emacsvox-ivy--done-targets
+  '(ivy-done ivy-alt-done ivy-immediate-done)
+  "Ivy commands that finish completion.")
+
 (cl-loop
- for f in 
- '(ivy-done ivy-alt-done ivy-immediate-done)
+ for target in emacsvox-ivy--done-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "speak."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'close-object)))))
 
 (defun emacsvox-ivy-speak-selection ()
@@ -99,31 +107,56 @@
     ivy--length
     (elt ivy--old-cands ivy--index))))
 
+(defconst emacsvox-ivy--navigation-targets
+  '(ivy-beginning-of-buffer
+    ivy-end-of-buffer
+    ivy-next-line
+    ivy-previous-line)
+  "Ivy commands that move through candidates.")
+
 (cl-loop
- for f in
- '(
-   ivy-beginning-of-buffer  ivy-end-of-buffer
-   ivy-next-line ivy-previous-line)
+ for target in emacsvox-ivy--navigation-targets
+ for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
+  `(defun ,advice-function (&rest _)
      "Speak selection."
-     (when (ems-interactive-p)
+     (when (ems-interactive-p ',target)
        (emacsvox-ivy-speak-selection)
        (emacsvox-icon 'select-object)))))
 
-(defun ems--ivy--exhibit-after (&rest _)
+(defun emacsvox--advice-ivy--exhibit-after (&rest _)
   "Speak updated Ivy list." (emacsvox-ivy-speak-selection)
   (sit-for 5) (emacsvox-speak-rest-of-buffer))
 
-(advice-add 'ivy--exhibit :after #'ems--ivy--exhibit-after)
-
-(defun ems--ivy-read-before (&rest _)
+(defun emacsvox--advice-ivy-read-before (prompt &rest _)
   "Speak prompt" (emacsvox-icon 'open-object)
-  (dtk-speak (ad-get-arg 0)))
+  (dtk-speak prompt))
 
-(advice-add 'ivy-read :before #'ems--ivy-read-before)
+(defconst emacsvox-ivy--advice
+  (append
+   (mapcar
+    (lambda (target)
+      (list target :after
+            (intern (format "emacsvox--advice-%s-after" target))))
+    (append
+     emacsvox-ivy--switch-targets
+     emacsvox-ivy--done-targets
+     emacsvox-ivy--navigation-targets))
+   '((ivy--exhibit :after emacsvox--advice-ivy--exhibit-after)
+     (ivy-read :before emacsvox--advice-ivy-read-before)))
+  "Current Ivy targets and their native advice functions.")
+
+(defun emacsvox-ivy--install-advice ()
+  "Install advice after the optional Ivy package loads."
+  (dolist (entry emacsvox-ivy--advice)
+    (pcase-let ((`(,target ,where ,function) entry))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target where function '((name . emacsvox)))))))
+
+(with-eval-after-load 'ivy
+  (emacsvox-ivy--install-advice))
 
 (provide 'emacsvox-ivy)
 ;;;  end of file
-
