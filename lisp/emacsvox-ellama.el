@@ -47,22 +47,17 @@
 ;;;  Interactive Commands:
 ;; Speech-enable output handlers:
 
-(defun ems--ellama-chat-done-after (&rest _)
-  "speak." (emacsvox-icon 'item) (dtk-speak (ad-get-arg 0)))
+(defun emacsvox--advice-ellama-chat-done-after (text &rest _)
+  "Speak completed Ellama response TEXT."
+  (emacsvox-icon 'item)
+  (dtk-speak text))
 
-(advice-add 'ellama-chat-done :after #'ems--ellama-chat-done-after)
-
-(cl-loop
- for f in 
- '(
-   ellama-add-code
-   ellama-ask
+(defconst emacsvox-ellama--request-targets
+  '(
    ellama-ask-about
-   ellama-ask-interactive
    ellama-ask-line
    ellama-ask-selection
    ellama-change
-   ellama-change-code
    ellama-chat
    ellama-code-add
    ellama-code-complete
@@ -70,30 +65,52 @@
    ellama-code-improve
    ellama-code-review
    ellama-complete
-   ellama-complete-code
    ellama-define-word
-   ellama-enhance-code
-   ellama-enhance-grammar-spelling
-   ellama-enhance-wording
    ellama-improve-conciseness
    ellama-improve-grammar
    ellama-improve-wording
-   ellama-make-concise
    ellama-make-format
    ellama-make-list
    ellama-make-table
-   ellama-render
    ellama-summarize
    ellama-summarize-webpage
-   ellama-translate
-   )
+   ellama-translate)
+  "Current Ellama commands that submit an LLM request.")
+
+(cl-loop
+ for target in emacsvox-ellama--request-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Report the LLM request submitted by `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'select-object)
        (dtk-speak "Calling LLM")))))
+
+(defconst emacsvox-ellama--removed-targets
+  '(ellama-add-code ellama-ask ellama-ask-interactive
+    ellama-change-code ellama-complete-code ellama-enhance-code
+    ellama-enhance-grammar-spelling ellama-enhance-wording
+    ellama-make-concise ellama-render)
+  "Obsolete Ellama command names removed during migration.")
+
+(defconst emacsvox-ellama--advice-targets
+  (cons 'ellama-chat-done emacsvox-ellama--request-targets)
+  "Current Ellama targets that receive native after advice.")
+
+(defun emacsvox-ellama--install-advice ()
+  "Install native advice after the optional Ellama package loads."
+  (dolist (target emacsvox-ellama--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'ellama
+  (emacsvox-ellama--install-advice))
 
 (provide 'emacsvox-ellama)
 ;;;  end of file
