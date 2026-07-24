@@ -45,6 +45,10 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'eglot)
+(require 'eldoc)
+(defvar eldoc--doc-buffer)
+(defvar eglot--managed-mode)
 
 ;;;  Map Faces:
 
@@ -53,28 +57,33 @@
 
 ;;;  Interactive Commands:
 
-(defun ems--eglot-help-at-point-after (&rest _)
-  "speak."
-  (when (ems-interactive-p)
+(defun emacsvox--advice-eldoc-doc-buffer-after (&rest _)
+  "Speak documentation displayed from an Eglot-managed buffer."
+  (when (and (ems-interactive-p 'eldoc-doc-buffer)
+             (bound-and-true-p eglot--managed-mode)
+             (buffer-live-p eldoc--doc-buffer))
     (emacsvox-icon 'help)
-    (with-current-buffer eglot--help-buffer (emacsvox-speak-buffer))))
+    (with-current-buffer eldoc--doc-buffer
+      (emacsvox-speak-buffer))))
 
-(advice-add 'eglot-help-at-point :after
-            #'ems--eglot-help-at-point-after)
+(advice-add 'eldoc-doc-buffer :after
+            #'emacsvox--advice-eldoc-doc-buffer-after)
 
 (cl-loop
- for f in 
+ for target in
  '(eglot-find-declaration
    eglot-find-implementation
    eglot-find-typeDefinition)
+ for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'large-movement)))))
+  `(progn
+     (defun ,function (&rest _)
+       "Speak after an interactive Eglot navigation command."
+       (when (ems-interactive-p ',target)
+         (emacsvox-speak-line)
+         (emacsvox-icon 'large-movement)))
+     (advice-add ',target :after #',function))))
 
 (provide 'emacsvox-eglot)
 ;;;  end of file
-
