@@ -63,21 +63,38 @@
   devdocs-update-all
   )
 
+(defconst emacsvox-devdocs--advice-targets
+  '(devdocs-first-page
+    devdocs-go-back devdocs-go-forward
+    devdocs-goto-page devdocs-goto-target
+    devdocs-last-page devdocs-lookup devdocs-peruse
+    devdocs-next-entry devdocs-next-page
+    devdocs-previous-entry devdocs-previous-page devdocs-search)
+  "Current DevDocs commands that receive speech feedback.")
+
 (cl-loop
- for f in 
- '(devdocs-first-page
-   devdocs-go-back devdocs-go-forward
-   devdocs-goto-page devdocs-goto-target
-   devdocs-last-page devdocs-lookup devdocs-peruse
-   devdocs-next-entry devdocs-next-page
-   devdocs-previous-entry devdocs-previous-page devdocs-search)
+ for target in emacsvox-devdocs--advice-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defadvice ,f (after emacsvox pre act comp)
-     "speak."
-     (when (ems-interactive-p)
+  `(defun ,advice-function (&rest _)
+     ,(format "Speak after `%s'." target)
+     (when (ems-interactive-p ',target)
        (emacsvox-icon 'open-object)
        (emacsvox-speak-line)))))
+
+(defun emacsvox-devdocs--install-advice ()
+  "Install native advice after the optional DevDocs package loads."
+  (dolist (target emacsvox-devdocs--advice-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (when (and (fboundp target)
+                 (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'devdocs
+  (emacsvox-devdocs--install-advice))
 
 (provide 'emacsvox-devdocs)
 ;;;  end of file
@@ -85,4 +102,3 @@
                                         ; 
                                         ; 
                                         ; 
-
