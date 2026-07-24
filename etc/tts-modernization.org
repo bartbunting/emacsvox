@@ -1,0 +1,143 @@
+#+title: DTK to TTS Namespace Modernization
+
+* Purpose
+
+The original Emacspeak speech server was DECtalk, so the generic speech
+interface acquired the =dtk-= prefix.  Emacsvox now supports eSpeak, Outloud,
+Mac, SwiftMac, cloud, and other engines through the same interface.  This
+migration gives the engine-independent layer a TTS name while retaining
+DECtalk as a supported backend.
+
+This work is separate from the native-advice migration and is developed on the
+=tts-modernization= branch.
+
+* Initial Inventory
+
+The read-only inventory on 2026-07-24 found:
+
+- approximately 135 =dtk-= definitions in =lisp/dtk-speak.el=;
+- 729 references in 126 other Lisp modules;
+- 196 references in 75 test files;
+- 47 active references to legacy =DTK_*= environment variables;
+- 262 tracked, non-archive files containing a =dtk-= or =DTK_= name;
+- a stale tracked copy at =lisp/dtk-speak.el.final-warn=.
+
+Run the syntax-aware Lisp inventory with:
+
+#+begin_src sh
+make tts-audit EMACS=/home/bart/opt/emacs-31/bin/emacs
+#+end_src
+
+The audit deliberately reports the current baseline.  It becomes a zero-legacy
+gate only after compatibility code has been isolated.
+
+* Naming Policy
+
+Generic Lisp APIs use =tts-=:
+
+| Legacy                         | Canonical                    |
+|--------------------------------+------------------------------|
+| =dtk-speak.el=                 | =tts-speak.el=               |
+| =dtk-speak=                    | =tts-speak=                  |
+| =dtk-stop=                     | =tts-stop=                   |
+| =dtk-tone=                     | =tts-tone=                   |
+| =dtk-notify=                   | =tts-notify=                 |
+| =dtk-program=                  | =tts-program=                |
+| =dtk-speaker-process=          | =tts-speaker-process=        |
+| =dtk-set-rate=                 | =tts-set-rate=               |
+| =dtk-punctuation-mode=         | =tts-punctuation-mode=       |
+| =dtk-interp-*=                 | private =tts--protocol-*=    |
+| =dtk-unicode-*=                | =tts-unicode-*=              |
+| =emacsvox-dtk-submap=          | =emacsvox-tts-submap=        |
+| =DTK_PROGRAM=                  | =TTS_PROGRAM=                |
+
+Names that identify an actual DECtalk backend remain valid, including
+=dectalk-voices.el=, =servers/dtk-exp=, =servers/dtk-soft=,
+=servers/software-dtk=, and =cloud-dtk=.
+
+* Compatibility Policy
+
+Repository code moves completely to canonical names.  Legacy function and
+variable names are temporarily collected in one compatibility module rather
+than spread throughout the implementation.
+
+Variable aliases must preserve dynamic bindings, buffer-local values, default
+values, and Custom settings.  Function aliases preserve direct calls, but
+advice attached to a legacy alias does not intercept an internal call made
+through the canonical symbol.  That compatibility boundary must be documented
+and tested before internal calls change.
+
+=TTS_PROGRAM= takes precedence over =DTK_PROGRAM=.  The latter remains a
+documented fallback for a transition period.
+
+* Test Gates
+
+Before changing the implementation:
+
+1. Test exact commands sent over the speech-server protocol.
+2. Test engine selection and voice adapter configuration.
+3. Test dynamic and buffer-local TTS state.
+4. Test primary and notification process routing.
+5. Test =TTS_PROGRAM= and =DTK_PROGRAM= precedence.
+6. Teach semantic traces to normalize old Emacspeak and new Emacsvox APIs.
+
+Every migration commit must pass the Emacs 31 ERT suite, semantic traces,
+complete Lisp byte compilation, startup smoke test where applicable, and the
+TTS namespace audit.
+
+* Migration Slices
+
+** 1. Inventory and tests
+
+Add the syntax-aware audit, protocol contract tests, state tests, backend
+configuration tests, and environment selection tests.
+
+** 2. Canonical namespace foundation
+
+Introduce canonical state variables and a canonical public facade.  Preserve
+legacy entry points while callers still use them.
+
+** 3. Core runtime
+
+Convert low-level protocol operations, text preparation, audio formatting,
+speech, notification, Unicode handling, and process lifecycle code.
+
+** 4. Central consumers
+
+Convert =emacsvox-speak.el=, =emacsvox-advice.el=, =emacsvox.el=,
+=emacsvox-keymap.el=, =emacsvox-sounds.el=, =voice-setup.el=, and all engine
+voice adapters.
+
+** 5. Remaining Lisp consumers
+
+Convert first-party support and third-party integration modules in small,
+alphabetical or behavioural batches.  Update the matching tests in each
+commit.
+
+** 6. Environment, servers, and documentation
+
+Migrate launchers and generic server configuration from =DTK_*= to =TTS_*=,
+with tested fallback behavior.  Update source documentation and regenerate
+derived manuals separately.
+
+** 7. File and feature rename
+
+Move the generic implementation to =tts-speak.el= and provide a small
+=dtk-speak= compatibility loader.  File moves and compatibility removal are
+reviewed explicitly before they occur.
+
+** 8. Compatibility retirement
+
+After a transition release, remove the compatibility module and require a zero
+legacy audit outside files that describe real DECtalk backends or historical
+archives.
+
+* Completion Criteria
+
+- All generic runtime and consumer code uses =tts-= names.
+- DECtalk remains functional as an engine-specific backend.
+- eSpeak startup and audible behavior remain unchanged.
+- The Emacs 31 suite, semantic traces, full build, and startup smoke pass.
+- Generic server configuration prefers =TTS_*= variables.
+- Remaining =dtk-= names identify DECtalk itself or are explicitly historical.
+- The compatibility layer is isolated and has a documented removal point.

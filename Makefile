@@ -44,7 +44,7 @@ README = README
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
-.PHONY: test unit-test trace trace-test reference-test advice-audit
+.PHONY: test unit-test trace trace-test reference-test advice-audit tts-audit
 test: unit-test trace-test
 
 unit-test:
@@ -74,6 +74,10 @@ reference-test:
 advice-audit:
 	$(EMACS) -Q --batch -l utils/advice-audit.el \
 		--eval '(ems-advice-audit-batch "lisp")'
+
+tts-audit:
+	$(EMACS) -Q --batch -l utils/tts-audit.el \
+		--eval '(ems-tts-audit-batch "lisp")'
 
 ###   User level targets emacsvox   outloud espeak 
 
