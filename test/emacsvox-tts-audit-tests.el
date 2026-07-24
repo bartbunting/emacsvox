@@ -39,6 +39,24 @@
       (plist-get result :string-counts)
       '(("DTK_PROGRAM" . 1))))))
 
+(ert-deftest emacsvox-tts-audit-allows-only-real-dectalk-backend-strings ()
+  "DECtalk backend names remain valid without exempting generic DTK strings."
+  (let ((result
+         (emacsvox-test--tts-audit-source
+          "(list \"dtk-exp\" \"dtk-soft\" \"dtk-other\" \"DTK_PROGRAM\")\n")))
+    (should
+     (equal
+      (plist-get result :string-counts)
+      '(("DTK_PROGRAM" . 1) ("dtk-other" . 1))))
+    (should-not (ems-tts-audit-clean-p result))))
+
+(ert-deftest emacsvox-tts-audit-recognizes-a-clean-result ()
+  "The audit gate accepts code that uses only canonical names."
+  (let ((result
+         (emacsvox-test--tts-audit-source
+          "(tts-speak (getenv \"TTS_PROGRAM\"))\n")))
+    (should (ems-tts-audit-clean-p result))))
+
 (ert-deftest emacsvox-tts-audit-identifies-definitions ()
   "Legacy definitions are distinguished from ordinary references."
   (let ((result

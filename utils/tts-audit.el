@@ -21,6 +21,10 @@
   '(emacsvox-dtk-submap)
   "Legacy TTS symbols that do not begin with `dtk-'.")
 
+(defconst ems-tts-audit-backend-string-names
+  '("dtk-exp" "dtk-soft")
+  "Names that identify real DECtalk backends rather than generic TTS APIs.")
+
 (defconst ems-tts-audit-generated-files
   '("emacsvox-loaddefs.el")
   "Generated Lisp files excluded from namespace audits.")
@@ -73,8 +77,11 @@
 (defun ems-tts-audit--legacy-string-names (string)
   "Return legacy TTS names embedded in STRING."
   (append
-   (ems-tts-audit--string-matches
-    string "\\_<dtk-[[:alnum:]-]+\\_>")
+   (cl-remove-if
+    (lambda (name)
+      (member name ems-tts-audit-backend-string-names))
+    (ems-tts-audit--string-matches
+     string "\\_<dtk-[[:alnum:]-]+\\_>"))
    (ems-tts-audit--string-matches
     string "\\_<DTK_[[:upper:][:digit:]_]+\\_>")))
 
@@ -208,6 +215,12 @@
               (> (cdr left) (cdr right)))))))
     (seq-take ordered (or limit (length ordered)))))
 
+(defun ems-tts-audit-clean-p (audit)
+  "Return non-nil when AUDIT contains no generic legacy TTS names."
+  (and
+   (null (plist-get audit :symbol-counts))
+   (null (plist-get audit :string-counts))))
+
 (defun ems-tts-audit-format (audit)
   "Return a concise human-readable report for AUDIT."
   (let ((symbols (plist-get audit :symbol-counts))
@@ -215,7 +228,7 @@
     (concat
      (format "TTS namespace audit: %d Lisp files\n"
              (plist-get audit :file-count))
-     (format "legacy names: %d files, %d definitions\n"
+     (format "generic legacy names: %d files, %d definitions\n"
              (plist-get audit :legacy-file-count)
              (plist-get audit :definition-count))
      (format "symbol occurrences: %d\n"
@@ -230,10 +243,11 @@
      "\n")))
 
 (defun ems-tts-audit-batch (directory)
-  "Audit DIRECTORY and print the TTS namespace inventory."
-  (princ
-   (ems-tts-audit-format
-    (ems-tts-audit-directory directory))))
+  "Audit DIRECTORY, print the inventory, and fail if legacy names remain."
+  (let ((audit (ems-tts-audit-directory directory)))
+    (princ (ems-tts-audit-format audit))
+    (unless (ems-tts-audit-clean-p audit)
+      (kill-emacs 1))))
 
 (provide 'tts-audit)
 ;;; tts-audit.el ends here
