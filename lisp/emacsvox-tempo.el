@@ -44,6 +44,7 @@
 
 ;;;  requires
 (require 'emacsvox-preamble)
+(require 'tempo)
 
 ;;;   First setup tempo variables:
 
@@ -59,22 +60,30 @@
 
 ;;;   Advice: 
 
-(defun ems--tempo-forward-mark-after (&rest _)
-  "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-tempo-forward-mark-after (&rest _)
+  "Speak the line."
+  (when (ems-interactive-p 'tempo-forward-mark)
+    (emacsvox-speak-line)))
 
-(advice-add 'tempo-forward-mark :after #'ems--tempo-forward-mark-after)
+(advice-add 'tempo-forward-mark :after
+            #'emacsvox--advice-tempo-forward-mark-after)
 
-(defun ems--tempo-backward-mark-after (&rest _)
-  "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-tempo-backward-mark-after (&rest _)
+  "Speak the line."
+  (when (ems-interactive-p 'tempo-backward-mark)
+    (emacsvox-speak-line)))
 
 (advice-add 'tempo-backward-mark :after
-            #'ems--tempo-backward-mark-after)
+            #'emacsvox--advice-tempo-backward-mark-after)
 
-(defun ems--html-helper-smart-insert-item-after (&rest _)
-  "Speak the line." (when (ems-interactive-p) (emacsvox-speak-line)))
+(defun emacsvox--advice-html-helper-smart-insert-item-after (&rest _)
+  "Speak the line."
+  (when (ems-interactive-p 'html-helper-smart-insert-item)
+    (emacsvox-speak-line)))
 
-(advice-add 'html-helper-smart-insert-item :after
-            #'ems--html-helper-smart-insert-item-after)
+(with-eval-after-load 'html-helper-mode
+  (advice-add 'html-helper-smart-insert-item :after
+              #'emacsvox--advice-html-helper-smart-insert-item-after))
 
 (emacsvox-pronounce-add-super 'sgml-mode 'html-helper-mode)
 
@@ -83,4 +92,3 @@
 ;;;  end of file 
 
 ;;;  end of file 
-
