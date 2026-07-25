@@ -818,7 +818,8 @@ runtime behavior change.
 
 Checks: static repository inventory, =org-lint=, and =git diff --check=.
 
-** TODO Slice 1: Characterization Tests
+** DONE Slice 1: Characterization Tests
+CLOSED: [2026-07-26 Sun]
 
 - Add focused tests for current icon caching, theme switching, fallback,
   immediate playback, and queued =auditory-icon= properties.
@@ -832,6 +833,11 @@ Checks: static repository inventory, =org-lint=, and =git diff --check=.
 
 Deliverable: tests protecting existing public behavior and identifying exact
 compatibility boundaries.
+
+Checks: 19 focused ERT results on the available Emacs 30.2 runtime, including
+one expected failure recording the stale theme-cache bug.  The repository-wide
+=make unit-test= gate could not run because =test/run-tests.el= requires Emacs
+31 or later; the current environment provides Emacs 30.2.
 
 ** TODO Slice 2: Semantic Registry
 
