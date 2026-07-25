@@ -34,7 +34,8 @@
 ;; generate autoloads for emacsvox
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(require 'loaddefs-gen)
+
 (defvar emacsvox-auto-autoloads-file
   (expand-file-name "emacsvox-loaddefs.el"
                     (file-name-directory load-file-name))
@@ -42,13 +43,8 @@
 
 (defun emacsvox-auto-generate-autoloads ()
   "Generate emacsvox autoloads."
-  (cond
-   ((locate-library "loaddefs-gen")     ; emacs 29
-    (loaddefs-generate emacsvox-lisp-directory "emacsvox-loaddefs.el"))
-   (t (require 'autoload)
-      (let ((tts-quiet t)
-            (generated-autoload-file emacsvox-auto-autoloads-file))
-        (update-directory-autoloads emacsvox-lisp-directory)))))
+  (loaddefs-generate
+   emacsvox-lisp-directory emacsvox-auto-autoloads-file))
 
 (provide 'emacsvox-autoload)
 ;;;  end of file
