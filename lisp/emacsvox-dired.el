@@ -45,6 +45,10 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-m-player-options)
+
 ;;;   required packages
 
 (eval-when-compile (require 'cl-lib))

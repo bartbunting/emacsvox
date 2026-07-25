@@ -35,6 +35,7 @@
   (require 'emacsvox-startup-tests)
   (require 'emacsvox-converter-tests)
   (require 'emacsvox-dired-tests)
+  (require 'emacsvox-media-options-tests)
   (require 'emacsvox-mail-tests)
   (require 'emacsvox-core-migration-tests)
   (require 'emacsvox-completion-tests)

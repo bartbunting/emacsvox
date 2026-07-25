@@ -59,6 +59,7 @@
 
 (defvar emacsvox-amark-file)
 (defvar emacsvox-amark-list)
+(defvar emacsvox-m-player-options)
 (defvar emacsvox-m-player-process)
 (defvar locate-command)
 (defvar locate-make-command-line)
