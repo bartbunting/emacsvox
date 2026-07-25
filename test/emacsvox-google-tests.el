@@ -29,6 +29,19 @@
                 'details))))
         (should (= calls 1))))))
 
+(ert-deftest emacsvox-google-open-link-uses-google-result-filter ()
+  "Opening a result extracts the link with the shared Google filter."
+  (let (arguments)
+    (cl-letf (((symbol-function 'shr-url-at-point)
+               (lambda (&optional _) "https://example.com/result"))
+              ((symbol-function 'add-hook) #'ignore)
+              ((symbol-function 'emacsvox-we-extract-by-id-list)
+               (lambda (&rest args) (setq arguments args))))
+      (emacsvox-google-open-link))
+    (should
+     (equal arguments
+            (list ems--google-filter "https://example.com/result")))))
+
 (ert-deftest emacsvox-gmaps-mode-uses-current-face-symbol ()
   "GMaps applies the current quoted face symbol to its heading."
   (with-temp-buffer

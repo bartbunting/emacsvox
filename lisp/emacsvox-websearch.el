@@ -49,7 +49,6 @@
 (defvar emacsvox-eww-masquerade)
 (defvar emacsvox-google-toolbelt)
 (defvar emacsvox-websearch-google-lite)
-(defvar ems--google-filter)
 
 
 ;;  required modules
@@ -159,10 +158,6 @@ ARGS specifies additional arguments to SPEAKER if any."
 
 (defvar emacsvox-websearch-google-options nil
   "Additional options to pass to Google e.g. &xx=yy...")
-
-(defconst ems--google-filter
-  '("main")
-  "Ids of nodes we keep in Google results page.")
 
 (declare-function emacsvox-eww-next-h "emacsvox-eww" (&optional speak))
 (declare-function emacsvox-eww-next-h1 "emacsvox-eww" (&optional speak))

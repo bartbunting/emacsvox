@@ -61,6 +61,10 @@
 (require 'emacsvox-we)
 (require 'gweb)
 
+(defconst ems--google-filter
+  '("main")
+  "Ids of nodes we keep in Google results page.")
+
 ;;;  Data Structures
 
 ;; One tool on a tool-belt
@@ -490,7 +494,7 @@ current page."
      #'(lambda ()
          (emacsvox-eww-next-h1  'speak)))
     (emacsvox-we-extract-by-id-list
-     ems--websearch-google-filter
+     ems--google-filter
      url)))
 
 ;;;  Sign in, Sign out:
