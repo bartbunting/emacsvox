@@ -249,6 +249,52 @@
       (mapcar #'car (nreverse events))
       '(icon icon speak)))))
 
+(ert-deftest emacsvox-notmuch-show-position-speaks-ordinal-and-details ()
+  "The manual position report combines thread position and message details."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((current-id "second")
+          iterated-id
+          events)
+      (cl-letf (((symbol-function 'notmuch-show-get-message-id)
+                 (lambda (&optional _bare) (or iterated-id current-id)))
+                ((symbol-function 'notmuch-show-mapc)
+                 (lambda (function)
+                   (dolist (message-id '("first" "second" "third"))
+                     (setq iterated-id message-id)
+                     (funcall function))
+                   (setq iterated-id nil)))
+                ((symbol-function 'notmuch-show-get-message-properties)
+                 (lambda () emacsvox-notmuch-test--show-message))
+                ((symbol-function 'emacsvox-notmuch--play-status-icons)
+                 (lambda (&rest _) (push '(status-icons) events)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text)
+                   (push
+                    (list 'speak (substring-no-properties text))
+                    events))))
+        (should
+         (equal
+          (substring-no-properties
+           (emacsvox-notmuch-speak-show-position))
+          (concat
+           "Message 2 of 3, Alice Smith <alice@example.com>, today, "
+           "Bart Bunting <bart@example.com>, "
+           "Project Team <team@example.com>, inbox, 2 attachments"))))
+      (should
+       (equal
+        (nreverse events)
+        '((status-icons)
+          (speak
+           "Message 2 of 3, Alice Smith <alice@example.com>, today, Bart Bunting <bart@example.com>, Project Team <team@example.com>, inbox, 2 attachments")))))))
+
+(ert-deftest emacsvox-notmuch-show-position-has-manual-binding ()
+  "The thread-position report has one explicit Notmuch Show binding."
+  (should
+   (eq
+    (lookup-key notmuch-show-mode-map (kbd "C-c C-p"))
+    #'emacsvox-notmuch-speak-show-position)))
+
 (defconst emacsvox-notmuch-test--attachment
   '(:id 2
     :content-type "application/pdf"

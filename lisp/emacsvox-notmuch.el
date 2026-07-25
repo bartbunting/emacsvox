@@ -51,13 +51,16 @@
 (declare-function notmuch-sanitize "notmuch-lib" (str))
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
 (declare-function notmuch-show-clean-address "notmuch-show" (address))
+(declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 (declare-function notmuch-show-get-message-properties "notmuch-show" ())
 (declare-function notmuch-show-get-part-properties "notmuch-show" ())
+(declare-function notmuch-show-mapc "notmuch-show" (function))
 (declare-function notmuch-show-message-extent "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
 
 (defvar notmuch-archive-tags)
+(defvar notmuch-show-mode-map)
 (defvar notmuch-show-part-button-default-action)
 
 ;;;  Customization:
@@ -409,6 +412,39 @@ tag, or give it a nil icon to keep the status silent."
      message emacsvox-notmuch-show-status-icons)
     (tts-speak summary)
     summary))
+
+(defun emacsvox-notmuch--show-message-position ()
+  "Return the current message position and thread size as a cons cell."
+  (when (eq major-mode 'notmuch-show-mode)
+    (let ((current-id (notmuch-show-get-message-id))
+          (position 0)
+          (total 0))
+      (notmuch-show-mapc
+       (lambda ()
+         (cl-incf total)
+         (when (equal current-id (notmuch-show-get-message-id))
+           (setq position total))))
+      (when (> position 0)
+        (cons position total)))))
+
+(defun emacsvox-notmuch-speak-show-position ()
+  "Speak the current position in the thread and semantic message details."
+  (interactive)
+  (unless (eq major-mode 'notmuch-show-mode)
+    (user-error "This command is only available in Notmuch Show"))
+  (when-let* ((message (notmuch-show-get-message-properties))
+              (position (emacsvox-notmuch--show-message-position)))
+    (let* ((details (emacsvox-notmuch-format-show-message message))
+           (position-summary
+            (format "Message %d of %d" (car position) (cdr position)))
+           (summary
+            (if (string-empty-p details)
+                position-summary
+              (concat position-summary ", " details))))
+      (emacsvox-notmuch--play-status-icons
+       message emacsvox-notmuch-show-status-icons)
+      (tts-speak summary)
+      summary)))
 
 (defun emacsvox-notmuch--current-show-message-id ()
   "Return the current Notmuch show message ID, if available."
@@ -1415,6 +1451,11 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
          '(notmuch notmuch-hello notmuch-lib notmuch-search notmuch-show))
   (eval `(with-eval-after-load ',feature
            (emacsvox-notmuch--install-advice))))
+
+(with-eval-after-load 'notmuch-show
+  (define-key
+   notmuch-show-mode-map (kbd "C-c C-p")
+   #'emacsvox-notmuch-speak-show-position))
 
 ;;; MUA:
 
