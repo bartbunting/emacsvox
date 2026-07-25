@@ -636,6 +636,49 @@
             (icon select-object)
             (speak "End of thread"))))))))
 
+(ert-deftest emacsvox-notmuch-show-previous-navigation-announces-thread-start ()
+  "Backward navigation should not reread the first message."
+  (dolist
+      (case
+       '((notmuch-show-previous-open-message
+          emacsvox--advice-notmuch-show-previous-open-message-around)
+         (notmuch-show-previous-message
+          emacsvox--advice-notmuch-show-previous-message-around)))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let ((ems--interactive-fn-name (car case))
+            (calls 0)
+            events)
+        (cl-letf
+            (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+              (lambda () "first"))
+             ((symbol-function 'notmuch-show-move-to-message-top)
+              (lambda () (push '(top) events)))
+             ((symbol-function 'emacsvox-notmuch--move-to-message-body)
+              (lambda () (push '(body) events)))
+             ((symbol-function 'emacsvox-notmuch-speak-show-message)
+              (lambda (&optional _message) (push '(message) events)))
+             ((symbol-function 'emacsvox-icon)
+              (lambda (icon) (push (list 'icon icon) events)))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (push (list 'speak text) events))))
+          (should
+           (eq
+            (funcall
+             (cadr case)
+             (lambda ()
+               (cl-incf calls)
+               'at-start))
+            'at-start)))
+        (should (= calls 1))
+        (should
+         (equal
+          (nreverse events)
+          '((top)
+            (body)
+            (icon select-object)
+            (speak "Beginning of thread"))))))))
+
 (ert-deftest emacsvox-notmuch-show-navigation-can-return-from-message-bodies ()
   "Previous navigation should cross messages after body positioning."
   (dolist

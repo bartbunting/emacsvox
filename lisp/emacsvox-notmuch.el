@@ -920,6 +920,12 @@ line contains non-whitespace text."
   (emacsvox-icon 'select-object)
   (tts-speak "End of thread"))
 
+(defun emacsvox-notmuch--beginning-of-thread-feedback ()
+  "Select the current body and announce the beginning of its thread."
+  (emacsvox-notmuch--move-to-message-body)
+  (emacsvox-icon 'select-object)
+  (tts-speak "Beginning of thread"))
+
 (defun emacsvox-notmuch--next-navigation-around
     (target original arguments)
   "Provide state-aware feedback for next-message TARGET.
@@ -975,14 +981,20 @@ message, or announce the end of the thread when it does not change."
 (defun emacsvox-notmuch--previous-navigation-around
     (target original arguments)
   "Navigate to the previous message for interactive TARGET.
-Call ORIGINAL once with ARGUMENTS, then select and speak the body."
+Call ORIGINAL once with ARGUMENTS.  Speak the newly selected
+message, or announce the beginning of the thread when it does not change."
   (if (and
        (eq major-mode 'notmuch-show-mode)
        (ems-interactive-p target))
-      (progn
+      (let ((before-message (emacsvox-notmuch--current-show-message-id)))
         (notmuch-show-move-to-message-top)
         (let ((result (apply original arguments)))
-          (emacsvox-notmuch--show-navigation-feedback)
+          (when (eq major-mode 'notmuch-show-mode)
+            (if (equal
+                 before-message
+                 (emacsvox-notmuch--current-show-message-id))
+                (emacsvox-notmuch--beginning-of-thread-feedback)
+              (emacsvox-notmuch--show-navigation-feedback)))
           result))
     (apply original arguments)))
 
