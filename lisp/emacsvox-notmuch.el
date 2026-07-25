@@ -403,6 +403,12 @@ tag, or give it a nil icon to keep the status silent."
     (tts-speak summary)
     summary))
 
+(defun emacsvox-notmuch--current-show-message-id ()
+  "Return the current Notmuch show message ID, if available."
+  (when (eq major-mode 'notmuch-show-mode)
+    (ignore-errors
+      (plist-get (notmuch-show-get-message-properties) :id))))
+
 ;;;  Interactive Commands:
 
 '(
@@ -645,6 +651,49 @@ tag, or give it a nil icon to keep the status silent."
    notmuch-show-previous-open-message
    notmuch-show-next-matching-message)
  #'emacsvox-notmuch--show-navigation-feedback)
+
+(defun emacsvox-notmuch--show-reading-around (target original arguments)
+  "Provide state-aware reading feedback for TARGET.
+Call ORIGINAL once with ARGUMENTS.  Speak a semantic summary when
+the selected message changes; otherwise speak the visible window."
+  (let ((before-message (emacsvox-notmuch--current-show-message-id))
+        (result (apply original arguments)))
+    (when (ems-interactive-p target)
+      (when (eq major-mode 'notmuch-show-mode)
+        (let ((after-message
+               (emacsvox-notmuch--current-show-message-id)))
+          (cond
+           ((not (equal before-message after-message))
+            (emacsvox-notmuch-speak-show-message))
+           ((and (eq target 'notmuch-show-advance) (eobp))
+            (emacsvox-icon 'select-object)
+            (tts-speak "End of thread"))
+           (t
+            (emacsvox-icon 'scroll)
+            (emacsvox-speak-current-window))))))
+    result))
+
+(defun emacsvox--advice-notmuch-show-advance-around
+    (original &rest arguments)
+  "Provide state-aware reading feedback around Show advance."
+  (emacsvox-notmuch--show-reading-around
+   'notmuch-show-advance original arguments))
+
+(defun emacsvox--advice-notmuch-show-rewind-around
+    (original &rest arguments)
+  "Provide state-aware reading feedback around Show rewind."
+  (emacsvox-notmuch--show-reading-around
+   'notmuch-show-rewind original arguments))
+
+(push
+ '(notmuch-show-advance
+   :around emacsvox--advice-notmuch-show-advance-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-rewind
+   :around emacsvox--advice-notmuch-show-rewind-around)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox-notmuch--tag-change-summary (tag-changes)
   "Return a concise description of Notmuch TAG-CHANGES."

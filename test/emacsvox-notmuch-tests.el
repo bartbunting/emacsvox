@@ -226,6 +226,80 @@
         (should-not (emacsvox-notmuch-speak-show-message)))
       (should-not called))))
 
+(ert-deftest emacsvox-notmuch-show-advance-speaks-message-transition ()
+  "Space speaks a semantic summary when it advances to another message."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((ems--interactive-fn-name 'notmuch-show-advance)
+          (message-ids '("first" "second"))
+          (calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+            (lambda () (pop message-ids)))
+           ((symbol-function 'emacsvox-notmuch-speak-show-message)
+            (lambda (&optional _message) (push 'message events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-advance-around
+           (lambda ()
+             (cl-incf calls)
+             'advanced))
+          'advanced)))
+      (should (= calls 1))
+      (should (equal events '(message))))))
+
+(ert-deftest emacsvox-notmuch-show-advance-speaks-window-after-scroll ()
+  "Space speaks the visible window when it scrolls within one message."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((ems--interactive-fn-name 'notmuch-show-advance)
+          (calls 0)
+          events)
+      (insert "message body")
+      (goto-char (point-min))
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+            (lambda () "same"))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events)))
+           ((symbol-function 'emacsvox-speak-current-window)
+            (lambda () (push '(window) events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-advance-around
+           (lambda ()
+             (cl-incf calls)
+             'scrolled))
+          'scrolled)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((icon scroll)
+          (window)))))))
+
+(ert-deftest emacsvox-notmuch-show-rewind-is-target-aware ()
+  "Programmatic rewind remains quiet and preserves its return value."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+            (lambda () "same"))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push icon events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-rewind-around
+           (lambda ()
+             (cl-incf calls)
+             'rewound))
+          'rewound)))
+      (should (= calls 1))
+      (should-not events))))
+
 (ert-deftest emacsvox-notmuch-describes-tag-changes ()
   "Tag-change summaries distinguish additions and removals."
   (should
