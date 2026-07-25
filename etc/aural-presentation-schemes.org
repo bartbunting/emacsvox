@@ -839,7 +839,8 @@ one expected failure recording the stale theme-cache bug.  The repository-wide
 =make unit-test= gate could not run because =test/run-tests.el= requires Emacs
 31 or later; the current environment provides Emacs 30.2.
 
-** TODO Slice 2: Semantic Registry
+** DONE Slice 2: Semantic Registry
+CLOSED: [2026-07-26 Sun]
 
 - Implement registration and lookup for roles, events, states, and attributes.
 - Seed the reviewed core and module-extension definitions.
@@ -850,6 +851,11 @@ one expected failure recording the stale theme-cache bug.  The repository-wide
 
 Deliverable: one canonical, discoverable vocabulary with no intentional user
 presentation change.
+
+Checks: 11 focused semantic-registry ERT tests, 30 combined aural
+characterization and registry results with one expected stale-cache failure,
+=check-parens=, and =git diff --check=.  The Emacs 31 full-suite gate remains
+unavailable in the current Emacs 30.2 environment.
 
 ** TODO Slice 3: Pure Rule and Render-Plan Engine
 
