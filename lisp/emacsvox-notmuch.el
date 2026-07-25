@@ -416,15 +416,55 @@ tag, or give it a nil icon to keep the status silent."
       (plist-get (notmuch-show-get-message-properties) :id))))
 
 (defun emacsvox-notmuch--move-to-message-body ()
-  "Move point to the first content in the current Notmuch message body."
+  "Move point to the first visible leaf content in the current message."
   (when (eq major-mode 'notmuch-show-mode)
     (when-let* ((message (notmuch-show-get-message-properties))
                 (headers-overlay (plist-get message :headers-overlay)))
-      (goto-char (overlay-end headers-overlay))
-      (forward-line 1)
-      (skip-chars-forward " \t\n"
-                          (1- (cdr (notmuch-show-message-extent))))
-      (point))))
+      (let ((limit (1- (cdr (notmuch-show-message-extent))))
+            first-part-button
+            first-leaf-button
+            found)
+        (goto-char (overlay-end headers-overlay))
+        (forward-line 1)
+        (while (and (< (point) limit) (not found))
+          (skip-chars-forward " \t\n" limit)
+          (cond
+           ((>= (point) limit))
+           ((invisible-p (point))
+            (goto-char
+             (min
+              limit
+              (next-overlay-change (point))
+              (or
+               (next-single-property-change
+                (point) 'invisible nil limit)
+               limit))))
+           ((let ((button (button-at (point))))
+              (when
+                  (and
+                   button
+                   (eq
+                    (button-type button)
+                    'notmuch-show-part-button-type))
+                (let ((part
+                       (emacsvox-notmuch--part-at-point button)))
+                  (unless first-part-button
+                    (setq first-part-button (button-start button)))
+                  (unless
+                      (or
+                       first-leaf-button
+                       (string-prefix-p
+                        "multipart/"
+                        (or (plist-get part :content-type) "")))
+                    (setq first-leaf-button (button-start button))))
+                (goto-char (button-end button))
+                t)))
+           (t (setq found t))))
+        (unless found
+          (when-let* ((fallback
+                       (or first-leaf-button first-part-button)))
+            (goto-char fallback)))
+        (point)))))
 
 (defun emacsvox-notmuch--part-at-point (&optional button)
   "Return the Notmuch MIME part at point or on BUTTON."

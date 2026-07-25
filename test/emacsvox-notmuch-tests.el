@@ -362,33 +362,84 @@
   "Opening a search result selects the body and speaks the message."
   (with-temp-buffer
     (setq major-mode 'notmuch-show-mode)
-    (insert "Summary\nSubject: Project update\nFrom: Alice\n\n  Message body\n")
+    (insert "Summary\nSubject: Project update\nFrom: Alice\n")
     (goto-char (point-min))
     (forward-line 1)
     (let ((headers-start (point)))
       (forward-line 2)
-      (let ((message
-             (list
-              :headers-overlay (make-overlay headers-start (point))))
-            (extent (cons (point-min) (point-max)))
-            (ems--interactive-fn-name 'notmuch-search-show-thread)
-            events)
-        (goto-char (point-min))
-        (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
-                   (lambda () message))
-                  ((symbol-function 'notmuch-show-message-extent)
-                   (lambda () extent))
-                  ((symbol-function 'emacsvox-icon)
-                   (lambda (icon) (push (list 'icon icon) events)))
-                  ((symbol-function 'emacsvox-notmuch-speak-show-message)
-                   (lambda (&optional _message) (push '(message) events))))
-          (emacsvox--advice-notmuch-search-show-thread-after))
-        (should (looking-at-p "Message body"))
-        (should
-         (equal
-          (nreverse events)
-          '((icon open-object)
-            (message))))))))
+      (let ((headers-overlay (make-overlay headers-start (point))))
+        (insert "\n")
+        (let ((multipart-button
+               (notmuch-show-insert-part-header
+                1 "multipart/alternative" "multipart/alternative")))
+          (put-text-property
+           (button-start multipart-button) (button-end multipart-button)
+           :notmuch-part '(:content-type "multipart/alternative")))
+        (let ((html-button
+               (notmuch-show-insert-part-header
+                2 "text/html" "text/html")))
+          (put-text-property
+           (button-start html-button) (button-end html-button)
+           :notmuch-part '(:content-type "text/html"))
+          (let ((hidden-start (point)))
+            (insert "<p>Hidden HTML alternative</p>\n")
+            (overlay-put
+             (make-overlay hidden-start (point))
+             'invisible t)))
+        (let ((plain-button
+               (notmuch-show-insert-part-header
+                3 "text/plain" "text/plain")))
+          (put-text-property
+           (button-start plain-button) (button-end plain-button)
+           :notmuch-part '(:content-type "text/plain")))
+        (insert "  Message body\n")
+        (let ((message (list :headers-overlay headers-overlay))
+              (extent (cons (point-min) (point-max)))
+              (ems--interactive-fn-name 'notmuch-search-show-thread)
+              events)
+          (goto-char (point-min))
+          (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
+                     (lambda () message))
+                    ((symbol-function 'notmuch-show-message-extent)
+                     (lambda () extent))
+                    ((symbol-function 'emacsvox-icon)
+                     (lambda (icon) (push (list 'icon icon) events)))
+                    ((symbol-function 'emacsvox-notmuch-speak-show-message)
+                     (lambda (&optional _message) (push '(message) events))))
+            (emacsvox--advice-notmuch-search-show-thread-after))
+          (should (looking-at-p "Message body"))
+          (should
+           (equal
+            (nreverse events)
+            '((icon open-object)
+              (message)))))))))
+
+(ert-deftest emacsvox-notmuch-body-position-keeps-attachment-fallback ()
+  "An attachment-only message selects its actionable leaf-part button."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "Summary\nFrom: Alice\n")
+    (goto-char (point-min))
+    (forward-line 1)
+    (let ((headers-overlay (make-overlay (point) (line-end-position 2))))
+      (goto-char (overlay-end headers-overlay))
+      (insert "\n")
+      (let ((attachment-button
+             (notmuch-show-insert-part-header
+              2 "application/pdf" "application/pdf" "report.pdf")))
+        (put-text-property
+         (button-start attachment-button) (button-end attachment-button)
+         :notmuch-part
+         '(:content-type "application/pdf" :filename "report.pdf"))
+        (let ((message (list :headers-overlay headers-overlay))
+              (extent (cons (point-min) (point-max))))
+          (goto-char (point-min))
+          (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
+                     (lambda () message))
+                    ((symbol-function 'notmuch-show-message-extent)
+                     (lambda () extent)))
+            (emacsvox-notmuch--move-to-message-body))
+          (should (= (point) (button-start attachment-button))))))))
 
 (ert-deftest emacsvox-notmuch-navigation-speaks-selected-result ()
   "Only the active interactive search-navigation command speaks."
