@@ -268,6 +268,7 @@ emacsvox-webspace.elc \
 emacsvox-widget.elc \
 emacsvox-which-key.elc \
 emacsvox-windmove.elc \
+emacsvox-windows-speech.elc \
 emacsvox-wizards.elc  \
 emacsvox-woman.elc \
 emacsvox-xkcd.elc \

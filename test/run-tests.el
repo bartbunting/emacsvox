@@ -31,6 +31,7 @@
   (require 'emacsvox-name-audit-tests)
   (require 'emacsvox-tts-audit-tests)
   (require 'emacsvox-tts-tests)
+  (require 'emacsvox-windows-speech-tests)
   (require 'emacsvox-keymap-tests)
   (require 'emacsvox-startup-tests)
   (require 'emacsvox-converter-tests)
