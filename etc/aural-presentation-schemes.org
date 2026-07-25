@@ -490,6 +490,34 @@ Additional selector fields increase specificity only according to a documented
 comparison; registration order must not accidentally change behavior.  A
 stable explicit rule order breaks genuine ties and is visible in the editor.
 
+** Resolved rule representation and specificity
+
+Schemes use safe, versioned keyword plists for persistence and interchange.
+The pure resolver compiles them into validated internal structures.  Module
+defaults are read-only scheme fragments in the same declarative format.
+
+=content= is a distinguished scalar-style phase.  =before= and =after= contain
+ordered actions.  Scalar values use the strongest matching contribution.
+Sequences append by default and support explicit =prepend=, =append=,
+=replace=, =remove=, and =suppress= operations.  Actions have stable
+identifiers so inherited contributions can be removed without comparing text
+or filenames.
+
+Rules are applied from weakest to strongest using a fixed vector:
+
+1. origin layer;
+2. matched semantic identity;
+3. combined module and exact mode;
+4. exact mode or nearest derived-mode ancestor;
+5. module;
+6. matched states and attributes;
+7. explicit visible rule order;
+8. stable rule identifier for a genuine tie.
+
+This makes resolution independent of hash-table and registration order.  The
+resolved plan retains the matching rule identifiers, score vectors, action
+sources, and scalar-property provenance.
+
 ** Storage and versioning
 
 Persistent scheme data must:
@@ -857,7 +885,8 @@ characterization and registry results with one expected stale-cache failure,
 =check-parens=, and =git diff --check=.  The Emacs 31 full-suite gate remains
 unavailable in the current Emacs 30.2 environment.
 
-** TODO Slice 3: Pure Rule and Render-Plan Engine
+** DONE Slice 3: Pure Rule and Render-Plan Engine
+CLOSED: [2026-07-26 Sun]
 
 - Finalize the safe, versioned rule data shape.
 - Implement selector matching independently of playback.
@@ -871,6 +900,12 @@ unavailable in the current Emacs 30.2 environment.
 
 Deliverable: semantic facts and rules compile deterministically into an
 explainable backend-independent render plan.
+
+Checks: 12 focused rule-engine ERT tests covering validation, occasions,
+heading/state composition, origin layers, combined context, derived modes,
+stable ties, scalar provenance, sequence operations, suppression, and input
+validation; =check-parens= and =git diff --check=.  The Emacs 31 full-suite
+gate remains unavailable in the current Emacs 30.2 environment.
 
 ** TODO Slice 4: Resource Packs and Voice Palettes
 
@@ -1031,27 +1066,18 @@ The dedicated tests must cover:
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. The final declarative rule, render-plan, and semantic text-property shapes.
-2. The exact specificity comparison for selectors with different attributes
-   and states.
-3. Default composition behavior for multiple sequence contributions and the
-   identifiers used to replace or remove an inherited action.
-4. Whether module defaults live in the central registry, separate scheme
-   fragments, or both with one generated representation.
-5. How a scheme override interacts with an explicit legacy =personality= when
+1. How a scheme override interacts with an explicit legacy =personality= when
    no registered semantic role is present.
-6. Whether content speech is an action or a distinguished content capability
-   in the final data model.
-7. The safe persistent storage format and migration mechanism.
-8. The exact context snapshot boundary around =tts-speak= and notification
+2. The safe persistent storage location and migration mechanism.
+3. The exact context snapshot boundary around =tts-speak= and notification
    speech.
-9. Serialization and timing when speech and cues use different processes.
-10. Pulse/PipeWire sample naming and cleanup for contextual assets.
-11. The portable spatial coordinate ranges and how 3D values reduce to stereo.
-12. Whether critical alerts may be completely suppressed or require an
+4. Serialization and timing when speech and cues use different processes.
+5. Pulse/PipeWire sample naming and cleanup for contextual assets.
+6. The portable spatial coordinate ranges and how 3D values reduce to stereo.
+7. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-13. The ordering policy required before minor-mode selectors are enabled.
-14. Whether future integrations need additional occasions and whether those
+8. The ordering policy required before minor-mode selectors are enabled.
+9. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:
