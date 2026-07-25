@@ -570,20 +570,71 @@
 
 (ert-deftest emacsvox-notmuch-show-navigation-selects-and-speaks-message-body ()
   "Active show navigation selects the message body before speaking."
-  (let ((ems--interactive-fn-name 'notmuch-show-next-open-message)
-        (calls 0)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-notmuch--move-to-message-body)
-               (lambda () (push 'body events)))
-              ((symbol-function 'emacsvox-notmuch-speak-show-message)
-               (lambda (&optional _message) (push 'message events))))
-      (emacsvox--advice-notmuch-show-next-open-message-after)
-      (emacsvox--advice-notmuch-show-previous-open-message-around
-       (lambda ()
-         (cl-incf calls)
-         'unchanged)))
-    (should (= calls 1))
-    (should (equal (nreverse events) '(body message)))))
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((ems--interactive-fn-name 'notmuch-show-next-open-message)
+          (message-ids '("first" "second"))
+          (calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+            (lambda () (pop message-ids)))
+           ((symbol-function 'emacsvox-notmuch--move-to-message-body)
+            (lambda () (push 'body events)))
+           ((symbol-function 'emacsvox-notmuch-speak-show-message)
+            (lambda (&optional _message) (push 'message events))))
+        (emacsvox--advice-notmuch-show-next-open-message-around
+         (lambda ()
+           (cl-incf calls)
+           'moved))
+        (emacsvox--advice-notmuch-show-previous-open-message-around
+         (lambda ()
+           (cl-incf calls)
+           'unchanged)))
+      (should (= calls 2))
+      (should (equal (nreverse events) '(body message))))))
+
+(ert-deftest emacsvox-notmuch-show-next-navigation-announces-thread-end ()
+  "Forward navigation should not reread the final message."
+  (dolist
+      (case
+       '((notmuch-show-next-open-message
+          emacsvox--advice-notmuch-show-next-open-message-around)
+         (notmuch-show-next-message
+          emacsvox--advice-notmuch-show-next-message-around)
+         (notmuch-show-next-matching-message
+          emacsvox--advice-notmuch-show-next-matching-message-around)))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-show-mode)
+      (let ((ems--interactive-fn-name (car case))
+            (calls 0)
+            events)
+        (cl-letf
+            (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+              (lambda () "last"))
+             ((symbol-function 'emacsvox-notmuch--move-to-message-body)
+              (lambda () (push '(body) events)))
+             ((symbol-function 'emacsvox-notmuch-speak-show-message)
+              (lambda (&optional _message) (push '(message) events)))
+             ((symbol-function 'emacsvox-icon)
+              (lambda (icon) (push (list 'icon icon) events)))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (push (list 'speak text) events))))
+          (should
+           (eq
+            (funcall
+             (cadr case)
+             (lambda ()
+               (cl-incf calls)
+               'at-end))
+            'at-end)))
+        (should (= calls 1))
+        (should
+         (equal
+          (nreverse events)
+          '((body)
+            (icon select-object)
+            (speak "End of thread"))))))))
 
 (ert-deftest emacsvox-notmuch-show-navigation-can-return-from-message-bodies ()
   "Previous navigation should cross messages after body positioning."

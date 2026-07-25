@@ -914,6 +914,64 @@ line contains non-whitespace text."
   (emacsvox-notmuch--move-to-message-body)
   (emacsvox-notmuch-speak-show-message))
 
+(defun emacsvox-notmuch--end-of-thread-feedback ()
+  "Select the current body and announce the end of its thread."
+  (emacsvox-notmuch--move-to-message-body)
+  (emacsvox-icon 'select-object)
+  (tts-speak "End of thread"))
+
+(defun emacsvox-notmuch--next-navigation-around
+    (target original arguments)
+  "Provide state-aware feedback for next-message TARGET.
+Call ORIGINAL once with ARGUMENTS.  Speak the newly selected
+message, or announce the end of the thread when it does not change."
+  (if (and
+       (eq major-mode 'notmuch-show-mode)
+       (ems-interactive-p target))
+      (let ((before-message (emacsvox-notmuch--current-show-message-id))
+            (result (apply original arguments)))
+        (when (eq major-mode 'notmuch-show-mode)
+          (if (equal
+               before-message
+               (emacsvox-notmuch--current-show-message-id))
+              (emacsvox-notmuch--end-of-thread-feedback)
+            (emacsvox-notmuch--show-navigation-feedback)))
+        result)
+    (apply original arguments)))
+
+(defun emacsvox--advice-notmuch-show-next-message-around
+    (original &rest arguments)
+  "Provide state-aware feedback for `notmuch-show-next-message'."
+  (emacsvox-notmuch--next-navigation-around
+   'notmuch-show-next-message original arguments))
+
+(defun emacsvox--advice-notmuch-show-next-open-message-around
+    (original &rest arguments)
+  "Provide state-aware feedback for `notmuch-show-next-open-message'."
+  (emacsvox-notmuch--next-navigation-around
+   'notmuch-show-next-open-message original arguments))
+
+(defun emacsvox--advice-notmuch-show-next-matching-message-around
+    (original &rest arguments)
+  "Provide state-aware feedback for `notmuch-show-next-matching-message'."
+  (emacsvox-notmuch--next-navigation-around
+   'notmuch-show-next-matching-message original arguments))
+
+(push
+ '(notmuch-show-next-message
+   :around emacsvox--advice-notmuch-show-next-message-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-next-open-message
+   :around emacsvox--advice-notmuch-show-next-open-message-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-next-matching-message
+   :around emacsvox--advice-notmuch-show-next-matching-message-around)
+ emacsvox-notmuch--advice)
+
 (defun emacsvox-notmuch--previous-navigation-around
     (target original arguments)
   "Navigate to the previous message for interactive TARGET.
@@ -949,12 +1007,6 @@ Call ORIGINAL once with ARGUMENTS, then select and speak the body."
  '(notmuch-show-previous-open-message
    :around emacsvox--advice-notmuch-show-previous-open-message-around)
  emacsvox-notmuch--advice)
-
-(emacsvox-notmuch--register-after-group
- '(notmuch-show-next-message
-   notmuch-show-next-open-message
-   notmuch-show-next-matching-message)
- #'emacsvox-notmuch--show-navigation-feedback)
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-show-next-button
