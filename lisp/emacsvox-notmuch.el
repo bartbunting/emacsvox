@@ -441,6 +441,66 @@ tag, or give it a nil icon to keep the status silent."
    notmuch-search-last-thread)
  #'emacsvox-notmuch--navigation-feedback)
 
+(defun emacsvox-notmuch--tag-change-summary (tag-changes)
+  "Return a concise description of Notmuch TAG-CHANGES."
+  (let (added removed changed)
+    (dolist (change tag-changes)
+      (cond
+       ((string-prefix-p "+" change)
+        (push (substring change 1) added))
+       ((string-prefix-p "-" change)
+        (push (substring change 1) removed))
+       (t (push change changed))))
+    (string-join
+     (delq
+      nil
+      (list
+       (when added
+         (format "Added %s" (string-join (nreverse added) ", ")))
+       (when removed
+         (format "Removed %s" (string-join (nreverse removed) ", ")))
+       (when changed
+         (format "Changed %s" (string-join (nreverse changed) ", ")))))
+     "; ")))
+
+(defun emacsvox-notmuch--tag-feedback (tag-changes)
+  "Confirm TAG-CHANGES and speak the updated Notmuch result."
+  (when tag-changes
+    (emacsvox-icon 'task-done)
+    (tts-speak (emacsvox-notmuch--tag-change-summary tag-changes))
+    (emacsvox-notmuch-speak-search-result)))
+
+(defun emacsvox-notmuch--register-tag-group (targets)
+  "Register search tag-operation feedback for TARGETS."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (tag-changes &rest _)
+          ,(format "Confirm tag changes after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (emacsvox-notmuch--tag-feedback tag-changes))))
+      (push (list target :after advice-function) emacsvox-notmuch--advice))))
+
+(emacsvox-notmuch--register-tag-group
+ '(notmuch-search-tag
+   notmuch-search-add-tag
+   notmuch-search-remove-tag
+   notmuch-search-tag-all))
+
+(defun emacsvox--advice-notmuch-search-archive-thread-after
+    (&optional unarchive &rest _)
+  "Confirm an archive operation and speak the current result."
+  (when (ems-interactive-p 'notmuch-search-archive-thread)
+    (emacsvox-icon 'close-object)
+    (tts-speak (if unarchive "Unarchived" "Archived"))
+    (emacsvox-notmuch-speak-search-result)))
+
+(push
+ '(notmuch-search-archive-thread
+   :after emacsvox--advice-notmuch-search-archive-thread-after)
+ emacsvox-notmuch--advice)
+
 (defun emacsvox-notmuch--install-advice ()
   "Install advice for Notmuch features loaded so far."
   (dolist (entry emacsvox-notmuch--advice)

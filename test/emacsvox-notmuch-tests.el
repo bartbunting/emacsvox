@@ -99,5 +99,53 @@
       (emacsvox--advice-notmuch-search-previous-thread-after))
     (should (equal events '(result)))))
 
+(ert-deftest emacsvox-notmuch-describes-tag-changes ()
+  "Tag-change summaries distinguish additions and removals."
+  (should
+   (equal
+    (emacsvox-notmuch--tag-change-summary
+     '("+work" "+urgent" "-inbox"))
+    "Added work, urgent; Removed inbox")))
+
+(ert-deftest emacsvox-notmuch-tag-feedback-runs-once ()
+  "An interactive tag wrapper confirms once and speaks the updated row."
+  (let ((ems--interactive-fn-name 'notmuch-search-add-tag)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-notmuch-speak-search-result)
+               (lambda (&optional _result) (push '(result) events))))
+      ;; `notmuch-search-add-tag' delegates to this command internally.
+      (emacsvox--advice-notmuch-search-tag-after
+       '("+work" "-inbox"))
+      (emacsvox--advice-notmuch-search-add-tag-after
+       '("+work" "-inbox")))
+    (should
+     (equal
+      (nreverse events)
+      '((icon task-done)
+        (speak "Added work; Removed inbox")
+        (result))))))
+
+(ert-deftest emacsvox-notmuch-archive-confirms-then-speaks-next-result ()
+  "Archive feedback acknowledges completion before speaking the new row."
+  (let ((ems--interactive-fn-name 'notmuch-search-archive-thread)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-notmuch-speak-search-result)
+               (lambda (&optional _result) (push '(result) events))))
+      (emacsvox--advice-notmuch-search-archive-thread-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object)
+        (speak "Archived")
+        (result))))))
+
 (provide 'emacsvox-notmuch-tests)
 ;;; emacsvox-notmuch-tests.el ends here
