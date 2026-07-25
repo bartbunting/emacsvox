@@ -59,6 +59,7 @@
 (require 'emacsvox-preamble)
 
 (defvar emacsvox-last-message)
+(defvar emacsvox-speak-messages)
 
 ;;;   ispell command cl-loop:
 
@@ -100,9 +101,23 @@ many available corrections."
         (insert (format "%s corrections available." (length choices)))))
       (modify-syntax-entry 10 ">") (tts-speak (buffer-string)))))
 
+(defun emacsvox--advice-ispell-command-loop-around
+    (original choices guess word start end)
+  "Speak CHOICES, then call ORIGINAL without generic prompt speech.
+GUESS, WORD, START, and END are the remaining native arguments to
+`ispell-command-loop'.  Generic message feedback is silenced while Ispell
+waits for a correction key, but its visual prompt remains available."
+  (emacsvox--advice-ispell-command-loop-before
+   choices guess word start end)
+  (let ((emacsvox-speak-messages nil))
+    (funcall original choices guess word start end)))
+
+(advice-remove
+ 'ispell-command-loop
+ #'emacsvox--advice-ispell-command-loop-before)
 (advice-add
- 'ispell-command-loop :before
- #'emacsvox--advice-ispell-command-loop-before
+ 'ispell-command-loop :around
+ #'emacsvox--advice-ispell-command-loop-around
  '((name . emacsvox)))
 
 (defun emacsvox--ispell-call-with-completion-feedback

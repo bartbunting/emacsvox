@@ -80,7 +80,8 @@
 
 (ert-deftest emacsvox-read-key-advice-caches-and-speaks-prompt ()
   "Key-reader advice preserves prompt caches and spoken feedback."
-  (let ((emacsvox-last-message nil)
+  (let ((emacsvox-speak-messages t)
+        (emacsvox-last-message nil)
         (emacsvox-read-char-prompt-cache nil)
         events)
     (cl-letf (((symbol-function 'emacsvox-icon)
@@ -94,6 +95,21 @@
      (equal
       (nreverse events)
       '((icon char) (notify "Continue?"))))))
+
+(ert-deftest emacsvox-read-key-advice-respects-silenced-messages ()
+  "A caller can suppress key-reader speech without losing prompt state."
+  (let ((emacsvox-speak-messages nil)
+        (emacsvox-last-message nil)
+        (emacsvox-read-char-prompt-cache nil)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-notify)
+               (lambda (text) (push (list 'notify text) events))))
+      (emacsvox--advice-read-key-before "Continue?"))
+    (should (equal emacsvox-last-message "Continue?"))
+    (should (equal emacsvox-read-char-prompt-cache "Continue?"))
+    (should-not events)))
 
 (ert-deftest emacsvox-read-passwd-advice-uses-explicit-prompt ()
   "Password feedback preserves icon and speech order."

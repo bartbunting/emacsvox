@@ -1105,11 +1105,12 @@ ARGUMENTS are passed to ORIGINAL unchanged."
             `(progn
                (defun ,function (&optional prompt &rest _)
                  ,(format "Speak PROMPT before calling `%s'." target)
-                 (emacsvox-icon 'char)
                  (setq emacsvox-last-message prompt)
                  (setq emacsvox-read-char-prompt-cache prompt)
-                 (tts-with-punctuations
-                  'all (tts-notify (or prompt "key"))))
+                 (when emacsvox-speak-messages
+                   (emacsvox-icon 'char)
+                   (tts-with-punctuations
+                    'all (tts-notify (or prompt "key")))))
                (advice-add
                 ',target :before #',function '((name . emacsvox))))))
         targets)))

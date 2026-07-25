@@ -27,7 +27,7 @@
 
 (defconst emacsvox-test--ispell-simple-advice
   '((ispell-command-loop
-     :before emacsvox--advice-ispell-command-loop-before)
+     :around emacsvox--advice-ispell-command-loop-around)
     (ispell-help :before emacsvox--advice-ispell-help-before))
   "Directly migrated simple Ispell advice.")
 
@@ -78,6 +78,41 @@
         "bad line0 good\n1 best\n"))
       (should (eq (get-text-property 0 'personality spoken) voice-bolden))
       (should-not (get-text-property 3 'personality spoken)))))
+
+(ert-deftest emacsvox-ispell-command-loop-protects-correction-speech ()
+  "Prompt feedback cannot interrupt the spoken correction choices."
+  (with-temp-buffer
+    (insert "bad line")
+    (let ((emacsvox-speak-messages t)
+          (tts-stop-immediately t)
+          events)
+      (cl-letf (((symbol-function 'tts-set-punctuations)
+                 (lambda (&rest _)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text)
+                   (push
+                    (list
+                     'speak (substring-no-properties text)
+                     tts-stop-immediately)
+                    events))))
+        (should
+         (eq
+          'selected
+          (emacsvox--advice-ispell-command-loop-around
+           (lambda (&rest _)
+             (push
+              (list
+               'prompt emacsvox-speak-messages tts-stop-immediately)
+              events)
+             (when emacsvox-speak-messages
+               (tts-speak "key"))
+             'selected)
+           '("good") nil "bad" 1 4))))
+      (should
+       (equal
+        (nreverse events)
+        '((speak "bad line0 good\n" t)
+          (prompt nil t)))))))
 
 (ert-deftest emacsvox-ispell-help-feedback-remains-unconditional ()
   "Ispell help continues to speak for internal invocations."
