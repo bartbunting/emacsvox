@@ -48,6 +48,9 @@
 
 ;;; Code:
 
+;; Emacs 30.1 retired the Makefile target browser in favor of Imenu.
+(keymap-set makefile-mode-map "C-c C-b" #'imenu)
+
 ;;;  advice
 
 (defun emacsvox--advice-makefile-next-dependency-after (&rest _)
@@ -58,22 +61,6 @@
 
 (advice-add 'makefile-next-dependency :after
             #'emacsvox--advice-makefile-next-dependency-after)
-
-(defun emacsvox--advice-makefile-browser-next-line-after (&rest _)
-  "Speak line we moved to"
-  (when (ems-interactive-p 'makefile-browser-next-line)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'makefile-browser-next-line :after
-            #'emacsvox--advice-makefile-browser-next-line-after)
-
-(defun emacsvox--advice-makefile-browser-previous-line-after (&rest _)
-  "Speak line we moved to"
-  (when (ems-interactive-p 'makefile-browser-previous-line)
-    (emacsvox-speak-line) (emacsvox-icon 'select-object)))
-
-(advice-add 'makefile-browser-previous-line :after
-            #'emacsvox--advice-makefile-browser-previous-line-after)
 
 (defun emacsvox--advice-makefile-previous-dependency-after (&rest _)
   "Speak line we moved to"
@@ -94,44 +81,6 @@
 
 (advice-add 'makefile-backslash-region :after
             #'emacsvox--advice-makefile-backslash-region-after)
-
-(defun emacsvox--advice-makefile-browser-quit-after (&rest _)
-  "speak"
-  (when (ems-interactive-p 'makefile-browser-quit)
-    (emacsvox-speak-mode-line) (emacsvox-icon 'close-object)))
-
-(advice-add 'makefile-browser-quit :after
-            #'emacsvox--advice-makefile-browser-quit-after)
-
-(defun emacsvox--advice-makefile-switch-to-browser-after (&rest _)
-  "Provide status information"
-  (when (ems-interactive-p 'makefile-switch-to-browser)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
-
-(advice-add 'makefile-switch-to-browser :after
-            #'emacsvox--advice-makefile-switch-to-browser-after)
-
-(defun emacsvox--advice-makefile-browser-toggle-around (orig-fun)
-  "Speak what happened"
-  (if (ems-interactive-p 'makefile-browser-toggle)
-      (let ((this-line (max (count-lines (point-min) (point)) 1)))
-        (prog1 (funcall orig-fun)
-          (emacsvox-icon
-           (if (makefile-browser-get-state-for-line this-line) 'on 'off))
-          (emacsvox-speak-line)))
-    (funcall orig-fun)))
-
-(advice-add 'makefile-browser-toggle :around
-            #'emacsvox--advice-makefile-browser-toggle-around)
-
-(defun emacsvox--advice-makefile-browser-insert-selection-after (&rest _)
-  "Provide status message"
-  (when (ems-interactive-p 'makefile-browser-insert-selection)
-    (message "Inserted selections into client  %s"
-             (buffer-name makefile-browser-client))))
-
-(advice-add 'makefile-browser-insert-selection :after
-            #'emacsvox--advice-makefile-browser-insert-selection-after)
 
 ;;;  personalities 
 
