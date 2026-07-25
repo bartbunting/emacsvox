@@ -43,6 +43,7 @@
 ;;   Required modules:
 
 (require 'cl-lib)
+(require 'button)
 (require 'emacsvox-preamble)
 (require 'subr-x)
 
@@ -50,10 +51,12 @@
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
 (declare-function notmuch-show-clean-address "notmuch-show" (address))
 (declare-function notmuch-show-get-message-properties "notmuch-show" ())
+(declare-function notmuch-show-get-part-properties "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
 
 (defvar notmuch-archive-tags)
+(defvar notmuch-show-part-button-default-action)
 
 ;;;  Customization:
 
@@ -411,6 +414,76 @@ tag, or give it a nil icon to keep the status silent."
     (ignore-errors
       (plist-get (notmuch-show-get-message-properties) :id))))
 
+(defun emacsvox-notmuch--part-at-point (&optional button)
+  "Return the Notmuch MIME part at point or on BUTTON."
+  (ignore-errors
+    (get-text-property
+     (if button (button-start button) (point))
+     :notmuch-part)))
+
+(defun emacsvox-notmuch--part-content-length (part)
+  "Return PART's content length as an integer, when available."
+  (let ((length (plist-get part :content-length)))
+    (cond
+     ((numberp length) length)
+     ((and (stringp length)
+           (string-match-p "\\`[0-9]+\\'" length))
+      (string-to-number length)))))
+
+(defun emacsvox-notmuch-format-part (part)
+  "Return a concise description of Notmuch MIME PART."
+  (let* ((filename (plist-get part :filename))
+         (content-type
+          (or
+           (plist-get part :computed-type)
+           (plist-get part :content-type)))
+         (length (emacsvox-notmuch--part-content-length part))
+         (description
+          (string-join
+           (delq
+            nil
+            (list
+             (if filename
+                 (format "Attachment %s" filename)
+               "MIME part")
+             content-type
+             (when length
+               (file-size-human-readable length 'iec " "))))
+           ", ")))
+    (propertize description
+                'face 'emacsvox-notmuch-message-attachments)))
+
+(defun emacsvox-notmuch--part-action-object (part)
+  "Return a concise action-oriented name for Notmuch MIME PART."
+  (if-let* ((filename (plist-get part :filename)))
+      (format "attachment %s" filename)
+    (if-let* ((content-type
+               (or
+                (plist-get part :computed-type)
+                (plist-get part :content-type))))
+        (format "%s part" content-type)
+      "MIME part")))
+
+(defun emacsvox-notmuch--speak-show-button ()
+  "Cue and identify the current button in a Notmuch Show buffer."
+  (when-let* ((button (button-at (point))))
+    (if-let* ((part (emacsvox-notmuch--part-at-point button)))
+        (progn
+          (emacsvox-icon
+           (if (plist-get part :filename) 'item 'button))
+          (tts-speak (emacsvox-notmuch-format-part part)))
+      (emacsvox-icon 'large-movement)
+      (tts-speak (button-label button)))))
+
+(defun emacsvox-notmuch--part-action-feedback (action part)
+  "Confirm ACTION on Notmuch MIME PART."
+  (let ((save-p (eq action 'save)))
+    (emacsvox-icon (if save-p 'save-object 'open-object))
+    (tts-speak
+     (format "%s %s"
+             (if save-p "Saved" "Opened")
+             (emacsvox-notmuch--part-action-object part)))))
+
 ;;;  Interactive Commands:
 
 '(
@@ -653,6 +726,131 @@ tag, or give it a nil icon to keep the status silent."
    notmuch-show-previous-open-message
    notmuch-show-next-matching-message)
  #'emacsvox-notmuch--show-navigation-feedback)
+
+(emacsvox-notmuch--register-after-group
+ '(notmuch-show-next-button
+   notmuch-show-previous-button)
+ #'emacsvox-notmuch--speak-show-button)
+
+(defun emacsvox-notmuch--part-action-around
+    (target action original arguments)
+  "Confirm ACTION performed by TARGET on the current MIME part.
+Call ORIGINAL once with ARGUMENTS and preserve its result."
+  (let ((part
+         (or
+          (emacsvox-notmuch--part-at-point (button-at (point)))
+          (ignore-errors (notmuch-show-get-part-properties))))
+        (result (apply original arguments)))
+    (when (and part (ems-interactive-p target))
+      (emacsvox-notmuch--part-action-feedback action part))
+    result))
+
+(defun emacsvox--advice-notmuch-show-save-part-around
+    (original &rest arguments)
+  "Confirm saving the current Notmuch MIME part."
+  (emacsvox-notmuch--part-action-around
+   'notmuch-show-save-part 'save original arguments))
+
+(defun emacsvox--advice-notmuch-show-view-part-around
+    (original &rest arguments)
+  "Confirm viewing the current Notmuch MIME part."
+  (emacsvox-notmuch--part-action-around
+   'notmuch-show-view-part 'view original arguments))
+
+(defun emacsvox--advice-notmuch-show-interactively-view-part-around
+    (original &rest arguments)
+  "Confirm interactively viewing the current Notmuch MIME part."
+  (emacsvox-notmuch--part-action-around
+   'notmuch-show-interactively-view-part 'view original arguments))
+
+(defun emacsvox--advice-notmuch-show-choose-mime-of-part-around
+    (original &rest arguments)
+  "Confirm viewing the current Notmuch part with a chosen MIME type."
+  (emacsvox-notmuch--part-action-around
+   'notmuch-show-choose-mime-of-part 'view original arguments))
+
+(push
+ '(notmuch-show-save-part
+   :around emacsvox--advice-notmuch-show-save-part-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-view-part
+   :around emacsvox--advice-notmuch-show-view-part-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-interactively-view-part
+   :around emacsvox--advice-notmuch-show-interactively-view-part-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-choose-mime-of-part
+   :around emacsvox--advice-notmuch-show-choose-mime-of-part-around)
+ emacsvox-notmuch--advice)
+
+(defun emacsvox-notmuch--part-visibility-feedback (hidden part)
+  "Report whether Notmuch MIME PART is HIDDEN."
+  (emacsvox-icon (if hidden 'close-object 'open-object))
+  (tts-speak
+   (format "%s %s"
+           (emacsvox-notmuch--part-action-object part)
+           (if hidden "hidden" "shown"))))
+
+(defun emacsvox--advice-notmuch-show-part-button-default-around
+    (original &rest arguments)
+  "Confirm the default action on a Notmuch MIME-part button."
+  (let* ((button (or (car arguments) (button-at (point))))
+         (part (emacsvox-notmuch--part-at-point button))
+         (hidden-before
+          (and button (button-get button :notmuch-part-hidden)))
+         (action notmuch-show-part-button-default-action)
+         (result (apply original arguments)))
+    (when (and part
+               (ems-interactive-p 'notmuch-show-part-button-default))
+      (let ((hidden-after
+             (and button (button-get button :notmuch-part-hidden))))
+        (cond
+         ((not (eq hidden-before hidden-after))
+          (emacsvox-notmuch--part-visibility-feedback
+           hidden-after part))
+         ((eq action 'notmuch-show-save-part)
+          (emacsvox-notmuch--part-action-feedback 'save part))
+         ((memq action
+                '(notmuch-show-view-part
+                  notmuch-show-interactively-view-part))
+          (emacsvox-notmuch--part-action-feedback 'view part)))))
+    result))
+
+(push
+ '(notmuch-show-part-button-default
+   :around emacsvox--advice-notmuch-show-part-button-default-around)
+ emacsvox-notmuch--advice)
+
+(defun emacsvox--advice-notmuch-show-save-attachments-around
+    (original &rest arguments)
+  "Confirm saving attachments from the current Notmuch message."
+  (let* ((message
+          (ignore-errors (notmuch-show-get-message-properties)))
+         (count
+          (and
+           message
+           (emacsvox-notmuch--attachment-count
+            (plist-get message :body))))
+         (result (apply original arguments)))
+    (when (ems-interactive-p 'notmuch-show-save-attachments)
+      (if (and count (> count 0))
+          (progn
+            (emacsvox-icon 'save-object)
+            (tts-speak "Finished saving attachments"))
+        (emacsvox-icon 'select-object)
+        (tts-speak "No attachments to save")))
+    result))
+
+(push
+ '(notmuch-show-save-attachments
+   :around emacsvox--advice-notmuch-show-save-attachments-around)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox-notmuch--show-reading-around (target original arguments)
   "Provide state-aware reading feedback for TARGET.
@@ -1056,7 +1254,8 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
                  (not (advice-member-p function target)))
         (advice-add target where function '((name . emacsvox)))))))
 
-(dolist (feature '(notmuch notmuch-hello notmuch-lib notmuch-search))
+(dolist (feature
+         '(notmuch notmuch-hello notmuch-lib notmuch-search notmuch-show))
   (eval `(with-eval-after-load ',feature
            (emacsvox-notmuch--install-advice))))
 

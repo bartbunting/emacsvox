@@ -182,6 +182,182 @@
       (mapcar #'car (nreverse events))
       '(icon icon speak)))))
 
+(defconst emacsvox-notmuch-test--attachment
+  '(:id 2
+    :content-type "application/pdf"
+    :computed-type "application/pdf"
+    :content-length 59096
+    :filename "report.pdf")
+  "Representative Notmuch attachment used by part-feedback tests.")
+
+(ert-deftest emacsvox-notmuch-formats-semantic-attachment ()
+  "Attachment descriptions include name, MIME type, size, and voice."
+  (let ((description
+         (emacsvox-notmuch-format-part
+          emacsvox-notmuch-test--attachment)))
+    (should
+     (equal
+      (substring-no-properties description)
+      "Attachment report.pdf, application/pdf, 58 KiB"))
+    (should
+     (eq
+      (get-text-property 0 'face description)
+      'emacsvox-notmuch-message-attachments))))
+
+(ert-deftest emacsvox-notmuch-show-button-navigation-describes-attachment ()
+  "TAB navigation gives attachment-specific semantic feedback."
+  (with-temp-buffer
+    (insert-text-button "[ report.pdf: application/pdf ]" 'action #'ignore)
+    (put-text-property
+     (point-min) (point-max)
+     :notmuch-part emacsvox-notmuch-test--attachment)
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'notmuch-show-next-button)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text)
+                   (push
+                    (list 'speak (substring-no-properties text))
+                    events))))
+        (emacsvox--advice-notmuch-show-next-button-after))
+      (should
+       (equal
+        (nreverse events)
+        '((icon item)
+          (speak
+           "Attachment report.pdf, application/pdf, 58 KiB")))))))
+
+(ert-deftest emacsvox-notmuch-show-save-part-confirms-filename ()
+  "Saving one part confirms the attachment that was saved."
+  (with-temp-buffer
+    (insert "attachment")
+    (put-text-property
+     (point-min) (point-max)
+     :notmuch-part emacsvox-notmuch-test--attachment)
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'notmuch-show-save-part)
+          (calls 0)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text) (push (list 'speak text) events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-save-part-around
+           (lambda ()
+             (cl-incf calls)
+             'saved))
+          'saved)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((icon save-object)
+          (speak "Saved attachment report.pdf")))))))
+
+(ert-deftest emacsvox-notmuch-show-view-part-confirms-filename ()
+  "Viewing one part confirms the attachment that was opened."
+  (with-temp-buffer
+    (insert "attachment")
+    (put-text-property
+     (point-min) (point-max)
+     :notmuch-part emacsvox-notmuch-test--attachment)
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'notmuch-show-view-part)
+          events)
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text) (push (list 'speak text) events))))
+        (emacsvox--advice-notmuch-show-view-part-around
+         (lambda () 'opened)))
+      (should
+       (equal
+        (nreverse events)
+        '((icon open-object)
+          (speak "Opened attachment report.pdf")))))))
+
+(ert-deftest emacsvox-notmuch-part-button-default-reports-once ()
+  "A part button's default save action owns its nested confirmation."
+  (with-temp-buffer
+    (let ((button
+           (insert-text-button
+            "[ report.pdf: application/pdf ]"
+            'action #'ignore)))
+      (put-text-property
+       (point-min) (point-max)
+       :notmuch-part emacsvox-notmuch-test--attachment)
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name
+             'notmuch-show-part-button-default)
+            (notmuch-show-part-button-default-action
+             'notmuch-show-save-part)
+            events)
+        (cl-letf (((symbol-function 'emacsvox-icon)
+                   (lambda (icon) (push (list 'icon icon) events)))
+                  ((symbol-function 'tts-speak)
+                   (lambda (text) (push (list 'speak text) events))))
+          (emacsvox--advice-notmuch-show-part-button-default-around
+           (lambda (&optional _button)
+             (emacsvox--advice-notmuch-show-save-part-around
+              (lambda () 'saved)))
+           button))
+        (should
+         (equal
+          (nreverse events)
+          '((icon save-object)
+            (speak "Saved attachment report.pdf"))))))))
+
+(ert-deftest emacsvox-notmuch-part-button-announces-visibility ()
+  "Toggling an inline attachment reports its resulting visibility."
+  (with-temp-buffer
+    (let ((button
+           (insert-text-button
+            "[ report.pdf: application/pdf ]"
+            'action #'ignore)))
+      (put-text-property
+       (point-min) (point-max)
+       :notmuch-part emacsvox-notmuch-test--attachment)
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name
+             'notmuch-show-part-button-default)
+            events)
+        (cl-letf (((symbol-function 'emacsvox-icon)
+                   (lambda (icon) (push (list 'icon icon) events)))
+                  ((symbol-function 'tts-speak)
+                   (lambda (text) (push (list 'speak text) events))))
+          (emacsvox--advice-notmuch-show-part-button-default-around
+           (lambda (&optional part-button)
+             (button-put part-button :notmuch-part-hidden t)
+             'hidden)
+           button))
+        (should
+         (equal
+          (nreverse events)
+          '((icon close-object)
+            (speak "attachment report.pdf hidden"))))))))
+
+(ert-deftest emacsvox-notmuch-show-save-attachments-confirms-completion ()
+  "Saving all message attachments gives one completion confirmation."
+  (let ((ems--interactive-fn-name 'notmuch-show-save-attachments)
+        events)
+    (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
+               (lambda () emacsvox-notmuch-test--show-message))
+              ((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox--advice-notmuch-show-save-attachments-around
+       (lambda () 'saved)))
+    (should
+     (equal
+      (nreverse events)
+      '((icon save-object)
+        (speak "Finished saving attachments"))))))
+
 (ert-deftest emacsvox-notmuch-opening-thread-speaks-semantic-message ()
   "Opening a search result speaks the first structured message."
   (let ((ems--interactive-fn-name 'notmuch-search-show-thread)
