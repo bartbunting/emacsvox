@@ -246,7 +246,7 @@
   
   (cond
    ((get-text-property (point) 'nxml-outline-state)
-    (let ((o-open nil))
+    (let (o-open o-close)
       (save-excursion
         (setq o-open (car (overlays-at (point))))
         (forward-line 1)

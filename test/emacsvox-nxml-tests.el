@@ -172,5 +172,37 @@
       (nreverse events)
       '((icon open-object) line)))))
 
+(ert-deftest emacsvox-nxml-outline-summary-keeps-overlays-local ()
+  "Outline summaries speak both displays without leaking overlay state."
+  (let ((old-bound (boundp 'o-close))
+        (old-value (and (boundp 'o-close) (symbol-value 'o-close))))
+    (unwind-protect
+        (progn
+          (when (boundp 'o-close)
+            (makunbound 'o-close))
+          (with-temp-buffer
+            (insert "openxx\nnext")
+            (put-text-property 1 2 'nxml-outline-state t)
+            (let ((opening-overlay (make-overlay 1 2))
+                  (closing-overlay (make-overlay 6 7))
+                  events)
+              (overlay-put opening-overlay 'display "Opening")
+              (overlay-put closing-overlay 'display "Closing")
+              (goto-char 1)
+              (cl-letf (((symbol-function 'tts-speak)
+                         (lambda (text) (push (list 'speak text) events)))
+                        ((symbol-function 'emacsvox-icon)
+                         (lambda (icon) (push (list 'icon icon) events))))
+                (emacsvox-nxml-summarize-outline))
+              (should
+               (equal
+                (nreverse events)
+                '((speak "OpeningClosing") (icon ellipses))))))
+          (should-not (boundp 'o-close)))
+      (if old-bound
+          (set 'o-close old-value)
+        (when (boundp 'o-close)
+          (makunbound 'o-close))))))
+
 (provide 'emacsvox-nxml-tests)
 ;;; emacsvox-nxml-tests.el ends here
