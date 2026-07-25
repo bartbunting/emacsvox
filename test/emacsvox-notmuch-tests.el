@@ -54,6 +54,36 @@
         (nreverse events)
         '((icon item) (speak "inbox, 42 messages")))))))
 
+(ert-deftest emacsvox-notmuch-show-visual-lines-cue-blank-content ()
+  "Visual-line speech should retain Emacsvox's blank-line tones."
+  (dolist (case '((notmuch-show-mode "" 130.8)
+                  (notmuch-show-mode "  " 261.6)
+                  (notmuch-show-mode "content" nil)
+                  (fundamental-mode "" nil)))
+    (with-temp-buffer
+      (insert (nth 1 case))
+      (goto-char (point-min))
+      (setq major-mode (nth 0 case))
+      (visual-line-mode 1)
+      (let (events)
+        (cl-letf (((symbol-function 'tts-stop)
+                   (lambda (&optional all)
+                     (push (list 'stop all) events)))
+                  ((symbol-function 'tts-tone)
+                   (lambda (pitch duration &optional force)
+                     (push (list 'tone pitch duration force) events))))
+          (emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
+           (lambda (&rest _)
+             (push '(original) events))))
+        (should
+         (equal
+          (nreverse events)
+          (if (nth 2 case)
+              `((stop all)
+                (original)
+                (tone ,(nth 2 case) 150 force))
+            '((original)))))))))
+
 (defconst emacsvox-notmuch-test--search-result
   '(:authors "Alice Smith|Bob Jones"
     :subject "Project update"
