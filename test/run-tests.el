@@ -101,6 +101,7 @@
   (require 'emacsvox-outline-tests)
   (require 'emacsvox-eww-tests)
   (require 'emacsvox-reading-dom-tests)
+  (require 'emacsvox-epub-tests)
   (require 'emacsvox-gnus-tests)
   (require 'emacsvox-ibuffer-tests)
   (require 'emacsvox-comint-tests)

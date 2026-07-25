@@ -177,6 +177,7 @@
 (defvar emacsvox-epub-gutenberg-suffix)
 (defvar emacsvox-epub-interaction-buffer)
 (defvar emacsvox-epub-library-directory)
+(defvar emacsvox-epub-scratch)
 (defvar emacsvox-epub-this-epub)
 (defvar emacsvox-epub-unzip)
 (defvar emacsvox-epub-wget)
@@ -185,6 +186,9 @@
 (defvar emacsvox-we-url-executor)
 (defvar epub-this-epub)
 (defvar eww-data)
+(defvar locate-command)
+(defvar locate-make-command-line)
+
 ;; Required Modules:
 
 (eval-when-compile (require 'cl-lib))
