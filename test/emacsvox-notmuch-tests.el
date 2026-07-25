@@ -300,6 +300,56 @@
       (should (= calls 1))
       (should-not events))))
 
+(ert-deftest emacsvox-notmuch-show-opening-message-cues-and-speaks ()
+  "Opening a message body plays an opening cue and identifies it."
+  (let ((ems--interactive-fn-name 'notmuch-show-toggle-message)
+        events)
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () '(:message-visible t)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'emacsvox-notmuch-speak-show-message)
+          (lambda (&optional _message) (push '(message) events))))
+      (emacsvox--advice-notmuch-show-toggle-message-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object)
+        (message))))))
+
+(ert-deftest emacsvox-notmuch-show-closing-message-uses-icon-only ()
+  "Closing a message body uses a concise nonverbal cue."
+  (let ((ems--interactive-fn-name 'notmuch-show-toggle-message)
+        events)
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () '(:message-visible nil)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'emacsvox-notmuch-speak-show-message)
+          (lambda (&optional _message) (push '(message) events))))
+      (emacsvox--advice-notmuch-show-toggle-message-after))
+    (should
+     (equal
+      events
+      '((icon close-object))))))
+
+(ert-deftest emacsvox-notmuch-show-open-all-feedback-is-target-aware ()
+  "Opening all message bodies produces one visibility announcement."
+  (let ((ems--interactive-fn-name 'notmuch-show-open-or-close-all)
+        events)
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () '(:message-visible t)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon) (push icon events)))
+         ((symbol-function 'emacsvox-notmuch-speak-show-message)
+          (lambda (&optional _message) (push 'message events))))
+      (emacsvox--advice-notmuch-show-toggle-message-after)
+      (emacsvox--advice-notmuch-show-open-or-close-all-after))
+    (should (equal (nreverse events) '(open-object message)))))
+
 (ert-deftest emacsvox-notmuch-describes-tag-changes ()
   "Tag-change summaries distinguish additions and removals."
   (should

@@ -695,6 +695,21 @@ the selected message changes; otherwise speak the visible window."
    :around emacsvox--advice-notmuch-show-rewind-around)
  emacsvox-notmuch--advice)
 
+(defun emacsvox-notmuch--show-visibility-feedback ()
+  "Indicate whether the current Notmuch message body is visible."
+  (if (plist-get
+       (notmuch-show-get-message-properties)
+       :message-visible)
+      (progn
+        (emacsvox-icon 'open-object)
+        (emacsvox-notmuch-speak-show-message))
+    (emacsvox-icon 'close-object)))
+
+(emacsvox-notmuch--register-after-group
+ '(notmuch-show-toggle-message
+   notmuch-show-open-or-close-all)
+ #'emacsvox-notmuch--show-visibility-feedback)
+
 (defun emacsvox-notmuch--tag-change-summary (tag-changes)
   "Return a concise description of Notmuch TAG-CHANGES."
   (let (added removed changed)
