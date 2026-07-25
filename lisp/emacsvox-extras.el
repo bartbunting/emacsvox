@@ -45,6 +45,7 @@
 
 (defvar emacsvox-curl)
 (defvar emacsvox-curl-cookie-store)
+(defvar cperl-pod2man-program)
 
 ;;   Required modules:
 
@@ -295,6 +296,7 @@ Interactive  arguments specify filename pattern and search pattern."
     (expand-file-name
      (read-file-name "Enter name of POD file: "))))
   
+  (require 'cperl-mode)
   (require 'man)
   (let* ((pod2man-args (concat filename " | nroff -man "))
          (bufname (concat "Man " filename))
@@ -304,7 +306,7 @@ Interactive  arguments specify filename pattern and search pattern."
       (with-environment-variables
           (("TERM" "dumb"))
         (set-process-sentinel
-         (start-process pod2man-program buffer "sh" "-c"
+         (start-process cperl-pod2man-program buffer "sh" "-c"
                         (format (cperl-pod2man-build-command) pod2man-args))
          'Man-bgproc-sentinel)))))
 
@@ -463,4 +465,3 @@ Emacsvox sessions running on  different machines. "
 
 (provide 'emacsvox-extras)
 ;;;  end of file
-
