@@ -89,5 +89,15 @@
         (speak
          "Alice Smith, Bob Jones, Project update, yesterday, 2 of 5, inbox work"))))))
 
+(ert-deftest emacsvox-notmuch-navigation-speaks-selected-result ()
+  "Only the active interactive search-navigation command speaks."
+  (let ((ems--interactive-fn-name 'notmuch-search-next-thread)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-notmuch-speak-search-result)
+               (lambda (&optional _result) (push 'result events))))
+      (emacsvox--advice-notmuch-search-next-thread-after)
+      (emacsvox--advice-notmuch-search-previous-thread-after))
+    (should (equal events '(result)))))
+
 (provide 'emacsvox-notmuch-tests)
 ;;; emacsvox-notmuch-tests.el ends here

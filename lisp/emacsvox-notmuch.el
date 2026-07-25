@@ -430,6 +430,17 @@ tag, or give it a nil icon to keep the status silent."
  '(notmuch-search notmuch-search-show-thread)
  #'emacsvox-notmuch--search-feedback)
 
+(defun emacsvox-notmuch--navigation-feedback ()
+  "Speak the Notmuch search result selected by navigation."
+  (emacsvox-notmuch-speak-search-result))
+
+(emacsvox-notmuch--register-after-group
+ '(notmuch-search-next-thread
+   notmuch-search-previous-thread
+   notmuch-search-first-thread
+   notmuch-search-last-thread)
+ #'emacsvox-notmuch--navigation-feedback)
+
 (defun emacsvox-notmuch--install-advice ()
   "Install advice for Notmuch features loaded so far."
   (dolist (entry emacsvox-notmuch--advice)
