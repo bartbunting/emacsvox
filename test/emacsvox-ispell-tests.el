@@ -75,9 +75,48 @@
       (should
        (equal
         (substring-no-properties spoken)
-        "bad line0 good\n1 best\n"))
+        (concat
+         "bad line\n"
+         "Choose by key.\n"
+         "0 good\n"
+         "1 best\n"
+         "Space keeps the spelling.")))
       (should (eq (get-text-property 0 'personality spoken) voice-bolden))
       (should-not (get-text-property 3 'personality spoken)))))
+
+(ert-deftest emacsvox-ispell-choice-keys-match-native-command-loop ()
+  "Correction labels skip keys reserved for native Ispell commands."
+  (should
+   (equal
+    (mapcar
+     #'single-key-description
+     (emacsvox-ispell--choice-keys 16))
+    '("0" "1" "2" "3" "4" "5" "6" "7"
+      "8" "9" ":" ";" "<" "=" ">" "@"))))
+
+(ert-deftest emacsvox-ispell-large-choice-list-remains-actionable ()
+  "Large correction lists speak a bounded set with usable keys."
+  (with-temp-buffer
+    (insert "bad line")
+    (let ((choices
+           (mapcar
+            (lambda (number) (format "choice-%d" number))
+            (number-sequence 0 14)))
+          spoken)
+      (cl-letf (((symbol-function 'tts-set-punctuations)
+                 (lambda (&rest _)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox--advice-ispell-command-loop-before
+         choices nil "bad" 1 4))
+      (setq spoken (substring-no-properties spoken))
+      (should
+       (string-match-p
+        "15 corrections available; speaking the first 8\\." spoken))
+      (should (string-match-p "Choose by key\\.\n0 choice-0" spoken))
+      (should (string-match-p "7 choice-7" spoken))
+      (should-not (string-match-p "choice-8" spoken))
+      (should (string-suffix-p "Space keeps the spelling." spoken)))))
 
 (ert-deftest emacsvox-ispell-command-loop-protects-correction-speech ()
   "Prompt feedback cannot interrupt the spoken correction choices."
@@ -111,7 +150,9 @@
       (should
        (equal
         (nreverse events)
-        '((speak "bad line0 good\n" t)
+        '((speak
+           "bad line\nChoose by key.\n0 good\nSpace keeps the spelling."
+           t)
           (prompt nil t)))))))
 
 (ert-deftest emacsvox-ispell-help-feedback-remains-unconditional ()

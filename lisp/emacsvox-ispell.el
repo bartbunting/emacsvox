@@ -72,16 +72,36 @@
   :group  'emacsvox)
 
 (defcustom emacsvox-ispell-max-choices 8
-  "Emacsvox will not speak the choices if there are more than this
-many available corrections."
+  "Maximum number of correction choices Emacsvox will speak.
+When Ispell returns more choices, Emacsvox speaks this many of the
+highest-ranked corrections and announces the total."
   :type 'number
   :group 'emacsvox-ispell)
+
+(defconst emacsvox-ispell--command-characters
+  '(?\s ?i ?a ?A ?r ?R ?? ?x ?X ?q ?l ?u ?m)
+  "Characters reserved for commands by `ispell-command-loop'.")
+
+(defun emacsvox-ispell--choice-keys (count)
+  "Return the first COUNT correction keys used by Ispell."
+  (let ((key ?0)
+        keys)
+    (dotimes (_ count)
+      (while (memq key emacsvox-ispell--command-characters)
+        (setq key (1+ key)))
+      (push key keys)
+      (setq key (1+ key)))
+    (nreverse keys)))
 
 (defun emacsvox--advice-ispell-command-loop-before
     (choices _guess _word start end)
   "Speak the misspelled text and correction CHOICES from START to END."
-  (let
-      ((line nil) (pos ""))
+  (let*
+      ((line nil)
+       (total (length choices))
+       (limit (min total (max 0 emacsvox-ispell-max-choices)))
+       (keys (emacsvox-ispell--choice-keys limit))
+       (pos ""))
     (setq line
           (ems-set-personality-temporarily start end voice-bolden
                                            (buffer-substring
@@ -89,16 +109,29 @@ many available corrections."
                                             (line-end-position))))
     (with-temp-buffer
       (setq voice-lock-mode t) (setq buffer-undo-list t)
-      (tts-set-punctuations 'all) (insert line)
+      (tts-set-punctuations 'all)
+      (insert line "\n")
       (cond
-       ((< (length choices) emacsvox-ispell-max-choices)
-        (cl-loop for choice in choices and position from 0 do
-                 (setq pos
-                       (propertize (format "%d" position) 'personality
-                                   voice-smoothen))
-                 (insert pos) (insert (format " %s\n" choice))))
+       ((zerop total)
+        (insert "No suggested corrections.\n"))
        (t
-        (insert (format "%s corrections available." (length choices)))))
+        (when (> total limit)
+          (insert
+           (format
+            "%d corrections available; speaking the first %d.\n"
+            total limit)))
+        (insert "Choose by key.\n")
+        (cl-loop
+         for choice in choices
+         for key in keys
+         repeat limit do
+         (setq pos
+               (propertize
+                (single-key-description key)
+                'personality voice-smoothen))
+         (insert pos)
+         (insert (format " %s\n" choice)))))
+      (insert "Space keeps the spelling.")
       (modify-syntax-entry 10 ">") (tts-speak (buffer-string)))))
 
 (defun emacsvox--advice-ispell-command-loop-around
