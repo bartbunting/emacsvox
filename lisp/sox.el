@@ -60,6 +60,11 @@
 (eval-when-compile (require 'derived))
 (require 'ladspa)
 
+;;; Forward variable declarations:
+
+(defvar sox-context)
+(defvar sox-effects)
+
 ;;;  Customizations:
 
 (defgroup sox nil

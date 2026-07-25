@@ -53,5 +53,16 @@
       (get-text-property (1- (point)) 'face)
       'font-lock-keyword-face))))
 
+(ert-deftest emacsvox-sox-mode-initializes-buffer-local-context ()
+  "SoX mode initializes its workbench state without changing the default."
+  (let ((default-context (default-value 'sox-context)))
+    (with-temp-buffer
+      (sox-mode)
+      (should (local-variable-p 'sox-context))
+      (should (sox-context-p sox-context))
+      (should-not (sox-context-file sox-context))
+      (should-not (sox-context-effects sox-context)))
+    (should (eq (default-value 'sox-context) default-context))))
+
 (provide 'emacsvox-sox-tests)
 ;;; emacsvox-sox-tests.el ends here
