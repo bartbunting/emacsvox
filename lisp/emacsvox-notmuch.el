@@ -56,6 +56,7 @@
 (declare-function notmuch-show-get-part-properties "notmuch-show" ())
 (declare-function notmuch-show-mapc "notmuch-show" (function))
 (declare-function notmuch-show-message-extent "notmuch-show" ())
+(declare-function notmuch-show-move-to-message-top "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
 
@@ -912,11 +913,45 @@ line contains non-whitespace text."
   (emacsvox-notmuch--move-to-message-body)
   (emacsvox-notmuch-speak-show-message))
 
+(defun emacsvox-notmuch--previous-navigation-around
+    (target original arguments)
+  "Navigate to the previous message for interactive TARGET.
+Call ORIGINAL once with ARGUMENTS, then select and speak the body."
+  (if (and
+       (eq major-mode 'notmuch-show-mode)
+       (ems-interactive-p target))
+      (progn
+        (notmuch-show-move-to-message-top)
+        (let ((result (apply original arguments)))
+          (emacsvox-notmuch--show-navigation-feedback)
+          result))
+    (apply original arguments)))
+
+(defun emacsvox--advice-notmuch-show-previous-message-around
+    (original &rest arguments)
+  "Navigate backward from a body with `notmuch-show-previous-message'."
+  (emacsvox-notmuch--previous-navigation-around
+   'notmuch-show-previous-message original arguments))
+
+(defun emacsvox--advice-notmuch-show-previous-open-message-around
+    (original &rest arguments)
+  "Navigate backward from a body with `notmuch-show-previous-open-message'."
+  (emacsvox-notmuch--previous-navigation-around
+   'notmuch-show-previous-open-message original arguments))
+
+(push
+ '(notmuch-show-previous-message
+   :around emacsvox--advice-notmuch-show-previous-message-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-previous-open-message
+   :around emacsvox--advice-notmuch-show-previous-open-message-around)
+ emacsvox-notmuch--advice)
+
 (emacsvox-notmuch--register-after-group
  '(notmuch-show-next-message
-   notmuch-show-previous-message
    notmuch-show-next-open-message
-   notmuch-show-previous-open-message
    notmuch-show-next-matching-message)
  #'emacsvox-notmuch--show-navigation-feedback)
 

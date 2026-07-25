@@ -567,14 +567,85 @@
 (ert-deftest emacsvox-notmuch-show-navigation-selects-and-speaks-message-body ()
   "Active show navigation selects the message body before speaking."
   (let ((ems--interactive-fn-name 'notmuch-show-next-open-message)
+        (calls 0)
         events)
     (cl-letf (((symbol-function 'emacsvox-notmuch--move-to-message-body)
                (lambda () (push 'body events)))
               ((symbol-function 'emacsvox-notmuch-speak-show-message)
                (lambda (&optional _message) (push 'message events))))
       (emacsvox--advice-notmuch-show-next-open-message-after)
-      (emacsvox--advice-notmuch-show-previous-open-message-after))
+      (emacsvox--advice-notmuch-show-previous-open-message-around
+       (lambda ()
+         (cl-incf calls)
+         'unchanged)))
+    (should (= calls 1))
     (should (equal (nreverse events) '(body message)))))
+
+(ert-deftest emacsvox-notmuch-show-navigation-can-return-from-message-bodies ()
+  "Previous navigation should cross messages after body positioning."
+  (dolist
+      (commands
+       '((notmuch-show-next-open-message
+          notmuch-show-previous-open-message)
+         (notmuch-show-next-message
+          notmuch-show-previous-message)))
+    (let ((buffer (generate-new-buffer " *emacsvox-notmuch-navigation*")))
+      (unwind-protect
+          (save-window-excursion
+            (switch-to-buffer buffer)
+            (setq major-mode 'notmuch-show-mode)
+            (cl-labels
+                ((insert-message
+                  (id)
+                  (let ((start (point-marker)))
+                    (insert (format "Message %s\n" id))
+                    (let ((headers-start (point-marker)))
+                      (insert "From: Test Sender\n")
+                      (let ((headers-end (point-marker)))
+                        (insert "\n")
+                        (let ((body-start (point-marker)))
+                          (insert (format "Body %s\n" id))
+                          (let* ((end (point-marker))
+                                 (headers-overlay
+                                  (make-overlay headers-start headers-end))
+                                 (message-overlay
+                                  (make-overlay headers-start end))
+                                 (properties
+                                  (list
+                                   :id id
+                                   :headers '(:From "Test Sender")
+                                   :headers-overlay headers-overlay
+                                   :message-overlay message-overlay
+                                   :message-visible t)))
+                            (put-text-property
+                             start end :notmuch-message-extent
+                             (cons start end))
+                            (put-text-property
+                             start (1+ start)
+                             :notmuch-message-properties properties)
+                            body-start)))))))
+              (insert-message "first")
+              (insert-message "second"))
+            (goto-char (point-min))
+            (cl-letf
+                (((symbol-function 'emacsvox-notmuch-speak-show-message)
+                  #'ignore))
+              (funcall-interactively (car commands))
+              (should (looking-at-p "Body second"))
+              (should
+               (equal
+                (plist-get
+                 (notmuch-show-get-message-properties) :id)
+                "second"))
+              (funcall-interactively (cadr commands))
+              (should (looking-at-p "Body first"))
+              (should
+               (equal
+                (plist-get
+                 (notmuch-show-get-message-properties) :id)
+                "first"))))
+        (when (buffer-live-p buffer)
+          (kill-buffer buffer))))))
 
 (ert-deftest emacsvox-notmuch-show-speaker-is-quiet-outside-show-mode ()
   "Show navigation that moves to another view does not read stale data."
