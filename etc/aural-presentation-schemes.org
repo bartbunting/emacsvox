@@ -1,0 +1,980 @@
+#+title: Semantic Aural Presentation Schemes
+#+author: Emacsvox Contributors
+#+date: <2026-07-25 Sat>
+
+* Purpose
+
+Build one semantic aural-presentation system for Emacsvox.
+
+Speech labels, voice changes, auditory icons, pauses, ordering, and spatial
+placement are alternative and composable ways to present meaning.  Modules
+should describe what an object, state, or event means; a user-selected scheme
+should decide how that meaning is rendered.
+
+For example, an Org heading may be presented with any combination of:
+
+- a distinct voice for its level;
+- spoken text such as "Heading 1" before its contents;
+- an auditory icon before or after its contents;
+- a pause;
+- a stable spatial position;
+- a spoken or sounded indication that it is folded.
+
+The system must not force those choices into mutually exclusive "voice",
+"speech", or "sound" settings.  It must produce an ordered render plan that can
+contain all of them.
+
+This plan supersedes the narrower semantic auditory-icon theme plan.  Auditory
+icon themes become resource providers within the broader system, and existing
+ACSS personalities become one source of voice styling.  Both remain usable
+through a staged, backward-compatible migration.
+
+* Design Summary
+
+The proposed flow is:
+
+#+begin_example
+semantic facts
+      |
+      v
+matching scheme rules
+      |
+      v
+backend-independent aural render plan
+  +-- before: speech, cue, pause
+  +-- content: speech plus voice and spatial style
+  `-- after: speech, cue, pause
+      |
+      v
+backend compilation and queueing
+      |
+      v
+speech and audio services
+#+end_example
+
+The central design invariant is:
+
+#+begin_quote
+Resolve semantic facts, scheme rules, context, icons, and voice styles while
+the source buffer and Emacs state are available.  Queue only a concrete,
+ordered render plan.  The speech server must not need to understand modes,
+modules, semantic names, schemes, inheritance, or user override precedence.
+#+end_quote
+
+* Goals
+
+1. Define a stable semantic vocabulary for aural objects, events, states, and
+   their attributes.
+2. Let a module express meaning once without choosing whether the user hears
+   speech, a voice change, a sound, spatial placement, or a combination.
+3. Let schemes compose ordered actions before, during, and after spoken
+   content.
+4. Give users deterministic global, module, major-mode, derived-mode, and
+   buffer-local customization.
+5. Preserve ACSS as the device-independent voice description and preserve
+   existing face-to-personality behavior during migration.
+6. Turn auditory-icon themes into validated resource packs with documented
+   semantic intent and fallback.
+7. Resolve concrete voice commands and sound resources before queueing them.
+8. Provide portable stereo positioning and optional richer spatial audio with
+   documented fallback.
+9. Make the system discoverable through completion, validation, preview,
+   explanation, and an accessible scheme editor.
+10. Keep existing one-argument icon calls, =personality= properties, face
+    mappings, and bundled sound directories working while modules migrate.
+
+* Non-Goals
+
+- Replace the speech server or audio server in the first implementation.
+- Rewrite every Emacsvox integration in one change.
+- Move or rename the existing =sounds/= tree during the initial migration.
+- Redesign the bundled audio samples.
+- Make pronunciation, punctuation, capitalization, or language selection part
+  of the first rule schema.  The render-plan contract should leave room for
+  them, but existing TTS preprocessing remains authoritative initially.
+- Require full three-dimensional audio on every backend.
+- Require every scheme or sound pack to implement every third-party semantic
+  extension.
+- Infer module ownership from the Lisp call stack.
+- Store arbitrary executable Lisp forms in portable scheme data.
+
+Minor-mode selectors are deferred from the first implementation.  Several
+minor modes may be active simultaneously, so they require an explicit ordering
+and conflict policy rather than an accidental list order.
+
+* Motivating Org Example
+
+An Org module should be able to expose facts equivalent to:
+
+#+begin_src emacs-lisp
+(:role heading
+ :module org
+ :level 1
+ :states (folded))
+#+end_src
+
+The exact public API and data representation are implementation decisions, but
+the facts must not prescribe a presentation.
+
+One scheme might add rules equivalent to:
+
+#+begin_src emacs-lisp
+(:id org-heading-level-1
+ :match (:role heading :module org :level 1)
+ :render
+ (:before ((:kind speech :text "Heading 1")
+           (:kind cue :name heading-1))
+  :content (:voice voice-bolden
+            :space (:balance -20))))
+
+(:id org-folded-heading
+ :match (:role heading :module org :state folded)
+ :render
+ (:after ((:kind speech :text "folded"))))
+#+end_src
+
+Another scheme could omit the spoken level, put the cue after the contents,
+represent =folded= with a sound, or leave the heading unchanged.  The second
+rule demonstrates composition: state presentation is independent of heading
+level presentation.
+
+This example establishes requirements rather than committing to these keyword
+names:
+
+- selectors can match roles, modules, attributes, and states;
+- before and after actions are explicitly ordered;
+- content can retain its text while receiving voice and spatial styling;
+- independently matched rules can contribute to one render plan;
+- a user can replace or suppress each contribution.
+
+* Prior Art
+
+** JAWS Speech and Sound Schemes
+
+JAWS Speech and Sound Schemes associate controls, states, document elements,
+and text attributes with voices, spoken text, or sounds.  Published examples
+include piano notes for heading levels and a deeper voice for bold text.
+Schemes can be selected by application.
+
+The useful ideas for Emacsvox are:
+
+- one user-facing scheme spans speech, voices, and sounds;
+- rules are based on recognized semantics rather than file names;
+- application-specific selection is visible to the user;
+- preview is part of editing;
+- training mode plays the configured presentation and then identifies the
+  underlying semantic object or state.
+
+The published JAWS editor exposes a fixed taxonomy and appears oriented toward
+selecting a presentation for each recognized item.  Emacsvox needs an explicit
+composition and ordering contract so that a heading can use speech, a voice,
+and a cue together and so independent state rules can add presentation.
+
+References:
+
+- [[https://www.freedomscientific.com/SurfsUp/Speech_Sounds_Schemes.htm][JAWS Speech and Sound Schemes]]
+- [[https://support.freedomscientific.com/support/technicalsupport/bulletin/513][JAWS scheme configuration by application]]
+- [[https://blog.freedomscientific.com/increase-productivity-with-new-sound-features-in-jaws-and-fusion-2022/][JAWS split sound]]
+
+** Aural CSS and CSS Speech
+
+The CSS2 aural style model combines voice properties, =cue-before=,
+=cue-after=, pauses, and spatial azimuth and elevation.  Its examples style
+headings with both a voice and a preceding cue.  The CSS Speech module retains
+voice styling, pauses, and cues and defines a portable stereo =voice-balance=
+property.
+
+Emacsvox already uses ACSS concepts for device-independent voice definitions.
+The proposed system extends that architectural idea from voice alone to an
+ordered aural presentation.
+
+References:
+
+- [[https://www.w3.org/TR/CSS2/aural.html][CSS2 Aural Style Sheets]]
+- [[https://www.w3.org/TR/css-speech-1/][CSS Speech Module Level 1]]
+
+* Current Architecture
+
+** Voice and personality
+
+=lisp/voice-setup.el= defines ACSS with the dimensions =family=,
+=average-pitch=, =pitch-range=, =stress=, and =richness=.  =defvoice= creates a
+named personality and customizable ACSS settings.  Engine adapters translate
+the ACSS values into device-specific voice commands.
+
+Text can carry a =personality= property.  If it does not, =tts-get-style= maps
+its =face= property through =voice-setup-face-voice-table=.  Explicit
+=personality= therefore takes precedence over face-derived voice styling.
+=tts-audio-format= identifies style runs and queues the corresponding voice
+commands and text.
+
+This is already a useful separation:
+
+- a face or module selects a semantic personality;
+- ACSS describes it without depending on one TTS engine;
+- an engine adapter generates concrete commands.
+
+The missing pieces are a common semantic registry, contextual scheme rules,
+ordered non-speech actions, spatial styling, and an explanation of why a voice
+was selected.
+
+** Auditory icons
+
+=lisp/emacsvox-sounds.el= maps an icon symbol such as =open-object= to an Ogg
+file in the selected directory.  =emacsvox-icon= either invokes a local player
+or sends the resolved resource to the speech server.
+
+The current cache is populated from =sounds/prompts/= and then the selected
+theme.  Unknown names silently use =button=.  Theme selection knows the
+hard-coded names =chimes= and =3d=.  There is no canonical intent registry,
+scheme inheritance, per-semantic override, or common validation.
+
+** Queued properties
+
+=tts-audio-format= handles an =auditory-icon= property at the beginning of a
+text run separately from =personality=.  It queues the icon and then formats
+the text and voice.  This supplies only an implicit "before" ordering and
+cannot express an after cue or spoken state annotation.
+
+=tts-speak= copies text and its properties into = *tts-scratch-buffer* =.  It
+captures the source =major-mode= in =orig-mode= for limited preprocessing but
+does not make the scratch buffer use that mode.  Future mode-, module-, and
+buffer-specific scheme resolution must therefore happen before the source
+context is lost, or the required context must be captured explicitly with the
+semantic annotation.
+
+** Spatial audio
+
+The =sounds/3d/= theme contains Csound-generated HRTF assets.  Several source
+files under =sounds/3d/src/= use azimuth, elevation, panning, or movement.
+=etc/pipewire/= also contains experiments with HRTF virtual devices and
+left/right or upper/lower speech routing.
+
+Spatial behavior is currently baked into assets or output devices.  It is not
+a semantic property that a scheme can apply independently to a cue or speech.
+
+* Terminology
+
+** Semantic fact
+
+A registered statement about meaning.  Examples include =:role heading=,
+=:level 1=, =:state folded=, =:event open-object=, and =:severity warning=.
+
+** Aural object
+
+Content with an identity and lifecycle that may be rendered before, during,
+and after its spoken text.  A heading is an aural object.
+
+** Event
+
+A semantic occurrence such as opening an object, completing a task, reaching a
+boundary, or receiving mail.  An event may have associated content but need
+not correspond to a persistent text range.
+
+** State
+
+A fact that qualifies an object or event, such as =folded=, =checked=,
+=selected=, or =unavailable=.
+
+** Scheme
+
+A named, versioned collection of declarative rules plus references to resource
+packs and voice palettes.  A scheme may inherit from another scheme.
+
+** Rule
+
+A selector and presentation contribution.  A selector matches semantic facts
+and context.  Its contribution adds, changes, reorders, replaces, or suppresses
+parts of a render plan.
+
+** Render phase
+
+One of =before=, =content=, and =after=.  Phases make order explicit without
+requiring modules to coordinate separate speech and sound calls.
+
+** Render action
+
+A backend-independent instruction such as:
+
+- speak literal text;
+- speak the object's content;
+- apply a voice or ACSS style;
+- play a semantic cue;
+- insert a pause;
+- apply volume or spatial placement.
+
+** Render plan
+
+The ordered, fully merged result of semantic and scheme resolution.  It still
+uses backend-independent voice and spatial values, but contains no unresolved
+scheme rules.
+
+** Concrete queue plan
+
+The render plan after backend compilation.  Cue names have become file paths
+or sample identifiers, voices have become supported engine settings or
+commands, and spatial values have been reduced to backend capabilities.
+
+** Sound resource pack
+
+A named collection of concrete assets implementing registered cue names.
+Existing =chimes= and =3d= directories become bundled resource packs.
+
+** Voice palette
+
+A named collection of device-independent voice styles.  Existing ACSS
+personalities provide the initial palette.
+
+* Semantic Contract
+
+** Registry entries
+
+The semantic registry is the authority for documentation, completion,
+validation, and development-time auditing.  It should describe:
+
+- a stable identifier;
+- whether the entry is an object role, event, state, or attribute;
+- concise user-facing intent;
+- owning module for extensions;
+- valid attributes and value types;
+- valid states;
+- lifecycle or allowed render phases where relevant;
+- semantic fallback;
+- optional default presentation;
+- usage guidance and examples.
+
+Semantic identifiers must not encode a chosen modality.  For example,
+=open-object= can remain a useful event name, but a new identifier should not
+be called =play-open-sound=.
+
+Core names should express reusable interaction semantics.  A module registers
+an extension only when no core meaning is suitable.  Extension registrations
+must document an owner and a core fallback where one exists.
+
+Registration collisions, invalid attributes, unknown states, and fallback
+cycles must be diagnosed.  Development checks should reject new unregistered
+literal semantics in the repository.
+
+** Module contract
+
+A module may:
+
+- annotate a text range with registered facts;
+- present a registered event with optional content;
+- provide default rules scoped to its own semantics;
+- register module-specific roles, states, attributes, or events.
+
+A module must not:
+
+- choose a sound filename;
+- assume a bundled sound pack;
+- infer that a semantic event will necessarily be a sound;
+- depend on a particular TTS engine;
+- hide undocumented meaning inside a newly invented cue name.
+
+The emitting module supplies module context explicitly.  The resolver obtains
+the source buffer and major mode directly while they are available.  Context
+must not be guessed from the call stack.
+
+* Scheme and Rule Contract
+
+** Selectors
+
+The first implementation must support selectors over:
+
+- semantic role or event;
+- state;
+- registered attributes and values;
+- module;
+- exact major mode;
+- derived major-mode ancestry;
+- current buffer through a buffer-local rule layer.
+
+Selectors may combine axes.  For example, a rule can target folded Org
+headings without affecting headings rendered by another module.
+
+Minor modes, window context, frame context, and workspace/project context may
+be added after their ordering semantics are specified.
+
+** Contributions and composition
+
+Rules contribute to =before=, =content=, or =after=.  The merge contract must
+distinguish scalar style properties from ordered action sequences.
+
+Recommended initial behavior:
+
+- scalar values such as voice, balance, volume, and speaking state use the
+  most specific winning value;
+- ordered actions compose in deterministic rule order;
+- a rule can explicitly prepend, append, replace, remove, or suppress an
+  action or phase;
+- semantic identity is never changed by a presentation rule;
+- silence can target a cue, speech annotation, content speech, a phase, or the
+  complete presentation;
+- duplicate suppression is based on stable action identifiers, not coincident
+  text or file names.
+
+The final data syntax and merge operators must be agreed and tested before
+runtime integration.  Plain "last writer wins" is not sufficient because
+independent rules such as heading level and folded state must compose.
+
+** Cascade
+
+Origin and selector specificity are separate concerns.  The recommended
+origin layers, from strongest to weakest, are:
+
+1. current-buffer and temporary session overrides;
+2. persistent personal user rules;
+3. active scheme rules;
+4. module-provided defaults;
+5. core fallbacks.
+
+Within one layer, the resolver orders rules by documented selector
+specificity:
+
+1. combined module, exact mode, semantic identity, attributes, and states;
+2. exact major mode;
+3. nearest matching derived-mode ancestor;
+4. module;
+5. semantic identity, attributes, and states without context;
+6. layer-wide defaults.
+
+Additional selector fields increase specificity only according to a documented
+comparison; registration order must not accidentally change behavior.  A
+stable explicit rule order breaks genuine ties and is visible in the editor.
+
+** Storage and versioning
+
+Persistent scheme data must:
+
+- carry a schema version;
+- have stable scheme and rule identifiers;
+- be readable without evaluating arbitrary code;
+- preserve comments or user-facing descriptions where practical;
+- support validation without selecting the scheme;
+- support inheritance without mutating the parent;
+- provide explicit migrations when the schema changes.
+
+The native representation may be declarative Lisp data.  Import/export can use
+another safe format later, but the semantic and merge contracts must not
+depend on the serialization.
+
+* Voice Integration
+
+ACSS remains the device-independent voice layer.  The first implementation
+should not replace =defvoice=, engine-specific voice adapters, or existing
+=personality= text properties.
+
+The renderer should accept:
+
+- a named existing personality;
+- a named voice-palette entry;
+- an ACSS style or partial ACSS override;
+- the default voice;
+- =inaudible= where content suppression is intended.
+
+Compatibility rules:
+
+1. Text with no registered semantic annotation follows the current
+   =personality=, then face-to-personality behavior.
+2. Existing =personality= values become legacy presentation hints when the
+   text also has semantic facts.
+3. A user rule can deliberately override a legacy personality for matching
+   semantics.
+4. Face mappings remain a fallback source of presentation; visual face names
+   do not become the canonical semantic vocabulary.
+5. Backend compilation uses existing ACSS-to-engine adapters wherever
+   possible.
+
+The pure resolver should output a named or ACSS voice style.  The TTS adapter
+then converts it to concrete engine commands before queueing.  This keeps
+engine codes out of schemes while keeping the speech server simple.
+
+* Cue and Resource Integration
+
+The registry distinguishes a semantic cue from its concrete asset.  A resource
+pack maps registered cue names to files and declares:
+
+- name, version, summary, and optional parent;
+- file or sample mapping;
+- supported cues;
+- required and optional coverage;
+- format, channels, and duration where known;
+- whether an asset is position-neutral, stereo, or already spatialized;
+- fixed position or trajectory metadata for pre-spatialized assets;
+- semantic fallback and aliases.
+
+The default mapping may remain =CUE.ogg=.  Existing sound directories remain
+valid resource sources during migration.
+
+Theme selection must build a fresh effective resource cache.  It must not
+retain an asset merely because the previous pack supplied it.  Unknown names,
+unreadable files, aliases, missing required assets, and fallback cycles must be
+diagnosed rather than silently becoming =button=.
+
+A scheme may select a default resource pack and voice palette.  Users may
+override either component without changing the scheme's semantic rules.
+
+* Spatial Presentation
+
+Spatial styling belongs to render actions and applies independently to speech
+and cues.
+
+The portable first level should be stereo balance with a documented range and
+centre.  A richer optional level may add:
+
+- azimuth;
+- elevation;
+- distance;
+- width or spread;
+- a time-varying trajectory.
+
+The coordinate system must be listener-relative and documented.  Backend
+capability fallback should be deterministic:
+
+#+begin_example
+3D position or trajectory -> stereo balance -> centred mono
+#+end_example
+
+Backends report capabilities.  The resolver does not inspect PipeWire, SoX,
+Csound, or speech-server details; the backend compiler reduces the requested
+style to what is available and records the degradation for explanation.
+
+Pre-spatialized assets must not be spatialized a second time by default.
+Resource metadata must distinguish position-neutral material from assets such
+as the current HRTF-generated =3d= sounds.
+
+Users need independent controls to:
+
+- disable all spatial presentation;
+- disable spatial speech while retaining spatial cues;
+- reduce the maximum left/right separation;
+- remap positions for unilateral hearing or speaker layouts;
+- choose a non-spatial speech or cue fallback.
+
+Stable positions are preferable to arbitrary motion because they can convey
+source or role without reducing speech intelligibility.  Motion should be an
+optional later capability, not a requirement for the first portable contract.
+
+* Resolution and Queueing
+
+Resolution has four stages:
+
+1. Capture registered semantic facts and source context.
+2. Match and merge scheme rules into a backend-independent render plan.
+3. Resolve cues, voices, pauses, and spatial properties through selected
+   resource and backend capabilities.
+4. Queue a concrete ordered plan.
+
+Concrete cue files or sample identifiers must be selected before queueing.
+The speech server should only receive actions it can execute, such as a voice
+command, text, silence duration, concrete sound resource, and supported spatial
+parameters.
+
+The queue contract must preserve the order of:
+
+- before actions;
+- content speech and its style runs;
+- after actions.
+
+If audio and speech use separate processes, the adapter must define whether
+actions are strictly serialized, overlapped, or mixed.  A scheme must not rely
+on accidental process scheduling.  Concurrent and background actions should
+be explicit future action modes.
+
+Immediate event presentation and text-property presentation must use the same
+resolver and concrete-plan compiler.  A plain symbol-valued =auditory-icon=
+property remains valid and maps through a compatibility adapter.
+
+Context must be captured before =tts-speak= moves text into its scratch
+buffer.  The implementation may resolve the complete plan at the call site or
+attach an immutable context snapshot, but it must not attempt to recover the
+source mode from the scratch buffer.
+
+* Discovery, Explanation, and Editing
+
+The user interface is part of the contract, not a follow-up convenience.
+
+Provide commands equivalent to:
+
+- =emacsvox-list-aural-semantics=: list roles, events, states, attributes,
+  owners, and intent;
+- =emacsvox-describe-aural-semantic=: describe registration, defaults, and
+  available presentations;
+- =emacsvox-explain-aural-presentation=: show captured facts, matching rules,
+  cascade order, merge operations, concrete resources, and backend fallback;
+- =emacsvox-preview-aural-rule=: render a rule against representative or
+  current content;
+- =emacsvox-list-aural-schemes=: show inheritance, resource packs, and
+  validation state;
+- =emacsvox-validate-aural-scheme=: report unknown semantics, invalid
+  selectors, conflicts, unavailable voices, and missing assets;
+- commands to add, edit, reorder, copy, enable, disable, and remove user rules
+  at global, module, mode, combined, and buffer scopes.
+
+The scheme editor should use an accessible Emacs buffer and completion rather
+than requiring users to edit raw data.  Its workflow should be:
+
+1. choose the semantic object, event, state, or current item;
+2. narrow its context and attributes;
+3. add and order before, content, and after actions;
+4. select voice, speech, cue, pause, and spatial settings;
+5. preview;
+6. inspect conflicts and effective fallback;
+7. save to the desired scope.
+
+Customize may expose simple settings, but a dedicated editor is needed for
+ordered actions, inheritance, rule explanations, and previews.
+
+Add a training mode inspired by JAWS.  It should perform the normal
+presentation and then speak a concise semantic explanation.  A more detailed
+command should identify every matched rule and why it won or composed.
+
+* Compatibility Policy
+
+1. Existing =(emacsvox-icon ICON)= calls remain valid.
+2. Existing symbol-valued =auditory-icon= text properties remain valid.
+3. Existing =personality= properties and face-to-personality mappings remain
+   valid.
+4. Existing =defvoice= and ACSS settings remain supported.
+5. Existing =chimes=, =3d=, and =prompts= directories remain valid resource
+   sources.
+6. Existing player selection remains supported.
+7. Unknown legacy icons warn once and fall back during migration; new in-tree
+   semantics must be registered.
+8. Module context and richer semantics are optional until a module is
+   deliberately migrated.
+9. No repository-wide mechanical caller rewrite is part of an initial slice.
+10. Compatibility adapters are removed only through a separately reviewed
+    public API change.
+
+* Baseline Inventory
+
+The earlier read-only inventory found:
+
+| Asset or reference                        | Count |
+|-------------------------------------------+-------|
+| =sounds/chimes/*.ogg=                     |    56 |
+| =sounds/3d/*.ogg=                         |    55 |
+| =sounds/prompts/*.ogg=                    |    17 |
+| Direct literal icon symbols found in Lisp |    58 |
+
+=shutdown.ogg= is present in =chimes= but absent from =3d=.  Static inspection
+also found direct requests for =emacsvox=, =repeat-stop=, and =unmark-object=
+without a matching file in =chimes= or =prompts=.  They currently fall back to
+=button=.
+
+This remains a useful resource baseline but is not a semantic inventory.
+Computed icon symbols, direct speech labels, face mappings, explicit
+=personality= properties, pauses, and state announcements must also be
+inventoried before the registry is finalized.
+
+=utils/count-icons.pl= is historical tooling derived from =sounds/chimes/= and
+source scraping.  It should not remain the authority once the semantic
+registry exists.
+
+* Implementation Plan
+
+Each slice should be independently reviewable.  The first slices establish
+pure data contracts and characterization tests before changing presentation.
+
+** TODO Slice 0: Confirm Use Cases and Vocabulary
+
+- Record representative aural objects, events, states, and attributes from
+  Org, Notmuch, programming modes, completion, and Agent Shell.
+- Include at least the Org heading-level and folded-state variants described
+  in this plan.
+- Inventory direct speech labels, literal and computed icons, =personality=
+  properties, face mappings, pauses, prompts, and spatial assets.
+- Classify reusable core semantics and module extensions.
+- Define intent and fallback metadata without choosing presentation modality.
+- Decide the semantics of unresolved legacy names such as =emacsvox=,
+  =repeat-stop=, and =unmark-object=.
+
+Deliverable: reviewed semantic vocabulary and use-case fixtures with no
+runtime behavior change.
+
+** TODO Slice 1: Characterization Tests
+
+- Add focused tests for current icon caching, theme switching, fallback,
+  immediate playback, and queued =auditory-icon= properties.
+- Characterize explicit =personality= precedence over face mappings, ACSS
+  definition, style-run boundaries, =inaudible=, pauses, and engine command
+  generation.
+- Characterize property copying and source-context loss in =tts-speak=.
+- Add a regression demonstrating that switching sound themes cannot leak an
+  asset from the previous theme.
+- Preserve existing canonical-process and speech protocol tests.
+
+Deliverable: tests protecting existing public behavior and identifying exact
+compatibility boundaries.
+
+** TODO Slice 2: Semantic Registry
+
+- Implement registration and lookup for roles, events, states, and attributes.
+- Seed the reviewed core and module-extension definitions.
+- Add completion, description, ownership, fallback, and collision validation.
+- Add a development audit for unregistered literal semantics.
+- Provide internal adapters that describe legacy icon calls and personality
+  hints as semantic or presentation inputs without changing their output.
+
+Deliverable: one canonical, discoverable vocabulary with no intentional user
+presentation change.
+
+** TODO Slice 3: Pure Rule and Render-Plan Engine
+
+- Finalize the safe, versioned rule data shape.
+- Implement selector matching independently of playback.
+- Implement the origin layers, mode ancestry, specificity comparison, and
+  stable tie ordering.
+- Implement explicit scalar merge and sequence prepend, append, replace,
+  remove, and suppress operations.
+- Represent before, content, and after phases as an ordered render plan.
+- Record provenance for every plan value and action.
+- Add pure tests for composition, conflicts, inheritance, and explanation.
+
+Deliverable: semantic facts and rules compile deterministically into an
+explainable backend-independent render plan.
+
+** TODO Slice 4: Resource Packs and Voice Palettes
+
+- Register =chimes=, =3d=, and prompts as resource providers.
+- Replace the hard-coded sound-theme list with registry completion.
+- Build a fresh resource cache on selection.
+- Add inheritance, aliases, semantic fallbacks, coverage reporting, and asset
+  spatial metadata.
+- Expose existing ACSS personalities as the initial voice palette.
+- Validate named voices and ACSS values without generating backend commands in
+  the pure resolver.
+
+Deliverable: explicit sound and voice provider contracts behind one scheme
+model.
+
+** TODO Slice 5: Contextual User Schemes
+
+- Add active scheme selection and inheritance.
+- Add persistent personal rules and buffer-local/session overrides.
+- Support module, exact mode, derived mode, combined context, attributes, and
+  states.
+- Add safe storage, schema versioning, validation, and migration hooks.
+- Provide simple compatibility customization for aliasing, replacing, or
+  suppressing one legacy icon or personality.
+
+Deliverable: users can customize aural presentation deterministically without
+editing module code.
+
+** TODO Slice 6: Resolve Before Queueing
+
+- Capture source buffer, major mode, module, and facts before scratch-buffer
+  processing loses context.
+- Compile cue names to concrete paths or sample identifiers.
+- Compile named or ACSS voices through the selected TTS adapter.
+- Route immediate icon calls, queued =auditory-icon= properties, and
+  =personality= styling through compatible concrete-plan adapters.
+- Define strict ordering across speech-server and local-player paths.
+- Implement Pulse/PipeWire sample identifiers and invalidation for contextual
+  resource overrides.
+- Verify that semantic and scheme resolution never occurs in the speech
+  server.
+
+Deliverable: all playback paths queue concrete ordered actions and agree on
+fallback, silence, and context.
+
+** TODO Slice 7: Explanation and Scheme Editor
+
+- Add list, describe, preview, validate, explain, set, reset, and copy
+  commands.
+- Show semantic facts and rule provenance for presentation at point.
+- Build the accessible scheme editor for selectors, phases, ordered actions,
+  scope, and inheritance.
+- Report unreachable rules, ambiguous ties, suppressed actions, missing
+  assets, and backend degradation.
+- Implement training mode with concise semantic explanations.
+
+Deliverable: users can create, understand, test, and repair schemes without
+reading internal caches or raw protocol output.
+
+** TODO Slice 8: Org Vertical Slice
+
+- Register heading role, level attribute, folded state, and other deliberately
+  selected Org semantics.
+- Annotate or present them through the new semantic API.
+- Supply scheme examples for voice-only, spoken-label, cue-only, combined,
+  before/after, and folded-state presentation.
+- Verify user overrides globally, for =org-mode=, for a derived mode, for the
+  Org module, and for one buffer.
+- Compare output and latency with the compatibility path.
+
+Deliverable: the motivating example works end to end and validates the
+contract before broad module migration.
+
+** TODO Slice 9: Portable Spatial Presentation
+
+- Implement stereo balance for speech and cues where supported.
+- Add capability reporting and centred fallback.
+- Add global disable, independent speech/cue controls, maximum separation, and
+  user remapping.
+- Prevent double spatialization of assets marked as pre-spatialized.
+- Validate ordering, intelligibility, mono output, and local-player versus
+  speech-server behavior.
+- Prototype azimuth, elevation, and distance only after the stereo contract is
+  stable.
+
+Deliverable: schemes can position speech and cues portably without requiring
+3D support.
+
+** TODO Slice 10: Representative Module Migration
+
+Migrate a small cross-section:
+
+- Notmuch for field voices, message states, and notifications;
+- Agent Shell for existing processing-icon variables;
+- one programming mode for face-derived and semantic voice interaction;
+- one completion interface for rapid event presentation.
+
+Use these migrations to refine extension registration and compatibility.
+Migrate remaining modules later in small functional batches.
+
+Deliverable: the model handles persistent text, transient events, states, and
+legacy face mappings outside Org.
+
+** TODO Slice 11: Audit, Documentation, and Rollout
+
+- Replace or supplement =utils/count-icons.pl= with registry-aware audits.
+- Generate semantic, scheme-author, module-author, sound-pack, and voice-palette
+  references from the registries.
+- Document the cascade, merge operators, render phases, queue contract, and
+  spatial fallback.
+- Add migration guidance for direct icon calls and =personality= properties.
+- Add release notes when user-facing scheme selection becomes available.
+- Mark completed slices and record their check results in this document.
+
+Deliverable: enforceable contracts, maintained documentation, and a staged
+path for the remaining integrations.
+
+* Test Gates
+
+Every behavior-changing slice must run checks proportional to its scope:
+
+1. Dedicated semantic, scheme, voice, resource, and render-plan ERT tests.
+2. Full =make unit-test=.
+3. =make trace-test= when speech or cue traces may change.
+4. Complete Lisp byte compilation when public Lisp interfaces change.
+5. Registry, scheme, resource-pack, and documentation audits.
+6. Startup smoke tests after changing default scheme or provider selection.
+7. Backend-specific integration tests when concrete queue plans change.
+
+The dedicated tests must cover:
+
+- unique registrations, ownership, valid fields, intent, and fallback;
+- selector matching and derived-mode ancestry;
+- origin-layer and specificity ordering;
+- deterministic ties independent of hash or registration order;
+- independent heading-level and folded-state composition;
+- ordered before, content, and after actions;
+- prepend, append, replace, remove, suppress, and silence;
+- inheritance and cycle detection;
+- buffer isolation and explicit module context;
+- existing personality precedence and face fallback;
+- named and generated ACSS voices;
+- required sound coverage and optional extension fallback;
+- unknown cues, semantics, voices, rules, and theme assets;
+- clean cache rebuilding on provider changes;
+- source-context capture before scratch-buffer processing;
+- concrete resolution before queueing;
+- queued and immediate equivalence;
+- SoX, Pulse/PipeWire, and speech-server adapters;
+- stereo, mono, unsupported spatial capability, and pre-spatialized assets;
+- compatibility of existing icon calls, text properties, voices, and sound
+  directories;
+- explanation provenance sufficient to reproduce every winning decision.
+
+* Open Decisions
+
+These decisions must be resolved before their corresponding implementation
+slice:
+
+1. The final declarative rule, render-plan, and semantic text-property shapes.
+2. The exact specificity comparison for selectors with different attributes
+   and states.
+3. Default composition behavior for multiple sequence contributions and the
+   identifiers used to replace or remove an inherited action.
+4. Whether module defaults live in the central registry, separate scheme
+   fragments, or both with one generated representation.
+5. How a scheme override interacts with an explicit legacy =personality= when
+   no registered semantic role is present.
+6. Whether content speech is an action or a distinguished content capability
+   in the final data model.
+7. The safe persistent storage format and migration mechanism.
+8. The exact context snapshot boundary around =tts-speak= and notification
+   speech.
+9. Serialization and timing when speech and cues use different processes.
+10. Pulse/PipeWire sample naming and cleanup for contextual assets.
+11. The portable spatial coordinate ranges and how 3D values reduce to stereo.
+12. Whether critical alerts may be completely suppressed or require an
+    alternative presentation.
+13. The ordering policy required before minor-mode selectors are enabled.
+
+Initial recommendations are:
+
+- use versioned declarative Lisp data with no evaluation;
+- resolve all context and resources in Emacs before queueing;
+- treat existing personalities as presentation hints, not semantic identity;
+- make stereo balance the portable spatial baseline;
+- use explicit action operations rather than implicit last-writer behavior;
+- warn once per session for unknown legacy inputs during migration.
+
+* Risks
+
+- Calling everything an icon would preserve a sound-first design and make
+  speech or voice alternatives second-class.
+- Treating visual faces as semantic identity would couple accessibility
+  behavior to display styling and package implementation details.
+- A rule engine without explicit composition would make independently useful
+  facts such as heading level and folded state conflict.
+- Context inferred after text enters the TTS scratch buffer would select the
+  wrong mode or buffer rules.
+- Backend-specific semantic resolution would make presentation depend on the
+  selected player.
+- Queueing unresolved cue names would push Emacs configuration and fallback
+  policy into the speech server.
+- Runtime spatialization of the existing =3d= assets could position them
+  twice.
+- Unstable or excessive spatial speech could reduce intelligibility.
+- Requiring every scheme to cover every extension would make third-party
+  schemes impractical.
+- An editor that cannot explain rule provenance would make a powerful cascade
+  impossible to debug.
+- Migrating every caller at once would obscure semantic review and make
+  regressions difficult to isolate.
+
+The staged plan addresses these risks with a registered semantic vocabulary, a
+pure and explainable rule engine, concrete pre-queue resolution, capability
+fallback, an Org vertical slice, and small subsequent migrations.
+
+* Definition of Done
+
+The migration is complete when:
+
+- registered semantic facts are the documented source of truth;
+- modules describe meaning without choosing a modality or file;
+- schemes can compose speech, voice, cues, pauses, and spatial style in
+  explicit before, content, and after phases;
+- users can inspect and override presentation globally and by module, major
+  mode, combined context, derived mode, or buffer;
+- independent rules such as heading level and folded state compose
+  deterministically;
+- existing ACSS personalities and sound packs are providers within the common
+  system;
+- the concrete render plan is resolved before queueing;
+- the speech server contains no scheme, mode, module, or semantic resolution;
+- supported backends honor the same ordering, silence, and fallback behavior;
+- portable spatial presentation degrades predictably and can be disabled;
+- training and explanation commands identify what was presented and why;
+- schemes, resource packs, voice palettes, and semantic extensions validate;
+- existing icon calls, =personality= properties, face mappings, and bundled
+  directories remain functional through documented compatibility adapters;
+- the Org vertical slice and representative module migrations pass all
+  required test gates;
+- public documentation explains authoring, customization, migration, and
+  backend capability behavior.
