@@ -16,6 +16,7 @@
 
 (require 'subr-x)
 (require 'tts-speak)
+(require 'emacsvox-sounds)
 
 (defgroup emacsvox-windows-speech nil
   "Native Windows speech support under WSL."
@@ -50,6 +51,9 @@ player named by `EMACSVOX_PLAY'."
 
 (defvar emacsvox-windows-speech--added-server-names nil
   "Server names added to `tts-servers-alist' by this integration.")
+
+(defvar emacsvox-windows-speech--saved-audio-state nil
+  "Audio configuration saved before enabling native Windows playback.")
 
 (defun emacsvox-windows-speech--server-path (name)
   "Return the configured native Windows server path for NAME."
@@ -118,6 +122,63 @@ player named by `EMACSVOX_PLAY'."
         emacsvox-windows-speech--enabled nil)
   (when (called-interactively-p 'interactive)
     (message "Disabled native Windows speech server selection")))
+
+(defun emacsvox-windows-speech--audio-player ()
+  "Return the configured native Windows auditory-icon player path."
+  (when emacsvox-windows-speech-servers-directory
+    (expand-file-name
+     "windows-play" emacsvox-windows-speech-servers-directory)))
+
+(defun emacsvox-windows-speech-configure-audio (&optional restart)
+  "Route auditory icons and generated SoX cues through Windows.
+With prefix argument RESTART, restart the active speech server afterward."
+  (interactive "P")
+  (let ((player (emacsvox-windows-speech--audio-player)))
+    (unless (and player (file-executable-p player))
+      (user-error "Windows auditory-icon player is not executable: %s"
+                  (or player "not configured")))
+    (unless emacsvox-windows-speech--saved-audio-state
+      (setq emacsvox-windows-speech--saved-audio-state
+            (list
+             :emacsvox-play (getenv "EMACSVOX_PLAY")
+             :emacspeak-play (getenv "EMACSPEAK_PLAY")
+             :emacsvox-play-program emacsvox-play-program
+             :play-arguments ems--play-args
+             :sox-play sox-play)))
+    (setenv "EMACSVOX_PLAY" player)
+    ;; The external Windows server launchers still use the legacy name.
+    (setenv "EMACSPEAK_PLAY" player)
+    (set 'emacsvox-play-program nil)
+    (set 'ems--play-args nil)
+    (set 'sox-play player)
+    (when restart
+      (tts-restart))
+    (when (called-interactively-p 'interactive)
+      (message
+       "Configured native Windows audio%s"
+       (if restart " and restarted speech" "")))
+    player))
+
+(defun emacsvox-windows-speech-restore-audio (&optional restart)
+  "Restore audio settings saved before native Windows configuration.
+With prefix argument RESTART, restart the active speech server afterward."
+  (interactive "P")
+  (unless emacsvox-windows-speech--saved-audio-state
+    (user-error "No previous audio configuration has been saved"))
+  (let ((state emacsvox-windows-speech--saved-audio-state))
+    (setenv "EMACSVOX_PLAY" (plist-get state :emacsvox-play))
+    (setenv "EMACSPEAK_PLAY" (plist-get state :emacspeak-play))
+    (set 'emacsvox-play-program
+         (plist-get state :emacsvox-play-program))
+    (set 'ems--play-args (plist-get state :play-arguments))
+    (set 'sox-play (plist-get state :sox-play))
+    (setq emacsvox-windows-speech--saved-audio-state nil))
+  (when restart
+    (tts-restart))
+  (when (called-interactively-p 'interactive)
+    (message
+     "Restored previous audio configuration%s"
+     (if restart " and restarted speech" ""))))
 
 ;; Loading this module is enough to expose any configured executable servers.
 (emacsvox-windows-speech-enable)

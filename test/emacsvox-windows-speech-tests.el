@@ -52,6 +52,55 @@
        (equal emacsvox-windows-speech--added-server-names
               '("windows-outloud"))))))
 
+(ert-deftest emacsvox-windows-speech-routes-generated-audio ()
+  "Native audio configuration includes direct SoX-generated cues."
+  (let ((process-environment (copy-sequence process-environment))
+        (emacsvox-windows-speech-servers-directory "/support/servers/")
+        (emacsvox-windows-speech--saved-audio-state nil)
+        (emacsvox-play-program "/usr/bin/play")
+        (ems--play-args "-q")
+        (sox-play "/usr/bin/play"))
+    (setenv "EMACSVOX_PLAY" nil)
+    (setenv "EMACSPEAK_PLAY" nil)
+    (cl-letf (((symbol-function 'file-executable-p) (lambda (_file) t)))
+      (should
+       (equal
+        (emacsvox-windows-speech-configure-audio)
+        "/support/servers/windows-play"))
+      (should-not emacsvox-play-program)
+      (should-not ems--play-args)
+      (should
+       (equal sox-play "/support/servers/windows-play"))
+      (should
+       (equal
+        (getenv "EMACSVOX_PLAY") "/support/servers/windows-play"))
+      (should
+       (equal
+        (getenv "EMACSPEAK_PLAY") "/support/servers/windows-play"))
+      (emacsvox-windows-speech-restore-audio)
+      (should (equal emacsvox-play-program "/usr/bin/play"))
+      (should (equal ems--play-args "-q"))
+      (should (equal sox-play "/usr/bin/play"))
+      (should-not (getenv "EMACSVOX_PLAY"))
+      (should-not (getenv "EMACSPEAK_PLAY")))))
+
+(ert-deftest emacsvox-windows-speech-can-restart-after-audio-change ()
+  "A requested restart happens after audio routing is configured."
+  (let ((emacsvox-windows-speech-servers-directory "/support/servers/")
+        (emacsvox-windows-speech--saved-audio-state nil)
+        restarted)
+    (cl-letf (((symbol-function 'file-executable-p) (lambda (_file) t))
+              ((symbol-function 'tts-restart)
+               (lambda ()
+                 (should
+                  (equal sox-play "/support/servers/windows-play"))
+                 (setq restarted t))))
+      (unwind-protect
+          (progn
+            (emacsvox-windows-speech-configure-audio t)
+            (should restarted))
+        (emacsvox-windows-speech-restore-audio)))))
+
 (provide 'emacsvox-windows-speech-tests)
 
 ;;; emacsvox-windows-speech-tests.el ends here
