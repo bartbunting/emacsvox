@@ -359,19 +359,36 @@
         (speak "Finished saving attachments"))))))
 
 (ert-deftest emacsvox-notmuch-opening-thread-speaks-semantic-message ()
-  "Opening a search result speaks the first structured message."
-  (let ((ems--interactive-fn-name 'notmuch-search-show-thread)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-notmuch-speak-show-message)
-               (lambda (&optional _message) (push '(message) events))))
-      (emacsvox--advice-notmuch-search-show-thread-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon open-object)
-        (message))))))
+  "Opening a search result selects the body and speaks the message."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "Summary\nSubject: Project update\nFrom: Alice\n\n  Message body\n")
+    (goto-char (point-min))
+    (forward-line 1)
+    (let ((headers-start (point)))
+      (forward-line 2)
+      (let ((message
+             (list
+              :headers-overlay (make-overlay headers-start (point))))
+            (extent (cons (point-min) (point-max)))
+            (ems--interactive-fn-name 'notmuch-search-show-thread)
+            events)
+        (goto-char (point-min))
+        (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
+                   (lambda () message))
+                  ((symbol-function 'notmuch-show-message-extent)
+                   (lambda () extent))
+                  ((symbol-function 'emacsvox-icon)
+                   (lambda (icon) (push (list 'icon icon) events)))
+                  ((symbol-function 'emacsvox-notmuch-speak-show-message)
+                   (lambda (&optional _message) (push '(message) events))))
+          (emacsvox--advice-notmuch-search-show-thread-after))
+        (should (looking-at-p "Message body"))
+        (should
+         (equal
+          (nreverse events)
+          '((icon open-object)
+            (message))))))))
 
 (ert-deftest emacsvox-notmuch-navigation-speaks-selected-result ()
   "Only the active interactive search-navigation command speaks."

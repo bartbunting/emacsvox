@@ -52,6 +52,7 @@
 (declare-function notmuch-show-clean-address "notmuch-show" (address))
 (declare-function notmuch-show-get-message-properties "notmuch-show" ())
 (declare-function notmuch-show-get-part-properties "notmuch-show" ())
+(declare-function notmuch-show-message-extent "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
 
@@ -414,6 +415,17 @@ tag, or give it a nil icon to keep the status silent."
     (ignore-errors
       (plist-get (notmuch-show-get-message-properties) :id))))
 
+(defun emacsvox-notmuch--move-to-message-body ()
+  "Move point to the first content in the current Notmuch message body."
+  (when (eq major-mode 'notmuch-show-mode)
+    (when-let* ((message (notmuch-show-get-message-properties))
+                (headers-overlay (plist-get message :headers-overlay)))
+      (goto-char (overlay-end headers-overlay))
+      (forward-line 1)
+      (skip-chars-forward " \t\n"
+                          (1- (cdr (notmuch-show-message-extent))))
+      (point))))
+
 (defun emacsvox-notmuch--part-at-point (&optional button)
   "Return the Notmuch MIME part at point or on BUTTON."
   (ignore-errors
@@ -697,11 +709,12 @@ tag, or give it a nil icon to keep the status silent."
 
 (defun emacsvox-notmuch--show-feedback ()
   "Speak the first message in a newly opened Notmuch thread."
+  (emacsvox-notmuch--move-to-message-body)
   (emacsvox-icon 'open-object)
   (emacsvox-notmuch-speak-show-message))
 
 (emacsvox-notmuch--register-after-group
- '(notmuch-search-show-thread)
+ '(notmuch-show notmuch-search-show-thread)
  #'emacsvox-notmuch--show-feedback)
 
 (defun emacsvox-notmuch--navigation-feedback ()
