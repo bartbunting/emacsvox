@@ -35,6 +35,7 @@
   (require 'emacsvox-aural-rules-tests)
   (require 'emacsvox-aural-resources-tests)
   (require 'emacsvox-aural-schemes-tests)
+  (require 'emacsvox-aural-transport-tests)
   (require 'emacsvox-sounds-tests)
   (require 'emacsvox-voice-tests)
   (require 'emacsvox-windows-speech-tests)

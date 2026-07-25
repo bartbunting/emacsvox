@@ -57,6 +57,9 @@
 (defvar-local emacsvox-aural-buffer-rules nil
   "Temporary aural rules applying only in the current buffer.")
 
+(defvar-local emacsvox-aural-module nil
+  "Semantic module identifier for aural presentation in this buffer.")
+
 (defcustom emacsvox-aural-active-scheme 'default
   "Selected registered aural presentation scheme."
   :type 'symbol
@@ -342,12 +345,14 @@ not loaded yet; validation is deferred until the complete registry check."
     (module occasion &optional legacy-personality legacy-source)
   "Capture current MODULE, OCCASION, and legacy presentation hints."
   (list
-   :module module
+   :module (or module emacsvox-aural-module)
    :mode major-mode
    :mode-lineage (emacsvox-aural-mode-lineage major-mode)
    :occasion occasion
    :legacy-personality legacy-personality
-   :legacy-source legacy-source))
+   :legacy-source legacy-source
+   :source-buffer (current-buffer)
+   :source-buffer-name (buffer-name)))
 
 (defun emacsvox-aural-resolve-active (facts &optional context)
   "Resolve FACTS through active scheme and contextual rule layers."
@@ -376,14 +381,24 @@ not loaded yet; validation is deferred until the complete registry check."
         (emacsvox-aural-content-style-provenance content))))
     plan))
 
-(defun emacsvox-aural-resolve-legacy-icon (icon &optional context)
+(defun emacsvox-aural-resolve-legacy-icon (icon &optional context facts)
   "Resolve legacy ICON through the active scheme in CONTEXT.
 
 The returned plan initially contains ICON as action `legacy-cue'.  Contextual
-rules can remove that action or replace its cue without changing callers."
+rules can remove that action or replace its cue without changing callers.
+Optional FACTS are composed with any known semantic event for ICON."
   (emacsvox-aural--require-symbol icon "Legacy cue")
   (let* ((semantic (alist-get icon emacsvox-aural-legacy-icon-semantics))
-         (facts (if semantic (list :event semantic) nil))
+         (facts (copy-tree facts))
+         (events
+          (append
+           (when-let* ((event (plist-get facts :event))) (list event))
+           (copy-sequence (plist-get facts :events))
+           (when semantic (list semantic))))
+         (facts
+          (if events
+              (plist-put facts :events (delete-dups events))
+            facts))
          (context
           (plist-put
            (copy-sequence

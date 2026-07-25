@@ -47,6 +47,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (eval-when-compile (require 'subr-x))
+(require 'emacsvox-aural-transport)
 
 ;;;  Forward Declarations:
 
@@ -347,13 +348,31 @@ bound to \\[tts-toggle-caps].")
 ;; Helper: like replace-match but preserves existing face or apply
 ;; 'match for pronunciation
 
+(defun tts--replace-match-preserving-aural-plan
+    (replacement &optional fixedcase literal subexp)
+  "Replace the match with REPLACEMENT while retaining its concrete plan.
+
+FIXEDCASE, LITERAL, and SUBEXP have the meanings accepted by
+`replace-match'.  Semantic and contextual decisions are frozen before this
+scratch-buffer cleanup, so replacement text must inherit the plan at the
+start of the source match."
+  (let ((start (match-beginning (or subexp 0)))
+        (plan
+         (get-text-property
+          (match-beginning (or subexp 0))
+          emacsvox-aural-concrete-plan-property)))
+    (replace-match replacement fixedcase literal nil subexp)
+    (when plan
+      (put-text-property
+       start (point) emacsvox-aural-concrete-plan-property plan))))
+
 (defsubst tts-replace-match (replace)
   
   (let* ((start (match-beginning 0))
          (face
           (or
            (get-text-property start 'face) emacsvox-pronounce-personality)))
-    (replace-match replace t t)
+    (tts--replace-match-preserving-aural-plan replace t t)
     (when face (put-text-property start (point) 'face face))))
 
 (defun tts-apply-pronunciations (pronunciation-table)
@@ -493,7 +512,7 @@ Newlines  become spaces so each server request is a single line.
   (let ((inhibit-read-only t))
     (goto-char (point-min))
     (while (re-search-forward "[\177-\377]+" nil t)
-      (replace-match " "))))
+      (tts--replace-match-preserving-aural-plan " "))))
 
 (defun tts-fix-brackets (mode)
   "Quote  delimiters that need special treatment. Argument MODE
@@ -511,33 +530,35 @@ specifies the current pronunciation mode --- See
           (setq personality (tts-get-style (match-beginning 0)))
           (cond
            ((= 10 (char-after (match-beginning 0))) ; newline
-            (replace-match " "))
+            (tts--replace-match-preserving-aural-plan " "))
            ((= ?| (char-after (match-beginning 0)))
-            (replace-match " pipe " nil t))
+            (tts--replace-match-preserving-aural-plan " pipe " nil t))
            ((= ?< (char-after (match-beginning 0)))
-            (replace-match " less than " nil t))
+            (tts--replace-match-preserving-aural-plan " less than " nil t))
            ((= ?> (char-after (match-beginning 0)))
-            (replace-match " greater than " nil t))
+            (tts--replace-match-preserving-aural-plan " greater than " nil t))
            ((= ?{ (char-after (match-beginning 0)))
-            (replace-match " left brace " nil t))
+            (tts--replace-match-preserving-aural-plan " left brace " nil t))
            ((= ?} (char-after (match-beginning 0)))
-            (replace-match " right brace " nil t))
+            (tts--replace-match-preserving-aural-plan " right brace " nil t))
            ((= ?\] (char-after (match-beginning 0)))
-            (replace-match " right bracket " nil t))
+            (tts--replace-match-preserving-aural-plan
+             " right bracket " nil t))
            ((= ?\[ (char-after (match-beginning 0)))
-            (replace-match " left bracket " nil t))
+            (tts--replace-match-preserving-aural-plan
+             " left bracket " nil t))
            ((= ?\\ (char-after (match-beginning 0)))
-            (replace-match " backslash " nil t))
+            (tts--replace-match-preserving-aural-plan " backslash " nil t))
            ((= ?# (char-after (match-beginning 0)))
-            (replace-match " pound " nil t))
+            (tts--replace-match-preserving-aural-plan " pound " nil t))
            ((= ?` (char-after (match-beginning 0)))
-            (replace-match " backquote " nil t)))
+            (tts--replace-match-preserving-aural-plan " backquote " nil t)))
           (when personality
             (put-text-property start (point)
                                'personality personality)))))
      (t
       (while (re-search-forward tts-bracket-regexp nil t)
-        (replace-match " " nil t))))))
+        (tts--replace-match-preserving-aural-plan " " nil t))))))
 
 (defvar-local tts-speak-nonprinting-chars nil
   "Speak non-printing chars.")
@@ -556,7 +577,7 @@ specifies the current pronunciation mode --- See
      (tts-speak-nonprinting-chars
       (while (re-search-forward tts-octal-chars nil t)
         (setq char (char-after (match-beginning 0)))
-        (replace-match
+        (tts--replace-match-preserving-aural-plan
          (format " %s " (aref tts-character-to-speech-table char))
          nil t))))))
 (defconst tts-caps-regexp
@@ -629,7 +650,7 @@ specifies the current pronunciation mode --- See
                  (/ (- (match-end 0) (match-beginning 0)) len)
                  (if (string-equal " " string) " space " string))
               ""))
-      (replace-match replacement nil t)
+      (tts--replace-match-preserving-aural-plan replacement nil t)
       (setq start (- (point) (length replacement)))
       (when personality
         (put-text-property start (point) 'personality personality)))
@@ -658,7 +679,7 @@ specifies the current pronunciation mode --- See
   "Quote backslash characters."
   (goto-char (point-min))
   (while (search-forward "\\" nil t)
-    (replace-match " backslash " nil t)))
+    (tts--replace-match-preserving-aural-plan " backslash " nil t)))
 
 ;; Moving  across a chunk of text.
 ;; A chunk  is specified by a punctuation (todo? followed by whitespace)
@@ -763,7 +784,10 @@ Argument COMPLEMENT  is the complement of separator."
    (previous-single-property-change start 'personality (current-buffer) end)
    (previous-single-property-change start 'face (current-buffer) end)
    (previous-single-property-change
-    start 'font-lock-face (current-buffer) end)))
+    start 'font-lock-face (current-buffer) end)
+   (previous-single-property-change
+    start emacsvox-aural-concrete-plan-property
+    (current-buffer) end)))
 
 ;; Get position of next style change from start   to end.
 ;; Here,  change is any change in property personality, face.
@@ -773,37 +797,54 @@ Argument COMPLEMENT  is the complement of separator."
    (tts-next-single-property-change start 'personality (current-buffer) end)
    (tts-next-single-property-change start 'face (current-buffer) end)
    (tts-next-single-property-change
-    start 'font-lock-face (current-buffer) end)))
+    start 'font-lock-face (current-buffer) end)
+   (tts-next-single-property-change
+    start emacsvox-aural-concrete-plan-property
+    (current-buffer) end)))
 
 (defun tts-audio-format (start end)
   "Format and speak text from `start' to `end'. "
-  (when (and emacsvox-use-icons
-             (get-text-property start 'auditory-icon))
-    (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
-  (tts--protocol-queue-code (tts-voice-reset-code))
-  (when-let* ((pause (get-text-property start 'pause)))
-    (tts--protocol-silence pause))
-  (cond
-   ((not voice-lock-mode)
-    (tts--protocol-queue-text (buffer-substring-no-properties start end)))
-   (t                                   ; voiceify as we go
-    (let ((last nil)
-          (personality (tts-get-style start)))
-      (while
-          (and
-           (< start end)
-           (setq last (tts-next-style-change start end)))
-        (if personality
-            (tts-speak-using-voice
-             personality (buffer-substring-no-properties start last))
-          (tts--protocol-queue-text
-           (buffer-substring-no-properties start last)))
-        (setq
-         start last
-         personality (tts-get-style last))
-        (when (get-text-property start 'pause)
-          (tts--protocol-silence
-           (get-text-property start 'pause) nil)))))))
+  (if (emacsvox-aural-concrete-plan-at start)
+      (let ((position start))
+        (while (< position end)
+          (let ((plan (emacsvox-aural-concrete-plan-at position))
+                (next
+                 (next-single-property-change
+                  position emacsvox-aural-concrete-plan-property
+                  (current-buffer) end)))
+            (when-let* ((pause (get-text-property position 'pause)))
+              (tts--protocol-silence pause))
+            (emacsvox-aural-queue-concrete-plan
+             plan
+             (buffer-substring-no-properties position next))
+            (setq position next))))
+    (when (and emacsvox-use-icons
+               (get-text-property start 'auditory-icon))
+      (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
+    (tts--protocol-queue-code (tts-voice-reset-code))
+    (when-let* ((pause (get-text-property start 'pause)))
+      (tts--protocol-silence pause))
+    (cond
+     ((not voice-lock-mode)
+      (tts--protocol-queue-text (buffer-substring-no-properties start end)))
+     (t                                 ; voiceify as we go
+      (let ((last nil)
+            (personality (tts-get-style start)))
+        (while
+            (and
+             (< start end)
+             (setq last (tts-next-style-change start end)))
+          (if personality
+              (tts-speak-using-voice
+               personality (buffer-substring-no-properties start last))
+            (tts--protocol-queue-text
+             (buffer-substring-no-properties start last)))
+          (setq
+           start last
+           personality (tts-get-style last))
+          (when (get-text-property start 'pause)
+            (tts--protocol-silence
+             (get-text-property start 'pause) nil))))))))
 
 ;; Write out the string to the tts via TCL.
 ;; No quoting is done,
@@ -1598,6 +1639,14 @@ This is so text marked invisible is silenced.")
 (defun tts-speak (text)
   "Speak the TEXT string
 unless   `tts-quiet' is set to t. "
+  (let ((emacsvox-aural-submission-context
+         (or
+          emacsvox-aural-submission-context
+          (emacsvox-aural-capture-context))))
+    (tts--speak text)))
+
+(defun tts--speak (text)
+  "Implement `tts-speak' for TEXT with source context already captured."
   ;; ensure text is a  string
   (unless (stringp text) (when text (setq text (format "%s" text))))
   ;; ensure  the process  is live
@@ -1608,6 +1657,12 @@ unless   `tts-quiet' is set to t. "
   (unless
       (or tts-quiet (not (process-live-p tts-speaker-process))
           (null text) (zerop (length text)))
+    (unless (emacsvox-aural-prepared-text-p text)
+      (setq
+       text
+       (emacsvox-aural-prepare-text
+        text emacsvox-aural-submission-facts
+        emacsvox-aural-submission-context)))
     ;; flush previous speech if asked to
     (when tts-stop-immediately
       (when (process-live-p tts-notify-process) (tts-notify-stop))
@@ -1633,6 +1688,22 @@ unless   `tts-quiet' is set to t. "
           (speech-rate tts-speech-rate)
           (caps tts-caps)
           (split-caps tts-split-caps)
+          (tts-caps-prefix
+           (if tts-caps
+               (emacsvox-aural-prepare-text
+                tts-caps-prefix
+                (list :content
+                      (substring-no-properties tts-caps-prefix))
+                emacsvox-aural-submission-context)
+             tts-caps-prefix))
+          (tts-allcaps-prefix
+           (if tts-caps
+               (emacsvox-aural-prepare-text
+                tts-allcaps-prefix
+                (list :content
+                      (substring-no-properties tts-allcaps-prefix))
+                emacsvox-aural-submission-context)
+             tts-allcaps-prefix))
           (tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
           (start 1)
           (end nil)
@@ -1777,19 +1848,29 @@ grouping"
   "Speak text on notification stream.
 Notification is logged in the notifications buffer unless `dont-log' is T. "
   
-  (unless dont-log (emacsvox-log-notification text))
-  (setq emacsvox-last-message text)
-  (cond
-   ((tts-notify-process)                ; we have a live notifier
-    (tts-notify-apply #'tts-speak text))
-   (t (tts-speak text)))
+  (let* ((context
+          (copy-tree
+           (or
+            emacsvox-aural-submission-context
+            (emacsvox-aural-capture-context nil 'notification))))
+         (emacsvox-aural-submission-context
+          (plist-put context :occasion 'notification))
+         (emacsvox-aural-submission-occasion 'notification))
+    (unless dont-log (emacsvox-log-notification text))
+    (setq emacsvox-last-message text)
+    (cond
+     ((tts-notify-process)              ; we have a live notifier
+      (tts-notify-apply #'tts-speak text))
+     (t (tts-speak text))))
   text)
 
 (defun tts-notify-icon (icon)
   "Play icon  on notification stream. "
-  (cond
-   ((tts-notify-process)                ; we have a live notifier
-    (tts-notify-apply #'emacsvox-icon icon))))
+  (let ((emacsvox-aural-submission-context
+         (emacsvox-aural-capture-context nil 'notification)))
+    (cond
+     ((tts-notify-process)              ; we have a live notifier
+      (tts-notify-apply #'emacsvox-icon icon)))))
 
 (defun tts-notify-initialize ()
   "Initialize notification TTS stream."
@@ -2075,7 +2156,7 @@ When called interactively, CHAR defaults to the character after point."
                       " "
                     (run-hook-with-args-until-success
                      'tts-unicode-handlers char)))))
-          (replace-match replacement t t nil)
+          (tts--replace-match-preserving-aural-plan replacement t t)
           (when props
             (set-text-properties pos (point) props)))))))
 

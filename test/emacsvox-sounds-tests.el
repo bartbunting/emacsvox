@@ -146,12 +146,12 @@
       (should (equal (emacsvox-sounds-resource 'unknown) "button")))))
 
 (ert-deftest emacsvox-sounds-icon-dispatches-by-player-and-toggle ()
-  "Immediate icons select server or local playback and honor the toggle."
+  "Immediate icons resolve concretely and continue to honor the toggle."
   (let (events)
-    (cl-letf (((symbol-function 'emacsvox-serve-icon)
-               (lambda (icon) (push (list 'serve icon) events)))
-              ((symbol-function 'emacsvox-play-icon)
-               (lambda (icon) (push (list 'play icon) events))))
+    (cl-letf
+        (((symbol-function 'emacsvox-sounds-play-concrete-cue)
+          (lambda (resource sample-id)
+            (push (list resource sample-id) events))))
       (let ((emacsvox-use-icons t)
             (emacsvox-play-program nil))
         (emacsvox-icon 'item))
@@ -162,25 +162,54 @@
             (emacsvox-play-program nil))
         (emacsvox-icon 'close-object)))
     (should
+     (= (length events) 2))
+    (should
+     (string-suffix-p
+      "/chimes/item.ogg"
+      (car (cadr events))))
+    (should
+     (string-suffix-p
+      "/chimes/open-object.ogg"
+      (caar events)))))
+
+(ert-deftest emacsvox-sounds-concrete-cue-selects-server-or-sox ()
+  "Concrete compatibility cues still honor the selected playback backend."
+  (let ((tts-speaker-process 'speaker)
+        events)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (process text)
+            (push (list 'server process text) events)))
+         ((symbol-function 'start-process)
+          (lambda (_name _buffer program &rest args)
+            (push (list 'local program args) events))))
+      (let ((emacsvox-play-program nil))
+        (emacsvox-sounds-play-concrete-cue
+         "/sounds/item.ogg" "sample-item"))
+      (let ((emacsvox-play-program "/usr/bin/play")
+            (ems--play-args "-q"))
+        (emacsvox-sounds-play-concrete-cue
+         "/sounds/open.ogg" "sample-open")))
+    (should
      (equal
       (nreverse events)
-      '((serve item)
-        (play open-object))))))
+      '((server speaker "p /sounds/item.ogg\n")
+        (local "/usr/bin/play" ("-q" "/sounds/open.ogg")))))))
 
 (ert-deftest emacsvox-sounds-queued-icon-uses-concrete-resource ()
   "Queued legacy icons send the currently resolved concrete resource."
   (let ((tts-speaker-process 'speaker)
         writes)
-    (cl-letf (((symbol-function 'emacsvox-sounds-resource)
-               (lambda (icon)
-                 (should (eq icon 'item))
-                 "/sounds/item.ogg"))
-              ((symbol-function 'process-send-string)
+    (cl-letf (((symbol-function 'process-send-string)
                (lambda (process text)
                  (push (list process text) writes))))
       (emacsvox-queue-icon 'item))
     (should
-     (equal writes '((speaker "a /sounds/item.ogg\n"))))))
+     (eq (caar writes) 'speaker))
+    (should
+     (string-suffix-p
+      "/chimes/item.ogg\n"
+      (cadar writes)))))
 
 (ert-deftest emacsvox-sounds-auditory-property-precedes-text ()
   "An auditory-icon property currently queues before reset and spoken text."

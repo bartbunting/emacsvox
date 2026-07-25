@@ -48,7 +48,8 @@
 
 (defconst emacsvox-aural--context-keys
   '(:module :mode :mode-lineage :occasion :legacy-cue
-    :legacy-personality :legacy-source)
+    :legacy-personality :legacy-source :source-buffer
+    :source-buffer-name)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct
@@ -113,7 +114,8 @@
      (:constructor emacsvox-aural--make-input))
   "Normalized semantic facts and presentation context."
   role events states attributes content module mode mode-lineage occasion
-  legacy-cue legacy-personality legacy-source)
+  legacy-cue legacy-personality legacy-source source-buffer
+  source-buffer-name)
 
 (cl-defstruct
     (emacsvox-aural-content-style
@@ -619,6 +621,8 @@ LAYER-ORDER records inheritance order within one origin."
          (legacy-cue (plist-get context :legacy-cue))
          (legacy-personality (plist-get context :legacy-personality))
          (legacy-source (plist-get context :legacy-source))
+         (source-buffer (plist-get context :source-buffer))
+         (source-buffer-name (plist-get context :source-buffer-name))
          (lineage
           (or
            (plist-get context :mode-lineage)
@@ -646,6 +650,15 @@ LAYER-ORDER records inheritance order within one origin."
          legacy-personality)))
     (when legacy-source
       (emacsvox-aural--require-symbol legacy-source "Legacy presentation source"))
+    (when source-buffer
+      (unless (bufferp source-buffer)
+        (emacsvox-aural--rule-error
+         "Context source buffer must be a buffer: %S" source-buffer)))
+    (when source-buffer-name
+      (unless (stringp source-buffer-name)
+        (emacsvox-aural--rule-error
+         "Context source buffer name must be a string: %S"
+         source-buffer-name)))
     (when lineage
       (unless (and (listp lineage) (cl-every #'symbolp lineage))
         (emacsvox-aural--rule-error
@@ -665,7 +678,9 @@ LAYER-ORDER records inheritance order within one origin."
      :occasion occasion
      :legacy-cue legacy-cue
      :legacy-personality legacy-personality
-     :legacy-source legacy-source)))
+     :legacy-source legacy-source
+     :source-buffer source-buffer
+     :source-buffer-name source-buffer-name)))
 
 (defun emacsvox-aural--mode-distance (selector input)
   "Return mode ancestry distance for SELECTOR and INPUT, or nil."

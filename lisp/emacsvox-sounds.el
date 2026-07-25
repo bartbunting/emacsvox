@@ -119,6 +119,9 @@ sound library load independently during native compilation.")
 (require 'emacsvox-aural-resources)
 (emacsvox-aural-register-bundled-resources emacsvox-sounds-dir)
 (require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-transport)
+
+(defvar tts-speaker-process)
 
 ;;;   Auditory Icons:
 
@@ -144,9 +147,7 @@ Optional interactive PREFIX arg toggles global value."
   "Produce an auditory ICON."
   
   (when emacsvox-use-icons
-    (if   (null emacsvox-play-program) ; serve icon
-        (emacsvox-serve-icon icon)
-      (emacsvox-play-icon icon))))
+    (emacsvox-aural-present-legacy-icon icon)))
 ;;;  emacsvox-prompts:
 
 (defvar emacsvox-prompts-dir
@@ -196,6 +197,50 @@ icon-name, as string."
 
 (defconst emacsvox-pactl (executable-find "pactl") "PaCtl Executable.")
 
+(defvar emacsvox-sounds-owned-samples (make-hash-table :test #'equal)
+  "Pulse/PipeWire samples uploaded and therefore owned by Emacsvox.
+
+Keys are sample identifiers and values are their concrete resource paths.")
+
+(defun emacsvox-sounds-ensure-sample (resource sample-id)
+  "Ensure RESOURCE is uploaded to Pulse/PipeWire as SAMPLE-ID."
+  (unless emacsvox-pactl
+    (error "Pulse/PipeWire sample playback is unavailable"))
+  (let ((existing
+         (gethash sample-id emacsvox-sounds-owned-samples)))
+    (unless (equal existing resource)
+      (when existing
+        (call-process
+         emacsvox-pactl nil 0 nil "unload-sample" sample-id))
+      (let ((status
+             (call-process
+              emacsvox-pactl nil 0 nil
+              "upload-sample" resource sample-id)))
+        (unless (and (integerp status) (zerop status))
+          (error
+           "Could not upload Pulse/PipeWire sample %s from %s"
+           sample-id resource))
+        (puthash
+         sample-id resource emacsvox-sounds-owned-samples))))
+  sample-id)
+
+(defun emacsvox-sounds-release-samples (&optional keep)
+  "Unload owned Pulse/PipeWire samples except identifiers in KEEP."
+  (let (remove)
+    (maphash
+     (lambda (sample-id _resource)
+       (unless (member sample-id keep)
+         (push sample-id remove)))
+     emacsvox-sounds-owned-samples)
+    (dolist (sample-id remove)
+      (when emacsvox-pactl
+        (call-process
+         emacsvox-pactl nil 0 nil "unload-sample" sample-id))
+      (remhash sample-id emacsvox-sounds-owned-samples)))
+  t)
+
+(add-hook 'kill-emacs-hook #'emacsvox-sounds-release-samples)
+
 ;; Called when  selecting themes.
 (defun emacsvox-sounds-cache-rebuild (dir)
   "Rebuild sound cache for `dir', a directory containing sound files.
@@ -221,8 +266,13 @@ It is called  to cache sounds in our theme and prompts directories."
   (cl-loop
    for k being the hash-keys of emacsvox-sounds-cache
    using (hash-values v) do
-   (call-process emacsvox-pactl nil 0 nil
-                 "upload-sample" v (symbol-name  k))))
+   (let* ((sample-id (symbol-name k))
+          (status
+           (call-process emacsvox-pactl nil 0 nil
+                         "upload-sample" v sample-id)))
+     (when (and (integerp status) (zerop status))
+       (puthash
+        sample-id v emacsvox-sounds-owned-samples)))))
 
 (defsubst ems--samples-not-loaded-p (sample)
   "Verify if sample loaded"
@@ -285,6 +335,7 @@ directory.")
               (emacsvox-aural-resource-pack-directory
                (emacsvox-aural-resource-pack pack-id))
             (expand-file-name theme))))
+    (emacsvox-sounds-release-samples)
     (clrhash emacsvox-sounds-cache)
     (cond
      (pack-id
@@ -351,16 +402,37 @@ None: For systems that rely on the speech server playing the icon."
 
 ;;; Implementation: emacsvox-icon methods
 
+(defun emacsvox-queue-resource (resource)
+  "Queue concrete auditory RESOURCE on the ordered speech stream."
+  (process-send-string
+   tts-speaker-process
+   (format "a %s\n" resource)))
+
+(defun emacsvox-sounds-play-concrete-cue (resource sample-id)
+  "Play concrete cue RESOURCE, using SAMPLE-ID for Pulse/PipeWire."
+  (let ((process-connection-type nil))
+    (cond
+     ((null emacsvox-play-program)
+      (process-send-string
+       tts-speaker-process
+       (format "p %s\n" resource)))
+     ((and
+       emacsvox-pactl
+       (string= emacsvox-play-program emacsvox-pactl))
+      (emacsvox-sounds-ensure-sample resource sample-id)
+      (start-process
+       "Play" nil emacsvox-pactl "play-sample" sample-id))
+     (t
+      (start-process
+       "Play" nil emacsvox-play-program ems--play-args resource)))))
+
 ;;;;   queue an auditory icon
 (defun emacsvox-queue-icon (icon)
   "Queue auditory icon ICON.
 Used by TTS layer to play icons that are found as text property
 `auditory-icon' on text being spoken.
 This is a private function and  might go away."
-  
-  (process-send-string
-   tts-speaker-process
-   (format "a %s\n" (emacsvox-sounds-resource icon))))
+  (emacsvox-aural-queue-legacy-icon icon))
 
 ;;;;   serve an auditory icon
 (defun emacsvox-serve-icon (icon)
@@ -380,9 +452,6 @@ This is a private function and  might go away."
 Linux: Pipewire and Pulse: pactl.
 without Pipewire/Pulse: play from sox."
   
-  (let ((process-connection-type nil))
-    (start-process
-     "Play" nil emacsvox-play-program ems--play-args
-     (emacsvox-sounds-resource icon))))
+  (emacsvox-aural-present-legacy-icon icon))
 
 (provide  'emacsvox-sounds)

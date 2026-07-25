@@ -697,9 +697,26 @@ resolver and concrete-plan compiler.  A plain symbol-valued =auditory-icon=
 property remains valid and maps through a compatibility adapter.
 
 Context must be captured before =tts-speak= moves text into its scratch
-buffer.  The implementation may resolve the complete plan at the call site or
-attach an immutable context snapshot, but it must not attempt to recover the
-source mode from the scratch buffer.
+buffer.  The implemented boundary is entry to =tts-speak= or =tts-notify=,
+before process initialization, notification logging, or stream switching can
+change the current buffer.  Every formatted source-text run is resolved and
+compiled there, and carries an immutable concrete-plan property into the
+scratch buffer.  Pronunciation, punctuation, capitalization, and Unicode
+cleanup may still replace the text payload, but must preserve that property
+and must not rerun semantic, scheme, resource, or voice resolution.
+
+All multi-action plans use one ordered speech-server queue.  This includes
+spoken annotations, pauses, concrete cues, content speech, and trailing
+actions.  The only local-player exception is a compatibility call whose
+entire presentation is exactly one standalone cue.  A scheme cannot split one
+ordered presentation across independently scheduled local and server
+processes.
+
+Pulse/PipeWire samples use readable content-addressed identifiers of the form
+=emacsvox-PACK-CUE-DIGEST=.  Emacsvox records only identifiers it successfully
+uploaded, unloads obsolete owned samples when the selected pack changes, and
+releases remaining owned samples at exit.  It never unloads samples owned by
+another application.
 
 * Discovery, Explanation, and Editing
 
@@ -1002,7 +1019,8 @@ rule-engine, resource, scheme, sound, and voice tests with no unexpected
 results; =check-parens=, =checkdoc=, and =git diff --check=.  The Emacs 31
 full-suite gate remains unavailable in the current Emacs 30.2 environment.
 
-** TODO Slice 6: Resolve Before Queueing
+** DONE Slice 6: Resolve Before Queueing
+CLOSED: [2026-07-26 Sun]
 
 - Capture source buffer, major mode, module, and facts before scratch-buffer
   processing loses context.
@@ -1018,6 +1036,39 @@ full-suite gate remains unavailable in the current Emacs 30.2 environment.
 
 Deliverable: all playback paths queue concrete ordered actions and agree on
 fallback, silence, and context.
+
+Implemented details:
+
+- =tts-speak= and notification entry points capture the source buffer, buffer
+  name, major-mode lineage, explicit module, occasion, and semantic facts
+  before scratch-buffer processing or logging;
+- formatted source runs carry frozen concrete plans while the normally
+  cleaned scratch-buffer text remains the final speech payload;
+- cue resources and content-addressed sample identifiers, palette
+  personalities and raw ACSS voices, pauses, content suppression, and ordered
+  actions are compiled in Emacs before queueing;
+- concrete before, content, and after actions share one strict speech-server
+  queue, while a legacy presentation containing only one standalone cue may
+  use the selected local player;
+- legacy immediate icons, symbol-valued =auditory-icon= properties,
+  =personality= properties, face fallback, the icon toggle, SoX, and
+  Pulse/PipeWire remain compatibility inputs or adapters;
+- unknown legacy cues compile to the concrete =button= fallback and record
+  degradation rather than reaching the queue unresolved;
+- owned Pulse/PipeWire uploads use =emacsvox-PACK-CUE-DIGEST= identifiers and
+  are invalidated on pack changes and released at exit;
+- scratch-buffer text replacements preserve frozen plans, and queue tests
+  prove that no semantic, scheme, resource, or voice resolver is called after
+  compilation.
+
+Checks: 17 focused concrete-transport ERT tests and 89 combined semantic,
+rule-engine, resource, scheme, transport, sound, and voice tests with no
+unexpected results; 27 source-loaded semantic traces matching the golden
+output; =check-parens=, =checkdoc=, byte compilation, =org-lint=, and
+=git diff --check=.  The normal =make unit-test= gate requires Emacs 31, and
+the normal =make trace-test= initially loads incompatible Emacs 31 bytecode;
+both standard targets remain unavailable in the current Emacs 30.2
+environment.
 
 ** TODO Slice 7: Explanation and Scheme Editor
 
@@ -1129,20 +1180,30 @@ The dedicated tests must cover:
   directories;
 - explanation provenance sufficient to reproduce every winning decision.
 
+* Resolved Decisions
+
+The decisions required for Slice 6 are:
+
+1. Resolve and compile at =tts-speak= and notification entry, attaching the
+   frozen concrete decision to each source-text run while allowing normal
+   cleanup to determine the final text payload.
+2. Use one strict ordered speech-server queue for a complete multi-action
+   presentation.  Permit local playback only for a standalone one-cue
+   compatibility presentation.
+3. Name Pulse/PipeWire samples
+   =emacsvox-PACK-CUE-CONTENT-DIGEST=, own only successful uploads, and unload
+   obsolete owned identifiers.
+
 * Open Decisions
 
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. The exact context snapshot boundary around =tts-speak= and notification
-   speech.
-2. Serialization and timing when speech and cues use different processes.
-3. Pulse/PipeWire sample naming and cleanup for contextual assets.
-4. The portable spatial coordinate ranges and how 3D values reduce to stereo.
-5. Whether critical alerts may be completely suppressed or require an
+1. The portable spatial coordinate ranges and how 3D values reduce to stereo.
+2. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-6. The ordering policy required before minor-mode selectors are enabled.
-7. Whether future integrations need additional occasions and whether those
+3. The ordering policy required before minor-mode selectors are enabled.
+4. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:
