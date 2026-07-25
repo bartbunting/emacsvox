@@ -50,17 +50,31 @@
 ;; 
 ;;; Code:
 
-;;; Forward variable declarations:
-
-(defvar ems--vterm-char)
-(defvar ems--vterm-column)
-(defvar ems--vterm-opoint)
-(defvar ems--vterm-row)
-
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+
+;;; Cached VTerm state:
+
+(defvar-local ems--vterm-row nil
+  "Cache row.")
+
+(defvar-local ems--vterm-column nil
+  "Cache vterm column.")
+
+(defvar-local ems--vterm-char nil
+  "Cache current char.")
+
+(defvar-local ems--vterm-opoint nil
+  "Cache current point.")
+
+(defsubst emacsvox-vterm-snapshot ()
+  "Snapshot VTerm state."
+  (setq ems--vterm-row (1+ (count-lines (point-min) (point)))
+        ems--vterm-column (current-column)
+        ems--vterm-opoint (point)
+        ems--vterm-char (preceding-char)))
 
 ;;;  Map Faces:
 
@@ -165,26 +179,6 @@
 ;; so use before advice to record state
 ;; and an after advice on vterm--redraw to implement the spoken
 ;; feedback loop.
-
-(defvar-local ems--vterm-row nil
-  "Cache row.")
-
-(defvar-local ems--vterm-column nil
-  "Cache vterm column.")
-
-(defvar-local ems--vterm-char nil
-  "Cache current char.")
-
-(defvar-local ems--vterm-opoint nil
-  "Cache current point.")
-
-(defsubst emacsvox-vterm-snapshot ()
-  "Snapshot VTerm state."
-  (setq ems--vterm-row(1+ (count-lines (point-min) (point))) ;;; line number
-        ems--vterm-column (current-column) ;;; column number
-        ems--vterm-opoint (point)
-        ems--vterm-char (preceding-char))
-  )
 
 (defun emacsvox--advice-vterm--flush-output-before (&rest _)
   "Cache state before input event is processed."

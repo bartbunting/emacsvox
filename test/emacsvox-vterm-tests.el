@@ -22,5 +22,20 @@
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-vterm-snapshot-captures-buffer-state ()
+  "VTerm snapshots cache the current buffer position and character."
+  (with-temp-buffer
+    (insert "first\nsecond")
+    (goto-char (point-max))
+    (let ((expected-row (1+ (count-lines (point-min) (point))))
+          (expected-column (current-column))
+          (expected-point (point))
+          (expected-char (preceding-char)))
+      (emacsvox-vterm-snapshot)
+      (should (= ems--vterm-row expected-row))
+      (should (= ems--vterm-column expected-column))
+      (should (= ems--vterm-opoint expected-point))
+      (should (= ems--vterm-char expected-char)))))
+
 (provide 'emacsvox-vterm-tests)
 ;;; emacsvox-vterm-tests.el ends here
