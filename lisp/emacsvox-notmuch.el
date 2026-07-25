@@ -46,6 +46,7 @@
 (require 'button)
 (require 'emacsvox-preamble)
 (require 'subr-x)
+(require 'wid-edit)
 
 (declare-function notmuch-sanitize "notmuch-lib" (str))
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
@@ -724,6 +725,71 @@ tag, or give it a nil icon to keep the status silent."
   "Speak a newly opened Notmuch view."
   (emacsvox-icon 'open-object)
   (emacsvox-speak-mode-line))
+
+(defun emacsvox-notmuch--hello-widget-count (widget)
+  "Return the displayed result count preceding saved-search WIDGET."
+  (when-let* ((start (widget-get widget :from)))
+    (save-excursion
+      (goto-char start)
+      (skip-chars-backward " \t")
+      (let ((end (point)))
+        (skip-chars-backward "^ \t\n")
+        (unless (= (point) end)
+          (buffer-substring-no-properties (point) end))))))
+
+(defun emacsvox-notmuch--hello-widget-summary ()
+  "Speak the Notmuch Hello widget at point."
+  (when-let* ((widget (widget-at (point)))
+              (value (widget-value widget))
+              (label (string-trim (format "%s" value))))
+    (let* ((count
+            (and
+             (widget-get widget :notmuch-search-terms)
+             (emacsvox-notmuch--hello-widget-count widget)))
+           (summary
+            (cond
+             (count
+              (format
+               "%s, %s %s"
+               label count
+               (if (string= count "1") "message" "messages")))
+             ((eq (widget-type widget) 'push-button)
+              (format "%s button" label))
+             ((eq (widget-type widget) 'link)
+              (format "%s link" label))
+             (t label))))
+      (emacsvox-icon 'item)
+      (tts-speak summary))))
+
+(defun emacsvox-notmuch--hello-widget-navigation-around
+    (target original arguments)
+  "Speak Notmuch Hello widgets reached by TARGET.
+Call ORIGINAL once with ARGUMENTS and preserve its result."
+  (if (and
+       (eq major-mode 'notmuch-hello-mode)
+       (ems-interactive-p target))
+      (let ((result (apply original arguments)))
+        (emacsvox-notmuch--hello-widget-summary)
+        result)
+    (apply original arguments)))
+
+(defun emacsvox--advice-widget-forward-notmuch-around (original &rest arguments)
+  "Speak the Notmuch Hello widget reached by `widget-forward'."
+  (emacsvox-notmuch--hello-widget-navigation-around
+   'widget-forward original arguments))
+
+(defun emacsvox--advice-widget-backward-notmuch-around (original &rest arguments)
+  "Speak the Notmuch Hello widget reached by `widget-backward'."
+  (emacsvox-notmuch--hello-widget-navigation-around
+   'widget-backward original arguments))
+
+(push
+ '(widget-forward :around emacsvox--advice-widget-forward-notmuch-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(widget-backward :around emacsvox--advice-widget-backward-notmuch-around)
+ emacsvox-notmuch--advice)
 
 (emacsvox-notmuch--register-after-group
  '(notmuch notmuch-hello notmuch-hello-update)

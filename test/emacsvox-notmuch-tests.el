@@ -17,6 +17,43 @@
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-notmuch-hello-navigation-speaks-search-name-and-count ()
+  "Tabbing through saved searches should speak their names and counts."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-hello-mode)
+    (widget-insert "      42 ")
+    (let* ((widget
+            (widget-create
+             'push-button
+             :notmuch-search-terms "tag:inbox"
+             "inbox"))
+           (destination (copy-marker (widget-get widget :from)))
+           (ems--interactive-fn-name 'widget-forward)
+           events
+           original-marker
+           (original-calls 0))
+      (widget-setup)
+      (goto-char (point-min))
+      (cl-letf (((symbol-function 'emacsvox-icon)
+                 (lambda (icon) (push (list 'icon icon) events)))
+                ((symbol-function 'tts-speak)
+                 (lambda (text) (push (list 'speak text) events))))
+        (should
+         (eq
+          (emacsvox--advice-widget-forward-notmuch-around
+           (lambda (&rest _)
+             (setq original-marker ems--interactive-fn-name)
+             (cl-incf original-calls)
+             (goto-char destination)
+             'moved))
+          'moved)))
+      (should (= original-calls 1))
+      (should-not original-marker)
+      (should
+       (equal
+        (nreverse events)
+        '((icon item) (speak "inbox, 42 messages")))))))
+
 (defconst emacsvox-notmuch-test--search-result
   '(:authors "Alice Smith|Bob Jones"
     :subject "Project update"
