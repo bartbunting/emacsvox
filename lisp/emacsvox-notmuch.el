@@ -872,7 +872,8 @@ line contains non-whitespace text."
  #'emacsvox-notmuch--navigation-feedback)
 
 (defun emacsvox-notmuch--show-navigation-feedback ()
-  "Speak the Notmuch message selected by show-mode navigation."
+  "Select and speak the Notmuch message body reached by navigation."
+  (emacsvox-notmuch--move-to-message-body)
   (emacsvox-notmuch-speak-show-message))
 
 (emacsvox-notmuch--register-after-group
