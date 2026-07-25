@@ -42,8 +42,61 @@
 
 ;;   Required modules:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)
+(require 'subr-x)
+
+(declare-function notmuch-sanitize "notmuch-lib" (str))
+(declare-function notmuch-search-get-result "notmuch" (&optional pos))
+(declare-function notmuch-tag-format-tags "notmuch-tag"
+                  (tags orig-tags &optional face))
+
+;;;  Customization:
+
+(defgroup emacsvox-notmuch nil
+  "Speech feedback for the Notmuch mail interface."
+  :group 'emacsvox)
+
+(defcustom emacsvox-notmuch-search-result-fields
+  '(authors subject date count tags)
+  "Ordered fields spoken for the current Notmuch search result.
+
+The built-in fields are `authors', `subject', `date', `count',
+and `tags'.  A function may also be used as a field; it receives
+the Notmuch result plist and should return the string to speak.
+Remove a field to silence it, or reorder the list to change when
+it is spoken."
+  :type '(repeat
+          (choice
+           (const :tag "Authors" authors)
+           (const :tag "Subject" subject)
+           (const :tag "Date" date)
+           (const :tag "Matched and total count" count)
+           (const :tag "Tags" tags)
+           (function :tag "Custom formatter")))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-search-field-separator ", "
+  "String placed between spoken Notmuch search-result fields."
+  :type 'string
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-search-status-icons
+  '(("unread" . new-mail)
+    ("flagged" . mark-object))
+  "Map Notmuch status tags to auditory icons.
+
+Entries are checked in order and every matching non-nil icon is
+played.  Tags present in this alist are omitted from the spoken
+`tags' field.  Remove an entry to speak that status as an ordinary
+tag, or give it a nil icon to keep the status silent."
+  :type '(alist
+          :key-type (string :tag "Status tag")
+          :value-type
+          (choice
+           (const :tag "No sound" nil)
+           (symbol :tag "Auditory icon")))
+  :group 'emacsvox-notmuch)
 
 ;;;  Map Faces:
 
@@ -66,6 +119,105 @@
    (notmuch-search-unread-face voice-animate)
    (notmuch-tag-face voice-bolden)
    (notmuch-wash-cited-text voice-smoothen)))
+
+;;;  Search Results:
+
+(defun emacsvox-notmuch--field-string (value face)
+  "Return VALUE as a non-empty string using FACE."
+  (when value
+    (let ((text (string-trim (format "%s" value))))
+      (unless (string-empty-p text)
+        (propertize text 'face face)))))
+
+(defun emacsvox-notmuch--format-authors (authors)
+  "Format AUTHORS with Notmuch's matching-author personalities."
+  (when authors
+    (save-match-data
+      (if (string-match "\\(.*\\)|\\(.*\\)" authors)
+          (let ((matching
+                 (emacsvox-notmuch--field-string
+                  (match-string 1 authors)
+                  'notmuch-search-matching-authors))
+                (non-matching
+                 (emacsvox-notmuch--field-string
+                  (match-string 2 authors)
+                  'notmuch-search-non-matching-authors)))
+            (string-join (delq nil (list matching non-matching)) ", "))
+        (emacsvox-notmuch--field-string
+         authors 'notmuch-search-matching-authors)))))
+
+(defun emacsvox-notmuch--status-tags ()
+  "Return tags represented by `emacsvox-notmuch-search-status-icons'."
+  (mapcar #'car emacsvox-notmuch-search-status-icons))
+
+(defun emacsvox-notmuch--ordinary-tags (tags)
+  "Return TAGS excluding statuses represented by auditory cues."
+  (let ((status-tags (emacsvox-notmuch--status-tags)))
+    (cl-remove-if
+     (lambda (tag) (member tag status-tags))
+     tags)))
+
+(defun emacsvox-notmuch--format-tags (result)
+  "Format ordinary tags from Notmuch RESULT."
+  (let ((tags
+         (emacsvox-notmuch--ordinary-tags
+          (plist-get result :tags)))
+        (orig-tags
+         (emacsvox-notmuch--ordinary-tags
+          (plist-get result :orig-tags))))
+    (unless (and (null tags) (null orig-tags))
+      (notmuch-tag-format-tags tags orig-tags))))
+
+(defun emacsvox-notmuch--format-search-field (field result)
+  "Format FIELD from Notmuch search RESULT for speech."
+  (pcase field
+    ('authors
+     (emacsvox-notmuch--format-authors
+      (notmuch-sanitize (or (plist-get result :authors) ""))))
+    ('subject
+     (emacsvox-notmuch--field-string
+      (notmuch-sanitize (or (plist-get result :subject) "[No subject]"))
+      'notmuch-search-subject))
+    ('date
+     (emacsvox-notmuch--field-string
+      (plist-get result :date_relative)
+      'notmuch-search-date))
+    ('count
+     (emacsvox-notmuch--field-string
+      (format "%s of %s"
+              (plist-get result :matched)
+              (plist-get result :total))
+      'notmuch-search-count))
+    ('tags (emacsvox-notmuch--format-tags result))
+    ((pred functionp) (funcall field result))
+    (_ nil)))
+
+(defun emacsvox-notmuch-format-search-result (result)
+  "Return a voice-propertized summary of Notmuch search RESULT."
+  (string-join
+   (delq
+    nil
+    (mapcar
+     (lambda (field)
+       (emacsvox-notmuch--format-search-field field result))
+     emacsvox-notmuch-search-result-fields))
+   emacsvox-notmuch-search-field-separator))
+
+(defun emacsvox-notmuch--play-status-icons (result)
+  "Play configured status icons for Notmuch search RESULT."
+  (let ((tags (plist-get result :tags)))
+    (dolist (entry emacsvox-notmuch-search-status-icons)
+      (when (and (cdr entry) (member (car entry) tags))
+        (emacsvox-icon (cdr entry))))))
+
+(defun emacsvox-notmuch-speak-search-result (&optional result)
+  "Speak Notmuch search RESULT, defaulting to the result at point."
+  (interactive)
+  (when-let* ((result (or result (notmuch-search-get-result)))
+              (summary (emacsvox-notmuch-format-search-result result)))
+    (emacsvox-notmuch--play-status-icons result)
+    (tts-speak summary)
+    summary))
 
 ;;;  Interactive Commands:
 
