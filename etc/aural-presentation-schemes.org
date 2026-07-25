@@ -497,6 +497,12 @@ Schemes use safe, versioned keyword plists for persistence and interchange.
 The pure resolver compiles them into validated internal structures.  Module
 defaults are read-only scheme fragments in the same declarative format.
 
+Schema version 1 rules accept optional =:enabled nil= or =:enabled t=, with
+omission meaning enabled.  Disabled rules remain in scheme data, retain their
+stable identifiers, and are fully validated, but do not match, contribute
+actions, or add resource requirements.  Identifier uniqueness includes
+disabled rules so disabling cannot hide an ambiguity that reappears later.
+
 =content= is a distinguished scalar-style phase.  =before= and =after= contain
 ordered actions.  Scalar values use the strongest matching contribution.
 Sequences append by default and support explicit =prepend=, =append=,
@@ -720,9 +726,8 @@ another application.
 
 * Discovery, Explanation, and Editing
 
-The user interface is part of the contract, not a follow-up convenience.
-
-Provide commands equivalent to:
+The user interface is part of the contract, not a follow-up convenience.  The
+implemented discovery and management commands are:
 
 - =emacsvox-list-aural-semantics=: list roles, events, states, attributes,
   owners, and intent;
@@ -738,6 +743,11 @@ Provide commands equivalent to:
   selectors, conflicts, unavailable voices, and missing assets;
 - commands to add, edit, reorder, copy, enable, disable, and remove user rules
   at global, module, mode, combined, and buffer scopes.
+
+=emacsvox-set-aural-scheme=, =emacsvox-reset-aural-scheme=,
+=emacsvox-copy-aural-scheme=, and =emacsvox-reset-aural-overrides= provide
+the set, reset, and copy operations.  Scheme copying creates an editable
+inheriting child by default; a prefix argument creates a flattened copy.
 
 The scheme editor should use an accessible Emacs buffer and completion rather
 than requiring users to edit raw data.  Its workflow should be:
@@ -756,6 +766,43 @@ ordered actions, inheritance, rule explanations, and previews.
 Add a training mode inspired by JAWS.  It should perform the normal
 presentation and then speak a concise semantic explanation.  A more detailed
 command should identify every matched rule and why it won or composed.
+
+The implemented =emacsvox-aural-training-mode= adds its concise semantic
+identification after the concrete plan, including after a standalone cue
+played through a local adapter.  It queues concrete explanatory text directly
+and never recursively invokes semantic resolution.  Detailed inspection uses
+=emacsvox-explain-aural-presentation=.
+
+** Accessible editor contract
+
+=emacsvox-edit-aural-rules= opens one plain-text
+=emacsvox-aural-scheme-editor-mode= buffer for a persistent personal,
+temporary session, source-buffer-local, or personal-scheme scope.
+=emacsvox-edit-aural-scheme= opens the scheme scope directly.  Built-in
+schemes remain read-only and must first be copied.
+
+The buffer exposes these stable operations:
+
+| Key                  | Operation                                      |
+|----------------------+------------------------------------------------|
+| =n=                  | Add a guided rule                              |
+| =RET= or =e=         | Edit the rule at point                         |
+| =c=                  | Copy a rule under a new stable identifier      |
+| =d=                  | Remove a rule                                  |
+| =t=                  | Enable or disable a rule without losing it     |
+| =M-up= / =M-down=    | Reorder rules and their explicit visible order |
+| =m=                  | Edit scheme inheritance and providers          |
+| =p= / =x=            | Preview or explain the unsaved rule            |
+| =v= / =s=            | Validate or atomically save/apply               |
+| =?=                  | Describe the completion-driven workflow         |
+
+Selectors are assembled from registered semantic, module, major-mode,
+occasion, and compatibility fields.  Before and after phases explicitly
+choose append, prepend, replace, remove, suppress, or unchanged behavior and
+then build ordered speech, cue, and pause actions.  Content prompts distinguish
+unchanged, spoken, silenced, default voice, named voice, and inaudible
+presentation.  Existing spatial data is displayed and validated; guided
+spatial editing waits for the Slice 9 coordinate contract.
 
 * Compatibility Policy
 
@@ -1070,7 +1117,8 @@ the normal =make trace-test= initially loads incompatible Emacs 31 bytecode;
 both standard targets remain unavailable in the current Emacs 30.2
 environment.
 
-** TODO Slice 7: Explanation and Scheme Editor
+** DONE Slice 7: Explanation and Scheme Editor
+CLOSED: [2026-07-26 Sun]
 
 - Add list, describe, preview, validate, explain, set, reset, and copy
   commands.
@@ -1083,6 +1131,37 @@ environment.
 
 Deliverable: users can create, understand, test, and repair schemes without
 reading internal caches or raw protocol output.
+
+Implemented details:
+
+- tabulated semantic and scheme browsers with completion-driven description
+  and validation commands;
+- point inspection of namespaced semantic facts or already frozen concrete
+  plans;
+- reproducible explanations containing facts, source context, matching rules,
+  origin and specificity vectors, scalar provenance, ordered concrete
+  resources, removed or suppressed actions, and backend degradation;
+- previews against current facts or selector-derived representative facts and
+  context;
+- validation for inheritance and providers, missing or unknown assets,
+  unavailable voices after voice initialization, ineffective rules,
+  ambiguous stable-ID ties, and disabled rules;
+- active-scheme set/reset, inherited or flattened personal copies, and
+  persistent/session/buffer override reset commands;
+- schema-v1 optional =:enabled= state, default enabled, with full validation
+  and identifier uniqueness even while disabled;
+- the accessible special-mode editor described above, with atomic personal
+  scheme and persistent override saves and isolated session/buffer commits;
+- global training mode that follows normal presentation with concise
+  registered semantics and offers the full explanation command for detail;
+- main Emacsvox startup loads the tools and editor commands.
+
+Checks: 16 focused tooling/editor ERT tests and 105 combined semantic,
+rule-engine, resource, scheme, transport, tooling, sound, and voice tests with
+no unexpected results; 27 source-loaded semantic traces matching the golden
+output; =check-parens=, =checkdoc=, byte compilation, =org-lint=, and
+=git diff --check=.  The normal Emacs 31 gates remain unavailable in the
+current Emacs 30.2 environment as recorded for Slice 6.
 
 ** TODO Slice 8: Org Vertical Slice
 
@@ -1193,6 +1272,10 @@ The decisions required for Slice 6 are:
 3. Name Pulse/PipeWire samples
    =emacsvox-PACK-CUE-CONTENT-DIGEST=, own only successful uploads, and unload
    obsolete owned identifiers.
+
+For Slice 7, retain schema version 1 and add optional boolean =:enabled= to
+rule data.  Omission means enabled; disabled rules validate but do not enter
+the cascade.
 
 * Open Decisions
 

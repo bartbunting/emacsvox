@@ -100,7 +100,7 @@
     (emacsvox-aural-rule
      (:constructor emacsvox-aural--make-rule))
   "A validated compiled presentation rule."
-  id origin layer-order order selector contribution source)
+  id enabled origin layer-order order selector contribution source)
 
 (cl-defstruct
     (emacsvox-aural-scheme
@@ -490,18 +490,25 @@ LAYER-ORDER records inheritance order within one origin."
     (emacsvox-aural--rule-error
      "Rule layer order must be an integer: %S" layer-order))
   (let* ((id (plist-get data :id))
+         (enabled
+          (if (plist-member data :enabled)
+              (plist-get data :enabled)
+            t))
          (order (if (plist-member data :order)
                     (plist-get data :order)
                   (or index 0)))
          (match (or (plist-get data :match) nil))
          (render (plist-get data :render))
-         (allowed '(:id :order :match :render))
+         (allowed '(:id :enabled :order :match :render))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
            unless (memq key allowed)
            collect key)))
     (emacsvox-aural--require-symbol id "Rule identifier")
+    (unless (memq enabled '(nil t))
+      (emacsvox-aural--rule-error
+       "Rule :enabled must be boolean for %S" id))
     (unless (integerp order)
       (emacsvox-aural--rule-error "Rule order must be an integer for %S" id))
     (unless (plist-member data :render)
@@ -510,6 +517,7 @@ LAYER-ORDER records inheritance order within one origin."
       (emacsvox-aural--rule-error "Unknown keys for rule %S: %S" id unknown))
     (emacsvox-aural--make-rule
      :id id
+     :enabled enabled
      :origin origin
      :layer-order (or layer-order 0)
      :order order
@@ -701,6 +709,7 @@ LAYER-ORDER records inheritance order within one origin."
          (legacy-personality
           (emacsvox-aural-selector-legacy-personality selector)))
     (and
+     (emacsvox-aural-rule-enabled rule)
      (or (null role) (eq role (emacsvox-aural-input-role input)))
      (cl-every
       (lambda (event) (memq event (emacsvox-aural-input-events input)))

@@ -50,6 +50,16 @@
    :mode-lineage (list (or mode 'text-mode))
    :occasion 'navigation))
 
+(defun emacsvox-test--transport-adapter-command (personality)
+  "Return the mock adapter command for PERSONALITY.
+
+Loaded `defvoice' personalities resolve through their ACSS-backed value."
+  (format
+   "<%s>"
+   (if (boundp personality)
+       (symbol-value personality)
+     personality)))
+
 (ert-deftest emacsvox-aural-transport-captures-source-context ()
   "Source buffer, name, mode, module, and occasion are frozen together."
   (with-temp-buffer
@@ -118,7 +128,8 @@
          (equal
           (emacsvox-aural-concrete-content-voice-command
            (emacsvox-aural-concrete-plan-content plan))
-          "<voice-bolden>"))))))
+          (emacsvox-test--transport-adapter-command
+           'voice-bolden)))))))
 
 (ert-deftest emacsvox-aural-transport-compiles-raw-acss ()
   "A raw ACSS style is named before the selected adapter compiles it."
@@ -181,13 +192,17 @@
       (should
        (equal
         (nreverse events)
-        '((code "<voice-annotate>")
+        `((code
+           ,(emacsvox-test--transport-adapter-command
+             'voice-annotate))
           (text "Heading")
           (code "RESET")
           (cue "item")
           (pause 40)
           (code "RESET")
-          (code "<voice-bolden>")
+          (code
+           ,(emacsvox-test--transport-adapter-command
+             'voice-bolden))
           (text "Title")
           (code "RESET")
           (text "folded")))))))
@@ -243,7 +258,8 @@
           (should
            (equal
             (emacsvox-aural-concrete-content-voice-command content)
-            "<voice-bolden>")))))))
+            (emacsvox-test--transport-adapter-command
+             'voice-bolden))))))))
 
 (ert-deftest emacsvox-aural-transport-detects-partially-prepared-text ()
   "A raw suffix prevents a mixed string from bypassing source preparation."
@@ -323,7 +339,10 @@
       (should
        (equal
         captured
-        '(fundamental-mode emacs-lisp-mode "<voice-bolden>"))))))
+        `(fundamental-mode
+          emacs-lisp-mode
+          ,(emacsvox-test--transport-adapter-command
+            'voice-bolden)))))))
 
 (ert-deftest emacsvox-aural-transport-cleanup-preserves-frozen-plan ()
   "Scratch-buffer replacements retain the plan frozen at submission."
@@ -404,8 +423,10 @@
       (should
        (equal
         (nreverse queued)
-        '(("cap " "<cap-voice>")
-          ("Word" "<voice-bolden>")))))))
+        `(("cap " "<cap-voice>")
+          ("Word"
+           ,(emacsvox-test--transport-adapter-command
+             'voice-bolden))))))))
 
 (ert-deftest emacsvox-aural-transport-notification-captures-before-logging ()
   "Notification logging cannot replace the source buffer context."

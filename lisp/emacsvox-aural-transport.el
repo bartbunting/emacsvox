@@ -70,6 +70,12 @@
 (defvar emacsvox-aural-submission-occasion nil
   "Dynamically bound occasion for the current speech submission.")
 
+(defvar emacsvox-aural-plan-presented-hook nil
+  "Abnormal hook run after queueing one concrete aural plan.
+
+Each function receives the `emacsvox-aural-concrete-plan' that was queued.
+Standalone local cues run this hook after playback has been requested.")
+
 (defconst emacsvox-aural-concrete-plan-property
   'emacsvox-aural-concrete-plan
   "Text property holding a source-resolved concrete plan.")
@@ -378,6 +384,22 @@ or a command string understood by the selected speech server."
      "Run-local semantic facts must be a plist: %S" local))
   (append (copy-tree local) (copy-tree base)))
 
+(defun emacsvox-aural--legacy-input (icon facts context)
+  "Return concrete source FACTS and CONTEXT for legacy ICON."
+  (let* ((semantic
+          (alist-get icon emacsvox-aural-legacy-icon-semantics))
+         (facts (copy-tree facts))
+         (events
+          (append
+           (when-let* ((event (plist-get facts :event))) (list event))
+           (copy-sequence (plist-get facts :events))
+           (when semantic (list semantic)))))
+    (list
+     (if events
+         (plist-put facts :events (delete-dups events))
+       facts)
+     (plist-put (copy-tree context) :legacy-cue icon))))
+
 (defun emacsvox-aural-prepare-text (text &optional facts context)
   "Freeze aural decisions for every formatted run in TEXT.
 
@@ -433,6 +455,14 @@ The returned string retains legacy properties and adds concrete plans."
            (plist-put
             run-context :legacy-source
             (if explicit 'personality-property 'face))))
+        (when icon
+          (pcase-let
+              ((`(,legacy-facts ,legacy-context)
+                (emacsvox-aural--legacy-input
+                 icon run-facts run-context)))
+            (setq
+             run-facts legacy-facts
+             run-context legacy-context)))
         (let* ((plan
                 (if icon
                     (emacsvox-aural-resolve-legacy-icon
@@ -514,6 +544,7 @@ cleanup, without rerunning semantic or contextual resolution."
         (tts--protocol-queue-code (tts-voice-reset-code)))))
   (dolist (action (emacsvox-aural-concrete-plan-after plan))
     (emacsvox-aural-queue-concrete-action action))
+  (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan)
   plan)
 
 (defun emacsvox-aural--standalone-cue (plan)
@@ -542,20 +573,28 @@ cleanup, without rerunning semantic or contextual resolution."
 
 (defun emacsvox-aural-present-legacy-icon (icon &optional context)
   "Present legacy ICON through contextual resolution and concrete transport."
-  (let* ((context
-          (or
-           context
-           (emacsvox-aural-capture-context nil 'notification)))
-         (plan
-          (emacsvox-aural-compile-plan
-           (emacsvox-aural-resolve-legacy-icon icon context)
-           nil context))
-         (cue (emacsvox-aural--standalone-cue plan)))
+  (pcase-let*
+      ((context
+        (or
+         context
+         (emacsvox-aural-capture-context nil 'notification)))
+       (`(,facts ,context)
+        (emacsvox-aural--legacy-input icon nil context))
+       (plan
+        (emacsvox-aural-compile-plan
+         (emacsvox-aural-resolve-legacy-icon icon context facts)
+         facts context))
+       (cue (emacsvox-aural--standalone-cue plan)))
     (cond
      (cue
       (emacsvox-sounds-play-concrete-cue
        (emacsvox-aural-concrete-action-resource cue)
-       (emacsvox-aural-concrete-action-sample-id cue)))
+       (emacsvox-aural-concrete-action-sample-id cue))
+      (when emacsvox-aural-plan-presented-hook
+        (emacsvox-aural--ensure-speaker)
+        (run-hook-with-args
+         'emacsvox-aural-plan-presented-hook plan)
+        (tts--protocol-dispatch)))
      ((or
        (emacsvox-aural-concrete-plan-before plan)
        (emacsvox-aural-concrete-plan-after plan))
@@ -566,15 +605,18 @@ cleanup, without rerunning semantic or contextual resolution."
 
 (defun emacsvox-aural-queue-legacy-icon (icon &optional context)
   "Resolve and queue legacy ICON concretely without dispatching."
-  (let* ((context
-          (or
-           context
-           emacsvox-aural-submission-context
-           (emacsvox-aural-capture-context nil 'continuous)))
-         (plan
-          (emacsvox-aural-compile-plan
-           (emacsvox-aural-resolve-legacy-icon icon context)
-           nil context)))
+  (pcase-let*
+      ((context
+        (or
+         context
+         emacsvox-aural-submission-context
+         (emacsvox-aural-capture-context nil 'continuous)))
+       (`(,facts ,context)
+        (emacsvox-aural--legacy-input icon nil context))
+       (plan
+        (emacsvox-aural-compile-plan
+         (emacsvox-aural-resolve-legacy-icon icon context facts)
+         facts context)))
     (emacsvox-aural-queue-concrete-plan plan)))
 
 (defun emacsvox-aural-present (facts &optional context)

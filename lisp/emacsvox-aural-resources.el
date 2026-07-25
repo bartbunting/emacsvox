@@ -451,20 +451,23 @@
   "Return unique cue identifiers referenced by compiled SCHEME."
   (let (cues)
     (dolist (rule (emacsvox-aural-scheme-rules scheme))
-      (let ((contribution (emacsvox-aural-rule-contribution rule)))
-        (dolist
-            (operations
-             (list
-              (emacsvox-aural-contribution-before contribution)
-              (emacsvox-aural-contribution-after contribution)))
+      (when (emacsvox-aural-rule-enabled rule)
+        (let ((contribution (emacsvox-aural-rule-contribution rule)))
           (dolist
-              (action
-               (append
-                (emacsvox-aural-phase-operations-replace operations)
-                (emacsvox-aural-phase-operations-prepend operations)
-                (emacsvox-aural-phase-operations-append operations)))
-            (when (eq (emacsvox-aural-action-kind action) 'cue)
-              (push (emacsvox-aural-action-cue action) cues))))))
+              (operations
+               (list
+                (emacsvox-aural-contribution-before contribution)
+                (emacsvox-aural-contribution-after contribution)))
+            (dolist
+                (action
+                 (append
+                  (emacsvox-aural-phase-operations-replace operations)
+                  (emacsvox-aural-phase-operations-prepend operations)
+                  (emacsvox-aural-phase-operations-append operations)))
+              (when (eq (emacsvox-aural-action-kind action) 'cue)
+                (push
+                 (emacsvox-aural-action-cue action)
+                 cues)))))))
     (sort
      (delete-dups cues)
      (lambda (left right)

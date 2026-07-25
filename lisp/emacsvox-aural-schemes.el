@@ -157,8 +157,11 @@ Each function receives one data plist and returns a plist with a greater
          (list entry))
       (list entry))))
 
-(defun emacsvox-aural-effective-scheme-rules (&optional id)
-  "Return inherited compiled rules for scheme ID or the active scheme."
+(defun emacsvox-aural-effective-scheme-rules (&optional id include-disabled)
+  "Return inherited compiled rules for scheme ID or the active scheme.
+
+When INCLUDE-DISABLED is non-nil, retain validated disabled rules for
+diagnostics and cross-layer identifier checks."
   (let ((chain
          (emacsvox-aural--scheme-chain
           (or id emacsvox-aural-active-scheme)))
@@ -178,9 +181,10 @@ Each function receives one data plist and returns a plist with a greater
           (or id emacsvox-aural-active-scheme)
           (emacsvox-aural-rule-id rule)))
        (push (emacsvox-aural-rule-id rule) seen)
-       (let ((copy (copy-emacsvox-aural-rule rule)))
-         (setf (emacsvox-aural-rule-layer-order copy) layer-order)
-         (push copy rules))))
+       (when (or include-disabled (emacsvox-aural-rule-enabled rule))
+         (let ((copy (copy-emacsvox-aural-rule rule)))
+           (setf (emacsvox-aural-rule-layer-order copy) layer-order)
+           (push copy rules)))))
     (nreverse rules)))
 
 (defun emacsvox-aural-effective-scheme-provider (property &optional id)
@@ -266,8 +270,11 @@ not loaded yet; validation is deferred until the complete registry check."
   (run-hooks 'emacsvox-aural-active-scheme-changed-hook)
   id)
 
-(defun emacsvox-aural--compile-rule-list (data origin source)
-  "Compile rule DATA from ORIGIN and SOURCE, rejecting duplicate IDs."
+(defun emacsvox-aural--compile-rule-list
+    (data origin source &optional include-disabled)
+  "Compile rule DATA from ORIGIN and SOURCE, rejecting duplicate IDs.
+
+When INCLUDE-DISABLED is non-nil, retain disabled rules in the result."
   (unless (listp data)
     (emacsvox-aural--scheme-error "Rule layer must be a list: %S" data))
   (let ((compiled
@@ -283,10 +290,14 @@ not loaded yet; validation is deferred until the complete registry check."
          "Duplicate %S rule identifier: %S"
          origin (emacsvox-aural-rule-id rule)))
       (push (emacsvox-aural-rule-id rule) seen))
-    compiled))
+    (if include-disabled
+        compiled
+      (cl-remove-if-not #'emacsvox-aural-rule-enabled compiled))))
 
-(defun emacsvox-aural--module-rules (module)
-  "Return compiled read-only fragment rules matching MODULE."
+(defun emacsvox-aural--module-rules (module &optional include-disabled)
+  "Return compiled read-only fragment rules matching MODULE.
+
+When INCLUDE-DISABLED is non-nil, retain disabled fragment rules."
   (let (fragments rules)
     (maphash
      (lambda (_ fragment)
@@ -309,9 +320,10 @@ not loaded yet; validation is deferred until the complete registry check."
          (rule
           (emacsvox-aural-scheme-rules
            (emacsvox-aural-module-fragment-compiled fragment)))
-       (let ((copy (copy-emacsvox-aural-rule rule)))
-         (setf (emacsvox-aural-rule-layer-order copy) layer-order)
-         (push copy rules))))
+       (when (or include-disabled (emacsvox-aural-rule-enabled rule))
+         (let ((copy (copy-emacsvox-aural-rule rule)))
+           (setf (emacsvox-aural-rule-layer-order copy) layer-order)
+           (push copy rules)))))
     (nreverse rules)))
 
 (defun emacsvox-aural--require-unique-rule-ids (rules)
@@ -330,16 +342,20 @@ not loaded yet; validation is deferred until the complete registry check."
 
 (defun emacsvox-aural-current-rules (&optional context)
   "Return every compiled rule layer relevant to CONTEXT."
-  (emacsvox-aural--require-unique-rule-ids
-   (append
-    (emacsvox-aural--module-rules (plist-get context :module))
-    (emacsvox-aural-effective-scheme-rules)
-    (emacsvox-aural--compile-rule-list
-     emacsvox-aural-user-rules 'user emacsvox-aural-schemes-file)
-    (emacsvox-aural--compile-rule-list
-     emacsvox-aural-session-rules 'session "session")
-    (emacsvox-aural--compile-rule-list
-     emacsvox-aural-buffer-rules 'buffer (current-buffer)))))
+  (cl-remove-if-not
+   #'emacsvox-aural-rule-enabled
+   (emacsvox-aural--require-unique-rule-ids
+    (append
+     (emacsvox-aural--module-rules
+      (plist-get context :module) t)
+     (emacsvox-aural-effective-scheme-rules nil t)
+     (emacsvox-aural--compile-rule-list
+      emacsvox-aural-user-rules
+      'user emacsvox-aural-schemes-file t)
+     (emacsvox-aural--compile-rule-list
+      emacsvox-aural-session-rules 'session "session" t)
+     (emacsvox-aural--compile-rule-list
+      emacsvox-aural-buffer-rules 'buffer (current-buffer) t)))))
 
 (defun emacsvox-aural-current-context
     (module occasion &optional legacy-personality legacy-source)
