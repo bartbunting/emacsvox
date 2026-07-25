@@ -61,6 +61,8 @@
 (eval-when-compile (require 'advice))
 (require 'emacsvox-preamble)
 
+(defvar read-passwd--password-hidden)
+
 (defmacro emacsvox-advice--define-interactive-after-advice
     (targets docstring &rest body)
   "Define native interactive after advice for each command in TARGETS.
@@ -1060,7 +1062,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (defun emacsvox--advice-read-passwd--hide-password-after (&rest _)
   "Speak the masked or visible password character."
   (tts-notify
-   (if read-passwd--hide-password "dot"
+   (if read-passwd--password-hidden "dot"
      (if (characterp last-input-event) (format "%c" last-input-event)
        "dot")))
   (emacsvox-icon 'repeat-active))
@@ -1073,7 +1075,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (defun emacsvox--advice-read-passwd-toggle-visibility-after (&rest _)
   "Announce an interactive password visibility change."
   (when (ems-interactive-p 'read-passwd-toggle-visibility)
-    (emacsvox-icon (if read-passwd--hide-password 'off 'on))))
+    (emacsvox-icon (if read-passwd--password-hidden 'off 'on))))
 
 (advice-add
  'read-passwd-toggle-visibility :after

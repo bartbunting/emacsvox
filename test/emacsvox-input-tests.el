@@ -108,6 +108,37 @@
       (nreverse events)
       '((icon open-object) (speak "Secret: ") (icon pwd))))))
 
+(ert-deftest emacsvox-read-passwd-character-feedback-respects-visibility ()
+  "Password characters are masked in speech only while hidden."
+  (let ((last-input-event ?s)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-notify)
+               (lambda (text) (push (list 'notify text) events))))
+      (let ((read-passwd--password-hidden t))
+        (emacsvox--advice-read-passwd--hide-password-after))
+      (let ((read-passwd--password-hidden nil))
+        (emacsvox--advice-read-passwd--hide-password-after)))
+    (should
+     (equal
+      (nreverse events)
+      '((notify "dot")
+        (icon repeat-active)
+        (notify "s")
+        (icon repeat-active))))))
+
+(ert-deftest emacsvox-read-passwd-toggle-announces-visibility ()
+  "Interactive password visibility changes announce their resulting state."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push icon events))))
+      (dolist (hidden '(t nil))
+        (let ((ems--interactive-fn-name 'read-passwd-toggle-visibility)
+              (read-passwd--password-hidden hidden))
+          (emacsvox--advice-read-passwd-toggle-visibility-after))))
+    (should (equal (nreverse events) '(off on)))))
+
 (ert-deftest emacsvox-long-question-preserves-call-and-positive-result ()
   "A long question cues a positive answer around exactly one call."
   (let ((calls 0)
