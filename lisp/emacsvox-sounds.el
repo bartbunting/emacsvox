@@ -116,6 +116,9 @@ sound library load independently during native compilation.")
 Normally defined by `emacsvox-preamble'; this fallback also lets the
 sound library load independently during native compilation.")
 
+(require 'emacsvox-aural-resources)
+(emacsvox-aural-register-bundled-resources emacsvox-sounds-dir)
+
 ;;;   Auditory Icons:
 
 (defvar-local emacsvox-use-icons t
@@ -201,6 +204,17 @@ It is called  to cache sounds in our theme and prompts directories."
      for f in (directory-files dir 'full "\\.ogg$") do
      (emacsvox-sounds-cache-put (intern (file-name-base f)) f))))
 
+(defun emacsvox-sounds-cache-install-fallbacks ()
+  "Populate registered cue aliases and fallbacks in the current cache."
+  (maphash
+   (lambda (cue _record)
+     (unless (gethash cue emacsvox-sounds-cache)
+       (when-let* ((resource
+                    (emacsvox-aural--resolve-cue-in-assets
+                     cue emacsvox-sounds-cache)))
+         (puthash cue resource emacsvox-sounds-cache))))
+   emacsvox-aural-cue-registry))
+
 (defsubst ems--upload-pulse-samples ()
   "Upload samples to Pulse"
   (cl-loop
@@ -213,30 +227,90 @@ It is called  to cache sounds in our theme and prompts directories."
   "Verify if sample loaded"
   (= 1 (call-process emacsvox-pactl nil nil nil "play-sample" sample)))
 
-(defun emacsvox-sounds-select-theme  ( &optional theme)
-  "Select theme for auditory icons."
+(defvar emacsvox-sounds-current-pack 'chimes
+  "Registered resource pack supplying the current auditory cues.
+
+The value is nil when a compatibility caller selects an unregistered
+directory.")
+
+(defun emacsvox-sounds--pack-for-theme (theme)
+  "Return the registered sound pack selected by THEME, or nil."
+  (cond
+   ((and (symbolp theme)
+         (emacsvox-aural-resource-pack theme)
+         (eq
+          (emacsvox-aural-resource-pack-kind
+           (emacsvox-aural-resource-pack theme))
+          'sound))
+    theme)
+   ((stringp theme)
+    (let ((named (intern-soft theme)))
+      (or
+       (and named
+            (emacsvox-aural-resource-pack named)
+            (eq
+             (emacsvox-aural-resource-pack-kind
+              (emacsvox-aural-resource-pack named))
+             'sound)
+            named)
+       (let ((expanded (directory-file-name (expand-file-name theme)))
+             found)
+         (maphash
+          (lambda (id pack)
+            (when
+                (and
+                 (eq (emacsvox-aural-resource-pack-kind pack) 'sound)
+                 (equal
+                  expanded
+                  (directory-file-name
+                   (emacsvox-aural-resource-pack-directory pack))))
+              (setq found id)))
+          emacsvox-aural-resource-pack-registry)
+         found))))))
+
+(defun emacsvox-sounds-select-theme (&optional theme)
+  "Select registered resource pack or compatibility directory THEME."
   (interactive
    (list
-    (expand-file-name
+    (intern
      (completing-read
-      "Theme: " '("3d" "chimes")
-      nil 'must-match nil nil "chimes")
-     emacsvox-sounds-dir)))
-  
-  (setq theme (or theme (expand-file-name "chimes" emacsvox-sounds-dir)))
-  (emacsvox-sounds-cache-prompts)
-  (emacsvox-sounds-cache-rebuild theme)
+      "Theme: "
+      (emacsvox-aural-resource-pack-candidates 'sound)
+      nil 'must-match nil nil "chimes"))))
+  (setq theme (or theme 'chimes))
+  (let* ((pack-id (emacsvox-sounds--pack-for-theme theme))
+         (theme-directory
+          (if pack-id
+              (emacsvox-aural-resource-pack-directory
+               (emacsvox-aural-resource-pack pack-id))
+            (expand-file-name theme))))
+    (clrhash emacsvox-sounds-cache)
+    (cond
+     (pack-id
+      (when (emacsvox-aural-resource-pack 'prompts)
+        (emacsvox-aural-refresh-resource-pack 'prompts))
+      (emacsvox-aural-refresh-resource-pack pack-id)
+      (maphash
+       #'emacsvox-sounds-cache-put
+       (emacsvox-aural-effective-assets pack-id t)))
+     (t
+      (emacsvox-sounds-cache-prompts)
+      (emacsvox-sounds-cache-rebuild theme-directory)))
+    (emacsvox-sounds-cache-install-fallbacks)
   (when                                 ; upload samples if needed
       (and
        emacsvox-play-program           ; avoid nil nil comparison
+       emacsvox-pactl
        (string= emacsvox-play-program emacsvox-pactl)
        (or
         (called-interactively-p 'interactive) ; upload on theme change
         (ems--samples-not-loaded-p "item")
         (ems--samples-not-loaded-p "waking-up")))
     (ems--upload-pulse-samples))
-  (setq emacsvox-sounds-current-theme theme)
-  (emacsvox-icon 'button))
+    (setq
+     emacsvox-sounds-current-pack pack-id
+     emacsvox-sounds-current-theme theme-directory)
+    (emacsvox-icon 'button)))
 
 (defvar ems--play-args nil
   "Arguments passed to play program.

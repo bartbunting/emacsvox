@@ -67,8 +67,7 @@
        (equal (gethash 'button emacsvox-sounds-cache) themed)))))
 
 (ert-deftest emacsvox-sounds-theme-switch-must-not-leak-old-assets ()
-  "A future fresh-cache implementation must remove old theme assets."
-  :expected-result :failed
+  "Selecting a new theme removes assets supplied only by the old theme."
   (emacsvox-test--with-sound-tree
     (emacsvox-test--sound-file prompts "button")
     (emacsvox-test--sound-file theme-one "only-in-one")
@@ -82,6 +81,27 @@
         (emacsvox-sounds-select-theme theme-two))
       (should-not (gethash 'only-in-one emacsvox-sounds-cache))
       (should (gethash 'only-in-two emacsvox-sounds-cache)))))
+
+(ert-deftest emacsvox-sounds-selects-registered-pack-and-aliases ()
+  "Registered selection records the pack and installs compatibility aliases."
+  (let ((emacsvox-sounds-cache (make-hash-table))
+        (emacsvox-play-program nil))
+    (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+      (emacsvox-sounds-select-theme '3d))
+    (should (eq emacsvox-sounds-current-pack '3d))
+    (should
+     (equal
+      (directory-file-name emacsvox-sounds-current-theme)
+      (directory-file-name
+       (expand-file-name "3d" emacsvox-sounds-dir))))
+    (should
+     (string-suffix-p
+      "/3d/repeat-end.ogg"
+      (gethash 'repeat-stop emacsvox-sounds-cache)))
+    (should
+     (string-suffix-p
+      "/3d/close-object.ogg"
+      (gethash 'shutdown emacsvox-sounds-cache)))))
 
 (ert-deftest emacsvox-sounds-resource-reflects-player-contract ()
   "Server and SoX use paths while Pulse uses uploaded sample names."

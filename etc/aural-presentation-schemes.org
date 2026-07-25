@@ -590,6 +590,26 @@ diagnosed rather than silently becoming =button=.
 A scheme may select a default resource pack and voice palette.  Users may
 override either component without changing the scheme's semantic rules.
 
+** Resolved resource-pack completeness
+
+Resource packs use requirement profiles rather than one universal all-or-none
+definition of completeness.
+
+- Every standalone sound pack must resolve =button= as its emergency fallback.
+- =legacy-complete= contains the 55 cues shared by =chimes= and =3d=.
+- Both bundled sound packs satisfy =legacy-complete=.
+- =shutdown= is optional: a direct resource wins, otherwise it falls back to
+  =close-object=.
+- A scheme derives additional required cues from its compiled rules.
+- Parent packs may satisfy requirements for focused child packs.
+- Partial packs remain valid providers but do not claim profiles they cannot
+  satisfy.
+
+All bundled filenames, prompt names, and compatibility aliases have registered
+intent.  =emacsvox= falls back to =startup=, =repeat-stop= to =repeat-end=, and
+=unmark-object= to =deselect-object=.  The existing 25 ACSS personalities are
+exposed through the =acss-default= voice palette.
+
 * Spatial Presentation
 
 Spatial styling belongs to render actions and applies independently to speech
@@ -907,7 +927,8 @@ stable ties, scalar provenance, sequence operations, suppression, and input
 validation; =check-parens= and =git diff --check=.  The Emacs 31 full-suite
 gate remains unavailable in the current Emacs 30.2 environment.
 
-** TODO Slice 4: Resource Packs and Voice Palettes
+** DONE Slice 4: Resource Packs and Voice Palettes
+CLOSED: [2026-07-26 Sun]
 
 - Register =chimes=, =3d=, and prompts as resource providers.
 - Replace the hard-coded sound-theme list with registry completion.
@@ -920,6 +941,13 @@ gate remains unavailable in the current Emacs 30.2 environment.
 
 Deliverable: explicit sound and voice provider contracts behind one scheme
 model.
+
+Checks: 10 focused provider tests and 53 combined aural tests covering cue
+intent, requirement profiles, direct and fallback resources, compatibility
+aliases, inheritance, scheme-derived requirements, unknown assets, the ACSS
+palette, fresh theme caches, and registered selection; =check-parens= and
+=git diff --check=.  The Emacs 31 full-suite gate remains unavailable in the
+current Emacs 30.2 environment.
 
 ** TODO Slice 5: Contextual User Schemes
 
