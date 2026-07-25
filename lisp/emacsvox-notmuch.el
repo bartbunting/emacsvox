@@ -732,15 +732,63 @@ the selected message changes; otherwise speak the visible window."
          (format "Changed %s" (string-join (nreverse changed) ", ")))))
      "; ")))
 
+(defun emacsvox-notmuch--tag-change-name (tag-change)
+  "Return the bare tag name from TAG-CHANGE."
+  (if (string-match-p "\\`[+-]" tag-change)
+      (substring tag-change 1)
+    tag-change))
+
+(defun emacsvox-notmuch--ordinary-tag-changes (tag-changes status-icons)
+  "Return TAG-CHANGES not represented by STATUS-ICONS."
+  (cl-remove-if
+   (lambda (change)
+     (assoc
+      (emacsvox-notmuch--tag-change-name change)
+      status-icons))
+   tag-changes))
+
+(defun emacsvox-notmuch--removed-status-p (tag-changes status-icons)
+  "Return non-nil when TAG-CHANGES removes a status in STATUS-ICONS."
+  (cl-some
+   (lambda (change)
+     (and
+      (string-prefix-p "-" change)
+      (assoc (substring change 1) status-icons)))
+   tag-changes))
+
+(defun emacsvox-notmuch--tag-operation-feedback
+    (tag-changes status-icons speaker)
+  "Confirm TAG-CHANGES and call SPEAKER for the updated item.
+Statuses represented by STATUS-ICONS remain nonverbal."
+  (when tag-changes
+    (let ((ordinary
+           (emacsvox-notmuch--ordinary-tag-changes
+            tag-changes status-icons)))
+      (when ordinary
+        (emacsvox-icon 'task-done)
+        (tts-speak (emacsvox-notmuch--tag-change-summary ordinary)))
+      (when
+          (emacsvox-notmuch--removed-status-p
+           tag-changes status-icons)
+        (emacsvox-icon 'deselect-object))
+      (funcall speaker))))
+
 (defun emacsvox-notmuch--tag-feedback (tag-changes)
   "Confirm TAG-CHANGES and speak the updated Notmuch result."
-  (when tag-changes
-    (emacsvox-icon 'task-done)
-    (tts-speak (emacsvox-notmuch--tag-change-summary tag-changes))
-    (emacsvox-notmuch-speak-search-result)))
+  (emacsvox-notmuch--tag-operation-feedback
+   tag-changes
+   emacsvox-notmuch-search-status-icons
+   #'emacsvox-notmuch-speak-search-result))
 
-(defun emacsvox-notmuch--register-tag-group (targets)
-  "Register search tag-operation feedback for TARGETS."
+(defun emacsvox-notmuch--show-tag-feedback (tag-changes)
+  "Confirm TAG-CHANGES and speak the updated Notmuch message."
+  (emacsvox-notmuch--tag-operation-feedback
+   tag-changes
+   emacsvox-notmuch-show-status-icons
+   #'emacsvox-notmuch-speak-show-message))
+
+(defun emacsvox-notmuch--register-tag-group (targets feedback)
+  "Register tag-operation FEEDBACK for TARGETS."
   (dolist (target targets)
     (let ((advice-function
            (intern (format "emacsvox--advice-%s-after" target))))
@@ -748,14 +796,85 @@ the selected message changes; otherwise speak the visible window."
        `(defun ,advice-function (tag-changes &rest _)
           ,(format "Confirm tag changes after `%s'." target)
           (when (ems-interactive-p ',target)
-            (emacsvox-notmuch--tag-feedback tag-changes))))
+            (,feedback tag-changes))))
       (push (list target :after advice-function) emacsvox-notmuch--advice))))
 
 (emacsvox-notmuch--register-tag-group
  '(notmuch-search-tag
    notmuch-search-add-tag
    notmuch-search-remove-tag
-   notmuch-search-tag-all))
+   notmuch-search-tag-all)
+ #'emacsvox-notmuch--tag-feedback)
+
+(emacsvox-notmuch--register-tag-group
+ '(notmuch-show-tag
+   notmuch-show-add-tag
+   notmuch-show-remove-tag
+   notmuch-show-tag-all)
+ #'emacsvox-notmuch--show-tag-feedback)
+
+(defun emacsvox-notmuch--current-tags ()
+  "Return a copy of the tags at point in a Notmuch search or Show buffer."
+  (let ((tags
+         (pcase major-mode
+           ('notmuch-search-mode
+            (plist-get (notmuch-search-get-result) :tags))
+           ('notmuch-show-mode
+            (plist-get
+             (notmuch-show-get-message-properties)
+             :tags)))))
+    (and tags (copy-sequence tags))))
+
+(defun emacsvox-notmuch--tag-differences (before after)
+  "Return Notmuch tag operations that transform BEFORE into AFTER."
+  (append
+   (mapcar
+    (lambda (tag) (concat "+" tag))
+    (cl-remove-if (lambda (tag) (member tag before)) after))
+   (mapcar
+    (lambda (tag) (concat "-" tag))
+    (cl-remove-if (lambda (tag) (member tag after)) before))))
+
+(defun emacsvox-notmuch--tag-state-around (target original arguments)
+  "Report structured tag changes made by TARGET.
+Call ORIGINAL once with ARGUMENTS and preserve its result."
+  (let ((mode major-mode)
+        (before (emacsvox-notmuch--current-tags))
+        (result (apply original arguments)))
+    (when (ems-interactive-p target)
+      (let ((changes
+             (emacsvox-notmuch--tag-differences
+              before
+              (emacsvox-notmuch--current-tags))))
+        (when changes
+          (pcase mode
+            ('notmuch-search-mode
+             (emacsvox-notmuch--tag-feedback changes))
+            ('notmuch-show-mode
+             (emacsvox-notmuch--show-tag-feedback changes))))))
+    result))
+
+(defun emacsvox--advice-notmuch-tag-jump-around
+    (original &rest arguments)
+  "Report the tag operation selected from Notmuch's tag menu."
+  (emacsvox-notmuch--tag-state-around
+   'notmuch-tag-jump original arguments))
+
+(defun emacsvox--advice-notmuch-show-mark-read-around
+    (original &rest arguments)
+  "Report an interactive Notmuch read-state change."
+  (emacsvox-notmuch--tag-state-around
+   'notmuch-show-mark-read original arguments))
+
+(push
+ '(notmuch-tag-jump
+   :around emacsvox--advice-notmuch-tag-jump-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-mark-read
+   :around emacsvox--advice-notmuch-show-mark-read-around)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox--advice-notmuch-search-archive-thread-after
     (&optional unarchive &rest _)

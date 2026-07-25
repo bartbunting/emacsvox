@@ -380,6 +380,109 @@
         (speak "Added work; Removed inbox")
         (result))))))
 
+(ert-deftest emacsvox-notmuch-show-tag-feedback-runs-once ()
+  "An interactive Show tag wrapper confirms once and speaks the message."
+  (let ((ems--interactive-fn-name 'notmuch-show-add-tag)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-notmuch-speak-show-message)
+               (lambda (&optional _message) (push '(message) events))))
+      (emacsvox--advice-notmuch-show-tag-after '("+work"))
+      (emacsvox--advice-notmuch-show-add-tag-after '("+work")))
+    (should
+     (equal
+      (nreverse events)
+      '((icon task-done)
+        (speak "Added work")
+        (message))))))
+
+(ert-deftest emacsvox-notmuch-status-tag-changes-remain-nonverbal ()
+  "Status changes use cues without speaking status names."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events))))
+      (emacsvox-notmuch--tag-operation-feedback
+       '("+flagged" "-unread")
+       emacsvox-notmuch-show-status-icons
+       (lambda () (push '(message) events))))
+    (should
+     (equal
+      (nreverse events)
+      '((icon deselect-object)
+        (message))))))
+
+(ert-deftest emacsvox-notmuch-tag-menu-reports-structured-difference ()
+  "The common tag menu reports changes made by its nested tag command."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((ems--interactive-fn-name 'notmuch-tag-jump)
+          (tag-states
+           '(("inbox" "unread")
+             ("flagged" "unread")))
+          (calls 0)
+          feedback)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-tags)
+            (lambda () (pop tag-states)))
+           ((symbol-function 'emacsvox-notmuch--show-tag-feedback)
+            (lambda (changes) (setq feedback changes))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-tag-jump-around
+           (lambda (&rest _)
+             (cl-incf calls)
+             'tagged))
+          'tagged)))
+      (should (= calls 1))
+      (should (equal feedback '("+flagged" "-inbox"))))))
+
+(ert-deftest emacsvox-notmuch-automatic-mark-read-remains-silent ()
+  "Programmatic mark-seen activity does not produce action feedback."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((tag-states
+           '(("inbox" "unread")
+             ("inbox")))
+          (calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-tags)
+            (lambda () (pop tag-states)))
+           ((symbol-function 'emacsvox-notmuch--show-tag-feedback)
+            (lambda (changes) (push changes events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-mark-read-around
+           (lambda ()
+             (cl-incf calls)
+             'read))
+          'read)))
+      (should (= calls 1))
+      (should-not events))))
+
+(ert-deftest emacsvox-notmuch-manual-mark-read-reports-status-change ()
+  "An explicit read-state command reports its structured status change."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((ems--interactive-fn-name 'notmuch-show-mark-read)
+          (tag-states
+           '(("inbox" "unread")
+             ("inbox")))
+          feedback)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-tags)
+            (lambda () (pop tag-states)))
+           ((symbol-function 'emacsvox-notmuch--show-tag-feedback)
+            (lambda (changes) (setq feedback changes))))
+        (emacsvox--advice-notmuch-show-mark-read-around
+         (lambda () 'read)))
+      (should (equal feedback '("-unread"))))))
+
 (ert-deftest emacsvox-notmuch-archive-confirms-then-speaks-next-result ()
   "Archive feedback acknowledges completion before speaking the new row."
   (let ((ems--interactive-fn-name 'notmuch-search-archive-thread)
