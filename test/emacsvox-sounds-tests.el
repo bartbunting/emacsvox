@@ -103,6 +103,32 @@
       "/3d/close-object.ogg"
       (gethash 'shutdown emacsvox-sounds-cache)))))
 
+(ert-deftest emacsvox-sounds-follows-active-aural-scheme ()
+  "Selecting a scheme switches to its inherited registered sound pack."
+  (let ((emacsvox-aural-scheme-registry
+         (make-hash-table :test #'eq))
+        (emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-active-scheme-changed-hook
+         '(emacsvox-sounds-follow-aural-scheme))
+        (emacsvox-sounds-cache (make-hash-table))
+        (emacsvox-sounds-current-pack 'chimes)
+        (emacsvox-use-icons nil)
+        (emacsvox-play-program nil))
+    (emacsvox-aural--register-default-scheme)
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id spatial
+       :summary "Use bundled spatial cues"
+       :parent default
+       :resource-pack 3d
+       :rules ()))
+    (emacsvox-aural-select-scheme 'spatial)
+    (should (eq emacsvox-sounds-current-pack '3d))
+    (should
+     (string-suffix-p
+      "/3d/item.ogg"
+      (gethash 'item emacsvox-sounds-cache)))))
+
 (ert-deftest emacsvox-sounds-resource-reflects-player-contract ()
   "Server and SoX use paths while Pulse uses uploaded sample names."
   (let ((emacsvox-sounds-cache (make-hash-table))

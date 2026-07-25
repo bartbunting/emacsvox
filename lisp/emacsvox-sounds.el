@@ -118,6 +118,7 @@ sound library load independently during native compilation.")
 
 (require 'emacsvox-aural-resources)
 (emacsvox-aural-register-bundled-resources emacsvox-sounds-dir)
+(require 'emacsvox-aural-schemes)
 
 ;;;   Auditory Icons:
 
@@ -311,6 +312,18 @@ directory.")
      emacsvox-sounds-current-pack pack-id
      emacsvox-sounds-current-theme theme-directory)
     (emacsvox-icon 'button)))
+
+(defun emacsvox-sounds-follow-aural-scheme ()
+  "Select the sound pack inherited by the active aural scheme."
+  (when-let* ((pack
+               (emacsvox-aural-effective-scheme-provider 'resource-pack)))
+    (unless (eq pack emacsvox-sounds-current-pack)
+      (emacsvox-sounds-select-theme pack))))
+
+(with-eval-after-load 'emacsvox-aural-schemes
+  (add-hook
+   'emacsvox-aural-active-scheme-changed-hook
+   #'emacsvox-sounds-follow-aural-scheme))
 
 (defvar ems--play-args nil
   "Arguments passed to play program.

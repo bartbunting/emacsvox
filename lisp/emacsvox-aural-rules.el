@@ -29,7 +29,8 @@
     (module . 1)
     (scheme . 2)
     (user . 3)
-    (session . 4))
+    (session . 4)
+    (buffer . 5))
   "Resolver origin layers ordered from weakest to strongest.")
 
 (defconst emacsvox-aural-action-kinds
@@ -37,7 +38,8 @@
   "Action kinds supported by the initial pure render-plan engine.")
 
 (defconst emacsvox-aural--selector-keys
-  '(:role :event :events :state :states :module :mode :occasion)
+  '(:role :event :events :state :states :module :mode :occasion
+    :legacy-cue :legacy-personality)
   "Reserved selector keys that are not registered semantic attributes.")
 
 (defconst emacsvox-aural--fact-keys
@@ -45,14 +47,16 @@
   "Reserved semantic fact keys that are not registered attributes.")
 
 (defconst emacsvox-aural--context-keys
-  '(:module :mode :mode-lineage :occasion)
+  '(:module :mode :mode-lineage :occasion :legacy-cue
+    :legacy-personality :legacy-source)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct
     (emacsvox-aural-selector
      (:constructor emacsvox-aural--make-selector))
   "A validated selector compiled from declarative rule data."
-  role events states attributes module mode occasion)
+  role events states attributes module mode occasion legacy-cue
+  legacy-personality)
 
 (cl-defstruct
     (emacsvox-aural-action
@@ -95,19 +99,21 @@
     (emacsvox-aural-rule
      (:constructor emacsvox-aural--make-rule))
   "A validated compiled presentation rule."
-  id origin order selector contribution source)
+  id origin layer-order order selector contribution source)
 
 (cl-defstruct
     (emacsvox-aural-scheme
      (:constructor emacsvox-aural--make-scheme))
   "A validated compiled aural scheme."
-  id schema-version summary parent origin rules source)
+  id schema-version summary parent resource-pack voice-palette origin rules
+  source)
 
 (cl-defstruct
     (emacsvox-aural-input
      (:constructor emacsvox-aural--make-input))
   "Normalized semantic facts and presentation context."
-  role events states attributes content module mode mode-lineage occasion)
+  role events states attributes content module mode mode-lineage occasion
+  legacy-cue legacy-personality legacy-source)
 
 (cl-defstruct
     (emacsvox-aural-content-style
@@ -231,6 +237,8 @@
          (module (plist-get selector :module))
          (mode (plist-get selector :mode))
          (occasion (plist-get selector :occasion))
+         (legacy-cue (plist-get selector :legacy-cue))
+         (legacy-personality (plist-get selector :legacy-personality))
          (attributes
           (emacsvox-aural--extract-attributes
            selector emacsvox-aural--selector-keys
@@ -249,6 +257,13 @@
       (unless (emacsvox-aural-occasion occasion)
         (emacsvox-aural--rule-error
          "Selector occasion is not registered: %S" occasion)))
+    (when legacy-cue
+      (emacsvox-aural--require-symbol legacy-cue "Selector legacy cue"))
+    (when legacy-personality
+      (unless (or (symbolp legacy-personality) (consp legacy-personality))
+        (emacsvox-aural--rule-error
+         "Selector legacy personality must be a symbol or cons: %S"
+         legacy-personality)))
     (emacsvox-aural--make-selector
      :role role
      :events events
@@ -256,7 +271,9 @@
      :attributes attributes
      :module module
      :mode mode
-     :occasion occasion)))
+     :occasion occasion
+     :legacy-cue legacy-cue
+     :legacy-personality legacy-personality)))
 
 (defun emacsvox-aural--compile-action (data rule-id phase index)
   "Compile action DATA contributed by RULE-ID in PHASE at INDEX."
@@ -458,13 +475,18 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
      (emacsvox-aural--compile-phase
       (plist-get render :after) rule-id 'after))))
 
-(defun emacsvox-aural-compile-rule (data origin &optional index source)
+(defun emacsvox-aural-compile-rule
+    (data origin &optional index source layer-order)
   "Compile declarative rule DATA from ORIGIN.
 
-INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
+INDEX supplies the default visible order.  SOURCE is retained for diagnostics.
+LAYER-ORDER records inheritance order within one origin."
   (emacsvox-aural--require-plist data "Aural rule")
   (unless (assq origin emacsvox-aural-origin-ranks)
     (emacsvox-aural--rule-error "Unknown rule origin: %S" origin))
+  (unless (or (null layer-order) (integerp layer-order))
+    (emacsvox-aural--rule-error
+     "Rule layer order must be an integer: %S" layer-order))
   (let* ((id (plist-get data :id))
          (order (if (plist-member data :order)
                     (plist-get data :order)
@@ -487,6 +509,7 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
     (emacsvox-aural--make-rule
      :id id
      :origin origin
+     :layer-order (or layer-order 0)
      :order order
      :selector (emacsvox-aural--compile-selector match id)
      :contribution (emacsvox-aural--compile-contribution render id)
@@ -500,8 +523,12 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
          (id (plist-get data :id))
          (summary (plist-get data :summary))
          (parent (plist-get data :parent))
+         (resource-pack (plist-get data :resource-pack))
+         (voice-palette (plist-get data :voice-palette))
          (rules (plist-get data :rules))
-         (allowed '(:schema-version :id :summary :parent :rules))
+         (allowed
+          '(:schema-version :id :summary :parent :resource-pack
+            :voice-palette :rules))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -517,6 +544,10 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
        "Scheme %S requires a nonempty summary" id))
     (when parent
       (emacsvox-aural--require-symbol parent "Parent scheme identifier"))
+    (when resource-pack
+      (emacsvox-aural--require-symbol resource-pack "Scheme resource pack"))
+    (when voice-palette
+      (emacsvox-aural--require-symbol voice-palette "Scheme voice palette"))
     (unless (listp rules)
       (emacsvox-aural--rule-error "Rules for scheme %S must be a list" id))
     (when unknown
@@ -538,6 +569,8 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
        :schema-version version
        :summary summary
        :parent parent
+       :resource-pack resource-pack
+       :voice-palette voice-palette
        :origin origin
        :rules compiled
        :source source))))
@@ -583,6 +616,9 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
          (module (plist-get context :module))
          (mode (plist-get context :mode))
          (occasion (plist-get context :occasion))
+         (legacy-cue (plist-get context :legacy-cue))
+         (legacy-personality (plist-get context :legacy-personality))
+         (legacy-source (plist-get context :legacy-source))
          (lineage
           (or
            (plist-get context :mode-lineage)
@@ -601,6 +637,15 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
       (unless (emacsvox-aural-occasion occasion)
         (emacsvox-aural--rule-error
          "Context occasion is not registered: %S" occasion)))
+    (when legacy-cue
+      (emacsvox-aural--require-symbol legacy-cue "Context legacy cue"))
+    (when legacy-personality
+      (unless (or (symbolp legacy-personality) (consp legacy-personality))
+        (emacsvox-aural--rule-error
+         "Context legacy personality must be a symbol or cons: %S"
+         legacy-personality)))
+    (when legacy-source
+      (emacsvox-aural--require-symbol legacy-source "Legacy presentation source"))
     (when lineage
       (unless (and (listp lineage) (cl-every #'symbolp lineage))
         (emacsvox-aural--rule-error
@@ -617,7 +662,10 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
      :module module
      :mode mode
      :mode-lineage (copy-sequence lineage)
-     :occasion occasion)))
+     :occasion occasion
+     :legacy-cue legacy-cue
+     :legacy-personality legacy-personality
+     :legacy-source legacy-source)))
 
 (defun emacsvox-aural--mode-distance (selector input)
   "Return mode ancestry distance for SELECTOR and INPUT, or nil."
@@ -633,7 +681,10 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
          (attributes (emacsvox-aural-selector-attributes selector))
          (module (emacsvox-aural-selector-module selector))
          (mode (emacsvox-aural-selector-mode selector))
-         (occasion (emacsvox-aural-selector-occasion selector)))
+         (occasion (emacsvox-aural-selector-occasion selector))
+         (legacy-cue (emacsvox-aural-selector-legacy-cue selector))
+         (legacy-personality
+          (emacsvox-aural-selector-legacy-personality selector)))
     (and
      (or (null role) (eq role (emacsvox-aural-input-role input)))
      (cl-every
@@ -654,7 +705,15 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
      (or (null mode) (numberp (emacsvox-aural--mode-distance selector input)))
      (or
       (null occasion)
-      (eq occasion (emacsvox-aural-input-occasion input))))))
+      (eq occasion (emacsvox-aural-input-occasion input)))
+     (or
+      (null legacy-cue)
+      (eq legacy-cue (emacsvox-aural-input-legacy-cue input)))
+     (or
+      (null legacy-personality)
+      (equal
+       legacy-personality
+       (emacsvox-aural-input-legacy-personality input))))))
 
 (defun emacsvox-aural-rule-score (rule input)
   "Return RULE specificity vector for normalized INPUT."
@@ -680,7 +739,12 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
          (mode-closeness (if distance (- distance) 0))
          (constraints
           (+ (length (emacsvox-aural-selector-states selector))
-             (length (emacsvox-aural-selector-attributes selector)))))
+             (length (emacsvox-aural-selector-attributes selector))
+             (if (emacsvox-aural-selector-legacy-cue selector) 1 0)
+             (if
+                 (emacsvox-aural-selector-legacy-personality selector)
+                 1
+               0))))
     (vector
      origin
      identity
@@ -689,6 +753,7 @@ INDEX supplies the default visible order.  SOURCE is retained for diagnostics."
      mode-closeness
      (if module 1 0)
      constraints
+     (emacsvox-aural-rule-layer-order rule)
      (emacsvox-aural-rule-order rule))))
 
 (defun emacsvox-aural--score-less-p (left right)

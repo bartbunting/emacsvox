@@ -68,6 +68,10 @@ emacsvox-pronounce.elc \
 emacsvox-speak.elc  \
 emacsvox-advice.elc\
 emacsvox-keymap.elc\
+emacsvox-aural.elc \
+emacsvox-aural-rules.elc \
+emacsvox-aural-resources.elc \
+emacsvox-aural-schemes.elc \
 emacsvox-sounds.elc \
 emacsvox.elc \
 emacsvox-setup.elc

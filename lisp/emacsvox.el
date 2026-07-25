@@ -403,7 +403,12 @@ commands and options."
    #'(lambda nil (setq-default emacsvox-speak-messages nil))
    -10)
   (tts-initialize)
-  (emacsvox-sounds-select-theme)
+  (emacsvox-aural-load-user-data)
+  (emacsvox-aural-validate-scheme-registry)
+  (emacsvox-sounds-select-theme
+   (or
+    (emacsvox-aural-effective-scheme-provider 'resource-pack)
+    'chimes))
   (emacsvox-pronounce-load-dictionaries)
   (make-thread #'(lambda nil  (ems--fastload "emacsvox-advice")))
   (ems--fastload "emacsvox-websearch")

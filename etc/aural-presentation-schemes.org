@@ -467,14 +467,15 @@ independent rules such as heading level and folded state must compose.
 
 ** Cascade
 
-Origin and selector specificity are separate concerns.  The recommended
+Origin and selector specificity are separate concerns.  The implemented
 origin layers, from strongest to weakest, are:
 
-1. current-buffer and temporary session overrides;
-2. persistent personal user rules;
-3. active scheme rules;
-4. module-provided defaults;
-5. core fallbacks.
+1. current-buffer overrides;
+2. temporary session overrides;
+3. persistent personal user rules;
+4. active scheme rules;
+5. module-provided defaults;
+6. core fallbacks.
 
 Within one layer, the resolver orders rules by documented selector
 specificity:
@@ -510,9 +511,10 @@ Rules are applied from weakest to strongest using a fixed vector:
 3. combined module and exact mode;
 4. exact mode or nearest derived-mode ancestor;
 5. module;
-6. matched states and attributes;
-7. explicit visible rule order;
-8. stable rule identifier for a genuine tie.
+6. matched states, attributes, and compatibility hints;
+7. parent-to-child order within an inherited origin;
+8. explicit visible rule order;
+9. stable rule identifier for a genuine tie.
 
 This makes resolution independent of hash-table and registration order.  The
 resolved plan retains the matching rule identifiers, score vectors, action
@@ -533,6 +535,19 @@ Persistent scheme data must:
 The native representation may be declarative Lisp data.  Import/export can use
 another safe format later, but the semantic and merge contracts must not
 depend on the serialization.
+
+The initial persistent implementation uses the data-only file
+=~/.emacsvox/aural-schemes.el=, configurable as
+=emacsvox-aural-schemes-file=.  It binds =read-eval= to nil before reading,
+accepts one validated data form, saves through a mode-0600 temporary file and
+atomic rename, and retains the previous file as =~=.  User data and individual
+schemes are independently versioned; migration functions must explicitly
+advance an older version.  Invalid replacement data is fully staged and
+validated before it can replace the live personal registry.
+
+=emacsvox-aural-active-scheme= is a Customize option.  Startup loads the
+personal data, validates scheme inheritance and providers, and selects the
+active scheme's inherited resource pack.
 
 * Voice Integration
 
@@ -949,7 +964,8 @@ palette, fresh theme caches, and registered selection; =check-parens= and
 =git diff --check=.  The Emacs 31 full-suite gate remains unavailable in the
 current Emacs 30.2 environment.
 
-** TODO Slice 5: Contextual User Schemes
+** DONE Slice 5: Contextual User Schemes
+CLOSED: [2026-07-26 Sun]
 
 - Add active scheme selection and inheritance.
 - Add persistent personal rules and buffer-local/session overrides.
@@ -961,6 +977,30 @@ current Emacs 30.2 environment.
 
 Deliverable: users can customize aural presentation deterministically without
 editing module code.
+
+Implemented details:
+
+- safe scheme registration, parent-to-child inheritance, active selection,
+  provider inheritance, cycle detection, and duplicate inherited-rule
+  detection;
+- read-only module fragments followed by active scheme, persistent personal,
+  session, and buffer-local rule layers;
+- source module, exact and derived mode, occasion, semantic attribute/state,
+  legacy cue, and legacy personality selectors;
+- the dedicated versioned =~/.emacsvox/aural-schemes.el= store, data-only
+  reader, explicit migration hooks, staged atomic loading, mode-0600 atomic
+  save, and one-file backup;
+- compatibility builders to remap or suppress one legacy cue or personality
+  globally or with module/mode selectors;
+- preservation of an explicit or face-derived legacy personality when no
+  winning rule sets or clears voice, while registered semantic rules remain
+  more specific than a compatibility hint;
+- sound-pack switching when active scheme selection changes.
+
+Checks: 17 focused contextual-scheme ERT tests and 71 combined semantic,
+rule-engine, resource, scheme, sound, and voice tests with no unexpected
+results; =check-parens=, =checkdoc=, and =git diff --check=.  The Emacs 31
+full-suite gate remains unavailable in the current Emacs 30.2 environment.
 
 ** TODO Slice 6: Resolve Before Queueing
 
@@ -1094,18 +1134,15 @@ The dedicated tests must cover:
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. How a scheme override interacts with an explicit legacy =personality= when
-   no registered semantic role is present.
-2. The safe persistent storage location and migration mechanism.
-3. The exact context snapshot boundary around =tts-speak= and notification
+1. The exact context snapshot boundary around =tts-speak= and notification
    speech.
-4. Serialization and timing when speech and cues use different processes.
-5. Pulse/PipeWire sample naming and cleanup for contextual assets.
-6. The portable spatial coordinate ranges and how 3D values reduce to stereo.
-7. Whether critical alerts may be completely suppressed or require an
+2. Serialization and timing when speech and cues use different processes.
+3. Pulse/PipeWire sample naming and cleanup for contextual assets.
+4. The portable spatial coordinate ranges and how 3D values reduce to stereo.
+5. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-8. The ordering policy required before minor-mode selectors are enabled.
-9. Whether future integrations need additional occasions and whether those
+6. The ordering policy required before minor-mode selectors are enabled.
+7. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:
