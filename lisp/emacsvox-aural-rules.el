@@ -16,6 +16,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural)
+(require 'emacsvox-aural-spatial)
 
 (define-error
   'emacsvox-aural-rule-error
@@ -310,9 +311,15 @@
     (when (and volume (not (numberp volume)))
       (emacsvox-aural--rule-error
        "Action volume must be numeric for %S" id))
-    (when (and space (not (emacsvox-aural--plist-p space)))
+    (when space
+      (condition-case error
+          (emacsvox-aural-spatial-validate-space
+           space (format "Action space for %S" id))
+        (error
+         (emacsvox-aural--rule-error "%s" (error-message-string error)))))
+    (when (and space (eq kind 'pause))
       (emacsvox-aural--rule-error
-       "Action space must be a plist for %S" id))
+       "Pause action %S cannot have spatial presentation" id))
     (emacsvox-aural--make-action
      :id id
      :kind kind
@@ -441,9 +448,12 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
       (when (and volume (not (numberp volume)))
         (emacsvox-aural--rule-error
          "Content volume must be numeric for %S" rule-id))
-      (when (and space (not (emacsvox-aural--plist-p space)))
-        (emacsvox-aural--rule-error
-         "Content space must be a plist for %S" rule-id))
+      (when space
+        (condition-case error
+            (emacsvox-aural-spatial-validate-space
+             space (format "Content space for %S" rule-id))
+          (error
+           (emacsvox-aural--rule-error "%s" (error-message-string error)))))
       (emacsvox-aural--make-content-patch
        :suppress (plist-get data :suppress)
        :speak-set-p (plist-member data :speak)

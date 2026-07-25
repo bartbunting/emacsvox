@@ -336,6 +336,38 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
     (unless (or (string-empty-p answer) (string= answer "default"))
       (intern answer))))
 
+(defun emacsvox-aural-editor--read-space (&optional old label)
+  "Read portable spatial styling, optionally preserving OLD.
+
+LABEL identifies the speech or cue being edited."
+  (let* ((choices
+          (append
+           (when old '("keep"))
+           '("unchanged" "center" "balance" "azimuth")))
+         (choice
+          (intern
+           (completing-read
+            (format "%s spatial placement: " (or label "Content"))
+            choices nil 'must-match nil nil
+            (if old "keep" "unchanged")))))
+    (pcase choice
+      ('keep (copy-tree old))
+      ('unchanged nil)
+      ('center '(:balance 0.0))
+      ('balance
+       (let ((value (read-number "Balance (-1 left, +1 right): " 0.0)))
+         (unless (<= -1.0 value 1.0)
+           (user-error "Balance must be between -1.0 and 1.0"))
+         (list :balance (float value))))
+      ('azimuth
+       (let ((value
+              (read-number
+               "Listener-relative azimuth in degrees (-180 to 180): "
+               0.0)))
+         (unless (<= -180.0 value 180.0)
+           (user-error "Azimuth must be between -180 and 180 degrees"))
+         (list :azimuth (float value)))))))
+
 (defun emacsvox-aural-editor--read-action (rule-id phase index)
   "Read action INDEX for RULE-ID and PHASE."
   (let* ((kind
@@ -374,6 +406,11 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
         (plist-put
          action :duration
          (read-number "Pause duration in milliseconds: " 50)))))
+    (when (memq kind '(speech cue))
+      (when-let* ((space
+                   (emacsvox-aural-editor--read-space
+                    nil (capitalize (symbol-name kind)))))
+        (setq action (plist-put action :space space))))
     action))
 
 (defun emacsvox-aural-editor--read-actions (rule-id phase)
@@ -438,6 +475,9 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
              "Content voice: "
              (append '("unchanged") (emacsvox-aural-editor--voice-candidates))
              nil nil nil nil "unchanged"))
+           (space
+            (emacsvox-aural-editor--read-space
+             (plist-get old :space) "Content"))
            content)
       (pcase speech
         ('speak (setq content (plist-put content :speak t)))
@@ -449,6 +489,8 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
           content :voice
           (unless (string= voice-answer "default")
             (intern voice-answer)))))
+      (when space
+        (setq content (plist-put content :space space)))
       content)))
 
 (defun emacsvox-aural-editor--read-rule (&optional old copied-id)

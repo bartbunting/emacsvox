@@ -196,6 +196,26 @@
       '((server speaker "p /sounds/item.ogg\n")
         (local "/usr/bin/play" ("-q" "/sounds/open.ogg")))))))
 
+(ert-deftest emacsvox-sounds-sox-applies-normalized-cue-balance ()
+  "Local SoX playback turns normalized balance into a two-channel remix."
+  (let ((sox-play "/usr/bin/play")
+        (emacsvox-play-program "/usr/bin/play")
+        (ems--play-args "-q")
+        event)
+    (cl-letf
+        (((symbol-function 'start-process)
+          (lambda (_name _buffer program &rest args)
+            (setq event (list program args)))))
+      (emacsvox-sounds-play-concrete-cue
+       "/sounds/item.ogg" "sample-item" 0.25))
+    (should
+     (equal
+      event
+      (list
+       sox-play
+       '("-q" "/sounds/item.ogg"
+         "channels" "2" "remix" "-m" "1v0.750000" "2v1.000000"))))))
+
 (ert-deftest emacsvox-sounds-queued-icon-uses-concrete-resource ()
   "Queued legacy icons send the currently resolved concrete resource."
   (let ((tts-speaker-process 'speaker)

@@ -132,7 +132,7 @@ One scheme might add rules equivalent to:
  (:before ((:kind speech :text "Heading 1")
            (:kind cue :name heading-1))
   :content (:voice voice-bolden
-            :space (:balance -20))))
+            :space (:balance -0.2))))
 
 (:id org-folded-heading
  :match (:role heading :module org :state folded)
@@ -636,10 +636,23 @@ exposed through the =acss-default= voice palette.
 Spatial styling belongs to render actions and applies independently to speech
 and cues.
 
-The portable first level should be stereo balance with a documented range and
-centre.  A richer optional level may add:
+The implemented portable level is normalized stereo balance.  =-1.0= is full
+left, =0.0= is centre, and =+1.0= is full right.  Scheme data uses either
+=(:balance NUMBER)= in that range or listener-relative
+=(:azimuth DEGREES)= from =-180= through =+180=.  Positive values are right,
+negative values are left, zero degrees is directly in front, and either 180
+degree value is directly behind.
 
-- azimuth;
+Azimuth is currently a portable input rather than a claim of 3D output.  It
+reduces to stereo using:
+
+#+begin_example
+balance = sin(azimuth in radians)
+#+end_example
+
+This preserves front and rear at the centre, maps 90 degrees right to =+1.0=,
+and maps 90 degrees left to =-1.0=.  A richer future level may add native:
+
 - elevation;
 - distance;
 - width or spread;
@@ -656,9 +669,19 @@ Backends report capabilities.  The resolver does not inspect PipeWire, SoX,
 Csound, or speech-server details; the backend compiler reduces the requested
 style to what is available and records the degradation for explanation.
 
+The concrete compiler reports =stereo=, =mono=, or =centered= independently
+for speech, ordered speech-server cues, and standalone local cues.  The
+current local SoX adapter implements balance using two-channel =remix=.
+Current speech and ordered-cue transports centre requests unless an adapter
+installs the corresponding ordered balance function.  A declared mono output
+always centres requests.  The concrete plan records requested space, compiled
+balance, capability, and every reduction before anything is queued.
+
 Pre-spatialized assets must not be spatialized a second time by default.
 Resource metadata must distinguish position-neutral material from assets such
-as the current HRTF-generated =3d= sounds.
+as the current HRTF-generated =3d= sounds.  The compiler obtains this metadata
+from the pack that owns the resolved file, including inherited and prompt
+resources; a requested balance is not applied to a =pre-spatialized= asset.
 
 Users need independent controls to:
 
@@ -667,6 +690,13 @@ Users need independent controls to:
 - reduce the maximum left/right separation;
 - remap positions for unilateral hearing or speaker layouts;
 - choose a non-spatial speech or cue fallback.
+
+The stable schema uses audible centred output as its non-spatial fallback.
+Whether a critical alert may instead be suppressed remains a separate policy
+decision.  =emacsvox-aural-spatial-enabled=, the independent speech and cue
+toggles, =emacsvox-aural-spatial-maximum-separation=,
+=emacsvox-aural-spatial-remapping=, and =emacsvox-aural-spatial-output=
+implement the other controls without changing scheme data.
 
 Stable positions are preferable to arbitrary motion because they can convey
 source or role without reducing speech intelligibility.  Motion should be an
@@ -735,6 +765,8 @@ implemented discovery and management commands are:
   available presentations;
 - =emacsvox-explain-aural-presentation=: show captured facts, matching rules,
   cascade order, merge operations, concrete resources, and backend fallback;
+- =emacsvox-describe-aural-spatial-capabilities=: show speech, ordered-cue,
+  local-cue, final-output, and user-policy spatial settings;
 - =emacsvox-preview-aural-rule=: render a rule against representative or
   current content;
 - =emacsvox-list-aural-schemes=: show inheritance, resource packs, and
@@ -801,8 +833,9 @@ occasion, and compatibility fields.  Before and after phases explicitly
 choose append, prepend, replace, remove, suppress, or unchanged behavior and
 then build ordered speech, cue, and pause actions.  Content prompts distinguish
 unchanged, spoken, silenced, default voice, named voice, and inaudible
-presentation.  Existing spatial data is displayed and validated; guided
-spatial editing waits for the Slice 9 coordinate contract.
+presentation.  Guided spatial prompts offer unchanged, centred, normalized
+balance, or listener-relative azimuth values and validate them against the
+portable contract.
 
 * Compatibility Policy
 
@@ -1217,7 +1250,8 @@ results; 27 source-loaded semantic traces matching the golden output;
 =git diff --check=.  The normal Emacs 31 gates remain unavailable in the
 current Emacs 30.2 environment as recorded for Slice 6.
 
-** TODO Slice 9: Portable Spatial Presentation
+** DONE Slice 9: Portable Spatial Presentation
+CLOSED: [2026-07-26 Sun]
 
 - Implement stereo balance for speech and cues where supported.
 - Add capability reporting and centred fallback.
@@ -1231,6 +1265,47 @@ current Emacs 30.2 environment as recorded for Slice 6.
 
 Deliverable: schemes can position speech and cues portably without requiring
 3D support.
+
+Implemented details:
+
+- schema-v1 spatial values accept normalized =:balance= from =-1.0= through
+  =+1.0= or listener-relative =:azimuth= from =-180= through =+180= degrees;
+  invalid ranges, mixed coordinates, unknown properties, and spatial pauses
+  fail validation;
+- azimuth reduces predictably through =sin(azimuth)=, while elevation,
+  distance, width, and motion remain deferred until their units, capabilities,
+  and intelligibility contract are reviewed;
+- concrete speech, content, and cue records freeze requested space, compiled
+  balance, backend capability, and reductions before queueing;
+- speech and ordered-cue adapters can advertise and queue stereo balance;
+  unsupported or explicitly mono transports produce audible centred output
+  and an explainable degradation;
+- standalone local SoX cues use a two-channel balance remix, while current
+  Pulse/PipeWire sample and speech-server paths centre unless an ordered
+  adapter supplies spatial support;
+- speech balance brackets exactly one speech action or content run and resets
+  to centre before the next ordered action;
+- global enable, independent speech/cue enable, final mono output, maximum
+  separation, direction reversal, unilateral-side collapse, centring, and a
+  custom remapping function are user controls applied during concrete
+  compilation;
+- resolved assets inherit spatial metadata from their actual owning pack, and
+  the bundled =3d= pack's =pre-spatialized= assets are never positioned a
+  second time;
+- explanation output and the capability command expose compiled balance,
+  capability, and reduction reasons, and the accessible editor creates balance
+  or azimuth data without raw plist editing.
+
+Checks: 78 focused rule, resource, transport, tooling/editor, and sound ERT
+tests and 153 combined Org, semantic, rule-engine, resource, scheme,
+transport, tooling, sound, and voice tests with no unexpected results; 27
+source-loaded semantic traces matching the golden output; source-only startup
+smoke; a real SoX mono input through the documented two-channel remix;
+=check-parens=, =checkdoc=, byte compilation, =org-lint=, and
+=git diff --check=.  Byte compilation and =checkdoc= retain only the
+pre-existing warnings in the legacy sound and tooling files.  The normal
+Emacs 31 gate remains unavailable because the current environment provides
+Emacs 30.2; =make unit-test= stops at its explicit version check.
 
 ** TODO Slice 10: Representative Module Migration
 
@@ -1317,16 +1392,24 @@ For Slice 7, retain schema version 1 and add optional boolean =:enabled= to
 rule data.  Omission means enabled; disabled rules validate but do not enter
 the cascade.
 
+For Slice 9, use normalized balance =-1.0..+1.0= as the portable coordinate,
+negative left and positive right.  Listener-relative azimuth
+=-180..+180= degrees reduces with =sin(azimuth)= so front and rear remain
+centred.  Apply user remapping and maximum separation after coordinate
+reduction.  Speech and cues use the same coordinate contract but retain
+independent controls and transport capabilities.  Unsupported and mono output
+remain audible at the centre, and pre-spatialized assets are not positioned
+again.
+
 * Open Decisions
 
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. The portable spatial coordinate ranges and how 3D values reduce to stereo.
-2. Whether critical alerts may be completely suppressed or require an
+1. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-3. The ordering policy required before minor-mode selectors are enabled.
-4. Whether future integrations need additional occasions and whether those
+2. The ordering policy required before minor-mode selectors are enabled.
+3. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:

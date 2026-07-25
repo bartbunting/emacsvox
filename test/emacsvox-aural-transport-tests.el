@@ -28,7 +28,15 @@
          (emacsvox-aural-buffer-rules nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
-         (emacsvox-sounds-current-pack 'chimes))
+         (emacsvox-sounds-current-pack 'chimes)
+         (emacsvox-aural-spatial-enabled t)
+         (emacsvox-aural-spatial-speech-enabled t)
+         (emacsvox-aural-spatial-cue-enabled t)
+         (emacsvox-aural-spatial-output 'auto)
+         (emacsvox-aural-spatial-maximum-separation 1.0)
+         (emacsvox-aural-spatial-remapping 'normal)
+         (emacsvox-aural-speech-balance-function nil)
+         (emacsvox-aural-queued-cue-balance-function nil))
      (emacsvox-aural--register-default-scheme)
      ,@body))
 
@@ -151,6 +159,189 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
      (equal
       (nreverse events)
       `((acss ,style) (adapter generated-voice))))))
+
+(ert-deftest emacsvox-aural-spatial-reduces-azimuth-to-stereo ()
+  "Listener-relative azimuth uses the documented sine stereo fallback."
+  (should
+   (= (emacsvox-aural-spatial-requested-balance '(:azimuth 90)) 1.0))
+  (should
+   (= (emacsvox-aural-spatial-requested-balance '(:azimuth -90)) -1.0))
+  (should
+   (<
+    (abs
+     (emacsvox-aural-spatial-requested-balance '(:azimuth 180)))
+    0.000001)))
+
+(ert-deftest emacsvox-aural-transport-centers-unsupported-spatial-output ()
+  "Unsupported speech and ordered cue transports degrade predictably."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id spatial-heading
+        :match (:role heading)
+        :render
+        (:before
+         ((:id cue :kind cue :cue item :space (:balance -0.5))
+          (:id label :kind speech :text "Heading"
+           :space (:balance 0.25)))
+         :content (:space (:azimuth 90))))))
+    (let* ((emacsvox-aural-speech-balance-function nil)
+           (emacsvox-aural-queued-cue-balance-function nil)
+           (facts '(:role heading :content "Title"))
+           (context (emacsvox-test--transport-context))
+           (plan
+            (emacsvox-aural-compile-plan
+             (emacsvox-aural-resolve-active facts context)
+             facts context))
+           (before (emacsvox-aural-concrete-plan-before plan))
+           (content (emacsvox-aural-concrete-plan-content plan))
+           (reasons
+            (mapcar
+             (lambda (entry) (plist-get entry :reason))
+             (emacsvox-aural-concrete-plan-degradations plan))))
+      (should
+       (equal (mapcar #'emacsvox-aural-concrete-action-balance before)
+              '(0.0 0.0)))
+      (should (= (emacsvox-aural-concrete-content-balance content) 0.0))
+      (should (= (cl-count 'backend-centered reasons) 3))
+      (should (memq 'azimuth-reduced-to-stereo reasons)))))
+
+(ert-deftest emacsvox-aural-transport-spatial-adapters-preserve-order ()
+  "Speech balance brackets text and an ordered cue adapter stays in sequence."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id spatial-heading
+        :match (:role heading)
+        :render
+        (:before
+         ((:id label :kind speech :text "Heading"
+           :space (:balance -0.5))
+          (:id cue :kind cue :cue item :space (:balance 0.25)))
+         :content (:space (:balance 1.0))))))
+    (let ((emacsvox-aural-spatial-maximum-separation 0.75)
+          (emacsvox-aural-spatial-remapping 'normal)
+          events)
+      (cl-letf
+          (((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
+           ((symbol-function 'tts--protocol-queue-code)
+            (lambda (code) (push (list 'code code) events)))
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text) (push (list 'text text) events))))
+        (let ((emacsvox-aural-speech-balance-function
+               (lambda (balance)
+                 (push (list 'speech-balance balance) events)))
+              (emacsvox-aural-queued-cue-balance-function
+               (lambda (resource balance)
+                 (push
+                  (list 'cue (file-name-base resource) balance)
+                  events))))
+          (let* ((facts '(:role heading :content "Title"))
+                 (context (emacsvox-test--transport-context))
+                 (plan
+                  (emacsvox-aural-compile-plan
+                   (emacsvox-aural-resolve-active facts context)
+                   facts context)))
+            (emacsvox-aural-queue-concrete-plan plan)
+            (should
+             (equal
+              (nreverse events)
+              '((speech-balance -0.5)
+                (text "Heading")
+                (speech-balance 0.0)
+                (cue "item" 0.25)
+                (code "RESET")
+                (speech-balance 0.75)
+                (text "Title")
+                (speech-balance 0.0))))
+            (should
+             (memq
+              'maximum-separation
+              (mapcar
+               (lambda (entry) (plist-get entry :reason))
+               (emacsvox-aural-concrete-plan-degradations plan))))))))))
+
+(ert-deftest emacsvox-aural-transport-honors-independent-spatial-controls ()
+  "Speech and cue controls, remapping, and maximum separation compose."
+  (let ((emacsvox-aural-spatial-enabled t)
+        (emacsvox-aural-spatial-speech-enabled nil)
+        (emacsvox-aural-spatial-cue-enabled t)
+        (emacsvox-aural-spatial-remapping 'reverse)
+        (emacsvox-aural-spatial-maximum-separation 0.4))
+    (should
+     (equal
+      (emacsvox-aural-spatial-apply-user-policy 0.8 'speech)
+      '(:balance 0.0 :reasons (speech-spatialization-disabled))))
+    (should
+     (equal
+      (emacsvox-aural-spatial-apply-user-policy 0.8 'cue)
+      '(:balance -0.4 :reasons (user-remapping maximum-separation))))))
+
+(ert-deftest emacsvox-aural-transport-mono-output-centers-with-reason ()
+  "A declared mono output overrides otherwise spatial-capable adapters."
+  (let ((emacsvox-aural-spatial-output 'mono)
+        (emacsvox-aural-speech-balance-function #'ignore))
+    (let ((compiled
+           (emacsvox-aural--compile-space
+            '(:balance -0.6) 'speech 'speech nil '(:content t))))
+      (should (= (plist-get compiled :balance) 0.0))
+      (should (eq (plist-get compiled :capability) 'mono))
+      (should
+       (eq
+        (plist-get (car (plist-get compiled :degradations)) :reason)
+        'mono-output)))))
+
+(ert-deftest emacsvox-aural-transport-does-not-double-spatialize-assets ()
+  "A pre-spatialized resource is played unchanged despite a rule request."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-sounds-current-pack '3d)
+          (emacsvox-aural-queued-cue-balance-function #'ignore))
+      (emacsvox-test--transport-scheme
+       '((:id cue
+          :match (:role heading)
+          :render
+          (:before
+           ((:id item :kind cue :cue item :space (:balance 0.8)))))))
+      (let* ((facts '(:role heading))
+             (context (emacsvox-test--transport-context))
+             (plan
+              (emacsvox-aural-compile-plan
+               (emacsvox-aural-resolve-active facts context)
+               facts context))
+             (cue (car (emacsvox-aural-concrete-plan-before plan))))
+        (should (= (emacsvox-aural-concrete-action-balance cue) 0.0))
+        (should
+         (eq
+          (plist-get
+           (car (emacsvox-aural-concrete-plan-degradations plan))
+           :reason)
+          'pre-spatialized-resource))))))
+
+(ert-deftest emacsvox-aural-transport-distinguishes-local-and-queued-cues ()
+  "The same cue can spatialize in local SoX and center on the server."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id cue
+        :match (:role heading)
+        :render
+        (:before
+         ((:id item :kind cue :cue item :space (:balance -0.75)))))))
+    (let* ((facts '(:role heading))
+           (context (emacsvox-test--transport-context))
+           (render (emacsvox-aural-resolve-active facts context))
+           (sox-play "/usr/bin/play")
+           (emacsvox-play-program sox-play)
+           (emacsvox-aural-queued-cue-balance-function nil)
+           (local (emacsvox-aural-compile-plan
+                   render facts context 'local-cue))
+           (queued (emacsvox-aural-compile-plan
+                    render facts context 'queued-cue)))
+      (should
+       (= -0.75
+          (emacsvox-aural-concrete-action-balance
+           (car (emacsvox-aural-concrete-plan-before local)))))
+      (should
+       (= 0.0
+          (emacsvox-aural-concrete-action-balance
+           (car (emacsvox-aural-concrete-plan-before queued))))))))
 
 (ert-deftest emacsvox-aural-transport-queues-one-strict-order ()
   "Before actions, styled content, and after actions share one ordered queue."

@@ -408,8 +408,35 @@ None: For systems that rely on the speech server playing the icon."
    tts-speaker-process
    (format "a %s\n" resource)))
 
-(defun emacsvox-sounds-play-concrete-cue (resource sample-id)
-  "Play concrete cue RESOURCE, using SAMPLE-ID for Pulse/PipeWire."
+(defun emacsvox-sounds-spatial-capability ()
+  "Return the selected local cue player's spatial capability."
+  (if
+      (and
+       emacsvox-play-program
+       sox-play
+       (equal emacsvox-play-program sox-play))
+      'stereo
+    'centered))
+
+(defun emacsvox-sounds--sox-balance-arguments (balance)
+  "Return SoX effects implementing normalized stereo BALANCE.
+
+The input is first normalized to two channels.  Balance then preserves the
+near channel and attenuates the far channel without changing total ordering."
+  (let* ((balance
+          (emacsvox-aural-spatial-clamp balance))
+         (left (if (> balance 0.0) (- 1.0 balance) 1.0))
+         (right (if (< balance 0.0) (+ 1.0 balance) 1.0)))
+    (list
+     "channels" "2" "remix" "-m"
+     (format "1v%.6f" left)
+     (format "2v%.6f" right))))
+
+(defun emacsvox-sounds-play-concrete-cue
+    (resource sample-id &optional balance)
+  "Play concrete cue RESOURCE, using SAMPLE-ID for Pulse/PipeWire.
+
+Apply normalized stereo BALANCE when the selected local player supports it."
   (let ((process-connection-type nil))
     (cond
      ((null emacsvox-play-program)
@@ -423,8 +450,18 @@ None: For systems that rely on the speech server playing the icon."
       (start-process
        "Play" nil emacsvox-pactl "play-sample" sample-id))
      (t
-      (start-process
-       "Play" nil emacsvox-play-program ems--play-args resource)))))
+      (apply
+       #'start-process
+       "Play" nil emacsvox-play-program
+       (append
+        (when ems--play-args (list ems--play-args))
+        (list resource)
+        (when
+            (and
+             (numberp balance)
+             (not (zerop balance))
+             (eq (emacsvox-sounds-spatial-capability) 'stereo))
+          (emacsvox-sounds--sox-balance-arguments balance))))))))
 
 ;;;;   queue an auditory icon
 (defun emacsvox-queue-icon (icon)

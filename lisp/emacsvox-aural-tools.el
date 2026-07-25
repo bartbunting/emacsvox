@@ -596,27 +596,59 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 
 (defun emacsvox-aural-tools--format-action (action)
   "Return a concise description of concrete ACTION."
-  (pcase (emacsvox-aural-concrete-action-kind action)
-    ('cue
+  (let* ((balance (emacsvox-aural-concrete-action-balance action))
+         (spatial
+          (if (numberp balance)
+              (format
+               ", balance %.3f (%s)"
+               balance
+               (emacsvox-aural-concrete-action-spatial-capability action))
+            "")))
+    (concat
+     (pcase (emacsvox-aural-concrete-action-kind action)
+       ('cue
+        (format
+         "%s: cue %s -> %s"
+         (emacsvox-aural-concrete-action-id action)
+         (emacsvox-aural-concrete-action-cue action)
+         (emacsvox-aural-concrete-action-resource action)))
+       ('speech
+        (format
+         "%s: speak %S%s"
+         (emacsvox-aural-concrete-action-id action)
+         (emacsvox-aural-concrete-action-text action)
+         (if-let* ((voice
+                    (emacsvox-aural-concrete-action-voice-command action)))
+             (format " using %S" voice)
+           "")))
+       ('pause
+        (format
+         "%s: pause %s"
+         (emacsvox-aural-concrete-action-id action)
+         (emacsvox-aural-concrete-action-duration action))))
+     spatial)))
+
+(defun emacsvox-describe-aural-spatial-capabilities ()
+  "Describe current spatial backends and user policy."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ "Aural spatial capabilities\n\n")
+    (princ
+     (format "Backends: %S\n" (emacsvox-aural-spatial-capabilities)))
+    (princ
      (format
-      "%s: cue %s -> %s"
-      (emacsvox-aural-concrete-action-id action)
-      (emacsvox-aural-concrete-action-cue action)
-      (emacsvox-aural-concrete-action-resource action)))
-    ('speech
+      "Enabled: %s; speech: %s; cues: %s\n"
+      emacsvox-aural-spatial-enabled
+      emacsvox-aural-spatial-speech-enabled
+      emacsvox-aural-spatial-cue-enabled))
+    (princ (format "Final output: %s\n" emacsvox-aural-spatial-output))
+    (princ
      (format
-      "%s: speak %S%s"
-      (emacsvox-aural-concrete-action-id action)
-      (emacsvox-aural-concrete-action-text action)
-      (if-let* ((voice
-                 (emacsvox-aural-concrete-action-voice-command action)))
-          (format " using %S" voice)
-        "")))
-    ('pause
-     (format
-      "%s: pause %s"
-      (emacsvox-aural-concrete-action-id action)
-      (emacsvox-aural-concrete-action-duration action)))))
+      "Maximum separation: %.3f; remapping: %S\n"
+      emacsvox-aural-spatial-maximum-separation
+      emacsvox-aural-spatial-remapping))
+    (princ
+     "\nUnsupported spatial requests remain audible at the center.\n")))
 
 (defun emacsvox-aural-tools--display-explanation (explanation)
   "Display EXPLANATION in a help buffer."
@@ -651,9 +683,11 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
                  (emacsvox-aural-tools--format-action action))))
       (princ
        (format
-        "Content: speak %s, voice command %S, provenance %S\n"
+        "Content: speak %s, voice command %S, balance %S (%s), provenance %S\n"
         (emacsvox-aural-concrete-content-speak content)
         (emacsvox-aural-concrete-content-voice-command content)
+        (emacsvox-aural-concrete-content-balance content)
+        (emacsvox-aural-concrete-content-spatial-capability content)
         (emacsvox-aural-content-style-provenance
          (emacsvox-aural-render-plan-content render))))
       (dolist (action (emacsvox-aural-concrete-plan-after concrete))

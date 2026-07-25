@@ -151,7 +151,40 @@
           child-item))
         (should
          (emacsvox-aural-resource-report-valid
-          (emacsvox-aural-validate-resource-pack 'child)))))))
+         (emacsvox-aural-validate-resource-pack 'child)))))))
+
+(ert-deftest emacsvox-aural-resources-spatialization-follows-asset-owner ()
+  "An inherited asset retains its provider's spatialization metadata."
+  (emacsvox-test--with-resource-directory
+    (emacsvox-test--with-empty-resource-packs
+      (let ((parent-item
+             (emacsvox-test--resource-file parent-directory "item"))
+            (child-button
+             (emacsvox-test--resource-file child-directory "button")))
+        (emacsvox-aural-register-resource-pack
+         'parent
+         :summary "Pre-spatialized parent"
+         :directory parent-directory
+         :default-spatialization 'pre-spatialized)
+        (emacsvox-aural-register-resource-pack
+         'child
+         :summary "Neutral child"
+         :directory child-directory
+         :parent 'parent)
+        (should
+         (eq
+          (emacsvox-aural-resource-spatialization
+           (emacsvox-aural-resolve-cue 'item 'child)
+           'child)
+          'pre-spatialized))
+        (should
+         (eq
+          (emacsvox-aural-resource-spatialization child-button 'child)
+          'neutral))
+        (should
+         (equal
+          (emacsvox-aural-resolve-cue 'item 'child)
+          parent-item))))))
 
 (ert-deftest emacsvox-aural-resources-report-unknown-assets ()
   "Files without registered cue intent are reported."

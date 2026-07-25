@@ -29,7 +29,15 @@
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-plan-presented-hook nil)
          (emacsvox-aural-training-mode nil)
-         (emacsvox-sounds-current-pack 'chimes))
+         (emacsvox-sounds-current-pack 'chimes)
+         (emacsvox-aural-spatial-enabled t)
+         (emacsvox-aural-spatial-speech-enabled t)
+         (emacsvox-aural-spatial-cue-enabled t)
+         (emacsvox-aural-spatial-output 'auto)
+         (emacsvox-aural-spatial-maximum-separation 1.0)
+         (emacsvox-aural-spatial-remapping 'normal)
+         (emacsvox-aural-speech-balance-function nil)
+         (emacsvox-aural-queued-cue-balance-function nil))
      (emacsvox-aural--register-default-scheme)
      ,@body))
 
@@ -361,6 +369,27 @@
          (equal (mapcar #'car tabulated-list-entries) '(default)))))
     (kill-buffer "*Aural Semantics*")
     (kill-buffer "*Aural Schemes*")))
+
+(ert-deftest emacsvox-aural-editor-reads-portable-spatial-values ()
+  "The guided editor produces validated balance and azimuth scheme data."
+  (cl-letf
+      (((symbol-function 'completing-read)
+        (lambda (&rest _) "balance"))
+       ((symbol-function 'read-number)
+        (lambda (&rest _) -0.35)))
+    (should
+     (equal
+      (emacsvox-aural-editor--read-space nil "Speech")
+      '(:balance -0.35))))
+  (cl-letf
+      (((symbol-function 'completing-read)
+        (lambda (&rest _) "azimuth"))
+       ((symbol-function 'read-number)
+        (lambda (&rest _) 135)))
+    (should
+     (equal
+      (emacsvox-aural-editor--read-space nil "Cue")
+      '(:azimuth 135.0)))))
 
 (ert-deftest emacsvox-aural-editor-toggle-reorder-and-save-session ()
   "The accessible working model toggles, reorders, validates, and commits."

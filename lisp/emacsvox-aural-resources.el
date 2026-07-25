@@ -390,6 +390,37 @@
   (emacsvox-aural--resolve-cue-in-assets
    cue (emacsvox-aural-effective-assets pack-id include-prompts)))
 
+(defun emacsvox-aural-resource-spatialization
+    (resource pack-id &optional include-prompts path)
+  "Return spatialization metadata for RESOURCE selected through PACK-ID.
+
+INCLUDE-PROMPTS includes the prompt pack in the lookup.  PATH detects pack
+inheritance cycles.  The metadata comes from the pack that actually owns the
+resolved file, rather than unconditionally from the selected child pack."
+  (when (memq pack-id path)
+    (emacsvox-aural--resource-error
+     "Resource pack inheritance cycle: %S"
+     (nreverse (cons pack-id path))))
+  (let ((pack (emacsvox-aural-resource-pack pack-id)))
+    (unless pack
+      (emacsvox-aural--resource-error "Unknown resource pack: %S" pack-id))
+    (or
+     (and
+      (cl-loop
+       for file being the hash-values of
+       (emacsvox-aural-resource-pack-assets pack)
+       thereis (equal file resource))
+      (emacsvox-aural-resource-pack-default-spatialization pack))
+     (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
+       (emacsvox-aural-resource-spatialization
+        resource parent nil (cons pack-id path)))
+     (when
+         (and include-prompts
+              (not (eq pack-id 'prompts))
+              (emacsvox-aural-resource-pack 'prompts))
+       (emacsvox-aural-resource-spatialization resource 'prompts nil))
+     'neutral)))
+
 (defun emacsvox-aural--pack-profile-cues (pack)
   "Return declared requirement cues for PACK."
   (let (cues)

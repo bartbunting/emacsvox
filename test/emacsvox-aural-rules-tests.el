@@ -76,6 +76,51 @@
        (:id duplicate :kind cue :cue open-object))))
    :type 'emacsvox-aural-rule-error))
 
+(ert-deftest emacsvox-aural-rules-validate-portable-spatial-contract ()
+  "Spatial styling accepts normalized balance or listener-relative azimuth."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'spatial
+           '(:role heading)
+           '(:before
+             ((:id left-label :kind speech :text "Heading"
+               :space (:balance -0.5)))
+             :content (:space (:azimuth 90)))))
+         (contribution (emacsvox-aural-rule-contribution rule)))
+    (should
+     (equal
+      (emacsvox-aural-action-space
+       (car
+        (emacsvox-aural-phase-operations-append
+         (emacsvox-aural-contribution-before contribution))))
+      '(:balance -0.5)))
+    (should
+     (equal
+      (emacsvox-aural-content-patch-space
+       (emacsvox-aural-contribution-content contribution))
+      '(:azimuth 90))))
+  (dolist
+      (space
+       '((:balance -1.1)
+         (:balance 1.1)
+         (:azimuth 181)
+         (:balance 0 :azimuth 0)
+         (:elevation 20)
+         (:unknown 0)))
+    (should-error
+     (emacsvox-test--compile-rule
+      'invalid-space
+      '(:role heading)
+      `(:content (:space ,space)))
+     :type 'emacsvox-aural-rule-error))
+  (should-error
+   (emacsvox-test--compile-rule
+    'spatial-pause
+    '(:role heading)
+    '(:before
+      ((:id pause :kind pause :duration 10 :space (:balance 0.5)))))
+   :type 'emacsvox-aural-rule-error))
+
 (ert-deftest emacsvox-aural-rules-compose-heading-level-and-folded-state ()
   "Independent level and folded-state rules compose into one ordered plan."
   (let* ((rules

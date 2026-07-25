@@ -15,9 +15,10 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-spatial)
 
 (declare-function emacsvox-sounds-play-concrete-cue
-                  "emacsvox-sounds" (resource sample-id))
+                  "emacsvox-sounds" (resource sample-id &optional balance))
 (declare-function emacsvox-queue-resource
                   "emacsvox-sounds" (resource))
 (declare-function tts--protocol-dispatch "tts-speak" ())
@@ -43,13 +44,15 @@
     (emacsvox-aural-concrete-action
      (:constructor emacsvox-aural--make-concrete-action))
   "One backend-ready ordered action."
-  id kind text cue resource sample-id duration voice-command source)
+  id kind text cue resource sample-id duration voice-command source
+  requested-space balance spatial-capability spatial-degradations)
 
 (cl-defstruct
     (emacsvox-aural-concrete-content
      (:constructor emacsvox-aural--make-concrete-content))
   "Backend-ready styling and speaking state for object content."
-  text speak voice-command provenance)
+  text speak voice-command provenance requested-space balance
+  spatial-capability spatial-degradations)
 
 (cl-defstruct
     (emacsvox-aural-concrete-plan
@@ -220,32 +223,121 @@ or a command string understood by the selected speech server."
      (emacsvox-aural-sample-id pack resolved-cue resource)
      resolved-cue)))
 
-(defun emacsvox-aural--compile-concrete-action (action pack palette)
-  "Compile ACTION through PACK and PALETTE."
+(defun emacsvox-aural--spatial-degradation
+    (reason requested balance capability &optional extra)
+  "Return one spatial degradation record.
+
+REASON describes the reduction from REQUESTED to BALANCE for CAPABILITY.
+EXTRA supplies identifying properties such as `:action' or `:content'."
+  (append
+   extra
+   (list
+    :reason reason
+    :requested-space (copy-tree requested)
+    :balance balance
+    :capability capability)))
+
+(defun emacsvox-aural--compile-space
+    (space kind target &optional resource-spatialization identity)
+  "Compile SPACE for KIND and transport TARGET.
+
+RESOURCE-SPATIALIZATION describes a cue asset.  IDENTITY is a plist used in
+degradation records.  Return balance, capability, and degradation records."
+  (let* ((capability (emacsvox-aural-spatial-capability target))
+         (requested
+          (and space
+               (emacsvox-aural-spatial-requested-balance space)))
+         (balance requested)
+         degradations)
+    (when space
+      (when (plist-member space :azimuth)
+        (push
+         (emacsvox-aural--spatial-degradation
+          'azimuth-reduced-to-stereo
+          space balance capability identity)
+         degradations))
+      (let ((policy
+             (emacsvox-aural-spatial-apply-user-policy balance kind)))
+        (setq balance (plist-get policy :balance))
+        (dolist (reason (plist-get policy :reasons))
+          (push
+           (emacsvox-aural--spatial-degradation
+            reason space balance capability identity)
+           degradations)))
+      (cond
+       ((and
+         (eq kind 'cue)
+         (eq resource-spatialization 'pre-spatialized)
+         (not (zerop balance)))
+        (setq balance 0.0)
+        (push
+         (emacsvox-aural--spatial-degradation
+          'pre-spatialized-resource
+          space balance capability identity)
+         degradations))
+       ((and (not (eq capability 'stereo))
+             (not (zerop balance)))
+        (setq balance 0.0)
+        (push
+         (emacsvox-aural--spatial-degradation
+          (if (eq capability 'mono) 'mono-output 'backend-centered)
+          space balance capability identity)
+         degradations))))
+    (list
+     :balance balance
+     :capability capability
+     :degradations (nreverse degradations))))
+
+(defun emacsvox-aural--compile-concrete-action
+    (action pack palette cue-target)
+  "Compile ACTION through PACK and PALETTE for CUE-TARGET."
   (pcase (emacsvox-aural-action-kind action)
     ('cue
      (pcase-let*
          ((`(,resource ,sample-id ,resolved-cue)
            (emacsvox-aural--resolve-cue
-            (emacsvox-aural-action-cue action) pack)))
+            (emacsvox-aural-action-cue action) pack))
+          (spatialization
+           (emacsvox-aural-resource-spatialization
+            resource pack t))
+          (space
+           (emacsvox-aural--compile-space
+            (emacsvox-aural-action-space action)
+            'cue cue-target spatialization
+            (list :action (emacsvox-aural-action-id action)))))
        (emacsvox-aural--make-concrete-action
         :id (emacsvox-aural-action-id action)
         :kind 'cue
         :cue resolved-cue
         :resource resource
         :sample-id sample-id
-        :source (emacsvox-aural-action-source action))))
+        :source (emacsvox-aural-action-source action)
+        :requested-space
+        (copy-tree (emacsvox-aural-action-space action))
+        :balance (plist-get space :balance)
+        :spatial-capability (plist-get space :capability)
+        :spatial-degradations (plist-get space :degradations))))
     ('speech
-     (let ((voice-command
-            (emacsvox-aural-compile-voice
-             (emacsvox-aural-action-voice action) palette)))
+     (let* ((voice-command
+             (emacsvox-aural-compile-voice
+              (emacsvox-aural-action-voice action) palette))
+            (space
+             (emacsvox-aural--compile-space
+              (emacsvox-aural-action-space action)
+              'speech 'speech nil
+              (list :action (emacsvox-aural-action-id action)))))
        (unless (eq voice-command 'inaudible)
          (emacsvox-aural--make-concrete-action
           :id (emacsvox-aural-action-id action)
           :kind 'speech
           :text (emacsvox-aural-action-text action)
           :voice-command voice-command
-          :source (emacsvox-aural-action-source action)))))
+          :source (emacsvox-aural-action-source action)
+          :requested-space
+          (copy-tree (emacsvox-aural-action-space action))
+          :balance (plist-get space :balance)
+          :spatial-capability (plist-get space :capability)
+          :spatial-degradations (plist-get space :degradations)))))
     ('pause
      (emacsvox-aural--make-concrete-action
       :id (emacsvox-aural-action-id action)
@@ -253,13 +345,15 @@ or a command string understood by the selected speech server."
       :duration (emacsvox-aural-action-duration action)
       :source (emacsvox-aural-action-source action)))))
 
-(defun emacsvox-aural--compile-concrete-actions (actions pack palette)
-  "Compile ACTIONS through PACK and PALETTE."
+(defun emacsvox-aural--compile-concrete-actions
+    (actions pack palette cue-target)
+  "Compile ACTIONS through PACK and PALETTE for CUE-TARGET."
   (delq
    nil
    (mapcar
     (lambda (action)
-      (emacsvox-aural--compile-concrete-action action pack palette))
+      (emacsvox-aural--compile-concrete-action
+       action pack palette cue-target))
     actions)))
 
 (defun emacsvox-aural--action-degradations (source concrete)
@@ -272,15 +366,19 @@ or a command string understood by the selected speech server."
               concrete
               :key #'emacsvox-aural-concrete-action-id
               :test #'eq)))
-        (when
-            (or
-             (emacsvox-aural-action-volume action)
-             (emacsvox-aural-action-space action))
+        (when (emacsvox-aural-action-volume action)
           (push
            (list
             :action (emacsvox-aural-action-id action)
             :reason 'backend-property-deferred)
            degradations))
+        (when compiled
+          (setq
+           degradations
+           (append
+            (reverse
+             (emacsvox-aural-concrete-action-spatial-degradations compiled))
+            degradations)))
         (when
             (and
              compiled
@@ -297,10 +395,15 @@ or a command string understood by the selected speech server."
            degradations))))
     (nreverse degradations)))
 
-(defun emacsvox-aural-compile-plan (plan facts context)
-  "Compile render PLAN for FACTS and CONTEXT to a concrete plan."
+(defun emacsvox-aural-compile-plan
+    (plan facts context &optional cue-target)
+  "Compile render PLAN for FACTS and CONTEXT to a concrete plan.
+
+CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
+`local-cue' so capabilities are frozen before playback."
   (let* ((pack (emacsvox-aural--resource-pack))
          (palette (emacsvox-aural--voice-palette))
+         (cue-target (or cue-target 'queued-cue))
          (style (emacsvox-aural-render-plan-content plan))
          (voice-command
           (emacsvox-aural-compile-voice
@@ -310,17 +413,19 @@ or a command string understood by the selected speech server."
            (emacsvox-aural-content-style-speak style)
            (not (eq voice-command 'inaudible))))
          (degradations nil)
+         (content-space
+          (emacsvox-aural--compile-space
+           (emacsvox-aural-content-style-space style)
+           'speech 'speech nil '(:content t)))
          (before
           (emacsvox-aural--compile-concrete-actions
            (emacsvox-aural-render-plan-before plan)
-           pack palette))
+           pack palette cue-target))
          (after
           (emacsvox-aural--compile-concrete-actions
            (emacsvox-aural-render-plan-after plan)
-           pack palette)))
-    (when (or
-           (emacsvox-aural-content-style-volume style)
-           (emacsvox-aural-content-style-space style))
+           pack palette cue-target)))
+    (when (emacsvox-aural-content-style-volume style)
       (push
        (list :content t :reason 'backend-property-deferred)
        degradations))
@@ -329,9 +434,10 @@ or a command string understood by the selected speech server."
      (append
       (emacsvox-aural--action-degradations
        (emacsvox-aural-render-plan-before plan) before)
+      (plist-get content-space :degradations)
+      (nreverse degradations)
       (emacsvox-aural--action-degradations
-       (emacsvox-aural-render-plan-after plan) after)
-      degradations))
+       (emacsvox-aural-render-plan-after plan) after)))
     (emacsvox-aural--make-concrete-plan
      :before before
      :content
@@ -339,6 +445,11 @@ or a command string understood by the selected speech server."
       :text (plist-get facts :content)
       :speak speak
       :voice-command (unless (eq voice-command 'inaudible) voice-command)
+      :requested-space
+      (copy-tree (emacsvox-aural-content-style-space style))
+      :balance (plist-get content-space :balance)
+      :spatial-capability (plist-get content-space :capability)
+      :spatial-degradations (plist-get content-space :degradations)
       :provenance
       (copy-tree
        (emacsvox-aural-content-style-provenance style)))
@@ -348,7 +459,7 @@ or a command string understood by the selected speech server."
      :resource-pack pack
      :voice-palette palette
      :source-plan plan
-     :degradations (nreverse degradations))))
+     :degradations degradations)))
 
 (defun emacsvox-aural--string-style (text position)
   "Return legacy personality or face-derived style in TEXT at POSITION."
@@ -501,20 +612,45 @@ The returned string retains legacy properties and adds concrete plans."
          (or
           (not (boundp 'emacsvox-use-icons))
           emacsvox-use-icons)
-       (emacsvox-queue-resource
-        (emacsvox-aural-concrete-action-resource action))))
+       (let ((resource
+              (emacsvox-aural-concrete-action-resource action))
+             (balance
+              (emacsvox-aural-concrete-action-balance action)))
+         (if
+             (and
+              (numberp balance)
+              (not (zerop balance))
+              (functionp emacsvox-aural-queued-cue-balance-function))
+             (funcall
+              emacsvox-aural-queued-cue-balance-function
+              resource balance)
+           (emacsvox-queue-resource resource)))))
     ('pause
      (tts--protocol-silence
       (emacsvox-aural-concrete-action-duration action)))
     ('speech
      (let ((command
-            (emacsvox-aural-concrete-action-voice-command action)))
+            (emacsvox-aural-concrete-action-voice-command action))
+           (balance
+            (emacsvox-aural-concrete-action-balance action)))
+       (when
+           (and
+            (numberp balance)
+            (not (zerop balance))
+            (functionp emacsvox-aural-speech-balance-function))
+         (funcall emacsvox-aural-speech-balance-function balance))
        (when (and command (not (string-empty-p command)))
          (tts--protocol-queue-code command))
        (tts--protocol-queue-text
         (emacsvox-aural-concrete-action-text action))
        (when command
-         (tts--protocol-queue-code (tts-voice-reset-code)))))))
+         (tts--protocol-queue-code (tts-voice-reset-code)))
+       (when
+           (and
+            (numberp balance)
+            (not (zerop balance))
+            (functionp emacsvox-aural-speech-balance-function))
+         (funcall emacsvox-aural-speech-balance-function 0.0))))))
 
 (cl-defun emacsvox-aural-queue-concrete-plan
     (plan &optional (text nil text-supplied-p))
@@ -535,17 +671,31 @@ cleanup, without rerunning semantic or contextual resolution."
          payload
          (not (string-empty-p payload)))
       (tts--protocol-queue-code (tts-voice-reset-code))
-      (when-let* ((command
-                   (emacsvox-aural-concrete-content-voice-command content)))
-        (unless (string-empty-p command)
-          (tts--protocol-queue-code command)))
-      (tts--protocol-queue-text payload)
-      (when (emacsvox-aural-concrete-content-voice-command content)
-        (tts--protocol-queue-code (tts-voice-reset-code)))))
+      (let ((balance
+             (emacsvox-aural-concrete-content-balance content)))
+        (when
+            (and
+             (numberp balance)
+             (not (zerop balance))
+             (functionp emacsvox-aural-speech-balance-function))
+          (funcall emacsvox-aural-speech-balance-function balance))
+        (when-let* ((command
+                     (emacsvox-aural-concrete-content-voice-command content)))
+          (unless (string-empty-p command)
+            (tts--protocol-queue-code command)))
+        (tts--protocol-queue-text payload)
+        (when (emacsvox-aural-concrete-content-voice-command content)
+          (tts--protocol-queue-code (tts-voice-reset-code)))
+        (when
+            (and
+             (numberp balance)
+             (not (zerop balance))
+             (functionp emacsvox-aural-speech-balance-function))
+          (funcall emacsvox-aural-speech-balance-function 0.0))))
   (dolist (action (emacsvox-aural-concrete-plan-after plan))
     (emacsvox-aural-queue-concrete-action action))
   (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan)
-  plan)
+  plan))
 
 (defun emacsvox-aural--standalone-cue (plan)
   "Return PLAN's one standalone cue action, or nil."
@@ -580,16 +730,34 @@ cleanup, without rerunning semantic or contextual resolution."
          (emacsvox-aural-capture-context nil 'notification)))
        (`(,facts ,context)
         (emacsvox-aural--legacy-input icon nil context))
+       (render
+        (emacsvox-aural-resolve-legacy-icon icon context facts))
+       (local-cue-p
+        (let ((actions
+               (append
+                (emacsvox-aural-render-plan-before render)
+                (emacsvox-aural-render-plan-after render))))
+          (and
+           (= (length actions) 1)
+           (eq (emacsvox-aural-action-kind (car actions)) 'cue)
+           (not (plist-get facts :content)))))
        (plan
         (emacsvox-aural-compile-plan
-         (emacsvox-aural-resolve-legacy-icon icon context facts)
-         facts context))
+         render facts context
+         (if local-cue-p 'local-cue 'queued-cue)))
        (cue (emacsvox-aural--standalone-cue plan)))
     (cond
      (cue
-      (emacsvox-sounds-play-concrete-cue
-       (emacsvox-aural-concrete-action-resource cue)
-       (emacsvox-aural-concrete-action-sample-id cue))
+      (let ((balance
+             (emacsvox-aural-concrete-action-balance cue)))
+        (if (and (numberp balance) (not (zerop balance)))
+            (emacsvox-sounds-play-concrete-cue
+             (emacsvox-aural-concrete-action-resource cue)
+             (emacsvox-aural-concrete-action-sample-id cue)
+             balance)
+          (emacsvox-sounds-play-concrete-cue
+           (emacsvox-aural-concrete-action-resource cue)
+           (emacsvox-aural-concrete-action-sample-id cue))))
       (when emacsvox-aural-plan-presented-hook
         (emacsvox-aural--ensure-speaker)
         (run-hook-with-args
