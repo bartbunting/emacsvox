@@ -277,6 +277,30 @@
        "notice"))
     (should (eq selected 'notification))))
 
+(ert-deftest emacsvox-tts-org-fold-uses-current-hidden-spec ()
+  "Org link visibility uses the current Emacs 31 folding spec."
+  (let (events)
+    (cl-progv
+        '(org-fold-core-style org-link-descriptive)
+        '(text-properties t)
+      (cl-letf (((symbol-function 'outline-mode)
+                 (lambda () (push '(outline) events)))
+                ((symbol-function 'org-fold-initialize)
+                 (lambda (ellipsis)
+                   (push (list 'initialize ellipsis) events)))
+                ((symbol-function 'org-fold-core-set-folding-spec-property)
+                 (lambda (spec property value &optional force)
+                   (push
+                    (list 'spec spec property value force)
+                    events))))
+        (tts-org-fold)))
+    (should
+     (equal
+      (nreverse events)
+      '((outline)
+        (initialize "...")
+        (spec org-fold-hidden :visible nil nil))))))
+
 (ert-deftest emacsvox-tts-canonical-protocol-preserves-wire-format ()
   "Canonical protocol entry points produce the established commands."
   (should

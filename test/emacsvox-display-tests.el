@@ -60,5 +60,26 @@
              (list 'speak-buffer clock-buffer)))))
       (kill-buffer clock-buffer))))
 
+(ert-deftest emacsvox-world-clock-completion-is-case-insensitive ()
+  "Timezone completion dynamically enables all case-folding controls."
+  (let (observed
+        shell-command)
+    (cl-progv '(ido-case-fold) '(outer)
+      (cl-letf (((symbol-function 'read-file-name)
+                 (lambda (&rest _)
+                   (setq observed
+                         (list
+                          completion-ignore-case
+                          (symbol-value 'ido-case-fold)
+                          read-file-name-completion-ignore-case))
+                   (expand-file-name
+                    "UTC"
+                    (symbol-value 'emacsvox-speak-zoneinfo-directory))))
+                ((symbol-function 'emacsvox-shell-command)
+                 (lambda (command) (setq shell-command command))))
+        (call-interactively #'emacsvox-speak-world-clock)))
+    (should (equal observed '(t t t)))
+    (should (string-match-p "TZ=.*/UTC" shell-command))))
+
 (provide 'emacsvox-display-tests)
 ;;; emacsvox-display-tests.el ends here

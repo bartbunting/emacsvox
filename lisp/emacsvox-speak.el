@@ -48,6 +48,12 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar emacsvox-last-message)
+(defvar ido-case-fold)
+(defvar repeat-in-progress)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))

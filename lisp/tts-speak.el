@@ -50,6 +50,11 @@
 
 ;;;  Forward Declarations:
 
+(defvar emacsvox-last-message)
+(defvar org-fold-core-style)
+(defvar org-link-descriptive)
+(defvar tts-default-voice)
+
 (declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (declare-function emacsvox-icon "emacsvox-sounds.el" (icon))
@@ -1587,7 +1592,7 @@ This is so text marked invisible is silenced.")
     (outline-mode)
     (org-fold-initialize "...")
     (org-fold-core-set-folding-spec-property
-     (car org-link--link-folding-spec)
+     'org-fold-hidden
      :visible (not org-link-descriptive))))
 
 (defun tts-speak (text)
