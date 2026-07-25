@@ -501,6 +501,73 @@ tag, or give it a nil icon to keep the status silent."
    :after emacsvox--advice-notmuch-search-archive-thread-after)
  emacsvox-notmuch--advice)
 
+(defconst emacsvox-notmuch--refresh-process-property
+  'emacsvox-notmuch-announce-refresh
+  "Process property requesting refresh-completion feedback.")
+
+(defun emacsvox-notmuch--search-result-count (&optional buffer)
+  "Count structured Notmuch search results in BUFFER."
+  (with-current-buffer (or buffer (current-buffer))
+    (let ((position (point-min))
+          (limit (point-max))
+          (count 0))
+      (while (< position limit)
+        (when (get-text-property position 'notmuch-search-result)
+          (cl-incf count))
+        (setq position
+              (or
+               (next-single-property-change
+                position 'notmuch-search-result nil limit)
+               limit)))
+      count)))
+
+(defun emacsvox-notmuch--announce-refresh-complete (&optional buffer)
+  "Announce completed Notmuch search refresh for BUFFER."
+  (let* ((count (emacsvox-notmuch--search-result-count buffer))
+         (noun (if (= count 1) "thread" "threads")))
+    (emacsvox-icon 'task-done)
+    (tts-speak (format "Search refreshed, %d %s" count noun))))
+
+(defun emacsvox-notmuch--mark-refresh-process ()
+  "Mark the current Notmuch search process for completion feedback."
+  (when-let* ((process (get-buffer-process (current-buffer))))
+    (process-put process emacsvox-notmuch--refresh-process-property t)
+    ;; A very small search can finish before the command's after advice runs.
+    (unless (process-live-p process)
+      (emacsvox--advice-notmuch-search-process-sentinel-after process nil))))
+
+(defun emacsvox--advice-notmuch-search-refresh-view-after (&rest _)
+  "Arrange feedback after an interactive search refresh completes."
+  (when (ems-interactive-p 'notmuch-search-refresh-view)
+    ;; `notmuch-refresh-all-buffers' deliberately refreshes silently.
+    (unless (eq this-command 'notmuch-refresh-all-buffers)
+      (emacsvox-notmuch--mark-refresh-process))))
+
+(defun emacsvox--advice-notmuch-search-process-sentinel-after (process _event)
+  "Announce completion of a marked Notmuch search PROCESS."
+  (when (and
+         (process-get process emacsvox-notmuch--refresh-process-property)
+         (memq (process-status process) '(exit signal)))
+    (process-put process emacsvox-notmuch--refresh-process-property nil)
+    (let ((buffer (process-buffer process)))
+      (if (and
+           (eq (process-status process) 'exit)
+           (zerop (process-exit-status process))
+           (buffer-live-p buffer))
+          (emacsvox-notmuch--announce-refresh-complete buffer)
+        (emacsvox-icon 'warn-user)
+        (tts-speak "Search refresh failed")))))
+
+(push
+ '(notmuch-search-refresh-view
+   :after emacsvox--advice-notmuch-search-refresh-view-after)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-search-process-sentinel
+   :after emacsvox--advice-notmuch-search-process-sentinel-after)
+ emacsvox-notmuch--advice)
+
 (defun emacsvox-notmuch--install-advice ()
   "Install advice for Notmuch features loaded so far."
   (dolist (entry emacsvox-notmuch--advice)

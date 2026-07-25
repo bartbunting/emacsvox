@@ -147,5 +147,76 @@
         (speak "Archived")
         (result))))))
 
+(ert-deftest emacsvox-notmuch-refresh-marks-its-search-process ()
+  "Interactive single-buffer refresh requests completion feedback."
+  (let ((ems--interactive-fn-name 'notmuch-search-refresh-view)
+        (this-command 'notmuch-search-refresh-view)
+        events)
+    (cl-letf (((symbol-function 'get-buffer-process)
+               (lambda (_buffer) 'process))
+              ((symbol-function 'process-put)
+               (lambda (process property value)
+                 (push (list process property value) events)))
+              ((symbol-function 'process-live-p) (lambda (_process) t)))
+      (emacsvox--advice-notmuch-search-refresh-view-after))
+    (should
+     (equal
+      events
+      `((process ,emacsvox-notmuch--refresh-process-property t))))))
+
+(ert-deftest emacsvox-notmuch-refresh-all-remains-silent ()
+  "The command for silently refreshing every buffer requests no feedback."
+  (let ((ems--interactive-fn-name 'notmuch-search-refresh-view)
+        (this-command 'notmuch-refresh-all-buffers)
+        marked)
+    (cl-letf (((symbol-function 'emacsvox-notmuch--mark-refresh-process)
+               (lambda () (setq marked t))))
+      (emacsvox--advice-notmuch-search-refresh-view-after))
+    (should-not marked)))
+
+(ert-deftest emacsvox-notmuch-refresh-announces-after-process-exit ()
+  "A marked successful process reports its final structured-result count."
+  (let ((buffer (generate-new-buffer " *emacsvox-notmuch-refresh-test*"))
+        events)
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (insert "First result\nSecond result\nEnd of search results.\n")
+            (goto-char (point-min))
+            (put-text-property
+             (point-min) (line-beginning-position 2)
+             'notmuch-search-result '(:thread "one"))
+            (put-text-property
+             (line-beginning-position 2) (line-beginning-position 3)
+             'notmuch-search-result '(:thread "two")))
+          (cl-letf
+              (((symbol-function 'process-get)
+                (lambda (_process property)
+                  (and
+                   (eq property emacsvox-notmuch--refresh-process-property)
+                   t)))
+               ((symbol-function 'process-put)
+                (lambda (_process property value)
+                  (push (list 'property property value) events)))
+               ((symbol-function 'process-status)
+                (lambda (_process) 'exit))
+               ((symbol-function 'process-exit-status)
+                (lambda (_process) 0))
+               ((symbol-function 'process-buffer)
+                (lambda (_process) buffer))
+               ((symbol-function 'emacsvox-icon)
+                (lambda (icon) (push (list 'icon icon) events)))
+               ((symbol-function 'tts-speak)
+                (lambda (text) (push (list 'speak text) events))))
+            (emacsvox--advice-notmuch-search-process-sentinel-after
+             'process nil)))
+      (kill-buffer buffer))
+    (should
+     (equal
+      (nreverse events)
+      `((property ,emacsvox-notmuch--refresh-process-property nil)
+        (icon task-done)
+        (speak "Search refreshed, 2 threads"))))))
+
 (provide 'emacsvox-notmuch-tests)
 ;;; emacsvox-notmuch-tests.el ends here
