@@ -75,6 +75,7 @@ emacsvox-aural-schemes.elc \
 emacsvox-aural-transport.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-editor.elc \
+emacsvox-aural-org.elc \
 emacsvox-sounds.elc \
 emacsvox.elc \
 emacsvox-setup.elc

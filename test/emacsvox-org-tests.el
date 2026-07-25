@@ -25,6 +25,40 @@
 (require 'ox)
 (require 'ox-md)
 
+(define-derived-mode emacsvox-test-org-derived-mode org-mode
+  "Emacsvox-Test-Org"
+  "Derived Org mode used to verify aural mode ancestry.")
+
+(defun emacsvox-test--org-context (&optional occasion)
+  "Return captured Org context for OCCASION."
+  (emacsvox-aural-capture-context
+   'org (or occasion 'navigation)))
+
+(defun emacsvox-test--activate-org-mode (mode)
+  "Activate Org-derived MODE without unrelated full-startup setup."
+  (let ((org-mode-hook
+         (remove
+          #'emacsvox-org-mode-setup
+          (copy-sequence org-mode-hook))))
+    (funcall mode)))
+
+(defun emacsvox-test--org-resolved-voice
+    (mode user-rules &optional buffer-rules)
+  "Resolve a heading voice in MODE with USER-RULES and BUFFER-RULES."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-user-rules user-rules)
+        (emacsvox-aural-session-rules nil))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode mode)
+      (insert "* Heading\n")
+      (goto-char (point-min))
+      (setq emacsvox-aural-buffer-rules buffer-rules)
+      (emacsvox-aural-content-style-voice
+       (emacsvox-aural-render-plan-content
+        (emacsvox-aural-resolve-active
+         (emacsvox-org-heading-facts)
+         (emacsvox-test--org-context)))))))
+
 (defconst emacsvox-test--org-structure-after-targets
   '(org-next-item org-previous-item
     org-mark-ring-goto org-mark-ring-push
@@ -116,6 +150,243 @@
      (equal
       (nreverse events)
       '(speak-line (icon large-movement))))))
+
+(ert-deftest emacsvox-org-headings-carry-live-semantic-facts ()
+  "Fontified Org headings expose level and refreshed folded-state facts."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "* Parent\nBody\n** Child\n")
+    (goto-char (point-min))
+    (font-lock-ensure)
+    (should (eq emacsvox-aural-module 'org))
+    (should
+     (equal
+      (get-text-property
+       (point) emacsvox-aural-facts-property)
+      '(:role heading :level 1)))
+    (org-fold-hide-subtree)
+    (emacsvox-org-refresh-aural-heading)
+    (should
+     (equal
+      (get-text-property
+       (point) emacsvox-aural-facts-property)
+      '(:role heading :level 1 :states (folded))))))
+
+(ert-deftest emacsvox-org-navigation-captures-event-and-context ()
+  "Heading navigation submits one semantic speech operation."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "** Heading\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-next-visible-heading)
+          facts context events)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-line)
+            (lambda ()
+              (setq
+               facts (copy-tree emacsvox-aural-submission-facts)
+               context (copy-tree emacsvox-aural-submission-context))
+              (push 'speak-line events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-org-next-visible-heading-after))
+      (should (equal events '(speak-line)))
+      (should
+       (equal
+        facts
+        '(:role heading :level 2 :events (focus-entered))))
+      (should (eq (plist-get context :module) 'org))
+      (should (eq (plist-get context :mode) 'org-mode))
+      (should (eq (plist-get context :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-org-default-plan-preserves-navigation-output-order ()
+  "Default semantic heading output remains line then movement cue."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode #'org-mode)
+      (insert "* Heading\n")
+      (goto-char (point-min))
+      (let* ((facts
+              (emacsvox-org-heading-facts 'focus-entered))
+             (plan
+              (emacsvox-aural-resolve-active
+               facts (emacsvox-test--org-context))))
+        (should
+         (emacsvox-aural-content-style-speak
+          (emacsvox-aural-render-plan-content plan)))
+        (should-not (emacsvox-aural-render-plan-before plan))
+        (should
+         (equal
+          (mapcar
+           (lambda (action)
+             (list
+              (emacsvox-aural-action-kind action)
+              (emacsvox-aural-action-cue action)))
+           (emacsvox-aural-render-plan-after plan))
+          '((cue large-movement))))))))
+
+(ert-deftest emacsvox-org-example-schemes-cover-presentation-modalities ()
+  "Selectable Org examples cover voice, labels, cues, phases, and state."
+  (dolist
+      (scheme
+       '(org-voice-only org-spoken-label org-cue-only
+         org-combined org-before-after org-folded-state))
+    (let ((entry (emacsvox-aural-scheme-entry scheme)))
+      (should entry)
+      (should (emacsvox-aural-scheme-entry-built-in entry))))
+  (let* ((facts
+          '(:role heading :level 1 :states (folded)
+            :events (focus-entered)))
+         (context
+          '(:module org :mode org-mode
+            :mode-lineage (org-mode outline-mode)
+            :occasion navigation))
+         (emacsvox-aural-user-rules nil)
+         (emacsvox-aural-session-rules nil)
+         (emacsvox-aural-buffer-rules nil))
+    (let* ((emacsvox-aural-active-scheme 'org-voice-only)
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice
+         (emacsvox-aural-render-plan-content plan))
+        'bolden))
+      (should-not (emacsvox-aural-render-plan-after plan)))
+    (let* ((emacsvox-aural-active-scheme 'org-spoken-label)
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-text
+                (emacsvox-aural-render-plan-before plan))
+        '("Heading 1"))))
+    (let* ((emacsvox-aural-active-scheme 'org-cue-only)
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-cue
+                (emacsvox-aural-render-plan-before plan))
+        '(section))))
+    (let* ((emacsvox-aural-active-scheme 'org-combined)
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-kind
+                (emacsvox-aural-render-plan-before plan))
+        '(speech cue)))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice
+         (emacsvox-aural-render-plan-content plan))
+        'bolden)))
+    (let* ((emacsvox-aural-active-scheme 'org-before-after)
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-text
+                (emacsvox-aural-render-plan-before plan))
+        '("Heading")))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-text
+                (emacsvox-aural-render-plan-after plan))
+        '("end heading"))))
+    (let* ((emacsvox-aural-active-scheme 'org-folded-state)
+           (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-text
+                (cl-remove-if-not
+                 (lambda (action)
+                   (eq (emacsvox-aural-action-kind action) 'speech))
+                 (emacsvox-aural-render-plan-after plan)))
+        '("folded"))))))
+
+(ert-deftest emacsvox-org-combined-scheme-queues-one-concrete-plan ()
+  "The motivating label, cue, voice, and heading text queue end to end."
+  (let* ((emacsvox-aural-active-scheme 'org-combined)
+         (emacsvox-aural-user-rules nil)
+         (emacsvox-aural-session-rules nil)
+         (emacsvox-aural-buffer-rules nil)
+         (emacsvox-use-icons t)
+         (facts
+          '(:role heading :level 1 :events (focus-entered)
+            :content "Title"))
+         (context
+          '(:module org :mode org-mode
+            :mode-lineage (org-mode outline-mode)
+            :occasion navigation))
+         events)
+    (cl-letf
+        (((symbol-function 'tts-get-voice-command)
+          (lambda (voice) (format "<%s>" voice)))
+         ((symbol-function 'tts-voice-reset-code)
+          (lambda () "RESET"))
+         ((symbol-function 'tts--protocol-queue-code)
+          (lambda (code) (push (list 'code code) events)))
+         ((symbol-function 'tts--protocol-queue-text)
+          (lambda (text) (push (list 'text text) events)))
+         ((symbol-function 'emacsvox-queue-resource)
+          (lambda (resource)
+            (push (list 'cue (file-name-base resource)) events))))
+      (emacsvox-aural-queue-concrete-plan
+       (emacsvox-aural-compile-plan
+        (emacsvox-aural-resolve-active facts context)
+        facts context)))
+    (should
+     (equal
+      (nreverse events)
+      `((text "Heading")
+        (cue "section")
+        (code "RESET")
+        (code ,(format "<%s>" (symbol-value 'voice-bolden)))
+        (text "Title")
+        (code "RESET"))))))
+
+(ert-deftest emacsvox-org-user-overrides-cover-every-context-axis ()
+  "Org headings honor global, mode, derived-mode, module, and buffer rules."
+  (should
+   (eq
+    (emacsvox-test--org-resolved-voice
+     #'org-mode
+     '((:id org-test-global
+        :match (:role heading)
+        :render (:content (:voice animate)))))
+    'animate))
+  (should
+   (eq
+    (emacsvox-test--org-resolved-voice
+     #'org-mode
+     '((:id org-test-mode
+        :match (:role heading :mode org-mode)
+        :render (:content (:voice bolden)))))
+    'bolden))
+  (should
+   (eq
+    (emacsvox-test--org-resolved-voice
+     #'emacsvox-test-org-derived-mode
+     '((:id org-test-derived
+        :match (:role heading :mode emacsvox-test-org-derived-mode)
+        :render (:content (:voice lighten)))))
+    'lighten))
+  (should
+   (eq
+    (emacsvox-test--org-resolved-voice
+     #'org-mode
+     '((:id org-test-module
+        :match (:role heading :module org)
+        :render (:content (:voice smoothen)))))
+    'smoothen))
+  (should
+   (eq
+    (emacsvox-test--org-resolved-voice
+     #'org-mode nil
+     '((:id org-test-buffer
+        :match (:role heading)
+        :render (:content (:voice monotone)))))
+    'monotone)))
 
 (ert-deftest emacsvox-org-paragraph-feedback-preserves-order ()
   "Org paragraph movement cues before speaking the paragraph."

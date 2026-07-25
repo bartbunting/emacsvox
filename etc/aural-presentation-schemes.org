@@ -1163,7 +1163,8 @@ output; =check-parens=, =checkdoc=, byte compilation, =org-lint=, and
 =git diff --check=.  The normal Emacs 31 gates remain unavailable in the
 current Emacs 30.2 environment as recorded for Slice 6.
 
-** TODO Slice 8: Org Vertical Slice
+** DONE Slice 8: Org Vertical Slice
+CLOSED: [2026-07-26 Sun]
 
 - Register heading role, level attribute, folded state, and other deliberately
   selected Org semantics.
@@ -1176,6 +1177,45 @@ current Emacs 30.2 environment as recorded for Slice 6.
 
 Deliverable: the motivating example works end to end and validates the
 contract before broad module migration.
+
+Implemented details:
+
+- Org interprets the registered core =heading= role, =level= attribute,
+  =folded= state, and =focus-entered=, =state-changed=, and =object-changed=
+  events rather than creating synonymous module-private identifiers;
+- =org-mode= buffers identify their aural module and fontified heading lines
+  carry namespaced facts for continuous reading and point inspection;
+- heading facts use effective structural depth, refresh folded state after
+  visibility changes, and capture navigation, state-change, or edit occasion
+  with source mode ancestry before speech enters the scratch buffer;
+- heading navigation and editing now queue their compatibility movement or
+  open cue after content in the same concrete plan; non-heading Org feedback
+  retains its previous direct path and ordering;
+- six selectable built-in examples, =org-voice-only=, =org-spoken-label=,
+  =org-cue-only=, =org-combined=, =org-before-after=, and
+  =org-folded-state=, demonstrate each motivating modality without changing
+  the default choice;
+- their data-only definitions load before personal scheme data, so a saved Org
+  scheme remains selectable at startup without eagerly loading Org itself;
+- the combined example resolves a spoken label, concrete =section= resource,
+  ACSS-backed content voice, heading text, and reset codes into one strict
+  queue;
+- focused tests exercise global, =org-mode=, derived-mode, =org= module, and
+  one-buffer user selectors against real Org facts and context.
+
+The compatibility comparison preserves the observable default order of
+heading text followed by =large-movement=.  A 2,000-iteration, source-loaded
+planning benchmark on the development machine, excluding speech and audio
+I/O, measured 820.6 microseconds per heading for separate compatibility speech
+and icon plans and 655.8 microseconds for the single semantic plan.  This is a
+local regression baseline, not a cross-machine performance guarantee.
+
+Checks: 37 focused Org ERT tests and 142 combined Org, semantic, rule-engine,
+resource, scheme, transport, tooling, sound, and voice tests with no unexpected
+results; 27 source-loaded semantic traces matching the golden output;
+=check-parens=, =checkdoc=, byte compilation, =org-lint=, and
+=git diff --check=.  The normal Emacs 31 gates remain unavailable in the
+current Emacs 30.2 environment as recorded for Slice 6.
 
 ** TODO Slice 9: Portable Spatial Presentation
 

@@ -48,13 +48,108 @@
 
 ;;  required modules
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-org)
 (require 'emacsvox-amark)
 (require 'org)
 (require 'org-element)
 (require 'org-table "org-table" 'no-error)
 (defvar org-ans2 nil)
+
+;;;  Semantic aural presentation:
+
+(defvar-local emacsvox-org-aural-annotation-enabled nil
+  "Non-nil when semantic heading annotation is installed in this buffer.")
+
+(defun emacsvox-org-heading-folded-p ()
+  "Return non-nil when point is on an Org heading with hidden descendants."
+  (and
+   (org-at-heading-p)
+   (org-fold-folded-p (line-end-position) 'outline)))
+
+(defun emacsvox-org-heading-facts (&optional event)
+  "Return semantic facts for the Org heading at point.
+
+Optional EVENT records the registered event that caused its presentation."
+  (when (org-at-heading-p)
+    (let ((facts
+           (list
+            :role 'heading
+            :level (org-reduced-level (org-outline-level)))))
+      (when (emacsvox-org-heading-folded-p)
+        (setq facts (plist-put facts :states '(folded))))
+      (when event
+        (setq facts (plist-put facts :events (list event))))
+      facts)))
+
+(defun emacsvox-org-refresh-aural-heading ()
+  "Refresh semantic text properties on the Org heading at point."
+  (when-let* ((facts (emacsvox-org-heading-facts)))
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
+      (with-silent-modifications
+        (remove-text-properties
+         start end
+         (list
+          emacsvox-aural-facts-property nil
+          emacsvox-aural-module-property nil))
+        (add-text-properties
+         start end
+         (list
+          emacsvox-aural-facts-property facts
+          emacsvox-aural-module-property 'org))))
+    facts))
+
+(defun emacsvox-org--aural-heading-matcher (limit)
+  "Annotate the next Org heading before LIMIT for font locking."
+  (when (re-search-forward org-heading-regexp limit t)
+    (save-excursion
+      (goto-char (match-beginning 0))
+      (emacsvox-org-refresh-aural-heading))
+    t))
+
+(defconst emacsvox-org--aural-font-lock-keywords
+  '((emacsvox-org--aural-heading-matcher))
+  "Font-lock matcher that attaches semantic facts to Org headings.")
+
+(defun emacsvox-org-enable-aural-annotations ()
+  "Enable semantic heading facts and Org module context in this buffer."
+  (setq-local emacsvox-aural-module 'org)
+  (unless emacsvox-org-aural-annotation-enabled
+    (setq-local emacsvox-org-aural-annotation-enabled t)
+    (add-to-list
+     (make-local-variable 'font-lock-extra-managed-props)
+     emacsvox-aural-facts-property)
+    (add-to-list
+     (make-local-variable 'font-lock-extra-managed-props)
+     emacsvox-aural-module-property)
+    (font-lock-add-keywords
+     nil emacsvox-org--aural-font-lock-keywords 'append)
+    (font-lock-flush)))
+
+(defun emacsvox-org-speak-line-semantically (occasion event)
+  "Speak the current line with Org facts for OCCASION and EVENT.
+
+Return the heading facts when point is on a heading, or nil after using the
+ordinary compatibility path for any other Org line."
+  (let ((facts (emacsvox-org-heading-facts event)))
+    (if (not facts)
+        (progn
+          (emacsvox-speak-line)
+          nil)
+      (emacsvox-org-refresh-aural-heading)
+      (let* ((context
+              (emacsvox-aural-capture-context 'org occasion))
+             (emacsvox-aural-submission-facts facts)
+             (emacsvox-aural-submission-context context)
+             (emacsvox-aural-submission-module 'org)
+             (emacsvox-aural-submission-occasion occasion))
+        (emacsvox-speak-line))
+      facts)))
+
+(add-hook 'org-mode-hook #'emacsvox-org-enable-aural-annotations)
 
 ;;;  voice locking:
 
@@ -177,8 +272,10 @@
      (defun ,function (&rest _)
        "Speak after an interactive Org structure movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-speak-line)
-         (emacsvox-icon 'large-movement)))
+         (unless
+             (emacsvox-org-speak-line-semantically
+              'navigation 'focus-entered)
+           (emacsvox-icon 'large-movement))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -246,7 +343,9 @@
         (t
          (let ((tts-stop-immediately nil))
            (when (ems-interactive-p ',target)
-             (emacsvox-speak-line))))))
+             (emacsvox-org-refresh-aural-heading)
+             (emacsvox-org-speak-line-semantically
+              'state-change 'state-changed))))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -302,8 +401,10 @@
      (defun ,function (&rest _)
        "Speak after an interactive Org heading edit."
        (when (ems-interactive-p ',target)
-         (emacsvox-speak-line)
-         (emacsvox-icon 'open-object)))
+         (unless
+             (emacsvox-org-speak-line-semantically
+              'edit 'object-changed)
+           (emacsvox-icon 'open-object))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
