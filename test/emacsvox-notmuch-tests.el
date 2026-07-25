@@ -207,6 +207,25 @@
       (emacsvox--advice-notmuch-search-previous-thread-after))
     (should (equal events '(result)))))
 
+(ert-deftest emacsvox-notmuch-show-navigation-speaks-selected-message ()
+  "Only the active interactive show-navigation command speaks."
+  (let ((ems--interactive-fn-name 'notmuch-show-next-open-message)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-notmuch-speak-show-message)
+               (lambda (&optional _message) (push 'message events))))
+      (emacsvox--advice-notmuch-show-next-open-message-after)
+      (emacsvox--advice-notmuch-show-previous-open-message-after))
+    (should (equal events '(message)))))
+
+(ert-deftest emacsvox-notmuch-show-speaker-is-quiet-outside-show-mode ()
+  "Show navigation that moves to another view does not read stale data."
+  (with-temp-buffer
+    (let (called)
+      (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
+                 (lambda () (setq called t))))
+        (should-not (emacsvox-notmuch-speak-show-message)))
+      (should-not called))))
+
 (ert-deftest emacsvox-notmuch-describes-tag-changes ()
   "Tag-change summaries distinguish additions and removals."
   (should

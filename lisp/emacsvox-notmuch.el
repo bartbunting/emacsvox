@@ -392,7 +392,11 @@ tag, or give it a nil icon to keep the status silent."
   "Speak Notmuch MESSAGE, defaulting to the message at point."
   (interactive)
   (when-let* ((message
-               (or message (notmuch-show-get-message-properties)))
+               (or
+                message
+                (and
+                 (eq major-mode 'notmuch-show-mode)
+                 (notmuch-show-get-message-properties))))
               (summary (emacsvox-notmuch-format-show-message message)))
     (emacsvox-notmuch--play-status-icons
      message emacsvox-notmuch-show-status-icons)
@@ -629,6 +633,18 @@ tag, or give it a nil icon to keep the status silent."
    notmuch-search-first-thread
    notmuch-search-last-thread)
  #'emacsvox-notmuch--navigation-feedback)
+
+(defun emacsvox-notmuch--show-navigation-feedback ()
+  "Speak the Notmuch message selected by show-mode navigation."
+  (emacsvox-notmuch-speak-show-message))
+
+(emacsvox-notmuch--register-after-group
+ '(notmuch-show-next-message
+   notmuch-show-previous-message
+   notmuch-show-next-open-message
+   notmuch-show-previous-open-message
+   notmuch-show-next-matching-message)
+ #'emacsvox-notmuch--show-navigation-feedback)
 
 (defun emacsvox-notmuch--tag-change-summary (tag-changes)
   "Return a concise description of Notmuch TAG-CHANGES."
