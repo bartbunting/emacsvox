@@ -48,6 +48,8 @@
 
 (declare-function notmuch-sanitize "notmuch-lib" (str))
 (declare-function notmuch-search-get-result "notmuch" (&optional pos))
+(declare-function notmuch-show-clean-address "notmuch-show" (address))
+(declare-function notmuch-show-get-message-properties "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
 
@@ -98,10 +100,91 @@ tag, or give it a nil icon to keep the status silent."
            (symbol :tag "Auditory icon")))
   :group 'emacsvox-notmuch)
 
+(defcustom emacsvox-notmuch-show-message-fields
+  '(from date to cc tags attachments)
+  "Ordered fields spoken for the current Notmuch message.
+
+The built-in fields are `from', `subject', `date', `to', `cc',
+`tags', and `attachments'.  A function may also be used as a
+field; it receives the Notmuch message plist and should return the
+string to speak.  Remove a field to silence it, or reorder the
+list to change when it is spoken."
+  :type '(repeat
+          (choice
+           (const :tag "Sender" from)
+           (const :tag "Subject" subject)
+           (const :tag "Date" date)
+           (const :tag "To recipients" to)
+           (const :tag "Cc recipients" cc)
+           (const :tag "Tags" tags)
+           (const :tag "Attachment count" attachments)
+           (function :tag "Custom formatter")))
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-show-field-separator ", "
+  "String placed between spoken fields for a Notmuch message."
+  :type 'string
+  :group 'emacsvox-notmuch)
+
+(defcustom emacsvox-notmuch-show-status-icons
+  '(("unread" . new-mail)
+    ("flagged" . mark-object))
+  "Map Notmuch message status tags to auditory icons.
+
+Entries are checked in order and every matching non-nil icon is
+played.  Tags present in this alist are omitted from the spoken
+`tags' field.  Remove an entry to speak that status as an ordinary
+tag, or give it a nil icon to keep the status silent."
+  :type '(alist
+          :key-type (string :tag "Status tag")
+          :value-type
+          (choice
+           (const :tag "No sound" nil)
+           (symbol :tag "Auditory icon")))
+  :group 'emacsvox-notmuch)
+
+;;;  Message Faces:
+
+(defface emacsvox-notmuch-message-from
+  '((t :inherit message-header-other))
+  "Face used to voice the sender of a Notmuch message."
+  :group 'emacsvox-notmuch)
+
+(defface emacsvox-notmuch-message-subject
+  '((t :inherit message-header-subject))
+  "Face used to voice the subject of a Notmuch message."
+  :group 'emacsvox-notmuch)
+
+(defface emacsvox-notmuch-message-date
+  '((t :inherit message-header-other))
+  "Face used to voice the date of a Notmuch message."
+  :group 'emacsvox-notmuch)
+
+(defface emacsvox-notmuch-message-to
+  '((t :inherit message-header-to))
+  "Face used to voice the To recipients of a Notmuch message."
+  :group 'emacsvox-notmuch)
+
+(defface emacsvox-notmuch-message-cc
+  '((t :inherit message-header-cc))
+  "Face used to voice the Cc recipients of a Notmuch message."
+  :group 'emacsvox-notmuch)
+
+(defface emacsvox-notmuch-message-attachments
+  '((t :inherit message-mml))
+  "Face used to voice the attachment count of a Notmuch message."
+  :group 'emacsvox-notmuch)
+
 ;;;  Map Faces:
 
 (voice-setup-add-map 
  '(
+   (emacsvox-notmuch-message-attachments voice-annotate)
+   (emacsvox-notmuch-message-cc voice-smoothen)
+   (emacsvox-notmuch-message-date voice-monotone)
+   (emacsvox-notmuch-message-from voice-lighten)
+   (emacsvox-notmuch-message-subject voice-bolden)
+   (emacsvox-notmuch-message-to voice-brighten)
    (notmuch-crypto-decryption voice-smoothen)
    (notmuch-crypto-part-header voice-smoothen-extra)
    (notmuch-crypto-signature-bad voice-smoothen-medium)
@@ -146,25 +229,27 @@ tag, or give it a nil icon to keep the status silent."
         (emacsvox-notmuch--field-string
          authors 'notmuch-search-matching-authors)))))
 
-(defun emacsvox-notmuch--status-tags ()
-  "Return tags represented by `emacsvox-notmuch-search-status-icons'."
-  (mapcar #'car emacsvox-notmuch-search-status-icons))
+(defun emacsvox-notmuch--status-tags (status-icons)
+  "Return tags represented by STATUS-ICONS."
+  (mapcar #'car status-icons))
 
-(defun emacsvox-notmuch--ordinary-tags (tags)
-  "Return TAGS excluding statuses represented by auditory cues."
-  (let ((status-tags (emacsvox-notmuch--status-tags)))
+(defun emacsvox-notmuch--ordinary-tags (tags status-icons)
+  "Return TAGS excluding statuses represented by STATUS-ICONS."
+  (let ((status-tags (emacsvox-notmuch--status-tags status-icons)))
     (cl-remove-if
      (lambda (tag) (member tag status-tags))
      tags)))
 
-(defun emacsvox-notmuch--format-tags (result)
-  "Format ordinary tags from Notmuch RESULT."
+(defun emacsvox-notmuch--format-tags (result status-icons)
+  "Format ordinary tags from Notmuch RESULT using STATUS-ICONS."
   (let ((tags
          (emacsvox-notmuch--ordinary-tags
-          (plist-get result :tags)))
+          (plist-get result :tags)
+          status-icons))
         (orig-tags
          (emacsvox-notmuch--ordinary-tags
-          (plist-get result :orig-tags))))
+          (plist-get result :orig-tags)
+          status-icons)))
     (unless (and (null tags) (null orig-tags))
       (notmuch-tag-format-tags tags orig-tags))))
 
@@ -188,7 +273,9 @@ tag, or give it a nil icon to keep the status silent."
               (plist-get result :matched)
               (plist-get result :total))
       'notmuch-search-count))
-    ('tags (emacsvox-notmuch--format-tags result))
+    ('tags
+     (emacsvox-notmuch--format-tags
+      result emacsvox-notmuch-search-status-icons))
     ((pred functionp) (funcall field result))
     (_ nil)))
 
@@ -203,10 +290,10 @@ tag, or give it a nil icon to keep the status silent."
      emacsvox-notmuch-search-result-fields))
    emacsvox-notmuch-search-field-separator))
 
-(defun emacsvox-notmuch--play-status-icons (result)
-  "Play configured status icons for Notmuch search RESULT."
+(defun emacsvox-notmuch--play-status-icons (result status-icons)
+  "Play STATUS-ICONS for statuses present in Notmuch RESULT."
   (let ((tags (plist-get result :tags)))
-    (dolist (entry emacsvox-notmuch-search-status-icons)
+    (dolist (entry status-icons)
       (when (and (cdr entry) (member (car entry) tags))
         (emacsvox-icon (cdr entry))))))
 
@@ -215,7 +302,100 @@ tag, or give it a nil icon to keep the status silent."
   (interactive)
   (when-let* ((result (or result (notmuch-search-get-result)))
               (summary (emacsvox-notmuch-format-search-result result)))
-    (emacsvox-notmuch--play-status-icons result)
+    (emacsvox-notmuch--play-status-icons
+     result emacsvox-notmuch-search-status-icons)
+    (tts-speak summary)
+    summary))
+
+;;;  Show Messages:
+
+(defun emacsvox-notmuch--attachment-count (body)
+  "Return the number of named MIME attachments below BODY."
+  (cl-labels
+      ((count-node
+        (node)
+        (cond
+         ((and (listp node) (keywordp (car node)))
+          (+
+           (if (and
+                (plist-get node :content-type)
+                (plist-get node :filename))
+               1
+             0)
+           (count-node (plist-get node :content))
+           (count-node (plist-get node :body))))
+         ((listp node)
+          (cl-loop for child in node sum (count-node child)))
+         (t 0))))
+    (count-node body)))
+
+(defun emacsvox-notmuch--format-show-header (message header face)
+  "Format HEADER from MESSAGE using FACE."
+  (emacsvox-notmuch--field-string
+   (notmuch-sanitize
+    (or (plist-get (plist-get message :headers) header) ""))
+   face))
+
+(defun emacsvox-notmuch--format-show-field (field message)
+  "Format FIELD from Notmuch MESSAGE for speech."
+  (pcase field
+    ('from
+     (let ((from
+            (plist-get (plist-get message :headers) :From)))
+       (emacsvox-notmuch--field-string
+        (notmuch-sanitize
+         (if from (notmuch-show-clean-address from) ""))
+        'emacsvox-notmuch-message-from)))
+    ('subject
+     (emacsvox-notmuch--format-show-header
+      message :Subject 'emacsvox-notmuch-message-subject))
+    ('date
+     (emacsvox-notmuch--field-string
+      (or
+       (plist-get message :date_relative)
+       (plist-get (plist-get message :headers) :Date))
+      'emacsvox-notmuch-message-date))
+    ('to
+     (emacsvox-notmuch--format-show-header
+      message :To 'emacsvox-notmuch-message-to))
+    ('cc
+     (emacsvox-notmuch--format-show-header
+      message :Cc 'emacsvox-notmuch-message-cc))
+    ('tags
+     (emacsvox-notmuch--format-tags
+      message emacsvox-notmuch-show-status-icons))
+    ('attachments
+     (let ((count
+            (emacsvox-notmuch--attachment-count
+             (plist-get message :body))))
+       (when (> count 0)
+         (emacsvox-notmuch--field-string
+          (format "%d %s"
+                  count
+                  (if (= count 1) "attachment" "attachments"))
+          'emacsvox-notmuch-message-attachments))))
+    ((pred functionp) (funcall field message))
+    (_ nil)))
+
+(defun emacsvox-notmuch-format-show-message (message)
+  "Return a voice-propertized summary of Notmuch MESSAGE."
+  (string-join
+   (delq
+    nil
+    (mapcar
+     (lambda (field)
+       (emacsvox-notmuch--format-show-field field message))
+     emacsvox-notmuch-show-message-fields))
+   emacsvox-notmuch-show-field-separator))
+
+(defun emacsvox-notmuch-speak-show-message (&optional message)
+  "Speak Notmuch MESSAGE, defaulting to the message at point."
+  (interactive)
+  (when-let* ((message
+               (or message (notmuch-show-get-message-properties)))
+              (summary (emacsvox-notmuch-format-show-message message)))
+    (emacsvox-notmuch--play-status-icons
+     message emacsvox-notmuch-show-status-icons)
     (tts-speak summary)
     summary))
 
@@ -427,8 +607,17 @@ tag, or give it a nil icon to keep the status silent."
   (emacsvox-speak-line))
 
 (emacsvox-notmuch--register-after-group
- '(notmuch-search notmuch-search-show-thread)
+ '(notmuch-search)
  #'emacsvox-notmuch--search-feedback)
+
+(defun emacsvox-notmuch--show-feedback ()
+  "Speak the first message in a newly opened Notmuch thread."
+  (emacsvox-icon 'open-object)
+  (emacsvox-notmuch-speak-show-message))
+
+(emacsvox-notmuch--register-after-group
+ '(notmuch-search-show-thread)
+ #'emacsvox-notmuch--show-feedback)
 
 (defun emacsvox-notmuch--navigation-feedback ()
   "Speak the Notmuch search result selected by navigation."

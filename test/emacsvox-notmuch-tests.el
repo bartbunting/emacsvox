@@ -27,6 +27,28 @@
     :orig-tags ("inbox" "unread" "flagged" "work"))
   "Representative Notmuch search result used by speech tests.")
 
+(defconst emacsvox-notmuch-test--show-message
+  '(:date_relative "today"
+    :tags ("inbox" "unread" "flagged")
+    :orig-tags ("inbox" "unread" "flagged")
+    :headers
+    (:From "Alice Smith <alice@example.com>"
+     :Subject "Project update"
+     :Date "Sat, 25 Jul 2026 10:30:00 +1000"
+     :To "Bart Bunting <bart@example.com>"
+     :Cc "Project Team <team@example.com>")
+    :body
+    ((:content-type "multipart/mixed"
+      :content
+      ((:content-type "text/plain" :content "Hello")
+       (:content-type "application/pdf" :filename "report.pdf")
+       (:content-type "message/rfc822"
+        :content
+        ((:headers (:From "Carol <carol@example.com>")
+          :body
+          ((:content-type "image/png" :filename "chart.png")))))))))
+  "Representative Notmuch show message used by speech tests.")
+
 (ert-deftest emacsvox-notmuch-formats-semantic-search-result ()
   "Search results use semantic fields, native faces, and silent statuses."
   (let* ((summary
@@ -88,6 +110,92 @@
         (icon mark-object)
         (speak
          "Alice Smith, Bob Jones, Project update, yesterday, 2 of 5, inbox work"))))))
+
+(ert-deftest emacsvox-notmuch-formats-semantic-show-message ()
+  "Show messages use configurable semantic fields and distinct faces."
+  (let* ((summary
+          (emacsvox-notmuch-format-show-message
+           emacsvox-notmuch-test--show-message))
+         (plain (substring-no-properties summary)))
+    (should
+     (equal
+      plain
+      (concat
+       "Alice Smith <alice@example.com>, today, "
+       "Bart Bunting <bart@example.com>, "
+       "Project Team <team@example.com>, inbox, 2 attachments")))
+    (should-not (string-match-p "unread\\|flagged" plain))
+    (dolist
+        (expectation
+         '(("Alice Smith" . emacsvox-notmuch-message-from)
+           ("today" . emacsvox-notmuch-message-date)
+           ("Bart Bunting" . emacsvox-notmuch-message-to)
+           ("Project Team" . emacsvox-notmuch-message-cc)
+           ("2 attachments" . emacsvox-notmuch-message-attachments)))
+      (should
+       (eq
+        (get-text-property
+         (string-match (car expectation) summary)
+         'face summary)
+        (cdr expectation))))))
+
+(ert-deftest emacsvox-notmuch-show-message-fields-are-configurable ()
+  "Show-message fields can be reordered and include the subject."
+  (let ((emacsvox-notmuch-show-message-fields '(subject from))
+        (emacsvox-notmuch-show-field-separator " / "))
+    (should
+     (equal
+      (substring-no-properties
+       (emacsvox-notmuch-format-show-message
+        emacsvox-notmuch-test--show-message))
+      "Project update / Alice Smith <alice@example.com>"))))
+
+(ert-deftest emacsvox-notmuch-show-fields-have-distinct-voices ()
+  "Each semantic show-message face has an independent voice mapping."
+  (dolist
+      (mapping
+       '((emacsvox-notmuch-message-from . voice-lighten)
+         (emacsvox-notmuch-message-subject . voice-bolden)
+         (emacsvox-notmuch-message-date . voice-monotone)
+         (emacsvox-notmuch-message-to . voice-brighten)
+         (emacsvox-notmuch-message-cc . voice-smoothen)
+         (emacsvox-notmuch-message-attachments . voice-annotate)))
+    (should
+     (eq
+      (voice-setup-get-voice-for-face (car mapping))
+      (cdr mapping)))))
+
+(ert-deftest emacsvox-notmuch-show-status-uses-icons-not-words ()
+  "Message status uses auditory icons and stays out of spoken tags."
+  (let (events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text)
+                 (push
+                  (list 'speak (substring-no-properties text))
+                  events))))
+      (emacsvox-notmuch-speak-show-message
+       emacsvox-notmuch-test--show-message))
+    (should
+     (equal
+      (mapcar #'car (nreverse events))
+      '(icon icon speak)))))
+
+(ert-deftest emacsvox-notmuch-opening-thread-speaks-semantic-message ()
+  "Opening a search result speaks the first structured message."
+  (let ((ems--interactive-fn-name 'notmuch-search-show-thread)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'emacsvox-notmuch-speak-show-message)
+               (lambda (&optional _message) (push '(message) events))))
+      (emacsvox--advice-notmuch-search-show-thread-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object)
+        (message))))))
 
 (ert-deftest emacsvox-notmuch-navigation-speaks-selected-result ()
   "Only the active interactive search-navigation command speaks."
