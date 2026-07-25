@@ -170,6 +170,27 @@
      'entry)
     (should observed)))
 
+(ert-deftest emacsvox-calendar-diary-view-uses-symbolic-punctuation ()
+  "Diary speech uses symbolic punctuation and restores the prior mode."
+  (let ((diary-buffer (generate-new-buffer "*Fancy Diary Entries*"))
+        (ems--interactive-fn-name 'diary-view-entries)
+        (tts-punctuation-mode 'all)
+        events)
+    (unwind-protect
+        (cl-letf (((symbol-function 'tts--protocol-set-punctuations)
+                   (lambda (setting)
+                     (push (list 'punctuation setting) events)))
+                  ((symbol-function 'emacsvox-speak-buffer)
+                   (lambda ()
+                     (push (list 'speak tts-punctuation-mode) events))))
+          (emacsvox--advice-diary-view-entries-after))
+      (kill-buffer diary-buffer))
+    (should
+     (equal
+      (nreverse events)
+      '((punctuation some) (speak some) (punctuation all))))
+    (should (eq tts-punctuation-mode 'all))))
+
 (ert-deftest emacsvox-calendar-mark-visible-date-uses-explicit-date ()
   "Calendar marking receives DATE directly."
   (let (seen)

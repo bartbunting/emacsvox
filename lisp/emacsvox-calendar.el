@@ -146,7 +146,7 @@
       ((buffer-live-p (get-buffer "*Fancy Diary Entries*"))
        (save-current-buffer
          (set-buffer "*Fancy Diary Entries*")
-         (tts-with-punctuations "some" (emacsvox-speak-buffer))))
+         (tts-with-punctuations 'some (emacsvox-speak-buffer))))
       (t (tts-speak "No diary entries."))))))
 
 (advice-add
