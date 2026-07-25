@@ -158,15 +158,15 @@
   (expand-file-name style emacsvox-xslt-directory))
 
 (defconst emacsvox-opml-xsl
-  (eval-when-compile  (emacsvox-xslt-get "opml.xsl"))
+  (emacsvox-xslt-get "opml.xsl")
   "XSL stylesheet used for viewing OPML  Feeds.")
 
 (defconst emacsvox-rss-xsl
-  (eval-when-compile  (emacsvox-xslt-get "rss.xsl"))
+  (emacsvox-xslt-get "rss.xsl")
   "XSL stylesheet used for viewing RSS Feeds.")
 
 (defconst emacsvox-atom-xsl
-  (eval-when-compile  (emacsvox-xslt-get "atom.xsl"))
+  (emacsvox-xslt-get "atom.xsl")
   "XSL stylesheet used for viewing Atom Feeds.")
 
 ;;; Git Revision:

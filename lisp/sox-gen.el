@@ -115,6 +115,16 @@
 (eval-when-compile (require 'cl-lib))
 (require 'tts-speak)
 
+(defvar sox-play (executable-find "play")
+  "Location of the SoX play command.
+Normally defined by `emacsvox-preamble'; this fallback also lets this
+standalone library load independently during native compilation.")
+
+(defvar sox-sox (executable-find "sox")
+  "Location of the SoX command.
+Normally defined by `emacsvox-preamble'; this fallback also lets this
+standalone library load independently during native compilation.")
+
 ;;;  sox-gen-p:
 
 (defvar sox-gen-p sox-sox "Is sox available?")

@@ -59,6 +59,11 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-sounds)
 
+(defvar emacsvox-user-directory (expand-file-name "~/.emacsvox/")
+  "Directory containing user Emacsvox resources.
+Normally defined by `emacsvox-preamble'; this fallback also lets the
+pronunciation library load independently during native compilation.")
+
 ;;; Helper:ems--pronounce-string-template:
 
 ;; Helper: split a string using split-pattern and format using format-template
@@ -948,4 +953,3 @@ Value returned is compatible with `encode-time'."
 
 (provide 'emacsvox-pronounce)
 ;;;  emacs local variables
-

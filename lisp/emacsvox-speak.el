@@ -51,6 +51,10 @@
 ;;; Forward variable declarations:
 
 (defvar emacsvox-last-message)
+(defvar emacsvox-wpctl (executable-find "wpctl")
+  "Location of wpctl.
+Normally defined by `emacsvox-preamble'; this fallback also lets the
+speech library load independently during native compilation.")
 (defvar ido-case-fold)
 (defvar repeat-in-progress)
 
@@ -1510,8 +1514,7 @@ Interactive prefix arg speaks buffer info."
                           (buffer-name))))
 
 (defconst ems--vol-cmd
-  (eval-when-compile
-    (when emacsvox-wpctl  "wpctl get-volume @DEFAULT_AUDIO_SINK@"))
+  (when emacsvox-wpctl "wpctl get-volume @DEFAULT_AUDIO_SINK@")
   "Shell pipeline for getting volume.")
 
 (defsubst ems--show-current-volume ()

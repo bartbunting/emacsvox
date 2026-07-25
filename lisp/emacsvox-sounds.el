@@ -101,6 +101,21 @@
 
 (eval-when-compile (require 'cl-lib))
 
+(defvar emacsvox-sounds-dir
+  (eval-when-compile
+    (expand-file-name
+     "../sounds/"
+     (file-name-directory
+      (or load-file-name byte-compile-current-file buffer-file-name))))
+  "Auditory icons directory.
+Normally defined by `emacsvox-preamble'; this fallback also lets the
+sound library load independently during native compilation.")
+
+(defvar sox-play (executable-find "play")
+  "Location of the SoX play command.
+Normally defined by `emacsvox-preamble'; this fallback also lets the
+sound library load independently during native compilation.")
+
 ;;;   Auditory Icons:
 
 (defvar-local emacsvox-use-icons t
