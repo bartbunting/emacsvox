@@ -454,7 +454,7 @@ tag, or give it a nil icon to keep the status silent."
       (plist-get (notmuch-show-get-message-properties) :id))))
 
 (defun emacsvox-notmuch--move-to-message-body ()
-  "Move point to the first visible leaf content in the current message."
+  "Move point to the line before visible leaf content in the current message."
   (when (eq major-mode 'notmuch-show-mode)
     (when-let* ((message (notmuch-show-get-message-properties))
                 (headers-overlay (plist-get message :headers-overlay)))
@@ -498,7 +498,8 @@ tag, or give it a nil icon to keep the status silent."
                 (goto-char (button-end button))
                 t)))
            (t (setq found t))))
-        (unless found
+        (if found
+            (forward-line -1)
           (when-let* ((fallback
                        (or first-leaf-button first-part-button)))
             (goto-char fallback)))

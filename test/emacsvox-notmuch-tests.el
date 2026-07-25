@@ -472,7 +472,7 @@
         (speak "Finished saving attachments"))))))
 
 (ert-deftest emacsvox-notmuch-opening-thread-speaks-semantic-message ()
-  "Opening a search result selects the body and speaks the message."
+  "Opening a search result selects the line before the message body."
   (with-temp-buffer
     (setq major-mode 'notmuch-show-mode)
     (insert "Summary\nSubject: Project update\nFrom: Alice\n")
@@ -520,7 +520,11 @@
                     ((symbol-function 'emacsvox-notmuch-speak-show-message)
                      (lambda (&optional _message) (push '(message) events))))
             (emacsvox--advice-notmuch-search-show-thread-after))
-          (should (looking-at-p "Message body"))
+          (should
+           (save-excursion
+             (forward-line 1)
+             (skip-chars-forward " \t")
+             (looking-at-p "Message body")))
           (should
            (equal
             (nreverse events)
@@ -631,14 +635,20 @@
                 (((symbol-function 'emacsvox-notmuch-speak-show-message)
                   #'ignore))
               (funcall-interactively (car commands))
-              (should (looking-at-p "Body second"))
+              (should
+               (save-excursion
+                 (forward-line 1)
+                 (looking-at-p "Body second")))
               (should
                (equal
                 (plist-get
                  (notmuch-show-get-message-properties) :id)
                 "second"))
               (funcall-interactively (cadr commands))
-              (should (looking-at-p "Body first"))
+              (should
+               (save-excursion
+                 (forward-line 1)
+                 (looking-at-p "Body first")))
               (should
                (equal
                 (plist-get
