@@ -27,5 +27,24 @@
       (emacsvox--advice-syslog-next-file-after))
     (should (equal (nreverse events) '(mode-line open-object)))))
 
+(ert-deftest emacsvox-syslog-whois-feedback-uses-auditory-icon ()
+  "Interactive WhoIs lookup emits its completion cue and message."
+  (let ((ems--interactive-fn-name 'other-command)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (push (apply #'format format-string arguments) events))))
+      (emacsvox--advice-syslog-whois-reverse-lookup-after)
+      (should-not events)
+      (setq ems--interactive-fn-name 'syslog-whois-reverse-lookup)
+      (emacsvox--advice-syslog-whois-reverse-lookup-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon task-done)
+        "Displayed WhoIs data in other window.")))))
+
 (provide 'emacsvox-syslog-tests)
 ;;; emacsvox-syslog-tests.el ends here

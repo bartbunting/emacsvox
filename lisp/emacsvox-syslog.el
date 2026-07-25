@@ -43,6 +43,10 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar syslog-mode-map)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -67,7 +71,7 @@
 (defun emacsvox--advice-syslog-whois-reverse-lookup-after (&rest _)
   "speak."
   (when (ems-interactive-p 'syslog-whois-reverse-lookup)
-    (emacsvox-audit 'task-done)
+    (emacsvox-icon 'task-done)
     (message "Displayed WhoIs data in other window.")))
 
 (defun emacsvox--advice-syslog-filter-dates-after (&rest _)
