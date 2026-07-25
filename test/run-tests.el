@@ -188,6 +188,7 @@
   (require 'emacsvox-2048-tests)
   (require 'emacsvox-abc-mode-tests)
   (require 'emacsvox-ace-window-tests)
+  (require 'emacsvox-agent-shell-tests)
   (require 'emacsvox-annotate-tests)
   (require 'emacsvox-auctex-tests)
   (require 'emacsvox-avy-tests)

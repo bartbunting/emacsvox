@@ -79,6 +79,7 @@ emacsvox-abc-mode.elc \
 emacsvox-ace-window.elc \
 emacsvox-add-log.elc \
 emacsvox-amark.elc \
+emacsvox-agent-shell.elc \
 emacsvox-annotate.elc \
 emacsvox-arc.elc \
 emacsvox-avy.elc \

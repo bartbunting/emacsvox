@@ -91,6 +91,7 @@
     ("abc-mode" emacsvox-abc-mode)
     ("ace-window" emacsvox-ace-window)
     ("add-log" emacsvox-add-log)
+    ("agent-shell" emacsvox-agent-shell)
     ("annotate" emacsvox-annotate)
     ("arc-mode" emacsvox-arc)
     ("avy" emacsvox-avy)
