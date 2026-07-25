@@ -52,10 +52,16 @@
 ;; @var{company-frontends}   to generate their own feedback.
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar company-candidates)
+(defvar company-selection)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(declare-function company-call-backend "company" (&rest args))
 (declare-function company-fetch-metadata "company" nil)
 
 ;;;  map faces:
@@ -76,9 +82,10 @@
 
 (defun emacsvox-company-speak-this ()
   "Formatting rule for speaking company selection."
-  (let ((metadata (funcall 'company-fetch-metadata)))
+  (let ((metadata (company-fetch-metadata)))
     (when metadata
-      (propertize metadata 'personality 'voice-annotate))
+      (setq metadata
+            (propertize metadata 'personality 'voice-annotate)))
     (message (concat (ems-company-current) " " metadata))))
 
 ;;;  Emacsvox Front-End For Company:

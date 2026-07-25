@@ -47,6 +47,24 @@
       (emacsvox--advice-company-complete-tooltip-row-after))
     (should (equal events '(line)))))
 
+(ert-deftest emacsvox-company-metadata-retains-annotation ()
+  "Completion metadata retains its annotated speaking personality."
+  (let ((company-selection 0)
+        (company-candidates '("candidate"))
+        spoken)
+    (cl-letf (((symbol-function 'company-fetch-metadata)
+               (lambda () "metadata"))
+              ((symbol-function 'message)
+               (lambda (text &rest _) (setq spoken text))))
+      (emacsvox-company-speak-this))
+    (should (equal spoken "candidate metadata"))
+    (should-not (get-text-property 0 'personality spoken))
+    (should
+     (eq
+      (get-text-property
+       (1+ (length "candidate")) 'personality spoken)
+      'voice-annotate))))
+
 (ert-deftest emacsvox-company-doc-advice-handles-buffer-position-pair ()
   "Company documentation may return a buffer-position pair."
   (let ((company-selection 0)
