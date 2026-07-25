@@ -108,19 +108,26 @@ An Org module should be able to expose facts equivalent to:
 
 #+begin_src emacs-lisp
 (:role heading
- :module org
  :level 1
  :states (folded))
 #+end_src
 
+The presentation context is captured separately:
+
+#+begin_src emacs-lisp
+(:module org
+ :mode org-mode
+ :occasion navigation)
+#+end_src
+
 The exact public API and data representation are implementation decisions, but
-the facts must not prescribe a presentation.
+semantic facts and presentation context must not prescribe a presentation.
 
 One scheme might add rules equivalent to:
 
 #+begin_src emacs-lisp
 (:id org-heading-level-1
- :match (:role heading :module org :level 1)
+ :match (:role heading :module org :level 1 :occasion navigation)
  :render
  (:before ((:kind speech :text "Heading 1")
            (:kind cue :name heading-1))
@@ -146,6 +153,38 @@ names:
 - content can retain its text while receiving voice and spatial styling;
 - independently matched rules can contribute to one render plan;
 - a user can replace or suppress each contribution.
+
+** Presentation occasions
+
+The same semantic object may need different presentation when it is reached
+through different interactions.  Presentation occasion is context, not part of
+the object's identity.
+
+The initial occasions are:
+
+| Occasion       | Meaning                                             |
+|----------------+-----------------------------------------------------|
+| =navigation=   | Point or focus moved to the object                  |
+| =continuous=   | Continuous reading reached the object               |
+| =state-change= | An action changed a registered state                 |
+| =edit=         | The object was created or changed                    |
+| =inspection=   | The user explicitly requested detail or explanation |
+| =notification= | An asynchronous event requested user attention      |
+
+For an Org heading:
+
+| Occasion       | Facts retained                    | Additional event context |
+|----------------+-----------------------------------+--------------------------|
+| =navigation=   | heading, level, folded state      | focus entered            |
+| =continuous=   | heading, level, folded state      | continuous reading       |
+| =state-change= | heading, level, new folded state  | folding changed          |
+| =edit=         | heading, level, folded state      | heading changed          |
+| =inspection=   | heading, level, folded state      | explain presentation     |
+
+This distinction lets a user retain level voices during continuous reading
+while hearing "Heading 1" or a cue only during navigation.  Modules must use a
+registered occasion rather than treating the command name as presentation
+semantics.
 
 * Prior Art
 
@@ -276,6 +315,13 @@ not correspond to a persistent text range.
 A fact that qualifies an object or event, such as =folded=, =checked=,
 =selected=, or =unavailable=.
 
+** Presentation occasion
+
+Context describing why an object or event is being rendered, such as
+=navigation=, =continuous=, =state-change=, =edit=, =inspection=, or
+=notification=.  Occasion affects rule matching but does not change semantic
+identity.
+
 ** Scheme
 
 A named, versioned collection of declarative rules plus references to resource
@@ -386,6 +432,7 @@ The first implementation must support selectors over:
 - state;
 - registered attributes and values;
 - module;
+- presentation occasion;
 - exact major mode;
 - derived major-mode ancestry;
 - current buffer through a buffer-local rule layer.
@@ -657,17 +704,88 @@ The earlier read-only inventory found:
 | =sounds/chimes/*.ogg=                     |    56 |
 | =sounds/3d/*.ogg=                         |    55 |
 | =sounds/prompts/*.ogg=                    |    17 |
+| Direct =emacsvox-icon= calls               |  1750 |
+| Direct literal icon references            |  1659 |
 | Direct literal icon symbols found in Lisp |    58 |
+| =voice-setup-add-map= forms                |   106 |
+| Explicit personality property writes      |    50 |
+| Literal =tts-speak= string calls           |   104 |
+| Lisp references to =auditory-icon=         |    22 |
+| Csound HRTF or panning instructions       |    40 |
 
 =shutdown.ogg= is present in =chimes= but absent from =3d=.  Static inspection
 also found direct requests for =emacsvox=, =repeat-stop=, and =unmark-object=
 without a matching file in =chimes= or =prompts=.  They currently fall back to
 =button=.
 
-This remains a useful resource baseline but is not a semantic inventory.
-Computed icon symbols, direct speech labels, face mappings, explicit
-=personality= properties, pauses, and state announcements must also be
-inventoried before the registry is finalized.
+The difference between all icon calls and literal icon references confirms
+that some names are computed dynamically and require semantic inspection.
+The voice, speech, property, and spatial counts are static search baselines;
+they measure references rather than distinct semantics.
+
+This remains a useful implementation inventory but is not itself a semantic
+vocabulary.  Direct speech labels, face mappings, explicit =personality=
+properties, pauses, computed icon symbols, and state announcements require
+review as modules migrate.
+
+** Initial semantic vocabulary
+
+The first registry seed is deliberately small:
+
+| Identifier       | Kind      | Intent                                      |
+|------------------+-----------+---------------------------------------------|
+| =heading=        | role      | A titled structural section                 |
+| =level=          | attribute | One-based structural depth                  |
+| =folded=         | state     | Descendants are currently hidden            |
+| =focus-entered=  | event     | Navigation arrived at an aural object       |
+| =state-changed=  | event     | A registered state changed                  |
+| =object-changed= | event     | A registered object was created or modified |
+
+The registered presentation occasions are =navigation=, =continuous=,
+=state-change=, =edit=, =inspection=, and =notification=.  =heading= and
+=level= are core semantics; the Org module initially owns the interpretation
+of Org folding and maps it to the core =folded= state.
+
+This seed is sufficient to exercise an object, an attribute, a state, separate
+events, and occasion-sensitive rules without prematurely assigning semantics
+to all 58 legacy icon names.  Legacy icon compatibility remains presentation
+input until each name is reviewed.
+
+** Representative use-case fixtures
+
+These fixtures bound the initial architecture without making every candidate a
+core registry entry immediately:
+
+| Integration   | Semantic facts or events                         | Occasion                          | Existing presentation source                 |
+|---------------+--------------------------------------------------+-----------------------------------+----------------------------------------------|
+| Org           | heading, level, folded, focus/state/object change | navigation, continuous, edit      | level faces, spoken line, movement/open cues |
+| Notmuch       | message, field, unread, flagged, attachments      | navigation, continuous            | field faces, ordered speech, status cues     |
+| Programming   | code construct, syntax role, boundary             | navigation, continuous, inspection | font-lock faces, speech, movement cues       |
+| Completion    | candidate, selected, accepted, list opened/closed | navigation, state-change          | candidate faces and complete/select cues     |
+| Agent Shell   | response, thought, tool, permission, processing   | continuous, notification          | verbosity choices, speech, lifecycle cues    |
+
+Org supplies the first registry and vertical-slice implementation.  The other
+rows are fixtures for testing that the contract can later handle field order,
+transient lists, face-derived presentation, asynchronous lifecycle events, and
+module-specific verbosity without changing the core model.
+
+** Legacy semantic decisions
+
+The unresolved legacy names use semantic cleanup with compatibility aliases:
+
+| Legacy name     | Canonical semantic   | Initial resource and fallback               |
+|-----------------+----------------------+---------------------------------------------|
+| =emacsvox=      | =product-identity=   | =startup= prompt                            |
+| =repeat-stop=   | =activity-ended=     | =repeat-end=                                |
+| =unmark-object= | =selection-cleared=  | =deselect-object=                           |
+| =shutdown=      | =game-over=          | =shutdown= when available, then =close-object= |
+
+The canonical semantics describe intent rather than filenames.  In-tree
+callers migrate in their representative-module slices.  Old names remain
+warning compatibility aliases so external integrations continue to work.
+
+Add =product-identity=, =activity-ended=, =selection-cleared=, and =game-over=
+as core events when the registry is seeded.
 
 =utils/count-icons.pl= is historical tooling derived from =sounds/chimes/= and
 source scraping.  It should not remain the authority once the semantic
@@ -678,12 +796,16 @@ registry exists.
 Each slice should be independently reviewable.  The first slices establish
 pure data contracts and characterization tests before changing presentation.
 
-** TODO Slice 0: Confirm Use Cases and Vocabulary
+** DONE Slice 0: Confirm Use Cases and Vocabulary
+CLOSED: [2026-07-26 Sun]
 
 - Record representative aural objects, events, states, and attributes from
   Org, Notmuch, programming modes, completion, and Agent Shell.
 - Include at least the Org heading-level and folded-state variants described
   in this plan.
+- Distinguish semantic identity from presentation occasion, including
+  navigation, continuous reading, state change, editing, inspection, and
+  notification.
 - Inventory direct speech labels, literal and computed icons, =personality=
   properties, face mappings, pauses, prompts, and spatial assets.
 - Classify reusable core semantics and module extensions.
@@ -693,6 +815,8 @@ pure data contracts and characterization tests before changing presentation.
 
 Deliverable: reviewed semantic vocabulary and use-case fixtures with no
 runtime behavior change.
+
+Checks: static repository inventory, =org-lint=, and =git diff --check=.
 
 ** TODO Slice 1: Characterization Tests
 
@@ -868,6 +992,7 @@ The dedicated tests must cover:
 
 - unique registrations, ownership, valid fields, intent, and fallback;
 - selector matching and derived-mode ancestry;
+- presentation-occasion matching without changing semantic identity;
 - origin-layer and specificity ordering;
 - deterministic ties independent of hash or registration order;
 - independent heading-level and folded-state composition;
@@ -914,6 +1039,8 @@ slice:
 12. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
 13. The ordering policy required before minor-mode selectors are enabled.
+14. Whether future integrations need additional occasions and whether those
+    are core or module extensions.
 
 Initial recommendations are:
 
