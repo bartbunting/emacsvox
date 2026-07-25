@@ -1,0 +1,563 @@
+#+title: Semantic Auditory Icon Themes and Overrides
+#+author: Emacsvox Contributors
+#+date: <2026-07-25 Sat>
+
+* Purpose
+
+Turn the existing auditory-icon directory convention into a documented,
+discoverable, and customizable semantic theme system.
+
+The current implementation successfully separates Lisp callers from sound file
+paths: callers request a symbol such as =open-object=, and the selected theme
+maps that symbol to an Ogg file.  This plan preserves that useful separation
+while adding:
+
+- a canonical registry of icon names and their intent;
+- an explicit contract for theme authors;
+- validation and discovery;
+- global, module, major-mode, and buffer-local overrides;
+- deterministic fallback and inheritance;
+- consistent behavior across all playback paths.
+
+This is a staged, backward-compatible migration.  Existing one-argument calls
+such as =(emacsvox-icon 'open-object)= and existing theme directories continue
+to work while modules adopt richer context incrementally.
+
+* Goals
+
+1. Give every auditory icon a stable semantic definition.
+2. Let code and users discover which icons exist and what they mean.
+3. Tell theme authors which icons are required, optional, or supplied as
+   theme-independent prompts.
+4. Diagnose unknown icon names and incomplete themes instead of silently
+   hiding mistakes.
+5. Let users replace, alias, or silence an icon:
+   - globally;
+   - for a module;
+   - for an exact or derived major mode;
+   - for a module and major-mode combination;
+   - in one buffer.
+6. Apply the same resolution rules to immediate icons, queued icons stored in
+   text properties, SoX, Pulse/PipeWire, and speech-server playback.
+7. Preserve the simple convention that =open-object.ogg= implements the
+   =open-object= event unless a theme explicitly says otherwise.
+
+* Non-Goals
+
+- Redesign the audio samples themselves.
+- Replace auditory icons with soundscapes.
+- Move or rename the existing =sounds/= tree during the initial migration.
+- Rewrite every module in one change.
+- Add minor-mode-specific overrides in the first version.
+- Require every theme to implement optional icons from every third-party
+  module.
+
+Minor-mode overrides are deferred because many minor modes may be active at
+once.  Supporting them requires an explicit and user-visible ordering policy;
+major modes and their derived-mode hierarchy have deterministic precedence.
+
+* Current Architecture
+
+The implementation is concentrated in =lisp/emacsvox-sounds.el=.
+
+** Icon emission
+
+Modules request a semantic-looking symbol:
+
+#+begin_src emacs-lisp
+(emacsvox-icon 'open-object)
+#+end_src
+
+=emacsvox-icon= either sends the icon to the speech server or invokes a local
+player, depending on =emacsvox-play-program=.
+
+** Theme loading
+
+=emacsvox-sounds-cache-rebuild= scans a directory for =.ogg= files.  It interns
+each basename and stores a global mapping from that symbol to the fully
+qualified file name.  =emacsvox-sounds-select-theme= first adds files from
+=sounds/prompts/= and then overlays files from the selected theme.
+
+The interactive selector currently knows the hard-coded theme names =chimes=
+and =3d=.  Startup selects =chimes= by calling
+=emacsvox-sounds-select-theme= without an argument.
+
+** Fallback
+
+=emacsvox-sounds-cache-get= returns the requested mapping or silently returns
+the mapping for =button=.  The caller cannot distinguish a deliberate button
+from an unknown or misspelled icon.
+
+** Queued icons
+
+Text carrying an =auditory-icon= property is handled by
+=tts-audio-format=.  It passes the property value to
+=emacsvox-queue-icon=, which resolves the resource separately from immediate
+playback.  Contextual overrides must cover this path as well as direct calls.
+
+** Existing customization
+
+Users can:
+
+- toggle icons globally or buffer-locally with =emacsvox-use-icons=;
+- choose the complete current theme;
+- choose the playback program;
+- customize a few module-specific variables, including Notmuch status maps
+  and Agent Shell processing icons.
+
+There is no common per-icon, per-mode, or per-module customization facility.
+
+* Baseline Inventory
+
+The initial read-only inventory found:
+
+| Asset or reference                         | Count |
+|--------------------------------------------+-------|
+| =sounds/chimes/*.ogg=                      |    56 |
+| =sounds/3d/*.ogg=                          |    55 |
+| =sounds/prompts/*.ogg=                     |    17 |
+| Direct literal icon symbols found in Lisp  |    58 |
+
+=shutdown.ogg= is present in =chimes= but absent from =3d=.  Static inspection
+also found direct requests for =emacsvox=, =repeat-stop=, and =unmark-object=
+without a matching file in =chimes= or =prompts=.  They currently fall back to
+=button=.
+
+These counts are a baseline, not yet the canonical contract.  Calls that
+compute icon symbols dynamically require semantic inspection and cannot be
+completely inventoried with a textual search.
+
+=utils/count-icons.pl= is useful historical tooling, but it derives the icon
+list from =sounds/chimes/= and scrapes source text.  It should not remain the
+authority once the registry exists.
+
+* Terminology
+
+** Event
+
+A semantic occurrence that code announces, such as opening an object, reaching
+the end of a task, or receiving new mail.
+
+** Icon
+
+The stable symbol naming an event, together with registered intent and fallback
+metadata.  An icon is not itself a file.
+
+** Resource
+
+The concrete sound used after resolution.  It may be a theme asset, a user
+file, an alias to another icon, or silence.
+
+** Theme
+
+A named set of resources for registered icons.  A theme may inherit from
+another theme and may omit optional icons.
+
+** Prompt
+
+A theme-independent sound such as startup or login feedback.  Prompts use the
+same playback machinery but are not required members of every auditory-icon
+theme.
+
+** Module context
+
+The Emacsvox integration responsible for emitting an event, such as =org=,
+=notmuch=, or =agent-shell=.  Module context is distinct from =major-mode=.
+
+* Proposed Semantic Registry
+
+Add a registry owned by the auditory-icon layer.  Each entry records:
+
+- symbol;
+- concise summary of intent;
+- category;
+- kind: core icon, prompt, or module extension;
+- owner for module extensions;
+- whether every complete theme must implement it;
+- semantic fallback;
+- optional usage guidance.
+
+Illustrative API:
+
+#+begin_src emacs-lisp
+(emacsvox-define-icon open-object
+  :summary "A container, document, or view was opened"
+  :category navigation
+  :kind core
+  :required t
+  :fallback button)
+
+(emacsvox-define-icon notmuch-message-arrived
+  :summary "New mail appeared in a Notmuch view"
+  :category notification
+  :kind extension
+  :owner notmuch
+  :required nil
+  :fallback new-mail)
+#+end_src
+
+Core names should describe reusable interaction semantics rather than a
+particular package.  A module should register a new extension icon only when no
+core event expresses the intended meaning.  Every extension icon must have a
+documented core fallback so existing themes remain usable.
+
+The registry becomes the source of truth for documentation, completion,
+validation, and development-time auditing.  A theme directory is an
+implementation of the vocabulary, not its definition.
+
+* Theme Contract
+
+Themes remain directory based by default.  A registration records the theme
+name, directory, optional parent, and description:
+
+#+begin_src emacs-lisp
+(emacsvox-define-sound-theme chimes
+  :directory "chimes"
+  :summary "Short chime-based auditory icons")
+#+end_src
+
+The default filename for an icon remains =ICON.ogg=.  An explicit per-icon
+mapping may be added later if a theme cannot use that convention; it is not
+required for the initial implementation.
+
+A complete theme must provide every registered icon whose kind is =core= and
+whose =required= field is non-nil.  It may provide optional core icons and
+module extensions.  Missing optional icons follow their registered fallback.
+Prompts are loaded independently and are not counted as theme coverage.
+
+Theme selection must build a fresh effective cache.  It must not retain an
+entry merely because the previous theme provided an asset with the same icon
+name.
+
+* Context and Override Model
+
+Module and mode are independent axes:
+
+- a mode override applies wherever that major mode is active;
+- a module override applies wherever that integration emits the event;
+- a combined rule targets one module in one mode;
+- a buffer override affects only the current buffer.
+
+An emission API may accept optional context while keeping the existing call
+valid:
+
+#+begin_src emacs-lisp
+(emacsvox-icon 'open-object)
+(emacsvox-icon 'open-object :module 'org)
+#+end_src
+
+The resolver obtains the current buffer and major mode automatically.  Callers
+provide module context explicitly; it must not be guessed from the call stack.
+
+Queued =auditory-icon= properties need a backward-compatible representation
+for optional module context.  A plain symbol remains valid.  The exact richer
+property representation is an implementation decision for the playback-path
+slice and must be covered by compatibility tests before migration.
+
+** Resolution precedence
+
+Resolve a requested event in this order:
+
+1. current buffer override;
+2. module plus exact major-mode override;
+3. exact major-mode override;
+4. nearest matching parent in the derived-mode hierarchy;
+5. module override;
+6. global user override;
+7. active theme resource;
+8. inherited theme resource;
+9. registered semantic fallback.
+
+The final emergency fallback may remain =button= during migration, but an
+unregistered icon must produce a diagnostic rather than becoming an
+indistinguishable button silently.
+
+Mode resolution must prefer the nearest ancestor.  For example, an
+=org-src-mode= rule wins over an =org-mode= parent rule when both apply.
+
+** Override values
+
+An override may resolve to:
+
+- another registered icon symbol;
+- a readable sound file;
+- =:silent=.
+
+Alias chains must be cycle checked.  A missing file must be diagnosed and then
+follow documented fallback behavior; it must not fail differently between
+playback backends.
+
+** Customization storage
+
+Provide:
+
+- a persistent global override alist;
+- persistent module rules;
+- persistent mode and module-plus-mode rules;
+- a buffer-local override alist for temporary or programmatic use.
+
+Persistent rules should be editable through Customize.  Buffer-local rules
+should have interactive set, reset, inspect, and test commands but should not
+attempt to serialize buffer objects.
+
+* Discovery and User Interface
+
+Provide commands equivalent to:
+
+- =emacsvox-list-icons=: show names, kinds, owners, intent, and effective
+  resources;
+- =emacsvox-describe-icon=: describe intent, fallback, availability, and
+  active overrides;
+- =emacsvox-test-icon=: play an icon using the current resolution context;
+- =emacsvox-list-sound-themes=: list registered themes and coverage;
+- =emacsvox-validate-sound-theme=: report missing, unknown, and unreadable
+  assets;
+- commands to set and reset global, module, mode, combined, and current-buffer
+  overrides.
+
+Completion should come from the registries rather than hard-coded theme or icon
+lists.
+
+* Playback Backend Requirements
+
+All playback paths must consume one resolved result.
+
+For SoX and speech-server playback, a file override can use the resolved path
+directly.  Pulse/PipeWire uses uploaded sample names, so contextual file
+overrides need deterministic, collision-free sample identifiers and lifecycle
+management when a theme or override changes.
+
+The resolver must not know backend details.  It should return a structured
+result containing enough information for a backend adapter to play the
+resource.  Backend adapters remain responsible for file playback, sample
+upload, or speech-server protocol commands.
+
+Immediate and queued playback must agree on:
+
+- theme and fallback resolution;
+- global, mode, module, and buffer overrides;
+- silence;
+- unknown-icon diagnostics;
+- missing-file behavior.
+
+* Compatibility Policy
+
+1. Existing =(emacsvox-icon ICON)= calls remain valid.
+2. Existing symbol-valued =auditory-icon= text properties remain valid.
+3. Existing =chimes= and =3d= directories remain valid theme sources.
+4. Existing =emacsvox-sounds-current-theme= behavior is retained or migrated
+   behind a compatibility-preserving accessor.
+5. Existing player selection remains supported.
+6. Unknown icons warn once and fall back during migration.  In-tree audits
+   reject new unregistered literal icons.
+7. Module context is optional until a module is deliberately migrated.
+8. No repository-wide mechanical caller rewrite is part of the initial
+   implementation.
+
+Any later removal of a compatibility path or change to the public icon API
+requires separate approval.
+
+* Implementation Plan
+
+Each slice should be reviewable independently and should avoid unrelated
+cleanup.
+
+** TODO Slice 0: Confirm Vocabulary and Contract
+
+- Inventory literal and dynamically computed icons.
+- Classify core icons, prompts, and module extensions.
+- Write intent and fallback metadata for the initial registry.
+- Decide the intended mappings for =emacsvox=, =repeat-stop=, and
+  =unmark-object=.
+- Decide whether =shutdown= is required or optional.
+- Record the required core vocabulary before changing runtime resolution.
+
+Deliverable: reviewed registry data and baseline audit fixtures with no
+playback behavior change.
+
+** TODO Slice 1: Characterization Tests
+
+- Add =test/emacsvox-sounds-tests.el= and load it from =test/run-tests.el=.
+- Characterize cache rebuilding, prompt overlay, theme switching, fallback,
+  immediate playback, queued playback, and each backend.
+- Add a regression demonstrating that switching themes cannot leak an asset
+  from the previous theme.
+- Preserve the existing canonical-process tests in
+  =test/emacsvox-tts-tests.el=.
+
+Deliverable: tests protecting the old public behavior and exposing the stale
+cache and unknown-icon gaps.
+
+** TODO Slice 2: Semantic Icon Registry
+
+- Implement icon registration and lookup in =emacsvox-sounds.el= without
+  moving public functions.
+- Seed the reviewed core, prompt, and extension definitions.
+- Add description and completion APIs.
+- Warn once for unregistered icons while retaining the migration fallback.
+- Add fallback existence and cycle validation.
+
+Deliverable: a canonical discoverable vocabulary with existing callers still
+working.
+
+** TODO Slice 3: Theme Registry and Validation
+
+- Register =chimes= and =3d=.
+- Replace the hard-coded interactive theme list with registry completion.
+- Build a fresh cache on selection.
+- Implement inheritance and coverage reporting.
+- Diagnose unknown, missing, duplicate, and unreadable assets.
+- Keep basename-based resource discovery as the default convention.
+
+Deliverable: explicit, validated theme contracts without changing bundled
+theme selection for users.
+
+** TODO Slice 4: Central Resolver and Global Overrides
+
+- Separate semantic resolution from backend playback.
+- Implement aliases, file overrides, and =:silent=.
+- Add cycle and missing-file handling.
+- Add global user overrides and Customize support.
+- Route immediate playback through the resolver.
+
+Deliverable: users can customize individual icons globally.
+
+** TODO Slice 5: Buffer, Mode, and Module Context
+
+- Add buffer-local overrides.
+- Add exact and derived major-mode rules.
+- Add module and module-plus-mode rules.
+- Extend emission with optional explicit module context.
+- Implement and test the documented precedence order.
+- Keep minor-mode rules out of this slice.
+
+Deliverable: deterministic contextual customization with unchanged legacy
+callers.
+
+** TODO Slice 6: Unify Queued and Backend Playback
+
+- Route =emacsvox-queue-icon= and =auditory-icon= text properties through the
+  resolver.
+- Define the compatible contextual text-property representation.
+- Adapt SoX and speech-server playback to resolved resources.
+- Implement Pulse/PipeWire sample identifiers and upload invalidation for
+  contextual file overrides.
+- Verify silence and fallback behavior on every backend.
+
+Deliverable: one resolution model for all playback paths.
+
+** TODO Slice 7: User Commands
+
+- Add list, describe, test, validate, set, and reset commands.
+- Make registry values available through completion.
+- Show why a resource was selected, including the winning scope and fallback
+  chain.
+- Make current-buffer overrides easy to inspect and clear.
+
+Deliverable: customization does not require editing cache internals.
+
+** TODO Slice 8: Representative Module Migration
+
+Migrate a deliberately small cross-section:
+
+- Notmuch for customizable status mappings;
+- Org for a large major-mode integration;
+- Agent Shell for existing module-specific icon variables.
+
+Use these migrations to validate module context and compatibility.  Migrate
+remaining modules later in small functional batches.
+
+Deliverable: proven context use without a broad repository rewrite.
+
+** TODO Slice 9: Audit, Documentation, and Rollout
+
+- Replace or supplement =utils/count-icons.pl= with a registry-aware audit.
+- Reject unregistered literal in-tree icon calls.
+- Update =emacsvox-sounds.el= commentary and generated user documentation.
+- Document the theme-author and module-author contracts.
+- Add release notes when the user-facing customization becomes available.
+- Mark completed slices and record check results in this document.
+
+Deliverable: enforceable contracts and maintained user documentation.
+
+* Test Gates
+
+Every behavior-changing slice must run checks proportional to its scope:
+
+1. Dedicated auditory-icon ERT tests.
+2. Full =make unit-test=.
+3. =make trace-test= when emitted icon traces may change.
+4. Complete Lisp byte compilation when public Lisp interfaces change.
+5. Registry and theme audits.
+6. Startup smoke test after changing default theme initialization.
+
+The dedicated tests must cover:
+
+- unique registrations and complete intent metadata;
+- required theme coverage and optional extension fallback;
+- unknown icons and unknown theme assets;
+- missing and cyclic icon aliases;
+- clean cache rebuilding on theme changes;
+- override precedence at every scope;
+- nearest-parent derived-mode selection;
+- buffer isolation;
+- module-plus-mode specificity;
+- silence;
+- queued and immediate equivalence;
+- SoX, Pulse/PipeWire, and speech-server adapters;
+- compatibility of existing one-argument calls and symbol text properties.
+
+* Open Decisions
+
+These decisions must be resolved before their corresponding slice:
+
+1. The richer =auditory-icon= text-property representation.
+2. The exact Customize data shape for combined module and mode selectors.
+3. Whether file overrides are copied, referenced in place, or only validated
+   when selected.
+4. Pulse/PipeWire naming and cleanup for contextual samples.
+5. Whether unknown external icons warn once forever, once per session, or only
+   when a development option is enabled.
+6. Whether prompts share the same registry with =:kind prompt= or use a
+   parallel registry with the same metadata schema.
+7. The intended semantics and fallbacks for the currently unresolved names.
+
+The initial recommendation is one registry with a =kind= field, warnings once
+per session, and explicit module context rather than call-stack inference.
+
+* Risks
+
+- A registry that merely copies filenames without intent descriptions would
+  formalize the current ambiguity rather than solve it.
+- Context inferred from the call stack would be fragile under advice,
+  callbacks, and queued playback.
+- A global cache mutated in place can leak resources across themes and scopes.
+- Backend-specific resolution can make the same override sound different or
+  fail depending on the selected player.
+- Requiring themes to implement every optional module extension would make
+  third-party themes impractical.
+- Migrating every caller at once would make semantic review and regression
+  diagnosis unnecessarily difficult.
+
+The staged plan addresses these risks by keeping a small stable core,
+registering optional extensions with fallbacks, centralizing resolution, and
+migrating representative modules before broad adoption.
+
+* Definition of Done
+
+The migration is complete when:
+
+- the semantic registry is the documented source of truth;
+- bundled themes validate against the required core vocabulary;
+- unknown in-tree icon names fail an audit;
+- code and users can list and describe available icons;
+- users can alias, replace, or silence icons globally and by module, major
+  mode, combined context, or buffer;
+- derived modes follow documented nearest-parent precedence;
+- immediate and queued playback use the same resolver;
+- all supported playback backends honor the same effective resource;
+- existing one-argument callers and existing theme directories remain
+  functional;
+- representative module migrations and all required test gates pass;
+- public documentation explains how to author themes, register extension
+  icons, and customize resolution.
