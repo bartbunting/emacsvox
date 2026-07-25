@@ -53,6 +53,8 @@
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
 
+(defvar notmuch-archive-tags)
+
 ;;;  Customization:
 
 (defgroup emacsvox-notmuch nil
@@ -695,6 +697,28 @@ the selected message changes; otherwise speak the visible window."
    :around emacsvox--advice-notmuch-show-rewind-around)
  emacsvox-notmuch--advice)
 
+(defun emacsvox--advice-notmuch-show-advance-and-archive-around
+    (original &rest arguments)
+  "Provide reading or archive feedback for the Space-bound command."
+  (let ((at-thread-end
+         (and (eq major-mode 'notmuch-show-mode) (eobp))))
+    (if at-thread-end
+        (let ((will-archive notmuch-archive-tags)
+              (result (apply original arguments)))
+          (when (ems-interactive-p 'notmuch-show-advance-and-archive)
+            (if will-archive
+                (emacsvox-notmuch--show-archive-feedback
+                 'thread nil t)
+              (emacsvox-notmuch--speak-current-item)))
+          result)
+      (emacsvox-notmuch--show-reading-around
+       'notmuch-show-advance-and-archive original arguments))))
+
+(push
+ '(notmuch-show-advance-and-archive
+   :around emacsvox--advice-notmuch-show-advance-and-archive-around)
+ emacsvox-notmuch--advice)
+
 (defun emacsvox-notmuch--show-visibility-feedback ()
   "Indicate whether the current Notmuch message body is visible."
   (if (plist-get
@@ -875,6 +899,74 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
  '(notmuch-show-mark-read
    :around emacsvox--advice-notmuch-show-mark-read-around)
  emacsvox-notmuch--advice)
+
+(defun emacsvox-notmuch--speak-current-item ()
+  "Speak the current structured item in a Notmuch Show or search buffer."
+  (pcase major-mode
+    ('notmuch-show-mode
+     (emacsvox-notmuch-speak-show-message))
+    ('notmuch-search-mode
+     (emacsvox-notmuch-speak-search-result))))
+
+(defun emacsvox-notmuch--show-archive-feedback
+    (object unarchive speak-destination)
+  "Confirm archiving OBJECT and optionally SPEAK-DESTINATION.
+When UNARCHIVE is non-nil, confirm the reverse operation."
+  (emacsvox-icon (if unarchive 'open-object 'close-object))
+  (tts-speak
+   (format
+    "%s %s"
+    (if unarchive "Unarchived" "Archived")
+    (symbol-name object)))
+  (when speak-destination
+    (emacsvox-notmuch--speak-current-item)))
+
+(defun emacsvox--advice-notmuch-show-archive-message-after
+    (&optional unarchive &rest _)
+  "Confirm an interactive message archive operation."
+  (when (ems-interactive-p 'notmuch-show-archive-message)
+    (emacsvox-notmuch--show-archive-feedback
+     'message unarchive t)))
+
+(defun emacsvox--advice-notmuch-show-archive-thread-after
+    (&optional unarchive &rest _)
+  "Confirm an interactive thread archive operation."
+  (when (ems-interactive-p 'notmuch-show-archive-thread)
+    (emacsvox-notmuch--show-archive-feedback
+     'thread unarchive t)))
+
+(push
+ '(notmuch-show-archive-message
+   :after emacsvox--advice-notmuch-show-archive-message-after)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-show-archive-thread
+   :after emacsvox--advice-notmuch-show-archive-thread-after)
+ emacsvox-notmuch--advice)
+
+(defun emacsvox-notmuch--register-show-archive-group (targets object)
+  "Register archive feedback for TARGETS operating on OBJECT."
+  (dolist (target targets)
+    (let ((advice-function
+           (intern (format "emacsvox--advice-%s-after" target))))
+      (eval
+       `(defun ,advice-function (&rest _)
+          ,(format "Confirm archiving after `%s'." target)
+          (when (ems-interactive-p ',target)
+            (emacsvox-notmuch--show-archive-feedback
+             ',object nil t))))
+      (push (list target :after advice-function) emacsvox-notmuch--advice))))
+
+(emacsvox-notmuch--register-show-archive-group
+ '(notmuch-show-archive-message-then-next-or-exit
+   notmuch-show-archive-message-then-next-or-next-thread)
+ 'message)
+
+(emacsvox-notmuch--register-show-archive-group
+ '(notmuch-show-archive-thread-then-next
+   notmuch-show-archive-thread-then-exit)
+ 'thread)
 
 (defun emacsvox--advice-notmuch-search-archive-thread-after
     (&optional unarchive &rest _)

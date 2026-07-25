@@ -300,6 +300,59 @@
       (should (= calls 1))
       (should-not events))))
 
+(ert-deftest emacsvox-notmuch-space-uses-state-aware-reading ()
+  "The command actually bound to Space uses state-aware page feedback."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "message body")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'notmuch-show-advance-and-archive)
+          (calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+            (lambda () "same"))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events)))
+           ((symbol-function 'emacsvox-speak-current-window)
+            (lambda () (push '(window) events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-advance-and-archive-around
+           (lambda ()
+             (cl-incf calls)
+             'scrolled))
+          'scrolled)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((icon scroll)
+          (window)))))))
+
+(ert-deftest emacsvox-notmuch-space-confirms-end-of-thread-archive ()
+  "Space confirms archiving when invoked at the end of a thread."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (let ((ems--interactive-fn-name 'notmuch-show-advance-and-archive)
+          (notmuch-archive-tags '("-inbox"))
+          (calls 0)
+          feedback)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--show-archive-feedback)
+            (lambda (object unarchive destination)
+              (setq feedback
+                    (list object unarchive destination)))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-advance-and-archive-around
+           (lambda ()
+             (cl-incf calls)
+             'archived))
+          'archived)))
+      (should (= calls 1))
+      (should (equal feedback '(thread nil t))))))
+
 (ert-deftest emacsvox-notmuch-show-opening-message-cues-and-speaks ()
   "Opening a message body plays an opening cue and identifies it."
   (let ((ems--interactive-fn-name 'notmuch-show-toggle-message)
@@ -482,6 +535,55 @@
         (emacsvox--advice-notmuch-show-mark-read-around
          (lambda () 'read)))
       (should (equal feedback '("-unread"))))))
+
+(ert-deftest emacsvox-notmuch-show-archive-message-confirms-and-speaks ()
+  "A direct message archive confirms completion and identifies the result."
+  (let ((ems--interactive-fn-name 'notmuch-show-archive-message)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-notmuch--speak-current-item)
+               (lambda () (push '(destination) events))))
+      (emacsvox--advice-notmuch-show-archive-message-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object)
+        (speak "Archived message")
+        (destination))))))
+
+(ert-deftest emacsvox-notmuch-show-unarchive-thread-uses-opening-cue ()
+  "Reversing a thread archive uses an opening cue and clear confirmation."
+  (let ((ems--interactive-fn-name 'notmuch-show-archive-thread)
+        events)
+    (cl-letf (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (push (list 'icon icon) events)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (push (list 'speak text) events)))
+              ((symbol-function 'emacsvox-notmuch--speak-current-item)
+               #'ignore))
+      (emacsvox--advice-notmuch-show-archive-thread-after t))
+    (should
+     (equal
+      (nreverse events)
+      '((icon open-object)
+        (speak "Unarchived thread"))))))
+
+(ert-deftest emacsvox-notmuch-show-archive-wrapper-reports-once ()
+  "An archive-and-move wrapper owns feedback from its nested operations."
+  (let
+      ((ems--interactive-fn-name
+        'notmuch-show-archive-message-then-next-or-exit)
+       events)
+    (cl-letf
+        (((symbol-function 'emacsvox-notmuch--show-archive-feedback)
+          (lambda (object unarchive destination)
+            (push (list object unarchive destination) events))))
+      (emacsvox--advice-notmuch-show-archive-message-after)
+      (emacsvox--advice-notmuch-show-archive-message-then-next-or-exit-after))
+    (should (equal events '((message nil t))))))
 
 (ert-deftest emacsvox-notmuch-archive-confirms-then-speaks-next-result ()
   "Archive feedback acknowledges completion before speaking the new row."
