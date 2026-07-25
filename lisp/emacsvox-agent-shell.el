@@ -9,7 +9,7 @@
 ;; A speech interface to Emacs |
 ;;
 ;;  $Revision: 1.0 $ |
-;; Location https://github.com/tvraman/emacsvox
+;; Location https://github.com/robertmeta/emacsvox
 ;;
 
 ;;;   Copyright:
@@ -53,8 +53,8 @@
 ;; - Two-dimensional rendered Markdown table navigation and copying
 ;; - Viewport mode integration and reload-safe buffer teardown
 ;;
-;; See README.md and agent-shell-accessibility-plan.md in this repository for
-;; user-facing keys, customization, compatibility notes, and remaining work.
+;; Customize `emacsvox-agent-shell' for speech levels, table feedback, and
+;; lifecycle announcements.  The interactive commands document their keys.
 ;; See https://github.com/xenodium/agent-shell for agent-shell itself.
 
 ;;; Code:
