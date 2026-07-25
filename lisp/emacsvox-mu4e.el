@@ -214,16 +214,6 @@
    mu4e-compose-edit mu4e-compose-resend)
  #'emacsvox-mu4e--compose-feedback)
 
-(defun emacsvox--advice-mu4e-message-send-and-exit-after (&rest _)
-  "Announce send in Mu4e compose buffers."
-  (when (ems-interactive-p 'message-send-and-exit)
-    (emacsvox-icon 'close-object)
-    (tts-speak "Message sent")))
-
-(push '(message-send-and-exit :after
-        emacsvox--advice-mu4e-message-send-and-exit-after)
-      emacsvox-mu4e--advice)
-
 (defun emacsvox-mu4e--search-feedback (_target)
   "Speak a newly displayed or edited Mu4e search."
   (emacsvox-icon 'open-object)

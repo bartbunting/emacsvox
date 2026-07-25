@@ -2,6 +2,7 @@
 
 ;;; Code:
 (require 'ert)
+(require 'seq)
 
 (defconst emacsvox-mu4e-test--available (require 'mu4e nil t)
   "Non-nil when the optional Mu4e system package is installed.")
@@ -13,23 +14,17 @@
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 
-(ert-deftest emacsvox-mu4e-message-advice-name-is-module-specific ()
-  "Mu4e does not replace the generic Message integration's advice helper."
-  (should
-   (member
-    '(message-send-and-exit :after
-      emacsvox--advice-mu4e-message-send-and-exit-after)
-    emacsvox-mu4e--advice))
-  (should
-   (fboundp 'emacsvox--advice-mu4e-message-send-and-exit-after))
+(ert-deftest emacsvox-mu4e-uses-generic-message-send-feedback ()
+  "Mu4e relies on Message's low-level send feedback without duplication."
   (should
    (advice-member-p
-    #'emacsvox--advice-message-send-and-exit-after
-    'message-send-and-exit))
-  (should
-   (advice-member-p
-    #'emacsvox--advice-mu4e-message-send-and-exit-after
-    'message-send-and-exit)))
+    #'emacsvox--advice-message-send-around
+    'message-send))
+  (should-not
+   (seq-find
+    (lambda (entry)
+      (eq (car entry) 'message-send-and-exit))
+    emacsvox-mu4e--advice)))
 
 (ert-deftest emacsvox-mu4e-advice-is-current-and-direct ()
   "Current Mu4e targets use native advice directly."

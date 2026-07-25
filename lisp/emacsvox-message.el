@@ -44,6 +44,8 @@
 ;;;  requires
 (require 'emacsvox-preamble)
 (require 'message)
+(require 'mml)
+(require 'subr-x)
 
 ;;;  customize
 (defgroup emacsvox-message nil
@@ -84,11 +86,134 @@
        (advice-add
         ',target ,where #',function '((name . emacsvox))))))
 
-(dolist (target '(message-send message-send-and-exit))
-  (eval
-   `(emacsvox-message--define-advice ,target :after
-      (emacsvox-speak-mode-line)
-      (emacsvox-icon 'close-object))))
+(defvar-local emacsvox-message--send-active nil
+  "Non-nil while Emacsvox is reporting a Message send operation.")
+
+(defun emacsvox--advice-message-send-around (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS and report the complete send outcome."
+  (if emacsvox-message--send-active
+      (apply original arguments)
+    (let ((emacsvox-message--send-active t))
+      (emacsvox-icon 'progress)
+      (tts-speak "Sending message")
+      (condition-case error-data
+          (let ((result (apply original arguments)))
+            (if result
+                (progn
+                  (emacsvox-icon 'task-done)
+                  (tts-speak "Message sent"))
+              (emacsvox-icon 'warn-user)
+              (tts-speak "Message was not sent"))
+            result)
+        (quit
+         (emacsvox-icon 'warn-user)
+         (tts-speak "Send interrupted; delivery status unknown")
+         (signal (car error-data) (cdr error-data)))
+        (error
+         (emacsvox-icon 'warn-user)
+         (tts-speak
+          (format "Send failed or incomplete: %s"
+                  (error-message-string error-data)))
+         (signal (car error-data) (cdr error-data)))))))
+
+(advice-add
+ 'message-send :around #'emacsvox--advice-message-send-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-message-setup-1-after (&rest _)
+  "Announce a newly prepared Message composition buffer."
+  (emacsvox-icon 'open-object)
+  (tts-speak "Compose message")
+  (emacsvox-speak-line))
+
+(advice-add
+ 'message-setup-1 :after #'emacsvox--advice-message-setup-1-after
+ '((name . emacsvox)))
+
+(defun emacsvox-message--header-value (header)
+  "Return the value of Message HEADER in the current buffer."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (message-narrow-to-headers-or-head)
+      (message-fetch-field header))))
+
+(defun emacsvox-message--attachment-count ()
+  "Return the number of named MML parts in the current message."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let ((count 0))
+        (while (re-search-forward
+                "^<#part[ \t][^\n]*\\bfilename=" nil t)
+          (setq count (1+ count)))
+        count))))
+
+(defun emacsvox-message-speak-compose-status ()
+  "Speak sender, recipients, subject, attachments, and point location."
+  (interactive)
+  (let* ((from (emacsvox-message--header-value "From"))
+         (to (emacsvox-message--header-value "To"))
+         (cc (emacsvox-message--header-value "Cc"))
+         (subject (emacsvox-message--header-value "Subject"))
+         (attachments (emacsvox-message--attachment-count))
+         (parts
+          (list
+           "Compose message"
+           (if (string-empty-p (or from ""))
+               "From address unspecified"
+             (format "From %s" from))
+           (if (string-empty-p (or to ""))
+               "No primary recipients"
+             (format "To %s" to))
+           (if (string-empty-p (or subject ""))
+               "No subject"
+             (format "Subject %s" subject)))))
+    (unless (string-empty-p (or cc ""))
+      (setq parts (append parts (list (format "C C %s" cc)))))
+    (setq
+     parts
+     (append
+      parts
+      (list
+       (if (zerop attachments)
+           "No attachments"
+         (format "%d %s"
+                 attachments
+                 (if (= attachments 1) "attachment" "attachments")))
+       (if (message-point-in-header-p)
+           "Point is in the headers"
+         "Point is in the message body"))))
+    (tts-speak (mapconcat #'identity parts ". "))))
+
+(define-key
+ message-mode-map (kbd "C-c C-f C-p")
+ #'emacsvox-message-speak-compose-status)
+
+(defun emacsvox--advice-mml-attach-file-after (file &rest _)
+  "Confirm attaching FILE to a Message buffer."
+  (when (derived-mode-p 'message-mode)
+    (emacsvox-icon 'save-object)
+    (tts-speak
+     (format "Attached %s"
+             (file-name-nondirectory (expand-file-name file))))))
+
+(advice-add
+ 'mml-attach-file :after #'emacsvox--advice-mml-attach-file-after
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-mml-attach-buffer-after (buffer &rest _)
+  "Confirm attaching BUFFER to a Message buffer."
+  (when (derived-mode-p 'message-mode)
+    (emacsvox-icon 'save-object)
+    (tts-speak
+     (format "Attached buffer %s"
+             (if (bufferp buffer) (buffer-name buffer) buffer)))))
+
+(advice-add
+ 'mml-attach-buffer :after #'emacsvox--advice-mml-attach-buffer-after
+ '((name . emacsvox)))
 
 (dolist
     (target
