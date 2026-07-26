@@ -459,9 +459,15 @@ dynamic-call count, and source parse errors."
    "parent, requirement profiles, and default spatialization.  File basenames "
    "are cue identifiers.  Unknown files fail audit; missing required cues fail "
    "pack validation.  Every standalone sound pack must resolve =button=.  "
-   "Use a parent for deliberate fallback and call "
-   "=emacsvox-aural-refresh-resource-pack= after changing files in a live "
-   "session.\n\n"
+   "Use a parent for deliberate fallback.\n\n"
+   "Immediate subdirectories of =sounds/= containing =button.ogg= are "
+   "discovered automatically.  A partial pack without =button.ogg= can opt "
+   "in with a data-only =emacsvox-sound-pack.el= manifest containing "
+   "=:schema-version 1= and optional =:summary=, =:parent=, =:profiles=, and "
+   "=:default-spatialization= fields.  Discovery runs before pack completion "
+   "and selection; =M-x emacsvox-aural-refresh-discovered-resource-packs= "
+   "forces it explicitly.  Call =emacsvox-aural-refresh-resource-pack= after "
+   "changing files in an already selected pack.\n\n"
    "Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark "
    "HRTF or otherwise positioned assets =pre-spatialized= so runtime balance "
    "does not position them again.\n\n"
@@ -482,9 +488,14 @@ dynamic-call count, and source parse errors."
         (file-relative-name
          (emacsvox-aural-resource-pack-directory pack) root))
        (emacsvox-aural-resource-pack-summary pack)))
-    (emacsvox-aural-audit--hash-records
-     emacsvox-aural-resource-pack-registry
-     #'emacsvox-aural-resource-pack-id)))
+    (seq-remove
+     (lambda (pack)
+       (eq
+        (emacsvox-aural-resource-pack-origin pack)
+        'discovered))
+     (emacsvox-aural-audit--hash-records
+      emacsvox-aural-resource-pack-registry
+      #'emacsvox-aural-resource-pack-id))))
   (insert "** Registered Cues\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Kind" "Owner" "Fallback" "Intent")

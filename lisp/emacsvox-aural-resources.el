@@ -17,6 +17,8 @@
 (require 'emacsvox-aural)
 (require 'emacsvox-aural-rules)
 
+(defvar read-eval)
+
 (define-error
   'emacsvox-aural-resource-error
   "Invalid Emacsvox aural resource provider")
@@ -37,7 +39,8 @@
     (emacsvox-aural-resource-pack
      (:constructor emacsvox-aural--make-resource-pack))
   "A concrete sound resource provider."
-  id summary kind directory parent profiles default-spatialization assets)
+  id summary kind directory parent profiles default-spatialization assets
+  origin)
 
 (cl-defstruct
     (emacsvox-aural-resource-report
@@ -62,9 +65,23 @@
   (make-hash-table :test #'eq)
   "Map resource-pack identifiers to provider records.")
 
+(defvar emacsvox-aural-resource-pack-discovery-roots nil
+  "Directories whose immediate children are dynamically discovered packs.")
+
+(defvar emacsvox-aural--resource-pack-discovery-registry
+  emacsvox-aural-resource-pack-registry
+  "Registry associated with `emacsvox-aural-resource-pack-discovery-roots'.")
+
 (defvar emacsvox-aural-voice-palette-registry
   (make-hash-table :test #'eq)
   "Map voice-palette identifiers to palette records.")
+
+(defconst emacsvox-aural-resource-pack-manifest
+  "emacsvox-sound-pack.el"
+  "Optional data-only manifest filename for a discovered sound pack.")
+
+(defconst emacsvox-aural-resource-pack-manifest-schema-version 1
+  "Current schema version for sound-pack manifests.")
 
 (defconst emacsvox-aural--legacy-cue-definitions
   '((alarm "An urgent alarm")
@@ -236,8 +253,13 @@
 
 (cl-defun emacsvox-aural-register-resource-pack
     (id &key summary (kind 'sound) directory parent profiles
-        (default-spatialization 'neutral))
-  "Register resource pack ID rooted at DIRECTORY."
+        (default-spatialization 'neutral) (origin 'explicit))
+  "Register resource pack ID with SUMMARY rooted at DIRECTORY.
+
+KIND is `sound' or `prompt'.  PARENT supplies inherited assets, PROFILES name
+coverage contracts, and DEFAULT-SPATIALIZATION describes the concrete assets.
+ORIGIN is `explicit' for declared providers and `discovered' for synchronized
+sound directories."
   (emacsvox-aural--validate-id id "Resource pack identifier")
   (emacsvox-aural--validate-summary summary (format "Resource pack %S" id))
   (unless (memq kind '(sound prompt))
@@ -255,6 +277,9 @@
     (emacsvox-aural--resource-error
      "Invalid default spatialization for %S: %S"
      id default-spatialization))
+  (unless (memq origin '(explicit discovered))
+    (emacsvox-aural--resource-error
+     "Invalid registration origin for %S: %S" id origin))
   (when (gethash id emacsvox-aural-resource-pack-registry)
     (emacsvox-aural--resource-error
      "Resource pack is already registered: %S" id))
@@ -267,7 +292,8 @@
           :parent parent
           :profiles (delete-dups (copy-sequence profiles))
           :default-spatialization default-spatialization
-          :assets (emacsvox-aural--scan-resource-directory directory))))
+          :assets (emacsvox-aural--scan-resource-directory directory)
+          :origin origin)))
     (puthash id record emacsvox-aural-resource-pack-registry)
     record))
 
@@ -324,6 +350,7 @@
 
 (defun emacsvox-aural-resource-pack-candidates (&optional kind)
   "Return registered pack identifiers as strings, optionally limited to KIND."
+  (emacsvox-aural-refresh-discovered-resource-packs)
   (let (ids)
     (maphash
      (lambda (id pack)
@@ -331,6 +358,228 @@
          (push (symbol-name id) ids)))
      emacsvox-aural-resource-pack-registry)
     (sort ids #'string-lessp)))
+
+(defun emacsvox-aural--read-resource-pack-manifest (directory)
+  "Read and validate the optional sound-pack manifest in DIRECTORY."
+  (let ((file
+         (expand-file-name
+          emacsvox-aural-resource-pack-manifest directory)))
+    (when (file-exists-p file)
+      (unless (file-readable-p file)
+        (emacsvox-aural--resource-error
+         "Sound-pack manifest is not readable: %s" file))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (emacs-lisp-mode)
+        (goto-char (point-min))
+        (let* ((read-eval nil)
+               (data
+                (condition-case error
+                    (read (current-buffer))
+                  (error
+                   (emacsvox-aural--resource-error
+                    "Could not read sound-pack manifest %s: %s"
+                    file (error-message-string error))))))
+          (forward-comment (point-max))
+          (unless (eobp)
+            (emacsvox-aural--resource-error
+             "Trailing data in sound-pack manifest: %s" file))
+          (unless (emacsvox-aural--plist-p data)
+            (emacsvox-aural--resource-error
+             "Sound-pack manifest must be a keyword plist: %s" file))
+          (cl-loop
+           for (key _) on data by #'cddr
+           unless
+           (memq
+            key
+            '(:schema-version :summary :parent :profiles
+              :default-spatialization))
+           do
+           (emacsvox-aural--resource-error
+            "Unknown sound-pack manifest field %S in %s" key file))
+          (unless
+              (eq
+               (plist-get data :schema-version)
+               emacsvox-aural-resource-pack-manifest-schema-version)
+            (emacsvox-aural--resource-error
+             "Unsupported sound-pack manifest schema in %s: %S"
+             file (plist-get data :schema-version)))
+          (when (plist-member data :summary)
+            (emacsvox-aural--validate-summary
+             (plist-get data :summary)
+             (format "Sound-pack manifest %s" file)))
+          (when-let* ((parent (plist-get data :parent)))
+            (emacsvox-aural--validate-id
+             parent (format "Sound-pack manifest parent in %s" file)))
+          (when (plist-member data :profiles)
+            (let ((profiles (plist-get data :profiles)))
+              (unless (and (listp profiles) (cl-every #'symbolp profiles))
+                (emacsvox-aural--resource-error
+                 "Sound-pack manifest profiles must be symbols in %s"
+                 file))))
+          (when (plist-member data :default-spatialization)
+            (unless
+                (memq
+                 (plist-get data :default-spatialization)
+                 '(neutral stereo pre-spatialized))
+              (emacsvox-aural--resource-error
+               "Invalid sound-pack spatialization in %s: %S"
+               file (plist-get data :default-spatialization))))
+          data)))))
+
+(defun emacsvox-aural--resource-pack-default-summary (id)
+  "Return a human-readable default summary for discovered pack ID."
+  (format
+   "Automatically discovered %s sound pack"
+   (capitalize
+    (replace-regexp-in-string "[-_]+" " " (symbol-name id)))))
+
+(defun emacsvox-aural--resource-pack-inferred-profiles (directory)
+  "Return requirement profiles directly satisfied by DIRECTORY."
+  (let ((assets (emacsvox-aural--scan-resource-directory directory)))
+    (when
+        (cl-every
+         (lambda (cue) (gethash cue assets))
+         emacsvox-aural-legacy-complete-cues)
+      '(legacy-complete))))
+
+(defun emacsvox-aural--discovered-resource-pack-definition (directory)
+  "Return registration arguments for sound pack DIRECTORY, or nil."
+  (let* ((manifest-file
+          (expand-file-name
+           emacsvox-aural-resource-pack-manifest directory))
+         (manifest-present (file-exists-p manifest-file))
+         (button (expand-file-name "button.ogg" directory)))
+    (when (or manifest-present (file-regular-p button))
+      (let* ((id (intern (file-name-nondirectory
+                          (directory-file-name directory))))
+             (manifest
+              (and
+               manifest-present
+               (emacsvox-aural--read-resource-pack-manifest directory)))
+             (profiles
+              (if (and manifest (plist-member manifest :profiles))
+                  (plist-get manifest :profiles)
+                (emacsvox-aural--resource-pack-inferred-profiles directory))))
+        (list
+         id
+         :summary
+         (or
+          (plist-get manifest :summary)
+          (emacsvox-aural--resource-pack-default-summary id))
+         :directory directory
+         :parent (plist-get manifest :parent)
+         :profiles profiles
+         :default-spatialization
+         (or (plist-get manifest :default-spatialization) 'neutral)
+         :origin 'discovered)))))
+
+(defun emacsvox-aural--pack-immediately-below-root-p (pack root)
+  "Return non-nil when discovered PACK is immediately below ROOT."
+  (and
+   (eq (emacsvox-aural-resource-pack-origin pack) 'discovered)
+   (equal
+    (file-name-as-directory
+     (file-name-directory
+      (directory-file-name
+       (emacsvox-aural-resource-pack-directory pack))))
+    (file-name-as-directory (expand-file-name root)))))
+
+(defun emacsvox-aural-discover-resource-packs (sounds-directory)
+  "Synchronize dynamically discovered packs below SOUNDS-DIRECTORY.
+
+An immediate child directory is a sound pack when it contains `button.ogg'
+or an `emacsvox-sound-pack.el' manifest.  The manifest is read as data with
+reader evaluation disabled.  Explicit registrations take precedence over
+discovered directories with the same identifier."
+  (let* ((root (file-name-as-directory (expand-file-name sounds-directory)))
+         (directories
+          (when (file-directory-p root)
+            (cl-remove-if-not
+             #'file-directory-p
+             (directory-files
+              root 'full directory-files-no-dot-files-regexp))))
+         definitions
+         desired
+         remove)
+    (dolist (directory directories)
+      (when-let* ((definition
+                   (emacsvox-aural--discovered-resource-pack-definition
+                    directory)))
+        (push definition definitions)
+        (push (car definition) desired)))
+    (let ((snapshot
+           (copy-hash-table emacsvox-aural-resource-pack-registry)))
+      (condition-case error
+          (progn
+            (maphash
+             (lambda (id pack)
+               (when
+                   (and
+                    (emacsvox-aural--pack-immediately-below-root-p pack root)
+                    (not (memq id desired)))
+                 (push id remove)))
+             emacsvox-aural-resource-pack-registry)
+            (dolist (id remove)
+              (remhash id emacsvox-aural-resource-pack-registry))
+            (dolist (definition (nreverse definitions))
+              (let* ((id (car definition))
+                     (existing (emacsvox-aural-resource-pack id)))
+                (when
+                    (or
+                     (null existing)
+                     (emacsvox-aural--pack-immediately-below-root-p
+                      existing root))
+                  (when existing
+                    (remhash id emacsvox-aural-resource-pack-registry))
+                  (apply
+                   #'emacsvox-aural-register-resource-pack
+                   definition))))
+            (emacsvox-aural-validate-resource-registry))
+        (error
+         (clrhash emacsvox-aural-resource-pack-registry)
+         (maphash
+          (lambda (id pack)
+            (puthash id pack emacsvox-aural-resource-pack-registry))
+          snapshot)
+         (signal (car error) (cdr error)))))
+    (setq
+     desired
+     (cl-remove-if-not
+      (lambda (id)
+        (let ((pack (emacsvox-aural-resource-pack id)))
+          (and
+           pack
+           (emacsvox-aural--pack-immediately-below-root-p pack root))))
+      (delete-dups desired)))
+    (sort
+     desired
+     (lambda (left right)
+       (string-lessp (symbol-name left) (symbol-name right))))))
+
+(defun emacsvox-aural-refresh-discovered-resource-packs ()
+  "Rescan configured discovery roots and return discovered pack identifiers."
+  (interactive)
+  (let (ids)
+    (when
+        (eq
+         emacsvox-aural-resource-pack-registry
+         emacsvox-aural--resource-pack-discovery-registry)
+      (dolist (root emacsvox-aural-resource-pack-discovery-roots)
+        (setq ids
+              (append
+               (emacsvox-aural-discover-resource-packs root)
+               ids))))
+    (setq ids
+          (sort
+           (delete-dups ids)
+           (lambda (left right)
+             (string-lessp (symbol-name left) (symbol-name right)))))
+    (when (called-interactively-p 'interactive)
+      (message
+       "Discovered %d sound pack%s"
+       (length ids) (if (= (length ids) 1) "" "s")))
+    ids))
 
 (defun emacsvox-aural-refresh-resource-pack (id)
   "Rescan registered resource pack ID and return it."
@@ -628,7 +877,14 @@ resolved file, rather than unconditionally from the selected child pack."
      :entries emacsvox-aural-default-voice-entries)))
 
 (defun emacsvox-aural-register-bundled-resources (sounds-directory)
-  "Register bundled packs below SOUNDS-DIRECTORY."
+  "Register bundled packs and discover local packs below SOUNDS-DIRECTORY."
+  (let ((root (file-name-as-directory (expand-file-name sounds-directory))))
+    (when
+        (eq
+         emacsvox-aural-resource-pack-registry
+         emacsvox-aural--resource-pack-discovery-registry)
+      (cl-pushnew root emacsvox-aural-resource-pack-discovery-roots
+                  :test #'equal)))
   (dolist
       (definition
        `((prompts "Theme-independent prompts" prompt "prompts" nil neutral)
@@ -645,6 +901,7 @@ resolved file, rather than unconditionally from the selected child pack."
          :directory (expand-file-name (nth 3 definition) sounds-directory)
          :profiles (nth 4 definition)
          :default-spatialization (nth 5 definition)))))
+  (emacsvox-aural-discover-resource-packs sounds-directory)
   (emacsvox-aural-validate-resource-registry))
 
 (emacsvox-aural--register-resource-vocabulary)

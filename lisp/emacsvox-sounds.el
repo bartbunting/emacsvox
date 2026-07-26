@@ -73,7 +73,9 @@
 ;; Emacsvox 13.0, this module defines a themes architecture for
 ;; auditory icons.  Sound files corresponding to a given theme are
 ;; found in appropriate subdirectories of emacsvox-sounds-dir.
-;; @item There are two supported themes: @code{chimes} and @code{3d}.
+;; @item The bundled themes are @code{chimes} and @code{3d}.  Additional
+;; immediate subdirectories containing @file{button.ogg}, or a data-only
+;; @file{emacsvox-sound-pack.el} manifest, are discovered dynamically.
 ;; @item Contrast this with @code{prompts} --- they  dont belong to any theme.
 ;; @end itemize
 ;; @subsection Designing Auditory Icons
@@ -329,6 +331,7 @@ directory.")
       (emacsvox-aural-resource-pack-candidates 'sound)
       nil 'must-match nil nil "chimes"))))
   (setq theme (or theme 'chimes))
+  (emacsvox-aural-refresh-discovered-resource-packs)
   (let* ((pack-id (emacsvox-sounds--pack-for-theme theme))
          (theme-directory
           (if pack-id

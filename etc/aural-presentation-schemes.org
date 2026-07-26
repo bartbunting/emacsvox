@@ -633,6 +633,32 @@ pack maps registered cue names to files and declares:
 The default mapping may remain =CUE.ogg=.  Existing sound directories remain
 valid resource sources during migration.
 
+Immediate child directories of =sounds/= are dynamically registered as sound
+packs when they contain =button.ogg=.  This convention makes a complete
+personal pack selectable without editing Lisp.  A partial pack can opt in with
+a data-only =emacsvox-sound-pack.el= manifest:
+
+#+begin_src emacs-lisp
+(:schema-version 1
+ :summary "Personal overlay"
+ :parent chimes
+ :profiles nil
+ :default-spatialization neutral)
+#+end_src
+
+The identifier comes from the directory name.  The optional manifest may set
+=:summary=, =:parent=, =:profiles=, and =:default-spatialization=; it cannot
+run code because reader evaluation is disabled.  A pack with all 55 legacy
+cues automatically claims =legacy-complete=.  Explicit registrations for
+=prompts=, =chimes=, and =3d= take precedence over discovered directory names,
+so built-in kind and spatial metadata remain authoritative.
+
+Discovery synchronizes when completion or theme selection asks for available
+packs.  It adds new directories, reloads manifests, and removes registrations
+for directories that have gone away.  The explicit command
+=emacsvox-aural-refresh-discovered-resource-packs= is available when immediate
+refresh is useful.
+
 Theme selection must build a fresh effective resource cache.  It must not
 retain an asset merely because the previous pack supplied it.  Unknown names,
 unreadable files, aliases, missing required assets, and fallback cycles must be
@@ -1614,6 +1640,31 @@ reference audit; =org-lint=, =check-parens=, focused =checkdoc=, temporary
 byte compilation, and =git diff --check=.  Byte compilation reports only the
 existing deferred-protocol, duplicate helper, and legacy Org integration
 warnings.
+
+** DONE Slice 14: Dynamic Sound-Pack Discovery
+CLOSED: [2026-07-26 Sun]
+
+- Discover immediate =sounds/= subdirectories containing =button.ogg= without
+  requiring a hard-coded Lisp registration.
+- Support safe data-only manifests for partial packs, inheritance, coverage
+  declarations, summaries, and spatial metadata.
+- Synchronize additions, metadata changes, and removals before completion and
+  selection while preserving explicit built-in registrations.
+- Infer =legacy-complete= only when all 55 direct legacy cue assets exist.
+- Exclude unrelated directories such as =clock= unless they explicitly opt in.
+- Keep locally discovered packs out of the repository-generated static
+  registry table while still validating them in the live resource audit.
+
+Deliverable: a user can add or customize a personal sound directory such as
+=sounds/bart/=, select it immediately, and use it from a scheme without
+changing source registration tables.
+
+Checks: 238 selected core, aural, Org, and sound ERT tests with no unexpected
+results; all 27 source-loaded semantic traces matching; clean live resource
+and generated-reference audit including the discovered =bart= pack;
+=check-parens=, temporary byte compilation without warnings, =org-lint=,
+focused =checkdoc= with only pre-existing resource-helper warnings, and
+=git diff --check=.
 
 * Test Gates
 

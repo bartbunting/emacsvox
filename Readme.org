@@ -48,6 +48,13 @@ Use =M-x emacsvox-list-aural-schemes= to browse schemes and
 documents user controls, scheme and module authoring, registered semantics,
 sound packs, voice palettes, migration, queue ordering, and spatial fallback.
 
+Personal sound packs are dynamic.  Put one immediate directory below
+=sounds/= with at least =button.ogg=, then use
+=M-x emacsvox-sounds-select-theme= or choose it as a scheme's sound pack.
+Partial packs can inherit from another pack through a data-only
+=emacsvox-sound-pack.el= manifest; the generated reference documents its
+validated fields.
+
 ** Quick Installation Instructions
 
 For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.

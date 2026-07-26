@@ -10,6 +10,8 @@
 (require 'ert)
 (require 'emacsvox-aural-resources)
 
+(defvar emacsvox-test--sound-pack-read-evaluated nil)
+
 (defconst emacsvox-test--sounds-directory
   (expand-file-name
    "../sounds"
@@ -20,6 +22,14 @@
   "Create empty Ogg NAME in DIRECTORY and return its path."
   (let ((file (expand-file-name (concat name ".ogg") directory)))
     (write-region "" nil file nil 'silent)
+    file))
+
+(defun emacsvox-test--sound-pack-manifest (directory data)
+  "Write sound-pack manifest DATA in DIRECTORY and return its path."
+  (let ((file
+         (expand-file-name
+          emacsvox-aural-resource-pack-manifest directory)))
+    (write-region data nil file nil 'silent)
     file))
 
 (defmacro emacsvox-test--with-resource-directory (&rest body)
@@ -76,10 +86,159 @@
        (emacsvox-aural-resource-pack '3d))
       'pre-spatialized))
     (should
-     (eq
-      (emacsvox-aural-resource-pack-default-spatialization
-       (emacsvox-aural-resource-pack 'chimes))
-      'neutral))))
+      (eq
+       (emacsvox-aural-resource-pack-default-spatialization
+        (emacsvox-aural-resource-pack 'chimes))
+       'neutral))))
+
+(ert-deftest emacsvox-aural-resources-discover-and-remove-local-packs ()
+  "Pack candidates dynamically track qualifying immediate directories."
+  (let* ((root (make-temp-file "emacsvox-pack-discovery-" t))
+         (clock (expand-file-name "clock" root))
+         (bart (expand-file-name "bart" root))
+         (emacsvox-aural-resource-pack-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural--resource-pack-discovery-registry
+          emacsvox-aural-resource-pack-registry)
+         (emacsvox-aural-resource-pack-discovery-roots nil))
+    (unwind-protect
+        (progn
+          (make-directory clock)
+          (emacsvox-test--resource-file clock "chime-15")
+          (emacsvox-aural-register-bundled-resources root)
+          (should-not (emacsvox-aural-resource-pack 'clock))
+          (make-directory bart)
+          (dolist (cue emacsvox-aural-legacy-complete-cues)
+            (emacsvox-test--resource-file bart (symbol-name cue)))
+          (should
+           (member
+            "bart"
+            (emacsvox-aural-resource-pack-candidates 'sound)))
+          (let ((pack (emacsvox-aural-resource-pack 'bart)))
+            (should (eq (emacsvox-aural-resource-pack-origin pack)
+                        'discovered))
+            (should
+             (equal
+              (emacsvox-aural-resource-pack-summary pack)
+              "Automatically discovered Bart sound pack"))
+            (should
+             (equal
+              (emacsvox-aural-resource-pack-profiles pack)
+              '(legacy-complete))))
+          (delete-directory bart t)
+          (should-not
+           (member
+            "bart"
+            (emacsvox-aural-resource-pack-candidates 'sound)))
+          (should-not (emacsvox-aural-resource-pack 'bart)))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-aural-resources-discover-manifested-partial-pack ()
+  "A data manifest can define inheritance and spatialization for a partial pack."
+  (let* ((root (make-temp-file "emacsvox-pack-manifest-" t))
+         (chimes (expand-file-name "chimes" root))
+         (partial (expand-file-name "personal-overlay" root))
+         (emacsvox-aural-resource-pack-registry
+          (make-hash-table :test #'eq)))
+    (unwind-protect
+        (progn
+          (make-directory chimes)
+          (make-directory partial)
+          (emacsvox-test--resource-file chimes "button")
+          (let ((item (emacsvox-test--resource-file partial "item")))
+            (emacsvox-test--sound-pack-manifest
+             partial
+             (concat
+              "(:schema-version 1\n"
+              " :summary \"Personal overlay\"\n"
+              " :parent chimes\n"
+              " :profiles nil\n"
+              " :default-spatialization stereo)\n"))
+            (emacsvox-aural-register-bundled-resources root)
+            (should
+             (eq
+              (emacsvox-aural-resource-pack-origin
+               (emacsvox-aural-resource-pack 'chimes))
+              'explicit))
+            (let ((pack
+                   (emacsvox-aural-resource-pack 'personal-overlay)))
+              (should pack)
+              (should (eq (emacsvox-aural-resource-pack-parent pack)
+                          'chimes))
+              (should
+               (eq
+                (emacsvox-aural-resource-pack-default-spatialization pack)
+                'stereo))
+              (should
+               (equal
+                (emacsvox-aural-resolve-cue
+                 'button 'personal-overlay)
+                (expand-file-name "button.ogg" chimes)))
+              (should
+               (equal
+                (emacsvox-aural-resolve-cue 'item 'personal-overlay)
+                item))
+              (should
+               (emacsvox-aural-resource-report-valid
+                (emacsvox-aural-validate-resource-pack
+                 'personal-overlay))))
+            (emacsvox-test--sound-pack-manifest
+             partial
+             (concat
+              "(:schema-version 1\n"
+              " :summary \"Renamed overlay\"\n"
+              " :parent chimes\n"
+              " :profiles nil\n"
+              " :default-spatialization neutral)\n"))
+            (emacsvox-aural-discover-resource-packs root)
+            (let ((pack
+                   (emacsvox-aural-resource-pack 'personal-overlay)))
+              (should
+               (equal
+                (emacsvox-aural-resource-pack-summary pack)
+                "Renamed overlay"))
+              (should
+               (eq
+                (emacsvox-aural-resource-pack-default-spatialization pack)
+                'neutral)))
+            (emacsvox-test--sound-pack-manifest
+             partial
+             (concat
+              "(:schema-version 1\n"
+              " :summary \"Invalid overlay\"\n"
+              " :parent missing-pack)\n"))
+            (should-error
+             (emacsvox-aural-discover-resource-packs root)
+             :type 'emacsvox-aural-resource-error)
+            (should
+             (equal
+              (emacsvox-aural-resource-pack-summary
+               (emacsvox-aural-resource-pack 'personal-overlay))
+              "Renamed overlay"))))
+      (delete-directory root t))))
+
+(ert-deftest emacsvox-aural-resources-never-evaluate-pack-manifests ()
+  "Dynamic discovery disables reader evaluation in sound-pack manifests."
+  (let* ((root (make-temp-file "emacsvox-pack-safe-read-" t))
+         (pack (expand-file-name "unsafe" root))
+         (emacsvox-aural-resource-pack-registry
+          (make-hash-table :test #'eq)))
+    (unwind-protect
+        (progn
+          (make-directory pack)
+          (emacsvox-test--sound-pack-manifest
+           pack
+           (concat
+            "#.(progn\n"
+            "    (setq emacsvox-test--sound-pack-read-evaluated t)\n"
+            "    '(:schema-version 1))\n"))
+          (setq emacsvox-test--sound-pack-read-evaluated nil)
+          (let ((read-eval t))
+            (should-error
+             (emacsvox-aural-discover-resource-packs root)
+             :type 'emacsvox-aural-resource-error))
+          (should-not emacsvox-test--sound-pack-read-evaluated))
+      (delete-directory root t))))
 
 (ert-deftest emacsvox-aural-resources-resolve-optional-and-legacy-fallbacks ()
   "Optional shutdown and compatibility names resolve to available assets."

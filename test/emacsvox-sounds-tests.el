@@ -103,6 +103,30 @@
       "/3d/close-object.ogg"
       (gethash 'shutdown emacsvox-sounds-cache)))))
 
+(ert-deftest emacsvox-sounds-selects-newly-discovered-pack ()
+  "Programmatic theme selection refreshes dynamic sound-pack discovery."
+  (emacsvox-test--with-sound-tree
+    (let ((emacsvox-aural-resource-pack-registry
+           (make-hash-table :test #'eq))
+          (emacsvox-aural-resource-pack-discovery-roots nil)
+          (emacsvox-sounds-cache (make-hash-table))
+          (emacsvox-sounds-owned-samples (make-hash-table :test #'equal))
+          (emacsvox-play-program nil))
+      (let ((emacsvox-aural--resource-pack-discovery-registry
+             emacsvox-aural-resource-pack-registry))
+        (emacsvox-aural-register-bundled-resources root)
+        (let ((bart (expand-file-name "bart" root)))
+          (make-directory bart)
+          (emacsvox-test--sound-file bart "button")
+          (emacsvox-test--sound-file bart "item")
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+            (emacsvox-sounds-select-theme 'bart))
+          (should (eq emacsvox-sounds-current-pack 'bart))
+          (should
+           (string-suffix-p
+            "/bart/item.ogg"
+            (gethash 'item emacsvox-sounds-cache))))))))
+
 (ert-deftest emacsvox-sounds-follows-active-aural-scheme ()
   "Selecting a scheme switches to its inherited registered sound pack."
   (let ((emacsvox-aural-scheme-registry
