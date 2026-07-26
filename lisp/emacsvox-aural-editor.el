@@ -857,6 +857,10 @@ LABEL identifies the speech or cue being edited."
          (concrete (emacsvox-aural-compile-plan render facts context))
          (explanation
           (emacsvox-aural--make-explanation
+           :scheme
+           (if (eq emacsvox-aural-editor-scope 'scheme)
+               emacsvox-aural-editor-target
+             emacsvox-aural-active-scheme)
            :facts facts
            :context context
            :matching-rules
@@ -871,7 +875,8 @@ LABEL identifies the speech or cue being edited."
            :render-plan render
            :concrete-plan concrete
            :suppressed-actions nil)))
-      (emacsvox-aural-tools--display-explanation explanation))))
+      (emacsvox-aural-tools--display-explanation
+       explanation (called-interactively-p 'interactive)))))
 
 (defun emacsvox-aural-editor-help ()
   "Display aural editor commands and workflow."

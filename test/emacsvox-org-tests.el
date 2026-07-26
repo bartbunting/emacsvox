@@ -8,6 +8,7 @@
 
 (require 'cl-lib)
 (require 'ert)
+(require 'emacsvox-aural-tools)
 
 (let ((module
        (expand-file-name
@@ -227,6 +228,44 @@
               (emacsvox-aural-action-cue action)))
            (emacsvox-aural-render-plan-after plan))
           '((cue large-movement))))))))
+
+(ert-deftest emacsvox-org-explanation-infers-navigation-and-speaks-plan ()
+  "Org point help explains the scheme occasion and multimodal order."
+  (let ((emacsvox-aural-active-scheme 'org-combined)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode #'org-mode)
+      (insert "* Heading\n")
+      (goto-char (point-min))
+      (emacsvox-org-refresh-aural-heading)
+      (pcase-let*
+          ((`(,facts ,context)
+            (emacsvox-aural-tools--read-explanation-input nil))
+           (explanation (emacsvox-aural-explain facts context))
+           (matches
+            (mapcar
+             (lambda (entry) (plist-get entry :id))
+             (emacsvox-aural-explanation-matching-rules explanation)))
+           (summary
+            (emacsvox-aural-tools--spoken-explanation explanation)))
+        (should (eq (plist-get context :occasion) 'navigation))
+        (should
+         (equal
+          matches
+          '(org-heading-navigation-compatibility org-combined-heading)))
+        (should
+         (string-match-p
+          "Scheme org combined" summary))
+        (should
+         (string-match-p
+          "Before the content, say Heading, then play the section cue"
+          summary))
+        (should
+         (string-match-p
+          "content is spoken using the bolden voice"
+          summary))))))
 
 (ert-deftest emacsvox-org-example-schemes-cover-presentation-modalities ()
   "Selectable Org examples cover voice, labels, cues, phases, and state."

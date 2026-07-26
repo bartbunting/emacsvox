@@ -11,7 +11,7 @@ A semantic fact says what an object or event means.  A scheme decides whether th
 
 The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-list-aural-schemes= to browse schemes, =M-x emacsvox-set-aural-scheme= to select one, and =M-x emacsvox-reset-aural-scheme= to return to the default.
 
-Use =M-x emacsvox-edit-aural-scheme= for a persistent personal scheme, or =M-x emacsvox-edit-aural-rules= for persistent, session, or buffer-local rules.  =M-x emacsvox-explain-aural-presentation= shows facts, context, matching rules, provenance, concrete resources, suppression, and backend degradation at point.
+Use =M-x emacsvox-edit-aural-scheme= for a persistent personal scheme, or =M-x emacsvox-edit-aural-rules= for persistent, session, or buffer-local rules.  =M-x emacsvox-explain-aural-presentation= shows facts, context, matching rules, provenance, concrete resources, suppression, and backend degradation at point.  It automatically chooses the occasion with the most matching rules, speaks a concise description of the resolved order, and retains detailed output in a Help buffer.  Use a prefix argument to choose the occasion explicitly.
 
 ** Cascade and Deterministic Selection
 

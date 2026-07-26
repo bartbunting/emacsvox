@@ -29,8 +29,11 @@ Use ~emacsvox-list-aural-schemes~, ~emacsvox-set-aural-scheme~, and
 ~emacsvox-edit-aural-scheme~ to inspect, select, and customize schemes.  Rules
 can apply globally or by module, major or derived mode, session, or buffer.
 ~emacsvox-explain-aural-presentation~ reports the facts and winning rules at
-point.  Existing icon calls, personality properties, face mappings, and sound
-directories remain supported through compatibility adapters.
+point.  It infers an occasion with matching rules, speaks the resolved
+before/content/after order, and accepts a prefix argument to choose an
+occasion explicitly.  Existing icon calls, personality properties, face
+mappings, and sound directories remain supported through compatibility
+adapters.
 
 ** Search From Calendar
 

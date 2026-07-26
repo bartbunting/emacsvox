@@ -763,8 +763,10 @@ implemented discovery and management commands are:
   owners, and intent;
 - =emacsvox-describe-aural-semantic=: describe registration, defaults, and
   available presentations;
-- =emacsvox-explain-aural-presentation=: show captured facts, matching rules,
-  cascade order, merge operations, concrete resources, and backend fallback;
+- =emacsvox-explain-aural-presentation=: infer the most informative occasion,
+  speak a concise before/content/after explanation, and show captured facts,
+  matching rules, cascade order, concrete resources, and backend fallback in
+  a Help buffer; a prefix argument selects the occasion explicitly;
 - =emacsvox-describe-aural-spatial-capabilities=: show speech, ordered-cue,
   local-cue, final-output, and user-policy spatial settings;
 - =emacsvox-preview-aural-rule=: render a rule against representative or

@@ -22,7 +22,8 @@
     (emacsvox-aural-explanation
      (:constructor emacsvox-aural--make-explanation))
   "Reproducible explanation of one resolved aural presentation."
-  facts context matching-rules render-plan concrete-plan suppressed-actions)
+  scheme facts context matching-rules render-plan concrete-plan
+  suppressed-actions)
 
 (cl-defstruct
     (emacsvox-aural-validation-report
@@ -34,6 +35,9 @@
 (defvar emacsvox-aural-tools--last-explanation nil
   "Most recently displayed aural presentation explanation.")
 
+(declare-function emacsvox-icon "emacsvox-sounds" (icon))
+(declare-function tts-speak "tts-speak" (text))
+
 (defun emacsvox-aural-tools--point-position ()
   "Return a position at or immediately before point that can hold properties."
   (cond
@@ -41,26 +45,96 @@
    ((= (point) (point-max)) (1- (point)))
    (t (point))))
 
+(defun emacsvox-aural-tools--plan-at-point ()
+  "Return the frozen concrete aural plan at point, or nil."
+  (when-let* ((position (emacsvox-aural-tools--point-position)))
+    (get-text-property
+     position emacsvox-aural-concrete-plan-property)))
+
 (defun emacsvox-aural-facts-at-point ()
   "Return semantic facts attached to the object at point, or nil."
   (when-let* ((position (emacsvox-aural-tools--point-position)))
     (or
      (get-text-property
       position emacsvox-aural-facts-property)
-     (when-let* ((plan
-                  (get-text-property
-                   position emacsvox-aural-concrete-plan-property)))
+     (when-let* ((plan (emacsvox-aural-tools--plan-at-point)))
        (copy-tree (emacsvox-aural-concrete-plan-facts plan))))))
 
 (defun emacsvox-aural-context-at-point ()
   "Return frozen presentation context at point or capture current context."
   (or
-   (when-let* ((position (emacsvox-aural-tools--point-position))
-               (plan
-                (get-text-property
-                 position emacsvox-aural-concrete-plan-property)))
+   (when-let* ((plan (emacsvox-aural-tools--plan-at-point)))
      (copy-tree (emacsvox-aural-concrete-plan-context plan)))
    (emacsvox-aural-capture-context)))
+
+(defun emacsvox-aural-tools--context-for-occasion (context occasion)
+  "Return a copy of CONTEXT whose presentation OCCASION is frozen."
+  (plist-put (copy-tree context) :occasion occasion))
+
+(defun emacsvox-aural-tools--matching-rules-for-occasion
+    (facts context occasion)
+  "Return rules matching FACTS in CONTEXT for OCCASION."
+  (let* ((context
+          (emacsvox-aural-tools--context-for-occasion context occasion))
+         (rules (emacsvox-aural-current-rules context))
+         (input (emacsvox-aural-normalize-input facts context)))
+    (emacsvox-aural-matching-rules rules input)))
+
+(defun emacsvox-aural-tools--occasion-match-counts (facts context)
+  "Return registered occasions and matching-rule counts for FACTS and CONTEXT."
+  (mapcar
+   (lambda (candidate)
+     (let ((occasion (intern candidate)))
+       (cons
+        occasion
+        (length
+         (emacsvox-aural-tools--matching-rules-for-occasion
+          facts context occasion)))))
+   (emacsvox-aural-occasion-candidates)))
+
+(defun emacsvox-aural-tools--best-explanation-occasion (facts context)
+  "Choose the most informative presentation occasion for FACTS in CONTEXT.
+
+Prefer the current occasion when it ties for the most matching rules."
+  (let* ((current (or (plist-get context :occasion) 'continuous))
+         (counts
+          (emacsvox-aural-tools--occasion-match-counts facts context))
+         (best current)
+         (best-count (or (alist-get current counts) 0)))
+    (dolist (entry counts)
+      (when (> (cdr entry) best-count)
+        (setq best (car entry)
+              best-count (cdr entry))))
+    best))
+
+(defun emacsvox-aural-tools--read-explanation-input (choose-occasion)
+  "Read interactive explanation input.
+
+Infer an informative occasion unless CHOOSE-OCCASION is non-nil, in which
+case prompt with the inferred occasion as the default.  A frozen concrete
+plan at point always supplies its actual occasion as the initial default."
+  (let* ((plan (emacsvox-aural-tools--plan-at-point))
+         (facts
+          (if plan
+              (copy-tree (emacsvox-aural-concrete-plan-facts plan))
+            (emacsvox-aural-tools--facts-or-read)))
+         (context (emacsvox-aural-context-at-point))
+         (inferred
+          (if plan
+              (or (plist-get context :occasion) 'continuous)
+            (emacsvox-aural-tools--best-explanation-occasion
+             facts context)))
+         (occasion
+          (if choose-occasion
+              (intern
+               (completing-read
+                "Explain aural occasion: "
+                (emacsvox-aural-occasion-candidates)
+                nil 'must-match nil nil (symbol-name inferred)))
+            inferred)))
+    (list
+     facts
+     (emacsvox-aural-tools--context-for-occasion context occasion))))
 
 (defun emacsvox-aural-tools--read-semantic (&optional prompt allow-empty)
   "Read a registered semantic using PROMPT.
@@ -578,6 +652,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
          (render (emacsvox-aural-resolve-active facts context))
          (concrete (emacsvox-aural-compile-plan render facts context)))
     (emacsvox-aural--make-explanation
+     :scheme emacsvox-aural-active-scheme
      :facts (copy-tree facts)
      :context context
      :matching-rules
@@ -650,23 +725,235 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     (princ
      "\nUnsupported spatial requests remain audible at the center.\n")))
 
-(defun emacsvox-aural-tools--display-explanation (explanation)
-  "Display EXPLANATION in a help buffer."
+(defun emacsvox-aural-tools--humanize (value)
+  "Return VALUE in a form suitable for visual and spoken help."
+  (cond
+   ((symbolp value)
+    (replace-regexp-in-string "-" " " (symbol-name value)))
+   ((stringp value) value)
+   (t (format "%s" value))))
+
+(defun emacsvox-aural-tools--facts-description (facts context)
+  "Return a concise natural-language description of FACTS in CONTEXT."
+  (let* ((input (emacsvox-aural-normalize-input facts context))
+         (parts
+          (when-let* ((role (emacsvox-aural-input-role input)))
+            (list (emacsvox-aural-tools--humanize role)))))
+    (dolist (attribute (emacsvox-aural-input-attributes input))
+      (setq
+       parts
+       (append
+        parts
+        (list
+         (format
+          "%s %s"
+          (emacsvox-aural-tools--humanize (car attribute))
+          (emacsvox-aural-tools--humanize (cdr attribute)))))))
+    (dolist (state (emacsvox-aural-input-states input))
+      (setq
+       parts
+       (append
+        parts
+        (list (emacsvox-aural-tools--humanize state)))))
+    (dolist (event (emacsvox-aural-input-events input))
+      (setq
+       parts
+       (append
+        parts
+        (list
+         (format
+          "event %s"
+          (emacsvox-aural-tools--humanize event))))))
+    (if parts
+        (string-join parts ", ")
+      "unclassified content")))
+
+(defun emacsvox-aural-tools--spoken-action (action)
+  "Return a concise spoken description of concrete ACTION."
+  (pcase (emacsvox-aural-concrete-action-kind action)
+    ('speech
+     (format "say %s" (emacsvox-aural-concrete-action-text action)))
+    ('cue
+     (format
+      "play the %s cue"
+      (emacsvox-aural-tools--humanize
+       (emacsvox-aural-concrete-action-cue action))))
+    ('pause
+     (format
+      "pause for %s seconds"
+      (emacsvox-aural-concrete-action-duration action)))))
+
+(defun emacsvox-aural-tools--spoken-content (render concrete)
+  "Describe resolved content from RENDER and CONCRETE for speech."
+  (let* ((style (emacsvox-aural-render-plan-content render))
+         (content (emacsvox-aural-concrete-plan-content concrete))
+         (voice (emacsvox-aural-content-style-voice style))
+         (balance (emacsvox-aural-concrete-content-balance content)))
+    (if (not (emacsvox-aural-concrete-content-speak content))
+        "The content is suppressed"
+      (concat
+       "The content is spoken"
+       (if voice
+           (format
+            " using the %s voice"
+            (emacsvox-aural-tools--humanize voice))
+         " using its existing voice")
+       (cond
+        ((and (numberp balance) (< balance 0)) " on the left")
+        ((and (numberp balance) (> balance 0)) " on the right")
+        (t " in the center"))))))
+
+(defun emacsvox-aural-tools--matching-occasion-description (counts)
+  "Describe nonzero occasion match COUNTS, or return nil."
+  (when-let* ((matching
+               (cl-remove-if-not
+                (lambda (entry) (> (cdr entry) 0))
+                counts)))
+    (mapconcat
+     (lambda (entry)
+       (format
+        "%s, %d %s"
+        (emacsvox-aural-tools--humanize (car entry))
+        (cdr entry)
+        (if (= (cdr entry) 1) "rule" "rules")))
+     matching
+     "; ")))
+
+(defun emacsvox-aural-tools--spoken-explanation
+    (explanation &optional occasion-counts)
+  "Return a concise spoken summary of EXPLANATION.
+
+OCCASION-COUNTS, when supplied, identifies other useful contexts when the
+selected occasion has no matching rule."
+  (let* ((scheme
+          (or
+           (emacsvox-aural-explanation-scheme explanation)
+           emacsvox-aural-active-scheme))
+         (facts (emacsvox-aural-explanation-facts explanation))
+         (context (emacsvox-aural-explanation-context explanation))
+         (rules (emacsvox-aural-explanation-matching-rules explanation))
+         (render (emacsvox-aural-explanation-render-plan explanation))
+         (concrete (emacsvox-aural-explanation-concrete-plan explanation))
+         (before (emacsvox-aural-concrete-plan-before concrete))
+         (after (emacsvox-aural-concrete-plan-after concrete))
+         (occasion (plist-get context :occasion))
+         (matching-occasions
+          (emacsvox-aural-tools--matching-occasion-description
+           occasion-counts)))
+    (string-join
+     (delq
+      nil
+      (list
+       "Aural explanation."
+       (format
+        "Scheme %s."
+        (emacsvox-aural-tools--humanize scheme))
+       (format
+        "%s."
+        (capitalize
+         (emacsvox-aural-tools--facts-description facts context)))
+       (format
+        "Occasion %s."
+        (emacsvox-aural-tools--humanize occasion))
+       (if rules
+           (format
+            "%d %s matched. Strongest rule %s."
+            (length rules)
+            (if (= (length rules) 1) "rule" "rules")
+            (emacsvox-aural-tools--humanize
+             (plist-get (car (last rules)) :id)))
+         (concat
+          "No rule matched."
+          (when matching-occasions
+            (format
+             " Matching rules are available for %s. Use a prefix argument to choose an occasion."
+             matching-occasions))))
+       (when before
+         (format
+          "Before the content, %s."
+          (mapconcat
+           #'emacsvox-aural-tools--spoken-action before ", then ")))
+       (concat
+        (emacsvox-aural-tools--spoken-content render concrete)
+        ".")
+       (when after
+         (format
+          "After the content, %s."
+          (mapconcat
+           #'emacsvox-aural-tools--spoken-action after ", then ")))))
+      " ")))
+
+(defun emacsvox-aural-tools--display-explanation
+    (explanation &optional speak occasion-counts)
+  "Display EXPLANATION in a help buffer.
+
+When SPEAK is non-nil, speak a concise natural-language summary rather than
+the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
   (let* ((render (emacsvox-aural-explanation-render-plan explanation))
          (concrete (emacsvox-aural-explanation-concrete-plan explanation))
-         (content (emacsvox-aural-concrete-plan-content concrete)))
+         (content (emacsvox-aural-concrete-plan-content concrete))
+         (context (emacsvox-aural-explanation-context explanation))
+         (rules (emacsvox-aural-explanation-matching-rules explanation))
+         (before (emacsvox-aural-concrete-plan-before concrete))
+         (after (emacsvox-aural-concrete-plan-after concrete))
+         (summary
+          (emacsvox-aural-tools--spoken-explanation
+           explanation occasion-counts))
+         (matching-occasions
+          (emacsvox-aural-tools--matching-occasion-description
+           occasion-counts)))
     (setq emacsvox-aural-tools--last-explanation explanation)
     (with-help-window (help-buffer)
       (princ "Aural presentation explanation\n\n")
       (princ
-       (format "Facts: %S\n" (emacsvox-aural-explanation-facts explanation)))
+       (format
+        "Scheme: %s\n"
+        (or
+         (emacsvox-aural-explanation-scheme explanation)
+         emacsvox-aural-active-scheme)))
       (princ
        (format
-        "Context: %S\n\n"
-        (emacsvox-aural-explanation-context explanation)))
-      (princ "Matching rules, weakest to strongest\n\n")
-      (if-let* ((rules
-                 (emacsvox-aural-explanation-matching-rules explanation)))
+        "Object: %s\n"
+        (emacsvox-aural-tools--facts-description
+         (emacsvox-aural-explanation-facts explanation)
+         context)))
+      (princ
+       (format "Occasion: %s\n" (plist-get context :occasion)))
+      (princ
+       (format
+        "Module: %s; mode: %s\n"
+        (or (plist-get context :module) "none")
+        (or (plist-get context :mode) "none")))
+      (when matching-occasions
+        (princ
+         (format
+          "Occasions with matching rules: %s\n"
+          matching-occasions)))
+      (princ
+       "Use a prefix argument with this command to choose another occasion.\n")
+      (princ "\nResolved presentation order\n\n")
+      (princ "Before content:\n")
+      (if before
+          (dolist (action before)
+            (princ
+             (format
+              "  %s\n"
+              (emacsvox-aural-tools--format-action action))))
+        (princ "  Nothing.\n"))
+      (princ
+       (format
+        "\nContent: %s.\n"
+        (emacsvox-aural-tools--spoken-content render concrete)))
+      (princ "After content:\n")
+      (if after
+          (dolist (action after)
+            (princ
+             (format
+              "  %s\n"
+              (emacsvox-aural-tools--format-action action))))
+        (princ "  Nothing.\n"))
+      (princ "\nMatching rules, weakest to strongest\n\n")
+      (if rules
           (dolist (rule rules)
             (princ
              (format
@@ -675,12 +962,14 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
               (plist-get rule :origin)
               (plist-get rule :score)
               (plist-get rule :source))))
-        (princ "No scheme rule matched.\n"))
-      (princ "\nResolved order\n\n")
-      (dolist (action (emacsvox-aural-concrete-plan-before concrete))
-        (princ
-         (format "Before: %s\n"
-                 (emacsvox-aural-tools--format-action action))))
+        (princ "No scheme rule matched for this occasion.\n"))
+      (princ "\nTechnical details\n\n")
+      (princ
+       (format "Facts: %S\n" (emacsvox-aural-explanation-facts explanation)))
+      (princ
+       (format
+        "Context: %S\n\n"
+        context))
       (princ
        (format
         "Content: speak %s, voice command %S, balance %S (%s), provenance %S\n"
@@ -690,28 +979,41 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         (emacsvox-aural-concrete-content-spatial-capability content)
         (emacsvox-aural-content-style-provenance
          (emacsvox-aural-render-plan-content render))))
-      (dolist (action (emacsvox-aural-concrete-plan-after concrete))
-        (princ
-         (format "After: %s\n"
-                 (emacsvox-aural-tools--format-action action))))
       (when-let* ((suppressed
                    (emacsvox-aural-explanation-suppressed-actions
                     explanation)))
         (princ (format "\nSuppressed or removed actions: %S\n" suppressed)))
       (when-let* ((degradations
                    (emacsvox-aural-concrete-plan-degradations concrete)))
-        (princ (format "\nBackend degradation: %S\n" degradations))))))
+        (princ (format "\nBackend degradation: %S\n" degradations))))
+    (when speak
+      (when (fboundp 'emacsvox-icon)
+        (emacsvox-icon 'help))
+      (when (fboundp 'tts-speak)
+        (tts-speak summary)))
+    summary))
 
 (defun emacsvox-explain-aural-presentation (&optional facts context)
-  "Explain presentation of FACTS in CONTEXT or semantic facts at point."
-  (interactive)
+  "Explain presentation of FACTS in CONTEXT or semantic facts at point.
+
+Interactively, infer the occasion that produces the most useful explanation.
+With a prefix argument, prompt for the occasion.  The command displays full
+technical details and speaks a concise description of the scheme, semantic
+object, matching rule, and resolved before/content/after order."
+  (interactive
+   (emacsvox-aural-tools--read-explanation-input current-prefix-arg))
   (let* ((facts
           (or facts (emacsvox-aural-tools--facts-or-read)))
          (context
           (or context (emacsvox-aural-context-at-point)))
-         (explanation (emacsvox-aural-explain facts context)))
+         (explanation (emacsvox-aural-explain facts context))
+         (occasion-counts
+          (and
+           (called-interactively-p 'interactive)
+           (emacsvox-aural-tools--occasion-match-counts facts context))))
     (when (called-interactively-p 'interactive)
-      (emacsvox-aural-tools--display-explanation explanation))
+      (emacsvox-aural-tools--display-explanation
+       explanation t occasion-counts))
     explanation))
 
 (defun emacsvox-aural-tools--representative-input (rule)

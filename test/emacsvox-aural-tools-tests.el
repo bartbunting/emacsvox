@@ -208,6 +208,167 @@
        (emacsvox-aural-concrete-plan-degradations
         (emacsvox-aural-explanation-concrete-plan explanation))))))
 
+(ert-deftest emacsvox-aural-tools-explain-infers-matching-occasion ()
+  "Point help prefers an occasion that exercises the active scheme."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'occasion-test
+     '((:id navigation-heading
+        :match (:role heading :module org :occasion navigation)
+        :render
+        (:before
+         ((:id heading-label :kind speech :text "Heading"))))))
+    (let ((facts '(:role heading :level 1))
+          (context
+           '(:module org :mode org-mode :mode-lineage (org-mode)
+             :occasion continuous)))
+      (should
+       (eq
+        (emacsvox-aural-tools--best-explanation-occasion
+         facts context)
+        'navigation))
+      (should
+       (equal
+        (emacsvox-aural-tools--occasion-match-counts facts context)
+        '((continuous . 0)
+          (edit . 0)
+          (inspection . 0)
+          (navigation . 1)
+          (notification . 0)
+          (state-change . 0)))))))
+
+(ert-deftest emacsvox-aural-tools-explain-prefix-chooses-occasion ()
+  "A prefix prompt can override the automatically inferred occasion."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'occasion-test
+     '((:id navigation-heading
+        :match (:role heading :module org :occasion navigation)
+        :render (:content (:voice bolden)))))
+    (with-temp-buffer
+      (setq-local emacsvox-aural-module 'org)
+      (setq major-mode 'org-mode)
+      (insert
+       (propertize
+        "Heading"
+        emacsvox-aural-facts-property
+        '(:role heading :level 1)))
+      (goto-char (point-min))
+      (let (default)
+        (cl-letf
+            (((symbol-function 'completing-read)
+              (lambda (_prompt _collection &rest arguments)
+                (setq default (nth 4 arguments))
+                "continuous")))
+          (pcase-let
+              ((`(,facts ,context)
+                (emacsvox-aural-tools--read-explanation-input t)))
+            (should (equal facts '(:role heading :level 1)))
+            (should (eq (plist-get context :occasion) 'continuous))
+            (should (equal default "navigation"))))))))
+
+(ert-deftest emacsvox-aural-tools-explain-preserves-frozen-occasion ()
+  "Help on prepared output reports its actual occasion without inference."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'occasion-test
+     '((:id navigation-heading
+        :match (:role heading :occasion navigation)
+        :render (:content (:voice bolden)))))
+    (with-temp-buffer
+      (insert
+       (emacsvox-aural-prepare-text
+        "Heading"
+        '(:role heading :level 1)
+        '(:mode text-mode :mode-lineage (text-mode)
+          :occasion continuous)))
+      (goto-char (point-min))
+      (pcase-let
+          ((`(,facts ,context)
+            (emacsvox-aural-tools--read-explanation-input nil)))
+        (should (equal facts '(:role heading :level 1)))
+        (should (eq (plist-get context :occasion) 'continuous))))))
+
+(ert-deftest emacsvox-aural-tools-explanation-speaks-concise-order ()
+  "Interactive help speaks natural output order and keeps technical detail."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'occasion-test
+     '((:id navigation-heading
+        :match (:role heading :module org :occasion navigation)
+        :render
+        (:before
+         ((:id heading-label :kind speech :text "Heading"))
+         :content (:voice bolden)))))
+    (let* ((facts '(:role heading :level 1 :state folded))
+           (context
+            '(:module org :mode org-mode :mode-lineage (org-mode)
+              :occasion navigation))
+           (explanation (emacsvox-aural-explain facts context))
+           (counts
+            (emacsvox-aural-tools--occasion-match-counts facts context))
+           icon spoken)
+      (unwind-protect
+          (progn
+            (cl-letf
+                (((symbol-function 'emacsvox-icon)
+                  (lambda (value) (setq icon value)))
+                 ((symbol-function 'tts-speak)
+                  (lambda (text) (setq spoken text))))
+              (save-window-excursion
+                (emacsvox-aural-tools--display-explanation
+                 explanation t counts)))
+            (should (eq icon 'help))
+            (should
+             (string-match-p
+              "Scheme occasion test" spoken))
+            (should
+             (string-match-p
+              "Occasion navigation" spoken))
+            (should
+             (string-match-p
+              "Before the content, say Heading" spoken))
+            (should
+             (string-match-p
+              "content is spoken using the bolden voice" spoken))
+            (with-current-buffer "*Help*"
+              (should
+               (string-match-p
+                "Scheme: occasion-test" (buffer-string)))
+              (should
+               (string-match-p
+                "Resolved presentation order" (buffer-string)))
+              (should
+               (string-match-p
+                "Technical details" (buffer-string)))))
+        (when (get-buffer "*Help*")
+          (kill-buffer "*Help*"))))))
+
+(ert-deftest emacsvox-aural-tools-explanation-names-matching-occasions ()
+  "No-match spoken help identifies a useful alternative occasion."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'occasion-test
+     '((:id navigation-heading
+        :match (:role heading :occasion navigation)
+        :render (:content (:voice bolden)))))
+    (let* ((facts '(:role heading))
+           (context
+            '(:mode text-mode :mode-lineage (text-mode)
+              :occasion continuous))
+           (explanation (emacsvox-aural-explain facts context))
+           (summary
+            (emacsvox-aural-tools--spoken-explanation
+             explanation
+             (emacsvox-aural-tools--occasion-match-counts
+              facts context))))
+      (should
+       (string-match-p
+        "No rule matched" summary))
+      (should
+       (string-match-p
+        "available for navigation, 1 rule" summary)))))
+
 (ert-deftest emacsvox-aural-tools-preview-uses-representative-context ()
   "Rule preview constructs selector-matching facts and mode context."
   (emacsvox-test--with-aural-tools
