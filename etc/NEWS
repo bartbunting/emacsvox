@@ -37,6 +37,10 @@ top, bottom, first-column, and last-column boundaries.
 The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.
+One base scheme remains active at a time, with any number of independently
+enabled feature fragments layered over it in explicit order.  Fragments can
+add speech, cues, or styling without copying or replacing the base scheme;
+persistent personal rules remain stronger.
 The default scheme editor is now a spoken form: TAB and Shift-TAB move through
 natural-language fields, RET edits one field, and built-in schemes can be
 copied from inside the workflow.  Use

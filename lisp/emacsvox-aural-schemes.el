@@ -41,12 +41,25 @@
   "Read-only scheme fragment supplied by an integration module."
   id module data compiled source)
 
+(cl-defstruct
+    (emacsvox-aural-feature-fragment-entry
+     (:constructor emacsvox-aural--make-feature-fragment-entry))
+  "Registered optional feature fragment."
+  id data compiled built-in source)
+
 (defvar emacsvox-aural-scheme-registry (make-hash-table :test #'eq)
   "Map scheme identifiers to `emacsvox-aural-scheme-entry' records.")
 
 (defvar emacsvox-aural-module-fragment-registry
   (make-hash-table :test #'eq)
   "Map fragment identifiers to read-only module rule fragments.")
+
+(defvar emacsvox-aural-feature-fragment-registry
+  (make-hash-table :test #'eq)
+  "Map optional feature fragment identifiers to their records.")
+
+(defvar emacsvox-aural-enabled-feature-fragments nil
+  "Ordered identifiers of optional feature fragments in the cascade.")
 
 (defvar emacsvox-aural-user-rules nil
   "Persistent personal rules loaded from `emacsvox-aural-schemes-file'.")
@@ -71,17 +84,31 @@
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 1
+(defconst emacsvox-aural-user-data-schema-version 2
   "Current schema version for the personal scheme data file.")
+
+(defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
+  "Add feature-fragment storage to version 1 user DATA."
+  (setq data (plist-put data :feature-fragments nil))
+  (setq data (plist-put data :enabled-feature-fragments nil))
+  (plist-put data :schema-version 2))
+
+(defconst emacsvox-aural--built-in-user-data-migrations
+  '((1 . emacsvox-aural--migrate-user-data-v1-to-v2))
+  "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil
   "Alist mapping old schema versions to data migration functions.
 
 Each function receives one data plist and returns a plist with a greater
-`:schema-version'.")
+`:schema-version'.  Required Emacsvox migrations are always applied after
+consulting this extension alist.")
 
 (defvar emacsvox-aural-active-scheme-changed-hook nil
   "Hook run after selecting a different active scheme.")
+
+(defvar emacsvox-aural-feature-fragments-changed-hook nil
+  "Hook run after the ordered enabled feature fragments change.")
 
 (defun emacsvox-aural--scheme-error (format-string &rest arguments)
   "Signal a scheme error described by FORMAT-STRING and ARGUMENTS."
@@ -92,6 +119,10 @@ Each function receives one data plist and returns a plist with a greater
 (defun emacsvox-aural-scheme-entry (id)
   "Return registered scheme entry ID, or nil."
   (gethash id emacsvox-aural-scheme-registry))
+
+(defun emacsvox-aural-feature-fragment-entry (id)
+  "Return registered feature fragment entry ID, or nil."
+  (gethash id emacsvox-aural-feature-fragment-registry))
 
 (cl-defun emacsvox-aural-register-scheme
     (data &key built-in source)
@@ -133,6 +164,41 @@ Each function receives one data plist and returns a plist with a greater
       (puthash id fragment emacsvox-aural-module-fragment-registry)
       fragment)))
 
+(defun emacsvox-aural--compile-feature-fragment (data &optional source)
+  "Compile feature fragment DATA from SOURCE."
+  (let ((compiled (emacsvox-aural-compile-scheme data 'fragment source)))
+    (when (emacsvox-aural-scheme-parent compiled)
+      (emacsvox-aural--scheme-error
+       "Feature fragment %S cannot inherit a scheme"
+       (emacsvox-aural-scheme-id compiled)))
+    (when (or
+           (emacsvox-aural-scheme-resource-pack compiled)
+           (emacsvox-aural-scheme-voice-palette compiled))
+      (emacsvox-aural--scheme-error
+       "Feature fragment %S cannot select resource providers"
+       (emacsvox-aural-scheme-id compiled)))
+    compiled))
+
+(cl-defun emacsvox-aural-register-feature-fragment
+    (data &key built-in source)
+  "Compile and register optional feature fragment DATA.
+
+BUILT-IN marks a read-only fragment and SOURCE is retained for diagnostics."
+  (let* ((compiled (emacsvox-aural--compile-feature-fragment data source))
+         (id (emacsvox-aural-scheme-id compiled)))
+    (when (emacsvox-aural-feature-fragment-entry id)
+      (emacsvox-aural--scheme-error
+       "Feature fragment is already registered: %S" id))
+    (let ((entry
+           (emacsvox-aural--make-feature-fragment-entry
+            :id id
+            :data (copy-tree data)
+            :compiled compiled
+            :built-in built-in
+            :source source)))
+      (puthash id entry emacsvox-aural-feature-fragment-registry)
+      entry)))
+
 (defun emacsvox-aural-scheme-candidates ()
   "Return registered scheme identifiers as sorted completion strings."
   (let (ids)
@@ -140,6 +206,45 @@ Each function receives one data plist and returns a plist with a greater
      (lambda (id _) (push (symbol-name id) ids))
      emacsvox-aural-scheme-registry)
     (sort ids #'string-lessp)))
+
+(defun emacsvox-aural-feature-fragment-candidates ()
+  "Return registered feature fragment identifiers as sorted strings."
+  (let (ids)
+    (maphash
+     (lambda (id _) (push (symbol-name id) ids))
+     emacsvox-aural-feature-fragment-registry)
+    (sort ids #'string-lessp)))
+
+(defun emacsvox-aural-feature-fragment-enabled-p (id)
+  "Return non-nil when feature fragment ID is enabled."
+  (memq id emacsvox-aural-enabled-feature-fragments))
+
+(defun emacsvox-aural--validate-enabled-feature-fragments
+    (ids &optional registry)
+  "Validate ordered feature fragment IDS against REGISTRY and return IDS."
+  (unless (and (listp ids) (proper-list-p ids))
+    (emacsvox-aural--scheme-error
+     "Enabled feature fragments must be a proper list: %S" ids))
+  (let ((registry
+         (or registry emacsvox-aural-feature-fragment-registry))
+        seen)
+    (dolist (id ids)
+      (emacsvox-aural--require-symbol id "Enabled feature fragment")
+      (when (memq id seen)
+        (emacsvox-aural--scheme-error
+         "Feature fragment is enabled more than once: %S" id))
+      (unless (gethash id registry)
+        (emacsvox-aural--scheme-error
+         "Unknown enabled feature fragment: %S" id))
+      (push id seen)))
+  ids)
+
+(defun emacsvox-aural-set-enabled-feature-fragments (ids)
+  "Set ordered enabled feature fragment IDS and run the change hook."
+  (emacsvox-aural--validate-enabled-feature-fragments ids)
+  (setq emacsvox-aural-enabled-feature-fragments (copy-sequence ids))
+  (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
+  emacsvox-aural-enabled-feature-fragments)
 
 (defun emacsvox-aural--scheme-chain (id &optional path)
   "Return inherited scheme entries for ID from parent to child."
@@ -326,6 +431,28 @@ When INCLUDE-DISABLED is non-nil, retain disabled fragment rules."
            (push copy rules)))))
     (nreverse rules)))
 
+(defun emacsvox-aural--feature-fragment-rules (&optional include-disabled)
+  "Return rules from enabled feature fragments in their explicit order.
+
+When INCLUDE-DISABLED is non-nil, retain disabled rules."
+  (emacsvox-aural--validate-enabled-feature-fragments
+   emacsvox-aural-enabled-feature-fragments)
+  (let (rules)
+    (cl-loop
+     for id in emacsvox-aural-enabled-feature-fragments
+     for layer-order from 0
+     for entry = (emacsvox-aural-feature-fragment-entry id)
+     do
+     (dolist
+         (rule
+          (emacsvox-aural-scheme-rules
+           (emacsvox-aural-feature-fragment-entry-compiled entry)))
+       (when (or include-disabled (emacsvox-aural-rule-enabled rule))
+         (let ((copy (copy-emacsvox-aural-rule rule)))
+           (setf (emacsvox-aural-rule-layer-order copy) layer-order)
+           (push copy rules)))))
+    (nreverse rules)))
+
 (defun emacsvox-aural--require-unique-rule-ids (rules)
   "Return RULES after rejecting ambiguous duplicate rule identifiers."
   (let ((seen (make-hash-table :test #'eq)))
@@ -349,6 +476,7 @@ When INCLUDE-DISABLED is non-nil, retain disabled fragment rules."
      (emacsvox-aural--module-rules
       (plist-get context :module) t)
      (emacsvox-aural-effective-scheme-rules nil t)
+     (emacsvox-aural--feature-fragment-rules t)
      (emacsvox-aural--compile-rule-list
       emacsvox-aural-user-rules
       'user emacsvox-aural-schemes-file t)
@@ -494,11 +622,17 @@ selector plist such as `(:mode org-mode)' or `(:module org)'."
   (emacsvox-aural--require-plist data "Aural user data")
   (let ((version (plist-get data :schema-version))
         (schemes (plist-get data :schemes))
+        (fragments (plist-get data :feature-fragments))
+        (enabled (plist-get data :enabled-feature-fragments))
         (rules (plist-get data :user-rules))
         (unknown
          (cl-loop
           for (key _) on data by #'cddr
-          unless (memq key '(:schema-version :schemes :user-rules))
+          unless
+          (memq
+           key
+           '(:schema-version :schemes :feature-fragments
+             :enabled-feature-fragments :user-rules))
           collect key)))
     (unless (eq version emacsvox-aural-user-data-schema-version)
       (emacsvox-aural--scheme-error
@@ -508,6 +642,8 @@ selector plist such as `(:mode org-mode)' or `(:module org)'."
        "Unknown user data keys: %S" unknown))
     (unless (listp schemes)
       (emacsvox-aural--scheme-error "User schemes must be a list"))
+    (unless (listp fragments)
+      (emacsvox-aural--scheme-error "User feature fragments must be a list"))
     (unless (listp rules)
       (emacsvox-aural--scheme-error "User rules must be a list"))
     (let (ids)
@@ -518,6 +654,19 @@ selector plist such as `(:mode org-mode)' or `(:module org)'."
              "Duplicate user scheme: %S"
              (emacsvox-aural-scheme-id compiled)))
           (push (emacsvox-aural-scheme-id compiled) ids))))
+    (let ((registry
+           (emacsvox-aural--built-in-feature-fragment-registry))
+          ids)
+      (dolist (fragment fragments)
+        (let* ((compiled
+                (emacsvox-aural--compile-feature-fragment fragment))
+               (id (emacsvox-aural-scheme-id compiled)))
+          (when (or (memq id ids) (gethash id registry))
+            (emacsvox-aural--scheme-error
+             "Duplicate or protected user feature fragment: %S" id))
+          (push id ids)
+          (puthash id t registry)))
+      (emacsvox-aural--validate-enabled-feature-fragments enabled registry))
     (emacsvox-aural--compile-rule-list rules 'user "user data")
     data))
 
@@ -535,7 +684,11 @@ selector plist such as `(:mode org-mode)' or `(:module org)'."
           (emacsvox-aural--scheme-error
            "User data migration cycle at version %S" version))
         (push version seen)
-        (let ((migration (alist-get version emacsvox-aural-user-data-migrations)))
+        (let ((migration
+               (or
+                (alist-get version emacsvox-aural-user-data-migrations)
+                (alist-get
+                 version emacsvox-aural--built-in-user-data-migrations))))
           (unless migration
             (emacsvox-aural--scheme-error
              "No migration from user data version %S" version))
@@ -568,15 +721,30 @@ selector plist such as `(:mode org-mode)' or `(:module org)'."
      emacsvox-aural-scheme-registry)
     registry))
 
+(defun emacsvox-aural--built-in-feature-fragment-registry ()
+  "Return a registry containing only current built-in feature fragments."
+  (let ((registry (make-hash-table :test #'eq)))
+    (maphash
+     (lambda (id entry)
+       (when (emacsvox-aural-feature-fragment-entry-built-in entry)
+         (puthash id entry registry)))
+     emacsvox-aural-feature-fragment-registry)
+    registry))
+
 (defun emacsvox-aural-load-user-data (&optional file)
   "Load personal schemes and rules from FILE.
 
 The file is read as data and is never evaluated."
   (when-let* ((data (emacsvox-aural-read-user-data file)))
     (let ((schemes (plist-get data :schemes))
+          (fragments (plist-get data :feature-fragments))
+          (enabled (plist-get data :enabled-feature-fragments))
           (rules (plist-get data :user-rules))
           (registry (emacsvox-aural--built-in-scheme-registry))
-          entries)
+          (fragment-registry
+           (emacsvox-aural--built-in-feature-fragment-registry))
+          entries
+          fragment-entries)
       (dolist (scheme schemes)
         (let* ((compiled (emacsvox-aural-compile-scheme scheme))
                (id (emacsvox-aural-scheme-id compiled)))
@@ -591,32 +759,69 @@ The file is read as data and is never evaluated."
             :built-in nil
             :source (or file emacsvox-aural-schemes-file))
            entries)))
+      (dolist (fragment fragments)
+        (let* ((compiled
+                (emacsvox-aural--compile-feature-fragment
+                 fragment (or file emacsvox-aural-schemes-file)))
+               (id (emacsvox-aural-scheme-id compiled)))
+          (when (gethash id fragment-registry)
+            (emacsvox-aural--scheme-error
+             "User feature fragment cannot replace built-in %S" id))
+          (push
+           (emacsvox-aural--make-feature-fragment-entry
+            :id id
+            :data (copy-tree fragment)
+            :compiled compiled
+            :built-in nil
+            :source (or file emacsvox-aural-schemes-file))
+           fragment-entries)))
       (dolist (entry entries)
         (puthash
          (emacsvox-aural-scheme-entry-id entry)
          entry
          registry))
+      (dolist (entry fragment-entries)
+        (puthash
+         (emacsvox-aural-feature-fragment-entry-id entry)
+         entry
+         fragment-registry))
       ;; Validate the complete replacement before changing live state.
-      (let ((emacsvox-aural-scheme-registry registry))
+      (let ((emacsvox-aural-scheme-registry registry)
+            (emacsvox-aural-feature-fragment-registry fragment-registry)
+            (emacsvox-aural-enabled-feature-fragments enabled)
+            (emacsvox-aural-user-rules rules))
         (maphash
          (lambda (id _)
            (emacsvox-aural--scheme-chain id)
            (emacsvox-aural-effective-scheme-rules id))
          registry)
-        (emacsvox-aural--scheme-chain emacsvox-aural-active-scheme))
+        (emacsvox-aural--scheme-chain emacsvox-aural-active-scheme)
+        (emacsvox-aural--validate-enabled-feature-fragments
+         enabled fragment-registry)
+        (emacsvox-aural-current-rules))
       (setq
        emacsvox-aural-scheme-registry registry
+       emacsvox-aural-feature-fragment-registry fragment-registry
+       emacsvox-aural-enabled-feature-fragments (copy-sequence enabled)
        emacsvox-aural-user-rules (copy-tree rules))
+      (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
       data)))
 
 (defun emacsvox-aural-user-data ()
-  "Return current personal schemes and rules as versioned data."
-  (let (schemes)
+  "Return current personal schemes, fragments, and rules as versioned data."
+  (let (schemes fragments)
     (maphash
      (lambda (_ entry)
        (unless (emacsvox-aural-scheme-entry-built-in entry)
          (push (copy-tree (emacsvox-aural-scheme-entry-data entry)) schemes)))
      emacsvox-aural-scheme-registry)
+    (maphash
+     (lambda (_ entry)
+       (unless (emacsvox-aural-feature-fragment-entry-built-in entry)
+         (push
+          (copy-tree (emacsvox-aural-feature-fragment-entry-data entry))
+          fragments)))
+     emacsvox-aural-feature-fragment-registry)
     (setq
      schemes
      (sort
@@ -625,9 +830,20 @@ The file is read as data and is never evaluated."
         (string-lessp
          (symbol-name (plist-get left :id))
          (symbol-name (plist-get right :id))))))
+    (setq
+     fragments
+     (sort
+      fragments
+      (lambda (left right)
+        (string-lessp
+         (symbol-name (plist-get left :id))
+         (symbol-name (plist-get right :id))))))
     (list
      :schema-version emacsvox-aural-user-data-schema-version
      :schemes schemes
+     :feature-fragments fragments
+     :enabled-feature-fragments
+     (copy-sequence emacsvox-aural-enabled-feature-fragments)
      :user-rules (copy-tree emacsvox-aural-user-rules))))
 
 (defun emacsvox-aural-save-user-data (&optional file)

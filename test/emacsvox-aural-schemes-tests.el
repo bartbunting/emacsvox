@@ -17,11 +17,15 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-module-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-feature-fragment-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
+         (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-user-data-migrations nil))
      (emacsvox-aural--register-default-scheme)
      ,@body))
@@ -194,6 +198,128 @@
            'voice
            (emacsvox-aural-content-style-provenance content))
           'buffer-heading))))))
+
+(ert-deftest emacsvox-aural-schemes-compose-ordered-feature-fragments ()
+  "Enabled fragments add to a scheme before stronger personal overrides."
+  (emacsvox-test--with-isolated-schemes
+    (emacsvox-aural-register-scheme
+     (emacsvox-test--scheme
+      'spoken "Spoken"
+      '((:id scheme-heading
+         :match (:role heading)
+         :render
+         (:before
+          ((:id scheme-label :kind speech :text "Heading"))
+          :content (:voice voice-lighten))))
+      :parent 'default))
+    (emacsvox-aural-register-feature-fragment
+     (emacsvox-test--scheme
+      'with-icon "Add a heading cue"
+      '((:id fragment-heading-icon
+         :match (:role heading)
+         :render
+         (:before
+          (:append
+           ((:id heading-icon :kind cue :cue section)))))))
+     :built-in t
+     :source "test")
+    (emacsvox-aural-register-feature-fragment
+     (emacsvox-test--scheme
+      'with-prefix "Add another spoken prefix"
+      '((:id fragment-heading-prefix
+         :match (:role heading)
+         :render
+         (:before
+          (:append
+           ((:id extra-label :kind speech :text "Level")))))))
+     :built-in t
+     :source "test")
+    (emacsvox-aural-select-scheme 'spoken)
+    (emacsvox-aural-set-enabled-feature-fragments
+     '(with-icon with-prefix))
+    (setq
+     emacsvox-aural-user-rules
+     (list
+      (emacsvox-test--voice-rule
+       'personal-heading 'voice-bolden)))
+    (let* ((plan
+            (emacsvox-aural-resolve-active
+             '(:role heading)
+             '(:module org :mode org-mode :occasion navigation)))
+           (content (emacsvox-aural-render-plan-content plan)))
+      (should
+       (equal
+        (emacsvox-aural-render-plan-matched-rules plan)
+        '(scheme-heading fragment-heading-icon
+          fragment-heading-prefix personal-heading)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-id
+         (emacsvox-aural-render-plan-before plan))
+        '(scheme-label heading-icon extra-label)))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice content)
+        'voice-bolden)))))
+
+(ert-deftest emacsvox-aural-schemes-order-feature-fragment-scalars ()
+  "A later enabled fragment is stronger within the fragment origin."
+  (emacsvox-test--with-isolated-schemes
+    (dolist
+        (entry
+         '((first-fragment voice-lighten)
+           (second-fragment voice-bolden)))
+      (emacsvox-aural-register-feature-fragment
+       (emacsvox-test--scheme
+        (car entry)
+        (symbol-name (car entry))
+        (list
+         (emacsvox-test--voice-rule
+          (intern (format "%s-rule" (car entry)))
+          (cadr entry))))
+       :built-in t))
+    (emacsvox-aural-set-enabled-feature-fragments
+     '(first-fragment second-fragment))
+    (let ((content
+           (emacsvox-aural-render-plan-content
+            (emacsvox-aural-resolve-active
+             '(:role heading)
+             '(:mode org-mode :occasion navigation)))))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice content)
+        'voice-bolden)))))
+
+(ert-deftest emacsvox-aural-schemes-validate-feature-fragment-contract ()
+  "Fragments reject providers, inheritance, unknown IDs, and duplicate enabling."
+  (emacsvox-test--with-isolated-schemes
+    (dolist
+        (data
+         (list
+          (emacsvox-test--scheme
+           'inheriting-fragment "Invalid parent" () :parent 'default)
+          (emacsvox-test--scheme
+           'provider-fragment "Invalid provider" ()
+           :resource-pack 'chimes)))
+      (should-error
+       (emacsvox-aural-register-feature-fragment data)
+       :type 'emacsvox-aural-scheme-error))
+    (emacsvox-aural-register-feature-fragment
+     (emacsvox-test--scheme 'valid-fragment "Valid" ())
+     :built-in t)
+    (emacsvox-aural-set-enabled-feature-fragments '(valid-fragment))
+    (should-error
+     (emacsvox-aural-set-enabled-feature-fragments '(missing-fragment))
+     :type 'emacsvox-aural-scheme-error)
+    (should-error
+     (emacsvox-aural-set-enabled-feature-fragments
+      '(valid-fragment valid-fragment))
+     :type 'emacsvox-aural-scheme-error)
+    (should
+     (equal
+      emacsvox-aural-enabled-feature-fragments
+      '(valid-fragment)))))
 
 (ert-deftest emacsvox-aural-schemes-preserve-legacy-personality-by-default ()
   "An unmatched explicit or face-derived legacy personality is retained."
@@ -402,6 +528,14 @@
              (list
               (emacsvox-test--voice-rule
                'user-heading 'voice-smoothen)))
+            (emacsvox-aural-register-feature-fragment
+             (emacsvox-test--scheme
+              'personal-fragment "Personal fragment"
+              (list
+               (emacsvox-test--voice-rule
+                'fragment-heading 'voice-annotate))))
+            (emacsvox-aural-set-enabled-feature-fragments
+             '(personal-fragment))
             (emacsvox-aural-save-user-data file)
             (let ((first (emacsvox-aural-read-user-data file)))
               (should (= (file-modes file) #o600))
@@ -418,10 +552,20 @@
                 first)))
             (let ((emacsvox-aural-scheme-registry
                    (make-hash-table :test #'eq))
+                  (emacsvox-aural-feature-fragment-registry
+                   (make-hash-table :test #'eq))
+                  (emacsvox-aural-enabled-feature-fragments nil)
                   (emacsvox-aural-user-rules nil))
               (emacsvox-aural--register-default-scheme)
               (emacsvox-aural-load-user-data file)
               (should (emacsvox-aural-scheme-entry 'personal))
+              (should
+               (emacsvox-aural-feature-fragment-entry
+                'personal-fragment))
+              (should
+               (equal
+                emacsvox-aural-enabled-feature-fragments
+                '(personal-fragment)))
               (should
                (equal
                 (plist-get
@@ -472,7 +616,11 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 1 :schemes nil :user-rules nil))))
+        '(:schema-version 2
+          :schemes nil
+          :user-rules nil
+          :feature-fragments nil
+          :enabled-feature-fragments nil))))
     (should-error
      (emacsvox-aural-migrate-user-data
       '(:schema-version 0 :schemes nil :user-rules nil))

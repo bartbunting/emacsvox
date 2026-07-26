@@ -473,9 +473,18 @@ origin layers, from strongest to weakest, are:
 1. current-buffer overrides;
 2. temporary session overrides;
 3. persistent personal user rules;
-4. active scheme rules;
-5. module-provided defaults;
-6. core fallbacks.
+4. ordered enabled feature fragments;
+5. active scheme rules;
+6. module-provided defaults;
+7. core fallbacks.
+
+Exactly one base scheme is active.  Feature fragments are independent
+rules-only additions that can be enabled and disabled without changing the
+base scheme.  Their explicit enabled order runs from weaker to stronger.
+They cannot inherit schemes or select a resource pack or voice palette.
+This lets one fragment append a cue while another appends speech, preserving
+the base scheme's inherited presentation.  Persistent personal rules remain
+stronger than every fragment.
 
 Within one layer, the resolver orders rules by documented selector
 specificity:
@@ -550,6 +559,10 @@ atomic rename, and retains the previous file as =~=.  User data and individual
 schemes are independently versioned; migration functions must explicitly
 advance an older version.  Invalid replacement data is fully staged and
 validated before it can replace the live personal registry.
+
+Personal data schema version 2 stores personal feature-fragment definitions
+and their ordered enabled identifiers alongside schemes and persistent rules.
+Version 1 data migrates automatically with no fragments enabled.
 
 =emacsvox-aural-active-scheme= is a Customize option.  Startup loads the
 personal data, validates scheme inheritance and providers, and selects the

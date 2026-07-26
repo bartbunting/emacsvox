@@ -192,7 +192,7 @@
       'voice-lighten))))
 
 (ert-deftest emacsvox-aural-rules-stronger-origin-wins-content-scalars ()
-  "Personal and session layers override schemes, modules, and core defaults."
+  "Fragments, personal, and session layers override weaker origins."
   (let* ((core
           (emacsvox-test--compile-rule
            'core-heading '(:role heading)
@@ -205,6 +205,10 @@
           (emacsvox-test--compile-rule
            'scheme-heading '(:role heading)
            '(:content (:voice voice-scheme)) 'scheme))
+         (fragment
+          (emacsvox-test--compile-rule
+           'fragment-heading '(:role heading)
+           '(:content (:voice voice-fragment)) 'fragment))
          (user
           (emacsvox-test--compile-rule
            'user-heading '(:role heading)
@@ -217,13 +221,13 @@
           (emacsvox-aural-resolve
            '(:role heading)
            '(:module org :mode org-mode :occasion navigation)
-           (list session core user module scheme)))
+           (list session core user module fragment scheme)))
          (content (emacsvox-aural-render-plan-content plan)))
     (should
      (equal
       (emacsvox-aural-render-plan-matched-rules plan)
       '(core-heading module-heading scheme-heading
-        user-heading session-heading)))
+        fragment-heading user-heading session-heading)))
     (should (eq (emacsvox-aural-content-style-voice content) 'voice-session))
     (should
      (eq

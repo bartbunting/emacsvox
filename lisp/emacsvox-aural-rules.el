@@ -29,9 +29,10 @@
   '((core . 0)
     (module . 1)
     (scheme . 2)
-    (user . 3)
-    (session . 4)
-    (buffer . 5))
+    (fragment . 3)
+    (user . 4)
+    (session . 5)
+    (buffer . 6))
   "Resolver origin layers ordered from weakest to strongest.")
 
 (defconst emacsvox-aural-action-kinds
