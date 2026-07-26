@@ -206,13 +206,21 @@ RULE-INDEX associates the line with a working declarative rule."
 
 (defun emacsvox-aural-simple-editor--match-description (match)
   "Return a natural description of declarative MATCH."
-  (let ((parts
-         (list
-          (format
-           "object %s"
-           (if-let* ((role (plist-get match :role)))
-               (emacsvox-aural-simple-editor--humanize role)
-             "any")))))
+  (let (parts)
+    (when-let* ((role (plist-get match :role)))
+      (push
+       (format
+        "object %s"
+        (emacsvox-aural-simple-editor--humanize role))
+       parts))
+    (when-let* ((face (plist-get match :legacy-face)))
+      (push
+       (format
+        "visual face %s"
+        (emacsvox-aural-simple-editor--humanize face))
+       parts))
+    (unless (or (plist-get match :role) (plist-get match :legacy-face))
+      (push "object any" parts))
     (when-let* ((states
                  (append
                   (when-let* ((state (plist-get match :state)))
@@ -657,7 +665,7 @@ RULE-INDEX associates the line with a working declarative rule."
            (completing-read
             "Change which condition? "
             '("object" "states" "events" "details" "module"
-              "major-mode" "occasion" "advanced")
+              "major-mode" "occasion" "visual-face" "advanced")
             nil 'must-match))))
     (pcase choice
       ('object
@@ -728,6 +736,18 @@ RULE-INDEX associates the line with a working declarative rule."
                (emacsvox-aural-simple-editor--plist-delete match :occasion))
          (when occasion
            (setq match (plist-put match :occasion occasion)))))
+      ('visual-face
+       (let ((face
+              (emacsvox-aural-editor--read-symbol-or-nil
+               "Visual face (none means any): "
+               (plist-get match :legacy-face)
+               (emacsvox-aural-editor--face-candidates))))
+         (setq
+          match
+          (emacsvox-aural-simple-editor--plist-delete
+           match :legacy-face))
+         (when face
+           (setq match (plist-put match :legacy-face face)))))
       ('advanced
        (user-error "Press A to use the advanced rule editor")))
     match))
@@ -776,8 +796,11 @@ RULE-INDEX associates the line with a working declarative rule."
      nil 'must-match))))
 
 (defun emacsvox-aural-simple-editor--edit-phase
-    (rule-id phase old)
-  "Return simple feedback for RULE-ID and PHASE, replacing OLD."
+    (rule-id phase old &optional append-p)
+  "Return simple feedback for RULE-ID and PHASE based on OLD.
+
+When APPEND-P is non-nil, newly chosen actions add to inherited feedback
+instead of replacing it."
   (let* ((choice
           (completing-read
            (format "%s content feedback: "
@@ -829,7 +852,7 @@ RULE-INDEX associates the line with a working declarative rule."
             (lambda (action)
               (plist-put action :space (copy-tree space)))
             actions))))
-      (list :replace actions))
+      (list (if append-p :append :replace) actions))
      (t (copy-tree old)))))
 
 (defun emacsvox-aural-simple-editor--edit-content (old)
@@ -967,7 +990,10 @@ RULE-INDEX associates the line with a working declarative rule."
               (phase (plist-get render (intern (format ":%s" kind))))
               (updated
                (emacsvox-aural-simple-editor--edit-phase
-                (plist-get rule :id) kind phase)))
+                (plist-get rule :id)
+                kind
+                phase
+                (plist-get (plist-get rule :match) :legacy-face))))
          (setq
           render
           (plist-put render (intern (format ":%s" kind)) updated))
@@ -1018,14 +1044,33 @@ RULE-INDEX associates the line with a working declarative rule."
 (defun emacsvox-aural-simple-editor-add-rule ()
   "Create a new presentation through natural prompts."
   (interactive)
-  (let* ((name (read-string "Presentation name: " "Org heading"))
-         (id (emacsvox-aural-simple-editor--unique-rule-id name))
+  (let* ((target-kind
+          (completing-read
+           "Presentation target: "
+           '("semantic object" "visual face")
+           nil 'must-match nil nil "semantic object"))
+         (face
+          (when (string= target-kind "visual face")
+            (intern
+             (completing-read
+              "Visual face: "
+              (emacsvox-aural-editor--face-candidates)
+              nil 'must-match))))
          (role
-          (intern
-           (completing-read
-            "Object: "
-            (emacsvox-aural-simple-editor--semantic-candidates 'role)
-            nil 'must-match nil nil "heading")))
+          (when (string= target-kind "semantic object")
+            (intern
+             (completing-read
+              "Object: "
+              (emacsvox-aural-simple-editor--semantic-candidates 'role)
+              nil 'must-match nil nil "heading"))))
+         (name
+          (read-string
+           "Presentation name: "
+           (format
+            "%s presentation"
+            (emacsvox-aural-simple-editor--humanize
+             (or face role)))))
+         (id (emacsvox-aural-simple-editor--unique-rule-id name))
          (module
           (emacsvox-aural-editor--read-symbol-or-nil
            "Module (none means any): "
@@ -1037,7 +1082,10 @@ RULE-INDEX associates the line with a working declarative rule."
            'navigation
            (emacsvox-aural-occasion-candidates)
            'must-match))
-         (match (list :role role))
+         (match
+          (if role
+              (list :role role)
+            (list :legacy-face face)))
          render)
     (when module (setq match (plist-put match :module module)))
     (when occasion (setq match (plist-put match :occasion occasion)))
@@ -1045,19 +1093,22 @@ RULE-INDEX associates the line with a working declarative rule."
       (let ((level (read-number "Heading level (0 means every level): " 0)))
         (when (> level 0)
           (setq match (plist-put match :level level)))))
-    (let ((state
-           (emacsvox-aural-editor--read-symbol-or-nil
-            "Required state (none means any): "
-            nil
-            (emacsvox-aural-simple-editor--semantic-candidates 'state)
-            'must-match)))
-      (when state (setq match (plist-put match :states (list state)))))
+    (when role
+      (let ((state
+             (emacsvox-aural-editor--read-symbol-or-nil
+              "Required state (none means any): "
+              nil
+              (emacsvox-aural-simple-editor--semantic-candidates 'state)
+              'must-match)))
+        (when state (setq match (plist-put match :states (list state))))))
     (let ((before
-           (emacsvox-aural-simple-editor--edit-phase id 'before nil))
+           (emacsvox-aural-simple-editor--edit-phase
+            id 'before nil face))
           (content
            (emacsvox-aural-simple-editor--edit-content nil))
           (after
-           (emacsvox-aural-simple-editor--edit-phase id 'after nil)))
+           (emacsvox-aural-simple-editor--edit-phase
+            id 'after nil face)))
       (when before (setq render (plist-put render :before before)))
       (when content (setq render (plist-put render :content content)))
       (when after (setq render (plist-put render :after after))))
@@ -1205,7 +1256,8 @@ RULE-INDEX associates the line with a working declarative rule."
       "Simple Aural Scheme Editor\n\n"
       "The buffer is a spoken form.  TAB and Shift-TAB move between fields,\n"
       "and RET changes only the current field.  Each presentation says what\n"
-      "it applies to and what happens before, during, and after its content.\n\n"
+      "it applies to and what happens before, during, and after its content.\n"
+      "A new presentation can target registered meaning or a visual face.\n\n"
       "TAB next field       Shift-TAB previous field\n"
       "RET edit field       n new presentation\n"
       "p preview            x explain\n"

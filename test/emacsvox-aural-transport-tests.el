@@ -482,6 +482,50 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
             (emacsvox-test--transport-adapter-command
              'voice-bolden))))))))
 
+(ert-deftest emacsvox-aural-transport-freezes-layered-face-presentation ()
+  "Named faces select composable cues and voice before text is queued."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-face
+        :match
+        (:legacy-face font-lock-warning-face :occasion navigation)
+        :render
+        (:before
+         ((:id warning-cue :kind cue :cue warn-user))
+         :content (:voice bolden)))))
+    (with-temp-buffer
+      (cl-letf (((symbol-function 'tts-get-voice-command)
+                 (lambda (voice) (format "<%s>" voice))))
+        (let* ((text
+                (propertize
+                 "warning"
+                 'face
+                 '(font-lock-warning-face bold
+                   font-lock-warning-face)))
+               (prepared
+                (emacsvox-aural-prepare-text
+                 text nil
+                 (emacsvox-aural-capture-context nil 'navigation)))
+               (plan (emacsvox-aural-concrete-plan-at 0 prepared))
+               (context (emacsvox-aural-concrete-plan-context plan))
+               (content (emacsvox-aural-concrete-plan-content plan)))
+          (should
+           (equal
+            (plist-get context :legacy-faces)
+            '(font-lock-warning-face bold)))
+          (should (eq (plist-get context :legacy-face-source) 'face))
+          (should
+           (equal
+            (mapcar
+             #'emacsvox-aural-concrete-action-cue
+             (emacsvox-aural-concrete-plan-before plan))
+            '(warn-user)))
+          (should
+           (equal
+            (emacsvox-aural-concrete-content-voice-command content)
+            (emacsvox-test--transport-adapter-command
+             'voice-bolden))))))))
+
 (ert-deftest emacsvox-aural-transport-detects-partially-prepared-text ()
   "A raw suffix prevents a mixed string from bypassing source preparation."
   (emacsvox-test--with-transport-scheme

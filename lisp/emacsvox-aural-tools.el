@@ -125,7 +125,23 @@
   (or
    (when-let* ((plan (emacsvox-aural-tools--plan-at-point)))
      (copy-tree (emacsvox-aural-concrete-plan-context plan)))
-   (emacsvox-aural-capture-context)))
+   (let ((context (emacsvox-aural-capture-context))
+         (position (emacsvox-aural-tools--point-position)))
+     (when position
+       (let ((faces
+              (emacsvox-aural-face-names
+               (or
+                (face-at-point nil t)
+                (get-char-property position 'face)
+                (get-char-property position 'font-lock-face)))))
+         (when faces
+           (setq
+            context
+            (plist-put context :legacy-faces (copy-sequence faces)))
+           (setq
+            context
+            (plist-put context :legacy-face-source 'source-buffer)))))
+     context)))
 
 (defun emacsvox-aural-tools--context-for-occasion (context occasion)
   "Return a copy of CONTEXT whose presentation OCCASION is frozen."
@@ -890,6 +906,10 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (push
        (format "legacy cue %s" (emacsvox-aural-tools--humanize cue))
        parts))
+    (when-let* ((face (emacsvox-aural-selector-legacy-face selector)))
+      (push
+       (format "visual face %s" (emacsvox-aural-tools--humanize face))
+       parts))
     (when (emacsvox-aural-selector-legacy-personality selector)
       (push "legacy voice property" parts))
     (if parts
@@ -1549,6 +1569,15 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
          (format
           "event %s"
           (emacsvox-aural-tools--humanize event))))))
+    (dolist (face (emacsvox-aural-input-legacy-faces input))
+      (setq
+       parts
+       (append
+        parts
+        (list
+         (format
+          "visual face %s"
+          (emacsvox-aural-tools--humanize face))))))
     (if parts
         (string-join parts ", ")
       "unclassified content")))
@@ -1709,6 +1738,11 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
         "Module: %s; mode: %s\n"
         (or (plist-get context :module) "none")
         (or (plist-get context :mode) "none")))
+      (when-let* ((faces (plist-get context :legacy-faces)))
+        (princ
+         (format
+          "Visual faces, strongest first: %s\n"
+          (mapconcat #'symbol-name faces ", "))))
       (when matching-occasions
         (princ
          (format
@@ -1856,6 +1890,9 @@ object, matching rule, and resolved before/content/after order."
        context
        (plist-put context :mode-lineage
                   (emacsvox-aural-mode-lineage mode))))
+    (when-let* ((face (emacsvox-aural-selector-legacy-face selector)))
+      (setq context (plist-put context :legacy-faces (list face)))
+      (setq context (plist-put context :legacy-face-source 'preview)))
     (list facts context)))
 
 (defun emacsvox-aural-tools--rule-candidates (&optional context)
@@ -3223,6 +3260,10 @@ SCOPE is `personal', `session', or `buffer'."
     (when-let* ((cue (plist-get context :legacy-cue)))
       (push
        (format "legacy cue %s" (emacsvox-aural-tools--humanize cue))
+       parts))
+    (dolist (face (plist-get context :legacy-faces))
+      (push
+       (format "visual face %s" (emacsvox-aural-tools--humanize face))
        parts))
     (when-let* ((occasion (plist-get context :occasion)))
       (push

@@ -511,15 +511,41 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
      :source-plan plan
      :degradations degradations)))
 
-(defun emacsvox-aural--string-style (text position)
-  "Return legacy personality or face-derived style in TEXT at POSITION."
+(defun emacsvox-aural-face-names (value)
+  "Return ordered named faces explicitly represented by face VALUE.
+
+Anonymous attribute plists contribute only named faces reached through
+`:inherit'.  Duplicate names retain their first, strongest position."
+  (cl-labels
+      ((collect
+        (item)
+        (cond
+         ((and (symbolp item) (facep item)) (list item))
+         ((and (proper-list-p item) (keywordp (car item)))
+          (collect (plist-get item :inherit)))
+         ((proper-list-p item)
+          (apply #'append (mapcar #'collect item)))
+         (t nil))))
+    (delete-dups (collect value))))
+
+(defun emacsvox-aural--string-face-value (text position)
+  "Return face value and source property for TEXT at POSITION."
+  (let ((face (get-text-property position 'face text)))
+    (if face
+        (cons face 'face)
+      (when-let* ((font-lock-face
+                   (get-text-property position 'font-lock-face text)))
+        (cons font-lock-face 'font-lock-face)))))
+
+(defun emacsvox-aural--string-style (text position &optional face-value)
+  "Return legacy personality or FACE-VALUE-derived style at POSITION in TEXT."
   (or
    (get-text-property position 'personality text)
    (when (fboundp 'tts-get-voice-for-face)
      (tts-get-voice-for-face
       (or
-       (get-text-property position 'face text)
-       (get-text-property position 'font-lock-face text))))))
+       face-value
+       (car (emacsvox-aural--string-face-value text position)))))))
 
 (defun emacsvox-aural--run-end (text position)
   "Return the next aural input boundary in TEXT after POSITION."
@@ -585,12 +611,17 @@ The returned string retains legacy properties and adds concrete plans."
              (icon (get-text-property position 'auditory-icon prepared))
              (explicit
               (get-text-property position 'personality prepared))
+             (face-data
+              (emacsvox-aural--string-face-value prepared position))
+             (face-value (car face-data))
+             (legacy-faces (emacsvox-aural-face-names face-value))
              (legacy
               (and
                (or
                 (not (boundp 'voice-lock-mode))
                 voice-lock-mode)
-               (emacsvox-aural--string-style prepared position)))
+               (emacsvox-aural--string-style
+                prepared position face-value)))
              (local-facts
               (get-text-property
                position emacsvox-aural-facts-property prepared))
@@ -607,6 +638,15 @@ The returned string retains legacy properties and adds concrete plans."
           (setq run-context (plist-put run-context :module module)))
         (when occasion
           (setq run-context (plist-put run-context :occasion occasion)))
+        (when legacy-faces
+          (setq
+           run-context
+           (plist-put
+            run-context :legacy-faces (copy-sequence legacy-faces)))
+          (setq
+           run-context
+           (plist-put
+            run-context :legacy-face-source (cdr face-data))))
         (when legacy
           (setq
            run-context

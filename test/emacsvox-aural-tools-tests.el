@@ -149,6 +149,42 @@
           (plist-get (emacsvox-aural-context-at-point) :mode)
           'emacs-lisp-mode))))))
 
+(ert-deftest emacsvox-aural-tools-explain-and-preview-visual-faces ()
+  "Point diagnosis and preview preserve ordered face compatibility context."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (insert
+       (propertize
+        "warning" 'face '(font-lock-warning-face bold)))
+      (goto-char (point-min))
+      (let ((context (emacsvox-aural-context-at-point)))
+        (should
+         (equal
+          (plist-get context :legacy-faces)
+          '(font-lock-warning-face bold)))
+        (should
+         (eq (plist-get context :legacy-face-source) 'source-buffer))))
+    (let* ((rule
+            (emacsvox-aural-compile-rule
+             '(:id warning-face
+               :match (:legacy-face font-lock-warning-face)
+               :render (:content (:voice bolden)))
+             'user))
+           (selector (emacsvox-aural-rule-selector rule))
+           (input (emacsvox-aural-tools--representative-input rule)))
+      (should
+       (equal
+        (emacsvox-aural-tools--selector-description selector)
+        "visual face font lock warning face"))
+      (should
+       (equal
+        (plist-get (cadr input) :legacy-faces)
+        '(font-lock-warning-face)))
+      (should
+       (string-match-p
+        "visual face font lock warning face"
+        (emacsvox-aural-concise-explanation nil (cadr input)))))))
+
 (ert-deftest emacsvox-aural-tools-validation-reports-rule-diagnostics ()
   "Validation reports ineffective rules, stable-ID ties, and disabled rules."
   (emacsvox-test--with-aural-tools
@@ -1296,6 +1332,28 @@
        '(:role heading :level 2))
       '(:role heading :requires (level))))))
 
+(ert-deftest emacsvox-aural-simple-editor-describes-and-edits-visual-face ()
+  "The spoken editor exposes face compatibility as an ordinary condition."
+  (should
+   (equal
+    (emacsvox-aural-simple-editor--match-description
+     '(:legacy-face font-lock-warning-face :occasion navigation))
+    "visual face font lock warning face; during navigation"))
+  (cl-letf
+      (((symbol-function 'completing-read)
+        (lambda (prompt &rest _)
+          (cond
+           ((string-match-p "Change which condition" prompt)
+            "visual-face")
+           ((string-match-p "Visual face" prompt)
+            "font-lock-warning-face")
+           (t (ert-fail (format "Unexpected prompt %s" prompt)))))))
+    (should
+     (equal
+      (emacsvox-aural-simple-editor--edit-match
+       '(:occasion navigation))
+      '(:occasion navigation :legacy-face font-lock-warning-face)))))
+
 (defun emacsvox-test--setup-simple-editor (scheme)
   "Set up the current buffer as the simple editor for SCHEME."
   (let ((entry (emacsvox-aural-scheme-entry scheme)))
@@ -1310,6 +1368,52 @@
       (plist-get (emacsvox-aural-scheme-entry-data entry) :rules))
      emacsvox-aural-editor-dirty nil)
     (emacsvox-aural-simple-editor-refresh)))
+
+(ert-deftest emacsvox-aural-simple-editor-creates-layered-face-presentation ()
+  "The new-presentation wizard can append a cue and select a face voice."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme 'face-test nil)
+    (with-temp-buffer
+      (emacsvox-test--setup-simple-editor 'face-test)
+      (cl-letf
+          (((symbol-function 'read-string)
+            (lambda (prompt &rest _)
+              (if (string-match-p "Presentation name" prompt)
+                  "Warning face"
+                (ert-fail (format "Unexpected prompt %s" prompt)))))
+           ((symbol-function 'completing-read)
+            (lambda (prompt &rest _)
+              (cond
+               ((string-match-p "Presentation target" prompt) "visual face")
+               ((string-match-p "Visual face" prompt)
+                "font-lock-warning-face")
+               ((string-match-p "Module" prompt) "(none)")
+               ((string-match-p "Occasion" prompt) "navigation")
+               ((string-match-p "Before content feedback" prompt) "play a cue")
+               ((string-match-p "Sound cue" prompt) "warn-user")
+               ((string-match-p "Feedback position" prompt) "inherit")
+               ((string-match-p "Speak the content" prompt) "keep current")
+               ((string-match-p "Content voice" prompt) "bolden")
+               ((string-match-p "Content position" prompt) "inherit")
+               ((string-match-p "After content feedback" prompt)
+                "inherit existing feedback")
+               (t (ert-fail (format "Unexpected prompt %s" prompt)))))))
+        (emacsvox-aural-simple-editor-add-rule))
+      (let ((rule (car emacsvox-aural-editor-rules)))
+        (should
+         (equal
+          (plist-get rule :match)
+          '(:legacy-face font-lock-warning-face
+            :occasion navigation)))
+        (should
+         (eq
+          (plist-get (plist-get (plist-get rule :render) :content) :voice)
+          'bolden))
+        (should
+         (equal
+          (plist-get (plist-get (plist-get rule :render) :before) :append)
+          '((:id face-test-warning-face-before-cue
+             :kind cue :cue warn-user))))))))
 
 (ert-deftest emacsvox-aural-simple-editor-renders-natural-spoken-fields ()
   "The default scheme editor presents a navigable natural-language form."

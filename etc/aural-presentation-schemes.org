@@ -2025,6 +2025,39 @@ Lisp module; =check-parens=; =org-lint=; and =git diff --check=.  The untracked
 =sounds/bart/= customization remains excluded from the clean repository gate
 and was not changed.
 
+** DONE Slice 25: Layered Visual-Face Compatibility
+
+- Add =:legacy-face= as an explicit compatibility selector without treating a
+  visual styling name as semantic identity.
+- Capture ordered named faces from =face= and =font-lock-face= text runs before
+  queueing, and capture the faces at point for explanation.
+- Let every matching face rule compose ordered speech, cue, and pause actions.
+  Use Emacs face precedence to break otherwise equal face-only scalar choices
+  such as content voice.
+- Keep registered semantic identity stronger than face presentation within one
+  origin, while retaining the normal scheme, user, session, and buffer
+  cascade.
+- Expose visual-face creation and editing in both scheme editors.  New simple
+  face presentations append their chosen actions by default so layered faces
+  do not erase one another.
+- Report captured faces strongest first in presentation explanation and
+  construct representative face context for preview.
+- Test validation, multiple-face action composition, voice precedence,
+  pre-queue transport freezing, point diagnosis, preview, and the spoken
+  editor workflow.
+
+Deliverable: users can select a specific face, add an icon before or after its
+text, and choose its voice without losing semantic customization or other
+layered face feedback.
+
+Checks for Slice 25: five focused face tests added; 1,530 expected results and
+zero unexpected results in the clean full repository suite, with one existing
+optional Mu4e skip; all 27 semantic traces matching; compiled aural parity;
+current generated reference and clean repository aural audit; temporary byte
+compilation; =check-parens=; focused =checkdoc=; =org-lint=; and
+=git diff --check=.  The untracked =sounds/bart/= customization remains
+excluded from the clean repository gate and was not changed.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:

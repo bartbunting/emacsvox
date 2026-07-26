@@ -41,7 +41,7 @@
 
 (defconst emacsvox-aural--selector-keys
   '(:role :event :events :state :states :module :mode :occasion
-    :legacy-cue :legacy-personality :requires)
+    :legacy-cue :legacy-face :legacy-personality :requires)
   "Reserved selector keys that are not registered semantic attributes.")
 
 (defconst emacsvox-aural--fact-keys
@@ -50,8 +50,8 @@
 
 (defconst emacsvox-aural--context-keys
   '(:module :mode :mode-lineage :occasion :legacy-cue
-    :legacy-personality :legacy-source :source-buffer
-    :source-buffer-name)
+    :legacy-face-source :legacy-faces :legacy-personality
+    :legacy-source :source-buffer :source-buffer-name)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct
@@ -59,7 +59,7 @@
      (:constructor emacsvox-aural--make-selector))
   "A validated selector compiled from declarative rule data."
   role events states attributes required-attributes module mode occasion legacy-cue
-  legacy-personality)
+  legacy-face legacy-personality)
 
 (cl-defstruct
     (emacsvox-aural-action
@@ -117,8 +117,8 @@
      (:constructor emacsvox-aural--make-input))
   "Normalized semantic facts and presentation context."
   role events states attributes content module mode mode-lineage occasion
-  legacy-cue legacy-personality legacy-source source-buffer
-  source-buffer-name)
+  legacy-cue legacy-face-source legacy-faces legacy-personality
+  legacy-source source-buffer source-buffer-name)
 
 (cl-defstruct
     (emacsvox-aural-content-style
@@ -290,6 +290,7 @@ LABEL identifies the source in validation errors."
          (mode (plist-get selector :mode))
          (occasion (plist-get selector :occasion))
          (legacy-cue (plist-get selector :legacy-cue))
+         (legacy-face (plist-get selector :legacy-face))
          (legacy-personality (plist-get selector :legacy-personality))
          (required-attributes
           (emacsvox-aural--require-attribute-ids
@@ -315,6 +316,8 @@ LABEL identifies the source in validation errors."
          "Selector occasion is not registered: %S" occasion)))
     (when legacy-cue
       (emacsvox-aural--require-symbol legacy-cue "Selector legacy cue"))
+    (when legacy-face
+      (emacsvox-aural--require-symbol legacy-face "Selector legacy face"))
     (when legacy-personality
       (unless (or (symbolp legacy-personality) (consp legacy-personality))
         (emacsvox-aural--rule-error
@@ -337,6 +340,7 @@ LABEL identifies the source in validation errors."
      :mode mode
      :occasion occasion
      :legacy-cue legacy-cue
+     :legacy-face legacy-face
      :legacy-personality legacy-personality)))
 
 (defun emacsvox-aural--compile-action (data rule-id phase index)
@@ -779,6 +783,8 @@ LAYER-ORDER records inheritance order within one origin."
          (mode (plist-get context :mode))
          (occasion (plist-get context :occasion))
          (legacy-cue (plist-get context :legacy-cue))
+         (legacy-face-source (plist-get context :legacy-face-source))
+         (legacy-faces (plist-get context :legacy-faces))
          (legacy-personality (plist-get context :legacy-personality))
          (legacy-source (plist-get context :legacy-source))
          (source-buffer (plist-get context :source-buffer))
@@ -803,6 +809,13 @@ LAYER-ORDER records inheritance order within one origin."
          "Context occasion is not registered: %S" occasion)))
     (when legacy-cue
       (emacsvox-aural--require-symbol legacy-cue "Context legacy cue"))
+    (when legacy-face-source
+      (emacsvox-aural--require-symbol
+       legacy-face-source "Context legacy face source"))
+    (when legacy-faces
+      (unless (and (proper-list-p legacy-faces) (cl-every #'symbolp legacy-faces))
+        (emacsvox-aural--rule-error
+         "Context legacy faces must be a symbol list: %S" legacy-faces)))
     (when legacy-personality
       (unless (or (symbolp legacy-personality) (consp legacy-personality))
         (emacsvox-aural--rule-error
@@ -837,6 +850,8 @@ LAYER-ORDER records inheritance order within one origin."
      :mode-lineage (copy-sequence lineage)
      :occasion occasion
      :legacy-cue legacy-cue
+     :legacy-face-source legacy-face-source
+     :legacy-faces (delete-dups (copy-sequence legacy-faces))
      :legacy-personality legacy-personality
      :legacy-source legacy-source
      :source-buffer source-buffer
@@ -846,6 +861,11 @@ LAYER-ORDER records inheritance order within one origin."
   "Return mode ancestry distance for SELECTOR and INPUT, or nil."
   (when-let* ((selected (emacsvox-aural-selector-mode selector)))
     (cl-position selected (emacsvox-aural-input-mode-lineage input) :test #'eq)))
+
+(defun emacsvox-aural--face-distance (selector input)
+  "Return face precedence distance for SELECTOR and INPUT, or nil."
+  (when-let* ((selected (emacsvox-aural-selector-legacy-face selector)))
+    (cl-position selected (emacsvox-aural-input-legacy-faces input) :test #'eq)))
 
 (defun emacsvox-aural-rule-matches-p (rule input)
   "Return non-nil when compiled RULE matches normalized INPUT."
@@ -860,6 +880,7 @@ LAYER-ORDER records inheritance order within one origin."
          (mode (emacsvox-aural-selector-mode selector))
          (occasion (emacsvox-aural-selector-occasion selector))
          (legacy-cue (emacsvox-aural-selector-legacy-cue selector))
+         (legacy-face (emacsvox-aural-selector-legacy-face selector))
          (legacy-personality
           (emacsvox-aural-selector-legacy-personality selector)))
     (and
@@ -892,6 +913,9 @@ LAYER-ORDER records inheritance order within one origin."
       (null legacy-cue)
       (eq legacy-cue (emacsvox-aural-input-legacy-cue input)))
      (or
+      (null legacy-face)
+      (memq legacy-face (emacsvox-aural-input-legacy-faces input)))
+     (or
       (null legacy-personality)
       (equal
        legacy-personality
@@ -910,6 +934,7 @@ LAYER-ORDER records inheritance order within one origin."
          (module (emacsvox-aural-selector-module selector))
          (mode (emacsvox-aural-selector-mode selector))
          (distance (and mode (emacsvox-aural--mode-distance selector input)))
+         (face-distance (emacsvox-aural--face-distance selector input))
          (combined-exact
           (if (and module mode (numberp distance) (zerop distance)) 1 0))
          (mode-rank
@@ -925,6 +950,7 @@ LAYER-ORDER records inheritance order within one origin."
              (length
               (emacsvox-aural-selector-required-attributes selector))
              (if (emacsvox-aural-selector-legacy-cue selector) 1 0)
+             (if (emacsvox-aural-selector-legacy-face selector) 1 0)
              (if
                  (emacsvox-aural-selector-legacy-personality selector)
                  1
@@ -937,6 +963,7 @@ LAYER-ORDER records inheritance order within one origin."
      mode-closeness
      (if module 1 0)
      constraints
+     (if face-distance (- face-distance) 0)
      (emacsvox-aural-rule-layer-order rule)
      (emacsvox-aural-rule-order rule))))
 

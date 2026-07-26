@@ -64,6 +64,13 @@ Use =M-x emacsvox-aural-list-schemes= to browse schemes and
 documents user controls, scheme and module authoring, registered semantics,
 sound packs, voice palettes, migration, queue ordering, and spatial fallback.
 
+Scheme rules can also target a named visual face as an explicit compatibility
+fallback.  A face presentation may append an icon before or after the text and
+select a palette voice, with the usual module, mode, occasion, session, and
+buffer scopes.  Layered faces compose their actions; the strongest face wins
+otherwise tied voice settings.  Prefer registered meaning when a semantic
+role is available.
+
 Personal sound packs are dynamic.  Put one immediate directory below
 =sounds/= with at least =button.ogg=, then use
 =M-x emacsvox-aural-list-sound-packs= to inspect, audition, validate, and

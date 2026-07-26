@@ -207,6 +207,12 @@
          (push (symbol-name symbol) modes))))
     (sort (delete-dups modes) #'string-lessp)))
 
+(defun emacsvox-aural-editor--face-candidates ()
+  "Return currently defined visual face names for completion."
+  (sort
+   (delete-dups (mapcar #'symbol-name (face-list)))
+   #'string-lessp))
+
 (defun emacsvox-aural-editor--read-symbol-or-nil
     (prompt &optional default candidates require-match)
   "Read a symbol using PROMPT, DEFAULT, and CANDIDATES.
@@ -342,6 +348,12 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
                    (emacsvox-aural-editor--read-symbol-or-nil
                     "Legacy cue (empty for none): ")))
         (setq selector (plist-put selector :legacy-cue cue)))
+      (when-let* ((face
+                   (emacsvox-aural-editor--read-symbol-or-nil
+                    "Visual face (empty for none): "
+                    nil
+                    (emacsvox-aural-editor--face-candidates))))
+        (setq selector (plist-put selector :legacy-face face)))
       selector)))
 
 (defun emacsvox-aural-editor--cue-candidates ()

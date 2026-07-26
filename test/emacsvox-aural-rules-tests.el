@@ -244,6 +244,71 @@
       (emacsvox-aural-render-plan-matched-rules plan)
       '(folded-heading heading-level-one)))))
 
+(ert-deftest emacsvox-aural-rules-compose-layered-face-presentations ()
+  "Every named face may add actions while the strongest face wins voice ties."
+  (let* ((warning
+          (emacsvox-test--compile-rule
+           'warning-face
+           '(:legacy-face font-lock-warning-face)
+           '(:before
+             ((:id warning-cue :kind cue :cue warn-user))
+             :content (:voice bolden))))
+         (bold
+          (emacsvox-test--compile-rule
+           'bold-face
+           '(:legacy-face bold)
+           '(:before
+             ((:id bold-cue :kind cue :cue item))
+             :content (:voice lighten))))
+         (rules (list warning bold))
+         (context
+          '(:mode text-mode :mode-lineage (text-mode)
+            :occasion navigation
+            :legacy-faces (font-lock-warning-face bold)))
+         (plan (emacsvox-aural-resolve nil context rules)))
+    (should
+     (equal
+      (emacsvox-aural-render-plan-matched-rules plan)
+      '(bold-face warning-face)))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-action-cue
+       (emacsvox-aural-render-plan-before plan))
+      '(item warn-user)))
+    (should
+     (eq
+      (emacsvox-aural-content-style-voice
+       (emacsvox-aural-render-plan-content plan))
+      'bolden))
+    (let ((reversed
+           (emacsvox-aural-resolve
+            nil
+            '(:mode text-mode :mode-lineage (text-mode)
+              :occasion navigation
+              :legacy-faces (bold font-lock-warning-face))
+            rules)))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice
+         (emacsvox-aural-render-plan-content reversed))
+        'lighten)))
+    (let* ((semantic
+            (emacsvox-test--compile-rule
+             'semantic-warning
+             '(:role heading)
+             '(:content (:voice annotate))))
+           (semantic-plan
+            (emacsvox-aural-resolve
+             '(:role heading)
+             context
+             (list warning semantic))))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice
+         (emacsvox-aural-render-plan-content semantic-plan))
+        'annotate)))))
+
 (ert-deftest emacsvox-aural-rules-match-presentation-occasion ()
   "Occasion changes matching presentation without changing semantic facts."
   (let* ((rules
@@ -504,6 +569,18 @@
    (emacsvox-aural-normalize-input
     '(:role heading)
     '(:module org :command org-next-visible-heading))
+   :type 'emacsvox-aural-rule-error)
+  (should-error
+   (emacsvox-aural-normalize-input
+    nil
+    '(:mode text-mode :occasion navigation
+      :legacy-faces (font-lock-warning-face "not-a-face")))
+   :type 'emacsvox-aural-rule-error)
+  (should-error
+   (emacsvox-test--compile-rule
+    'invalid-face
+    '(:legacy-face "not-a-face")
+    '(:content (:voice bolden)))
    :type 'emacsvox-aural-rule-error))
 
 (provide 'emacsvox-aural-rules-tests)

@@ -62,7 +62,7 @@ A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:pare
     (:append ((:id heading-end :kind cue :cue section)))))))
 #+end_src
 
-Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.
+Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, =:legacy-face=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.
 
 Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Action IDs are the handles used by later =:remove= operations.
 
@@ -410,7 +410,19 @@ Existing direct =emacsvox-icon= calls, queued =auditory-icon= properties, =perso
 
 To migrate a direct icon path, first characterize its text, cue, and order. Register or reuse the intent, bind semantic facts and source context around the unchanged call, then add an optional compatibility fragment only if the old output must be expressed as a rule.  Do not replace cue symbols with file paths and do not queue unresolved semantic names.
 
-To migrate styled text, keep existing =personality= or face properties while adding semantic fact properties.  A semantic scheme can then override the voice for one module, mode, derived mode, or buffer; without such a rule, normal Voice Lock behavior remains authoritative.
+To migrate styled text, keep existing =personality= or face properties while adding semantic fact properties.  A semantic scheme can then override the voice for one module, mode, derived mode, or buffer; without such a rule, normal Voice Lock behavior remains authoritative.  A =:legacy-face= compatibility selector can deliberately match one named visual face when no semantic intent is available.  It can add before or after cues and select a palette voice, and can be scoped by module, mode, occasion, or buffer like any other rule.  This is a presentation fallback, not semantic identity.
+
+#+begin_src emacs-lisp
+(:id warning-face-presentation
+ :match (:legacy-face font-lock-warning-face
+         :mode emacs-lisp-mode :occasion navigation)
+ :render
+ (:before
+  (:append ((:id warning-cue :kind cue :cue warn-user)))
+  :content (:voice bolden)))
+#+end_src
+
+A text run may carry an ordered list of named faces.  Every matching face rule participates in normal rule composition, so append or prepend operations can accumulate cues.  The first, strongest Emacs face wins a tie between face-only scalar settings such as content voice.  Semantic identity remains stronger within the same rule origin, while stronger user, session, and buffer origins can intentionally override module defaults.
 
 Agent Shell, Markdown, Notmuch, Gnus, Dired, and Magit now attach registered conversation, document, message, filesystem, and version-control facts around their established feedback.  Their speech and cue order remains unchanged unless a scheme or fragment matches the new facts.  Optional fragments demonstrate customization without requiring the corresponding third-party package at startup.
 

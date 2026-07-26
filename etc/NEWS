@@ -61,6 +61,13 @@ before/content/after order, and accepts a prefix argument to choose an
 occasion explicitly.  Existing icon calls, personality properties, face
 mappings, and sound directories remain supported through compatibility
 adapters.
+Personal rules can now match a named visual face with the ~:legacy-face~
+selector and combine an appended or prepended cue with a palette voice.
+Ordered face lists remain layered: all matching rules may contribute actions,
+the strongest face breaks otherwise tied scalar voice settings, and semantic
+identity remains preferred within the same origin.  The spoken scheme editor
+can create and edit face presentations directly, and explanation reports the
+captured faces strongest first.
 Interactive Up and Down line movement now submits the same ~navigation~ and
 ~focus-entered~ semantics as structural movement commands.  Arriving on an
 Org heading with an arrow key therefore uses the same heading presentation as
