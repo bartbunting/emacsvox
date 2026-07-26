@@ -109,6 +109,7 @@ An Org module should be able to expose facts equivalent to:
 #+begin_src emacs-lisp
 (:role heading
  :level 1
+ :visibility folded
  :states (folded))
 #+end_src
 
@@ -135,7 +136,7 @@ One scheme might add rules equivalent to:
             :space (:balance -0.2))))
 
 (:id org-folded-heading
- :match (:role heading :module org :state folded)
+ :match (:role heading :module org :visibility folded)
  :render
  (:after ((:kind speech :text "folded"))))
 #+end_src
@@ -149,7 +150,9 @@ This example establishes requirements rather than committing to these keyword
 names:
 
 - selectors can match roles, modules, attributes, and states;
+- selectors can require an attribute without fixing its value;
 - before and after actions are explicitly ordered;
+- safe speech templates can insert guaranteed semantic values;
 - content can retain its text while receiving voice and spatial styling;
 - independently matched rules can contribute to one render plan;
 - a user can replace or suppress each contribution.
@@ -397,6 +400,12 @@ Core names should express reusable interaction semantics.  A module registers
 an extension only when no core meaning is suitable.  Extension registrations
 must document an owner and a core fallback where one exists.
 
+The registry owner defines each property's intent, value type, and allowed
+values.  Modules capture those facts; schemes and feature fragments only
+choose their presentation.  For example, core owns =visibility= with
+=folded= and =expanded= values, and the Org integration reports the current
+value.  A random rule cannot invent a property merely by using a new keyword.
+
 Registration collisions, invalid attributes, unknown states, and fallback
 cycles must be diagnosed.  Development checks should reject new unregistered
 literal semantics in the repository.
@@ -518,6 +527,14 @@ Sequences append by default and support explicit =prepend=, =append=,
 =replace=, =remove=, and =suppress= operations.  Actions have stable
 identifiers so inherited contributions can be removed without comparing text
 or filenames.
+
+A selector may use =:requires (level)= when an attribute must be present but
+its value should remain dynamic.  Speech actions accept either literal
+=:text= or safe =:text-template= data such as ="Heading {level}"=.  Template
+fields are limited to =role= and registered attributes, and the selector must
+guarantee each field through an exact match or =:requires=.  Templates perform
+substitution only; arbitrary Lisp cannot run.  Emacs renders them to concrete
+text at the source boundary before anything is queued.
 
 Rules are applied from weakest to strongest using a fixed vector:
 
@@ -961,7 +978,9 @@ then build ordered speech, cue, and pause actions.  Content prompts distinguish
 unchanged, spoken, silenced, default voice, named voice, and inaudible
 presentation.  Guided spatial prompts offer unchanged, centred, normalized
 balance, or listener-relative azimuth values and validate them against the
-portable contract.
+portable contract.  Registered attribute prompts can choose an exact value or
+require its presence, and speech prompts can choose literal text or a safe
+semantic template.
 
 * Compatibility Policy
 
@@ -1548,6 +1567,50 @@ source-loaded semantic traces matching the golden output; clean
 The independent name audit continues to report eight pre-existing legacy names
 in the Windows Speech module and its tests; this slice neither introduced nor
 changed them.
+
+** DONE Slice 12: Spoken Managers and Feature Layers
+CLOSED: [2026-07-26 Sun]
+
+- Give the scheme and semantic tables consistent row, column, and boundary
+  speech, including column titles and explicit top and bottom announcements.
+- Retain conventional =n= and =p= row navigation and provide discoverable
+  =emacsvox-aural-...= command aliases without removing established names.
+- Keep exactly one active base scheme while adding explicitly ordered,
+  independently enabled feature fragments.
+- Persist personal fragments, enabled order, and automatic schema migration
+  through the existing data-only atomic store.
+- Provide a spoken fragment manager for viewing, creating, copying, editing,
+  deleting, validating, toggling, and reordering fragments.
+
+Deliverable: users can layer optional features over inherited presentation
+without copying a complete scheme, and all list managers provide predictable
+spoken navigation.
+
+** DONE Slice 13: Dynamic Org Presentation Features
+CLOSED: [2026-07-26 Sun]
+
+- Add presence selectors for registered attributes whose value should remain
+  dynamic.
+- Add non-evaluating semantic speech templates and require selectors to
+  guarantee every substituted field.
+- Render templates to literal speech in Emacs before queueing.
+- Register the core =visibility= attribute and have Org always report
+  =folded= or =expanded= while retaining the older =folded= state.
+- Supply disabled built-in Org fragments for heading-level labels, section
+  cues, and folded/opened state-change wording.
+- Verify that fragments can prepend or append to inherited actions, preserve
+  base content styling, and expose their origin and source in explanations.
+
+Deliverable: users may independently enable speech, voices, cues, state
+wording, and spatial styling while modules continue to emit one coherent set
+of semantic facts.
+
+Checks: 181 selected aural and Org ERT tests with no unexpected results; all
+27 source-loaded semantic traces matching; clean registry and generated
+reference audit; =org-lint=, =check-parens=, focused =checkdoc=, temporary
+byte compilation, and =git diff --check=.  Byte compilation reports only the
+existing deferred-protocol, duplicate helper, and legacy Org integration
+warnings.
 
 * Test Gates
 

@@ -6,16 +6,17 @@
 
 ;;; Commentary:
 
-;; Register the lightweight Org compatibility fragment and selectable example
-;; schemes before personal aural data is loaded.  This file deliberately does
-;; not load Org itself; live semantic fact capture remains in emacsvox-org.el.
+;; Register the lightweight Org compatibility fragment, selectable example
+;; schemes, and optional feature fragments before personal aural data is
+;; loaded.  This file deliberately does not load Org itself; live semantic
+;; fact capture remains in emacsvox-org.el.
 
 ;;; Code:
 
 (require 'emacsvox-aural-schemes)
 
 (defconst emacsvox-org-aural-semantics
-  '(heading level folded focus-entered state-changed object-changed)
+  '(heading level visibility folded focus-entered state-changed object-changed)
   "Core semantic identifiers interpreted by the Org integration.")
 
 (defconst emacsvox-org-aural-level-voices
@@ -139,8 +140,60 @@
        (:after
         ((:id org-folded-label :kind speech :text "folded"))))))))
 
+(defun emacsvox-org-aural-feature-fragment-data ()
+  "Return optional built-in Org presentation feature fragments."
+  '((:schema-version 1
+     :id org-heading-level-labels
+     :summary "Speak an Org heading's level before inherited presentation"
+     :rules
+     ((:id org-fragment-heading-level-label
+       :match
+       (:role heading :module org :occasion navigation :requires (level))
+       :render
+       (:before
+        (:prepend
+         ((:id org-fragment-heading-level-label-action
+           :kind speech
+           :text-template "Heading {level}")))))))
+    (:schema-version 1
+     :id org-heading-section-cues
+     :summary "Add a section cue before navigated Org headings"
+     :rules
+     ((:id org-fragment-heading-section-cue
+       :match (:role heading :module org :occasion navigation)
+       :render
+       (:before
+        (:append
+         ((:id org-fragment-heading-section-cue-action
+           :kind cue
+           :cue section)))))))
+    (:schema-version 1
+     :id org-heading-visibility-changes
+     :summary "Speak an Org heading's level and new visibility after cycling"
+     :rules
+     ((:id org-fragment-heading-folded
+       :match
+       (:role heading :module org :event state-changed
+        :visibility folded :requires (level) :occasion state-change)
+       :render
+       (:after
+        (:append
+         ((:id org-fragment-heading-folded-action
+           :kind speech
+           :text-template "Heading {level} is now folded")))))
+      (:id org-fragment-heading-expanded
+       :match
+       (:role heading :module org :event state-changed
+        :visibility expanded :requires (level) :occasion state-change)
+       :render
+       (:after
+        (:append
+         ((:id org-fragment-heading-expanded-action
+           :kind speech
+           :text-template "Heading {level} is now opened")))))))))
+
 (defun emacsvox-org-register-aural-presentation ()
-  "Register Org compatibility rules and selectable example schemes."
+  "Register Org compatibility rules, examples, and optional fragments."
   (emacsvox-org--require-aural-semantics)
   (unless (gethash 'org-compatibility
                    emacsvox-aural-module-fragment-registry)
@@ -168,6 +221,10 @@
   (dolist (data (emacsvox-org-aural-example-scheme-data))
     (unless (emacsvox-aural-scheme-entry (plist-get data :id))
       (emacsvox-aural-register-scheme
+       data :built-in t :source "emacsvox-aural-org")))
+  (dolist (data (emacsvox-org-aural-feature-fragment-data))
+    (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
+      (emacsvox-aural-register-feature-fragment
        data :built-in t :source "emacsvox-aural-org"))))
 
 (emacsvox-org-register-aural-presentation)

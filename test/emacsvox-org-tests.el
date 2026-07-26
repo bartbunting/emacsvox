@@ -164,14 +164,15 @@
      (equal
       (get-text-property
        (point) emacsvox-aural-facts-property)
-      '(:role heading :level 1)))
+      '(:role heading :level 1 :visibility expanded)))
     (org-fold-hide-subtree)
     (emacsvox-org-refresh-aural-heading)
     (should
      (equal
       (get-text-property
        (point) emacsvox-aural-facts-property)
-      '(:role heading :level 1 :states (folded))))))
+      '(:role heading :level 1 :visibility folded
+        :states (folded))))))
 
 (ert-deftest emacsvox-org-navigation-captures-event-and-context ()
   "Heading navigation submits one semantic speech operation."
@@ -195,7 +196,8 @@
       (should
        (equal
         facts
-        '(:role heading :level 2 :events (focus-entered))))
+        '(:role heading :level 2 :visibility expanded
+          :events (focus-entered))))
       (should (eq (plist-get context :module) 'org))
       (should (eq (plist-get context :mode) 'org-mode))
       (should (eq (plist-get context :occasion) 'navigation)))))
@@ -343,6 +345,106 @@
                  (emacsvox-aural-render-plan-after plan)))
         '("folded"))))))
 
+(ert-deftest emacsvox-org-feature-fragments-are-optional-built-ins ()
+  "Org feature fragments are registered read-only and remain opt-in."
+  (dolist
+      (fragment
+       '(org-heading-level-labels
+         org-heading-section-cues
+         org-heading-visibility-changes))
+    (let ((entry (emacsvox-aural-feature-fragment-entry fragment)))
+      (should entry)
+      (should (emacsvox-aural-feature-fragment-entry-built-in entry))
+      (should
+       (equal
+        (emacsvox-aural-feature-fragment-entry-source entry)
+        "emacsvox-aural-org"))
+      (should-not
+       (emacsvox-aural-feature-fragment-enabled-p fragment)))))
+
+(ert-deftest emacsvox-org-feature-fragments-compose-with-the-base-scheme ()
+  "Optional Org features add to rather than replace inherited presentation."
+  (let ((emacsvox-aural-active-scheme 'org-combined)
+        (emacsvox-aural-enabled-feature-fragments
+         '(org-heading-level-labels org-heading-section-cues))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil))
+    (let* ((facts
+            '(:role heading :level 3 :visibility expanded
+              :events (focus-entered) :content "Title"))
+           (context
+            '(:module org :mode org-mode
+              :mode-lineage (org-mode outline-mode)
+              :occasion navigation))
+           (plan (emacsvox-aural-resolve-active facts context))
+           (explanation (emacsvox-aural-explain facts context))
+           (level-rule
+            (cl-find
+             'org-fragment-heading-level-label
+             (emacsvox-aural-explanation-matching-rules explanation)
+             :key (lambda (entry) (plist-get entry :id))))
+           (concrete (emacsvox-aural-compile-plan plan facts context)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-id
+         (emacsvox-aural-render-plan-before plan))
+        '(org-fragment-heading-level-label-action
+          org-combined-label
+          org-combined-cue
+          org-fragment-heading-section-cue-action)))
+      (should
+       (eq
+        (emacsvox-aural-content-style-voice
+         (emacsvox-aural-render-plan-content plan))
+        'bolden))
+      (should
+       (equal
+        (emacsvox-aural-concrete-action-text
+         (car (emacsvox-aural-concrete-plan-before concrete)))
+        "Heading 3"))
+      (should (eq (plist-get level-rule :origin) 'fragment))
+      (should
+       (equal (plist-get level-rule :source) "emacsvox-aural-org")))))
+
+(ert-deftest emacsvox-org-visibility-fragment-speaks-level-and-new-state ()
+  "The optional visibility fragment renders folded and opened wording."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(org-heading-visibility-changes))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (context
+         '(:module org :mode org-mode
+           :mode-lineage (org-mode outline-mode)
+           :occasion state-change)))
+    (dolist
+        (case
+         '((folded (folded) "Heading 3 is now folded")
+           (expanded nil "Heading 3 is now opened")))
+      (let* ((visibility (nth 0 case))
+             (states (nth 1 case))
+             (expected (nth 2 case))
+             (facts
+              (append
+               (list
+                :role 'heading
+                :level 3
+                :visibility visibility)
+               (when states (list :states states))
+               '(:events (state-changed) :content "Title")))
+             (plan (emacsvox-aural-resolve-active facts context))
+             (concrete
+              (emacsvox-aural-compile-plan plan facts context)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-text
+           (emacsvox-aural-concrete-plan-after concrete))
+          (list expected)))))))
+
 (ert-deftest emacsvox-org-combined-scheme-queues-one-concrete-plan ()
   "The motivating label, cue, voice, and heading text queue end to end."
   (let* ((emacsvox-aural-active-scheme 'org-combined)
@@ -465,6 +567,30 @@
       (emacsvox--advice-org-cycle-after)
       (emacsvox--advice-org-shifttab-after))
     (should (equal events '(speak-line)))))
+
+(ert-deftest emacsvox-org-cycle-submits-explicit-visibility-change ()
+  "Org cycling submits heading level, new visibility, event, and occasion."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "* Parent\nBody\n** Child\n")
+    (goto-char (point-min))
+    (org-fold-hide-subtree)
+    (let ((ems--interactive-fn-name 'org-cycle)
+          facts context)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-line)
+            (lambda ()
+              (setq
+               facts (copy-tree emacsvox-aural-submission-facts)
+               context (copy-tree emacsvox-aural-submission-context)))))
+        (emacsvox--advice-org-cycle-after))
+      (should
+       (equal
+        facts
+        '(:role heading :level 1 :visibility folded
+          :states (folded) :events (state-changed))))
+      (should (eq (plist-get context :module) 'org))
+      (should (eq (plist-get context :occasion) 'state-change)))))
 
 (ert-deftest emacsvox-org-agenda-table-advice-is-directly-registered ()
   "Org agenda and table advice uses native advice directly."

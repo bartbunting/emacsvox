@@ -202,7 +202,9 @@ dynamic-call count, and source parse errors."
    "Use =M-x emacsvox-aural-list-feature-fragments= to view, create, copy, "
    "edit, delete, validate, enable, disable, and reorder independent "
    "presentation additions over the active base scheme.  Fragment changes "
-   "use the same atomic personal-data store.\n\n"
+   "use the same atomic personal-data store.  Built-in Org fragments can add "
+   "a dynamic heading-level label, section cue, or visibility-change wording "
+   "without replacing the active scheme.\n\n"
    "Use =M-x emacsvox-aural-edit-scheme= for a spoken field editor over a "
    "persistent personal scheme.  It can create a flattened editable copy of "
    "a built-in scheme.  Use =M-x emacsvox-aural-edit-scheme-advanced= for "
@@ -237,12 +239,13 @@ dynamic-call count, and source parse errors."
    "=:volume=, =:space=, and =:suppress=; the strongest rule that sets a "
    "scalar wins.\n\n"
    "Semantic and contextual resolution happens in Emacs at the source "
-   "submission boundary.  Cue names become concrete files or sample IDs, "
-   "voices become adapter commands, and spatial requests become backend "
-   "values before anything is queued.  The speech server never resolves "
-   "schemes, modes, modules, semantics, or resource fallbacks.  A complete "
-   "multi-action plan uses one strict queue.  Only a standalone compatibility "
-   "cue may use the selected local player.\n\n"
+   "submission boundary.  Safe speech templates become literal text, cue "
+   "names become concrete files or sample IDs, voices become adapter "
+   "commands, and spatial requests become backend values before anything is "
+   "queued.  The speech server never resolves templates, schemes, modes, "
+   "modules, semantics, or resource fallbacks.  A complete multi-action plan "
+   "uses one strict queue.  Only a standalone compatibility cue may use the "
+   "selected local player.\n\n"
    "** Spatial Fallback\n\n"
    "Portable space is normalized =:balance= from =-1.0= left through =+1.0= "
    "right.  Listener-relative =:azimuth= from =-180= through =+180= degrees "
@@ -260,7 +263,8 @@ dynamic-call count, and source parse errors."
    "Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned "
    "declarative Lisp data read with evaluation disabled.  Prefer the "
    "accessible editor; if data is authored directly, retain the outer "
-   "=:schema-version=, =:schemes=, and =:user-rules= fields.\n\n"
+   "=:schema-version=, =:schemes=, =:feature-fragments=, "
+   "=:enabled-feature-fragments=, and =:user-rules= fields.\n\n"
    "A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional "
    "=:parent=, optional =:resource-pack= and =:voice-palette=, and =:rules=.  "
    "Every rule has a globally stable =:id=, optional boolean =:enabled=, "
@@ -282,14 +286,20 @@ dynamic-call count, and source parse errors."
    "    (:append ((:id heading-end :kind cue :cue section)))))))\n"
    "#+end_src\n\n"
    "Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, "
-   "registered attribute keywords, =:module=, =:mode=, =:occasion=, "
-   "=:legacy-cue=, and =:legacy-personality=.  Unknown semantics, attributes, "
-   "cues, voices, providers, fields, or schema versions fail validation.\n\n"
+   "registered attribute keywords, =:requires= for registered attributes "
+   "that must exist without fixing their value, =:module=, =:mode=, "
+   "=:occasion=, =:legacy-cue=, and =:legacy-personality=.  Unknown "
+   "semantics, attributes, cues, voices, providers, fields, or schema "
+   "versions fail validation.\n\n"
    "Ordered actions require an =:id= and =:kind=.  A speech action supplies "
-   "=:text= and may supply =:voice=, =:volume=, and =:space=.  A cue action "
-   "supplies a registered =:cue= and may supply =:volume= and =:space=.  A "
-   "pause supplies a nonnegative =:duration=.  Action IDs are the handles "
-   "used by later =:remove= operations.\n\n"))
+   "either literal =:text= or a safe =:text-template= such as "
+   "=\"Heading {level}\"=, and may supply =:voice=, =:volume=, and =:space=.  "
+   "A template can name only =role= or registered attributes, and its "
+   "selector must guarantee every field by exact match or =:requires=.  "
+   "Templates perform substitution only; they cannot evaluate Lisp.  A cue "
+   "action supplies a registered =:cue= and may supply =:volume= and "
+   "=:space=.  A pause supplies a nonnegative =:duration=.  Action IDs are "
+   "the handles used by later =:remove= operations.\n\n"))
 
 (defun emacsvox-aural-audit--insert-module-author-reference ()
   "Insert the integration module-author reference at point."
@@ -298,8 +308,11 @@ dynamic-call count, and source parse errors."
    "Register meaning before emitting it.  A semantic registration supplies a "
    "unique identifier, =:kind= (=role=, =event=, =state=, or =attribute=), "
    "intent summary, owner, and any value, occasion, phase, fallback, or usage "
-   "contract.  Do not use a visual face, voice name, cue name, or file name as "
-   "semantic identity.\n\n"
+   "contract.  The registry owner defines the intent, type, and allowed "
+   "values; modules emit those facts, while schemes and fragments decide only "
+   "how to present them.  For example, core owns the =visibility= attribute "
+   "and its =folded= and =expanded= values.  Do not use a visual face, voice "
+   "name, cue name, or file name as semantic identity.\n\n"
    "#+begin_src emacs-lisp\n"
    "(emacsvox-aural-register-semantic\n"
    " 'diagnostic\n"
@@ -381,8 +394,16 @@ dynamic-call count, and source parse errors."
    emacsvox-aural-module-fragment-registry
    #'emacsvox-aural-module-fragment-id))
 
+(defun emacsvox-aural-audit--built-in-feature-fragments ()
+  "Return built-in feature-fragment entries sorted by identifier."
+  (cl-remove-if-not
+   #'emacsvox-aural-feature-fragment-entry-built-in
+   (emacsvox-aural-audit--hash-records
+    emacsvox-aural-feature-fragment-registry
+    #'emacsvox-aural-feature-fragment-entry-id)))
+
 (defun emacsvox-aural-audit--insert-schemes ()
-  "Insert generated scheme and module-fragment tables at point."
+  "Insert generated scheme and fragment tables at point."
   (insert "* Built-in Schemes\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Parent" "Sound Pack" "Voice Palette" "Rules" "Intent")
@@ -399,6 +420,19 @@ dynamic-call count, and source parse errors."
          (length (emacsvox-aural-scheme-rules scheme))
          (emacsvox-aural-scheme-summary scheme))))
     (emacsvox-aural-audit--built-in-schemes)))
+  (insert "** Built-in Feature Fragments\n\n")
+  (emacsvox-aural-audit--insert-table
+   '("Identifier" "Rules" "Source" "Intent")
+   (mapcar
+    (lambda (entry)
+      (let ((scheme
+             (emacsvox-aural-feature-fragment-entry-compiled entry)))
+        (list
+         (emacsvox-aural-feature-fragment-entry-id entry)
+         (length (emacsvox-aural-scheme-rules scheme))
+         (emacsvox-aural-feature-fragment-entry-source entry)
+         (emacsvox-aural-scheme-summary scheme))))
+    (emacsvox-aural-audit--built-in-feature-fragments)))
   (insert "** Module Compatibility Fragments\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Module" "Rules" "Source" "Intent")

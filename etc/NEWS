@@ -44,6 +44,13 @@ persistent personal rules remain stronger.
 Use ~emacsvox-aural-list-feature-fragments~ for the spoken fragment manager.
 It supports viewing, creating, copying, editing, deleting, validating,
 enabling or disabling, and reordering fragments; all changes save atomically.
+Optional built-in Org fragments independently add a heading-level label, a
+section cue, or folded/opened feedback.  Speech actions may safely substitute
+registered semantic values with templates such as ~Heading {level}~; every
+field must be guaranteed by the selector, and Emacs converts the result to
+literal text before queueing it.  Org headings now always expose the
+registered ~visibility~ attribute as ~folded~ or ~expanded~, while preserving
+the older folded state for compatible rules.
 The default scheme editor is now a spoken form: TAB and Shift-TAB move through
 natural-language fields, RET edits one field, and built-in schemes can be
 copied from inside the workflow.  Use

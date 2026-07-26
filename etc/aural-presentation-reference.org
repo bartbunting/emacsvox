@@ -11,7 +11,7 @@ A semantic fact says what an object or event means.  A scheme decides whether th
 
 The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
 
-Use =M-x emacsvox-aural-list-feature-fragments= to view, create, copy, edit, delete, validate, enable, disable, and reorder independent presentation additions over the active base scheme.  Fragment changes use the same atomic personal-data store.
+Use =M-x emacsvox-aural-list-feature-fragments= to view, create, copy, edit, delete, validate, enable, disable, and reorder independent presentation additions over the active base scheme.  Fragment changes use the same atomic personal-data store.  Built-in Org fragments can add a dynamic heading-level label, section cue, or visibility-change wording without replacing the active scheme.
 
 Use =M-x emacsvox-aural-edit-scheme= for a spoken field editor over a persistent personal scheme.  It can create a flattened editable copy of a built-in scheme.  Use =M-x emacsvox-aural-edit-scheme-advanced= for the declarative rule view, or =M-x emacsvox-aural-edit-rules= for persistent, session, or buffer-local rules.  =M-x emacsvox-explain-aural-presentation= shows facts, context, matching rules, provenance, concrete resources, suppression, and backend degradation at point.  It automatically chooses the occasion with the most matching rules, speaks a concise description of the resolved order, and retains detailed output in a Help buffer.  Use a prefix argument to choose the occasion explicitly.
 
@@ -25,7 +25,7 @@ A buffer rule can therefore override one module in one buffer without changing t
 
 Each plan has ordered =before= actions, one styled =content= action, and ordered =after= actions.  Speech, cue, and pause actions may be added.  Phase operators are =:prepend=, =:append=, =:replace=, =:remove=, and =:suppress=.  Content independently controls =:speak=, =:voice=, =:volume=, =:space=, and =:suppress=; the strongest rule that sets a scalar wins.
 
-Semantic and contextual resolution happens in Emacs at the source submission boundary.  Cue names become concrete files or sample IDs, voices become adapter commands, and spatial requests become backend values before anything is queued.  The speech server never resolves schemes, modes, modules, semantics, or resource fallbacks.  A complete multi-action plan uses one strict queue.  Only a standalone compatibility cue may use the selected local player.
+Semantic and contextual resolution happens in Emacs at the source submission boundary.  Safe speech templates become literal text, cue names become concrete files or sample IDs, voices become adapter commands, and spatial requests become backend values before anything is queued.  The speech server never resolves templates, schemes, modes, modules, semantics, or resource fallbacks.  A complete multi-action plan uses one strict queue.  Only a standalone compatibility cue may use the selected local player.
 
 ** Spatial Fallback
 
@@ -33,7 +33,7 @@ Portable space is normalized =:balance= from =-1.0= left through =+1.0= right.  
 
 * Scheme Author Reference
 
-Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data read with evaluation disabled.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:schemes=, and =:user-rules= fields.
+Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data read with evaluation disabled.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:schemes=, =:feature-fragments=, =:enabled-feature-fragments=, and =:user-rules= fields.
 
 A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:parent=, optional =:resource-pack= and =:voice-palette=, and =:rules=.  Every rule has a globally stable =:id=, optional boolean =:enabled=, optional integer =:order=, a =:match= plist, and a =:render= plist.
 
@@ -54,13 +54,13 @@ A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:pare
     (:append ((:id heading-end :kind cue :cue section)))))))
 #+end_src
 
-Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:module=, =:mode=, =:occasion=, =:legacy-cue=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.
+Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.
 
-Ordered actions require an =:id= and =:kind=.  A speech action supplies =:text= and may supply =:voice=, =:volume=, and =:space=.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Action IDs are the handles used by later =:remove= operations.
+Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Action IDs are the handles used by later =:remove= operations.
 
 * Module Author Reference
 
-Register meaning before emitting it.  A semantic registration supplies a unique identifier, =:kind= (=role=, =event=, =state=, or =attribute=), intent summary, owner, and any value, occasion, phase, fallback, or usage contract.  Do not use a visual face, voice name, cue name, or file name as semantic identity.
+Register meaning before emitting it.  A semantic registration supplies a unique identifier, =:kind= (=role=, =event=, =state=, or =attribute=), intent summary, owner, and any value, occasion, phase, fallback, or usage contract.  The registry owner defines the intent, type, and allowed values; modules emit those facts, while schemes and fragments decide only how to present them.  For example, core owns the =visibility= attribute and its =folded= and =expanded= values.  Do not use a visual face, voice name, cue name, or file name as semantic identity.
 
 #+begin_src emacs-lisp
 (emacsvox-aural-register-semantic
@@ -123,6 +123,7 @@ Extension checklist:
 | =state-changed= | =event= | =core= | - | - | - | A registered state changed |
 | =syntax-role= | =attribute= | =core= | =symbol= | - | - | The language-defined structural role of source code |
 | =unread= | =state= | =core= | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | An item has not yet been read |
+| =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | Whether structural descendants are visible |
 
 ** Presentation Occasions
 
@@ -146,6 +147,14 @@ Extension checklist:
 | =org-folded-state= | =default= | =chimes= | =acss-default= | =1= | Folded Org headings announce their state after contents |
 | =org-spoken-label= | =default= | =chimes= | =acss-default= | =8= | Org heading levels spoken before heading contents |
 | =org-voice-only= | =default= | =chimes= | =acss-default= | =9= | Org heading levels presented only through distinct voices |
+
+** Built-in Feature Fragments
+
+| Identifier | Rules | Source | Intent |
+|------------+-------+--------+--------|
+| =org-heading-level-labels= | =1= | emacsvox-aural-org | Speak an Org heading's level before inherited presentation |
+| =org-heading-section-cues= | =1= | emacsvox-aural-org | Add a section cue before navigated Org headings |
+| =org-heading-visibility-changes= | =2= | emacsvox-aural-org | Speak an Org heading's level and new visibility after cycling |
 
 ** Module Compatibility Fragments
 
