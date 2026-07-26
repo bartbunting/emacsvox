@@ -78,8 +78,15 @@
 
 (ert-deftest emacsvox-flyspell-defers-optional-correction-advice ()
   (dolist (target emacsvox-flyspell--correct-targets)
-    (should-not (fboundp target))
     (should
-     (fboundp (intern (format "emacsvox--advice-%s-after" target))))))
+     (fboundp (intern (format "emacsvox--advice-%s-after" target))))
+    (when
+        (and
+         (featurep 'flyspell-correct)
+         (fboundp target))
+      (should
+       (advice-member-p
+        (intern (format "emacsvox--advice-%s-after" target))
+        target)))))
 
 (provide 'emacsvox-flyspell-tests)

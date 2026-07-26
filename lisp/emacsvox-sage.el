@@ -138,8 +138,6 @@
    sage-shell:help)
  #'emacsvox-sage--help-feedback)
 
-(emacsvox-icon 'help)
-
 ;;;  Advice sage-edit:
 
 (defun emacsvox-sage--task-feedback ()

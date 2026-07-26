@@ -3,11 +3,30 @@
 ;;; Code:
 (require 'ert)
 (require 'package)
+(require 'emacsvox-preamble)
 (package-initialize)
 (mapc #'require '(sage-shell-mode sage-shell-blocks))
-(load (expand-file-name "../lisp/emacsvox-sage.el"
-                        (file-name-directory (or load-file-name buffer-file-name)))
-      nil nil)
+
+(defvar emacsvox-test--sage-load-icons nil
+  "Auditory icons attempted while loading the Sage integration.")
+
+(let (load-icons)
+  (cl-letf
+      (((symbol-function 'emacsvox-icon)
+        (lambda (icon)
+          (push icon load-icons))))
+    (load
+     (expand-file-name
+      "../lisp/emacsvox-sage.el"
+      (file-name-directory (or load-file-name buffer-file-name)))
+     nil nil))
+  (setq
+   emacsvox-test--sage-load-icons
+   (nreverse load-icons)))
+
+(ert-deftest emacsvox-sage-load-is-audio-hermetic ()
+  "Loading the Sage integration does not produce user feedback."
+  (should-not emacsvox-test--sage-load-icons))
 
 (ert-deftest emacsvox-sage-advice-is-current-and-direct ()
   "Current Sage targets use native advice directly."

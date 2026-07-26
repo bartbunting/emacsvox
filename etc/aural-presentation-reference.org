@@ -15,6 +15,8 @@ Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It vie
 
 Use =M-x emacsvox-aural-list-feature-fragments= to view, create, copy, edit, delete, validate, enable, disable, and reorder independent presentation additions over the active base scheme.  Fragment changes use the same atomic personal-data store.  Built-in Org fragments can add a dynamic heading-level label, section cue, or visibility-change wording without replacing the active scheme.
 
+Use =M-x emacsvox-aural-list-sound-packs= to inspect active state, inheritance, native and effective assets, coverage, spatialization, validation, directory, and intent.  Its cue browser identifies native, inherited, fallback, and missing resources and auditions the frozen concrete file without activating the inspected pack.  Discovered personal packs have a guided, atomic, data-only manifest editor.
+
 Use =M-x emacsvox-aural-edit-scheme= for a spoken field editor over a persistent personal scheme.  It can create a flattened editable copy of a built-in scheme.  Use =M-x emacsvox-aural-edit-scheme-advanced= for the declarative rule view, or =M-x emacsvox-aural-edit-rules= for persistent, session, or buffer-local rules.  =M-x emacsvox-explain-aural-presentation= shows facts, context, matching rules, provenance, concrete resources, suppression, and backend degradation at point.  It automatically chooses the occasion with the most matching rules, speaks a concise description of the resolved order, and retains detailed output in a Help buffer.  Use a prefix argument to choose the occasion explicitly.
 
 ** Cascade and Deterministic Selection
@@ -169,6 +171,8 @@ Extension checklist:
 Register a cue with intent before adding an asset.  Register a pack with an identifier, summary, =sound= or =prompt= kind, directory, optional parent, requirement profiles, and default spatialization.  File basenames are cue identifiers.  Unknown files fail audit; missing required cues fail pack validation.  Every standalone sound pack must resolve =button=.  Use a parent for deliberate fallback.
 
 Immediate subdirectories of =sounds/= containing =button.ogg= are discovered automatically.  A partial pack without =button.ogg= can opt in with a data-only =emacsvox-sound-pack.el= manifest containing =:schema-version 1= and optional =:summary=, =:parent=, =:profiles=, and =:default-spatialization= fields.  Discovery runs before pack completion and selection; =M-x emacsvox-aural-refresh-discovered-resource-packs= forces it explicitly.  Call =emacsvox-aural-refresh-resource-pack= after changing files in an already selected pack.
+
+Use =M-x emacsvox-aural-list-sound-packs= for the spoken workbench.  It can rescan, validate, activate, audition, open the pack directory, browse cue intent and provenance, and guidedly edit manifests belonging to discovered packs.  Registered built-in metadata remains read-only.  Manifest replacement is atomic, retains the previous file as =~=, and rolls back when refreshed metadata cannot be validated.
 
 Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF or otherwise positioned assets =pre-spatialized= so runtime balance does not position them again.
 

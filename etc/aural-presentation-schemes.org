@@ -830,6 +830,10 @@ implemented discovery and management commands are:
 - =emacsvox-list-aural-schemes=: open the spoken manager for viewing,
   editing, copying, deleting, renaming, activating, previewing, and validating
   schemes;
+- =emacsvox-aural-list-sound-packs=: inspect, audition, validate, activate,
+  rescan, and guidedly edit dynamically discovered sound packs;
+- =emacsvox-aural-list-sound-pack-cues=: browse cue intent and native,
+  inherited, fallback, missing, file, provider, and spatial provenance;
 - =emacsvox-validate-aural-scheme=: report unknown semantics, invalid
   selectors, conflicts, unavailable voices, and missing assets;
 - commands to add, edit, reorder, copy, enable, disable, and remove user rules
@@ -884,7 +888,7 @@ lead to:
 | Feature fragments    | Independently enabled presentation layers             |
 | Current buffer rules | Advanced editor scoped to the remembered source       |
 | Semantic vocabulary  | Registered roles, events, states, and attributes       |
-| Sound packs          | Dynamic sound-pack selection                           |
+| Sound packs          | Spoken pack manager and cue-provenance browser          |
 | Spatial capabilities | Current backend support and fallback                   |
 | Spatial settings     | =emacsvox-aural-spatial= Customize group               |
 | Training mode        | Concise semantic-identification toggle                 |
@@ -978,6 +982,46 @@ the scheme and semantic managers.  Built-ins are viewable, copyable, and
 independently toggleable but remain read-only.  Personal fragments use the
 advanced guided rule editor; create, copy, edit, delete, enable, disable, and
 reorder operations share the versioned atomic persistence path.
+
+** Accessible sound-pack workbench contract
+
+=emacsvox-aural-list-sound-packs= opens the spoken sound-pack manager.  The
+aural home's =Sound packs= row opens the same view.  Each pack row reports
+active state, sound or prompt kind, registered or discovered origin, parent,
+native and effective asset counts, coverage profiles, default spatialization,
+validation, directory, and intent.
+
+The pack manager exposes:
+
+| Key                 | Operation                                                   |
+|---------------------+-------------------------------------------------------------|
+| =n= / =p= / arrows | Move by row or column with titled speech and boundaries      |
+| =RET=              | Browse cue intent and concrete provenance for the pack       |
+| =SPC= / =.=        | Speak the complete pack or titled current cell               |
+| =a=                | Activate a sound pack as the current auditory theme          |
+| =P=                | Audition a representative concrete cue without activation    |
+| =v=                | Display and speak validation diagnostics                     |
+| =e=                | Guidedly edit a discovered personal pack's safe manifest     |
+| =o=                | Open the pack directory in Dired                             |
+| =g= / =?= / =h=    | Rescan, speak help, or return to the aural home              |
+
+=emacsvox-aural-list-sound-pack-cues= opens the cue browser.  Sound packs
+show shared and compatibility cues; prompt packs show prompt cues; supplied
+unknown filenames remain visible as validation errors.  Each row reports
+=native=, =inherited=, =fallback to CUE=, or =missing=, together with the
+actual provider, concrete file, owning pack's spatial metadata, and registered
+intent.  =RET= or =P= auditions that frozen resource, =v= validates the pack,
+=o= opens its directory, =s= returns to the pack manager, and =h= returns
+home.  Audition never activates the inspected pack or re-resolves through the
+current scheme.
+
+Only dynamically discovered packs expose manifest editing.  Completion limits
+parents to same-kind non-descendants, profiles to registered coverage
+contracts, and spatialization to =neutral=, =stereo=, or =pre-spatialized=.
+The editor writes versioned declarative data atomically, keeps the previous
+manifest as =~=, refreshes the registry, verifies that every edited field took
+effect, and restores the original file if refresh fails.  Registered built-in
+pack metadata remains read-only.
 
 ** Accessible editor contract
 
@@ -1736,6 +1780,44 @@ The repository-wide runner remains blocked before ERT by its existing attempt
 to upload the Sage load-time =help= cue to an unavailable Pulse/PipeWire
 server; both the normal run and a run with =EMACSVOX_PLAY=/bin/true= reached
 the same external-audio failure.
+
+** DONE Slice 16: Accessible Sound-Pack Workbench
+CLOSED: [2026-07-26 Sun]
+
+- Add =emacsvox-aural-list-sound-packs= as a spoken manager for active state,
+  origin, inheritance, asset counts, coverage, spatialization, validation,
+  directory, and pack intent.
+- Add a per-pack cue browser that distinguishes native, inherited, fallback,
+  and missing cues and names the concrete provider, file, spatial policy, and
+  registered cue intent.
+- Audition concrete resources from either view without temporarily activating
+  the inspected pack or asking the speech server to resolve a semantic cue.
+- Rescan discovered sound roots and refresh registered pack directories on
+  every manager refresh so new or customized assets appear dynamically.
+- Permit guided editing only for safe data-only manifests belonging to
+  discovered packs.  Validate parent, profile, and spatial values, save
+  atomically with a =~= backup, refresh immediately, and restore the old
+  manifest if registration fails.
+- Route the Sound packs row in =emacsvox-aural= to the manager and document
+  direct commands, spoken navigation, validation, audition, directory access,
+  activation, and manifest editing.
+- Remove the accidental top-level Sage =help= icon and make the Sage, Eshell,
+  Flyspell, and canonical TTS tests independent of audio devices and optional
+  package load order.
+
+Deliverable: a user can discover, inspect, audition, validate, activate, and
+safely describe personal sound packs from one spoken workbench while retaining
+exact cue provenance.
+
+Checks: 250 selected core, aural, Org, sound, input, completion, and keymap ERT
+tests with no unexpected results; the full repository suite with 1,488
+expected passes, zero unexpected results, and one existing Mu4e skip; all 27
+source-loaded semantic traces matching; clean live aural and generated
+reference audits; successful source startup of the manager and cue browser
+against the 55-asset =bart= pack; =org-lint=, =check-parens=, =checkdoc=,
+warning-free temporary compilation of the new workbench, and =git diff
+--check=.  Existing files retain only their prior duplicate-helper,
+deferred-protocol, and legacy free-variable compilation warnings.
 
 * Test Gates
 

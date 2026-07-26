@@ -505,17 +505,15 @@ variables; nil removes the variable."
   (should-not (boundp 'dtk-stop-immediately)))
 
 (ert-deftest emacsvox-tts-auditory-icons-use-canonical-process ()
-  "Queued and served icons write through the canonical TTS process."
+  "Queued resources and served icons use the canonical TTS process."
   (let ((tts-speaker-process 'canonical)
         (emacsvox-sounds-cache (make-hash-table))
         writes)
     (puthash 'served "/sounds/served.ogg" emacsvox-sounds-cache)
     (cl-letf (((symbol-function 'process-send-string)
                (lambda (process string)
-                 (push (list process string) writes)))
-              ((symbol-function 'emacsvox-sounds-resource)
-               (lambda (_icon) "/sounds/queued.ogg")))
-      (emacsvox-queue-icon 'queued)
+                 (push (list process string) writes))))
+      (emacsvox-queue-resource "/sounds/queued.ogg")
       (emacsvox-serve-icon 'served))
     (should
      (equal

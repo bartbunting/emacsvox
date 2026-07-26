@@ -53,8 +53,8 @@
 (declare-function emacsvox-edit-aural-rules
                   "emacsvox-aural-editor"
                   (scope &optional scheme source-buffer))
-(declare-function emacsvox-sounds-select-theme
-                  "emacsvox-sounds" (&optional theme))
+(declare-function emacsvox-aural-list-sound-packs
+                  "emacsvox-aural-sound-packs" (&optional pack))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -66,6 +66,8 @@
      'emacsvox-aural-semantics-mode
      'emacsvox-aural-schemes-mode
      'emacsvox-aural-feature-fragments-mode
+     'emacsvox-aural-sound-packs-mode
+     'emacsvox-aural-sound-pack-cues-mode
      'emacsvox-aural-scheme-editor-mode
      'emacsvox-aural-simple-editor-mode)))
 
@@ -2934,7 +2936,7 @@ SCOPE is `personal', `session', or `buffer'."
       'sounds
       (vector
        "Sound packs" (format "%s" pack)
-       "Select a discovered auditory cue pack"))
+       "Browse, audition, validate, edit, and activate auditory cue packs"))
      (list
       'spatial
       (vector
@@ -3056,11 +3058,8 @@ SCOPE is `personal', `session', or `buffer'."
        (emacsvox-edit-aural-rules 'buffer nil source)))
     ('semantics (emacsvox-aural-list-semantics))
     ('sounds
-     (require 'emacsvox-sounds)
-     (call-interactively #'emacsvox-sounds-select-theme)
-     (when (derived-mode-p 'emacsvox-aural-home-mode)
-       (emacsvox-aural-home-refresh 'sounds)
-       (emacsvox-aural-home-speak-current)))
+     (require 'emacsvox-aural-sound-packs)
+     (emacsvox-aural-list-sound-packs))
     ('spatial (emacsvox-aural-describe-spatial-capabilities))
     ('spatial-settings (customize-group 'emacsvox-aural-spatial))
     ('training

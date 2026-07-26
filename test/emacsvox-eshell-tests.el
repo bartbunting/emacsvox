@@ -117,7 +117,8 @@
   (should (eq (symbol-function 'eshell-pcomplete) 'completion-at-point))
   (should-not (fboundp 'emacsvox--advice-eshell-kill-output-after))
   (with-temp-buffer
-    (cl-letf (((symbol-function 'tts-speak) #'ignore))
+    (cl-letf (((symbol-function 'tts-speak) #'ignore)
+              ((symbol-function 'emacsvox-icon) #'ignore))
       (eshell-mode))
     (should (eq (key-binding (kbd "C-a")) 'move-beginning-of-line))
     (should (eq (key-binding (kbd "TAB")) 'completion-at-point))

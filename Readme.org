@@ -58,10 +58,12 @@ sound packs, voice palettes, migration, queue ordering, and spatial fallback.
 
 Personal sound packs are dynamic.  Put one immediate directory below
 =sounds/= with at least =button.ogg=, then use
-=M-x emacsvox-sounds-select-theme= or choose it as a scheme's sound pack.
-Partial packs can inherit from another pack through a data-only
-=emacsvox-sound-pack.el= manifest; the generated reference documents its
-validated fields.
+=M-x emacsvox-aural-list-sound-packs= to inspect, audition, validate, and
+activate it.  =RET= opens its cue browser, which reports each cue's intent and
+whether its file is native, inherited, resolved through fallback, or missing.
+Discovered personal packs can edit summary, parent, coverage, and spatial
+metadata with =e=.  Partial packs inherit through a safely written data-only
+=emacsvox-sound-pack.el= manifest.
 
 ** Quick Installation Instructions
 
