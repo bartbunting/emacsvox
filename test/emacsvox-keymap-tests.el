@@ -40,6 +40,14 @@
   (should
    (eq
     (lookup-key emacsvox-keymap (kbd "E"))
+    'emacsvox-aural-explain-presentation))
+  (should
+   (eq
+    (key-binding (kbd "C-e H"))
+    'emacsvox-aural))
+  (should
+   (eq
+    (key-binding (kbd "C-e E"))
     'emacsvox-aural-explain-presentation)))
 
 (ert-deftest emacsvox-keymap-uses-canonical-tts-commands ()
