@@ -532,6 +532,258 @@
     (kill-buffer "*Aural Semantics*")
     (kill-buffer "*Aural Schemes*")))
 
+(ert-deftest emacsvox-aural-scheme-manager-rows-and-commands-are-complete ()
+  "The manager exposes useful row state and every documented operation."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id personal
+       :summary "Personal manager test"
+       :parent default
+       :rules
+       ((:id heading
+         :match (:role heading)
+         :render (:content (:voice bolden)))))
+     :source "test")
+    (emacsvox-aural-select-scheme 'personal)
+    (save-window-excursion
+      (emacsvox-list-aural-schemes)
+      (with-current-buffer "*Aural Schemes*"
+        (let ((row (cadr (assq 'personal tabulated-list-entries))))
+          (should (equal (aref row 1) "active"))
+          (should (equal (aref row 2) "personal"))
+          (should (equal (aref row 3) "default"))
+          (should (equal (aref row 5) "1 direct, 1 total")))
+        (should
+         (eq
+          (lookup-key emacsvox-aural-schemes-mode-map (kbd "RET"))
+          #'emacsvox-describe-aural-scheme))
+        (dolist
+            (binding
+             '(("e" . emacsvox-aural-schemes-edit)
+               ("A" . emacsvox-aural-schemes-edit-advanced)
+               ("c" . emacsvox-aural-schemes-copy)
+               ("d" . emacsvox-delete-aural-scheme)
+               ("r" . emacsvox-rename-aural-scheme)
+               ("a" . emacsvox-aural-schemes-activate)
+               ("p" . emacsvox-preview-aural-scheme)
+               ("v" . emacsvox-validate-aural-scheme)
+               ("SPC" . emacsvox-aural-schemes-speak-current)
+               ("?" . emacsvox-aural-schemes-help)))
+          (should
+           (eq
+            (lookup-key
+             emacsvox-aural-schemes-mode-map
+             (kbd (car binding)))
+            (cdr binding))))))
+    (kill-buffer "*Aural Schemes*")))
+
+(ert-deftest emacsvox-aural-scheme-manager-speaks-natural-row-summary ()
+  "A manager row has concise status, inheritance, resource, and count speech."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id spoken-personal
+       :summary "Spoken manager test"
+       :parent default
+       :rules
+       ((:id heading
+         :match (:role heading)
+         :render (:content (:voice bolden)))))
+     :source "test")
+    (emacsvox-aural-select-scheme 'spoken-personal)
+    (let ((summary
+           (emacsvox-aural-tools--scheme-spoken-summary
+            'spoken-personal)))
+      (should (string-match-p "spoken personal" summary))
+      (should (string-match-p "Active personal scheme" summary))
+      (should (string-match-p "Based on default" summary))
+      (should (string-match-p "Sound pack chimes" summary))
+      (should (string-match-p "1 effective presentation" summary))
+      (should (string-match-p "Valid" summary)))))
+
+(ert-deftest emacsvox-aural-scheme-manager-view-separates-direct-and-inherited ()
+  "Scheme details distinguish direct, inherited, and effective presentations."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id manager-parent
+       :summary "Manager parent"
+       :parent default
+       :rules
+       ((:id parent-heading
+         :match (:role heading)
+         :render (:content (:voice bolden)))))
+     :source "test")
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id manager-child
+       :summary "Manager child"
+       :parent manager-parent
+       :rules
+       ((:id child-item
+         :match (:role heading :level 2)
+         :render (:content (:voice smoothen)))))
+     :source "test")
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-describe-aural-scheme 'manager-child)
+          (with-current-buffer "*Help*"
+            (let ((text (buffer-string)))
+              (should
+               (string-match-p
+                "Inheritance chain: default -> manager-parent -> manager-child"
+                text))
+              (should (string-match-p "Direct presentations" text))
+              (should (string-match-p "child-item" text))
+              (should (string-match-p "Inherited presentations" text))
+              (should (string-match-p "parent-heading" text))
+              (should
+               (string-match-p
+                "Effective presentation order (2 total)"
+                text)))))
+      (when (get-buffer "*Help*")
+        (kill-buffer "*Help*")))))
+
+(ert-deftest emacsvox-aural-scheme-manager-protects-built-ins ()
+  "Built-in schemes cannot be edited, deleted, or renamed."
+  (emacsvox-test--with-aural-tools
+    (should-error
+     (emacsvox-delete-aural-scheme 'default)
+     :type 'user-error)
+    (should-error
+     (emacsvox-rename-aural-scheme 'default 'renamed-default)
+     :type 'user-error)
+    (cl-letf
+        (((symbol-function
+           'emacsvox-aural-tools--scheme-at-point-or-read)
+          (lambda (&rest _) 'default)))
+      (should-error
+       (emacsvox-aural-schemes-edit)
+       :type 'user-error)
+      (should-error
+       (emacsvox-aural-schemes-edit-advanced)
+       :type 'user-error))))
+
+(ert-deftest emacsvox-aural-scheme-manager-refuses-delete-with-children ()
+  "Deletion names child schemes instead of breaking inheritance."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1 :id parent :summary "Parent"
+       :parent default :rules ())
+     :source "test")
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1 :id child :summary "Child"
+       :parent parent :rules ())
+     :source "test")
+    (let ((error
+           (should-error
+            (emacsvox-delete-aural-scheme 'parent)
+            :type 'user-error)))
+      (should (string-match-p "inherited by child" (cadr error))))
+    (should (emacsvox-aural-scheme-entry 'parent))
+    (should (emacsvox-aural-scheme-entry 'child))))
+
+(ert-deftest emacsvox-aural-scheme-manager-delete-active-selects-parent ()
+  "Deleting an active personal scheme persists removal and selects its parent."
+  (emacsvox-test--with-aural-tools
+    (let* ((directory (make-temp-file "emacsvox-manager-delete-" t))
+           (emacsvox-aural-schemes-file
+            (expand-file-name "schemes.el" directory)))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-scheme
+             '(:schema-version 1 :id disposable :summary "Disposable"
+               :parent default :rules ())
+             :source emacsvox-aural-schemes-file)
+            (emacsvox-aural-select-scheme 'disposable)
+            (emacsvox-delete-aural-scheme 'disposable)
+            (should-not (emacsvox-aural-scheme-entry 'disposable))
+            (should (eq emacsvox-aural-active-scheme 'default))
+            (should (file-exists-p emacsvox-aural-schemes-file)))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-scheme-manager-rename-updates-active-and-children ()
+  "Renaming is atomic across the target, active selection, and child parents."
+  (emacsvox-test--with-aural-tools
+    (let* ((directory (make-temp-file "emacsvox-manager-rename-" t))
+           (emacsvox-aural-schemes-file
+            (expand-file-name "schemes.el" directory)))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-scheme
+             '(:schema-version 1 :id old-parent :summary "Old parent"
+               :parent default :rules ())
+             :source emacsvox-aural-schemes-file)
+            (emacsvox-aural-register-scheme
+             '(:schema-version 1 :id child :summary "Child"
+               :parent old-parent :rules ())
+             :source emacsvox-aural-schemes-file)
+            (emacsvox-aural-select-scheme 'old-parent)
+            (emacsvox-rename-aural-scheme 'old-parent 'new-parent)
+            (should-not (emacsvox-aural-scheme-entry 'old-parent))
+            (should (emacsvox-aural-scheme-entry 'new-parent))
+            (should (eq emacsvox-aural-active-scheme 'new-parent))
+            (should
+             (eq
+              (emacsvox-aural-scheme-parent
+               (emacsvox-aural-scheme-entry-compiled
+                (emacsvox-aural-scheme-entry 'child)))
+              'new-parent))
+            (should (file-exists-p emacsvox-aural-schemes-file)))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-scheme-manager-mutations-roll-back-on-save-error ()
+  "Delete and rename leave the live registry untouched when persistence fails."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1 :id personal :summary "Personal"
+       :parent default :rules ())
+     :source "test")
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-save-user-data)
+          (lambda (&rest _) (error "save failed"))))
+      (should-error
+       (emacsvox-delete-aural-scheme 'personal)
+       :type 'error)
+      (should (emacsvox-aural-scheme-entry 'personal))
+      (should-error
+       (emacsvox-rename-aural-scheme 'personal 'renamed)
+       :type 'error)
+      (should (emacsvox-aural-scheme-entry 'personal))
+      (should-not (emacsvox-aural-scheme-entry 'renamed)))))
+
+(ert-deftest emacsvox-aural-scheme-manager-previews-inactive-scheme ()
+  "Preview uses the selected scheme without changing the active scheme."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id inactive-preview
+       :summary "Inactive preview"
+       :parent default
+       :rules
+       ((:id preview-heading
+         :match (:role heading :mode emacs-lisp-mode)
+         :render
+         (:before
+          ((:id preview-label :kind speech :text "Preview heading"))))))
+     :source "test")
+    (let ((tts-speaker-process 'speaker)
+          queued)
+      (cl-letf
+          (((symbol-function 'process-live-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+            (lambda (plan &rest _) (setq queued plan)))
+           ((symbol-function 'tts--protocol-dispatch) #'ignore))
+        (emacsvox-preview-aural-scheme
+         'inactive-preview 'preview-heading))
+      (should (eq emacsvox-aural-active-scheme 'default))
+      (should
+       (equal
+        (emacsvox-aural-concrete-action-text
+         (car (emacsvox-aural-concrete-plan-before queued)))
+        "Preview heading")))))
+
 (ert-deftest emacsvox-aural-editor-reads-portable-spatial-values ()
   "The guided editor produces validated balance and azimuth scheme data."
   (cl-letf

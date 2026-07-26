@@ -771,17 +771,19 @@ implemented discovery and management commands are:
   local-cue, final-output, and user-policy spatial settings;
 - =emacsvox-preview-aural-rule=: render a rule against representative or
   current content;
-- =emacsvox-list-aural-schemes=: show inheritance, resource packs, and
-  validation state;
+- =emacsvox-list-aural-schemes=: open the spoken manager for viewing,
+  editing, copying, deleting, renaming, activating, previewing, and validating
+  schemes;
 - =emacsvox-validate-aural-scheme=: report unknown semantics, invalid
   selectors, conflicts, unavailable voices, and missing assets;
 - commands to add, edit, reorder, copy, enable, disable, and remove user rules
   at global, module, mode, combined, and buffer scopes.
 
 =emacsvox-set-aural-scheme=, =emacsvox-reset-aural-scheme=,
-=emacsvox-copy-aural-scheme=, and =emacsvox-reset-aural-overrides= provide
-the set, reset, and copy operations.  Scheme copying creates an editable
-inheriting child by default; a prefix argument creates a flattened copy.
+=emacsvox-copy-aural-scheme=, =emacsvox-delete-aural-scheme=,
+=emacsvox-rename-aural-scheme=, and =emacsvox-reset-aural-overrides= provide
+the lifecycle operations.  Scheme copying creates an editable inheriting
+child by default; a prefix argument creates a flattened copy.
 
 The scheme editor should use an accessible Emacs buffer and completion rather
 than requiring users to edit raw data.  Its workflow should be:
@@ -806,6 +808,35 @@ identification after the concrete plan, including after a standalone cue
 played through a local adapter.  It queues concrete explanatory text directly
 and never recursively invokes semantic resolution.  Detailed inspection uses
 =emacsvox-explain-aural-presentation=.
+
+** Accessible scheme-manager contract
+
+=emacsvox-list-aural-schemes= is the normal entry point for scheme
+management.  Each row reports the active state, built-in or personal
+ownership, parent, effective sound pack, direct and effective presentation
+counts, validation state, and summary.  Opening the manager speaks a concise
+description of the active row.
+
+The manager exposes these stable operations:
+
+| Key       | Operation                                                  |
+|-----------+------------------------------------------------------------|
+| =RET=     | View direct, inherited, effective, and resource details    |
+| =e= / =A= | Open the simple or advanced editor                         |
+| =c=       | Copy as an inheriting personal scheme                      |
+| =C-u c=   | Copy as a flattened personal scheme                        |
+| =d= / =r= | Delete or rename a personal scheme                         |
+| =a=       | Activate the scheme                                        |
+| =p= / =v= | Preview a representative presentation or validate          |
+| =SPC=     | Speak a concise description of the current row             |
+| =g= / =?= | Refresh, or display and speak manager help                  |
+
+Built-in schemes are viewable and copyable but cannot be edited, renamed, or
+deleted.  A personal scheme cannot be deleted while another scheme inherits
+it.  Deleting the active scheme activates its parent, or =default= when it has
+no parent.  Renaming a scheme updates direct child schemes atomically.  Copy,
+delete, and rename changes are saved through the same data-only atomic
+persistence contract as the editors.
 
 ** Accessible editor contract
 

@@ -28,6 +28,10 @@ presentations.
 Use ~emacsvox-list-aural-schemes~, ~emacsvox-set-aural-scheme~, and
 ~emacsvox-edit-aural-scheme~ to inspect, select, and customize schemes.  Rules
 can apply globally or by module, major or derived mode, session, or buffer.
+The scheme list is now a spoken manager for viewing direct and inherited
+presentations, editing, copying, deleting, renaming, activating, previewing,
+and validating schemes.  Built-ins remain read-only; deletion protects
+schemes that are inherited by others, and rename updates child schemes.
 The default scheme editor is now a spoken form: TAB and Shift-TAB move through
 natural-language fields, RET edits one field, and built-in schemes can be
 copied from inside the workflow.  Use
