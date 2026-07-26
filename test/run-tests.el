@@ -38,6 +38,8 @@
   (require 'emacsvox-aural-schemes-tests)
   (require 'emacsvox-aural-transport-tests)
   (require 'emacsvox-aural-tools-tests)
+  (require 'emacsvox-aural-doctor-tests)
+  (require 'emacsvox-aural-profiles-tests)
   (require 'emacsvox-aural-sound-packs-tests)
   (require 'emacsvox-sounds-tests)
   (require 'emacsvox-voice-tests)

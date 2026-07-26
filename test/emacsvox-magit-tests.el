@@ -85,5 +85,58 @@
        (lambda () (cl-incf calls) 'result))))
     (should (= calls 1))))
 
+(ert-deftest emacsvox-magit-stage-facts-express-intent ()
+  "Staging and section visibility have explicit semantic facts."
+  (should
+   (equal
+    (emacsvox-magit-section-facts
+     'magit-stage '(:type file :hidden nil))
+    '(:role vcs-section
+      :section-kind file
+      :events (entry-staged)
+      :states (staged)
+      :visibility expanded)))
+  (should
+   (equal
+    (emacsvox-magit-section-facts
+     'magit-section-toggle
+     '(:type hunk :hidden t)
+     'visibility-changed)
+    '(:role vcs-section
+      :section-kind hunk
+      :events (visibility-changed)
+      :visibility folded))))
+
+(ert-deftest emacsvox-magit-feedback-shares-semantic-context ()
+  "The compatibility cue and line speech share one Magit submission."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list icon emacsvox-aural-submission-facts
+                   emacsvox-aural-submission-occasion)
+             events)))
+         ((symbol-function 'emacsvox-speak-line)
+          (lambda ()
+            (push
+             (list 'line emacsvox-aural-submission-facts)
+             events))))
+      (emacsvox-magit-present-line
+       'select-object 'state-change
+       'magit-file-unstage '(:type file :hidden nil)))
+    (should
+     (equal
+      (nreverse events)
+      '((select-object
+         (:role vcs-section :section-kind file
+          :events (entry-unstaged) :states (unstaged)
+          :visibility expanded)
+         state-change)
+        (line
+         (:role vcs-section :section-kind file
+          :events (entry-unstaged) :states (unstaged)
+          :visibility expanded)))))))
+
 (provide 'emacsvox-magit-tests)
 ;;; emacsvox-magit-tests.el ends here

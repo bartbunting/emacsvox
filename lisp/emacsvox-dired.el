@@ -53,6 +53,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-representative)
 (require 'dired)
 
 ;;;  Define personalities
@@ -86,6 +88,81 @@ If in locate-mode, speak full pathname."
      (t (emacsvox-speak-line)
         (ding)))))
 
+;;; Semantic aural presentation:
+
+(defun emacsvox-dired-enable-aural-context ()
+  "Identify the current Dired buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'dired))
+
+(add-hook 'dired-mode-hook #'emacsvox-dired-enable-aural-context)
+
+(defun emacsvox-dired-entry-facts (&optional event extra-states)
+  "Return semantic facts for the Dired entry at point.
+
+EVENT names an optional state change and EXTRA-STATES augments states inferred
+from the Dired marker column."
+  (let* ((filename (ignore-errors (dired-get-filename nil t)))
+         (marker (char-after (line-beginning-position)))
+         (kind
+          (cond
+           ((null filename) 'other)
+           ((file-symlink-p filename) 'symbolic-link)
+           ((file-directory-p filename) 'directory)
+           ((file-regular-p filename) 'file)
+           (t 'other)))
+         (states (copy-sequence extra-states)))
+    (when (eq marker ?*) (push 'marked states))
+    (when (eq marker ?D) (push 'deletion-flagged states))
+    (append
+     (list :role 'filesystem-entry :entry-kind kind)
+     (when event (list :events (list event)))
+     (when states (list :states (delete-dups (nreverse states)))))))
+
+(defun emacsvox-dired-present-current
+    (icon occasion event &optional speaker)
+  "Present the current entry with ICON, OCCASION, EVENT, and SPEAKER.
+
+The established icon-then-speech ordering is preserved."
+  (let* ((facts (emacsvox-dired-entry-facts event))
+         (context (emacsvox-aural-capture-context 'dired occasion))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'dired)
+         (emacsvox-aural-submission-occasion occasion))
+    (when icon (emacsvox-icon icon))
+    (funcall (or speaker #'emacsvox-dired-speak-line))))
+
+(defun emacsvox-dired-action-facts (event &optional state)
+  "Return frozen current-entry facts for action EVENT and resulting STATE."
+  (let ((entry (emacsvox-dired-entry-facts)))
+    (append
+     (list
+      :role 'filesystem-entry
+      :entry-kind (plist-get entry :entry-kind)
+      :events (list event))
+     (when state (list :states (list state))))))
+
+(defun emacsvox-dired--marking-around
+    (orig-fun arguments target icon event &optional state)
+  "Call ORIG-FUN with ARGUMENTS and present a Dired marking action.
+
+TARGET controls interactive feedback.  ICON, EVENT, and resulting STATE
+describe the entry at point before the command advances to the next row."
+  (if (ems-interactive-p target)
+      (let* ((facts (emacsvox-dired-action-facts event state))
+             (context
+              (emacsvox-aural-capture-context 'dired 'state-change))
+             (result (apply orig-fun arguments)))
+        (let ((emacsvox-aural-submission-facts facts)
+              (emacsvox-aural-submission-context context)
+              (emacsvox-aural-submission-module 'dired)
+              (emacsvox-aural-submission-occasion 'state-change))
+          (emacsvox-icon icon))
+        (emacsvox-dired-present-current
+         nil 'navigation 'focus-entered)
+        result)
+    (apply orig-fun arguments)))
+
 ;;;   advice:
 
 (defun emacsvox--advice-dired-sort-toggle-or-edit-around
@@ -95,8 +172,16 @@ If in locate-mode, speak full pathname."
       (let (result)
         (ems-with-messages-silenced
           (setq result (apply orig-fun args)))
-        (emacsvox-icon 'task-done)
-        (emacsvox-speak-mode-line)
+        (let* ((facts
+                (emacsvox-dired-entry-facts 'operation-completed))
+               (context
+                (emacsvox-aural-capture-context 'dired 'state-change))
+               (emacsvox-aural-submission-facts facts)
+               (emacsvox-aural-submission-context context)
+               (emacsvox-aural-submission-module 'dired)
+               (emacsvox-aural-submission-occasion 'state-change))
+          (emacsvox-icon 'task-done)
+          (emacsvox-speak-mode-line))
         result)
     (apply orig-fun args)))
 
@@ -111,6 +196,7 @@ If in locate-mode, speak full pathname."
 
 (defun emacsvox-dired-initialize ()
   "Set up emacsvox dired."
+  (emacsvox-dired-enable-aural-context)
   (emacsvox-dired-label-fields)
   (emacsvox-dired-setup-keys))
 
@@ -137,19 +223,32 @@ DOCSTRING and BODY define the feedback function for each command."
     (dired ido-dired dired-jump dired-other-window dired-other-frame)
     "Set up Emacsvox."
   (emacsvox-dired-initialize)
-  (emacsvox-icon 'open-object)
-  (emacsvox-speak-mode-line))
+  (let* ((facts (emacsvox-dired-entry-facts 'entry-opened))
+         (context (emacsvox-aural-capture-context 'dired 'state-change))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'dired)
+         (emacsvox-aural-submission-occasion 'state-change))
+    (emacsvox-icon 'open-object)
+    (emacsvox-speak-mode-line)))
 
 (defun emacsvox--advice-dired-find-file-around (orig-fun &rest args)
   "Produce an auditory icon."
   (if (ems-interactive-p 'dired-find-file)
-      (let ((directory-p (file-directory-p (dired-get-filename t t)))
+      (let* ((directory-p (file-directory-p (dired-get-filename t t)))
+             (facts (emacsvox-dired-entry-facts 'entry-opened))
+             (context
+              (emacsvox-aural-capture-context 'dired 'state-change))
             result)
         (setq result (apply orig-fun args))
         (when directory-p
           (emacsvox-dired-label-fields))
-        (emacsvox-speak-mode-line)
-        (emacsvox-icon 'open-object)
+        (let ((emacsvox-aural-submission-facts facts)
+              (emacsvox-aural-submission-context context)
+              (emacsvox-aural-submission-module 'dired)
+              (emacsvox-aural-submission-occasion 'state-change))
+          (emacsvox-speak-mode-line)
+          (emacsvox-icon 'open-object))
         result)
     (apply orig-fun args)))
 
@@ -162,15 +261,15 @@ DOCSTRING and BODY define the feedback function for each command."
      dired-next-marked-file dired-prev-marked-file
      dired-next-dirline dired-prev-dirline)
     "Speak the filename."
-  (emacsvox-icon 'large-movement)
-  (emacsvox-dired-speak-line))
+  (emacsvox-dired-present-current
+   'large-movement 'navigation 'focus-entered))
 
 (emacsvox-dired--define-after-advice
     (dired-next-line dired-previous-line
      dired-unmark-backward dired-maybe-insert-subdir)
     "Speak the filename."
-  (emacsvox-icon 'select-object)
-  (emacsvox-dired-speak-line))
+  (emacsvox-dired-present-current
+   'select-object 'navigation 'focus-entered))
 
 ;; Producing auditory icons:
 ;; These dired commands do some action that causes a state change:
@@ -180,29 +279,32 @@ DOCSTRING and BODY define the feedback function for each command."
 ;; We speak the line moved to, and indicate the state change
 ;; with an auditory icon.
 
-(defun emacsvox--advice-dired-mark-after (&rest _)
-  "Produce an auditory icon."
-  (when (ems-interactive-p 'dired-mark)
-    (emacsvox-icon 'mark-object) (emacsvox-dired-speak-line)))
+(defun emacsvox--advice-dired-mark-around (orig-fun &rest arguments)
+  "Present the entry marked by Dired while preserving its next-row speech."
+  (emacsvox-dired--marking-around
+   orig-fun arguments 'dired-mark 'mark-object 'entry-marked 'marked))
 
-(advice-add 'dired-mark :after
-            #'emacsvox--advice-dired-mark-after)
+(advice-add 'dired-mark :around
+            #'emacsvox--advice-dired-mark-around)
 
-(defun emacsvox--advice-dired-flag-file-deletion-after (&rest _)
-  "Produce an auditory icon indicating that a file was marked for deletion."
-  (when (ems-interactive-p 'dired-flag-file-deletion)
-    (emacsvox-icon 'delete-object) (emacsvox-dired-speak-line)))
+(defun emacsvox--advice-dired-flag-file-deletion-around
+    (orig-fun &rest arguments)
+  "Present the Dired entry flagged for deletion and then the next row."
+  (emacsvox-dired--marking-around
+   orig-fun arguments 'dired-flag-file-deletion
+   'delete-object 'entry-deletion-flagged 'deletion-flagged))
 
-(advice-add 'dired-flag-file-deletion :after
-            #'emacsvox--advice-dired-flag-file-deletion-after)
+(advice-add 'dired-flag-file-deletion :around
+            #'emacsvox--advice-dired-flag-file-deletion-around)
 
-(defun emacsvox--advice-dired-unmark-after (&rest _)
-  "Give speech feedback. Also provide an auditory icon."
-  (when (ems-interactive-p 'dired-unmark)
-    (emacsvox-icon 'deselect-object) (emacsvox-dired-speak-line)))
+(defun emacsvox--advice-dired-unmark-around (orig-fun &rest arguments)
+  "Present the entry unmarked by Dired and then the newly selected row."
+  (emacsvox-dired--marking-around
+   orig-fun arguments 'dired-unmark
+   'deselect-object 'entry-unmarked))
 
-(advice-add 'dired-unmark :after
-            #'emacsvox--advice-dired-unmark-after)
+(advice-add 'dired-unmark :around
+            #'emacsvox--advice-dired-unmark-around)
 
 ;;;   labeling fields in the dired buffer:
 

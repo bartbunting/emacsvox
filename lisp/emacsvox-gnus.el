@@ -60,6 +60,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-representative)
 (require 'emacsvox-hide)
 (require 'gnus)
 (require 'gnus-art)
@@ -115,8 +117,91 @@ instead you hear only the first screenful."
 
 ;;;   helper functions
 
+(defun emacsvox-gnus-enable-aural-context ()
+  "Identify the current Gnus buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'gnus))
+
+(dolist
+    (hook
+     '(gnus-group-mode-hook gnus-summary-mode-hook gnus-article-mode-hook))
+  (add-hook hook #'emacsvox-gnus-enable-aural-context))
+
+(defun emacsvox-gnus-message-facts (&optional event extra-states)
+  "Return semantic facts for the current Gnus message.
+
+EVENT names a presentation event and EXTRA-STATES records an operation whose
+new Gnus mark is not otherwise portable."
+  (let ((mark
+         (and
+          (fboundp 'gnus-summary-article-mark)
+          (ignore-errors (gnus-summary-article-mark))))
+        (states (copy-sequence extra-states)))
+    (when
+        (and
+         (boundp 'gnus-unread-mark)
+         (equal mark gnus-unread-mark))
+      (push 'unread states))
+    (when
+        (or
+         (and (boundp 'gnus-ticked-mark)
+              (equal mark gnus-ticked-mark))
+         (and (boundp 'gnus-dormant-mark)
+              (equal mark gnus-dormant-mark)))
+      (push 'flagged states))
+    (append
+     (list :role 'message)
+     (when event (list :events (list event)))
+     (when states (list :states (delete-dups (nreverse states)))))))
+
+(defun emacsvox-gnus-present-subject
+    (icon occasion event &optional extra-states)
+  "Present the current subject with ICON and semantic message context."
+  (let* ((facts (emacsvox-gnus-message-facts event extra-states))
+         (context (emacsvox-aural-capture-context 'gnus occasion))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'gnus)
+         (emacsvox-aural-submission-occasion occasion))
+    (when icon (emacsvox-icon icon))
+    (emacsvox-gnus-summary-speak-subject)))
+
+(defun emacsvox-gnus-present-group
+    (icon occasion event speaker &optional icon-after)
+  "Present a mail group using ICON, OCCASION, EVENT, and SPEAKER.
+
+When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
+  (let* ((facts
+          (append
+           (list :role 'mail-group)
+           (when event (list :events (list event)))))
+         (context (emacsvox-aural-capture-context 'gnus occasion))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'gnus)
+         (emacsvox-aural-submission-occasion occasion))
+    (if icon-after
+        (progn
+          (funcall speaker)
+          (when icon (emacsvox-icon icon)))
+      (when icon (emacsvox-icon icon))
+      (funcall speaker))))
+
 (defun emacsvox-gnus-summary-speak-subject ()
-  (tts-speak (gnus-summary-article-subject)))
+  "Speak the current Gnus subject with semantic message context."
+  (let* ((facts
+          (or
+           emacsvox-aural-submission-facts
+           (emacsvox-gnus-message-facts 'focus-entered)))
+         (context
+          (or
+           emacsvox-aural-submission-context
+           (emacsvox-aural-capture-context 'gnus 'navigation)))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'gnus)
+         (emacsvox-aural-submission-occasion
+          (or emacsvox-aural-submission-occasion 'navigation)))
+    (tts-speak (gnus-summary-article-subject))))
 
 (defun emacsvox-gnus-speak-article-body ()
   (with-current-buffer gnus-article-buffer
@@ -145,8 +230,9 @@ instead you hear only the first screenful."
   (let ((result
          (ems-with-messages-silenced
            (apply original arguments))))
-    (emacsvox-icon 'news)
-    (message "Gnus is ready ")
+    (emacsvox-gnus-present-group
+     'news 'notification 'refresh-completed
+     (lambda () (message "Gnus is ready ")))
     result))
 
 (advice-add
@@ -190,8 +276,9 @@ instead you hear only the first screenful."
   (let ((result
          (ems-with-messages-silenced
            (apply original arguments))))
-    (message "Gnus is ready ")
-    (emacsvox-icon 'news)
+    (emacsvox-gnus-present-group
+     'news 'notification 'refresh-completed
+     (lambda () (message "Gnus is ready ")) t)
     result))
 
 (advice-add
@@ -227,8 +314,9 @@ instead you hear only the first screenful."
      (defun ,function (&rest _)
        "Cue and speak after interactive Gnus group movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'select-object)
-         (emacsvox-speak-line)))
+         (emacsvox-gnus-present-group
+          'select-object 'navigation 'focus-entered
+          #'emacsvox-speak-line)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -376,8 +464,8 @@ instead you hear only the first screenful."
            (when (ems-interactive-p ',target)
              (if (= saved-point (point))
                  (emacsvox-pip "No more articles")
-               (emacsvox-icon 'mark-object)
-               (emacsvox-gnus-summary-speak-subject)))
+               (emacsvox-gnus-present-subject
+                'mark-object 'state-change 'message-marked '(marked))))
            result)))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
@@ -386,8 +474,8 @@ instead you hear only the first screenful."
     (&rest _)
   "Speak the line.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-summary-unmark-as-processable)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-gnus-summary-speak-subject)))
+    (emacsvox-gnus-present-subject
+     'deselect-object 'state-change 'message-marked)))
 
 (advice-add
  'gnus-summary-unmark-as-processable :after
@@ -397,8 +485,8 @@ instead you hear only the first screenful."
 (defun emacsvox--advice-gnus-summary-delete-article-after (&rest _)
   "Speak the line.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-summary-delete-article)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-gnus-summary-speak-subject)))
+    (emacsvox-gnus-present-subject
+     'delete-object 'state-change 'message-deleted)))
 
 (advice-add
  'gnus-summary-delete-article :after
@@ -415,8 +503,8 @@ instead you hear only the first screenful."
      (defun ,function (&rest _)
        "Cue and speak after interactively catching up articles."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'mark-object)
-         (emacsvox-gnus-summary-speak-subject)))
+         (emacsvox-gnus-present-subject
+          'mark-object 'state-change 'message-marked '(marked))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -477,8 +565,8 @@ instead you hear only the first screenful."
            (when (ems-interactive-p ',target)
              (if (= saved-point (point))
                  (emacsvox-pip ,no-more-message)
-               (emacsvox-icon 'select-object)
-               (tts-speak (gnus-summary-article-subject))))
+               (emacsvox-gnus-present-subject
+                'select-object 'navigation 'focus-entered)))
            result)))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
@@ -506,8 +594,8 @@ instead you hear only the first screenful."
      (defun ,function (&rest _)
        "Cue and speak after interactively marking articles as read."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'mark-object)
-         (emacsvox-gnus-summary-speak-subject)))
+         (emacsvox-gnus-present-subject
+          'mark-object 'state-change 'message-marked '(marked))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -548,8 +636,8 @@ instead you hear only the first screenful."
      (defun ,function (&rest _)
        "Cue and speak after interactive Gnus thread movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'select-object)
-         (emacsvox-gnus-summary-speak-subject)))
+         (emacsvox-gnus-present-subject
+          'select-object 'navigation 'focus-entered)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -592,12 +680,19 @@ instead you hear only the first screenful."
   "Start speaking the article. "
   (when (ems-interactive-p 'gnus-summary-show-article)
     (with-current-buffer gnus-article-buffer
-      (visual-line-mode)
-      (emacsvox-icon 'open-object)
-      (condition-case nil
-          (emacsvox-hide-all-blocks-in-buffer)
-        (error nil))
-      (emacsvox-gnus-speak-article-body))))
+      (let* ((facts (emacsvox-gnus-message-facts 'message-opened))
+             (context
+              (emacsvox-aural-capture-context 'gnus 'state-change))
+             (emacsvox-aural-submission-facts facts)
+             (emacsvox-aural-submission-context context)
+             (emacsvox-aural-submission-module 'gnus)
+             (emacsvox-aural-submission-occasion 'state-change))
+        (visual-line-mode)
+        (emacsvox-icon 'open-object)
+        (condition-case nil
+            (emacsvox-hide-all-blocks-in-buffer)
+          (error nil))
+        (emacsvox-gnus-speak-article-body)))))
 
 (advice-add
  'gnus-summary-show-article :after

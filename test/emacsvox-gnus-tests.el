@@ -151,6 +151,55 @@
       (nreverse events)
       '((icon select-object) speak-line)))))
 
+(ert-deftest emacsvox-gnus-message-facts-express-mail-state ()
+  "Gnus maps portable marks and explicit operations to message facts."
+  (let ((gnus-unread-mark ?u)
+        (gnus-ticked-mark ?!)
+        (gnus-dormant-mark ??))
+    (cl-letf (((symbol-function 'gnus-summary-article-mark)
+               (lambda () ?u)))
+      (should
+       (equal
+        (emacsvox-gnus-message-facts
+         'message-marked '(marked))
+        '(:role message
+          :events (message-marked)
+          :states (marked unread)))))))
+
+(ert-deftest emacsvox-gnus-subject-feedback-shares-semantic-context ()
+  "Gnus subject cues and speech share message facts and navigation context."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-gnus-message-facts)
+          (lambda (&rest _)
+            '(:role message :states (unread)
+              :events (focus-entered))))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list icon emacsvox-aural-submission-facts
+                   (plist-get emacsvox-aural-submission-context :module))
+             events)))
+         ((symbol-function 'emacsvox-gnus-summary-speak-subject)
+          (lambda ()
+            (push
+             (list 'subject emacsvox-aural-submission-facts
+                   emacsvox-aural-submission-occasion)
+             events))))
+      (emacsvox-gnus-present-subject
+       'select-object 'navigation 'focus-entered))
+    (should
+     (equal
+      (nreverse events)
+      '((select-object
+         (:role message :states (unread)
+          :events (focus-entered))
+         gnus)
+        (subject
+         (:role message :states (unread)
+          :events (focus-entered))
+         navigation))))))
+
 (ert-deftest emacsvox-gnus-close-feedback-is-target-aware ()
   "Only the matching interactive Gnus exit emits close feedback."
   (let ((ems--interactive-fn-name 'gnus-group-exit)

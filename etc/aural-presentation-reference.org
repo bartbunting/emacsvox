@@ -9,7 +9,11 @@
 
 A semantic fact says what an object or event means.  A scheme decides whether that fact is conveyed by speech, voice, a cue, a pause, spatial placement, or a composition of those modalities.  Modules therefore do not need to agree on one preferred presentation.
 
-The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, schemes, feature fragments, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and diagnostics.  Press =h= in any routed manager or editor to return home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
+The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, schemes, feature fragments, presentation profiles, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and the Aural Doctor.  Press =h= in any routed manager or editor to return home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
+
+Use =M-x emacsvox-aural-list-profiles= to save and switch complete named configurations.  A profile references one base scheme and ordered feature fragments and may capture sound-pack, voice-palette, and portable-spatial settings.  It never copies rules: edit those in the scheme and fragment managers.  Profile activation validates every reference before changing the live configuration and rolls the complete change back on failure.
+
+Use =M-x emacsvox-aural-doctor= to inspect the live bindings, loaded source or byte-code, active scheme and fragments, saved profiles, sound resources, personal data, spatial fallback, speech server, and training state.  It does not start the server or repair anything automatically.  The =r= command runs the explicitly offered safe repair for one row.
 
 Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
 
@@ -37,7 +41,7 @@ Portable space is normalized =:balance= from =-1.0= left through =+1.0= right.  
 
 * Scheme Author Reference
 
-Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data read with evaluation disabled.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:schemes=, =:feature-fragments=, =:enabled-feature-fragments=, and =:user-rules= fields.
+Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data; evaluation syntax is rejected by the reader.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:schemes=, =:feature-fragments=, =:enabled-feature-fragments=, =:profiles=, and =:user-rules= fields.
 
 A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:parent=, optional =:resource-pack= and =:voice-palette=, and =:rules=.  Every rule has a globally stable =:id=, optional boolean =:enabled=, optional integer =:order=, a =:match= plist, and a =:render= plist.
 
@@ -103,8 +107,17 @@ Extension checklist:
 | =candidate= | =role= | =core= | - | =navigation=, =state-change= | =before=, =content=, =after= | One available completion candidate |
 | =code-construct= | =role= | =core= | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | A structural construct in source code |
 | =completion-index= | =attribute= | =core= | =integer= | - | - | Zero-based position of a candidate in a completion list |
+| =deletion-flagged= | =state= | =dired= | - | =navigation=, =state-change= | =before=, =content=, =after= | A filesystem entry is flagged for deletion |
+| =entry-deletion-flagged= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry was flagged for deletion |
+| =entry-kind= | =attribute= | =dired= | =file=, =directory=, =symbolic-link=, =other= | - | - | The filesystem kind of a directory entry |
+| =entry-marked= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry was marked |
+| =entry-opened= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry or directory was opened |
+| =entry-staged= | =event= | =magit= | - | =state-change= | =before=, =content=, =after= | A version-control entry was staged |
+| =entry-unmarked= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry mark was removed |
+| =entry-unstaged= | =event= | =magit= | - | =state-change= | =before=, =content=, =after= | A version-control entry was unstaged |
 | =field= | =role= | =core= | - | =navigation=, =continuous=, =inspection= | =content= | A named field within a structured object |
 | =field-kind= | =attribute= | =core= | =symbol= | - | - | The module-defined purpose of a structured field |
+| =filesystem-entry= | =role= | =dired= | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | A file, directory, symbolic link, or other directory entry |
 | =flagged= | =state= | =core= | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | An item has been explicitly flagged for attention |
 | =focus-entered= | =event= | =core= | - | - | - | Navigation arrived at an aural object |
 | =folded= | =state= | =core= | - | - | - | Descendants of an object are hidden |
@@ -112,8 +125,15 @@ Extension checklist:
 | =has-attachments= | =state= | =core= | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | A message contains one or more attachments |
 | =heading= | =role= | =core= | - | - | - | A titled structural section |
 | =level= | =attribute= | =core= | =positive-integer= | - | - | One-based structural depth |
+| =mail-group= | =role= | =gnus= | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | A mail or news group containing messages |
+| =marked= | =state= | =dired= | - | =navigation=, =state-change= | =before=, =content=, =after= | An item is marked for a later operation |
 | =message= | =role= | =core= | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | A mail or communication message |
+| =message-deleted= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | A message was marked or removed as deleted |
+| =message-marked= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | A message mark or persistent attention state changed |
+| =message-opened= | =event= | =core= | - | =state-change=, =notification= | =before=, =content=, =after= | A mail or communication message was opened for reading |
 | =object-changed= | =event= | =core= | - | - | - | A registered object was created or modified |
+| =operation-completed= | =event= | =core= | - | =notification=, =state-change= | =before=, =content=, =after= | A requested module operation completed successfully |
+| =operation-failed= | =event= | =core= | - | =notification=, =state-change= | =before=, =content=, =after= | A requested module operation failed |
 | =permission-request= | =role= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An agent action awaiting user permission |
 | =processing= | =state= | =agent-shell= | - | =continuous=, =notification= | =before=, =content=, =after= | An agent session is processing a request |
 | =processing-completed= | =event= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An agent completed initialization or a request |
@@ -122,12 +142,17 @@ Extension checklist:
 | =product-identity= | =event= | =core= | - | - | - | Emacsvox identity or readiness was presented |
 | =refresh-completed= | =event= | =core= | - | =notification= | =before=, =content=, =after= | A displayed collection finished refreshing |
 | =refresh-failed= | =event= | =core= | - | =notification= | =before=, =content=, =after= | A displayed collection failed to refresh |
+| =section-kind= | =attribute= | =magit= | =symbol= | - | - | The integration-defined kind of a structural section |
 | =selected= | =state= | =core= | - | =navigation=, =state-change= | =before=, =content=, =after= | An item is the current selection |
 | =selection-cleared= | =event= | =core= | - | - | - | A mark or selection was removed |
+| =staged= | =state= | =magit= | - | =navigation=, =state-change= | =before=, =content=, =after= | A version-control change is staged for commit |
 | =state-changed= | =event= | =core= | - | - | - | A registered state changed |
 | =syntax-role= | =attribute= | =core= | =symbol= | - | - | The language-defined structural role of source code |
 | =unread= | =state= | =core= | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | An item has not yet been read |
+| =unstaged= | =state= | =magit= | - | =navigation=, =state-change= | =before=, =content=, =after= | A version-control change is not staged for commit |
+| =vcs-section= | =role= | =magit= | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | A structural section in a version-control view |
 | =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | Whether structural descendants are visible |
+| =visibility-changed= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | The visible descendants of a structural object changed |
 
 ** Presentation Occasions
 
@@ -156,6 +181,9 @@ Extension checklist:
 
 | Identifier | Rules | Source | Intent |
 |------------+-------+--------+--------|
+| =dired-entry-state-labels= | =3= | emacsvox-aural-representative | Speak Dired mark and deletion-flag changes after the entry |
+| =magit-section-visibility-cues= | =2= | emacsvox-aural-representative | Add semantic open and close cues when Magit section visibility changes |
+| =mail-message-status-cues= | =3= | emacsvox-aural-representative | Add semantic cues for unread, flagged, and attached messages |
 | =org-heading-level-labels= | =1= | emacsvox-aural-org | Speak an Org heading's level before inherited presentation |
 | =org-heading-section-cues= | =1= | emacsvox-aural-org | Add a section cue before navigated Org headings |
 | =org-heading-visibility-changes= | =2= | emacsvox-aural-org | Speak an Org heading's level and new visibility after cycling |
@@ -308,6 +336,8 @@ Existing direct =emacsvox-icon= calls, queued =auditory-icon= properties, =perso
 To migrate a direct icon path, first characterize its text, cue, and order. Register or reuse the intent, bind semantic facts and source context around the unchanged call, then add an optional compatibility fragment only if the old output must be expressed as a rule.  Do not replace cue symbols with file paths and do not queue unresolved semantic names.
 
 To migrate styled text, keep existing =personality= or face properties while adding semantic fact properties.  A semantic scheme can then override the voice for one module, mode, derived mode, or buffer; without such a rule, normal Voice Lock behavior remains authoritative.
+
+Notmuch, Gnus, Dired, and Magit now attach registered message, filesystem, and version-control facts around their established feedback.  Their speech and cue order remains unchanged unless a scheme or fragment matches the new facts.  Optional mail-status, Dired-state, and Magit-visibility fragments demonstrate customization without requiring the corresponding third-party package at startup.
 
 Rollout is deliberately staged.  The default scheme is compatibility preserving, the Org variants are selectable examples, and integrations move in small tested batches.  Critical alerts currently follow the same explicit suppression contract as other actions; deployments that require a mandatory alternative should enforce that policy in a site scheme until a shared critical-alert contract is registered.
 

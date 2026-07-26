@@ -17,6 +17,13 @@
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-notmuch-mode-hooks-set-semantic-module ()
+  "Notmuch buffers identify their semantic module independently of text."
+  (with-temp-buffer
+    (emacsvox-notmuch-enable-aural-context)
+    (should (eq emacsvox-aural-module 'notmuch))
+    (should (local-variable-p 'emacsvox-aural-module))))
+
 (ert-deftest emacsvox-notmuch-hello-navigation-speaks-search-name-and-count ()
   "Tabbing through saved searches should speak their names and counts."
   (with-temp-buffer

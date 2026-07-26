@@ -65,6 +65,18 @@ Interactive Up and Down line movement now submits the same ~navigation~ and
 ~focus-entered~ semantics as structural movement commands.  Arriving on an
 Org heading with an arrow key therefore uses the same heading presentation as
 ~org-next-visible-heading~; continuous-reading commands remain ~continuous~.
+Use ~emacsvox-aural-list-profiles~ to save and switch complete named
+combinations of a base scheme, ordered feature fragments, sound pack, voice
+palette, and portable spatial settings.  Profiles reference existing
+components instead of copying their rules, and activation is transactional.
+Use ~emacsvox-aural-doctor~ for a spoken report of live bindings, loaded source
+or byte-code, active presentation, resources, personal data, spatial fallback,
+and speech-server state.  Repairs are explicit and limited to deterministic
+safe operations.
+Notmuch, Gnus, Dired, and Magit now submit registered workflow facts around
+their existing speech and auditory cues.  Schemes and optional fragments can
+therefore distinguish mail status, filesystem state, and version-control
+sections without changing the default feedback.
 
 ** Search From Calendar
 

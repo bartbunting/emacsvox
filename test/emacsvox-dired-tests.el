@@ -26,10 +26,10 @@
      :around emacsvox--advice-dired-sort-toggle-or-edit-around)
     (dired-query :before emacsvox--advice-dired-query-before)
     (dired-find-file :around emacsvox--advice-dired-find-file-around)
-    (dired-mark :after emacsvox--advice-dired-mark-after)
+    (dired-mark :around emacsvox--advice-dired-mark-around)
     (dired-flag-file-deletion
-     :after emacsvox--advice-dired-flag-file-deletion-after)
-    (dired-unmark :after emacsvox--advice-dired-unmark-after))
+     :around emacsvox--advice-dired-flag-file-deletion-around)
+    (dired-unmark :around emacsvox--advice-dired-unmark-around))
   "Remaining hand-written Dired advice migrated to final native form.")
 
 (let ((module
@@ -188,23 +188,110 @@
       (nreverse events)
       '((filename (t t))
         (directory "/tmp/directory")
+        (filename (nil t))
+        (directory "/tmp/directory")
         original label mode-line (icon open-object))))))
 
-(ert-deftest emacsvox-dired-marking-feedback-is-target-aware ()
-  "Only feedback for the matching Dired marking command is emitted."
-  (let ((ems--interactive-fn-name 'dired-flag-file-deletion)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-dired-speak-line)
-               (lambda () (push 'line events))))
-      (emacsvox--advice-dired-mark-after)
-      (emacsvox--advice-dired-flag-file-deletion-after)
-      (emacsvox--advice-dired-unmark-after))
+(ert-deftest emacsvox-dired-entry-facts-describe-kind-and-marker ()
+  "Dired exposes filesystem kind, mark state, and operation event."
+  (let ((directory (make-temp-file "emacsvox-dired-facts-" t)))
+    (unwind-protect
+        (with-temp-buffer
+          (insert "* entry")
+          (goto-char (point-min))
+          (cl-letf (((symbol-function 'dired-get-filename)
+                     (lambda (&rest _) directory)))
+            (should
+             (equal
+              (emacsvox-dired-entry-facts 'entry-marked)
+              '(:role filesystem-entry
+                :entry-kind directory
+                :events (entry-marked)
+                :states (marked))))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-feedback-shares-semantic-context ()
+  "The legacy cue and filename speech see one frozen Dired submission."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-entry-facts)
+          (lambda (&rest _)
+            '(:role filesystem-entry :entry-kind file
+              :events (focus-entered))))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list icon emacsvox-aural-submission-facts
+                   (plist-get emacsvox-aural-submission-context :module)
+                   emacsvox-aural-submission-occasion)
+             events)))
+         ((symbol-function 'emacsvox-dired-speak-line)
+          (lambda ()
+            (push
+             (list 'line emacsvox-aural-submission-facts)
+             events))))
+      (emacsvox-dired-present-current
+       'select-object 'navigation 'focus-entered))
     (should
      (equal
       (nreverse events)
-      '((icon delete-object) line)))))
+      '((select-object
+         (:role filesystem-entry :entry-kind file
+          :events (focus-entered))
+         dired navigation)
+        (line
+         (:role filesystem-entry :entry-kind file
+          :events (focus-entered))))))))
+
+(ert-deftest emacsvox-dired-marking-feedback-is-target-aware ()
+  "Only the matching command emits action cue then next-row speech."
+  (let ((ems--interactive-fn-name 'dired-flag-file-deletion)
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-action-facts)
+          (lambda (&rest _) '(:role filesystem-entry)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'emacsvox-dired-present-current)
+          (lambda (&rest _) (push 'line events))))
+      (emacsvox--advice-dired-mark-around
+       (lambda () (push 'mark events)))
+      (emacsvox--advice-dired-flag-file-deletion-around
+       (lambda () (push 'original events)))
+      (emacsvox--advice-dired-unmark-around
+       (lambda () (push 'unmark events))))
+    (should
+     (equal
+      (nreverse events)
+      '(mark original (icon delete-object) line unmark)))))
+
+(ert-deftest emacsvox-dired-marking-freezes-the-action-target ()
+  "The action cue keeps pre-command facts while next-row speech is navigation."
+  (let ((ems--interactive-fn-name 'dired-mark)
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-action-facts)
+          (lambda (&rest _)
+            '(:role filesystem-entry :entry-kind file
+              :events (entry-marked) :states (marked))))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (_)
+            (push
+             (list 'action emacsvox-aural-submission-facts)
+             events)))
+         ((symbol-function 'emacsvox-dired-present-current)
+          (lambda (&rest _)
+            (push 'next-row events))))
+      (emacsvox--advice-dired-mark-around
+       (lambda () (push 'original events) 'result)))
+    (should
+     (equal
+      (nreverse events)
+      '(original
+        (action
+         (:role filesystem-entry :entry-kind file
+          :events (entry-marked) :states (marked)))
+        next-row)))))
 
 (ert-deftest emacsvox-dired-query-cue-remains-unconditional ()
   "Dired queries always cue before deciding whether prompting is needed."

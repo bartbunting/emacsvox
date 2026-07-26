@@ -535,8 +535,8 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain schemes features buffer-rules semantics sounds
-                  spatial spatial-settings training diagnostics)))
+                '(explain profiles schemes features buffer-rules semantics
+                  sounds spatial spatial-settings training diagnostics)))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
@@ -596,9 +596,10 @@
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Area, Schemes"))
+                (should (equal spoken "Area, Presentation profiles"))
                 (emacsvox-aural-home-next-column)
-                (should (equal spoken "Current status, default"))
+                (should
+                 (string-prefix-p "Current status, " spoken))
                 (emacsvox-aural-home-explain))
               (should (eq explained-in source))))
         (when (get-buffer "*Emacsvox Aural*")

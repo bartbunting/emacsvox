@@ -66,6 +66,18 @@
 (defvar notmuch-show-mode-map)
 (defvar notmuch-show-part-button-default-action)
 
+;;; Semantic module context:
+
+(defun emacsvox-notmuch-enable-aural-context ()
+  "Identify the current Notmuch buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'notmuch))
+
+(dolist
+    (hook
+     '(notmuch-hello-mode-hook notmuch-search-mode-hook
+       notmuch-show-mode-hook notmuch-tree-mode-hook))
+  (add-hook hook #'emacsvox-notmuch-enable-aural-context))
+
 ;;;  Customization:
 
 (defgroup emacsvox-notmuch nil
@@ -458,13 +470,18 @@ tag, or give it a nil icon to keep the status silent."
                  (notmuch-show-get-message-properties))))
               (summary (emacsvox-notmuch-format-show-message message)))
     (let* ((facts
-            (emacsvox-notmuch-message-facts message 'focus-entered))
+            (or
+             emacsvox-aural-submission-facts
+             (emacsvox-notmuch-message-facts message 'focus-entered)))
            (context
-            (emacsvox-aural-capture-context 'notmuch 'navigation))
+            (or
+             emacsvox-aural-submission-context
+             (emacsvox-aural-capture-context 'notmuch 'navigation)))
            (emacsvox-aural-submission-facts facts)
            (emacsvox-aural-submission-context context)
            (emacsvox-aural-submission-module 'notmuch)
-           (emacsvox-aural-submission-occasion 'navigation))
+           (emacsvox-aural-submission-occasion
+            (or emacsvox-aural-submission-occasion 'navigation)))
       (emacsvox-notmuch--play-status-icons
        message emacsvox-notmuch-show-status-icons)
       (tts-speak summary))
@@ -910,8 +927,22 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 (defun emacsvox-notmuch--show-feedback ()
   "Speak the first message in a newly opened Notmuch thread."
   (emacsvox-notmuch--move-to-message-body)
-  (emacsvox-icon 'open-object)
-  (emacsvox-notmuch-speak-show-message))
+  (let* ((message
+          (and
+           (eq major-mode 'notmuch-show-mode)
+           (notmuch-show-get-message-properties)))
+         (facts
+          (and
+           message
+           (emacsvox-notmuch-message-facts message 'message-opened)))
+         (context
+          (emacsvox-aural-capture-context 'notmuch 'state-change))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'notmuch)
+         (emacsvox-aural-submission-occasion 'state-change))
+    (emacsvox-icon 'open-object)
+    (emacsvox-notmuch-speak-show-message message)))
 
 (defun emacsvox-notmuch--blank-visual-line-pitch ()
   "Return the Emacsvox blank-line pitch in Notmuch Show.

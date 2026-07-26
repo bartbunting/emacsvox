@@ -53,10 +53,24 @@
 (declare-function emacsvox-edit-aural-rules
                   "emacsvox-aural-editor"
                   (scope &optional scheme source-buffer))
+(declare-function emacsvox-edit-aural-feature-fragment
+                  "emacsvox-aural-editor" (&optional fragment))
 (declare-function emacsvox-aural-list-sound-packs
                   "emacsvox-aural-sound-packs" (&optional pack))
+(declare-function emacsvox-aural-doctor
+                  "emacsvox-aural-doctor" ())
+(declare-function emacsvox-aural-doctor-summary
+                  "emacsvox-aural-doctor" (&optional findings))
+(declare-function emacsvox-aural-list-profiles
+                  "emacsvox-aural-profiles" (&optional profile))
+(declare-function emacsvox-aural-profiles-status
+                  "emacsvox-aural-profiles" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
+(declare-function tts-voice-reset-code "tts-speak" ())
+(declare-function tts--protocol-queue-code "tts-speak" (code))
+(declare-function tts--protocol-queue-text "tts-speak" (text))
+(declare-function tts--protocol-dispatch "tts-speak" ())
 
 (defun emacsvox-aural-tools--interface-buffer-p (&optional buffer)
   "Return non-nil when BUFFER is an aural manager or editor buffer."
@@ -66,6 +80,8 @@
      'emacsvox-aural-semantics-mode
      'emacsvox-aural-schemes-mode
      'emacsvox-aural-feature-fragments-mode
+     'emacsvox-aural-profiles-mode
+     'emacsvox-aural-doctor-mode
      'emacsvox-aural-sound-packs-mode
      'emacsvox-aural-sound-pack-cues-mode
      'emacsvox-aural-scheme-editor-mode
@@ -2847,10 +2863,6 @@ SCOPE is `personal', `session', or `buffer'."
            "No feature fragments are registered.  Press N to create one."))))
     buffer))
 
-(defun emacsvox-aural-tools--humanize (value)
-  "Return VALUE as concise spoken words."
-  (replace-regexp-in-string "-" " " (format "%s" value)))
-
 (defun emacsvox-aural-home--source-buffer ()
   "Return the live inspection source for the current aural home buffer."
   (cond
@@ -2869,6 +2881,11 @@ SCOPE is `personal', `session', or `buffer'."
         #'symbol-name emacsvox-aural-enabled-feature-fragments ", "))
     "none enabled"))
 
+(defun emacsvox-aural-home--profile-status ()
+  "Return concise status for complete saved presentation profiles."
+  (require 'emacsvox-aural-profiles)
+  (emacsvox-aural-profiles-status))
+
 (defun emacsvox-aural-home--spatial-status ()
   "Return concise status for portable spatial presentation."
   (if emacsvox-aural-spatial-enabled
@@ -2880,12 +2897,9 @@ SCOPE is `personal', `session', or `buffer'."
     "off"))
 
 (defun emacsvox-aural-home--validation-status ()
-  "Return validation status for the active aural scheme."
-  (if
-      (emacsvox-aural-validation-report-valid
-       (emacsvox-aural-validate-scheme emacsvox-aural-active-scheme))
-      "active scheme valid"
-    "active scheme invalid"))
+  "Return concise installation and configuration health."
+  (require 'emacsvox-aural-doctor)
+  (emacsvox-aural-doctor-summary))
 
 (defun emacsvox-aural-home--entries ()
   "Return current rows for the aural home buffer."
@@ -2909,6 +2923,12 @@ SCOPE is `personal', `session', or `buffer'."
       (vector
        "Explain at point" source-name
        "Show and speak why the current item sounds as it does"))
+     (list
+      'profiles
+      (vector
+       "Presentation profiles"
+       (emacsvox-aural-home--profile-status)
+       "Save and switch complete scheme, fragment, sound, voice, and spatial configurations"))
      (list
       'schemes
       (vector
@@ -2957,9 +2977,9 @@ SCOPE is `personal', `session', or `buffer'."
      (list
       'diagnostics
       (vector
-       "Diagnostics"
+       "Aural Doctor"
        (emacsvox-aural-home--validation-status)
-       "Validate the active scheme and its resources")))))
+       "Diagnose bindings, loaded files, configuration, resources, and backend")))))
 
 (defun emacsvox-aural-home--goto (id)
   "Move to home row ID and its first column."
@@ -3041,6 +3061,12 @@ SCOPE is `personal', `session', or `buffer'."
   (emacsvox-aural-home--call-in-source
    #'emacsvox-aural-explain-presentation))
 
+(defun emacsvox-aural-home-profiles ()
+  "Open the complete presentation-profile manager."
+  (interactive)
+  (require 'emacsvox-aural-profiles)
+  (emacsvox-aural-list-profiles))
+
 (defun emacsvox-aural-home-activate ()
   "Perform the primary operation for the aural home row at point."
   (interactive)
@@ -3048,6 +3074,7 @@ SCOPE is `personal', `session', or `buffer'."
              (user-error "Move to an aural home row first"))
     ('explain
      (emacsvox-aural-home-explain))
+    ('profiles (emacsvox-aural-home-profiles))
     ('schemes (emacsvox-aural-list-schemes))
     ('features (emacsvox-aural-list-feature-fragments))
     ('buffer-rules
@@ -3068,8 +3095,8 @@ SCOPE is `personal', `session', or `buffer'."
      (emacsvox-aural-home-refresh 'training)
      (emacsvox-aural-home-speak-current))
     ('diagnostics
-     (emacsvox-aural-show-scheme-validation
-      emacsvox-aural-active-scheme))))
+     (require 'emacsvox-aural-doctor)
+     (emacsvox-aural-doctor))))
 
 (defun emacsvox-aural-home-help ()
   "Display and speak aural home commands and discovery guidance."
@@ -3083,7 +3110,8 @@ SCOPE is `personal', `session', or `buffer'."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
-      "x explain at point   g refresh\n"
+      "x explain at point   P presentation profiles\n"
+      "D aural doctor       g refresh\n"
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
@@ -3118,6 +3146,8 @@ SCOPE is `personal', `session', or `buffer'."
        ("<right>" . emacsvox-aural-home-next-column)
        ("<left>" . emacsvox-aural-home-previous-column)
        ("x" . emacsvox-aural-home-explain)
+       ("P" . emacsvox-aural-home-profiles)
+       ("D" . emacsvox-aural-doctor)
        ("g" . emacsvox-aural-home-refresh)
        ("?" . emacsvox-aural-home-help)))
   (define-key

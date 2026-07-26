@@ -48,6 +48,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-representative)
 
 ;;;  Map voices to faces:
 
@@ -156,6 +158,82 @@
  'magit-mode-hook
  'emacsvox-pronounce-refresh-pronunciations)
 
+;;; Semantic aural presentation:
+
+(defun emacsvox-magit-enable-aural-context ()
+  "Identify the current Magit buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'magit))
+
+(add-hook 'magit-mode-hook #'emacsvox-magit-enable-aural-context)
+
+(defun emacsvox-magit--section-value (section property)
+  "Return SECTION's PROPERTY without requiring Magit at startup."
+  (cond
+   ((and (listp section)
+         (plist-member section (intern (format ":%s" property))))
+    (plist-get section (intern (format ":%s" property))))
+   ((and section (fboundp 'slot-boundp)
+         (ignore-errors (slot-boundp section property)))
+    (ignore-errors (slot-value section property)))))
+
+(defun emacsvox-magit-section-facts
+    (&optional target section event visibility)
+  "Return semantic facts for Magit TARGET and SECTION.
+
+EVENT and VISIBILITY override values inferred from the command and section."
+  (let* ((section
+          (or
+           section
+           (and
+            (fboundp 'magit-current-section)
+            (ignore-errors (magit-current-section)))))
+         (kind (or (emacsvox-magit--section-value section 'type) 'section))
+         (hidden (emacsvox-magit--section-value section 'hidden))
+         (stage-p
+          (memq
+           target
+           '(magit-stage magit-file-stage magit-stage-modified)))
+         (unstage-p
+          (memq
+           target
+           '(magit-unstage magit-unstage-all magit-file-unstage)))
+         (event
+          (or event
+              (cond
+               (stage-p 'entry-staged)
+               (unstage-p 'entry-unstaged)
+               (t 'focus-entered))))
+         (visibility
+          (or visibility
+              (and section (if hidden 'folded 'expanded))))
+         states)
+    (when stage-p (push 'staged states))
+    (when unstage-p (push 'unstaged states))
+    (append
+     (list :role 'vcs-section :section-kind
+           (if (symbolp kind) kind 'section))
+     (when event (list :events (list event)))
+     (when states (list :states states))
+     (when visibility (list :visibility visibility)))))
+
+(defun emacsvox-magit-present-line
+    (icon occasion &optional target section event visibility icon-after)
+  "Present the current Magit line semantically.
+
+ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
+feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
+  (let* ((facts
+          (emacsvox-magit-section-facts target section event visibility))
+         (context (emacsvox-aural-capture-context 'magit occasion))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'magit)
+         (emacsvox-aural-submission-occasion occasion))
+    (if icon-after
+        (progn (emacsvox-speak-line) (emacsvox-icon icon))
+      (emacsvox-icon icon)
+      (emacsvox-speak-line))))
+
 ;;;  Advice navigation commands:
 
 (defconst emacsvox-magit--navigation-targets
@@ -183,8 +261,17 @@
   `(defun ,advice-function (&rest _)
      "speak"
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'select-object)
-       (emacsvox-speak-line)))))
+       (emacsvox-magit-present-line
+        'select-object
+        ,(if
+             (memq
+              target
+              '(magit-stash magit-unstage magit-unstage-all
+                magit-file-unstage magit-stage magit-file-stage
+                magit-stage-modified))
+             ''state-change
+           ''navigation)
+        ',target)))))
 
 ;;;  Section Toggle:
 
@@ -210,11 +297,22 @@
  (eval
   `(defun ,advice-function (&rest _)
      "speak."
-     (emacsvox-speak-line)
-     (emacsvox-icon 'open-object))))
+     (emacsvox-magit-present-line
+      'open-object 'state-change ',target nil
+      'visibility-changed 'expanded t))))
 
 (defun emacsvox--advice-magit-section-hide-after (&rest _)
-  "Icon." (emacsvox-icon 'close-object))
+  "Present a hidden Magit section."
+  (let* ((facts
+          (emacsvox-magit-section-facts
+           'magit-section-hide nil 'visibility-changed 'folded))
+         (context
+          (emacsvox-aural-capture-context 'magit 'state-change))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'magit)
+         (emacsvox-aural-submission-occasion 'state-change))
+    (emacsvox-icon 'close-object)))
 
 (defun emacsvox--advice-magit-section-cycle-global-after (&rest _)
   "speak."
@@ -229,9 +327,12 @@
   `(defun ,advice-function (section &rest _)
      "speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-speak-line)
-       (emacsvox-icon
-        (if (oref section hidden) 'close-object 'open-object))))))
+       (let* ((hidden (emacsvox-magit--section-value section 'hidden))
+              (visibility (if hidden 'folded 'expanded)))
+         (emacsvox-magit-present-line
+          (if hidden 'close-object 'open-object)
+          'state-change ',target section
+          'visibility-changed visibility t))))))
 
 ;;; blob mode:
 
@@ -260,7 +361,9 @@
 (defun emacsvox--advice-magit-refresh-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-refresh)
-    (emacsvox-icon 'task-done) (emacsvox-speak-line)))
+    (emacsvox-magit-present-line
+     'task-done 'notification 'magit-refresh nil
+     'refresh-completed)))
 
 (defun emacsvox--advice-magit-status-after (&rest _)
   "speak."
@@ -283,7 +386,9 @@
 (defun emacsvox--advice-magit-refresh-all-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-refresh-all)
-    (emacsvox-icon 'task-done) (emacsvox-speak-line)))
+    (emacsvox-magit-present-line
+     'task-done 'notification 'magit-refresh-all nil
+     'refresh-completed)))
 
 (defun emacsvox--advice-magit-display-buffer-after (&rest _)
   "speak."
@@ -292,8 +397,25 @@
 
 ;;;  Advise process-sentinel:
 
-(defun emacsvox--advice-magit-process-finish-after (&rest _)
-  "Produce auditory icon." (emacsvox-icon 'task-done))
+(defun emacsvox--advice-magit-process-finish-after
+    (&optional process &rest _)
+  "Present semantic completion or failure for Magit PROCESS."
+  (let* ((failed
+          (and
+           (processp process)
+           (memq (process-status process) '(exit signal))
+           (not (zerop (process-exit-status process)))))
+         (facts
+          (emacsvox-magit-section-facts
+           'magit-process-finish nil
+           (if failed 'operation-failed 'operation-completed)))
+         (context
+          (emacsvox-aural-capture-context 'magit 'notification))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'magit)
+         (emacsvox-aural-submission-occasion 'notification))
+    (emacsvox-icon (if failed 'warn-user 'task-done))))
 
 ;;;  Magit Blame:
 

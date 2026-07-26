@@ -44,12 +44,15 @@ README = README
 TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
-.PHONY: test unit-test trace trace-test reference-test advice-audit name-audit tts-audit
+.PHONY: test unit-test compiled-aural-test trace trace-test reference-test advice-audit name-audit tts-audit
 .PHONY: aural-audit aural-reference
-test: unit-test trace-test
+test: unit-test compiled-aural-test trace-test
 
 unit-test:
 	$(EMACS) -Q --batch -l test/run-tests.el
+
+compiled-aural-test:
+	$(EMACS) -Q --batch -l test/run-compiled-aural-tests.el
 
 trace:
 	EMACSVOX_TRACE_IMPLEMENTATION=emacsvox \

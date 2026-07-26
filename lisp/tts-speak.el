@@ -45,8 +45,8 @@
 
 ;;  required modules
 
-(eval-when-compile (require 'cl-lib))
-(eval-when-compile (require 'subr-x))
+(require 'cl-lib)
+(require 'subr-x)
 (require 'emacsvox-aural-transport)
 
 ;;;  Forward Declarations:
@@ -55,6 +55,11 @@
 (defvar org-fold-core-style)
 (defvar org-link-descriptive)
 (defvar tts-default-voice)
+(defvar tts-speaker-process)
+(defvar tts-punctuation-mode)
+(defvar tts-split-caps)
+(defvar tts-caps)
+(defvar tts-speech-rate)
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
@@ -98,7 +103,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  silence
 
-(defsubst tts--protocol-silence (duration &optional force)
+(defun tts--protocol-silence (duration &optional force)
   
   (process-send-string tts-speaker-process
                        (format "sh %d%s\n"
@@ -107,7 +112,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   tone
 
-(defsubst tts--protocol-tone (pitch duration &optional force)
+(defun tts--protocol-tone (pitch duration &optional force)
   
   (process-send-string
    tts-speaker-process
@@ -117,24 +122,24 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   queue
 
-(defsubst tts--protocol-queue-text (text)
+(defun tts--protocol-queue-text (text)
   
   (unless (string-match "^[[:space:]]+$" text)
     (process-send-string tts-speaker-process (format "q {%s }\n" text))))
 
-(defsubst tts--protocol-queue-code (code)
+(defun tts--protocol-queue-code (code)
   
   (process-send-string tts-speaker-process (format "c {%s }\n" code)))
 
 ;;;;   speak
 
-(defsubst tts--protocol-dispatch ()
+(defun tts--protocol-dispatch ()
   
   (process-send-string tts-speaker-process "d\n"))
 
 ;;;;  say
 
-(defsubst tts--protocol-say (string)
+(defun tts--protocol-say (string)
   
   (process-send-string
    tts-speaker-process
@@ -142,13 +147,13 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  stop
 
-(defsubst tts--protocol-stop ()
+(defun tts--protocol-stop ()
   
   (process-send-string tts-speaker-process "s\n"))
 
 ;;;;  sync
 
-(defsubst tts--protocol-sync ()
+(defun tts--protocol-sync ()
   "Synchronize speech state with running server"
   (process-send-string
    tts-speaker-process
@@ -160,7 +165,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   letter
 
-(defsubst tts--protocol-letter (letter)
+(defun tts--protocol-letter (letter)
   
   (process-send-string
    tts-speaker-process
@@ -168,25 +173,25 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   language
 
-(defsubst tts--protocol-next-language (&optional say_it)
+(defun tts--protocol-next-language (&optional say_it)
   
   (process-send-string
    tts-speaker-process
    (format "set_next_lang %s\n" say_it)))
 
-(defsubst tts--protocol-previous-language (&optional say_it)
+(defun tts--protocol-previous-language (&optional say_it)
   
   (process-send-string
    tts-speaker-process
    (format "set_previous_lang %s\n" say_it)))
 
-(defsubst tts--protocol-set-language (language say_it)
+(defun tts--protocol-set-language (language say_it)
   
   (process-send-string
    tts-speaker-process
    (format "set_lang %s %s \n" language say_it)))
 
-(defsubst tts--protocol-set-preferred-language (alias language)
+(defun tts--protocol-set-preferred-language (alias language)
   
   (process-send-string
    tts-speaker-process
@@ -194,11 +199,11 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   Version, rate
 
-(defsubst tts--protocol-version ()
+(defun tts--protocol-version ()
   
   (process-send-string tts-speaker-process "version\n"))
 
-(defsubst tts--protocol-set-rate (rate)
+(defun tts--protocol-set-rate (rate)
   
   (process-send-string
    tts-speaker-process
@@ -206,7 +211,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  character scale
 
-(defsubst tts--protocol-set-character-scale (factor)
+(defun tts--protocol-set-character-scale (factor)
   
   (process-send-string tts-speaker-process
                        (format "tts_set_character_scale %s\n"
@@ -214,7 +219,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;   split caps
 
-(defsubst tts--protocol-set-split-caps (flag)
+(defun tts--protocol-set-split-caps (flag)
   
   (process-send-string
    tts-speaker-process
@@ -222,7 +227,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  punctuations
 
-(defsubst tts--protocol-set-punctuations (mode)
+(defun tts--protocol-set-punctuations (mode)
   
   (process-send-string
    tts-speaker-process
@@ -230,7 +235,7 @@ mac for MAC TTS (default on Mac)")
 
 ;;;;  reset
 
-(defsubst tts--protocol-reset ()
+(defun tts--protocol-reset ()
   
   (process-send-string tts-speaker-process "tts_reset \n"))
 

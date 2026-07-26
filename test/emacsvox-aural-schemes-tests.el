@@ -19,7 +19,10 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-feature-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-profile-registry
+          (make-hash-table :test #'eq))
          (emacsvox-aural-enabled-feature-fragments nil)
+         (emacsvox-aural-voice-palette-override nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
@@ -616,11 +619,12 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 2
+        '(:schema-version 3
           :schemes nil
           :user-rules nil
           :feature-fragments nil
-          :enabled-feature-fragments nil))))
+          :enabled-feature-fragments nil
+          :profiles nil))))
     (should-error
      (emacsvox-aural-migrate-user-data
       '(:schema-version 0 :schemes nil :user-rules nil))

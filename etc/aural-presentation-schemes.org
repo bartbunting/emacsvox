@@ -570,16 +570,18 @@ depend on the serialization.
 
 The initial persistent implementation uses the data-only file
 =~/.emacsvox/aural-schemes.el=, configurable as
-=emacsvox-aural-schemes-file=.  It binds =read-eval= to nil before reading,
-accepts one validated data form, saves through a mode-0600 temporary file and
-atomic rename, and retains the previous file as =~=.  User data and individual
-schemes are independently versioned; migration functions must explicitly
-advance an older version.  Invalid replacement data is fully staged and
-validated before it can replace the live personal registry.
+=emacsvox-aural-schemes-file=.  The Emacs Lisp reader rejects evaluation
+syntax; the loader accepts one validated data form, saves through a mode-0600
+temporary file and atomic rename, and retains the previous file as =~=.  User
+data and individual schemes are independently versioned; migration functions
+must explicitly advance an older version.  Invalid replacement data is fully
+staged and validated before it can replace the live personal registry.
 
-Personal data schema version 2 stores personal feature-fragment definitions
-and their ordered enabled identifiers alongside schemes and persistent rules.
-Version 1 data migrates automatically with no fragments enabled.
+Personal data schema version 3 stores named presentation profiles alongside
+personal feature-fragment definitions, their ordered enabled identifiers,
+schemes, and persistent rules.  Version 1 and version 2 data migrate
+automatically with no profiles; version 1 also starts with no fragments
+enabled.
 
 =emacsvox-aural-active-scheme= is a Customize option.  Startup loads the
 personal data, validates scheme inheritance and providers, and selects the
@@ -1818,6 +1820,131 @@ against the 55-asset =bart= pack; =org-lint=, =check-parens=, =checkdoc=,
 warning-free temporary compilation of the new workbench, and =git diff
 --check=.  Existing files retain only their prior duplicate-helper,
 deferred-protocol, and legacy free-variable compilation warnings.
+
+** DONE Slice 17: Compiled Runtime Parity and Upgrade Safety
+CLOSED: [2026-07-26 Sun]
+
+- Treat low-level =tts--protocol-*= functions as replaceable runtime extension
+  points and define them with =defun= rather than =defsubst=.
+- Exercise presentation preview, training feedback, protocol advice, and global
+  aural bindings from byte-compiled callers as well as source.
+- Add a clean compiled-startup gate that builds into an isolated directory and
+  never leaves generated objects in the source tree.
+- Diagnose stale or shadowing byte-code for the aural entry points and report
+  exactly which source or compiled file Emacs loaded.
+- Remove compilation warnings in touched aural code where they obscure parity
+  failures.
+
+Deliverable: installed byte-code and source checkouts expose the same bindings,
+extension behavior, and aural presentation results.
+
+Implemented details:
+
+- all low-level =tts--protocol-*= runtime extension points are ordinary
+  functions, so native advice and dynamic replacement remain visible to
+  byte-compiled callers;
+- =make compiled-aural-test= compiles into an isolated temporary directory and
+  checks preview, training, protocol advice, and the live =C-e H= and =C-e E=
+  bindings in a clean child Emacs;
+- the Aural Doctor identifies the exact loaded source or byte-code file and
+  offers source reload when the corresponding source is newer.
+
+** DONE Slice 18: Accessible Aural Doctor
+CLOSED: [2026-07-26 Sun]
+
+- Add one spoken, refreshable diagnostic report reachable from the aural home.
+- Check the live =C-e H= and =C-e E= bindings, loaded source-versus-byte-code
+  freshness, active scheme, ordered fragments, selected and effective sound
+  packs, resource availability, spatial capability, training state, and the
+  personal data file.
+- Separate failures, warnings, and informational facts and provide concise
+  spoken summaries plus complete written detail.
+- Offer only deterministic safe repairs: reload newer source, reload personal
+  data, refresh sound packs, and restore the documented aural prefix bindings.
+- Keep point explanation focused on semantic resolution; use the doctor for
+  installation and configuration health.
+
+Deliverable: a user can answer “why is aural presentation not working?” without
+knowing which Lisp file, registry, binding, or backend to inspect.
+
+Implemented details:
+
+- =emacsvox-aural-doctor= presents titled, spoken rows with explicit
+  severities, status, details, and repair availability;
+- checks cover bindings, loaded entry points, scheme, fragments, profiles,
+  sound resources, personal data, spatial capability, speech-server state,
+  and training without starting the server;
+- =r= performs only the row's declared repair, while =g= reruns every check
+  and =h= returns to the spoken aural home.
+
+** DONE Slice 19: Saved Presentation Profiles
+CLOSED: [2026-07-26 Sun]
+
+- Persist named profiles that reference one registered base scheme, an ordered
+  set of registered feature fragments, and optional sound-pack, voice-palette,
+  and portable-spatial settings.
+- Apply a profile transactionally: validate every reference before changing
+  live state, then switch the complete configuration and run existing change
+  hooks.
+- Keep profiles as references to existing components rather than copied rules;
+  scheme and fragment editors remain the single rule-editing model.
+- Supply an accessible spoken manager for viewing, creating from the current
+  configuration, copying, activating, renaming, deleting, validating, and
+  saving profiles.
+- Migrate the data-only personal store atomically and retain compatibility with
+  existing version 1 and version 2 files.
+
+Deliverable: users can switch complete named presentation configurations such
+as concise, verbose, or task-specific setups in one operation.
+
+Implemented details:
+
+- personal data schema version 3 persists profile references and migrates
+  version 1 and version 2 data without evaluating code;
+- profile application validates the complete target, applies scheme,
+  fragments, sound, voice, and spatial state as one transaction, and restores
+  the previous live configuration on error;
+- =emacsvox-aural-list-profiles= provides spoken create, copy, update,
+  activate, rename, delete, view, validate, refresh, and home commands.
+
+** DONE Slice 20: Workflow Semantic Migrations
+CLOSED: [2026-07-26 Sun]
+
+- Complete the mail vertical slice across Notmuch and Gnus with message,
+  unread, flagged, attachment, selection, refresh, and lifecycle facts.
+- Add Dired file, directory, marked, deletion-flagged, selection, navigation,
+  and operation facts.
+- Add Magit section, visibility, staging, navigation, refresh, success, and
+  failure facts.
+- Register module-owned semantics and optional built-in feature fragments
+  without requiring Notmuch, Gnus, or Magit to be installed at startup.
+- Preserve established speech, voices, cues, ordering, and interactivity when
+  no semantic rule changes the presentation.
+- Add focused module tests demonstrating that schemes can distinguish the new
+  roles, states, events, attributes, modules, and occasions.
+
+Deliverable: the most-used mail, filesystem, and version-control workflows emit
+coherent intent that users can customize without remapping isolated icon calls.
+
+Implemented details:
+
+- Notmuch and Gnus expose message lifecycle and status facts; Dired exposes
+  entry kind and marking state; Magit exposes section, visibility, staging,
+  refresh, success, and failure facts;
+- optional mail-status, Dired-state, and Magit-visibility fragments register
+  independently of optional package installation;
+- existing spoken text, cue choice, call count, and feedback order remain the
+  compatibility default, with focused tests proving shared semantic context.
+
+Checks for Slices 17--20: 1,507 expected passes and zero unexpected results in
+the clean full repository suite, with one existing optional Mu4e skip; 97
+focused Notmuch, Gnus, Dired, and Magit passes; isolated compiled preview,
+training, advice, and key-binding parity; all 27 semantic traces matching;
+current generated reference and clean repository aural audit; temporary byte
+compilation; =check-parens=; focused =checkdoc=; =org-lint=; and
+=git diff --check=.  The local audit additionally reports unregistered
+alternate takes in the untracked =sounds/bart/= customization; those user
+files were excluded from the clean repository gate and were not changed.
 
 * Test Gates
 

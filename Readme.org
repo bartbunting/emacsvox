@@ -43,12 +43,20 @@ while users can override presentation globally or for a module, major mode,
 derived mode, session, or individual buffer.
 
 Use =M-x emacsvox-aural=, or =C-e H=, to open the spoken aural home.  It
-reports current status and routes to schemes, feature fragments,
-buffer-local rules, semantic vocabulary, sound packs, spatial controls,
-training, and diagnostics.  From an ordinary buffer, =C-e E= always runs
+reports current status and routes to saved profiles, schemes, feature
+fragments, buffer-local rules, semantic vocabulary, sound packs, spatial
+controls, training, and the Aural Doctor.  From an ordinary buffer, =C-e E=
+always runs
 =emacsvox-aural-explain-presentation= at point so presentation problems can
 be inspected directly.  Press =h= in any aural manager or editor to return
 home.
+
+Use =M-x emacsvox-aural-list-profiles= to save and switch complete named
+configurations.  A profile references one base scheme and ordered feature
+fragments, and can capture sound-pack, voice-palette, and portable spatial
+settings without copying their rules.  Use =M-x emacsvox-aural-doctor= when
+bindings, loaded byte-code, personal data, resources, or the backend appear
+wrong; it reports each check and offers only explicit safe repairs.
 
 Use =M-x emacsvox-aural-list-schemes= to browse schemes and
 =M-x emacsvox-aural-edit-scheme= to customize one accessibly.  The generated

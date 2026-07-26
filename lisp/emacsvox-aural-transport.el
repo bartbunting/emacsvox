@@ -32,6 +32,7 @@
 (declare-function voice-from-acss "voice-setup" (style))
 
 (defvar emacsvox-sounds-current-pack)
+(defvar emacsvox-aural-voice-palette-override)
 (defvar emacsvox-use-icons)
 (defvar tts-speaker-process)
 (defvar voice-lock-mode)
@@ -122,6 +123,11 @@ Standalone local cues run this hook after playback has been requested.")
 (defun emacsvox-aural--voice-palette ()
   "Return the effective voice palette at the current submission boundary."
   (or
+   (and
+    emacsvox-aural-voice-palette-override
+    (emacsvox-aural-voice-palette
+     emacsvox-aural-voice-palette-override)
+    emacsvox-aural-voice-palette-override)
    (emacsvox-aural-effective-scheme-provider 'voice-palette)
    'acss-default))
 
