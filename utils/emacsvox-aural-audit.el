@@ -510,7 +510,13 @@ below a presentation boundary."
    "=:occasion=, =:legacy-cue=, =:legacy-face=, and "
    "=:legacy-personality=.  Unknown "
    "semantics, attributes, cues, voices, providers, fields, or schema "
-   "versions fail validation.\n\n"
+   "versions fail validation.  Singular and plural state and event forms are "
+   "canonicalized, range-local scalar facts override base facts, and local "
+   "state and event sets compose with base sets.  Explanation displays this "
+   "same authoritative fact plist.  Declared role, occasion, and phase "
+   "contracts reject impossible selectors.  Validation warns about deprecated "
+   "semantic aliases and rules whose fallback selectors overlap more-specific "
+   "rules.\n\n"
    "Ordered actions require an =:id= and =:kind=.  A speech action supplies "
    "either literal =:text= or a safe =:text-template= such as "
    "=\"Heading {level}\"=, and may supply =:voice=, =:volume=, and =:space=.  "
@@ -533,9 +539,13 @@ below a presentation boundary."
    "Register meaning before emitting it.  A semantic registration supplies a "
    "unique identifier, =:kind= (=role=, =event=, =state=, or =attribute=), "
    "intent summary, owner, and any value, occasion, phase, fallback, or usage "
-   "contract.  The registry owner defines the intent, type, and allowed "
-   "values; modules emit those facts, while schemes and fragments decide only "
-   "how to present them.  For example, core owns the =visibility= attribute "
+   "contract.  Optional =:roles= restricts a state, event, or attribute to "
+   "named roles; optional =:attributes=, =:states=, and =:events= restrict a "
+   "role.  These restrictions, =:occasions=, and =:phases= are enforced for "
+   "facts and rules rather than serving only as documentation.  The registry "
+   "owner defines the intent, type, and allowed values; modules emit those "
+   "facts, while schemes and fragments decide only how to present them.  "
+   "For example, core owns the =visibility= attribute "
    "and its =folded= and =expanded= values.  Do not use a visual face, voice "
    "name, cue name, or file name as semantic identity.\n\n"
    "#+begin_src emacs-lisp\n"
@@ -547,6 +557,14 @@ below a presentation boundary."
    " :occasions '(navigation continuous)\n"
    " :phases '(before content after))\n"
    "#+end_src\n\n"
+   "Use =emacsvox-aural-register-semantic-alias= when an identifier must be "
+   "renamed.  Aliases remain readable migration hooks tagged with the "
+   "semantic contract version, compile to the canonical identifier, and "
+   "produce deprecation diagnostics.  Never silently reuse an old identifier "
+   "for a different intent.  A fallback must retain the same semantic kind.  "
+   "When emitted facts name a more specific semantic, rules selecting its "
+   "fallback also match weakly; exact rules compose later and explanation "
+   "shows the complete path and distance.\n\n"
    "For persistent formatted text, attach =emacsvox-aural-facts= and "
    "=emacsvox-aural-module= text properties.  A submission is one inferred "
    "object until facts, module, occasion, or a new queued icon changes.  "
@@ -581,9 +599,14 @@ below a presentation boundary."
 
 (defun emacsvox-aural-audit--insert-semantics ()
   "Insert generated semantic and occasion tables at point."
-  (insert "* Semantic Registry\n\n")
+  (insert
+   "* Semantic Registry\n\n"
+   (format
+    "Operational semantic contract version: =%d=.\n\n"
+    emacsvox-aural-semantic-schema-version))
   (emacsvox-aural-audit--insert-table
-   '("Identifier" "Kind" "Owner" "Value" "Occasions" "Phases" "Intent")
+   '("Identifier" "Kind" "Owner" "Value" "Roles" "Attributes" "States"
+     "Events" "Occasions" "Phases" "Fallback" "Intent")
    (mapcar
     (lambda (record)
       (list
@@ -593,10 +616,29 @@ below a presentation boundary."
        (or
         (emacsvox-aural-semantic-allowed-values record)
         (emacsvox-aural-semantic-value-type record))
+       (emacsvox-aural-semantic-roles record)
+       (emacsvox-aural-semantic-attributes record)
+       (emacsvox-aural-semantic-states record)
+       (emacsvox-aural-semantic-events record)
        (emacsvox-aural-semantic-occasions record)
        (emacsvox-aural-semantic-phases record)
+       (emacsvox-aural-semantic-fallback record)
        (emacsvox-aural-semantic-summary record)))
     (emacsvox-aural-semantics)))
+  (insert "** Stable Semantic Aliases\n\n")
+  (emacsvox-aural-audit--insert-table
+   '("Deprecated identifier" "Canonical identifier" "Owner"
+     "Since contract version" "Migration note")
+   (mapcar
+    (lambda (record)
+      (list
+       (emacsvox-aural-semantic-alias-id record)
+       (emacsvox-aural-canonical-semantic-id
+        (emacsvox-aural-semantic-alias-id record))
+       (emacsvox-aural-semantic-alias-owner record)
+       (emacsvox-aural-semantic-alias-since-version record)
+       (emacsvox-aural-semantic-alias-summary record)))
+    (emacsvox-aural-semantic-aliases)))
   (insert "** Presentation Occasions\n\n")
   (emacsvox-aural-audit--insert-table
    '("Identifier" "Owner" "Intent")

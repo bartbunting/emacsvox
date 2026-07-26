@@ -73,7 +73,7 @@
      (:constructor emacsvox-aural--make-selector))
   "A validated selector compiled from declarative rule data."
   role events states attributes required-attributes module mode occasion legacy-cue
-  legacy-face legacy-personality)
+  legacy-face legacy-personality semantic-aliases)
 
 (cl-defstruct
     (emacsvox-aural-action
@@ -135,7 +135,7 @@
   face-presentation-enabled voice-lock-enabled
   legacy-cue legacy-face-source legacy-faces legacy-face-provenance
   legacy-personality
-  legacy-source source-buffer source-buffer-name)
+  legacy-source source-buffer source-buffer-name facts semantic-aliases)
 
 (cl-defstruct
     (emacsvox-aural-content-style
@@ -147,7 +147,7 @@
     (emacsvox-aural-render-plan
      (:constructor emacsvox-aural--make-render-plan))
   "Ordered backend-independent result of rule resolution."
-  before content after matched-rules rule-scores)
+  before content after matched-rules rule-scores semantic-matches)
 
 (defun emacsvox-aural--rule-error (format-string &rest arguments)
   "Signal a rule error described by FORMAT-STRING and ARGUMENTS."
@@ -269,14 +269,15 @@ voice."
 
 (defun emacsvox-aural--require-kind (id kind label)
   "Return semantic ID when registered as KIND, otherwise report LABEL."
-  (let ((record (emacsvox-aural-semantic id)))
+  (let* ((canonical (emacsvox-aural-canonical-semantic-id id))
+         (record (emacsvox-aural-semantic canonical)))
     (unless record
       (emacsvox-aural--rule-error "%s is not registered: %S" label id))
     (unless (eq (emacsvox-aural-semantic-kind record) kind)
       (emacsvox-aural--rule-error
        "%s %S is registered as %S, not %S"
        label id (emacsvox-aural-semantic-kind record) kind))
-    id))
+    canonical))
 
 (defun emacsvox-aural--normalize-symbols (singular plural label)
   "Combine SINGULAR and PLURAL into unique symbols for LABEL."
@@ -322,16 +323,195 @@ LABEL identifies the source in validation errors."
      for (key value) on plist by #'cddr
      unless (memq key reserved)
      do
-     (let* ((id (emacsvox-aural--keyword-attribute key))
+     (let* ((raw-id (emacsvox-aural--keyword-attribute key))
+            (id (emacsvox-aural-canonical-semantic-id raw-id))
             (record (emacsvox-aural-semantic id)))
        (unless (and record (eq (emacsvox-aural-semantic-kind record) 'attribute))
          (emacsvox-aural--rule-error
           "%s contains unknown attribute %S" label key))
+       (when (assq id attributes)
+         (emacsvox-aural--rule-error
+          "%s defines attribute %S more than once" label id))
        (unless (emacsvox-aural--valid-attribute-value-p record value)
          (emacsvox-aural--rule-error
           "%s has invalid value for %S: %S" label id value))
        (push (cons id value) attributes)))
     (nreverse attributes)))
+
+(defun emacsvox-aural--semantic-alias-records (ids)
+  "Return unique alias records referenced by semantic IDS."
+  (let (aliases)
+    (dolist (id ids)
+      (when-let* ((alias (emacsvox-aural-semantic-alias id)))
+        (unless
+            (cl-find
+             (emacsvox-aural-semantic-alias-id alias)
+             aliases
+             :key #'emacsvox-aural-semantic-alias-id
+             :test #'eq)
+          (push alias aliases))))
+    (nreverse aliases)))
+
+(defun emacsvox-aural--semantic-ids-in-plist (plist reserved)
+  "Return raw semantic identifiers represented by PLIST outside RESERVED."
+  (cl-loop
+   for (key _) on plist by #'cddr
+   unless (memq key reserved)
+   collect (emacsvox-aural--keyword-attribute key)))
+
+(defun emacsvox-aural--canonicalize-facts (facts)
+  "Return (CANONICAL-FACTS . ALIASES) for declarative FACTS.
+
+Singular event and state keys are folded into their plural forms.  Every
+attribute occurs once under its canonical identifier, in stable identifier
+order.  ALIASES records deprecated identifiers encountered during migration."
+  (emacsvox-aural--require-plist facts "Semantic facts")
+  (let* ((raw-role (plist-get facts :role))
+         (raw-events
+          (emacsvox-aural--normalize-symbols
+           (plist-get facts :event)
+           (plist-get facts :events)
+           "Fact events"))
+         (raw-states
+          (emacsvox-aural--normalize-symbols
+           (plist-get facts :state)
+           (plist-get facts :states)
+           "Fact states"))
+         (raw-attributes
+          (emacsvox-aural--semantic-ids-in-plist
+           facts emacsvox-aural--fact-keys))
+         (alias-records
+          (emacsvox-aural--semantic-alias-records
+           (append
+            (when raw-role (list raw-role))
+            raw-events raw-states raw-attributes)))
+         (role
+          (and raw-role
+               (emacsvox-aural--require-kind
+                raw-role 'role "Fact role")))
+         (events
+          (delete-dups
+           (mapcar
+            (lambda (event)
+              (emacsvox-aural--require-kind event 'event "Fact event"))
+            raw-events)))
+         (states
+          (delete-dups
+           (mapcar
+            (lambda (state)
+              (emacsvox-aural--require-kind state 'state "Fact state"))
+            raw-states)))
+         (attributes
+          (sort
+           (emacsvox-aural--extract-attributes
+            facts emacsvox-aural--fact-keys "Semantic facts")
+           (lambda (left right)
+             (string-lessp
+              (symbol-name (car left))
+              (symbol-name (car right))))))
+         canonical)
+    (when role
+      (setq canonical (plist-put canonical :role role)))
+    (when events
+      (setq canonical (plist-put canonical :events events)))
+    (when states
+      (setq canonical (plist-put canonical :states states)))
+    (dolist (attribute attributes)
+      (setq
+       canonical
+       (plist-put
+        canonical
+        (intern (format ":%s" (car attribute)))
+        (cdr attribute))))
+    (when (plist-member facts :content)
+      (setq canonical (plist-put canonical :content (plist-get facts :content))))
+    (cons canonical alias-records)))
+
+(defun emacsvox-aural-canonical-facts (facts)
+  "Return the authoritative canonical representation of semantic FACTS."
+  (car (emacsvox-aural--canonicalize-facts facts)))
+
+(defun emacsvox-aural-migrate-facts
+    (facts &optional from-version)
+  "Migrate semantic FACTS from FROM-VERSION to the current contract.
+
+Aliases are stable migration hooks: identifiers deprecated at or after
+FROM-VERSION are replaced by their canonical targets.  Future versions are
+rejected so callers cannot silently discard an unknown contract."
+  (let ((version (or from-version emacsvox-aural-semantic-schema-version)))
+    (unless
+        (and
+         (integerp version)
+         (> version 0)
+         (<= version emacsvox-aural-semantic-schema-version))
+      (emacsvox-aural--rule-error
+       "Unsupported semantic contract version: %S" version))
+    (emacsvox-aural-canonical-facts facts)))
+
+(defun emacsvox-aural-merge-facts (base local)
+  "Canonically merge BASE facts with range-local LOCAL facts.
+
+LOCAL overrides scalar role, content, and attribute values.  Event and state
+sets compose with local values first.  The result contains one authoritative
+property for each semantic field."
+  (let* ((base (emacsvox-aural-canonical-facts (or base nil)))
+         (local (emacsvox-aural-canonical-facts (or local nil)))
+         (role
+          (if (plist-member local :role)
+              (plist-get local :role)
+            (plist-get base :role)))
+         (events
+          (delete-dups
+           (append
+            (copy-sequence (plist-get local :events))
+            (copy-sequence (plist-get base :events)))))
+         (states
+          (delete-dups
+           (append
+            (copy-sequence (plist-get local :states))
+            (copy-sequence (plist-get base :states)))))
+         (content-set-p
+          (or
+           (plist-member local :content)
+           (plist-member base :content)))
+         (content
+          (if (plist-member local :content)
+              (plist-get local :content)
+            (plist-get base :content)))
+         (base-attributes
+          (emacsvox-aural--extract-attributes
+           base emacsvox-aural--fact-keys "Base semantic facts"))
+         (local-attributes
+          (emacsvox-aural--extract-attributes
+           local emacsvox-aural--fact-keys "Range-local semantic facts"))
+         (attributes (copy-tree base-attributes))
+         result)
+    (dolist (attribute local-attributes)
+      (setf (alist-get (car attribute) attributes) (cdr attribute)))
+    (setq
+     attributes
+     (sort
+      attributes
+      (lambda (left right)
+        (string-lessp
+         (symbol-name (car left))
+         (symbol-name (car right))))))
+    (when role
+      (setq result (plist-put result :role role)))
+    (when events
+      (setq result (plist-put result :events events)))
+    (when states
+      (setq result (plist-put result :states states)))
+    (dolist (attribute attributes)
+      (setq
+       result
+       (plist-put
+        result
+        (intern (format ":%s" (car attribute)))
+        (cdr attribute))))
+    (when content-set-p
+      (setq result (plist-put result :content content)))
+    result))
 
 (defun emacsvox-aural--require-attribute-ids (value label)
   "Validate attribute identifier list VALUE for LABEL."
@@ -339,9 +519,113 @@ LABEL identifies the source in validation errors."
     (emacsvox-aural--rule-error "%s must be a proper list: %S" label value))
   (let (attributes)
     (dolist (id value)
-      (emacsvox-aural--require-kind id 'attribute label)
-      (push id attributes))
+      (push
+       (emacsvox-aural--require-kind id 'attribute label)
+       attributes))
     (delete-dups (nreverse attributes))))
+
+(defun emacsvox-aural-semantic-lineage (id)
+  "Return canonical semantic ID followed by its fallback ancestors."
+  (let ((current (emacsvox-aural-canonical-semantic-id id))
+        lineage)
+    (while current
+      (when (memq current lineage)
+        (emacsvox-aural--rule-error
+         "Semantic fallback cycle involving %S" current))
+      (push current lineage)
+      (setq
+       current
+       (when-let* ((record (emacsvox-aural-semantic current)))
+         (emacsvox-aural-semantic-fallback record))))
+    (nreverse lineage)))
+
+(defun emacsvox-aural-semantic-distance (selected actual)
+  "Return fallback distance when SELECTED matches ACTUAL, or nil.
+
+Distance zero is an exact match.  A positive distance means ACTUAL falls
+back to the more general SELECTED semantic."
+  (cl-position
+   (emacsvox-aural-canonical-semantic-id selected)
+   (emacsvox-aural-semantic-lineage actual)
+   :test #'eq))
+
+(defun emacsvox-aural--semantic-restriction-allows-p (actual allowed)
+  "Return non-nil when ACTUAL is covered by one of ALLOWED semantics."
+  (cl-some
+   (lambda (candidate)
+     (numberp (emacsvox-aural-semantic-distance candidate actual)))
+   allowed))
+
+(defun emacsvox-aural--validate-semantic-combination
+    (role events states attributes occasion label)
+  "Validate an operational semantic combination described by LABEL."
+  (let* ((role-record (and role (emacsvox-aural-semantic role)))
+         (entries
+          (append
+           (mapcar (lambda (id) (cons 'event id)) events)
+           (mapcar (lambda (id) (cons 'state id)) states)
+           (mapcar (lambda (entry) (cons 'attribute (car entry))) attributes))))
+    (when (and role-record occasion)
+      (let ((allowed (emacsvox-aural-semantic-occasions role-record)))
+        (when (and allowed (not (memq occasion allowed)))
+          (emacsvox-aural--rule-error
+           "%s uses role %S on unsupported occasion %S; allowed: %S"
+           label role occasion allowed))))
+    (dolist (entry entries)
+      (let* ((kind (car entry))
+             (id (cdr entry))
+             (record (emacsvox-aural-semantic id))
+             (roles (emacsvox-aural-semantic-roles record))
+             (role-contract
+              (and
+               role-record
+               (pcase kind
+                 ('event (emacsvox-aural-semantic-events role-record))
+                 ('state (emacsvox-aural-semantic-states role-record))
+                 ('attribute
+                  (emacsvox-aural-semantic-attributes role-record))))))
+        (when (and roles (null role))
+          (emacsvox-aural--rule-error
+           "%s uses %S without one of its required roles %S"
+           label id roles))
+        (when
+            (and
+             roles role
+             (not
+              (emacsvox-aural--semantic-restriction-allows-p role roles)))
+          (emacsvox-aural--rule-error
+           "%s combines %S with invalid role %S; allowed: %S"
+           label id role roles))
+        (when
+            (and
+             role-contract
+             (not
+              (emacsvox-aural--semantic-restriction-allows-p
+               id role-contract)))
+          (emacsvox-aural--rule-error
+           "%s combines role %S with unsupported %S %S; allowed: %S"
+           label role kind id role-contract))
+        (when occasion
+          (let ((allowed (emacsvox-aural-semantic-occasions record)))
+            (when (and allowed (not (memq occasion allowed)))
+              (emacsvox-aural--rule-error
+               "%s uses %S on unsupported occasion %S; allowed: %S"
+               label id occasion allowed))))))
+    t))
+
+(defun emacsvox-aural--selector-semantics (selector)
+  "Return semantic records explicitly selected by SELECTOR."
+  (delq
+   nil
+   (mapcar
+    #'emacsvox-aural-semantic
+    (append
+     (when (emacsvox-aural-selector-role selector)
+       (list (emacsvox-aural-selector-role selector)))
+     (emacsvox-aural-selector-events selector)
+     (emacsvox-aural-selector-states selector)
+     (mapcar #'car (emacsvox-aural-selector-attributes selector))
+     (emacsvox-aural-selector-required-attributes selector)))))
 
 (defun emacsvox-aural--template-fields (template label)
   "Return validated semantic fields referenced by TEMPLATE for LABEL."
@@ -381,17 +665,45 @@ LABEL identifies the source in validation errors."
 (defun emacsvox-aural--compile-selector (selector rule-id)
   "Compile SELECTOR for RULE-ID."
   (emacsvox-aural--require-plist selector (format "Selector for %S" rule-id))
-  (let* ((role (plist-get selector :role))
-         (events
+  (let* ((raw-role (plist-get selector :role))
+         (raw-events
           (emacsvox-aural--normalize-symbols
            (plist-get selector :event)
            (plist-get selector :events)
            "Selector events"))
-         (states
+         (raw-states
           (emacsvox-aural--normalize-symbols
            (plist-get selector :state)
            (plist-get selector :states)
            "Selector states"))
+         (raw-required (or (plist-get selector :requires) nil))
+         (raw-attributes
+          (emacsvox-aural--semantic-ids-in-plist
+           selector emacsvox-aural--selector-keys))
+         (semantic-aliases
+          (emacsvox-aural--semantic-alias-records
+           (append
+            (when raw-role (list raw-role))
+            raw-events raw-states raw-required raw-attributes)))
+         (role
+          (and
+           raw-role
+           (emacsvox-aural--require-kind
+            raw-role 'role "Selector role")))
+         (events
+          (delete-dups
+           (mapcar
+            (lambda (event)
+              (emacsvox-aural--require-kind
+               event 'event "Selector event"))
+            raw-events)))
+         (states
+          (delete-dups
+           (mapcar
+            (lambda (state)
+              (emacsvox-aural--require-kind
+               state 'state "Selector state"))
+            raw-states)))
          (module (plist-get selector :module))
          (mode (plist-get selector :mode))
          (occasion (plist-get selector :occasion))
@@ -400,18 +712,12 @@ LABEL identifies the source in validation errors."
          (legacy-personality (plist-get selector :legacy-personality))
          (required-attributes
           (emacsvox-aural--require-attribute-ids
-           (or (plist-get selector :requires) nil)
+           raw-required
            "Required selector attributes"))
          (attributes
           (emacsvox-aural--extract-attributes
            selector emacsvox-aural--selector-keys
            (format "Selector for %S" rule-id))))
-    (when role
-      (emacsvox-aural--require-kind role 'role "Selector role"))
-    (dolist (event events)
-      (emacsvox-aural--require-kind event 'event "Selector event"))
-    (dolist (state states)
-      (emacsvox-aural--require-kind state 'state "Selector state"))
     (when module
       (emacsvox-aural--require-symbol module "Selector module"))
     (when mode
@@ -436,6 +742,13 @@ LABEL identifies the source in validation errors."
         (emacsvox-aural--rule-error
          "Selector for %S both fixes and requires attributes: %S"
          rule-id redundant)))
+    (emacsvox-aural--validate-semantic-combination
+     role events states
+     (append
+      attributes
+      (mapcar (lambda (id) (cons id :required)) required-attributes))
+     occasion
+     (format "Selector for %S" rule-id))
     (emacsvox-aural--make-selector
      :role role
      :events events
@@ -447,7 +760,8 @@ LABEL identifies the source in validation errors."
      :occasion occasion
      :legacy-cue legacy-cue
      :legacy-face legacy-face
-     :legacy-personality legacy-personality)))
+     :legacy-personality legacy-personality
+     :semantic-aliases semantic-aliases)))
 
 (defun emacsvox-aural--selector-default-anchor (selector)
   "Return the backward-compatible action anchor for SELECTOR.
@@ -784,6 +1098,51 @@ explicit anchor."
      (emacsvox-aural--compile-phase
       (plist-get render :after) rule-id 'after default-anchor))))
 
+(defun emacsvox-aural--phase-operations-active-p (operations)
+  "Return non-nil when OPERATIONS can affect an action phase."
+  (or
+   (emacsvox-aural-phase-operations-suppress operations)
+   (emacsvox-aural-phase-operations-replace-set-p operations)
+   (emacsvox-aural-phase-operations-remove operations)
+   (emacsvox-aural-phase-operations-prepend operations)
+   (emacsvox-aural-phase-operations-append operations)))
+
+(defun emacsvox-aural--content-patch-active-p (patch)
+  "Return non-nil when content PATCH can affect presentation."
+  (or
+   (emacsvox-aural-content-patch-suppress patch)
+   (emacsvox-aural-content-patch-speak-set-p patch)
+   (emacsvox-aural-content-patch-voice-set-p patch)
+   (emacsvox-aural-content-patch-volume-set-p patch)
+   (emacsvox-aural-content-patch-space-set-p patch)))
+
+(defun emacsvox-aural--validate-render-phases
+    (selector contribution rule-id)
+  "Validate CONTRIBUTION phases against SELECTOR semantics for RULE-ID."
+  (let (used)
+    (when
+        (emacsvox-aural--phase-operations-active-p
+         (emacsvox-aural-contribution-before contribution))
+      (push 'before used))
+    (when
+        (emacsvox-aural--content-patch-active-p
+         (emacsvox-aural-contribution-content contribution))
+      (push 'content used))
+    (when
+        (emacsvox-aural--phase-operations-active-p
+         (emacsvox-aural-contribution-after contribution))
+      (push 'after used))
+    (dolist (record (emacsvox-aural--selector-semantics selector))
+      (let ((allowed (emacsvox-aural-semantic-phases record)))
+        (dolist (phase used)
+          (when (and allowed (not (memq phase allowed)))
+            (emacsvox-aural--rule-error
+             "Rule %S renders in phase %S, unsupported by semantic %S; allowed: %S"
+             rule-id phase
+             (emacsvox-aural-semantic-id record)
+             allowed)))))
+    t))
+
 (defun emacsvox-aural-compile-rule
     (data origin &optional index source layer-order)
   "Compile declarative rule DATA from ORIGIN.
@@ -826,6 +1185,8 @@ LAYER-ORDER records inheritance order within one origin."
            (contribution
             (emacsvox-aural--compile-contribution render id selector)))
       (emacsvox-aural--validate-template-guarantees
+       selector contribution id)
+      (emacsvox-aural--validate-render-phases
        selector contribution id)
       (emacsvox-aural--make-rule
        :id id
@@ -911,7 +1272,6 @@ LAYER-ORDER records inheritance order within one origin."
 
 (defun emacsvox-aural-normalize-input (facts &optional context)
   "Validate FACTS and CONTEXT and return an internal input record."
-  (emacsvox-aural--require-plist facts "Semantic facts")
   (emacsvox-aural--require-plist (or context nil) "Presentation context")
   (let ((unknown
          (cl-loop
@@ -921,17 +1281,12 @@ LAYER-ORDER records inheritance order within one origin."
     (when unknown
       (emacsvox-aural--rule-error
        "Unknown presentation context keys: %S" unknown)))
-  (let* ((role (plist-get facts :role))
-         (events
-          (emacsvox-aural--normalize-symbols
-           (plist-get facts :event)
-           (plist-get facts :events)
-           "Fact events"))
-         (states
-          (emacsvox-aural--normalize-symbols
-           (plist-get facts :state)
-           (plist-get facts :states)
-           "Fact states"))
+  (let* ((canonicalized (emacsvox-aural--canonicalize-facts facts))
+         (facts (car canonicalized))
+         (semantic-aliases (cdr canonicalized))
+         (role (plist-get facts :role))
+         (events (copy-sequence (plist-get facts :events)))
+         (states (copy-sequence (plist-get facts :states)))
          (attributes
           (emacsvox-aural--extract-attributes
            facts emacsvox-aural--fact-keys "Semantic facts"))
@@ -959,12 +1314,6 @@ LAYER-ORDER records inheritance order within one origin."
           (or
            (plist-get context :mode-lineage)
            (and mode (emacsvox-aural-mode-lineage mode)))))
-    (when role
-      (emacsvox-aural--require-kind role 'role "Fact role"))
-    (dolist (event events)
-      (emacsvox-aural--require-kind event 'event "Fact event"))
-    (dolist (state states)
-      (emacsvox-aural--require-kind state 'state "Fact state"))
     (when module
       (emacsvox-aural--require-symbol module "Context module"))
     (when mode
@@ -973,6 +1322,8 @@ LAYER-ORDER records inheritance order within one origin."
       (unless (emacsvox-aural-occasion occasion)
         (emacsvox-aural--rule-error
          "Context occasion is not registered: %S" occasion)))
+    (emacsvox-aural--validate-semantic-combination
+     role events states attributes occasion "Semantic facts")
     (unless (memq face-presentation-enabled '(nil t))
       (emacsvox-aural--rule-error
        "Context face presentation state must be boolean: %S"
@@ -1052,7 +1403,9 @@ LAYER-ORDER records inheritance order within one origin."
      :legacy-personality legacy-personality
      :legacy-source legacy-source
      :source-buffer source-buffer
-     :source-buffer-name source-buffer-name)))
+     :source-buffer-name source-buffer-name
+     :facts (copy-tree facts)
+     :semantic-aliases semantic-aliases)))
 
 (defun emacsvox-aural--mode-distance (selector input)
   "Return mode ancestry distance for SELECTOR and INPUT, or nil."
@@ -1064,8 +1417,54 @@ LAYER-ORDER records inheritance order within one origin."
   (when-let* ((selected (emacsvox-aural-selector-legacy-face selector)))
     (cl-position selected (emacsvox-aural-input-legacy-faces input) :test #'eq)))
 
-(defun emacsvox-aural-rule-matches-p (rule input)
-  "Return non-nil when compiled RULE matches normalized INPUT."
+(defun emacsvox-aural--semantic-match-detail
+    (kind selected actual)
+  "Return provenance when SELECTED matches ACTUAL semantic of KIND."
+  (when-let* ((distance (emacsvox-aural-semantic-distance selected actual)))
+    (list
+     :kind kind
+     :selected selected
+     :actual actual
+     :distance distance
+     :path
+     (cl-subseq
+      (emacsvox-aural-semantic-lineage actual)
+      0 (1+ distance)))))
+
+(defun emacsvox-aural--best-semantic-match
+    (kind selected actuals &optional value)
+  "Return strongest match for SELECTED among ACTUALS of KIND.
+
+ACTUALS contains identifiers, or attribute conses when KIND is `attribute'.
+When VALUE is supplied, an attribute must also have that value."
+  (let (best)
+    (dolist (actual-entry actuals)
+      (let* ((actual
+              (if (eq kind 'attribute)
+                  (car actual-entry)
+                actual-entry))
+             (eligible
+              (or
+               (not (eq kind 'attribute))
+               (eq value :emacsvox-aural-any)
+               (equal value (cdr actual-entry))))
+             (detail
+              (and
+               eligible
+               (emacsvox-aural--semantic-match-detail
+                kind selected actual))))
+        (when
+            (and
+             detail
+             (or
+              (null best)
+              (< (plist-get detail :distance)
+                 (plist-get best :distance))))
+          (setq best detail))))
+    best))
+
+(defun emacsvox-aural-rule-semantic-matches (rule input)
+  "Return semantic match provenance for RULE and INPUT, or `no-match'."
   (let* ((selector (emacsvox-aural-rule-selector rule))
          (role (emacsvox-aural-selector-role selector))
          (events (emacsvox-aural-selector-events selector))
@@ -1073,6 +1472,51 @@ LAYER-ORDER records inheritance order within one origin."
          (attributes (emacsvox-aural-selector-attributes selector))
          (required
           (emacsvox-aural-selector-required-attributes selector))
+         details)
+    (catch 'no-match
+      (when role
+        (let ((detail
+               (and
+                (emacsvox-aural-input-role input)
+                (emacsvox-aural--semantic-match-detail
+                 'role role (emacsvox-aural-input-role input)))))
+          (unless detail (throw 'no-match 'no-match))
+          (push detail details)))
+      (dolist (event events)
+        (let ((detail
+               (emacsvox-aural--best-semantic-match
+                'event event (emacsvox-aural-input-events input))))
+          (unless detail (throw 'no-match 'no-match))
+          (push detail details)))
+      (dolist (state states)
+        (let ((detail
+               (emacsvox-aural--best-semantic-match
+                'state state (emacsvox-aural-input-states input))))
+          (unless detail (throw 'no-match 'no-match))
+          (push detail details)))
+      (dolist (attribute attributes)
+        (let ((detail
+               (emacsvox-aural--best-semantic-match
+                'attribute
+                (car attribute)
+                (emacsvox-aural-input-attributes input)
+                (cdr attribute))))
+          (unless detail (throw 'no-match 'no-match))
+          (push detail details)))
+      (dolist (attribute required)
+        (let ((detail
+               (emacsvox-aural--best-semantic-match
+                'attribute
+                attribute
+                (emacsvox-aural-input-attributes input)
+                :emacsvox-aural-any)))
+          (unless detail (throw 'no-match 'no-match))
+          (push detail details)))
+      (nreverse details))))
+
+(defun emacsvox-aural-rule-matches-p (rule input)
+  "Return non-nil when compiled RULE matches normalized INPUT."
+  (let* ((selector (emacsvox-aural-rule-selector rule))
          (module (emacsvox-aural-selector-module selector))
          (mode (emacsvox-aural-selector-mode selector))
          (occasion (emacsvox-aural-selector-occasion selector))
@@ -1082,25 +1526,10 @@ LAYER-ORDER records inheritance order within one origin."
           (emacsvox-aural-selector-legacy-personality selector)))
     (and
      (emacsvox-aural-rule-enabled rule)
-     (or (null role) (eq role (emacsvox-aural-input-role input)))
-     (cl-every
-      (lambda (event) (memq event (emacsvox-aural-input-events input)))
-      events)
-     (cl-every
-      (lambda (state) (memq state (emacsvox-aural-input-states input)))
-      states)
-     (cl-every
-      (lambda (attribute)
-        (equal
-         (alist-get
-          (car attribute) (emacsvox-aural-input-attributes input)
-          :emacsvox-aural-missing)
-         (cdr attribute)))
-      attributes)
-     (cl-every
-      (lambda (attribute)
-        (assq attribute (emacsvox-aural-input-attributes input)))
-      required)
+     (not
+      (eq
+       (emacsvox-aural-rule-semantic-matches rule input)
+       'no-match))
      (or (null module) (eq module (emacsvox-aural-input-module input)))
      (or (null mode) (numberp (emacsvox-aural--mode-distance selector input)))
      (or
@@ -1132,6 +1561,15 @@ LAYER-ORDER records inheritance order within one origin."
          (identity
           (+ (if (emacsvox-aural-selector-role selector) 1 0)
              (length (emacsvox-aural-selector-events selector))))
+         (semantic-details
+          (emacsvox-aural-rule-semantic-matches rule input))
+         (semantic-closeness
+          (if (eq semantic-details 'no-match)
+              0
+            (-
+             (cl-loop
+              for detail in semantic-details
+              sum (plist-get detail :distance)))))
          (module (emacsvox-aural-selector-module selector))
          (mode (emacsvox-aural-selector-mode selector))
          (distance (and mode (emacsvox-aural--mode-distance selector input)))
@@ -1159,6 +1597,7 @@ LAYER-ORDER records inheritance order within one origin."
     (vector
      origin
      identity
+     semantic-closeness
      combined-exact
      mode-rank
      mode-closeness
@@ -1211,6 +1650,20 @@ LAYER-ORDER records inheritance order within one origin."
             (setq best score)))))
     best))
 
+(defun emacsvox-aural--best-rule-input (rule inputs)
+  "Return RULE's strongest matching member of normalized INPUTS."
+  (let (best best-score)
+    (dolist (input inputs)
+      (when (emacsvox-aural-rule-matches-p rule input)
+        (let ((score (emacsvox-aural-rule-score rule input)))
+          (when
+              (or
+               (null best-score)
+               (emacsvox-aural--score-less-p best-score score))
+            (setq best input
+                  best-score score)))))
+    best))
+
 (defun emacsvox-aural--matching-rules-for-inputs (rules inputs)
   "Return scored RULES matching any normalized member of INPUTS.
 
@@ -1229,6 +1682,131 @@ Each rule occurs once with its strongest score across the complete object."
               (symbol-name (emacsvox-aural-rule-id (cdr left)))
               (symbol-name (emacsvox-aural-rule-id (cdr right))))
            (emacsvox-aural--score-less-p left-score right-score)))))))
+
+(defun emacsvox-aural--fallback-list-distance (general specific)
+  "Return fallback distance from SPECIFIC list to GENERAL list, or nil."
+  (when (= (length general) (length specific))
+    (let ((distance 0)
+          valid)
+      (setq valid t)
+      (cl-mapc
+       (lambda (general-id specific-id)
+         (let ((item-distance
+                (emacsvox-aural-semantic-distance
+                 general-id specific-id)))
+           (if (numberp item-distance)
+               (setq distance (+ distance item-distance))
+             (setq valid nil))))
+       general specific)
+      (and valid distance))))
+
+(defun emacsvox-aural--fallback-attribute-distance (general specific)
+  "Return fallback distance from SPECIFIC attributes to GENERAL, or nil."
+  (when (= (length general) (length specific))
+    (let ((distance 0)
+          valid)
+      (setq valid t)
+      (cl-mapc
+       (lambda (general-entry specific-entry)
+         (let ((item-distance
+                (and
+                 (equal (cdr general-entry) (cdr specific-entry))
+                 (emacsvox-aural-semantic-distance
+                  (car general-entry) (car specific-entry)))))
+           (if (numberp item-distance)
+               (setq distance (+ distance item-distance))
+             (setq valid nil))))
+       general specific)
+      (and valid distance))))
+
+(defun emacsvox-aural-selector-fallback-distance (general specific)
+  "Return positive fallback distance from SPECIFIC selector to GENERAL.
+
+Return nil unless all non-semantic selector constraints are equal and the
+semantic selections have the same shape.  Exact selectors return nil because
+they do not form a fallback-shadow relationship."
+  (let* ((context-accessors
+          '(emacsvox-aural-selector-module
+            emacsvox-aural-selector-mode
+            emacsvox-aural-selector-occasion
+            emacsvox-aural-selector-legacy-cue
+            emacsvox-aural-selector-legacy-face
+            emacsvox-aural-selector-legacy-personality))
+         (context-equal
+          (cl-every
+           (lambda (accessor)
+             (equal
+              (funcall accessor general)
+              (funcall accessor specific)))
+           context-accessors))
+         (general-role (emacsvox-aural-selector-role general))
+         (specific-role (emacsvox-aural-selector-role specific))
+         (role-distance
+          (cond
+           ((and (null general-role) (null specific-role)) 0)
+           ((and general-role specific-role)
+            (emacsvox-aural-semantic-distance
+             general-role specific-role))
+           (t nil)))
+         (event-distance
+          (emacsvox-aural--fallback-list-distance
+           (emacsvox-aural-selector-events general)
+           (emacsvox-aural-selector-events specific)))
+         (state-distance
+          (emacsvox-aural--fallback-list-distance
+           (emacsvox-aural-selector-states general)
+           (emacsvox-aural-selector-states specific)))
+         (attribute-distance
+          (emacsvox-aural--fallback-attribute-distance
+           (emacsvox-aural-selector-attributes general)
+           (emacsvox-aural-selector-attributes specific)))
+         (required-distance
+          (emacsvox-aural--fallback-list-distance
+           (emacsvox-aural-selector-required-attributes general)
+           (emacsvox-aural-selector-required-attributes specific))))
+    (when
+        (and
+         context-equal
+         (numberp role-distance)
+         (numberp event-distance)
+         (numberp state-distance)
+         (numberp attribute-distance)
+         (numberp required-distance))
+      (let ((total
+             (+ role-distance event-distance state-distance
+                attribute-distance required-distance)))
+        (and (> total 0) total)))))
+
+(defun emacsvox-aural-fallback-shadow-diagnostics (rules)
+  "Return stable fallback-overlap diagnostics for compiled RULES."
+  (let (diagnostics)
+    (while rules
+      (let ((left (pop rules)))
+        (dolist (right rules)
+          (let* ((left-selector (emacsvox-aural-rule-selector left))
+                 (right-selector (emacsvox-aural-rule-selector right))
+                 (left-distance
+                  (emacsvox-aural-selector-fallback-distance
+                   left-selector right-selector))
+                 (right-distance
+                  (emacsvox-aural-selector-fallback-distance
+                   right-selector left-selector)))
+            (cond
+             (left-distance
+              (push
+               (list
+                :general (emacsvox-aural-rule-id left)
+                :specific (emacsvox-aural-rule-id right)
+                :distance left-distance)
+               diagnostics))
+             (right-distance
+              (push
+               (list
+                :general (emacsvox-aural-rule-id right)
+                :specific (emacsvox-aural-rule-id left)
+                :distance right-distance)
+               diagnostics)))))))
+    (nreverse diagnostics)))
 
 (defun emacsvox-aural--remove-actions (actions ids)
   "Return ACTIONS without actions whose identifiers occur in IDS."
@@ -1423,17 +2001,20 @@ of `object', `run', and `transition'."
          (matches
           (emacsvox-aural--matching-rules-for-inputs rules normalized))
          (plan
-          (emacsvox-aural--make-render-plan
+         (emacsvox-aural--make-render-plan
            :before nil
            :content (emacsvox-aural--make-content-style :speak t)
            :after nil
            :matched-rules nil
-           :rule-scores nil)))
+           :rule-scores nil
+           :semantic-matches nil)))
     (dolist (match matches)
       (let* ((score (car match))
              (rule (cdr match))
              (contribution (emacsvox-aural-rule-contribution rule))
-             (rule-id (emacsvox-aural-rule-id rule)))
+             (rule-id (emacsvox-aural-rule-id rule))
+             (best-input
+              (emacsvox-aural--best-rule-input rule normalized)))
         (setf
          (emacsvox-aural-render-plan-before plan)
          (emacsvox-aural--apply-phase
@@ -1460,7 +2041,16 @@ of `object', `run', and `transition'."
          (append
           (emacsvox-aural-render-plan-rule-scores plan)
           (list
-           (cons rule-id score))))))
+           (cons rule-id score))))
+        (setf
+         (emacsvox-aural-render-plan-semantic-matches plan)
+         (append
+          (emacsvox-aural-render-plan-semantic-matches plan)
+          (list
+           (cons
+            rule-id
+            (emacsvox-aural-rule-semantic-matches
+             rule best-input)))))))
     plan))
 
 (defun emacsvox-aural-resolve (facts context rules &optional anchor)

@@ -244,6 +244,150 @@
       (emacsvox-aural-render-plan-matched-rules plan)
       '(folded-heading heading-level-one)))))
 
+(ert-deftest emacsvox-aural-rules-match-semantic-fallbacks-with-provenance ()
+  "General fallback rules compose before exact rules with an explicit path."
+  (let ((emacsvox-aural-semantic-registry
+         (copy-hash-table emacsvox-aural-semantic-registry))
+        (emacsvox-aural-semantic-alias-registry
+         (copy-hash-table emacsvox-aural-semantic-alias-registry)))
+    (emacsvox-aural-register-semantic
+     'contract-general-event
+     :kind 'event
+     :summary "General event")
+    (emacsvox-aural-register-semantic
+     'contract-specific-event
+     :kind 'event
+     :summary "Specific event"
+     :fallback 'contract-general-event)
+    (emacsvox-aural-validate-registry)
+    (let* ((general
+            (emacsvox-test--compile-rule
+             'general
+             '(:event contract-general-event)
+             '(:before
+               ((:id general-action :kind speech :text "general")))))
+           (specific
+            (emacsvox-test--compile-rule
+             'specific
+             '(:event contract-specific-event)
+             '(:before
+               ((:id specific-action :kind speech :text "specific")))))
+           (plan
+            (emacsvox-aural-resolve
+             '(:event contract-specific-event)
+             nil
+             (list specific general)))
+           (generic-match
+            (cdr
+             (assq
+              'general
+              (emacsvox-aural-render-plan-semantic-matches plan)))))
+      (should
+       (equal
+        (emacsvox-aural-render-plan-matched-rules plan)
+        '(general specific)))
+      (should
+       (equal
+        (emacsvox-test--action-ids
+         (emacsvox-aural-render-plan-before plan))
+        '(general-action specific-action)))
+      (should (= (plist-get (car generic-match) :distance) 1))
+      (should
+       (equal
+        (plist-get (car generic-match) :path)
+        '(contract-specific-event contract-general-event))))))
+
+(ert-deftest emacsvox-aural-rules-enforce-operational-combinations ()
+  "Declared role, occasion, and phase restrictions reject impossible rules."
+  (let ((emacsvox-aural-semantic-registry
+         (copy-hash-table emacsvox-aural-semantic-registry))
+        (emacsvox-aural-semantic-alias-registry
+         (copy-hash-table emacsvox-aural-semantic-alias-registry)))
+    (emacsvox-aural-register-semantic
+     'contract-importance
+     :kind 'attribute
+     :summary "Importance"
+     :roles '(contract-object)
+     :value-type 'symbol
+     :allowed-values '(low high)
+     :occasions '(navigation)
+     :phases '(content))
+    (emacsvox-aural-register-semantic
+     'contract-object
+     :kind 'role
+     :summary "Contract object"
+     :attributes '(contract-importance)
+     :occasions '(navigation)
+     :phases '(before content))
+    (emacsvox-aural-validate-registry)
+    (should
+     (emacsvox-test--compile-rule
+      'valid-contract
+      '(:role contract-object :contract-importance high
+        :occasion navigation)
+      '(:content (:voice voice-bolden))))
+    (dolist
+        (definition
+         '((wrong-role
+            (:role heading :contract-importance high
+             :occasion navigation)
+            (:content (:speak t)))
+           (wrong-occasion
+            (:role contract-object :contract-importance high
+             :occasion notification)
+            (:content (:speak t)))
+           (wrong-phase
+            (:role contract-object :contract-importance high
+             :occasion navigation)
+            (:before
+             ((:id invalid-phase :kind speech :text "important"))))))
+      (should-error
+       (emacsvox-test--compile-rule
+        (car definition) (cadr definition) (caddr definition))
+       :type 'emacsvox-aural-rule-error))
+    (should-error
+     (emacsvox-aural-normalize-input
+      '(:role heading :contract-importance high)
+      '(:occasion navigation))
+     :type 'emacsvox-aural-rule-error)))
+
+(ert-deftest emacsvox-aural-rules-canonicalize-and-merge-facts ()
+  "Base and range facts produce one stable authoritative property per field."
+  (should
+   (equal
+    (emacsvox-aural-merge-facts
+     '(:role heading :event focus-entered :state folded
+       :level 1 :content "base")
+     '(:events (object-changed) :states (collapsed)
+       :level 2 :content "local"))
+    '(:role heading
+      :events (object-changed focus-entered)
+      :states (folded)
+      :level 2
+      :content "local")))
+  (should
+   (equal
+    (emacsvox-aural-migrate-facts
+     '(:role heading :state collapsed) 1)
+    '(:role heading :states (folded)))))
+
+(ert-deftest emacsvox-aural-rules-retain-semantic-alias-diagnostics ()
+  "Deprecated identifiers compile canonically without losing diagnostics."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'old-folded-name
+           '(:role heading :state collapsed)
+           '(:content (:speak t))))
+         (selector (emacsvox-aural-rule-selector rule))
+         (input
+          (emacsvox-aural-normalize-input
+           '(:role heading :state collapsed))))
+    (should
+     (equal (emacsvox-aural-selector-states selector) '(folded)))
+    (should (emacsvox-aural-selector-semantic-aliases selector))
+    (should (equal (emacsvox-aural-input-states input) '(folded)))
+    (should (emacsvox-aural-input-semantic-aliases input))))
+
 (ert-deftest emacsvox-aural-rules-compose-explicit-voice-dimensions ()
   "Explicit ACSS data composes by dimension over a complete named preset."
   (let* ((rules

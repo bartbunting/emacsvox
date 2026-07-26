@@ -67,13 +67,13 @@ A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:pare
     (:append ((:id heading-end :kind cue :cue section)))))))
 #+end_src
 
-Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, =:legacy-face=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.
+Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, =:legacy-face=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.  Singular and plural state and event forms are canonicalized, range-local scalar facts override base facts, and local state and event sets compose with base sets.  Explanation displays this same authoritative fact plist.  Declared role, occasion, and phase contracts reject impossible selectors.  Validation warns about deprecated semantic aliases and rules whose fallback selectors overlap more-specific rules.
 
 Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Optional =:anchor= is =object=, =run=, or =transition=.  Semantic rules default to one action per object; compatibility face and personality rules default to one per formatting run.  A before transition action occurs when entering matching presentation and an after transition action when leaving it.  Action IDs are the handles used by later =:remove= operations.
 
 * Module Author Reference
 
-Register meaning before emitting it.  A semantic registration supplies a unique identifier, =:kind= (=role=, =event=, =state=, or =attribute=), intent summary, owner, and any value, occasion, phase, fallback, or usage contract.  The registry owner defines the intent, type, and allowed values; modules emit those facts, while schemes and fragments decide only how to present them.  For example, core owns the =visibility= attribute and its =folded= and =expanded= values.  Do not use a visual face, voice name, cue name, or file name as semantic identity.
+Register meaning before emitting it.  A semantic registration supplies a unique identifier, =:kind= (=role=, =event=, =state=, or =attribute=), intent summary, owner, and any value, occasion, phase, fallback, or usage contract.  Optional =:roles= restricts a state, event, or attribute to named roles; optional =:attributes=, =:states=, and =:events= restrict a role.  These restrictions, =:occasions=, and =:phases= are enforced for facts and rules rather than serving only as documentation.  The registry owner defines the intent, type, and allowed values; modules emit those facts, while schemes and fragments decide only how to present them.  For example, core owns the =visibility= attribute and its =folded= and =expanded= values.  Do not use a visual face, voice name, cue name, or file name as semantic identity.
 
 #+begin_src emacs-lisp
 (emacsvox-aural-register-semantic
@@ -84,6 +84,8 @@ Register meaning before emitting it.  A semantic registration supplies a unique 
  :occasions '(navigation continuous)
  :phases '(before content after))
 #+end_src
+
+Use =emacsvox-aural-register-semantic-alias= when an identifier must be renamed.  Aliases remain readable migration hooks tagged with the semantic contract version, compile to the canonical identifier, and produce deprecation diagnostics.  Never silently reuse an old identifier for a different intent.  A fallback must retain the same semantic kind.  When emitted facts name a more specific semantic, rules selecting its fallback also match weakly; exact rules compose later and explanation shows the complete path and distance.
 
 For persistent formatted text, attach =emacsvox-aural-facts= and =emacsvox-aural-module= text properties.  A submission is one inferred object until facts, module, occasion, or a new queued icon changes.  Attach the same non-nil =emacsvox-aural-object= value across adjacent runs when an explicitly identified object must span those changes.  For transient output, bind =emacsvox-aural-submission-facts=, =emacsvox-aural-submission-context=, =emacsvox-aural-submission-module=, and =emacsvox-aural-submission-occasion= around the existing =tts-speak= or =emacsvox-icon= call.  Use =emacsvox-aural-source-substring= instead of =buffer-substring= when copied source text can be styled by overlays; the returned string carries the same authoritative face snapshot used by point explanation.  Capture context in the source buffer before text enters a scratch buffer or notification log.  A migrated integration should centralize that binding in a small call boundary and put preserved legacy output in a function ending in =-compatibility=.  The source audit rejects direct icon calls elsewhere in migrated modules.
 
@@ -100,136 +102,144 @@ Extension checklist:
 
 * Semantic Registry
 
-| Identifier | Kind | Owner | Value | Occasions | Phases | Intent |
-|------------+------+-------+-------+-----------+--------+--------|
-| =accepted= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | The current candidate or choice was accepted |
-| =activity-ended= | =event= | =core= | - | - | - | A repeating or ongoing activity ended |
-| =agent-block= | =role= | =agent-shell= | - | =navigation=, =inspection= | =before=, =content=, =after= | One navigable structural block in an agent transcript |
-| =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =other= | - | - | The structural kind of an Agent Shell transcript block |
-| =agent-content-copied= | =event= | =agent-shell= | - | =state-change= | =before=, =content=, =after= | Agent Shell content was copied for reuse |
-| =agent-content-inspected= | =event= | =agent-shell= | - | =inspection= | =before=, =content=, =after= | The user explicitly requested Agent Shell content |
-| =agent-error= | =role= | =agent-shell= | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | Error content produced while running an agent session |
-| =agent-permission-requested= | =event= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An Agent Shell action requested user permission |
-| =agent-permission-resolved= | =event= | =agent-shell= | - | =state-change=, =notification= | =before=, =content=, =after= | An Agent Shell permission request was resolved |
-| =agent-permission-result= | =attribute= | =agent-shell= | =allowed=, =denied=, =cancelled=, =sent= | - | - | The result of an Agent Shell permission decision |
-| =agent-plan= | =role= | =agent-shell= | - | =continuous=, =navigation=, =inspection= | =before=, =content=, =after= | A plan produced by an agent |
-| =agent-prompt-cancelled= | =event= | =agent-shell= | - | =state-change= | =before=, =content=, =after= | Agent Shell prompt composition was cancelled |
-| =agent-prompt-disposition= | =attribute= | =agent-shell= | =submitted=, =queued=, =sent= | - | - | Whether an Agent Shell prompt was submitted, queued, or sent |
-| =agent-prompt-editor= | =role= | =agent-shell= | - | =navigation=, =edit=, =state-change= | =before=, =content=, =after= | An editor used to compose an Agent Shell prompt |
-| =agent-prompt-opened= | =event= | =agent-shell= | - | =edit=, =state-change= | =before=, =content=, =after= | An Agent Shell prompt editor was opened |
-| =agent-prompt-submitted= | =event= | =agent-shell= | - | =state-change=, =notification= | =before=, =content=, =after= | A composed Agent Shell prompt was submitted or queued |
-| =agent-response= | =role= | =agent-shell= | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | User-facing response content produced by an agent |
-| =agent-session= | =role= | =agent-shell= | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | One interactive agent conversation |
-| =agent-session-interrupted= | =event= | =agent-shell= | - | =state-change=, =notification= | =before=, =content=, =after= | The user interrupted an Agent Shell request |
-| =agent-session-opened= | =event= | =agent-shell= | - | =navigation=, =state-change= | =before=, =content=, =after= | An Agent Shell session was opened or selected |
-| =agent-setting-changed= | =event= | =agent-shell= | - | =state-change= | =before=, =content=, =after= | An Agent Shell presentation or session setting changed |
-| =agent-source-block= | =role= | =agent-shell= | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | A rendered source-code block in an agent response |
-| =agent-source-language= | =attribute= | =agent-shell= | =string= | - | - | The declared language of an Agent Shell source block |
-| =agent-speech-level= | =attribute= | =agent-shell= | =auto=, =full=, =response=, =notify=, =quiet= | - | - | The selected automatic speech level for an agent session |
-| =agent-table= | =role= | =agent-shell= | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | A rendered table in an agent response |
-| =agent-table-cell= | =role= | =agent-shell= | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | One logical cell in a rendered agent-response table |
-| =agent-table-column= | =attribute= | =agent-shell= | =integer= | - | - | The zero-based logical column of an Agent Shell table cell |
-| =agent-table-entered= | =event= | =agent-shell= | - | =navigation= | =before=, =content=, =after= | Navigation entered a rendered Agent Shell table |
-| =agent-table-exited= | =event= | =agent-shell= | - | =navigation= | =before=, =content=, =after= | Navigation left a rendered Agent Shell table |
-| =agent-table-row= | =attribute= | =agent-shell= | =integer= | - | - | The zero-based logical row of an Agent Shell table cell |
-| =agent-thought= | =role= | =agent-shell= | - | =continuous=, =navigation=, =inspection= | =before=, =content=, =after= | Intermediate reasoning content exposed by an agent |
-| =agent-tool= | =role= | =agent-shell= | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | A tool invocation or its output in an agent session |
-| =agent-tool-status= | =attribute= | =agent-shell= | =pending=, =in-progress=, =completed=, =failed= | - | - | The current lifecycle status of an Agent Shell tool call |
-| =agent-tool-status-changed= | =event= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An Agent Shell tool call changed lifecycle status |
-| =agent-user-prompt= | =role= | =agent-shell= | - | =continuous=, =navigation=, =edit=, =inspection= | =before=, =content=, =after= | User-authored prompt content in an agent conversation |
-| =agent-viewport= | =role= | =agent-shell= | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | An Agent Shell response or prompt viewport |
-| =agent-viewport-mode= | =attribute= | =agent-shell= | =view=, =edit= | - | - | The interaction mode of an Agent Shell viewport |
-| =agent-viewport-opened= | =event= | =agent-shell= | - | =state-change= | =before=, =content=, =after= | An Agent Shell viewport was opened |
-| =agent-viewport-refreshed= | =event= | =agent-shell= | - | =state-change=, =notification= | =before=, =content=, =after= | An Agent Shell viewport finished refreshing |
-| =boundary-entered= | =event= | =core= | - | =navigation= | =before=, =content=, =after= | Navigation arrived at a source-code boundary |
-| =candidate= | =role= | =core= | - | =navigation=, =state-change= | =before=, =content=, =after= | One available completion candidate |
-| =checked= | =state= | =markdown= | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | A checkable item is complete |
-| =code-construct= | =role= | =core= | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | A structural construct in source code |
-| =completion-index= | =attribute= | =core= | =integer= | - | - | Zero-based position of a candidate in a completion list |
-| =confirmation-request= | =role= | =core= | - | =notification= | =before=, =content=, =after= | A prompt asking the user to confirm an action |
-| =deletion-flagged= | =state= | =dired= | - | =navigation=, =state-change= | =before=, =content=, =after= | A filesystem entry is flagged for deletion |
-| =entry-deletion-flagged= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry was flagged for deletion |
-| =entry-inspected= | =event= | =dired= | - | =inspection= | =before=, =content=, =after= | The user requested a property of a filesystem entry |
-| =entry-inspection-kind= | =attribute= | =dired= | =size=, =modification-time=, =access-time=, =symbolic-link-target=, =permissions=, =file-type= | - | - | The requested property of a filesystem entry |
-| =entry-kind= | =attribute= | =dired= | =file=, =directory=, =symbolic-link=, =other= | - | - | The filesystem kind of a directory entry |
-| =entry-marked= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry was marked |
-| =entry-opened= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry or directory was opened |
-| =entry-staged= | =event= | =magit= | - | =state-change= | =before=, =content=, =after= | A version-control entry was staged |
-| =entry-unmarked= | =event= | =dired= | - | =state-change= | =before=, =content=, =after= | A filesystem entry mark was removed |
-| =entry-unstaged= | =event= | =magit= | - | =state-change= | =before=, =content=, =after= | A version-control entry was unstaged |
-| =field= | =role= | =core= | - | =navigation=, =continuous=, =inspection= | =content= | A named field within a structured object |
-| =field-kind= | =attribute= | =core= | =symbol= | - | - | The module-defined purpose of a structured field |
-| =filesystem-entry= | =role= | =dired= | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | A file, directory, symbolic link, or other directory entry |
-| =filesystem-listing= | =role= | =dired= | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | A directory or search-result listing of filesystem entries |
-| =flagged= | =state= | =core= | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | An item has been explicitly flagged for attention |
-| =focus-entered= | =event= | =core= | - | - | - | Navigation arrived at an aural object |
-| =folded= | =state= | =core= | - | - | - | Descendants of an object are hidden |
-| =game-over= | =event= | =core= | - | - | - | A game ended without successful completion |
-| =has-attachments= | =state= | =core= | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | A message contains one or more attachments |
-| =heading= | =role= | =core= | - | - | - | A titled structural section |
-| =level= | =attribute= | =core= | =positive-integer= | - | - | One-based structural depth |
-| =mail-action-kind= | =attribute= | =core= | =open=, =close=, =compose=, =select=, =unsubscribe=, =catch-up=, =restore=, =list=, =customize=, =toggle-topic=, =show=, =hide=, =scroll=, =activate=, =modify=, =save=, =archive=, =tag=, =search=, =refresh= | - | - | The mail-reader operation whose feedback is being presented |
-| =mail-group= | =role= | =gnus= | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A mail or news group containing messages |
-| =mail-view= | =role= | =core= | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A mail reader group, summary, article, compose, or server view |
-| =mail-view-closed= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | A mail reader view was closed, buried, or left |
-| =mail-view-kind= | =attribute= | =core= | =group=, =summary=, =article=, =compose=, =server=, =search=, =thread=, =topic=, =other= | - | - | The kind of mail-reader view being presented |
-| =mail-view-opened= | =event= | =core= | - | =navigation=, =state-change= | =before=, =content=, =after= | A mail reader view was opened or selected |
-| =markdown-code-block= | =role= | =markdown= | - | =navigation=, =continuous=, =inspection=, =edit= | =before=, =content=, =after= | A fenced Markdown source-code block |
-| =markdown-completion-completed= | =event= | =markdown= | - | =edit= | =before=, =content=, =after= | A Markdown completion command updated document content |
-| =markdown-content= | =role= | =markdown= | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | Ordinary prose content in a Markdown document |
-| =markdown-footnote= | =role= | =markdown= | - | =navigation=, =continuous=, =inspection=, =edit= | =before=, =content=, =after= | A Markdown footnote definition or reference |
-| =markdown-heading-navigated= | =event= | =markdown= | - | =navigation= | =before=, =content=, =after= | Structural navigation arrived at a Markdown heading |
-| =markdown-language= | =attribute= | =markdown= | =string= | - | - | The declared language of a Markdown fenced code block |
-| =markdown-link= | =role= | =markdown= | - | =navigation=, =continuous=, =inspection=, =edit= | =before=, =content=, =after= | A Markdown link, image, or reference |
-| =markdown-link-navigated= | =event= | =markdown= | - | =navigation= | =before=, =content=, =after= | Navigation arrived at a Markdown link |
-| =markdown-list-item= | =role= | =markdown= | - | =navigation=, =continuous=, =inspection=, =edit= | =before=, =content=, =after= | One ordered or unordered Markdown list item |
-| =markdown-list-kind= | =attribute= | =markdown= | =ordered=, =unordered= | - | - | Whether a Markdown list item is ordered or unordered |
-| =markdown-navigation-kind= | =attribute= | =markdown= | =line=, =structural= | - | - | Whether Markdown navigation was by line or structure |
-| =markdown-operation-completed= | =event= | =markdown= | - | =notification=, =state-change= | =before=, =content=, =after= | A Markdown validation or export operation completed |
-| =markdown-separator= | =role= | =markdown= | - | =navigation=, =continuous= | =before=, =content=, =after= | A thematic or structural separator in Markdown |
-| =markdown-structure-navigated= | =event= | =markdown= | - | =navigation= | =before=, =content=, =after= | A Markdown structural navigation command moved point |
-| =markdown-table-row= | =role= | =markdown= | - | =navigation=, =continuous=, =inspection=, =edit= | =before=, =content=, =after= | One logical row of a Markdown table |
-| =markdown-task= | =role= | =markdown= | - | =navigation=, =continuous=, =state-change=, =inspection=, =edit= | =before=, =content=, =after= | A Markdown task-list item |
-| =markdown-task-state= | =attribute= | =markdown= | =checked=, =unchecked= | - | - | Whether a Markdown task is checked or unchecked |
-| =marked= | =state= | =dired= | - | =navigation=, =state-change= | =before=, =content=, =after= | An item is marked for a later operation |
-| =message= | =role= | =core= | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A mail or communication message |
-| =message-deleted= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | A message was marked or removed as deleted |
-| =message-marked= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | A message mark or persistent attention state changed |
-| =message-opened= | =event= | =core= | - | =state-change=, =notification= | =before=, =content=, =after= | A mail or communication message was opened for reading |
-| =message-part= | =role= | =core= | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A body, attachment, link, button, or other part of a message |
-| =message-part-kind= | =attribute= | =core= | =body=, =page=, =attachment=, =link=, =button=, =mime-part=, =header=, =other= | - | - | The kind of content part within a message |
-| =message-thread= | =role= | =core= | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | A conversation thread containing related messages |
-| =object-changed= | =event= | =core= | - | - | - | A registered object was created or modified |
-| =operation-completed= | =event= | =core= | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A requested module operation completed successfully |
-| =operation-failed= | =event= | =core= | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A requested module operation failed |
-| =permission-request= | =role= | =agent-shell= | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | An agent action awaiting user permission |
-| =processing= | =state= | =agent-shell= | - | =continuous=, =notification= | =before=, =content=, =after= | An agent session is processing a request |
-| =processing-completed= | =event= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An agent completed initialization or a request |
-| =processing-failed= | =event= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An agent request ended exceptionally |
-| =processing-started= | =event= | =agent-shell= | - | =notification= | =before=, =content=, =after= | An agent began initialization or request processing |
-| =product-identity= | =event= | =core= | - | - | - | Emacsvox identity or readiness was presented |
-| =refresh-completed= | =event= | =core= | - | =notification= | =before=, =content=, =after= | A displayed collection finished refreshing |
-| =refresh-failed= | =event= | =core= | - | =notification= | =before=, =content=, =after= | A displayed collection failed to refresh |
-| =section-kind= | =attribute= | =magit= | =symbol= | - | - | The integration-defined kind of a structural section |
-| =selected= | =state= | =core= | - | =navigation=, =state-change= | =before=, =content=, =after= | An item is the current selection |
-| =selection-cleared= | =event= | =core= | - | - | - | A mark or selection was removed |
-| =staged= | =state= | =magit= | - | =navigation=, =state-change= | =before=, =content=, =after= | A version-control change is staged for commit |
-| =state-changed= | =event= | =core= | - | - | - | A registered state changed |
-| =syntax-role= | =attribute= | =core= | =symbol= | - | - | The language-defined structural role of source code |
-| =unchecked= | =state= | =markdown= | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | A checkable item is incomplete |
-| =unread= | =state= | =core= | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | An item has not yet been read |
-| =unstaged= | =state= | =magit= | - | =navigation=, =state-change= | =before=, =content=, =after= | A version-control change is not staged for commit |
-| =vcs-blame-chunk= | =role= | =magit= | - | =navigation=, =inspection= | =before=, =content=, =after= | One annotated source chunk in a version-control blame view |
-| =vcs-commit-displayed= | =event= | =magit= | - | =navigation=, =state-change= | =before=, =content=, =after= | A version-control commit was displayed |
-| =vcs-diff-scrolled= | =event= | =magit= | - | =navigation= | =before=, =content=, =after= | Navigation moved within a version-control diff |
-| =vcs-process= | =role= | =magit= | - | =notification= | =before=, =content=, =after= | An asynchronous version-control operation |
-| =vcs-section= | =role= | =magit= | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | A structural section in a version-control view |
-| =vcs-view= | =role= | =magit= | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | A version-control status, log, blob, blame, or diff view |
-| =vcs-view-closed= | =event= | =magit= | - | =state-change= | =before=, =content=, =after= | A version-control view was closed or buried |
-| =vcs-view-kind= | =attribute= | =magit= | =status=, =log=, =blob=, =blame=, =diff=, =commit=, =other= | - | - | The kind of version-control view being presented |
-| =vcs-view-opened= | =event= | =magit= | - | =navigation=, =state-change= | =before=, =content=, =after= | A version-control view was opened or selected |
-| =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | Whether structural descendants are visible |
-| =visibility-changed= | =event= | =core= | - | =state-change= | =before=, =content=, =after= | The visible descendants of a structural object changed |
+Operational semantic contract version: =1=.
+
+| Identifier | Kind | Owner | Value | Roles | Attributes | States | Events | Occasions | Phases | Fallback | Intent |
+|------------+------+-------+-------+-------+------------+--------+--------+-----------+--------+----------+--------|
+| =accepted= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The current candidate or choice was accepted |
+| =activity-ended= | =event= | =core= | - | - | - | - | - | - | - | - | A repeating or ongoing activity ended |
+| =agent-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | One navigable structural block in an agent transcript |
+| =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
+| =agent-content-copied= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell content was copied for reuse |
+| =agent-content-inspected= | =event= | =agent-shell= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user explicitly requested Agent Shell content |
+| =agent-error= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | Error content produced while running an agent session |
+| =agent-permission-requested= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An Agent Shell action requested user permission |
+| =agent-permission-resolved= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | An Agent Shell permission request was resolved |
+| =agent-permission-result= | =attribute= | =agent-shell= | =allowed=, =denied=, =cancelled=, =sent= | - | - | - | - | - | - | - | The result of an Agent Shell permission decision |
+| =agent-plan= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection= | =before=, =content=, =after= | - | A plan produced by an agent |
+| =agent-prompt-cancelled= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell prompt composition was cancelled |
+| =agent-prompt-disposition= | =attribute= | =agent-shell= | =submitted=, =queued=, =sent= | - | - | - | - | - | - | - | Whether an Agent Shell prompt was submitted, queued, or sent |
+| =agent-prompt-editor= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =edit=, =state-change= | =before=, =content=, =after= | - | An editor used to compose an Agent Shell prompt |
+| =agent-prompt-opened= | =event= | =agent-shell= | - | - | - | - | - | =edit=, =state-change= | =before=, =content=, =after= | - | An Agent Shell prompt editor was opened |
+| =agent-prompt-submitted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A composed Agent Shell prompt was submitted or queued |
+| =agent-response= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | User-facing response content produced by an agent |
+| =agent-session= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | One interactive agent conversation |
+| =agent-session-interrupted= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | The user interrupted an Agent Shell request |
+| =agent-session-opened= | =event= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | An Agent Shell session was opened or selected |
+| =agent-setting-changed= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Agent Shell presentation or session setting changed |
+| =agent-source-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | - | A rendered source-code block in an agent response |
+| =agent-source-language= | =attribute= | =agent-shell= | =string= | - | - | - | - | - | - | - | The declared language of an Agent Shell source block |
+| =agent-speech-level= | =attribute= | =agent-shell= | =auto=, =full=, =response=, =notify=, =quiet= | - | - | - | - | - | - | - | The selected automatic speech level for an agent session |
+| =agent-table= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | - | A rendered table in an agent response |
+| =agent-table-cell= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection=, =state-change= | =before=, =content=, =after= | - | One logical cell in a rendered agent-response table |
+| =agent-table-column= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | The zero-based logical column of an Agent Shell table cell |
+| =agent-table-entered= | =event= | =agent-shell= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation entered a rendered Agent Shell table |
+| =agent-table-exited= | =event= | =agent-shell= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation left a rendered Agent Shell table |
+| =agent-table-row= | =attribute= | =agent-shell= | =integer= | - | - | - | - | - | - | - | The zero-based logical row of an Agent Shell table cell |
+| =agent-thought= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection= | =before=, =content=, =after= | - | Intermediate reasoning content exposed by an agent |
+| =agent-tool= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =inspection=, =notification= | =before=, =content=, =after= | - | A tool invocation or its output in an agent session |
+| =agent-tool-status= | =attribute= | =agent-shell= | =pending=, =in-progress=, =completed=, =failed= | - | - | - | - | - | - | - | The current lifecycle status of an Agent Shell tool call |
+| =agent-tool-status-changed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An Agent Shell tool call changed lifecycle status |
+| =agent-user-prompt= | =role= | =agent-shell= | - | - | - | - | - | =continuous=, =navigation=, =edit=, =inspection= | =before=, =content=, =after= | - | User-authored prompt content in an agent conversation |
+| =agent-viewport= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | An Agent Shell response or prompt viewport |
+| =agent-viewport-mode= | =attribute= | =agent-shell= | =view=, =edit= | - | - | - | - | - | - | - | The interaction mode of an Agent Shell viewport |
+| =agent-viewport-opened= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Agent Shell viewport was opened |
+| =agent-viewport-refreshed= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | An Agent Shell viewport finished refreshing |
+| =boundary-entered= | =event= | =core= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation arrived at a source-code boundary |
+| =candidate= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | One available completion candidate |
+| =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
+| =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
+| =completion-index= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Zero-based position of a candidate in a completion list |
+| =confirmation-request= | =role= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A prompt asking the user to confirm an action |
+| =deletion-flagged= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem entry is flagged for deletion |
+| =entry-deletion-flagged= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry was flagged for deletion |
+| =entry-inspected= | =event= | =dired= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user requested a property of a filesystem entry |
+| =entry-inspection-kind= | =attribute= | =dired= | =size=, =modification-time=, =access-time=, =symbolic-link-target=, =permissions=, =file-type= | - | - | - | - | - | - | - | The requested property of a filesystem entry |
+| =entry-kind= | =attribute= | =dired= | =file=, =directory=, =symbolic-link=, =other= | =filesystem-entry= | - | - | - | - | - | - | The filesystem kind of a directory entry |
+| =entry-marked= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry was marked |
+| =entry-opened= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry or directory was opened |
+| =entry-staged= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control entry was staged |
+| =entry-unmarked= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry mark was removed |
+| =entry-unstaged= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control entry was unstaged |
+| =field= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =content= | - | A named field within a structured object |
+| =field-kind= | =attribute= | =core= | =symbol= | =field= | - | - | - | - | - | - | The module-defined purpose of a structured field |
+| =filesystem-entry= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A file, directory, symbolic link, or other directory entry |
+| =filesystem-listing= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A directory or search-result listing of filesystem entries |
+| =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
+| =focus-entered= | =event= | =core= | - | - | - | - | - | - | - | - | Navigation arrived at an aural object |
+| =folded= | =state= | =core= | - | - | - | - | - | - | - | - | Descendants of an object are hidden |
+| =game-over= | =event= | =core= | - | - | - | - | - | - | - | - | A game ended without successful completion |
+| =has-attachments= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A message contains one or more attachments |
+| =heading= | =role= | =core= | - | - | - | - | - | - | - | - | A titled structural section |
+| =level= | =attribute= | =core= | =positive-integer= | - | - | - | - | - | - | - | One-based structural depth |
+| =mail-action-kind= | =attribute= | =core= | =open=, =close=, =compose=, =select=, =unsubscribe=, =catch-up=, =restore=, =list=, =customize=, =toggle-topic=, =show=, =hide=, =scroll=, =activate=, =modify=, =save=, =archive=, =tag=, =search=, =refresh= | - | - | - | - | - | - | - | The mail-reader operation whose feedback is being presented |
+| =mail-group= | =role= | =gnus= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail or news group containing messages |
+| =mail-view= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail reader group, summary, article, compose, or server view |
+| =mail-view-closed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A mail reader view was closed, buried, or left |
+| =mail-view-kind= | =attribute= | =core= | =group=, =summary=, =article=, =compose=, =server=, =search=, =thread=, =topic=, =other= | =mail-view= | - | - | - | - | - | - | The kind of mail-reader view being presented |
+| =mail-view-opened= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A mail reader view was opened or selected |
+| =markdown-code-block= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A fenced Markdown source-code block |
+| =markdown-completion-completed= | =event= | =markdown= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A Markdown completion command updated document content |
+| =markdown-content= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | Ordinary prose content in a Markdown document |
+| =markdown-footnote= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A Markdown footnote definition or reference |
+| =markdown-heading-navigated= | =event= | =markdown= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Structural navigation arrived at a Markdown heading |
+| =markdown-language= | =attribute= | =markdown= | =string= | =markdown-code-block= | - | - | - | - | - | - | The declared language of a Markdown fenced code block |
+| =markdown-link= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A Markdown link, image, or reference |
+| =markdown-link-navigated= | =event= | =markdown= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation arrived at a Markdown link |
+| =markdown-list-item= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | One ordered or unordered Markdown list item |
+| =markdown-list-kind= | =attribute= | =markdown= | =ordered=, =unordered= | =markdown-list-item=, =markdown-task= | - | - | - | - | - | - | Whether a Markdown list item is ordered or unordered |
+| =markdown-navigation-kind= | =attribute= | =markdown= | =line=, =structural= | =heading=, =markdown-content=, =markdown-list-item=, =markdown-task=, =markdown-link=, =markdown-code-block=, =markdown-table-row=, =markdown-footnote=, =markdown-separator= | - | - | - | - | - | - | Whether Markdown navigation was by line or structure |
+| =markdown-operation-completed= | =event= | =markdown= | - | - | - | - | - | =notification=, =state-change= | =before=, =content=, =after= | - | A Markdown validation or export operation completed |
+| =markdown-separator= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A thematic or structural separator in Markdown |
+| =markdown-structure-navigated= | =event= | =markdown= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | A Markdown structural navigation command moved point |
+| =markdown-table-row= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | One logical row of a Markdown table |
+| =markdown-task= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A Markdown task-list item |
+| =markdown-task-state= | =attribute= | =markdown= | =checked=, =unchecked= | =markdown-task= | - | - | - | - | - | - | Whether a Markdown task is checked or unchecked |
+| =marked= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | An item is marked for a later operation |
+| =message= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail or communication message |
+| =message-deleted= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A message was marked or removed as deleted |
+| =message-marked= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A message mark or persistent attention state changed |
+| =message-opened= | =event= | =core= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A mail or communication message was opened for reading |
+| =message-part= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A body, attachment, link, button, or other part of a message |
+| =message-part-kind= | =attribute= | =core= | =body=, =page=, =attachment=, =link=, =button=, =mime-part=, =header=, =other= | =message-part= | - | - | - | - | - | - | The kind of content part within a message |
+| =message-thread= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A conversation thread containing related messages |
+| =object-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered object was created or modified |
+| =operation-completed= | =event= | =core= | - | - | - | - | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation completed successfully |
+| =operation-failed= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation failed |
+| =permission-request= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | An agent action awaiting user permission |
+| =processing= | =state= | =agent-shell= | - | - | - | - | - | =continuous=, =notification= | =before=, =content=, =after= | - | An agent session is processing a request |
+| =processing-completed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent completed initialization or a request |
+| =processing-failed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent request ended exceptionally |
+| =processing-started= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent began initialization or request processing |
+| =product-identity= | =event= | =core= | - | - | - | - | - | - | - | - | Emacsvox identity or readiness was presented |
+| =refresh-completed= | =event= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A displayed collection finished refreshing |
+| =refresh-failed= | =event= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A displayed collection failed to refresh |
+| =section-kind= | =attribute= | =magit= | =symbol= | =vcs-section= | - | - | - | - | - | - | The integration-defined kind of a structural section |
+| =selected= | =state= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | An item is the current selection |
+| =selection-cleared= | =event= | =core= | - | - | - | - | - | - | - | - | A mark or selection was removed |
+| =staged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is staged for commit |
+| =state-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered state changed |
+| =syntax-role= | =attribute= | =core= | =symbol= | - | - | - | - | - | - | - | The language-defined structural role of source code |
+| =unchecked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is incomplete |
+| =unread= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =notification= | =before=, =content=, =after= | - | An item has not yet been read |
+| =unstaged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is not staged for commit |
+| =vcs-blame-chunk= | =role= | =magit= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | One annotated source chunk in a version-control blame view |
+| =vcs-commit-displayed= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control commit was displayed |
+| =vcs-diff-scrolled= | =event= | =magit= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation moved within a version-control diff |
+| =vcs-process= | =role= | =magit= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An asynchronous version-control operation |
+| =vcs-section= | =role= | =magit= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | A structural section in a version-control view |
+| =vcs-view= | =role= | =magit= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A version-control status, log, blob, blame, or diff view |
+| =vcs-view-closed= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control view was closed or buried |
+| =vcs-view-kind= | =attribute= | =magit= | =status=, =log=, =blob=, =blame=, =diff=, =commit=, =other= | =vcs-view= | - | - | - | - | - | - | The kind of version-control view being presented |
+| =vcs-view-opened= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control view was opened or selected |
+| =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | - | - | - | - | - | Whether structural descendants are visible |
+| =visibility-changed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The visible descendants of a structural object changed |
+
+** Stable Semantic Aliases
+
+| Deprecated identifier | Canonical identifier | Owner | Since contract version | Migration note |
+|-----------------------+----------------------+-------+------------------------+----------------|
+| =collapsed= | =folded= | =core= | =1= | Use the canonical folded state identifier |
 
 ** Presentation Occasions
 

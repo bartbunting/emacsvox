@@ -30,7 +30,7 @@
      (:constructor emacsvox-aural--make-validation-report))
   "Validation result for one registered aural scheme."
   scheme valid errors warnings missing-assets unavailable-voices
-  unreachable-rules ambiguous-ties disabled-rules)
+  unreachable-rules ambiguous-ties disabled-rules semantic-diagnostics)
 
 (defvar emacsvox-aural-tools--last-explanation nil
   "Most recently displayed aural presentation explanation.")
@@ -520,12 +520,38 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         (princ (format "Fallback: %s\n" fallback)))
       (when-let* ((values (emacsvox-aural-semantic-allowed-values record)))
         (princ (format "Allowed values: %S\n" values)))
+      (when-let* ((roles (emacsvox-aural-semantic-roles record)))
+        (princ (format "Valid roles: %S\n" roles)))
+      (when-let* ((attributes (emacsvox-aural-semantic-attributes record)))
+        (princ (format "Valid attributes: %S\n" attributes)))
+      (when-let* ((states (emacsvox-aural-semantic-states record)))
+        (princ (format "Valid states: %S\n" states)))
+      (when-let* ((events (emacsvox-aural-semantic-events record)))
+        (princ (format "Valid events: %S\n" events)))
       (when-let* ((occasions (emacsvox-aural-semantic-occasions record)))
         (princ (format "Occasions: %S\n" occasions)))
       (when-let* ((phases (emacsvox-aural-semantic-phases record)))
         (princ (format "Phases: %S\n" phases)))
       (when-let* ((usage (emacsvox-aural-semantic-usage record)))
         (princ (format "\nUsage\n\n%s\n" usage)))
+      (when-let* ((aliases
+                   (cl-remove-if-not
+                    (lambda (alias)
+                      (eq
+                       (emacsvox-aural-canonical-semantic-id
+                        (emacsvox-aural-semantic-alias-id alias))
+                       (emacsvox-aural-semantic-id record)))
+                    (emacsvox-aural-semantic-aliases))))
+        (princ "\nDeprecated aliases\n\n")
+        (dolist (alias aliases)
+          (princ
+           (format
+            "%s, since contract version %d: %s\n"
+            (emacsvox-aural-semantic-alias-id alias)
+            (emacsvox-aural-semantic-alias-since-version alias)
+            (or
+             (emacsvox-aural-semantic-alias-summary alias)
+             "Use the canonical identifier")))))
       (princ "\nRegistered presentations\n\n")
       (if-let* ((references
                  (emacsvox-aural-tools--rules-for-semantic semantic)))
@@ -605,6 +631,42 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
              ties)))))
     (nreverse ties)))
 
+(defun emacsvox-aural-tools--semantic-diagnostics (rules)
+  "Return alias and fallback-shadow diagnostics for compiled RULES."
+  (let (diagnostics seen-aliases)
+    (dolist (rule rules)
+      (dolist
+          (alias
+           (emacsvox-aural-selector-semantic-aliases
+            (emacsvox-aural-rule-selector rule)))
+        (let ((id (emacsvox-aural-semantic-alias-id alias)))
+          (unless (memq id seen-aliases)
+            (push id seen-aliases)
+            (push
+             (list
+              :kind 'deprecated-alias
+              :rule (emacsvox-aural-rule-id rule)
+              :alias id
+              :canonical
+              (emacsvox-aural-canonical-semantic-id id)
+              :message
+              (emacsvox-aural-semantic-alias-diagnostic id))
+             diagnostics)))))
+    (dolist (shadow (emacsvox-aural-fallback-shadow-diagnostics rules))
+      (push
+       (append
+        (list
+         :kind 'fallback-shadow
+         :message
+         (format
+          "Rule %s selects a fallback of %s; both contribute, with %s stronger"
+          (plist-get shadow :general)
+          (plist-get shadow :specific)
+          (plist-get shadow :specific)))
+        shadow)
+       diagnostics))
+    (nreverse diagnostics)))
+
 (defun emacsvox-aural-tools--rule-voices (rule)
   "Return voice values referenced by RULE."
   (let* ((contribution (emacsvox-aural-rule-contribution rule))
@@ -646,7 +708,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
   "Return a complete validation report for registered SCHEME."
   (let
       (errors warnings rules all-rules missing-assets unavailable
-              unreachable ties disabled)
+              unreachable ties disabled semantic-diagnostics)
     (condition-case error
         (progn
           (emacsvox-aural--scheme-chain scheme)
@@ -708,7 +770,10 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
                 (unless
                     (emacsvox-aural-tools--voice-available-p voice palette)
                   (push voice unavailable))))
-            (setq ties (emacsvox-aural-tools--ambiguous-ties rules))))
+            (setq ties (emacsvox-aural-tools--ambiguous-ties rules))
+            (setq
+             semantic-diagnostics
+             (emacsvox-aural-tools--semantic-diagnostics rules))))
       (error (push (error-message-string error) errors)))
     (when missing-assets
       (push
@@ -726,6 +791,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (push
        "Ambiguous ties are resolved only by stable rule identifier"
        warnings))
+    (dolist (diagnostic semantic-diagnostics)
+      (push (plist-get diagnostic :message) warnings))
     (emacsvox-aural--make-validation-report
      :scheme scheme
      :valid (null errors)
@@ -735,7 +802,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
      :unavailable-voices (delete-dups (nreverse unavailable))
      :unreachable-rules (nreverse unreachable)
      :ambiguous-ties ties
-     :disabled-rules disabled)))
+     :disabled-rules disabled
+     :semantic-diagnostics semantic-diagnostics)))
 
 (defun emacsvox-aural-tools--scheme-at-point-or-read (&optional prompt)
   "Return the scheme at point, or read one using PROMPT."
@@ -1465,6 +1533,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
            (or context (emacsvox-aural-capture-context))))
          (rules (emacsvox-aural-current-rules context))
          (input (emacsvox-aural-normalize-input facts context))
+         (facts (emacsvox-aural-input-facts input))
          (matching (emacsvox-aural-matching-rules rules input))
          (render (emacsvox-aural-resolve-active facts context))
          (concrete (emacsvox-aural-compile-plan render facts context)))
@@ -1475,11 +1544,24 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
      :matching-rules
      (mapcar
       (lambda (rule)
-        (list
-         :id (emacsvox-aural-rule-id rule)
-         :origin (emacsvox-aural-rule-origin rule)
-         :source (emacsvox-aural-rule-source rule)
-         :score (emacsvox-aural-rule-score rule input)))
+        (let ((aliases
+               (append
+                (emacsvox-aural-input-semantic-aliases input)
+                (emacsvox-aural-selector-semantic-aliases
+                 (emacsvox-aural-rule-selector rule)))))
+          (list
+           :id (emacsvox-aural-rule-id rule)
+           :origin (emacsvox-aural-rule-origin rule)
+           :source (emacsvox-aural-rule-source rule)
+           :score (emacsvox-aural-rule-score rule input)
+           :semantic-matches
+           (emacsvox-aural-rule-semantic-matches rule input)
+           :semantic-aliases
+           (mapcar
+            (lambda (alias)
+              (emacsvox-aural-semantic-alias-diagnostic
+               (emacsvox-aural-semantic-alias-id alias)))
+            aliases))))
       matching)
      :render-plan render
      :concrete-plan concrete
@@ -1723,6 +1805,20 @@ selected occasion has no matching rule."
          (faces (plist-get context :legacy-faces))
          (face-source (plist-get context :legacy-face-source))
          (occasion (plist-get context :occasion))
+         (fallback-count
+          (cl-loop
+           for rule in rules
+           sum
+           (cl-count-if
+            (lambda (detail)
+              (> (plist-get detail :distance) 0))
+            (plist-get rule :semantic-matches))))
+         (alias-diagnostics
+          (delete-dups
+           (cl-mapcan
+            (lambda (rule)
+              (copy-sequence (plist-get rule :semantic-aliases)))
+            rules)))
          (matching-occasions
           (emacsvox-aural-tools--matching-occasion-description
            occasion-counts)))
@@ -1757,14 +1853,24 @@ selected occasion has no matching rule."
             "%d %s matched. Strongest rule %s."
             (length rules)
             (if (= (length rules) 1) "rule" "rules")
-            (emacsvox-aural-tools--humanize
-             (plist-get (car (last rules)) :id)))
+             (emacsvox-aural-tools--humanize
+              (plist-get (car (last rules)) :id)))
          (concat
           "No rule matched."
           (when matching-occasions
             (format
              " Matching rules are available for %s. Use a prefix argument to choose an occasion."
              matching-occasions))))
+       (when (> fallback-count 0)
+         (format
+          "%d semantic fallback %s used; technical details give each path."
+          fallback-count
+          (if (= fallback-count 1) "match was" "matches were")))
+       (when alias-diagnostics
+         (format
+          "%d deprecated semantic %s used."
+          (length alias-diagnostics)
+          (if (= (length alias-diagnostics) 1) "alias was" "aliases were")))
        (when before
          (format
           "Before the content, %s."
@@ -1901,7 +2007,23 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
               (plist-get rule :id)
               (plist-get rule :origin)
               (plist-get rule :score)
-              (plist-get rule :source))))
+              (plist-get rule :source)))
+            (dolist (detail (plist-get rule :semantic-matches))
+              (princ
+               (format
+                "  %s: selected %s, actual %s, fallback path %S, distance %d\n"
+                (plist-get detail :kind)
+                (plist-get detail :selected)
+                (plist-get detail :actual)
+                (plist-get detail :path)
+                (plist-get detail :distance))))
+            (dolist
+                (diagnostic
+                 (delete-dups
+                  (copy-sequence
+                   (plist-get rule :semantic-aliases))))
+              (when diagnostic
+                (princ (format "  Deprecation: %s\n" diagnostic)))))
         (princ "No scheme rule matched for this occasion.\n"))
       (princ "\nTechnical details\n\n")
       (princ
@@ -2415,7 +2537,7 @@ SCOPE is `personal', `session', or `buffer'."
   "Return a validation report for registered feature FRAGMENT."
   (let
       (errors warnings rules all-rules missing-assets unavailable
-              unreachable ties disabled)
+              unreachable ties disabled semantic-diagnostics)
     (condition-case error
         (let* ((entry
                 (or
@@ -2465,7 +2587,10 @@ SCOPE is `personal', `session', or `buffer'."
               (unless
                   (emacsvox-aural-tools--voice-available-p voice palette)
                 (push voice unavailable))))
-          (setq ties (emacsvox-aural-tools--ambiguous-ties rules)))
+          (setq ties (emacsvox-aural-tools--ambiguous-ties rules))
+          (setq
+           semantic-diagnostics
+           (emacsvox-aural-tools--semantic-diagnostics rules)))
       (error (push (error-message-string error) errors)))
     (when missing-assets
       (push
@@ -2483,6 +2608,8 @@ SCOPE is `personal', `session', or `buffer'."
       (push
        "Ambiguous ties are resolved only by stable rule identifier"
        warnings))
+    (dolist (diagnostic semantic-diagnostics)
+      (push (plist-get diagnostic :message) warnings))
     (emacsvox-aural--make-validation-report
      :scheme fragment
      :valid (null errors)
@@ -2492,7 +2619,8 @@ SCOPE is `personal', `session', or `buffer'."
      :unavailable-voices (delete-dups (nreverse unavailable))
      :unreachable-rules (nreverse unreachable)
      :ambiguous-ties ties
-     :disabled-rules disabled)))
+     :disabled-rules disabled
+     :semantic-diagnostics semantic-diagnostics)))
 
 (defun emacsvox-aural-tools--fragment-at-point-or-read (&optional prompt)
   "Return the feature fragment at point, or read one using PROMPT."

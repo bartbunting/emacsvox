@@ -19,83 +19,100 @@
      :kind role
      :summary "Ordinary prose content in a Markdown document"
      :owner markdown
-     :occasions (navigation continuous inspection)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-list-item
      :kind role
      :summary "One ordered or unordered Markdown list item"
      :owner markdown
-     :occasions (navigation continuous inspection edit)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-task
      :kind role
      :summary "A Markdown task-list item"
      :owner markdown
-     :occasions (navigation continuous state-change inspection edit)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-link
      :kind role
      :summary "A Markdown link, image, or reference"
      :owner markdown
-     :occasions (navigation continuous inspection edit)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-code-block
      :kind role
      :summary "A fenced Markdown source-code block"
      :owner markdown
-     :occasions (navigation continuous inspection edit)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-table-row
      :kind role
      :summary "One logical row of a Markdown table"
      :owner markdown
-     :occasions (navigation continuous inspection edit)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-footnote
      :kind role
      :summary "A Markdown footnote definition or reference"
      :owner markdown
-     :occasions (navigation continuous inspection edit)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-separator
      :kind role
      :summary "A thematic or structural separator in Markdown"
      :owner markdown
-     :occasions (navigation continuous)
+     :occasions
+     (navigation continuous state-change edit inspection notification)
      :phases (before content after))
     (markdown-language
      :kind attribute
      :summary "The declared language of a Markdown fenced code block"
      :owner markdown
+     :roles (markdown-code-block)
      :value-type string)
     (markdown-list-kind
      :kind attribute
      :summary "Whether a Markdown list item is ordered or unordered"
      :owner markdown
+     :roles (markdown-list-item markdown-task)
      :value-type symbol
      :allowed-values (ordered unordered))
     (markdown-task-state
      :kind attribute
      :summary "Whether a Markdown task is checked or unchecked"
      :owner markdown
+     :roles (markdown-task)
      :value-type symbol
      :allowed-values (checked unchecked))
     (markdown-navigation-kind
      :kind attribute
      :summary "Whether Markdown navigation was by line or structure"
      :owner markdown
+     :roles
+     (heading markdown-content markdown-list-item markdown-task markdown-link
+              markdown-code-block markdown-table-row markdown-footnote
+              markdown-separator)
      :value-type symbol
      :allowed-values (line structural))
     (checked
      :kind state
      :summary "A checkable item is complete"
      :owner markdown
+     :roles (markdown-task)
      :occasions (navigation continuous state-change inspection)
      :phases (before content after))
     (unchecked
      :kind state
      :summary "A checkable item is incomplete"
      :owner markdown
+     :roles (markdown-task)
      :occasions (navigation continuous state-change inspection)
      :phases (before content after))
     (markdown-heading-navigated

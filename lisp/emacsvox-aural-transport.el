@@ -742,7 +742,8 @@ degradation records.  Return balance, capability, and degradation records."
 
 CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
 `local-cue' so capabilities are frozen before playback."
-  (let* ((pack (emacsvox-aural--resource-pack))
+  (let* ((facts (emacsvox-aural-canonical-facts facts))
+         (pack (emacsvox-aural--resource-pack))
          (palette (emacsvox-aural--voice-palette))
          (cue-target (or cue-target 'queued-cue))
          (style (emacsvox-aural-render-plan-content plan))
@@ -1042,10 +1043,16 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
 
 (defun emacsvox-aural--merge-facts (base local)
   "Return semantic facts formed from BASE and run-local LOCAL."
-  (unless (or (null local) (listp local))
+  (unless
+      (or
+       (null local)
+       (and
+        (listp local)
+        (proper-list-p local)
+        (zerop (% (length local) 2))))
     (emacsvox-aural--transport-error
      "Run-local semantic facts must be a plist: %S" local))
-  (append (copy-tree local) (copy-tree base)))
+  (emacsvox-aural-merge-facts base local))
 
 (defun emacsvox-aural--legacy-input (icon facts context)
   "Return concrete source FACTS and CONTEXT for legacy ICON."

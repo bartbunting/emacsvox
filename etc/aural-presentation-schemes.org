@@ -2341,7 +2341,8 @@ skipped, and the only remaining audit failure is the already recorded
 untracked =sounds/bart/= personal pack.  The personal-pack audit exception is
 not broadened and no file in that pack was changed.
 
-** TODO Slice 30: Operational Semantic Contracts
+** DONE Slice 30: Operational Semantic Contracts
+CLOSED: [2026-07-26 Sun]
 
 - Make registered fallback chains participate in rule matching with explicit
   weakest-to-strongest provenance.
@@ -2357,6 +2358,51 @@ not broadened and no file in that pack was changed.
 
 Deliverable: registry metadata affects safe matching and authoring rather than
 serving only as documentation.
+
+Implemented details:
+
+- Semantic registrations may now restrict =:roles= for attributes, states,
+  and events, or =:attributes=, =:states=, and =:events= for roles.  Registry
+  validation checks every typed cross-reference, fallback kind, alias target,
+  occasion, and cycle.  Rule and fact validation enforce declared role,
+  occasion, value, and render-phase contracts; absent restrictions remain
+  intentionally open for compatibility.
+- A specific emitted role, event, state, or attribute matches rules selecting
+  any semantic on its registered fallback chain.  Exact matches have stronger
+  specificity than fallback matches within the normal origin cascade.
+  Render plans and spoken presentation explanations retain each selected and
+  actual identifier, fallback path, and distance in weakest-to-strongest rule
+  order.
+- Semantic facts now have one canonical representation.  Singular event and
+  state keys become plural sets, identifiers and attributes become canonical
+  and unique, local role, content, and attribute values override base values,
+  and local event and state sets compose before base sets.  Resolution,
+  concrete transport, frozen facts, and explanation all use that same plist.
+- The semantic contract has an explicit version and stable alias registry.
+  Aliases compile to canonical identifiers while retaining deprecation
+  diagnostics; =collapsed= is the first compatibility alias for =folded=.
+  =emacsvox-aural-migrate-facts= rejects future versions and applies the same
+  canonical migration without evaluating data.
+- Scheme and feature-fragment validation now reports deprecated semantic
+  aliases and fallback-shadow relationships, while impossible selectors fail
+  compilation with the violated operational contract.  The semantic browser
+  describes role, attribute, state, event, occasion, phase, fallback, and
+  alias contracts.  Markdown and representative shared attributes declare
+  their valid roles.
+- The generated reference now includes the operational contract version, all
+  restriction fields, fallback targets, and a stable-alias table, and explains
+  canonical range merging, fallback specificity, migration, and author
+  diagnostics.
+
+Checks for Slice 30: the changed registry, rule, transport, tools, Markdown,
+and representative modules compile with warnings treated as errors.  Focused
+registry, rules, transport, tools, Markdown, and generated-reference suites
+have 152 tests; all Slice 30 behavior passes and the only failure is the
+already recorded untracked =sounds/bart/= pack containing
+=large-movement-02=.  The full source suite has 1,563 tests: 1,561 pass, the
+optional Mu4e test is skipped, and that same personal-pack audit is the sole
+failure.  Compiled aural parity passes, all 27 semantic traces match, the
+generated reference is current, and no file in the personal pack was changed.
 
 ** TODO Slice 31: Exact Presentation Inspection and Runtime Efficiency
 

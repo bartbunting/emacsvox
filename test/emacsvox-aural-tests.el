@@ -14,7 +14,9 @@
   "Run BODY with isolated empty semantic and occasion registries."
   (declare (indent 0) (debug t))
   `(let ((emacsvox-aural-semantic-registry (make-hash-table :test #'eq))
-         (emacsvox-aural-occasion-registry (make-hash-table :test #'eq)))
+         (emacsvox-aural-occasion-registry (make-hash-table :test #'eq))
+         (emacsvox-aural-semantic-alias-registry
+          (make-hash-table :test #'eq)))
      ,@body))
 
 (ert-deftest emacsvox-aural-builtins-validate ()
@@ -143,6 +145,61 @@
      'first :kind 'event :summary "First" :fallback 'second)
     (emacsvox-aural-register-semantic
      'second :kind 'event :summary "Second" :fallback 'first)
+    (should-error
+     (emacsvox-aural-validate-registry)
+     :type 'emacsvox-aural-registration-error)))
+
+(ert-deftest emacsvox-aural-registers-operational-contracts ()
+  "Roles and semantic restrictions retain and validate typed references."
+  (emacsvox-test--with-empty-aural-registries
+    (emacsvox-aural-register-occasion
+     'navigation :summary "Focus moved")
+    (emacsvox-aural-register-semantic
+     'importance
+     :kind 'attribute
+     :summary "Importance"
+     :value-type 'symbol
+     :allowed-values '(low high)
+     :roles '(article)
+     :occasions '(navigation)
+     :phases '(content))
+    (emacsvox-aural-register-semantic
+     'article
+     :kind 'role
+     :summary "Article"
+     :attributes '(importance)
+     :occasions '(navigation)
+     :phases '(content))
+    (should (emacsvox-aural-validate-registry))
+    (should
+     (equal
+      (emacsvox-aural-semantic-roles
+       (emacsvox-aural-semantic 'importance))
+      '(article)))
+    (setf
+     (emacsvox-aural-semantic-attributes
+      (emacsvox-aural-semantic 'article))
+     '(missing))
+    (should-error
+     (emacsvox-aural-validate-registry)
+     :type 'emacsvox-aural-registration-error)))
+
+(ert-deftest emacsvox-aural-aliases-are-versioned-and-diagnostic ()
+  "Stable aliases resolve canonically and explain their deprecation."
+  (should
+   (eq (emacsvox-aural-canonical-semantic-id 'collapsed) 'folded))
+  (should
+   (string-match-p
+    "deprecated since contract version 1; use folded"
+    (emacsvox-aural-semantic-alias-diagnostic 'collapsed))))
+
+(ert-deftest emacsvox-aural-rejects-cross-kind-fallbacks ()
+  "A fallback remains within one semantic kind."
+  (emacsvox-test--with-empty-aural-registries
+    (emacsvox-aural-register-semantic
+     'object :kind 'role :summary "Object")
+    (emacsvox-aural-register-semantic
+     'specific :kind 'event :summary "Specific" :fallback 'object)
     (should-error
      (emacsvox-aural-validate-registry)
      :type 'emacsvox-aural-registration-error)))

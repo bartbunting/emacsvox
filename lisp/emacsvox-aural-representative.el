@@ -34,6 +34,7 @@
      :kind attribute
      :summary "The module-defined purpose of a structured field"
      :owner core
+     :roles (field)
      :value-type symbol)
     (unread
      :kind state
@@ -111,6 +112,7 @@
      :kind attribute
      :summary "The kind of mail-reader view being presented"
      :owner core
+     :roles (mail-view)
      :value-type symbol
      :allowed-values
      (group summary article compose server search thread topic other))
@@ -118,6 +120,7 @@
      :kind attribute
      :summary "The kind of content part within a message"
      :owner core
+     :roles (message-part)
      :value-type symbol
      :allowed-values
      (body page attachment link button mime-part header other))
@@ -164,6 +167,7 @@
      :kind attribute
      :summary "The filesystem kind of a directory entry"
      :owner dired
+     :roles (filesystem-entry)
      :value-type symbol
      :allowed-values (file directory symbolic-link other))
     (entry-inspection-kind
@@ -244,11 +248,13 @@
      :kind attribute
      :summary "The integration-defined kind of a structural section"
      :owner magit
+     :roles (vcs-section)
      :value-type symbol)
     (vcs-view-kind
      :kind attribute
      :summary "The kind of version-control view being presented"
      :owner magit
+     :roles (vcs-view)
      :value-type symbol
      :allowed-values (status log blob blame diff commit other))
     (staged

@@ -87,7 +87,21 @@ disable it.  This does not change semantic presentation or Voice Lock."
   fallback
   occasions
   phases
-  usage)
+  usage
+  roles
+  attributes
+  states
+  events)
+
+(cl-defstruct
+    (emacsvox-aural-semantic-alias
+     (:constructor emacsvox-aural--make-semantic-alias))
+  "A stable deprecated name for a canonical semantic identifier."
+  id
+  target
+  owner
+  summary
+  since-version)
 
 (cl-defstruct
     (emacsvox-aural-occasion
@@ -106,6 +120,9 @@ disable it.  This does not change semantic presentation or Voice Lock."
   '(before content after)
   "Valid phases named by semantic registration metadata.")
 
+(defconst emacsvox-aural-semantic-schema-version 1
+  "Current version of the operational semantic identifier contract.")
+
 (defvar emacsvox-aural-semantic-registry
   (make-hash-table :test #'eq)
   "Map semantic identifiers to `emacsvox-aural-semantic' records.")
@@ -113,6 +130,10 @@ disable it.  This does not change semantic presentation or Voice Lock."
 (defvar emacsvox-aural-occasion-registry
   (make-hash-table :test #'eq)
   "Map occasion identifiers to `emacsvox-aural-occasion' records.")
+
+(defvar emacsvox-aural-semantic-alias-registry
+  (make-hash-table :test #'eq)
+  "Map deprecated semantic identifiers to stable alias records.")
 
 (defconst emacsvox-aural-legacy-icon-semantics
   '((emacsvox . product-identity)
@@ -154,13 +175,16 @@ disable it.  This does not change semantic presentation or Voice Lock."
 
 (cl-defun emacsvox-aural-register-semantic
     (id &key kind summary (owner 'core) value-type allowed-values fallback
-        occasions phases usage)
+        occasions phases usage roles attributes states events)
   "Register semantic ID and return its immutable registry record.
 
 KIND is one of `role', `event', `state', or `attribute'.  SUMMARY and OWNER
 document intent and ownership.  VALUE-TYPE and ALLOWED-VALUES constrain
 attributes.  FALLBACK names another semantic identifier.  OCCASIONS and PHASES
-document supported presentation contexts.  USAGE is optional extended help."
+restrict supported presentation contexts when non-nil.  ROLES restricts the
+roles with which a state, event, or attribute may occur.  ATTRIBUTES, STATES,
+and EVENTS restrict facts permitted with a role.  USAGE is optional extended
+help.  Cross-references are checked by `emacsvox-aural-validate-registry'."
   (emacsvox-aural--validate-id id "Semantic identifier")
   (unless (memq kind emacsvox-aural-semantic-kinds)
     (emacsvox-aural--registration-error
@@ -174,13 +198,29 @@ document supported presentation contexts.  USAGE is optional extended help."
   (when phases
     (emacsvox-aural--validate-symbol-list
      phases emacsvox-aural-render-phases "phase"))
+  (dolist (contract
+           `((,roles . "role")
+             (,attributes . "attribute")
+             (,states . "state")
+             (,events . "event")))
+    (when (car contract)
+      (emacsvox-aural--validate-symbol-list
+       (car contract) nil (cdr contract))))
+  (when (and roles (eq kind 'role))
+    (emacsvox-aural--registration-error
+     "Role %S may not declare a :roles restriction" id))
+  (when (and (or attributes states events) (not (eq kind 'role)))
+    (emacsvox-aural--registration-error
+     "Only roles may restrict attributes, states, or events: %S" id))
   (when (and allowed-values (not (eq kind 'attribute)))
     (emacsvox-aural--registration-error
      "Only attributes may declare allowed values: %S" id))
   (when (and value-type (not (eq kind 'attribute)))
     (emacsvox-aural--registration-error
      "Only attributes may declare a value type: %S" id))
-  (when (gethash id emacsvox-aural-semantic-registry)
+  (when (or
+         (gethash id emacsvox-aural-semantic-registry)
+         (gethash id emacsvox-aural-semantic-alias-registry))
     (emacsvox-aural--registration-error
      "Semantic identifier is already registered: %S" id))
   (let ((record
@@ -194,9 +234,79 @@ document supported presentation contexts.  USAGE is optional extended help."
           :fallback fallback
           :occasions (copy-sequence occasions)
           :phases (copy-sequence phases)
-          :usage usage)))
+          :usage usage
+          :roles (copy-sequence roles)
+          :attributes (copy-sequence attributes)
+          :states (copy-sequence states)
+          :events (copy-sequence events))))
     (puthash id record emacsvox-aural-semantic-registry)
     record))
+
+(cl-defun emacsvox-aural-register-semantic-alias
+    (id target &key (owner 'core) summary
+        (since-version emacsvox-aural-semantic-schema-version))
+  "Register deprecated semantic ID as an alias for canonical TARGET.
+
+SINCE-VERSION records the semantic contract version in which TARGET became
+canonical.  Alias use remains supported, but rule and fact compilation expose
+a deprecation diagnostic."
+  (emacsvox-aural--validate-id id "Semantic alias")
+  (emacsvox-aural--validate-id target (format "Alias target for %S" id))
+  (emacsvox-aural--validate-id owner (format "Alias owner for %S" id))
+  (when summary
+    (emacsvox-aural--validate-summary summary (format "Alias %S" id)))
+  (unless (and (integerp since-version) (> since-version 0))
+    (emacsvox-aural--registration-error
+     "Alias %S version must be a positive integer: %S" id since-version))
+  (when (> since-version emacsvox-aural-semantic-schema-version)
+    (emacsvox-aural--registration-error
+     "Alias %S requires future semantic version %S"
+     id since-version))
+  (when (or
+         (gethash id emacsvox-aural-semantic-registry)
+         (gethash id emacsvox-aural-semantic-alias-registry))
+    (emacsvox-aural--registration-error
+     "Semantic identifier is already registered: %S" id))
+  (let ((record
+         (emacsvox-aural--make-semantic-alias
+          :id id
+          :target target
+          :owner owner
+          :summary summary
+          :since-version since-version)))
+    (puthash id record emacsvox-aural-semantic-alias-registry)
+    record))
+
+(defun emacsvox-aural-semantic-alias (id)
+  "Return the semantic alias record named ID, or nil."
+  (gethash id emacsvox-aural-semantic-alias-registry))
+
+(defun emacsvox-aural-canonical-semantic-id (id)
+  "Return the stable canonical identifier for semantic ID.
+
+Return ID unchanged when it is neither a registered semantic nor an alias.
+Registry validation rejects missing targets and alias cycles."
+  (let ((current id)
+        seen)
+    (while-let ((alias (emacsvox-aural-semantic-alias current)))
+      (when (memq current seen)
+        (emacsvox-aural--registration-error
+         "Semantic alias cycle: %S" (nreverse (cons current seen))))
+      (push current seen)
+      (setq current (emacsvox-aural-semantic-alias-target alias)))
+    current))
+
+(defun emacsvox-aural-semantic-alias-diagnostic (id)
+  "Return a deprecation diagnostic for semantic alias ID, or nil."
+  (when-let* ((alias (emacsvox-aural-semantic-alias id)))
+    (format
+     "Semantic %s is deprecated since contract version %d; use %s%s"
+     id
+     (emacsvox-aural-semantic-alias-since-version alias)
+     (emacsvox-aural-canonical-semantic-id id)
+     (if-let* ((summary (emacsvox-aural-semantic-alias-summary alias)))
+         (format " (%s)" summary)
+       ""))))
 
 (cl-defun emacsvox-aural-register-occasion
     (id &key summary (owner 'core) usage)
@@ -215,7 +325,9 @@ document supported presentation contexts.  USAGE is optional extended help."
 
 (defun emacsvox-aural-semantic (id)
   "Return the registered semantic record for ID, or nil."
-  (gethash id emacsvox-aural-semantic-registry))
+  (gethash
+   (emacsvox-aural-canonical-semantic-id id)
+   emacsvox-aural-semantic-registry))
 
 (defun emacsvox-aural-occasion (id)
   "Return the registered presentation occasion record for ID, or nil."
@@ -237,6 +349,12 @@ document supported presentation contexts.  USAGE is optional extended help."
   (emacsvox-aural--sorted-records
    emacsvox-aural-semantic-registry
    #'emacsvox-aural-semantic-id))
+
+(defun emacsvox-aural-semantic-aliases ()
+  "Return all semantic alias records in identifier order."
+  (emacsvox-aural--sorted-records
+   emacsvox-aural-semantic-alias-registry
+   #'emacsvox-aural-semantic-alias-id))
 
 (defun emacsvox-aural-occasions ()
   "Return all presentation occasion records in identifier order."
@@ -288,7 +406,44 @@ document supported presentation contexts.  USAGE is optional extended help."
             (emacsvox-aural--registration-error
              "Unknown semantic fallback %S in path %S"
              fallback
-             (nreverse path)))))))
+             (nreverse path)))
+          (unless
+              (eq
+               (emacsvox-aural-semantic-kind record)
+               (emacsvox-aural-semantic-kind current))
+            (emacsvox-aural--registration-error
+             "Semantic fallback %S for %S has kind %S, expected %S"
+             fallback
+             (emacsvox-aural-semantic-id record)
+             (emacsvox-aural-semantic-kind current)
+             (emacsvox-aural-semantic-kind record)))))))
+  t)
+
+(defun emacsvox-aural--validate-semantic-reference-list
+    (record field kind)
+  "Validate semantic RECORD's FIELD as references of KIND."
+  (dolist (id (funcall field record))
+    (let ((target (emacsvox-aural-semantic id)))
+      (unless target
+        (emacsvox-aural--registration-error
+         "Semantic %S names unknown %S %S"
+         (emacsvox-aural-semantic-id record) kind id))
+      (unless (eq (emacsvox-aural-semantic-kind target) kind)
+        (emacsvox-aural--registration-error
+         "Semantic %S names %S %S registered as %S"
+         (emacsvox-aural-semantic-id record)
+         kind id (emacsvox-aural-semantic-kind target))))))
+
+(defun emacsvox-aural--validate-aliases ()
+  "Validate semantic alias targets and cycles."
+  (dolist (alias (emacsvox-aural-semantic-aliases))
+    (let ((target
+           (emacsvox-aural-canonical-semantic-id
+            (emacsvox-aural-semantic-alias-id alias))))
+      (unless (gethash target emacsvox-aural-semantic-registry)
+        (emacsvox-aural--registration-error
+         "Semantic alias %S names unknown target %S"
+         (emacsvox-aural-semantic-alias-id alias) target))))
   t)
 
 (defun emacsvox-aural-validate-registry ()
@@ -299,7 +454,16 @@ document supported presentation contexts.  USAGE is optional extended help."
         (emacsvox-aural--registration-error
          "Semantic %S names unknown occasion %S"
          (emacsvox-aural-semantic-id record)
-         occasion))))
+         occasion)))
+    (emacsvox-aural--validate-semantic-reference-list
+     record #'emacsvox-aural-semantic-roles 'role)
+    (emacsvox-aural--validate-semantic-reference-list
+     record #'emacsvox-aural-semantic-attributes 'attribute)
+    (emacsvox-aural--validate-semantic-reference-list
+     record #'emacsvox-aural-semantic-states 'state)
+    (emacsvox-aural--validate-semantic-reference-list
+     record #'emacsvox-aural-semantic-events 'event))
+  (emacsvox-aural--validate-aliases)
   (emacsvox-aural--validate-fallbacks))
 
 (defun emacsvox-aural-audit-semantic-ids (ids)
@@ -367,6 +531,10 @@ document supported presentation contexts.  USAGE is optional extended help."
      :summary "Whether structural descendants are visible"
      :value-type 'symbol
      :allowed-values '(folded expanded)))
+  (unless (emacsvox-aural-semantic-alias 'collapsed)
+    (emacsvox-aural-register-semantic-alias
+     'collapsed 'folded
+     :summary "Use the canonical folded state identifier"))
   (emacsvox-aural-validate-registry))
 
 (emacsvox-aural--register-builtins)

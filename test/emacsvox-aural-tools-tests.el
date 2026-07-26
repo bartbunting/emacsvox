@@ -263,6 +263,55 @@
         (emacsvox-aural-validation-report-disabled-rules report)
         '(parked))))))
 
+(ert-deftest emacsvox-aural-tools-validation-reports-semantic-diagnostics ()
+  "Validation exposes deprecated aliases and fallback-shadow relationships."
+  (let ((emacsvox-aural-semantic-registry
+         (copy-hash-table emacsvox-aural-semantic-registry))
+        (emacsvox-aural-semantic-alias-registry
+         (copy-hash-table emacsvox-aural-semantic-alias-registry)))
+    (emacsvox-aural-register-semantic
+     'tools-general-event
+     :kind 'event
+     :summary "General event")
+    (emacsvox-aural-register-semantic
+     'tools-specific-event
+     :kind 'event
+     :summary "Specific event"
+     :fallback 'tools-general-event)
+    (emacsvox-aural-validate-registry)
+    (emacsvox-test--with-aural-tools
+      (emacsvox-test--register-tools-scheme
+       'semantic-diagnostics
+       '((:id general-event
+          :match (:event tools-general-event)
+          :render (:content (:voice bolden)))
+         (:id specific-event
+          :match (:event tools-specific-event)
+          :render (:content (:voice lighten)))
+         (:id deprecated-state
+          :match (:role heading :state collapsed)
+          :render (:content (:voice smoothen)))))
+      (let* ((report
+              (emacsvox-aural-validate-scheme
+               'semantic-diagnostics))
+             (diagnostics
+              (emacsvox-aural-validation-report-semantic-diagnostics
+               report)))
+        (should (emacsvox-aural-validation-report-valid report))
+        (should
+         (cl-find
+          'deprecated-alias diagnostics
+          :key (lambda (entry) (plist-get entry :kind))))
+        (should
+         (cl-find
+          'fallback-shadow diagnostics
+          :key (lambda (entry) (plist-get entry :kind))))
+        (should
+         (cl-some
+          (lambda (warning)
+            (string-match-p "deprecated" warning))
+          (emacsvox-aural-validation-report-warnings report)))))))
+
 (ert-deftest emacsvox-aural-tools-explain-suppression-and-degradation ()
   "Explanation reproduces matches, removed actions, and backend fallback."
   (emacsvox-test--with-aural-tools
