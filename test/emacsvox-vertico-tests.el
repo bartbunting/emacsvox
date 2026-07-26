@@ -31,5 +31,40 @@
                 'inserted))))
         (should (= calls 1))))))
 
+(ert-deftest emacsvox-vertico-acceptance-carries-candidate-semantics ()
+  "Accepted-candidate cue and speech share completion facts and context."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-icon)
+            (lambda (icon)
+              (push
+               (list
+                icon
+                (copy-tree emacsvox-aural-submission-facts)
+                (copy-tree emacsvox-aural-submission-context))
+               captured)))
+           ((symbol-function 'emacsvox-speak-region)
+            (lambda (&rest _)
+              (push
+               (list
+                'speech
+                (copy-tree emacsvox-aural-submission-facts)
+                (copy-tree emacsvox-aural-submission-context))
+               captured))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () (insert "candidate"))))
+      (setq captured (nreverse captured))
+      (should (equal (mapcar #'car captured) '(complete speech)))
+      (dolist (entry captured)
+        (should (eq (plist-get (cadr entry) :role) 'candidate))
+        (should (equal (plist-get (cadr entry) :events) '(accepted)))
+        (should (equal (plist-get (cadr entry) :states) '(selected)))
+        (should (= (plist-get (cadr entry) :completion-index) 2))
+        (should (eq (plist-get (caddr entry) :module) 'vertico))
+        (should
+         (eq (plist-get (caddr entry) :occasion) 'state-change))))))
+
 (provide 'emacsvox-vertico-tests)
 ;;; emacsvox-vertico-tests.el ends here

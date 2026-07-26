@@ -671,9 +671,57 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (pcase-let ((`(,target ,where ,function ,active) state))
       (if active
           (unless (advice-member-p function target)
-            (advice-add target where function '((name . emacsvox))))
+            (advice-add target where function
+                        '((name . emacsvox-agent-shell))))
         (when (advice-member-p function target)
           (advice-remove target function))))))
+
+(defun emacsvox-agent-shell-test--advice-target (&rest arguments)
+  "Return ARGUMENTS for isolated advice coexistence tests."
+  arguments)
+
+(defun emacsvox-agent-shell-test--unrelated-advice
+    (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS as unrelated Emacsvox advice."
+  (apply original arguments))
+
+(defun emacsvox-agent-shell-test--agent-advice
+    (original &rest arguments)
+  "Call ORIGINAL with ARGUMENTS as test Agent Shell advice."
+  (apply original arguments))
+
+(ert-deftest emacsvox-agent-shell-advice-name-preserves-other-modules ()
+  "Agent Shell advice should coexist with advice from another module."
+  (let ((emacsvox-agent-shell--advice-list
+         '((emacsvox-agent-shell-test--advice-target
+            :around emacsvox-agent-shell-test--agent-advice))))
+    (unwind-protect
+        (progn
+          (advice-add
+           'emacsvox-agent-shell-test--advice-target
+           :around
+           #'emacsvox-agent-shell-test--unrelated-advice
+           '((name . emacsvox)))
+          (emacsvox-agent-shell--install-advice)
+          (should
+           (advice-member-p
+            #'emacsvox-agent-shell-test--unrelated-advice
+            'emacsvox-agent-shell-test--advice-target))
+          (should
+           (advice-member-p
+            #'emacsvox-agent-shell-test--agent-advice
+            'emacsvox-agent-shell-test--advice-target))
+          (emacsvox-agent-shell--remove-advice)
+          (should
+           (advice-member-p
+            #'emacsvox-agent-shell-test--unrelated-advice
+            'emacsvox-agent-shell-test--advice-target)))
+      (advice-remove
+       'emacsvox-agent-shell-test--advice-target
+       #'emacsvox-agent-shell-test--agent-advice)
+      (advice-remove
+       'emacsvox-agent-shell-test--advice-target
+       #'emacsvox-agent-shell-test--unrelated-advice))))
 
 (ert-deftest emacsvox-agent-shell-speak-content-orders-feedback ()
   "Speech and icon calls should be observable in their delivery order."
@@ -1757,6 +1805,55 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (icon task-done)
         (icon progress)
         (icon task-done))))))
+
+(ert-deftest emacsvox-agent-shell-lifecycle-carries-aural-facts ()
+  "Configured processing icons retain semantic lifecycle facts and context."
+  (let ((emacsvox-agent-shell-signal-processing t)
+        (emacsvox-agent-shell-processing-start-icon 'progress)
+        (emacsvox-agent-shell-processing-end-icon 'task-done)
+        captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--begin-response-turn)
+          #'ignore)
+         ((symbol-function 'emacsvox-agent-shell--finish-response-turn)
+          #'ignore)
+         ((symbol-function 'emacsvox-agent-shell--speech-level-at-least-p)
+          (lambda (&rest _) t))
+         ((symbol-function 'emacsvox-agent-shell--session-focused-p)
+          (lambda (&rest _) t))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list
+              icon
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured))))
+      (emacsvox-agent-shell--handle-lifecycle-event
+       '((:event . input-submitted)))
+      (emacsvox-agent-shell--handle-lifecycle-event
+       '((:event . turn-complete)
+         (:data (:stop-reason . "end_turn")))))
+    (setq captured (nreverse captured))
+    (should (equal (mapcar #'car captured) '(progress task-done)))
+    (should
+     (equal
+      (plist-get (cadr (car captured)) :events)
+      '(processing-started)))
+    (should
+     (equal
+      (plist-get (cadr (car captured)) :states)
+      '(processing)))
+    (should
+     (equal
+      (plist-get (cadr (cadr captured)) :events)
+      '(processing-completed)))
+    (dolist (entry captured)
+      (should (eq (plist-get (cadr entry) :role) 'agent-session))
+      (should
+       (eq (plist-get (caddr entry) :module) 'agent-shell))
+      (should
+       (eq (plist-get (caddr entry) :occasion) 'notification)))))
 
 (ert-deftest emacsvox-agent-shell-focus-includes-associated-viewport ()
   "A selected shell or its viewport should be the focused session."

@@ -662,6 +662,41 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
        (string-prefix-p
         "emacsvox-chimes-item-" (cadr played))))))
 
+(ert-deftest emacsvox-aural-transport-direct-icon-inherits-submission-facts ()
+  "A compatibility icon keeps semantic facts, module, and occasion in scope."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-use-icons t)
+          (emacsvox-aural-submission-facts
+           '(:events (focus-entered)))
+          (emacsvox-aural-submission-module 'python)
+          (emacsvox-aural-submission-occasion 'navigation)
+          played
+          plan)
+      (cl-letf
+          (((symbol-function 'emacsvox-sounds-play-concrete-cue)
+            (lambda (resource sample-id)
+              (setq played (list resource sample-id)))))
+        (setq plan (emacsvox-icon 'paragraph)))
+      (should played)
+      (should
+       (equal
+        (plist-get
+         (emacsvox-aural-concrete-plan-facts plan)
+         :events)
+        '(focus-entered)))
+      (should
+       (eq
+        (plist-get
+         (emacsvox-aural-concrete-plan-context plan)
+         :module)
+        'python))
+      (should
+       (eq
+        (plist-get
+         (emacsvox-aural-concrete-plan-context plan)
+         :occasion)
+        'navigation)))))
+
 (ert-deftest emacsvox-aural-transport-rich-icon-plan-uses-server-queue ()
   "A spoken replacement joins the ordered server queue instead of racing it."
   (emacsvox-test--with-transport-scheme

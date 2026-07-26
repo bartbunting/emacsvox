@@ -147,6 +147,60 @@
       (get-text-property (string-match "2 of 5" summary) 'face summary)
       'notmuch-search-count))))
 
+(ert-deftest emacsvox-notmuch-fields-carry-semantic-facts ()
+  "Formatted fields retain voices while exposing semantic kind and module."
+  (let* ((summary
+          (emacsvox-notmuch-format-search-result
+           emacsvox-notmuch-test--search-result))
+         (subject (string-match "Project update" summary)))
+    (should
+     (eq
+      (get-text-property subject 'face summary)
+      'notmuch-search-subject))
+    (should
+     (equal
+      (get-text-property
+       subject emacsvox-aural-facts-property summary)
+      '(:role field :field-kind subject)))
+    (should
+     (eq
+      (get-text-property
+       subject emacsvox-aural-module-property summary)
+      'notmuch))))
+
+(ert-deftest emacsvox-notmuch-status-feedback-shares-message-facts ()
+  "Status cues and message speech share states and navigation context."
+  (let (captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list
+              icon
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'tts-speak)
+          (lambda (_text)
+            (push
+             (list
+              'speech
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured))))
+      (emacsvox-notmuch-speak-search-result
+       emacsvox-notmuch-test--search-result))
+    (setq captured (nreverse captured))
+    (should (equal (mapcar #'car captured) '(new-mail mark-object speech)))
+    (dolist (entry captured)
+      (should (eq (plist-get (cadr entry) :role) 'message))
+      (should
+       (equal (plist-get (cadr entry) :states) '(unread flagged)))
+      (should
+       (eq (plist-get (caddr entry) :module) 'notmuch))
+      (should
+       (eq (plist-get (caddr entry) :occasion) 'navigation)))))
+
 (ert-deftest emacsvox-notmuch-search-result-fields-are-configurable ()
   "Search-result fields can be reordered and omitted."
   (let ((emacsvox-notmuch-search-result-fields '(subject authors))

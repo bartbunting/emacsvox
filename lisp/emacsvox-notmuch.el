@@ -45,6 +45,8 @@
 (require 'cl-lib)
 (require 'button)
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-representative)
 (require 'subr-x)
 (require 'wid-edit)
 
@@ -214,6 +216,40 @@ tag, or give it a nil icon to keep the status silent."
    (notmuch-tag-face voice-bolden)
    (notmuch-wash-cited-text voice-smoothen)))
 
+;;;  Semantic aural presentation:
+
+(defun emacsvox-notmuch--annotate-field (text field)
+  "Return TEXT annotated as semantic Notmuch FIELD content."
+  (when text
+    (let ((annotated (copy-sequence text)))
+      (add-text-properties
+       0 (length annotated)
+       (list
+        emacsvox-aural-facts-property
+        (list :role 'field :field-kind field)
+        emacsvox-aural-module-property
+        'notmuch)
+       annotated)
+      annotated)))
+
+(defun emacsvox-notmuch-message-facts (message &optional event)
+  "Return semantic facts for Notmuch MESSAGE and optional EVENT."
+  (let ((tags (plist-get message :tags))
+        states)
+    (when (member "unread" tags) (push 'unread states))
+    (when (member "flagged" tags) (push 'flagged states))
+    (when
+        (and
+         (plist-member message :body)
+         (> (emacsvox-notmuch--attachment-count
+             (plist-get message :body))
+            0))
+      (push 'has-attachments states))
+    (append
+     (list :role 'message)
+     (when event (list :events (list event)))
+     (when states (list :states (nreverse states))))))
+
 ;;;  Search Results:
 
 (defun emacsvox-notmuch--field-string (value face)
@@ -266,29 +302,31 @@ tag, or give it a nil icon to keep the status silent."
 
 (defun emacsvox-notmuch--format-search-field (field result)
   "Format FIELD from Notmuch search RESULT for speech."
-  (pcase field
-    ('authors
-     (emacsvox-notmuch--format-authors
-      (notmuch-sanitize (or (plist-get result :authors) ""))))
-    ('subject
-     (emacsvox-notmuch--field-string
-      (notmuch-sanitize (or (plist-get result :subject) "[No subject]"))
-      'notmuch-search-subject))
-    ('date
-     (emacsvox-notmuch--field-string
-      (plist-get result :date_relative)
-      'notmuch-search-date))
-    ('count
-     (emacsvox-notmuch--field-string
-      (format "%s of %s"
-              (plist-get result :matched)
-              (plist-get result :total))
-      'notmuch-search-count))
-    ('tags
-     (emacsvox-notmuch--format-tags
-      result emacsvox-notmuch-search-status-icons))
-    ((pred functionp) (funcall field result))
-    (_ nil)))
+  (emacsvox-notmuch--annotate-field
+   (pcase field
+     ('authors
+      (emacsvox-notmuch--format-authors
+       (notmuch-sanitize (or (plist-get result :authors) ""))))
+     ('subject
+      (emacsvox-notmuch--field-string
+       (notmuch-sanitize (or (plist-get result :subject) "[No subject]"))
+       'notmuch-search-subject))
+     ('date
+      (emacsvox-notmuch--field-string
+       (plist-get result :date_relative)
+       'notmuch-search-date))
+     ('count
+      (emacsvox-notmuch--field-string
+       (format "%s of %s"
+               (plist-get result :matched)
+               (plist-get result :total))
+       'notmuch-search-count))
+     ('tags
+      (emacsvox-notmuch--format-tags
+       result emacsvox-notmuch-search-status-icons))
+     ((pred functionp) (funcall field result))
+     (_ nil))
+   (if (symbolp field) field 'custom)))
 
 (defun emacsvox-notmuch-format-search-result (result)
   "Return a voice-propertized summary of Notmuch search RESULT."
@@ -313,9 +351,17 @@ tag, or give it a nil icon to keep the status silent."
   (interactive)
   (when-let* ((result (or result (notmuch-search-get-result)))
               (summary (emacsvox-notmuch-format-search-result result)))
-    (emacsvox-notmuch--play-status-icons
-     result emacsvox-notmuch-search-status-icons)
-    (tts-speak summary)
+    (let* ((facts
+            (emacsvox-notmuch-message-facts result 'focus-entered))
+           (context
+            (emacsvox-aural-capture-context 'notmuch 'navigation))
+           (emacsvox-aural-submission-facts facts)
+           (emacsvox-aural-submission-context context)
+           (emacsvox-aural-submission-module 'notmuch)
+           (emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-notmuch--play-status-icons
+       result emacsvox-notmuch-search-status-icons)
+      (tts-speak summary))
     summary))
 
 ;;;  Show Messages:
@@ -349,44 +395,46 @@ tag, or give it a nil icon to keep the status silent."
 
 (defun emacsvox-notmuch--format-show-field (field message)
   "Format FIELD from Notmuch MESSAGE for speech."
-  (pcase field
-    ('from
-     (let ((from
-            (plist-get (plist-get message :headers) :From)))
-       (emacsvox-notmuch--field-string
-        (notmuch-sanitize
-         (if from (notmuch-show-clean-address from) ""))
-        'emacsvox-notmuch-message-from)))
-    ('subject
-     (emacsvox-notmuch--format-show-header
-      message :Subject 'emacsvox-notmuch-message-subject))
-    ('date
-     (emacsvox-notmuch--field-string
-      (or
-       (plist-get message :date_relative)
-       (plist-get (plist-get message :headers) :Date))
-      'emacsvox-notmuch-message-date))
-    ('to
-     (emacsvox-notmuch--format-show-header
-      message :To 'emacsvox-notmuch-message-to))
-    ('cc
-     (emacsvox-notmuch--format-show-header
-      message :Cc 'emacsvox-notmuch-message-cc))
-    ('tags
-     (emacsvox-notmuch--format-tags
-      message emacsvox-notmuch-show-status-icons))
-    ('attachments
-     (let ((count
-            (emacsvox-notmuch--attachment-count
-             (plist-get message :body))))
-       (when (> count 0)
-         (emacsvox-notmuch--field-string
-          (format "%d %s"
-                  count
-                  (if (= count 1) "attachment" "attachments"))
-          'emacsvox-notmuch-message-attachments))))
-    ((pred functionp) (funcall field message))
-    (_ nil)))
+  (emacsvox-notmuch--annotate-field
+   (pcase field
+     ('from
+      (let ((from
+             (plist-get (plist-get message :headers) :From)))
+        (emacsvox-notmuch--field-string
+         (notmuch-sanitize
+          (if from (notmuch-show-clean-address from) ""))
+         'emacsvox-notmuch-message-from)))
+     ('subject
+      (emacsvox-notmuch--format-show-header
+       message :Subject 'emacsvox-notmuch-message-subject))
+     ('date
+      (emacsvox-notmuch--field-string
+       (or
+        (plist-get message :date_relative)
+        (plist-get (plist-get message :headers) :Date))
+       'emacsvox-notmuch-message-date))
+     ('to
+      (emacsvox-notmuch--format-show-header
+       message :To 'emacsvox-notmuch-message-to))
+     ('cc
+      (emacsvox-notmuch--format-show-header
+       message :Cc 'emacsvox-notmuch-message-cc))
+     ('tags
+      (emacsvox-notmuch--format-tags
+       message emacsvox-notmuch-show-status-icons))
+     ('attachments
+      (let ((count
+             (emacsvox-notmuch--attachment-count
+              (plist-get message :body))))
+        (when (> count 0)
+          (emacsvox-notmuch--field-string
+           (format "%d %s"
+                   count
+                   (if (= count 1) "attachment" "attachments"))
+           'emacsvox-notmuch-message-attachments))))
+     ((pred functionp) (funcall field message))
+     (_ nil))
+   (if (symbolp field) field 'custom)))
 
 (defun emacsvox-notmuch-format-show-message (message)
   "Return a voice-propertized summary of Notmuch MESSAGE."
@@ -409,9 +457,17 @@ tag, or give it a nil icon to keep the status silent."
                  (eq major-mode 'notmuch-show-mode)
                  (notmuch-show-get-message-properties))))
               (summary (emacsvox-notmuch-format-show-message message)))
-    (emacsvox-notmuch--play-status-icons
-     message emacsvox-notmuch-show-status-icons)
-    (tts-speak summary)
+    (let* ((facts
+            (emacsvox-notmuch-message-facts message 'focus-entered))
+           (context
+            (emacsvox-aural-capture-context 'notmuch 'navigation))
+           (emacsvox-aural-submission-facts facts)
+           (emacsvox-aural-submission-context context)
+           (emacsvox-aural-submission-module 'notmuch)
+           (emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-notmuch--play-status-icons
+       message emacsvox-notmuch-show-status-icons)
+      (tts-speak summary))
     summary))
 
 (defun emacsvox-notmuch--show-message-position ()
@@ -1494,10 +1550,18 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
 
 (defun emacsvox-notmuch--announce-refresh-complete (&optional buffer)
   "Announce completed Notmuch search refresh for BUFFER."
-  (let* ((count (emacsvox-notmuch--search-result-count buffer))
-         (noun (if (= count 1) "thread" "threads")))
-    (emacsvox-icon 'task-done)
-    (tts-speak (format "Search refreshed, %d %s" count noun))))
+  (with-current-buffer (or buffer (current-buffer))
+    (let* ((count (emacsvox-notmuch--search-result-count))
+           (noun (if (= count 1) "thread" "threads"))
+           (facts '(:events (refresh-completed)))
+           (context
+            (emacsvox-aural-capture-context 'notmuch 'notification))
+           (emacsvox-aural-submission-facts facts)
+           (emacsvox-aural-submission-context context)
+           (emacsvox-aural-submission-module 'notmuch)
+           (emacsvox-aural-submission-occasion 'notification))
+      (emacsvox-icon 'task-done)
+      (tts-speak (format "Search refreshed, %d %s" count noun)))))
 
 (defun emacsvox-notmuch--mark-refresh-process ()
   "Mark the current Notmuch search process for completion feedback."
@@ -1526,8 +1590,16 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
            (zerop (process-exit-status process))
            (buffer-live-p buffer))
           (emacsvox-notmuch--announce-refresh-complete buffer)
-        (emacsvox-icon 'warn-user)
-        (tts-speak "Search refresh failed")))))
+        (let* ((facts '(:events (refresh-failed)))
+               (context
+                (emacsvox-aural-capture-context
+                 'notmuch 'notification))
+               (emacsvox-aural-submission-facts facts)
+               (emacsvox-aural-submission-context context)
+               (emacsvox-aural-submission-module 'notmuch)
+               (emacsvox-aural-submission-occasion 'notification))
+          (emacsvox-icon 'warn-user)
+          (tts-speak "Search refresh failed"))))))
 
 (push
  '(notmuch-search-refresh-view
@@ -1545,7 +1617,8 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
     (pcase-let ((`(,target ,where ,function) entry))
       (when (and (fboundp target)
                  (not (advice-member-p function target)))
-        (advice-add target where function '((name . emacsvox)))))))
+        (advice-add target where function
+                    '((name . emacsvox-notmuch)))))))
 
 (dolist (feature
          '(notmuch notmuch-hello notmuch-lib notmuch-search notmuch-show))

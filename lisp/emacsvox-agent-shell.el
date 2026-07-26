@@ -64,6 +64,8 @@
 (eval-when-compile (require 'cl-lib))
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-representative)
 (require 'agent-shell nil 'noerror)
 (require 'shell-maker nil 'noerror)
 
@@ -214,6 +216,7 @@ for the active speech server to interpret."
 ;;;###autoload
 (defun emacsvox-agent-shell-speech-setup ()
   "Speech setup for agent-shell."
+  (setq-local emacsvox-aural-module 'agent-shell)
   (setq buffer-undo-list t)
   ;; Enable autospeak by default for agent-shell buffers
   (unless (local-variable-p 'emacsvox-comint-autospeak)
@@ -1329,7 +1332,27 @@ the body retains semantic faces and omits markup that is no longer displayed."
          (emacsvox-agent-shell--deliver-announcement
           'warn-user "Agent stopped for an unknown reason."))))))
 
-(defun emacsvox-agent-shell--handle-lifecycle-event (event)
+(defun emacsvox-agent-shell-lifecycle-facts (event)
+  "Return semantic processing facts for Agent Shell lifecycle EVENT."
+  (let* ((event-type (map-elt event :event))
+         (stop-reason
+          (map-nested-elt event '(:data :stop-reason)))
+         (semantic-event
+          (pcase event-type
+            ((or 'init-started 'input-submitted) 'processing-started)
+            ('init-finished 'processing-completed)
+            ('turn-complete
+             (if (equal stop-reason "end_turn")
+                 'processing-completed
+               'processing-failed))
+            ('error 'processing-failed))))
+    (append
+     '(:role agent-session)
+     (when semantic-event (list :events (list semantic-event)))
+     (when (eq semantic-event 'processing-started)
+       '(:states (processing))))))
+
+(defun emacsvox-agent-shell--handle-lifecycle-event-compatibility (event)
   "Provide semantic processing feedback for public agent-shell EVENT."
   (let ((event-type (map-elt event :event)))
     ;; Response collection is independent of lifecycle cue preferences.
@@ -1359,6 +1382,18 @@ the body retains semantic faces and omits markup that is no longer displayed."
          (emacsvox-agent-shell--speak-turn-completion event))
         ('error
          (emacsvox-agent-shell--speak-agent-error event))))))
+
+(defun emacsvox-agent-shell--handle-lifecycle-event (event)
+  "Present Agent Shell lifecycle EVENT with semantic submission context."
+  (let* ((facts (emacsvox-agent-shell-lifecycle-facts event))
+         (context
+          (emacsvox-aural-capture-context
+           'agent-shell 'notification))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'agent-shell)
+         (emacsvox-aural-submission-occasion 'notification))
+    (emacsvox-agent-shell--handle-lifecycle-event-compatibility event)))
 
 (defun emacsvox-agent-shell--lifecycle-event-setup ()
   "Subscribe the current agent-shell buffer to lifecycle events."
@@ -1425,7 +1460,7 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
          (> (length block-id) 10)) 'tool-call)
    (t 'unknown)))
 
-(defun emacsvox-agent-shell--speak-content (content block-type)
+(defun emacsvox-agent-shell--speak-content-compatibility (content block-type)
   "Speak CONTENT based on BLOCK-TYPE with appropriate feedback."
   (let ((trimmed-content (string-trim content)))
     (pcase block-type
@@ -1478,6 +1513,33 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
        (when (and (> (length trimmed-content) 0)
                   (emacsvox-agent-shell--speech-level-at-least-p 'response))
          (tts-speak trimmed-content))))))
+
+(defun emacsvox-agent-shell-content-facts (block-type)
+  "Return semantic facts for Agent Shell BLOCK-TYPE."
+  (let ((role
+         (pcase block-type
+           ('agent-message 'agent-response)
+           ('thought 'agent-thought)
+           ('tool-call 'agent-tool)
+           ('permission 'permission-request)
+           (_ 'agent-session))))
+    (list :role role)))
+
+(defun emacsvox-agent-shell--speak-content (content block-type)
+  "Present Agent Shell CONTENT of BLOCK-TYPE with semantic context."
+  (let* ((facts (emacsvox-agent-shell-content-facts block-type))
+         (occasion
+          (if (memq block-type '(permission error))
+              'notification
+            'continuous))
+         (context
+          (emacsvox-aural-capture-context 'agent-shell occasion))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'agent-shell)
+         (emacsvox-aural-submission-occasion occasion))
+    (emacsvox-agent-shell--speak-content-compatibility
+     content block-type)))
 
 ;;;  Advice Agent-Shell Functions
 
@@ -3366,6 +3428,7 @@ Return nil when that logical cell does not exist."
 
 (defun emacsvox-agent-shell--table-navigation-setup ()
   "Install contextual Markdown table navigation in the current buffer."
+  (setq-local emacsvox-aural-module 'agent-shell)
   (setq emacsvox-agent-shell--speech-control-active t)
   (emacsvox-agent-shell--vertical-toggle-hint-setup)
   (add-hook 'pre-command-hook
@@ -3396,7 +3459,8 @@ Return nil when that logical cell does not exist."
   (remove-hook 'kill-buffer-hook
                #'emacsvox-agent-shell--table-navigation-cleanup t)
   (remove-hook 'change-major-mode-hook
-               #'emacsvox-agent-shell--table-navigation-cleanup t))
+               #'emacsvox-agent-shell--table-navigation-cleanup t)
+  (kill-local-variable 'emacsvox-aural-module))
 
 (defun emacsvox-agent-shell--table-settings-speech ()
   "Return a complete spoken summary of the table speech settings."
@@ -3938,6 +4002,7 @@ DISMISS means the compose window is dismissed."
 
 (defun emacsvox-agent-shell--buffer-setup ()
   "Install event support and centralized cleanup in this shell buffer."
+  (setq-local emacsvox-aural-module 'agent-shell)
   (add-hook 'kill-buffer-hook
             #'emacsvox-agent-shell--buffer-cleanup nil t)
   (add-hook 'change-major-mode-hook
@@ -4026,7 +4091,8 @@ DISMISS means the compose window is dismissed."
       (when (and
              (fboundp target)
              (not (advice-member-p function target)))
-        (advice-add target where function '((name . emacsvox)))))))
+        (advice-add target where function
+                    '((name . emacsvox-agent-shell)))))))
 
 (defun emacsvox-agent-shell--remove-advice ()
   "Remove native Agent Shell advice."

@@ -47,8 +47,34 @@
 ;;   Required modules:
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-representative)
 
 (require 'python "python" 'no-error)
+
+;;;  Semantic aural presentation:
+
+(defun emacsvox-python-enable-aural-context ()
+  "Identify the current Python buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'python))
+
+(add-hook 'python-mode-hook #'emacsvox-python-enable-aural-context)
+
+(defun emacsvox-python-navigation-facts (target)
+  "Return semantic navigation facts for Python command TARGET."
+  (let* ((name (symbol-name target))
+         (syntax-role
+          (cond
+           ((string-match-p "defun" name) 'function)
+           ((string-match-p "block" name) 'block)
+           ((string-match-p "statement" name) 'statement)
+           ((string-match-p "sexp\\|list" name) 'expression)
+           ((string-match-p "if-name-main" name) 'main-guard)
+           (t 'construct))))
+    (list
+     :role 'code-construct
+     :events '(boundary-entered focus-entered)
+     :syntax-role syntax-role)))
 
 ;;;  interactive programming
 
@@ -182,8 +208,15 @@
 (defun emacsvox-python--navigation-feedback (target)
   "Speak the current line when TARGET is the interactive command."
   (when (ems-interactive-p target)
-    (emacsvox-speak-line)
-    (emacsvox-icon 'paragraph)))
+    (let* ((facts (emacsvox-python-navigation-facts target))
+           (context
+            (emacsvox-aural-capture-context 'python 'navigation))
+           (emacsvox-aural-submission-facts facts)
+           (emacsvox-aural-submission-context context)
+           (emacsvox-aural-submission-module 'python)
+           (emacsvox-aural-submission-occasion 'navigation))
+      (emacsvox-speak-line)
+      (emacsvox-icon 'paragraph))))
 
 (defun emacsvox--advice-python-nav-up-list-after (&rest _)
   "Speak after navigating up a list."

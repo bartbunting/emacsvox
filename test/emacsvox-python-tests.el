@@ -166,5 +166,38 @@
       (nreverse events)
       '(line (icon paragraph))))))
 
+(ert-deftest emacsvox-python-navigation-carries-code-semantics ()
+  "Python navigation speech and its cue share construct facts and context."
+  (let ((ems--interactive-fn-name 'python-nav-forward-defun)
+        captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-speak-line)
+          (lambda ()
+            (push
+             (list
+              'line
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list
+              icon
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured))))
+      (emacsvox--advice-python-nav-forward-defun-after))
+    (setq captured (nreverse captured))
+    (should (equal (mapcar #'car captured) '(line paragraph)))
+    (dolist (entry captured)
+      (should (eq (plist-get (cadr entry) :role) 'code-construct))
+      (should (eq (plist-get (cadr entry) :syntax-role) 'function))
+      (should
+       (equal
+        (plist-get (cadr entry) :events)
+        '(boundary-entered focus-entered)))
+      (should (eq (plist-get (caddr entry) :module) 'python)))))
+
 (provide 'emacsvox-python-tests)
 ;;; emacsvox-python-tests.el ends here

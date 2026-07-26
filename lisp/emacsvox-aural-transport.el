@@ -722,14 +722,18 @@ cleanup, without rerunning semantic or contextual resolution."
     (tts-initialize)))
 
 (defun emacsvox-aural-present-legacy-icon (icon &optional context)
-  "Present legacy ICON through contextual resolution and concrete transport."
+  "Present legacy ICON through concrete transport.
+Resolve it using CONTEXT or the dynamically captured submission context."
   (pcase-let*
       ((context
         (or
          context
-         (emacsvox-aural-capture-context nil 'notification)))
+         (emacsvox-aural-capture-context
+          nil
+          (or emacsvox-aural-submission-occasion 'notification))))
        (`(,facts ,context)
-        (emacsvox-aural--legacy-input icon nil context))
+        (emacsvox-aural--legacy-input
+         icon emacsvox-aural-submission-facts context))
        (render
         (emacsvox-aural-resolve-legacy-icon icon context facts))
        (local-cue-p
@@ -772,7 +776,8 @@ cleanup, without rerunning semantic or contextual resolution."
     plan))
 
 (defun emacsvox-aural-queue-legacy-icon (icon &optional context)
-  "Resolve and queue legacy ICON concretely without dispatching."
+  "Resolve and queue legacy ICON concretely without dispatching.
+Use CONTEXT when supplied, otherwise capture the submission context."
   (pcase-let*
       ((context
         (or
@@ -780,7 +785,8 @@ cleanup, without rerunning semantic or contextual resolution."
          emacsvox-aural-submission-context
          (emacsvox-aural-capture-context nil 'continuous)))
        (`(,facts ,context)
-        (emacsvox-aural--legacy-input icon nil context))
+        (emacsvox-aural--legacy-input
+         icon emacsvox-aural-submission-facts context))
        (plan
         (emacsvox-aural-compile-plan
          (emacsvox-aural-resolve-legacy-icon icon context facts)

@@ -8,6 +8,7 @@
 
 (require 'ert)
 (require 'emacsvox-aural)
+(require 'emacsvox-aural-representative)
 
 (defmacro emacsvox-test--with-empty-aural-registries (&rest body)
   "Run BODY with isolated empty semantic and occasion registries."
@@ -28,6 +29,29 @@
       (id
        '(navigation continuous state-change edit inspection notification))
     (should (emacsvox-aural-occasion id))))
+
+(ert-deftest emacsvox-aural-representative-semantics-are-owned-and-valid ()
+  "Cross-module semantics are available before integrations load."
+  (should (emacsvox-aural-validate-registry))
+  (dolist
+      (id
+       '(message field field-kind unread flagged has-attachments
+         refresh-completed refresh-failed code-construct syntax-role
+         boundary-entered candidate selected accepted completion-index
+         agent-session agent-response agent-thought agent-tool
+         permission-request processing processing-started
+         processing-completed processing-failed))
+    (should (emacsvox-aural-semantic id)))
+  (should
+   (eq
+    (emacsvox-aural-semantic-owner
+     (emacsvox-aural-semantic 'agent-response))
+    'agent-shell))
+  (should
+   (eq
+    (emacsvox-aural-semantic-owner
+     (emacsvox-aural-semantic 'candidate))
+    'core)))
 
 (ert-deftest emacsvox-aural-registers-complete-semantic-metadata ()
   "A valid semantic record retains its documented metadata."
