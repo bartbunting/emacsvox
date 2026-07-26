@@ -1021,5 +1021,12 @@ scope."
   (require 'emacsvox-aural-simple-editor)
   (emacsvox-aural-simple-editor-open scheme))
 
+(defalias 'emacsvox-aural-edit-rules
+  #'emacsvox-edit-aural-rules)
+(defalias 'emacsvox-aural-edit-scheme-advanced
+  #'emacsvox-edit-aural-scheme-advanced)
+(defalias 'emacsvox-aural-edit-scheme
+  #'emacsvox-edit-aural-scheme)
+
 (provide 'emacsvox-aural-editor)
 ;;; emacsvox-aural-editor.el ends here

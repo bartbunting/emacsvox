@@ -232,6 +232,112 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         (format "%s/%s" (car left) (cdr left))
         (format "%s/%s" (car right) (cdr right)))))))
 
+(defun emacsvox-aural-semantics--set-entries ()
+  "Populate the current semantic-list buffer."
+  (setq
+   tabulated-list-entries
+   (mapcar
+    (lambda (record)
+      (let ((id (emacsvox-aural-semantic-id record)))
+        (list
+         id
+         (vector
+          (symbol-name id)
+          (symbol-name (emacsvox-aural-semantic-kind record))
+          (symbol-name (emacsvox-aural-semantic-owner record))
+          (emacsvox-aural-semantic-summary record)))))
+    (emacsvox-aural-semantics))))
+
+(defun emacsvox-aural-semantics--goto (semantic)
+  "Move to SEMANTIC in the current semantic-list buffer."
+  (let ((start (point-min))
+        found)
+    (goto-char start)
+    (while (and (not found) (< (point) (point-max)))
+      (if (eq semantic (tabulated-list-get-id))
+          (setq found t)
+        (forward-line 1)))
+    (unless found
+      (goto-char start))
+    (when found
+      (emacsvox-aural-tools--goto-tabulated-column 0))
+    found))
+
+(defun emacsvox-aural-semantics-refresh (&optional semantic)
+  "Refresh the semantic list, preserving SEMANTIC and the current column."
+  (interactive)
+  (let ((column
+         (emacsvox-aural-tools--tabulated-column-index))
+        (selected (or semantic (tabulated-list-get-id))))
+    (emacsvox-aural-semantics--set-entries)
+    (tabulated-list-print t)
+    (if selected
+        (progn
+          (emacsvox-aural-semantics--goto selected)
+          (emacsvox-aural-tools--goto-tabulated-column column))
+      (goto-char (point-min))
+      (emacsvox-aural-tools--goto-tabulated-column 0))))
+
+(defun emacsvox-aural-semantics-speak-current ()
+  "Speak a concise description of the semantic at point."
+  (interactive)
+  (let* ((semantic
+          (or
+           (tabulated-list-get-id)
+           (user-error "Move to a semantic row first")))
+         (record (emacsvox-aural-semantic semantic))
+         (summary
+          (format
+           "%s. %s, owner %s. %s"
+           (emacsvox-aural-tools--humanize semantic)
+           (emacsvox-aural-semantic-kind record)
+           (emacsvox-aural-tools--humanize
+            (emacsvox-aural-semantic-owner record))
+           (emacsvox-aural-semantic-summary record))))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-semantics-speak-current-cell ()
+  "Speak the current semantic column title and value."
+  (interactive)
+  (emacsvox-aural-tools--speak-tabulated-cell))
+
+(defun emacsvox-aural-semantics-next ()
+  "Move to and speak the next semantic."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row 1 "semantic list"))
+
+(defun emacsvox-aural-semantics-previous ()
+  "Move to and speak the previous semantic."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row -1 "semantic list"))
+
+(defun emacsvox-aural-semantics-next-column ()
+  "Move right and speak the next semantic column title and value."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column 1))
+
+(defun emacsvox-aural-semantics-previous-column ()
+  "Move left and speak the previous semantic column title and value."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column -1))
+
+(defun emacsvox-aural-semantics-help ()
+  "Display and speak semantic-list help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Aural Semantic List\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
+      "RET view details     SPC speak semantic\n"
+      "g refresh            q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
 (define-derived-mode emacsvox-aural-semantics-mode tabulated-list-mode
   "Aural-Semantics"
   "Major mode for browsing registered aural semantics."
@@ -242,34 +348,40 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     ("Owner" 18 t)
     ("Intent" 0 t)])
   (setq tabulated-list-padding 2)
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-semantics--set-entries nil t)
   (tabulated-list-init-header))
 
-(define-key
- emacsvox-aural-semantics-mode-map
- (kbd "RET")
- #'emacsvox-describe-aural-semantic)
+(dolist
+    (binding
+     '(("RET" . emacsvox-describe-aural-semantic)
+       ("n" . emacsvox-aural-semantics-next)
+       ("p" . emacsvox-aural-semantics-previous)
+       ("<down>" . emacsvox-aural-semantics-next)
+       ("<up>" . emacsvox-aural-semantics-previous)
+       ("<right>" . emacsvox-aural-semantics-next-column)
+       ("<left>" . emacsvox-aural-semantics-previous-column)
+       ("." . emacsvox-aural-semantics-speak-current-cell)
+       ("SPC" . emacsvox-aural-semantics-speak-current)
+       ("g" . emacsvox-aural-semantics-refresh)
+       ("?" . emacsvox-aural-semantics-help)))
+  (define-key
+   emacsvox-aural-semantics-mode-map
+   (kbd (car binding))
+   (cdr binding)))
 
 (defun emacsvox-list-aural-semantics ()
-  "Display registered roles, events, states, attributes, owners, and intent."
+  "Open the accessible list of registered semantic vocabulary."
   (interactive)
   (let ((buffer (get-buffer-create "*Aural Semantics*")))
     (with-current-buffer buffer
       (emacsvox-aural-semantics-mode)
-      (setq
-       tabulated-list-entries
-       (mapcar
-        (lambda (record)
-          (let ((id (emacsvox-aural-semantic-id record)))
-            (list
-             id
-             (vector
-              (symbol-name id)
-              (symbol-name (emacsvox-aural-semantic-kind record))
-              (symbol-name (emacsvox-aural-semantic-owner record))
-              (emacsvox-aural-semantic-summary record)))))
-        (emacsvox-aural-semantics)))
-      (tabulated-list-print t))
-    (pop-to-buffer buffer)))
+      (emacsvox-aural-semantics-refresh))
+    (pop-to-buffer buffer)
+    (when (called-interactively-p 'interactive)
+      (emacsvox-aural-semantics-speak-current))
+    buffer))
 
 (defun emacsvox-describe-aural-semantic (&optional semantic)
   "Describe registered SEMANTIC and schemes that present it."
@@ -566,8 +678,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     #'emacsvox-aural-tools--scheme-row
     (emacsvox-aural-scheme-candidates))))
 
-(defun emacsvox-aural-schemes--column-index ()
-  "Return the manager column index at point, defaulting to the first."
+(defun emacsvox-aural-tools--tabulated-column-index ()
+  "Return the current tabulated column index, defaulting to the first."
   (let ((name
          (get-text-property
           (point) 'tabulated-list-column-name)))
@@ -579,8 +691,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
        :test #'string= :key #'car))
      0)))
 
-(defun emacsvox-aural-schemes--goto-column (index)
-  "Move to column INDEX on the current manager row."
+(defun emacsvox-aural-tools--goto-tabulated-column (index)
+  "Move to column INDEX on the current tabulated row."
   (let ((name (car (aref tabulated-list-format index)))
         (position (line-beginning-position))
         (limit (line-end-position))
@@ -612,7 +724,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     (unless found
       (goto-char start))
     (when found
-      (emacsvox-aural-schemes--goto-column 0))
+      (emacsvox-aural-tools--goto-tabulated-column 0))
     found))
 
 (defun emacsvox-aural-schemes-refresh (&optional scheme)
@@ -622,7 +734,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
          (and
           (null scheme)
           (derived-mode-p 'emacsvox-aural-schemes-mode)
-          (emacsvox-aural-schemes--column-index)))
+          (emacsvox-aural-tools--tabulated-column-index)))
         (selected
          (or
           scheme
@@ -634,7 +746,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     (when selected
       (emacsvox-aural-schemes--goto-scheme selected)
       (when column
-        (emacsvox-aural-schemes--goto-column column)))))
+        (emacsvox-aural-tools--goto-tabulated-column column)))))
 
 (defun emacsvox-aural-tools--refresh-scheme-manager (&optional scheme)
   "Refresh an existing scheme-manager buffer and select SCHEME."
@@ -751,13 +863,13 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (message "%s" summary))
     summary))
 
-(defun emacsvox-aural-schemes--cell-description ()
-  "Return the current manager cell as titled spoken text."
+(defun emacsvox-aural-tools--tabulated-cell-description ()
+  "Return the current tabulated cell as titled spoken text."
   (let* ((entry
           (or
            (tabulated-list-get-entry)
            (user-error "Move to a scheme row first")))
-         (index (emacsvox-aural-schemes--column-index))
+         (index (emacsvox-aural-tools--tabulated-column-index))
          (name (car (aref tabulated-list-format index)))
          (value (aref entry index))
          (value (if (listp value) (car value) value))
@@ -767,11 +879,10 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
      name
      (if (string-empty-p value) "blank" value))))
 
-(defun emacsvox-aural-schemes-speak-current-cell ()
-  "Speak the current manager column title and value."
-  (interactive)
+(defun emacsvox-aural-tools--speak-tabulated-cell ()
+  "Speak the current tabulated column title and value."
   (let ((description
-         (emacsvox-aural-schemes--cell-description)))
+         (emacsvox-aural-tools--tabulated-cell-description)))
     (when (fboundp 'emacsvox-icon)
       (emacsvox-icon 'select-object))
     (if (fboundp 'tts-speak)
@@ -779,8 +890,13 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (message "%s" description))
     description))
 
-(defun emacsvox-aural-schemes--boundary (message)
-  "Announce manager boundary MESSAGE."
+(defun emacsvox-aural-schemes-speak-current-cell ()
+  "Speak the current manager column title and value."
+  (interactive)
+  (emacsvox-aural-tools--speak-tabulated-cell))
+
+(defun emacsvox-aural-tools--tabulated-boundary (message)
+  "Announce tabulated-list boundary MESSAGE."
   (when (fboundp 'emacsvox-icon)
     (emacsvox-icon 'warn-user))
   (if (fboundp 'tts-speak)
@@ -788,55 +904,56 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     (message "%s" message))
   message)
 
-(defun emacsvox-aural-schemes--move-row (direction)
-  "Move one manager row in DIRECTION and speak the titled cell."
+(defun emacsvox-aural-tools--move-tabulated-row (direction list-name)
+  "Move a tabulated row in DIRECTION within LIST-NAME and speak the cell."
   (let ((origin (point))
-        (column (emacsvox-aural-schemes--column-index)))
+        (column (emacsvox-aural-tools--tabulated-column-index)))
     (beginning-of-line)
     (let ((residue (forward-line direction)))
       (if (and (zerop residue) (tabulated-list-get-id))
           (progn
-            (emacsvox-aural-schemes--goto-column column)
-            (emacsvox-aural-schemes-speak-current-cell))
+            (emacsvox-aural-tools--goto-tabulated-column column)
+            (emacsvox-aural-tools--speak-tabulated-cell))
         (goto-char origin)
-        (emacsvox-aural-schemes--boundary
-         (if (> direction 0)
-             "Bottom of scheme list."
-           "Top of scheme list."))))))
+        (emacsvox-aural-tools--tabulated-boundary
+         (format
+          "%s of %s."
+          (if (> direction 0) "Bottom" "Top")
+          list-name))))))
 
 (defun emacsvox-aural-schemes-next ()
   "Move to and speak the next scheme."
   (interactive)
-  (emacsvox-aural-schemes--move-row 1))
+  (emacsvox-aural-tools--move-tabulated-row 1 "scheme list"))
 
 (defun emacsvox-aural-schemes-previous ()
   "Move to and speak the previous scheme."
   (interactive)
-  (emacsvox-aural-schemes--move-row -1))
+  (emacsvox-aural-tools--move-tabulated-row -1 "scheme list"))
 
-(defun emacsvox-aural-schemes--move-column (direction)
-  "Move one manager column in DIRECTION and speak its title and value."
-  (let* ((index (emacsvox-aural-schemes--column-index))
+(defun emacsvox-aural-tools--move-tabulated-column (direction)
+  "Move a tabulated column in DIRECTION and speak its title and value."
+  (let* ((index (emacsvox-aural-tools--tabulated-column-index))
          (last (1- (length tabulated-list-format)))
          (target (+ index direction)))
     (cond
      ((< target 0)
-      (emacsvox-aural-schemes--boundary "First column."))
+      (emacsvox-aural-tools--tabulated-boundary "First column."))
      ((> target last)
-      (emacsvox-aural-schemes--boundary "Last column."))
+      (emacsvox-aural-tools--tabulated-boundary "Last column."))
      (t
-      (emacsvox-aural-schemes--goto-column target)
-      (emacsvox-aural-schemes-speak-current-cell)))))
+      (emacsvox-aural-tools--goto-tabulated-column target)
+      (emacsvox-aural-tools--speak-tabulated-cell)))))
 
 (defun emacsvox-aural-schemes-next-column ()
   "Move right and speak the next manager column title and value."
   (interactive)
-  (emacsvox-aural-schemes--move-column 1))
+  (emacsvox-aural-tools--move-tabulated-column 1))
 
 (defun emacsvox-aural-schemes-previous-column ()
   "Move left and speak the previous manager column title and value."
   (interactive)
-  (emacsvox-aural-schemes--move-column -1))
+  (emacsvox-aural-tools--move-tabulated-column -1))
 
 (defun emacsvox-describe-aural-scheme (&optional scheme)
   "View direct, inherited, effective, and resource details for SCHEME."
@@ -2062,6 +2179,39 @@ SCOPE is `personal', `session', or `buffer'."
     (remove-hook
      'emacsvox-aural-plan-presented-hook
      #'emacsvox-aural-tools--training-presented)))
+
+;; Keep the established verb-first commands while exposing one discoverable
+;; `emacsvox-aural-' command namespace.
+(defalias 'emacsvox-aural-list-semantics
+  #'emacsvox-list-aural-semantics)
+(defalias 'emacsvox-aural-describe-semantic
+  #'emacsvox-describe-aural-semantic)
+(defalias 'emacsvox-aural-list-schemes
+  #'emacsvox-list-aural-schemes)
+(defalias 'emacsvox-aural-describe-scheme
+  #'emacsvox-describe-aural-scheme)
+(defalias 'emacsvox-aural-show-scheme-validation
+  #'emacsvox-validate-aural-scheme)
+(defalias 'emacsvox-aural-describe-spatial-capabilities
+  #'emacsvox-describe-aural-spatial-capabilities)
+(defalias 'emacsvox-aural-explain-presentation
+  #'emacsvox-explain-aural-presentation)
+(defalias 'emacsvox-aural-preview-rule
+  #'emacsvox-preview-aural-rule)
+(defalias 'emacsvox-aural-preview-scheme
+  #'emacsvox-preview-aural-scheme)
+(defalias 'emacsvox-aural-set-scheme
+  #'emacsvox-set-aural-scheme)
+(defalias 'emacsvox-aural-reset-scheme
+  #'emacsvox-reset-aural-scheme)
+(defalias 'emacsvox-aural-copy-scheme
+  #'emacsvox-copy-aural-scheme)
+(defalias 'emacsvox-aural-delete-scheme
+  #'emacsvox-delete-aural-scheme)
+(defalias 'emacsvox-aural-rename-scheme
+  #'emacsvox-rename-aural-scheme)
+(defalias 'emacsvox-aural-reset-overrides
+  #'emacsvox-reset-aural-overrides)
 
 (provide 'emacsvox-aural-tools)
 ;;; emacsvox-aural-tools.el ends here

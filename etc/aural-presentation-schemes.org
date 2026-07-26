@@ -809,13 +809,28 @@ played through a local adapter.  It queues concrete explanatory text directly
 and never recursively invokes semantic resolution.  Detailed inspection uses
 =emacsvox-explain-aural-presentation=.
 
+** Accessible semantic-list contract
+
+=emacsvox-aural-list-semantics= opens the registered semantic vocabulary.
+The established =emacsvox-list-aural-semantics= name remains available.
+=n=, =p=, Up, and Down move between semantics while preserving the current
+column.  Left and Right speak the column title and value; =.= repeats the
+titled cell and =SPC= speaks the complete semantic summary.  Attempts to move
+above or below the list announce the top or bottom rather than repeating the
+current cell.
+
 ** Accessible scheme-manager contract
 
-=emacsvox-list-aural-schemes= is the normal entry point for scheme
+=emacsvox-aural-list-schemes= is the normal entry point for scheme
 management.  Each row reports the active state, built-in or personal
 ownership, parent, effective sound pack, direct and effective presentation
 counts, validation state, and summary.  Opening the manager speaks a concise
 description of the active row.
+
+All user-facing operations also have discoverable =emacsvox-aural-...=
+command names.  Existing verb-first names such as
+=emacsvox-list-aural-schemes= and =emacsvox-edit-aural-scheme= remain
+compatible.
 
 The manager exposes these stable operations:
 

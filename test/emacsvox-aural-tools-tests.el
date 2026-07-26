@@ -532,6 +532,44 @@
     (kill-buffer "*Aural Semantics*")
     (kill-buffer "*Aural Schemes*")))
 
+(ert-deftest emacsvox-aural-tools-expose-discoverable-command-namespace ()
+  "Preferred aural command names coexist with established compatibility names."
+  (dolist
+      (entry
+       '((emacsvox-aural-list-semantics
+          . emacsvox-list-aural-semantics)
+         (emacsvox-aural-describe-semantic
+          . emacsvox-describe-aural-semantic)
+         (emacsvox-aural-list-schemes
+          . emacsvox-list-aural-schemes)
+         (emacsvox-aural-describe-scheme
+          . emacsvox-describe-aural-scheme)
+         (emacsvox-aural-show-scheme-validation
+          . emacsvox-validate-aural-scheme)
+         (emacsvox-aural-explain-presentation
+          . emacsvox-explain-aural-presentation)
+         (emacsvox-aural-preview-scheme
+          . emacsvox-preview-aural-scheme)
+         (emacsvox-aural-set-scheme
+          . emacsvox-set-aural-scheme)
+         (emacsvox-aural-copy-scheme
+          . emacsvox-copy-aural-scheme)
+         (emacsvox-aural-delete-scheme
+          . emacsvox-delete-aural-scheme)
+         (emacsvox-aural-rename-scheme
+          . emacsvox-rename-aural-scheme)
+         (emacsvox-aural-edit-scheme
+          . emacsvox-edit-aural-scheme)
+         (emacsvox-aural-edit-scheme-advanced
+          . emacsvox-edit-aural-scheme-advanced)
+         (emacsvox-aural-edit-rules
+          . emacsvox-edit-aural-rules)))
+    (should (commandp (car entry)))
+    (should
+     (eq
+      (indirect-function (car entry))
+      (indirect-function (cdr entry))))))
+
 (ert-deftest emacsvox-aural-scheme-manager-rows-and-commands-are-complete ()
   "The manager exposes useful row state and every documented operation."
   (emacsvox-test--with-aural-tools
@@ -625,10 +663,10 @@
                 (should (equal spoken "First column."))
                 (emacsvox-aural-schemes-next-column)
                 (should (equal spoken "Status, active"))
-                (emacsvox-aural-schemes--goto-column 3)
+                (emacsvox-aural-tools--goto-tabulated-column 3)
                 (emacsvox-aural-schemes-speak-current-cell)
                 (should (equal spoken "Based on, blank"))
-                (emacsvox-aural-schemes--goto-column
+                (emacsvox-aural-tools--goto-tabulated-column
                  (1- (length tabulated-list-format)))
                 (emacsvox-aural-schemes-next-column)
                 (should (equal spoken "Last column."))))))
@@ -669,6 +707,43 @@
                 (should (equal spoken "Scheme, default"))))))
       (when (get-buffer "*Aural Schemes*")
         (kill-buffer "*Aural Schemes*")))))
+
+(ert-deftest emacsvox-aural-semantic-list-navigation-speaks-titles-and-edges ()
+  "Semantic row and column movement announces titles and list boundaries."
+  (emacsvox-test--with-aural-tools
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-list-aural-semantics)
+          (with-current-buffer "*Aural Semantics*"
+            (let* ((ids
+                    (mapcar
+                     #'emacsvox-aural-semantic-id
+                     (emacsvox-aural-semantics)))
+                   (first (car ids))
+                   (second (cadr ids))
+                   (last (car (last ids)))
+                   spoken)
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'emacsvox-icon) #'ignore))
+                (should (eq (tabulated-list-get-id) first))
+                (emacsvox-aural-semantics-previous)
+                (should (equal spoken "Top of semantic list."))
+                (emacsvox-aural-semantics-next)
+                (should (eq (tabulated-list-get-id) second))
+                (should
+                 (equal
+                  spoken
+                  (format "Identifier, %s" second)))
+                (emacsvox-aural-semantics-next-column)
+                (should (string-prefix-p "Kind, " spoken))
+                (emacsvox-aural-semantics--goto last)
+                (emacsvox-aural-semantics-next)
+                (should (eq (tabulated-list-get-id) last))
+                (should (equal spoken "Bottom of semantic list."))))))
+      (when (get-buffer "*Aural Semantics*")
+        (kill-buffer "*Aural Semantics*")))))
 
 (ert-deftest emacsvox-aural-scheme-manager-view-separates-direct-and-inherited ()
   "Scheme details distinguish direct, inherited, and effective presentations."

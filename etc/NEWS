@@ -34,6 +34,9 @@ and validating schemes.  Built-ins remain read-only; deletion protects
 schemes that are inherited by others, and rename updates child schemes.
 Row and column movement speaks the column title and value, and announces the
 top, bottom, first-column, and last-column boundaries.
+The semantic vocabulary list now provides the same titled-cell and boundary
+navigation.  Preferred interactive command aliases share the discoverable
+~emacsvox-aural-~ prefix; established verb-first names remain compatible.
 The default scheme editor is now a spoken form: TAB and Shift-TAB move through
 natural-language fields, RET edits one field, and built-in schemes can be
 copied from inside the workflow.  Use
