@@ -1212,7 +1212,8 @@ RULE-INDEX associates the line with a working declarative rule."
       "d delete             t enable or disable\n"
       "v validate           s save\n"
       "a activate scheme    A advanced editor\n"
-      "g refresh            q quit\n")))
+      "g refresh            h aural home\n"
+      "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -1236,6 +1237,7 @@ RULE-INDEX associates the line with a working declarative rule."
     (define-key map (kbd "a") #'emacsvox-aural-simple-editor-activate)
     (define-key map (kbd "A") #'emacsvox-aural-simple-editor-use-advanced)
     (define-key map (kbd "g") #'emacsvox-aural-simple-editor-refresh)
+    (define-key map (kbd "h") #'emacsvox-aural)
     (define-key map (kbd "?") #'emacsvox-aural-simple-editor-help)
     (define-key map (kbd "q") #'emacsvox-aural-editor-quit)
     map)

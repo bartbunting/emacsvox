@@ -29,6 +29,7 @@
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
+         (emacsvox-aural-tools--last-source-buffer nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
@@ -521,20 +522,101 @@
           dispatch))))))
 
 (ert-deftest emacsvox-aural-tools-list-buffers-use-accessible-modes ()
-  "Semantic and scheme list commands populate predictable tabulated buffers."
+  "Aural home and list commands populate predictable tabulated buffers."
   (emacsvox-test--with-aural-tools
-    (save-window-excursion
-      (emacsvox-list-aural-semantics)
-      (with-current-buffer "*Aural Semantics*"
-        (should (derived-mode-p 'emacsvox-aural-semantics-mode))
-        (should tabulated-list-entries))
-      (emacsvox-list-aural-schemes)
-      (with-current-buffer "*Aural Schemes*"
-        (should (derived-mode-p 'emacsvox-aural-schemes-mode))
-        (should
-         (equal (mapcar #'car tabulated-list-entries) '(default)))))
-    (kill-buffer "*Aural Semantics*")
-    (kill-buffer "*Aural Schemes*")))
+    (let ((source (generate-new-buffer " *aural-home-source*")))
+      (unwind-protect
+          (save-window-excursion
+            (with-current-buffer source
+              (emacsvox-aural))
+            (with-current-buffer "*Emacsvox Aural*"
+              (should (derived-mode-p 'emacsvox-aural-home-mode))
+              (should (eq emacsvox-aural-home-source-buffer source))
+              (should
+               (equal
+                (mapcar #'car tabulated-list-entries)
+                '(explain schemes features buffer-rules semantics sounds
+                  spatial spatial-settings training diagnostics)))
+              (dolist
+                  (binding
+                   '(("RET" . emacsvox-aural-home-activate)
+                     ("SPC" . emacsvox-aural-home-speak-current)
+                     ("." . emacsvox-aural-home-speak-current-cell)
+                     ("n" . emacsvox-aural-home-next)
+                     ("p" . emacsvox-aural-home-previous)
+                     ("<down>" . emacsvox-aural-home-next)
+                     ("<up>" . emacsvox-aural-home-previous)
+                     ("<right>" . emacsvox-aural-home-next-column)
+                     ("<left>" . emacsvox-aural-home-previous-column)
+                     ("x" . emacsvox-aural-home-explain)
+                     ("g" . emacsvox-aural-home-refresh)
+                     ("?" . emacsvox-aural-home-help)))
+                (should
+                 (eq
+                  (lookup-key
+                   emacsvox-aural-home-mode-map
+                   (kbd (car binding)))
+                  (cdr binding)))))
+            (emacsvox-list-aural-semantics)
+            (with-current-buffer "*Aural Semantics*"
+              (should (derived-mode-p 'emacsvox-aural-semantics-mode))
+              (should tabulated-list-entries))
+            (emacsvox-list-aural-schemes)
+            (with-current-buffer "*Aural Schemes*"
+              (should (derived-mode-p 'emacsvox-aural-schemes-mode))
+              (should
+               (equal
+                (mapcar #'car tabulated-list-entries)
+                '(default)))))
+        (dolist
+            (buffer
+             '("*Emacsvox Aural*" "*Aural Semantics*" "*Aural Schemes*"))
+          (when (get-buffer buffer)
+            (kill-buffer buffer)))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-home-speaks-navigation-and-source-explanation ()
+  "The home buffer speaks cells and diagnoses its remembered source."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-explanation-source*"))
+          spoken
+          explained-in)
+      (unwind-protect
+          (save-window-excursion
+            (emacsvox-aural source)
+            (cl-letf
+                (((symbol-function 'tts-speak)
+                  (lambda (text) (setq spoken text)))
+                 ((symbol-function 'emacsvox-icon) #'ignore)
+                 ((symbol-function 'emacsvox-aural-explain-presentation)
+                  (lambda ()
+                    (interactive)
+                    (setq explained-in (current-buffer)))))
+              (with-current-buffer "*Emacsvox Aural*"
+                (emacsvox-aural-home-previous)
+                (should (equal spoken "Top of aural home."))
+                (emacsvox-aural-home-next)
+                (should (equal spoken "Area, Schemes"))
+                (emacsvox-aural-home-next-column)
+                (should (equal spoken "Current status, default"))
+                (emacsvox-aural-home-explain))
+              (should (eq explained-in source))))
+        (when (get-buffer "*Emacsvox Aural*")
+          (kill-buffer "*Emacsvox Aural*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-interfaces-provide-home-navigation ()
+  "Every aural child manager and editor uses h for the aural home."
+  (dolist
+      (map
+       (list
+        emacsvox-aural-semantics-mode-map
+        emacsvox-aural-schemes-mode-map
+        emacsvox-aural-feature-fragments-mode-map
+        emacsvox-aural-scheme-editor-mode-map
+        emacsvox-aural-simple-editor-mode-map))
+    (should
+     (eq (lookup-key map (kbd "h")) #'emacsvox-aural))))
 
 (ert-deftest emacsvox-aural-tools-expose-discoverable-command-namespace ()
   "Preferred aural command names coexist with established compatibility names."
@@ -621,6 +703,7 @@
                ("SPC" . emacsvox-aural-schemes-speak-current)
                ("." . emacsvox-aural-schemes-speak-current-cell)
                ("f" . emacsvox-aural-list-feature-fragments)
+               ("h" . emacsvox-aural)
                ("?" . emacsvox-aural-schemes-help)))
           (should
            (eq
@@ -691,6 +774,7 @@
                    ("v"
                     . emacsvox-aural-show-feature-fragment-validation)
                    ("s" . emacsvox-aural-list-schemes)
+                   ("h" . emacsvox-aural)
                    ("?" . emacsvox-aural-feature-fragments-help)))
               (should
                (eq

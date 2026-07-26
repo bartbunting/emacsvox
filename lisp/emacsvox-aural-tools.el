@@ -6,8 +6,8 @@
 
 ;;; Commentary:
 
-;; Accessible list, describe, validation, explanation, preview, selection,
-;; copy, reset, and training commands for semantic aural presentation.
+;; Accessible home, list, describe, validation, explanation, preview,
+;; selection, copy, reset, and training commands for semantic presentation.
 
 ;;; Code:
 
@@ -35,13 +35,50 @@
 (defvar emacsvox-aural-tools--last-explanation nil
   "Most recently displayed aural presentation explanation.")
 
+(defvar emacsvox-aural-tools--last-source-buffer nil
+  "Most recent non-aural buffer used as an aural inspection source.")
+
+(defvar-local emacsvox-aural-home-source-buffer nil
+  "Source buffer inspected and customized from the aural home buffer.")
+
+(defvar emacsvox-sounds-current-pack)
+(defvar emacsvox-aural-training-mode nil
+  "Non-nil when semantic training explanations are enabled.")
+
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
 (declare-function emacsvox-edit-aural-scheme
                   "emacsvox-aural-editor" (&optional scheme))
 (declare-function emacsvox-edit-aural-scheme-advanced
                   "emacsvox-aural-editor" (&optional scheme))
+(declare-function emacsvox-edit-aural-rules
+                  "emacsvox-aural-editor"
+                  (scope &optional scheme source-buffer))
+(declare-function emacsvox-sounds-select-theme
+                  "emacsvox-sounds" (&optional theme))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
+
+(defun emacsvox-aural-tools--interface-buffer-p (&optional buffer)
+  "Return non-nil when BUFFER is an aural manager or editor buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (derived-mode-p
+     'emacsvox-aural-home-mode
+     'emacsvox-aural-semantics-mode
+     'emacsvox-aural-schemes-mode
+     'emacsvox-aural-feature-fragments-mode
+     'emacsvox-aural-scheme-editor-mode
+     'emacsvox-aural-simple-editor-mode)))
+
+(defun emacsvox-aural-tools--remember-source-buffer (&optional buffer)
+  "Remember BUFFER as the source for aural inspection when appropriate."
+  (let ((buffer (or buffer (current-buffer))))
+    (when
+        (and
+         (buffer-live-p buffer)
+         (not (minibufferp buffer))
+         (not (emacsvox-aural-tools--interface-buffer-p buffer)))
+      (setq emacsvox-aural-tools--last-source-buffer buffer)))
+  emacsvox-aural-tools--last-source-buffer)
 
 (defun emacsvox-aural-tools--point-position ()
   "Return a position at or immediately before point that can hold properties."
@@ -363,7 +400,8 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET view details     SPC speak semantic\n"
-      "g refresh            q quit\n")))
+      "g refresh            h aural home\n"
+      "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -394,6 +432,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
        ("." . emacsvox-aural-semantics-speak-current-cell)
        ("SPC" . emacsvox-aural-semantics-speak-current)
        ("g" . emacsvox-aural-semantics-refresh)
+       ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-semantics-help)))
   (define-key
    emacsvox-aural-semantics-mode-map
@@ -403,6 +442,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 (defun emacsvox-list-aural-semantics ()
   "Open the accessible list of registered semantic vocabulary."
   (interactive)
+  (emacsvox-aural-tools--remember-source-buffer)
   (let ((buffer (get-buffer-create "*Aural Semantics*")))
     (with-current-buffer buffer
       (emacsvox-aural-semantics-mode)
@@ -905,7 +945,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
   (let* ((entry
           (or
            (tabulated-list-get-entry)
-           (user-error "Move to a scheme row first")))
+           (user-error "Move to a tabulated row first")))
          (index (emacsvox-aural-tools--tabulated-column-index))
          (name (car (aref tabulated-list-format index)))
          (value (aref entry index))
@@ -1173,7 +1213,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
       "r rename personal    a activate\n"
       "P preview            v validate\n"
       "SPC speak row        g refresh\n"
-      "f feature fragments\n"
+      "f feature fragments  h aural home\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1277,10 +1317,15 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  emacsvox-aural-schemes-mode-map
  (kbd "f")
  #'emacsvox-aural-list-feature-fragments)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "h")
+ #'emacsvox-aural)
 
 (defun emacsvox-list-aural-schemes ()
   "Open the accessible manager for registered aural schemes."
   (interactive)
+  (emacsvox-aural-tools--remember-source-buffer)
   (let ((buffer (get-buffer-create "*Aural Schemes*")))
     (with-current-buffer buffer
       (emacsvox-aural-schemes-mode)
@@ -1724,6 +1769,8 @@ technical details and speaks a concise description of the scheme, semantic
 object, matching rule, and resolved before/content/after order."
   (interactive
    (emacsvox-aural-tools--read-explanation-input current-prefix-arg))
+  (when (called-interactively-p 'interactive)
+    (emacsvox-aural-tools--remember-source-buffer))
   (let* ((facts
           (or facts (emacsvox-aural-tools--facts-or-read)))
          (context
@@ -2726,7 +2773,8 @@ SCOPE is `personal', `session', or `buffer'."
       "N create personal    c copy as personal\n"
       "e edit personal      d delete personal\n"
       "v validate           g refresh\n"
-      "s scheme manager     q quit\n")))
+      "s scheme manager     h aural home\n"
+      "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
@@ -2769,6 +2817,7 @@ SCOPE is `personal', `session', or `buffer'."
        ("v" . emacsvox-aural-show-feature-fragment-validation)
        ("g" . emacsvox-aural-feature-fragments-refresh)
        ("s" . emacsvox-aural-list-schemes)
+       ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-feature-fragments-help)))
   (define-key
    emacsvox-aural-feature-fragments-mode-map
@@ -2778,6 +2827,7 @@ SCOPE is `personal', `session', or `buffer'."
 (defun emacsvox-aural-list-feature-fragments ()
   "Open the accessible manager for aural feature fragments."
   (interactive)
+  (emacsvox-aural-tools--remember-source-buffer)
   (let ((buffer (get-buffer-create "*Aural Feature Fragments*")))
     (with-current-buffer buffer
       (emacsvox-aural-feature-fragments-mode)
@@ -2798,6 +2848,319 @@ SCOPE is `personal', `session', or `buffer'."
 (defun emacsvox-aural-tools--humanize (value)
   "Return VALUE as concise spoken words."
   (replace-regexp-in-string "-" " " (format "%s" value)))
+
+(defun emacsvox-aural-home--source-buffer ()
+  "Return the live inspection source for the current aural home buffer."
+  (cond
+   ((buffer-live-p emacsvox-aural-home-source-buffer)
+    emacsvox-aural-home-source-buffer)
+   ((buffer-live-p emacsvox-aural-tools--last-source-buffer)
+    emacsvox-aural-tools--last-source-buffer)))
+
+(defun emacsvox-aural-home--enabled-fragment-status ()
+  "Return concise status for enabled aural feature fragments."
+  (if emacsvox-aural-enabled-feature-fragments
+      (format
+       "%d enabled: %s"
+       (length emacsvox-aural-enabled-feature-fragments)
+       (mapconcat
+        #'symbol-name emacsvox-aural-enabled-feature-fragments ", "))
+    "none enabled"))
+
+(defun emacsvox-aural-home--spatial-status ()
+  "Return concise status for portable spatial presentation."
+  (if emacsvox-aural-spatial-enabled
+      (format
+       "on; speech %s, cues %s, output %s"
+       (if emacsvox-aural-spatial-speech-enabled "on" "off")
+       (if emacsvox-aural-spatial-cue-enabled "on" "off")
+       emacsvox-aural-spatial-output)
+    "off"))
+
+(defun emacsvox-aural-home--validation-status ()
+  "Return validation status for the active aural scheme."
+  (if
+      (emacsvox-aural-validation-report-valid
+       (emacsvox-aural-validate-scheme emacsvox-aural-active-scheme))
+      "active scheme valid"
+    "active scheme invalid"))
+
+(defun emacsvox-aural-home--entries ()
+  "Return current rows for the aural home buffer."
+  (let* ((source (emacsvox-aural-home--source-buffer))
+         (source-name (if source (buffer-name source) "no source buffer"))
+         (buffer-rules
+          (if source
+              (length
+               (buffer-local-value 'emacsvox-aural-buffer-rules source))
+            0))
+         (pack
+          (or
+           (and
+            (boundp 'emacsvox-sounds-current-pack)
+            emacsvox-sounds-current-pack)
+           (emacsvox-aural-effective-scheme-provider 'resource-pack)
+           "none")))
+    (list
+     (list
+      'explain
+      (vector
+       "Explain at point" source-name
+       "Show and speak why the current item sounds as it does"))
+     (list
+      'schemes
+      (vector
+       "Schemes" (symbol-name emacsvox-aural-active-scheme)
+       "View, activate, copy, edit, preview, and validate base schemes"))
+     (list
+      'features
+      (vector
+       "Feature fragments"
+       (emacsvox-aural-home--enabled-fragment-status)
+       "Layer and order independent presentation additions"))
+     (list
+      'buffer-rules
+      (vector
+       "Current buffer rules"
+       (format "%d in %s" buffer-rules source-name)
+       "Edit temporary presentation rules for the source buffer"))
+     (list
+      'semantics
+      (vector
+       "Semantic vocabulary"
+       (format "%d registered" (length (emacsvox-aural-semantics)))
+       "Browse roles, events, states, attributes, owners, and intent"))
+     (list
+      'sounds
+      (vector
+       "Sound packs" (format "%s" pack)
+       "Select a discovered auditory cue pack"))
+     (list
+      'spatial
+      (vector
+       "Spatial capabilities"
+       (emacsvox-aural-home--spatial-status)
+       "Inspect backend capability and fallback"))
+     (list
+      'spatial-settings
+      (vector
+       "Spatial settings" "Customize"
+       "Configure output, separation, direction, speech, and cues"))
+     (list
+      'training
+      (vector
+       "Training mode"
+       (if emacsvox-aural-training-mode "on" "off")
+       "Toggle concise semantic explanations after presentations"))
+     (list
+      'diagnostics
+      (vector
+       "Diagnostics"
+       (emacsvox-aural-home--validation-status)
+       "Validate the active scheme and its resources")))))
+
+(defun emacsvox-aural-home--goto (id)
+  "Move to home row ID and its first column."
+  (let ((start (point-min))
+        found)
+    (goto-char start)
+    (while (and (not found) (< (point) (point-max)))
+      (if (eq id (tabulated-list-get-id))
+          (setq found t)
+        (forward-line 1)))
+    (unless found
+      (goto-char start))
+    (when found
+      (emacsvox-aural-tools--goto-tabulated-column 0))
+    found))
+
+(defun emacsvox-aural-home-refresh (&optional id)
+  "Refresh aural home status, preserving row ID and the current column."
+  (interactive)
+  (let ((column (emacsvox-aural-tools--tabulated-column-index))
+        (selected (or id (tabulated-list-get-id) 'explain)))
+    (setq tabulated-list-entries (emacsvox-aural-home--entries))
+    (tabulated-list-print t)
+    (emacsvox-aural-home--goto selected)
+    (emacsvox-aural-tools--goto-tabulated-column column)))
+
+(defun emacsvox-aural-home-speak-current ()
+  "Speak the complete aural home row at point."
+  (interactive)
+  (let* ((entry
+          (or
+           (tabulated-list-get-entry)
+           (user-error "Move to an aural home row first")))
+         (summary
+          (format
+           "%s. %s. %s."
+           (aref entry 0) (aref entry 1) (aref entry 2))))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-home-speak-current-cell ()
+  "Speak the current aural home column title and value."
+  (interactive)
+  (emacsvox-aural-tools--speak-tabulated-cell))
+
+(defun emacsvox-aural-home-next ()
+  "Move to and speak the next aural home row."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row 1 "aural home"))
+
+(defun emacsvox-aural-home-previous ()
+  "Move to and speak the previous aural home row."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row -1 "aural home"))
+
+(defun emacsvox-aural-home-next-column ()
+  "Move right and speak the next aural home column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column 1))
+
+(defun emacsvox-aural-home-previous-column ()
+  "Move left and speak the previous aural home column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column -1))
+
+(defun emacsvox-aural-home--call-in-source (command)
+  "Call interactive COMMAND in the remembered source buffer."
+  (let ((source (emacsvox-aural-home--source-buffer)))
+    (unless source
+      (user-error "No live source buffer is available"))
+    (with-current-buffer source
+      (call-interactively command))))
+
+(defun emacsvox-aural-home-explain ()
+  "Explain presentation at point in the remembered source buffer."
+  (interactive)
+  (emacsvox-aural-home--call-in-source
+   #'emacsvox-aural-explain-presentation))
+
+(defun emacsvox-aural-home-activate ()
+  "Perform the primary operation for the aural home row at point."
+  (interactive)
+  (pcase (or (tabulated-list-get-id)
+             (user-error "Move to an aural home row first"))
+    ('explain
+     (emacsvox-aural-home-explain))
+    ('schemes (emacsvox-aural-list-schemes))
+    ('features (emacsvox-aural-list-feature-fragments))
+    ('buffer-rules
+     (let ((source (emacsvox-aural-home--source-buffer)))
+       (unless source
+         (user-error "No live source buffer is available"))
+       (require 'emacsvox-aural-editor)
+       (emacsvox-edit-aural-rules 'buffer nil source)))
+    ('semantics (emacsvox-aural-list-semantics))
+    ('sounds
+     (require 'emacsvox-sounds)
+     (call-interactively #'emacsvox-sounds-select-theme)
+     (when (derived-mode-p 'emacsvox-aural-home-mode)
+       (emacsvox-aural-home-refresh 'sounds)
+       (emacsvox-aural-home-speak-current)))
+    ('spatial (emacsvox-aural-describe-spatial-capabilities))
+    ('spatial-settings (customize-group 'emacsvox-aural-spatial))
+    ('training
+     (emacsvox-aural-training-mode
+      (if emacsvox-aural-training-mode -1 1))
+     (emacsvox-aural-home-refresh 'training)
+     (emacsvox-aural-home-speak-current))
+    ('diagnostics
+     (emacsvox-aural-show-scheme-validation
+      emacsvox-aural-active-scheme))))
+
+(defun emacsvox-aural-home-help ()
+  "Display and speak aural home commands and discovery guidance."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Emacsvox Aural Home\n\n"
+      "This is the main entry point for presentation discovery, editing,\n"
+      "inspection, sound packs, spatial settings, and diagnostics.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
+      "RET open or perform  SPC speak complete row\n"
+      "x explain at point   g refresh\n"
+      "? display and speak this help\n"
+      "C-e H opens this home from any ordinary buffer\n"
+      "C-e E explains presentation from any ordinary buffer\n"
+      "h returns here from any aural manager or editor\n"
+      "q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode emacsvox-aural-home-mode tabulated-list-mode
+  "Emacsvox-Aural"
+  "Spoken home mode for aural presentation discovery and interaction."
+  (setq
+   tabulated-list-format
+   [("Area" 24 t)
+    ("Current status" 38 t)
+    ("Purpose" 0 t)])
+  (setq tabulated-list-padding 2)
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-home-refresh nil t)
+  (tabulated-list-init-header))
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-home-activate)
+       ("SPC" . emacsvox-aural-home-speak-current)
+       ("." . emacsvox-aural-home-speak-current-cell)
+       ("n" . emacsvox-aural-home-next)
+       ("p" . emacsvox-aural-home-previous)
+       ("<down>" . emacsvox-aural-home-next)
+       ("<up>" . emacsvox-aural-home-previous)
+       ("<right>" . emacsvox-aural-home-next-column)
+       ("<left>" . emacsvox-aural-home-previous-column)
+       ("x" . emacsvox-aural-home-explain)
+       ("g" . emacsvox-aural-home-refresh)
+       ("?" . emacsvox-aural-home-help)))
+  (define-key
+   emacsvox-aural-home-mode-map
+   (kbd (car binding))
+   (cdr binding)))
+
+(defun emacsvox-aural (&optional source-buffer)
+  "Open the spoken aural home using SOURCE-BUFFER for contextual operations."
+  (interactive)
+  (emacsvox-aural-tools--remember-source-buffer
+   (or source-buffer (current-buffer)))
+  (let* ((buffer (get-buffer-create "*Emacsvox Aural*"))
+         (source
+          (or
+           (and (buffer-live-p source-buffer) source-buffer)
+           (and
+            (buffer-live-p emacsvox-aural-tools--last-source-buffer)
+            emacsvox-aural-tools--last-source-buffer))))
+    (with-current-buffer buffer
+      (emacsvox-aural-home-mode)
+      (when source
+        (setq emacsvox-aural-home-source-buffer source))
+      (emacsvox-aural-home-refresh 'explain))
+    (pop-to-buffer buffer)
+    (when (called-interactively-p 'interactive)
+      (emacsvox-aural-home-speak-current))
+    buffer))
+
+(defun emacsvox-aural-home-refresh-if-live ()
+  "Refresh the aural home buffer when it is currently available."
+  (when-let* ((buffer (get-buffer "*Emacsvox Aural*")))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-home-mode)
+        (emacsvox-aural-home-refresh)))))
+
+(add-hook
+ 'emacsvox-aural-active-scheme-changed-hook
+ #'emacsvox-aural-home-refresh-if-live)
+(add-hook
+ 'emacsvox-aural-feature-fragments-changed-hook
+ #'emacsvox-aural-home-refresh-if-live)
 
 (defun emacsvox-aural-concise-explanation (facts context)
   "Return a concise spoken explanation of FACTS in CONTEXT."

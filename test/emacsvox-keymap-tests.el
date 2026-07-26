@@ -31,6 +31,17 @@
     (lookup-key emacsvox-keymap (kbd "C-M-y"))
     'emacsvox-clipfile-paste)))
 
+(ert-deftest emacsvox-keymap-exposes-aural-home-and-explanation ()
+  "Aural discovery and point diagnosis have stable prefix bindings."
+  (should
+   (eq
+    (lookup-key emacsvox-keymap (kbd "H"))
+    'emacsvox-aural))
+  (should
+   (eq
+    (lookup-key emacsvox-keymap (kbd "E"))
+    'emacsvox-aural-explain-presentation)))
+
 (ert-deftest emacsvox-keymap-uses-canonical-tts-commands ()
   "Generic speech bindings use canonical commands; DECtalk remains explicit."
   (dolist

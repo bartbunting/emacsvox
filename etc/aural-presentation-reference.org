@@ -9,7 +9,9 @@
 
 A semantic fact says what an object or event means.  A scheme decides whether that fact is conveyed by speech, voice, a cue, a pause, spatial placement, or a composition of those modalities.  Modules therefore do not need to agree on one preferred presentation.
 
-The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
+The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, schemes, feature fragments, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and diagnostics.  Press =h= in any routed manager or editor to return home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
+
+Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
 
 Use =M-x emacsvox-aural-list-feature-fragments= to view, create, copy, edit, delete, validate, enable, disable, and reorder independent presentation additions over the active base scheme.  Fragment changes use the same atomic personal-data store.  Built-in Org fragments can add a dynamic heading-level label, section cue, or visibility-change wording without replacing the active scheme.
 

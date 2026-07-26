@@ -18,6 +18,7 @@
 
 (declare-function emacsvox-aural-simple-editor-open
                   "emacsvox-aural-simple-editor" (&optional scheme))
+(declare-function emacsvox-speak-help "emacsvox-speak" ())
 
 (defvar-local emacsvox-aural-editor-scope nil
   "Scope edited by the current aural editor buffer.")
@@ -1007,7 +1008,10 @@ LABEL identifies the speech or cue being edited."
       "m metadata          p preview\n"
       "x explain           v validate\n"
       "s save\n"
-      "q quit\n"))))
+      "h aural home\n"
+      "q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
 
 (defun emacsvox-aural-editor-quit ()
   "Quit the editor, asking before discarding working changes."
@@ -1035,6 +1039,7 @@ LABEL identifies the speech or cue being edited."
     (define-key map (kbd "v") #'emacsvox-aural-editor-validate)
     (define-key map (kbd "s") #'emacsvox-aural-editor-save)
     (define-key map (kbd "g") #'emacsvox-aural-editor-refresh)
+    (define-key map (kbd "h") #'emacsvox-aural)
     (define-key map (kbd "?") #'emacsvox-aural-editor-help)
     (define-key map (kbd "q") #'emacsvox-aural-editor-quit)
     map)
@@ -1081,6 +1086,8 @@ the current buffer for buffer scope."
       '("personal" "session" "buffer" "scheme" "fragment")
       nil 'must-match))))
   (let* ((source-buffer (or source-buffer (current-buffer)))
+         (_source
+          (emacsvox-aural-tools--remember-source-buffer source-buffer))
          (scheme
           (when (memq scope '(scheme fragment))
             (or
@@ -1169,6 +1176,7 @@ the current buffer for buffer scope."
 (defun emacsvox-edit-aural-scheme (&optional scheme)
   "Open the simple spoken editor for personal SCHEME."
   (interactive)
+  (emacsvox-aural-tools--remember-source-buffer)
   (require 'emacsvox-aural-simple-editor)
   (emacsvox-aural-simple-editor-open scheme))
 

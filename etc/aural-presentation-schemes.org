@@ -865,6 +865,39 @@ played through a local adapter.  It queues concrete explanatory text directly
 and never recursively invokes semantic resolution.  Detailed inspection uses
 =emacsvox-explain-aural-presentation=.
 
+** Accessible aural-home contract
+
+=emacsvox-aural= is the stable discovery and interaction entry point.
+=C-e H= opens it from any ordinary buffer and remembers that buffer as the
+source for contextual explanation and buffer-local editing.  The first row is
+=Explain at point=; =C-e E= invokes the same
+=emacsvox-aural-explain-presentation= diagnosis directly from an ordinary
+buffer.
+
+The home is a status-and-routing view rather than another editor.  Its rows
+lead to:
+
+| Row                  | Destination or operation                              |
+|----------------------+-------------------------------------------------------|
+| Explain at point     | Spoken and detailed presentation provenance           |
+| Schemes              | Base-scheme manager                                    |
+| Feature fragments    | Independently enabled presentation layers             |
+| Current buffer rules | Advanced editor scoped to the remembered source       |
+| Semantic vocabulary  | Registered roles, events, states, and attributes       |
+| Sound packs          | Dynamic sound-pack selection                           |
+| Spatial capabilities | Current backend support and fallback                   |
+| Spatial settings     | =emacsvox-aural-spatial= Customize group               |
+| Training mode        | Concise semantic-identification toggle                 |
+| Diagnostics          | Active-scheme validation                               |
+
+=n=, =p=, Up, and Down move by row.  Left and Right move by column and speak
+the column title and value.  =.= repeats the titled cell, =SPC= speaks the
+complete row, =RET= performs its primary operation, =x= always explains the
+remembered source, and =?= displays and speaks help.  Top, bottom, first
+column, and last column boundaries are announced instead of silently
+repeating a value.  Every routed aural manager and editor binds =h= to return
+home without losing the remembered source.
+
 ** Accessible semantic-list contract
 
 =emacsvox-aural-list-semantics= opens the registered semantic vocabulary.
@@ -873,7 +906,7 @@ The established =emacsvox-list-aural-semantics= name remains available.
 column.  Left and Right speak the column title and value; =.= repeats the
 titled cell and =SPC= speaks the complete semantic summary.  Attempts to move
 above or below the list announce the top or bottom rather than repeating the
-current cell.
+current cell.  =h= returns to the aural home.
 
 ** Accessible scheme-manager contract
 
@@ -904,6 +937,7 @@ The manager exposes these stable operations:
 | =SPC= / =.= | Speak the current row, or the titled current cell        |
 | =g= / =?= | Refresh, or display and speak manager help                  |
 | =f=       | Open the feature-fragment manager                           |
+| =h=       | Return to the aural home                                    |
 
 Moving above or below the list announces the top or bottom instead of
 repeating the current value.  Horizontal movement announces the first and
@@ -937,6 +971,7 @@ The manager exposes these stable operations:
 | =e= / =d=           | Edit or delete a personal fragment                    |
 | =v= / =g= / =?=     | Validate, refresh, or display and speak help          |
 | =s=                 | Return to the scheme manager                          |
+| =h=                 | Return to the aural home                              |
 
 Row, column, and list-boundary speech uses the same accessibility contract as
 the scheme and semantic managers.  Built-ins are viewable, copyable, and
@@ -965,6 +1000,7 @@ The simple form exposes these stable operations:
 | =v= / =s=            | Validate or atomically save                          |
 | =a=                  | Activate the edited scheme                           |
 | =A=                  | Switch to the advanced editor without losing changes |
+| =h=                  | Return to the aural home                             |
 | =?=                  | Display and speak the field-oriented workflow        |
 
 Scheme summary, inheritance, sound pack, and voice palette are individual
@@ -995,6 +1031,7 @@ The advanced buffer exposes these stable operations:
 | =p= / =x=            | Preview or explain the unsaved rule            |
 | =v= / =s=            | Validate or atomically save/apply               |
 | =A=                  | Return to the simple editor                     |
+| =h=                  | Return to the aural home                         |
 | =?=                  | Describe the completion-driven workflow         |
 
 Selectors are assembled from registered semantic, module, major-mode,
@@ -1665,6 +1702,40 @@ and generated-reference audit including the discovered =bart= pack;
 =check-parens=, temporary byte compilation without warnings, =org-lint=,
 focused =checkdoc= with only pre-existing resource-helper warnings, and
 =git diff --check=.
+
+** DONE Slice 15: Spoken Aural Home and Point Diagnosis
+CLOSED: [2026-07-26 Sun]
+
+- Add =emacsvox-aural= as one spoken status-and-routing home for schemes,
+  feature fragments, source-buffer rules, semantics, sound packs, spatial
+  controls, training, and diagnostics.
+- Remember the ordinary source buffer across routed managers and editors so
+  explanation and buffer-local editing retain their intended context.
+- Put =Explain at point= first, bind =x= to it from anywhere in the home, and
+  bind =C-e E= directly to =emacsvox-aural-explain-presentation=.
+- Bind =C-e H= to the home and =h= in every aural manager and editor to return
+  there without replacing an established binding.
+- Reuse the accessible table contract: titled cell speech, complete-row
+  speech, conventional row and column movement, and explicit boundary
+  announcements.
+- Display live base-scheme, fragment, buffer-rule, sound-pack, spatial,
+  training, and validation status without creating a third editing model.
+- Display and speak home and advanced-editor help; document every route,
+  binding, and editor entry point in the maintained and generated references.
+
+Deliverable: a user can always discover aural controls with =C-e H= and can
+diagnose a presentation problem at its source with =C-e E=.
+
+Checks: 242 selected core, aural, Org, sound, input, completion, and keymap ERT
+tests with no unexpected results; all 27 source-loaded semantic traces
+matching; clean live registry and generated-reference audit; successful
+source startup and binding smoke test; =check-parens=, =checkdoc=, temporary
+byte compilation, =org-lint=, and =git diff --check=.  Temporary compilation
+reports only the existing duplicate-helper and deferred-protocol warnings.
+The repository-wide runner remains blocked before ERT by its existing attempt
+to upload the Sage load-time =help= cue to an unavailable Pulse/PipeWire
+server; both the normal run and a run with =EMACSVOX_PLAY=/bin/true= reached
+the same external-audio failure.
 
 * Test Gates
 
