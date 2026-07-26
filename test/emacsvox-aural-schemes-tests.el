@@ -28,12 +28,88 @@
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
+         (emacsvox-aural-configuration-generation 0)
+         (emacsvox-aural-configuration-changed-hook nil)
+         (emacsvox-aural--current-rules-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--provider-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--current-rules-cache-hits 0)
+         (emacsvox-aural--current-rules-cache-misses 0)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-user-data-migrations nil))
      (emacsvox-aural--register-default-scheme)
      ,@body))
+
+(ert-deftest emacsvox-aural-schemes-cache-rules-and-providers-by-generation ()
+  "Stable configuration reuses rule snapshots and inherited providers."
+  (emacsvox-test--with-isolated-schemes
+    (emacsvox-aural-register-scheme
+     (emacsvox-test--scheme
+      'cached "Cached"
+      (list (emacsvox-test--voice-rule 'cached-heading 'voice-bolden))
+      :parent 'default
+      :resource-pack 'chimes))
+    (emacsvox-aural-select-scheme 'cached)
+    (clrhash emacsvox-aural--current-rules-cache)
+    (clrhash emacsvox-aural--provider-cache)
+    (setq
+     emacsvox-aural--current-rules-cache-hits 0
+     emacsvox-aural--current-rules-cache-misses 0)
+    (let* ((context '(:module org))
+           (first (emacsvox-aural-current-rules context))
+           (second (emacsvox-aural-current-rules context))
+           (original
+            (symbol-function
+             'emacsvox-aural--compute-effective-scheme-provider))
+           (provider-computations 0))
+      (should (eq first second))
+      (should
+       (equal
+        (emacsvox-aural-rule-cache-statistics)
+        (list
+         :generation emacsvox-aural-configuration-generation
+         :hits 1 :misses 1 :entries 1)))
+      (cl-letf
+          (((symbol-function
+             'emacsvox-aural--compute-effective-scheme-provider)
+            (lambda (property id)
+              (cl-incf provider-computations)
+              (funcall original property id))))
+        (should
+         (eq
+          (emacsvox-aural-effective-scheme-provider 'resource-pack)
+          'chimes))
+        (should
+         (eq
+          (emacsvox-aural-effective-scheme-provider 'resource-pack)
+          'chimes)))
+      (should (= provider-computations 1)))))
+
+(ert-deftest emacsvox-aural-schemes-invalidate-caches-on-state-change ()
+  "Configuration APIs invalidate snapshots, while raw layers key by value."
+  (emacsvox-test--with-isolated-schemes
+    (let* ((context '(:module org))
+           (first (emacsvox-aural-current-rules context))
+           (generation emacsvox-aural-configuration-generation))
+      (setq
+       emacsvox-aural-session-rules
+       '((:id session-heading
+          :match (:role heading)
+          :render (:content (:voice bolden)))))
+      (let ((second (emacsvox-aural-current-rules context)))
+        (should-not (eq first second))
+        (should
+         (memq
+          'session-heading
+          (mapcar #'emacsvox-aural-rule-id second))))
+      (emacsvox-aural-configuration-changed 'test-change)
+      (should (> emacsvox-aural-configuration-generation generation))
+      (should (zerop (hash-table-count
+                      emacsvox-aural--current-rules-cache)))
+      (should (zerop (hash-table-count emacsvox-aural--provider-cache))))))
 
 (defun emacsvox-test--scheme (id summary rules &rest properties)
   "Return scheme data for ID, SUMMARY, RULES, and PROPERTIES."

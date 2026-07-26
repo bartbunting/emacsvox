@@ -2404,7 +2404,7 @@ optional Mu4e test is skipped, and that same personal-pack audit is the sole
 failure.  Compiled aural parity passes, all 27 semantic traces match, the
 generated reference is current, and no file in the personal pack was changed.
 
-** TODO Slice 31: Exact Presentation Inspection and Runtime Efficiency
+** DONE Slice 31: Exact Presentation Inspection and Runtime Efficiency
 
 - Retain a bounded record of the last frozen presentations with object/run
   provenance and source location while avoiding long-lived source-buffer
@@ -2423,6 +2423,56 @@ generated reference is current, and no file in the personal pack was changed.
 
 Deliverable: diagnosis reproduces heard output, and continuous reading does
 not pay scheme and resource setup costs for every style run.
+
+Implemented:
+
+- The concrete queue and standalone local-cue boundary now retain a
+  newest-first history of the last
+  =emacsvox-aural-presentation-history-limit= presentations.  Each record
+  freezes the actual queued text, concrete before/content/after plan,
+  scheme/configuration generation, matching-rule provenance, object/run
+  identity, source buffer name, source position, and queue time.  Recursive
+  data sanitization strips text properties and buffer/marker retention; a
+  zero limit disables and clears history.  Cues disabled at queue time are
+  removed from the historical concrete plan and reported as a degradation.
+- =emacsvox-aural-explain-presentation= uses the latest queued record for the
+  source buffer when available.  Its spoken summary and Help buffer say
+  =Exact queued presentation= and retain the old result after scheme changes.
+  Without a record it explicitly says =Simulation using the current
+  configuration=.  A prefix argument deliberately selects a simulated
+  occasion.
+- Every successful scheme, fragment, profile, override, palette, and sound
+  pack state transition advances one monotonic configuration generation and
+  clears contextual rule and inherited-provider caches.  Rule snapshots are
+  additionally keyed by the actual override values and source buffer name, so
+  direct dynamically bound test/preview layers cannot return stale rules.
+  Cache statistics expose generation, hits, misses, and entry count for
+  diagnostics and deterministic performance tests.
+- Sound SHA-256 digests are cached once per canonical file using modification
+  time, change time, size, inode, and device metadata.  Resource registration
+  and refresh run an explicit invalidation hook.  Canonical symlink aliases
+  share the digest and replacing a file generation recomputes it without
+  retaining obsolete cache entries.
+- The speech queue does not expose a portable volume primitive.
+  =emacsvox-aural-unsupported-volume-policy= therefore defaults to =degrade=:
+  concrete actions/content and explanation retain the requested value,
+  =unsupported= capability, and =unsupported-volume= degradation.  Setting it
+  to =reject= fails concrete compilation before anything is queued.
+- Combined object/run render plans now retain semantic-match provenance as
+  well as rule IDs and scores, so historical explanation is no weaker than
+  immediate simulation.
+
+Checks for Slice 31: 165 focused resource, scheme, profile, sound-pack,
+transport, editor, and tooling tests pass.  A 240-run alternating-face
+document completes in about 0.23 seconds on
+the development host, compiles one contextual rule snapshot, then serves more
+than 100 cache hits while staying inside explicit cons, vector, string, and
+five-second bounds.  Changed runtime files compile in an isolated directory
+with warnings treated as errors.  The complete source suite has 1,570 tests:
+1,568 pass, the optional Mu4e test is skipped, and the sole failure is the
+previously recorded untracked =sounds/bart/= pack containing
+=large-movement-02=.  Compiled aural parity passes, all 27 semantic traces
+match, the generated reference is current, and no personal sound was changed.
 
 ** TODO Slice 32: Complete Build and Resume Migration
 

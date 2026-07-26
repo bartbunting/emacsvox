@@ -29,6 +29,16 @@
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
+         (emacsvox-aural-configuration-generation 0)
+         (emacsvox-aural-configuration-changed-hook nil)
+         (emacsvox-aural--current-rules-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--provider-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--current-rules-cache-hits 0)
+         (emacsvox-aural--current-rules-cache-misses 0)
+         (emacsvox-aural-presentation-history nil)
+         (emacsvox-aural--presentation-sequence 0)
          (emacsvox-aural-tools--last-source-buffer nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
@@ -477,6 +487,94 @@
                 "Technical details" (buffer-string)))))
         (when (get-buffer "*Help*")
           (kill-buffer "*Help*"))))))
+
+(ert-deftest emacsvox-aural-tools-explains-exact-queued-presentation ()
+  "Heard output remains explainable after active configuration changes."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'heard-scheme
+     '((:id heard-rule
+        :match (:role heading)
+        :render
+        (:before
+         ((:id heard-label :kind speech :text "Heard heading"))))))
+    (with-temp-buffer
+      (rename-buffer "aural-explanation-source" t)
+      (let* ((facts '(:role heading :content "Title"))
+             (context (emacsvox-aural-capture-context nil 'navigation))
+             (render (emacsvox-aural-resolve-active facts context))
+             (concrete (emacsvox-aural-compile-plan render facts context)))
+        (cl-letf
+            (((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text) #'ignore))
+          (emacsvox-aural-queue-concrete-plan concrete "Title"))
+        (let ((record (emacsvox-aural-last-presentation (current-buffer))))
+          (should
+           (equal
+            (emacsvox-aural-tools--interactive-explanation-input nil)
+            (list nil nil record)))
+          (emacsvox-aural-register-scheme
+           '(:schema-version 1
+             :id current-scheme
+             :summary "Changed after queueing"
+             :parent default
+             :rules
+             ((:id current-rule
+               :match (:role heading)
+               :render
+               (:before
+                ((:id current-label :kind speech
+                  :text "Current heading")))))))
+          (emacsvox-aural-select-scheme 'current-scheme)
+          (let* ((exact (emacsvox-aural-explain-record record))
+                 (simulation (emacsvox-aural-explain facts context))
+                 (spoken
+                  (emacsvox-aural-tools--spoken-explanation exact)))
+            (should
+             (eq
+              (emacsvox-aural-explanation-basis exact)
+              'exact-queued))
+            (should
+             (eq
+              (emacsvox-aural-explanation-scheme exact)
+              'heard-scheme))
+            (should
+             (equal
+              (mapcar
+               (lambda (entry) (plist-get entry :id))
+               (emacsvox-aural-explanation-matching-rules exact))
+              '(heard-rule)))
+            (should
+             (equal
+              (emacsvox-aural-concrete-action-text
+               (car
+                (emacsvox-aural-concrete-plan-before
+                 (emacsvox-aural-explanation-concrete-plan exact))))
+              "Heard heading"))
+            (should
+             (eq
+              (emacsvox-aural-explanation-basis simulation)
+              'simulation))
+            (should
+             (equal
+              (mapcar
+               (lambda (entry) (plist-get entry :id))
+               (emacsvox-aural-explanation-matching-rules simulation))
+              '(current-rule)))
+            (should
+             (string-match-p "Exact queued presentation" spoken))
+            (unwind-protect
+                (save-window-excursion
+                  (emacsvox-aural-tools--display-explanation exact)
+                  (with-current-buffer "*Help*"
+                    (should
+                     (string-match-p
+                      "Basis: exact queued presentation"
+                      (buffer-string)))))
+              (when (get-buffer "*Help*")
+                (kill-buffer "*Help*")))))))))
 
 (ert-deftest emacsvox-aural-tools-explanation-names-matching-occasions ()
   "No-match spoken help identifies a useful alternative occasion."

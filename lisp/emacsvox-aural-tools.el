@@ -23,7 +23,7 @@
      (:constructor emacsvox-aural--make-explanation))
   "Reproducible explanation of one resolved aural presentation."
   scheme facts context matching-rules render-plan concrete-plan
-  suppressed-actions)
+  suppressed-actions basis presentation-id queued-at source-location)
 
 (cl-defstruct
     (emacsvox-aural-validation-report
@@ -223,6 +223,24 @@ plan at point always supplies its actual occasion as the initial default."
     (list
      facts
      (emacsvox-aural-tools--context-for-occasion context occasion))))
+
+(defun emacsvox-aural-tools--interactive-explanation-input
+    (choose-occasion)
+  "Return exact queued input, or simulated input when CHOOSE-OCCASION."
+  (let* ((source
+          (if (emacsvox-aural-tools--interface-buffer-p)
+              emacsvox-aural-tools--last-source-buffer
+            (current-buffer)))
+         (record
+          (and
+           (not choose-occasion)
+           source
+           (emacsvox-aural-last-presentation source))))
+    (if record
+        (list nil nil record)
+      (append
+       (emacsvox-aural-tools--read-explanation-input choose-occasion)
+       (list nil)))))
 
 (defun emacsvox-aural-tools--read-semantic (&optional prompt allow-empty)
   "Read a registered semantic using PROMPT.
@@ -1566,7 +1584,34 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
      :render-plan render
      :concrete-plan concrete
      :suppressed-actions
-     (emacsvox-aural-tools--suppressed-action-ids matching render))))
+     (emacsvox-aural-tools--suppressed-action-ids matching render)
+     :basis 'simulation)))
+
+(defun emacsvox-aural-explain-record (record)
+  "Return an exact explanation of frozen presentation RECORD."
+  (unless (emacsvox-aural-presentation-record-p record)
+    (user-error "Not an aural presentation record: %S" record))
+  (let* ((concrete (emacsvox-aural-presentation-record-plan record))
+         (render (emacsvox-aural-concrete-plan-source-plan concrete)))
+    (emacsvox-aural--make-explanation
+     :scheme (emacsvox-aural-concrete-plan-scheme concrete)
+     :facts (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
+     :context (copy-tree (emacsvox-aural-concrete-plan-context concrete))
+     :matching-rules
+     (copy-tree (emacsvox-aural-concrete-plan-rule-provenance concrete))
+     :render-plan render
+     :concrete-plan concrete
+     :suppressed-actions nil
+     :basis 'exact-queued
+     :presentation-id (emacsvox-aural-presentation-record-id record)
+     :queued-at (copy-tree
+                 (emacsvox-aural-presentation-record-queued-at record))
+     :source-location
+     (list
+      :buffer
+      (emacsvox-aural-presentation-record-source-buffer-name record)
+      :position
+      (emacsvox-aural-presentation-record-source-position record)))))
 
 (defun emacsvox-aural-tools--format-action (action)
   "Return a concise description of concrete ACTION."
@@ -1574,12 +1619,20 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
          (anchor
           (or (emacsvox-aural-concrete-action-anchor action) 'undivided))
          (spatial
-          (if (numberp balance)
+         (if (numberp balance)
               (format
                ", balance %.3f (%s)"
                balance
                (emacsvox-aural-concrete-action-spatial-capability action))
-            "")))
+            ""))
+         (volume
+          (when-let* ((requested
+                       (emacsvox-aural-concrete-action-requested-volume
+                        action)))
+            (format
+             ", volume %S (%s)"
+             requested
+             (emacsvox-aural-concrete-action-volume-capability action)))))
     (concat
      (pcase (emacsvox-aural-concrete-action-kind action)
        ('cue
@@ -1603,6 +1656,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
          (emacsvox-aural-concrete-action-id action)
          (emacsvox-aural-concrete-action-duration action))))
      spatial
+     volume
      (format ", %s anchored" anchor))))
 
 (defun emacsvox-describe-aural-spatial-capabilities ()
@@ -1827,6 +1881,14 @@ selected occasion has no matching rule."
       nil
       (list
        "Aural explanation."
+       (if
+           (eq
+            (emacsvox-aural-explanation-basis explanation)
+            'exact-queued)
+           (format
+            "Exact queued presentation %s."
+            (emacsvox-aural-explanation-presentation-id explanation))
+         "Simulation using the current configuration.")
        (format
         "Scheme %s."
         (emacsvox-aural-tools--humanize scheme))
@@ -1908,6 +1970,26 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
     (setq emacsvox-aural-tools--last-explanation explanation)
     (with-help-window (help-buffer)
       (princ "Aural presentation explanation\n\n")
+      (if
+          (eq
+           (emacsvox-aural-explanation-basis explanation)
+           'exact-queued)
+          (let ((location
+                 (emacsvox-aural-explanation-source-location explanation)))
+            (princ
+             (format
+              "Basis: exact queued presentation %s, heard at %s\n"
+              (emacsvox-aural-explanation-presentation-id explanation)
+              (format-time-string
+               "%Y-%m-%d %H:%M:%S"
+               (emacsvox-aural-explanation-queued-at explanation))))
+            (princ
+             (format
+              "Source: %s at position %s\n"
+              (or (plist-get location :buffer) "unknown")
+              (or (plist-get location :position) "unknown"))))
+        (princ
+         "Basis: simulation using the current configuration; this may differ from previously heard output\n"))
       (princ
        (format
         "Scheme: %s\n"
@@ -2036,11 +2118,16 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
        (format
         (concat
          "Content: speak %s, voice command %S, balance %S (%s), "
+         "volume %S (%s), "
          "provenance %S\n")
         (emacsvox-aural-concrete-content-speak content)
         (emacsvox-aural-concrete-content-voice-command content)
         (emacsvox-aural-concrete-content-balance content)
         (emacsvox-aural-concrete-content-spatial-capability content)
+        (emacsvox-aural-concrete-content-requested-volume content)
+        (or
+         (emacsvox-aural-concrete-content-volume-capability content)
+         'not-requested)
         (emacsvox-aural-content-style-provenance
          (emacsvox-aural-render-plan-content render))))
       (princ
@@ -2064,24 +2151,35 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
         (tts-speak summary)))
     summary))
 
-(defun emacsvox-explain-aural-presentation (&optional facts context)
-  "Explain presentation of FACTS in CONTEXT or semantic facts at point.
+(defun emacsvox-explain-aural-presentation
+    (&optional facts context record)
+  "Explain exact queued RECORD or simulate FACTS in CONTEXT.
 
-Interactively, infer the occasion that produces the most useful explanation.
-With a prefix argument, prompt for the occasion.  The command displays full
-technical details and speaks a concise description of the scheme, semantic
-object, matching rule, and resolved before/content/after order."
+Interactively, use the last queued presentation for the source buffer when
+available.  With a prefix argument, deliberately simulate an occasion chosen
+by the user.  When no queued record is available, infer the occasion that
+produces the most useful simulation.  The visual and spoken explanations
+always identify whether they describe heard output or a simulation."
   (interactive
-   (emacsvox-aural-tools--read-explanation-input current-prefix-arg))
+   (emacsvox-aural-tools--interactive-explanation-input
+    current-prefix-arg))
   (when (called-interactively-p 'interactive)
     (emacsvox-aural-tools--remember-source-buffer))
   (let* ((facts
-          (or facts (emacsvox-aural-tools--facts-or-read)))
+          (and
+           (null record)
+           (or facts (emacsvox-aural-tools--facts-or-read))))
          (context
-          (or context (emacsvox-aural-context-at-point)))
-         (explanation (emacsvox-aural-explain facts context))
+          (and
+           (null record)
+           (or context (emacsvox-aural-context-at-point))))
+         (explanation
+          (if record
+              (emacsvox-aural-explain-record record)
+            (emacsvox-aural-explain facts context)))
          (occasion-counts
           (and
+           (null record)
            (called-interactively-p 'interactive)
            (emacsvox-aural-tools--occasion-match-counts facts context))))
     (when (called-interactively-p 'interactive)
@@ -2410,7 +2508,8 @@ selects its parent, or the built-in default when it has no parent."
         (remhash scheme registry)
         (let ((emacsvox-aural-scheme-registry registry))
           (emacsvox-aural-save-user-data))
-        (setq emacsvox-aural-scheme-registry registry))
+        (setq emacsvox-aural-scheme-registry registry)
+        (emacsvox-aural-configuration-changed 'scheme-deleted))
       (when active
         (emacsvox-aural-select-scheme fallback))
       (emacsvox-aural-tools--refresh-scheme-manager
@@ -2500,6 +2599,7 @@ selects its parent, or the built-in default when it has no parent."
            registry)
           (emacsvox-aural-save-user-data))
         (setq emacsvox-aural-scheme-registry registry)
+        (emacsvox-aural-configuration-changed 'scheme-renamed)
         (when active
           (emacsvox-aural-select-scheme new-id))
         (emacsvox-aural-tools--refresh-scheme-manager new-id)
@@ -2529,6 +2629,7 @@ SCOPE is `personal', `session', or `buffer'."
        (emacsvox-aural-save-user-data))
       ('session (setq emacsvox-aural-session-rules nil))
       ('buffer (setq emacsvox-aural-buffer-rules nil)))
+    (emacsvox-aural-configuration-changed 'override-reset)
     (when (called-interactively-p 'interactive)
       (message "Reset %s aural overrides" scope))
     t))
@@ -2863,6 +2964,7 @@ SCOPE is `personal', `session', or `buffer'."
         emacsvox-aural-feature-fragment-registry old-registry
         emacsvox-aural-enabled-feature-fragments old-enabled)
        (signal (car error) (cdr error))))
+    (emacsvox-aural-configuration-changed 'feature-fragments)
     (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
     enabled))
 

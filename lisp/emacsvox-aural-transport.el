@@ -49,7 +49,8 @@
   id kind text cue resource sample-id duration voice-command source
   anchor requested-space balance spatial-capability spatial-degradations
   voice-request voice-style voice-provenance voice-capability
-  voice-degradations)
+  voice-degradations
+  requested-volume volume-capability volume-degradation)
 
 (cl-defstruct
     (emacsvox-aural-concrete-content
@@ -58,7 +59,8 @@
   text speak voice-command provenance requested-space balance
   spatial-capability spatial-degradations
   voice-request voice-style voice-provenance voice-capability
-  voice-degradations)
+  voice-degradations
+  requested-volume volume-capability volume-degradation)
 
 (cl-defstruct
     (emacsvox-aural-compiled-voice
@@ -71,7 +73,14 @@
      (:constructor emacsvox-aural--make-concrete-plan))
   "A backend-ready ordered plan frozen at its source boundary."
   before content after facts context resource-pack voice-palette
-  source-plan degradations object-id run-id object-start-p object-end-p)
+  source-plan degradations object-id run-id object-start-p object-end-p
+  scheme configuration-generation rule-provenance)
+
+(cl-defstruct
+    (emacsvox-aural-presentation-record
+     (:constructor emacsvox-aural--make-presentation-record))
+  "One bounded, data-only record of an actually queued presentation."
+  id queued-at plan source-buffer-name source-position object-id run-id)
 
 (cl-defstruct
     (emacsvox-aural-source-run
@@ -96,6 +105,37 @@
 
 Each function receives the `emacsvox-aural-concrete-plan' that was queued.
 Standalone local cues run this hook after playback has been requested.")
+
+(defcustom emacsvox-aural-presentation-history-limit 20
+  "Maximum number of actually queued presentations retained for inspection.
+
+History records contain frozen data and source names and positions, but never
+retain source buffers.  Set this to zero to disable history."
+  :type 'natnum
+  :group 'emacsvox-aural)
+
+(defvar emacsvox-aural-presentation-history nil
+  "Newest-first bounded list of frozen presentation records.")
+
+(defvar emacsvox-aural--presentation-sequence 0
+  "Sequence used to identify frozen presentation records.")
+
+(defvar emacsvox-aural--history-respect-icon-policy nil
+  "Non-nil while queue history must remove globally disabled cues.")
+
+(defcustom emacsvox-aural-unsupported-volume-policy 'degrade
+  "Policy for explicit volume when the active transport cannot apply it.
+
+`degrade' queues the presentation without volume and records the exact
+capability degradation.  `reject' signals an error before anything is queued."
+  :type '(choice
+          (const :tag "Queue without volume and report degradation" degrade)
+          (const :tag "Reject presentations requesting volume" reject))
+  :group 'emacsvox-aural)
+
+(defvar emacsvox-aural--file-digest-cache
+  (make-hash-table :test #'equal)
+  "Content digests keyed by canonical file identity and metadata.")
 
 (defconst emacsvox-aural-concrete-plan-property
   'emacsvox-aural-concrete-plan
@@ -161,15 +201,45 @@ occasion, or a new queued icon changes.")
    (emacsvox-aural-effective-scheme-provider 'voice-palette)
    'acss-default))
 
+(defun emacsvox-aural-clear-file-digest-cache (&optional _pack)
+  "Clear cached sound digests after a resource-pack change.
+
+The optional PACK argument makes this function suitable for
+`emacsvox-aural-resource-packs-changed-hook'."
+  (clrhash emacsvox-aural--file-digest-cache))
+
+(add-hook
+ 'emacsvox-aural-resource-packs-changed-hook
+ #'emacsvox-aural-clear-file-digest-cache)
+
 (defun emacsvox-aural--file-digest (file)
-  "Return a SHA-256 digest of the literal contents of FILE."
-  (unless (file-readable-p file)
-    (emacsvox-aural--transport-error
-     "Concrete cue resource is not readable: %s" file))
-  (with-temp-buffer
-    (set-buffer-multibyte nil)
-    (insert-file-contents-literally file)
-    (secure-hash 'sha256 (current-buffer))))
+  "Return a cached SHA-256 digest of the literal contents of FILE."
+  (let* ((canonical (file-truename file))
+         (attributes (file-attributes canonical 'string)))
+    (unless (and attributes (file-readable-p canonical))
+      (emacsvox-aural--transport-error
+       "Concrete cue resource is not readable: %s" file))
+    (let* ((metadata
+            (list
+             (nth 5 attributes)
+             (nth 6 attributes)
+             (nth 7 attributes)
+             (nth 10 attributes)
+             (nth 11 attributes)))
+           (cached
+            (gethash canonical emacsvox-aural--file-digest-cache)))
+      (if (and cached (equal (car cached) metadata))
+          (cdr cached)
+        (let ((digest
+               (with-temp-buffer
+                 (set-buffer-multibyte nil)
+                 (insert-file-contents-literally canonical)
+                 (secure-hash 'sha256 (current-buffer)))))
+          (puthash
+           canonical
+           (cons metadata digest)
+           emacsvox-aural--file-digest-cache)
+          digest)))))
 
 (defun emacsvox-aural--sample-component (value)
   "Return VALUE as a Pulse/PipeWire-safe identifier component."
@@ -604,10 +674,38 @@ degradation records.  Return balance, capability, and degradation records."
     (push (substring template position) parts)
     (apply #'concat (nreverse parts))))
 
+(defun emacsvox-aural--compile-volume (volume identity)
+  "Freeze unsupported VOLUME handling for presentation IDENTITY.
+
+The current queue protocol has no portable per-action or per-content volume
+operation.  Return an explicit capability record, or reject the presentation
+according to `emacsvox-aural-unsupported-volume-policy'."
+  (when volume
+    (when (eq emacsvox-aural-unsupported-volume-policy 'reject)
+      (emacsvox-aural--transport-error
+       "Volume %S requested for %S, but this transport cannot apply volume"
+       volume identity))
+    (list
+     :requested volume
+     :capability 'unsupported
+     :degradation
+     (append
+      identity
+      (list
+       :property 'volume
+       :requested volume
+       :capability 'unsupported
+       :policy 'degrade
+       :reason 'unsupported-volume)))))
+
 (defun emacsvox-aural--compile-concrete-action
     (action facts pack palette cue-target)
   "Compile ACTION with FACTS through PACK and PALETTE for CUE-TARGET."
-  (pcase (emacsvox-aural-action-kind action)
+  (let* ((identity (list :action (emacsvox-aural-action-id action)))
+         (volume
+          (emacsvox-aural--compile-volume
+           (emacsvox-aural-action-volume action) identity)))
+    (pcase (emacsvox-aural-action-kind action)
     ('cue
      (pcase-let*
          ((`(,resource ,sample-id ,resolved-cue)
@@ -633,7 +731,10 @@ degradation records.  Return balance, capability, and degradation records."
         (copy-tree (emacsvox-aural-action-space action))
         :balance (plist-get space :balance)
         :spatial-capability (plist-get space :capability)
-        :spatial-degradations (plist-get space :degradations))))
+        :spatial-degradations (plist-get space :degradations)
+        :requested-volume (plist-get volume :requested)
+        :volume-capability (plist-get volume :capability)
+        :volume-degradation (plist-get volume :degradation))))
     ('speech
      (let* ((voice
              (emacsvox-aural-compile-voice-style
@@ -675,14 +776,17 @@ degradation records.  Return balance, capability, and degradation records."
           (copy-tree (emacsvox-aural-action-space action))
           :balance (plist-get space :balance)
           :spatial-capability (plist-get space :capability)
-          :spatial-degradations (plist-get space :degradations)))))
+          :spatial-degradations (plist-get space :degradations)
+          :requested-volume (plist-get volume :requested)
+          :volume-capability (plist-get volume :capability)
+          :volume-degradation (plist-get volume :degradation)))))
     ('pause
      (emacsvox-aural--make-concrete-action
       :id (emacsvox-aural-action-id action)
       :kind 'pause
       :duration (emacsvox-aural-action-duration action)
       :source (emacsvox-aural-action-source action)
-      :anchor (emacsvox-aural-action-anchor action)))))
+      :anchor (emacsvox-aural-action-anchor action))))))
 
 (defun emacsvox-aural--compile-concrete-actions
     (actions facts pack palette cue-target)
@@ -705,16 +809,14 @@ degradation records.  Return balance, capability, and degradation records."
               concrete
               :key #'emacsvox-aural-concrete-action-id
               :test #'eq)))
-        (when (emacsvox-aural-action-volume action)
-          (push
-           (list
-            :action (emacsvox-aural-action-id action)
-            :reason 'backend-property-deferred)
-           degradations))
         (when compiled
           (setq
            degradations
            (append
+            (when-let* ((volume
+                         (emacsvox-aural-concrete-action-volume-degradation
+                          compiled)))
+              (list (copy-tree volume)))
             (reverse
              (emacsvox-aural-concrete-action-voice-degradations compiled))
             (reverse
@@ -735,6 +837,43 @@ degradation records.  Return balance, capability, and degradation records."
             :fallback (emacsvox-aural-concrete-action-cue compiled))
            degradations))))
     (nreverse degradations)))
+
+(defun emacsvox-aural--frozen-rule-provenance (plan facts context)
+  "Return data-only matching-rule provenance for resolved PLAN."
+  (let* ((input (emacsvox-aural-normalize-input facts context))
+         (rules (emacsvox-aural-current-rules context))
+         (aliases (emacsvox-aural-input-semantic-aliases input)))
+    (mapcar
+     (lambda (id)
+       (let* ((rule
+               (cl-find
+                id rules :key #'emacsvox-aural-rule-id :test #'eq))
+              (rule-aliases
+               (and
+                rule
+                (emacsvox-aural-selector-semantic-aliases
+                 (emacsvox-aural-rule-selector rule)))))
+         (list
+          :id id
+          :origin
+          (and rule (emacsvox-aural-rule-origin rule))
+          :source
+          (and rule (emacsvox-aural-rule-source rule))
+          :score
+          (cdr (assq id (emacsvox-aural-render-plan-rule-scores plan)))
+          :semantic-matches
+          (copy-tree
+           (cdr
+            (assq
+             id
+             (emacsvox-aural-render-plan-semantic-matches plan))))
+          :semantic-aliases
+          (mapcar
+           (lambda (alias)
+             (emacsvox-aural-semantic-alias-diagnostic
+              (emacsvox-aural-semantic-alias-id alias)))
+           (append aliases rule-aliases)))))
+     (emacsvox-aural-render-plan-matched-rules plan))))
 
 (defun emacsvox-aural-compile-plan
     (plan facts context &optional cue-target)
@@ -759,6 +898,10 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
            (emacsvox-aural-content-style-speak style)
            (not (eq voice-command 'inaudible))))
          (degradations nil)
+         (content-volume
+          (emacsvox-aural--compile-volume
+           (emacsvox-aural-content-style-volume style)
+           '(:content t)))
          (content-space
           (emacsvox-aural--compile-space
            (emacsvox-aural-content-style-space style)
@@ -771,10 +914,8 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
           (emacsvox-aural--compile-concrete-actions
            (emacsvox-aural-render-plan-after plan)
            facts pack palette cue-target)))
-    (when (emacsvox-aural-content-style-volume style)
-      (push
-       (list :content t :reason 'backend-property-deferred)
-       degradations))
+    (when-let* ((volume (plist-get content-volume :degradation)))
+      (push volume degradations))
     (setq
      degradations
      (append
@@ -807,6 +948,9 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
       :balance (plist-get content-space :balance)
       :spatial-capability (plist-get content-space :capability)
       :spatial-degradations (plist-get content-space :degradations)
+      :requested-volume (plist-get content-volume :requested)
+      :volume-capability (plist-get content-volume :capability)
+      :volume-degradation (plist-get content-volume :degradation)
       :provenance
       (copy-tree
        (emacsvox-aural-content-style-provenance style)))
@@ -816,7 +960,12 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
      :resource-pack pack
      :voice-palette palette
      :source-plan plan
-     :degradations degradations)))
+     :degradations degradations
+     :scheme emacsvox-aural-active-scheme
+     :configuration-generation
+     emacsvox-aural-configuration-generation
+     :rule-provenance
+     (emacsvox-aural--frozen-rule-provenance plan facts context))))
 
 (defun emacsvox-aural-face-names (value)
   "Return ordered named faces explicitly represented by face VALUE.
@@ -1176,8 +1325,8 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
      actions)))
 
 (defun emacsvox-aural--merge-rule-provenance (&rest plans)
-  "Return matching rules and scores combined from render PLANS."
-  (let (rules scores)
+  "Return matching rules, scores, and semantic matches from render PLANS."
+  (let (rules scores semantic-matches)
     (dolist (plan plans)
       (when plan
         (dolist (rule (emacsvox-aural-render-plan-matched-rules plan))
@@ -1185,8 +1334,15 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
             (setq rules (append rules (list rule)))))
         (dolist (score (emacsvox-aural-render-plan-rule-scores plan))
           (setq scores (assq-delete-all (car score) scores))
-          (setq scores (append scores (list score))))))
-    (cons rules scores)))
+          (setq scores (append scores (list score))))
+        (dolist
+            (match (emacsvox-aural-render-plan-semantic-matches plan))
+          (setq semantic-matches (assq-delete-all (car match) semantic-matches))
+          (setq semantic-matches (append semantic-matches (list match))))))
+    (list
+     :rules rules
+     :scores scores
+     :semantic-matches semantic-matches)))
 
 (defun emacsvox-aural--combine-run-plan
     (object-plan run-plan transition-plan previous-transition next-transition
@@ -1221,8 +1377,9 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
       (emacsvox-aural-render-plan-after run-plan)
       transition-after
       (and last-p (emacsvox-aural-render-plan-after object-plan)))
-     :matched-rules (car provenance)
-     :rule-scores (cdr provenance))))
+     :matched-rules (plist-get provenance :rules)
+     :rule-scores (plist-get provenance :scores)
+     :semantic-matches (plist-get provenance :semantic-matches))))
 
 (defun emacsvox-aural--combine-concrete-run
     (source-plan object-plan run-plan transition-plan previous-transition
@@ -1258,6 +1415,21 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
      :context (copy-tree (emacsvox-aural-concrete-plan-context run-plan))
      :resource-pack (emacsvox-aural-concrete-plan-resource-pack run-plan)
      :voice-palette (emacsvox-aural-concrete-plan-voice-palette run-plan)
+     :scheme (emacsvox-aural-concrete-plan-scheme run-plan)
+     :configuration-generation
+     (emacsvox-aural-concrete-plan-configuration-generation run-plan)
+     :rule-provenance
+     (mapcar
+      (lambda (id)
+        (cl-find
+         id
+         (append
+          (emacsvox-aural-concrete-plan-rule-provenance object-plan)
+          (emacsvox-aural-concrete-plan-rule-provenance transition-plan)
+          (emacsvox-aural-concrete-plan-rule-provenance run-plan))
+         :key (lambda (entry) (plist-get entry :id))
+         :test #'eq))
+      (emacsvox-aural-render-plan-matched-rules source-plan))
      :source-plan source-plan
      :degradations
      (append
@@ -1444,6 +1616,120 @@ explicitly."
             (functionp emacsvox-aural-speech-balance-function))
          (funcall emacsvox-aural-speech-balance-function 0.0))))))
 
+(defun emacsvox-aural--history-value (value)
+  "Return a data-only copy of VALUE that cannot retain a source buffer."
+  (cond
+   ((bufferp value) nil)
+   ((markerp value)
+    (list
+     :marker-position (marker-position value)
+     :source-buffer-name
+     (and (marker-buffer value) (buffer-name (marker-buffer value)))))
+   ((stringp value) (substring-no-properties value))
+   ((consp value)
+    (cons
+     (emacsvox-aural--history-value (car value))
+     (emacsvox-aural--history-value (cdr value))))
+   ((hash-table-p value)
+    (let ((copy
+           (make-hash-table
+            :test (hash-table-test value)
+            :size (max 1 (hash-table-count value)))))
+      (maphash
+       (lambda (key item)
+         (puthash
+          (emacsvox-aural--history-value key)
+          (emacsvox-aural--history-value item)
+          copy))
+       value)
+      copy))
+   ((vectorp value)
+    (vconcat (mapcar #'emacsvox-aural--history-value value)))
+   (t value)))
+
+(cl-defun emacsvox-aural-record-presentation
+    (plan &optional (text nil text-supplied-p))
+  "Retain a bounded data-only record of actually queued PLAN.
+
+When TEXT is supplied, freeze that exact queue payload in the copied content
+rather than the source-plan content."
+  (unless (natnump emacsvox-aural-presentation-history-limit)
+    (emacsvox-aural--transport-error
+     "Presentation history limit must be a natural number: %S"
+     emacsvox-aural-presentation-history-limit))
+  (if (zerop emacsvox-aural-presentation-history-limit)
+      (setq emacsvox-aural-presentation-history nil)
+    (let* ((context (emacsvox-aural-concrete-plan-context plan))
+           (frozen (emacsvox-aural--history-value plan))
+           (frozen-context
+            (plist-put
+             (emacsvox-aural-concrete-plan-context frozen)
+             :source-buffer nil))
+           (record
+            (emacsvox-aural--make-presentation-record
+             :id (cl-incf emacsvox-aural--presentation-sequence)
+             :queued-at (current-time)
+             :plan frozen
+             :source-buffer-name (plist-get context :source-buffer-name)
+             :source-position (plist-get context :source-position)
+             :object-id
+             (emacsvox-aural--history-value
+              (emacsvox-aural-concrete-plan-object-id plan))
+             :run-id
+             (emacsvox-aural--history-value
+              (emacsvox-aural-concrete-plan-run-id plan)))))
+      (setf
+       (emacsvox-aural-concrete-plan-context frozen)
+       frozen-context)
+      (when
+          (and
+           emacsvox-aural--history-respect-icon-policy
+           (boundp 'emacsvox-use-icons)
+           (not emacsvox-use-icons))
+        (setf
+         (emacsvox-aural-concrete-plan-before frozen)
+         (cl-remove
+          'cue
+          (emacsvox-aural-concrete-plan-before frozen)
+          :key #'emacsvox-aural-concrete-action-kind))
+        (setf
+         (emacsvox-aural-concrete-plan-after frozen)
+         (cl-remove
+          'cue
+          (emacsvox-aural-concrete-plan-after frozen)
+          :key #'emacsvox-aural-concrete-action-kind))
+        (push
+         '(:reason icons-disabled-at-queue)
+         (emacsvox-aural-concrete-plan-degradations frozen)))
+      (when text-supplied-p
+        (setf
+         (emacsvox-aural-concrete-content-text
+          (emacsvox-aural-concrete-plan-content frozen))
+         (and text (substring-no-properties text))))
+      (push record emacsvox-aural-presentation-history)
+      (when
+          (> (length emacsvox-aural-presentation-history)
+             emacsvox-aural-presentation-history-limit)
+        (setcdr
+         (nthcdr
+          (1- emacsvox-aural-presentation-history-limit)
+          emacsvox-aural-presentation-history)
+         nil))
+      record)))
+
+(defun emacsvox-aural-last-presentation (&optional source)
+  "Return the latest frozen presentation record for optional SOURCE.
+
+SOURCE may be a buffer or buffer name.  With nil, return the latest record
+from any source."
+  (if (null source)
+      (car emacsvox-aural-presentation-history)
+    (let ((name (if (bufferp source) (buffer-name source) source)))
+      (cl-find
+       name emacsvox-aural-presentation-history
+       :key #'emacsvox-aural-presentation-record-source-buffer-name
+       :test #'equal))))
+
 (cl-defun emacsvox-aural-queue-concrete-plan
     (plan &optional (text nil text-supplied-p))
   "Queue concrete PLAN in strict before, content, and after order.
@@ -1484,14 +1770,18 @@ cleanup, without rerunning semantic or contextual resolution."
              (not (zerop balance))
              (functionp emacsvox-aural-speech-balance-function))
           (funcall emacsvox-aural-speech-balance-function 0.0))))
-  (dolist (action (emacsvox-aural-concrete-plan-after plan))
-    (emacsvox-aural-queue-concrete-action action))
-  (when
-      (or
-       (null (emacsvox-aural-concrete-plan-object-id plan))
-       (emacsvox-aural-concrete-plan-object-end-p plan))
-    (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))
-  plan))
+    (dolist (action (emacsvox-aural-concrete-plan-after plan))
+      (emacsvox-aural-queue-concrete-action action))
+    (let ((emacsvox-aural--history-respect-icon-policy t))
+      (if text-supplied-p
+          (emacsvox-aural-record-presentation plan payload)
+        (emacsvox-aural-record-presentation plan)))
+    (when
+        (or
+         (null (emacsvox-aural-concrete-plan-object-id plan))
+         (emacsvox-aural-concrete-plan-object-end-p plan))
+      (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))
+    plan))
 
 (defun emacsvox-aural--standalone-cue (plan)
   "Return PLAN's one standalone cue action, or nil."
@@ -1558,6 +1848,7 @@ Resolve it using CONTEXT or the dynamically captured submission context."
           (emacsvox-sounds-play-concrete-cue
            (emacsvox-aural-concrete-action-resource cue)
            (emacsvox-aural-concrete-action-sample-id cue))))
+      (emacsvox-aural-record-presentation plan)
       (when emacsvox-aural-plan-presented-hook
         (emacsvox-aural--ensure-speaker)
         (run-hook-with-args

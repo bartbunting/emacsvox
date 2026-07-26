@@ -365,6 +365,8 @@ directory.")
     (setq
      emacsvox-sounds-current-pack pack-id
      emacsvox-sounds-current-theme theme-directory)
+    (when (fboundp 'emacsvox-aural-configuration-changed)
+      (emacsvox-aural-configuration-changed 'sound-pack))
     (emacsvox-icon 'button)))
 
 (defun emacsvox-sounds-follow-aural-scheme ()

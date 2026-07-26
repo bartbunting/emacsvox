@@ -8,7 +8,9 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'benchmark)
 (require 'ert)
+(require 'seq)
 (require 'emacsvox-sounds)
 (require 'tts-speak)
 (require 'voice-setup)
@@ -29,6 +31,19 @@
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
+         (emacsvox-aural-configuration-generation 0)
+         (emacsvox-aural-configuration-changed-hook nil)
+         (emacsvox-aural--current-rules-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--provider-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--current-rules-cache-hits 0)
+         (emacsvox-aural--current-rules-cache-misses 0)
+         (emacsvox-aural-presentation-history nil)
+         (emacsvox-aural--presentation-sequence 0)
+         (emacsvox-aural--file-digest-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural-unsupported-volume-policy 'degrade)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-face-presentation-enabled t)
@@ -152,6 +167,77 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
               (emacsvox-aural-sample-id
                'my-pack 'item second)))))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-aural-transport-caches-digests-by-file-generation ()
+  "Canonical aliases share a digest until metadata or resources change."
+  (let* ((directory (make-temp-file "emacsvox-digest-cache-" t))
+         (resource (expand-file-name "item.ogg" directory))
+         (alias (expand-file-name "alias.ogg" directory))
+         (original (symbol-function 'secure-hash))
+         (hashes 0)
+         (emacsvox-aural--file-digest-cache
+          (make-hash-table :test #'equal)))
+    (unwind-protect
+        (progn
+          (write-region "one" nil resource nil 'silent)
+          (make-symbolic-link resource alias)
+          (cl-letf
+              (((symbol-function 'secure-hash)
+                (lambda (&rest arguments)
+                  (cl-incf hashes)
+                  (apply original arguments))))
+            (let ((first (emacsvox-aural--file-digest resource)))
+              (should (equal first (emacsvox-aural--file-digest resource)))
+              (should (equal first (emacsvox-aural--file-digest alias)))
+              (should (= hashes 1))
+              (write-region "changed-size" nil resource nil 'silent)
+              (should-not
+               (equal first (emacsvox-aural--file-digest alias)))
+              (should (= hashes 2))
+              (run-hook-with-args
+               'emacsvox-aural-resource-packs-changed-hook 'test-pack)
+              (emacsvox-aural--file-digest alias)
+              (should (= hashes 3)))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-aural-transport-freezes-volume-capability-policy ()
+  "Unsupported volume is explicit and can be degraded or rejected."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id volume
+        :match (:role heading)
+        :render
+        (:before
+         ((:id label :kind speech :text "Heading" :volume 0.4))
+         :content (:volume 0.7)))))
+    (let* ((facts '(:role heading :content "Title"))
+           (context (emacsvox-test--transport-context))
+           (render (emacsvox-aural-resolve-active facts context))
+           (plan (emacsvox-aural-compile-plan render facts context))
+           (action (car (emacsvox-aural-concrete-plan-before plan)))
+           (content (emacsvox-aural-concrete-plan-content plan)))
+      (should (= (emacsvox-aural-concrete-action-requested-volume action)
+                 0.4))
+      (should
+       (eq
+        (emacsvox-aural-concrete-action-volume-capability action)
+        'unsupported))
+      (should (= (emacsvox-aural-concrete-content-requested-volume content)
+                 0.7))
+      (should
+       (eq
+        (emacsvox-aural-concrete-content-volume-capability content)
+        'unsupported))
+      (should
+       (= 2
+          (cl-count
+           'unsupported-volume
+           (emacsvox-aural-concrete-plan-degradations plan)
+           :key (lambda (entry) (plist-get entry :reason)))))
+      (let ((emacsvox-aural-unsupported-volume-policy 'reject))
+        (should-error
+         (emacsvox-aural-compile-plan render facts context)
+         :type 'emacsvox-aural-transport-error)))))
 
 (ert-deftest emacsvox-aural-transport-compiles-cues-and-palette-voices ()
   "Semantic cue and voice names become paths, sample IDs, and TTS commands."
@@ -520,6 +606,101 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (text "Title")
           (code "RESET")
           (text "folded")))))))
+
+(ert-deftest emacsvox-aural-transport-retains-bounded-data-only-history ()
+  "Actually queued payloads retain provenance without retaining buffers."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural-presentation-history-limit 2))
+      (with-temp-buffer
+        (rename-buffer "aural-history-source" t)
+        (goto-char (point-min))
+        (let* ((facts '(:role heading :content "source"))
+               (context (emacsvox-aural-capture-context nil 'continuous))
+               (render (emacsvox-aural-resolve-active facts context))
+               (plan (emacsvox-aural-compile-plan render facts context)))
+          (setf (emacsvox-aural-concrete-plan-object-id plan) 'paragraph-1)
+          (setf (emacsvox-aural-concrete-plan-run-id plan) 2)
+          (cl-letf
+              (((symbol-function 'tts-voice-reset-code)
+                (lambda () "RESET"))
+               ((symbol-function 'tts--protocol-queue-code) #'ignore)
+               ((symbol-function 'tts--protocol-queue-text) #'ignore))
+            (emacsvox-aural-queue-concrete-plan plan "first")
+            (emacsvox-aural-queue-concrete-plan plan "second")
+            (emacsvox-aural-queue-concrete-plan plan "third"))))
+      (should (= (length emacsvox-aural-presentation-history) 2))
+      (let* ((record (emacsvox-aural-last-presentation))
+             (plan (emacsvox-aural-presentation-record-plan record))
+             (context (emacsvox-aural-concrete-plan-context plan)))
+        (should (equal
+                 (emacsvox-aural-presentation-record-source-buffer-name
+                  record)
+                 "aural-history-source"))
+        (should (eq
+                 (emacsvox-aural-presentation-record-object-id record)
+                 'paragraph-1))
+        (should (= (emacsvox-aural-presentation-record-run-id record) 2))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-text
+           (emacsvox-aural-concrete-plan-content plan))
+          "third"))
+        (should-not (plist-get context :source-buffer))
+        (cl-labels
+            ((retains-buffer-p
+              (value)
+              (cond
+               ((bufferp value) t)
+               ((stringp value) nil)
+               ((consp value)
+                (or
+                 (retains-buffer-p (car value))
+                 (retains-buffer-p (cdr value))))
+               ((vectorp value)
+                (seq-some #'retains-buffer-p value))
+               (t nil))))
+          (should-not (retains-buffer-p record)))))))
+
+(ert-deftest emacsvox-aural-transport-scales-long-multi-face-document ()
+  "Long face-rich text reuses one rule snapshot within bounded resources."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text (make-string 240 ?x))
+           (context (emacsvox-test--transport-context))
+           (facts '(:role heading))
+           (original
+            (symbol-function 'emacsvox-aural--compute-current-rules))
+           (computations 0))
+      (dotimes (index (length text))
+        (put-text-property
+         index (1+ index) 'face
+         (if (zerop (% index 2)) 'bold 'italic)
+         text))
+      (clrhash emacsvox-aural--current-rules-cache)
+      (setq
+       emacsvox-aural--current-rules-cache-hits 0
+       emacsvox-aural--current-rules-cache-misses 0)
+      (let ((before (memory-use-counts))
+            elapsed
+            after)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural--compute-current-rules)
+              (lambda (current-context)
+                (cl-incf computations)
+                (funcall original current-context))))
+          (setq
+           elapsed
+           (car
+            (benchmark-run
+             1
+             (emacsvox-aural-prepare-text text facts context)))))
+        (setq after (memory-use-counts))
+        (should (= computations 1))
+        (should (= emacsvox-aural--current-rules-cache-misses 1))
+        (should (> emacsvox-aural--current-rules-cache-hits 100))
+        (should (< elapsed 5.0))
+        (should (< (- (nth 0 after) (nth 0 before)) 5000000))
+        (should (< (- (nth 2 after) (nth 2 before)) 5000000))
+        (should (< (- (nth 4 after) (nth 4 before)) 1000000))))))
 
 (ert-deftest emacsvox-aural-transport-queue-never-reresolves ()
   "Queueing a compiled plan performs no semantic, resource, or voice lookup."

@@ -873,11 +873,16 @@ LABEL identifies the speech or cue being edited."
     (when (and old (emacsvox-aural-scheme-entry-built-in old))
       (user-error "Built-in schemes cannot be edited; copy it first"))
     (puthash id entry emacsvox-aural-scheme-registry)
+    ;; The staged replacement mutates the live registry object.  Clear caches
+    ;; before validating it, but advance the public generation only on commit.
+    (clrhash emacsvox-aural--current-rules-cache)
+    (clrhash emacsvox-aural--provider-cache)
     (condition-case error
         (progn
           (emacsvox-aural-validate-scheme-registry)
           (emacsvox-aural-save-user-data)
-          (setq emacsvox-aural-editor-scheme-data data))
+          (setq emacsvox-aural-editor-scheme-data data)
+          (emacsvox-aural-configuration-changed 'scheme-edited))
       (error
        (if old
            (puthash id old emacsvox-aural-scheme-registry)
@@ -921,7 +926,8 @@ LABEL identifies the speech or cue being edited."
            (progn
              (emacsvox-aural-current-rules
               (emacsvox-aural-context-at-point))
-             (emacsvox-aural-save-user-data))
+             (emacsvox-aural-save-user-data)
+             (emacsvox-aural-configuration-changed 'personal-rules))
          (error
           (setq emacsvox-aural-user-rules old)
           (signal (car error) (cdr error))))))
@@ -929,8 +935,10 @@ LABEL identifies the speech or cue being edited."
      (let ((old emacsvox-aural-session-rules))
        (setq emacsvox-aural-session-rules rules)
        (condition-case error
-           (emacsvox-aural-current-rules
-            (emacsvox-aural-context-at-point))
+           (progn
+             (emacsvox-aural-current-rules
+              (emacsvox-aural-context-at-point))
+             (emacsvox-aural-configuration-changed 'session-rules))
          (error
           (setq emacsvox-aural-session-rules old)
           (signal (car error) (cdr error))))))
@@ -941,8 +949,10 @@ LABEL identifies the speech or cue being edited."
        (let ((old emacsvox-aural-buffer-rules))
          (setq emacsvox-aural-buffer-rules rules)
          (condition-case error
-             (emacsvox-aural-current-rules
-              (emacsvox-aural-current-context nil 'continuous))
+             (progn
+               (emacsvox-aural-current-rules
+                (emacsvox-aural-current-context nil 'continuous))
+               (emacsvox-aural-configuration-changed 'buffer-rules))
            (error
             (setq emacsvox-aural-buffer-rules old)
             (signal (car error) (cdr error)))))))))

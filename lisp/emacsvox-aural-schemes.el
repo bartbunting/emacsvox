@@ -145,6 +145,49 @@ consulting this extension alist.")
 (defvar emacsvox-aural-voice-palette-changed-hook nil
   "Hook run after the selected voice-palette override changes.")
 
+(defvar emacsvox-aural-configuration-generation 0
+  "Monotonic generation of compiled aural presentation configuration.")
+
+(defvar emacsvox-aural-configuration-changed-hook nil
+  "Abnormal hook run after an aural configuration generation changes.
+
+Each function receives the new generation and a symbolic reason.")
+
+(defvar emacsvox-aural--current-rules-cache
+  (make-hash-table :test #'equal)
+  "Validated contextual rule snapshots for the current configuration.")
+
+(defvar emacsvox-aural--provider-cache
+  (make-hash-table :test #'equal)
+  "Effective scheme providers cached by configuration generation.")
+
+(defvar emacsvox-aural--current-rules-cache-hits 0
+  "Number of contextual rule snapshots served from cache.")
+
+(defvar emacsvox-aural--current-rules-cache-misses 0
+  "Number of contextual rule snapshots compiled for the cache.")
+
+(defun emacsvox-aural-configuration-changed (&optional reason)
+  "Advance the configuration generation and invalidate compiled caches.
+
+REASON is a diagnostic symbol describing the completed state change."
+  (cl-incf emacsvox-aural-configuration-generation)
+  (clrhash emacsvox-aural--current-rules-cache)
+  (clrhash emacsvox-aural--provider-cache)
+  (run-hook-with-args
+   'emacsvox-aural-configuration-changed-hook
+   emacsvox-aural-configuration-generation
+   (or reason 'configuration))
+  emacsvox-aural-configuration-generation)
+
+(defun emacsvox-aural-rule-cache-statistics ()
+  "Return current rule-cache generation, hits, misses, and entry count."
+  (list
+   :generation emacsvox-aural-configuration-generation
+   :hits emacsvox-aural--current-rules-cache-hits
+   :misses emacsvox-aural--current-rules-cache-misses
+   :entries (hash-table-count emacsvox-aural--current-rules-cache)))
+
 (declare-function emacsvox-sounds-select-theme
                   "emacsvox-sounds" (&optional theme))
 
@@ -182,6 +225,7 @@ consulting this extension alist.")
             :built-in built-in
             :source source)))
       (puthash id entry emacsvox-aural-scheme-registry)
+      (emacsvox-aural-configuration-changed 'scheme-registered)
       entry)))
 
 (cl-defun emacsvox-aural-register-module-fragment
@@ -204,6 +248,7 @@ consulting this extension alist.")
             :compiled compiled
             :source source)))
       (puthash id fragment emacsvox-aural-module-fragment-registry)
+      (emacsvox-aural-configuration-changed 'module-fragment-registered)
       fragment)))
 
 (defun emacsvox-aural--compile-feature-fragment (data &optional source)
@@ -239,6 +284,7 @@ BUILT-IN marks a read-only fragment and SOURCE is retained for diagnostics."
             :built-in built-in
             :source source)))
       (puthash id entry emacsvox-aural-feature-fragment-registry)
+      (emacsvox-aural-configuration-changed 'feature-fragment-registered)
       entry)))
 
 (defun emacsvox-aural-scheme-candidates ()
@@ -285,6 +331,7 @@ BUILT-IN marks a read-only fragment and SOURCE is retained for diagnostics."
   "Set ordered enabled feature fragment IDS and run the change hook."
   (emacsvox-aural--validate-enabled-feature-fragments ids)
   (setq emacsvox-aural-enabled-feature-fragments (copy-sequence ids))
+  (emacsvox-aural-configuration-changed 'feature-fragments)
   (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
   emacsvox-aural-enabled-feature-fragments)
 
@@ -334,18 +381,10 @@ diagnostics and cross-layer identifier checks."
            (push copy rules)))))
     (nreverse rules)))
 
-(defun emacsvox-aural-effective-scheme-provider (property &optional id)
-  "Return inherited provider PROPERTY for scheme ID or the active scheme.
-
-PROPERTY is `resource-pack' or `voice-palette'."
-  (unless (memq property '(resource-pack voice-palette))
-    (emacsvox-aural--scheme-error
-     "Unknown scheme provider property: %S" property))
+(defun emacsvox-aural--compute-effective-scheme-provider (property id)
+  "Compute inherited provider PROPERTY for scheme ID."
   (let (value)
-    (dolist
-        (entry
-         (emacsvox-aural--scheme-chain
-          (or id emacsvox-aural-active-scheme)))
+    (dolist (entry (emacsvox-aural--scheme-chain id))
       (let ((scheme (emacsvox-aural-scheme-entry-compiled entry)))
         (pcase property
           ('resource-pack
@@ -355,6 +394,28 @@ PROPERTY is `resource-pack' or `voice-palette'."
            (when (emacsvox-aural-scheme-voice-palette scheme)
              (setq value (emacsvox-aural-scheme-voice-palette scheme)))))))
     value))
+
+(defun emacsvox-aural-effective-scheme-provider (property &optional id)
+  "Return inherited provider PROPERTY for scheme ID or the active scheme.
+
+PROPERTY is `resource-pack' or `voice-palette'."
+  (unless (memq property '(resource-pack voice-palette))
+    (emacsvox-aural--scheme-error
+     "Unknown scheme provider property: %S" property))
+  (let* ((id (or id emacsvox-aural-active-scheme))
+         (key
+          (list
+           emacsvox-aural-configuration-generation
+           emacsvox-aural-scheme-registry property id))
+         (missing (make-symbol "missing"))
+         (cached (gethash key emacsvox-aural--provider-cache missing)))
+    (if (eq cached missing)
+        (let ((provider
+               (emacsvox-aural--compute-effective-scheme-provider
+                property id)))
+          (puthash key (cons t provider) emacsvox-aural--provider-cache)
+          provider)
+      (cdr cached))))
 
 (defun emacsvox-aural--validate-scheme-providers (id &optional defer-packs)
   "Validate provider references for scheme ID.
@@ -414,6 +475,7 @@ not loaded yet; validation is deferred until the complete registry check."
   (emacsvox-aural-effective-scheme-rules id)
   (emacsvox-aural--validate-scheme-providers id t)
   (setq emacsvox-aural-active-scheme id)
+  (emacsvox-aural-configuration-changed 'active-scheme)
   (run-hooks 'emacsvox-aural-active-scheme-changed-hook)
   id)
 
@@ -509,8 +571,8 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
         (puthash id rule seen)))
     rules))
 
-(defun emacsvox-aural-current-rules (&optional context)
-  "Return every compiled rule layer relevant to CONTEXT."
+(defun emacsvox-aural--compute-current-rules (context)
+  "Compile every validated rule layer relevant to CONTEXT."
   (cl-remove-if-not
    #'emacsvox-aural-rule-enabled
    (emacsvox-aural--require-unique-rule-ids
@@ -525,7 +587,39 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
      (emacsvox-aural--compile-rule-list
       emacsvox-aural-session-rules 'session "session" t)
      (emacsvox-aural--compile-rule-list
-      emacsvox-aural-buffer-rules 'buffer (current-buffer) t)))))
+      emacsvox-aural-buffer-rules
+      'buffer
+      (format "buffer:%s" (buffer-name))
+      t)))))
+
+(defun emacsvox-aural--current-rules-cache-key (context)
+  "Return an immutable cache key for contextual rule CONTEXT."
+  (list
+   emacsvox-aural-configuration-generation
+   emacsvox-aural-scheme-registry
+   emacsvox-aural-module-fragment-registry
+   emacsvox-aural-feature-fragment-registry
+   emacsvox-aural-active-scheme
+   (plist-get context :module)
+   emacsvox-aural-enabled-feature-fragments
+   emacsvox-aural-user-rules
+   emacsvox-aural-session-rules
+   emacsvox-aural-buffer-rules
+   (buffer-name)))
+
+(defun emacsvox-aural-current-rules (&optional context)
+  "Return the validated immutable rule snapshot relevant to CONTEXT."
+  (let* ((key (emacsvox-aural--current-rules-cache-key context))
+         (missing (make-symbol "missing"))
+         (cached
+          (gethash key emacsvox-aural--current-rules-cache missing)))
+    (if (eq cached missing)
+        (let ((rules (emacsvox-aural--compute-current-rules context)))
+          (cl-incf emacsvox-aural--current-rules-cache-misses)
+          (puthash key rules emacsvox-aural--current-rules-cache)
+          rules)
+      (cl-incf emacsvox-aural--current-rules-cache-hits)
+      cached)))
 
 (defun emacsvox-aural-current-context
     (module occasion &optional legacy-personality legacy-source)
@@ -542,7 +636,8 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
    :legacy-personality legacy-personality
    :legacy-source legacy-source
    :source-buffer (current-buffer)
-   :source-buffer-name (buffer-name)))
+   :source-buffer-name (buffer-name)
+   :source-position (point)))
 
 (defun emacsvox-aural--apply-legacy-content-style (plan context)
   "Apply CONTEXT's legacy voice fallback to resolved PLAN."
@@ -981,6 +1076,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (when pack
             (emacsvox-sounds-select-theme pack))
           (setq completed t)
+          (emacsvox-aural-configuration-changed 'profile-applied)
           (unless (eq old-palette palette)
             (run-hook-with-args
              'emacsvox-aural-voice-palette-changed-hook palette))
@@ -1057,6 +1153,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     (emacsvox-aural--scheme-error
      "Unknown voice palette: %S" palette))
   (setq emacsvox-aural-voice-palette-override palette)
+  (emacsvox-aural-configuration-changed 'voice-palette)
   (run-hook-with-args 'emacsvox-aural-voice-palette-changed-hook palette)
   palette)
 
@@ -1338,6 +1435,7 @@ The file is read as data and is never evaluated."
        emacsvox-aural-profile-registry profile-registry
        emacsvox-aural-enabled-feature-fragments (copy-sequence enabled)
        emacsvox-aural-user-rules (copy-tree rules))
+      (emacsvox-aural-configuration-changed 'user-data-loaded)
       (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
       data)))
 

@@ -65,7 +65,7 @@
     :face-presentation-enabled :voice-lock-enabled
     :legacy-face-source :legacy-faces :legacy-face-provenance
     :legacy-personality
-    :legacy-source :source-buffer :source-buffer-name)
+    :legacy-source :source-buffer :source-buffer-name :source-position)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct
@@ -1310,6 +1310,7 @@ LAYER-ORDER records inheritance order within one origin."
          (legacy-source (plist-get context :legacy-source))
          (source-buffer (plist-get context :source-buffer))
          (source-buffer-name (plist-get context :source-buffer-name))
+         (source-position (plist-get context :source-position))
          (lineage
           (or
            (plist-get context :mode-lineage)
@@ -1377,6 +1378,11 @@ LAYER-ORDER records inheritance order within one origin."
         (emacsvox-aural--rule-error
          "Context source buffer name must be a string: %S"
          source-buffer-name)))
+    (when source-position
+      (unless (natnump source-position)
+        (emacsvox-aural--rule-error
+         "Context source position must be a natural number: %S"
+         source-position)))
     (when lineage
       (unless (and (listp lineage) (cl-every #'symbolp lineage))
         (emacsvox-aural--rule-error

@@ -65,6 +65,12 @@
   (make-hash-table :test #'eq)
   "Map resource-pack identifiers to provider records.")
 
+(defvar emacsvox-aural-resource-packs-changed-hook nil
+  "Abnormal hook run after resource-pack registration or refresh.
+
+Each function receives the affected pack identifier, or nil for a discovery
+refresh that may affect several packs.")
+
 (defvar emacsvox-aural-resource-pack-discovery-roots nil
   "Directories whose immediate children are dynamically discovered packs.")
 
@@ -298,6 +304,7 @@ sound directories."
           :assets (emacsvox-aural--scan-resource-directory directory)
           :origin origin)))
     (puthash id record emacsvox-aural-resource-pack-registry)
+    (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)
     record))
 
 (defun emacsvox-aural--complete-voice-style-p (value)
@@ -767,6 +774,7 @@ discovered directories with the same identifier."
      (emacsvox-aural-resource-pack-assets pack)
      (emacsvox-aural--scan-resource-directory
       (emacsvox-aural-resource-pack-directory pack)))
+    (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)
     pack))
 
 (defun emacsvox-aural--effective-pack-assets (id &optional path)
