@@ -2280,7 +2280,8 @@ filenames in the untracked, in-progress =sounds/bart/= personal pack.  The
 complete audit passes with only that personal pack excluded, reports the
 generated reference current, and no file in the pack was changed.
 
-** TODO Slice 29: Composable Voice Styles and Palette Management
+** DONE Slice 29: Composable Voice Styles and Palette Management
+CLOSED: [2026-07-26 Sun]
 
 - Define a voice value as either a complete named preset or a composable
   device-independent ACSS style with independently sourced family, pitch,
@@ -2300,6 +2301,45 @@ generated reference current, and no file in the pack was changed.
 
 Deliverable: users can build and inspect reusable composable voices through
 the same accessible aural-management workflow as schemes and sound packs.
+
+Implemented details:
+
+- A symbol or compatibility personality list is a complete named preset.  A
+  stronger named value replaces the whole inherited voice.  An explicit
+  =:voice= style plist may name a =:preset= and independently override
+  =:family=, =:average-pitch=, =:pitch-range=, =:stress=, and =:richness=.
+  Raw ACSS records remain accepted as compatibility partial styles.
+- Resolution retains the winning rule for the preset and for every ACSS
+  dimension.  Concrete compilation records requested and effective styles,
+  the active adapter capability, dimension provenance, and explicit fallback
+  records while queueing only the final precompiled command.
+- Adapter capability is taken from the function installed as
+  =tts-define-voice-from-acss=.  Dectalk, Outloud, eSpeak, Mac, SwiftMac,
+  Plain, and an unconfigured adapter declare only the dimensions they
+  actually implement.  Existing adapter-owned personalities are preserved
+  without reconstructing or rejecting their backend commands.
+- Personal scheme data schema 4 stores versioned voice palettes.  Palette
+  entries are either existing personality symbols or complete declarative
+  ACSS presets.  Reading disables reader evaluation; migration, inheritance,
+  profile references, and the complete replacement registry validate before
+  live state changes.
+- =emacsvox-aural-list-voice-palettes= opens a spoken manager reached from
+  Aural Home.  It lists provider status and inheritance; copies and creates
+  personal palettes; edits metadata and guided complete styles; deletes
+  entries or unreferenced personal palettes; activates an override or follows
+  the scheme; previews compiled voices; and explains requested/effective
+  styles, adapter capability, provenance, and fallback.
+- General presentation explanation now speaks composed voice styles naturally
+  and includes requested voice data, effective ACSS, adapter capability, and
+  dimension provenance in its technical detail.
+
+Checks for Slice 29: six focused rule, resource, scheme, transport, tools, and
+voice-manager suites pass with 156 expected results.  The changed runtime and
+manager modules compile with warnings treated as errors.  The full source
+suite has 1,555 tests: the new behavior passes, the optional Mu4e test remains
+skipped, and the only remaining audit failure is the already recorded
+untracked =sounds/bart/= personal pack.  The personal-pack audit exception is
+not broadened and no file in that pack was changed.
 
 ** TODO Slice 30: Operational Semantic Contracts
 
@@ -2440,18 +2480,19 @@ controls the historical face/personality voice mapping, while the independent
 default-on =emacsvox-aural-face-presentation-enabled= control gates explicit
 =:legacy-face= scheme rules.  Neither control disables semantic presentation.
 
+For Slice 29, a named voice is a complete preset that resets inherited ACSS
+dimensions.  Explicit ACSS style data remains partial and composes
+dimension-by-dimension over a weaker preset or partial style.
+
 * Open Decisions
 
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. Whether a named voice is a complete preset that resets inherited ACSS
-   dimensions or a reusable partial style that composes with them.  This
-   blocks Slice 29.
-2. Whether critical alerts may be completely suppressed or require an
+1. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-3. The ordering policy required before minor-mode selectors are enabled.
-4. Whether future integrations need additional occasions and whether those
+2. The ordering policy required before minor-mode selectors are enabled.
+3. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:

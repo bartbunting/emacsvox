@@ -21,6 +21,8 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-profile-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-voice-palette-registry
+          (copy-hash-table emacsvox-aural-voice-palette-registry))
          (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-voice-palette-override nil)
          (emacsvox-aural-user-rules nil)
@@ -619,16 +621,86 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 3
+        '(:schema-version 4
           :schemes nil
           :user-rules nil
           :feature-fragments nil
           :enabled-feature-fragments nil
-          :profiles nil))))
+          :profiles nil
+          :voice-palettes nil))))
     (should-error
      (emacsvox-aural-migrate-user-data
       '(:schema-version 0 :schemes nil :user-rules nil))
      :type 'emacsvox-aural-scheme-error)))
+
+(ert-deftest emacsvox-aural-schemes-persist-personal-voice-palettes ()
+  "Personal voice palettes round-trip as versioned non-evaluated data."
+  (emacsvox-test--with-isolated-schemes
+    (let* ((directory (make-temp-file "emacsvox-voice-palettes-" t))
+           (file (expand-file-name "aural-schemes.el" directory))
+           (palette
+            '(:schema-version 1
+              :id reading
+              :summary "Reading voices"
+              :parent acss-default
+              :entries
+              ((heading
+                :style
+                (:family paul :average-pitch 6 :pitch-range 4
+                 :stress nil :richness 7))))))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-voice-palette-data palette)
+            (emacsvox-aural-save-user-data file)
+            (let ((saved (emacsvox-aural-read-user-data file)))
+              (should (equal (plist-get saved :voice-palettes)
+                             (list palette))))
+            (let ((emacsvox-aural-voice-palette-registry
+                   (emacsvox-aural--built-in-voice-palette-registry)))
+              (emacsvox-aural-load-user-data file)
+              (should
+               (equal
+                (emacsvox-aural-voice 'heading 'reading)
+                '(:family paul :average-pitch 6 :pitch-range 4
+                  :stress nil :richness 7)))))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-schemes-palette-load-is-atomic ()
+  "Invalid palette inheritance leaves the live palette registry unchanged."
+  (emacsvox-test--with-isolated-schemes
+    (emacsvox-aural-register-voice-palette-data
+     '(:schema-version 1
+       :id working-palette
+       :summary "Working palette"
+       :entries
+       ((heading :personality voice-bolden))))
+    (let* ((directory (make-temp-file "emacsvox-bad-palette-" t))
+           (file (expand-file-name "invalid.el" directory))
+           (before emacsvox-aural-voice-palette-registry))
+      (unwind-protect
+          (progn
+            (emacsvox-test--write-lisp-data
+             file
+             '(:schema-version 4
+               :schemes nil
+               :feature-fragments nil
+               :enabled-feature-fragments nil
+               :voice-palettes
+               ((:schema-version 1
+                 :id broken
+                 :summary "Broken"
+                 :parent missing
+                 :entries nil))
+               :profiles nil
+               :user-rules nil))
+            (should-error
+             (emacsvox-aural-load-user-data file)
+             :type 'emacsvox-aural-resource-error)
+            (should (eq emacsvox-aural-voice-palette-registry before))
+            (should
+             (emacsvox-aural-voice-palette 'working-palette))
+            (should-not (emacsvox-aural-voice-palette 'broken)))
+        (delete-directory directory t)))))
 
 (ert-deftest emacsvox-aural-schemes-load-is-atomic ()
   "Invalid replacement data leaves live personal schemes and rules intact."

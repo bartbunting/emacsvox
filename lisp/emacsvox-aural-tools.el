@@ -65,6 +65,10 @@
                   "emacsvox-aural-profiles" (&optional profile))
 (declare-function emacsvox-aural-profiles-status
                   "emacsvox-aural-profiles" ())
+(declare-function emacsvox-aural-list-voice-palettes
+                  "emacsvox-aural-voice-palettes" (&optional palette))
+(declare-function emacsvox-aural-voice-palettes-status
+                  "emacsvox-aural-voice-palettes" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 (declare-function tts-voice-reset-code "tts-speak" ())
@@ -81,6 +85,7 @@
      'emacsvox-aural-schemes-mode
      'emacsvox-aural-feature-fragments-mode
      'emacsvox-aural-profiles-mode
+     'emacsvox-aural-voice-palettes-mode
      'emacsvox-aural-doctor-mode
      'emacsvox-aural-sound-packs-mode
      'emacsvox-aural-sound-pack-cues-mode
@@ -1618,16 +1623,41 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
   (let* ((style (emacsvox-aural-render-plan-content render))
          (content (emacsvox-aural-concrete-plan-content concrete))
          (voice (emacsvox-aural-content-style-voice style))
+         (voice-description
+          (cond
+           ((emacsvox-aural-voice-style-p voice)
+            (let ((preset (plist-get voice :preset))
+                  dimensions)
+              (dolist (dimension emacsvox-aural-voice-dimensions)
+                (let ((key
+                       (emacsvox-aural--voice-dimension-key dimension)))
+                  (when (plist-member voice key)
+                    (push
+                     (format
+                      "%s %s"
+                      (emacsvox-aural-tools--humanize dimension)
+                      (or (plist-get voice key) "default"))
+                     dimensions))))
+              (string-join
+               (append
+                (when preset
+                  (list
+                   (format
+                    "the %s preset"
+                    (emacsvox-aural-tools--humanize preset))))
+                (nreverse dimensions))
+               ", with ")))
+           (voice
+            (format
+             "the %s voice"
+             (emacsvox-aural-tools--humanize voice)))
+           (t "its existing voice")))
          (balance (emacsvox-aural-concrete-content-balance content)))
     (if (not (emacsvox-aural-concrete-content-speak content))
         "The content is suppressed"
       (concat
        "The content is spoken"
-       (if voice
-           (format
-            " using the %s voice"
-            (emacsvox-aural-tools--humanize voice))
-         " using its existing voice")
+       (format " using %s" voice-description)
        (cond
         ((and (numberp balance) (< balance 0)) " on the left")
         ((and (numberp balance) (> balance 0)) " on the right")
@@ -1882,13 +1912,22 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
         context))
       (princ
        (format
-        "Content: speak %s, voice command %S, balance %S (%s), provenance %S\n"
+        (concat
+         "Content: speak %s, voice command %S, balance %S (%s), "
+         "provenance %S\n")
         (emacsvox-aural-concrete-content-speak content)
         (emacsvox-aural-concrete-content-voice-command content)
         (emacsvox-aural-concrete-content-balance content)
         (emacsvox-aural-concrete-content-spatial-capability content)
         (emacsvox-aural-content-style-provenance
          (emacsvox-aural-render-plan-content render))))
+      (princ
+       (format
+        "Voice: requested %S, effective ACSS %S, capability %S, dimension provenance %S\n"
+        (emacsvox-aural-concrete-content-voice-request content)
+        (emacsvox-aural-concrete-content-voice-style content)
+        (emacsvox-aural-concrete-content-voice-capability content)
+        (emacsvox-aural-concrete-content-voice-provenance content)))
       (when-let* ((suppressed
                    (emacsvox-aural-explanation-suppressed-actions
                     explanation)))
@@ -3025,6 +3064,11 @@ SCOPE is `personal', `session', or `buffer'."
   (require 'emacsvox-aural-profiles)
   (emacsvox-aural-profiles-status))
 
+(defun emacsvox-aural-home--voice-palette-status ()
+  "Return concise status for voice palettes."
+  (require 'emacsvox-aural-voice-palettes)
+  (emacsvox-aural-voice-palettes-status))
+
 (defun emacsvox-aural-home--spatial-status ()
   "Return concise status for portable spatial presentation."
   (if emacsvox-aural-spatial-enabled
@@ -3073,6 +3117,12 @@ SCOPE is `personal', `session', or `buffer'."
       (vector
        "Schemes" (symbol-name emacsvox-aural-active-scheme)
        "View, activate, copy, edit, preview, and validate base schemes"))
+     (list
+      'voices
+      (vector
+       "Voice palettes"
+       (emacsvox-aural-home--voice-palette-status)
+       "Browse, create, edit, preview, explain, validate, and activate named voices"))
      (list
       'features
       (vector
@@ -3212,6 +3262,12 @@ SCOPE is `personal', `session', or `buffer'."
   (require 'emacsvox-aural-profiles)
   (emacsvox-aural-list-profiles))
 
+(defun emacsvox-aural-home-voice-palettes ()
+  "Open the accessible voice-palette manager."
+  (interactive)
+  (require 'emacsvox-aural-voice-palettes)
+  (emacsvox-aural-list-voice-palettes))
+
 (defun emacsvox-aural-home-toggle-face-presentation ()
   "Toggle explicit face scheme rules and speak the refreshed home row."
   (interactive)
@@ -3228,6 +3284,7 @@ SCOPE is `personal', `session', or `buffer'."
      (emacsvox-aural-home-explain))
     ('profiles (emacsvox-aural-home-profiles))
     ('schemes (emacsvox-aural-list-schemes))
+    ('voices (emacsvox-aural-home-voice-palettes))
     ('features (emacsvox-aural-list-feature-fragments))
     ('face-presentation
      (emacsvox-aural-home-toggle-face-presentation))
@@ -3265,7 +3322,8 @@ SCOPE is `personal', `session', or `buffer'."
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
       "x explain at point   P presentation profiles\n"
-      "v face rules toggle  D aural doctor\n"
+      "V voice palettes     v face rules toggle\n"
+      "D aural doctor\n"
       "g refresh\n"
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
@@ -3302,6 +3360,7 @@ SCOPE is `personal', `session', or `buffer'."
        ("<left>" . emacsvox-aural-home-previous-column)
        ("x" . emacsvox-aural-home-explain)
        ("P" . emacsvox-aural-home-profiles)
+       ("V" . emacsvox-aural-home-voice-palettes)
        ("v" . emacsvox-aural-home-toggle-face-presentation)
        ("D" . emacsvox-aural-doctor)
        ("g" . emacsvox-aural-home-refresh)
@@ -3333,7 +3392,7 @@ SCOPE is `personal', `session', or `buffer'."
       (emacsvox-aural-home-speak-current))
     buffer))
 
-(defun emacsvox-aural-home-refresh-if-live ()
+(defun emacsvox-aural-home-refresh-if-live (&rest _ignored)
   "Refresh the aural home buffer when it is currently available."
   (when-let* ((buffer (get-buffer "*Emacsvox Aural*")))
     (with-current-buffer buffer
@@ -3348,6 +3407,9 @@ SCOPE is `personal', `session', or `buffer'."
  #'emacsvox-aural-home-refresh-if-live)
 (add-hook
  'emacsvox-aural-face-presentation-changed-hook
+ #'emacsvox-aural-home-refresh-if-live)
+(add-hook
+ 'emacsvox-aural-voice-palette-changed-hook
  #'emacsvox-aural-home-refresh-if-live)
 
 (defun emacsvox-aural-concise-explanation (facts context)

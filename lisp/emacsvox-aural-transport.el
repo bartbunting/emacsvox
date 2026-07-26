@@ -30,6 +30,7 @@
 (declare-function tts-initialize "tts-speak" ())
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function voice-from-acss "voice-setup" (style))
+(declare-function make-acss "voice-setup" (&rest slots))
 
 (defvar emacsvox-sounds-current-pack)
 (defvar emacsvox-aural-voice-palette-override)
@@ -46,14 +47,24 @@
      (:constructor emacsvox-aural--make-concrete-action))
   "One backend-ready ordered action."
   id kind text cue resource sample-id duration voice-command source
-  anchor requested-space balance spatial-capability spatial-degradations)
+  anchor requested-space balance spatial-capability spatial-degradations
+  voice-request voice-style voice-provenance voice-capability
+  voice-degradations)
 
 (cl-defstruct
     (emacsvox-aural-concrete-content
      (:constructor emacsvox-aural--make-concrete-content))
   "Backend-ready styling and speaking state for object content."
   text speak voice-command provenance requested-space balance
-  spatial-capability spatial-degradations)
+  spatial-capability spatial-degradations
+  voice-request voice-style voice-provenance voice-capability
+  voice-degradations)
+
+(cl-defstruct
+    (emacsvox-aural-compiled-voice
+     (:constructor emacsvox-aural--make-compiled-voice))
+  "One device-independent voice compiled for the active adapter."
+  command request style provenance capability degradations preset)
 
 (cl-defstruct
     (emacsvox-aural-concrete-plan
@@ -176,10 +187,6 @@ PACK and CUE remain readable while RESOURCE contents distinguish generations."
    (emacsvox-aural--sample-component cue)
    (substring (emacsvox-aural--file-digest resource) 0 16)))
 
-(defun emacsvox-aural--acss-p (value)
-  "Return non-nil when VALUE is an ACSS structure."
-  (eq (type-of value) 'acss))
-
 (defun emacsvox-aural--resolve-voice-name (voice palette)
   "Resolve named VOICE through PALETTE and existing personality variables."
   (let ((resolved
@@ -196,41 +203,284 @@ PACK and CUE remain readable while RESOURCE contents distinguish generations."
         (symbol-value resolved)
       resolved)))
 
-(defun emacsvox-aural--one-voice-command (voice palette)
-  "Compile one VOICE through PALETTE and the selected TTS adapter."
-  (let ((resolved (emacsvox-aural--resolve-voice-name voice palette)))
-    (when (emacsvox-aural--acss-p resolved)
-      (unless (fboundp 'voice-from-acss)
-        (emacsvox-aural--transport-error
-         "ACSS voice support has not loaded"))
-      (setq resolved (voice-from-acss resolved)))
-    (unless (symbolp resolved)
+(defun emacsvox-aural--active-voice-adapter ()
+  "Return the active ACSS adapter identifier."
+  (let ((implementation
+         (and
+          (fboundp 'tts-define-voice-from-acss)
+          (symbol-function 'tts-define-voice-from-acss))))
+    (or
+     (cdr
+     (assq
+       implementation
+       '((dectalk-define-voice-from-acss . dectalk)
+         (outloud-define-voice-from-acss . outloud)
+         (espeak-define-voice-from-acss . espeak)
+         (mac-define-voice-from-acss . mac)
+         (swiftmac-define-voice-from-acss . swiftmac)
+         (plain-define-voice-from-acss . plain))))
+     'unknown)))
+
+(defun emacsvox-aural-active-voice-capabilities ()
+  "Return declared ACSS capabilities of the active speech adapter."
+  (let* ((adapter (emacsvox-aural--active-voice-adapter))
+         (dimensions
+          (pcase adapter
+            ('dectalk emacsvox-aural-voice-dimensions)
+            ('outloud '(average-pitch pitch-range stress richness))
+            ('espeak '(family average-pitch pitch-range richness))
+            ((or 'mac 'swiftmac) '(family average-pitch pitch-range))
+            (_ nil))))
+    (list
+     :adapter adapter
+     :dimensions (copy-sequence dimensions))))
+
+(defun emacsvox-aural-voice-palette-capability-degradations
+    (&optional palette)
+  "Return unsupported explicit dimensions in PALETTE for the active adapter.
+
+Existing personality-backed presets are adapter-owned compatibility values
+and are not reconstructed or rejected here."
+  (let* ((palette (or palette (emacsvox-aural--voice-palette)))
+         (capability (emacsvox-aural-active-voice-capabilities))
+         (supported (plist-get capability :dimensions))
+         degradations)
+    (dolist (entry (emacsvox-aural-effective-voice-entries palette))
+      (when (emacsvox-aural-voice-style-p (cdr entry))
+        (dolist (dimension emacsvox-aural-voice-dimensions)
+          (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+                 (value (plist-get (cdr entry) key)))
+            (when (and value (not (memq dimension supported)))
+              (push
+               (list
+                :reason 'unsupported-voice-dimension
+                :adapter (plist-get capability :adapter)
+                :voice (car entry)
+                :dimension dimension
+                :requested value)
+               degradations))))))
+    (nreverse degradations)))
+(defun emacsvox-aural--empty-voice-style ()
+  "Return a complete device-independent default voice style."
+  (let (style)
+    (dolist (dimension emacsvox-aural-voice-dimensions)
+      (setq
+       style
+       (plist-put
+        style (emacsvox-aural--voice-dimension-key dimension) nil)))
+    style))
+
+(defun emacsvox-aural--personality-style (personality)
+  "Return complete ACSS settings declared for PERSONALITY, or nil."
+  (let ((settings-variable
+         (intern-soft (format "%s-settings" personality))))
+    (when
+        (and
+         settings-variable
+         (boundp settings-variable)
+         (proper-list-p (symbol-value settings-variable)))
+      (let ((settings (symbol-value settings-variable))
+            (style (emacsvox-aural--empty-voice-style)))
+        (cl-loop
+         for dimension in emacsvox-aural-voice-dimensions
+         for index from 0
+         do
+         (setq
+          style
+          (plist-put
+           style
+           (emacsvox-aural--voice-dimension-key dimension)
+           (nth index settings))))
+        style))))
+
+(defun emacsvox-aural--join-voice-commands (&rest commands)
+  "Join nonempty adapter COMMANDS, returning nil when none remain."
+  (let ((commands
+         (cl-remove-if
+          (lambda (command)
+            (or (null command)
+                (and (stringp command) (string-empty-p command))))
+          commands)))
+    (when commands
+      (mapconcat #'identity commands " "))))
+
+(defun emacsvox-aural--style-acss (style)
+  "Return an ACSS record containing non-nil values from STYLE."
+  (unless (fboundp 'make-acss)
+    (emacsvox-aural--transport-error "ACSS voice support has not loaded"))
+  (make-acss
+   :family (plist-get style :family)
+   :average-pitch (plist-get style :average-pitch)
+   :pitch-range (plist-get style :pitch-range)
+   :stress (plist-get style :stress)
+   :richness (plist-get style :richness)))
+
+(defun emacsvox-aural--compile-personality-command (personality)
+  "Compile PERSONALITY with the selected speech adapter."
+  (unless (symbolp personality)
+    (emacsvox-aural--transport-error
+     "Voice did not resolve to a personality: %S" personality))
+  (unless (fboundp 'tts-get-voice-command)
+    (emacsvox-aural--transport-error
+     "The selected TTS adapter has no voice compiler"))
+  (tts-get-voice-command personality))
+
+(defun emacsvox-aural--compile-explicit-voice-style
+    (style palette provenance)
+  "Compile explicit STYLE through PALETTE with PROVENANCE."
+  (let* ((capability (emacsvox-aural-active-voice-capabilities))
+         (supported (plist-get capability :dimensions))
+         (preset-present (plist-member style :preset))
+         (preset (and preset-present (plist-get style :preset)))
+         (base
+          (when preset-present
+            (emacsvox-aural-compile-voice-style
+             preset palette provenance)))
+         (effective
+          (or
+           (and base
+                (copy-tree (emacsvox-aural-compiled-voice-style base)))
+           (emacsvox-aural--empty-voice-style)))
+         command-style
+         degradations)
+    (when
+        (and
+         base
+         (eq (emacsvox-aural-compiled-voice-command base) 'inaudible))
       (emacsvox-aural--transport-error
-       "Voice did not resolve to a personality: %S" voice))
-    (unless (fboundp 'tts-get-voice-command)
+       "Inaudible cannot be used as the base of an explicit voice style"))
+    (dolist (dimension emacsvox-aural-voice-dimensions)
+      (let ((key (emacsvox-aural--voice-dimension-key dimension)))
+        (when (plist-member style key)
+          (let ((value (plist-get style key)))
+            (setq effective (plist-put effective key nil))
+            (cond
+             ((null value))
+             ((memq dimension supported)
+              (setq command-style (plist-put command-style key value))
+              (setq effective (plist-put effective key value)))
+             (t
+              (push
+               (list
+                :reason 'unsupported-voice-dimension
+                :adapter (plist-get capability :adapter)
+                :dimension dimension
+                :requested value)
+               degradations)))))))
+    (let ((style-command
+           (when command-style
+             (unless (fboundp 'voice-from-acss)
+               (emacsvox-aural--transport-error
+                "ACSS voice support has not loaded"))
+             (emacsvox-aural--compile-personality-command
+              (voice-from-acss
+               (emacsvox-aural--style-acss command-style))))))
+      (emacsvox-aural--make-compiled-voice
+       :command
+       (emacsvox-aural--join-voice-commands
+        (and base (emacsvox-aural-compiled-voice-command base))
+        style-command)
+       :request (copy-tree style)
+       :style effective
+       :provenance (copy-tree provenance)
+       :capability capability
+       :degradations
+       (append
+        (and
+         base
+         (copy-tree (emacsvox-aural-compiled-voice-degradations base)))
+        (nreverse degradations))
+       :preset
+       (or
+        preset
+        (and base (emacsvox-aural-compiled-voice-preset base)))))))
+
+(defun emacsvox-aural-compile-voice-style
+    (voice &optional palette provenance)
+  "Compile VOICE once and return a concrete voice result.
+
+PALETTE defaults to the active palette.  PROVENANCE maps the winning preset
+and ACSS dimensions to the rules that supplied them."
+  (let* ((palette (or palette (emacsvox-aural--voice-palette)))
+         (capability (emacsvox-aural-active-voice-capabilities)))
+    (cond
+     ((null voice)
+      (emacsvox-aural--make-compiled-voice
+       :command nil
+       :request nil
+       :style (emacsvox-aural--empty-voice-style)
+       :provenance (copy-tree provenance)
+       :capability capability))
+     ((or
+       (eq voice 'inaudible)
+       (and (proper-list-p voice) (memq 'inaudible voice)))
+      (emacsvox-aural--make-compiled-voice
+       :command 'inaudible
+       :request (copy-tree voice)
+       :provenance (copy-tree provenance)
+       :capability capability
+       :preset 'inaudible))
+     ((or
+       (emacsvox-aural-voice-style-p voice)
+       (emacsvox-aural--acss-p voice))
+      (emacsvox-aural--compile-explicit-voice-style
+       (if (emacsvox-aural--acss-p voice)
+           (emacsvox-aural--acss-to-voice-style voice)
+         voice)
+       palette provenance))
+     ((and (proper-list-p voice) voice)
+      (let ((parts
+             (mapcar
+              (lambda (entry)
+                (emacsvox-aural-compile-voice-style
+                 entry palette provenance))
+              voice)))
+        (emacsvox-aural--make-compiled-voice
+         :command
+         (apply
+          #'emacsvox-aural--join-voice-commands
+          (mapcar #'emacsvox-aural-compiled-voice-command parts))
+         :request (copy-tree voice)
+         :provenance (copy-tree provenance)
+         :capability capability
+         :degradations
+         (apply
+          #'append
+         (mapcar
+           #'emacsvox-aural-compiled-voice-degradations parts))
+         :preset (copy-tree voice))))
+     ((symbolp voice)
+      (let ((palette-definition
+             (emacsvox-aural-voice voice palette)))
+        (if palette-definition
+            (let ((compiled
+                   (emacsvox-aural-compile-voice-style
+                    palette-definition palette provenance)))
+              (setf
+               (emacsvox-aural-compiled-voice-request compiled) voice
+               (emacsvox-aural-compiled-voice-preset compiled) voice)
+              compiled)
+          (let* ((resolved (emacsvox-aural--resolve-voice-name voice palette))
+                 (style (emacsvox-aural--personality-style voice)))
+            (emacsvox-aural--make-compiled-voice
+             :command
+             (emacsvox-aural--compile-personality-command resolved)
+             :request voice
+             :style style
+             :provenance (copy-tree provenance)
+             :capability capability
+             :preset voice)))))
+     (t
       (emacsvox-aural--transport-error
-       "The selected TTS adapter has no voice compiler"))
-    (tts-get-voice-command resolved)))
+       "Cannot compile voice value: %S" voice)))))
 
 (defun emacsvox-aural-compile-voice (voice &optional palette)
   "Compile VOICE through PALETTE to a concrete TTS command.
 
 Return `inaudible' when VOICE suppresses content, nil for the default voice,
 or a command string understood by the selected speech server."
-  (let ((palette (or palette (emacsvox-aural--voice-palette))))
-    (cond
-     ((null voice) nil)
-     ((or
-       (eq voice 'inaudible)
-       (and (proper-list-p voice) (memq 'inaudible voice)))
-      'inaudible)
-     ((and (listp voice) (proper-list-p voice))
-      (mapconcat
-       (lambda (entry)
-         (emacsvox-aural--one-voice-command entry palette))
-       voice
-       " "))
-     (t (emacsvox-aural--one-voice-command voice palette)))))
+  (emacsvox-aural-compiled-voice-command
+   (emacsvox-aural-compile-voice-style voice palette)))
 
 (defun emacsvox-aural--resolve-cue (cue pack)
   "Return concrete resource and sample identifier for CUE in PACK."
@@ -385,9 +635,16 @@ degradation records.  Return balance, capability, and degradation records."
         :spatial-capability (plist-get space :capability)
         :spatial-degradations (plist-get space :degradations))))
     ('speech
-     (let* ((voice-command
-             (emacsvox-aural-compile-voice
-              (emacsvox-aural-action-voice action) palette))
+     (let* ((voice
+             (emacsvox-aural-compile-voice-style
+              (emacsvox-aural-action-voice action)
+              palette
+              (mapcar
+               (lambda (property)
+                 (cons property (emacsvox-aural-action-source action)))
+               (cons 'preset emacsvox-aural-voice-dimensions))))
+            (voice-command
+             (emacsvox-aural-compiled-voice-command voice))
             (space
              (emacsvox-aural--compile-space
               (emacsvox-aural-action-space action)
@@ -402,6 +659,16 @@ degradation records.  Return balance, capability, and degradation records."
               (emacsvox-aural--render-text-template action facts)
             (emacsvox-aural-action-text action))
           :voice-command voice-command
+          :voice-request
+          (copy-tree (emacsvox-aural-compiled-voice-request voice))
+          :voice-style
+          (copy-tree (emacsvox-aural-compiled-voice-style voice))
+          :voice-provenance
+          (copy-tree (emacsvox-aural-compiled-voice-provenance voice))
+          :voice-capability
+          (copy-tree (emacsvox-aural-compiled-voice-capability voice))
+          :voice-degradations
+          (copy-tree (emacsvox-aural-compiled-voice-degradations voice))
           :source (emacsvox-aural-action-source action)
           :anchor (emacsvox-aural-action-anchor action)
           :requested-space
@@ -449,6 +716,8 @@ degradation records.  Return balance, capability, and degradation records."
            degradations
            (append
             (reverse
+             (emacsvox-aural-concrete-action-voice-degradations compiled))
+            (reverse
              (emacsvox-aural-concrete-action-spatial-degradations compiled))
             degradations)))
         (when
@@ -477,9 +746,13 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
          (palette (emacsvox-aural--voice-palette))
          (cue-target (or cue-target 'queued-cue))
          (style (emacsvox-aural-render-plan-content plan))
+         (voice
+          (emacsvox-aural-compile-voice-style
+           (emacsvox-aural-content-style-voice style)
+           palette
+           (emacsvox-aural-content-style-voice-provenance style)))
          (voice-command
-          (emacsvox-aural-compile-voice
-           (emacsvox-aural-content-style-voice style) palette))
+          (emacsvox-aural-compiled-voice-command voice))
          (speak
           (and
            (emacsvox-aural-content-style-speak style)
@@ -507,6 +780,7 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
       (emacsvox-aural--action-degradations
        (emacsvox-aural-render-plan-before plan) before)
       (plist-get content-space :degradations)
+      (copy-tree (emacsvox-aural-compiled-voice-degradations voice))
       (nreverse degradations)
       (emacsvox-aural--action-degradations
        (emacsvox-aural-render-plan-after plan) after)))
@@ -517,6 +791,16 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
       :text (plist-get facts :content)
       :speak speak
       :voice-command (unless (eq voice-command 'inaudible) voice-command)
+      :voice-request
+      (copy-tree (emacsvox-aural-compiled-voice-request voice))
+      :voice-style
+      (copy-tree (emacsvox-aural-compiled-voice-style voice))
+      :voice-provenance
+      (copy-tree (emacsvox-aural-compiled-voice-provenance voice))
+      :voice-capability
+      (copy-tree (emacsvox-aural-compiled-voice-capability voice))
+      :voice-degradations
+      (copy-tree (emacsvox-aural-compiled-voice-degradations voice))
       :requested-space
       (copy-tree (emacsvox-aural-content-style-space style))
       :balance (plist-get content-space :balance)

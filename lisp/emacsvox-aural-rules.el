@@ -43,6 +43,14 @@
   '(object run transition)
   "Lifetimes at which ordered aural actions may be emitted.")
 
+(defconst emacsvox-aural-voice-dimensions
+  '(family average-pitch pitch-range stress richness)
+  "Device-independent dimensions supported by aural voice styles.")
+
+(defconst emacsvox-aural--voice-style-keys
+  '(:preset :family :average-pitch :pitch-range :stress :richness)
+  "Properties accepted in an explicit aural voice style.")
+
 (defconst emacsvox-aural--selector-keys
   '(:role :event :events :state :states :module :mode :occasion
     :legacy-cue :legacy-face :legacy-personality :requires)
@@ -133,7 +141,7 @@
     (emacsvox-aural-content-style
      (:constructor emacsvox-aural--make-content-style))
   "Resolved scalar styling for object content."
-  speak voice volume space provenance)
+  speak voice volume space provenance voice-provenance)
 
 (cl-defstruct
     (emacsvox-aural-render-plan
@@ -169,6 +177,95 @@
     (emacsvox-aural--rule-error
      "%s must be a non-keyword symbol: %S" label value))
   value)
+
+(defun emacsvox-aural--acss-p (value)
+  "Return non-nil when VALUE is a `voice-setup' ACSS record."
+  (and
+   (recordp value)
+   (> (length value) 0)
+   (eq (aref value 0) 'acss)))
+
+(defun emacsvox-aural-voice-style-p (value)
+  "Return non-nil when VALUE is an explicit aural voice style plist.
+
+An explicit style may name a complete base with `:preset' and override any
+subset of the five device-independent ACSS dimensions."
+  (and
+   (emacsvox-aural--plist-p value)
+   (cl-loop
+    for (key _) on value by #'cddr
+    thereis (memq key emacsvox-aural--voice-style-keys))))
+
+(defun emacsvox-aural--voice-dimension-key (dimension)
+  "Return the keyword property corresponding to voice DIMENSION."
+  (intern (concat ":" (symbol-name dimension))))
+
+(defun emacsvox-aural--validate-voice-style (style label)
+  "Validate explicit voice STYLE described by LABEL and return STYLE."
+  (unless (emacsvox-aural-voice-style-p style)
+    (emacsvox-aural--rule-error
+     "%s must contain :preset or an ACSS dimension: %S" label style))
+  (let ((unknown
+         (cl-loop
+          for (key _) on style by #'cddr
+          unless (memq key emacsvox-aural--voice-style-keys)
+          collect key)))
+    (when unknown
+      (emacsvox-aural--rule-error
+       "Unknown properties in %s: %S" label unknown)))
+  (when (plist-member style :preset)
+    (let ((preset (plist-get style :preset)))
+      (unless (or
+               (null preset)
+               (and
+                (symbolp preset)
+                (not (keywordp preset))))
+        (emacsvox-aural--rule-error
+         "%s :preset must be a non-keyword symbol or nil: %S"
+         label preset))))
+  (when (plist-member style :family)
+    (let ((family (plist-get style :family)))
+      (unless (or (null family) (symbolp family) (stringp family))
+        (emacsvox-aural--rule-error
+         "%s :family must be a symbol, string, or nil: %S" label family))))
+  (dolist (dimension '(average-pitch pitch-range stress richness))
+    (let ((key (emacsvox-aural--voice-dimension-key dimension)))
+      (when (plist-member style key)
+        (let ((value (plist-get style key)))
+          (unless (or
+                   (null value)
+                   (and (integerp value) (<= 0 value 9)))
+            (emacsvox-aural--rule-error
+             "%s %S must be an integer from 0 through 9, or nil: %S"
+             label key value))))))
+  style)
+
+(defun emacsvox-aural-validate-voice-value (voice label)
+  "Validate declarative VOICE described by LABEL and return VOICE.
+
+Symbols and lists of personality symbols are complete presets.  Explicit
+style plists and raw ACSS records are composable.  Nil selects the default
+voice."
+  (cond
+   ((emacsvox-aural-voice-style-p voice)
+    (emacsvox-aural--validate-voice-style voice label))
+   ((or (null voice)
+        (and (symbolp voice) (not (keywordp voice)))
+        (emacsvox-aural--acss-p voice)
+        (and
+         (proper-list-p voice)
+         voice
+         (cl-every
+          (lambda (item)
+            (and (symbolp item) (not (keywordp item))))
+          voice)))
+    voice)
+   (t
+    (emacsvox-aural--rule-error
+     (concat
+      "%s must be a named preset, personality list, explicit ACSS style, "
+      "raw ACSS record, or nil: %S")
+     label voice))))
 
 (defun emacsvox-aural--require-kind (id kind label)
   "Return semantic ID when registered as KIND, otherwise report LABEL."
@@ -448,6 +545,9 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
     (when (and volume (not (numberp volume)))
       (emacsvox-aural--rule-error
        "Action volume must be numeric for %S" id))
+    (when (plist-member data :voice)
+      (emacsvox-aural-validate-voice-value
+       voice (format "Voice for action %S" id)))
     (unless (memq anchor emacsvox-aural-action-anchors)
       (emacsvox-aural--rule-error
        "Action anchor for %S must be object, run, or transition: %S"
@@ -640,6 +740,9 @@ explicit anchor."
       (when (and volume (not (numberp volume)))
         (emacsvox-aural--rule-error
          "Content volume must be numeric for %S" rule-id))
+      (when (plist-member data :voice)
+        (emacsvox-aural-validate-voice-value
+         (plist-get data :voice) (format "Content voice for %S" rule-id)))
       (when space
         (condition-case error
             (emacsvox-aural-spatial-validate-space
@@ -1197,6 +1300,81 @@ An omitted ANCHOR retains the original undivided resolution behavior."
     (assq-delete-all
      property (emacsvox-aural-content-style-provenance content)))))
 
+(defun emacsvox-aural--acss-to-voice-style (value)
+  "Convert raw ACSS VALUE to a partial declarative voice style."
+  (let (style)
+    (dolist (dimension emacsvox-aural-voice-dimensions)
+      (let* ((accessor (intern (format "acss-%s" dimension)))
+             (dimension-value
+              (and (fboundp accessor) (funcall accessor value))))
+        (when dimension-value
+          (setq
+           style
+           (plist-put
+            style
+            (emacsvox-aural--voice-dimension-key dimension)
+            dimension-value)))))
+    style))
+
+(defun emacsvox-aural--canonical-voice-style (voice)
+  "Return composable VOICE as a declarative style plist."
+  (cond
+   ((emacsvox-aural-voice-style-p voice) (copy-tree voice))
+   ((emacsvox-aural--acss-p voice)
+    (emacsvox-aural--acss-to-voice-style voice))
+   (t nil)))
+
+(defun emacsvox-aural--set-voice-provenance
+    (content property rule-id)
+  "Record RULE-ID as the provider of voice PROPERTY on CONTENT."
+  (setf
+   (emacsvox-aural-content-style-voice-provenance content)
+   (cons
+    (cons property rule-id)
+    (assq-delete-all
+     property
+     (emacsvox-aural-content-style-voice-provenance content)))))
+
+(defun emacsvox-aural--reset-voice-provenance (content rule-id)
+  "Record RULE-ID as the complete voice provider on CONTENT."
+  (setf
+   (emacsvox-aural-content-style-voice-provenance content)
+   (mapcar
+    (lambda (property) (cons property rule-id))
+    (cons 'preset emacsvox-aural-voice-dimensions))))
+
+(defun emacsvox-aural--apply-voice (content voice rule-id)
+  "Apply declarative VOICE from RULE-ID to CONTENT.
+
+Named voices replace the complete inherited voice.  Explicit style data
+overrides only the dimensions it mentions, unless it includes `:preset',
+which establishes a new complete base before applying those dimensions."
+  (if (or
+       (emacsvox-aural-voice-style-p voice)
+       (emacsvox-aural--acss-p voice))
+      (let* ((incoming (emacsvox-aural--canonical-voice-style voice))
+             (current (emacsvox-aural-content-style-voice content))
+             (result
+              (cond
+               ((emacsvox-aural-voice-style-p current)
+                (copy-tree current))
+               ((emacsvox-aural--acss-p current)
+                (emacsvox-aural--canonical-voice-style current))
+               (current (list :preset current))
+               (t nil))))
+        (when (plist-member incoming :preset)
+          (setq result (list :preset (plist-get incoming :preset)))
+          (emacsvox-aural--reset-voice-provenance content rule-id))
+        (dolist (dimension emacsvox-aural-voice-dimensions)
+          (let ((key (emacsvox-aural--voice-dimension-key dimension)))
+            (when (plist-member incoming key)
+              (setq result (plist-put result key (plist-get incoming key)))
+              (emacsvox-aural--set-voice-provenance
+               content dimension rule-id))))
+        (setf (emacsvox-aural-content-style-voice content) result))
+    (setf (emacsvox-aural-content-style-voice content) voice)
+    (emacsvox-aural--reset-voice-provenance content rule-id)))
+
 (defun emacsvox-aural--apply-content (content patch rule-id)
   "Apply scalar content PATCH from RULE-ID to CONTENT."
   (when (emacsvox-aural-content-patch-suppress patch)
@@ -1208,9 +1386,8 @@ An omitted ANCHOR retains the original undivided resolution behavior."
      (emacsvox-aural-content-patch-speak patch))
     (emacsvox-aural--set-content-provenance content 'speak rule-id))
   (when (emacsvox-aural-content-patch-voice-set-p patch)
-    (setf
-     (emacsvox-aural-content-style-voice content)
-     (emacsvox-aural-content-patch-voice patch))
+    (emacsvox-aural--apply-voice
+     content (emacsvox-aural-content-patch-voice patch) rule-id)
     (emacsvox-aural--set-content-provenance content 'voice rule-id))
   (when (emacsvox-aural-content-patch-volume-set-p patch)
     (setf

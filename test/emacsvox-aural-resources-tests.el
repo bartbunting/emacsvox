@@ -440,5 +440,47 @@
     (should (eq (alist-get 'bolden entries) 'voice-bolden))
     (should (eq (emacsvox-aural-voice 'smoothen) 'voice-smoothen))))
 
+(ert-deftest emacsvox-aural-resources-compile-safe-personal-voice-palette ()
+  "Personal palette data supports inherited personalities and complete styles."
+  (let ((emacsvox-aural-voice-palette-registry
+         (copy-hash-table emacsvox-aural-voice-palette-registry))
+        (style
+         '(:family paul :average-pitch 6 :pitch-range 4
+           :stress nil :richness 7)))
+    (emacsvox-aural-register-voice-palette-data
+     `(:schema-version 1
+       :id personal
+       :summary "Personal voices"
+       :parent acss-default
+       :entries
+       ((strong :personality voice-bolden)
+        (clear :style ,style)))
+     nil
+     'personal-data)
+    (should (eq (emacsvox-aural-voice 'strong 'personal) 'voice-bolden))
+    (should (equal (emacsvox-aural-voice 'clear 'personal) style))
+    (should
+     (equal
+      (emacsvox-aural-voice-palette-data
+       (emacsvox-aural-voice-palette 'personal))
+      `(:schema-version 1
+        :id personal
+        :summary "Personal voices"
+        :parent acss-default
+        :entries
+        ((strong :personality voice-bolden)
+         (clear :style ,style)))))))
+
+(ert-deftest emacsvox-aural-resources-require-complete-personal-style ()
+  "A named custom preset must state all five ACSS dimensions."
+  (should-error
+   (emacsvox-aural-compile-voice-palette-data
+    '(:schema-version 1
+      :id incomplete
+      :summary "Incomplete"
+      :entries
+      ((partial :style (:average-pitch 5)))))
+   :type 'emacsvox-aural-resource-error))
+
 (provide 'emacsvox-aural-resources-tests)
 ;;; emacsvox-aural-resources-tests.el ends here

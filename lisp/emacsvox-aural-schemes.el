@@ -20,6 +20,7 @@
 (defvar emacsvox-user-directory (expand-file-name "~/.emacsvox/")
   "Emacsvox user data directory.")
 (defvar emacsvox-sounds-current-pack)
+(defvar read-eval)
 (defvar emacsvox-aural-spatial-enabled)
 (defvar emacsvox-aural-spatial-speech-enabled)
 (defvar emacsvox-aural-spatial-cue-enabled)
@@ -100,7 +101,7 @@
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 3
+(defconst emacsvox-aural-user-data-schema-version 4
   "Current schema version for the personal scheme data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -114,9 +115,15 @@
   (setq data (plist-put data :profiles nil))
   (plist-put data :schema-version 3))
 
+(defun emacsvox-aural--migrate-user-data-v3-to-v4 (data)
+  "Add personal voice palettes to version 3 user DATA."
+  (setq data (plist-put data :voice-palettes nil))
+  (plist-put data :schema-version 4))
+
 (defconst emacsvox-aural--built-in-user-data-migrations
   '((1 . emacsvox-aural--migrate-user-data-v1-to-v2)
-    (2 . emacsvox-aural--migrate-user-data-v2-to-v3))
+    (2 . emacsvox-aural--migrate-user-data-v2-to-v3)
+    (3 . emacsvox-aural--migrate-user-data-v3-to-v4))
   "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil
@@ -134,6 +141,9 @@ consulting this extension alist.")
 
 (defvar emacsvox-aural-profile-applied-hook nil
   "Hook run after a saved presentation profile is applied.")
+
+(defvar emacsvox-aural-voice-palette-changed-hook nil
+  "Hook run after the selected voice-palette override changes.")
 
 (declare-function emacsvox-sounds-select-theme
                   "emacsvox-sounds" (&optional theme))
@@ -551,6 +561,11 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
            (emacsvox-aural-content-style-provenance content))))
       (setf (emacsvox-aural-content-style-voice content) legacy)
       (setf
+       (emacsvox-aural-content-style-voice-provenance content)
+       (mapcar
+        (lambda (property) (cons property source))
+        (cons 'preset emacsvox-aural-voice-dimensions)))
+      (setf
        (emacsvox-aural-content-style-provenance content)
        (cons
         (cons 'voice source)
@@ -755,11 +770,11 @@ selector plist such as `(:mode org-mode)' or `(:module org)'."
   spatial)
 
 (defun emacsvox-aural--validate-profile-data
-    (data &optional scheme-registry fragment-registry)
+    (data &optional scheme-registry fragment-registry palette-registry)
   "Validate and return presentation profile DATA.
 
-SCHEME-REGISTRY and FRAGMENT-REGISTRY permit validation of a complete user
-file before its entries replace the live registries."
+SCHEME-REGISTRY, FRAGMENT-REGISTRY, and PALETTE-REGISTRY permit validation of
+a complete user file before its entries replace the live registries."
   (emacsvox-aural--require-plist data "Presentation profile")
   (let* ((id (plist-get data :id))
          (summary (plist-get data :summary))
@@ -772,6 +787,8 @@ file before its entries replace the live registries."
           (or scheme-registry emacsvox-aural-scheme-registry))
          (fragment-registry
           (or fragment-registry emacsvox-aural-feature-fragment-registry))
+         (palette-registry
+          (or palette-registry emacsvox-aural-voice-palette-registry))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -811,8 +828,8 @@ file before its entries replace the live registries."
        palette "Presentation profile voice palette")
       (when
           (and
-           (> (hash-table-count emacsvox-aural-voice-palette-registry) 0)
-           (not (emacsvox-aural-voice-palette palette)))
+           (> (hash-table-count palette-registry) 0)
+           (not (gethash palette palette-registry)))
         (emacsvox-aural--scheme-error
          "Presentation profile %S names unknown voice palette %S"
          id palette)))
@@ -964,6 +981,9 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (when pack
             (emacsvox-sounds-select-theme pack))
           (setq completed t)
+          (unless (eq old-palette palette)
+            (run-hook-with-args
+             'emacsvox-aural-voice-palette-changed-hook palette))
           (run-hook-with-args 'emacsvox-aural-profile-applied-hook id))
       (unless completed
         (setq
@@ -1030,6 +1050,16 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
            (plist-get spatial :remapping)
            emacsvox-aural-spatial-remapping))))))))
 
+(defun emacsvox-aural-select-voice-palette (&optional palette)
+  "Select voice PALETTE as a global override, or nil to follow the scheme."
+  (when
+      (and palette (not (emacsvox-aural-voice-palette palette)))
+    (emacsvox-aural--scheme-error
+     "Unknown voice palette: %S" palette))
+  (setq emacsvox-aural-voice-palette-override palette)
+  (run-hook-with-args 'emacsvox-aural-voice-palette-changed-hook palette)
+  palette)
+
 (defun emacsvox-aural--validate-user-data (data)
   "Validate and return current-schema user DATA."
   (emacsvox-aural--require-plist data "Aural user data")
@@ -1037,6 +1067,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
         (schemes (plist-get data :schemes))
         (fragments (plist-get data :feature-fragments))
         (enabled (plist-get data :enabled-feature-fragments))
+        (palettes (plist-get data :voice-palettes))
         (profiles (plist-get data :profiles))
         (rules (plist-get data :user-rules))
         (unknown
@@ -1046,7 +1077,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (memq
            key
            '(:schema-version :schemes :feature-fragments
-             :enabled-feature-fragments :profiles :user-rules))
+             :enabled-feature-fragments :voice-palettes
+             :profiles :user-rules))
           collect key)))
     (unless (eq version emacsvox-aural-user-data-schema-version)
       (emacsvox-aural--scheme-error
@@ -1061,11 +1093,16 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     (unless (listp profiles)
       (emacsvox-aural--scheme-error
        "Presentation profiles must be a list"))
+    (unless (listp palettes)
+      (emacsvox-aural--scheme-error
+       "Personal voice palettes must be a list"))
     (unless (listp rules)
       (emacsvox-aural--scheme-error "User rules must be a list"))
     (let ((scheme-registry (emacsvox-aural--built-in-scheme-registry))
           (fragment-registry
            (emacsvox-aural--built-in-feature-fragment-registry))
+          (palette-registry
+           (emacsvox-aural--built-in-voice-palette-registry))
           profile-ids)
       (dolist (scheme schemes)
         (let* ((compiled (emacsvox-aural-compile-scheme scheme))
@@ -1084,9 +1121,26 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (puthash id t fragment-registry)))
       (emacsvox-aural--validate-enabled-feature-fragments
        enabled fragment-registry)
+      (dolist (palette palettes)
+        (condition-case error
+            (let* ((compiled
+                    (emacsvox-aural-compile-voice-palette-data palette))
+                   (id (emacsvox-aural-voice-palette-id compiled)))
+              (when (gethash id palette-registry)
+                (emacsvox-aural--scheme-error
+                 "Duplicate or protected personal voice palette: %S" id))
+              (puthash id compiled palette-registry))
+          (emacsvox-aural-resource-error
+           (emacsvox-aural--scheme-error
+            "%s" (error-message-string error)))))
+      (let ((emacsvox-aural-voice-palette-registry palette-registry))
+        (maphash
+         (lambda (id _)
+           (emacsvox-aural-effective-voice-entries id))
+         palette-registry))
       (dolist (profile profiles)
         (emacsvox-aural--validate-profile-data
-         profile scheme-registry fragment-registry)
+         profile scheme-registry fragment-registry palette-registry)
         (let ((id (plist-get profile :id)))
           (when (memq id profile-ids)
             (emacsvox-aural--scheme-error
@@ -1128,7 +1182,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
         (insert-file-contents file)
         (emacs-lisp-mode)
         (goto-char (point-min))
-        (let ((data (read (current-buffer))))
+        (let* ((read-eval nil)
+               (data (read (current-buffer))))
           (forward-comment (point-max))
           (unless (eobp)
             (emacsvox-aural--scheme-error
@@ -1155,6 +1210,16 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
      emacsvox-aural-feature-fragment-registry)
     registry))
 
+(defun emacsvox-aural--built-in-voice-palette-registry ()
+  "Return a registry containing only current built-in voice palettes."
+  (let ((registry (make-hash-table :test #'eq)))
+    (maphash
+     (lambda (id palette)
+       (when (emacsvox-aural-voice-palette-built-in palette)
+         (puthash id palette registry)))
+     emacsvox-aural-voice-palette-registry)
+    registry))
+
 (defun emacsvox-aural-load-user-data (&optional file)
   "Load personal schemes and rules from FILE.
 
@@ -1163,14 +1228,18 @@ The file is read as data and is never evaluated."
     (let ((schemes (plist-get data :schemes))
           (fragments (plist-get data :feature-fragments))
           (enabled (plist-get data :enabled-feature-fragments))
+          (palettes (plist-get data :voice-palettes))
           (profiles (plist-get data :profiles))
           (rules (plist-get data :user-rules))
           (registry (emacsvox-aural--built-in-scheme-registry))
           (fragment-registry
            (emacsvox-aural--built-in-feature-fragment-registry))
+          (palette-registry
+           (emacsvox-aural--built-in-voice-palette-registry))
           (profile-registry (make-hash-table :test #'eq))
           entries
-          fragment-entries)
+          fragment-entries
+          palette-entries)
       (dolist (scheme schemes)
         (let* ((compiled (emacsvox-aural-compile-scheme scheme))
                (id (emacsvox-aural-scheme-id compiled)))
@@ -1211,9 +1280,27 @@ The file is read as data and is never evaluated."
          (emacsvox-aural-feature-fragment-entry-id entry)
          entry
          fragment-registry))
+      (dolist (palette palettes)
+        (condition-case error
+            (let* ((entry
+                    (emacsvox-aural-compile-voice-palette-data
+                     palette nil (or file emacsvox-aural-schemes-file)))
+                   (id (emacsvox-aural-voice-palette-id entry)))
+              (when (gethash id palette-registry)
+                (emacsvox-aural--scheme-error
+                 "Personal voice palette cannot replace built-in %S" id))
+              (push entry palette-entries))
+          (emacsvox-aural-resource-error
+           (emacsvox-aural--scheme-error
+            "%s" (error-message-string error)))))
+      (dolist (entry palette-entries)
+        (puthash
+         (emacsvox-aural-voice-palette-id entry)
+         entry
+         palette-registry))
       (dolist (profile profiles)
         (emacsvox-aural--validate-profile-data
-         profile registry fragment-registry)
+         profile registry fragment-registry palette-registry)
         (let* ((id (plist-get profile :id))
                (entry
                 (emacsvox-aural--make-profile-entry
@@ -1227,6 +1314,7 @@ The file is read as data and is never evaluated."
       ;; Validate the complete replacement before changing live state.
       (let ((emacsvox-aural-scheme-registry registry)
             (emacsvox-aural-feature-fragment-registry fragment-registry)
+            (emacsvox-aural-voice-palette-registry palette-registry)
             (emacsvox-aural-profile-registry profile-registry)
             (emacsvox-aural-enabled-feature-fragments enabled)
             (emacsvox-aural-user-rules rules))
@@ -1238,10 +1326,15 @@ The file is read as data and is never evaluated."
         (emacsvox-aural--scheme-chain emacsvox-aural-active-scheme)
         (emacsvox-aural--validate-enabled-feature-fragments
          enabled fragment-registry)
+        (maphash
+         (lambda (id _)
+           (emacsvox-aural-effective-voice-entries id))
+         palette-registry)
         (emacsvox-aural-current-rules))
       (setq
        emacsvox-aural-scheme-registry registry
        emacsvox-aural-feature-fragment-registry fragment-registry
+       emacsvox-aural-voice-palette-registry palette-registry
        emacsvox-aural-profile-registry profile-registry
        emacsvox-aural-enabled-feature-fragments (copy-sequence enabled)
        emacsvox-aural-user-rules (copy-tree rules))
@@ -1249,8 +1342,8 @@ The file is read as data and is never evaluated."
       data)))
 
 (defun emacsvox-aural-user-data ()
-  "Return current personal schemes, fragments, profiles, and rules as data."
-  (let (schemes fragments profiles)
+  "Return current personal schemes, fragments, palettes, profiles, and rules."
+  (let (schemes fragments palettes profiles)
     (maphash
      (lambda (_ entry)
        (unless (emacsvox-aural-scheme-entry-built-in entry)
@@ -1263,6 +1356,13 @@ The file is read as data and is never evaluated."
           (copy-tree (emacsvox-aural-feature-fragment-entry-data entry))
           fragments)))
      emacsvox-aural-feature-fragment-registry)
+    (maphash
+     (lambda (_ palette)
+       (unless (emacsvox-aural-voice-palette-built-in palette)
+         (push
+          (emacsvox-aural-voice-palette-data-form palette)
+          palettes)))
+     emacsvox-aural-voice-palette-registry)
     (maphash
      (lambda (_ entry)
        (push
@@ -1286,6 +1386,14 @@ The file is read as data and is never evaluated."
          (symbol-name (plist-get left :id))
          (symbol-name (plist-get right :id))))))
     (setq
+     palettes
+     (sort
+      palettes
+      (lambda (left right)
+        (string-lessp
+         (symbol-name (plist-get left :id))
+         (symbol-name (plist-get right :id))))))
+    (setq
      profiles
      (sort
       profiles
@@ -1299,6 +1407,7 @@ The file is read as data and is never evaluated."
      :feature-fragments fragments
      :enabled-feature-fragments
      (copy-sequence emacsvox-aural-enabled-feature-fragments)
+     :voice-palettes palettes
      :profiles profiles
      :user-rules (copy-tree emacsvox-aural-user-rules))))
 

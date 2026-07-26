@@ -194,6 +194,11 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                (lambda (value)
                  (push (list 'acss value) events)
                  'generated-voice))
+              ((symbol-function 'emacsvox-aural-active-voice-capabilities)
+               (lambda ()
+                 '(:adapter test
+                   :dimensions
+                   (family average-pitch pitch-range stress richness))))
               ((symbol-function 'tts-get-voice-command)
                (lambda (voice)
                  (push (list 'adapter voice) events)
@@ -206,6 +211,77 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
      (equal
       (nreverse events)
       `((acss ,style) (adapter generated-voice))))))
+
+(ert-deftest emacsvox-aural-transport-compiles-named-base-and-partial-style ()
+  "A named base and explicit overlay compile once with effective ACSS data."
+  (let (generated adapter-calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+          (lambda ()
+            '(:adapter test
+              :dimensions
+              (family average-pitch pitch-range stress richness))))
+         ((symbol-function 'voice-from-acss)
+          (lambda (style)
+            (setq generated style)
+            'generated-overlay))
+         ((symbol-function 'tts-get-voice-command)
+          (lambda (voice)
+            (push voice adapter-calls)
+            (format "<%s>" voice))))
+      (let* ((provenance
+              '((preset . base-rule) (pitch-range . overlay-rule)))
+             (compiled
+              (emacsvox-aural-compile-voice-style
+               '(:preset bolden :pitch-range 3)
+               'acss-default
+               provenance)))
+        (should
+         (equal
+          (emacsvox-aural-compiled-voice-command compiled)
+          (format
+           "%s <generated-overlay>"
+           (emacsvox-test--transport-adapter-command 'voice-bolden))))
+        (should (equal (nreverse adapter-calls)
+                       (list
+                        (if (boundp 'voice-bolden)
+                            (symbol-value 'voice-bolden)
+                          'voice-bolden)
+                        'generated-overlay)))
+        (should (= (acss-pitch-range generated) 3))
+        (should
+         (= (plist-get
+             (emacsvox-aural-compiled-voice-style compiled)
+             :pitch-range)
+            3))
+        (should
+         (equal
+          (emacsvox-aural-compiled-voice-provenance compiled)
+          provenance))
+        (should-not
+         (emacsvox-aural-compiled-voice-degradations compiled))))))
+
+(ert-deftest emacsvox-aural-transport-records-unsupported-voice-dimension ()
+  "Unsupported explicit ACSS data degrades to the adapter default visibly."
+  (cl-letf
+      (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+        (lambda ()
+          '(:adapter limited :dimensions (average-pitch)))))
+    (let* ((compiled
+            (emacsvox-aural-compile-voice-style '(:richness 8)))
+           (degradation
+            (car
+             (emacsvox-aural-compiled-voice-degradations compiled))))
+      (should-not (emacsvox-aural-compiled-voice-command compiled))
+      (should-not
+       (plist-get
+        (emacsvox-aural-compiled-voice-style compiled) :richness))
+      (should
+       (eq
+        (plist-get degradation :reason)
+        'unsupported-voice-dimension))
+      (should (eq (plist-get degradation :dimension) 'richness))
+      (should (eq (plist-get degradation :adapter) 'limited)))))
 
 (ert-deftest emacsvox-aural-spatial-reduces-azimuth-to-stereo ()
   "Listener-relative azimuth uses the documented sine stereo fallback."

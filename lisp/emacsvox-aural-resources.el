@@ -51,8 +51,8 @@
 (cl-defstruct
     (emacsvox-aural-voice-palette
      (:constructor emacsvox-aural--make-voice-palette))
-  "A named collection of device-independent personality symbols."
-  id summary parent entries)
+  "A named collection of complete device-independent voice presets."
+  id summary parent entries built-in source data)
 
 (defvar emacsvox-aural-cue-registry (make-hash-table :test #'eq)
   "Map cue identifiers to `emacsvox-aural-cue' records.")
@@ -75,6 +75,9 @@
 (defvar emacsvox-aural-voice-palette-registry
   (make-hash-table :test #'eq)
   "Map voice-palette identifiers to palette records.")
+
+(defconst emacsvox-aural-voice-palette-schema-version 1
+  "Current safe data schema for personal voice palettes.")
 
 (defconst emacsvox-aural-resource-pack-manifest
   "emacsvox-sound-pack.el"
@@ -297,9 +300,57 @@ sound directories."
     (puthash id record emacsvox-aural-resource-pack-registry)
     record))
 
+(defun emacsvox-aural--complete-voice-style-p (value)
+  "Return non-nil when VALUE is a complete explicit ACSS preset."
+  (and
+   (emacsvox-aural-voice-style-p value)
+   (not (plist-member value :preset))
+   (cl-every
+    (lambda (dimension)
+      (plist-member
+       value (emacsvox-aural--voice-dimension-key dimension)))
+    emacsvox-aural-voice-dimensions)))
+
+(defun emacsvox-aural--validate-palette-entry (entry palette-id)
+  "Validate voice palette ENTRY belonging to PALETTE-ID."
+  (unless
+      (and
+       (consp entry)
+       (symbolp (car entry))
+       (car entry)
+       (not (keywordp (car entry))))
+    (emacsvox-aural--resource-error
+     "Voice palette %S contains an invalid entry name: %S"
+     palette-id entry))
+  (let ((definition (cdr entry)))
+    (cond
+     ((and
+       (symbolp definition)
+       definition
+       (not (keywordp definition))))
+     ((emacsvox-aural--complete-voice-style-p definition)
+      (condition-case error
+          (emacsvox-aural-validate-voice-value
+           definition
+           (format "Voice %S in palette %S" (car entry) palette-id))
+        (emacsvox-aural-rule-error
+         (emacsvox-aural--resource-error
+          "%s" (error-message-string error)))))
+     (t
+      (emacsvox-aural--resource-error
+       (concat
+        "Voice %S in palette %S must be a personality symbol or a complete "
+        "ACSS style containing all five dimensions: %S")
+       (car entry) palette-id definition))))
+  entry)
+
 (cl-defun emacsvox-aural-register-voice-palette
-    (id &key summary parent entries)
-  "Register voice palette ID with named personality ENTRIES."
+    (id &key summary parent entries built-in source data)
+  "Register voice palette ID with complete named ENTRIES.
+
+Each entry maps a name to either an existing personality symbol or a complete
+explicit ACSS style.  BUILT-IN, SOURCE, and safe declarative DATA are retained
+for management and persistence."
   (emacsvox-aural--validate-id id "Voice palette identifier")
   (emacsvox-aural--validate-summary summary (format "Voice palette %S" id))
   (when parent
@@ -307,15 +358,11 @@ sound directories."
   (unless
       (and
        (listp entries)
-       (cl-every
-        (lambda (entry)
-          (and
-           (consp entry)
-           (symbolp (car entry))
-           (symbolp (cdr entry))))
-        entries))
+       (cl-every #'consp entries))
     (emacsvox-aural--resource-error
-     "Voice palette %S entries must map symbols to personalities" id))
+     "Voice palette %S entries must be named pairs" id))
+  (dolist (entry entries)
+    (emacsvox-aural--validate-palette-entry entry id))
   (when (gethash id emacsvox-aural-voice-palette-registry)
     (emacsvox-aural--resource-error
      "Voice palette is already registered: %S" id))
@@ -328,9 +375,131 @@ sound directories."
           :id id
           :summary summary
           :parent parent
-          :entries (copy-tree entries))))
+          :entries (copy-tree entries)
+          :built-in built-in
+          :source source
+          :data (copy-tree data))))
     (puthash id record emacsvox-aural-voice-palette-registry)
     record))
+
+(defun emacsvox-aural--compile-voice-palette-entry (data palette-id)
+  "Compile safe voice entry DATA for PALETTE-ID."
+  (unless (and (consp data) (symbolp (car data)))
+    (emacsvox-aural--resource-error
+     "Voice palette %S entry must start with a symbol: %S" palette-id data))
+  (let* ((name (car data))
+         (properties (cdr data))
+         (allowed '(:personality :style))
+         (unknown
+          (and
+           (emacsvox-aural--plist-p properties)
+           (cl-loop
+            for (key _) on properties by #'cddr
+            unless (memq key allowed)
+            collect key))))
+    (unless (emacsvox-aural--plist-p properties)
+      (emacsvox-aural--resource-error
+       "Voice %S in palette %S must use keyword properties"
+       name palette-id))
+    (when unknown
+      (emacsvox-aural--resource-error
+       "Unknown properties for voice %S in palette %S: %S"
+       name palette-id unknown))
+    (when
+        (eq
+         (and (plist-member properties :personality) t)
+         (and (plist-member properties :style) t))
+      (emacsvox-aural--resource-error
+       "Voice %S in palette %S must have exactly one of :personality or :style"
+       name palette-id))
+    (let ((definition
+           (if (plist-member properties :personality)
+               (plist-get properties :personality)
+             (copy-tree (plist-get properties :style)))))
+      (emacsvox-aural--validate-palette-entry
+       (cons name definition) palette-id))))
+
+(defun emacsvox-aural-compile-voice-palette-data
+    (data &optional built-in source)
+  "Compile safe voice palette DATA without registering it.
+
+BUILT-IN and SOURCE become immutable management metadata on the result."
+  (unless (emacsvox-aural--plist-p data)
+    (emacsvox-aural--resource-error
+     "Voice palette data must be a keyword plist: %S" data))
+  (let* ((allowed
+          '(:schema-version :id :summary :parent :entries))
+         (unknown
+          (cl-loop
+           for (key _) on data by #'cddr
+           unless (memq key allowed)
+           collect key))
+         (version (plist-get data :schema-version))
+         (id (plist-get data :id))
+         (summary (plist-get data :summary))
+         (parent (plist-get data :parent))
+         (raw-entries (plist-get data :entries)))
+    (when unknown
+      (emacsvox-aural--resource-error
+       "Unknown voice palette properties: %S" unknown))
+    (unless (eq version emacsvox-aural-voice-palette-schema-version)
+      (emacsvox-aural--resource-error
+       "Unsupported voice palette schema version: %S" version))
+    (emacsvox-aural--validate-id id "Voice palette identifier")
+    (emacsvox-aural--validate-summary summary (format "Voice palette %S" id))
+    (when parent
+      (emacsvox-aural--validate-id parent (format "Parent palette for %S" id)))
+    (unless (listp raw-entries)
+      (emacsvox-aural--resource-error
+       "Voice palette %S entries must be a list" id))
+    (let ((entries
+           (mapcar
+            (lambda (entry)
+              (emacsvox-aural--compile-voice-palette-entry entry id))
+            raw-entries)))
+      (let ((names (mapcar #'car entries)))
+        (unless
+            (= (length names) (length (delete-dups (copy-sequence names))))
+          (emacsvox-aural--resource-error
+           "Voice palette %S contains duplicate names" id)))
+      (emacsvox-aural--make-voice-palette
+       :id id
+       :summary summary
+       :parent parent
+       :entries entries
+       :built-in built-in
+       :source source
+       :data (copy-tree data)))))
+
+(defun emacsvox-aural-register-voice-palette-data
+    (data &optional built-in source)
+  "Compile and register safe voice palette DATA."
+  (let* ((record
+          (emacsvox-aural-compile-voice-palette-data
+           data built-in source))
+         (id (emacsvox-aural-voice-palette-id record)))
+    (when (gethash id emacsvox-aural-voice-palette-registry)
+      (emacsvox-aural--resource-error
+       "Voice palette is already registered: %S" id))
+    (puthash id record emacsvox-aural-voice-palette-registry)
+    record))
+
+(defun emacsvox-aural-voice-palette-data-form (palette)
+  "Return safe persistent data for voice PALETTE."
+  (or
+   (copy-tree (emacsvox-aural-voice-palette-data palette))
+   (list
+    :schema-version emacsvox-aural-voice-palette-schema-version
+    :id (emacsvox-aural-voice-palette-id palette)
+    :summary (emacsvox-aural-voice-palette-summary palette)
+    :parent (emacsvox-aural-voice-palette-parent palette)
+    :entries
+    (mapcar
+     (lambda (entry)
+       (if (symbolp (cdr entry))
+           (list (car entry) :personality (cdr entry))
+         (list (car entry) :style (copy-tree (cdr entry)))))
+     (emacsvox-aural-voice-palette-entries palette)))))
 
 (defun emacsvox-aural-cue (id)
   "Return registered cue ID, or nil."
@@ -347,6 +516,14 @@ sound directories."
 (defun emacsvox-aural-voice-palette (id)
   "Return registered voice palette ID, or nil."
   (gethash id emacsvox-aural-voice-palette-registry))
+
+(defun emacsvox-aural-voice-palette-candidates ()
+  "Return registered voice-palette identifiers as sorted strings."
+  (let (ids)
+    (maphash
+     (lambda (id _) (push (symbol-name id) ids))
+     emacsvox-aural-voice-palette-registry)
+    (sort ids #'string-lessp)))
 
 (defun emacsvox-aural-resource-pack-candidates (&optional kind)
   "Return registered pack identifiers as strings, optionally limited to KIND."
@@ -778,7 +955,7 @@ resolved file, rather than unconditionally from the selected child pack."
       entries)))
 
 (defun emacsvox-aural-voice (name &optional palette-id)
-  "Return the personality for NAME in PALETTE-ID or the default palette."
+  "Return the complete voice preset for NAME in PALETTE-ID."
   (alist-get
    name
    (emacsvox-aural-effective-voice-entries
@@ -791,7 +968,10 @@ resolved file, rather than unconditionally from the selected child pack."
         (entry
          (emacsvox-aural-effective-voice-entries
           (or palette-id 'acss-default)))
-      (unless (boundp (cdr entry))
+      (when
+          (and
+           (symbolp (cdr entry))
+           (not (boundp (cdr entry))))
         (push (cdr entry) missing)))
     (sort
      (delete-dups missing)
@@ -874,7 +1054,9 @@ resolved file, rather than unconditionally from the selected child pack."
     (emacsvox-aural-register-voice-palette
      'acss-default
      :summary "Existing device-independent ACSS personalities"
-     :entries emacsvox-aural-default-voice-entries)))
+     :entries emacsvox-aural-default-voice-entries
+     :built-in t
+     :source 'emacsvox-aural-resources)))
 
 (defun emacsvox-aural-register-bundled-resources (sounds-directory)
   "Register bundled packs and discover local packs below SOUNDS-DIRECTORY."

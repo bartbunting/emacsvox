@@ -244,6 +244,100 @@
       (emacsvox-aural-render-plan-matched-rules plan)
       '(folded-heading heading-level-one)))))
 
+(ert-deftest emacsvox-aural-rules-compose-explicit-voice-dimensions ()
+  "Explicit ACSS data composes by dimension over a complete named preset."
+  (let* ((rules
+          (list
+           (emacsvox-test--compile-rule
+            'base '(:role heading)
+            '(:content (:voice bolden))
+            'core)
+           (emacsvox-test--compile-rule
+            'pitch '(:role heading)
+            '(:content (:voice (:average-pitch 2)))
+            'scheme)
+           (emacsvox-test--compile-rule
+            'richness '(:role heading)
+            '(:content (:voice (:richness 8)))
+            'user)))
+         (content
+          (emacsvox-aural-render-plan-content
+           (emacsvox-aural-resolve
+            '(:role heading)
+            '(:mode org-mode :occasion navigation)
+            rules))))
+    (should
+     (equal
+      (emacsvox-aural-content-style-voice content)
+      '(:preset bolden :average-pitch 2 :richness 8)))
+    (should
+     (eq
+      (alist-get
+       'preset
+       (emacsvox-aural-content-style-voice-provenance content))
+      'base))
+    (should
+     (eq
+      (alist-get
+       'average-pitch
+       (emacsvox-aural-content-style-voice-provenance content))
+      'pitch))
+    (should
+     (eq
+      (alist-get
+       'richness
+       (emacsvox-aural-content-style-voice-provenance content))
+      'richness))
+    (should
+     (eq
+      (alist-get
+       'stress
+       (emacsvox-aural-content-style-voice-provenance content))
+      'base))))
+
+(ert-deftest emacsvox-aural-rules-named-voice-resets-partial-style ()
+  "A stronger named preset discards every inherited ACSS override."
+  (let* ((rules
+          (list
+           (emacsvox-test--compile-rule
+            'partial '(:role heading)
+            '(:content (:voice (:average-pitch 2)))
+            'core)
+           (emacsvox-test--compile-rule
+            'reset '(:role heading)
+            '(:content (:voice lighten))
+            'user)))
+         (content
+          (emacsvox-aural-render-plan-content
+           (emacsvox-aural-resolve
+            '(:role heading)
+            '(:mode org-mode :occasion navigation)
+            rules))))
+    (should (eq (emacsvox-aural-content-style-voice content) 'lighten))
+    (dolist (property (cons 'preset emacsvox-aural-voice-dimensions))
+      (should
+       (eq
+        (alist-get
+         property
+         (emacsvox-aural-content-style-voice-provenance content))
+        'reset)))))
+
+(ert-deftest emacsvox-aural-rules-validate-explicit-voice-style ()
+  "Voice styles reject unknown, out-of-range, and malformed properties."
+  (dolist
+      (voice
+       '((:average-pitch 10)
+         (:stress -1)
+         (:family 42)
+         (:unknown 4)
+         (:preset :keyword)))
+    (should-error
+     (emacsvox-test--compile-rule
+      'invalid-voice
+      '(:role heading)
+      `(:content (:voice ,voice)))
+     :type 'emacsvox-aural-rule-error)))
+
 (ert-deftest emacsvox-aural-rules-compose-layered-face-presentations ()
   "Every named face may add actions while the strongest face wins voice ties."
   (let* ((warning

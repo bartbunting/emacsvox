@@ -137,7 +137,7 @@
              (eq
               (plist-get
                (emacsvox-aural-read-user-data) :schema-version)
-              3))
+              4))
             (setq emacsvox-aural-profile-registry
                   (make-hash-table :test #'eq))
             (emacsvox-aural-load-user-data)

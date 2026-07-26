@@ -622,7 +622,7 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain profiles schemes features face-presentation
+                '(explain profiles schemes voices features face-presentation
                   buffer-rules semantics sounds spatial spatial-settings
                   training diagnostics)))
               (dolist
@@ -637,6 +637,7 @@
                      ("<right>" . emacsvox-aural-home-next-column)
                      ("<left>" . emacsvox-aural-home-previous-column)
                      ("x" . emacsvox-aural-home-explain)
+                     ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
                      ("g" . emacsvox-aural-home-refresh)
                      ("?" . emacsvox-aural-home-help)))
@@ -715,6 +716,7 @@
         emacsvox-aural-semantics-mode-map
         emacsvox-aural-schemes-mode-map
         emacsvox-aural-feature-fragments-mode-map
+        emacsvox-aural-voice-palettes-mode-map
         emacsvox-aural-scheme-editor-mode-map
         emacsvox-aural-simple-editor-mode-map))
     (should
@@ -1442,7 +1444,8 @@
     (with-temp-buffer
       (emacsvox-test--setup-simple-editor 'face-test)
       (cl-letf
-          (((symbol-function 'read-string)
+          (((symbol-function 'emacsvox-speak-line) #'ignore)
+           ((symbol-function 'read-string)
             (lambda (prompt &rest _)
               (if (string-match-p "Presentation name" prompt)
                   "Warning face"
