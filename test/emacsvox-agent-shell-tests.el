@@ -286,6 +286,42 @@
          ,@body
          (nreverse ,event-log)))))
 
+(defmacro emacsvox-agent-shell-test--capture-presentations (&rest body)
+  "Run BODY and return aural facts observed by compatibility output."
+  (declare (indent 0) (debug t))
+  (let ((presentations (make-symbol "presentations")))
+    `(let ((,presentations nil))
+       (cl-labels
+           ((capture
+             (kind value)
+             (push
+              (list
+               kind value
+               (copy-tree emacsvox-aural-submission-facts)
+               emacsvox-aural-submission-module
+               emacsvox-aural-submission-occasion
+               (copy-tree emacsvox-aural-submission-context))
+              ,presentations)))
+         (cl-letf
+             (((symbol-function 'emacsvox-icon)
+               (lambda (icon) (capture 'icon icon)))
+              ((symbol-function 'tts-notify-icon)
+               (lambda (icon) (capture 'notify-icon icon)))
+              ((symbol-function 'tts-speak)
+               (lambda (text) (capture 'speak text)))
+              ((symbol-function 'tts-notify)
+               (lambda (text &optional _) (capture 'notify text)))
+              ((symbol-function 'message)
+               (lambda (format-string &rest arguments)
+                 (capture
+                  'message
+                  (apply #'format-message format-string arguments))))
+              ((symbol-function
+                'emacsvox-agent-shell--session-focused-p)
+               (lambda (&optional _) t)))
+           ,@body
+           (nreverse ,presentations))))))
+
 (defun emacsvox-agent-shell-test--face-at-text (string text)
   "Return STRING's face at the first occurrence of TEXT."
   (when-let* ((position (string-match (regexp-quote text) string)))
@@ -4398,6 +4434,137 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (cancel-timer timer))
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-agent-shell-end-to-end-vocabulary-is-registered ()
+  "Every Agent Shell presentation category has registered intent."
+  (dolist
+      (id
+       '(agent-user-prompt agent-plan agent-block agent-source-block
+         agent-table agent-table-cell agent-viewport agent-prompt-editor
+         agent-error agent-block-kind agent-tool-status agent-table-row
+         agent-table-column agent-source-language agent-speech-level
+         agent-viewport-mode agent-prompt-disposition
+         agent-permission-result agent-session-opened
+         agent-session-interrupted agent-setting-changed
+         agent-content-inspected agent-content-copied agent-table-entered
+         agent-table-exited agent-viewport-opened agent-viewport-refreshed
+         agent-prompt-opened agent-prompt-submitted agent-prompt-cancelled
+         agent-tool-status-changed agent-permission-requested
+         agent-permission-resolved))
+    (should (emacsvox-aural-semantic id))))
+
+(ert-deftest emacsvox-agent-shell-content-categories-carry-specific-intent ()
+  "Turn content must expose its role before compatibility output."
+  (dolist
+      (entry
+       '((agent-message . agent-response)
+         (user-message . agent-user-prompt)
+         (thought . agent-thought)
+         (tool-call . agent-tool)
+         (permission . permission-request)
+         (plan . agent-plan)
+         (error . agent-error)
+         (unknown . agent-block)))
+    (should
+     (eq
+      (plist-get
+       (emacsvox-agent-shell-content-facts (car entry))
+       :role)
+      (cdr entry))))
+  (let* ((presentations
+          (emacsvox-agent-shell-test--capture-presentations
+            (let ((emacsvox-agent-shell-speech-level 'full))
+              (emacsvox-agent-shell--speak-content "One step" 'plan))))
+         (presentation (car presentations)))
+    (should (eq (car presentation) 'icon))
+    (should (eq (plist-get (nth 2 presentation) :role) 'agent-plan))
+    (should (eq (nth 3 presentation) 'agent-shell))
+    (should (eq (nth 4 presentation) 'continuous))
+    (should (eq (plist-get (nth 5 presentation) :module) 'agent-shell))))
+
+(ert-deftest emacsvox-agent-shell-source-block-presentation-is-complete ()
+  "Source-block inspection carries role, language, module, and occasion."
+  (emacsvox-agent-shell-test--with-rendered-source-blocks
+    (setq major-mode 'agent-shell-mode)
+    (goto-char (point-min))
+    (search-forward "(message")
+    (backward-char (length "(message"))
+    (let* ((presentations
+            (emacsvox-agent-shell-test--capture-presentations
+              (emacsvox-agent-shell-speak-source-block)))
+           (presentation (car presentations))
+           (facts (nth 2 presentation)))
+      (should (eq (plist-get facts :role) 'agent-source-block))
+      (should
+       (equal (plist-get facts :events) '(agent-content-inspected)))
+      (should (equal (plist-get facts :agent-source-language) "elisp"))
+      (should (eq (nth 3 presentation) 'agent-shell))
+      (should (eq (nth 4 presentation) 'inspection)))))
+
+(ert-deftest emacsvox-agent-shell-table-presentation-is-complete ()
+  "Table-cell navigation carries logical coordinates and source context."
+  (emacsvox-agent-shell-test--with-rendered-table
+      "| Name | Role |\n|---|---|\n| Alice | Engineer |\n"
+    (goto-char (point-min))
+    (search-forward "Engineer")
+    (backward-char (length "Engineer"))
+    (let* ((presentations
+            (emacsvox-agent-shell-test--capture-presentations
+              (emacsvox-agent-shell--table-cell-feedback)))
+           (presentation (car presentations))
+           (facts (nth 2 presentation)))
+      (should (eq (plist-get facts :role) 'agent-table-cell))
+      (should (equal (plist-get facts :events) '(focus-entered)))
+      (should (= (plist-get facts :agent-table-row) 1))
+      (should (= (plist-get facts :agent-table-column) 1))
+      (should (eq (nth 4 presentation) 'navigation)))))
+
+(ert-deftest emacsvox-agent-shell-tool-presentation-is-complete ()
+  "Tool transitions expose status intent before their compatibility cue."
+  (let ((emacsvox-agent-shell-speak-tool-calls t)
+        (emacsvox-agent-shell-tool-output-verbosity 'status)
+        (emacsvox-agent-shell-foreground-speech-level 'full))
+    (with-temp-buffer
+      (let* ((presentations
+              (emacsvox-agent-shell-test--capture-presentations
+                (emacsvox-agent-shell--handle-tool-call-update
+                 (emacsvox-agent-shell-test--tool-call-event
+                  "reader" "in_progress" "Read README"))))
+             (presentation (car presentations))
+             (facts (nth 2 presentation)))
+        (should (eq (plist-get facts :role) 'agent-tool))
+        (should
+         (equal
+          (plist-get facts :events) '(agent-tool-status-changed)))
+        (should (eq (plist-get facts :agent-tool-status) 'in-progress))
+        (should (eq (nth 4 presentation) 'notification))))))
+
+(ert-deftest emacsvox-agent-shell-viewport-submit-presentation-is-complete ()
+  "Viewport submission exposes prompt disposition before compatibility output."
+  (let ((agent-shell-prefer-viewport-interaction t)
+        (agent-shell-session-strategy 'new-deferred))
+    (with-temp-buffer
+      (setq major-mode 'agent-shell-viewport-edit-mode)
+      (cl-letf
+          (((symbol-function
+             'agent-shell-viewport-compose-send-and-wait-for-response)
+            #'ignore)
+           ((symbol-function
+             'emacsvox-agent-shell--viewport-submit-disposition)
+            (lambda () 'submitted)))
+        (let* ((presentations
+                (emacsvox-agent-shell-test--capture-presentations
+                  (call-interactively
+                   #'agent-shell-viewport-compose-send)))
+               (presentation (car presentations))
+               (facts (nth 2 presentation)))
+          (should (eq (plist-get facts :role) 'agent-prompt-editor))
+          (should
+           (equal
+            (plist-get facts :events) '(agent-prompt-submitted)))
+          (should
+           (eq (plist-get facts :agent-prompt-disposition) 'submitted))
+          (should (eq (nth 4 presentation) 'state-change)))))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here

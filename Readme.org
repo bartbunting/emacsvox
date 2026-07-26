@@ -73,6 +73,17 @@ Discovered personal packs can edit summary, parent, coverage, and spatial
 metadata with =e=.  Partial packs inherit through a safely written data-only
 =emacsvox-sound-pack.el= manifest.
 
+Agent Shell and Markdown are complete reference integrations.  Agent
+transcripts expose session lifecycle, response, thought, plan, tool,
+permission, source-block, table, viewport, and prompt-editor intent.
+Markdown exposes headings, task state, lists, links, code blocks, tables,
+footnotes, separators, visibility, and document operations, with the same
+heading intent whether movement is by line or structural command.
+
+Notmuch, Gnus, Dired, and Magit also place all retained compatibility cues
+inside semantic presentation boundaries.  The repository audit treats these
+six modules as migrated and rejects a new context-free direct icon call.
+
 ** Quick Installation Instructions
 
 For a more detailed installation guide, and further instructions on usage, see the documentation. For a quick installation guide, see below.

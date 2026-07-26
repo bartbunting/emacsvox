@@ -62,6 +62,7 @@
 (require 'emacsvox-aural-sound-packs)
 (require 'emacsvox-aural-org)
 (require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-markdown)
 
 ;;;   Customize groups
 

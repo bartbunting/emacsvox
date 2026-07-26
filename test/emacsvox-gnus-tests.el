@@ -217,6 +217,35 @@
       (nreverse events)
       '((icon close-object) stop speak-mode-line)))))
 
+(ert-deftest emacsvox-gnus-group-action-has-semantic-context ()
+  "A Gnus group operation gives its cue and speech the same intent."
+  (let ((ems--interactive-fn-name
+         'gnus-group-unsubscribe-current-group)
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list icon emacsvox-aural-submission-facts
+                   emacsvox-aural-submission-occasion)
+             events)))
+         ((symbol-function 'emacsvox-speak-line)
+          (lambda ()
+            (push
+             (list 'line emacsvox-aural-submission-facts)
+             events))))
+      (emacsvox--advice-gnus-group-unsubscribe-current-group-after))
+    (should
+     (equal
+      (nreverse events)
+      '((deselect-object
+         (:role mail-group :mail-action-kind unsubscribe
+          :events (operation-completed))
+         state-change)
+        (line
+         (:role mail-group :mail-action-kind unsubscribe
+          :events (operation-completed))))))))
+
 (defconst emacsvox-test--gnus-summary-marking-around-targets
   '(gnus-summary-clear-mark-backward gnus-summary-clear-mark-forward
     gnus-summary-mark-as-dormant gnus-summary-mark-as-expirable

@@ -126,6 +126,57 @@ instead you hear only the first screenful."
      '(gnus-group-mode-hook gnus-summary-mode-hook gnus-article-mode-hook))
   (add-hook hook #'emacsvox-gnus-enable-aural-context))
 
+(defun emacsvox-gnus--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in a frozen Gnus presentation.
+FACTS describe the object or event, and OCCASION describes the interaction."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts
+              '(:role mail-view :mail-view-kind other)))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'navigation))
+         (effective-module
+          (or emacsvox-aural-submission-module 'gnus))
+         (context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context
+               effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
+
+(defun emacsvox-gnus--present-feedback
+    (facts occasion icon function &rest arguments)
+  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
+  (emacsvox-gnus--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (when icon (emacsvox-icon icon))
+     (apply function arguments))))
+
+(defun emacsvox-gnus-view-facts (kind action event)
+  "Return semantic facts for Gnus view KIND, ACTION, and EVENT."
+  (append
+   (list :role 'mail-view :mail-view-kind kind)
+   (when action (list :mail-action-kind action))
+   (when event (list :events (list event)))))
+
+(defun emacsvox-gnus-group-facts (action event)
+  "Return semantic facts for a Gnus group ACTION and EVENT."
+  (append
+   '(:role mail-group)
+   (when action (list :mail-action-kind action))
+   (when event (list :events (list event)))))
+
+(defun emacsvox-gnus-message-part-facts (kind action event)
+  "Return semantic facts for message part KIND, ACTION, and EVENT."
+  (append
+   (list :role 'message-part :message-part-kind kind)
+   (when action (list :mail-action-kind action))
+   (when event (list :events (list event)))))
+
 (defun emacsvox-gnus-message-facts (&optional event extra-states)
   "Return semantic facts for the current Gnus message.
 
@@ -156,54 +207,40 @@ new Gnus mark is not otherwise portable."
 (defun emacsvox-gnus-present-subject
     (icon occasion event &optional extra-states)
   "Present the current subject with ICON and semantic message context."
-  (let* ((facts (emacsvox-gnus-message-facts event extra-states))
-         (context (emacsvox-aural-capture-context 'gnus occasion))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'gnus)
-         (emacsvox-aural-submission-occasion occasion))
-    (when icon (emacsvox-icon icon))
-    (emacsvox-gnus-summary-speak-subject)))
+  (emacsvox-gnus--present-feedback
+   (emacsvox-gnus-message-facts event extra-states)
+   occasion icon #'emacsvox-gnus-summary-speak-subject))
 
 (defun emacsvox-gnus-present-group
     (icon occasion event speaker &optional icon-after)
   "Present a mail group using ICON, OCCASION, EVENT, and SPEAKER.
 
 When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
-  (let* ((facts
-          (append
-           (list :role 'mail-group)
-           (when event (list :events (list event)))))
-         (context (emacsvox-aural-capture-context 'gnus occasion))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'gnus)
-         (emacsvox-aural-submission-occasion occasion))
-    (if icon-after
-        (progn
-          (funcall speaker)
-          (when icon (emacsvox-icon icon)))
-      (when icon (emacsvox-icon icon))
-      (funcall speaker))))
+  (emacsvox-gnus--call-with-aural-presentation
+   (emacsvox-gnus-group-facts nil event)
+   occasion
+   (lambda ()
+     (if icon-after
+         (progn
+           (funcall speaker)
+           (when icon (emacsvox-icon icon)))
+       (when icon (emacsvox-icon icon))
+       (funcall speaker)))))
 
 (defun emacsvox-gnus-summary-speak-subject ()
   "Speak the current Gnus subject with semantic message context."
-  (let* ((facts
-          (or
-           emacsvox-aural-submission-facts
-           (emacsvox-gnus-message-facts 'focus-entered)))
-         (context
-          (or
-           emacsvox-aural-submission-context
-           (emacsvox-aural-capture-context 'gnus 'navigation)))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'gnus)
-         (emacsvox-aural-submission-occasion
-          (or emacsvox-aural-submission-occasion 'navigation)))
-    (tts-speak (gnus-summary-article-subject))))
+  (emacsvox-gnus--call-with-aural-presentation
+   (emacsvox-gnus-message-facts 'focus-entered)
+   'navigation #'tts-speak (gnus-summary-article-subject)))
 
 (defun emacsvox-gnus-speak-article-body ()
+  "Speak the visible Gnus article body with semantic context."
+  (emacsvox-gnus--call-with-aural-presentation
+   (emacsvox-gnus-message-part-facts 'body 'show 'focus-entered)
+   'navigation #'emacsvox-gnus--speak-article-body-compatibility))
+
+(defun emacsvox-gnus--speak-article-body-compatibility ()
+  "Speak the Gnus article body using the established feedback."
   (with-current-buffer gnus-article-buffer
     (goto-char (point-min))
     (search-forward "\n\n")
@@ -250,9 +287,13 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
      (defun ,function (&rest _)
        "Cue and speak after interactively leaving a Gnus view."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'close-object)
-         (tts-stop)
-         (emacsvox-speak-mode-line)))
+         (emacsvox-gnus--call-with-aural-presentation
+          (emacsvox-gnus-view-facts 'other 'close 'mail-view-closed)
+          'state-change
+          (lambda ()
+            (emacsvox-icon 'close-object)
+            (tts-stop)
+            (emacsvox-speak-mode-line)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -261,8 +302,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-post-news-after (&rest _)
   "Cue and speak after interactively starting a Gnus post."
   (when (ems-interactive-p 'gnus-group-post-news)
-    (emacsvox-icon 'open-object)
-    (emacsvox-speak-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-view-facts 'compose 'compose 'mail-view-opened)
+     'state-change 'open-object #'emacsvox-speak-line)))
 
 (advice-add
  'gnus-group-post-news :after
@@ -324,8 +366,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
     (&rest _)
   "Produce an auditory icon indicating\nthis group is being deselected."
   (when (ems-interactive-p 'gnus-group-unsubscribe-current-group)
-    (emacsvox-icon 'deselect-object)
-    (emacsvox-speak-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'unsubscribe 'operation-completed)
+     'state-change 'deselect-object #'emacsvox-speak-line)))
 
 (advice-add
  'gnus-group-unsubscribe-current-group :after
@@ -335,8 +378,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-catchup-current-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-catchup-current)
-    (emacsvox-icon 'close-object)
-    (emacsvox-speak-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'catch-up 'operation-completed)
+     'state-change 'close-object #'emacsvox-speak-line)))
 
 (advice-add
  'gnus-group-catchup-current :after
@@ -346,8 +390,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-yank-group-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-yank-group)
-    (emacsvox-icon 'yank-object)
-    (emacsvox-speak-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'restore 'operation-completed)
+     'state-change 'yank-object #'emacsvox-speak-line)))
 
 (advice-add
  'gnus-group-yank-group :after
@@ -357,8 +402,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-list-groups-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-groups)
-    (emacsvox-icon 'open-object)
-    (tts-speak "Listing groups... done")))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'list 'operation-completed)
+     'inspection 'open-object #'tts-speak "Listing groups... done")))
 
 (advice-add
  'gnus-group-list-groups :after
@@ -368,8 +414,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-topic-mode-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-topic-mode)
-    (emacsvox-icon 'open-object)
-    (tts-speak "toggled topic mode")))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-view-facts 'topic 'toggle-topic 'operation-completed)
+     'state-change 'open-object #'tts-speak "toggled topic mode")))
 
 (advice-add
  'gnus-topic-mode :after
@@ -379,8 +426,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-list-all-groups-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-all-groups)
-    (emacsvox-icon 'open-object)
-    (tts-speak "Listing all groups... done")))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'list 'operation-completed)
+     'inspection 'open-object #'tts-speak "Listing all groups... done")))
 
 (advice-add
  'gnus-group-list-all-groups :after
@@ -390,8 +438,10 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-list-all-matching-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-all-matching)
-    (emacsvox-icon 'open-object)
-    (tts-speak "Listing all matching groups... done")))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'list 'operation-completed)
+     'inspection 'open-object
+     #'tts-speak "Listing all matching groups... done")))
 
 (advice-add
  'gnus-group-list-all-matching :after
@@ -401,8 +451,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-list-killed-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-killed)
-    (emacsvox-icon 'open-object)
-    (tts-speak "Listing killed groups... done")))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'list 'operation-completed)
+     'inspection 'open-object #'tts-speak "Listing killed groups... done")))
 
 (advice-add
  'gnus-group-list-killed :after
@@ -412,8 +463,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-list-matching-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-matching)
-    (emacsvox-icon 'open-object)
-    (emacsvox-pip
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'list 'operation-completed)
+     'inspection 'open-object #'emacsvox-pip
      "listing matching groups with unread articles... done")))
 
 (advice-add
@@ -424,8 +476,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-list-zombies-after (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-list-zombies)
-    (emacsvox-icon 'open-object)
-    (tts-speak "Listing zombie groups... done")))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'list 'operation-completed)
+     'inspection 'open-object #'tts-speak "Listing zombie groups... done")))
 
 (advice-add
  'gnus-group-list-zombies :after
@@ -435,8 +488,10 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-group-customize-before (&rest _)
   "speak.\n Produce an auditory icon if possible."
   (when (ems-interactive-p 'gnus-group-customize)
-    (emacsvox-icon 'open-object)
-    (message "Customizing group %s" (gnus-group-group-name))))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'customize nil)
+     'inspection 'open-object
+     #'message "Customizing group %s" (gnus-group-group-name))))
 
 (advice-add
  'gnus-group-customize :before
@@ -512,8 +567,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
     (&rest _)
   "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."
   (when (ems-interactive-p 'gnus-summary-select-article-buffer)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-view-facts 'article 'select 'mail-view-opened)
+     'navigation 'select-object #'emacsvox-speak-mode-line)))
 
 (advice-add
  'gnus-summary-select-article-buffer :after
@@ -532,11 +588,16 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
        (let ((current-group gnus-newsgroup-name))
          (let ((result (apply original arguments)))
            (when (ems-interactive-p ',target)
-             (emacsvox-icon 'close-object)
-             (tts-stop)
-             (if (eq current-group (gnus-group-group-name))
-                 (emacsvox-pip "No more unread newsgroups")
-               (emacsvox-speak-line)))
+             (emacsvox-gnus--call-with-aural-presentation
+              (emacsvox-gnus-view-facts
+               'summary 'close 'mail-view-closed)
+              'state-change
+              (lambda ()
+                (emacsvox-icon 'close-object)
+                (tts-stop)
+                (if (eq current-group (gnus-group-group-name))
+                    (emacsvox-pip "No more unread newsgroups")
+                  (emacsvox-speak-line)))))
            result)))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
@@ -575,8 +636,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
     (&rest _)
   "Speak the newsgroup line.\n Produce an auditory icon indicating \nthe previous group was closed."
   (when (ems-interactive-p 'gnus-summary-catchup-and-exit)
-    (emacsvox-icon 'close-object)
-    (emacsvox-speak-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-group-facts 'catch-up 'mail-view-closed)
+     'state-change 'close-object #'emacsvox-speak-line)))
 
 (advice-add
  'gnus-summary-catchup-and-exit :after
@@ -606,17 +668,21 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
   (when
       (ems-interactive-p
        'gnus-summary-kill-same-subject-and-select)
-    (emacsvox-gnus-summary-speak-subject)
-    (sit-for 2)
-    (emacsvox-icon 'open-object)
-    (with-current-buffer gnus-article-buffer
-      (let
-          ((start (point))
-           (window (get-buffer-window (current-buffer))))
-        (with-selected-window window
-          (save-excursion
-            (move-to-window-line -1) (end-of-line)
-            (emacsvox-speak-region start (point))))))))
+    (emacsvox-gnus--call-with-aural-presentation
+     (emacsvox-gnus-message-facts 'message-opened)
+     'state-change
+     (lambda ()
+       (emacsvox-gnus-summary-speak-subject)
+       (sit-for 2)
+       (emacsvox-icon 'open-object)
+       (with-current-buffer gnus-article-buffer
+         (let
+             ((start (point))
+              (window (get-buffer-window (current-buffer))))
+           (with-selected-window window
+             (save-excursion
+               (move-to-window-line -1) (end-of-line)
+               (emacsvox-speak-region start (point))))))))))
 
 (advice-add
  'gnus-summary-kill-same-subject-and-select :after
@@ -644,8 +710,10 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-summary-hide-all-threads-after (&rest _)
   "speak."
   (when (ems-interactive-p 'gnus-summary-hide-all-threads)
-    (emacsvox-icon 'close-object)
-    (emacsvox-speak-line)))
+    (emacsvox-gnus--present-feedback
+     '(:role message-thread :mail-action-kind hide
+       :events (visibility-changed))
+     'state-change 'close-object #'emacsvox-speak-line)))
 
 (advice-add
  'gnus-summary-hide-all-threads :after
@@ -658,8 +726,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
   "Catch up on all articles in current group."
   (interactive)
   (gnus-summary-catchup-and-exit t t)
-  (emacsvox-icon 'close-object)
-  (emacsvox-speak-line))
+  (emacsvox-gnus--present-feedback
+   (emacsvox-gnus-group-facts 'catch-up 'mail-view-closed)
+   'state-change 'close-object #'emacsvox-speak-line))
 
 (cl-loop
  for target in
@@ -680,19 +749,16 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
   "Start speaking the article. "
   (when (ems-interactive-p 'gnus-summary-show-article)
     (with-current-buffer gnus-article-buffer
-      (let* ((facts (emacsvox-gnus-message-facts 'message-opened))
-             (context
-              (emacsvox-aural-capture-context 'gnus 'state-change))
-             (emacsvox-aural-submission-facts facts)
-             (emacsvox-aural-submission-context context)
-             (emacsvox-aural-submission-module 'gnus)
-             (emacsvox-aural-submission-occasion 'state-change))
-        (visual-line-mode)
-        (emacsvox-icon 'open-object)
-        (condition-case nil
-            (emacsvox-hide-all-blocks-in-buffer)
-          (error nil))
-        (emacsvox-gnus-speak-article-body)))))
+      (emacsvox-gnus--call-with-aural-presentation
+       (emacsvox-gnus-message-facts 'message-opened)
+       'state-change
+       (lambda ()
+         (visual-line-mode)
+         (emacsvox-icon 'open-object)
+         (condition-case nil
+             (emacsvox-hide-all-blocks-in-buffer)
+           (error nil))
+         (emacsvox-gnus-speak-article-body))))))
 
 (advice-add
  'gnus-summary-show-article :after
@@ -708,16 +774,21 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
   `(progn
      (defun ,function (&rest _)
        "Cue and speak the visible article page."
-       (tts-stop 'all)
-       (emacsvox-icon 'scroll)
-       (with-current-buffer gnus-article-buffer
-         (let ((start (point))
-               (window (get-buffer-window (current-buffer))))
-           (with-selected-window window
-             (save-excursion
-               (move-to-window-line -1)
-               (end-of-line)
-               (emacsvox-speak-region start (point)))))))
+       (emacsvox-gnus--call-with-aural-presentation
+        (emacsvox-gnus-message-part-facts
+         'page 'scroll 'focus-entered)
+        'navigation
+        (lambda ()
+          (tts-stop 'all)
+          (emacsvox-icon 'scroll)
+          (with-current-buffer gnus-article-buffer
+            (let ((start (point))
+                  (window (get-buffer-window (current-buffer))))
+              (with-selected-window window
+                (save-excursion
+                  (move-to-window-line -1)
+                  (end-of-line)
+                  (emacsvox-speak-region start (point)))))))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -759,8 +830,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-article-show-summary-after (&rest _)
   "Speak the modeline.\nIndicate change of selection with\n  an auditory icon if possible."
   (when (ems-interactive-p 'gnus-article-show-summary)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-view-facts 'summary 'select 'mail-view-opened)
+     'navigation 'select-object #'emacsvox-speak-mode-line)))
 
 (advice-add
  'gnus-article-show-summary :after
@@ -785,9 +857,14 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
   "Cue and identify the current Gnus article button."
   (when (ems-interactive-p 'gnus-summary-button-forward)
     (let ((button (button-at (point))))
-      (emacsvox-icon 'large-movement)
-      (when button
-        (message "%s" (button-label button))))))
+      (emacsvox-gnus--call-with-aural-presentation
+       (emacsvox-gnus-message-part-facts
+        'button 'select 'focus-entered)
+       'navigation
+       (lambda ()
+         (emacsvox-icon 'large-movement)
+         (when button
+           (message "%s" (button-label button))))))))
 
 (advice-add
  'gnus-summary-button-forward :after
@@ -797,7 +874,10 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 (defun emacsvox--advice-gnus-article-press-button-before (&rest _)
   "Cue before interactively pressing a Gnus article button."
   (when (ems-interactive-p 'gnus-article-press-button)
-    (emacsvox-icon 'button)))
+    (emacsvox-gnus--present-feedback
+     (emacsvox-gnus-message-part-facts
+      'button 'activate 'operation-completed)
+     'state-change 'button #'ignore)))
 
 (advice-add
  'gnus-article-press-button :before
@@ -814,9 +894,14 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
      (defun ,function (&rest _)
        "Cue and speak after interactive Gnus article page movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'scroll)
-         (sit-for 1)
-         (emacsvox-speak-current-window)))
+         (emacsvox-gnus--call-with-aural-presentation
+          (emacsvox-gnus-message-part-facts
+           'page 'scroll 'focus-entered)
+          'navigation
+          (lambda ()
+            (emacsvox-icon 'scroll)
+            (sit-for 1)
+            (emacsvox-speak-current-window)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -831,8 +916,10 @@ Helps to prevent words from being spelled instead of spoken."
         (inhibit-read-only t))
     (downcase-region beg end))
   (gnus-article-show-summary)
-  (emacsvox-icon 'modified-object)
-  (tts-speak "Downcased article body"))
+  (emacsvox-gnus--present-feedback
+   (emacsvox-gnus-message-part-facts
+    'body 'modify 'operation-completed)
+   'state-change 'modified-object #'tts-speak "Downcased article body"))
 
 ;;;  refreshing the pronunciation  and punctuation mode
 

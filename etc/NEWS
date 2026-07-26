@@ -77,6 +77,17 @@ Notmuch, Gnus, Dired, and Magit now submit registered workflow facts around
 their existing speech and auditory cues.  Schemes and optional fragments can
 therefore distinguish mail status, filesystem state, and version-control
 sections without changing the default feedback.
+Their remaining legacy cue paths are now fully enclosed by semantic
+presentation boundaries, including message parts, attachments, thread
+boundaries, group operations, filesystem inspection, Magit views, blame,
+diffs, and process completion.
+Agent Shell is now an end-to-end reference integration for transcript
+content, session lifecycle, tools, permissions, source blocks, tables,
+viewports, and prompt editing.  Markdown now exposes headings, tasks, lists,
+links, code blocks, tables, footnotes, visibility, and document operations,
+and line movement uses the same semantic heading intent as structural
+navigation.  A source audit maintains the migrated-module set and rejects new
+context-free direct icon calls while allowing named compatibility adapters.
 
 ** Search From Calendar
 

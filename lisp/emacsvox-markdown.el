@@ -45,6 +45,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-markdown)
 
 ;;;  Silence byte-compiler:
 
@@ -103,28 +105,73 @@
 
 ;;;  Heading helpers:
 
-(defun emacsvox-markdown--get-heading-info ()
-  "Return heading info at point as 'heading level N: text'."
+(defun emacsvox-markdown--heading-data ()
+  "Return heading level and text at point, or nil outside a heading."
   (save-excursion
     (beginning-of-line)
     (cond
-     ((looking-at "^\\(#+\\)[ \t]+\\(.*\\)$")
-      (format "heading level %d: %s"
-              (length (match-string 1))
-              (string-trim (match-string 2))))
+     ((looking-at "^\\(#+\\)[ \t]+\\(.*?\\)[ \t]*#*[ \t]*$")
+      (list
+       :level (length (match-string 1))
+       :text (string-trim (match-string-no-properties 2))))
+     ((and
+       (< (line-end-position) (point-max))
+       (save-excursion
+         (forward-line 1)
+         (looking-at "^[ \t]*\\([=-]+\\)[ \t]*$")))
+      (let ((text
+             (string-trim
+              (buffer-substring-no-properties
+               (line-beginning-position) (line-end-position)))))
+        (save-excursion
+          (forward-line 1)
+          (list
+           :level (if (eq (char-after (match-beginning 1)) ?=) 1 2)
+           :text text))))
      ((and (fboundp 'markdown-heading-at-point)
            (fboundp 'markdown-outline-level))
-      (let ((heading (markdown-heading-at-point)))
-        (when heading
-          (format "heading level %d: %s"
-                  (markdown-outline-level)
-                  (string-trim heading))))))))
+      (when-let* ((heading (markdown-heading-at-point)))
+        (list
+         :level (markdown-outline-level)
+         :text (string-trim heading)))))))
+
+(defun emacsvox-markdown--get-heading-info ()
+  "Return heading information at point as \"heading level N: text\"."
+  (when-let* ((heading (emacsvox-markdown--heading-data)))
+    (format "heading level %d: %s"
+            (plist-get heading :level)
+            (plist-get heading :text))))
+
+(defun emacsvox-markdown--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in a frozen Markdown presentation.
+
+FACTS and OCCASION apply unless an enclosing, more specific submission is
+already active."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts
+              '(:role markdown-content)))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'navigation))
+         (effective-module
+          (or emacsvox-aural-submission-module 'markdown))
+         (context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context
+               effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
 
 (defun emacsvox-markdown-speak-heading ()
   "Speak the current heading with level information."
   (interactive)
   (let ((info (emacsvox-markdown--get-heading-info)))
-    (if info (tts-speak info)
+    (if info
+        (emacsvox-markdown--present-current
+         nil 'inspection nil #'tts-speak info)
       (message "Not at a heading"))))
 
 ;;;  Structure detection:
@@ -136,7 +183,7 @@
     (looking-at-p "^[ \t]*[-*+][ \t]+\\|^[ \t]*[0-9]+\\.[ \t]+")))
 
 (defun emacsvox-markdown--at-task-list-p ()
-  "Return 'checked or 'unchecked if at a task list item."
+  "Return `checked' or `unchecked' when point is at a task list item."
   (save-excursion
     (beginning-of-line)
     (cond
@@ -182,6 +229,77 @@
     (when (looking-at "^\\[\\^\\([^]]+\\)\\]:[ \t]*")
       (match-string 1))))
 
+(defun emacsvox-markdown--at-link-p ()
+  "Return non-nil when the current line contains a Markdown link."
+  (save-excursion
+    (beginning-of-line)
+    (re-search-forward
+     "\\(?:!\\)?\\[[^]\n]+\\]\\(?:([^)\n]+)\\|\\[[^]\n]*\\]\\)"
+     (line-end-position) t)))
+
+(defun emacsvox-markdown--visibility ()
+  "Return folded or expanded for the current heading."
+  (when (emacsvox-markdown--heading-data)
+    (if
+        (and
+         (fboundp 'outline-invisible-p)
+         (< (line-end-position) (point-max))
+         (outline-invisible-p (1+ (line-end-position))))
+        'folded
+      'expanded)))
+
+(defun emacsvox-markdown-facts-at-point
+    (&optional event navigation-kind)
+  "Return registered Markdown facts at point.
+
+EVENT describes the interaction.  NAVIGATION-KIND is `line' or `structural'
+when the distinction is relevant to compatibility presentation."
+  (let* ((heading (emacsvox-markdown--heading-data))
+         (task (emacsvox-markdown--at-task-list-p))
+         (fence (emacsvox-markdown--at-code-fence-p))
+         (footnote (emacsvox-markdown--at-footnote-def-p))
+         (list-kind
+          (and
+           (emacsvox-markdown--at-list-item-p)
+           (save-excursion
+             (beginning-of-line)
+             (if (looking-at-p "^[ \t]*[0-9]+\\.[ \t]+")
+                 'ordered
+               'unordered))))
+         (role
+          (cond
+           (heading 'heading)
+           (task 'markdown-task)
+           (fence 'markdown-code-block)
+           (footnote 'markdown-footnote)
+           ((emacsvox-markdown--at-horizontal-rule-p)
+            'markdown-separator)
+           ((emacsvox-markdown--at-table-row-p) 'markdown-table-row)
+           ((emacsvox-markdown--at-link-p) 'markdown-link)
+           (list-kind 'markdown-list-item)
+           (t 'markdown-content)))
+         (visibility (and heading (emacsvox-markdown--visibility))))
+    (append
+     (list :role role)
+     (when event (list :events (list event)))
+     (when task (list :states (list task)))
+     (when heading (list :level (plist-get heading :level)))
+     (when visibility (list :visibility visibility))
+     (when fence (list :markdown-language fence))
+     (when list-kind (list :markdown-list-kind list-kind))
+     (when task (list :markdown-task-state task))
+     (when navigation-kind
+       (list :markdown-navigation-kind navigation-kind)))))
+
+(defun emacsvox-markdown--present-current
+    (event occasion navigation-kind function &rest arguments)
+  "Present EVENT at point and call FUNCTION with ARGUMENTS.
+OCCASION and NAVIGATION-KIND describe how point reached the Markdown object."
+  (apply
+   #'emacsvox-markdown--call-with-aural-presentation
+   (emacsvox-markdown-facts-at-point event navigation-kind)
+   occasion function arguments))
+
 ;;;  Markup stripping for reading mode:
 
 (defun emacsvox-markdown--strip-markup (text)
@@ -220,6 +338,8 @@
 
 (defun emacsvox-markdown-reading-mode (&optional arg)
   "Toggle reading mode that strips markup syntax from speech.
+ARG enables the mode when positive, disables it otherwise, and toggles it
+when it is the symbol `toggle'.
 When enabled, voice personalities still indicate emphasis, headings, etc.,
 but you won't hear the literal markup characters."
   (interactive (list (or current-prefix-arg 'toggle)))
@@ -241,28 +361,26 @@ but you won't hear the literal markup characters."
          (task (emacsvox-markdown--at-task-list-p))
          (fence (emacsvox-markdown--at-code-fence-p))
          (footnote (emacsvox-markdown--at-footnote-def-p)))
-    (cond
-     ((emacsvox-markdown--at-horizontal-rule-p)
-      (emacsvox-icon 'item)
-      (tts-speak "section separator"))
-     ((emacsvox-markdown--at-table-separator-p) nil)
-     ((emacsvox-markdown--at-reference-link-def-p) nil)
-     (fence
-      (emacsvox-icon 'open-object)
-      (tts-speak (format "code block: %s" fence)))
-     (footnote
-      (tts-speak (format "footnote %s: %s" footnote clean)))
-     ((emacsvox-markdown--at-table-row-p)
-      (tts-speak clean))
-     (heading
-      (emacsvox-icon 'section)
-      (tts-speak heading))
-     (task
-      (emacsvox-icon 'mark-object)
-      (tts-speak clean))
-     ((emacsvox-markdown--at-list-item-p)
-      (tts-speak (concat "item " clean)))
-     (t (tts-speak (or clean ""))))))
+    (emacsvox-markdown--call-with-aural-presentation
+     (emacsvox-markdown-facts-at-point 'focus-entered 'line)
+     'navigation
+     (lambda ()
+       (cond
+        ((emacsvox-markdown--at-horizontal-rule-p)
+         (tts-speak "section separator"))
+        ((emacsvox-markdown--at-table-separator-p) nil)
+        ((emacsvox-markdown--at-reference-link-def-p) nil)
+        (fence
+         (tts-speak (format "code block: %s" fence)))
+        (footnote
+         (tts-speak (format "footnote %s: %s" footnote clean)))
+        ((emacsvox-markdown--at-table-row-p)
+         (tts-speak clean))
+        (heading (tts-speak heading))
+        (task (tts-speak clean))
+        ((emacsvox-markdown--at-list-item-p)
+         (tts-speak (concat "item " clean)))
+        (t (tts-speak (or clean ""))))))))
 
 (defun emacsvox-markdown--speak-table-row ()
   "Speak table row with column info."
@@ -280,16 +398,27 @@ but you won't hear the literal markup characters."
 ;;;  Advice for speak-line in markdown:
 
 (defun emacsvox--advice-markdown-speak-line-around (original &rest arguments)
-  "In markdown mode with reading mode, strip markup from speech."
-  (if (and (eq major-mode 'markdown-mode)
-           emacsvox-markdown-reading-mode)
-      (emacsvox-markdown--speak-line-clean)
-    (if (and (eq major-mode 'markdown-mode)
-             (emacsvox-markdown--get-heading-info))
-        (progn
-          (emacsvox-icon 'section)
-          (tts-speak (emacsvox-markdown--get-heading-info)))
-      (apply original arguments))))
+  "Call ORIGINAL with ARGUMENTS using Markdown presentation context.
+When reading mode is active, strip markup from speech."
+  (if (not (derived-mode-p 'markdown-mode))
+      (apply original arguments)
+    (cond
+     (emacsvox-markdown-reading-mode
+      (emacsvox-markdown--speak-line-clean))
+     ((emacsvox-markdown--get-heading-info)
+      (emacsvox-markdown--present-current
+       'focus-entered 'navigation 'line
+       #'tts-speak (emacsvox-markdown--get-heading-info)))
+     (t
+      (apply
+       #'emacsvox-markdown--present-current
+       'focus-entered 'navigation 'line original arguments)))))
+
+(defun emacsvox-markdown--speak-heading-or-line ()
+  "Speak the current Markdown heading description or ordinary line."
+  (if-let* ((info (emacsvox-markdown--get-heading-info)))
+      (tts-speak info)
+    (emacsvox-speak-line)))
 
 (advice-add
  'emacsvox-speak-line :around
@@ -309,12 +438,12 @@ but you won't hear the literal markup characters."
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defun ,advice-function (&rest _)
+ `(defun ,advice-function (&rest _)
      "Speak the heading we moved to."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'large-movement)
-       (let ((info (emacsvox-markdown--get-heading-info)))
-         (if info (tts-speak info) (emacsvox-speak-line))))))
+       (emacsvox-markdown--present-current
+        'markdown-heading-navigated 'navigation 'structural
+        #'emacsvox-markdown--speak-heading-or-line))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop
@@ -323,11 +452,12 @@ but you won't hear the literal markup characters."
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defun ,advice-function (&rest _)
+ `(defun ,advice-function (&rest _)
      "Speak the link we moved to."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'button)
-       (emacsvox-speak-line))))
+       (emacsvox-markdown--present-current
+        'markdown-link-navigated 'navigation 'structural
+        #'emacsvox-speak-line))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 ;;;  Advice editing/movement commands:
@@ -338,13 +468,30 @@ but you won't hear the literal markup characters."
  for advice-function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
-  `(defun ,advice-function (original &rest arguments)
+ `(defun ,advice-function (original &rest arguments)
      "Speak character you're deleting."
      (when (ems-interactive-p ',target)
-       (tts-tone 500 100 'force)
-       (emacsvox-speak-this-char (preceding-char)))
+       (emacsvox-markdown--call-with-aural-presentation
+        (emacsvox-markdown-facts-at-point 'object-changed)
+        'edit
+        (lambda ()
+          (tts-tone 500 100 'force)
+          (emacsvox-speak-this-char (preceding-char)))))
      (apply original arguments)))
  (push (list target :around advice-function) emacsvox-markdown--advice))
+
+(defun emacsvox-markdown--command-presentation (command)
+  "Return the event and occasion for Markdown COMMAND."
+  (cond
+   ((memq command
+          '(markdown-cycle markdown-hide-subtree markdown-hide-body
+            markdown-hide-sublevels))
+    '(visibility-changed . state-change))
+   ((string-match-p
+     "\\`markdown-\\(?:edit\\|enter\\|indent\\|insert\\|move\\|promote\\|demote\\)"
+     (symbol-name command))
+    '(object-changed . edit))
+   (t '(markdown-structure-navigated . navigation))))
 
 (cl-loop
  for target in
@@ -391,11 +538,14 @@ but you won't hear the literal markup characters."
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defun ,advice-function (&rest _)
-     "speak."
+ `(defun ,advice-function (&rest _)
+     "Present the Markdown object affected by this command."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line))))
+       (pcase-let
+           ((`(,event . ,occasion)
+             (emacsvox-markdown--command-presentation ',target)))
+         (emacsvox-markdown--present-current
+          event occasion 'structural #'emacsvox-speak-line)))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop
@@ -405,11 +555,12 @@ but you won't hear the literal markup characters."
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defun ,advice-function (&rest _)
-     "speak."
+ `(defun ,advice-function (&rest _)
+     "Present a completed Markdown operation."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-line))))
+       (emacsvox-markdown--present-current
+        'markdown-operation-completed 'notification nil
+        #'emacsvox-speak-line))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (cl-loop
@@ -419,11 +570,12 @@ but you won't hear the literal markup characters."
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
-  `(defun ,advice-function (&rest _)
-     "speak."
+ `(defun ,advice-function (&rest _)
+     "Present completed Markdown content."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'complete)
-       (emacsvox-speak-line))))
+       (emacsvox-markdown--present-current
+        'markdown-completion-completed 'edit nil
+        #'emacsvox-speak-line))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
 (defun emacsvox-markdown--install-advice ()
@@ -444,6 +596,7 @@ but you won't hear the literal markup characters."
 
 (defun emacsvox-markdown-mode-hook ()
   "Hook for markdown buffers."
+  (setq-local emacsvox-aural-module 'markdown)
   (when emacsvox-markdown-auto-reading-mode
     (emacsvox-markdown-reading-mode 1)))
 

@@ -574,17 +574,66 @@ A selected viewport counts as focus for its associated shell buffer."
           0)
       (or (alist-get level emacsvox-agent-shell--speech-level-values) 0)))
 
+(defun emacsvox-agent-shell--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS inside one frozen Agent Shell presentation.
+
+FACTS and OCCASION describe this boundary.  An enclosing, more specific
+submission remains authoritative so compatibility helpers can safely use this
+function without replacing lifecycle, permission, tool, or content intent."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts
+              '(:role agent-session)))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'continuous))
+         (effective-module
+          (or emacsvox-aural-submission-module 'agent-shell))
+         (context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context
+               effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
+
+(defun emacsvox-agent-shell--presentation-facts
+    (role &optional event states attributes)
+  "Return Agent Shell facts for ROLE, EVENT, STATES, and ATTRIBUTES.
+
+ATTRIBUTES is a property list of registered semantic attributes."
+  (append
+   (list :role role)
+   (when event (list :events (list event)))
+   (when states (list :states (copy-sequence states)))
+   (copy-tree attributes)))
+
+(defun emacsvox-agent-shell--present-feedback
+    (facts occasion icon function &rest arguments)
+  "Present compatibility ICON then call FUNCTION with ARGUMENTS.
+
+FACTS and OCCASION are frozen before either modality is delivered."
+  (emacsvox-agent-shell--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (when icon (emacsvox-icon icon))
+     (apply function arguments))))
+
 (defun emacsvox-agent-shell--deliver-announcement (icon text)
   "Deliver ICON and TEXT for the current session without background chatter."
-  (if (emacsvox-agent-shell--session-focused-p)
-      (progn
-        (emacsvox-icon icon)
-        (tts-speak text))
-    (tts-notify-icon icon)
-    (tts-notify
-     (format "%s. %s"
-             (emacsvox-agent-shell--session-label)
-             text))))
+  (emacsvox-agent-shell--call-with-aural-presentation
+   '(:role agent-session) 'notification
+   (lambda ()
+     (if (emacsvox-agent-shell--session-focused-p)
+         (progn
+           (emacsvox-icon icon)
+           (tts-speak text))
+       (tts-notify-icon icon)
+       (tts-notify
+        (format "%s. %s"
+                (emacsvox-agent-shell--session-label)
+                text))))))
 
 (defconst emacsvox-agent-shell--speech-level-cycle
   '(full response notify quiet)
@@ -820,8 +869,10 @@ Return non-nil when an announcement was delivered."
     (when-let* ((state (emacsvox-agent-shell--header-state))
                 (speech
                  (emacsvox-agent-shell--format-brief-header state)))
-      (emacsvox-icon 'item)
-      (tts-notify speech)
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--presentation-facts
+        'agent-session 'agent-content-inspected)
+       'inspection 'item #'tts-notify speech)
       t)))
 
 (defun emacsvox-agent-shell-speak-header ()
@@ -832,8 +883,10 @@ Return non-nil when an announcement was delivered."
               (user-error "Agent header state is unavailable")))
          (speech (emacsvox-agent-shell--format-full-header state)))
     (tts-stop)
-    (emacsvox-icon 'item)
-    (tts-speak speech)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-content-inspected)
+     'inspection 'item #'tts-speak speech)))
 
 (defun emacsvox-agent-shell--next-speech-level (level)
   "Return the speech level following LEVEL in the interactive cycle."
@@ -871,8 +924,13 @@ When INCLUDE-AUTO is non-nil, include the automatic focus-aware choice."
                         emacsvox-agent-shell-foreground-speech-level
                         emacsvox-agent-shell-background-speech-level)
               (format "Agent speech %s for %s." level label))))
-    (emacsvox-icon (if (eq level 'quiet) 'off 'select-object))
-    (tts-speak announcement)
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed nil
+      (list :agent-speech-level level))
+     'state-change
+     (if (eq level 'quiet) 'off 'select-object)
+     #'tts-speak announcement)
     level))
 
 (defun emacsvox-agent-shell-select-speech-level ()
@@ -905,8 +963,14 @@ When INCLUDE-AUTO is non-nil, include the automatic focus-aware choice."
     (setq emacsvox-agent-shell-background-speech-level level)
     (when (memq level '(notify quiet))
       (emacsvox-agent-shell--cancel-background-pending-speech))
-    (emacsvox-icon (if (eq level 'quiet) 'off 'select-object))
-    (tts-speak (format "Background agent speech %s." level))))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed nil
+      (list :agent-speech-level level))
+     'state-change
+     (if (eq level 'quiet) 'off 'select-object)
+     #'tts-speak
+     (format "Background agent speech %s." level))))
 
 (defun emacsvox-agent-shell-cycle-speech-level (&optional reset)
   "Cycle automatic speech for the current agent-shell session.
@@ -1009,18 +1073,21 @@ the body retains semantic faces and omits markup that is no longer displayed."
 (defun emacsvox-agent-shell--deliver-out-of-turn-body (body)
   "Deliver rendered out-of-turn agent message BODY according to focus policy."
   (when (bound-and-true-p emacsvox-comint-autospeak)
-    (let ((focused (emacsvox-agent-shell--session-focused-p)))
-      (cond
-       ((and focused
-             (emacsvox-agent-shell--speech-level-at-least-p 'response))
-        (emacsvox-icon 'item)
-        (tts-speak (concat "Agent update: " body)))
-       ((and (not focused)
-             (emacsvox-agent-shell--speech-level-at-least-p 'notify))
-        (tts-notify-icon 'item)
-        (tts-notify
-         (format "%s. Agent update available."
-                 (emacsvox-agent-shell--session-label))))))))
+    (emacsvox-agent-shell--call-with-aural-presentation
+     '(:role agent-response) 'notification
+     (lambda ()
+       (let ((focused (emacsvox-agent-shell--session-focused-p)))
+         (cond
+          ((and focused
+                (emacsvox-agent-shell--speech-level-at-least-p 'response))
+           (emacsvox-icon 'item)
+           (tts-speak (concat "Agent update: " body)))
+          ((and (not focused)
+                (emacsvox-agent-shell--speech-level-at-least-p 'notify))
+           (tts-notify-icon 'item)
+           (tts-notify
+            (format "%s. Agent update available."
+                    (emacsvox-agent-shell--session-label))))))))))
 
 (defun emacsvox-agent-shell--deliver-out-of-turn-pending (buffer)
   "Deliver and clear coalesced out-of-turn messages for live BUFFER."
@@ -1207,7 +1274,11 @@ the body retains semantic faces and omits markup that is no longer displayed."
   ;; so far.  A later section update refreshes the complete body snapshot.
   (when emacsvox-agent-shell-speak-permissions
     (tts-stop)
-    (emacsvox-agent-shell--deliver-announcement
+    (emacsvox-agent-shell--call-with-aural-presentation
+     (emacsvox-agent-shell--presentation-facts
+      'permission-request 'agent-permission-requested)
+     'notification
+     #'emacsvox-agent-shell--deliver-announcement
      'warn-user
      (emacsvox-agent-shell--permission-announcement event))))
 
@@ -1233,21 +1304,33 @@ the body retains semantic faces and omits markup that is no longer displayed."
                (hash-table-p emacsvox-agent-shell--permission-action-cache))
       (remhash key emacsvox-agent-shell--permission-action-cache))
     (when emacsvox-agent-shell-speak-permissions
-      (cond
-       (cancelled
-        (emacsvox-agent-shell--deliver-announcement
-         'close-object "Permission cancelled."))
-       ((equal kind "reject_once")
-        (emacsvox-agent-shell--deliver-announcement
-         'close-object
-         (format "Permission denied: %s." (or option "Reject"))))
-       ((member kind '("allow_once" "allow_always"))
-        (emacsvox-agent-shell--deliver-announcement
-         'select-object
-         (format "Permission granted: %s." (or option "Allow"))))
-       (t
-        (emacsvox-agent-shell--deliver-announcement
-         'select-object "Permission response sent."))))))
+      (let ((result
+             (cond
+              (cancelled 'cancelled)
+              ((equal kind "reject_once") 'denied)
+              ((member kind '("allow_once" "allow_always")) 'allowed)
+              (t 'sent))))
+        (emacsvox-agent-shell--call-with-aural-presentation
+         (emacsvox-agent-shell--presentation-facts
+          'permission-request 'agent-permission-resolved nil
+          (list :agent-permission-result result))
+         'state-change
+         (lambda ()
+           (pcase result
+             ('cancelled
+              (emacsvox-agent-shell--deliver-announcement
+               'close-object "Permission cancelled."))
+             ('denied
+              (emacsvox-agent-shell--deliver-announcement
+               'close-object
+               (format "Permission denied: %s." (or option "Reject"))))
+             ('allowed
+              (emacsvox-agent-shell--deliver-announcement
+               'select-object
+               (format "Permission granted: %s." (or option "Allow"))))
+             (_
+              (emacsvox-agent-shell--deliver-announcement
+               'select-object "Permission response sent.")))))))))
 
 (defun emacsvox-agent-shell--permission-event-setup ()
   "Subscribe the current agent-shell buffer to permission events."
@@ -1293,7 +1376,11 @@ the body retains semantic faces and omits markup that is no longer displayed."
             (string-trim (substring-no-properties message)))
            (code (format "code %s" code))
            (t nil))))
-    (emacsvox-agent-shell--deliver-announcement
+    (emacsvox-agent-shell--call-with-aural-presentation
+     (emacsvox-agent-shell--presentation-facts
+      'agent-error 'processing-failed)
+     'notification
+     #'emacsvox-agent-shell--deliver-announcement
      'warn-user
      (if detail
          (format "Agent error: %s" detail)
@@ -1301,36 +1388,40 @@ the body retains semantic faces and omits markup that is no longer displayed."
 
 (defun emacsvox-agent-shell--speak-turn-completion (event)
   "Announce the outcome described by turn completion EVENT."
-  (let ((stop-reason (map-nested-elt event '(:data :stop-reason))))
-    (if (equal stop-reason "end_turn")
-        (when (emacsvox-agent-shell--speech-level-at-least-p 'notify)
-          (if (emacsvox-agent-shell--session-focused-p)
-              (emacsvox-icon emacsvox-agent-shell-processing-end-icon)
-            (tts-notify-icon emacsvox-agent-shell-processing-end-icon)
-            (tts-notify
-             (format "%s finished."
-                     (emacsvox-agent-shell--session-label)))))
-      (pcase stop-reason
-        ("cancelled"
-         (emacsvox-agent-shell--deliver-announcement
-          'close-object "Agent turn cancelled."))
-        ("max_tokens"
-         (emacsvox-agent-shell--deliver-announcement
-          'warn-user "Agent stopped: maximum token limit reached."))
-        ("max_turn_requests"
-         (emacsvox-agent-shell--deliver-announcement
-          'warn-user "Agent stopped: request limit reached."))
-        ("refusal"
-         (emacsvox-agent-shell--deliver-announcement
-          'warn-user "Agent refused the request."))
-        ((pred stringp)
-         (emacsvox-agent-shell--deliver-announcement
-          'warn-user
-          (format "Agent stopped: %s."
-                  (string-replace "_" " " stop-reason))))
-        (_
-         (emacsvox-agent-shell--deliver-announcement
-          'warn-user "Agent stopped for an unknown reason."))))))
+  (emacsvox-agent-shell--call-with-aural-presentation
+   (emacsvox-agent-shell-lifecycle-facts event)
+   'notification
+   (lambda ()
+     (let ((stop-reason (map-nested-elt event '(:data :stop-reason))))
+       (if (equal stop-reason "end_turn")
+           (when (emacsvox-agent-shell--speech-level-at-least-p 'notify)
+             (if (emacsvox-agent-shell--session-focused-p)
+                 (emacsvox-icon emacsvox-agent-shell-processing-end-icon)
+               (tts-notify-icon emacsvox-agent-shell-processing-end-icon)
+               (tts-notify
+                (format "%s finished."
+                        (emacsvox-agent-shell--session-label)))))
+         (pcase stop-reason
+           ("cancelled"
+            (emacsvox-agent-shell--deliver-announcement
+             'close-object "Agent turn cancelled."))
+           ("max_tokens"
+            (emacsvox-agent-shell--deliver-announcement
+             'warn-user "Agent stopped: maximum token limit reached."))
+           ("max_turn_requests"
+            (emacsvox-agent-shell--deliver-announcement
+             'warn-user "Agent stopped: request limit reached."))
+           ("refusal"
+            (emacsvox-agent-shell--deliver-announcement
+             'warn-user "Agent refused the request."))
+           ((pred stringp)
+            (emacsvox-agent-shell--deliver-announcement
+             'warn-user
+             (format "Agent stopped: %s."
+                     (string-replace "_" " " stop-reason))))
+           (_
+            (emacsvox-agent-shell--deliver-announcement
+             'warn-user "Agent stopped for an unknown reason."))))))))
 
 (defun emacsvox-agent-shell-lifecycle-facts (event)
   "Return semantic processing facts for Agent Shell lifecycle EVENT."
@@ -1385,15 +1476,11 @@ the body retains semantic faces and omits markup that is no longer displayed."
 
 (defun emacsvox-agent-shell--handle-lifecycle-event (event)
   "Present Agent Shell lifecycle EVENT with semantic submission context."
-  (let* ((facts (emacsvox-agent-shell-lifecycle-facts event))
-         (context
-          (emacsvox-aural-capture-context
-           'agent-shell 'notification))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'agent-shell)
-         (emacsvox-aural-submission-occasion 'notification))
-    (emacsvox-agent-shell--handle-lifecycle-event-compatibility event)))
+  (emacsvox-agent-shell--call-with-aural-presentation
+   (emacsvox-agent-shell-lifecycle-facts event)
+   'notification
+   #'emacsvox-agent-shell--handle-lifecycle-event-compatibility
+   event))
 
 (defun emacsvox-agent-shell--lifecycle-event-setup ()
   "Subscribe the current agent-shell buffer to lifecycle events."
@@ -1519,11 +1606,17 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
   (let ((role
          (pcase block-type
            ('agent-message 'agent-response)
+           ('user-message 'agent-user-prompt)
            ('thought 'agent-thought)
            ('tool-call 'agent-tool)
            ('permission 'permission-request)
-           (_ 'agent-session))))
-    (list :role role)))
+           ('plan 'agent-plan)
+           ('error 'agent-error)
+           (_ 'agent-block))))
+    (emacsvox-agent-shell--presentation-facts
+     role nil nil
+     (when (eq role 'agent-block)
+       (list :agent-block-kind 'other)))))
 
 (defun emacsvox-agent-shell--speak-content (content block-type)
   "Present Agent Shell CONTENT of BLOCK-TYPE with semantic context."
@@ -1531,14 +1624,10 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
          (occasion
           (if (memq block-type '(permission error))
               'notification
-            'continuous))
-         (context
-          (emacsvox-aural-capture-context 'agent-shell occasion))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'agent-shell)
-         (emacsvox-aural-submission-occasion occasion))
-    (emacsvox-agent-shell--speak-content-compatibility
+            'continuous)))
+    (emacsvox-agent-shell--call-with-aural-presentation
+     facts occasion
+     #'emacsvox-agent-shell--speak-content-compatibility
      content block-type)))
 
 ;;;  Advice Agent-Shell Functions
@@ -1615,42 +1704,57 @@ does an interactive call with a prefix argument for buffer information."
   "Announce switching to agent-shell mode.
 Provide an auditory icon if possible."
   (when (ems-interactive-p 'agent-shell)
-    (emacsvox-icon 'open-object)
-    (tts-set-punctuations 'all)
-    (or tts-split-caps
-        (tts-toggle-split-caps))
-    (emacsvox-pronounce-refresh-pronunciations)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-agent-shell--call-with-aural-presentation
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-session-opened)
+     'navigation
+     (lambda ()
+       (emacsvox-icon 'open-object)
+       (tts-set-punctuations 'all)
+       (or tts-split-caps
+           (tts-toggle-split-caps))
+       (emacsvox-pronounce-refresh-pronunciations)
+       (emacsvox-speak-mode-line)))))
 
 (defun emacsvox-agent-shell--agent-shell-start-after (&rest _)
   "Announce agent shell startup."
   (when (ems-interactive-p 'agent-shell-start)
-    (emacsvox-icon 'open-object)
-    (message "Agent shell started")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-session-opened)
+     'state-change 'open-object #'message "Agent shell started")))
 
 (defun emacsvox-agent-shell--agent-shell-new-shell-after (&rest _)
   "Announce new agent shell."
   (when (ems-interactive-p 'agent-shell-new-shell)
-    (emacsvox-icon 'open-object)
-    (message "New agent shell")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-session-opened)
+     'state-change 'open-object #'message "New agent shell")))
 
 (defun emacsvox-agent-shell--agent-shell-toggle-after (&rest _)
   "Provide auditory feedback when toggling agent shell."
   (when (ems-interactive-p 'agent-shell-toggle)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-session-opened)
+     'navigation 'select-object #'emacsvox-speak-mode-line)))
 
 (defun emacsvox-agent-shell--agent-shell-other-buffer-after (&rest _)
   "Announce buffer switch."
   (when (ems-interactive-p 'agent-shell-other-buffer)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-session-opened)
+     'navigation 'select-object #'emacsvox-speak-mode-line)))
 
 (defun emacsvox-agent-shell--agent-shell-interrupt-after (&rest _)
   "Confirm interruption."
   (when (ems-interactive-p 'agent-shell-interrupt)
-    (emacsvox-icon 'close-object)
-    (message "Agent interrupted")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-session-interrupted)
+     'state-change 'close-object #'message "Agent interrupted")))
 
 ;;;  Output Monitoring
 
@@ -1701,6 +1805,40 @@ Provide an auditory icon if possible."
             (emacsvox-agent-shell--normalize-block-type type)
             emacsvox-agent-shell--block-type-choices))
       "Other"))
+
+(defun emacsvox-agent-shell--block-role (type)
+  "Return the registered semantic role for Agent Shell block TYPE."
+  (pcase (emacsvox-agent-shell--normalize-block-type type)
+    ('agent-response 'agent-response)
+    ('user-prompt 'agent-user-prompt)
+    ('thought 'agent-thought)
+    ('tool-call 'agent-tool)
+    ('permission 'permission-request)
+    ('plan 'agent-plan)
+    ('error 'agent-error)
+    ('source-block 'agent-source-block)
+    ('table 'agent-table)
+    (_ 'agent-block)))
+
+(defun emacsvox-agent-shell--block-facts
+    (type &optional event attributes)
+  "Return semantic facts for Agent Shell block TYPE.
+
+EVENT describes the interaction and ATTRIBUTES augments the registered block
+kind."
+  (let ((kind (emacsvox-agent-shell--normalize-block-type type)))
+    (emacsvox-agent-shell--presentation-facts
+     (emacsvox-agent-shell--block-role kind)
+     event nil
+     (append (list :agent-block-kind kind) attributes))))
+
+(defun emacsvox-agent-shell--block-location-facts (location &optional event)
+  "Return semantic facts for block LOCATION and optional EVENT."
+  (let ((type (or (plist-get location :type) 'other)))
+    (emacsvox-agent-shell--block-facts
+     type event
+     (when-let* ((language (plist-get location :language)))
+       (list :agent-source-language language)))))
 
 (defun emacsvox-agent-shell--accept-block-type-default ()
   "Accept the default block type when the minibuffer is empty.
@@ -1949,10 +2087,15 @@ PREDICATE receives TEXT and the start position of each property run."
   (if-let* ((answer (emacsvox-agent-shell--latest-agent-answer)))
       (progn
         (tts-stop)
-        (emacsvox-icon 'item)
-        (tts-speak answer))
-    (emacsvox-icon 'warn-user)
-    (tts-speak "No agent response available.")))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--presentation-facts
+          'agent-response 'agent-content-inspected)
+         'inspection 'item #'tts-speak answer))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-response 'operation-failed)
+     'inspection 'warn-user #'tts-speak
+     "No agent response available.")))
 
 (defun emacsvox-agent-shell-speak-response-overview ()
   "Speak a concise structural overview of the latest agent answer."
@@ -1960,10 +2103,16 @@ PREDICATE receives TEXT and the start position of each property run."
   (if-let* ((answer (emacsvox-agent-shell--latest-agent-answer)))
       (progn
         (tts-stop)
-        (emacsvox-icon 'item)
-        (tts-speak (emacsvox-agent-shell--response-overview answer)))
-    (emacsvox-icon 'warn-user)
-    (tts-speak "No agent response available.")))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--presentation-facts
+          'agent-response 'agent-content-inspected)
+         'inspection 'item #'tts-speak
+         (emacsvox-agent-shell--response-overview answer)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-response 'operation-failed)
+     'inspection 'warn-user #'tts-speak
+     "No agent response available.")))
 
 (defun emacsvox-agent-shell--concise-block-text (text)
   "Return a concise single-line version of block TEXT."
@@ -2723,20 +2872,28 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (emacsvox-agent-shell--expand-block-parent target)
           (goto-char (plist-get target :position))
           (tts-stop)
-          (pcase type
-            ('table
-             (emacsvox-agent-shell--table-entry-feedback direction))
-            ('source-block
-             (emacsvox-icon 'open-object)
-             (tts-speak
-              (emacsvox-agent-shell--source-block-summary target)))
-            (_
-             (emacsvox-icon 'large-movement)
-             (tts-speak
-              (emacsvox-agent-shell--block-location-speech target))))
+          (emacsvox-agent-shell--call-with-aural-presentation
+           (emacsvox-agent-shell--block-facts
+            type 'focus-entered
+            (when-let* ((language (plist-get target :language)))
+              (list :agent-source-language language)))
+           'navigation
+           (lambda ()
+             (pcase type
+               ('table
+                (emacsvox-agent-shell--table-entry-feedback direction))
+               ('source-block
+                (emacsvox-icon 'open-object)
+                (tts-speak
+                 (emacsvox-agent-shell--source-block-summary target)))
+               (_
+                (emacsvox-icon 'large-movement)
+                (tts-speak
+                 (emacsvox-agent-shell--block-location-speech target))))))
           target)
-      (emacsvox-icon 'warn-user)
-      (tts-speak
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--block-facts type 'operation-failed)
+       'navigation 'warn-user #'tts-speak
        (format "No %s %s%s."
                (if (eq direction 'forward) "later" "earlier")
                (downcase (emacsvox-agent-shell--block-type-label type))
@@ -2772,15 +2929,25 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
   (interactive)
   (let ((location (emacsvox-agent-shell--source-block-at-point)))
     (tts-stop)
-    (emacsvox-icon 'item)
-    (tts-speak (emacsvox-agent-shell--source-block-speech location))))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--block-facts
+      'source-block 'agent-content-inspected
+      (when-let* ((language (plist-get location :language)))
+        (list :agent-source-language language)))
+     'inspection 'item #'tts-speak
+     (emacsvox-agent-shell--source-block-speech location))))
 
 (defun emacsvox-agent-shell-copy-source-block ()
   "Copy the rendered Markdown source block at point using agent-shell."
   (interactive)
   (let ((location (emacsvox-agent-shell--source-block-at-point)))
-    (emacsvox-icon 'yank-object)
-    (agent-shell-copy-source-block-at-point
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--block-facts
+      'source-block 'agent-content-copied
+      (when-let* ((language (plist-get location :language)))
+        (list :agent-source-language language)))
+     'state-change 'yank-object
+     #'agent-shell-copy-source-block-at-point
      (plist-get location :position))))
 
 (defun emacsvox-agent-shell--literal-character-input-p ()
@@ -3020,11 +3187,21 @@ Markdown renderer."
                   (append titles (list data)))))
     (concat (mapconcat #'identity parts ", ") ".")))
 
+(defun emacsvox-agent-shell--table-cell-facts (cell &optional event)
+  "Return registered semantic facts for table CELL and optional EVENT."
+  (emacsvox-agent-shell--presentation-facts
+   'agent-table-cell event nil
+   (list
+    :agent-table-row (plist-get cell :row-index)
+    :agent-table-column (plist-get cell :column-index))))
+
 (defun emacsvox-agent-shell--table-cell-feedback ()
   "Speak the rendered Markdown table cell at point semantically."
   (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-    (emacsvox-icon 'item)
-    (tts-speak (emacsvox-agent-shell--table-cell-speech cell))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--table-cell-facts cell 'focus-entered)
+     'navigation 'item #'tts-speak
+     (emacsvox-agent-shell--table-cell-speech cell))
     t))
 
 (defun emacsvox-agent-shell--table-context-speech (cell)
@@ -3069,8 +3246,10 @@ Markdown renderer."
     (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
       (setq emacsvox-agent-shell--table-navigation-active t
             emacsvox-agent-shell--table-navigation-table-start (car region))
-      (emacsvox-icon 'open-object)
-      (tts-speak
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--presentation-facts
+        'agent-table 'agent-table-entered)
+       'navigation 'open-object #'tts-speak
        (concat (emacsvox-agent-shell--table-dimensions-speech cell)
                " "
                (emacsvox-agent-shell--table-cell-speech cell)))
@@ -3080,9 +3259,11 @@ Markdown renderer."
   "Speak current Markdown table position and dimensions."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (progn
-        (emacsvox-icon 'item)
-        (tts-speak (emacsvox-agent-shell--table-context-speech cell)))
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--table-cell-facts
+        cell 'agent-content-inspected)
+       'inspection 'item #'tts-speak
+       (emacsvox-agent-shell--table-context-speech cell))
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell-table-speak-cell ()
@@ -3095,9 +3276,11 @@ Markdown renderer."
   "Speak the dimensions of the Markdown table at point."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (progn
-        (emacsvox-icon 'item)
-        (tts-speak (emacsvox-agent-shell--table-dimensions-speech cell)))
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--presentation-facts
+        'agent-table 'agent-content-inspected)
+       'inspection 'item #'tts-speak
+       (emacsvox-agent-shell--table-dimensions-speech cell))
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell--table-leading-title-speech (title face)
@@ -3161,18 +3344,22 @@ Markdown renderer."
   "Speak the logical Markdown table row at point."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (progn
-        (emacsvox-icon 'item)
-        (tts-speak (emacsvox-agent-shell--table-row-speech cell)))
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--table-cell-facts
+        cell 'agent-content-inspected)
+       'inspection 'item #'tts-speak
+       (emacsvox-agent-shell--table-row-speech cell))
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell-table-speak-column ()
   "Speak the logical Markdown table column at point."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (progn
-        (emacsvox-icon 'item)
-        (tts-speak (emacsvox-agent-shell--table-column-speech cell)))
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--table-cell-facts
+        cell 'agent-content-inspected)
+       'inspection 'item #'tts-speak
+       (emacsvox-agent-shell--table-column-speech cell))
     (user-error "Not in a rendered Markdown table")))
 
 ;; Agent-shell does not currently expose a current-cell value or copy command.
@@ -3184,8 +3371,12 @@ Markdown renderer."
 (defun emacsvox-agent-shell--table-copy (text object)
   "Copy plain TEXT to the kill ring and announce copied table OBJECT."
   (kill-new (substring-no-properties text))
-  (emacsvox-icon 'save-object)
-  (tts-speak (format "Copied table %s." object)))
+  (emacsvox-agent-shell--present-feedback
+   (emacsvox-agent-shell--presentation-facts
+    (if (string= object "cell") 'agent-table-cell 'agent-table)
+    'agent-content-copied)
+   'state-change 'save-object #'tts-speak
+   (format "Copied table %s." object)))
 
 (defun emacsvox-agent-shell-table-copy-cell ()
   "Copy the logical Markdown table cell at point to the kill ring.
@@ -3241,8 +3432,10 @@ Return nil when that logical cell does not exist."
 
 (defun emacsvox-agent-shell--table-boundary-feedback (message)
   "Play a boundary cue and speak MESSAGE."
-  (emacsvox-icon 'warn-user)
-  (tts-speak message))
+  (emacsvox-agent-shell--present-feedback
+   (emacsvox-agent-shell--presentation-facts
+    'agent-table 'boundary-entered)
+   'navigation 'warn-user #'tts-speak message))
 
 (defun emacsvox-agent-shell--table-exit-destination (region direction)
   "Return a useful point outside table REGION in DIRECTION."
@@ -3273,12 +3466,14 @@ Return nil when that logical cell does not exist."
         (goto-char destination)
         (setq emacsvox-agent-shell--table-navigation-active nil
               emacsvox-agent-shell--table-navigation-table-start nil)
-        (emacsvox-icon 'close-object)
         (let ((line
                (string-trim
                 (buffer-substring-no-properties
                  (line-beginning-position) (line-end-position)))))
-          (tts-speak
+          (emacsvox-agent-shell--present-feedback
+           (emacsvox-agent-shell--presentation-facts
+            'agent-table 'agent-table-exited)
+           'navigation 'close-object #'tts-speak
            (format "%s table.%s"
                    (if (eq direction 'backward) "Before" "After")
                    (if (string-empty-p line) "" (concat " " line))))))
@@ -3395,8 +3590,10 @@ Return nil when that logical cell does not exist."
         (setq emacsvox-agent-shell--table-navigation-active t
               emacsvox-agent-shell--table-navigation-table-start
               (car region))
-        (emacsvox-icon 'open-object)
-        (tts-speak
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--presentation-facts
+          'agent-table 'agent-table-entered)
+         'navigation 'open-object #'tts-speak
          (concat (emacsvox-agent-shell--table-dimensions-speech cell)
                  " "
                  (emacsvox-agent-shell--table-cell-speech cell))))
@@ -3497,8 +3694,11 @@ resulting configuration after the change."
               (if (eq emacsvox-agent-shell-table-data-position 'first)
                   'last
                 'first))))
-  (emacsvox-icon 'button)
-  (tts-speak (emacsvox-agent-shell--table-settings-speech)))
+  (emacsvox-agent-shell--present-feedback
+   (emacsvox-agent-shell--presentation-facts
+    'agent-table 'agent-setting-changed)
+   'state-change 'button #'tts-speak
+   (emacsvox-agent-shell--table-settings-speech)))
 
 (defun emacsvox-agent-shell--permission-button-text-at-point ()
   "Return the visible permission button text at point, without decoration."
@@ -3545,8 +3745,11 @@ resulting configuration after the change."
       (when (string-match "\\`\\(.*\\) (\\([^()]+\\))\\'" text)
         (setq label (string-trim (match-string 1 text))
               key (match-string 2 text)))
-      (emacsvox-icon 'item)
-      (tts-speak
+      (emacsvox-agent-shell--present-feedback
+       (emacsvox-agent-shell--presentation-facts
+        'permission-request 'focus-entered '(selected)
+        (list :completion-index offset))
+       'navigation 'item #'tts-speak
        (format "%s, choice %d of %d. Press Return%s."
                label
                (1+ offset)
@@ -3638,8 +3841,11 @@ the corresponding buffer boundary."
                         origin 'forward))
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback))
-        (emacsvox-icon 'item)
-        (emacsvox-speak-line)))))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--block-location-facts
+          (emacsvox-agent-shell--block-location-at-point)
+          'focus-entered)
+         'navigation 'item #'emacsvox-speak-line)))))
 
 (defun emacsvox-agent-shell--previous-item-around
     (original-function &rest arguments)
@@ -3665,8 +3871,11 @@ the corresponding buffer boundary."
                         origin 'backward))
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback))
-        (emacsvox-icon 'item)
-        (emacsvox-speak-line)))))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--block-location-facts
+          (emacsvox-agent-shell--block-location-at-point)
+          'focus-entered)
+         'navigation 'item #'emacsvox-speak-line)))))
 
 (defun emacsvox-agent-shell--jump-to-permission-after
     (result &rest _)
@@ -3701,20 +3910,26 @@ the corresponding buffer boundary."
 (defun emacsvox-agent-shell--set-session-model-after (&rest _)
   "Announce model change."
   (when (ems-interactive-p 'agent-shell-set-session-model)
-    (emacsvox-icon 'select-object)
-    (message "Model changed")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed)
+     'state-change 'select-object #'message "Model changed")))
 
 (defun emacsvox-agent-shell--set-session-mode-after (&rest _)
   "Announce session mode change."
   (when (ems-interactive-p 'agent-shell-set-session-mode)
-    (emacsvox-icon 'select-object)
-    (message "Session mode changed")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed)
+     'state-change 'select-object #'message "Session mode changed")))
 
 (defun emacsvox-agent-shell--cycle-session-mode-after (&rest _)
   "Announce session mode cycle."
   (when (ems-interactive-p 'agent-shell-cycle-session-mode)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-line)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed)
+     'state-change 'select-object #'emacsvox-speak-line)))
 
 ;;;  Viewport Mode Integration
 
@@ -3763,20 +3978,26 @@ the corresponding buffer boundary."
 (defun emacsvox-agent-shell--viewport-show-buffer-after (&rest _)
   "Announce viewport display."
   (when (ems-interactive-p 'agent-shell-viewport--show-buffer)
-    (emacsvox-icon 'open-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-viewport 'agent-viewport-opened)
+     'navigation 'open-object #'emacsvox-speak-mode-line)))
 
 (defun emacsvox-agent-shell--prompt-compose-after (&rest _)
   "Announce prompt composition."
   (when (ems-interactive-p 'agent-shell-prompt-compose)
-    (emacsvox-icon 'open-object)
-    (message "Compose prompt")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-prompt-editor 'agent-prompt-opened)
+     'edit 'open-object #'message "Compose prompt")))
 
 (defun emacsvox-agent-shell--viewport-refresh-after (&rest _)
   "Announce viewport refresh."
   (when (ems-interactive-p 'agent-shell-viewport-refresh)
-    (emacsvox-icon 'task-done)
-    (message "Viewport refreshed")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-viewport 'agent-viewport-refreshed)
+     'state-change 'task-done #'message "Viewport refreshed")))
 
 (defun emacsvox-agent-shell--viewport-submit-disposition ()
   "Return how a viewport prompt will be handled, or nil when unknown.
@@ -3822,8 +4043,13 @@ DISMISS means the compose window is dismissed."
     (prog1
         (apply original-function arguments)
       (when interactive-p
-        (emacsvox-icon (if keep-composing 'task-done 'close-object))
-        (tts-speak
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--presentation-facts
+          'agent-prompt-editor 'agent-prompt-submitted nil
+          (list :agent-prompt-disposition (or disposition 'sent)))
+         'state-change
+         (if keep-composing 'task-done 'close-object)
+         #'tts-speak
          (emacsvox-agent-shell--viewport-submit-announcement
           disposition keep-composing dismiss))))))
 
@@ -3843,22 +4069,31 @@ DISMISS means the compose window is dismissed."
                       (eq
                        (buffer-local-value 'major-mode viewport-buffer)
                        original-mode))))
-        (emacsvox-icon 'close-object)
-        (tts-speak "Prompt composition cancelled.")))))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--presentation-facts
+          'agent-prompt-editor 'agent-prompt-cancelled)
+         'state-change 'close-object #'tts-speak
+         "Prompt composition cancelled.")))))
 
 ;;;  Interactive Commands for Viewport
 
 (defun emacsvox-agent-shell--viewport-view-mode-after (&rest _)
   "Announce a switch to the viewport view mode."
   (when (ems-interactive-p 'agent-shell-viewport-view-mode)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-viewport 'agent-setting-changed nil
+      '(:agent-viewport-mode view))
+     'state-change 'select-object #'emacsvox-speak-mode-line)))
 
 (defun emacsvox-agent-shell--viewport-edit-mode-after (&rest _)
   "Announce a switch to the viewport edit mode."
   (when (ems-interactive-p 'agent-shell-viewport-edit-mode)
-    (emacsvox-icon 'select-object)
-    (emacsvox-speak-mode-line)))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-viewport 'agent-setting-changed nil
+      '(:agent-viewport-mode edit))
+     'state-change 'select-object #'emacsvox-speak-mode-line)))
 
 ;;;  Tool Call Feedback
 
@@ -3962,20 +4197,32 @@ DISMISS means the compose window is dismissed."
                    (member status
                            '("pending" "in_progress" "completed" "failed"))
                    (not (equal status previous)))
-          (emacsvox-icon
-           (emacsvox-agent-shell--tool-call-status-icon status))
-          (unless (eq emacsvox-agent-shell-tool-output-verbosity 'status)
-            (tts-speak
-             (emacsvox-agent-shell--tool-call-announcement
-              status
-              (emacsvox-agent-shell--tool-call-description
-               tool-call tool-call-id)))
-            (when (and (eq emacsvox-agent-shell-tool-output-verbosity 'full)
-                       (member status '("completed" "failed")))
-              (when-let* ((output
-                           (emacsvox-agent-shell--tool-output-text
-                            (map-elt tool-call :content))))
-                (tts-speak (format "Output: %s" output))))))))))
+          (emacsvox-agent-shell--call-with-aural-presentation
+           (emacsvox-agent-shell--presentation-facts
+            'agent-tool 'agent-tool-status-changed nil
+            (list
+             :agent-tool-status
+             (if (equal status "in_progress")
+                 'in-progress
+               (intern status))))
+           'notification
+           (lambda ()
+             (emacsvox-icon
+              (emacsvox-agent-shell--tool-call-status-icon status))
+             (unless (eq emacsvox-agent-shell-tool-output-verbosity 'status)
+               (tts-speak
+                (emacsvox-agent-shell--tool-call-announcement
+                 status
+                 (emacsvox-agent-shell--tool-call-description
+                  tool-call tool-call-id)))
+               (when
+                   (and
+                    (eq emacsvox-agent-shell-tool-output-verbosity 'full)
+                    (member status '("completed" "failed")))
+                 (when-let* ((output
+                              (emacsvox-agent-shell--tool-output-text
+                               (map-elt tool-call :content))))
+                   (tts-speak (format "Output: %s" output))))))))))))
 
 (defun emacsvox-agent-shell--tool-call-event-setup ()
   "Subscribe the current agent-shell buffer to tool call updates."
@@ -4129,7 +4376,11 @@ DISMISS means the compose window is dismissed."
                         'agent-shell-viewport-edit-mode)
         (emacsvox-agent-shell--table-navigation-setup)))))
   (when (called-interactively-p 'interactive)
-    (message "Enabled Emacsvox agent-shell support")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed)
+     'state-change nil #'message
+     "Enabled Emacsvox agent-shell support")))
 
 (defun emacsvox-agent-shell-disable ()
   "Disable Emacsvox support for agent-shell."
@@ -4157,7 +4408,11 @@ DISMISS means the compose window is dismissed."
                         'agent-shell-viewport-edit-mode)
         (emacsvox-agent-shell--table-navigation-cleanup)))))
   (when (called-interactively-p 'interactive)
-    (message "Disabled Emacsvox agent-shell support")))
+    (emacsvox-agent-shell--present-feedback
+     (emacsvox-agent-shell--presentation-facts
+      'agent-session 'agent-setting-changed)
+     'state-change nil #'message
+     "Disabled Emacsvox agent-shell support")))
 
 (with-eval-after-load 'agent-shell
   (emacsvox-agent-shell-enable))

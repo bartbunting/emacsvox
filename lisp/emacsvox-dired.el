@@ -75,7 +75,7 @@
 
 ;;;   functions:
 
-(defun emacsvox-dired-speak-line ()
+(defun emacsvox-dired--speak-line-compatibility ()
   "Speak the dired line intelligently.
 If in locate-mode, speak full pathname."
   
@@ -88,6 +88,12 @@ If in locate-mode, speak full pathname."
      (t (emacsvox-speak-line)
         (ding)))))
 
+(defun emacsvox-dired-speak-line ()
+  "Speak the current Dired entry with semantic navigation context."
+  (emacsvox-dired--call-with-aural-presentation
+   (emacsvox-dired-entry-facts 'focus-entered)
+   'navigation #'emacsvox-dired--speak-line-compatibility))
+
 ;;; Semantic aural presentation:
 
 (defun emacsvox-dired-enable-aural-context ()
@@ -95,6 +101,36 @@ If in locate-mode, speak full pathname."
   (setq-local emacsvox-aural-module 'dired))
 
 (add-hook 'dired-mode-hook #'emacsvox-dired-enable-aural-context)
+
+(defun emacsvox-dired--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in a frozen Dired presentation.
+FACTS describe the object or event, and OCCASION describes the interaction."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts
+              '(:role filesystem-listing)))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'navigation))
+         (effective-module
+          (or emacsvox-aural-submission-module 'dired))
+         (context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context
+               effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
+
+(defun emacsvox-dired--present-feedback
+    (facts occasion icon function &rest arguments)
+  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
+  (emacsvox-dired--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (when icon (emacsvox-icon icon))
+     (apply function arguments))))
 
 (defun emacsvox-dired-entry-facts (&optional event extra-states)
   "Return semantic facts for the Dired entry at point.
@@ -123,14 +159,15 @@ from the Dired marker column."
   "Present the current entry with ICON, OCCASION, EVENT, and SPEAKER.
 
 The established icon-then-speech ordering is preserved."
-  (let* ((facts (emacsvox-dired-entry-facts event))
-         (context (emacsvox-aural-capture-context 'dired occasion))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'dired)
-         (emacsvox-aural-submission-occasion occasion))
-    (when icon (emacsvox-icon icon))
-    (funcall (or speaker #'emacsvox-dired-speak-line))))
+  (emacsvox-dired--present-feedback
+   (emacsvox-dired-entry-facts event)
+   occasion icon (or speaker #'emacsvox-dired-speak-line)))
+
+(defun emacsvox-dired-inspection-facts (kind)
+  "Return current-entry facts for inspection KIND."
+  (append
+   (emacsvox-dired-entry-facts 'entry-inspected)
+   (list :entry-inspection-kind kind)))
 
 (defun emacsvox-dired-action-facts (event &optional state)
   "Return frozen current-entry facts for action EVENT and resulting STATE."
@@ -153,11 +190,9 @@ describe the entry at point before the command advances to the next row."
              (context
               (emacsvox-aural-capture-context 'dired 'state-change))
              (result (apply orig-fun arguments)))
-        (let ((emacsvox-aural-submission-facts facts)
-              (emacsvox-aural-submission-context context)
-              (emacsvox-aural-submission-module 'dired)
-              (emacsvox-aural-submission-occasion 'state-change))
-          (emacsvox-icon icon))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--present-feedback
+           facts 'state-change icon #'ignore))
         (emacsvox-dired-present-current
          nil 'navigation 'focus-entered)
         result)
@@ -172,16 +207,9 @@ describe the entry at point before the command advances to the next row."
       (let (result)
         (ems-with-messages-silenced
           (setq result (apply orig-fun args)))
-        (let* ((facts
-                (emacsvox-dired-entry-facts 'operation-completed))
-               (context
-                (emacsvox-aural-capture-context 'dired 'state-change))
-               (emacsvox-aural-submission-facts facts)
-               (emacsvox-aural-submission-context context)
-               (emacsvox-aural-submission-module 'dired)
-               (emacsvox-aural-submission-occasion 'state-change))
-          (emacsvox-icon 'task-done)
-          (emacsvox-speak-mode-line))
+        (emacsvox-dired--present-feedback
+         (emacsvox-dired-entry-facts 'operation-completed)
+         'state-change 'task-done #'emacsvox-speak-mode-line)
         result)
     (apply orig-fun args)))
 
@@ -189,7 +217,10 @@ describe the entry at point before the command advances to the next row."
             #'emacsvox--advice-dired-sort-toggle-or-edit-around)
 
 (defun emacsvox--advice-dired-query-before (&rest _)
-  "Produce auditory icon." (emacsvox-icon 'ask-short-question))
+  "Present a Dired confirmation request."
+  (emacsvox-dired--present-feedback
+   '(:role confirmation-request) 'notification
+   'ask-short-question #'ignore))
 
 (advice-add 'dired-query :before
             #'emacsvox--advice-dired-query-before)
@@ -223,14 +254,9 @@ DOCSTRING and BODY define the feedback function for each command."
     (dired ido-dired dired-jump dired-other-window dired-other-frame)
     "Set up Emacsvox."
   (emacsvox-dired-initialize)
-  (let* ((facts (emacsvox-dired-entry-facts 'entry-opened))
-         (context (emacsvox-aural-capture-context 'dired 'state-change))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'dired)
-         (emacsvox-aural-submission-occasion 'state-change))
-    (emacsvox-icon 'open-object)
-    (emacsvox-speak-mode-line)))
+  (emacsvox-dired--present-feedback
+   (emacsvox-dired-entry-facts 'entry-opened)
+   'state-change 'open-object #'emacsvox-speak-mode-line))
 
 (defun emacsvox--advice-dired-find-file-around (orig-fun &rest args)
   "Produce an auditory icon."
@@ -243,12 +269,12 @@ DOCSTRING and BODY define the feedback function for each command."
         (setq result (apply orig-fun args))
         (when directory-p
           (emacsvox-dired-label-fields))
-        (let ((emacsvox-aural-submission-facts facts)
-              (emacsvox-aural-submission-context context)
-              (emacsvox-aural-submission-module 'dired)
-              (emacsvox-aural-submission-occasion 'state-change))
-          (emacsvox-speak-mode-line)
-          (emacsvox-icon 'open-object))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--call-with-aural-presentation
+           facts 'state-change
+           (lambda ()
+             (emacsvox-speak-mode-line)
+             (emacsvox-icon 'open-object))))
         result)
     (apply orig-fun args)))
 
@@ -364,24 +390,32 @@ unless `dired-listing-switches' contains -l"
 Like Emacs' built-in dired-show-file-type but allows user to customize
 options passed to command `file'."
   (interactive (list (dired-get-filename t) current-prefix-arg))
-  
-  (with-temp-buffer
-    (if deref-symlinks
-        (call-process "file" nil t t  "-l"
-                      emacsvox-dired-file-cmd-options  file)
-      (call-process "file" nil t t
-                    emacsvox-dired-file-cmd-options file))
-    (when (bolp)
-      (delete-char  -1))
-    (message (buffer-string))))
+  (emacsvox-dired--call-with-aural-presentation
+   (append
+    (emacsvox-dired-entry-facts 'entry-inspected)
+    '(:entry-inspection-kind file-type))
+   'inspection
+   (lambda ()
+     (with-temp-buffer
+       (if deref-symlinks
+           (call-process "file" nil t t "-l"
+                         emacsvox-dired-file-cmd-options file)
+         (call-process "file" nil t t
+                       emacsvox-dired-file-cmd-options file))
+       (when (bolp)
+         (delete-char -1))
+       (message (buffer-string))))))
 
 (defun emacsvox-dired-speak-header-line()
   "Speak the header line of the dired buffer. "
   (interactive)
-  (emacsvox-icon 'section)
-  (save-excursion (goto-char (point-min))
-                  (forward-line 2)
-                  (emacsvox-speak-region (point-min) (point))))
+  (emacsvox-dired--present-feedback
+   '(:role filesystem-listing) 'inspection 'section
+   (lambda ()
+     (save-excursion
+       (goto-char (point-min))
+       (forward-line 2)
+       (emacsvox-speak-region (point-min) (point))))))
 
 (defun emacsvox-dired-speak-file-size ()
   "Speak the size of the current file.
@@ -392,8 +426,10 @@ On a directory line, run du -s on the directory to speak its size."
     (cond
      ((and filename
            (file-directory-p filename))
-      (emacsvox-icon 'progress)
-      (emacsvox-shell-command (format "du -s \"%s\"" filename)))
+      (emacsvox-dired--present-feedback
+       (emacsvox-dired-inspection-facts 'size)
+       'inspection 'progress #'emacsvox-shell-command
+       (format "du -s \"%s\"" filename)))
      (filename
       (setq size (nth 7 (file-attributes filename)))
                                         ; check for ange-ftp
@@ -401,9 +437,10 @@ On a directory line, run du -s on the directory to speak its size."
         (setq size
               (nth  4
                     (split-string (ems--this-line)))))
-      (emacsvox-icon 'select-object)
-      (message "File size %s"
-               size))
+      (emacsvox-dired--present-feedback
+       (emacsvox-dired-inspection-facts 'size)
+       'inspection 'select-object #'message
+       "File size %s" size))
      (t (message "No file on current line")))))
 
 (defun emacsvox-dired-speak-file-modification-time ()
@@ -412,11 +449,13 @@ On a directory line, run du -s on the directory to speak its size."
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-icon 'select-object)
-      (message "Modified on : %s"
-               (format-time-string
-                emacsvox-speak-time-format
-                (nth 5 (file-attributes filename)))))
+      (emacsvox-dired--present-feedback
+       (emacsvox-dired-inspection-facts 'modification-time)
+       'inspection 'select-object #'message
+       "Modified on : %s"
+       (format-time-string
+        emacsvox-speak-time-format
+        (nth 5 (file-attributes filename)))))
      (t (message "No file on current line")))))
 
 (defun emacsvox-dired-speak-file-access-time ()
@@ -425,11 +464,13 @@ On a directory line, run du -s on the directory to speak its size."
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-icon 'select-object)
-      (message "Last accessed   on  %s"
-               (format-time-string
-                emacsvox-speak-time-format
-                (nth 4 (file-attributes filename)))))
+      (emacsvox-dired--present-feedback
+       (emacsvox-dired-inspection-facts 'access-time)
+       'inspection 'select-object #'message
+       "Last accessed   on  %s"
+       (format-time-string
+        emacsvox-speak-time-format
+        (nth 4 (file-attributes filename)))))
      (t (message "No file on current line")))))
 (defun emacsvox-dired-speak-symlink-target ()
   "Speaks the target of the symlink on the current line."
@@ -437,12 +478,15 @@ On a directory line, run du -s on the directory to speak its size."
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-icon 'select-object)
-      (cond
-       ((file-symlink-p filename)
-        (message "Target is %s"
-                 (file-chase-links filename)))
-       (t (message "%s is not a symbolic link" filename))))
+      (emacsvox-dired--present-feedback
+       (emacsvox-dired-inspection-facts 'symbolic-link-target)
+       'inspection 'select-object
+       (lambda ()
+         (cond
+          ((file-symlink-p filename)
+           (message "Target is %s"
+                    (file-chase-links filename)))
+          (t (message "%s is not a symbolic link" filename))))))
      (t (message "No file on current line")))))
 (defun emacsvox-dired-speak-file-permissions ()
   "Speak the permissions of the current file."
@@ -450,9 +494,10 @@ On a directory line, run du -s on the directory to speak its size."
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-icon 'select-object)
-      (message "Permissions %s"
-               (nth 8 (file-attributes filename))))
+      (emacsvox-dired--present-feedback
+       (emacsvox-dired-inspection-facts 'permissions)
+       'inspection 'select-object #'message
+       "Permissions %s" (nth 8 (file-attributes filename))))
      (t (message "No file on current line")))))
 
 ;;;   keys
@@ -489,8 +534,12 @@ On a directory line, run du -s on the directory to speak its size."
 (emacsvox-dired--define-after-advice
     (locate locate-with-filter)
     "Speak the Locate results."
-  (emacsvox-speak-line)
-  (emacsvox-icon 'open-object))
+  (emacsvox-dired--call-with-aural-presentation
+   '(:role filesystem-listing :events (entry-opened))
+   'state-change
+   (lambda ()
+     (emacsvox-speak-line)
+     (emacsvox-icon 'open-object))))
 (load "locate" t t)
 
 (cl-declaim (special locate-mode-map))
@@ -515,12 +564,16 @@ On a directory line, run du -s on the directory to speak its size."
   
   (unless (eq major-mode 'dired-mode)
     (error "This command should be used in dired mode."))
-  (shell-command
-   (format "rpm -qi ` rpm -qf %s`"
-           (dired-get-filename 'no-location)))
-  (other-window 1)
-  (search-forward "Summary" nil t)
-  (emacsvox-speak-line))
+  (let ((facts (emacsvox-dired-entry-facts 'entry-inspected)))
+    (emacsvox-dired--call-with-aural-presentation
+     facts 'inspection
+     (lambda ()
+       (shell-command
+        (format "rpm -qi ` rpm -qf %s`"
+                (dired-get-filename 'no-location)))
+       (other-window 1)
+       (search-forward "Summary" nil t)
+       (emacsvox-speak-line)))))
 
 (defconst emacsvox-dired-opener-table
   `(("\\.am$"  emacsvox-amark-file-load)
@@ -588,8 +641,13 @@ current file in DirEd."
 (defun emacsvox-dired-epub-eww ()
   "Open epub on current line  in EWW"
   (interactive)
-  (emacsvox-epub-eww (shell-quote-argument(dired-get-filename)))
-  (emacsvox-icon 'open-object))
+  (let ((filename (dired-get-filename))
+        (facts (emacsvox-dired-entry-facts 'entry-opened)))
+    (emacsvox-dired--call-with-aural-presentation
+     facts 'state-change
+     (lambda ()
+       (emacsvox-epub-eww (shell-quote-argument filename))
+       (emacsvox-icon 'open-object)))))
 
 (defun emacsvox-dired-csv-open ()
   "Open CSV file on current dired line."

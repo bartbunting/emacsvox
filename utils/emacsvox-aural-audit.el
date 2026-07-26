@@ -37,10 +37,35 @@
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-org)
 (require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-markdown)
 
 (defconst emacsvox-aural-audit-icon-functions
   '(emacsvox-icon emacsvox-queue-icon)
   "Functions whose literal cue arguments are included in the source audit.")
+
+(defconst emacsvox-aural-audit-migrated-icon-boundaries
+  '((emacsvox-agent-shell.el
+     emacsvox-agent-shell--call-with-aural-presentation
+     emacsvox-agent-shell--present-feedback)
+    (emacsvox-markdown.el
+     emacsvox-markdown--call-with-aural-presentation)
+    (emacsvox-notmuch.el
+     emacsvox-notmuch--call-with-aural-presentation
+     emacsvox-notmuch--present-feedback)
+    (emacsvox-gnus.el
+     emacsvox-gnus--call-with-aural-presentation
+     emacsvox-gnus--present-feedback)
+    (emacsvox-dired.el
+     emacsvox-dired--call-with-aural-presentation
+     emacsvox-dired--present-feedback)
+    (emacsvox-magit.el
+     emacsvox-magit--call-with-aural-presentation
+     emacsvox-magit--present-feedback))
+  "Migrated modules and calls that establish semantic icon context.
+
+A direct icon call in one of these modules must occur below one of its
+listed calls, or in an internal function whose name ends in
+`-compatibility'.")
 
 (defun emacsvox-aural-audit--root (&optional root)
   "Return normalized repository ROOT or the inferred default."
@@ -151,6 +176,150 @@ dynamic-call count, and source parse errors."
         sum (plist-get data :count))
        :dynamic-count dynamic-count
        :parse-errors (nreverse parse-errors)))))
+
+(defun emacsvox-aural-audit--compatibility-function-p (function)
+  "Return non-nil when FUNCTION explicitly names a compatibility adapter."
+  (and
+   (symbolp function)
+   (string-suffix-p "-compatibility" (symbol-name function))))
+
+(defun emacsvox-aural-audit-context-free-icons (&optional root)
+  "Return direct icon calls outside semantic boundaries in migrated modules.
+
+Repository ROOT is read without evaluation.  Each returned plist identifies
+the source file, containing function when statically known, and icon
+function.  Calls to a named compatibility adapter must themselves occur
+below a presentation boundary."
+  (let ((root (emacsvox-aural-audit--root root))
+        failures)
+    (dolist (entry emacsvox-aural-audit-migrated-icon-boundaries)
+      (let* ((basename (symbol-name (car entry)))
+             (boundaries (cdr entry))
+             (file (expand-file-name (concat "lisp/" basename) root))
+             forms
+             (compatibility-icons (make-hash-table :test #'eq)))
+        (when (file-readable-p file)
+          (with-temp-buffer
+            (insert-file-contents file)
+            (emacs-lisp-mode)
+            (goto-char (point-min))
+            (let ((read-eval nil))
+              (condition-case nil
+                  (while
+                      (progn
+                        (forward-comment (point-max))
+                        (not (eobp)))
+                    (push (read (current-buffer)) forms))
+                (error nil))))
+          (setq forms (nreverse forms))
+          (cl-labels
+              ((collect-icons
+                (form function)
+                (cond
+                 ((atom form) nil)
+                 ((eq (car form) 'quote) nil)
+                 ((eq (car form) 'defun)
+                  (let ((nested
+                         (and (symbolp (cadr form)) (cadr form))))
+                    (dolist (body-form (cdddr form))
+                      (collect-icons body-form nested))))
+                 (t
+                  (when
+                      (and function
+                           (memq
+                            (car form)
+                            emacsvox-aural-audit-icon-functions))
+                    (puthash
+                     function
+                     (delete-dups
+                      (cons
+                       (car form)
+                       (gethash function compatibility-icons)))
+                     compatibility-icons))
+                  (let ((tail form))
+                    (while (consp tail)
+                      (collect-icons (car tail) function)
+                      (setq tail (cdr tail)))
+                    (when tail
+                      (collect-icons tail function)))))))
+            (dolist (form forms)
+              (when
+                  (and
+                   (consp form)
+                   (eq (car form) 'defun)
+                   (emacsvox-aural-audit--compatibility-function-p
+                    (cadr form)))
+                (collect-icons form nil))))
+          (cl-labels
+              ((record
+                (function icon-function &optional compatibility-function)
+                (push
+                 (append
+                  (list
+                   :file (file-relative-name file root)
+                   :function function
+                   :icon-function icon-function)
+                  (when compatibility-function
+                    (list
+                     :compatibility-function compatibility-function)))
+                 failures))
+               (walk
+                (form inside-boundary containing-function)
+                (cond
+                 ((atom form) nil)
+                 ((eq (car form) 'quote) nil)
+                 ((eq (car form) 'defun)
+                  (let ((function
+                         (if (symbolp (cadr form))
+                             (cadr form)
+                           containing-function)))
+                    (dolist (body-form (cdddr form))
+                      (walk body-form nil function))))
+                 (t
+                  (let* ((head (car form))
+                         (bounded
+                          (or inside-boundary
+                              (memq head boundaries)))
+                         (compatibility
+                          (gethash head compatibility-icons)))
+                    (when
+                        (and
+                         (memq head emacsvox-aural-audit-icon-functions)
+                         (not bounded)
+                         (not
+                          (emacsvox-aural-audit--compatibility-function-p
+                           containing-function)))
+                      (record containing-function head))
+                    (when (and compatibility (not bounded))
+                      (dolist (icon-function compatibility)
+                        (record
+                         containing-function icon-function head)))
+                    (let ((tail form))
+                      (while (consp tail)
+                        (walk (car tail) bounded containing-function)
+                        (setq tail (cdr tail)))
+                      (when tail
+                        (walk tail bounded containing-function))))))))
+            (dolist (form forms)
+              (walk form nil nil))))))
+    (sort
+     failures
+     (lambda (left right)
+       (let ((left-key
+              (format
+               "%s:%s:%s:%s"
+               (plist-get left :file)
+               (plist-get left :function)
+               (plist-get left :icon-function)
+               (plist-get left :compatibility-function)))
+             (right-key
+              (format
+               "%s:%s:%s:%s"
+               (plist-get right :file)
+               (plist-get right :function)
+               (plist-get right :icon-function)
+               (plist-get right :compatibility-function))))
+         (string-lessp left-key right-key))))))
 
 (defun emacsvox-aural-audit--org-value (value)
   "Return VALUE formatted for an Org table cell."
@@ -356,7 +525,10 @@ dynamic-call count, and source parse errors."
    "=emacsvox-aural-submission-module=, and "
    "=emacsvox-aural-submission-occasion= around the existing =tts-speak= or "
    "=emacsvox-icon= call.  Capture context in the source buffer before text "
-   "enters a scratch buffer or notification log.\n\n"
+   "enters a scratch buffer or notification log.  A migrated integration "
+   "should centralize that binding in a small call boundary and put preserved "
+   "legacy output in a function ending in =-compatibility=.  The source audit "
+   "rejects direct icon calls elsewhere in migrated modules.\n\n"
    "A module may register a read-only fragment for compatibility defaults, "
    "but the fragment still matches semantic facts and emits modality.  Keep "
    "meaning in the registry and presentation in rules.  Preserve established "
@@ -593,12 +765,12 @@ dynamic-call count, and source parse errors."
    "while adding semantic fact properties.  A semantic scheme can then "
    "override the voice for one module, mode, derived mode, or buffer; without "
    "such a rule, normal Voice Lock behavior remains authoritative.\n\n"
-   "Notmuch, Gnus, Dired, and Magit now attach registered message, filesystem, "
-   "and version-control facts around their established feedback.  Their "
-   "speech and cue order remains unchanged unless a scheme or fragment "
-   "matches the new facts.  Optional mail-status, Dired-state, and "
-   "Magit-visibility fragments demonstrate customization without requiring "
-   "the corresponding third-party package at startup.\n\n"
+   "Agent Shell, Markdown, Notmuch, Gnus, Dired, and Magit now attach "
+   "registered conversation, document, message, filesystem, and "
+   "version-control facts around their established feedback.  Their speech "
+   "and cue order remains unchanged unless a scheme or fragment matches the "
+   "new facts.  Optional fragments demonstrate customization without "
+   "requiring the corresponding third-party package at startup.\n\n"
    "Rollout is deliberately staged.  The default scheme is compatibility "
    "preserving, the Org variants are selectable examples, and integrations "
    "move in small tested batches.  Critical alerts currently follow the same "
@@ -609,8 +781,9 @@ dynamic-call count, and source parse errors."
    "Run =make aural-reference= after changing a registry or this generator.  "
    "Run =make aural-audit= to validate registry cross-references, every "
    "registered pack and built-in scheme, literal cue calls, voice palettes, "
-   "and this generated file.  =utils/count-icons.pl= remains a historical "
-   "text counter; the registry-aware audit is authoritative.\n"))
+   "semantic icon boundaries in migrated modules, and this generated file.  "
+   "=utils/count-icons.pl= remains a historical text counter; the "
+   "registry-aware audit is authoritative.\n"))
 
 (defun emacsvox-aural-reference-string (&optional root)
   "Return the generated aural author reference for repository ROOT."
@@ -674,6 +847,8 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
   (let* ((root (emacsvox-aural-audit--root root))
          (source (emacsvox-aural-audit-source-cues root))
          (usage (plist-get source :usage))
+         (context-free-icons
+          (emacsvox-aural-audit-context-free-icons root))
          unknown
          errors)
     (dolist (entry usage)
@@ -732,6 +907,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
      :literal-count (plist-get source :literal-count)
      :dynamic-count (plist-get source :dynamic-count)
      :unknown-cues (nreverse unknown)
+     :context-free-icons context-free-icons
      :parse-errors (plist-get source :parse-errors)
      :errors (nreverse errors)
      :reference-current (emacsvox-aural-reference-current-p root)))))
@@ -740,6 +916,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
   "Return non-nil when AUDIT found no contract or documentation failures."
   (and
    (null (plist-get audit :unknown-cues))
+   (null (plist-get audit :context-free-icons))
    (null (plist-get audit :parse-errors))
    (null (plist-get audit :errors))
    (plist-get audit :reference-current)))
@@ -779,6 +956,21 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
          (car entry)
          (string-join (plist-get (cdr entry) :files) ", ")))
       (plist-get audit :unknown-cues)
+      "")
+     (mapconcat
+      (lambda (failure)
+        (format
+         "Context-free icon call %s in %s%s%s\n"
+         (plist-get failure :icon-function)
+         (plist-get failure :file)
+         (if-let* ((function (plist-get failure :function)))
+             (format " (%s)" function)
+           "")
+         (if-let* ((adapter
+                    (plist-get failure :compatibility-function)))
+             (format " via %s" adapter)
+           "")))
+      (plist-get audit :context-free-icons)
       "")
      (mapconcat
       (lambda (error) (concat "Source parse error: " error "\n"))

@@ -1946,6 +1946,85 @@ compilation; =check-parens=; focused =checkdoc=; =org-lint=; and
 alternate takes in the untracked =sounds/bart/= customization; those user
 files were excluded from the clean repository gate and were not changed.
 
+** DONE Slice 21: Agent Shell End-to-End Semantic Presentation
+
+- Inventory every Agent Shell cue, notification, spoken status, navigation
+  response, table interaction, viewport transition, permission action, tool
+  transition, source-block action, and editing response.
+- Extend the registered Agent Shell vocabulary with the roles, states,
+  attributes, and events required to express those interactions without
+  selecting a modality.
+- Route all Agent Shell feedback through one semantic submission boundary that
+  freezes the source buffer, module, occasion, and facts before compatibility
+  speech or cues run.
+- Preserve foreground and background speech-level policy, response
+  coalescing, cue choice, spoken wording, ordering, and notification behavior
+  when no scheme rule changes the presentation.
+- Add end-to-end tests proving that rules can independently customize session
+  lifecycle, response content, thoughts, plans, tools, permissions, block
+  navigation, source blocks, tables, viewports, and prompt editing.
+
+Deliverable: Agent Shell is the complete reference integration for persistent
+content, asynchronous events, background notification, structured navigation,
+and interactive actions.
+
+** DONE Slice 22: Markdown End-to-End Semantic Presentation
+
+- Register Markdown structure independently of visual faces: headings and
+  levels, visibility, lists, task state, links, code blocks and language,
+  tables, footnotes, separators, and document operations.
+- Treat ordinary line movement and structural commands as the same semantic
+  navigation occasion when they arrive at the same Markdown object.
+- Route reading-mode cleanup, explicit heading speech, navigation, editing,
+  completion, export, and visibility feedback through frozen Markdown facts.
+- Preserve existing face voices, clean-reading text, cue choice, wording,
+  command interactivity, and ordering as the compatibility default.
+- Add focused tests for ATX and Setext headings, task state, fenced code,
+  tables, links, structural navigation, visibility changes, and operations.
+
+Deliverable: Markdown provides a complete document-mode integration alongside
+Org, with consistent presentation whether users move by line or by structure.
+
+** DONE Slice 23: Complete Partially Migrated Workflow Modules
+
+- Inventory every remaining Notmuch, Gnus, Dired, and Magit feedback path.
+- Add missing registered intent for message parts and actions, mail-group
+  operations, filesystem inspection and operations, version-control buffers,
+  blame, diffs, processes, and other module-specific workflows.
+- Put every compatibility cue and spoken response inside a frozen semantic
+  submission, including failure, boundary, inspection, and prompt feedback.
+- Retain direct compatibility calls only inside named presentation boundaries;
+  module advice must describe intent before choosing the historical fallback.
+- Extend focused tests until every feedback path in the four modules has
+  semantic facts, module context, and an explicit occasion.
+
+Deliverable: the four workflow modules are fully migrated rather than
+representative vertical slices.
+
+** DONE Slice 24: Migration Enforcement and Reference Update
+
+- Extend the aural audit to distinguish approved compatibility calls inside
+  semantic presentation boundaries from context-free legacy calls.
+- Maintain an explicit migrated-module set and fail the audit when a new
+  context-free cue or speech path is introduced there.
+- Generate module-owned roles, states, events, attributes, occasions, and
+  compatibility boundaries in the Aural Presentation Reference.
+- Document the end-to-end integration pattern using Agent Shell and Markdown
+  as worked examples.
+- Run focused, full, trace, compiled-startup, audit, byte-compilation, lint,
+  and generated-document gates.
+
+Deliverable: complete migrations remain complete as modules evolve.
+
+Checks for Slices 21--24: 1,525 expected passes and zero unexpected results in
+the clean full repository suite, with one existing optional Mu4e skip; 246
+focused Agent Shell, Markdown, Dired, Magit, Gnus, and Notmuch passes; all 27
+semantic traces matching; compiled aural parity; current generated reference
+and clean repository aural audit; temporary byte compilation of every changed
+Lisp module; =check-parens=; =org-lint=; and =git diff --check=.  The untracked
+=sounds/bart/= customization remains excluded from the clean repository gate
+and was not changed.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:

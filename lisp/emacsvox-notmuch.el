@@ -230,6 +230,60 @@ tag, or give it a nil icon to keep the status silent."
 
 ;;;  Semantic aural presentation:
 
+(defun emacsvox-notmuch--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in a frozen Notmuch presentation.
+FACTS describe the object or event, and OCCASION describes the interaction."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts
+              '(:role mail-view :mail-view-kind other)))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'navigation))
+         (effective-module
+          (or emacsvox-aural-submission-module 'notmuch))
+         (context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context
+               effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
+
+(defun emacsvox-notmuch--present-feedback
+    (facts occasion icon function &rest arguments)
+  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
+  (emacsvox-notmuch--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (when icon (emacsvox-icon icon))
+     (apply function arguments))))
+
+(defun emacsvox-notmuch-view-facts (kind action event)
+  "Return semantic facts for Notmuch view KIND, ACTION, and EVENT."
+  (append
+   (list :role 'mail-view :mail-view-kind kind)
+   (when action (list :mail-action-kind action))
+   (when event (list :events (list event)))))
+
+(defun emacsvox-notmuch-thread-facts (action event)
+  "Return semantic facts for a Notmuch thread ACTION and EVENT."
+  (append
+   '(:role message-thread)
+   (when action (list :mail-action-kind action))
+   (when event (list :events (list event)))))
+
+(defun emacsvox-notmuch-part-facts (part action event)
+  "Return semantic facts for Notmuch PART, ACTION, and EVENT."
+  (append
+   (list
+    :role 'message-part
+    :message-part-kind
+    (if (plist-get part :filename) 'attachment 'mime-part))
+   (when action (list :mail-action-kind action))
+   (when event (list :events (list event)))))
+
 (defun emacsvox-notmuch--annotate-field (text field)
   "Return TEXT annotated as semantic Notmuch FIELD content."
   (when text
@@ -351,7 +405,8 @@ tag, or give it a nil icon to keep the status silent."
      emacsvox-notmuch-search-result-fields))
    emacsvox-notmuch-search-field-separator))
 
-(defun emacsvox-notmuch--play-status-icons (result status-icons)
+(defun emacsvox-notmuch--play-status-icons-compatibility
+    (result status-icons)
   "Play STATUS-ICONS for statuses present in Notmuch RESULT."
   (let ((tags (plist-get result :tags)))
     (dolist (entry status-icons)
@@ -363,17 +418,13 @@ tag, or give it a nil icon to keep the status silent."
   (interactive)
   (when-let* ((result (or result (notmuch-search-get-result)))
               (summary (emacsvox-notmuch-format-search-result result)))
-    (let* ((facts
-            (emacsvox-notmuch-message-facts result 'focus-entered))
-           (context
-            (emacsvox-aural-capture-context 'notmuch 'navigation))
-           (emacsvox-aural-submission-facts facts)
-           (emacsvox-aural-submission-context context)
-           (emacsvox-aural-submission-module 'notmuch)
-           (emacsvox-aural-submission-occasion 'navigation))
-      (emacsvox-notmuch--play-status-icons
-       result emacsvox-notmuch-search-status-icons)
-      (tts-speak summary))
+    (emacsvox-notmuch--call-with-aural-presentation
+     (emacsvox-notmuch-message-facts result 'focus-entered)
+     'navigation
+     (lambda ()
+       (emacsvox-notmuch--play-status-icons-compatibility
+        result emacsvox-notmuch-search-status-icons)
+       (tts-speak summary)))
     summary))
 
 ;;;  Show Messages:
@@ -469,22 +520,13 @@ tag, or give it a nil icon to keep the status silent."
                  (eq major-mode 'notmuch-show-mode)
                  (notmuch-show-get-message-properties))))
               (summary (emacsvox-notmuch-format-show-message message)))
-    (let* ((facts
-            (or
-             emacsvox-aural-submission-facts
-             (emacsvox-notmuch-message-facts message 'focus-entered)))
-           (context
-            (or
-             emacsvox-aural-submission-context
-             (emacsvox-aural-capture-context 'notmuch 'navigation)))
-           (emacsvox-aural-submission-facts facts)
-           (emacsvox-aural-submission-context context)
-           (emacsvox-aural-submission-module 'notmuch)
-           (emacsvox-aural-submission-occasion
-            (or emacsvox-aural-submission-occasion 'navigation)))
-      (emacsvox-notmuch--play-status-icons
-       message emacsvox-notmuch-show-status-icons)
-      (tts-speak summary))
+    (emacsvox-notmuch--call-with-aural-presentation
+     (emacsvox-notmuch-message-facts message 'focus-entered)
+     'navigation
+     (lambda ()
+       (emacsvox-notmuch--play-status-icons-compatibility
+        message emacsvox-notmuch-show-status-icons)
+       (tts-speak summary)))
     summary))
 
 (defun emacsvox-notmuch--show-message-position ()
@@ -515,9 +557,13 @@ tag, or give it a nil icon to keep the status silent."
             (if (string-empty-p details)
                 position-summary
               (concat position-summary ", " details))))
-      (emacsvox-notmuch--play-status-icons
-       message emacsvox-notmuch-show-status-icons)
-      (tts-speak summary)
+      (emacsvox-notmuch--call-with-aural-presentation
+       (emacsvox-notmuch-message-facts message)
+       'inspection
+       (lambda ()
+         (emacsvox-notmuch--play-status-icons-compatibility
+          message emacsvox-notmuch-show-status-icons)
+         (tts-speak summary)))
       summary)))
 
 (defun emacsvox-notmuch--current-show-message-id ()
@@ -632,18 +678,25 @@ tag, or give it a nil icon to keep the status silent."
   "Cue and identify the current button in a Notmuch Show buffer."
   (when-let* ((button (button-at (point))))
     (if-let* ((part (emacsvox-notmuch--part-at-point button)))
-        (progn
-          (emacsvox-icon
-           (if (plist-get part :filename) 'item 'button))
-          (tts-speak (emacsvox-notmuch-format-part part)))
-      (emacsvox-icon 'large-movement)
-      (tts-speak (button-label button)))))
+        (emacsvox-notmuch--present-feedback
+         (emacsvox-notmuch-part-facts part 'select 'focus-entered)
+         'navigation
+         (if (plist-get part :filename) 'item 'button)
+         #'tts-speak (emacsvox-notmuch-format-part part))
+      (emacsvox-notmuch--present-feedback
+       '(:role message-part :message-part-kind button
+         :mail-action-kind select :events (focus-entered))
+       'navigation 'large-movement #'tts-speak (button-label button)))))
 
 (defun emacsvox-notmuch--part-action-feedback (action part)
   "Confirm ACTION on Notmuch MIME PART."
   (let ((save-p (eq action 'save)))
-    (emacsvox-icon (if save-p 'save-object 'open-object))
-    (tts-speak
+    (emacsvox-notmuch--present-feedback
+     (emacsvox-notmuch-part-facts
+      part (if save-p 'save 'show) 'operation-completed)
+     'state-change
+     (if save-p 'save-object 'open-object)
+     #'tts-speak
      (format "%s %s"
              (if save-p "Saved" "Opened")
              (emacsvox-notmuch--part-action-object part)))))
@@ -834,8 +887,15 @@ tag, or give it a nil icon to keep the status silent."
 
 (defun emacsvox-notmuch--open-feedback ()
   "Speak a newly opened Notmuch view."
-  (emacsvox-icon 'open-object)
-  (emacsvox-speak-mode-line))
+  (emacsvox-notmuch--present-feedback
+   (emacsvox-notmuch-view-facts
+    (pcase major-mode
+      ('notmuch-hello-mode 'group)
+      ('notmuch-search-mode 'search)
+      ('notmuch-show-mode 'thread)
+      (_ 'other))
+    'open 'mail-view-opened)
+   'state-change 'open-object #'emacsvox-speak-mode-line))
 
 (defun emacsvox-notmuch--hello-widget-count (widget)
   "Return the displayed result count preceding saved-search WIDGET."
@@ -869,8 +929,14 @@ tag, or give it a nil icon to keep the status silent."
              ((eq (widget-type widget) 'link)
               (format "%s link" label))
              (t label))))
-      (emacsvox-icon 'item)
-      (tts-speak summary))))
+      (emacsvox-notmuch--present-feedback
+       (list
+        :role 'message-part
+        :message-part-kind
+        (if (eq (widget-type widget) 'link) 'link 'button)
+        :mail-action-kind 'select
+        :events '(focus-entered))
+       'navigation 'item #'tts-speak summary))))
 
 (defun emacsvox-notmuch--hello-widget-navigation-around
     (target original arguments)
@@ -908,8 +974,9 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox-notmuch--close-feedback ()
   "Speak after closing a Notmuch view."
-  (emacsvox-icon 'close-object)
-  (emacsvox-speak-mode-line))
+  (emacsvox-notmuch--present-feedback
+   (emacsvox-notmuch-view-facts 'other 'close 'mail-view-closed)
+   'state-change 'close-object #'emacsvox-speak-mode-line))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-bury-or-kill-this-buffer)
@@ -917,8 +984,9 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox-notmuch--search-feedback ()
   "Speak a Notmuch search result."
-  (emacsvox-icon 'open-object)
-  (emacsvox-speak-line))
+  (emacsvox-notmuch--present-feedback
+   (emacsvox-notmuch-view-facts 'search 'search 'mail-view-opened)
+   'state-change 'open-object #'emacsvox-speak-line))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-search)
@@ -934,15 +1002,10 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
          (facts
           (and
            message
-           (emacsvox-notmuch-message-facts message 'message-opened)))
-         (context
-          (emacsvox-aural-capture-context 'notmuch 'state-change))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'notmuch)
-         (emacsvox-aural-submission-occasion 'state-change))
-    (emacsvox-icon 'open-object)
-    (emacsvox-notmuch-speak-show-message message)))
+           (emacsvox-notmuch-message-facts message 'message-opened))))
+    (emacsvox-notmuch--present-feedback
+     facts 'state-change 'open-object
+     #'emacsvox-notmuch-speak-show-message message)))
 
 (defun emacsvox-notmuch--blank-visual-line-pitch ()
   "Return the Emacsvox blank-line pitch in Notmuch Show.
@@ -1004,14 +1067,16 @@ line contains non-whitespace text."
 (defun emacsvox-notmuch--end-of-thread-feedback ()
   "Select the current body and announce the end of its thread."
   (emacsvox-notmuch--move-to-message-body)
-  (emacsvox-icon 'select-object)
-  (tts-speak "End of thread"))
+  (emacsvox-notmuch--present-feedback
+   (emacsvox-notmuch-thread-facts 'select 'focus-entered)
+   'navigation 'select-object #'tts-speak "End of thread"))
 
 (defun emacsvox-notmuch--beginning-of-thread-feedback ()
   "Select the current body and announce the beginning of its thread."
   (emacsvox-notmuch--move-to-message-body)
-  (emacsvox-icon 'select-object)
-  (tts-speak "Beginning of thread"))
+  (emacsvox-notmuch--present-feedback
+   (emacsvox-notmuch-thread-facts 'select 'focus-entered)
+   'navigation 'select-object #'tts-speak "Beginning of thread"))
 
 (defun emacsvox-notmuch--next-navigation-around
     (target original arguments)
@@ -1171,8 +1236,14 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox-notmuch--part-visibility-feedback (hidden part)
   "Report whether Notmuch MIME PART is HIDDEN."
-  (emacsvox-icon (if hidden 'close-object 'open-object))
-  (tts-speak
+  (emacsvox-notmuch--present-feedback
+   (append
+    (emacsvox-notmuch-part-facts
+     part (if hidden 'hide 'show) 'visibility-changed)
+    (list :visibility (if hidden 'folded 'expanded)))
+   'state-change
+   (if hidden 'close-object 'open-object)
+   #'tts-speak
    (format "%s %s"
            (emacsvox-notmuch--part-action-object part)
            (if hidden "hidden" "shown"))))
@@ -1219,12 +1290,18 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
             (plist-get message :body))))
          (result (apply original arguments)))
     (when (ems-interactive-p 'notmuch-show-save-attachments)
-      (if (and count (> count 0))
-          (progn
-            (emacsvox-icon 'save-object)
-            (tts-speak "Finished saving attachments"))
-        (emacsvox-icon 'select-object)
-        (tts-speak "No attachments to save")))
+      (emacsvox-notmuch--present-feedback
+       (append
+        (if message
+            (emacsvox-notmuch-message-facts message)
+          '(:role message))
+        '(:mail-action-kind save :events (operation-completed)))
+       'state-change
+       (if (and count (> count 0)) 'save-object 'select-object)
+       #'tts-speak
+       (if (and count (> count 0))
+           "Finished saving attachments"
+         "No attachments to save")))
     result))
 
 (push
@@ -1246,11 +1323,14 @@ the selected message changes; otherwise speak the visible window."
            ((not (equal before-message after-message))
             (emacsvox-notmuch-speak-show-message))
            ((and (eq target 'notmuch-show-advance) (eobp))
-            (emacsvox-icon 'select-object)
-            (tts-speak "End of thread"))
+            (emacsvox-notmuch--present-feedback
+             (emacsvox-notmuch-thread-facts 'select 'focus-entered)
+             'navigation 'select-object #'tts-speak "End of thread"))
            (t
-            (emacsvox-icon 'scroll)
-            (emacsvox-speak-current-window))))))
+            (emacsvox-notmuch--present-feedback
+             '(:role message-part :message-part-kind page
+               :mail-action-kind scroll :events (focus-entered))
+             'navigation 'scroll #'emacsvox-speak-current-window))))))
     result))
 
 (defun emacsvox--advice-notmuch-show-advance-around
@@ -1299,13 +1379,19 @@ the selected message changes; otherwise speak the visible window."
 
 (defun emacsvox-notmuch--show-visibility-feedback ()
   "Indicate whether the current Notmuch message body is visible."
-  (if (plist-get
-       (notmuch-show-get-message-properties)
-       :message-visible)
-      (progn
-        (emacsvox-icon 'open-object)
-        (emacsvox-notmuch-speak-show-message))
-    (emacsvox-icon 'close-object)))
+  (let* ((message (notmuch-show-get-message-properties))
+         (visible (plist-get message :message-visible))
+         (facts
+          (append
+           (emacsvox-notmuch-message-facts message 'visibility-changed)
+           (list
+            :mail-action-kind (if visible 'show 'hide)
+            :visibility (if visible 'expanded 'folded)))))
+    (emacsvox-notmuch--present-feedback
+     facts 'state-change
+     (if visible 'open-object 'close-object)
+     (if visible #'emacsvox-notmuch-speak-show-message #'ignore)
+     message)))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-show-toggle-message
@@ -1363,17 +1449,21 @@ the selected message changes; otherwise speak the visible window."
   "Confirm TAG-CHANGES and call SPEAKER for the updated item.
 Statuses represented by STATUS-ICONS remain nonverbal."
   (when tag-changes
-    (let ((ordinary
-           (emacsvox-notmuch--ordinary-tag-changes
-            tag-changes status-icons)))
-      (when ordinary
-        (emacsvox-icon 'task-done)
-        (tts-speak (emacsvox-notmuch--tag-change-summary ordinary)))
-      (when
-          (emacsvox-notmuch--removed-status-p
-           tag-changes status-icons)
-        (emacsvox-icon 'deselect-object))
-      (funcall speaker))))
+    (emacsvox-notmuch--call-with-aural-presentation
+     '(:role message :mail-action-kind tag :events (message-marked))
+     'state-change
+     (lambda ()
+       (let ((ordinary
+              (emacsvox-notmuch--ordinary-tag-changes
+               tag-changes status-icons)))
+         (when ordinary
+           (emacsvox-icon 'task-done)
+           (tts-speak (emacsvox-notmuch--tag-change-summary ordinary)))
+         (when
+             (emacsvox-notmuch--removed-status-p
+              tag-changes status-icons)
+           (emacsvox-icon 'deselect-object))
+         (funcall speaker))))))
 
 (defun emacsvox-notmuch--tag-feedback (tag-changes)
   "Confirm TAG-CHANGES and speak the updated Notmuch result."
@@ -1490,14 +1580,22 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
     (object unarchive speak-destination)
   "Confirm archiving OBJECT and optionally SPEAK-DESTINATION.
 When UNARCHIVE is non-nil, confirm the reverse operation."
-  (emacsvox-icon (if unarchive 'open-object 'close-object))
-  (tts-speak
-   (format
-    "%s %s"
-    (if unarchive "Unarchived" "Archived")
-    (symbol-name object)))
-  (when speak-destination
-    (emacsvox-notmuch--speak-current-item)))
+  (emacsvox-notmuch--call-with-aural-presentation
+   (append
+    (if (eq object 'thread)
+        '(:role message-thread)
+      '(:role message))
+    '(:mail-action-kind archive :events (operation-completed)))
+   'state-change
+   (lambda ()
+     (emacsvox-icon (if unarchive 'open-object 'close-object))
+     (tts-speak
+      (format
+       "%s %s"
+       (if unarchive "Unarchived" "Archived")
+       (symbol-name object)))
+     (when speak-destination
+       (emacsvox-notmuch--speak-current-item)))))
 
 (defun emacsvox--advice-notmuch-show-archive-message-after
     (&optional unarchive &rest _)
@@ -1550,9 +1648,14 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
     (&optional unarchive &rest _)
   "Confirm an archive operation and speak the current result."
   (when (ems-interactive-p 'notmuch-search-archive-thread)
-    (emacsvox-icon 'close-object)
-    (tts-speak (if unarchive "Unarchived" "Archived"))
-    (emacsvox-notmuch-speak-search-result)))
+    (emacsvox-notmuch--call-with-aural-presentation
+     '(:role message-thread :mail-action-kind archive
+       :events (operation-completed))
+     'state-change
+     (lambda ()
+       (emacsvox-icon 'close-object)
+       (tts-speak (if unarchive "Unarchived" "Archived"))
+       (emacsvox-notmuch-speak-search-result)))))
 
 (push
  '(notmuch-search-archive-thread
@@ -1584,15 +1687,11 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
   (with-current-buffer (or buffer (current-buffer))
     (let* ((count (emacsvox-notmuch--search-result-count))
            (noun (if (= count 1) "thread" "threads"))
-           (facts '(:events (refresh-completed)))
-           (context
-            (emacsvox-aural-capture-context 'notmuch 'notification))
-           (emacsvox-aural-submission-facts facts)
-           (emacsvox-aural-submission-context context)
-           (emacsvox-aural-submission-module 'notmuch)
-           (emacsvox-aural-submission-occasion 'notification))
-      (emacsvox-icon 'task-done)
-      (tts-speak (format "Search refreshed, %d %s" count noun)))))
+           (summary (format "Search refreshed, %d %s" count noun)))
+      (emacsvox-notmuch--present-feedback
+       (emacsvox-notmuch-view-facts
+        'search 'refresh 'refresh-completed)
+       'notification 'task-done #'tts-speak summary))))
 
 (defun emacsvox-notmuch--mark-refresh-process ()
   "Mark the current Notmuch search process for completion feedback."
@@ -1621,16 +1720,11 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
            (zerop (process-exit-status process))
            (buffer-live-p buffer))
           (emacsvox-notmuch--announce-refresh-complete buffer)
-        (let* ((facts '(:events (refresh-failed)))
-               (context
-                (emacsvox-aural-capture-context
-                 'notmuch 'notification))
-               (emacsvox-aural-submission-facts facts)
-               (emacsvox-aural-submission-context context)
-               (emacsvox-aural-submission-module 'notmuch)
-               (emacsvox-aural-submission-occasion 'notification))
-          (emacsvox-icon 'warn-user)
-          (tts-speak "Search refresh failed"))))))
+        (emacsvox-notmuch--present-feedback
+         (emacsvox-notmuch-view-facts
+          'search 'refresh 'refresh-failed)
+         'notification 'warn-user
+         #'tts-speak "Search refresh failed")))))
 
 (push
  '(notmuch-search-refresh-view

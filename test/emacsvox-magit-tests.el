@@ -138,5 +138,49 @@
           :events (entry-unstaged) :states (unstaged)
           :visibility expanded)))))))
 
+(ert-deftest emacsvox-magit-view-and-process-facts-express-intent ()
+  "Magit view lifecycle and process completion use distinct semantics."
+  (should
+   (equal
+    (emacsvox-magit-view-facts 'diff 'vcs-diff-scrolled)
+    '(:role vcs-view :vcs-view-kind diff
+      :events (vcs-diff-scrolled))))
+  (should
+   (equal
+    (emacsvox-magit-process-facts t)
+    '(:role vcs-process :events (operation-failed)))))
+
+(ert-deftest emacsvox-magit-diff-feedback-has-view-context ()
+  "Diff scrolling keeps its compatibility output inside one view submission."
+  (with-temp-buffer
+    (insert "a\nb")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'magit-diff-show-or-scroll-up)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-icon)
+            (lambda (icon)
+              (push
+               (list icon emacsvox-aural-submission-facts
+                     emacsvox-aural-submission-occasion)
+               events)))
+           ((symbol-function 'emacsvox-speak-line)
+            (lambda ()
+              (push
+               (list 'line emacsvox-aural-submission-facts)
+               events))))
+        (emacsvox--advice-magit-diff-show-or-scroll-up-around
+         (lambda () (forward-line 1))))
+      (should
+       (equal
+        (nreverse events)
+        '((scroll
+           (:role vcs-view :vcs-view-kind diff
+            :events (vcs-diff-scrolled))
+           navigation)
+          (line
+           (:role vcs-view :vcs-view-kind diff
+            :events (vcs-diff-scrolled)))))))))
+
 (provide 'emacsvox-magit-tests)
 ;;; emacsvox-magit-tests.el ends here

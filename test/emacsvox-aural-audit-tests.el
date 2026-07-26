@@ -31,9 +31,11 @@
            ,@body)
        (delete-directory ,root t))))
 
-(defun emacsvox-test--write-aural-audit-source (root text)
-  "Write TEXT as one Lisp source file below audit ROOT."
-  (let ((file (expand-file-name "lisp/example.el" root)))
+(defun emacsvox-test--write-aural-audit-source (root text &optional basename)
+  "Write TEXT to BASENAME below the Lisp directory in audit ROOT."
+  (let ((file
+         (expand-file-name
+          (concat "lisp/" (or basename "example.el")) root)))
     (with-temp-buffer
       (insert text)
       (write-region (point-min) (point-max) file nil 'silent))
@@ -57,6 +59,33 @@
       (should (= (plist-get report :dynamic-count) 1))
       (should-not (plist-get report :parse-errors))
       (should (equal (mapcar #'car usage) '(item warn-user))))))
+
+(ert-deftest emacsvox-aural-audit-rejects-context-free-migrated-icons ()
+  "Migrated modules may emit icons only below their semantic boundary."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     (concat
+      "(defun unsafe-feedback () (emacsvox-icon 'item))\n"
+      "(defun safe-feedback ()\n"
+      "  (emacsvox-notmuch--call-with-aural-presentation\n"
+      "   '(:role message) 'navigation\n"
+      "   (lambda () (emacsvox-icon 'item))))\n"
+      "(defun old-feedback-compatibility ()\n"
+      "  (emacsvox-icon 'item))\n"
+      "(defun leaked-compatibility-feedback ()\n"
+      "  (old-feedback-compatibility))\n")
+     "emacsvox-notmuch.el")
+    (should
+     (equal
+      (emacsvox-aural-audit-context-free-icons root)
+      '((:file "lisp/emacsvox-notmuch.el"
+         :function leaked-compatibility-feedback
+         :icon-function emacsvox-icon
+         :compatibility-function old-feedback-compatibility)
+        (:file "lisp/emacsvox-notmuch.el"
+         :function unsafe-feedback
+         :icon-function emacsvox-icon))))))
 
 (ert-deftest emacsvox-aural-audit-never-evaluates-reader-forms ()
   "The source audit should reject `#.' without evaluating its payload."

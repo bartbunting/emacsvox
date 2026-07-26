@@ -166,6 +166,52 @@
 
 (add-hook 'magit-mode-hook #'emacsvox-magit-enable-aural-context)
 
+(defun emacsvox-magit--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in a frozen Magit presentation.
+FACTS describe the object or event, and OCCASION describes the interaction."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts
+              '(:role vcs-view :vcs-view-kind other)))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'navigation))
+         (effective-module
+          (or emacsvox-aural-submission-module 'magit))
+         (context
+          (or emacsvox-aural-submission-context
+              (emacsvox-aural-capture-context
+               effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
+
+(defun emacsvox-magit--present-feedback
+    (facts occasion icon function &rest arguments)
+  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
+  (emacsvox-magit--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (when icon (emacsvox-icon icon))
+     (apply function arguments))))
+
+(defun emacsvox-magit-view-facts (kind event)
+  "Return semantic facts for a Magit view of KIND undergoing EVENT."
+  (list :role 'vcs-view :vcs-view-kind kind :events (list event)))
+
+(defun emacsvox-magit-blame-facts (&optional event)
+  "Return semantic facts for the current blame chunk and optional EVENT."
+  (append
+   '(:role vcs-blame-chunk)
+   (when event (list :events (list event)))))
+
+(defun emacsvox-magit-process-facts (failed)
+  "Return semantic facts for a Magit process according to FAILED."
+  (list
+   :role 'vcs-process
+   :events (list (if failed 'operation-failed 'operation-completed))))
+
 (defun emacsvox-magit--section-value (section property)
   "Return SECTION's PROPERTY without requiring Magit at startup."
   (cond
@@ -221,18 +267,15 @@ EVENT and VISIBILITY override values inferred from the command and section."
   "Present the current Magit line semantically.
 
 ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
-feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
-  (let* ((facts
-          (emacsvox-magit-section-facts target section event visibility))
-         (context (emacsvox-aural-capture-context 'magit occasion))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'magit)
-         (emacsvox-aural-submission-occasion occasion))
-    (if icon-after
-        (progn (emacsvox-speak-line) (emacsvox-icon icon))
-      (emacsvox-icon icon)
-      (emacsvox-speak-line))))
+  feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
+  (emacsvox-magit--call-with-aural-presentation
+   (emacsvox-magit-section-facts target section event visibility)
+   occasion
+   (lambda ()
+     (if icon-after
+         (progn (emacsvox-speak-line) (emacsvox-icon icon))
+       (emacsvox-icon icon)
+       (emacsvox-speak-line)))))
 
 ;;;  Advice navigation commands:
 
@@ -303,21 +346,19 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
 
 (defun emacsvox--advice-magit-section-hide-after (&rest _)
   "Present a hidden Magit section."
-  (let* ((facts
-          (emacsvox-magit-section-facts
-           'magit-section-hide nil 'visibility-changed 'folded))
-         (context
-          (emacsvox-aural-capture-context 'magit 'state-change))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'magit)
-         (emacsvox-aural-submission-occasion 'state-change))
-    (emacsvox-icon 'close-object)))
+  (emacsvox-magit--present-feedback
+   (emacsvox-magit-section-facts
+    'magit-section-hide nil 'visibility-changed 'folded)
+   'state-change 'close-object #'ignore))
 
 (defun emacsvox--advice-magit-section-cycle-global-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-section-cycle-global)
-    (tts-notify "Cycling global visibility of sections")))
+    (emacsvox-magit--call-with-aural-presentation
+     (emacsvox-magit-section-facts
+      'magit-section-cycle-global nil 'visibility-changed)
+     'state-change
+     #'tts-notify "Cycling global visibility of sections")))
 
 (cl-loop
  for target in '(magit-section-toggle magit-section-cycle)
@@ -339,12 +380,16 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
 (defun emacsvox--advice-magit-kill-this-buffer-after (&rest _)
   "Speak."
   (when (ems-interactive-p 'magit-kill-this-buffer)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'other 'vcs-view-closed)
+     'state-change 'close-object #'emacsvox-speak-mode-line)))
 
 (defun emacsvox--advice-magit-blob-visit-file-after (&rest _)
   "Speak"
   (when (ems-interactive-p 'magit-blob-visit-file)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'blob 'vcs-view-opened)
+     'navigation 'open-object #'emacsvox-speak-mode-line)))
 
 (cl-loop
  for target in '(magit-blob-previous magit-blob-next)
@@ -354,7 +399,9 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
   `(defun ,advice-function (&rest _)
      "Speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'large-movement)))))
+       (emacsvox-magit--present-feedback
+        (emacsvox-magit-view-facts 'blob 'focus-entered)
+        'navigation 'large-movement #'ignore)))))
 
 ;;;  Additional commands to advice:
 
@@ -368,7 +415,9 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
 (defun emacsvox--advice-magit-status-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-status)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'status 'vcs-view-opened)
+     'state-change 'open-object #'emacsvox-speak-line)))
 
 (cl-loop
  for target in
@@ -380,8 +429,9 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
      "speak."
      (when (ems-interactive-p ',target)
        (with-current-buffer (window-buffer (selected-window))
-         (emacsvox-icon 'close-object)
-         (emacsvox-speak-mode-line))))))
+         (emacsvox-magit--present-feedback
+          (emacsvox-magit-view-facts 'other 'vcs-view-closed)
+          'state-change 'close-object #'emacsvox-speak-mode-line))))))
 
 (defun emacsvox--advice-magit-refresh-all-after (&rest _)
   "speak."
@@ -393,7 +443,9 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
 (defun emacsvox--advice-magit-display-buffer-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-display-buffer)
-    (emacsvox-icon 'open-object) (emacsvox-speak-line)))
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'other 'vcs-view-opened)
+     'navigation 'open-object #'emacsvox-speak-line)))
 
 ;;;  Advise process-sentinel:
 
@@ -405,24 +457,19 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
            (processp process)
            (memq (process-status process) '(exit signal))
            (not (zerop (process-exit-status process)))))
-         (facts
-          (emacsvox-magit-section-facts
-           'magit-process-finish nil
-           (if failed 'operation-failed 'operation-completed)))
-         (context
-          (emacsvox-aural-capture-context 'magit 'notification))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'magit)
-         (emacsvox-aural-submission-occasion 'notification))
-    (emacsvox-icon (if failed 'warn-user 'task-done))))
+         (icon (if failed 'warn-user 'task-done)))
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-process-facts failed)
+     'notification icon #'ignore)))
 
 ;;;  Magit Blame:
 
 (defun emacsvox-magit-blame-speak ()
   "Summarize current blame chunk."
-  (emacsvox-icon 'left)
-  (tts-speak
+  (emacsvox-magit--present-feedback
+   (emacsvox-magit-blame-facts 'focus-entered)
+   'navigation 'left
+   #'tts-speak
    (concat
     (buffer-substring (line-beginning-position) (line-end-position))
     (ems--display-props-get))))
@@ -439,18 +486,29 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
   `(defun ,advice-function (&rest _)
      "speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-magit-blame-speak)
-       (emacsvox-icon 'large-movement)))))
+       (emacsvox-magit--call-with-aural-presentation
+        (emacsvox-magit-blame-facts 'focus-entered)
+        'navigation
+        (lambda ()
+          (emacsvox-magit-blame-speak)
+          (emacsvox-icon 'large-movement)))))))
 
 (defun emacsvox--advice-magit-blame-quit-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-blame-quit)
-    (emacsvox-icon 'close-object) (emacsvox-speak-mode-line)))
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'blame 'vcs-view-closed)
+     'state-change 'close-object #'emacsvox-speak-mode-line)))
 
 (defun emacsvox--advice-magit-blame-after (&rest _)
   "speak."
   (when (ems-interactive-p 'magit-blame)
-    (message "Entering Magit Blame") (emacsvox-icon 'open-object)))
+    (emacsvox-magit--call-with-aural-presentation
+     (emacsvox-magit-view-facts 'blame 'vcs-view-opened)
+     'state-change
+     (lambda ()
+       (message "Entering Magit Blame")
+       (emacsvox-icon 'open-object)))))
 
 (defun emacsvox--advice-magit-diff-show-or-scroll-up-around
     (orig-fun &rest args)
@@ -461,10 +519,13 @@ feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
       (cond
        ((= origin (point))
         (message "Displayed commit in other window.")
-        (emacsvox-icon 'open-object))
+        (emacsvox-magit--present-feedback
+         (emacsvox-magit-view-facts 'commit 'vcs-commit-displayed)
+         'state-change 'open-object #'ignore))
        (t
-        (emacsvox-icon 'scroll)
-        (emacsvox-speak-line))))
+        (emacsvox-magit--present-feedback
+         (emacsvox-magit-view-facts 'diff 'vcs-diff-scrolled)
+         'navigation 'scroll #'emacsvox-speak-line))))
     result))
 
 (defconst emacsvox-magit--quit-targets

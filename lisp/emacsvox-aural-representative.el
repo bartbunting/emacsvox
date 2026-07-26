@@ -21,7 +21,8 @@
      :kind role
      :summary "A mail or communication message"
      :owner core
-     :occasions (navigation continuous notification)
+     :occasions
+     (navigation continuous state-change inspection notification)
      :phases (before content after))
     (field
      :kind role
@@ -86,7 +87,60 @@
      :kind role
      :summary "A mail or news group containing messages"
      :owner gnus
-     :occasions (navigation state-change notification)
+     :occasions (navigation state-change inspection notification)
+     :phases (before content after))
+    (mail-view
+     :kind role
+     :summary "A mail reader group, summary, article, compose, or server view"
+     :owner core
+     :occasions (navigation state-change inspection notification)
+     :phases (before content after))
+    (message-thread
+     :kind role
+     :summary "A conversation thread containing related messages"
+     :owner core
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (message-part
+     :kind role
+     :summary "A body, attachment, link, button, or other part of a message"
+     :owner core
+     :occasions (navigation state-change inspection notification)
+     :phases (before content after))
+    (mail-view-kind
+     :kind attribute
+     :summary "The kind of mail-reader view being presented"
+     :owner core
+     :value-type symbol
+     :allowed-values
+     (group summary article compose server search thread topic other))
+    (message-part-kind
+     :kind attribute
+     :summary "The kind of content part within a message"
+     :owner core
+     :value-type symbol
+     :allowed-values
+     (body page attachment link button mime-part header other))
+    (mail-action-kind
+     :kind attribute
+     :summary "The mail-reader operation whose feedback is being presented"
+     :owner core
+     :value-type symbol
+     :allowed-values
+     (open close compose select unsubscribe catch-up restore list
+           customize toggle-topic show hide scroll activate modify save
+           archive tag search refresh))
+    (mail-view-opened
+     :kind event
+     :summary "A mail reader view was opened or selected"
+     :owner core
+     :occasions (navigation state-change)
+     :phases (before content after))
+    (mail-view-closed
+     :kind event
+     :summary "A mail reader view was closed, buried, or left"
+     :owner core
+     :occasions (state-change)
      :phases (before content after))
     (filesystem-entry
      :kind role
@@ -94,12 +148,32 @@
      :owner dired
      :occasions (navigation state-change inspection)
      :phases (before content after))
+    (filesystem-listing
+     :kind role
+     :summary "A directory or search-result listing of filesystem entries"
+     :owner dired
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (confirmation-request
+     :kind role
+     :summary "A prompt asking the user to confirm an action"
+     :owner core
+     :occasions (notification)
+     :phases (before content after))
     (entry-kind
      :kind attribute
      :summary "The filesystem kind of a directory entry"
      :owner dired
      :value-type symbol
      :allowed-values (file directory symbolic-link other))
+    (entry-inspection-kind
+     :kind attribute
+     :summary "The requested property of a filesystem entry"
+     :owner dired
+     :value-type symbol
+     :allowed-values
+     (size modification-time access-time symbolic-link-target permissions
+           file-type))
     (marked
      :kind state
      :summary "An item is marked for a later operation"
@@ -136,17 +210,47 @@
      :owner dired
      :occasions (state-change)
      :phases (before content after))
+    (entry-inspected
+     :kind event
+     :summary "The user requested a property of a filesystem entry"
+     :owner dired
+     :occasions (inspection)
+     :phases (before content after))
     (vcs-section
      :kind role
      :summary "A structural section in a version-control view"
      :owner magit
      :occasions (navigation state-change notification)
      :phases (before content after))
+    (vcs-view
+     :kind role
+     :summary "A version-control status, log, blob, blame, or diff view"
+     :owner magit
+     :occasions (navigation state-change inspection notification)
+     :phases (before content after))
+    (vcs-blame-chunk
+     :kind role
+     :summary "One annotated source chunk in a version-control blame view"
+     :owner magit
+     :occasions (navigation inspection)
+     :phases (before content after))
+    (vcs-process
+     :kind role
+     :summary "An asynchronous version-control operation"
+     :owner magit
+     :occasions (notification)
+     :phases (before content after))
     (section-kind
      :kind attribute
      :summary "The integration-defined kind of a structural section"
      :owner magit
      :value-type symbol)
+    (vcs-view-kind
+     :kind attribute
+     :summary "The kind of version-control view being presented"
+     :owner magit
+     :value-type symbol
+     :allowed-values (status log blob blame diff commit other))
     (staged
      :kind state
      :summary "A version-control change is staged for commit"
@@ -171,6 +275,30 @@
      :owner magit
      :occasions (state-change)
      :phases (before content after))
+    (vcs-view-opened
+     :kind event
+     :summary "A version-control view was opened or selected"
+     :owner magit
+     :occasions (navigation state-change)
+     :phases (before content after))
+    (vcs-view-closed
+     :kind event
+     :summary "A version-control view was closed or buried"
+     :owner magit
+     :occasions (state-change)
+     :phases (before content after))
+    (vcs-commit-displayed
+     :kind event
+     :summary "A version-control commit was displayed"
+     :owner magit
+     :occasions (navigation state-change)
+     :phases (before content after))
+    (vcs-diff-scrolled
+     :kind event
+     :summary "Navigation moved within a version-control diff"
+     :owner magit
+     :occasions (navigation)
+     :phases (before content after))
     (visibility-changed
      :kind event
      :summary "The visible descendants of a structural object changed"
@@ -181,13 +309,13 @@
      :kind event
      :summary "A requested module operation completed successfully"
      :owner core
-     :occasions (notification state-change)
+     :occasions (state-change inspection notification)
      :phases (before content after))
     (operation-failed
      :kind event
      :summary "A requested module operation failed"
      :owner core
-     :occasions (notification state-change)
+     :occasions (navigation state-change inspection notification)
      :phases (before content after))
     (code-construct
      :kind role
@@ -233,32 +361,140 @@
      :kind role
      :summary "One interactive agent conversation"
      :owner agent-shell
-     :occasions (continuous notification)
+     :occasions
+     (navigation continuous state-change inspection notification)
      :phases (before content after))
     (agent-response
      :kind role
      :summary "User-facing response content produced by an agent"
      :owner agent-shell
-     :occasions (continuous notification)
+     :occasions (continuous navigation inspection notification)
+     :phases (before content after))
+    (agent-user-prompt
+     :kind role
+     :summary "User-authored prompt content in an agent conversation"
+     :owner agent-shell
+     :occasions (continuous navigation edit inspection)
      :phases (before content after))
     (agent-thought
      :kind role
      :summary "Intermediate reasoning content exposed by an agent"
      :owner agent-shell
-     :occasions (continuous)
+     :occasions (continuous navigation inspection)
+     :phases (before content after))
+    (agent-plan
+     :kind role
+     :summary "A plan produced by an agent"
+     :owner agent-shell
+     :occasions (continuous navigation inspection)
      :phases (before content after))
     (agent-tool
      :kind role
      :summary "A tool invocation or its output in an agent session"
      :owner agent-shell
-     :occasions (continuous notification)
+     :occasions (continuous navigation inspection notification)
      :phases (before content after))
     (permission-request
      :kind role
      :summary "An agent action awaiting user permission"
      :owner agent-shell
-     :occasions (notification)
+     :occasions (navigation state-change notification)
      :phases (before content after))
+    (agent-block
+     :kind role
+     :summary "One navigable structural block in an agent transcript"
+     :owner agent-shell
+     :occasions (navigation inspection)
+     :phases (before content after))
+    (agent-source-block
+     :kind role
+     :summary "A rendered source-code block in an agent response"
+     :owner agent-shell
+     :occasions (navigation inspection state-change)
+     :phases (before content after))
+    (agent-table
+     :kind role
+     :summary "A rendered table in an agent response"
+     :owner agent-shell
+     :occasions (navigation inspection state-change)
+     :phases (before content after))
+    (agent-table-cell
+     :kind role
+     :summary "One logical cell in a rendered agent-response table"
+     :owner agent-shell
+     :occasions (navigation inspection state-change)
+     :phases (before content after))
+    (agent-viewport
+     :kind role
+     :summary "An Agent Shell response or prompt viewport"
+     :owner agent-shell
+     :occasions (navigation state-change notification)
+     :phases (before content after))
+    (agent-prompt-editor
+     :kind role
+     :summary "An editor used to compose an Agent Shell prompt"
+     :owner agent-shell
+     :occasions (navigation edit state-change)
+     :phases (before content after))
+    (agent-error
+     :kind role
+     :summary "Error content produced while running an agent session"
+     :owner agent-shell
+     :occasions (continuous navigation inspection notification)
+     :phases (before content after))
+    (agent-block-kind
+     :kind attribute
+     :summary "The structural kind of an Agent Shell transcript block"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values
+     (agent-response user-prompt thought tool-call activity-group plan
+                     permission error table source-block other))
+    (agent-tool-status
+     :kind attribute
+     :summary "The current lifecycle status of an Agent Shell tool call"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values (pending in-progress completed failed))
+    (agent-table-row
+     :kind attribute
+     :summary "The zero-based logical row of an Agent Shell table cell"
+     :owner agent-shell
+     :value-type integer)
+    (agent-table-column
+     :kind attribute
+     :summary "The zero-based logical column of an Agent Shell table cell"
+     :owner agent-shell
+     :value-type integer)
+    (agent-source-language
+     :kind attribute
+     :summary "The declared language of an Agent Shell source block"
+     :owner agent-shell
+     :value-type string)
+    (agent-speech-level
+     :kind attribute
+     :summary "The selected automatic speech level for an agent session"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values (auto full response notify quiet))
+    (agent-viewport-mode
+     :kind attribute
+     :summary "The interaction mode of an Agent Shell viewport"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values (view edit))
+    (agent-prompt-disposition
+     :kind attribute
+     :summary "Whether an Agent Shell prompt was submitted, queued, or sent"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values (submitted queued sent))
+    (agent-permission-result
+     :kind attribute
+     :summary "The result of an Agent Shell permission decision"
+     :owner agent-shell
+     :value-type symbol
+     :allowed-values (allowed denied cancelled sent))
     (processing
      :kind state
      :summary "An agent session is processing a request"
@@ -282,6 +518,96 @@
      :summary "An agent request ended exceptionally"
      :owner agent-shell
      :occasions (notification)
+     :phases (before content after))
+    (agent-session-opened
+     :kind event
+     :summary "An Agent Shell session was opened or selected"
+     :owner agent-shell
+     :occasions (navigation state-change)
+     :phases (before content after))
+    (agent-session-interrupted
+     :kind event
+     :summary "The user interrupted an Agent Shell request"
+     :owner agent-shell
+     :occasions (state-change notification)
+     :phases (before content after))
+    (agent-setting-changed
+     :kind event
+     :summary "An Agent Shell presentation or session setting changed"
+     :owner agent-shell
+     :occasions (state-change)
+     :phases (before content after))
+    (agent-content-inspected
+     :kind event
+     :summary "The user explicitly requested Agent Shell content"
+     :owner agent-shell
+     :occasions (inspection)
+     :phases (before content after))
+    (agent-content-copied
+     :kind event
+     :summary "Agent Shell content was copied for reuse"
+     :owner agent-shell
+     :occasions (state-change)
+     :phases (before content after))
+    (agent-table-entered
+     :kind event
+     :summary "Navigation entered a rendered Agent Shell table"
+     :owner agent-shell
+     :occasions (navigation)
+     :phases (before content after))
+    (agent-table-exited
+     :kind event
+     :summary "Navigation left a rendered Agent Shell table"
+     :owner agent-shell
+     :occasions (navigation)
+     :phases (before content after))
+    (agent-viewport-opened
+     :kind event
+     :summary "An Agent Shell viewport was opened"
+     :owner agent-shell
+     :occasions (state-change)
+     :phases (before content after))
+    (agent-viewport-refreshed
+     :kind event
+     :summary "An Agent Shell viewport finished refreshing"
+     :owner agent-shell
+     :occasions (state-change notification)
+     :phases (before content after))
+    (agent-prompt-opened
+     :kind event
+     :summary "An Agent Shell prompt editor was opened"
+     :owner agent-shell
+     :occasions (edit state-change)
+     :phases (before content after))
+    (agent-prompt-submitted
+     :kind event
+     :summary "A composed Agent Shell prompt was submitted or queued"
+     :owner agent-shell
+     :occasions (state-change notification)
+     :phases (before content after))
+    (agent-prompt-cancelled
+     :kind event
+     :summary "Agent Shell prompt composition was cancelled"
+     :owner agent-shell
+     :occasions (state-change)
+     :phases (before content after))
+    (agent-tool-status-changed
+     :kind event
+     :summary "An Agent Shell tool call changed lifecycle status"
+     :owner agent-shell
+     :occasions (notification)
+     :phases (before content after))
+    (agent-permission-requested
+     :kind event
+     :summary "An Agent Shell action requested user permission"
+     :owner agent-shell
+     :occasions (notification)
+     :phases (before content after))
+    (agent-permission-resolved
+     :kind event
+     :summary "An Agent Shell permission request was resolved"
+     :owner agent-shell
+     :occasions (state-change notification)
      :phases (before content after)))
   "Semantic definitions used by representative integration slices.")
 

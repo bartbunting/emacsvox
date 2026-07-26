@@ -327,7 +327,8 @@
                    (setq iterated-id nil)))
                 ((symbol-function 'notmuch-show-get-message-properties)
                  (lambda () emacsvox-notmuch-test--show-message))
-                ((symbol-function 'emacsvox-notmuch--play-status-icons)
+                ((symbol-function
+                  'emacsvox-notmuch--play-status-icons-compatibility)
                  (lambda (&rest _) (push '(status-icons) events)))
                 ((symbol-function 'tts-speak)
                  (lambda (text)
@@ -513,6 +514,34 @@
           (nreverse events)
           '((icon close-object)
             (speak "attachment report.pdf hidden"))))))))
+
+(ert-deftest emacsvox-notmuch-part-action-has-semantic-context ()
+  "MIME-part action cues and speech share structured Notmuch intent."
+  (let ((part '(:filename "report.pdf" :content-type "application/pdf"))
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list icon emacsvox-aural-submission-facts
+                   emacsvox-aural-submission-occasion)
+             events)))
+         ((symbol-function 'tts-speak)
+          (lambda (text)
+            (push
+             (list text emacsvox-aural-submission-facts)
+             events))))
+      (emacsvox-notmuch--part-action-feedback 'save part))
+    (should
+     (equal
+      (nreverse events)
+      '((save-object
+         (:role message-part :message-part-kind attachment
+          :mail-action-kind save :events (operation-completed))
+         state-change)
+        ("Saved attachment report.pdf"
+         (:role message-part :message-part-kind attachment
+          :mail-action-kind save :events (operation-completed))))))))
 
 (ert-deftest emacsvox-notmuch-show-save-attachments-confirms-completion ()
   "Saving all message attachments gives one completion confirmation."
