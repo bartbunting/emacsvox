@@ -16,6 +16,9 @@
 (require 'subr-x)
 (require 'emacsvox-aural-tools)
 
+(declare-function emacsvox-aural-simple-editor-open
+                  "emacsvox-aural-simple-editor" (&optional scheme))
+
 (defvar-local emacsvox-aural-editor-scope nil
   "Scope edited by the current aural editor buffer.")
 
@@ -893,7 +896,8 @@ LABEL identifies the speech or cue being edited."
       "t enable/disable    M-up/M-down reorder\n"
       "m scheme metadata   p preview\n"
       "x explain           v validate\n"
-      "s save              q quit\n"))))
+      "s save              A simple editor\n"
+      "q quit\n"))))
 
 (defun emacsvox-aural-editor-quit ()
   "Quit the editor, asking before discarding working changes."
@@ -1006,10 +1010,16 @@ scope."
       (emacsvox-aural-editor-refresh))
     (pop-to-buffer buffer)))
 
-(defun emacsvox-edit-aural-scheme (&optional scheme)
-  "Open the accessible editor for personal SCHEME."
+(defun emacsvox-edit-aural-scheme-advanced (&optional scheme)
+  "Open the advanced declarative editor for personal SCHEME."
   (interactive)
   (emacsvox-edit-aural-rules 'scheme scheme))
+
+(defun emacsvox-edit-aural-scheme (&optional scheme)
+  "Open the simple spoken editor for personal SCHEME."
+  (interactive)
+  (require 'emacsvox-aural-simple-editor)
+  (emacsvox-aural-simple-editor-open scheme))
 
 (provide 'emacsvox-aural-editor)
 ;;; emacsvox-aural-editor.el ends here

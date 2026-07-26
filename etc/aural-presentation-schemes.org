@@ -809,18 +809,46 @@ and never recursively invokes semantic resolution.  Detailed inspection uses
 
 ** Accessible editor contract
 
-=emacsvox-edit-aural-rules= opens one plain-text
-=emacsvox-aural-scheme-editor-mode= buffer for a persistent personal,
-temporary session, source-buffer-local, or personal-scheme scope.
-=emacsvox-edit-aural-scheme= opens the scheme scope directly.  Built-in
-schemes remain read-only and must first be copied.
+=emacsvox-edit-aural-scheme= opens a spoken field form for a persistent
+personal scheme.  When no suitable personal scheme exists, the form offers to
+make a flattened editable copy of a built-in scheme.  The form describes each
+rule as what it applies to and what happens before, during, and after content;
+it does not expose raw plists or restart a complete rule wizard for a
+single-field change.
 
-The buffer exposes these stable operations:
+The simple form exposes these stable operations:
+
+| Key                  | Operation                                            |
+|----------------------+------------------------------------------------------|
+| =TAB= / =Shift-TAB=  | Move to and speak the next or previous field         |
+| =RET= or =e=         | Edit only the field at point                         |
+| =n=                  | Add a presentation through natural prompts           |
+| =d= / =t=            | Delete, or enable/disable, the presentation at point |
+| =p= / =x=            | Preview or explain the presentation at point         |
+| =v= / =s=            | Validate or atomically save                          |
+| =a=                  | Activate the edited scheme                           |
+| =A=                  | Switch to the advanced editor without losing changes |
+| =?=                  | Display and speak the field-oriented workflow        |
+
+Scheme summary, inheritance, sound pack, and voice palette are individual
+fields.  Presentation fields cover semantic context, before feedback, content
+speech/voice/position, and after feedback.  Common label, cue, ordering, and
+left/centre/right placement choices use natural prompts.  A clearly labelled
+advanced-details field appears for legacy selectors, phase merge/removal,
+pauses, per-action voice/volume, or advanced content styling.
+
+=emacsvox-edit-aural-scheme-advanced= opens the complete
+=emacsvox-aural-scheme-editor-mode= rule view.
+=emacsvox-edit-aural-rules= uses the same advanced view for a persistent
+personal, temporary session, source-buffer-local, or explicitly selected
+personal-scheme scope.  Built-in schemes remain read-only.
+
+The advanced buffer exposes these stable operations:
 
 | Key                  | Operation                                      |
 |----------------------+------------------------------------------------|
 | =n=                  | Add a guided rule                              |
-| =RET= or =e=         | Edit the rule at point                         |
+| =RET= or =e=         | Edit the complete rule at point                |
 | =c=                  | Copy a rule under a new stable identifier      |
 | =d=                  | Remove a rule                                  |
 | =t=                  | Enable or disable a rule without losing it     |
@@ -828,6 +856,7 @@ The buffer exposes these stable operations:
 | =m=                  | Edit scheme inheritance and providers          |
 | =p= / =x=            | Preview or explain the unsaved rule            |
 | =v= / =s=            | Validate or atomically save/apply               |
+| =A=                  | Return to the simple editor                     |
 | =?=                  | Describe the completion-driven workflow         |
 
 Selectors are assembled from registered semantic, module, major-mode,

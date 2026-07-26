@@ -28,6 +28,10 @@ presentations.
 Use ~emacsvox-list-aural-schemes~, ~emacsvox-set-aural-scheme~, and
 ~emacsvox-edit-aural-scheme~ to inspect, select, and customize schemes.  Rules
 can apply globally or by module, major or derived mode, session, or buffer.
+The default scheme editor is now a spoken form: TAB and Shift-TAB move through
+natural-language fields, RET edits one field, and built-in schemes can be
+copied from inside the workflow.  Use
+~emacsvox-edit-aural-scheme-advanced~ for the complete declarative rule view.
 ~emacsvox-explain-aural-presentation~ reports the facts and winning rules at
 point.  It infers an occasion with matching rules, speaks the resolved
 before/content/after order, and accepts a prefix argument to choose an

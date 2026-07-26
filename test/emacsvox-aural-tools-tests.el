@@ -14,6 +14,7 @@
 (require 'voice-setup)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-editor)
+(require 'emacsvox-aural-simple-editor)
 
 (defmacro emacsvox-test--with-aural-tools (&rest body)
   "Run BODY with isolated scheme, override, and training state."
@@ -551,6 +552,257 @@
      (equal
       (emacsvox-aural-editor--read-space nil "Cue")
       '(:azimuth 135.0)))))
+
+(defun emacsvox-test--setup-simple-editor (scheme)
+  "Set up the current buffer as the simple editor for SCHEME."
+  (let ((entry (emacsvox-aural-scheme-entry scheme)))
+    (emacsvox-aural-simple-editor-mode)
+    (setq
+     emacsvox-aural-editor-scope 'scheme
+     emacsvox-aural-editor-target scheme
+     emacsvox-aural-editor-scheme-data
+     (copy-tree (emacsvox-aural-scheme-entry-data entry))
+     emacsvox-aural-editor-rules
+     (copy-tree
+      (plist-get (emacsvox-aural-scheme-entry-data entry) :rules))
+     emacsvox-aural-editor-dirty nil)
+    (emacsvox-aural-simple-editor-refresh)))
+
+(ert-deftest emacsvox-aural-simple-editor-renders-natural-spoken-fields ()
+  "The default scheme editor presents a navigable natural-language form."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'simple-test
+     '((:id org-heading
+        :match (:role heading :module org :occasion navigation :level 1)
+        :render
+        (:before
+         ((:id label :kind speech :text "Heading")
+          (:id cue :kind cue :cue item))
+         :content (:voice bolden)
+         :after (:remove (inherited-cue))))))
+    (with-temp-buffer
+      (emacsvox-test--setup-simple-editor 'simple-test)
+      (let ((text (buffer-string))
+            spoken)
+        (should
+         (string-match-p
+          "Applies to:.*object heading; level 1; module org; during navigation"
+          text))
+        (should
+         (string-match-p
+          "Before content:.*say \"Heading\", then play the item cue"
+          text))
+        (should
+         (string-match-p
+          "Content:.*use the bolden voice"
+          text))
+        (should
+         (string-match-p
+          "Advanced details:.*advanced after-content operations"
+          text))
+        (should-not (string-match-p "(:role" text))
+        (should
+         (emacsvox-aural-simple-editor--goto-field
+          '(:kind match :rule 0)))
+        (should (= (emacsvox-aural-editor--index-at-point) 0))
+        (goto-char
+         (car
+          (emacsvox-aural-simple-editor--field-positions)))
+        (cl-letf
+            (((symbol-function 'emacsvox-speak-line)
+              (lambda ()
+                (setq
+                 spoken
+                 (buffer-substring
+                  (line-beginning-position) (line-end-position))))))
+          (emacsvox-aural-simple-editor-next-field))
+        (should (string-match-p "Based on:" spoken))))))
+
+(ert-deftest emacsvox-aural-simple-editor-edits-one-field-only ()
+  "RET on a field changes that field without restarting a rule wizard."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'simple-test
+     '((:id heading
+        :match (:role heading)
+        :render (:content (:voice bolden)))))
+    (with-temp-buffer
+      (emacsvox-test--setup-simple-editor 'simple-test)
+      (let ((rules-before (copy-tree emacsvox-aural-editor-rules)))
+        (goto-char
+         (car
+          (emacsvox-aural-simple-editor--field-positions)))
+        (cl-letf
+            (((symbol-function 'read-string)
+              (lambda (&rest _) "My clear scheme"))
+             ((symbol-function 'emacsvox-speak-line) #'ignore))
+          (emacsvox-aural-simple-editor-edit-field))
+        (should
+         (equal
+          (plist-get emacsvox-aural-editor-scheme-data :summary)
+          "My clear scheme"))
+        (should (equal emacsvox-aural-editor-rules rules-before))
+        (should emacsvox-aural-editor-dirty)))))
+
+(ert-deftest emacsvox-aural-simple-editor-builds-ordered-feedback ()
+  "Simple feedback choices produce validated ordered actions and placement."
+  (emacsvox-test--with-aural-tools
+    (let (prompts)
+      (cl-letf
+          (((symbol-function 'completing-read)
+            (lambda (prompt &rest _)
+              (push prompt prompts)
+              (cond
+               ((string-match-p "feedback:" prompt)
+                "say a label then play a cue")
+               ((string-match-p "Sound cue:" prompt) "item")
+               ((string-match-p "position:" prompt) "left")
+               (t (ert-fail (format "Unexpected prompt %s" prompt))))))
+           ((symbol-function 'read-string)
+            (lambda (&rest _) "Heading")))
+        (let* ((phase
+                (emacsvox-aural-simple-editor--edit-phase
+                 'heading-rule 'before nil))
+               (actions (plist-get phase :replace)))
+          (should
+           (equal (mapcar (lambda (action) (plist-get action :kind)) actions)
+                  '(speech cue)))
+          (should
+           (equal (mapcar (lambda (action) (plist-get action :space)) actions)
+                  '((:balance -0.65) (:balance -0.65))))
+          (should
+           (emacsvox-aural-compile-rule
+            (list
+             :id 'heading-rule
+             :match '(:role heading)
+             :render (list :before phase))
+            'user)))))))
+
+(ert-deftest emacsvox-aural-simple-editor-switch-preserves-working-data ()
+  "Switching between simple and advanced views does not discard changes."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'simple-test
+     '((:id heading
+        :match (:role heading)
+        :render (:content (:voice bolden)))))
+    (with-temp-buffer
+      (emacsvox-test--setup-simple-editor 'simple-test)
+      (setq emacsvox-aural-editor-dirty t)
+      (let ((data emacsvox-aural-editor-scheme-data)
+            (rules emacsvox-aural-editor-rules))
+        (emacsvox-aural-simple-editor-use-advanced)
+        (should (derived-mode-p 'emacsvox-aural-scheme-editor-mode))
+        (should (eq emacsvox-aural-editor-scheme-data data))
+        (should (eq emacsvox-aural-editor-rules rules))
+        (should emacsvox-aural-editor-dirty)
+        (emacsvox-aural-editor-use-simple-editor)
+        (should (derived-mode-p 'emacsvox-aural-simple-editor-mode))
+        (should (eq emacsvox-aural-editor-scheme-data data))
+        (should (eq emacsvox-aural-editor-rules rules))
+        (should emacsvox-aural-editor-dirty)))))
+
+(ert-deftest emacsvox-aural-simple-editor-validates-and-saves ()
+  "The simple form commits through the existing atomic scheme save path."
+  (emacsvox-test--with-aural-tools
+    (let* ((directory (make-temp-file "emacsvox-simple-save-" t))
+           (emacsvox-aural-schemes-file
+            (expand-file-name "schemes.el" directory)))
+      (unwind-protect
+          (progn
+            (emacsvox-test--register-tools-scheme
+             'simple-test
+             '((:id heading
+                :match (:role heading)
+                :render (:content (:voice bolden)))))
+            (with-temp-buffer
+              (emacsvox-test--setup-simple-editor 'simple-test)
+              (setq
+               emacsvox-aural-editor-scheme-data
+               (plist-put
+                (copy-tree emacsvox-aural-editor-scheme-data)
+                :summary "Saved from the simple form")
+               emacsvox-aural-editor-dirty t)
+              (emacsvox-aural-simple-editor-save)
+              (should-not emacsvox-aural-editor-dirty)
+              (should
+               (derived-mode-p 'emacsvox-aural-simple-editor-mode)))
+            (should
+             (equal
+              (plist-get
+               (emacsvox-aural-scheme-entry-data
+                (emacsvox-aural-scheme-entry 'simple-test))
+               :summary)
+              "Saved from the simple form"))
+            (should (file-exists-p emacsvox-aural-schemes-file)))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-simple-editor-copies-built-in-for-editing ()
+  "The no-personal-scheme workflow offers a flattened editable copy."
+  (emacsvox-test--with-aural-tools
+    (let* ((directory (make-temp-file "emacsvox-simple-copy-" t))
+           (emacsvox-aural-schemes-file
+            (expand-file-name "schemes.el" directory)))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-scheme
+             '(:schema-version 1
+               :id built-in-example
+               :summary "Built-in example"
+               :parent default
+               :rules
+               ((:id built-in-rule
+                 :match (:role heading)
+                 :render (:content (:voice bolden)))))
+             :built-in t :source "test")
+            (cl-letf
+                (((symbol-function 'completing-read)
+                  (lambda (prompt &rest _)
+                    (cond
+                     ((string-match-p "Edit personal" prompt)
+                      "[Copy a built-in scheme]")
+                     ((string-match-p "Copy built-in" prompt)
+                      "built-in-example")
+                     (t (ert-fail (format "Unexpected prompt %s" prompt))))))
+                 ((symbol-function 'read-string)
+                  (lambda (&rest _) "my-example")))
+              (should
+               (eq
+                (emacsvox-aural-simple-editor--read-scheme)
+                'my-example)))
+            (let ((entry (emacsvox-aural-scheme-entry 'my-example)))
+              (should entry)
+              (should-not (emacsvox-aural-scheme-entry-built-in entry))
+              (should
+               (equal
+                (mapcar
+                 (lambda (rule) (plist-get rule :id))
+                 (plist-get
+                  (emacsvox-aural-scheme-entry-data entry) :rules))
+                '(built-in-rule)))))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-edit-aural-scheme-opens-simple-editor ()
+  "The public editing command now opens the simple spoken form."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-tools-scheme
+     'simple-test
+     '((:id heading
+        :match (:role heading)
+        :render (:content (:voice bolden)))))
+    (let (buffer)
+      (unwind-protect
+          (cl-letf
+              (((symbol-function 'emacsvox-speak-line) #'ignore))
+            (save-window-excursion
+              (setq buffer
+                    (emacsvox-edit-aural-scheme 'simple-test)))
+            (with-current-buffer buffer
+              (should
+               (derived-mode-p 'emacsvox-aural-simple-editor-mode))))
+        (when (buffer-live-p buffer)
+          (kill-buffer buffer))))))
 
 (ert-deftest emacsvox-aural-editor-toggle-reorder-and-save-session ()
   "The accessible working model toggles, reorders, validates, and commits."
