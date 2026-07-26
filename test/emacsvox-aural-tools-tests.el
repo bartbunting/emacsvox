@@ -566,9 +566,16 @@
                ("d" . emacsvox-delete-aural-scheme)
                ("r" . emacsvox-rename-aural-scheme)
                ("a" . emacsvox-aural-schemes-activate)
-               ("p" . emacsvox-preview-aural-scheme)
+               ("n" . emacsvox-aural-schemes-next)
+               ("p" . emacsvox-aural-schemes-previous)
+               ("P" . emacsvox-preview-aural-scheme)
+               ("<down>" . emacsvox-aural-schemes-next)
+               ("<up>" . emacsvox-aural-schemes-previous)
+               ("<right>" . emacsvox-aural-schemes-next-column)
+               ("<left>" . emacsvox-aural-schemes-previous-column)
                ("v" . emacsvox-validate-aural-scheme)
                ("SPC" . emacsvox-aural-schemes-speak-current)
+               ("." . emacsvox-aural-schemes-speak-current-cell)
                ("?" . emacsvox-aural-schemes-help)))
           (should
            (eq
@@ -601,6 +608,67 @@
       (should (string-match-p "Sound pack chimes" summary))
       (should (string-match-p "1 effective presentation" summary))
       (should (string-match-p "Valid" summary)))))
+
+(ert-deftest emacsvox-aural-scheme-manager-column-navigation-speaks-title ()
+  "Horizontal movement speaks titles, blank values, and column boundaries."
+  (emacsvox-test--with-aural-tools
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-list-aural-schemes)
+          (with-current-buffer "*Aural Schemes*"
+            (let (spoken)
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'emacsvox-icon) #'ignore))
+                (emacsvox-aural-schemes-previous-column)
+                (should (equal spoken "First column."))
+                (emacsvox-aural-schemes-next-column)
+                (should (equal spoken "Status, active"))
+                (emacsvox-aural-schemes--goto-column 3)
+                (emacsvox-aural-schemes-speak-current-cell)
+                (should (equal spoken "Based on, blank"))
+                (emacsvox-aural-schemes--goto-column
+                 (1- (length tabulated-list-format)))
+                (emacsvox-aural-schemes-next-column)
+                (should (equal spoken "Last column."))))))
+      (when (get-buffer "*Aural Schemes*")
+        (kill-buffer "*Aural Schemes*")))))
+
+(ert-deftest emacsvox-aural-scheme-manager-row-navigation-speaks-boundaries ()
+  "Row navigation preserves the column and announces top and bottom."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id second
+       :summary "Second scheme"
+       :parent default
+       :rules ())
+     :source "test")
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-list-aural-schemes)
+          (with-current-buffer "*Aural Schemes*"
+            (let (spoken)
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'emacsvox-icon) #'ignore))
+                (should (eq (tabulated-list-get-id) 'default))
+                (emacsvox-aural-schemes-previous)
+                (should (eq (tabulated-list-get-id) 'default))
+                (should (equal spoken "Top of scheme list."))
+                (emacsvox-aural-schemes-next)
+                (should (eq (tabulated-list-get-id) 'second))
+                (should (equal spoken "Scheme, second"))
+                (emacsvox-aural-schemes-next)
+                (should (eq (tabulated-list-get-id) 'second))
+                (should (equal spoken "Bottom of scheme list."))
+                (emacsvox-aural-schemes-previous)
+                (should (eq (tabulated-list-get-id) 'default))
+                (should (equal spoken "Scheme, default"))))))
+      (when (get-buffer "*Aural Schemes*")
+        (kill-buffer "*Aural Schemes*")))))
 
 (ert-deftest emacsvox-aural-scheme-manager-view-separates-direct-and-inherited ()
   "Scheme details distinguish direct, inherited, and effective presentations."

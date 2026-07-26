@@ -821,15 +821,22 @@ The manager exposes these stable operations:
 
 | Key       | Operation                                                  |
 |-----------+------------------------------------------------------------|
+| =n= / =p= | Move to the next or previous scheme                        |
+| =Arrows=  | Move by row or column, speaking the column title and value  |
 | =RET=     | View direct, inherited, effective, and resource details    |
 | =e= / =A= | Open the simple or advanced editor                         |
 | =c=       | Copy as an inheriting personal scheme                      |
 | =C-u c=   | Copy as a flattened personal scheme                        |
 | =d= / =r= | Delete or rename a personal scheme                         |
 | =a=       | Activate the scheme                                        |
-| =p= / =v= | Preview a representative presentation or validate          |
-| =SPC=     | Speak a concise description of the current row             |
+| =P= / =v= | Preview a representative presentation or validate          |
+| =SPC= / =.= | Speak the current row, or the titled current cell        |
 | =g= / =?= | Refresh, or display and speak manager help                  |
+
+Moving above or below the list announces the top or bottom instead of
+repeating the current value.  Horizontal movement announces the first and
+last column boundaries.  Preview uses uppercase =P= so lowercase =p= remains
+the conventional previous-row command.
 
 Built-in schemes are viewable and copyable but cannot be edited, renamed, or
 deleted.  A personal scheme cannot be deleted while another scheme inherits

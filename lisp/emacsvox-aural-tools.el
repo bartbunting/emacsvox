@@ -566,6 +566,40 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     #'emacsvox-aural-tools--scheme-row
     (emacsvox-aural-scheme-candidates))))
 
+(defun emacsvox-aural-schemes--column-index ()
+  "Return the manager column index at point, defaulting to the first."
+  (let ((name
+         (get-text-property
+          (point) 'tabulated-list-column-name)))
+    (or
+     (and
+      name
+      (cl-position
+       name tabulated-list-format
+       :test #'string= :key #'car))
+     0)))
+
+(defun emacsvox-aural-schemes--goto-column (index)
+  "Move to column INDEX on the current manager row."
+  (let ((name (car (aref tabulated-list-format index)))
+        (position (line-beginning-position))
+        (limit (line-end-position))
+        found)
+    (while (and (< position limit) (not found))
+      (if
+          (equal
+           name
+           (get-text-property
+            position 'tabulated-list-column-name))
+          (setq found position)
+        (setq
+         position
+         (next-single-property-change
+          position 'tabulated-list-column-name nil limit))))
+    (when found
+      (goto-char found))
+    found))
+
 (defun emacsvox-aural-schemes--goto-scheme (scheme)
   "Move to SCHEME in the current scheme-manager buffer."
   (let ((start (point-min))
@@ -577,12 +611,19 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         (forward-line 1)))
     (unless found
       (goto-char start))
+    (when found
+      (emacsvox-aural-schemes--goto-column 0))
     found))
 
 (defun emacsvox-aural-schemes-refresh (&optional scheme)
   "Refresh the scheme manager, preserving SCHEME or the current row."
   (interactive)
-  (let ((selected
+  (let ((column
+         (and
+          (null scheme)
+          (derived-mode-p 'emacsvox-aural-schemes-mode)
+          (emacsvox-aural-schemes--column-index)))
+        (selected
          (or
           scheme
           (and
@@ -591,7 +632,9 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     (emacsvox-aural-schemes--set-entries)
     (tabulated-list-print t)
     (when selected
-      (emacsvox-aural-schemes--goto-scheme selected))))
+      (emacsvox-aural-schemes--goto-scheme selected)
+      (when column
+        (emacsvox-aural-schemes--goto-column column)))))
 
 (defun emacsvox-aural-tools--refresh-scheme-manager (&optional scheme)
   "Refresh an existing scheme-manager buffer and select SCHEME."
@@ -707,6 +750,93 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         (tts-speak summary)
       (message "%s" summary))
     summary))
+
+(defun emacsvox-aural-schemes--cell-description ()
+  "Return the current manager cell as titled spoken text."
+  (let* ((entry
+          (or
+           (tabulated-list-get-entry)
+           (user-error "Move to a scheme row first")))
+         (index (emacsvox-aural-schemes--column-index))
+         (name (car (aref tabulated-list-format index)))
+         (value (aref entry index))
+         (value (if (listp value) (car value) value))
+         (value (string-trim (format "%s" value))))
+    (format
+     "%s, %s"
+     name
+     (if (string-empty-p value) "blank" value))))
+
+(defun emacsvox-aural-schemes-speak-current-cell ()
+  "Speak the current manager column title and value."
+  (interactive)
+  (let ((description
+         (emacsvox-aural-schemes--cell-description)))
+    (when (fboundp 'emacsvox-icon)
+      (emacsvox-icon 'select-object))
+    (if (fboundp 'tts-speak)
+        (tts-speak description)
+      (message "%s" description))
+    description))
+
+(defun emacsvox-aural-schemes--boundary (message)
+  "Announce manager boundary MESSAGE."
+  (when (fboundp 'emacsvox-icon)
+    (emacsvox-icon 'warn-user))
+  (if (fboundp 'tts-speak)
+      (tts-speak message)
+    (message "%s" message))
+  message)
+
+(defun emacsvox-aural-schemes--move-row (direction)
+  "Move one manager row in DIRECTION and speak the titled cell."
+  (let ((origin (point))
+        (column (emacsvox-aural-schemes--column-index)))
+    (beginning-of-line)
+    (let ((residue (forward-line direction)))
+      (if (and (zerop residue) (tabulated-list-get-id))
+          (progn
+            (emacsvox-aural-schemes--goto-column column)
+            (emacsvox-aural-schemes-speak-current-cell))
+        (goto-char origin)
+        (emacsvox-aural-schemes--boundary
+         (if (> direction 0)
+             "Bottom of scheme list."
+           "Top of scheme list."))))))
+
+(defun emacsvox-aural-schemes-next ()
+  "Move to and speak the next scheme."
+  (interactive)
+  (emacsvox-aural-schemes--move-row 1))
+
+(defun emacsvox-aural-schemes-previous ()
+  "Move to and speak the previous scheme."
+  (interactive)
+  (emacsvox-aural-schemes--move-row -1))
+
+(defun emacsvox-aural-schemes--move-column (direction)
+  "Move one manager column in DIRECTION and speak its title and value."
+  (let* ((index (emacsvox-aural-schemes--column-index))
+         (last (1- (length tabulated-list-format)))
+         (target (+ index direction)))
+    (cond
+     ((< target 0)
+      (emacsvox-aural-schemes--boundary "First column."))
+     ((> target last)
+      (emacsvox-aural-schemes--boundary "Last column."))
+     (t
+      (emacsvox-aural-schemes--goto-column target)
+      (emacsvox-aural-schemes-speak-current-cell)))))
+
+(defun emacsvox-aural-schemes-next-column ()
+  "Move right and speak the next manager column title and value."
+  (interactive)
+  (emacsvox-aural-schemes--move-column 1))
+
+(defun emacsvox-aural-schemes-previous-column ()
+  "Move left and speak the previous manager column title and value."
+  (interactive)
+  (emacsvox-aural-schemes--move-column -1))
 
 (defun emacsvox-describe-aural-scheme (&optional scheme)
   "View direct, inherited, effective, and resource details for SCHEME."
@@ -879,12 +1009,15 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
       "Aural Scheme Manager\n\n"
       "Each row identifies whether a scheme is active, built-in or personal,\n"
       "what it inherits, its effective sound pack and presentation count.\n"
-      "Use the normal line-movement keys to move between schemes.\n\n"
+      "Row and column movement speaks the column title and value.  Moving\n"
+      "past the first or last row announces the list boundary.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
       "RET view details     e simple editor\n"
       "A advanced editor    c copy\n"
       "C-u c flattened copy d delete personal scheme\n"
       "r rename personal    a activate\n"
-      "p preview            v validate\n"
+      "P preview            v validate\n"
       "SPC speak row        g refresh\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -939,8 +1072,32 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  #'emacsvox-aural-schemes-activate)
 (define-key
  emacsvox-aural-schemes-mode-map
- (kbd "p")
+ (kbd "P")
  #'emacsvox-preview-aural-scheme)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "n")
+ #'emacsvox-aural-schemes-next)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "p")
+ #'emacsvox-aural-schemes-previous)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "<down>")
+ #'emacsvox-aural-schemes-next)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "<up>")
+ #'emacsvox-aural-schemes-previous)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "<right>")
+ #'emacsvox-aural-schemes-next-column)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "<left>")
+ #'emacsvox-aural-schemes-previous-column)
 (define-key
  emacsvox-aural-schemes-mode-map
  (kbd "v")
@@ -949,6 +1106,10 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  emacsvox-aural-schemes-mode-map
  (kbd "SPC")
  #'emacsvox-aural-schemes-speak-current)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd ".")
+ #'emacsvox-aural-schemes-speak-current-cell)
 (define-key
  emacsvox-aural-schemes-mode-map
  (kbd "g")
