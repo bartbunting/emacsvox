@@ -34,16 +34,19 @@ through a staged, backward-compatible migration.
 The proposed flow is:
 
 #+begin_example
-semantic facts
+aural object
+  +-- semantic facts and source context
+  `-- one or more formatting runs
       |
       v
 matching scheme rules
       |
       v
 backend-independent aural render plan
-  +-- before: speech, cue, pause
-  +-- content: speech plus voice and spatial style
-  `-- after: speech, cue, pause
+  +-- object before: speech, cue, pause
+  +-- run presentation: speech, cue, pause, voice, and spatial style
+  +-- object content: one or more styled speech runs
+  `-- object after: speech, cue, pause
       |
       v
 backend compilation and queueing
@@ -59,6 +62,12 @@ Resolve semantic facts, scheme rules, context, icons, and voice styles while
 the source buffer and Emacs state are available.  Queue only a concrete,
 ordered render plan.  The speech server must not need to understand modes,
 modules, semantic names, schemes, inheritance, or user override precedence.
+
+An aural object is not the same thing as a face or personality run.  Object
+feedback such as "Heading 2", a heading cue, and folded state is resolved once
+for the heading.  Its contents may contain several formatting runs, each with
+its own compatible face-derived or personality-derived voice.  Splitting text
+for styling must never repeat the complete semantic presentation.
 #+end_quote
 
 * Goals
@@ -351,6 +360,23 @@ A backend-independent instruction such as:
 - play a semantic cue;
 - insert a pause;
 - apply volume or spatial placement.
+
+** Formatting run
+
+A contiguous part of an aural object's content whose source presentation
+hints are unchanged.  Explicit =personality=, named =face= and
+=font-lock-face= values, and source overlay faces may create formatting-run
+boundaries.  A formatting run is not a semantic object and must not by itself
+repeat object-level labels, cues, pauses, or state feedback.
+
+** Action anchor
+
+The lifecycle point at which an ordered action is emitted.  Object-anchored
+actions occur once before or after the complete aural object.  Run-anchored
+actions follow a matching formatting run.  Transition-anchored actions occur
+only when entering or leaving a matching run presentation.  Slice 26 must
+finalize the declarative syntax, defaults, and compatibility inference for
+these anchors before changing transport behavior.
 
 ** Render plan
 
@@ -791,13 +817,16 @@ resolver and concrete-plan compiler.  A plain symbol-valued =auditory-icon=
 property remains valid and maps through a compatibility adapter.
 
 Context must be captured before =tts-speak= moves text into its scratch
-buffer.  The implemented boundary is entry to =tts-speak= or =tts-notify=,
-before process initialization, notification logging, or stream switching can
-change the current buffer.  Every formatted source-text run is resolved and
-compiled there, and carries an immutable concrete-plan property into the
-scratch buffer.  Pronunciation, punctuation, capitalization, and Unicode
-cleanup may still replace the text payload, but must preserve that property
-and must not rerun semantic, scheme, resource, or voice resolution.
+buffer.  The boundary is entry to =tts-speak= or =tts-notify=, before process
+initialization, notification logging, or stream switching can change the
+current buffer.  Each aural object is resolved there as one immutable
+object-level plan containing one or more concretely styled content runs.
+Formatting-run boundaries may select compatible face or personality
+presentation, but they do not receive duplicate copies of the complete
+object-level plan.  Pronunciation, punctuation, capitalization, and Unicode
+cleanup may still replace text payloads, but must preserve the frozen object
+and run decisions and must not rerun semantic, scheme, resource, or voice
+resolution.
 
 All multi-action plans use one ordered speech-server queue.  This includes
 spoken annotations, pauses, concrete cues, content speech, and trailing
@@ -2058,6 +2087,193 @@ compilation; =check-parens=; focused =checkdoc=; =org-lint=; and
 =git diff --check=.  The untracked =sounds/bart/= customization remains
 excluded from the clean repository gate and was not changed.
 
+** Deep-Dive Findings after Slice 25
+
+A source and runtime review after the first visual-face slice confirmed that
+the semantic architecture is still the correct direction, but found several
+contract and implementation gaps that must be corrected before further module
+migration:
+
+1. =emacsvox-aural-prepare-text= currently resolves the complete semantic
+   before/content/after plan for every personality or face run.  A mixed-face
+   Org heading can therefore speak its heading label and play its heading cue
+   several times.  Semantic object lifetime and formatting-run lifetime need
+   distinct representations.
+2. The queued string contains ordinary text properties but not overlay
+   properties.  Point explanation can observe an overlay face that actual
+   speech never captures.  Current transport also chooses =face= instead of
+   =font-lock-face= when both are present and ignores string-valued named
+   faces.  A narrow, authoritative named-source-face snapshot is required at
+   the source boundary.
+3. Existing Voice Lock controls legacy personality derivation, while new face
+   rules can still add presentation when Voice Lock is disabled.  The policy
+   must be explicit and visible in explanation rather than accidental.
+4. Legacy face lists can compile as a sequence of partial ACSS personalities,
+   but scheme =:content :voice= is one strongest-wins scalar.  The model needs
+   to distinguish a complete voice preset from composable ACSS dimensions.
+5. Only the built-in =acss-default= palette is registered.  Users have no
+   spoken palette manager, palette-entry provenance, or common persistence
+   path for creating and editing device-independent voice styles.
+6. Semantic fallback is validated and documented but does not participate in
+   matching.  Registered occasions, phases, role attributes, and state
+   combinations are not yet enforced as semantic contracts.  Semantic names
+   also have no alias, deprecation, or data-migration policy.
+7. Fact merging can leave duplicate plist keys, making displayed and resolved
+   input disagree about which value is authoritative.
+8. Overlay compatibility advice mirrors a resolved overlay voice into one
+   scalar text property.  Overlap, priority, removal, and original face
+   identity are not preserved reliably.
+9. Explanation usually re-resolves current facts and scheme state.  It must
+   distinguish simulation from inspection of the exact frozen plan that was
+   actually queued.
+10. Several aural modules are absent from =lisp/Makefile=, and stale source-tree
+    byte-code can shadow newer source during an ordinary interactive startup.
+    The isolated compiled test is useful but does not make the normal build
+    complete.
+11. Rule collection and scheme compilation, voice/resource lookup, and sound
+    file digesting are repeated at formatting-run frequency.  Correct object
+    boundaries should also provide a safe cache boundary.
+12. The current repository audit reports 1,548 literal and 104 dynamic legacy
+    presentation references across modules.  Further migration should wait
+    until object lifetime, source-face capture, and Voice Lock policy are
+    stable.
+
+These findings add corrective slices rather than reopening the completed
+vertical migrations.  Compatibility behavior stays supported while the shared
+transport and contracts are repaired.
+
+** TODO Slice 26: Aural Object and Formatting-Run Contract
+
+- Add a regression fixture containing one semantic Org heading split across
+  several named faces and personalities.
+- Finalize object, run, and transition action anchoring, including declarative
+  syntax, defaults, mixed semantic-and-face selectors, and legacy inference.
+- Define explicit object boundaries for plain submissions, annotated ranges,
+  semantic fact changes, module or occasion changes, and legacy queued icons.
+- Resolve semantic object rules once, resolve compatible formatting-run rules
+  at their source runs, and compile one frozen ordered object plan.
+- Preserve all styled content runs through scratch-buffer cleanup without
+  repeating object before/after actions or losing per-run voices.
+- Record object and run identifiers plus action anchors in provenance and
+  explanation.
+
+Deliverable: a mixed-face heading speaks and sounds like one heading while
+retaining all intended run-level voice changes.
+
+** TODO Slice 27: Authoritative Named Source-Face Snapshot
+
+- Define "named source face" narrowly: explicit named faces from text
+  properties and ordered source overlays, captured before copying to the
+  scratch buffer.  Do not expand theme-dependent inheritance or face remapping
+  into semantic identity.
+- Accept symbol and string forms of named faces that Emacs accepts.
+- Specify the precedence of =font-lock-face= and =face= and preserve the
+  ordered names from both when useful to compatible presentation.
+- Capture overlay priority, overlapping overlay order, and source provenance
+  for each object/run without mutating source text or compatibility voice
+  properties.
+- Make actual frozen speech and point explanation use the same capture
+  function.
+- Add tests for string faces, simultaneous face properties, overlays,
+  overlapping overlays, anonymous inherited faces, and source-to-scratch
+  parity.
+
+Deliverable: a face presentation that explanation says will match is the same
+presentation that actual speech receives.
+
+** TODO Slice 28: Explicit Voice Lock and Face-Presentation Policy
+
+- Decide whether Voice Lock gates all face-derived presentation, only
+  face-derived voice, or only the legacy face-to-personality compatibility
+  layer.
+- Expose the selected policy as one documented user control independent of the
+  semantic scheme and make its current value visible in the aural home,
+  doctor, and explanation.
+- Preserve explicit semantic role/state presentation when legacy visual
+  styling is disabled.
+- Remove accidental differences between text properties, overlays, immediate
+  presentation, preview, and continuous reading.
+- Test each policy state with legacy personality, legacy face voice, semantic
+  voice, face cue/label, and mixed semantic-and-face rules.
+
+Deliverable: users can predict and inspect exactly what disabling visual voice
+presentation changes.
+
+** TODO Slice 29: Composable Voice Styles and Palette Management
+
+- Define a voice value as either a complete named preset or a composable
+  device-independent ACSS style with independently sourced family, pitch,
+  pitch range, stress, and richness dimensions.
+- Specify how weaker inherited dimensions combine with stronger partial
+  overrides and how a complete preset resets or replaces prior dimensions.
+- Compile the effective ACSS style once through the active speech adapter and
+  record per-dimension provenance and unsupported capability fallback.
+- Add versioned personal voice-palette persistence without evaluating Lisp.
+- Add a spoken palette manager and guided style editor for listing, copying,
+  creating, editing, deleting, validating, previewing, and explaining palette
+  entries.
+- Validate against the active adapter's actual voice capabilities rather than
+  only whether a Lisp variable is bound.
+- Preserve every existing =defvoice= personality and =acss-default= entry as a
+  compatibility provider.
+
+Deliverable: users can build and inspect reusable composable voices through
+the same accessible aural-management workflow as schemes and sound packs.
+
+** TODO Slice 30: Operational Semantic Contracts
+
+- Make registered fallback chains participate in rule matching with explicit
+  weakest-to-strongest provenance.
+- Define and enforce valid roles, attributes, values, states, occasions, and
+  render phases for each registered semantic where restrictions are declared.
+- Canonically merge base and range-local facts so each property has one
+  authoritative value and displayed facts equal resolved facts.
+- Add stable aliases, deprecation diagnostics, and versioned migration hooks
+  for renamed semantic identifiers.
+- Extend module-author and scheme-author validation with invalid-combination,
+  impossible-selector, and fallback-shadow diagnostics.
+- Generate the complete operational contract in the aural reference.
+
+Deliverable: registry metadata affects safe matching and authoring rather than
+serving only as documentation.
+
+** TODO Slice 31: Exact Presentation Inspection and Runtime Efficiency
+
+- Retain a bounded record of the last frozen presentations with object/run
+  provenance and source location while avoiding long-lived source-buffer
+  retention.
+- Let =emacsvox-aural-explain-presentation= explain the exact presentation
+  that was queued when available and clearly label rule preview or current
+  re-resolution as simulation.
+- Cache a validated active rule snapshot and selected providers for one
+  configuration generation instead of recompiling at each formatting run.
+- Cache sound content digests by canonical file identity and modification
+  metadata, invalidating them on resource refresh.
+- Either implement volume in supported adapters or reject/degrade it with a
+  user-visible capability policy instead of silently deferring it.
+- Add timing and allocation checks for a long multi-face document without
+  weakening deterministic provenance.
+
+Deliverable: diagnosis reproduces heard output, and continuous reading does
+not pay scheme and resource setup costs for every style run.
+
+** TODO Slice 32: Complete Build and Resume Migration
+
+- Add every shipped aural module and manager to the normal Lisp build in
+  dependency order.
+- Add a normal-startup stale-byte-code check and document safe source-checkout
+  and installed-package behavior.
+- Run source, isolated compiled, and normal build-tree startup tests.
+- Regenerate the reference and rerun the clean aural audit after Slices 26--31.
+- Resume legacy migration only after object/run, face capture, Voice Lock, and
+  voice composition gates pass.
+- Prioritize remaining modules by user-visible feedback density and add each to
+  the migrated-module enforcement set only when its complete boundary audit
+  passes.
+
+Deliverable: the installed build contains the whole aural system, and further
+module migrations extend a stable transport contract.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:
@@ -2079,6 +2295,10 @@ The dedicated tests must cover:
 - deterministic ties independent of hash or registration order;
 - independent heading-level and folded-state composition;
 - ordered before, content, and after actions;
+- one object-level presentation across several formatting runs;
+- object-, run-, and transition-anchored action ordering;
+- source overlay and text-property face capture parity;
+- explicit Voice Lock interaction for semantic and compatibility rules;
 - prepend, append, replace, remove, suppress, and silence;
 - inheritance and cycle detection;
 - buffer isolation and explicit module context;
@@ -2095,14 +2315,17 @@ The dedicated tests must cover:
 - compatibility of existing icon calls, text properties, voices, and sound
   directories;
 - explanation provenance sufficient to reproduce every winning decision.
+- exact frozen-plan explanation distinguished from current-state simulation.
 
 * Resolved Decisions
 
 The decisions required for Slice 6 are:
 
 1. Resolve and compile at =tts-speak= and notification entry, attaching the
-   frozen concrete decision to each source-text run while allowing normal
-   cleanup to determine the final text payload.
+   frozen concrete decision at the source boundary while allowing normal
+   cleanup to determine the final text payload.  Slice 26 corrects the initial
+   per-formatting-run representation so one object plan owns its styled
+   content runs.
 2. Use one strict ordered speech-server queue for a complete multi-action
    presentation.  Permit local playback only for a standalone one-cue
    compatibility presentation.
@@ -2128,10 +2351,23 @@ again.
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. Whether critical alerts may be completely suppressed or require an
+1. Whether ordered actions declare an explicit =object=, =run=, or
+   =transition= anchor, use selector-based inference, or move run
+   presentation into a separate declarative rule shape.  This blocks Slice
+   26.
+2. Whether a change in range-local facts implicitly begins a new object or
+   whether modules must attach an explicit stable object identifier when a
+   submission contains several objects.  This blocks Slice 26.
+3. Whether Voice Lock gates every face-derived action, only face-derived
+   voice, or only the legacy face-to-personality compatibility mapping.  This
+   blocks Slice 28.
+4. Whether a named voice is a complete preset that resets inherited ACSS
+   dimensions or a reusable partial style that composes with them.  This
+   blocks Slice 29.
+5. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-2. The ordering policy required before minor-mode selectors are enabled.
-3. Whether future integrations need additional occasions and whether those
+6. The ordering policy required before minor-mode selectors are enabled.
+7. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:
@@ -2141,6 +2377,14 @@ Initial recommendations are:
 - treat existing personalities as presentation hints, not semantic identity;
 - make stereo balance the portable spatial baseline;
 - use explicit action operations rather than implicit last-writer behavior;
+- represent semantic feedback once per aural object and visual styling in
+  nested formatting runs;
+- capture explicit named source faces, including overlays, without expanding
+  theme inheritance or remapping;
+- keep semantic presentation active when Voice Lock disables legacy visual
+  voice mapping;
+- treat complete named voice presets as resets and explicit ACSS data as
+  composable partial styles;
 - warn once per session for unknown legacy inputs during migration.
 
 * Risks
@@ -2157,6 +2401,12 @@ Initial recommendations are:
   selected player.
 - Queueing unresolved cue names would push Emacs configuration and fallback
   policy into the speech server.
+- Treating every face run as a complete object would repeat semantic labels,
+  cues, pauses, and state presentation inside one spoken item.
+- Capturing faces only after copying text would lose overlays and make
+  explanation disagree with actual speech.
+- Leaving Voice Lock interaction implicit would make a face rule behave
+  differently from the legacy face voice it appears to replace.
 - Runtime spatialization of the existing =3d= assets could position them
   twice.
 - Unstable or excessive spatial speech could reduce intelligibility.
@@ -2183,6 +2433,12 @@ The migration is complete when:
   mode, combined context, derived mode, or buffer;
 - independent rules such as heading level and folded state compose
   deterministically;
+- one semantic object may contain several face or personality runs without
+  repeating object-level feedback;
+- actual speech and point explanation use the same frozen named-source-face
+  snapshot;
+- Voice Lock and face-presentation policy are independent, documented, and
+  visible;
 - existing ACSS personalities and sound packs are providers within the common
   system;
 - the concrete render plan is resolved before queueing;
