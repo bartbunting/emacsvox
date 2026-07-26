@@ -2182,7 +2182,7 @@ aural rule, scheme, transport, tools, and Org suites under Emacs 31; current
 generated reference; and source-preferred loading verified against stale
 ignored byte-code in the checkout.
 
-** TODO Slice 27: Authoritative Named Source-Face Snapshot
+** DONE Slice 27: Authoritative Named Source-Face Snapshot
 
 - Define "named source face" narrowly: explicit named faces from text
   properties and ordered source overlays, captured before copying to the
@@ -2202,6 +2202,32 @@ ignored byte-code in the checkout.
 
 Deliverable: a face presentation that explanation says will match is the same
 presentation that actual speech receives.
+
+Implemented contract:
+
+- =emacsvox-aural-capture-source-faces= is the single point and speech capture
+  function.  It orders overlays by Emacs priority, then retains both explicit
+  =face= and =font-lock-face= text properties.
+- Named symbol and string faces normalize to symbols.  Lists remain ordered,
+  and anonymous face attributes contribute only their explicit named
+  =:inherit= values; theme inheritance and face remapping are not expanded.
+- =emacsvox-aural-source-substring= copies source ranges without modifying the
+  buffer and attaches data-only face, source property, overlay priority,
+  source range, and order provenance.  Core line, visual-line, region, word,
+  sentence, expression, page, paragraph, buffer, window, completion, and
+  overlay speech paths use this source boundary.
+- Formatting runs consume the frozen snapshot, while point explanation calls
+  the same capture function.  Spoken explanation names the captured faces and
+  strongest source, and detailed help lists each provenance record.
+
+Checks for Slice 27: five focused capture, precedence, point/speech parity,
+string/inherited-face, and normal line-speech regressions added; 182 expected
+results and zero unexpected results across the aural, Org, and voice suites;
+1,541 expected results in the full source suite with the existing optional
+Mu4e skip.  The sole full-suite failure is the clean-tree resource audit
+correctly reporting unregistered variant filenames in the untracked,
+in-progress =sounds/bart/= personal pack; the audit passes when that personal
+pack is excluded, and no file in it was changed.
 
 ** TODO Slice 28: Explicit Voice Lock and Face-Presentation Policy
 

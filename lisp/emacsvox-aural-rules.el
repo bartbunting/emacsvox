@@ -54,7 +54,8 @@
 
 (defconst emacsvox-aural--context-keys
   '(:module :mode :mode-lineage :occasion :legacy-cue
-    :legacy-face-source :legacy-faces :legacy-personality
+    :legacy-face-source :legacy-faces :legacy-face-provenance
+    :legacy-personality
     :legacy-source :source-buffer :source-buffer-name)
   "Keys accepted in a presentation context plist.")
 
@@ -122,7 +123,8 @@
      (:constructor emacsvox-aural--make-input))
   "Normalized semantic facts and presentation context."
   role events states attributes content module mode mode-lineage occasion
-  legacy-cue legacy-face-source legacy-faces legacy-personality
+  legacy-cue legacy-face-source legacy-faces legacy-face-provenance
+  legacy-personality
   legacy-source source-buffer source-buffer-name)
 
 (cl-defstruct
@@ -834,6 +836,8 @@ LAYER-ORDER records inheritance order within one origin."
          (legacy-cue (plist-get context :legacy-cue))
          (legacy-face-source (plist-get context :legacy-face-source))
          (legacy-faces (plist-get context :legacy-faces))
+         (legacy-face-provenance
+          (plist-get context :legacy-face-provenance))
          (legacy-personality (plist-get context :legacy-personality))
          (legacy-source (plist-get context :legacy-source))
          (source-buffer (plist-get context :source-buffer))
@@ -865,6 +869,26 @@ LAYER-ORDER records inheritance order within one origin."
       (unless (and (proper-list-p legacy-faces) (cl-every #'symbolp legacy-faces))
         (emacsvox-aural--rule-error
          "Context legacy faces must be a symbol list: %S" legacy-faces)))
+    (when legacy-face-provenance
+      (unless
+          (and
+           (proper-list-p legacy-face-provenance)
+           (cl-every
+            (lambda (entry)
+              (and
+               (emacsvox-aural--plist-p entry)
+               (symbolp (plist-get entry :face))
+               (memq
+                (plist-get entry :source)
+                '(overlay text-property))
+               (memq
+                (plist-get entry :property)
+                '(face font-lock-face))
+               (natnump (plist-get entry :order))))
+            legacy-face-provenance))
+        (emacsvox-aural--rule-error
+         "Context legacy face provenance is invalid: %S"
+         legacy-face-provenance)))
     (when legacy-personality
       (unless (or (symbolp legacy-personality) (consp legacy-personality))
         (emacsvox-aural--rule-error
@@ -901,6 +925,7 @@ LAYER-ORDER records inheritance order within one origin."
      :legacy-cue legacy-cue
      :legacy-face-source legacy-face-source
      :legacy-faces (delete-dups (copy-sequence legacy-faces))
+     :legacy-face-provenance (copy-tree legacy-face-provenance)
      :legacy-personality legacy-personality
      :legacy-source legacy-source
      :source-buffer source-buffer

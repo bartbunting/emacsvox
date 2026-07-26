@@ -539,6 +539,115 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
             (emacsvox-test--transport-adapter-command
              'voice-bolden))))))))
 
+(ert-deftest emacsvox-aural-transport-normalizes-explicit-face-names ()
+  "Symbol, string, list, and anonymous inherited source faces stay named."
+  (should
+   (equal
+    (emacsvox-aural-face-names
+     '("font-lock-warning-face"
+       (:foreground "red" :inherit font-lock-keyword-face)
+       font-lock-warning-face))
+    '(font-lock-warning-face font-lock-keyword-face))))
+
+(ert-deftest emacsvox-aural-transport-captures-overlay-face-precedence ()
+  "The source snapshot orders overlays before both text face properties."
+  (with-temp-buffer
+    (insert
+     (propertize
+      "styled"
+      'face "font-lock-keyword-face"
+      'font-lock-face '(:inherit font-lock-warning-face)))
+    (let ((weaker (make-overlay (point-min) (point-max)))
+          (stronger (make-overlay (point-min) (point-max))))
+      (overlay-put weaker 'priority 2)
+      (overlay-put weaker 'face 'bold)
+      (overlay-put stronger 'priority 9)
+      (overlay-put stronger 'face "font-lock-comment-face")
+      (overlay-put stronger 'font-lock-face 'italic)
+      (let* ((snapshot
+              (emacsvox-aural-capture-source-faces (point-min)))
+             (copy
+              (emacsvox-aural-source-substring
+               (point-min) (point-max))))
+        (should
+         (equal
+          (mapcar
+           (lambda (entry) (plist-get entry :face))
+           snapshot)
+          '(font-lock-comment-face italic bold
+            font-lock-keyword-face font-lock-warning-face)))
+        (should
+         (equal
+          (get-text-property
+           0 emacsvox-aural-source-faces-property copy)
+          snapshot))
+        (should-not
+         (get-text-property
+          (point-min) emacsvox-aural-source-faces-property))
+        (should
+         (equal
+          (mapcar
+           (lambda (entry) (plist-get entry :order))
+           snapshot)
+          '(0 1 2 3 4)))
+        (should
+         (equal
+          (mapcar
+           (lambda (entry)
+             (list
+              (plist-get entry :source)
+              (plist-get entry :property)))
+           snapshot)
+          '((overlay face)
+            (overlay font-lock-face)
+            (overlay face)
+            (text-property face)
+            (text-property font-lock-face))))))))
+
+(ert-deftest emacsvox-aural-transport-source-and-frozen-faces-agree ()
+  "Frozen speech uses the same overlay snapshot captured at its source."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-overlay
+        :match (:legacy-face font-lock-warning-face)
+        :render
+        (:before
+         ((:id warning-overlay-cue :kind cue :cue warn-user))))))
+    (with-temp-buffer
+      (insert "warning")
+      (let ((overlay (make-overlay (point-min) (point-max))))
+        (overlay-put overlay 'priority '(nil . 7))
+        (overlay-put overlay 'face "font-lock-warning-face")
+        (let* ((snapshot
+                (emacsvox-aural-capture-source-faces (point-min)))
+               (source
+                (emacsvox-aural-source-substring
+                 (point-min) (point-max)))
+               (prepared
+                (emacsvox-aural-prepare-text source))
+               (plan
+                (emacsvox-aural-concrete-plan-at 0 prepared))
+               (context
+                (emacsvox-aural-concrete-plan-context plan)))
+          (should
+           (equal
+            (plist-get context :legacy-faces)
+            '(font-lock-warning-face)))
+          (should
+           (eq
+            (plist-get context :legacy-face-source)
+            'overlay-face))
+          (should
+           (equal
+            (plist-get context :legacy-face-provenance)
+            snapshot))
+          (should
+           (equal
+            (mapcar
+             #'emacsvox-aural-concrete-action-cue
+             (emacsvox-aural-concrete-plan-before plan))
+            '(warn-user))))))))
+
 (ert-deftest emacsvox-aural-transport-detects-partially-prepared-text ()
   "A raw suffix prevents a mixed string from bypassing source preparation."
   (emacsvox-test--with-transport-scheme

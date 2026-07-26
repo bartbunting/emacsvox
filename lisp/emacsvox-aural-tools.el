@@ -128,19 +128,26 @@
    (let ((context (emacsvox-aural-capture-context))
          (position (emacsvox-aural-tools--point-position)))
      (when position
-       (let ((faces
-              (emacsvox-aural-face-names
-               (or
-                (face-at-point nil t)
-                (get-char-property position 'face)
-                (get-char-property position 'font-lock-face)))))
+       (let* ((provenance
+               (emacsvox-aural-capture-source-faces position))
+              (faces
+               (mapcar
+                (lambda (entry) (plist-get entry :face))
+                provenance)))
          (when faces
            (setq
             context
             (plist-put context :legacy-faces (copy-sequence faces)))
            (setq
             context
-            (plist-put context :legacy-face-source 'source-buffer)))))
+            (plist-put
+             context :legacy-face-source
+             (emacsvox-aural--source-face-summary provenance)))
+           (setq
+            context
+            (plist-put
+             context :legacy-face-provenance
+             (copy-tree provenance))))))
      context)))
 
 (defun emacsvox-aural-tools--context-for-occasion (context occasion)
@@ -1659,6 +1666,8 @@ selected occasion has no matching rule."
          (concrete (emacsvox-aural-explanation-concrete-plan explanation))
          (before (emacsvox-aural-concrete-plan-before concrete))
          (after (emacsvox-aural-concrete-plan-after concrete))
+         (faces (plist-get context :legacy-faces))
+         (face-source (plist-get context :legacy-face-source))
          (occasion (plist-get context :occasion))
          (matching-occasions
           (emacsvox-aural-tools--matching-occasion-description
@@ -1678,6 +1687,14 @@ selected occasion has no matching rule."
        (format
         "Occasion %s."
         (emacsvox-aural-tools--humanize occasion))
+       (when faces
+         (format
+          "Captured visual %s %s, strongest first, from %s."
+          (if (= (length faces) 1) "face" "faces")
+          (mapconcat
+           #'emacsvox-aural-tools--humanize faces ", ")
+          (emacsvox-aural-tools--humanize
+           (or face-source 'unspecified-source))))
        (if rules
            (format
             "%d %s matched. Strongest rule %s."
@@ -1767,6 +1784,25 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
          (format
           "Visual faces, strongest first: %s\n"
           (mapconcat #'symbol-name faces ", "))))
+      (when-let*
+          ((provenance (plist-get context :legacy-face-provenance)))
+        (princ "Visual face source provenance:\n")
+        (dolist (entry provenance)
+          (princ
+           (format
+            "  %s: %s %s%s%s\n"
+            (plist-get entry :face)
+            (plist-get entry :source)
+            (plist-get entry :property)
+            (if (plist-member entry :priority)
+                (format ", priority %S" (plist-get entry :priority))
+              "")
+            (if (plist-member entry :overlay-start)
+                (format
+                 ", source range %s to %s"
+                 (plist-get entry :overlay-start)
+                 (plist-get entry :overlay-end))
+              "")))))
       (when matching-occasions
         (princ
          (format

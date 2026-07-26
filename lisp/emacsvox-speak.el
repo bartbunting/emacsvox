@@ -79,7 +79,8 @@ speech library load independently during native compilation.")
 
 (defsubst ems--this-line ()
   "Return current line as string."
-  (buffer-substring (line-beginning-position) (line-end-position)))
+  (emacsvox-aural-source-substring
+   (line-beginning-position) (line-end-position)))
 
 ;;; Clause Boundary Helper:
 
@@ -616,7 +617,7 @@ the sense of the filter. "
     (save-excursion
       (goto-char there)
       (tts-speak
-       (buffer-substring              ; left or right context
+       (emacsvox-aural-source-substring ; left or right context
         (if (eolp) (line-beginning-position) there)
         (line-end-position))))))
 
@@ -644,7 +645,7 @@ the sense of the filter. "
         (narrow-to-region start end)
         (emacsvox-speak-voice-annotate-paragraphs)))
     (if (< (abs (- start end )) ems--large-text-size)
-        (tts-speak (buffer-substring start end))
+        (tts-speak (emacsvox-aural-source-substring start end))
       (call-interactively #' emacsvox-speak-windowful))))
 
 (defun emacsvox-speak-extent (beg end &optional no-case)
@@ -757,8 +758,8 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
                orig (1+ orig) 5
                (ems-set-personality-temporarily
                 orig (1+ orig) voice-animate
-                (buffer-substring start end)))
-            (buffer-substring start end)))
+                (emacsvox-aural-source-substring start end)))
+            (emacsvox-aural-source-substring start end)))
     (when (and (null arg) emacsvox-speak-line-column-filter)
       (setq
        line
@@ -879,8 +880,9 @@ Cues the start of a physical line with auditory icon `left'."
             (if emacsvox-show-point
                 (ems-set-personality-temporarily
                  orig (1+ orig)
-                 voice-animate (buffer-substring start end))
-              (buffer-substring start end)))
+                 voice-animate
+                 (emacsvox-aural-source-substring start end))
+              (emacsvox-aural-source-substring start end)))
       (tts-speak line))))
 
 (defvar-local emacsvox-speak-last-spoken-word-position nil
@@ -942,7 +944,7 @@ spelled out  instead of being spoken."
         (setq speaker 'emacsvox-speak-spell-word)
         (setq emacsvox-speak-last-spoken-word-position nil))
        (t (setq emacsvox-speak-last-spoken-word-position orig)))
-      (funcall speaker (buffer-substring start end)))))
+      (funcall speaker (emacsvox-aural-source-substring start end)))))
 
 (defsubst emacsvox-is-alpha-p (c)
   "Check if `C' is an alphabetic char."
@@ -1091,7 +1093,7 @@ Negative prefix arg speaks from start of sentence to point."
        ((null arg))
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
-      (tts-speak (buffer-substring start end)))))
+      (tts-speak (emacsvox-aural-source-substring start end)))))
 
 (defun emacsvox-speak-sexp (&optional arg)
   "Speak current sexp.
@@ -1117,7 +1119,7 @@ Negative prefix arg speaks from start of sexp to point. "
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
       (emacsvox-icon 'select-object)
-      (tts-speak (buffer-substring start end)))))
+      (tts-speak (emacsvox-aural-source-substring start end)))))
 
 (defun emacsvox-speak-page (&optional arg)
   "Speak a page.
@@ -1136,7 +1138,7 @@ Negative prefix arg will read from start of current page to point. "
        ((null arg))
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
-      (tts-speak (buffer-substring start end)))))
+      (tts-speak (emacsvox-aural-source-substring start end)))))
 
 (defun emacsvox-speak-paragraph (&optional arg)
   "Speak paragraph.
@@ -1156,7 +1158,7 @@ Negative prefix arg will read from start of current paragraph to point. "
        ((null arg))
        ((> arg 0) (setq start orig))
        ((< arg 0) (setq end orig)))
-      (tts-speak (buffer-substring start end)))))
+      (tts-speak (emacsvox-aural-source-substring start end)))))
 
 ;;;   Speak buffer objects such as help, completions minibuffer etc
 
@@ -1184,7 +1186,7 @@ Negative prefix arg speaks from start of buffer to point. "
      (t (setq start (point-min)
               end (point))))
     (if (< (abs (- start end )) ems--large-text-size)
-        (tts-speak (buffer-substring start end))
+        (tts-speak (emacsvox-aural-source-substring start end))
       (emacsvox-speak-windowful))))
 
 (defun emacsvox-speak-other-buffer (buffer)
@@ -1235,7 +1237,7 @@ Useful to listen to a buffer without switching  contexts."
       (setq end
             (or (next-single-property-change end 'completion--string)
                 (point-max)))
-      (buffer-substring beg end))))
+      (emacsvox-aural-source-substring beg end))))
 
 ;;;  mail check
 
@@ -1895,7 +1897,7 @@ location of the mark is indicated by an aural highlight. "
        (beg (or start pre-start)))
     (when (and  beg end)
       (emacsvox-speak-region beg end)
-      (buffer-substring beg end))))
+      (emacsvox-aural-source-substring beg end))))
 
 (defun emacsvox-speak-face-forward ()
   "Property search for face --- see \\[text-property-search-forward]"
@@ -2036,7 +2038,7 @@ The message is also placed in the kill ring for convenient yanking "
 (defsubst emacsvox-get-window-contents ()
   "Return window contents."
   (save-excursion
-    (buffer-substring
+    (emacsvox-aural-source-substring
      (window-start (selected-window))
      (window-end (selected-window)  'update ))))
 
@@ -2260,7 +2262,8 @@ program, arguments specify the START and END of the rectangle."
 Argument O specifies overlay."
   (save-current-buffer
     (set-buffer (overlay-buffer o))
-    (buffer-substring (overlay-start o) (overlay-end o))))
+    (emacsvox-aural-source-substring
+     (overlay-start o) (overlay-end o))))
 
 ;;;  Speaking spaces
 

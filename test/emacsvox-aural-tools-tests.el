@@ -163,7 +163,18 @@
           (plist-get context :legacy-faces)
           '(font-lock-warning-face bold)))
         (should
-         (eq (plist-get context :legacy-face-source) 'source-buffer))))
+         (eq (plist-get context :legacy-face-source) 'face))
+        (should
+         (equal
+          (mapcar
+           (lambda (entry)
+             (list
+              (plist-get entry :face)
+              (plist-get entry :source)
+              (plist-get entry :property)))
+           (plist-get context :legacy-face-provenance))
+          '((font-lock-warning-face text-property face)
+            (bold text-property face))))))
     (let* ((rule
             (emacsvox-aural-compile-rule
              '(:id warning-face
@@ -184,6 +195,36 @@
        (string-match-p
         "visual face font lock warning face"
         (emacsvox-aural-concise-explanation nil (cadr input)))))))
+
+(ert-deftest emacsvox-aural-tools-point-and-speech-face-capture-agree ()
+  "Point diagnosis uses the authoritative source snapshot used by speech."
+  (emacsvox-test--with-aural-tools
+    (with-temp-buffer
+      (insert
+       (propertize
+        "styled" 'font-lock-face "font-lock-keyword-face"))
+      (let ((overlay (make-overlay (point-min) (point-max))))
+        (overlay-put overlay 'priority 4)
+        (overlay-put overlay 'face 'font-lock-warning-face)
+        (goto-char (point-min))
+        (let* ((snapshot (emacsvox-aural-capture-source-faces))
+               (context (emacsvox-aural-context-at-point))
+               (source
+                (emacsvox-aural-source-substring
+                 (point-min) (point-max))))
+          (should
+           (equal
+            (plist-get context :legacy-face-provenance)
+            snapshot))
+          (should
+           (equal
+            (get-text-property
+             0 emacsvox-aural-source-faces-property source)
+            snapshot))
+          (should
+           (equal
+            (plist-get context :legacy-faces)
+            '(font-lock-warning-face font-lock-keyword-face))))))))
 
 (ert-deftest emacsvox-aural-tools-validation-reports-rule-diagnostics ()
   "Validation reports ineffective rules, stable-ID ties, and disabled rules."

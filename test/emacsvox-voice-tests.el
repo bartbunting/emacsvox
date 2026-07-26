@@ -11,6 +11,7 @@
 (require 'ert)
 (require 'tts-speak)
 (require 'voice-setup)
+(require 'emacsvox-speak)
 
 (defvar emacsvox-pronounce-personality)
 (defvar emacsvox-pronounce-table)
@@ -209,6 +210,31 @@
           "heading" 'emacsvox-test-source-mode)))
     (should (eq (car captured) 'fundamental-mode))
     (should-not (eq (car captured) 'emacsvox-test-source-mode))))
+
+(ert-deftest emacsvox-voice-speak-line-snapshots-overlay-faces ()
+  "Normal line speech captures overlay faces before copying source text."
+  (with-temp-buffer
+    (insert "warning")
+    (let ((overlay (make-overlay (point-min) (point-max)))
+          captured)
+      (overlay-put overlay 'priority 5)
+      (overlay-put overlay 'face "font-lock-warning-face")
+      (let ((expected
+             (emacsvox-aural-capture-source-faces (point-min)))
+            (emacsvox-show-point nil)
+            (emacsvox-audio-indentation nil))
+        (cl-letf
+            (((symbol-function 'tts-stop) (lambda (&rest _)))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (setq captured text)))
+             ((symbol-function 'emacsvox-icon) (lambda (&rest _))))
+          (goto-char (point-min))
+          (emacsvox-speak-line))
+        (should
+         (equal
+          (get-text-property
+           0 emacsvox-aural-source-faces-property captured)
+          expected))))))
 
 (provide 'emacsvox-voice-tests)
 ;;; emacsvox-voice-tests.el ends here
