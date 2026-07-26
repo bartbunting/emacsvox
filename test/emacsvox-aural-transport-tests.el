@@ -71,6 +71,19 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
        (symbol-value personality)
      personality)))
 
+(defun emacsvox-test--concrete-plans-in (text)
+  "Return consecutive concrete aural plans carried by TEXT."
+  (let ((position 0)
+        plans)
+    (while (< position (length text))
+      (push (emacsvox-aural-concrete-plan-at position text) plans)
+      (setq
+       position
+       (next-single-property-change
+        position emacsvox-aural-concrete-plan-property
+        text (length text))))
+    (nreverse plans)))
+
 (ert-deftest emacsvox-aural-transport-captures-source-context ()
   "Source buffer, name, mode, module, and occasion are frozen together."
   (with-temp-buffer
@@ -843,6 +856,166 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         '(("upload-sample" "/sounds/one.ogg" "owned-one")
           ("upload-sample" "/sounds/two.ogg" "owned-two")
           ("unload-sample" "owned-one")))))))
+
+(ert-deftest emacsvox-aural-transport-presents-mixed-face-heading-once ()
+  "Formatting runs retain voices without repeating semantic heading feedback."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id heading-object
+        :match (:role heading :requires (level))
+        :render
+        (:before
+         ((:id heading-label :kind speech
+           :text-template "Heading {level}")
+          (:id heading-cue :kind cue :cue section))
+         :after
+         ((:id heading-state :kind speech :text "folded"))))
+       (:id warning-run
+        :match (:legacy-face font-lock-warning-face)
+        :render
+        (:before
+         ((:id warning-cue :kind cue :cue warn-user))
+        :content (:voice bolden)))
+       (:id keyword-run
+        :match (:legacy-face font-lock-keyword-face)
+        :render (:content (:voice animate)))))
+    (let ((text (copy-sequence "** TODO Mixed heading :tag:"))
+          (voice-lock-mode t))
+      (add-text-properties 0 2 '(face font-lock-comment-face) text)
+      (add-text-properties 3 7 '(face font-lock-warning-face) text)
+      (add-text-properties 8 21 '(face font-lock-keyword-face) text)
+      (add-text-properties 22 27 '(face font-lock-constant-face) text)
+      (cl-letf
+          (((symbol-function 'tts-get-voice-command)
+            (lambda (voice) (format "<%s>" voice))))
+        (let* ((prepared
+                (emacsvox-aural-prepare-text
+                 text
+                 '(:role heading :level 2 :states (folded)
+                   :content "** TODO Mixed heading :tag:")
+                 (emacsvox-test--transport-context 'org-mode)))
+               (plans (emacsvox-test--concrete-plans-in prepared))
+               (before-ids
+                (mapcan
+                 (lambda (plan)
+                   (mapcar
+                    #'emacsvox-aural-concrete-action-id
+                    (emacsvox-aural-concrete-plan-before plan)))
+                 plans))
+               (after-ids
+                (mapcan
+                 (lambda (plan)
+                   (mapcar
+                    #'emacsvox-aural-concrete-action-id
+                    (emacsvox-aural-concrete-plan-after plan)))
+                 plans)))
+          (should (> (length plans) 3))
+          (should (= (cl-count 'heading-label before-ids) 1))
+          (should (= (cl-count 'heading-cue before-ids) 1))
+          (should (= (cl-count 'heading-state after-ids) 1))
+          (should (= (cl-count 'warning-cue before-ids) 1))
+          (should
+           (equal
+            (mapcar #'emacsvox-aural-concrete-plan-object-id plans)
+            (make-list
+             (length plans)
+             (emacsvox-aural-concrete-plan-object-id (car plans)))))
+          (should
+           (emacsvox-aural-concrete-plan-object-start-p (car plans)))
+          (should
+           (emacsvox-aural-concrete-plan-object-end-p (car (last plans))))
+          (should
+           (equal
+            (emacsvox-aural-concrete-content-voice-command
+             (emacsvox-aural-concrete-plan-content
+              (emacsvox-aural-concrete-plan-at 3 prepared)))
+            (emacsvox-test--transport-adapter-command 'voice-bolden)))
+          (should
+           (equal
+            (emacsvox-aural-concrete-content-voice-command
+             (emacsvox-aural-concrete-plan-content
+              (emacsvox-aural-concrete-plan-at 8 prepared)))
+            (emacsvox-test--transport-adapter-command 'voice-animate))))))))
+
+(ert-deftest emacsvox-aural-transport-infers-or-honors-object-boundaries ()
+  "Fact changes split inferred objects while an explicit identifier groups."
+  (emacsvox-test--with-transport-scheme
+    (let ((text (copy-sequence "FirstSecond"))
+          (context (emacsvox-test--transport-context)))
+      (add-text-properties
+       0 5
+       (list emacsvox-aural-facts-property '(:role heading :level 1))
+       text)
+      (add-text-properties
+       5 11
+       (list emacsvox-aural-facts-property '(:role heading :level 2))
+       text)
+      (let* ((inferred (emacsvox-aural-prepare-text text nil context))
+             (plans (emacsvox-test--concrete-plans-in inferred)))
+        (should (= (length plans) 2))
+        (should-not
+         (equal
+          (emacsvox-aural-concrete-plan-object-id (car plans))
+          (emacsvox-aural-concrete-plan-object-id (cadr plans)))))
+      (add-text-properties
+       0 11 (list emacsvox-aural-object-property 'heading-one) text)
+      (let* ((explicit (emacsvox-aural-prepare-text text nil context))
+             (plans (emacsvox-test--concrete-plans-in explicit)))
+        (should (= (length plans) 2))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-concrete-plan-object-id plans)
+          '(heading-one heading-one)))
+        (should
+         (emacsvox-aural-concrete-plan-object-start-p (car plans)))
+        (should-not
+         (emacsvox-aural-concrete-plan-object-end-p (car plans)))
+        (should
+         (emacsvox-aural-concrete-plan-object-end-p (cadr plans)))))))
+
+(ert-deftest emacsvox-aural-transport-emits-transition-edges-once ()
+  "Adjacent matching runs share one transition entry and exit."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-transition
+        :match (:legacy-face font-lock-warning-face)
+        :render
+        (:before
+         ((:id warning-enter :kind speech :text "warning begins"
+           :anchor transition))
+        :after
+        ((:id warning-leave :kind speech :text "warning ends"
+          :anchor transition))))))
+    (let ((text (copy-sequence "abcdef"))
+          (voice-lock-mode t))
+      (add-text-properties
+       0 2 '(face font-lock-warning-face personality first) text)
+      (add-text-properties
+       2 4 '(face font-lock-warning-face personality second) text)
+      (cl-letf
+          (((symbol-function 'tts-get-voice-command)
+            (lambda (voice) (format "<%s>" voice))))
+        (let* ((prepared
+                (emacsvox-aural-prepare-text
+                 text nil (emacsvox-test--transport-context)))
+               (plans (emacsvox-test--concrete-plans-in prepared))
+               (before
+                (mapcan
+                 (lambda (plan)
+                   (mapcar
+                    #'emacsvox-aural-concrete-action-id
+                    (emacsvox-aural-concrete-plan-before plan)))
+                 plans))
+               (after
+                (mapcan
+                 (lambda (plan)
+                   (mapcar
+                    #'emacsvox-aural-concrete-action-id
+                    (emacsvox-aural-concrete-plan-after plan)))
+                 plans)))
+          (should (= (length plans) 3))
+          (should (equal before '(warning-enter)))
+          (should (equal after '(warning-leave))))))))
 
 (provide 'emacsvox-aural-transport-tests)
 ;;; emacsvox-aural-transport-tests.el ends here

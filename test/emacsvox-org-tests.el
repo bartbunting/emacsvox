@@ -263,7 +263,9 @@
           "Scheme org combined" summary))
         (should
          (string-match-p
-          "Before the content, say Heading, then play the section cue"
+          (concat
+           "Before the content, say Heading once for the object, "
+           "then play the section cue once for the object")
           summary))
         (should
          (string-match-p
@@ -468,7 +470,68 @@
            (emacsvox-aural-concrete-plan-after (nth 0 plans)))
           (mapcar
            #'emacsvox-aural-concrete-action-id
-           (emacsvox-aural-concrete-plan-after (nth 1 plans)))))))))
+          (emacsvox-aural-concrete-plan-after (nth 1 plans)))))))))
+
+(ert-deftest emacsvox-org-mixed-face-heading-has-one-object-presentation ()
+  "A fontified Org heading does not repeat semantic feedback per face run."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(org-heading-level-labels org-heading-section-cues))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (voice-lock-mode t))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode #'org-mode)
+      (insert "** TODO Mixed heading :tag:\n")
+      (goto-char (point-min))
+      (font-lock-ensure)
+      (emacsvox-org-refresh-aural-heading)
+      (let* ((text
+              (buffer-substring
+               (line-beginning-position) (line-end-position)))
+             (prepared
+              (let ((emacsvox-aural-submission-context
+                     (emacsvox-test--org-context 'navigation)))
+                (emacsvox-aural-prepare-text text)))
+             (position 0)
+             plans)
+        (while (< position (length prepared))
+          (push
+           (emacsvox-aural-concrete-plan-at position prepared)
+           plans)
+          (setq
+           position
+           (next-single-property-change
+            position emacsvox-aural-concrete-plan-property
+            prepared (length prepared))))
+        (setq plans (nreverse plans))
+        (should (> (length plans) 1))
+        (should
+         (equal
+          (mapcan
+           (lambda (plan)
+             (mapcar
+              #'emacsvox-aural-concrete-action-text
+              (cl-remove-if-not
+               (lambda (action)
+                 (eq
+                  (emacsvox-aural-concrete-action-kind action)
+                  'speech))
+               (emacsvox-aural-concrete-plan-before plan))))
+           plans)
+          '("Heading 2")))
+        (should
+         (=
+          (cl-count
+           'org-fragment-heading-section-cue-action
+           (mapcan
+            (lambda (plan)
+              (mapcar
+               #'emacsvox-aural-concrete-action-id
+               (emacsvox-aural-concrete-plan-before plan)))
+            plans))
+          1))))))
 
 (ert-deftest emacsvox-org-visibility-fragment-speaks-level-and-new-state ()
   "The optional visibility fragment renders folded and opened wording."

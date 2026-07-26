@@ -39,6 +39,10 @@
   '(speech cue pause)
   "Action kinds supported by the initial pure render-plan engine.")
 
+(defconst emacsvox-aural-action-anchors
+  '(object run transition)
+  "Lifetimes at which ordered aural actions may be emitted.")
+
 (defconst emacsvox-aural--selector-keys
   '(:role :event :events :state :states :module :mode :occasion
     :legacy-cue :legacy-face :legacy-personality :requires)
@@ -66,7 +70,7 @@
      (:constructor emacsvox-aural--make-action))
   "A validated backend-independent action."
   id kind text text-template template-fields cue duration voice volume space
-  source)
+  anchor source)
 
 (cl-defstruct
     (emacsvox-aural-phase-operations
@@ -77,7 +81,8 @@
   replace
   remove
   prepend
-  append)
+  append
+  anchor)
 
 (cl-defstruct
     (emacsvox-aural-content-patch
@@ -343,8 +348,23 @@ LABEL identifies the source in validation errors."
      :legacy-face legacy-face
      :legacy-personality legacy-personality)))
 
-(defun emacsvox-aural--compile-action (data rule-id phase index)
-  "Compile action DATA contributed by RULE-ID in PHASE at INDEX."
+(defun emacsvox-aural--selector-default-anchor (selector)
+  "Return the backward-compatible action anchor for SELECTOR.
+
+Compatibility face and personality selectors describe formatting runs.
+Semantic, contextual, and legacy-cue selectors describe complete objects."
+  (if
+      (or
+       (emacsvox-aural-selector-legacy-face selector)
+       (emacsvox-aural-selector-legacy-personality selector))
+      'run
+    'object))
+
+(defun emacsvox-aural--compile-action
+    (data rule-id phase index default-anchor)
+  "Compile action DATA contributed by RULE-ID in PHASE at INDEX.
+
+DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
   (emacsvox-aural--require-plist
    data (format "%S action %d for %S" phase index rule-id))
   (let* ((kind (plist-get data :kind))
@@ -359,9 +379,10 @@ LABEL identifies the source in validation errors."
          (voice (plist-get data :voice))
          (volume (plist-get data :volume))
          (space (plist-get data :space))
+         (anchor (or (plist-get data :anchor) default-anchor))
          (allowed
           '(:id :kind :text :text-template :cue :name :duration
-            :voice :volume :space))
+            :voice :volume :space :anchor))
          (unknown
           (cl-loop
            for (key _) on data by #'cddr
@@ -378,9 +399,10 @@ LABEL identifies the source in validation errors."
     (let* ((kind-properties
             (pcase kind
               ('speech
-               '(:id :kind :text :text-template :voice :volume :space))
-              ('cue '(:id :kind :cue :name :volume :space))
-              ('pause '(:id :kind :duration))
+               '(:id :kind :text :text-template :voice :volume :space
+                 :anchor))
+              ('cue '(:id :kind :cue :name :volume :space :anchor))
+              ('pause '(:id :kind :duration :anchor))
               (_ allowed)))
            (incompatible
             (cl-loop
@@ -422,6 +444,10 @@ LABEL identifies the source in validation errors."
     (when (and volume (not (numberp volume)))
       (emacsvox-aural--rule-error
        "Action volume must be numeric for %S" id))
+    (unless (memq anchor emacsvox-aural-action-anchors)
+      (emacsvox-aural--rule-error
+       "Action anchor for %S must be object, run, or transition: %S"
+       id anchor))
     (when space
       (condition-case error
           (emacsvox-aural-spatial-validate-space
@@ -442,6 +468,7 @@ LABEL identifies the source in validation errors."
      :voice voice
      :volume volume
      :space (copy-tree space)
+     :anchor anchor
      :source rule-id)))
 
 (defun emacsvox-aural--phase-actions (operations)
@@ -474,10 +501,11 @@ LABEL identifies the source in validation errors."
            rule-id field))))))
 
 (defun emacsvox-aural--compile-actions
-    (actions rule-id phase &optional id-namespace)
+    (actions rule-id phase default-anchor &optional id-namespace)
   "Compile ACTIONS contributed by RULE-ID to PHASE.
 
-ID-NAMESPACE distinguishes generated identifiers for separate operations."
+DEFAULT-ANCHOR supplies the rule's inferred lifetime.  ID-NAMESPACE
+distinguishes generated identifiers for separate operations."
   (unless (listp actions)
     (emacsvox-aural--rule-error
      "%S actions for %S must be a list" phase rule-id))
@@ -487,7 +515,7 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
           for index from 0
           collect
           (emacsvox-aural--compile-action
-           action rule-id (or id-namespace phase) index)))
+           action rule-id (or id-namespace phase) index default-anchor)))
         seen)
     (dolist (action compiled)
       (when (memq (emacsvox-aural-action-id action) seen)
@@ -497,18 +525,25 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
       (push (emacsvox-aural-action-id action) seen))
     compiled))
 
-(defun emacsvox-aural--compile-phase (data rule-id phase)
-  "Compile phase DATA contributed by RULE-ID to PHASE."
+(defun emacsvox-aural--compile-phase
+    (data rule-id phase default-anchor)
+  "Compile phase DATA contributed by RULE-ID to PHASE.
+
+DEFAULT-ANCHOR scopes destructive operations and actions that omit an
+explicit anchor."
   (cond
    ((null data)
-    (emacsvox-aural--make-phase-operations))
+    (emacsvox-aural--make-phase-operations :anchor default-anchor))
    ((and (listp data) (or (null data) (listp (car data))))
     (emacsvox-aural--make-phase-operations
-     :append (emacsvox-aural--compile-actions data rule-id phase)))
+     :append
+     (emacsvox-aural--compile-actions
+      data rule-id phase default-anchor)
+     :anchor default-anchor))
    (t
     (emacsvox-aural--require-plist
      data (format "%S operations for %S" phase rule-id))
-    (let* ((allowed '(:suppress :replace :remove :prepend :append))
+    (let* ((allowed '(:suppress :replace :remove :prepend :append :anchor))
            (unknown
             (cl-loop
              for (key _) on data by #'cddr
@@ -518,7 +553,8 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
            (replace-set-p (plist-member data :replace))
            (remove (plist-get data :remove))
            (prepend (plist-get data :prepend))
-           (append-actions (plist-get data :append)))
+           (append-actions (plist-get data :append))
+           (anchor (or (plist-get data :anchor) default-anchor)))
       (when unknown
         (emacsvox-aural--rule-error
          "Unknown %S operations for %S: %S" phase rule-id unknown))
@@ -531,27 +567,36 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
                   (and (listp remove) (cl-every #'symbolp remove)))
         (emacsvox-aural--rule-error
          "Remove identifiers for %S must be symbols" rule-id))
+      (unless (memq anchor emacsvox-aural-action-anchors)
+        (emacsvox-aural--rule-error
+         "%S phase anchor for %S must be object, run, or transition: %S"
+         phase rule-id anchor))
       (let* ((replace-actions
               (when replace-set-p
                 (emacsvox-aural--compile-actions
                  (plist-get data :replace)
-                 rule-id phase
+                 rule-id phase anchor
                  (intern (format "%s-replace" phase)))))
              (prepend-actions
               (when prepend
                 (emacsvox-aural--compile-actions
                  prepend
-                 rule-id phase
+                 rule-id phase default-anchor
                  (intern (format "%s-prepend" phase)))))
              (compiled-append
               (when append-actions
                 (emacsvox-aural--compile-actions
                  append-actions
-                 rule-id phase
+                 rule-id phase default-anchor
                  (intern (format "%s-append" phase)))))
              (all-actions
               (append replace-actions prepend-actions compiled-append))
              seen)
+        (dolist (action replace-actions)
+          (unless (eq (emacsvox-aural-action-anchor action) anchor)
+            (emacsvox-aural--rule-error
+             "Replacement action %S must use the %S phase anchor %S"
+             (emacsvox-aural-action-id action) phase anchor)))
         (dolist (action all-actions)
           (when (memq (emacsvox-aural-action-id action) seen)
             (emacsvox-aural--rule-error
@@ -564,7 +609,8 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
          :replace replace-actions
          :remove (copy-sequence remove)
          :prepend prepend-actions
-         :append compiled-append))))))
+         :append compiled-append
+         :anchor anchor))))))
 
 (defun emacsvox-aural--compile-content (data rule-id)
   "Compile content style DATA contributed by RULE-ID."
@@ -607,27 +653,29 @@ ID-NAMESPACE distinguishes generated identifiers for separate operations."
        :space-set-p (plist-member data :space)
        :space (copy-tree space)))))
 
-(defun emacsvox-aural--compile-contribution (render rule-id)
-  "Compile RENDER contribution for RULE-ID."
+(defun emacsvox-aural--compile-contribution (render rule-id selector)
+  "Compile RENDER contribution for RULE-ID using SELECTOR defaults."
   (emacsvox-aural--require-plist render (format "Render data for %S" rule-id))
   (let ((unknown
          (cl-loop
           for (key _) on render by #'cddr
           unless (memq key '(:before :content :after))
-          collect key)))
+          collect key))
+        (default-anchor
+         (emacsvox-aural--selector-default-anchor selector)))
     (when unknown
       (emacsvox-aural--rule-error
        "Unknown render phases for %S: %S" rule-id unknown))
     (emacsvox-aural--make-contribution
      :before
      (emacsvox-aural--compile-phase
-      (plist-get render :before) rule-id 'before)
+      (plist-get render :before) rule-id 'before default-anchor)
      :content
      (emacsvox-aural--compile-content
       (plist-get render :content) rule-id)
      :after
      (emacsvox-aural--compile-phase
-      (plist-get render :after) rule-id 'after))))
+      (plist-get render :after) rule-id 'after default-anchor))))
 
 (defun emacsvox-aural-compile-rule
     (data origin &optional index source layer-order)
@@ -667,8 +715,9 @@ LAYER-ORDER records inheritance order within one origin."
       (emacsvox-aural--rule-error "Rule %S has no :render contribution" id))
     (when unknown
       (emacsvox-aural--rule-error "Unknown keys for rule %S: %S" id unknown))
-    (let ((selector (emacsvox-aural--compile-selector match id))
-          (contribution (emacsvox-aural--compile-contribution render id)))
+    (let* ((selector (emacsvox-aural--compile-selector match id))
+           (contribution
+            (emacsvox-aural--compile-contribution render id selector)))
       (emacsvox-aural--validate-template-guarantees
        selector contribution id)
       (emacsvox-aural--make-rule
@@ -997,32 +1046,98 @@ LAYER-ORDER records inheritance order within one origin."
                (symbol-name (emacsvox-aural-rule-id (cdr right))))
             (emacsvox-aural--score-less-p left-score right-score))))))))
 
+(defun emacsvox-aural--best-rule-score (rule inputs)
+  "Return RULE's strongest matching score across normalized INPUTS."
+  (let (best)
+    (dolist (input inputs)
+      (when (emacsvox-aural-rule-matches-p rule input)
+        (let ((score (emacsvox-aural-rule-score rule input)))
+          (when
+              (or
+               (null best)
+               (emacsvox-aural--score-less-p best score))
+            (setq best score)))))
+    best))
+
+(defun emacsvox-aural--matching-rules-for-inputs (rules inputs)
+  "Return scored RULES matching any normalized member of INPUTS.
+
+Each rule occurs once with its strongest score across the complete object."
+  (let (matches)
+    (dolist (rule rules)
+      (when-let* ((score (emacsvox-aural--best-rule-score rule inputs)))
+        (push (cons score rule) matches)))
+    (sort
+     matches
+     (lambda (left right)
+       (let ((left-score (car left))
+             (right-score (car right)))
+         (if (equal left-score right-score)
+             (string-lessp
+              (symbol-name (emacsvox-aural-rule-id (cdr left)))
+              (symbol-name (emacsvox-aural-rule-id (cdr right))))
+           (emacsvox-aural--score-less-p left-score right-score)))))))
+
 (defun emacsvox-aural--remove-actions (actions ids)
   "Return ACTIONS without actions whose identifiers occur in IDS."
   (cl-remove-if
    (lambda (action) (memq (emacsvox-aural-action-id action) ids))
    actions))
 
-(defun emacsvox-aural--apply-phase (actions operations)
-  "Apply phase OPERATIONS to current ACTIONS."
+(defun emacsvox-aural--actions-at-anchor (actions anchor)
+  "Return ACTIONS whose lifecycle matches ANCHOR.
+
+When ANCHOR is nil, retain every action for compatibility callers that
+resolve an undivided render plan."
+  (if (null anchor)
+      (copy-sequence actions)
+    (cl-remove-if-not
+     (lambda (action)
+       (eq (emacsvox-aural-action-anchor action) anchor))
+     actions)))
+
+(defun emacsvox-aural--apply-phase (actions operations &optional anchor)
+  "Apply phase OPERATIONS to current ACTIONS for ANCHOR.
+
+An omitted ANCHOR retains the original undivided resolution behavior."
   (cond
-   ((emacsvox-aural-phase-operations-suppress operations) nil)
+   ((and
+     (emacsvox-aural-phase-operations-suppress operations)
+     (or
+      (null anchor)
+      (eq
+       anchor
+       (emacsvox-aural-phase-operations-anchor operations))))
+    nil)
    (t
-    (let ((result
-           (if (emacsvox-aural-phase-operations-replace-set-p operations)
-               (copy-sequence
-                (emacsvox-aural-phase-operations-replace operations))
-             (copy-sequence actions))))
-      (setq
-       result
-       (emacsvox-aural--remove-actions
-        result (emacsvox-aural-phase-operations-remove operations)))
+    (let* ((operation-applies
+            (or
+             (null anchor)
+             (eq
+              anchor
+              (emacsvox-aural-phase-operations-anchor operations))))
+           (result
+            (if
+                (and
+                 operation-applies
+                 (emacsvox-aural-phase-operations-replace-set-p operations))
+                (emacsvox-aural--actions-at-anchor
+                 (emacsvox-aural-phase-operations-replace operations)
+                 anchor)
+              (copy-sequence actions))))
+      (when operation-applies
+        (setq
+         result
+         (emacsvox-aural--remove-actions
+          result (emacsvox-aural-phase-operations-remove operations))))
       (append
-       (copy-sequence
-        (emacsvox-aural-phase-operations-prepend operations))
+       (emacsvox-aural--actions-at-anchor
+        (emacsvox-aural-phase-operations-prepend operations)
+        anchor)
        result
-       (copy-sequence
-        (emacsvox-aural-phase-operations-append operations)))))))
+       (emacsvox-aural--actions-at-anchor
+        (emacsvox-aural-phase-operations-append operations)
+        anchor))))))
 
 (defun emacsvox-aural--set-content-provenance (content property rule-id)
   "Record that RULE-ID selected PROPERTY on CONTENT."
@@ -1060,10 +1175,27 @@ LAYER-ORDER records inheritance order within one origin."
     (emacsvox-aural--set-content-provenance content 'space rule-id))
   content)
 
-(defun emacsvox-aural-resolve (facts context rules)
-  "Resolve semantic FACTS and CONTEXT through compiled RULES."
-  (let* ((input (emacsvox-aural-normalize-input facts context))
-         (matches (emacsvox-aural-matching-rules rules input))
+(defun emacsvox-aural-resolve-inputs (inputs rules &optional anchor)
+  "Resolve semantic INPUTS through compiled RULES for optional ANCHOR.
+
+INPUTS is a nonempty list of (FACTS . CONTEXT) pairs belonging to one aural
+object.  Rules matching several formatting runs contribute once at their
+strongest score.  ANCHOR is nil for the compatibility undivided plan, or one
+of `object', `run', and `transition'."
+  (unless (and (consp inputs) (cl-every #'consp inputs))
+    (emacsvox-aural--rule-error
+     "Aural resolution requires nonempty (facts . context) inputs: %S"
+     inputs))
+  (when
+      (and anchor (not (memq anchor emacsvox-aural-action-anchors)))
+    (emacsvox-aural--rule-error "Invalid resolution anchor: %S" anchor))
+  (let* ((normalized
+          (mapcar
+           (lambda (input)
+             (emacsvox-aural-normalize-input (car input) (cdr input)))
+           inputs))
+         (matches
+          (emacsvox-aural--matching-rules-for-inputs rules normalized))
          (plan
           (emacsvox-aural--make-render-plan
            :before nil
@@ -1071,14 +1203,17 @@ LAYER-ORDER records inheritance order within one origin."
            :after nil
            :matched-rules nil
            :rule-scores nil)))
-    (dolist (rule matches)
-      (let ((contribution (emacsvox-aural-rule-contribution rule))
-            (rule-id (emacsvox-aural-rule-id rule)))
+    (dolist (match matches)
+      (let* ((score (car match))
+             (rule (cdr match))
+             (contribution (emacsvox-aural-rule-contribution rule))
+             (rule-id (emacsvox-aural-rule-id rule)))
         (setf
          (emacsvox-aural-render-plan-before plan)
          (emacsvox-aural--apply-phase
           (emacsvox-aural-render-plan-before plan)
-          (emacsvox-aural-contribution-before contribution)))
+          (emacsvox-aural-contribution-before contribution)
+          anchor))
         (emacsvox-aural--apply-content
          (emacsvox-aural-render-plan-content plan)
          (emacsvox-aural-contribution-content contribution)
@@ -1087,7 +1222,8 @@ LAYER-ORDER records inheritance order within one origin."
          (emacsvox-aural-render-plan-after plan)
          (emacsvox-aural--apply-phase
           (emacsvox-aural-render-plan-after plan)
-          (emacsvox-aural-contribution-after contribution)))
+          (emacsvox-aural-contribution-after contribution)
+          anchor))
         (setf
          (emacsvox-aural-render-plan-matched-rules plan)
          (append
@@ -1098,8 +1234,16 @@ LAYER-ORDER records inheritance order within one origin."
          (append
           (emacsvox-aural-render-plan-rule-scores plan)
           (list
-           (cons rule-id (emacsvox-aural-rule-score rule input)))))))
+           (cons rule-id score))))))
     plan))
+
+(defun emacsvox-aural-resolve (facts context rules &optional anchor)
+  "Resolve semantic FACTS and CONTEXT through compiled RULES.
+
+Optional ANCHOR limits ordered actions to one lifecycle.  Content styling
+continues to resolve for formatting-run compilation."
+  (emacsvox-aural-resolve-inputs
+   (list (cons facts context)) rules anchor))
 
 (provide 'emacsvox-aural-rules)
 ;;; emacsvox-aural-rules.el ends here

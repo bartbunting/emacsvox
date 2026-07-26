@@ -46,7 +46,7 @@
      (:constructor emacsvox-aural--make-concrete-action))
   "One backend-ready ordered action."
   id kind text cue resource sample-id duration voice-command source
-  requested-space balance spatial-capability spatial-degradations)
+  anchor requested-space balance spatial-capability spatial-degradations)
 
 (cl-defstruct
     (emacsvox-aural-concrete-content
@@ -60,7 +60,13 @@
      (:constructor emacsvox-aural--make-concrete-plan))
   "A backend-ready ordered plan frozen at its source boundary."
   before content after facts context resource-pack voice-palette
-  source-plan degradations)
+  source-plan degradations object-id run-id object-start-p object-end-p)
+
+(cl-defstruct
+    (emacsvox-aural-source-run
+     (:constructor emacsvox-aural--make-source-run))
+  "One source formatting run captured inside an aural object."
+  start end facts context icon)
 
 (defvar emacsvox-aural-submission-context nil
   "Dynamically bound source context for the current speech submission.")
@@ -95,6 +101,15 @@ Standalone local cues run this hook after playback has been requested.")
 (defconst emacsvox-aural-occasion-property
   'emacsvox-aural-occasion
   "Text property overriding presentation occasion for one text run.")
+
+(defconst emacsvox-aural-object-property
+  'emacsvox-aural-object
+  "Text property explicitly identifying one aural object.
+
+Adjacent text with the same non-nil value belongs to one object even when
+run-local semantic or presentation properties change.  Without this property,
+the complete submission is one inferred object until semantic facts, module,
+occasion, or a new queued icon changes.")
 
 (defun emacsvox-aural--transport-error (format-string &rest arguments)
   "Signal a transport error described by FORMAT-STRING and ARGUMENTS."
@@ -359,6 +374,7 @@ degradation records.  Return balance, capability, and degradation records."
         :resource resource
         :sample-id sample-id
         :source (emacsvox-aural-action-source action)
+        :anchor (emacsvox-aural-action-anchor action)
         :requested-space
         (copy-tree (emacsvox-aural-action-space action))
         :balance (plist-get space :balance)
@@ -383,6 +399,7 @@ degradation records.  Return balance, capability, and degradation records."
             (emacsvox-aural-action-text action))
           :voice-command voice-command
           :source (emacsvox-aural-action-source action)
+          :anchor (emacsvox-aural-action-anchor action)
           :requested-space
           (copy-tree (emacsvox-aural-action-space action))
           :balance (plist-get space :balance)
@@ -393,7 +410,8 @@ degradation records.  Return balance, capability, and degradation records."
       :id (emacsvox-aural-action-id action)
       :kind 'pause
       :duration (emacsvox-aural-action-duration action)
-      :source (emacsvox-aural-action-source action)))))
+      :source (emacsvox-aural-action-source action)
+      :anchor (emacsvox-aural-action-anchor action)))))
 
 (defun emacsvox-aural--compile-concrete-actions
     (actions facts pack palette cue-target)
@@ -547,18 +565,61 @@ Anonymous attribute plists contribute only named faces reached through
        face-value
        (car (emacsvox-aural--string-face-value text position)))))))
 
-(defun emacsvox-aural--run-end (text position)
-  "Return the next aural input boundary in TEXT after POSITION."
-  (let ((limit (length text))
+(defun emacsvox-aural--next-non-nil-property
+    (text position property limit)
+  "Return next position after POSITION where PROPERTY becomes non-nil.
+
+Return LIMIT when PROPERTY has no later non-nil value in TEXT."
+  (let ((next position)
+        found)
+    (while (and (< next limit) (not found))
+      (setq
+       next
+       (next-single-property-change next property text limit))
+      (when
+          (and
+           (< next limit)
+           (get-text-property next property text))
+        (setq found next)))
+    (or found limit)))
+
+(defun emacsvox-aural--object-end (text position)
+  "Return the inferred aural-object boundary in TEXT after POSITION."
+  (let* ((limit (length text))
+         (explicit
+          (get-text-property
+           position emacsvox-aural-object-property text))
+         (icon-boundary
+          (emacsvox-aural--next-non-nil-property
+           text position 'auditory-icon limit))
+         (object-boundary
+          (next-single-property-change
+           position emacsvox-aural-object-property text limit)))
+    (if explicit
+        (min object-boundary icon-boundary)
+      (min
+       object-boundary
+       icon-boundary
+       (next-single-property-change
+        position emacsvox-aural-facts-property text limit)
+       (next-single-property-change
+        position emacsvox-aural-module-property text limit)
+       (next-single-property-change
+        position emacsvox-aural-occasion-property text limit)))))
+
+(defun emacsvox-aural--run-end (text position limit)
+  "Return the next formatting-run boundary in TEXT before LIMIT."
+  (let (
         boundaries)
     (dolist
         (property
          (list
-          'personality 'face 'font-lock-face 'auditory-icon
+          'personality 'face 'font-lock-face
           'pause
           emacsvox-aural-facts-property
           emacsvox-aural-module-property
-          emacsvox-aural-occasion-property))
+          emacsvox-aural-occasion-property
+          emacsvox-aural-object-property))
       (push
        (next-single-property-change position property text limit)
        boundaries))
@@ -587,12 +648,283 @@ Anonymous attribute plists contribute only named faces reached through
        facts)
      (plist-put (copy-tree context) :legacy-cue icon))))
 
+(defun emacsvox-aural--capture-source-run
+    (text position end base-facts base-context object-icon)
+  "Capture one source formatting run from POSITION to END in TEXT."
+  (let* ((explicit
+          (get-text-property position 'personality text))
+         (face-data
+          (emacsvox-aural--string-face-value text position))
+         (face-value (car face-data))
+         (legacy-faces (emacsvox-aural-face-names face-value))
+         (legacy
+          (and
+           (or
+            (not (boundp 'voice-lock-mode))
+            voice-lock-mode)
+           (emacsvox-aural--string-style text position face-value)))
+         (local-facts
+          (get-text-property
+           position emacsvox-aural-facts-property text))
+         (run-facts
+          (emacsvox-aural--merge-facts base-facts local-facts))
+         (run-context (copy-tree base-context))
+         (module
+          (get-text-property
+           position emacsvox-aural-module-property text))
+         (occasion
+          (get-text-property
+           position emacsvox-aural-occasion-property text)))
+    (when module
+      (setq run-context (plist-put run-context :module module)))
+    (when occasion
+      (setq run-context (plist-put run-context :occasion occasion)))
+    (when legacy-faces
+      (setq
+       run-context
+       (plist-put
+        run-context :legacy-faces (copy-sequence legacy-faces)))
+      (setq
+       run-context
+       (plist-put run-context :legacy-face-source (cdr face-data))))
+    (when legacy
+      (setq
+       run-context
+       (plist-put run-context :legacy-personality legacy))
+      (setq
+       run-context
+       (plist-put
+        run-context :legacy-source
+        (if explicit 'personality-property 'face))))
+    (when object-icon
+      (pcase-let
+          ((`(,legacy-facts ,legacy-context)
+            (emacsvox-aural--legacy-input
+             object-icon run-facts run-context)))
+        (setq
+         run-facts legacy-facts
+         run-context legacy-context)))
+    (emacsvox-aural--make-source-run
+     :start position
+     :end end
+     :facts run-facts
+     :context run-context
+     :icon object-icon)))
+
+(defun emacsvox-aural--resolve-source-run (run anchor)
+  "Resolve source RUN's presentation for ANCHOR."
+  (let ((facts (emacsvox-aural-source-run-facts run))
+        (context (emacsvox-aural-source-run-context run))
+        (icon (emacsvox-aural-source-run-icon run)))
+    (if icon
+        (emacsvox-aural-resolve-legacy-icon
+         icon context facts anchor)
+      (emacsvox-aural-resolve-active facts context anchor))))
+
+(defun emacsvox-aural--resolve-source-object (runs anchor)
+  "Resolve RUNS as one aural object for ANCHOR."
+  (let* ((icon (emacsvox-aural-source-run-icon (car runs)))
+         (inputs
+          (mapcar
+           (lambda (run)
+             (cons
+              (emacsvox-aural-source-run-facts run)
+              (emacsvox-aural-source-run-context run)))
+           runs)))
+    (if icon
+        (emacsvox-aural-resolve-legacy-icon-inputs
+         icon inputs anchor)
+      (emacsvox-aural-resolve-active-inputs inputs anchor))))
+
+(defun emacsvox-aural--actions-not-in
+    (actions other id-function)
+  "Return ACTIONS whose IDs do not occur in OTHER using ID-FUNCTION."
+  (let ((other-ids (mapcar id-function other)))
+    (cl-remove-if
+     (lambda (action)
+       (memq (funcall id-function action) other-ids))
+     actions)))
+
+(defun emacsvox-aural--merge-rule-provenance (&rest plans)
+  "Return matching rules and scores combined from render PLANS."
+  (let (rules scores)
+    (dolist (plan plans)
+      (when plan
+        (dolist (rule (emacsvox-aural-render-plan-matched-rules plan))
+          (unless (memq rule rules)
+            (setq rules (append rules (list rule)))))
+        (dolist (score (emacsvox-aural-render-plan-rule-scores plan))
+          (setq scores (assq-delete-all (car score) scores))
+          (setq scores (append scores (list score))))))
+    (cons rules scores)))
+
+(defun emacsvox-aural--combine-run-plan
+    (object-plan run-plan transition-plan previous-transition next-transition
+     first-p last-p)
+  "Return one render plan combining object, run, and transition lifetimes."
+  (let* ((transition-before
+          (emacsvox-aural--actions-not-in
+           (emacsvox-aural-render-plan-before transition-plan)
+           (and
+            previous-transition
+            (emacsvox-aural-render-plan-before previous-transition))
+           #'emacsvox-aural-action-id))
+         (transition-after
+          (emacsvox-aural--actions-not-in
+           (emacsvox-aural-render-plan-after transition-plan)
+           (and
+            next-transition
+            (emacsvox-aural-render-plan-after next-transition))
+           #'emacsvox-aural-action-id))
+         (provenance
+          (emacsvox-aural--merge-rule-provenance
+           object-plan run-plan transition-plan)))
+    (emacsvox-aural--make-render-plan
+     :before
+     (append
+      (and first-p (emacsvox-aural-render-plan-before object-plan))
+      transition-before
+      (emacsvox-aural-render-plan-before run-plan))
+     :content (emacsvox-aural-render-plan-content run-plan)
+     :after
+     (append
+      (emacsvox-aural-render-plan-after run-plan)
+      transition-after
+      (and last-p (emacsvox-aural-render-plan-after object-plan)))
+     :matched-rules (car provenance)
+     :rule-scores (cdr provenance))))
+
+(defun emacsvox-aural--combine-concrete-run
+    (source-plan object-plan run-plan transition-plan previous-transition
+     next-transition object-id run-id first-p last-p)
+  "Return one concrete run nested in OBJECT-ID."
+  (let ((transition-before
+         (emacsvox-aural--actions-not-in
+          (emacsvox-aural-concrete-plan-before transition-plan)
+          (and
+           previous-transition
+           (emacsvox-aural-concrete-plan-before previous-transition))
+          #'emacsvox-aural-concrete-action-id))
+        (transition-after
+         (emacsvox-aural--actions-not-in
+          (emacsvox-aural-concrete-plan-after transition-plan)
+          (and
+           next-transition
+           (emacsvox-aural-concrete-plan-after next-transition))
+          #'emacsvox-aural-concrete-action-id)))
+    (emacsvox-aural--make-concrete-plan
+     :before
+     (append
+      (and first-p (emacsvox-aural-concrete-plan-before object-plan))
+      transition-before
+      (emacsvox-aural-concrete-plan-before run-plan))
+     :content (emacsvox-aural-concrete-plan-content run-plan)
+     :after
+     (append
+      (emacsvox-aural-concrete-plan-after run-plan)
+      transition-after
+      (and last-p (emacsvox-aural-concrete-plan-after object-plan)))
+     :facts (copy-tree (emacsvox-aural-concrete-plan-facts run-plan))
+     :context (copy-tree (emacsvox-aural-concrete-plan-context run-plan))
+     :resource-pack (emacsvox-aural-concrete-plan-resource-pack run-plan)
+     :voice-palette (emacsvox-aural-concrete-plan-voice-palette run-plan)
+     :source-plan source-plan
+     :degradations
+     (append
+      (and first-p (emacsvox-aural-concrete-plan-degradations object-plan))
+      (emacsvox-aural-concrete-plan-degradations transition-plan)
+      (emacsvox-aural-concrete-plan-degradations run-plan))
+     :object-id object-id
+     :run-id run-id
+     :object-start-p first-p
+     :object-end-p last-p)))
+
+(defun emacsvox-aural--prepare-object
+    (text start end base-facts base-context object-id)
+  "Attach frozen nested plans to one object from START to END in TEXT."
+  (let ((object-icon (get-text-property start 'auditory-icon text))
+        (position start)
+        runs)
+    (while (< position end)
+      (let ((run-end (emacsvox-aural--run-end text position end)))
+        (push
+         (emacsvox-aural--capture-source-run
+          text position run-end base-facts base-context object-icon)
+         runs)
+        (setq position run-end)))
+    (setq runs (nreverse runs))
+    (let* ((object-render
+            (emacsvox-aural--resolve-source-object runs 'object))
+           (object-concrete
+            (emacsvox-aural-compile-plan
+             object-render
+             (emacsvox-aural-source-run-facts (car runs))
+             (emacsvox-aural-source-run-context (car runs))))
+           (run-renders
+            (mapcar
+             (lambda (run)
+               (emacsvox-aural--resolve-source-run run 'run))
+             runs))
+           (transition-renders
+            (mapcar
+             (lambda (run)
+               (emacsvox-aural--resolve-source-run run 'transition))
+             runs))
+           (run-concretes
+            (cl-mapcar
+             (lambda (render run)
+               (emacsvox-aural-compile-plan
+                render
+                (emacsvox-aural-source-run-facts run)
+                (emacsvox-aural-source-run-context run)))
+             run-renders runs))
+           (transition-concretes
+            (cl-mapcar
+             (lambda (render run)
+               (emacsvox-aural-compile-plan
+                render
+                (emacsvox-aural-source-run-facts run)
+                (emacsvox-aural-source-run-context run)))
+             transition-renders runs))
+           (count (length runs)))
+      (cl-loop
+       for run in runs
+       for run-render in run-renders
+       for transition-render in transition-renders
+       for run-concrete in run-concretes
+       for transition-concrete in transition-concretes
+       for index from 0
+       for previous-render = nil then transition-render
+       for previous-concrete = nil then transition-concrete
+       for next-render = (nth (1+ index) transition-renders)
+       for next-concrete = (nth (1+ index) transition-concretes)
+       for first-p = (zerop index)
+       for last-p = (= index (1- count))
+       do
+       (let* ((source-plan
+               (emacsvox-aural--combine-run-plan
+                object-render run-render transition-render
+                previous-render next-render first-p last-p))
+              (concrete
+               (emacsvox-aural--combine-concrete-run
+                source-plan object-concrete run-concrete transition-concrete
+                previous-concrete next-concrete object-id index
+                first-p last-p)))
+         (add-text-properties
+          (emacsvox-aural-source-run-start run)
+          (emacsvox-aural-source-run-end run)
+          (list emacsvox-aural-concrete-plan-property concrete)
+          text))))))
+
 (defun emacsvox-aural-prepare-text (text &optional facts context)
-  "Freeze aural decisions for every formatted run in TEXT.
+  "Freeze object and formatting-run decisions in TEXT.
 
 FACTS default to `emacsvox-aural-submission-facts'.  CONTEXT defaults to the
 dynamically captured submission context or a fresh source-buffer snapshot.
-The returned string retains legacy properties and adds concrete plans."
+The returned string retains legacy properties and adds concrete nested plans.
+One inferred object spans the submission until semantic context or a queued
+icon changes.  `emacsvox-aural-object-property' can group complex runs
+explicitly."
   (unless (stringp text)
     (emacsvox-aural--transport-error
      "Aural text preparation requires a string: %S" text))
@@ -605,78 +937,18 @@ The returned string retains legacy properties and adds concrete plans."
             emacsvox-aural-submission-context
             (emacsvox-aural-capture-context))))
          (position 0)
-         (length (length prepared)))
+         (length (length prepared))
+         (sequence 0))
     (while (< position length)
-      (let* ((end (emacsvox-aural--run-end prepared position))
-             (icon (get-text-property position 'auditory-icon prepared))
+      (let* ((end (emacsvox-aural--object-end prepared position))
              (explicit
-              (get-text-property position 'personality prepared))
-             (face-data
-              (emacsvox-aural--string-face-value prepared position))
-             (face-value (car face-data))
-             (legacy-faces (emacsvox-aural-face-names face-value))
-             (legacy
-              (and
-               (or
-                (not (boundp 'voice-lock-mode))
-                voice-lock-mode)
-               (emacsvox-aural--string-style
-                prepared position face-value)))
-             (local-facts
               (get-text-property
-               position emacsvox-aural-facts-property prepared))
-             (run-facts
-              (emacsvox-aural--merge-facts base-facts local-facts))
-             (run-context (copy-tree base-context))
-             (module
-              (get-text-property
-               position emacsvox-aural-module-property prepared))
-             (occasion
-              (get-text-property
-               position emacsvox-aural-occasion-property prepared)))
-        (when module
-          (setq run-context (plist-put run-context :module module)))
-        (when occasion
-          (setq run-context (plist-put run-context :occasion occasion)))
-        (when legacy-faces
-          (setq
-           run-context
-           (plist-put
-            run-context :legacy-faces (copy-sequence legacy-faces)))
-          (setq
-           run-context
-           (plist-put
-            run-context :legacy-face-source (cdr face-data))))
-        (when legacy
-          (setq
-           run-context
-           (plist-put run-context :legacy-personality legacy))
-          (setq
-           run-context
-           (plist-put
-            run-context :legacy-source
-            (if explicit 'personality-property 'face))))
-        (when icon
-          (pcase-let
-              ((`(,legacy-facts ,legacy-context)
-                (emacsvox-aural--legacy-input
-                 icon run-facts run-context)))
-            (setq
-             run-facts legacy-facts
-             run-context legacy-context)))
-        (let* ((plan
-                (if icon
-                    (emacsvox-aural-resolve-legacy-icon
-                     icon run-context run-facts)
-                  (emacsvox-aural-resolve-active
-                   run-facts run-context)))
-               (concrete
-                (emacsvox-aural-compile-plan
-                 plan run-facts run-context)))
-          (add-text-properties
-           position end
-           (list emacsvox-aural-concrete-plan-property concrete)
-           prepared))
+               position emacsvox-aural-object-property prepared))
+             (object-id
+              (or explicit
+                  (list 'inferred-object (cl-incf sequence)))))
+        (emacsvox-aural--prepare-object
+         prepared position end base-facts base-context object-id)
         (setq position end)))
     prepared))
 
@@ -784,7 +1056,11 @@ cleanup, without rerunning semantic or contextual resolution."
           (funcall emacsvox-aural-speech-balance-function 0.0))))
   (dolist (action (emacsvox-aural-concrete-plan-after plan))
     (emacsvox-aural-queue-concrete-action action))
-  (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan)
+  (when
+      (or
+       (null (emacsvox-aural-concrete-plan-object-id plan))
+       (emacsvox-aural-concrete-plan-object-end-p plan))
+    (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))
   plan))
 
 (defun emacsvox-aural--standalone-cue (plan)

@@ -535,17 +535,10 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
    :source-buffer (current-buffer)
    :source-buffer-name (buffer-name)))
 
-(defun emacsvox-aural-resolve-active (facts &optional context)
-  "Resolve FACTS through active scheme and contextual rule layers."
-  (let* ((context
-          (or
-           context
-           (emacsvox-aural-current-context nil 'continuous)))
-         (legacy (plist-get context :legacy-personality))
+(defun emacsvox-aural--apply-legacy-content-style (plan context)
+  "Apply CONTEXT's legacy voice fallback to resolved PLAN."
+  (let* ((legacy (plist-get context :legacy-personality))
          (source (or (plist-get context :legacy-source) 'legacy-personality))
-         (plan
-          (emacsvox-aural-resolve
-           facts context (emacsvox-aural-current-rules context)))
          (content (emacsvox-aural-render-plan-content plan)))
     (when
         (and
@@ -562,12 +555,53 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
         (emacsvox-aural-content-style-provenance content))))
     plan))
 
-(defun emacsvox-aural-resolve-legacy-icon (icon &optional context facts)
+(defun emacsvox-aural-resolve-active-inputs (inputs &optional anchor)
+  "Resolve one object's semantic INPUTS through active layers for ANCHOR.
+
+INPUTS is a nonempty list of (FACTS . CONTEXT) pairs.  Contextual rule
+collection uses the first pair because object boundaries guarantee stable
+module context."
+  (unless (and (consp inputs) (cl-every #'consp inputs))
+    (emacsvox-aural--scheme-error
+     "Active aural resolution requires nonempty inputs: %S" inputs))
+  (let* ((context (cdar inputs))
+         (plan
+          (emacsvox-aural-resolve-inputs
+           inputs (emacsvox-aural-current-rules context) anchor)))
+    (emacsvox-aural--apply-legacy-content-style plan context)))
+
+(defun emacsvox-aural-resolve-active (facts &optional context anchor)
+  "Resolve FACTS through active scheme and contextual rule layers.
+
+Optional ANCHOR limits ordered actions to one object/run lifecycle."
+  (let ((context
+         (or
+          context
+          (emacsvox-aural-current-context nil 'continuous))))
+    (emacsvox-aural-resolve-active-inputs
+     (list (cons facts context)) anchor)))
+
+(defun emacsvox-aural--legacy-icon-rule (icon)
+  "Return the core compatibility rule that presents legacy ICON."
+  (emacsvox-aural-compile-rule
+   (list
+    :id 'legacy-cue-default
+    :match (list :legacy-cue icon)
+    :render
+    (list
+     :before
+     (list
+      (list :id 'legacy-cue :kind 'cue :cue icon))))
+   'core 0 "legacy icon adapter"))
+
+(defun emacsvox-aural-resolve-legacy-icon
+    (icon &optional context facts anchor)
   "Resolve legacy ICON through the active scheme in CONTEXT.
 
 The returned plan initially contains ICON as action `legacy-cue'.  Contextual
 rules can remove that action or replace its cue without changing callers.
-Optional FACTS are composed with any known semantic event for ICON."
+Optional FACTS are composed with any known semantic event for ICON.  Optional
+ANCHOR limits ordered actions to one object/run lifecycle."
   (emacsvox-aural--require-symbol icon "Legacy cue")
   (let* ((semantic (alist-get icon emacsvox-aural-legacy-icon-semantics))
          (facts (copy-tree facts))
@@ -587,24 +621,37 @@ Optional FACTS are composed with any known semantic event for ICON."
              context
              (emacsvox-aural-current-context nil 'notification)))
            :legacy-cue icon))
-         (compatibility-rule
-          (emacsvox-aural-compile-rule
-           (list
-            :id 'legacy-cue-default
-            :match (list :legacy-cue icon)
-            :render
-            (list
-             :before
-             (list
-              (list :id 'legacy-cue :kind 'cue :cue icon))))
-           'core 0 "legacy icon adapter")))
-    (emacsvox-aural-resolve
-     facts
-     context
-     (emacsvox-aural--require-unique-rule-ids
-      (cons
-       compatibility-rule
-       (emacsvox-aural-current-rules context))))))
+         (compatibility-rule (emacsvox-aural--legacy-icon-rule icon)))
+    (emacsvox-aural--apply-legacy-content-style
+     (emacsvox-aural-resolve
+      facts
+      context
+      (emacsvox-aural--require-unique-rule-ids
+       (cons
+        compatibility-rule
+        (emacsvox-aural-current-rules context)))
+      anchor)
+     context)))
+
+(defun emacsvox-aural-resolve-legacy-icon-inputs
+    (icon inputs &optional anchor)
+  "Resolve legacy ICON across one object's INPUTS for optional ANCHOR.
+
+INPUTS must already contain ICON's semantic events and `:legacy-cue' context,
+as produced by the transport source-boundary adapter."
+  (unless (and (consp inputs) (cl-every #'consp inputs))
+    (emacsvox-aural--scheme-error
+     "Legacy icon resolution requires nonempty inputs: %S" inputs))
+  (let ((context (cdar inputs)))
+    (emacsvox-aural--apply-legacy-content-style
+     (emacsvox-aural-resolve-inputs
+      inputs
+      (emacsvox-aural--require-unique-rule-ids
+       (cons
+        (emacsvox-aural--legacy-icon-rule icon)
+        (emacsvox-aural-current-rules context)))
+      anchor)
+     context)))
 
 (defun emacsvox-aural-make-legacy-cue-rule
     (id cue replacement &optional selectors)

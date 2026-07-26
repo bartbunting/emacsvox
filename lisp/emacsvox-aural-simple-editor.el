@@ -293,7 +293,13 @@ RULE-INDEX associates the line with a working declarative rule."
          (when-let* ((space (plist-get action :space)))
            (format
             " on the %s"
-            (emacsvox-aural-simple-editor--space-description space)))))
+            (emacsvox-aural-simple-editor--space-description space))))
+        (lifetime
+         (pcase (plist-get action :anchor)
+           ('object " once per object")
+           ('run " for each formatting run")
+           ('transition " when entering or leaving the presentation")
+           (_ ""))))
     (concat
      (pcase (plist-get action :kind)
        ('speech
@@ -308,7 +314,8 @@ RULE-INDEX associates the line with a working declarative rule."
        ('pause
         (format "pause %s milliseconds" (plist-get action :duration)))
        (_ "advanced action"))
-     placement)))
+     placement
+     lifetime)))
 
 (defun emacsvox-aural-simple-editor--action-list-description (actions)
   "Describe ordered ACTIONS."
@@ -346,7 +353,12 @@ RULE-INDEX associates the line with a working declarative rule."
           "then %s"
           (emacsvox-aural-simple-editor--action-list-description actions)))
        (when-let* ((ids (plist-get phase :remove)))
-         (format "remove inherited actions %s" ids))))
+         (format "remove inherited actions %s" ids))
+       (pcase (plist-get phase :anchor)
+         ('object "operate once per object")
+         ('run "operate on each formatting run")
+         ('transition "operate on presentation transitions")
+         (_ nil))))
      "; "))))
 
 (defun emacsvox-aural-simple-editor--content-description (content)

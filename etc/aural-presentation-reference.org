@@ -31,7 +31,7 @@ A buffer rule can therefore override one module in one buffer without changing t
 
 ** Render and Queue Contract
 
-Each plan has ordered =before= actions, one styled =content= action, and ordered =after= actions.  Speech, cue, and pause actions may be added.  Phase operators are =:prepend=, =:append=, =:replace=, =:remove=, and =:suppress=.  Content independently controls =:speak=, =:voice=, =:volume=, =:space=, and =:suppress=; the strongest rule that sets a scalar wins.
+Each aural object has ordered =before= actions, one or more styled content runs, and ordered =after= actions.  A face or personality change creates a formatting run, not another object, so object labels and cues do not repeat merely because styling changes.  Speech, cue, and pause actions may be added.  Phase operators are =:prepend=, =:append=, =:replace=, =:remove=, and =:suppress=.  Content independently controls =:speak=, =:voice=, =:volume=, =:space=, and =:suppress=; the strongest rule that sets a scalar wins.  Ordered actions may use =:anchor object=, =:anchor run=, or =:anchor transition=.  An omitted anchor defaults to =run= for face and personality selectors and =object= otherwise.
 
 Semantic and contextual resolution happens in Emacs at the source submission boundary.  Safe speech templates become literal text, cue names become concrete files or sample IDs, voices become adapter commands, and spatial requests become backend values before anything is queued.  The speech server never resolves templates, schemes, modes, modules, semantics, or resource fallbacks.  A complete multi-action plan uses one strict queue.  Only a standalone compatibility cue may use the selected local player.
 
@@ -56,7 +56,8 @@ A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:pare
            :occasion navigation :level 1)
    :render
    (:before
-    (:append ((:id heading-label :kind speech :text "Heading 1")))
+    (:append ((:id heading-label :kind speech :text "Heading 1"
+              :anchor object)))
     :content (:voice bolden :space (:balance -0.2))
     :after
     (:append ((:id heading-end :kind cue :cue section)))))))
@@ -64,7 +65,7 @@ A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:pare
 
 Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, =:legacy-face=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.
 
-Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Action IDs are the handles used by later =:remove= operations.
+Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Optional =:anchor= is =object=, =run=, or =transition=.  Semantic rules default to one action per object; compatibility face and personality rules default to one per formatting run.  A before transition action occurs when entering matching presentation and an after transition action when leaving it.  Action IDs are the handles used by later =:remove= operations.
 
 * Module Author Reference
 
@@ -80,7 +81,7 @@ Register meaning before emitting it.  A semantic registration supplies a unique 
  :phases '(before content after))
 #+end_src
 
-For persistent formatted text, attach =emacsvox-aural-facts= and =emacsvox-aural-module= text properties.  For transient output, bind =emacsvox-aural-submission-facts=, =emacsvox-aural-submission-context=, =emacsvox-aural-submission-module=, and =emacsvox-aural-submission-occasion= around the existing =tts-speak= or =emacsvox-icon= call.  Capture context in the source buffer before text enters a scratch buffer or notification log.  A migrated integration should centralize that binding in a small call boundary and put preserved legacy output in a function ending in =-compatibility=.  The source audit rejects direct icon calls elsewhere in migrated modules.
+For persistent formatted text, attach =emacsvox-aural-facts= and =emacsvox-aural-module= text properties.  A submission is one inferred object until facts, module, occasion, or a new queued icon changes.  Attach the same non-nil =emacsvox-aural-object= value across adjacent runs when an explicitly identified object must span those changes.  For transient output, bind =emacsvox-aural-submission-facts=, =emacsvox-aural-submission-context=, =emacsvox-aural-submission-module=, and =emacsvox-aural-submission-occasion= around the existing =tts-speak= or =emacsvox-icon= call.  Capture context in the source buffer before text enters a scratch buffer or notification log.  A migrated integration should centralize that binding in a small call boundary and put preserved legacy output in a function ending in =-compatibility=.  The source audit rejects direct icon calls elsewhere in migrated modules.
 
 A module may register a read-only fragment for compatibility defaults, but the fragment still matches semantic facts and emits modality.  Keep meaning in the registry and presentation in rules.  Preserve established output during migration, add facts around it, and let users override the new facts.  Add new core semantics only when their intent is shared; use a module-owned identifier for genuinely private meaning.
 

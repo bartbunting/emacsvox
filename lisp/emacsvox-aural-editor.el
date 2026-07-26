@@ -62,23 +62,27 @@
 
 (defun emacsvox-aural-editor--phase-summary (phase)
   "Return a concise description of declarative PHASE."
-  (cond
-   ((null phase) "unchanged")
-   ((and (listp phase) (listp (car phase)))
-    (format "append %d action(s)" (length phase)))
-   ((plist-get phase :suppress) "suppressed")
-   ((plist-member phase :replace)
-    (format "replace with %d action(s)"
-            (length (plist-get phase :replace))))
-   ((plist-get phase :prepend)
-    (format "prepend %d action(s)"
-            (length (plist-get phase :prepend))))
-   ((plist-get phase :append)
-    (format "append %d action(s)"
-            (length (plist-get phase :append))))
-   ((plist-get phase :remove)
-    (format "remove %S" (plist-get phase :remove)))
-   (t "operations")))
+  (let ((summary
+         (cond
+          ((null phase) "unchanged")
+          ((and (listp phase) (listp (car phase)))
+           (format "append %d action(s)" (length phase)))
+          ((plist-get phase :suppress) "suppressed")
+          ((plist-member phase :replace)
+           (format "replace with %d action(s)"
+                   (length (plist-get phase :replace))))
+          ((plist-get phase :prepend)
+           (format "prepend %d action(s)"
+                   (length (plist-get phase :prepend))))
+          ((plist-get phase :append)
+           (format "append %d action(s)"
+                   (length (plist-get phase :append))))
+          ((plist-get phase :remove)
+           (format "remove %S" (plist-get phase :remove)))
+          (t "operations"))))
+    (if-let* ((anchor (and (listp phase) (plist-get phase :anchor))))
+        (format "%s at %s lifetime" summary anchor)
+      summary)))
 
 (defun emacsvox-aural-editor--content-summary (content)
   "Return a concise description of declarative CONTENT styling."
@@ -477,6 +481,13 @@ LABEL identifies the speech or cue being edited."
                    (emacsvox-aural-editor--read-space
                     nil (capitalize (symbol-name kind)))))
         (setq action (plist-put action :space space))))
+    (let ((anchor
+           (completing-read
+            "Action lifetime: "
+            '("inferred" "object" "run" "transition")
+            nil 'must-match nil nil "inferred")))
+      (unless (string= anchor "inferred")
+        (setq action (plist-put action :anchor (intern anchor)))))
     action))
 
 (defun emacsvox-aural-editor--read-actions (rule-id phase)
@@ -509,19 +520,48 @@ LABEL identifies the speech or cue being edited."
       ('keep (copy-tree old))
       ('unchanged nil)
       ((or 'append 'prepend 'replace)
-       (list
-        (intern (format ":%s" operation))
-        (emacsvox-aural-editor--read-actions rule-id phase)))
+       (let ((result
+              (list
+               (intern (format ":%s" operation))
+               (emacsvox-aural-editor--read-actions rule-id phase))))
+         (when (eq operation 'replace)
+           (let ((anchor
+                  (completing-read
+                   "Replacement lifetime: "
+                   '("inferred" "object" "run" "transition")
+                   nil 'must-match nil nil "inferred")))
+             (unless (string= anchor "inferred")
+               (setq result
+                     (plist-put result :anchor (intern anchor))))))
+         result))
       ('remove
-       (list
-        :remove
-        (mapcar
-         #'intern
-         (split-string
-          (read-string
-           "Action identifiers to remove, separated by spaces: ")
-          "[[:space:]]+" t))))
-      ('suppress '(:suppress t)))))
+       (let ((result
+              (list
+               :remove
+               (mapcar
+                #'intern
+                (split-string
+                 (read-string
+                  "Action identifiers to remove, separated by spaces: ")
+                 "[[:space:]]+" t))))
+             (anchor
+              (completing-read
+               "Removal lifetime: "
+               '("inferred" "object" "run" "transition")
+               nil 'must-match nil nil "inferred")))
+         (unless (string= anchor "inferred")
+           (setq result (plist-put result :anchor (intern anchor))))
+         result))
+      ('suppress
+       (let ((result (list :suppress t))
+             (anchor
+              (completing-read
+               "Suppression lifetime: "
+               '("inferred" "object" "run" "transition")
+               nil 'must-match nil nil "inferred")))
+         (unless (string= anchor "inferred")
+           (setq result (plist-put result :anchor (intern anchor))))
+         result)))))
 
 (defun emacsvox-aural-editor--read-content (&optional old)
   "Read content styling, optionally preserving OLD."

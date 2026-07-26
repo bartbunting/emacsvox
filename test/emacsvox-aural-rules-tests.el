@@ -583,5 +583,96 @@
     '(:content (:voice bolden)))
    :type 'emacsvox-aural-rule-error))
 
+(ert-deftest emacsvox-aural-rules-infer-and-validate-action-anchors ()
+  "Semantic actions default to objects and face actions default to runs."
+  (let* ((semantic
+          (emacsvox-test--compile-rule
+           'semantic-anchor
+           '(:role heading)
+           '(:before
+             ((:id semantic-default :kind cue :cue item)
+              (:id semantic-transition :kind cue :cue select-object
+               :anchor transition)))))
+         (face
+          (emacsvox-test--compile-rule
+           'face-anchor
+           '(:legacy-face font-lock-warning-face)
+           '(:before
+             ((:id face-default :kind speech :text "warning")))))
+         (semantic-actions
+          (emacsvox-aural-phase-operations-append
+           (emacsvox-aural-contribution-before
+            (emacsvox-aural-rule-contribution semantic))))
+         (face-action
+          (car
+           (emacsvox-aural-phase-operations-append
+            (emacsvox-aural-contribution-before
+             (emacsvox-aural-rule-contribution face))))))
+    (should
+     (equal
+      (mapcar #'emacsvox-aural-action-anchor semantic-actions)
+      '(object transition)))
+    (should (eq (emacsvox-aural-action-anchor face-action) 'run))
+    (should-error
+     (emacsvox-test--compile-rule
+      'invalid-anchor
+      '(:role heading)
+      '(:before
+        ((:id invalid :kind cue :cue item :anchor arbitrary))))
+     :type 'emacsvox-aural-rule-error)))
+
+(ert-deftest emacsvox-aural-rules-resolve-one-action-lifetime ()
+  "Anchored resolution selects object, run, or transition actions."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'three-lifetimes
+           '(:role heading)
+           '(:before
+             ((:id object-action :kind cue :cue item)
+              (:id run-action :kind cue :cue select-object :anchor run)
+              (:id transition-action :kind cue :cue open-object
+               :anchor transition)))))
+         (facts '(:role heading))
+         (context '(:mode text-mode :occasion navigation)))
+    (dolist
+        (case
+         '((object object-action)
+           (run run-action)
+           (transition transition-action)))
+      (let ((plan
+             (emacsvox-aural-resolve
+              facts context (list rule) (car case))))
+        (should
+         (equal
+          (emacsvox-test--action-ids
+           (emacsvox-aural-render-plan-before plan))
+          (cdr case)))))))
+
+(ert-deftest emacsvox-aural-rules-object-face-actions-compose-once ()
+  "An object action selected by several face runs contributes only once."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'face-object
+           '(:legacy-face font-lock-warning-face)
+           '(:before
+             ((:id warning-object :kind speech :text "contains warning"
+               :anchor object)))))
+         (facts '(:role heading))
+         (first
+          '(:mode text-mode :occasion navigation
+            :legacy-faces (font-lock-warning-face)))
+         (second
+          '(:mode text-mode :occasion navigation
+            :legacy-faces (font-lock-warning-face bold)))
+         (plan
+          (emacsvox-aural-resolve-inputs
+           (list (cons facts first) (cons facts second))
+           (list rule) 'object)))
+    (should
+     (equal
+      (emacsvox-test--action-ids
+       (emacsvox-aural-render-plan-before plan))
+      '(warning-object)))))
+
 (provide 'emacsvox-aural-rules-tests)
 ;;; emacsvox-aural-rules-tests.el ends here

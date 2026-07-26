@@ -2142,7 +2142,7 @@ These findings add corrective slices rather than reopening the completed
 vertical migrations.  Compatibility behavior stays supported while the shared
 transport and contracts are repaired.
 
-** TODO Slice 26: Aural Object and Formatting-Run Contract
+** DONE Slice 26: Aural Object and Formatting-Run Contract
 
 - Add a regression fixture containing one semantic Org heading split across
   several named faces and personalities.
@@ -2159,6 +2159,28 @@ transport and contracts are repaired.
 
 Deliverable: a mixed-face heading speaks and sounds like one heading while
 retaining all intended run-level voice changes.
+
+Resolved contract:
+
+- Ordered actions remain in the unified rule schema and may declare
+  =:anchor object=, =:anchor run=, or =:anchor transition=.  Omitted anchors
+  infer =run= for face/personality compatibility selectors and =object= for
+  semantic and other selectors.  Destructive phase operations use the same
+  explicit or inferred lifetime.
+- One ordinary text submission is one inferred aural object until a change in
+  range-local facts, module, occasion, or a new queued legacy icon.  Modules
+  may attach the =emacsvox-aural-object= text property to group formatting
+  runs explicitly across those inferred boundaries.
+- Object actions run once around the full object, run actions surround each
+  formatting run, and transition actions occur only when entering or leaving
+  a matching presentation.  Object and run identifiers and every concrete
+  action anchor are frozen into transport provenance.
+
+Checks for Slice 26: eleven focused rule, transport, and real fontified Org
+regressions added; 167 expected results and zero unexpected results across the
+aural rule, scheme, transport, tools, and Org suites under Emacs 31; current
+generated reference; and source-preferred loading verified against stale
+ignored byte-code in the checkout.
 
 ** TODO Slice 27: Authoritative Named Source-Face Snapshot
 
@@ -2346,28 +2368,29 @@ independent controls and transport capabilities.  Unsupported and mono output
 remain audible at the centre, and pre-spatialized assets are not positioned
 again.
 
+For Slice 26, keep one unified declarative rule schema and add optional
+=object=, =run=, and =transition= action anchors.  Infer semantic and
+contextual actions as object lifetime and compatibility face/personality
+actions as run lifetime.  Treat one ordinary submission as one inferred
+object, split it when range-local facts, module, occasion, or a new queued
+icon changes, and allow modules to group ranges explicitly with the
+=emacsvox-aural-object= text property.
+
 * Open Decisions
 
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. Whether ordered actions declare an explicit =object=, =run=, or
-   =transition= anchor, use selector-based inference, or move run
-   presentation into a separate declarative rule shape.  This blocks Slice
-   26.
-2. Whether a change in range-local facts implicitly begins a new object or
-   whether modules must attach an explicit stable object identifier when a
-   submission contains several objects.  This blocks Slice 26.
-3. Whether Voice Lock gates every face-derived action, only face-derived
+1. Whether Voice Lock gates every face-derived action, only face-derived
    voice, or only the legacy face-to-personality compatibility mapping.  This
    blocks Slice 28.
-4. Whether a named voice is a complete preset that resets inherited ACSS
+2. Whether a named voice is a complete preset that resets inherited ACSS
    dimensions or a reusable partial style that composes with them.  This
    blocks Slice 29.
-5. Whether critical alerts may be completely suppressed or require an
+3. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-6. The ordering policy required before minor-mode selectors are enabled.
-7. Whether future integrations need additional occasions and whether those
+4. The ordering policy required before minor-mode selectors are enabled.
+5. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:

@@ -1282,6 +1282,7 @@
         (lambda (prompt &rest _)
           (cond
            ((string-match-p "Action kind" prompt) "speech")
+           ((string-match-p "Action lifetime" prompt) "inferred")
            ((string-match-p "Speech wording" prompt) "semantic template")
            ((string-match-p "Annotation voice" prompt) "default")
            ((string-match-p "spatial placement" prompt) "unchanged")

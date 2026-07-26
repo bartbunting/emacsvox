@@ -1477,6 +1477,8 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
 (defun emacsvox-aural-tools--format-action (action)
   "Return a concise description of concrete ACTION."
   (let* ((balance (emacsvox-aural-concrete-action-balance action))
+         (anchor
+          (or (emacsvox-aural-concrete-action-anchor action) 'undivided))
          (spatial
           (if (numberp balance)
               (format
@@ -1506,7 +1508,8 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
          "%s: pause %s"
          (emacsvox-aural-concrete-action-id action)
          (emacsvox-aural-concrete-action-duration action))))
-     spatial)))
+     spatial
+     (format ", %s anchored" anchor))))
 
 (defun emacsvox-describe-aural-spatial-capabilities ()
   "Describe current spatial backends and user policy."
@@ -1584,18 +1587,24 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
 
 (defun emacsvox-aural-tools--spoken-action (action)
   "Return a concise spoken description of concrete ACTION."
-  (pcase (emacsvox-aural-concrete-action-kind action)
-    ('speech
-     (format "say %s" (emacsvox-aural-concrete-action-text action)))
-    ('cue
-     (format
-      "play the %s cue"
-      (emacsvox-aural-tools--humanize
-       (emacsvox-aural-concrete-action-cue action))))
-    ('pause
-     (format
-      "pause for %s seconds"
-      (emacsvox-aural-concrete-action-duration action)))))
+  (concat
+   (pcase (emacsvox-aural-concrete-action-kind action)
+     ('speech
+      (format "say %s" (emacsvox-aural-concrete-action-text action)))
+     ('cue
+      (format
+       "play the %s cue"
+       (emacsvox-aural-tools--humanize
+        (emacsvox-aural-concrete-action-cue action))))
+     ('pause
+      (format
+       "pause for %s seconds"
+       (emacsvox-aural-concrete-action-duration action))))
+   (pcase (emacsvox-aural-concrete-action-anchor action)
+     ('object " once for the object")
+     ('run " for this formatting run")
+     ('transition " at the presentation transition")
+     (_ ""))))
 
 (defun emacsvox-aural-tools--spoken-content (render concrete)
   "Describe resolved content from RENDER and CONCRETE for speech."
@@ -1733,6 +1742,21 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
          context)))
       (princ
        (format "Occasion: %s\n" (plist-get context :occasion)))
+      (when-let* ((object-id
+                   (emacsvox-aural-concrete-plan-object-id concrete)))
+        (princ
+         (format
+          "Frozen object: %S; formatting run: %S; object start: %s; object end: %s\n"
+          object-id
+          (emacsvox-aural-concrete-plan-run-id concrete)
+          (if
+              (emacsvox-aural-concrete-plan-object-start-p concrete)
+              "yes"
+            "no")
+          (if
+              (emacsvox-aural-concrete-plan-object-end-p concrete)
+              "yes"
+            "no"))))
       (princ
        (format
         "Module: %s; mode: %s\n"
