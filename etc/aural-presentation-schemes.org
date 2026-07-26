@@ -1598,6 +1598,9 @@ CLOSED: [2026-07-26 Sun]
   =folded= or =expanded= while retaining the older =folded= state.
 - Supply disabled built-in Org fragments for heading-level labels, section
   cues, and folded/opened state-change wording.
+- Classify interactive physical and visual Up/Down movement as =navigation=
+  with =focus-entered= so arrowing onto an Org heading matches structural Org
+  navigation while continuous reading remains =continuous=.
 - Verify that fragments can prepend or append to inherited actions, preserve
   base content styling, and expose their origin and source in explanations.
 
@@ -1605,7 +1608,7 @@ Deliverable: users may independently enable speech, voices, cues, state
 wording, and spatial styling while modules continue to emit one coherent set
 of semantic facts.
 
-Checks: 181 selected aural and Org ERT tests with no unexpected results; all
+Checks: 221 selected core, aural, and Org ERT tests with no unexpected results; all
 27 source-loaded semantic traces matching; clean registry and generated
 reference audit; =org-lint=, =check-parens=, focused =checkdoc=, temporary
 byte compilation, and =git diff --check=.  Byte compilation reports only the

@@ -19,7 +19,7 @@ Use =M-x emacsvox-aural-edit-scheme= for a spoken field editor over a persistent
 
 Matching rules are applied from weaker to stronger.  Origin layers are =core=, module fragments, the active inherited scheme, ordered enabled feature fragments, persistent user rules, session rules, and buffer rules.  One base scheme is active, while any number of independent feature fragments may add presentation without replacing it.  Within an origin, semantic identity, an exact combined module/mode match, exact or nearest derived mode, module, additional constraints, inheritance layer, and explicit rule order determine specificity.  A stable rule identifier breaks a remaining true tie, so hash and registration order cannot change output.
 
-A buffer rule can therefore override one module in one buffer without changing the same semantic in other buffers.  A mode selector also matches derived modes, with the nearest ancestor winning.  Combine =:module= and =:mode= when the same mode should sound different in one integration.
+A buffer rule can therefore override one module in one buffer without changing the same semantic in other buffers.  A mode selector also matches derived modes, with the nearest ancestor winning.  Combine =:module= and =:mode= when the same mode should sound different in one integration.  Interactive physical or visual Up and Down movement uses the =navigation= occasion and =focus-entered= event, so arrowing onto a semantic object matches structural navigation.  Continuous-reading commands retain the =continuous= occasion.
 
 ** Render and Queue Contract
 

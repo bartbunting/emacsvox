@@ -9,6 +9,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-advice)
 
 (let ((module
        (expand-file-name
@@ -407,6 +408,67 @@
       (should (eq (plist-get level-rule :origin) 'fragment))
       (should
        (equal (plist-get level-rule :source) "emacsvox-aural-org")))))
+
+(ert-deftest emacsvox-org-arrow-and-structural-navigation-present-alike ()
+  "Down-arrow and Org structural navigation present one heading identically."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(org-heading-level-labels))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil))
+    (with-temp-buffer
+      (emacsvox-test--activate-org-mode #'org-mode)
+      (insert "** Heading\n")
+      (goto-char (point-min))
+      (font-lock-ensure)
+      (let ((ems--interactive-fn-name 'next-line)
+            (line-move-visual nil)
+            (visual-line-mode nil)
+            plans)
+        (cl-letf
+            (((symbol-function 'emacsvox-speak-line)
+              (lambda ()
+                (let* ((text
+                        (buffer-substring
+                         (line-beginning-position) (line-end-position)))
+                       (prepared (emacsvox-aural-prepare-text text)))
+                  (push
+                   (emacsvox-aural-concrete-plan-at 0 prepared)
+                   plans)))))
+          (emacsvox--advice-next-line-after)
+          (emacsvox-org-speak-line-semantically
+           'navigation 'focus-entered))
+        (should (= (length plans) 2))
+        (dolist (plan plans)
+          (should
+           (eq
+            (plist-get
+             (emacsvox-aural-concrete-plan-context plan)
+             :occasion)
+            'navigation))
+          (should
+           (equal
+            (mapcar
+             #'emacsvox-aural-concrete-action-text
+             (emacsvox-aural-concrete-plan-before plan))
+            '("Heading 2"))))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-id
+           (emacsvox-aural-concrete-plan-before (nth 0 plans)))
+          (mapcar
+           #'emacsvox-aural-concrete-action-id
+           (emacsvox-aural-concrete-plan-before (nth 1 plans)))))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-id
+           (emacsvox-aural-concrete-plan-after (nth 0 plans)))
+          (mapcar
+           #'emacsvox-aural-concrete-action-id
+           (emacsvox-aural-concrete-plan-after (nth 1 plans)))))))))
 
 (ert-deftest emacsvox-org-visibility-fragment-speaks-level-and-new-state ()
   "The optional visibility fragment renders folded and opened wording."

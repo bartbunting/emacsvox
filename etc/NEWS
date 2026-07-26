@@ -61,6 +61,10 @@ before/content/after order, and accepts a prefix argument to choose an
 occasion explicitly.  Existing icon calls, personality properties, face
 mappings, and sound directories remain supported through compatibility
 adapters.
+Interactive Up and Down line movement now submits the same ~navigation~ and
+~focus-entered~ semantics as structural movement commands.  Arriving on an
+Org heading with an arrow key therefore uses the same heading presentation as
+~org-next-visible-heading~; continuous-reading commands remain ~continuous~.
 
 ** Search From Calendar
 

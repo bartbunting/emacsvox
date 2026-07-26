@@ -62,6 +62,10 @@
 (require 'emacsvox-preamble)
 
 (defvar read-passwd--password-hidden)
+(defvar emacsvox-aural-submission-facts nil
+  "Dynamically bound semantic facts for the current speech submission.")
+(defvar emacsvox-aural-submission-occasion nil
+  "Dynamically bound occasion for the current speech submission.")
 
 (defmacro emacsvox-advice--define-interactive-after-advice
     (targets docstring &rest body)
@@ -253,15 +257,27 @@ DOCSTRING and BODY define the feedback function for each command."
 
 ;;;  advice cursor movement commands to speak
 
+(defun emacsvox-advice--navigation-facts ()
+  "Return current submission facts extended with focus-entry navigation."
+  (let* ((facts (copy-tree emacsvox-aural-submission-facts))
+         (events
+          (append
+           (copy-sequence (plist-get facts :events))
+           '(focus-entered))))
+    (plist-put facts :events (delete-dups events))))
+
 (emacsvox-advice--define-interactive-after-advice
     (next-line previous-line)
     "Speak line. Speak  (visual) line if
 `visual-line-mode' is  on, and
 indicate  point  by an aural highlight.   Moving to
 beginning or end of a physical line produces an  auditory icon."
-  (cond
-   ((or line-move-visual visual-line-mode) (emacsvox-speak-visual-line))
-   (t (emacsvox-speak-line))))
+  (let ((emacsvox-aural-submission-facts
+         (emacsvox-advice--navigation-facts))
+        (emacsvox-aural-submission-occasion 'navigation))
+    (cond
+     ((or line-move-visual visual-line-mode) (emacsvox-speak-visual-line))
+     (t (emacsvox-speak-line)))))
 
 (emacsvox-advice--define-interactive-after-advice
     (delete-horizontal-space)

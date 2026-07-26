@@ -109,6 +109,44 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-core-line-movement-submits-navigation-semantics ()
+  "Physical and visual Up/Down speech reports focus-entry navigation."
+  (dolist
+      (case
+       '((next-line nil emacsvox--advice-next-line-after)
+         (previous-line t emacsvox--advice-previous-line-after)))
+    (let ((ems--interactive-fn-name (nth 0 case))
+          (line-move-visual (nth 1 case))
+          (visual-line-mode nil)
+          (emacsvox-aural-submission-facts
+           '(:events (object-changed)))
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-line)
+            (lambda ()
+              (setq
+               captured
+               (list
+                'physical
+                emacsvox-aural-submission-occasion
+                (copy-tree emacsvox-aural-submission-facts)))))
+           ((symbol-function 'emacsvox-speak-visual-line)
+            (lambda ()
+              (setq
+               captured
+               (list
+                'visual
+                emacsvox-aural-submission-occasion
+                (copy-tree emacsvox-aural-submission-facts))))))
+        (funcall (nth 2 case)))
+      (should
+       (equal
+        captured
+        (list
+         (if (nth 1 case) 'visual 'physical)
+         'navigation
+         '(:events (object-changed focus-entered))))))))
+
 (ert-deftest emacsvox-core-migrated-advice-is-native ()
   "Individually migrated editing advice is native and inspectable."
   (dolist (entry emacsvox-test--core-direct-advice)
