@@ -207,24 +207,53 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
    (eq semantic (emacsvox-aural-selector-role selector))
    (memq semantic (emacsvox-aural-selector-events selector))
    (memq semantic (emacsvox-aural-selector-states selector))
-   (assq semantic (emacsvox-aural-selector-attributes selector))))
+   (assq semantic (emacsvox-aural-selector-attributes selector))
+   (memq
+    semantic
+    (emacsvox-aural-selector-required-attributes selector))))
+
+(defun emacsvox-aural-tools--rule-references-p (rule semantic)
+  "Return non-nil when RULE selects or renders SEMANTIC."
+  (or
+   (emacsvox-aural-tools--selector-references-p
+    (emacsvox-aural-rule-selector rule) semantic)
+   (cl-some
+    (lambda (action)
+      (memq semantic (emacsvox-aural-action-template-fields action)))
+    (emacsvox-aural-tools--rule-actions rule))))
 
 (defun emacsvox-aural-tools--rules-for-semantic (semantic)
-  "Return registered scheme and rule identifiers that reference SEMANTIC."
+  "Return registered presentation and rule identifiers using SEMANTIC."
   (let (references)
-    (maphash
-     (lambda (scheme-id entry)
-       (dolist
-           (rule
-            (emacsvox-aural-scheme-rules
-             (emacsvox-aural-scheme-entry-compiled entry)))
-         (when
-             (emacsvox-aural-tools--selector-references-p
-              (emacsvox-aural-rule-selector rule) semantic)
-           (push
-            (cons scheme-id (emacsvox-aural-rule-id rule))
-            references))))
-     emacsvox-aural-scheme-registry)
+    (cl-labels
+        ((collect
+          (owner compiled)
+          (dolist
+              (rule (emacsvox-aural-scheme-rules compiled))
+            (when
+                (emacsvox-aural-tools--rule-references-p
+                 rule semantic)
+              (push
+               (cons owner (emacsvox-aural-rule-id rule))
+               references)))))
+      (maphash
+       (lambda (scheme-id entry)
+         (collect
+          scheme-id
+          (emacsvox-aural-scheme-entry-compiled entry)))
+       emacsvox-aural-scheme-registry)
+      (maphash
+       (lambda (fragment-id entry)
+         (collect
+          fragment-id
+          (emacsvox-aural-feature-fragment-entry-compiled entry)))
+       emacsvox-aural-feature-fragment-registry)
+      (maphash
+       (lambda (fragment-id fragment)
+         (collect
+          fragment-id
+          (emacsvox-aural-module-fragment-compiled fragment)))
+       emacsvox-aural-module-fragment-registry))
     (sort
      references
      (lambda (left right)
@@ -776,6 +805,14 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         "%s %s"
         (emacsvox-aural-tools--humanize (car attribute))
         (emacsvox-aural-tools--humanize (cdr attribute)))
+       parts))
+    (dolist
+        (attribute
+         (emacsvox-aural-selector-required-attributes selector))
+      (push
+       (format
+        "%s present"
+        (emacsvox-aural-tools--humanize attribute))
        parts))
     (when-let* ((module (emacsvox-aural-selector-module selector)))
       (push
@@ -1725,6 +1762,29 @@ object, matching rule, and resolved before/content/after order."
         facts
         (intern (format ":%s" (car attribute)))
         (cdr attribute))))
+    (dolist
+        (attribute
+         (emacsvox-aural-selector-required-attributes selector))
+      (unless
+          (assq attribute (emacsvox-aural-selector-attributes selector))
+        (let* ((record (emacsvox-aural-semantic attribute))
+               (value
+                (or
+                 (car (emacsvox-aural-semantic-allowed-values record))
+                 (pcase (emacsvox-aural-semantic-value-type record)
+                   ('positive-integer 1)
+                   ('integer 0)
+                   ('number 0)
+                   ('string "example")
+                   ('symbol 'example)
+                   ('boolean t)
+                   (_ 'example)))))
+          (setq
+           facts
+           (plist-put
+            facts
+            (intern (format ":%s" attribute))
+            value)))))
     (when-let* ((mode (emacsvox-aural-selector-mode selector)))
       (setq context (plist-put context :mode mode))
       (setq

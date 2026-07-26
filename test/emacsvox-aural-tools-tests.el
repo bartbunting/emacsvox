@@ -1154,6 +1154,63 @@
       (emacsvox-aural-editor--read-space nil "Cue")
       '(:azimuth 135.0)))))
 
+(ert-deftest emacsvox-aural-editor-builds-safe-semantic-speech-template ()
+  "The advanced editor builds data-only speech templates."
+  (cl-letf
+      (((symbol-function 'completing-read)
+        (lambda (prompt &rest _)
+          (cond
+           ((string-match-p "Action kind" prompt) "speech")
+           ((string-match-p "Speech wording" prompt) "semantic template")
+           ((string-match-p "Annotation voice" prompt) "default")
+           ((string-match-p "spatial placement" prompt) "unchanged")
+           (t (ert-fail (format "Unexpected prompt %s" prompt))))))
+       ((symbol-function 'read-string)
+        (lambda (prompt &rest _)
+          (if (string-match-p "identifier" prompt)
+              "heading-level-label"
+            "Heading {level}"))))
+    (let ((action
+           (emacsvox-aural-editor--read-action
+            'heading-rule 'before 0)))
+      (should
+       (equal
+        action
+        '(:id heading-level-label :kind speech
+          :text-template "Heading {level}")))
+      (should
+       (emacsvox-aural-compile-rule
+        (list
+         :id 'heading-rule
+         :match '(:role heading :requires (level))
+         :render (list :before (list action)))
+        'user)))))
+
+(ert-deftest emacsvox-aural-simple-editor-describes-and-edits-required-details ()
+  "The simple editor speaks presence selectors and template wording clearly."
+  (should
+   (equal
+    (emacsvox-aural-simple-editor--attribute-description
+     '(:requires (level)))
+    "level present"))
+  (should
+   (equal
+    (emacsvox-aural-simple-editor--action-description
+     '(:id label :kind speech :text-template "Heading {level}"))
+    "say template \"Heading {level}\""))
+  (cl-letf
+      (((symbol-function 'completing-read)
+        (lambda (prompt &rest _)
+          (cond
+           ((string-match-p "Detail to edit" prompt) "level")
+           ((string-match-p "level detail" prompt) "require presence")
+           (t (ert-fail (format "Unexpected prompt %s" prompt)))))))
+    (should
+     (equal
+      (emacsvox-aural-simple-editor--edit-attribute
+       '(:role heading :level 2))
+      '(:role heading :requires (level))))))
+
 (defun emacsvox-test--setup-simple-editor (scheme)
   "Set up the current buffer as the simple editor for SCHEME."
   (let ((entry (emacsvox-aural-scheme-entry scheme)))

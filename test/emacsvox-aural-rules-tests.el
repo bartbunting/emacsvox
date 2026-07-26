@@ -43,6 +43,91 @@
      (emacsvox-aural-rule-p
       (car (emacsvox-aural-scheme-rules scheme))))))
 
+(ert-deftest emacsvox-aural-rules-match-required-attributes-for-templates ()
+  "Presence selectors safely support dynamic semantic speech templates."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'dynamic-heading
+           '(:role heading :requires (level))
+           '(:before
+             ((:id dynamic-label
+               :kind speech
+               :text-template "Heading {level}")))))
+         (selector (emacsvox-aural-rule-selector rule))
+         (action
+          (car
+           (emacsvox-aural-phase-operations-append
+            (emacsvox-aural-contribution-before
+             (emacsvox-aural-rule-contribution rule))))))
+    (should
+     (equal
+      (emacsvox-aural-selector-required-attributes selector)
+      '(level)))
+    (should
+     (equal
+      (emacsvox-aural-action-template-fields action)
+      '(level)))
+    (should
+     (emacsvox-aural-rule-matches-p
+      rule
+      (emacsvox-aural-normalize-input
+       '(:role heading :level 3)
+       '(:mode org-mode :occasion navigation))))
+    (should-not
+     (emacsvox-aural-rule-matches-p
+      rule
+      (emacsvox-aural-normalize-input
+       '(:role heading)
+       '(:mode org-mode :occasion navigation))))))
+
+(ert-deftest emacsvox-aural-rules-reject-unsafe-or-unguaranteed-templates ()
+  "Templates accept only registered, selector-guaranteed semantic fields."
+  (dolist
+      (render
+       '((:before
+          ((:id missing-requirement :kind speech
+            :text-template "Heading {level}")))
+         (:before
+          ((:id unknown-field :kind speech
+            :text-template "Heading {arbitrary}")))
+         (:before
+          ((:id unmatched-brace :kind speech
+            :text-template "Heading {level")))
+         (:before
+          ((:id conflicting-text :kind speech
+            :text "Heading"
+            :text-template "Heading {level}")))
+         (:before
+          ((:id unknown-property :kind speech
+            :text "Heading" :execute arbitrary)))
+         (:before
+          ((:id cue-with-text :kind cue :cue item
+            :text "ignored")))
+         (:before
+          ((:id pause-with-volume :kind pause :duration 10
+            :volume 1)))
+         (:before
+          ((:id ambiguous-cue :kind cue
+            :cue item :name button)))))
+    (should-error
+     (emacsvox-test--compile-rule
+      'invalid-template
+      '(:role heading)
+      render)
+     :type 'emacsvox-aural-rule-error))
+  (should-error
+   (emacsvox-test--compile-rule
+    'invalid-required-kind
+    '(:role heading :requires (folded))
+    '(:content (:speak t)))
+   :type 'emacsvox-aural-rule-error)
+  (should-error
+   (emacsvox-test--compile-rule
+    'redundant-required
+    '(:role heading :level 3 :requires (level))
+    '(:content (:speak t)))
+   :type 'emacsvox-aural-rule-error))
+
 (ert-deftest emacsvox-aural-rules-reject-unsafe-or-unknown-data ()
   "Unknown versions, keys, semantics, and action kinds fail validation."
   (should-error

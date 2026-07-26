@@ -288,9 +288,50 @@ degradation records.  Return balance, capability, and degradation records."
      :capability capability
      :degradations (nreverse degradations))))
 
+(defun emacsvox-aural--template-value (facts field action-id)
+  "Return spoken FACTS value for template FIELD in ACTION-ID."
+  (let* ((key (intern (format ":%s" field)))
+         (missing (make-symbol "missing"))
+         (value (if (plist-member facts key)
+                    (plist-get facts key)
+                  missing)))
+    (when (eq value missing)
+      (emacsvox-aural--transport-error
+       "Action %S template field {%s} is missing from semantic facts"
+       action-id field))
+    (cond
+     ((null value) "false")
+     ((eq value t) "true")
+     ((symbolp value)
+      (replace-regexp-in-string "-" " " (symbol-name value)))
+     ((listp value)
+      (mapconcat
+       (lambda (item)
+         (emacsvox-aural--template-value
+          (list key item) field action-id))
+       value ", "))
+     (t (format "%s" value)))))
+
+(defun emacsvox-aural--render-text-template (action facts)
+  "Render the safe semantic text template from ACTION using FACTS."
+  (let ((template (emacsvox-aural-action-text-template action))
+        (position 0)
+        parts)
+    (while (string-match "{\\([^{}]+\\)}" template position)
+      (push (substring template position (match-beginning 0)) parts)
+      (push
+       (emacsvox-aural--template-value
+        facts
+        (intern (match-string 1 template))
+        (emacsvox-aural-action-id action))
+       parts)
+      (setq position (match-end 0)))
+    (push (substring template position) parts)
+    (apply #'concat (nreverse parts))))
+
 (defun emacsvox-aural--compile-concrete-action
-    (action pack palette cue-target)
-  "Compile ACTION through PACK and PALETTE for CUE-TARGET."
+    (action facts pack palette cue-target)
+  "Compile ACTION with FACTS through PACK and PALETTE for CUE-TARGET."
   (pcase (emacsvox-aural-action-kind action)
     ('cue
      (pcase-let*
@@ -330,7 +371,10 @@ degradation records.  Return balance, capability, and degradation records."
          (emacsvox-aural--make-concrete-action
           :id (emacsvox-aural-action-id action)
           :kind 'speech
-          :text (emacsvox-aural-action-text action)
+          :text
+          (if (emacsvox-aural-action-text-template action)
+              (emacsvox-aural--render-text-template action facts)
+            (emacsvox-aural-action-text action))
           :voice-command voice-command
           :source (emacsvox-aural-action-source action)
           :requested-space
@@ -346,14 +390,14 @@ degradation records.  Return balance, capability, and degradation records."
       :source (emacsvox-aural-action-source action)))))
 
 (defun emacsvox-aural--compile-concrete-actions
-    (actions pack palette cue-target)
-  "Compile ACTIONS through PACK and PALETTE for CUE-TARGET."
+    (actions facts pack palette cue-target)
+  "Compile ACTIONS with FACTS through PACK and PALETTE for CUE-TARGET."
   (delq
    nil
    (mapcar
     (lambda (action)
       (emacsvox-aural--compile-concrete-action
-       action pack palette cue-target))
+       action facts pack palette cue-target))
     actions)))
 
 (defun emacsvox-aural--action-degradations (source concrete)
@@ -420,11 +464,11 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
          (before
           (emacsvox-aural--compile-concrete-actions
            (emacsvox-aural-render-plan-before plan)
-           pack palette cue-target))
+           facts pack palette cue-target))
          (after
           (emacsvox-aural--compile-concrete-actions
            (emacsvox-aural-render-plan-after plan)
-           pack palette cue-target)))
+           facts pack palette cue-target)))
     (when (emacsvox-aural-content-style-volume style)
       (push
        (list :content t :reason 'backend-property-deferred)

@@ -23,6 +23,9 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-module-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-feature-fragment-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
@@ -84,6 +87,33 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (should (eq (plist-get context :mode) 'emacs-lisp-mode))
       (should (eq (plist-get context :module) 'elisp))
       (should (eq (plist-get context :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-aural-transport-renders-templates-before-queueing ()
+  "Semantic templates become concrete text at the source boundary."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id dynamic-heading
+        :match (:role heading :requires (level))
+        :render
+        (:before
+         ((:id heading-label :kind speech
+           :text-template "Heading {level} is ready"))))))
+    (let* ((facts '(:role heading :level 3 :content "Title"))
+           (context (emacsvox-test--transport-context 'org-mode))
+           (render (emacsvox-aural-resolve-active facts context))
+           (concrete
+            (emacsvox-aural-compile-plan render facts context)))
+      (setf (plist-get facts :level) 9)
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-text
+         (emacsvox-aural-concrete-plan-before concrete))
+        '("Heading 3 is ready")))
+      (should
+       (equal
+        (emacsvox-aural-concrete-plan-facts concrete)
+        '(:role heading :level 3 :content "Title"))))))
 
 (ert-deftest emacsvox-aural-transport-content-addresses-samples ()
   "Equal content shares an identifier and changed content gets a generation."

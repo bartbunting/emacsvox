@@ -305,6 +305,13 @@ document supported presentation contexts.  USAGE is optional extended help."
      :kind 'attribute
      :summary "One-based structural depth"
      :value-type 'positive-integer))
+  (unless (emacsvox-aural-semantic 'visibility)
+    (emacsvox-aural-register-semantic
+     'visibility
+     :kind 'attribute
+     :summary "Whether structural descendants are visible"
+     :value-type 'symbol
+     :allowed-values '(folded expanded)))
   (emacsvox-aural-validate-registry))
 
 (emacsvox-aural--register-builtins)

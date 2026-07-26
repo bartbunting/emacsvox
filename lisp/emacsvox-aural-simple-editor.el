@@ -196,6 +196,12 @@ RULE-INDEX associates the line with a working declarative rule."
               (emacsvox-aural-simple-editor--humanize
                (plist-get match key)))
              parts)))))
+    (dolist (id (plist-get match :requires))
+      (push
+       (format
+        "%s present"
+        (emacsvox-aural-simple-editor--humanize id))
+       parts))
     (if parts (string-join (nreverse parts) ", ") "any")))
 
 (defun emacsvox-aural-simple-editor--match-description (match)
@@ -283,7 +289,9 @@ RULE-INDEX associates the line with a working declarative rule."
     (concat
      (pcase (plist-get action :kind)
        ('speech
-        (format "say %S" (plist-get action :text)))
+        (if-let* ((template (plist-get action :text-template)))
+            (format "say template %S" template)
+          (format "say %S" (plist-get action :text))))
        ('cue
         (format
          "play the %s cue"
@@ -369,6 +377,7 @@ RULE-INDEX associates the line with a working declarative rule."
   "Return non-nil when ACTION needs advanced editing."
   (or
    (eq (plist-get action :kind) 'pause)
+   (plist-member action :text-template)
    (plist-member action :voice)
    (plist-member action :volume)))
 
@@ -587,6 +596,10 @@ RULE-INDEX associates the line with a working declarative rule."
              match
              (emacsvox-aural-simple-editor--plist-delete
               match (intern (format ":%s" candidate)))))
+          (setq
+           match
+           (emacsvox-aural-simple-editor--plist-delete
+            match :requires))
           match)
       (let* ((id (intern choice))
              (key (intern (format ":%s" id)))
@@ -594,16 +607,46 @@ RULE-INDEX associates the line with a working declarative rule."
              (action
               (completing-read
                (format "%s detail: " choice)
-               '("set value" "remove" "keep")
+               '("set value" "require presence" "remove" "keep")
                nil 'must-match nil nil "set value")))
         (pcase action
           ("set value"
+           (setq
+            match
+            (plist-put
+             match key
+             (emacsvox-aural-editor--read-attribute-value
+              record (plist-get match key))))
+           (let ((required
+                  (delq id (copy-sequence (plist-get match :requires)))))
+             (setq
+              match
+              (emacsvox-aural-simple-editor--plist-delete
+               match :requires))
+             (when required
+               (setq match (plist-put match :requires required))))
+           match)
+          ("require presence"
+           (setq
+            match
+            (emacsvox-aural-simple-editor--plist-delete match key))
            (plist-put
-            match key
-            (emacsvox-aural-editor--read-attribute-value
-             record (plist-get match key))))
+            match :requires
+            (delete-dups
+             (append (plist-get match :requires) (list id)))))
           ("remove"
-           (emacsvox-aural-simple-editor--plist-delete match key))
+           (setq
+            match
+            (emacsvox-aural-simple-editor--plist-delete match key))
+           (let ((required
+                  (delq id (copy-sequence (plist-get match :requires)))))
+             (setq
+              match
+              (emacsvox-aural-simple-editor--plist-delete
+               match :requires))
+             (when required
+               (setq match (plist-put match :requires required))))
+           match)
           (_ match))))))
 
 (defun emacsvox-aural-simple-editor--edit-match (match)

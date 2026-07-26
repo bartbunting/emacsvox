@@ -41,7 +41,7 @@
 
 (defconst emacsvox-aural--selector-keys
   '(:role :event :events :state :states :module :mode :occasion
-    :legacy-cue :legacy-personality)
+    :legacy-cue :legacy-personality :requires)
   "Reserved selector keys that are not registered semantic attributes.")
 
 (defconst emacsvox-aural--fact-keys
@@ -58,14 +58,15 @@
     (emacsvox-aural-selector
      (:constructor emacsvox-aural--make-selector))
   "A validated selector compiled from declarative rule data."
-  role events states attributes module mode occasion legacy-cue
+  role events states attributes required-attributes module mode occasion legacy-cue
   legacy-personality)
 
 (cl-defstruct
     (emacsvox-aural-action
      (:constructor emacsvox-aural--make-action))
   "A validated backend-independent action."
-  id kind text cue duration voice volume space source)
+  id kind text text-template template-fields cue duration voice volume space
+  source)
 
 (cl-defstruct
     (emacsvox-aural-phase-operations
@@ -207,7 +208,9 @@
      (_ t))))
 
 (defun emacsvox-aural--extract-attributes (plist reserved label)
-  "Extract registered attributes from PLIST excluding RESERVED keys."
+  "Extract registered attributes from PLIST excluding RESERVED keys.
+
+LABEL identifies the source in validation errors."
   (let (attributes)
     (cl-loop
      for (key value) on plist by #'cddr
@@ -223,6 +226,51 @@
           "%s has invalid value for %S: %S" label id value))
        (push (cons id value) attributes)))
     (nreverse attributes)))
+
+(defun emacsvox-aural--require-attribute-ids (value label)
+  "Validate attribute identifier list VALUE for LABEL."
+  (unless (and (listp value) (proper-list-p value))
+    (emacsvox-aural--rule-error "%s must be a proper list: %S" label value))
+  (let (attributes)
+    (dolist (id value)
+      (emacsvox-aural--require-kind id 'attribute label)
+      (push id attributes))
+    (delete-dups (nreverse attributes))))
+
+(defun emacsvox-aural--template-fields (template label)
+  "Return validated semantic fields referenced by TEMPLATE for LABEL."
+  (unless (and (stringp template) (not (string-empty-p template)))
+    (emacsvox-aural--rule-error "%s must be a nonempty string" label))
+  (let ((position 0)
+        fields)
+    (while (string-match "{\\([^{}]+\\)}" template position)
+      (when
+          (string-match-p
+           "[{}]" (substring template position (match-beginning 0)))
+        (emacsvox-aural--rule-error
+         "%s contains an unmatched brace: %S" label template))
+      (let ((name (match-string 1 template)))
+        (unless
+            (string-match-p
+             "\\`[[:alpha:]][[:alnum:]-]*\\'" name)
+          (emacsvox-aural--rule-error
+           "%s contains invalid placeholder {%s}" label name))
+        (let* ((field (intern name))
+               (record (emacsvox-aural-semantic field)))
+          (unless
+              (or
+               (eq field 'role)
+               (and
+                record
+                (eq (emacsvox-aural-semantic-kind record) 'attribute)))
+            (emacsvox-aural--rule-error
+             "%s names unsupported semantic field {%s}" label name))
+          (push field fields)))
+      (setq position (match-end 0)))
+    (when (string-match-p "[{}]" (substring template position))
+      (emacsvox-aural--rule-error
+       "%s contains an unmatched brace: %S" label template))
+    (delete-dups (nreverse fields))))
 
 (defun emacsvox-aural--compile-selector (selector rule-id)
   "Compile SELECTOR for RULE-ID."
@@ -243,6 +291,10 @@
          (occasion (plist-get selector :occasion))
          (legacy-cue (plist-get selector :legacy-cue))
          (legacy-personality (plist-get selector :legacy-personality))
+         (required-attributes
+          (emacsvox-aural--require-attribute-ids
+           (or (plist-get selector :requires) nil)
+           "Required selector attributes"))
          (attributes
           (emacsvox-aural--extract-attributes
            selector emacsvox-aural--selector-keys
@@ -268,11 +320,19 @@
         (emacsvox-aural--rule-error
          "Selector legacy personality must be a symbol or cons: %S"
          legacy-personality)))
+    (let ((redundant
+           (cl-intersection
+            required-attributes (mapcar #'car attributes) :test #'eq)))
+      (when redundant
+        (emacsvox-aural--rule-error
+         "Selector for %S both fixes and requires attributes: %S"
+         rule-id redundant)))
     (emacsvox-aural--make-selector
      :role role
      :events events
      :states states
      :attributes attributes
+     :required-attributes required-attributes
      :module module
      :mode mode
      :occasion occasion
@@ -289,21 +349,67 @@
            (plist-get data :id)
            (intern (format "%s/%s/%d" rule-id phase index))))
          (text (plist-get data :text))
+         (text-template (plist-get data :text-template))
          (cue (or (plist-get data :cue) (plist-get data :name)))
          (duration (plist-get data :duration))
          (voice (plist-get data :voice))
          (volume (plist-get data :volume))
-         (space (plist-get data :space)))
+         (space (plist-get data :space))
+         (allowed
+          '(:id :kind :text :text-template :cue :name :duration
+            :voice :volume :space))
+         (unknown
+          (cl-loop
+           for (key _) on data by #'cddr
+           unless (memq key allowed)
+           collect key))
+         template-fields)
     (emacsvox-aural--require-symbol id "Action identifier")
+    (when unknown
+      (emacsvox-aural--rule-error
+       "Unknown properties for action %S: %S" id unknown))
     (unless (memq kind emacsvox-aural-action-kinds)
       (emacsvox-aural--rule-error
        "Invalid action kind for %S: %S" id kind))
+    (let* ((kind-properties
+            (pcase kind
+              ('speech
+               '(:id :kind :text :text-template :voice :volume :space))
+              ('cue '(:id :kind :cue :name :volume :space))
+              ('pause '(:id :kind :duration))
+              (_ allowed)))
+           (incompatible
+            (cl-loop
+             for (key _) on data by #'cddr
+             unless (memq key kind-properties)
+             collect key)))
+      (when incompatible
+        (emacsvox-aural--rule-error
+         "Properties do not apply to %S action %S: %S"
+         kind id incompatible)))
     (pcase kind
       ('speech
-       (unless (and (stringp text) (not (string-empty-p text)))
+       (when (and text text-template)
          (emacsvox-aural--rule-error
-          "Speech action %S requires nonempty :text" id)))
+          "Speech action %S cannot combine :text and :text-template" id))
+       (cond
+        (text
+         (unless (and (stringp text) (not (string-empty-p text)))
+           (emacsvox-aural--rule-error
+            "Speech action %S requires nonempty :text" id)))
+        (text-template
+         (setq
+          template-fields
+          (emacsvox-aural--template-fields
+           text-template
+           (format "Speech action %S template" id))))
+        (t
+         (emacsvox-aural--rule-error
+          "Speech action %S requires :text or :text-template" id))))
       ('cue
+       (when (and (plist-member data :cue) (plist-member data :name))
+         (emacsvox-aural--rule-error
+          "Cue action %S cannot combine :cue and compatibility :name" id))
        (emacsvox-aural--require-symbol cue (format "Cue for action %S" id)))
       ('pause
        (unless (and (numberp duration) (>= duration 0))
@@ -325,12 +431,43 @@
      :id id
      :kind kind
      :text text
+     :text-template text-template
+     :template-fields template-fields
      :cue cue
      :duration duration
      :voice voice
      :volume volume
      :space (copy-tree space)
      :source rule-id)))
+
+(defun emacsvox-aural--phase-actions (operations)
+  "Return every action introduced by phase OPERATIONS."
+  (append
+   (emacsvox-aural-phase-operations-replace operations)
+   (emacsvox-aural-phase-operations-prepend operations)
+   (emacsvox-aural-phase-operations-append operations)))
+
+(defun emacsvox-aural--validate-template-guarantees
+    (selector contribution rule-id)
+  "Validate CONTRIBUTION templates for RULE-ID against SELECTOR guarantees."
+  (let ((attributes (emacsvox-aural-selector-attributes selector))
+        (required
+         (emacsvox-aural-selector-required-attributes selector)))
+    (dolist
+        (action
+         (append
+          (emacsvox-aural--phase-actions
+           (emacsvox-aural-contribution-before contribution))
+          (emacsvox-aural--phase-actions
+           (emacsvox-aural-contribution-after contribution))))
+      (dolist (field (emacsvox-aural-action-template-fields action))
+        (unless
+            (if (eq field 'role)
+                (emacsvox-aural-selector-role selector)
+              (or (assq field attributes) (memq field required)))
+          (emacsvox-aural--rule-error
+           "Rule %S template field {%s} is not guaranteed by its selector"
+           rule-id field))))))
 
 (defun emacsvox-aural--compile-actions
     (actions rule-id phase &optional id-namespace)
@@ -526,15 +663,19 @@ LAYER-ORDER records inheritance order within one origin."
       (emacsvox-aural--rule-error "Rule %S has no :render contribution" id))
     (when unknown
       (emacsvox-aural--rule-error "Unknown keys for rule %S: %S" id unknown))
-    (emacsvox-aural--make-rule
-     :id id
-     :enabled enabled
-     :origin origin
-     :layer-order (or layer-order 0)
-     :order order
-     :selector (emacsvox-aural--compile-selector match id)
-     :contribution (emacsvox-aural--compile-contribution render id)
-     :source source)))
+    (let ((selector (emacsvox-aural--compile-selector match id))
+          (contribution (emacsvox-aural--compile-contribution render id)))
+      (emacsvox-aural--validate-template-guarantees
+       selector contribution id)
+      (emacsvox-aural--make-rule
+       :id id
+       :enabled enabled
+       :origin origin
+       :layer-order (or layer-order 0)
+       :order order
+       :selector selector
+       :contribution contribution
+       :source source))))
 
 (defun emacsvox-aural-compile-scheme (data &optional origin source)
   "Compile declarative scheme DATA from ORIGIN and SOURCE."
@@ -713,6 +854,8 @@ LAYER-ORDER records inheritance order within one origin."
          (events (emacsvox-aural-selector-events selector))
          (states (emacsvox-aural-selector-states selector))
          (attributes (emacsvox-aural-selector-attributes selector))
+         (required
+          (emacsvox-aural-selector-required-attributes selector))
          (module (emacsvox-aural-selector-module selector))
          (mode (emacsvox-aural-selector-mode selector))
          (occasion (emacsvox-aural-selector-occasion selector))
@@ -736,6 +879,10 @@ LAYER-ORDER records inheritance order within one origin."
           :emacsvox-aural-missing)
          (cdr attribute)))
       attributes)
+     (cl-every
+      (lambda (attribute)
+        (assq attribute (emacsvox-aural-input-attributes input)))
+      required)
      (or (null module) (eq module (emacsvox-aural-input-module input)))
      (or (null mode) (numberp (emacsvox-aural--mode-distance selector input)))
      (or
@@ -775,6 +922,8 @@ LAYER-ORDER records inheritance order within one origin."
          (constraints
           (+ (length (emacsvox-aural-selector-states selector))
              (length (emacsvox-aural-selector-attributes selector))
+             (length
+              (emacsvox-aural-selector-required-attributes selector))
              (if (emacsvox-aural-selector-legacy-cue selector) 1 0)
              (if
                  (emacsvox-aural-selector-legacy-personality selector)

@@ -293,6 +293,33 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
          selector
          (emacsvox-aural-editor--add-semantic-selector
           selector semantic)))
+      (let ((attributes
+             (cl-loop
+              for record in (emacsvox-aural-semantics)
+              when (eq
+                    (emacsvox-aural-semantic-kind record)
+                    'attribute)
+              collect
+              (symbol-name (emacsvox-aural-semantic-id record))))
+            required
+            answer)
+        (while
+            (not
+             (string-empty-p
+              (setq
+               answer
+                (completing-read
+                 "Require a detail without fixing its value (empty to finish): "
+                attributes nil 'must-match))))
+          (let ((attribute (intern answer)))
+            (unless
+                (plist-member
+                 selector (intern (format ":%s" attribute)))
+              (push attribute required))))
+        (when required
+          (setq
+           selector
+           (plist-put selector :requires (nreverse required)))))
       (when-let* ((module
                    (emacsvox-aural-editor--read-symbol-or-nil
                     "Module (empty for any): ")))
@@ -394,9 +421,24 @@ LABEL identifies the speech or cue being edited."
          (action (list :id id :kind kind)))
     (pcase kind
       ('speech
-       (setq
-        action
-        (plist-put action :text (read-string "Spoken text: ")))
+       (let* ((form
+               (completing-read
+                "Speech wording: "
+                '("literal text" "semantic template")
+                nil 'must-match nil nil "literal text"))
+              (text
+               (read-string
+                (if (string= form "semantic template")
+                    "Template, for example Heading {level}: "
+                  "Spoken text: "))))
+         (setq
+          action
+          (plist-put
+           action
+           (if (string= form "semantic template")
+               :text-template
+             :text)
+           text)))
        (when-let* ((voice
                     (emacsvox-aural-editor--read-voice
                      "Annotation voice (default for none): ")))

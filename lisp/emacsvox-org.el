@@ -74,11 +74,13 @@
 
 Optional EVENT records the registered event that caused its presentation."
   (when (org-at-heading-p)
-    (let ((facts
-           (list
-            :role 'heading
-            :level (org-reduced-level (org-outline-level)))))
-      (when (emacsvox-org-heading-folded-p)
+    (let* ((folded (emacsvox-org-heading-folded-p))
+           (facts
+            (list
+             :role 'heading
+             :level (org-reduced-level (org-outline-level))
+             :visibility (if folded 'folded 'expanded))))
+      (when folded
         (setq facts (plist-put facts :states '(folded))))
       (when event
         (setq facts (plist-put facts :events (list event))))
