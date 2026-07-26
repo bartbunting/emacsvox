@@ -1136,6 +1136,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
       "r rename personal    a activate\n"
       "P preview            v validate\n"
       "SPC speak row        g refresh\n"
+      "f feature fragments\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -1235,6 +1236,10 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  emacsvox-aural-schemes-mode-map
  (kbd "?")
  #'emacsvox-aural-schemes-help)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "f")
+ #'emacsvox-aural-list-feature-fragments)
 
 (defun emacsvox-list-aural-schemes ()
   "Open the accessible manager for registered aural schemes."
@@ -1248,12 +1253,13 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
       (emacsvox-aural-schemes-speak-current))
     buffer))
 
-(defun emacsvox-aural-tools--display-validation (report)
-  "Display validation REPORT in a help buffer."
+(defun emacsvox-aural-tools--display-validation (report &optional kind)
+  "Display validation REPORT for object KIND in a help buffer."
   (with-help-window (help-buffer)
     (princ
      (format
-      "Aural scheme %s: %s\n\n"
+      "Aural %s %s: %s\n\n"
+      (or kind "scheme")
       (emacsvox-aural-validation-report-scheme report)
       (if (emacsvox-aural-validation-report-valid report)
           "valid"
@@ -2112,6 +2118,622 @@ SCOPE is `personal', `session', or `buffer'."
     (when (called-interactively-p 'interactive)
       (message "Reset %s aural overrides" scope))
     t))
+
+(defun emacsvox-aural-validate-feature-fragment (fragment)
+  "Return a validation report for registered feature FRAGMENT."
+  (let
+      (errors warnings rules all-rules missing-assets unavailable
+              unreachable ties disabled)
+    (condition-case error
+        (let* ((entry
+                (or
+                 (emacsvox-aural-feature-fragment-entry fragment)
+                 (emacsvox-aural--scheme-error
+                  "Unknown feature fragment: %S" fragment)))
+               (compiled
+                (emacsvox-aural-feature-fragment-entry-compiled entry))
+               (pack
+                (emacsvox-aural-effective-scheme-provider 'resource-pack))
+               (palette
+                (or
+                 (emacsvox-aural-effective-scheme-provider 'voice-palette)
+                 'acss-default)))
+          (setq
+           all-rules
+           (copy-sequence (emacsvox-aural-scheme-rules compiled))
+           rules
+           (cl-remove-if-not #'emacsvox-aural-rule-enabled all-rules)
+           disabled
+           (mapcar
+            #'emacsvox-aural-rule-id
+            (cl-remove-if #'emacsvox-aural-rule-enabled all-rules)))
+          (when pack
+            (let ((resource-report
+                   (emacsvox-aural-validate-resource-pack
+                    pack
+                    (emacsvox-aural-tools--scheme-cues rules))))
+              (setq
+               missing-assets
+               (emacsvox-aural-resource-report-missing-required
+                resource-report))
+              (when
+                  (emacsvox-aural-resource-report-missing-directory
+                   resource-report)
+                (push
+                 (format "Resource directory for %s is missing" pack)
+                 errors))))
+          (when (featurep 'voice-defs)
+            (setq
+             unavailable
+             (emacsvox-aural-validate-voice-palette palette)))
+          (dolist (rule rules)
+            (when (emacsvox-aural-tools--rule-ineffective-p rule)
+              (push (emacsvox-aural-rule-id rule) unreachable))
+            (dolist (voice (emacsvox-aural-tools--rule-voices rule))
+              (unless
+                  (emacsvox-aural-tools--voice-available-p voice palette)
+                (push voice unavailable))))
+          (setq ties (emacsvox-aural-tools--ambiguous-ties rules)))
+      (error (push (error-message-string error) errors)))
+    (when missing-assets
+      (push
+       (format "Missing required cues: %S" missing-assets)
+       errors))
+    (when unavailable
+      (push
+       (format "Unavailable voices: %S" (delete-dups unavailable))
+       errors))
+    (when unreachable
+      (push
+       "Rules listed as unreachable contain no presentation operation"
+       warnings))
+    (when ties
+      (push
+       "Ambiguous ties are resolved only by stable rule identifier"
+       warnings))
+    (emacsvox-aural--make-validation-report
+     :scheme fragment
+     :valid (null errors)
+     :errors (nreverse errors)
+     :warnings (nreverse warnings)
+     :missing-assets (copy-sequence missing-assets)
+     :unavailable-voices (delete-dups (nreverse unavailable))
+     :unreachable-rules (nreverse unreachable)
+     :ambiguous-ties ties
+     :disabled-rules disabled)))
+
+(defun emacsvox-aural-tools--fragment-at-point-or-read (&optional prompt)
+  "Return the feature fragment at point, or read one using PROMPT."
+  (or
+   (and
+    (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+    (tabulated-list-get-id))
+   (let ((candidates (emacsvox-aural-feature-fragment-candidates)))
+     (unless candidates
+       (user-error "No feature fragments are registered"))
+     (intern
+      (completing-read
+       (or prompt "Aural feature fragment: ")
+       candidates nil 'must-match)))))
+
+(defun emacsvox-aural-tools--ordered-feature-fragment-ids ()
+  "Return enabled feature fragment IDs first, then disabled IDs."
+  (append
+   (copy-sequence emacsvox-aural-enabled-feature-fragments)
+   (cl-loop
+    for candidate in (emacsvox-aural-feature-fragment-candidates)
+    for id = (intern candidate)
+    unless (memq id emacsvox-aural-enabled-feature-fragments)
+    collect id)))
+
+(defun emacsvox-aural-tools--fragment-kind (entry)
+  "Return a user-facing kind name for feature fragment ENTRY."
+  (if (emacsvox-aural-feature-fragment-entry-built-in entry)
+      "built-in"
+    "personal"))
+
+(defun emacsvox-aural-tools--fragment-row (id)
+  "Return a tabulated manager row for feature fragment ID."
+  (let* ((entry (emacsvox-aural-feature-fragment-entry id))
+         (compiled
+          (emacsvox-aural-feature-fragment-entry-compiled entry))
+         (position
+          (cl-position id emacsvox-aural-enabled-feature-fragments))
+         (report (emacsvox-aural-validate-feature-fragment id)))
+    (list
+     id
+     (vector
+      (symbol-name id)
+      (if position (format "enabled %d" (1+ position)) "disabled")
+      (emacsvox-aural-tools--fragment-kind entry)
+      (format
+       "%d"
+       (length (emacsvox-aural-scheme-rules compiled)))
+      (if (emacsvox-aural-validation-report-valid report)
+          "valid"
+        "invalid")
+      (emacsvox-aural-scheme-summary compiled)))))
+
+(defun emacsvox-aural-feature-fragments--set-entries ()
+  "Populate the current feature-fragment manager."
+  (setq
+   tabulated-list-entries
+   (mapcar
+    #'emacsvox-aural-tools--fragment-row
+    (emacsvox-aural-tools--ordered-feature-fragment-ids))))
+
+(defun emacsvox-aural-feature-fragments--goto (fragment)
+  "Move to feature FRAGMENT in the current manager."
+  (let ((start (point-min))
+        found)
+    (goto-char start)
+    (while (and (not found) (< (point) (point-max)))
+      (if (eq fragment (tabulated-list-get-id))
+          (setq found t)
+        (forward-line 1)))
+    (unless found
+      (goto-char start))
+    (when found
+      (emacsvox-aural-tools--goto-tabulated-column 0))
+    found))
+
+(defun emacsvox-aural-feature-fragments-refresh (&optional fragment)
+  "Refresh the feature-fragment manager, preserving FRAGMENT and column."
+  (interactive)
+  (let ((column
+         (and
+          (null fragment)
+          (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+          (emacsvox-aural-tools--tabulated-column-index)))
+        (selected
+         (or
+          fragment
+          (and
+           (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+           (tabulated-list-get-id)))))
+    (emacsvox-aural-feature-fragments--set-entries)
+    (tabulated-list-print t)
+    (when selected
+      (emacsvox-aural-feature-fragments--goto selected)
+      (when column
+        (emacsvox-aural-tools--goto-tabulated-column column)))))
+
+(defun emacsvox-aural-tools--refresh-fragment-manager (&optional fragment)
+  "Refresh an existing feature-fragment manager and select FRAGMENT."
+  (when-let* ((buffer (get-buffer "*Aural Feature Fragments*")))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+        (emacsvox-aural-feature-fragments-refresh fragment)))))
+
+(defun emacsvox-aural-tools--fragment-spoken-summary (fragment)
+  "Return a concise spoken summary of feature FRAGMENT."
+  (let* ((entry (emacsvox-aural-feature-fragment-entry fragment))
+         (compiled
+          (emacsvox-aural-feature-fragment-entry-compiled entry))
+         (position
+          (cl-position fragment emacsvox-aural-enabled-feature-fragments))
+         (count (length (emacsvox-aural-scheme-rules compiled)))
+         (report (emacsvox-aural-validate-feature-fragment fragment)))
+    (format
+     "%s. %s feature fragment. %s. %s. %d %s. %s."
+     (emacsvox-aural-tools--humanize fragment)
+     (emacsvox-aural-tools--fragment-kind entry)
+     (if position
+         (format "Enabled at position %d" (1+ position))
+       "Disabled")
+     (emacsvox-aural-scheme-summary compiled)
+     count
+     (if (= count 1) "presentation" "presentations")
+     (if (emacsvox-aural-validation-report-valid report)
+         "Valid"
+       "Invalid; press v for diagnostics"))))
+
+(defun emacsvox-aural-feature-fragments-speak-current ()
+  "Speak a concise description of the feature fragment at point."
+  (interactive)
+  (let* ((fragment
+          (emacsvox-aural-tools--fragment-at-point-or-read))
+         (summary
+          (emacsvox-aural-tools--fragment-spoken-summary fragment)))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-feature-fragments-speak-current-cell ()
+  "Speak the current feature-fragment column title and value."
+  (interactive)
+  (emacsvox-aural-tools--speak-tabulated-cell))
+
+(defun emacsvox-aural-feature-fragments-next ()
+  "Move to and speak the next feature fragment."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row
+   1 "feature fragment list"))
+
+(defun emacsvox-aural-feature-fragments-previous ()
+  "Move to and speak the previous feature fragment."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row
+   -1 "feature fragment list"))
+
+(defun emacsvox-aural-feature-fragments-next-column ()
+  "Move right and speak the next feature-fragment column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column 1))
+
+(defun emacsvox-aural-feature-fragments-previous-column ()
+  "Move left and speak the previous feature-fragment column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column -1))
+
+(defun emacsvox-aural-describe-feature-fragment (&optional fragment)
+  "Describe registered feature FRAGMENT and its presentations."
+  (interactive)
+  (let* ((fragment
+          (or
+           fragment
+           (emacsvox-aural-tools--fragment-at-point-or-read
+            "View feature fragment: ")))
+         (entry
+          (or
+           (emacsvox-aural-feature-fragment-entry fragment)
+           (user-error "Unknown feature fragment: %S" fragment)))
+         (compiled
+          (emacsvox-aural-feature-fragment-entry-compiled entry))
+         (report (emacsvox-aural-validate-feature-fragment fragment))
+         (summary
+          (emacsvox-aural-tools--fragment-spoken-summary fragment)))
+    (with-help-window (help-buffer)
+      (princ (format "Aural feature fragment: %s\n\n" fragment))
+      (princ
+       (format
+        "Status: %s\n"
+        (if-let* ((position
+                   (cl-position
+                    fragment emacsvox-aural-enabled-feature-fragments)))
+            (format "enabled at position %d" (1+ position))
+          "disabled")))
+      (princ
+       (format
+        "Kind: %s\n"
+        (emacsvox-aural-tools--fragment-kind entry)))
+      (princ
+       (format "Summary: %s\n"
+               (emacsvox-aural-scheme-summary compiled)))
+      (princ
+       (format
+        "Source: %s\n\nPresentations\n\n"
+        (emacsvox-aural-feature-fragment-entry-source entry)))
+      (emacsvox-aural-tools--print-scheme-rules
+       (emacsvox-aural-scheme-rules compiled))
+      (princ
+       (format
+        "\nValidation: %s\n"
+        (if (emacsvox-aural-validation-report-valid report)
+            "valid"
+          "invalid")))
+      (dolist (error (emacsvox-aural-validation-report-errors report))
+        (princ (format "Error: %s\n" error)))
+      (dolist (warning (emacsvox-aural-validation-report-warnings report))
+        (princ (format "Warning: %s\n" warning))))
+    (when (called-interactively-p 'interactive)
+      (when (fboundp 'emacsvox-icon)
+        (emacsvox-icon 'help))
+      (when (fboundp 'tts-speak)
+        (tts-speak summary)))
+    summary))
+
+(defun emacsvox-aural-tools--install-feature-fragment-state
+    (registry enabled)
+  "Validate and persist feature-fragment REGISTRY and ENABLED order."
+  (emacsvox-aural--validate-enabled-feature-fragments enabled registry)
+  (let ((old-registry emacsvox-aural-feature-fragment-registry)
+        (old-enabled emacsvox-aural-enabled-feature-fragments))
+    (setq
+     emacsvox-aural-feature-fragment-registry registry
+     emacsvox-aural-enabled-feature-fragments (copy-sequence enabled))
+    (condition-case error
+        (progn
+          (emacsvox-aural-current-rules
+           (emacsvox-aural-context-at-point))
+          (emacsvox-aural-save-user-data))
+      (error
+       (setq
+        emacsvox-aural-feature-fragment-registry old-registry
+        emacsvox-aural-enabled-feature-fragments old-enabled)
+       (signal (car error) (cdr error))))
+    (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
+    enabled))
+
+(defun emacsvox-aural-create-feature-fragment (id &optional summary)
+  "Create disabled personal feature fragment ID with SUMMARY."
+  (interactive
+   (let* ((answer (read-string "New feature fragment identifier: "))
+          (_
+           (when (string-empty-p answer)
+             (user-error "Feature fragment identifier cannot be empty"))))
+     (list (intern answer) nil)))
+  (when (emacsvox-aural-feature-fragment-entry id)
+    (user-error "Feature fragment already exists: %S" id))
+  (let ((registry
+         (copy-hash-table emacsvox-aural-feature-fragment-registry))
+        (data
+         (list
+          :schema-version emacsvox-aural-scheme-schema-version
+          :id id
+          :summary
+          (or summary (format "Personal feature fragment %s" id))
+          :rules nil)))
+    (let ((emacsvox-aural-feature-fragment-registry registry))
+      (emacsvox-aural-register-feature-fragment
+       data :source emacsvox-aural-schemes-file))
+    (emacsvox-aural-tools--install-feature-fragment-state
+     registry emacsvox-aural-enabled-feature-fragments)
+    (emacsvox-aural-tools--refresh-fragment-manager id)
+    (when (called-interactively-p 'interactive)
+      (require 'emacsvox-aural-editor)
+      (emacsvox-edit-aural-feature-fragment id))
+    id))
+
+(defun emacsvox-aural-copy-feature-fragment (source new-id)
+  "Copy feature fragment SOURCE to disabled personal fragment NEW-ID."
+  (interactive
+   (let* ((source
+           (emacsvox-aural-tools--fragment-at-point-or-read
+            "Copy feature fragment: "))
+          (answer
+           (read-string
+            "New personal feature fragment identifier: "
+            (format "%s-copy" source))))
+     (when (string-empty-p answer)
+       (user-error "Feature fragment identifier cannot be empty"))
+     (list source (intern answer))))
+  (when (emacsvox-aural-feature-fragment-entry new-id)
+    (user-error "Feature fragment already exists: %S" new-id))
+  (let* ((source-entry
+          (or
+           (emacsvox-aural-feature-fragment-entry source)
+           (user-error "Unknown feature fragment: %S" source)))
+         (data
+          (plist-put
+           (copy-tree
+            (emacsvox-aural-feature-fragment-entry-data source-entry))
+           :id new-id))
+         (data
+          (plist-put
+           data :summary
+           (format "Editable copy of %s: %s"
+                   source
+                   (plist-get data :summary))))
+         (registry
+          (copy-hash-table emacsvox-aural-feature-fragment-registry)))
+    (let ((emacsvox-aural-feature-fragment-registry registry))
+      (emacsvox-aural-register-feature-fragment
+       data :source emacsvox-aural-schemes-file))
+    (emacsvox-aural-tools--install-feature-fragment-state
+     registry emacsvox-aural-enabled-feature-fragments)
+    (emacsvox-aural-tools--refresh-fragment-manager new-id)
+    (message "Created personal feature fragment %s" new-id)
+    new-id))
+
+(defun emacsvox-aural-delete-feature-fragment (&optional fragment)
+  "Delete personal feature FRAGMENT, disabling it when necessary."
+  (interactive)
+  (let* ((fragment
+          (or
+           fragment
+           (emacsvox-aural-tools--fragment-at-point-or-read
+            "Delete personal feature fragment: ")))
+         (entry
+          (or
+           (emacsvox-aural-feature-fragment-entry fragment)
+           (user-error "Unknown feature fragment: %S" fragment))))
+    (when (emacsvox-aural-feature-fragment-entry-built-in entry)
+      (user-error "Built-in feature fragment %s cannot be deleted" fragment))
+    (when
+        (or
+         (not (called-interactively-p 'interactive))
+         (yes-or-no-p
+          (format
+           "Delete personal feature fragment %s%s? "
+           fragment
+           (if (emacsvox-aural-feature-fragment-enabled-p fragment)
+               " and disable it"
+             ""))))
+      (let ((registry
+             (copy-hash-table
+              emacsvox-aural-feature-fragment-registry))
+            (enabled
+             (delq
+              fragment
+              (copy-sequence emacsvox-aural-enabled-feature-fragments))))
+        (remhash fragment registry)
+        (emacsvox-aural-tools--install-feature-fragment-state
+         registry enabled))
+      (emacsvox-aural-tools--refresh-fragment-manager)
+      (message "Deleted personal feature fragment %s" fragment)
+      fragment)))
+
+(defun emacsvox-aural-feature-fragments-toggle (&optional fragment)
+  "Enable or disable feature FRAGMENT and persist the new order."
+  (interactive)
+  (let* ((fragment
+          (or
+           fragment
+           (emacsvox-aural-tools--fragment-at-point-or-read)))
+         (enabled-p
+          (emacsvox-aural-feature-fragment-enabled-p fragment))
+         (enabled
+          (if enabled-p
+              (delq
+               fragment
+               (copy-sequence emacsvox-aural-enabled-feature-fragments))
+            (append
+             emacsvox-aural-enabled-feature-fragments
+             (list fragment)))))
+    (emacsvox-aural-tools--install-feature-fragment-state
+     (copy-hash-table emacsvox-aural-feature-fragment-registry)
+     enabled)
+    (emacsvox-aural-tools--refresh-fragment-manager fragment)
+    (message
+     "%s feature fragment %s"
+     (if enabled-p "Disabled" "Enabled")
+     fragment)
+    (not enabled-p)))
+
+(defun emacsvox-aural-feature-fragments-move (offset)
+  "Move the enabled feature fragment at point by OFFSET."
+  (let* ((fragment
+          (emacsvox-aural-tools--fragment-at-point-or-read))
+         (index
+          (cl-position fragment emacsvox-aural-enabled-feature-fragments)))
+    (unless index
+      (user-error "Enable %s before ordering it" fragment))
+    (let ((destination (+ index offset)))
+      (if (not
+           (< -1 destination
+              (length emacsvox-aural-enabled-feature-fragments)))
+          (emacsvox-aural-tools--tabulated-boundary
+           (if (< offset 0)
+               "First enabled feature fragment."
+             "Last enabled feature fragment."))
+        (let ((enabled
+               (copy-sequence
+                emacsvox-aural-enabled-feature-fragments)))
+          (cl-rotatef
+           (nth index enabled)
+           (nth destination enabled))
+          (emacsvox-aural-tools--install-feature-fragment-state
+           (copy-hash-table
+            emacsvox-aural-feature-fragment-registry)
+           enabled)
+          (emacsvox-aural-tools--refresh-fragment-manager fragment)
+          (emacsvox-aural-feature-fragments-speak-current))))))
+
+(defun emacsvox-aural-feature-fragments-move-up ()
+  "Move the enabled feature fragment at point earlier."
+  (interactive)
+  (emacsvox-aural-feature-fragments-move -1))
+
+(defun emacsvox-aural-feature-fragments-move-down ()
+  "Move the enabled feature fragment at point later."
+  (interactive)
+  (emacsvox-aural-feature-fragments-move 1))
+
+(defun emacsvox-aural-feature-fragments-edit ()
+  "Edit the personal feature fragment at point."
+  (interactive)
+  (let* ((fragment
+          (emacsvox-aural-tools--fragment-at-point-or-read))
+         (entry (emacsvox-aural-feature-fragment-entry fragment)))
+    (when (emacsvox-aural-feature-fragment-entry-built-in entry)
+      (user-error
+       "Built-in feature fragment %s is read-only; press c to copy it"
+       fragment))
+    (require 'emacsvox-aural-editor)
+    (emacsvox-edit-aural-feature-fragment fragment)))
+
+(defun emacsvox-aural-show-feature-fragment-validation
+    (&optional fragment)
+  "Validate feature FRAGMENT and display actionable diagnostics."
+  (interactive)
+  (let* ((fragment
+          (or
+           fragment
+           (emacsvox-aural-tools--fragment-at-point-or-read)))
+         (report
+          (emacsvox-aural-validate-feature-fragment fragment)))
+    (when (called-interactively-p 'interactive)
+      (emacsvox-aural-tools--display-validation
+       report "feature fragment"))
+    report))
+
+(defun emacsvox-aural-feature-fragments-help ()
+  "Display and speak feature-fragment manager help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Aural Feature Fragment Manager\n\n"
+      "One base scheme is active.  Enabled feature fragments add independent\n"
+      "presentation in the displayed order.  Personal overrides remain stronger.\n"
+      "Row and column movement speaks titles, values, and list boundaries.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
+      "RET view details     SPC speak row\n"
+      "t enable/disable     M-up/M-down reorder enabled fragments\n"
+      "N create personal    c copy as personal\n"
+      "e edit personal      d delete personal\n"
+      "v validate           g refresh\n"
+      "s scheme manager     q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode
+    emacsvox-aural-feature-fragments-mode tabulated-list-mode
+  "Aural-Fragments"
+  "Major mode for viewing and managing aural feature fragments."
+  (setq
+   tabulated-list-format
+   [("Fragment" 28 t)
+    ("Status" 12 t)
+    ("Kind" 10 t)
+    ("Rules" 8 t)
+    ("Validation" 12 t)
+    ("Summary" 0 t)])
+  (setq tabulated-list-padding 2)
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-feature-fragments--set-entries nil t)
+  (tabulated-list-init-header))
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-describe-feature-fragment)
+       ("SPC" . emacsvox-aural-feature-fragments-speak-current)
+       ("." . emacsvox-aural-feature-fragments-speak-current-cell)
+       ("n" . emacsvox-aural-feature-fragments-next)
+       ("p" . emacsvox-aural-feature-fragments-previous)
+       ("<down>" . emacsvox-aural-feature-fragments-next)
+       ("<up>" . emacsvox-aural-feature-fragments-previous)
+       ("<right>" . emacsvox-aural-feature-fragments-next-column)
+       ("<left>" . emacsvox-aural-feature-fragments-previous-column)
+       ("t" . emacsvox-aural-feature-fragments-toggle)
+       ("<M-up>" . emacsvox-aural-feature-fragments-move-up)
+       ("<M-down>" . emacsvox-aural-feature-fragments-move-down)
+       ("N" . emacsvox-aural-create-feature-fragment)
+       ("c" . emacsvox-aural-copy-feature-fragment)
+       ("e" . emacsvox-aural-feature-fragments-edit)
+       ("d" . emacsvox-aural-delete-feature-fragment)
+       ("v" . emacsvox-aural-show-feature-fragment-validation)
+       ("g" . emacsvox-aural-feature-fragments-refresh)
+       ("s" . emacsvox-aural-list-schemes)
+       ("?" . emacsvox-aural-feature-fragments-help)))
+  (define-key
+   emacsvox-aural-feature-fragments-mode-map
+   (kbd (car binding))
+   (cdr binding)))
+
+(defun emacsvox-aural-list-feature-fragments ()
+  "Open the accessible manager for aural feature fragments."
+  (interactive)
+  (let ((buffer (get-buffer-create "*Aural Feature Fragments*")))
+    (with-current-buffer buffer
+      (emacsvox-aural-feature-fragments-mode)
+      (emacsvox-aural-feature-fragments-refresh
+       (car emacsvox-aural-enabled-feature-fragments)))
+    (pop-to-buffer buffer)
+    (if (tabulated-list-get-id)
+        (when (called-interactively-p 'interactive)
+          (emacsvox-aural-feature-fragments-speak-current))
+      (when (called-interactively-p 'interactive)
+        (if (fboundp 'tts-speak)
+            (tts-speak
+             "No feature fragments are registered.  Press N to create one.")
+          (message
+           "No feature fragments are registered.  Press N to create one."))))
+    buffer))
 
 (defun emacsvox-aural-tools--humanize (value)
   "Return VALUE as concise spoken words."

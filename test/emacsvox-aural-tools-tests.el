@@ -23,11 +23,15 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-module-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-feature-fragment-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
+         (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-plan-presented-hook nil)
          (emacsvox-aural-training-mode nil)
          (emacsvox-sounds-current-pack 'chimes)
@@ -563,7 +567,9 @@
          (emacsvox-aural-edit-scheme-advanced
           . emacsvox-edit-aural-scheme-advanced)
          (emacsvox-aural-edit-rules
-          . emacsvox-edit-aural-rules)))
+          . emacsvox-edit-aural-rules)
+         (emacsvox-aural-edit-feature-fragment
+          . emacsvox-edit-aural-feature-fragment)))
     (should (commandp (car entry)))
     (should
      (eq
@@ -614,6 +620,7 @@
                ("v" . emacsvox-validate-aural-scheme)
                ("SPC" . emacsvox-aural-schemes-speak-current)
                ("." . emacsvox-aural-schemes-speak-current-cell)
+               ("f" . emacsvox-aural-list-feature-fragments)
                ("?" . emacsvox-aural-schemes-help)))
           (should
            (eq
@@ -622,6 +629,205 @@
              (kbd (car binding)))
             (cdr binding))))))
     (kill-buffer "*Aural Schemes*")))
+
+(ert-deftest emacsvox-aural-fragment-manager-rows-and-commands-are-complete ()
+  "The fragment manager exposes state, accessible navigation, and operations."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-feature-fragment
+     '(:schema-version 1
+       :id built-in-fragment
+       :summary "Built-in fragment"
+       :rules
+       ((:id built-in-heading
+         :match (:role heading)
+         :render (:content (:speak t)))))
+     :built-in t :source "test")
+    (emacsvox-aural-register-feature-fragment
+     '(:schema-version 1
+       :id personal-fragment
+       :summary "Personal fragment"
+       :rules ())
+     :source "test")
+    (emacsvox-aural-set-enabled-feature-fragments
+     '(personal-fragment built-in-fragment))
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-aural-list-feature-fragments)
+          (with-current-buffer "*Aural Feature Fragments*"
+            (let ((personal
+                   (cadr
+                    (assq
+                     'personal-fragment
+                     tabulated-list-entries)))
+                  (built-in
+                   (cadr
+                    (assq
+                     'built-in-fragment
+                     tabulated-list-entries))))
+              (should (equal (aref personal 1) "enabled 1"))
+              (should (equal (aref personal 2) "personal"))
+              (should (equal (aref built-in 1) "enabled 2"))
+              (should (equal (aref built-in 2) "built-in")))
+            (dolist
+                (binding
+                 '(("RET" . emacsvox-aural-describe-feature-fragment)
+                   ("SPC" . emacsvox-aural-feature-fragments-speak-current)
+                   ("." . emacsvox-aural-feature-fragments-speak-current-cell)
+                   ("n" . emacsvox-aural-feature-fragments-next)
+                   ("p" . emacsvox-aural-feature-fragments-previous)
+                   ("<down>" . emacsvox-aural-feature-fragments-next)
+                   ("<up>" . emacsvox-aural-feature-fragments-previous)
+                   ("<right>"
+                    . emacsvox-aural-feature-fragments-next-column)
+                   ("<left>"
+                    . emacsvox-aural-feature-fragments-previous-column)
+                   ("t" . emacsvox-aural-feature-fragments-toggle)
+                   ("<M-up>" . emacsvox-aural-feature-fragments-move-up)
+                   ("<M-down>" . emacsvox-aural-feature-fragments-move-down)
+                   ("N" . emacsvox-aural-create-feature-fragment)
+                   ("c" . emacsvox-aural-copy-feature-fragment)
+                   ("e" . emacsvox-aural-feature-fragments-edit)
+                   ("d" . emacsvox-aural-delete-feature-fragment)
+                   ("v"
+                    . emacsvox-aural-show-feature-fragment-validation)
+                   ("s" . emacsvox-aural-list-schemes)
+                   ("?" . emacsvox-aural-feature-fragments-help)))
+              (should
+               (eq
+                (lookup-key
+                 emacsvox-aural-feature-fragments-mode-map
+                 (kbd (car binding)))
+                (cdr binding))))))
+      (when (get-buffer "*Aural Feature Fragments*")
+        (kill-buffer "*Aural Feature Fragments*")))))
+
+(ert-deftest emacsvox-aural-fragment-manager-navigation-speaks-edges ()
+  "Fragment movement speaks titled cells and boundaries without repetition."
+  (emacsvox-test--with-aural-tools
+    (dolist (id '(first-fragment second-fragment))
+      (emacsvox-aural-register-feature-fragment
+       (list
+        :schema-version 1
+        :id id
+        :summary (symbol-name id)
+        :rules nil)
+       :built-in t :source "test"))
+    (emacsvox-aural-set-enabled-feature-fragments
+     '(first-fragment second-fragment))
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-aural-list-feature-fragments)
+          (with-current-buffer "*Aural Feature Fragments*"
+            (let (spoken)
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'emacsvox-icon) #'ignore))
+                (emacsvox-aural-feature-fragments-previous)
+                (should
+                 (equal spoken "Top of feature fragment list."))
+                (emacsvox-aural-feature-fragments-next)
+                (should
+                 (equal spoken "Fragment, second-fragment"))
+                (emacsvox-aural-feature-fragments-next)
+                (should
+                 (equal spoken "Bottom of feature fragment list."))
+                (emacsvox-aural-feature-fragments-next-column)
+                (should (equal spoken "Status, enabled 2"))))))
+      (when (get-buffer "*Aural Feature Fragments*")
+        (kill-buffer "*Aural Feature Fragments*")))))
+
+(ert-deftest emacsvox-aural-fragment-manager-mutates-persistent-state ()
+  "Toggle, reorder, copy, create, and delete persist one coherent state."
+  (emacsvox-test--with-aural-tools
+    (let* ((directory (make-temp-file "emacsvox-fragments-" t))
+           (emacsvox-aural-schemes-file
+            (expand-file-name "schemes.el" directory)))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-feature-fragment
+             '(:schema-version 1 :id built-in-fragment
+               :summary "Built in" :rules ())
+             :built-in t :source "test")
+            (emacsvox-aural-register-feature-fragment
+             '(:schema-version 1 :id disposable
+               :summary "Disposable" :rules ())
+             :source emacsvox-aural-schemes-file)
+            (emacsvox-aural-feature-fragments-toggle
+             'built-in-fragment)
+            (emacsvox-aural-feature-fragments-toggle 'disposable)
+            (should
+             (equal
+              emacsvox-aural-enabled-feature-fragments
+              '(built-in-fragment disposable)))
+            (cl-letf
+                (((symbol-function
+                   'emacsvox-aural-feature-fragments-speak-current)
+                  #'ignore))
+              (with-temp-buffer
+                (emacsvox-aural-feature-fragments-mode)
+                (setq
+                 tabulated-list-entries
+                 (list
+                  (emacsvox-aural-tools--fragment-row 'disposable)))
+                (tabulated-list-print)
+                (emacsvox-aural-feature-fragments-move-up)))
+            (should
+             (equal
+              emacsvox-aural-enabled-feature-fragments
+              '(disposable built-in-fragment)))
+            (emacsvox-aural-copy-feature-fragment
+             'built-in-fragment 'copied-fragment)
+            (emacsvox-aural-create-feature-fragment
+             'new-fragment "New fragment")
+            (should
+             (emacsvox-aural-feature-fragment-entry 'copied-fragment))
+            (should
+             (emacsvox-aural-feature-fragment-entry 'new-fragment))
+            (should-not
+             (emacsvox-aural-feature-fragment-enabled-p
+              'copied-fragment))
+            (emacsvox-aural-delete-feature-fragment 'disposable)
+            (should-not
+             (emacsvox-aural-feature-fragment-entry 'disposable))
+            (should
+             (equal
+              emacsvox-aural-enabled-feature-fragments
+              '(built-in-fragment)))
+            (let ((data
+                   (emacsvox-aural-read-user-data
+                    emacsvox-aural-schemes-file)))
+              (should
+               (equal
+                (plist-get data :enabled-feature-fragments)
+                '(built-in-fragment)))
+              (should
+               (equal
+                (mapcar
+                 (lambda (fragment) (plist-get fragment :id))
+                 (plist-get data :feature-fragments))
+                '(copied-fragment new-fragment)))))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-fragment-manager-rolls-back-save-errors ()
+  "A persistence failure restores the prior registry and enabled order."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-feature-fragment
+     '(:schema-version 1 :id stable-fragment
+       :summary "Stable" :rules ())
+     :source "test")
+    (let ((registry emacsvox-aural-feature-fragment-registry)
+          (enabled emacsvox-aural-enabled-feature-fragments))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-save-user-data)
+            (lambda (&rest _) (error "simulated save failure"))))
+        (should-error
+         (emacsvox-aural-feature-fragments-toggle 'stable-fragment)
+         :type 'error))
+      (should (eq emacsvox-aural-feature-fragment-registry registry))
+      (should (eq emacsvox-aural-enabled-feature-fragments enabled))
+      (should-not
+       (emacsvox-aural-feature-fragment-enabled-p 'stable-fragment)))))
 
 (ert-deftest emacsvox-aural-scheme-manager-speaks-natural-row-summary ()
   "A manager row has concise status, inheritance, resource, and count speech."
@@ -1278,6 +1484,57 @@
               (should-not (plist-get saved :enabled))
               (should-not
                (emacsvox-aural-effective-scheme-rules 'personal)))
+            (should (file-exists-p emacsvox-aural-schemes-file)))
+        (delete-directory directory t)))))
+
+(ert-deftest emacsvox-aural-editor-saves-personal-feature-fragment ()
+  "Fragment scope validates and atomically persists edited rules."
+  (emacsvox-test--with-aural-tools
+    (let* ((directory (make-temp-file "emacsvox-editor-fragment-" t))
+           (emacsvox-aural-schemes-file
+            (expand-file-name "schemes.el" directory))
+           (data
+            '(:schema-version 1
+              :id personal-fragment
+              :summary "Personal fragment"
+              :rules
+              ((:id original-fragment-rule
+                :match (:role heading)
+                :render (:content (:speak t)))))))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-feature-fragment
+             data :source emacsvox-aural-schemes-file)
+            (emacsvox-aural-set-enabled-feature-fragments
+             '(personal-fragment))
+            (with-temp-buffer
+              (emacsvox-aural-scheme-editor-mode)
+              (setq
+               emacsvox-aural-editor-scope 'fragment
+               emacsvox-aural-editor-target 'personal-fragment
+               emacsvox-aural-editor-scheme-data (copy-tree data)
+               emacsvox-aural-editor-rules
+               (copy-tree (plist-get data :rules))
+               emacsvox-aural-editor-dirty t)
+              (setf
+               (plist-get
+                (car emacsvox-aural-editor-rules)
+                :enabled)
+               nil)
+              (emacsvox-aural-editor-save))
+            (let* ((entry
+                    (emacsvox-aural-feature-fragment-entry
+                     'personal-fragment))
+                   (saved
+                    (car
+                     (plist-get
+                      (emacsvox-aural-feature-fragment-entry-data entry)
+                      :rules))))
+              (should-not (plist-get saved :enabled))
+              (should
+               (equal
+                emacsvox-aural-enabled-feature-fragments
+                '(personal-fragment))))
             (should (file-exists-p emacsvox-aural-schemes-file)))
         (delete-directory directory t)))))
 

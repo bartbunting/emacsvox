@@ -860,6 +860,7 @@ The manager exposes these stable operations:
 | =P= / =v= | Preview a representative presentation or validate          |
 | =SPC= / =.= | Speak the current row, or the titled current cell        |
 | =g= / =?= | Refresh, or display and speak manager help                  |
+| =f=       | Open the feature-fragment manager                           |
 
 Moving above or below the list announces the top or bottom instead of
 repeating the current value.  Horizontal movement announces the first and
@@ -872,6 +873,33 @@ it.  Deleting the active scheme activates its parent, or =default= when it has
 no parent.  Renaming a scheme updates direct child schemes atomically.  Copy,
 delete, and rename changes are saved through the same data-only atomic
 persistence contract as the editors.
+
+** Accessible feature-fragment manager contract
+
+=emacsvox-aural-list-feature-fragments= opens the ordered fragment manager.
+Enabled fragments appear first in their cascade order, followed by disabled
+fragments.  Each row reports enabled position, built-in or personal
+ownership, rule count, validation state, and intent summary.
+
+The manager exposes these stable operations:
+
+| Key                 | Operation                                             |
+|---------------------+-------------------------------------------------------|
+| =n= / =p=           | Move to the next or previous fragment                 |
+| =Arrows=            | Move by row or column and speak its title and value   |
+| =RET= / =SPC= / =.= | View details, speak the row, or speak the titled cell |
+| =t=                 | Enable or disable the fragment                        |
+| =M-up= / =M-down=   | Move an enabled fragment earlier or later             |
+| =N= / =c=           | Create an empty personal fragment or copy one         |
+| =e= / =d=           | Edit or delete a personal fragment                    |
+| =v= / =g= / =?=     | Validate, refresh, or display and speak help          |
+| =s=                 | Return to the scheme manager                          |
+
+Row, column, and list-boundary speech uses the same accessibility contract as
+the scheme and semantic managers.  Built-ins are viewable, copyable, and
+independently toggleable but remain read-only.  Personal fragments use the
+advanced guided rule editor; create, copy, edit, delete, enable, disable, and
+reorder operations share the versioned atomic persistence path.
 
 ** Accessible editor contract
 
@@ -907,7 +935,8 @@ pauses, per-action voice/volume, or advanced content styling.
 =emacsvox-aural-scheme-editor-mode= rule view.
 =emacsvox-edit-aural-rules= uses the same advanced view for a persistent
 personal, temporary session, source-buffer-local, or explicitly selected
-personal-scheme scope.  Built-in schemes remain read-only.
+personal-scheme or personal-feature-fragment scope.  Built-in schemes and
+fragments remain read-only.
 
 The advanced buffer exposes these stable operations:
 

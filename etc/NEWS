@@ -41,6 +41,9 @@ One base scheme remains active at a time, with any number of independently
 enabled feature fragments layered over it in explicit order.  Fragments can
 add speech, cues, or styling without copying or replacing the base scheme;
 persistent personal rules remain stronger.
+Use ~emacsvox-aural-list-feature-fragments~ for the spoken fragment manager.
+It supports viewing, creating, copying, editing, deleting, validating,
+enabling or disabling, and reordering fragments; all changes save atomically.
 The default scheme editor is now a spoken form: TAB and Shift-TAB move through
 natural-language fields, RET edits one field, and built-in schemes can be
 copied from inside the workflow.  Use
