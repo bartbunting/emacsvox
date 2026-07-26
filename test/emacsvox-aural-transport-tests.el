@@ -31,6 +31,8 @@
          (emacsvox-aural-buffer-rules nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
+         (emacsvox-aural-face-presentation-enabled t)
+         (emacsvox-aural-face-presentation-changed-hook nil)
          (emacsvox-sounds-current-pack 'chimes)
          (emacsvox-aural-spatial-enabled t)
          (emacsvox-aural-spatial-speech-enabled t)
@@ -99,7 +101,9 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         "transport-source"))
       (should (eq (plist-get context :mode) 'emacs-lisp-mode))
       (should (eq (plist-get context :module) 'elisp))
-      (should (eq (plist-get context :occasion) 'navigation)))))
+      (should (eq (plist-get context :occasion) 'navigation))
+      (should (plist-get context :face-presentation-enabled))
+      (should (plist-get context :voice-lock-enabled)))))
 
 (ert-deftest emacsvox-aural-transport-renders-templates-before-queueing ()
   "Semantic templates become concrete text at the source boundary."
@@ -678,6 +682,59 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                  (emacsvox-aural-concrete-plan-at 0 prepared))))
           (should-not
            (emacsvox-aural-concrete-content-voice-command content)))))))
+
+(ert-deftest emacsvox-aural-transport-face-rules-ignore-voice-lock ()
+  "The face-rule toggle and legacy Voice Lock remain independent at source."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-face
+        :match (:legacy-face font-lock-warning-face)
+        :render
+        (:before
+         ((:id warning-cue :kind cue :cue warn-user))
+         :content (:voice bolden)))))
+    (cl-letf (((symbol-function 'tts-get-voice-command)
+               (lambda (voice) (format "<%s>" voice))))
+      (dolist
+          (case
+           '((t t t voice-bolden)
+             (t nil t voice-bolden)
+             (nil t nil voice-lighten)
+             (nil nil nil nil)))
+        (pcase-let
+            ((`(,faces ,voice-lock ,expected-cue ,expected-voice) case))
+          (let* ((emacsvox-aural-face-presentation-enabled faces)
+                 (voice-lock-mode voice-lock)
+                 (text
+                  (propertize
+                   "warning"
+                   'face 'font-lock-warning-face
+                   'personality 'voice-lighten))
+                 (prepared (emacsvox-aural-prepare-text text))
+                 (plan (emacsvox-aural-concrete-plan-at 0 prepared))
+                 (context (emacsvox-aural-concrete-plan-context plan))
+                 (voice-command
+                  (emacsvox-aural-concrete-content-voice-command
+                   (emacsvox-aural-concrete-plan-content plan))))
+            (should
+             (eq
+              (plist-get context :face-presentation-enabled)
+              faces))
+            (should
+             (eq (plist-get context :voice-lock-enabled) voice-lock))
+            (should
+             (eq
+               (not
+               (null
+                (emacsvox-aural-concrete-plan-before plan)))
+              expected-cue))
+            (if expected-voice
+                (should
+                 (equal
+                  voice-command
+                  (emacsvox-test--transport-adapter-command
+                   expected-voice)))
+              (should-not voice-command))))))))
 
 (ert-deftest emacsvox-aural-transport-tts-speak-keeps-source-snapshot ()
   "Scratch-buffer formatting receives a plan resolved in the source mode."

@@ -33,6 +33,8 @@
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
+         (emacsvox-aural-face-presentation-enabled t)
+         (emacsvox-aural-face-presentation-changed-hook nil)
          (emacsvox-aural-plan-presented-hook nil)
          (emacsvox-aural-training-mode nil)
          (emacsvox-sounds-current-pack 'chimes)
@@ -438,7 +440,9 @@
     (let* ((facts '(:role heading))
            (context
             '(:mode text-mode :mode-lineage (text-mode)
-              :occasion continuous))
+              :occasion continuous
+              :face-presentation-enabled nil
+              :voice-lock-enabled nil))
            (explanation (emacsvox-aural-explain facts context))
            (summary
             (emacsvox-aural-tools--spoken-explanation
@@ -450,7 +454,13 @@
         "No rule matched" summary))
       (should
        (string-match-p
-        "available for navigation, 1 rule" summary)))))
+        "available for navigation, 1 rule" summary))
+      (should
+       (string-match-p
+        "Visual face scheme presentation is disabled" summary))
+      (should
+       (string-match-p
+        "Voice Lock is disabled" summary)))))
 
 (ert-deftest emacsvox-aural-tools-preview-uses-representative-context ()
   "Rule preview constructs selector-matching facts and mode context."
@@ -612,8 +622,9 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain profiles schemes features buffer-rules semantics
-                  sounds spatial spatial-settings training diagnostics)))
+                '(explain profiles schemes features face-presentation
+                  buffer-rules semantics sounds spatial spatial-settings
+                  training diagnostics)))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
@@ -626,6 +637,7 @@
                      ("<right>" . emacsvox-aural-home-next-column)
                      ("<left>" . emacsvox-aural-home-previous-column)
                      ("x" . emacsvox-aural-home-explain)
+                     ("v" . emacsvox-aural-home-toggle-face-presentation)
                      ("g" . emacsvox-aural-home-refresh)
                      ("?" . emacsvox-aural-home-help)))
                 (should
@@ -634,6 +646,18 @@
                    emacsvox-aural-home-mode-map
                    (kbd (car binding)))
                   (cdr binding)))))
+              (let (spoken)
+                (with-current-buffer "*Emacsvox Aural*"
+                  (cl-letf (((symbol-function 'tts-speak)
+                             (lambda (text) (setq spoken text))))
+                    (emacsvox-aural-home--goto 'face-presentation)
+                    (emacsvox-aural-home-toggle-face-presentation)
+                    (should-not
+                     emacsvox-aural-face-presentation-enabled)
+                    (should
+                     (string-match-p
+                      "Visual face presentation.*off"
+                      spoken)))))
             (emacsvox-list-aural-semantics)
             (with-current-buffer "*Aural Semantics*"
               (should (derived-mode-p 'emacsvox-aural-semantics-mode))

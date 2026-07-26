@@ -242,6 +242,23 @@
    (if emacsvox-aural-training-mode "enabled" "disabled")
    "Training adds a concise semantic explanation after presentations"))
 
+(defun emacsvox-aural-doctor--face-presentation-finding ()
+  "Report independent explicit-face and legacy Voice Lock controls."
+  (let ((source
+         (and
+          (buffer-live-p emacsvox-aural-tools--last-source-buffer)
+          emacsvox-aural-tools--last-source-buffer)))
+    (emacsvox-aural-doctor--finding
+     'face-presentation 'info "Visual face presentation"
+     (format
+      "face %s; Voice Lock %s"
+      (if emacsvox-aural-face-presentation-enabled "enabled" "disabled")
+      (if (emacsvox-aural-voice-lock-enabled-p source) "enabled" "disabled"))
+     (concat
+      "Explicit :legacy-face scheme rules use the global face control. "
+      "Voice Lock is per buffer and controls only legacy face/personality "
+      "voice mapping. Semantic presentation remains active."))))
+
 (defun emacsvox-aural-doctor-run ()
   "Return current aural installation and configuration findings."
   (append
@@ -263,6 +280,7 @@
     (emacsvox-aural-doctor--sound-finding)
     (emacsvox-aural-doctor--personal-data-finding)
     (emacsvox-aural-doctor--spatial-finding)
+    (emacsvox-aural-doctor--face-presentation-finding)
     (emacsvox-aural-doctor--speech-server-finding)
     (emacsvox-aural-doctor--training-finding))))
 

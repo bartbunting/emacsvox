@@ -197,5 +197,18 @@
      'voice-bolden 'face-mapping)
     '(:source face-mapping :voice voice-bolden))))
 
+(ert-deftest emacsvox-aural-face-presentation-toggle-is-independent ()
+  "The global face-rule control supports toggle and explicit prefix states."
+  (let ((emacsvox-aural-face-presentation-enabled t)
+        (emacsvox-aural-face-presentation-changed-hook nil)
+        (changes 0))
+    (add-hook
+     'emacsvox-aural-face-presentation-changed-hook
+     (lambda () (setq changes (1+ changes))))
+    (should-not (emacsvox-aural-toggle-face-presentation))
+    (should (emacsvox-aural-toggle-face-presentation 1))
+    (should-not (emacsvox-aural-toggle-face-presentation 0))
+    (should (= changes 3))))
+
 (provide 'emacsvox-aural-tests)
 ;;; emacsvox-aural-tests.el ends here

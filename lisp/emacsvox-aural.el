@@ -15,6 +15,61 @@
 (require 'cl-lib)
 (require 'subr-x)
 
+(defgroup emacsvox-aural nil
+  "Semantic aural presentation schemes."
+  :group 'emacsvox
+  :prefix "emacsvox-aural-")
+
+(defcustom emacsvox-aural-face-presentation-enabled t
+  "Whether rules selected by explicit visual faces participate.
+
+This control affects rules with a `:legacy-face' selector.  It does not
+disable semantic role, state, event, or attribute presentation, and it does
+not replace `voice-lock-mode'.  Voice Lock continues to control only the
+legacy face/personality-to-voice compatibility mapping."
+  :type 'boolean
+  :group 'emacsvox-aural)
+
+(defvar emacsvox-aural-face-presentation-changed-hook nil
+  "Hook run after explicit visual-face presentation is toggled.")
+
+(defvar voice-lock-mode)
+
+(declare-function tts-speak "tts-speak" (text))
+
+(defun emacsvox-aural-voice-lock-enabled-p (&optional buffer)
+  "Return whether legacy Voice Lock compatibility is active in BUFFER.
+
+Before Voice Lock is loaded, preserve the historical enabled default."
+  (with-current-buffer (or buffer (current-buffer))
+    (or (not (boundp 'voice-lock-mode))
+        (not (null voice-lock-mode)))))
+
+;;;###autoload
+(defun emacsvox-aural-toggle-face-presentation (&optional arg)
+  "Toggle explicit visual-face presentation.
+
+With a positive prefix ARG, enable it.  With zero or a negative prefix,
+disable it.  This does not change semantic presentation or Voice Lock."
+  (interactive "P")
+  (setq
+   emacsvox-aural-face-presentation-enabled
+   (if (null arg)
+       (not emacsvox-aural-face-presentation-enabled)
+     (> (prefix-numeric-value arg) 0)))
+  (run-hooks 'emacsvox-aural-face-presentation-changed-hook)
+  (when (called-interactively-p 'interactive)
+    (let ((text
+           (format
+            "Visual face presentation %s. Voice Lock remains independent."
+            (if emacsvox-aural-face-presentation-enabled
+                "enabled"
+              "disabled"))))
+      (if (fboundp 'tts-speak)
+          (tts-speak text)
+        (message "%s" text))))
+  emacsvox-aural-face-presentation-enabled)
+
 (define-error
   'emacsvox-aural-registration-error
   "Invalid Emacsvox aural registry entry")

@@ -2229,7 +2229,7 @@ correctly reporting unregistered variant filenames in the untracked,
 in-progress =sounds/bart/= personal pack; the audit passes when that personal
 pack is excluded, and no file in it was changed.
 
-** TODO Slice 28: Explicit Voice Lock and Face-Presentation Policy
+** DONE Slice 28: Explicit Voice Lock and Face-Presentation Policy
 
 - Decide whether Voice Lock gates all face-derived presentation, only
   face-derived voice, or only the legacy face-to-personality compatibility
@@ -2246,6 +2246,39 @@ pack is excluded, and no file in it was changed.
 
 Deliverable: users can predict and inspect exactly what disabling visual voice
 presentation changes.
+
+Implemented contract:
+
+- Voice Lock gates only the historical face/personality-to-voice
+  compatibility mapping and =:legacy-personality= selectors.  It does not
+  gate semantic rules or explicit =:legacy-face= scheme rules.
+- =emacsvox-aural-face-presentation-enabled= is a separate global,
+  default-on control for every rule containing an explicit =:legacy-face=
+  selector.  =M-x emacsvox-aural-toggle-face-presentation=, the
+  =Visual face presentation= home row, and =v= in the aural home toggle it
+  without changing Voice Lock or semantic presentation.
+- Source contexts freeze =:face-presentation-enabled= and
+  =:voice-lock-enabled=.  Matching, legacy fallback, concrete presentation,
+  point explanation, preview, and continuous speech therefore use one
+  reproducible policy snapshot.
+- Spoken and detailed explanation state both controls and their division of
+  responsibility.  The aural home reports the global face state and Voice
+  Lock state in its remembered source buffer; the Aural Doctor reports the
+  same policy without changing it.
+- The four policy combinations are covered with an explicit face cue and
+  voice, a legacy personality voice, and a semantic voice.  Disabling face
+  presentation removes only explicit face-rule contributions; disabling
+  Voice Lock removes only the legacy voice contribution; semantic
+  presentation remains in every state.
+
+Checks for Slice 28: six changed Lisp modules compile with warnings treated as
+errors; focused aural rule, transport, tools, and doctor tests pass; compiled
+aural parity passes; all 27 semantic traces match.  The full source suite has
+1,544 expected results and the existing optional Mu4e skip.  Its sole failure
+is the clean-tree resource audit correctly reporting unregistered variant
+filenames in the untracked, in-progress =sounds/bart/= personal pack.  The
+complete audit passes with only that personal pack excluded, reports the
+generated reference current, and no file in the pack was changed.
 
 ** TODO Slice 29: Composable Voice Styles and Palette Management
 
@@ -2402,21 +2435,23 @@ object, split it when range-local facts, module, occasion, or a new queued
 icon changes, and allow modules to group ranges explicitly with the
 =emacsvox-aural-object= text property.
 
+For Slice 28, choose the compatibility-only Voice Lock policy.  Voice Lock
+controls the historical face/personality voice mapping, while the independent
+default-on =emacsvox-aural-face-presentation-enabled= control gates explicit
+=:legacy-face= scheme rules.  Neither control disables semantic presentation.
+
 * Open Decisions
 
 These decisions must be resolved before their corresponding implementation
 slice:
 
-1. Whether Voice Lock gates every face-derived action, only face-derived
-   voice, or only the legacy face-to-personality compatibility mapping.  This
-   blocks Slice 28.
-2. Whether a named voice is a complete preset that resets inherited ACSS
+1. Whether a named voice is a complete preset that resets inherited ACSS
    dimensions or a reusable partial style that composes with them.  This
    blocks Slice 29.
-3. Whether critical alerts may be completely suppressed or require an
+2. Whether critical alerts may be completely suppressed or require an
     alternative presentation.
-4. The ordering policy required before minor-mode selectors are enabled.
-5. Whether future integrations need additional occasions and whether those
+3. The ordering policy required before minor-mode selectors are enabled.
+4. Whether future integrations need additional occasions and whether those
     are core or module extensions.
 
 Initial recommendations are:

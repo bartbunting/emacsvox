@@ -1649,6 +1649,30 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
      matching
      "; ")))
 
+(defun emacsvox-aural-tools--context-control
+    (context key fallback)
+  "Return boolean control KEY from CONTEXT, or FALLBACK when absent."
+  (if (plist-member context key)
+      (plist-get context key)
+    fallback))
+
+(defun emacsvox-aural-tools--face-policy-description (context)
+  "Describe frozen face and Voice Lock controls in CONTEXT."
+  (format
+   "Visual face scheme presentation is %s. Voice Lock is %s and controls only legacy face and personality voice mapping"
+   (if
+       (emacsvox-aural-tools--context-control
+        context :face-presentation-enabled
+        emacsvox-aural-face-presentation-enabled)
+       "enabled"
+     "disabled")
+   (if
+       (emacsvox-aural-tools--context-control
+        context :voice-lock-enabled
+        (emacsvox-aural-voice-lock-enabled-p))
+       "enabled"
+     "disabled")))
+
 (defun emacsvox-aural-tools--spoken-explanation
     (explanation &optional occasion-counts)
   "Return a concise spoken summary of EXPLANATION.
@@ -1687,6 +1711,9 @@ selected occasion has no matching rule."
        (format
         "Occasion %s."
         (emacsvox-aural-tools--humanize occasion))
+       (concat
+        (emacsvox-aural-tools--face-policy-description context)
+        ".")
        (when faces
          (format
           "Captured visual %s %s, strongest first, from %s."
@@ -1779,6 +1806,10 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
         "Module: %s; mode: %s\n"
         (or (plist-get context :module) "none")
         (or (plist-get context :mode) "none")))
+      (princ
+       (concat
+        (emacsvox-aural-tools--face-policy-description context)
+        ".\n"))
       (when-let* ((faces (plist-get context :legacy-faces)))
         (princ
          (format
@@ -2978,6 +3009,17 @@ SCOPE is `personal', `session', or `buffer'."
         #'symbol-name emacsvox-aural-enabled-feature-fragments ", "))
     "none enabled"))
 
+(defun emacsvox-aural-home--face-presentation-status ()
+  "Return face-scheme and source-buffer Voice Lock status."
+  (let ((source (emacsvox-aural-home--source-buffer)))
+    (format
+     "%s; Voice Lock %s%s"
+     (if emacsvox-aural-face-presentation-enabled "on" "off")
+     (if (emacsvox-aural-voice-lock-enabled-p source) "on" "off")
+     (if source
+         (format " in %s" (buffer-name source))
+       ""))))
+
 (defun emacsvox-aural-home--profile-status ()
   "Return concise status for complete saved presentation profiles."
   (require 'emacsvox-aural-profiles)
@@ -3037,6 +3079,12 @@ SCOPE is `personal', `session', or `buffer'."
        "Feature fragments"
        (emacsvox-aural-home--enabled-fragment-status)
        "Layer and order independent presentation additions"))
+     (list
+      'face-presentation
+      (vector
+       "Visual face presentation"
+       (emacsvox-aural-home--face-presentation-status)
+       "Toggle explicit face scheme rules; Voice Lock independently controls legacy voices"))
      (list
       'buffer-rules
       (vector
@@ -3164,6 +3212,13 @@ SCOPE is `personal', `session', or `buffer'."
   (require 'emacsvox-aural-profiles)
   (emacsvox-aural-list-profiles))
 
+(defun emacsvox-aural-home-toggle-face-presentation ()
+  "Toggle explicit face scheme rules and speak the refreshed home row."
+  (interactive)
+  (emacsvox-aural-toggle-face-presentation)
+  (emacsvox-aural-home-refresh 'face-presentation)
+  (emacsvox-aural-home-speak-current))
+
 (defun emacsvox-aural-home-activate ()
   "Perform the primary operation for the aural home row at point."
   (interactive)
@@ -3174,6 +3229,8 @@ SCOPE is `personal', `session', or `buffer'."
     ('profiles (emacsvox-aural-home-profiles))
     ('schemes (emacsvox-aural-list-schemes))
     ('features (emacsvox-aural-list-feature-fragments))
+    ('face-presentation
+     (emacsvox-aural-home-toggle-face-presentation))
     ('buffer-rules
      (let ((source (emacsvox-aural-home--source-buffer)))
        (unless source
@@ -3208,7 +3265,8 @@ SCOPE is `personal', `session', or `buffer'."
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
       "x explain at point   P presentation profiles\n"
-      "D aural doctor       g refresh\n"
+      "v face rules toggle  D aural doctor\n"
+      "g refresh\n"
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
@@ -3244,6 +3302,7 @@ SCOPE is `personal', `session', or `buffer'."
        ("<left>" . emacsvox-aural-home-previous-column)
        ("x" . emacsvox-aural-home-explain)
        ("P" . emacsvox-aural-home-profiles)
+       ("v" . emacsvox-aural-home-toggle-face-presentation)
        ("D" . emacsvox-aural-doctor)
        ("g" . emacsvox-aural-home-refresh)
        ("?" . emacsvox-aural-home-help)))
@@ -3286,6 +3345,9 @@ SCOPE is `personal', `session', or `buffer'."
  #'emacsvox-aural-home-refresh-if-live)
 (add-hook
  'emacsvox-aural-feature-fragments-changed-hook
+ #'emacsvox-aural-home-refresh-if-live)
+(add-hook
+ 'emacsvox-aural-face-presentation-changed-hook
  #'emacsvox-aural-home-refresh-if-live)
 
 (defun emacsvox-aural-concise-explanation (facts context)

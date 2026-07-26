@@ -82,6 +82,10 @@
          (server
           (cl-find
            'speech-server findings
+           :key #'emacsvox-aural-doctor-finding-id))
+         (face-policy
+          (cl-find
+           'face-presentation findings
            :key #'emacsvox-aural-doctor-finding-id)))
     (unwind-protect
         (progn
@@ -93,7 +97,12 @@
           (should
            (cl-find
             'active-scheme findings
-            :key #'emacsvox-aural-doctor-finding-id)))
+            :key #'emacsvox-aural-doctor-finding-id))
+          (should face-policy)
+          (should
+           (string-match-p
+            "Voice Lock"
+            (emacsvox-aural-doctor-finding-detail face-policy))))
       (delete-directory directory t))))
 
 (ert-deftest emacsvox-aural-doctor-manager-is-spoken-and-refreshable ()

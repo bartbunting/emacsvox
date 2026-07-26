@@ -54,6 +54,7 @@
 
 (defconst emacsvox-aural--context-keys
   '(:module :mode :mode-lineage :occasion :legacy-cue
+    :face-presentation-enabled :voice-lock-enabled
     :legacy-face-source :legacy-faces :legacy-face-provenance
     :legacy-personality
     :legacy-source :source-buffer :source-buffer-name)
@@ -123,6 +124,7 @@
      (:constructor emacsvox-aural--make-input))
   "Normalized semantic facts and presentation context."
   role events states attributes content module mode mode-lineage occasion
+  face-presentation-enabled voice-lock-enabled
   legacy-cue legacy-face-source legacy-faces legacy-face-provenance
   legacy-personality
   legacy-source source-buffer source-buffer-name)
@@ -833,6 +835,14 @@ LAYER-ORDER records inheritance order within one origin."
          (module (plist-get context :module))
          (mode (plist-get context :mode))
          (occasion (plist-get context :occasion))
+         (face-presentation-enabled
+          (if (plist-member context :face-presentation-enabled)
+              (plist-get context :face-presentation-enabled)
+            emacsvox-aural-face-presentation-enabled))
+         (voice-lock-enabled
+          (if (plist-member context :voice-lock-enabled)
+              (plist-get context :voice-lock-enabled)
+            (emacsvox-aural-voice-lock-enabled-p)))
          (legacy-cue (plist-get context :legacy-cue))
          (legacy-face-source (plist-get context :legacy-face-source))
          (legacy-faces (plist-get context :legacy-faces))
@@ -860,6 +870,14 @@ LAYER-ORDER records inheritance order within one origin."
       (unless (emacsvox-aural-occasion occasion)
         (emacsvox-aural--rule-error
          "Context occasion is not registered: %S" occasion)))
+    (unless (memq face-presentation-enabled '(nil t))
+      (emacsvox-aural--rule-error
+       "Context face presentation state must be boolean: %S"
+       face-presentation-enabled))
+    (unless (memq voice-lock-enabled '(nil t))
+      (emacsvox-aural--rule-error
+       "Context Voice Lock state must be boolean: %S"
+       voice-lock-enabled))
     (when legacy-cue
       (emacsvox-aural--require-symbol legacy-cue "Context legacy cue"))
     (when legacy-face-source
@@ -922,6 +940,8 @@ LAYER-ORDER records inheritance order within one origin."
      :mode mode
      :mode-lineage (copy-sequence lineage)
      :occasion occasion
+     :face-presentation-enabled face-presentation-enabled
+     :voice-lock-enabled voice-lock-enabled
      :legacy-cue legacy-cue
      :legacy-face-source legacy-face-source
      :legacy-faces (delete-dups (copy-sequence legacy-faces))
@@ -988,12 +1008,16 @@ LAYER-ORDER records inheritance order within one origin."
       (eq legacy-cue (emacsvox-aural-input-legacy-cue input)))
      (or
       (null legacy-face)
-      (memq legacy-face (emacsvox-aural-input-legacy-faces input)))
+      (and
+       (emacsvox-aural-input-face-presentation-enabled input)
+       (memq legacy-face (emacsvox-aural-input-legacy-faces input))))
      (or
       (null legacy-personality)
-      (equal
-       legacy-personality
-       (emacsvox-aural-input-legacy-personality input))))))
+      (and
+       (emacsvox-aural-input-voice-lock-enabled input)
+       (equal
+        legacy-personality
+        (emacsvox-aural-input-legacy-personality input)))))))
 
 (defun emacsvox-aural-rule-score (rule input)
   "Return RULE specificity vector for normalized INPUT."

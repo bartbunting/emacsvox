@@ -29,11 +29,6 @@
 
 (declare-function emacsvox-sounds-follow-aural-scheme "emacsvox-sounds")
 
-(defgroup emacsvox-aural nil
-  "Semantic aural presentation schemes."
-  :group 'emacsvox
-  :prefix "emacsvox-aural-")
-
 (define-error
   'emacsvox-aural-scheme-error
   "Invalid Emacsvox contextual aural scheme")
@@ -530,6 +525,10 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
    :mode major-mode
    :mode-lineage (emacsvox-aural-mode-lineage major-mode)
    :occasion occasion
+   :face-presentation-enabled
+   emacsvox-aural-face-presentation-enabled
+   :voice-lock-enabled
+   (emacsvox-aural-voice-lock-enabled-p)
    :legacy-personality legacy-personality
    :legacy-source legacy-source
    :source-buffer (current-buffer)
@@ -542,6 +541,9 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
          (content (emacsvox-aural-render-plan-content plan)))
     (when
         (and
+         (if (plist-member context :voice-lock-enabled)
+             (plist-get context :voice-lock-enabled)
+           (emacsvox-aural-voice-lock-enabled-p))
          legacy
          (not
           (assq

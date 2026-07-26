@@ -788,11 +788,12 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
           (emacsvox-aural--string-face-snapshot text position))
          (legacy-faces
           (emacsvox-aural--source-face-names face-snapshot))
+         (run-context (copy-tree base-context))
          (legacy
           (and
-           (or
-            (not (boundp 'voice-lock-mode))
-            voice-lock-mode)
+           (if (plist-member run-context :voice-lock-enabled)
+               (plist-get run-context :voice-lock-enabled)
+             (emacsvox-aural-voice-lock-enabled-p))
            (emacsvox-aural--string-style
             text position face-snapshot)))
          (local-facts
@@ -800,7 +801,6 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
            position emacsvox-aural-facts-property text))
          (run-facts
           (emacsvox-aural--merge-facts base-facts local-facts))
-         (run-context (copy-tree base-context))
          (module
           (get-text-property
            position emacsvox-aural-module-property text))

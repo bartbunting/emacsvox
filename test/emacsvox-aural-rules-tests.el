@@ -309,6 +309,57 @@
          (emacsvox-aural-render-plan-content semantic-plan))
         'annotate)))))
 
+(ert-deftest emacsvox-aural-rules-separate-face-and-voice-lock-controls ()
+  "Face rules, legacy personality rules, and semantic rules have distinct gates."
+  (let* ((face
+          (emacsvox-test--compile-rule
+           'face-warning
+           '(:legacy-face font-lock-warning-face)
+           '(:before
+             ((:id face-cue :kind cue :cue warn-user)))))
+         (legacy
+          (emacsvox-test--compile-rule
+           'legacy-voice
+           '(:legacy-personality voice-bolden)
+           '(:after
+             ((:id legacy-label :kind speech :text "legacy voice")))))
+         (semantic
+          (emacsvox-test--compile-rule
+           'semantic-heading
+           '(:role heading)
+           '(:content (:voice annotate))))
+         (rules (list face legacy semantic))
+         (base
+          '(:mode text-mode :mode-lineage (text-mode)
+            :occasion navigation
+            :legacy-faces (font-lock-warning-face)
+            :legacy-personality voice-bolden)))
+    (dolist
+        (case
+         '((t t (face-warning legacy-voice semantic-heading))
+           (nil t (legacy-voice semantic-heading))
+           (t nil (face-warning semantic-heading))
+           (nil nil (semantic-heading))))
+      (pcase-let ((`(,faces ,voice-lock ,expected) case))
+        (let* ((context
+                (append
+                 (list
+                  :face-presentation-enabled faces
+                  :voice-lock-enabled voice-lock)
+                 base))
+               (plan
+                (emacsvox-aural-resolve
+                 '(:role heading) context rules)))
+          (should
+           (equal
+            (emacsvox-aural-render-plan-matched-rules plan)
+            expected))
+          (should
+           (eq
+            (emacsvox-aural-content-style-voice
+             (emacsvox-aural-render-plan-content plan))
+            'annotate)))))))
+
 (ert-deftest emacsvox-aural-rules-match-presentation-occasion ()
   "Occasion changes matching presentation without changing semantic facts."
   (let* ((rules
