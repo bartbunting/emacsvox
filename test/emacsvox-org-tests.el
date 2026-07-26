@@ -139,6 +139,68 @@
       (nreverse events)
       '((icon item) speak-item)))))
 
+(ert-deftest emacsvox-org-item-feedback-captures-semantic-boundary ()
+  "Item movement exposes stable intent to both its cue and speech."
+  (let ((ems--interactive-fn-name 'org-next-item)
+        presentations)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (_)
+            (push
+             (list
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             presentations)))
+         ((symbol-function 'emacsvox-org-speak-item)
+          (lambda ()
+            (push
+             (list
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             presentations))))
+      (emacsvox--advice-org-next-item-after))
+    (should (= (length presentations) 2))
+    (dolist (presentation presentations)
+      (should
+       (equal
+        (car presentation)
+        '(:role org-item :events (focus-entered)
+          :org-action item-navigation)))
+      (should (eq (plist-get (cadr presentation) :module) 'org))
+      (should
+       (eq (plist-get (cadr presentation) :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-org-owned-semantics-are-registered ()
+  "Org roles and operation intent are part of the inspectable contract."
+  (dolist
+      (semantic
+       '(org-content org-item org-paragraph org-agenda-entry org-table
+                     org-capture org-edit-buffer org-export org-action))
+    (should (emacsvox-aural-semantic semantic)))
+  (should
+   (eq
+    (emacsvox-aural-semantic-kind
+    (emacsvox-aural-semantic 'org-action))
+    'attribute)))
+
+(ert-deftest emacsvox-org-action-allows-specific-cue-overrides ()
+  "A user rule can alter one Org operation without changing other modules."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-user-rules
+         '((:id suppress-org-item-navigation
+            :match
+            (:role org-item :module org :org-action item-navigation)
+            :render (:before (:remove (legacy-cue))))))
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil))
+    (should-not
+     (emacsvox-aural-render-plan-before
+      (emacsvox-aural-resolve-legacy-icon
+       'item
+       (emacsvox-test--org-context)
+       (emacsvox-org--feedback-facts
+        'org-item 'focus-entered 'item-navigation))))))
+
 (ert-deftest emacsvox-org-structure-feedback-preserves-order ()
   "Org structure movement speaks before its large-movement cue."
   (let ((ems--interactive-fn-name 'org-next-visible-heading)

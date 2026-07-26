@@ -208,6 +208,15 @@ Operational semantic contract version: =1=.
 | =object-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered object was created or modified |
 | =operation-completed= | =event= | =core= | - | - | - | - | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation completed successfully |
 | =operation-failed= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation failed |
+| =org-action= | =attribute= | =org= | =item-navigation=, =structure-navigation=, =paragraph-navigation=, =list-style-changed=, =heading-edited=, =subtree-changed=, =option-toggled=, =timestamp-changed=, =agenda-navigation=, =agenda-opened=, =agenda-closed=, =table-mode-toggled=, =line-inserted=, =checkbox-toggled=, =item-boundary=, =line-start=, =line-end=, =capture-target=, =capture-saved=, =capture-cancelled=, =edit-opened=, =edit-closed=, =paragraph-filled=, =todo-changed=, =list-item-created=, =export-completed=, =publish-completed= | =heading=, =org-content=, =org-item=, =org-paragraph=, =org-agenda-entry=, =org-table=, =org-capture=, =org-edit-buffer=, =org-export= | - | - | - | - | - | - | The user-visible Org operation being presented |
+| =org-agenda-entry= | =role= | =org= | - | - | - | - | - | - | - | - | One entry in an Org agenda |
+| =org-capture= | =role= | =org= | - | - | - | - | - | - | - | - | An Org capture target or capture lifecycle operation |
+| =org-content= | =role= | =org= | - | - | - | - | - | - | - | - | Ordinary content in an Org document |
+| =org-edit-buffer= | =role= | =org= | - | - | - | - | - | - | - | - | A temporary Org source-editing buffer |
+| =org-export= | =role= | =org= | - | - | - | - | - | - | - | - | An Org export or publishing operation |
+| =org-item= | =role= | =org= | - | - | - | - | - | - | - | - | One list item in an Org document |
+| =org-paragraph= | =role= | =org= | - | - | - | - | - | - | - | - | One prose paragraph in an Org document |
+| =org-table= | =role= | =org= | - | - | - | - | - | - | - | - | An Org table or table cell |
 | =permission-request= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | An agent action awaiting user permission |
 | =processing= | =state= | =agent-shell= | - | - | - | - | - | =continuous=, =notification= | =before=, =content=, =after= | - | An agent session is processing a request |
 | =processing-completed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent completed initialization or a request |
@@ -441,7 +450,7 @@ To migrate styled text, keep existing =personality= or face properties while add
 
 A text run may carry an ordered list of named faces.  Every matching face rule participates in normal rule composition, so append or prepend operations can accumulate cues.  The first, strongest Emacs face wins a tie between face-only scalar settings such as content voice.  Semantic identity remains stronger within the same rule origin, while stronger user, session, and buffer origins can intentionally override module defaults.  Source overlay faces are snapshotted strongest-first before copying, followed by explicit =face= and =font-lock-face= text names.  String face names are normalized to their existing face symbols, and anonymous faces contribute only explicit named =:inherit= values.  Module speech paths should copy styled ranges with =emacsvox-aural-source-substring= so heard output and point explanation share this snapshot.
 
-Agent Shell, Markdown, Notmuch, Gnus, Dired, and Magit now attach registered conversation, document, message, filesystem, and version-control facts around their established feedback.  Their speech and cue order remains unchanged unless a scheme or fragment matches the new facts.  Optional fragments demonstrate customization without requiring the corresponding third-party package at startup.
+Agent Shell, Markdown, Org, Notmuch, Gnus, Dired, and Magit now attach registered conversation, document, organizer, message, filesystem, and version-control facts around their established feedback.  Their speech and cue order remains unchanged unless a scheme or fragment matches the new facts.  Optional fragments demonstrate customization without requiring the corresponding third-party package at startup.
 
 Rollout is deliberately staged.  The default scheme is compatibility preserving, the Org variants are selectable examples, and integrations move in small tested batches.  Critical alerts currently follow the same explicit suppression contract as other actions; deployments that require a mandatory alternative should enforce that policy in a site scheme until a shared critical-alert contract is registered.
 

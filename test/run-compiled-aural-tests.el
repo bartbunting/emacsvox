@@ -2,9 +2,9 @@
 
 ;;; Commentary:
 
-;; Compile the runtime extension boundary and its principal callers into an
-;; isolated directory, then verify them in a clean child Emacs.  No byte-code
-;; is written into the source tree.
+;; Compile the complete aural subsystem into an isolated directory, then
+;; verify it in a clean child Emacs.  No byte-code is written into the source
+;; tree.
 
 ;;; Code:
 
@@ -17,7 +17,25 @@
        (lisp-directory (expand-file-name "lisp/" root-directory))
        (build-directory (make-temp-file "emacsvox-compiled-aural-" t))
        (files
-        '("tts-speak.el" "emacsvox-aural-tools.el" "emacsvox-keymap.el"))
+        '("tts-speak.el"
+          "emacsvox-aural.el"
+          "emacsvox-aural-spatial.el"
+          "emacsvox-aural-rules.el"
+          "emacsvox-aural-resources.el"
+          "emacsvox-aural-schemes.el"
+          "emacsvox-aural-transport.el"
+          "emacsvox-aural-tools.el"
+          "emacsvox-aural-editor.el"
+          "emacsvox-aural-simple-editor.el"
+          "emacsvox-aural-doctor.el"
+          "emacsvox-aural-profiles.el"
+          "emacsvox-aural-voice-palettes.el"
+          "emacsvox-aural-org.el"
+          "emacsvox-aural-representative.el"
+          "emacsvox-aural-markdown.el"
+          "emacsvox-sounds.el"
+          "emacsvox-aural-sound-packs.el"
+          "emacsvox-keymap.el"))
        (byte-compile-dest-file-function
         (lambda (source)
           (expand-file-name
@@ -30,6 +48,7 @@
   (unwind-protect
       (progn
         (add-to-list 'load-path lisp-directory)
+        (add-to-list 'load-path build-directory)
         (setq load-prefer-newer t)
         (dolist (file files)
           (let ((source (expand-file-name file lisp-directory)))

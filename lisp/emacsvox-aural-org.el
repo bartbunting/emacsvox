@@ -15,9 +15,63 @@
 
 (require 'emacsvox-aural-schemes)
 
+(defconst emacsvox-org-aural-semantic-definitions
+  '((org-content
+     :kind role
+     :summary "Ordinary content in an Org document"
+     :owner org)
+    (org-item
+     :kind role
+     :summary "One list item in an Org document"
+     :owner org)
+    (org-paragraph
+     :kind role
+     :summary "One prose paragraph in an Org document"
+     :owner org)
+    (org-agenda-entry
+     :kind role
+     :summary "One entry in an Org agenda"
+     :owner org)
+    (org-table
+     :kind role
+     :summary "An Org table or table cell"
+     :owner org)
+    (org-capture
+     :kind role
+     :summary "An Org capture target or capture lifecycle operation"
+     :owner org)
+    (org-edit-buffer
+     :kind role
+     :summary "A temporary Org source-editing buffer"
+     :owner org)
+    (org-export
+     :kind role
+     :summary "An Org export or publishing operation"
+     :owner org)
+    (org-action
+     :kind attribute
+     :summary "The user-visible Org operation being presented"
+     :owner org
+     :roles
+     (heading org-content org-item org-paragraph org-agenda-entry org-table
+              org-capture org-edit-buffer org-export)
+     :value-type symbol
+     :allowed-values
+     (item-navigation structure-navigation paragraph-navigation
+                      list-style-changed heading-edited subtree-changed
+                      option-toggled timestamp-changed agenda-navigation
+                      agenda-opened agenda-closed table-mode-toggled
+                      line-inserted checkbox-toggled item-boundary line-start
+                      line-end capture-target capture-saved capture-cancelled
+                      edit-opened edit-closed paragraph-filled todo-changed
+                      list-item-created export-completed publish-completed)))
+  "Semantic definitions owned by the Org integration.")
+
 (defconst emacsvox-org-aural-semantics
-  '(heading level visibility folded focus-entered state-changed object-changed)
-  "Core semantic identifiers interpreted by the Org integration.")
+  '(heading level visibility folded focus-entered state-changed object-changed
+            org-content org-item org-paragraph org-agenda-entry org-table
+            org-capture org-edit-buffer org-export org-action)
+  "Semantic identifiers interpreted by the Org integration.")
 
 (defconst emacsvox-org-aural-level-voices
   '((1 . bolden)
@@ -194,6 +248,11 @@
 
 (defun emacsvox-org-register-aural-presentation ()
   "Register Org compatibility rules, examples, and optional fragments."
+  (dolist (definition emacsvox-org-aural-semantic-definitions)
+    (let ((id (car definition))
+          (metadata (cdr definition)))
+      (unless (emacsvox-aural-semantic id)
+        (apply #'emacsvox-aural-register-semantic id metadata))))
   (emacsvox-org--require-aural-semantics)
   (unless (gethash 'org-compatibility
                    emacsvox-aural-module-fragment-registry)

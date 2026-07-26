@@ -87,9 +87,12 @@ Markdown exposes headings, task state, lists, links, code blocks, tables,
 footnotes, separators, visibility, and document operations, with the same
 heading intent whether movement is by line or structural command.
 
+Org exposes heading, content, list, paragraph, agenda, table, capture,
+source-edit, and export intent.  Its =org-action= attribute distinguishes
+navigation and lifecycle operations without hard-coding their presentation.
 Notmuch, Gnus, Dired, and Magit also place all retained compatibility cues
 inside semantic presentation boundaries.  The repository audit treats these
-six modules as migrated and rejects a new context-free direct icon call.
+seven modules as migrated and rejects a new context-free direct icon call.
 
 ** Quick Installation Instructions
 
@@ -155,6 +158,12 @@ For a more detailed installation guide, and further instructions on usage, see t
    (load-file "<emacsvox-dir>/lisp/emacsvox-setup.el")
    #+END_SRC
    Replace <emacsvox-dir> with the directory where you unpacked the sources.
+   In a changing source checkout, rebuild with =make config && make= and keep
+   this explicit =load-file= form.  It lets the setup entry point warn and
+   prefer source if newer Lisp would otherwise be hidden by stale byte-code.
+   A stable installed build may instead use =(load-library
+   "emacsvox-setup")=.  See [[file:etc/install.org][the installation guide]]
+   for the source-checkout and installed-package details.
 
 ** Requirements
 

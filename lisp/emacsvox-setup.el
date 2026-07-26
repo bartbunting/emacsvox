@@ -40,28 +40,93 @@
 ;; The simplest and most basic way to start emacsvox is:
 ;; emacs -q -l <emacsvox-dir>/lisp/emacsvox-setup.el
 ;; The above starts a vanilla Emacs with just Emacsvox loaded.
+;; Loading this source file also detects newer startup sources that would
+;; otherwise be hidden by stale byte-code and temporarily prefers those
+;; sources.  Rebuild a changed checkout rather than relying on that fallback.
 ;; Once the above has been verified to work,
 ;; You can  add
 ;; (load-library "emacsvox-setup")
-;; To your .emacs file.
+;; To your .emacs file when using an installed, already-built copy.
 ;; See tvr/emacs-startup.el in the Emacsvox Git repository for  my setup.
 
 ;;; Code:
 
-;;; Load-path:
-(eval-when-compile (require 'cl-lib))
-(cl-pushnew (file-name-directory load-file-name) load-path :test #'string=)
-(require 'emacsvox-preamble)
+(require 'cl-lib)
 
-;; load and start emacsvox if interactive
-(require 'emacsvox)
-(unless noninteractive
-  (let ((file-name-handler-alist nil)
-        (load-source-file-function nil))
-    (load  "emacsvox-loaddefs")
-    (emacsvox)))
+(declare-function emacsvox "emacsvox" ())
+
+(defconst emacsvox-setup--startup-sources
+  '("emacsvox-preamble.el"
+    "emacsvox-loaddefs.el"
+    "emacsvox-keymap.el"
+    "emacsvox-aural.el"
+    "emacsvox-aural-spatial.el"
+    "emacsvox-aural-rules.el"
+    "emacsvox-aural-resources.el"
+    "emacsvox-aural-schemes.el"
+    "emacsvox-aural-transport.el"
+    "emacsvox-aural-tools.el"
+    "emacsvox-aural-editor.el"
+    "emacsvox-aural-simple-editor.el"
+    "emacsvox-aural-doctor.el"
+    "emacsvox-aural-profiles.el"
+    "emacsvox-aural-voice-palettes.el"
+    "emacsvox-aural-org.el"
+    "emacsvox-aural-representative.el"
+    "emacsvox-aural-markdown.el"
+    "emacsvox-sounds.el"
+    "emacsvox-aural-sound-packs.el"
+    "emacsvox.el"
+    "emacsvox-setup.el")
+  "Sources whose byte-code must not shadow a newer aural startup.")
+
+(defun emacsvox-setup--stale-byte-code (&optional directory)
+  "Return startup sources newer than their byte-code in DIRECTORY."
+  (let ((directory
+         (file-name-as-directory
+          (or directory
+              (file-name-directory
+               (or load-file-name buffer-file-name)))))
+        stale)
+    (dolist (name emacsvox-setup--startup-sources)
+      (let* ((source (expand-file-name name directory))
+             (compiled (concat source "c")))
+        (when
+            (and
+             (file-exists-p source)
+             (file-exists-p compiled)
+             (file-newer-than-file-p source compiled))
+          (push source stale))))
+    (nreverse stale)))
+
+(defun emacsvox-setup--load (directory)
+  "Load Emacsvox from DIRECTORY without allowing stale byte-code to win."
+  (let* ((stale (emacsvox-setup--stale-byte-code directory))
+         (load-prefer-newer (or load-prefer-newer (and stale t))))
+    (when stale
+      (display-warning
+       'emacsvox
+       (format
+        (concat
+         "Newer Emacsvox source will be loaded instead of stale byte-code: %s. "
+         "Run make config && make from the repository root to rebuild it.")
+        (mapconcat #'file-name-nondirectory stale ", "))
+       :warning))
+    (add-to-list 'load-path directory)
+    (require 'emacsvox-preamble)
+
+    ;; Load and start Emacsvox if interactive.
+    (require 'emacsvox)
+    (unless noninteractive
+      (let ((file-name-handler-alist nil)
+            (load-source-file-function nil))
+        (load "emacsvox-loaddefs")
+        (emacsvox)))))
+
+;;; Load-path:
+(emacsvox-setup--load
+ (file-name-directory (or load-file-name buffer-file-name)))
 
 (provide 'emacsvox-setup)
 
 ;; mode: emacs-lisp
-

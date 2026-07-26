@@ -49,6 +49,10 @@
      emacsvox-agent-shell--present-feedback)
     (emacsvox-markdown.el
      emacsvox-markdown--call-with-aural-presentation)
+    (emacsvox-org.el
+     emacsvox-org--call-with-aural-presentation
+     emacsvox-org--present-feedback
+     emacsvox-org--present-feedback-after)
     (emacsvox-notmuch.el
      emacsvox-notmuch--call-with-aural-presentation
      emacsvox-notmuch--present-feedback)
@@ -886,8 +890,8 @@ below a presentation boundary."
    "Module speech paths should copy styled ranges with "
    "=emacsvox-aural-source-substring= so heard output and point explanation "
    "share this snapshot.\n\n"
-   "Agent Shell, Markdown, Notmuch, Gnus, Dired, and Magit now attach "
-   "registered conversation, document, message, filesystem, and "
+   "Agent Shell, Markdown, Org, Notmuch, Gnus, Dired, and Magit now attach "
+   "registered conversation, document, organizer, message, filesystem, and "
    "version-control facts around their established feedback.  Their speech "
    "and cue order remains unchanged unless a scheme or fragment matches the "
    "new facts.  Optional fragments demonstrate customization without "

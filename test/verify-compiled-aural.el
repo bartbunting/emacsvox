@@ -21,13 +21,50 @@
        (lisp-directory (expand-file-name "lisp/" root-directory)))
   (add-to-list 'load-path lisp-directory)
   (add-to-list 'load-path build-directory)
-  (load (expand-file-name "tts-speak.elc" build-directory) nil nil)
-  (load (expand-file-name "emacsvox-aural-tools.elc" build-directory) nil nil)
-  (load (expand-file-name "emacsvox-keymap.elc" build-directory) nil nil)
+  (dolist
+      (library
+       '("tts-speak"
+         "emacsvox-aural"
+         "emacsvox-aural-spatial"
+         "emacsvox-aural-rules"
+         "emacsvox-aural-resources"
+         "emacsvox-aural-schemes"
+         "emacsvox-aural-transport"
+         "emacsvox-aural-tools"
+         "emacsvox-aural-editor"
+         "emacsvox-aural-simple-editor"
+         "emacsvox-aural-doctor"
+         "emacsvox-aural-profiles"
+         "emacsvox-aural-voice-palettes"
+         "emacsvox-aural-org"
+         "emacsvox-aural-representative"
+         "emacsvox-aural-markdown"
+         "emacsvox-sounds"
+         "emacsvox-aural-sound-packs"
+         "emacsvox-keymap"))
+    (load
+     (expand-file-name (concat library ".elc") build-directory)
+     nil nil))
   (dolist
       (function
        '(tts--protocol-queue-text
+         emacsvox-aural-voice-lock-enabled-p
+         emacsvox-aural-spatial-clamp
+         emacsvox-aural--rule-error
+         emacsvox-aural--resource-error
+         emacsvox-aural--migrate-user-data-v1-to-v2
+         emacsvox-aural--transport-error
          emacsvox-aural-tools--training-presented
+         emacsvox-aural-editor--scope-label
+         emacsvox-aural-simple-editor--humanize
+         emacsvox-aural-doctor--finding
+         emacsvox-aural-profiles--ids
+         emacsvox-aural-voice-palettes--active-id
+         emacsvox-org--require-aural-semantics
+         emacsvox-aural-register-representative-semantics
+         emacsvox-markdown-register-aural-presentation
+         emacsvox-toggle-icons
+         emacsvox-aural-sound-packs--symbol-less-p
          emacsvox-keymap-update))
     (unless
         (string-suffix-p

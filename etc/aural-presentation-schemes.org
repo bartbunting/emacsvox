@@ -2474,7 +2474,7 @@ previously recorded untracked =sounds/bart/= pack containing
 =large-movement-02=.  Compiled aural parity passes, all 27 semantic traces
 match, the generated reference is current, and no personal sound was changed.
 
-** TODO Slice 32: Complete Build and Resume Migration
+** DONE Slice 32: Complete Build and Resume Migration
 
 - Add every shipped aural module and manager to the normal Lisp build in
   dependency order.
@@ -2490,6 +2490,40 @@ match, the generated reference is current, and no personal sound was changed.
 
 Deliverable: the installed build contains the whole aural system, and further
 module migrations extend a stable transport contract.
+
+Result:
+
+- =lisp/Makefile= now builds every shipped aural runtime, manager, editor,
+  representative integration, sound-pack manager, and normal setup entry
+  point in dependency order.  The root =build-aural-test= target builds that
+  tree and starts a clean Emacs through =emacsvox-setup.elc=.
+- =emacsvox-setup.el= detects startup sources newer than their byte-code,
+  warns, and prefers the newer source for that startup.  The installation
+  guide distinguishes explicit source-checkout loading from stable installed
+  builds.  Clean compiled startup also exposed and fixed the missing runtime
+  =cl-lib= prerequisite and a top-level =cl-pushnew= expansion in the
+  preamble.
+- Isolated compiled parity now compiles and loads all 17 aural components,
+  sound support, and the keymap.  Source startup detection and normal
+  build-tree startup have dedicated gates.
+- Org is the next completed migrated module.  All established cue and speech
+  order is retained inside one frozen Org boundary.  Module-owned roles cover
+  ordinary content, items, paragraphs, agenda entries, tables, captures,
+  source-edit buffers, and exports; =org-action= records the specific
+  navigation, edit, state, or lifecycle intent.  The repository audit now
+  enforces Org alongside Agent Shell, Markdown, Notmuch, Gnus, Dired, and
+  Magit.
+- The generated reference is current.  The shipped-tree audit is clean with
+  the in-progress untracked =sounds/bart/= pack excluded.  The complete-tree
+  audit continues to report only its previously known unregistered
+  =large-movement-02= asset; no personal sound was changed.
+
+Checks: 47 focused Org results and three focused startup results pass.
+Isolated compiled aural parity, normal build-tree startup, all 27 semantic
+traces, and warning-as-error compilation of the changed runtime files pass.
+The complete source suite has 1,575 tests: 1,573 pass, the optional Mu4e test
+is skipped, and the sole failure is the in-progress untracked =sounds/bart/=
+pack described above.
 
 * Test Gates
 

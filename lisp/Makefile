@@ -61,6 +61,25 @@ plain-voices.elc espeak-voices.elc \
 outloud-voices.elc  mac-voices.elc \
 swiftmac-voices.elc
 
+AURAL_OBJECTS = \
+emacsvox-aural.elc \
+emacsvox-aural-spatial.elc \
+emacsvox-aural-rules.elc \
+emacsvox-aural-resources.elc \
+emacsvox-aural-schemes.elc \
+emacsvox-aural-transport.elc \
+emacsvox-aural-tools.elc \
+emacsvox-aural-editor.elc \
+emacsvox-aural-simple-editor.elc \
+emacsvox-aural-doctor.elc \
+emacsvox-aural-profiles.elc \
+emacsvox-aural-voice-palettes.elc \
+emacsvox-aural-org.elc \
+emacsvox-aural-representative.elc \
+emacsvox-aural-markdown.elc \
+emacsvox-sounds.elc \
+emacsvox-aural-sound-packs.elc
+
 SPEAK_OBJECTS =   \
 voice-setup.elc \
 voice-defs.elc \
@@ -68,16 +87,7 @@ emacsvox-pronounce.elc \
 emacsvox-speak.elc  \
 emacsvox-advice.elc\
 emacsvox-keymap.elc\
-emacsvox-aural.elc \
-emacsvox-aural-rules.elc \
-emacsvox-aural-resources.elc \
-emacsvox-aural-schemes.elc \
-emacsvox-aural-transport.elc \
-emacsvox-aural-tools.elc \
-emacsvox-aural-editor.elc \
-emacsvox-aural-org.elc \
-emacsvox-sounds.elc \
-emacsvox-aural-sound-packs.elc \
+$(AURAL_OBJECTS) \
 emacsvox.elc \
 emacsvox-setup.elc
 
@@ -299,7 +309,32 @@ OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 
 ###   User level targets all
 
+.PHONY: all aural
 all: $(OBJECTS)
+
+aural: emacsvox-preamble.elc emacsvox-loaddefs.elc emacsvox-keymap.elc \
+$(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
+
+emacsvox-aural-spatial.elc: emacsvox-aural.elc
+emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
+emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
+emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
+emacsvox-aural-transport.elc: \
+emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
+emacsvox-aural-tools.elc: emacsvox-aural-transport.elc
+emacsvox-aural-editor.elc: emacsvox-aural-tools.elc
+emacsvox-aural-simple-editor.elc: emacsvox-aural-editor.elc
+emacsvox-aural-doctor.elc: emacsvox-aural-tools.elc
+emacsvox-aural-profiles.elc: emacsvox-aural-tools.elc
+emacsvox-aural-voice-palettes.elc: emacsvox-aural-tools.elc
+emacsvox-aural-org.elc: emacsvox-aural-schemes.elc
+emacsvox-aural-representative.elc: emacsvox-aural-schemes.elc
+emacsvox-aural-markdown.elc: emacsvox-aural-representative.elc
+emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
+emacsvox-aural-sound-packs.elc: \
+emacsvox-aural-tools.elc emacsvox-sounds.elc
+emacsvox.elc: emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
+emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 
 muggles: emacsvox-muggles.elc
 extra-muggles: extra-muggles.elc

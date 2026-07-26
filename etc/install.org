@@ -8,3 +8,30 @@ To install a specific version of Emacsvox:
   4. Optional: make outloud to build ViaVoice outloud support.
   5. Copy the resulting =emacsvox= directory to the install location.
   6. Load =lisp/emacsvox-setup.el= from that installation.
+
+** Source checkouts and byte-code
+
+After changing branches, pulling changes, or editing Emacsvox Lisp, rebuild
+from the repository root:
+
+#+BEGIN_SRC sh
+make config && make
+#+END_SRC
+
+During development, load the setup source explicitly:
+
+#+BEGIN_SRC elisp
+(load-file "/path/to/emacsvox/lisp/emacsvox-setup.el")
+#+END_SRC
+
+The setup entry point checks the files used by aural startup.  If a source is
+newer than its matching byte-code, it warns and prefers newer source for that
+startup.  This is a safe fallback, not a replacement for rebuilding.
+
+An installed copy should contain current =.elc= files produced by the normal
+build, including every =emacsvox-aural-*= manager and integration.  In that
+stable installed copy, =(load-library "emacsvox-setup")= may be used.  Do not
+use =load-library= as the first load after modifying a source checkout:
+Emacs can select an old =emacsvox-setup.elc= before the checker in the newer
+source has had a chance to run.  Either rebuild first or use =load-file= on
+=emacsvox-setup.el=.
