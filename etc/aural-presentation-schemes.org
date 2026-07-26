@@ -1364,7 +1364,8 @@ golden output; =check-parens=, =checkdoc=, byte compilation, =org-lint=, and
 current environment provides Emacs 30.2; =make unit-test= stops at its
 explicit version check.
 
-** TODO Slice 11: Audit, Documentation, and Rollout
+** DONE Slice 11: Audit, Documentation, and Rollout
+CLOSED: [2026-07-26 Sun]
 
 - Replace or supplement =utils/count-icons.pl= with registry-aware audits.
 - Generate semantic, scheme-author, module-author, sound-pack, and voice-palette
@@ -1377,6 +1378,50 @@ explicit version check.
 
 Deliverable: enforceable contracts, maintained documentation, and a staged
 path for the remaining integrations.
+
+Implemented details:
+
+- =utils/emacsvox-aural-audit.el= validates semantic, resource, and scheme
+  registry cross-references, every registered pack, and every built-in scheme;
+- its non-evaluating Lisp reader inventories literal =emacsvox-icon= and
+  =emacsvox-queue-icon= calls while ignoring comments, strings, and quoted
+  data, rejects unregistered literal cues, reports dynamic calls separately,
+  and explicitly rejects evaluating =#.= reader forms;
+- =make aural-audit= supplements the historical textual
+  =utils/count-icons.pl= report with registered intent, provider validation,
+  source parsing, and generated-document drift checks;
+- =make aural-reference= atomically regenerates
+  =etc/aural-presentation-reference.org=, with deterministic tables for
+  semantics, occasions, built-in schemes, module fragments, cues, sound packs,
+  and voice palettes;
+- the generated reference also documents user controls, the cascade and
+  specificity vector, merge operators, render phases, concrete queue contract,
+  spatial fallback, scheme authoring, module extension registration, sound
+  pack and voice palette authoring, compatibility migration, and staged
+  rollout;
+- focused ERT coverage enforces safe reading, unregistered-cue failure,
+  deterministic generation, stale-reference detection, and the complete
+  current-tree audit; the standard test runner loads those checks;
+- =Readme.org= makes schemes and the generated reference discoverable, and the
+  current release notes describe the compatibility-preserving user-facing
+  rollout.
+
+The clean audit parsed 1,667 literal cue calls and 101 dynamic calls.  All 58
+literal cue identifiers in use belong to the 76-entry registered cue
+vocabulary.  Dynamic calls remain reported rather than guessed statically;
+their concrete values retain runtime registry fallback and validation.
+
+Checks: 6 focused audit/generation ERT tests and 351 combined Org, semantic,
+rule-engine, resource, scheme, transport, tooling, representative-module,
+audit, sound, and voice tests with no unexpected results; all 27
+source-loaded semantic traces matching the golden output; clean
+=make aural-audit= and TTS namespace audits; idempotent reference generation;
+=check-parens=, =checkdoc=, byte compilation, =org-lint=, and
+=git diff --check=.  The normal full suite remains unavailable because
+=make unit-test= requires Emacs 31 while this environment provides Emacs 30.2.
+The independent name audit continues to report eight pre-existing legacy names
+in the Windows Speech module and its tests; this slice neither introduced nor
+changed them.
 
 * Test Gates
 

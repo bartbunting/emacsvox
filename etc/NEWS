@@ -17,6 +17,21 @@ The generic speech prefix map is now ~emacsvox-tts-submap~.  The former
 User configuration that binds or inspects that map must use the new name.
 The default _C-e d_ key sequence is unchanged.
 
+** Aural Presentation Schemes
+
+Emacsvox now has semantic aural presentation schemes.  A scheme can combine
+speech, device-independent voices, auditory cues, pauses, and portable stereo
+placement before or after content.  The default scheme preserves existing
+voices and icons; selectable Org examples demonstrate alternative
+presentations.
+
+Use ~emacsvox-list-aural-schemes~, ~emacsvox-set-aural-scheme~, and
+~emacsvox-edit-aural-scheme~ to inspect, select, and customize schemes.  Rules
+can apply globally or by module, major or derived mode, session, or buffer.
+~emacsvox-explain-aural-presentation~ reports the facts and winning rules at
+point.  Existing icon calls, personality properties, face mappings, and sound
+directories remain supported through compatibility adapters.
+
 ** Search From Calendar
 
 You can perform before/after  Web and Youtube searches from within the

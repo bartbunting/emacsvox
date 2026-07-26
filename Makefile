@@ -45,6 +45,7 @@ TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
 .PHONY: test unit-test trace trace-test reference-test advice-audit name-audit tts-audit
+.PHONY: aural-audit aural-reference
 test: unit-test trace-test
 
 unit-test:
@@ -82,6 +83,16 @@ name-audit:
 tts-audit:
 	$(EMACS) -Q --batch -l utils/tts-audit.el \
 		--eval '(ems-tts-audit-batch "lisp")'
+
+aural-audit:
+	$(EMACS) -Q --batch --eval '(setq load-prefer-newer t)' \
+		-L lisp -L utils -l utils/emacsvox-aural-audit.el \
+		--eval '(emacsvox-aural-audit-batch "$(CURDIR)")'
+
+aural-reference:
+	$(EMACS) -Q --batch --eval '(setq load-prefer-newer t)' \
+		-L lisp -L utils -l utils/emacsvox-aural-audit.el \
+		--eval '(emacsvox-aural-write-reference "$(CURDIR)")'
 
 ###   User level targets emacsvox   outloud espeak 
 

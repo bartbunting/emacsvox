@@ -6,8 +6,9 @@
 1. [[*Emacsvox][Emacsvox]]
 2. [[*Description][Description]]
 3. [[*Quick Installation Instructions][Quick Installation Instructions]]
-4. [[*Blog and Portfolio][Blog and Portfolio]]
-5. [[*Additional Info][Additional Info]]
+4. [[*Aural Presentation Schemes][Aural Presentation Schemes]]
+5. [[*Blog and Portfolio][Blog and Portfolio]]
+6. [[*Additional Info][Additional Info]]
 
 ** Description
 *Emacsvox* is a modernized fork of Emacspeak - a speech interface that helps visually impaired users work with the Emacs editor. Emacsvox turns Emacs into a complete audio desktop, giving audio feedback allowing full access to all of its features.
@@ -33,6 +34,19 @@ The former =EMACSPEAK_DIR= and =EMACSPEAK_PLAY= environment variables are not
 recognized.  This is an intentional breaking change; update user configuration
 to the Emacsvox names.  References to Emacspeak remain where they identify the
 upstream project, historical material, or the pinned comparison test checkout.
+
+** Aural Presentation Schemes
+
+Emacsvox can present registered meaning with speech, voices, auditory cues,
+pauses, and stereo placement.  The default scheme preserves existing output,
+while users can override presentation globally or for a module, major mode,
+derived mode, session, or individual buffer.
+
+Use =M-x emacsvox-list-aural-schemes= to browse schemes and
+=M-x emacsvox-edit-aural-scheme= to customize one accessibly.  The generated
+[[file:etc/aural-presentation-reference.org][Aural Presentation Reference]]
+documents user controls, scheme and module authoring, registered semantics,
+sound packs, voice palettes, migration, queue ordering, and spatial fallback.
 
 ** Quick Installation Instructions
 
