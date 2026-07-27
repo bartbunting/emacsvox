@@ -43,6 +43,26 @@
   "Loading the integration does not recreate removed `eww-quit'."
   (should-not (fboundp 'eww-quit)))
 
+(ert-deftest emacsvox-eww-renderers-are-buffer-local ()
+  "EWW renderers do not change links rendered by other SHR clients."
+  (should
+   (memq #'emacsvox-eww--setup-renderers eww-mode-hook))
+  (should-not
+   (eq (default-value 'shr-external-rendering-functions)
+       emacsvox-eww-filter-renderers))
+  (let ((default-renderers
+         (default-value 'shr-external-rendering-functions)))
+    (with-temp-buffer
+      (emacsvox-eww--setup-renderers)
+      (should
+       (local-variable-p 'shr-external-rendering-functions))
+      (should
+       (eq shr-external-rendering-functions
+           emacsvox-eww-filter-renderers)))
+    (should
+     (eq (default-value 'shr-external-rendering-functions)
+         default-renderers))))
+
 (ert-deftest emacsvox-eww-url-navigation-feedback-is-target-aware ()
   "Only matching EWW URL navigation cues and speaks the header."
   (let ((ems--interactive-fn-name 'eww-forward-url)

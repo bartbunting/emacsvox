@@ -714,8 +714,7 @@ Safari/537.36"
      ("t" emacsvox-eww-next-table)
      )
    do
-   (emacsvox-keymap-update eww-mode-map binding))
-  (setq shr-external-rendering-functions emacsvox-eww-filter-renderers))
+   (emacsvox-keymap-update eww-mode-map binding)))
 
 ;;; play media:
 
@@ -1295,6 +1294,13 @@ Note that the Web browser should reset this hook after using it.")
     (cl-pushnew (cons 'span 'emacsvox-eww-span-with-space) copy)
     copy)
   "Renderers used when filtering.")
+
+(defun emacsvox-eww--setup-renderers ()
+  "Install Emacsvox SHR renderers in the current EWW buffer."
+  (setq-local shr-external-rendering-functions
+              emacsvox-eww-filter-renderers))
+
+(add-hook 'eww-mode-hook #'emacsvox-eww--setup-renderers)
 
 (emacsvox-eww-setup)
 
