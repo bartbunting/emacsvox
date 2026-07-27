@@ -1730,6 +1730,144 @@ from any source."
        :key #'emacsvox-aural-presentation-record-source-buffer-name
        :test #'equal))))
 
+(defun emacsvox-aural--queue-concrete-content (content payload)
+  "Queue concrete CONTENT using final text PAYLOAD."
+  (when
+      (and
+       (emacsvox-aural-concrete-content-speak content)
+       payload
+       (not (string-empty-p payload)))
+    (tts--protocol-queue-code (tts-voice-reset-code))
+    (let ((balance
+           (emacsvox-aural-concrete-content-balance content)))
+      (when
+          (and
+           (numberp balance)
+           (not (zerop balance))
+           (functionp emacsvox-aural-speech-balance-function))
+        (funcall emacsvox-aural-speech-balance-function balance))
+      (when-let* ((command
+                   (emacsvox-aural-concrete-content-voice-command content)))
+        (unless (string-empty-p command)
+          (tts--protocol-queue-code command)))
+      (tts--protocol-queue-text payload)
+      (when (emacsvox-aural-concrete-content-voice-command content)
+        (tts--protocol-queue-code (tts-voice-reset-code)))
+      (when
+          (and
+           (numberp balance)
+           (not (zerop balance))
+           (functionp emacsvox-aural-speech-balance-function))
+        (funcall emacsvox-aural-speech-balance-function 0.0)))))
+
+(defun emacsvox-aural--finish-concrete-plan
+    (plan text text-supplied-p)
+  "Record and finish concrete PLAN after queueing.
+
+TEXT is the final payload when TEXT-SUPPLIED-P is non-nil."
+  (let ((emacsvox-aural--history-respect-icon-policy t))
+    (if text-supplied-p
+        (emacsvox-aural-record-presentation plan text)
+      (emacsvox-aural-record-presentation plan)))
+  (when
+      (or
+       (null (emacsvox-aural-concrete-plan-object-id plan))
+       (emacsvox-aural-concrete-plan-object-end-p plan))
+    (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))
+  plan)
+
+(defun emacsvox-aural--concrete-content-transport-key (content)
+  "Return the speech-transport settings that distinguish CONTENT."
+  (list
+   (emacsvox-aural-concrete-content-speak content)
+   (emacsvox-aural-concrete-content-voice-command content)
+   (emacsvox-aural-concrete-content-balance content)))
+
+(defun emacsvox-aural--coalescible-concrete-runs-p (left right)
+  "Return non-nil when adjacent concrete runs LEFT and RIGHT can be joined.
+
+Each run is a list of PLAN, final text, and an optional leading pause."
+  (pcase-let
+      ((`(,left-plan ,left-text ,_) left)
+       (`(,right-plan ,right-text ,right-pause) right))
+    (let ((left-content
+           (emacsvox-aural-concrete-plan-content left-plan))
+          (right-content
+           (emacsvox-aural-concrete-plan-content right-plan)))
+      (and
+       (not right-pause)
+       (stringp left-text)
+       (not (string-empty-p left-text))
+       (stringp right-text)
+       (not (string-empty-p right-text))
+       (emacsvox-aural-concrete-content-speak left-content)
+       (emacsvox-aural-concrete-content-speak right-content)
+       (emacsvox-aural-concrete-plan-object-id left-plan)
+       (equal
+        (emacsvox-aural-concrete-plan-object-id left-plan)
+        (emacsvox-aural-concrete-plan-object-id right-plan))
+       (null (emacsvox-aural-concrete-plan-after left-plan))
+       (null (emacsvox-aural-concrete-plan-before right-plan))
+       (equal
+        (emacsvox-aural--concrete-content-transport-key left-content)
+        (emacsvox-aural--concrete-content-transport-key right-content))))))
+
+(defun emacsvox-aural--queue-concrete-run-group (runs)
+  "Queue forward-ordered, transport-equivalent concrete RUNS together."
+  (let* ((first (car runs))
+         (last (car (last runs)))
+         (first-plan (car first))
+         (last-plan (car last))
+         (payload
+          (mapconcat
+           (lambda (run) (nth 1 run))
+           runs
+           "")))
+    (when-let* ((pause (nth 2 first)))
+      (tts--protocol-silence pause))
+    (dolist (action (emacsvox-aural-concrete-plan-before first-plan))
+      (emacsvox-aural-queue-concrete-action action))
+    (emacsvox-aural--queue-concrete-content
+     (emacsvox-aural-concrete-plan-content first-plan)
+     payload)
+    (dolist (action (emacsvox-aural-concrete-plan-after last-plan))
+      (emacsvox-aural-queue-concrete-action action))
+    (dolist (run runs)
+      (emacsvox-aural--finish-concrete-plan
+       (car run) (nth 1 run) t))
+    last-plan))
+
+(defun emacsvox-aural-queue-concrete-runs (runs)
+  "Queue adjacent concrete RUNS without artificial speech boundaries.
+
+Each entry in RUNS is a list of PLAN, final text, and an optional leading
+pause.  Adjacent runs are coalesced only within one aural object when their
+effective speech transport settings match and no action or pause separates
+them."
+  (let (group previous)
+    (cl-labels
+        ((flush
+          ()
+          (when group
+            (setq group (nreverse group))
+            (if (cdr group)
+                (emacsvox-aural--queue-concrete-run-group group)
+              (pcase-let ((`(,plan ,text ,pause) (car group)))
+                (when pause
+                  (tts--protocol-silence pause))
+                (emacsvox-aural-queue-concrete-plan plan text)))
+            (setq group nil
+                  previous nil))))
+      (dolist (run runs)
+        (unless
+            (and
+             previous
+             (emacsvox-aural--coalescible-concrete-runs-p previous run))
+          (flush))
+        (push run group)
+        (setq previous run))
+      (flush))))
+
 (cl-defun emacsvox-aural-queue-concrete-plan
     (plan &optional (text nil text-supplied-p))
   "Queue concrete PLAN in strict before, content, and after order.
@@ -1740,48 +1878,14 @@ cleanup, without rerunning semantic or contextual resolution."
     (emacsvox-aural-queue-concrete-action action))
   (let* ((content (emacsvox-aural-concrete-plan-content plan))
          (payload
-          (if text-supplied-p
+         (if text-supplied-p
               text
             (emacsvox-aural-concrete-content-text content))))
-    (when
-        (and
-         (emacsvox-aural-concrete-content-speak content)
-         payload
-         (not (string-empty-p payload)))
-      (tts--protocol-queue-code (tts-voice-reset-code))
-      (let ((balance
-             (emacsvox-aural-concrete-content-balance content)))
-        (when
-            (and
-             (numberp balance)
-             (not (zerop balance))
-             (functionp emacsvox-aural-speech-balance-function))
-          (funcall emacsvox-aural-speech-balance-function balance))
-        (when-let* ((command
-                     (emacsvox-aural-concrete-content-voice-command content)))
-          (unless (string-empty-p command)
-            (tts--protocol-queue-code command)))
-        (tts--protocol-queue-text payload)
-        (when (emacsvox-aural-concrete-content-voice-command content)
-          (tts--protocol-queue-code (tts-voice-reset-code)))
-        (when
-            (and
-             (numberp balance)
-             (not (zerop balance))
-             (functionp emacsvox-aural-speech-balance-function))
-          (funcall emacsvox-aural-speech-balance-function 0.0))))
+    (emacsvox-aural--queue-concrete-content content payload)
     (dolist (action (emacsvox-aural-concrete-plan-after plan))
       (emacsvox-aural-queue-concrete-action action))
-    (let ((emacsvox-aural--history-respect-icon-policy t))
-      (if text-supplied-p
-          (emacsvox-aural-record-presentation plan payload)
-        (emacsvox-aural-record-presentation plan)))
-    (when
-        (or
-         (null (emacsvox-aural-concrete-plan-object-id plan))
-         (emacsvox-aural-concrete-plan-object-end-p plan))
-      (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))
-    plan))
+    (emacsvox-aural--finish-concrete-plan
+     plan payload text-supplied-p)))
 
 (defun emacsvox-aural--standalone-cue (plan)
   "Return PLAN's one standalone cue action, or nil."

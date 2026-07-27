@@ -940,6 +940,79 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (should-not
            (emacsvox-aural-concrete-content-voice-command content)))))))
 
+(ert-deftest emacsvox-aural-transport-coalesces-equivalent-midword-runs ()
+  "Equivalent formatting runs do not split one word at the speech server."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text
+            (concat
+             (propertize "N" 'face 'bold)
+             "etwork"))
+           (context
+            '(:module core
+              :mode text-mode
+              :mode-lineage (text-mode)
+              :occasion continuous
+              :face-presentation-enabled t
+              :voice-lock-enabled nil))
+           (prepared
+            (emacsvox-aural-prepare-text text nil context))
+           events)
+      (with-temp-buffer
+        (insert prepared)
+        (cl-letf
+            (((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code)
+              (lambda (code) (push (list 'code code) events)))
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (payload) (push (list 'text payload) events))))
+          (tts-audio-format (point-min) (point-max))))
+      (should
+       (equal
+        (nreverse events)
+        '((code "RESET")
+          (text "Network"))))
+      (should (= (length emacsvox-aural-presentation-history) 2)))))
+
+(ert-deftest emacsvox-aural-transport-keeps-real-midword-voice-boundaries ()
+  "A genuine voice change remains separate at the speech server."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text
+            (concat
+             (propertize "N" 'personality 'voice-bolden)
+             "etwork"))
+           (context
+            '(:module core
+              :mode text-mode
+              :mode-lineage (text-mode)
+              :occasion continuous
+              :face-presentation-enabled t
+              :voice-lock-enabled t))
+           prepared
+           events)
+      (cl-letf
+          (((symbol-function 'tts-get-voice-command)
+            (lambda (voice) (format "<%s>" voice))))
+        (setq prepared
+              (emacsvox-aural-prepare-text text nil context)))
+      (with-temp-buffer
+        (insert prepared)
+        (cl-letf
+            (((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code)
+              (lambda (code) (push (list 'code code) events)))
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (payload) (push (list 'text payload) events))))
+          (tts-audio-format (point-min) (point-max))))
+      (should
+       (equal
+        (mapcar #'cadr
+                (seq-filter
+                 (lambda (event) (eq (car event) 'text))
+                 (nreverse events)))
+        '("N" "etwork"))))))
+
 (ert-deftest emacsvox-aural-transport-face-rules-ignore-voice-lock ()
   "The face-rule toggle and legacy Voice Lock remain independent at source."
   (emacsvox-test--with-transport-scheme

@@ -810,19 +810,22 @@ Argument COMPLEMENT  is the complement of separator."
 (defun tts-audio-format (start end)
   "Format and speak text from `start' to `end'. "
   (if (emacsvox-aural-concrete-plan-at start)
-      (let ((position start))
+      (let ((position start)
+            runs)
         (while (< position end)
           (let ((plan (emacsvox-aural-concrete-plan-at position))
                 (next
                  (next-single-property-change
                   position emacsvox-aural-concrete-plan-property
                   (current-buffer) end)))
-            (when-let* ((pause (get-text-property position 'pause)))
-              (tts--protocol-silence pause))
-            (emacsvox-aural-queue-concrete-plan
-             plan
-             (buffer-substring-no-properties position next))
-            (setq position next))))
+            (push
+             (list
+              plan
+              (buffer-substring-no-properties position next)
+              (get-text-property position 'pause))
+             runs)
+            (setq position next)))
+        (emacsvox-aural-queue-concrete-runs (nreverse runs)))
     (when (and emacsvox-use-icons
                (get-text-property start 'auditory-icon))
       (emacsvox-queue-icon (get-text-property start 'auditory-icon)))
