@@ -299,7 +299,7 @@ Operational semantic contract version: =1=.
 
 Register a cue with intent before adding an asset.  Register a pack with an identifier, summary, =sound= or =prompt= kind, directory, optional parent, requirement profiles, and default spatialization.  File basenames are cue identifiers.  Unknown files fail audit; missing required cues fail pack validation.  Every standalone sound pack must resolve =button=.  Use a parent for deliberate fallback.
 
-Immediate subdirectories of =sounds/= containing =button.ogg= are discovered automatically.  A partial pack without =button.ogg= can opt in with a data-only =emacsvox-sound-pack.el= manifest containing =:schema-version 1= and optional =:summary=, =:parent=, =:profiles=, and =:default-spatialization= fields.  Discovery runs before pack completion and selection; =M-x emacsvox-aural-refresh-discovered-resource-packs= forces it explicitly.  Call =emacsvox-aural-refresh-resource-pack= after changing files in an already selected pack.
+Bundled packs live below =sounds/packs/=.  Personal packs live below =~/.emacsvox/sounds/packs/= by default; customize =emacsvox-aural-personal-sound-packs-directory= to use another root.  Immediate subdirectories containing =button.ogg= are discovered automatically.  Direct =sounds/PACK/= children remain a deprecated, lowest-precedence compatibility source.  A partial pack without =button.ogg= can opt in with a data-only =emacsvox-sound-pack.el= manifest containing =:schema-version 1= and optional =:summary=, =:parent=, =:profiles=, and =:default-spatialization= fields.  Discovery runs before pack completion and selection; =M-x emacsvox-aural-refresh-discovered-resource-packs= forces it explicitly.  Call =emacsvox-aural-refresh-resource-pack= after changing files in an already selected pack.
 
 Use =M-x emacsvox-aural-list-sound-packs= for the spoken workbench.  It can rescan, validate, activate, audition, open the pack directory, browse cue intent and provenance, and guidedly edit manifests belonging to discovered packs.  Registered built-in metadata remains read-only.  Manifest replacement is atomic, retains the previous file as =~=, and rolls back when refreshed metadata cannot be validated.
 
@@ -309,8 +309,8 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 
 | Identifier | Kind | Parent | Profiles | Spatial | Assets | Directory | Intent |
 |------------+------+--------+----------+---------+--------+-----------+--------|
-| =3d= | =sound= | - | =legacy-complete= | =pre-spatialized= | =55= | sounds/3d | HRTF-generated spatial auditory cues |
-| =chimes= | =sound= | - | =legacy-complete= | =neutral= | =56= | sounds/chimes | Short chime-based auditory cues |
+| =3d= | =sound= | - | =legacy-complete= | =pre-spatialized= | =55= | sounds/packs/3d | HRTF-generated spatial auditory cues |
+| =chimes= | =sound= | - | =legacy-complete= | =neutral= | =56= | sounds/packs/chimes | Short chime-based auditory cues |
 | =prompts= | =prompt= | - | - | =neutral= | =17= | sounds/prompts | Theme-independent prompts |
 
 ** Registered Cues

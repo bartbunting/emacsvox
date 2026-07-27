@@ -212,6 +212,10 @@ The optional PACK argument makes this function suitable for
  'emacsvox-aural-resource-packs-changed-hook
  #'emacsvox-aural-clear-file-digest-cache)
 
+(add-hook
+ 'emacsvox-aural-resource-overlays-changed-hook
+ #'emacsvox-aural-clear-file-digest-cache)
+
 (defun emacsvox-aural--file-digest (file)
   "Return a cached SHA-256 digest of the literal contents of FILE."
   (let* ((canonical (file-truename file))

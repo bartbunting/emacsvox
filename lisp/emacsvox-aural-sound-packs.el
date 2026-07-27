@@ -259,10 +259,11 @@
     id))
 
 (defun emacsvox-aural-sound-packs--exact-asset
-    (cue pack-id &optional path)
-  "Return exact CUE asset as (PROVIDER . FILE) through PACK-ID.
+    (cue pack-id &optional path selected-pack)
+  "Return exact CUE asset provenance through PACK-ID.
 
-PATH protects this inspection helper from invalid inheritance cycles."
+PATH protects this inspection helper from invalid inheritance cycles.
+SELECTED-PACK distinguishes direct from inherited resources."
   (when (memq pack-id path)
     (signal
      'emacsvox-aural-resource-error
@@ -270,17 +271,31 @@ PATH protects this inspection helper from invalid inheritance cycles."
       (format
        "Resource pack inheritance cycle: %S"
        (nreverse (cons pack-id path))))))
-  (let ((pack (emacsvox-aural-resource-pack pack-id)))
+  (let ((pack (emacsvox-aural-resource-pack pack-id))
+        (selected-pack (or selected-pack pack-id)))
     (unless pack
       (user-error "Unknown sound pack: %S" pack-id))
     (or
+     (when-let* ((module
+                  (emacsvox-aural--resource-pack-module-asset cue pack-id)))
+       (list
+        :provider pack-id
+        :resource (cdr module)
+        :availability
+        (if (eq pack-id selected-pack)
+            "module override"
+          "inherited module override")))
      (when-let* ((file
                   (gethash
                    cue (emacsvox-aural-resource-pack-assets pack))))
-       (cons pack-id file))
+       (list
+        :provider pack-id
+        :resource file
+        :availability
+        (if (eq pack-id selected-pack) "native" "inherited")))
      (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
        (emacsvox-aural-sound-packs--exact-asset
-        cue parent (cons pack-id path))))))
+        cue parent (cons pack-id path) selected-pack)))))
 
 (defun emacsvox-aural-sound-packs--cue-detail
     (cue pack-id &optional fallback-path)
@@ -296,14 +311,32 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
        (nreverse (cons cue fallback-path))))))
   (let* ((record (emacsvox-aural-cue cue))
          (exact
-          (emacsvox-aural-sound-packs--exact-asset cue pack-id)))
+          (emacsvox-aural-sound-packs--exact-asset cue pack-id))
+         (module-default
+          (unless exact
+            (emacsvox-aural--resource-overlay-default-asset cue))))
     (cond
      (exact
-      (let ((provider (car exact))
-            (resource (cdr exact)))
+      (let ((provider (plist-get exact :provider))
+            (resource (plist-get exact :resource)))
         (emacsvox-aural-sound-packs--make-cue-detail
          :cue cue
-         :availability (if (eq provider pack-id) "native" "inherited")
+         :availability (plist-get exact :availability)
+         :provider provider
+         :resource resource
+         :resolved-cue cue
+         :spatialization
+         (emacsvox-aural-resource-spatialization resource pack-id)
+         :intent
+         (if record
+             (emacsvox-aural-cue-summary record)
+           "Unregistered cue identifier; validation error"))))
+     (module-default
+      (let ((provider (car module-default))
+            (resource (cdr module-default)))
+        (emacsvox-aural-sound-packs--make-cue-detail
+         :cue cue
+         :availability "module default"
          :provider provider
          :resource resource
          :resolved-cue cue

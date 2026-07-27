@@ -9,7 +9,7 @@ my @raw = qx{grep -aF '(emacsvox-icon' ../lisp/*.el}; # matching lines
 chomp(@raw);
 
 # Load in defined icon names.
-my @icons = qx(ls ../sounds/chimes/*.ogg);
+my @icons = qx(ls ../sounds/packs/chimes/*.ogg);
 chomp(@icons);
 my %hash;
 

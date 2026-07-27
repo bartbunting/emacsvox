@@ -15,21 +15,21 @@
   (concatenate 'string
                *emacsvox-dir*
                "/"
-               "sounds/chimes/window-resize.ogg")
+               "sounds/packs/chimes/window-resize.ogg")
   "Window change icon.")
 
 (defvar *tts-off-icon*
   (concatenate 'string
                *emacsvox-dir*
                "/"
-               "sounds/chimes/off.ogg")
+               "sounds/packs/chimes/off.ogg")
   "Off icon.")
 
 (defvar *tts-on-icon*
   (concatenate 'string
                *emacsvox-dir*
                "/"
-               "sounds/chimes/on.ogg")
+               "sounds/packs/chimes/on.ogg")
   "On icon.")
 
 ;;}}}

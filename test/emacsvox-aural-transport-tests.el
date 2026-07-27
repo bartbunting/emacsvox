@@ -259,7 +259,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
              (cue (car (emacsvox-aural-concrete-plan-before plan))))
         (should
          (string-suffix-p
-          "/chimes/item.ogg"
+          "/packs/chimes/item.ogg"
           (emacsvox-aural-concrete-action-resource cue)))
         (should
          (string-prefix-p
@@ -726,7 +726,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                 ((symbol-function 'emacsvox-queue-resource)
                  (lambda (resource) (setq queued resource))))
         (emacsvox-aural-queue-concrete-plan plan))
-      (should (string-suffix-p "/chimes/item.ogg" queued)))))
+      (should (string-suffix-p "/packs/chimes/item.ogg" queued)))))
 
 (ert-deftest emacsvox-aural-transport-prepares-mode-rule-at-source ()
   "A mode rule is concrete before text reaches the scratch buffer."
@@ -1240,7 +1240,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
             (lambda (resource sample-id)
               (setq played (list resource sample-id)))))
         (emacsvox-icon 'item))
-      (should (string-suffix-p "/chimes/item.ogg" (car played)))
+      (should (string-suffix-p "/packs/chimes/item.ogg" (car played)))
       (should
        (string-prefix-p
         "emacsvox-chimes-item-" (cadr played))))))
@@ -1322,7 +1322,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (should (eq (emacsvox-aural-concrete-action-cue cue) 'button))
       (should
        (string-suffix-p
-        "/chimes/button.ogg"
+        "/packs/chimes/button.ogg"
         (emacsvox-aural-concrete-action-resource cue)))
       (should (emacsvox-aural-concrete-plan-degradations plan)))))
 

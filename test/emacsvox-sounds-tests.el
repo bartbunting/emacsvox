@@ -93,14 +93,14 @@
      (equal
       (directory-file-name emacsvox-sounds-current-theme)
       (directory-file-name
-       (expand-file-name "3d" emacsvox-sounds-dir))))
+       (expand-file-name "packs/3d" emacsvox-sounds-dir))))
     (should
      (string-suffix-p
-      "/3d/repeat-end.ogg"
+      "/packs/3d/repeat-end.ogg"
       (gethash 'repeat-stop emacsvox-sounds-cache)))
     (should
      (string-suffix-p
-      "/3d/close-object.ogg"
+      "/packs/3d/close-object.ogg"
       (gethash 'shutdown emacsvox-sounds-cache)))))
 
 (ert-deftest emacsvox-sounds-selects-newly-discovered-pack ()
@@ -108,6 +108,7 @@
   (emacsvox-test--with-sound-tree
     (let ((emacsvox-aural-resource-pack-registry
            (make-hash-table :test #'eq))
+          (emacsvox-aural-personal-sound-packs-directory nil)
           (emacsvox-aural-resource-pack-discovery-roots nil)
           (emacsvox-sounds-cache (make-hash-table))
           (emacsvox-sounds-owned-samples (make-hash-table :test #'equal))
@@ -126,6 +127,57 @@
            (string-suffix-p
             "/bart/item.ogg"
             (gethash 'item emacsvox-sounds-cache))))))))
+
+(ert-deftest emacsvox-sounds-refreshes-live-module-earcon-overlays ()
+  "Registering or disabling a module overlay refreshes the active sound cache."
+  (emacsvox-test--with-sound-tree
+    (let* ((notmuch-directory (expand-file-name "notmuch" theme-one))
+           (emacsvox-aural-cue-registry
+            (copy-hash-table emacsvox-aural-cue-registry))
+           (emacsvox-aural-resource-pack-registry
+            (make-hash-table :test #'eq))
+           (emacsvox-aural-resource-overlay-registry
+            (make-hash-table :test #'eq))
+           (emacsvox-aural-disabled-resource-overlays nil)
+           (emacsvox-aural-resource-overlays-changed-hook
+            '(emacsvox-sounds-refresh-resource-providers))
+           (emacsvox-sounds-current-pack 'bart)
+           (emacsvox-sounds-cache (make-hash-table))
+           (module-default
+            (emacsvox-test--sound-file
+             theme-two "notmuch-attachment"))
+           module-override
+           fallback)
+      (make-directory notmuch-directory)
+      (emacsvox-test--sound-file theme-one "button")
+      (setq
+       fallback (emacsvox-test--sound-file theme-one "item")
+       module-override
+       (emacsvox-test--sound-file
+        notmuch-directory "notmuch-attachment"))
+      (emacsvox-aural-register-cue
+       'notmuch-attachment
+       :summary "A Notmuch attachment was reached"
+       :fallback 'item
+       :owner 'notmuch)
+      (emacsvox-aural-register-resource-pack
+       'bart :summary "Bart sounds" :directory theme-one)
+      (emacsvox-aural-register-resource-overlay
+       'notmuch-earcons
+       :summary "Notmuch-specific earcons"
+       :owner 'notmuch
+       :directory theme-two)
+      (should-not (equal module-default module-override))
+      (should
+       (equal
+        (gethash 'notmuch-attachment emacsvox-sounds-cache)
+        module-override))
+      (emacsvox-aural-set-disabled-resource-overlays
+       '(notmuch-earcons))
+      (should
+       (equal
+        (gethash 'notmuch-attachment emacsvox-sounds-cache)
+        fallback)))))
 
 (ert-deftest emacsvox-sounds-follows-active-aural-scheme ()
   "Selecting a scheme switches to its inherited registered sound pack."
@@ -150,7 +202,7 @@
     (should (eq emacsvox-sounds-current-pack '3d))
     (should
      (string-suffix-p
-      "/3d/item.ogg"
+      "/packs/3d/item.ogg"
       (gethash 'item emacsvox-sounds-cache)))))
 
 (ert-deftest emacsvox-sounds-resource-reflects-player-contract ()
@@ -189,11 +241,11 @@
      (= (length events) 2))
     (should
      (string-suffix-p
-      "/chimes/item.ogg"
+      "/packs/chimes/item.ogg"
       (car (cadr events))))
     (should
      (string-suffix-p
-      "/chimes/open-object.ogg"
+      "/packs/chimes/open-object.ogg"
       (caar events)))))
 
 (ert-deftest emacsvox-sounds-concrete-cue-selects-server-or-sox ()
@@ -252,7 +304,7 @@
      (eq (caar writes) 'speaker))
     (should
      (string-suffix-p
-      "/chimes/item.ogg\n"
+      "/packs/chimes/item.ogg\n"
       (cadar writes)))))
 
 (ert-deftest emacsvox-sounds-auditory-property-precedes-text ()

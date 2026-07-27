@@ -35,6 +35,10 @@
           (overlay-directory (expand-file-name "overlay" root))
           (emacsvox-aural-resource-pack-registry
            (make-hash-table :test #'eq))
+          (emacsvox-aural-resource-overlay-registry
+           (make-hash-table :test #'eq))
+          (emacsvox-aural-disabled-resource-overlays nil)
+          (emacsvox-aural-resource-overlays-changed-hook nil)
           (emacsvox-aural--resource-pack-discovery-registry
            emacsvox-aural-resource-pack-registry)
           (emacsvox-aural-resource-pack-discovery-roots (list root))
@@ -189,6 +193,53 @@
              emacsvox-aural-sound-pack-cues-mode-map
              (kbd (car binding)))
             (cdr binding))))))))
+
+(ert-deftest emacsvox-aural-sound-pack-cues-explain-module-provenance ()
+  "Cue rows distinguish themed module overrides from packaged defaults."
+  (let ((emacsvox-aural-cue-registry
+         (copy-hash-table emacsvox-aural-cue-registry)))
+    (emacsvox-test--with-sound-workbench
+      (let* ((module-directory (expand-file-name "modules/notmuch" root))
+             (themed-directory
+              (expand-file-name "notmuch" overlay-directory)))
+        (make-directory module-directory t)
+        (make-directory themed-directory)
+        (emacsvox-aural-register-cue
+         'notmuch-attachment
+         :summary "A Notmuch attachment was reached"
+         :fallback 'item
+         :owner 'notmuch)
+        (emacsvox-test--sound-workbench-file
+         module-directory 'notmuch-attachment)
+        (emacsvox-test--sound-workbench-file
+         themed-directory 'notmuch-attachment)
+        (emacsvox-aural-register-resource-overlay
+         'notmuch-earcons
+         :summary "Notmuch-specific earcons"
+         :owner 'notmuch
+         :directory module-directory)
+        (let ((base
+               (emacsvox-aural-sound-packs--cue-detail
+                'notmuch-attachment 'base))
+              (themed
+               (emacsvox-aural-sound-packs--cue-detail
+                'notmuch-attachment 'overlay)))
+          (should
+           (equal
+            (emacsvox-aural-sound-cue-detail-availability base)
+            "module default"))
+          (should
+           (eq
+            (emacsvox-aural-sound-cue-detail-provider base)
+            'notmuch-earcons))
+          (should
+           (equal
+            (emacsvox-aural-sound-cue-detail-availability themed)
+            "module override"))
+          (should
+           (eq
+            (emacsvox-aural-sound-cue-detail-provider themed)
+            'overlay)))))))
 
 (ert-deftest emacsvox-aural-sound-pack-cues-audition-concrete-resource ()
   "Audition resolves the selected pack once and plays its concrete file."

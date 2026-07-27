@@ -70,11 +70,11 @@
 ;; appropriate commands to the speech server (local or cloud).
 ;; @item  This is determined by the value of @code{emacsvox-play-program}.
 ;; @item As of
-;; Emacsvox 13.0, this module defines a themes architecture for
-;; auditory icons.  Sound files corresponding to a given theme are
-;; found in appropriate subdirectories of emacsvox-sounds-dir.
-;; @item The bundled themes are @code{chimes} and @code{3d}.  Additional
-;; immediate subdirectories containing @file{button.ogg}, or a data-only
+;; Emacsvox 13.0, this module defines a sound-pack architecture for
+;; auditory icons.  Bundled packs live below @file{sounds/packs/}; personal
+;; packs live below @file{~/.emacsvox/sounds/packs/} by default.
+;; @item The bundled packs are @code{chimes} and @code{3d}.  Additional
+;; pack directories containing @file{button.ogg}, or a data-only
 ;; @file{emacsvox-sound-pack.el} manifest, are discovered dynamically.
 ;; @item Contrast this with @code{prompts} --- they  dont belong to any theme.
 ;; @end itemize
@@ -191,10 +191,10 @@ icon-name, as string."
                                         ; sox-play -> filename
      (t f))))
 
-;;;Sound themes
+;;; Sound packs
 
 (defvar emacsvox-sounds-current-theme
-  (expand-file-name "chimes/" emacsvox-sounds-dir)
+  (expand-file-name "packs/chimes/" emacsvox-sounds-dir)
   "Current theme for  icons, a fully-qualified directory. ")
 
 (defconst emacsvox-pactl (executable-find "pactl") "PaCtl Executable.")
@@ -286,6 +286,27 @@ It is called  to cache sounds in our theme and prompts directories."
 The value is nil when a compatibility caller selects an unregistered
 directory.")
 
+(defun emacsvox-sounds-refresh-resource-providers (&optional _provider)
+  "Refresh cached assets after sound-pack or module-overlay changes."
+  (when
+      (and
+       emacsvox-sounds-current-pack
+       (emacsvox-aural-resource-pack emacsvox-sounds-current-pack))
+    (clrhash emacsvox-sounds-cache)
+    (maphash
+     #'emacsvox-sounds-cache-put
+     (emacsvox-aural-effective-assets emacsvox-sounds-current-pack t))
+    (emacsvox-sounds-cache-install-fallbacks))
+  emacsvox-sounds-cache)
+
+(add-hook
+ 'emacsvox-aural-resource-overlays-changed-hook
+ #'emacsvox-sounds-refresh-resource-providers)
+
+(add-hook
+ 'emacsvox-aural-resource-packs-changed-hook
+ #'emacsvox-sounds-refresh-resource-providers)
+
 (defun emacsvox-sounds--pack-for-theme (theme)
   "Return the registered sound pack selected by THEME, or nil."
   (cond
@@ -345,6 +366,8 @@ directory.")
       (when (emacsvox-aural-resource-pack 'prompts)
         (emacsvox-aural-refresh-resource-pack 'prompts))
       (emacsvox-aural-refresh-resource-pack pack-id)
+      ;; Refresh hooks may have rebuilt the previously active pack.
+      (clrhash emacsvox-sounds-cache)
       (maphash
        #'emacsvox-sounds-cache-put
        (emacsvox-aural-effective-assets pack-id t)))

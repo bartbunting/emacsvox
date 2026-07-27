@@ -90,7 +90,7 @@ for styling must never repeat the complete semantic presentation.
 9. Make the system discoverable through completion, validation, preview,
    explanation, and an accessible scheme editor.
 10. Keep existing one-argument icon calls, =personality= properties, face
-    mappings, and bundled sound directories working while modules migrate.
+    mappings, and bundled sound-pack identifiers working while modules migrate.
 
 * Non-Goals
 
@@ -276,9 +276,8 @@ file in the selected directory.  =emacsvox-icon= either invokes a local player
 or sends the resolved resource to the speech server.
 
 The current cache is populated from =sounds/prompts/= and then the selected
-theme.  Unknown names silently use =button=.  Theme selection knows the
-hard-coded names =chimes= and =3d=.  There is no canonical intent registry,
-scheme inheritance, per-semantic override, or common validation.
+sound pack.  Bundled packs live below =sounds/packs/=.  Unknown names silently
+use =button=.  Theme selection knows the built-in names =chimes= and =3d=.
 
 ** Queued properties
 
@@ -296,10 +295,10 @@ semantic annotation.
 
 ** Spatial audio
 
-The =sounds/3d/= theme contains Csound-generated HRTF assets.  Several source
-files under =sounds/3d/src/= use azimuth, elevation, panning, or movement.
-=etc/pipewire/= also contains experiments with HRTF virtual devices and
-left/right or upper/lower speech routing.
+The =sounds/packs/3d/= sound pack contains Csound-generated HRTF assets.
+Several source files under =sounds/packs/3d/src/= use azimuth, elevation,
+panning, or movement.  =etc/pipewire/= also contains experiments with HRTF
+virtual devices and left/right or upper/lower speech routing.
 
 Spatial behavior is currently baked into assets or output devices.  It is not
 a semantic property that a scheme can apply independently to a cue or speech.
@@ -390,10 +389,20 @@ The render plan after backend compilation.  Cue names have become file paths
 or sample identifiers, voices have become supported engine settings or
 commands, and spatial values have been reduced to backend capabilities.
 
-** Sound resource pack
+** Sound pack
 
 A named collection of concrete assets implementing registered cue names.
-Existing =chimes= and =3d= directories become bundled resource packs.
+=3d=, =chimes=, and personal collections such as =bart= are sound packs.
+An earcon is one asset within a pack.  “Aural presentation scheme” is reserved
+for the semantic rules that select cues, voices, wording, and spatial intent;
+it does not name a directory of sound files.
+
+** Module resource overlay
+
+A module-owned collection of portable default earcons plus themed overrides
+supplied by the selected sound pack.  The overlay registers one owner and may
+contain only cue identifiers owned by that module.  It augments a sound pack;
+it never selects or replaces the user's pack.
 
 ** Voice palette
 
@@ -443,11 +452,13 @@ A module may:
 - annotate a text range with registered facts;
 - present a registered event with optional content;
 - provide default rules scoped to its own semantics;
-- register module-specific roles, states, attributes, or events.
+- register module-specific roles, states, attributes, or events;
+- register stable module-owned cue intent with a generic fallback;
+- distribute an owner-scoped default resource overlay.
 
 A module must not:
 
-- choose a sound filename;
+- choose or play a sound filename at the presentation call site;
 - assume a bundled sound pack;
 - infer that a semantic event will necessarily be a sound;
 - depend on a particular TTS engine;
@@ -658,13 +669,43 @@ pack maps registered cue names to files and declares:
 - fixed position or trajectory metadata for pre-spatialized assets;
 - semantic fallback and aliases.
 
-The default mapping may remain =CUE.ogg=.  Existing sound directories remain
-valid resource sources during migration.
+The default mapping may remain =CUE.ogg=.
 
-Immediate child directories of =sounds/= are dynamically registered as sound
-packs when they contain =button.ogg=.  This convention makes a complete
-personal pack selectable without editing Lisp.  A partial pack can opt in with
-a data-only =emacsvox-sound-pack.el= manifest:
+** Sound-pack storage and discovery
+
+Repository-owned resources have distinct roles:
+
+#+begin_example
+sounds/
+├── packs/
+│   ├── 3d/
+│   └── chimes/
+├── modules/
+│   └── OWNER/
+└── prompts/
+#+end_example
+
+=sounds/packs/= contains bundled sound packs.  =sounds/modules/= contains
+portable defaults owned by mode integrations.  =sounds/prompts/= contains
+theme-independent prompts.  Unrelated sound resources, such as the speaking
+clock, may retain their own named directory and are not sound packs.
+
+Personal sound packs do not normally live in the source tree.  Their canonical
+root is configurable with
+=emacsvox-aural-personal-sound-packs-directory= and defaults to:
+
+#+begin_example
+~/.emacsvox/sounds/packs/PACK/
+#+end_example
+
+For example, Bart's complete personal pack is
+=~/.emacsvox/sounds/packs/bart/=.  Keeping personal assets outside the checkout
+avoids dirty worktrees, accidental commits, and upgrade conflicts.  A separate
+version-controlled repository may be used for that directory.
+
+An immediate child of a discovery root is dynamically registered when it
+contains =button.ogg=.  A partial pack can opt in with a data-only
+=emacsvox-sound-pack.el= manifest:
 
 #+begin_src emacs-lisp
 (:schema-version 1
@@ -677,15 +718,84 @@ a data-only =emacsvox-sound-pack.el= manifest:
 The identifier comes from the directory name.  The optional manifest may set
 =:summary=, =:parent=, =:profiles=, and =:default-spatialization=; it cannot
 run code because reader evaluation is disabled.  A pack with all 55 legacy
-cues automatically claims =legacy-complete=.  Explicit registrations for
-=prompts=, =chimes=, and =3d= take precedence over discovered directory names,
-so built-in kind and spatial metadata remain authoritative.
+cues automatically claims =legacy-complete=.
+
+Explicit registrations for =prompts=, =chimes=, and =3d= remain authoritative.
+Other duplicate identifiers use discovery-root precedence:
+
+1. =~/.emacsvox/sounds/packs/=, or its configured replacement;
+2. =sounds/packs/=;
+3. direct =sounds/PACK/= children as a deprecated compatibility source.
+
+The compatibility root keeps existing installations working during migration.
+New personal packs must use the personal root.  If the same personal identifier
+exists in both locations, the canonical personal copy wins; removing it makes
+the compatibility copy visible again.
 
 Discovery synchronizes when completion or theme selection asks for available
 packs.  It adds new directories, reloads manifests, and removes registrations
 for directories that have gone away.  The explicit command
 =emacsvox-aural-refresh-discovered-resource-packs= is available when immediate
 refresh is useful.
+
+** Module-distributed earcons
+
+A mode integration may register one resource overlay for its semantic owner:
+
+#+begin_src emacs-lisp
+(emacsvox-aural-register-resource-overlay
+ 'notmuch-earcons
+ :summary "Notmuch-specific earcons"
+ :owner 'notmuch
+ :directory
+ (expand-file-name "modules/notmuch" emacsvox-sounds-dir)
+ :default-spatialization 'neutral)
+#+end_src
+
+The module registers every cue before registering the overlay.  Cue filenames
+are =CUE.ogg= and must belong to the overlay owner.  Unknown or foreign files
+in a packaged default are registration errors.  A second overlay for the same
+owner is rejected so package load order cannot change resolution.
+
+Built-in portable defaults live below:
+
+#+begin_example
+sounds/modules/OWNER/CUE.ogg
+#+end_example
+
+An external package uses the same flat cue directory inside its own package
+tree and registers that absolute directory.  It does not copy files into the
+Emacsvox installation.
+
+Sound packs may theme module earcons without duplicating module registration.
+The path is relative to the concrete pack directory:
+
+#+begin_example
+PACK-DIRECTORY/OWNER/CUE.ogg
+#+end_example
+
+For example, Bart's personal Notmuch override is
+=~/.emacsvox/sounds/packs/bart/notmuch/notmuch-attachment.ogg=.  A bundled
+Notmuch override in the =3d= pack would live below
+=sounds/packs/3d/notmuch/=.  Within each inherited pack layer, the owner
+subdirectory is stronger than the flat pack directory.  A child pack remains
+stronger than its parent.  Complete resolution is:
+
+1. the selected pack and its parents, including owner-subdirectory overrides;
+2. the module's packaged default;
+3. the cue's registered fallback, resolved again through the same layers.
+
+This order lets a user pack provide a themed version, lets a mode work out of
+the box, and retains a coherent generic cue when no additional asset exists.
+=emacsvox-aural-disabled-resource-overlays= suppresses both the packaged
+default and owner-subdirectory overrides for named overlays.  It does not
+change the selected sound pack.  Registration, refresh, or enablement changes
+refresh the live effective sound cache without playing a notification cue.
+
+Pack validation reports unknown or foreign files below an enabled owner
+subdirectory as =OWNER/CUE=.  Concrete-plan compilation still freezes the
+resolved file, owning provider's spatialization, and content-addressed sample
+identifier before queueing.
 
 Theme selection must build a fresh effective resource cache.  It must not
 retain an asset merely because the previous pack supplied it.  Unknown names,
@@ -1039,8 +1149,9 @@ The pack manager exposes:
 =emacsvox-aural-list-sound-pack-cues= opens the cue browser.  Sound packs
 show shared and compatibility cues; prompt packs show prompt cues; supplied
 unknown filenames remain visible as validation errors.  Each row reports
-=native=, =inherited=, =fallback to CUE=, or =missing=, together with the
-actual provider, concrete file, owning pack's spatial metadata, and registered
+=native=, =inherited=, =module override=, =inherited module override=,
+=module default=, =fallback to CUE=, or =missing=, together with the actual
+provider, concrete file, owning provider's spatial metadata, and registered
 intent.  =RET= or =P= auditions that frozen resource, =v= validates the pack,
 =o= opens its directory, =s= returns to the pack manager, and =h= returns
 home.  Audition never activates the inspected pack or re-resolves through the
@@ -1127,8 +1238,8 @@ semantic template.
 3. Existing =personality= properties and face-to-personality mappings remain
    valid.
 4. Existing =defvoice= and ACSS settings remain supported.
-5. Existing =chimes=, =3d=, and =prompts= directories remain valid resource
-   sources.
+5. Existing =chimes=, =3d=, and =prompts= identifiers remain valid; bundled
+   pack files move below =sounds/packs/=.
 6. Existing player selection remains supported.
 7. Unknown legacy icons warn once and fall back during migration; new in-tree
    semantics must be registered.
@@ -1144,8 +1255,8 @@ The earlier read-only inventory found:
 
 | Asset or reference                        | Count |
 |-------------------------------------------+-------|
-| =sounds/chimes/*.ogg=                     |    56 |
-| =sounds/3d/*.ogg=                         |    55 |
+| =sounds/packs/chimes/*.ogg=               |    56 |
+| =sounds/packs/3d/*.ogg=                   |    55 |
 | =sounds/prompts/*.ogg=                    |    17 |
 | Direct =emacsvox-icon= calls               |  1750 |
 | Direct literal icon references            |  1659 |
@@ -1230,8 +1341,9 @@ warning compatibility aliases so external integrations continue to work.
 Add =product-identity=, =activity-ended=, =selection-cleared=, and =game-over=
 as core events when the registry is seeded.
 
-=utils/count-icons.pl= is historical tooling derived from =sounds/chimes/= and
-source scraping.  It should not remain the authority once the semantic
+=utils/count-icons.pl= is historical tooling derived from
+=sounds/packs/chimes/= and source scraping.  It should not remain the authority
+once the semantic
 registry exists.
 
 * Implementation Plan
@@ -1756,7 +1868,7 @@ warnings.
 ** DONE Slice 14: Dynamic Sound-Pack Discovery
 CLOSED: [2026-07-26 Sun]
 
-- Discover immediate =sounds/= subdirectories containing =button.ogg= without
+- Discover configured-root subdirectories containing =button.ogg= without
   requiring a hard-coded Lisp registration.
 - Support safe data-only manifests for partial packs, inheritance, coverage
   declarations, summaries, and spatial metadata.
@@ -1768,8 +1880,8 @@ CLOSED: [2026-07-26 Sun]
   registry table while still validating them in the live resource audit.
 
 Deliverable: a user can add or customize a personal sound directory such as
-=sounds/bart/=, select it immediately, and use it from a scheme without
-changing source registration tables.
+=~/.emacsvox/sounds/packs/bart/=, select it immediately, and use it from a
+scheme without changing source registration tables.
 
 Checks: 238 selected core, aural, Org, and sound ERT tests with no unexpected
 results; all 27 source-loaded semantic traces matching; clean live resource
@@ -2703,7 +2815,8 @@ The migration is complete when:
 - training and explanation commands identify what was presented and why;
 - schemes, resource packs, voice palettes, and semantic extensions validate;
 - existing icon calls, =personality= properties, face mappings, and bundled
-  directories remain functional through documented compatibility adapters;
+  sound-pack identifiers remain functional through documented compatibility
+  adapters;
 - the Org vertical slice and representative module migrations pass all
   required test gates;
 - public documentation explains authoring, customization, migration, and

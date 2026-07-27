@@ -6,9 +6,9 @@
 
 ;;; Commentary:
 
-;; Register semantic cue names, sound resource packs, requirement profiles,
-;; and device-independent voice palettes.  Resource resolution remains
-;; independent of local-player and speech-server protocols.
+;; Register semantic cue names, sound resource packs, module resource overlays,
+;; requirement profiles, and device-independent voice palettes.  Resource
+;; resolution remains independent of local-player and speech-server protocols.
 
 ;;; Code:
 
@@ -22,6 +22,12 @@
 (define-error
   'emacsvox-aural-resource-error
   "Invalid Emacsvox aural resource provider")
+
+(defun emacsvox-aural--resource-error (format-string &rest arguments)
+  "Signal a resource error described by FORMAT-STRING and ARGUMENTS."
+  (signal
+   'emacsvox-aural-resource-error
+   (list (apply #'format format-string arguments))))
 
 (cl-defstruct
     (emacsvox-aural-cue
@@ -41,6 +47,13 @@
   "A concrete sound resource provider."
   id summary kind directory parent profiles default-spatialization assets
   origin)
+
+(cl-defstruct
+    (emacsvox-aural-resource-overlay
+     (:constructor emacsvox-aural--make-resource-overlay))
+  "Module-owned default assets and per-pack themed overrides."
+  id summary owner directory default-spatialization assets
+  pack-assets pack-unknown-assets)
 
 (cl-defstruct
     (emacsvox-aural-resource-report
@@ -65,18 +78,74 @@
   (make-hash-table :test #'eq)
   "Map resource-pack identifiers to provider records.")
 
+(defvar emacsvox-aural-resource-overlay-registry
+  (make-hash-table :test #'eq)
+  "Map module resource-overlay identifiers to provider records.")
+
 (defvar emacsvox-aural-resource-packs-changed-hook nil
   "Abnormal hook run after resource-pack registration or refresh.
 
 Each function receives the affected pack identifier, or nil for a discovery
 refresh that may affect several packs.")
 
+(defvar emacsvox-aural-resource-overlays-changed-hook nil
+  "Abnormal hook run after module resource-overlay state changes.
+
+Each function receives the affected overlay identifier, or nil when the
+enabled overlay set changed.")
+
 (defvar emacsvox-aural-resource-pack-discovery-roots nil
-  "Directories whose immediate children are dynamically discovered packs.")
+  "Sound-pack discovery roots in descending precedence order.")
 
 (defvar emacsvox-aural--resource-pack-discovery-registry
   emacsvox-aural-resource-pack-registry
   "Registry associated with `emacsvox-aural-resource-pack-discovery-roots'.")
+
+(defun emacsvox-aural--custom-set-personal-sound-packs-directory
+    (symbol value)
+  "Set personal sound-pack directory SYMBOL to VALUE."
+  (unless (or (null value) (stringp value))
+    (emacsvox-aural--resource-error
+     "Personal sound-pack directory must be nil or a string: %S" value))
+  (let ((old
+         (and
+          (boundp symbol)
+          (stringp (default-value symbol))
+          (file-name-as-directory
+           (expand-file-name (default-value symbol)))))
+        (normalized
+         (and value (file-name-as-directory (expand-file-name value)))))
+    (set-default symbol normalized)
+    (unless (equal old normalized)
+      (when old
+        (when
+            (fboundp
+             'emacsvox-aural--remove-discovered-resource-packs-below-root)
+          (emacsvox-aural--remove-discovered-resource-packs-below-root old))
+        (setq
+         emacsvox-aural-resource-pack-discovery-roots
+         (delete old emacsvox-aural-resource-pack-discovery-roots)))
+      (when normalized
+        (push normalized emacsvox-aural-resource-pack-discovery-roots))
+      (when
+          (and
+           (fboundp 'emacsvox-aural-refresh-discovered-resource-packs)
+           (eq
+            emacsvox-aural-resource-pack-registry
+            emacsvox-aural--resource-pack-discovery-registry))
+        (emacsvox-aural-refresh-discovered-resource-packs)))))
+
+(defcustom emacsvox-aural-personal-sound-packs-directory
+  (expand-file-name "~/.emacsvox/sounds/packs/")
+  "Directory containing personal sound packs.
+
+Each immediate child is a candidate pack.  Set this to nil to disable the
+standard personal discovery root.  The directory need not exist."
+  :type '(choice
+          (const :tag "Disable standard personal sound packs" nil)
+          directory)
+  :set #'emacsvox-aural--custom-set-personal-sound-packs-directory
+  :group 'emacsvox-aural)
 
 (defvar emacsvox-aural-voice-palette-registry
   (make-hash-table :test #'eq)
@@ -91,6 +160,53 @@ refresh that may affect several packs.")
 
 (defconst emacsvox-aural-resource-pack-manifest-schema-version 1
   "Current schema version for sound-pack manifests.")
+
+(defvar emacsvox-aural-disabled-resource-overlays nil)
+
+(defun emacsvox-aural--validate-disabled-resource-overlays (ids)
+  "Validate disabled resource-overlay IDS and return a copy."
+  (unless (and (listp ids) (cl-every #'symbolp ids))
+    (emacsvox-aural--resource-error
+     "Disabled resource overlays must be a list of symbols: %S" ids))
+  (unless (= (length ids) (length (delete-dups (copy-sequence ids))))
+    (emacsvox-aural--resource-error
+     "A resource overlay is disabled more than once: %S" ids))
+  (copy-sequence ids))
+
+(defun emacsvox-aural--resource-overlays-changed (&optional id)
+  "Notify resource consumers that overlay ID or enablement changed."
+  (run-hook-with-args 'emacsvox-aural-resource-overlays-changed-hook id)
+  (when (fboundp 'emacsvox-aural-configuration-changed)
+    (emacsvox-aural-configuration-changed 'resource-overlays)))
+
+(defun emacsvox-aural-set-disabled-resource-overlays (ids)
+  "Disable module resource overlays named by IDS.
+
+An unavailable identifier may be named before its package is loaded."
+  (setq
+   emacsvox-aural-disabled-resource-overlays
+   (emacsvox-aural--validate-disabled-resource-overlays ids))
+  (emacsvox-aural--resource-overlays-changed)
+  emacsvox-aural-disabled-resource-overlays)
+
+(defun emacsvox-aural--custom-set-disabled-resource-overlays (symbol value)
+  "Set disabled resource overlays in SYMBOL to VALUE."
+  (let* ((validated
+          (emacsvox-aural--validate-disabled-resource-overlays value))
+         (changed
+          (not (equal (default-value symbol) validated))))
+    (set-default symbol validated)
+    (when changed
+      (emacsvox-aural--resource-overlays-changed))))
+
+(defcustom emacsvox-aural-disabled-resource-overlays nil
+  "Module resource overlays that should use their generic cue fallbacks.
+
+Disabling an overlay suppresses both its packaged defaults and matching
+themed overrides below an active sound pack."
+  :type '(repeat symbol)
+  :set #'emacsvox-aural--custom-set-disabled-resource-overlays
+  :group 'emacsvox-aural)
 
 (defconst emacsvox-aural--legacy-cue-definitions
   '((alarm "An urgent alarm")
@@ -210,12 +326,6 @@ refresh that may affect several packs.")
     (smoothen-medium . voice-smoothen-medium))
   "The existing ACSS personalities exposed as the default voice palette.")
 
-(defun emacsvox-aural--resource-error (format-string &rest arguments)
-  "Signal a resource error described by FORMAT-STRING and ARGUMENTS."
-  (signal
-   'emacsvox-aural-resource-error
-   (list (apply #'format format-string arguments))))
-
 (cl-defun emacsvox-aural-register-cue
     (id &key summary (kind 'cue) fallback (owner 'core))
   "Register cue ID with SUMMARY, KIND, FALLBACK, and OWNER."
@@ -304,8 +414,166 @@ sound directories."
           :assets (emacsvox-aural--scan-resource-directory directory)
           :origin origin)))
     (puthash id record emacsvox-aural-resource-pack-registry)
+    (maphash
+     (lambda (_ overlay)
+       (emacsvox-aural--refresh-resource-overlay-pack overlay id))
+     emacsvox-aural-resource-overlay-registry)
     (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)
     record))
+
+(defun emacsvox-aural-resource-overlay (id)
+  "Return registered module resource overlay ID, or nil."
+  (gethash id emacsvox-aural-resource-overlay-registry))
+
+(defun emacsvox-aural-resource-overlay-enabled-p (id)
+  "Return non-nil when registered resource overlay ID is enabled."
+  (and
+   (emacsvox-aural-resource-overlay id)
+   (not (memq id emacsvox-aural-disabled-resource-overlays))))
+
+(defun emacsvox-aural--scan-owned-cue-directory (directory owner)
+  "Return (ASSETS . UNKNOWN) for Ogg files in DIRECTORY owned by OWNER."
+  (let ((assets (make-hash-table :test #'eq))
+        unknown)
+    (when (file-directory-p directory)
+      (dolist (file (directory-files directory 'full "\\.ogg\\'"))
+        (when (file-regular-p file)
+          (let* ((cue (intern (file-name-base file)))
+                 (record (emacsvox-aural-cue cue)))
+            (if (and record (eq owner (emacsvox-aural-cue-owner record)))
+                (puthash cue file assets)
+              (push cue unknown))))))
+    (cons
+     assets
+     (sort
+      (delete-dups unknown)
+      (lambda (left right)
+        (string-lessp (symbol-name left) (symbol-name right)))))))
+
+(defun emacsvox-aural--refresh-resource-overlay-pack (overlay pack-id)
+  "Refresh themed assets for resource OVERLAY below sound pack PACK-ID."
+  (let ((pack (emacsvox-aural-resource-pack pack-id)))
+    (if (and pack (eq (emacsvox-aural-resource-pack-kind pack) 'sound))
+        (pcase-let*
+            ((directory
+              (expand-file-name
+               (symbol-name (emacsvox-aural-resource-overlay-owner overlay))
+               (emacsvox-aural-resource-pack-directory pack)))
+             (`(,assets . ,unknown)
+              (emacsvox-aural--scan-owned-cue-directory
+               directory
+               (emacsvox-aural-resource-overlay-owner overlay))))
+          (puthash
+           pack-id assets
+           (emacsvox-aural-resource-overlay-pack-assets overlay))
+          (puthash
+           pack-id unknown
+           (emacsvox-aural-resource-overlay-pack-unknown-assets overlay)))
+      (remhash
+       pack-id (emacsvox-aural-resource-overlay-pack-assets overlay))
+      (remhash
+       pack-id
+       (emacsvox-aural-resource-overlay-pack-unknown-assets overlay))))
+  overlay)
+
+(defun emacsvox-aural--refresh-all-resource-overlay-packs ()
+  "Refresh every registered overlay against the current sound-pack registry."
+  (maphash
+   (lambda (_id overlay)
+     (clrhash (emacsvox-aural-resource-overlay-pack-assets overlay))
+     (clrhash (emacsvox-aural-resource-overlay-pack-unknown-assets overlay))
+     (maphash
+      (lambda (pack-id _pack)
+        (emacsvox-aural--refresh-resource-overlay-pack overlay pack-id))
+      emacsvox-aural-resource-pack-registry))
+   emacsvox-aural-resource-overlay-registry))
+
+(cl-defun emacsvox-aural-register-resource-overlay
+    (id &key summary owner directory (default-spatialization 'neutral))
+  "Register module resource overlay ID rooted at DIRECTORY.
+
+SUMMARY describes the overlay.  OWNER names the module that owns every cue
+file in DIRECTORY.  An active sound pack may override these defaults below
+its OWNER-named subdirectory.  DEFAULT-SPATIALIZATION describes the packaged
+default assets."
+  (emacsvox-aural--validate-id id "Resource overlay identifier")
+  (emacsvox-aural--validate-summary summary (format "Resource overlay %S" id))
+  (emacsvox-aural--validate-id owner (format "Owner for overlay %S" id))
+  (unless (stringp directory)
+    (emacsvox-aural--resource-error
+     "Resource overlay %S directory must be a string" id))
+  (unless (file-directory-p directory)
+    (emacsvox-aural--resource-error
+     "Resource overlay %S directory does not exist: %s" id directory))
+  (unless (memq default-spatialization '(neutral stereo pre-spatialized))
+    (emacsvox-aural--resource-error
+     "Invalid default spatialization for overlay %S: %S"
+     id default-spatialization))
+  (when (emacsvox-aural-resource-overlay id)
+    (emacsvox-aural--resource-error
+     "Resource overlay is already registered: %S" id))
+  (maphash
+   (lambda (other-id overlay)
+     (when (eq owner (emacsvox-aural-resource-overlay-owner overlay))
+       (emacsvox-aural--resource-error
+        "Resource overlay owner %S is already provided by %S"
+        owner other-id)))
+   emacsvox-aural-resource-overlay-registry)
+  (pcase-let*
+      ((expanded (expand-file-name directory))
+       (`(,assets . ,unknown)
+        (emacsvox-aural--scan-owned-cue-directory expanded owner)))
+    (when unknown
+      (emacsvox-aural--resource-error
+       "Resource overlay %S contains unknown or foreign cues: %S"
+       id unknown))
+    (let ((overlay
+           (emacsvox-aural--make-resource-overlay
+            :id id
+            :summary summary
+            :owner owner
+            :directory expanded
+            :default-spatialization default-spatialization
+            :assets assets
+            :pack-assets (make-hash-table :test #'eq)
+            :pack-unknown-assets (make-hash-table :test #'eq))))
+      (maphash
+       (lambda (pack-id _pack)
+         (emacsvox-aural--refresh-resource-overlay-pack overlay pack-id))
+       emacsvox-aural-resource-pack-registry)
+      (puthash id overlay emacsvox-aural-resource-overlay-registry)
+      (emacsvox-aural--resource-overlays-changed id)
+      overlay)))
+
+(defun emacsvox-aural-refresh-resource-overlay (id)
+  "Rescan registered module resource overlay ID and themed overrides."
+  (let ((overlay (emacsvox-aural-resource-overlay id)))
+    (unless overlay
+      (emacsvox-aural--resource-error "Unknown resource overlay: %S" id))
+    (unless
+        (file-directory-p
+         (emacsvox-aural-resource-overlay-directory overlay))
+      (emacsvox-aural--resource-error
+       "Resource overlay %S directory does not exist: %s"
+       id (emacsvox-aural-resource-overlay-directory overlay)))
+    (pcase-let
+        ((`(,assets . ,unknown)
+          (emacsvox-aural--scan-owned-cue-directory
+           (emacsvox-aural-resource-overlay-directory overlay)
+           (emacsvox-aural-resource-overlay-owner overlay))))
+      (when unknown
+        (emacsvox-aural--resource-error
+         "Resource overlay %S contains unknown or foreign cues: %S"
+         id unknown))
+      (setf (emacsvox-aural-resource-overlay-assets overlay) assets))
+    (clrhash (emacsvox-aural-resource-overlay-pack-assets overlay))
+    (clrhash (emacsvox-aural-resource-overlay-pack-unknown-assets overlay))
+    (maphash
+     (lambda (pack-id _pack)
+       (emacsvox-aural--refresh-resource-overlay-pack overlay pack-id))
+     emacsvox-aural-resource-pack-registry)
+    (emacsvox-aural--resource-overlays-changed id)
+    overlay))
 
 (defun emacsvox-aural--complete-voice-style-p (value)
   "Return non-nil when VALUE is a complete explicit ACSS preset."
@@ -669,6 +937,36 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
        (emacsvox-aural-resource-pack-directory pack))))
     (file-name-as-directory (expand-file-name root)))))
 
+(defun emacsvox-aural--remove-discovered-resource-packs-below-root (root)
+  "Remove dynamically discovered packs immediately below ROOT."
+  (let (remove)
+    (maphash
+     (lambda (id pack)
+       (when (emacsvox-aural--pack-immediately-below-root-p pack root)
+         (push id remove)))
+     emacsvox-aural-resource-pack-registry)
+    (dolist (id remove)
+      (remhash id emacsvox-aural-resource-pack-registry))
+    (when remove
+      (emacsvox-aural--refresh-all-resource-overlay-packs)
+      (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook nil))
+    remove))
+
+(defun emacsvox-aural--discovery-root-has-precedence-p (root pack)
+  "Return non-nil when discovery ROOT has precedence over discovered PACK."
+  (let ((candidate
+         (cl-position
+          (file-name-as-directory (expand-file-name root))
+          emacsvox-aural-resource-pack-discovery-roots
+          :test #'equal))
+        (existing
+         (cl-position-if
+          (lambda (configured-root)
+            (emacsvox-aural--pack-immediately-below-root-p
+             pack configured-root))
+          emacsvox-aural-resource-pack-discovery-roots)))
+    (and candidate existing (< candidate existing))))
+
 (defun emacsvox-aural-discover-resource-packs (sounds-directory)
   "Synchronize dynamically discovered packs below SOUNDS-DIRECTORY.
 
@@ -713,12 +1011,19 @@ discovered directories with the same identifier."
                     (or
                      (null existing)
                      (emacsvox-aural--pack-immediately-below-root-p
-                      existing root))
+                      existing root)
+                     (and
+                      (eq
+                       (emacsvox-aural-resource-pack-origin existing)
+                       'discovered)
+                      (emacsvox-aural--discovery-root-has-precedence-p
+                       root existing)))
                   (when existing
                     (remhash id emacsvox-aural-resource-pack-registry))
                   (apply
                    #'emacsvox-aural-register-resource-pack
                    definition))))
+            (emacsvox-aural--refresh-all-resource-overlay-packs)
             (emacsvox-aural-validate-resource-registry))
         (error
          (clrhash emacsvox-aural-resource-pack-registry)
@@ -726,6 +1031,7 @@ discovered directories with the same identifier."
           (lambda (id pack)
             (puthash id pack emacsvox-aural-resource-pack-registry))
           snapshot)
+         (emacsvox-aural--refresh-all-resource-overlay-packs)
          (signal (car error) (cdr error)))))
     (setq
      desired
@@ -774,6 +1080,10 @@ discovered directories with the same identifier."
      (emacsvox-aural-resource-pack-assets pack)
      (emacsvox-aural--scan-resource-directory
       (emacsvox-aural-resource-pack-directory pack)))
+    (maphash
+     (lambda (_ overlay)
+       (emacsvox-aural--refresh-resource-overlay-pack overlay id))
+     emacsvox-aural-resource-overlay-registry)
     (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)
     pack))
 
@@ -794,17 +1104,93 @@ discovered directories with the same identifier."
        (emacsvox-aural-resource-pack-assets pack))
       assets)))
 
-(defun emacsvox-aural-effective-assets (pack-id &optional include-prompts)
-  "Return effective assets for PACK-ID, optionally overlaying it on prompts."
-  (let ((assets
-         (if (and include-prompts
-                  (not (eq pack-id 'prompts))
-                  (emacsvox-aural-resource-pack 'prompts))
-             (emacsvox-aural--effective-pack-assets 'prompts)
-           (make-hash-table :test #'eq))))
+(defun emacsvox-aural--enabled-resource-overlays ()
+  "Return enabled module resource overlays in stable identifier order."
+  (let (overlays)
     (maphash
-     (lambda (cue file) (puthash cue file assets))
-     (emacsvox-aural--effective-pack-assets pack-id))
+     (lambda (id overlay)
+       (when (emacsvox-aural-resource-overlay-enabled-p id)
+         (push overlay overlays)))
+     emacsvox-aural-resource-overlay-registry)
+    (sort
+     overlays
+     (lambda (left right)
+       (string-lessp
+        (symbol-name (emacsvox-aural-resource-overlay-id left))
+        (symbol-name (emacsvox-aural-resource-overlay-id right)))))))
+
+(defun emacsvox-aural--copy-resource-assets (source destination)
+  "Copy cue mappings from SOURCE into DESTINATION."
+  (maphash
+   (lambda (cue file) (puthash cue file destination))
+   source)
+  destination)
+
+(defun emacsvox-aural--resource-overlay-default-asset (cue)
+  "Return (OVERLAY-ID . FILE) for enabled module-default CUE."
+  (cl-loop
+   for overlay in (emacsvox-aural--enabled-resource-overlays)
+   for file = (gethash cue (emacsvox-aural-resource-overlay-assets overlay))
+   when file
+   return (cons (emacsvox-aural-resource-overlay-id overlay) file)))
+
+(defun emacsvox-aural--resource-pack-module-asset (cue pack-id)
+  "Return (OVERLAY-ID . FILE) for CUE below sound pack PACK-ID."
+  (cl-loop
+   for overlay in (emacsvox-aural--enabled-resource-overlays)
+   for assets =
+   (gethash pack-id (emacsvox-aural-resource-overlay-pack-assets overlay))
+   for file = (and assets (gethash cue assets))
+   when file
+   return (cons (emacsvox-aural-resource-overlay-id overlay) file)))
+
+(defun emacsvox-aural--apply-pack-assets-with-overlays
+    (id assets &optional path)
+  "Overlay inherited pack ID and its module subdirectories onto ASSETS.
+
+PATH protects this helper from invalid inheritance cycles."
+  (when (memq id path)
+    (emacsvox-aural--resource-error
+     "Resource pack inheritance cycle: %S" (nreverse (cons id path))))
+  (let ((pack (emacsvox-aural-resource-pack id)))
+    (unless pack
+      (emacsvox-aural--resource-error "Unknown resource pack: %S" id))
+    (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
+      (emacsvox-aural--apply-pack-assets-with-overlays
+       parent assets (cons id path)))
+    (emacsvox-aural--copy-resource-assets
+     (emacsvox-aural-resource-pack-assets pack) assets)
+    (when (eq (emacsvox-aural-resource-pack-kind pack) 'sound)
+      (dolist (overlay (emacsvox-aural--enabled-resource-overlays))
+        (when-let* ((module-assets
+                     (gethash
+                      id
+                      (emacsvox-aural-resource-overlay-pack-assets overlay))))
+          (emacsvox-aural--copy-resource-assets module-assets assets)))))
+  assets)
+
+(defun emacsvox-aural-effective-assets (pack-id &optional include-prompts)
+  "Return effective assets for PACK-ID, including module resource overlays.
+
+When INCLUDE-PROMPTS is non-nil, prompt resources form the weakest layer.
+Enabled module defaults come next.  Each selected-pack inheritance layer then
+adds its flat assets followed by OWNER-named module-subdirectory overrides."
+  (let* ((pack (emacsvox-aural-resource-pack pack-id))
+         (_
+          (unless pack
+            (emacsvox-aural--resource-error
+             "Unknown resource pack: %S" pack-id)))
+         (assets (make-hash-table :test #'eq)))
+    (when
+        (and include-prompts
+             (not (eq pack-id 'prompts))
+             (emacsvox-aural-resource-pack 'prompts))
+      (emacsvox-aural--apply-pack-assets-with-overlays 'prompts assets))
+    (when (eq (emacsvox-aural-resource-pack-kind pack) 'sound)
+      (dolist (overlay (emacsvox-aural--enabled-resource-overlays))
+        (emacsvox-aural--copy-resource-assets
+         (emacsvox-aural-resource-overlay-assets overlay) assets)))
+    (emacsvox-aural--apply-pack-assets-with-overlays pack-id assets)
     assets))
 
 (defun emacsvox-aural--resolve-cue-in-assets (cue assets &optional path)
@@ -820,17 +1206,17 @@ discovered directories with the same identifier."
       fallback assets (cons cue path)))))
 
 (defun emacsvox-aural-resolve-cue (cue pack-id &optional include-prompts)
-  "Resolve CUE to a file from PACK-ID and optional prompt resources."
+  "Resolve CUE to a file from PACK-ID.
+
+When INCLUDE-PROMPTS is non-nil, include prompt resources."
   (emacsvox-aural--resolve-cue-in-assets
    cue (emacsvox-aural-effective-assets pack-id include-prompts)))
 
-(defun emacsvox-aural-resource-spatialization
-    (resource pack-id &optional include-prompts path)
-  "Return spatialization metadata for RESOURCE selected through PACK-ID.
+(defun emacsvox-aural--resource-spatialization-in-pack
+    (resource pack-id &optional path)
+  "Return spatialization for RESOURCE supplied through PACK-ID, or nil.
 
-INCLUDE-PROMPTS includes the prompt pack in the lookup.  PATH detects pack
-inheritance cycles.  The metadata comes from the pack that actually owns the
-resolved file, rather than unconditionally from the selected child pack."
+PATH protects this helper from invalid inheritance cycles."
   (when (memq pack-id path)
     (emacsvox-aural--resource-error
      "Resource pack inheritance cycle: %S"
@@ -840,20 +1226,51 @@ resolved file, rather than unconditionally from the selected child pack."
       (emacsvox-aural--resource-error "Unknown resource pack: %S" pack-id))
     (or
      (and
-      (cl-loop
-       for file being the hash-values of
-       (emacsvox-aural-resource-pack-assets pack)
-       thereis (equal file resource))
+      (or
+       (cl-loop
+        for file being the hash-values of
+        (emacsvox-aural-resource-pack-assets pack)
+        thereis (equal file resource))
+       (cl-some
+        (lambda (overlay)
+          (when-let* ((assets
+                       (gethash
+                        pack-id
+                        (emacsvox-aural-resource-overlay-pack-assets overlay))))
+            (cl-loop
+             for file being the hash-values of assets
+             thereis (equal file resource))))
+        (emacsvox-aural--enabled-resource-overlays)))
       (emacsvox-aural-resource-pack-default-spatialization pack))
      (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
-       (emacsvox-aural-resource-spatialization
-        resource parent nil (cons pack-id path)))
-     (when
-         (and include-prompts
-              (not (eq pack-id 'prompts))
-              (emacsvox-aural-resource-pack 'prompts))
-       (emacsvox-aural-resource-spatialization resource 'prompts nil))
-     'neutral)))
+       (emacsvox-aural--resource-spatialization-in-pack
+        resource parent (cons pack-id path))))))
+
+(defun emacsvox-aural-resource-spatialization
+    (resource pack-id &optional include-prompts path)
+  "Return spatialization metadata for RESOURCE selected through PACK-ID.
+
+INCLUDE-PROMPTS includes the prompt pack in the lookup.  PATH detects pack
+inheritance cycles.  The metadata comes from the pack that actually owns the
+resolved file, rather than unconditionally from the selected child pack."
+  (or
+   (emacsvox-aural--resource-spatialization-in-pack
+    resource pack-id path)
+   (cl-loop
+    for overlay in (emacsvox-aural--enabled-resource-overlays)
+    when
+    (cl-loop
+     for file being the hash-values of
+     (emacsvox-aural-resource-overlay-assets overlay)
+     thereis (equal file resource))
+    return
+    (emacsvox-aural-resource-overlay-default-spatialization overlay))
+   (when
+       (and include-prompts
+            (not (eq pack-id 'prompts))
+            (emacsvox-aural-resource-pack 'prompts))
+     (emacsvox-aural--resource-spatialization-in-pack resource 'prompts))
+   'neutral))
 
 (defun emacsvox-aural--pack-profile-cues (pack)
   "Return declared requirement cues for PACK."
@@ -871,6 +1288,34 @@ resolved file, rather than unconditionally from the selected child pack."
           cues))))
     (delete-dups cues)))
 
+(defun emacsvox-aural--resource-pack-module-unknown-assets
+    (id &optional path)
+  "Return themed module filenames with invalid cue ownership below pack ID.
+
+PATH protects this helper from invalid inheritance cycles."
+  (when (memq id path)
+    (emacsvox-aural--resource-error
+     "Resource pack inheritance cycle: %S" (nreverse (cons id path))))
+  (let* ((pack (emacsvox-aural-resource-pack id))
+         (_
+          (unless pack
+            (emacsvox-aural--resource-error "Unknown resource pack: %S" id)))
+         (unknown
+          (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
+            (emacsvox-aural--resource-pack-module-unknown-assets
+             parent (cons id path)))))
+    (dolist (overlay (emacsvox-aural--enabled-resource-overlays))
+      (let ((owner (emacsvox-aural-resource-overlay-owner overlay)))
+        (dolist
+            (cue
+             (gethash
+              id
+              (emacsvox-aural-resource-overlay-pack-unknown-assets overlay)))
+          (push
+           (intern (format "%s/%s" owner cue))
+           unknown))))
+    unknown))
+
 (defun emacsvox-aural-validate-resource-pack (id &optional extra-required)
   "Return a validation report for pack ID and EXTRA-REQUIRED cues."
   (let* ((pack (emacsvox-aural-resource-pack id))
@@ -879,7 +1324,7 @@ resolved file, rather than unconditionally from the selected child pack."
             (emacsvox-aural--resource-error "Unknown resource pack: %S" id)))
          (directory (emacsvox-aural-resource-pack-directory pack))
          (missing-directory (not (file-directory-p directory)))
-         (assets (emacsvox-aural--effective-pack-assets id))
+         (assets (emacsvox-aural-effective-assets id))
          (required
           (delete-dups
            (append
@@ -888,7 +1333,8 @@ resolved file, rather than unconditionally from the selected child pack."
             (emacsvox-aural--pack-profile-cues pack)
             (copy-sequence extra-required))))
          missing
-         unknown)
+         (unknown
+          (emacsvox-aural--resource-pack-module-unknown-assets id)))
     (dolist (cue required)
       (unless (emacsvox-aural--resolve-cue-in-assets cue assets)
         (push cue missing)))
@@ -1010,6 +1456,47 @@ resolved file, rather than unconditionally from the selected child pack."
          (emacsvox-aural--resource-error
           "Requirement profile %S names unknown cue %S" id cue))))
    emacsvox-aural-requirement-profile-registry)
+  (let ((owners (make-hash-table :test #'eq)))
+    (maphash
+     (lambda (id overlay)
+       (let ((owner (emacsvox-aural-resource-overlay-owner overlay)))
+         (when-let* ((other (gethash owner owners)))
+           (emacsvox-aural--resource-error
+            "Resource overlays %S and %S share owner %S"
+            other id owner))
+         (puthash owner id owners)
+         (unless
+             (file-directory-p
+              (emacsvox-aural-resource-overlay-directory overlay))
+           (emacsvox-aural--resource-error
+            "Resource overlay %S directory does not exist: %s"
+            id (emacsvox-aural-resource-overlay-directory overlay)))
+         (maphash
+          (lambda (cue _file)
+            (let ((record (emacsvox-aural-cue cue)))
+              (unless
+                  (and
+                   record
+                   (eq owner (emacsvox-aural-cue-owner record)))
+                (emacsvox-aural--resource-error
+                 "Resource overlay %S supplies foreign cue %S"
+                 id cue))))
+          (emacsvox-aural-resource-overlay-assets overlay))
+         (maphash
+          (lambda (_pack-id assets)
+            (maphash
+             (lambda (cue _file)
+               (let ((record (emacsvox-aural-cue cue)))
+                 (unless
+                     (and
+                      record
+                      (eq owner (emacsvox-aural-cue-owner record)))
+                   (emacsvox-aural--resource-error
+                    "Themed overlay %S supplies foreign cue %S"
+                    id cue))))
+             assets))
+          (emacsvox-aural-resource-overlay-pack-assets overlay))))
+     emacsvox-aural-resource-overlay-registry))
   (maphash
    (lambda (id pack)
      (emacsvox-aural--pack-profile-cues pack)
@@ -1066,33 +1553,58 @@ resolved file, rather than unconditionally from the selected child pack."
      :built-in t
      :source 'emacsvox-aural-resources)))
 
+(defun emacsvox-aural--prioritize-resource-pack-discovery-roots (roots)
+  "Put ROOTS first in configured discovery precedence order."
+  (dolist (root (reverse roots))
+    (setq root (file-name-as-directory (expand-file-name root)))
+    (setq
+     emacsvox-aural-resource-pack-discovery-roots
+     (cons
+      root
+      (delete root emacsvox-aural-resource-pack-discovery-roots)))))
+
 (defun emacsvox-aural-register-bundled-resources (sounds-directory)
-  "Register bundled packs and discover local packs below SOUNDS-DIRECTORY."
-  (let ((root (file-name-as-directory (expand-file-name sounds-directory))))
+  "Register bundled resources rooted at SOUNDS-DIRECTORY.
+
+Bundled sound packs live below the `packs' child.  Personal packs are
+discovered from `emacsvox-aural-personal-sound-packs-directory'.  Direct
+sound-pack children of SOUNDS-DIRECTORY remain a lowest-precedence
+compatibility source."
+  (let* ((root
+          (file-name-as-directory (expand-file-name sounds-directory)))
+         (bundled-packs (expand-file-name "packs" root))
+         (discovery-roots
+          (delq
+           nil
+           (list
+            emacsvox-aural-personal-sound-packs-directory
+            bundled-packs
+            root))))
     (when
         (eq
          emacsvox-aural-resource-pack-registry
          emacsvox-aural--resource-pack-discovery-registry)
-      (cl-pushnew root emacsvox-aural-resource-pack-discovery-roots
-                  :test #'equal)))
-  (dolist
-      (definition
-       `((prompts "Theme-independent prompts" prompt "prompts" nil neutral)
-         (chimes "Short chime-based auditory cues" sound "chimes"
-                 (legacy-complete) neutral)
-         (3d "HRTF-generated spatial auditory cues" sound "3d"
-             (legacy-complete) pre-spatialized)))
-    (let ((id (nth 0 definition)))
-      (unless (emacsvox-aural-resource-pack id)
-        (emacsvox-aural-register-resource-pack
-         id
-         :summary (nth 1 definition)
-         :kind (nth 2 definition)
-         :directory (expand-file-name (nth 3 definition) sounds-directory)
-         :profiles (nth 4 definition)
-         :default-spatialization (nth 5 definition)))))
-  (emacsvox-aural-discover-resource-packs sounds-directory)
-  (emacsvox-aural-validate-resource-registry))
+      (emacsvox-aural--prioritize-resource-pack-discovery-roots
+       discovery-roots))
+    (dolist
+        (definition
+         `((prompts "Theme-independent prompts" prompt "prompts" nil neutral)
+           (chimes "Short chime-based auditory cues" sound "packs/chimes"
+                   (legacy-complete) neutral)
+           (3d "HRTF-generated spatial auditory cues" sound "packs/3d"
+               (legacy-complete) pre-spatialized)))
+      (let ((id (nth 0 definition)))
+        (unless (emacsvox-aural-resource-pack id)
+          (emacsvox-aural-register-resource-pack
+           id
+           :summary (nth 1 definition)
+           :kind (nth 2 definition)
+           :directory (expand-file-name (nth 3 definition) sounds-directory)
+           :profiles (nth 4 definition)
+           :default-spatialization (nth 5 definition)))))
+    (dolist (discovery-root discovery-roots)
+      (emacsvox-aural-discover-resource-packs discovery-root))
+    (emacsvox-aural-validate-resource-registry)))
 
 (emacsvox-aural--register-resource-vocabulary)
 

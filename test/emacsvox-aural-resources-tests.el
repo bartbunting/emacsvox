@@ -48,7 +48,12 @@
   "Run BODY with an isolated resource-pack registry."
   (declare (indent 0) (debug t))
   `(let ((emacsvox-aural-resource-pack-registry
-          (make-hash-table :test #'eq)))
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-resource-overlay-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-personal-sound-packs-directory nil)
+         (emacsvox-aural-disabled-resource-overlays nil)
+         (emacsvox-aural-resource-overlays-changed-hook nil))
      ,@body))
 
 (ert-deftest emacsvox-aural-resources-register-intent-for-every-bundled-cue ()
@@ -100,6 +105,7 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural--resource-pack-discovery-registry
           emacsvox-aural-resource-pack-registry)
+         (emacsvox-aural-personal-sound-packs-directory nil)
          (emacsvox-aural-resource-pack-discovery-roots nil))
     (unwind-protect
         (progn
@@ -133,16 +139,61 @@
           (should-not (emacsvox-aural-resource-pack 'bart)))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-aural-resources-prefer-personal-packs-to-legacy-root ()
+  "The personal pack root wins over, then falls back to, legacy `sounds/'."
+  (let* ((root (make-temp-file "emacsvox-pack-roots-" t))
+         (personal-root (make-temp-file "emacsvox-personal-packs-" t))
+         (legacy-bart (expand-file-name "bart" root))
+         (personal-bart (expand-file-name "bart" personal-root))
+         (emacsvox-aural-resource-pack-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural--resource-pack-discovery-registry
+          emacsvox-aural-resource-pack-registry)
+         (emacsvox-aural-resource-pack-discovery-roots nil)
+         (emacsvox-aural-personal-sound-packs-directory personal-root))
+    (unwind-protect
+        (progn
+          (make-directory legacy-bart)
+          (emacsvox-test--resource-file legacy-bart "button")
+          (emacsvox-aural-register-bundled-resources root)
+          (should
+           (equal
+            (emacsvox-aural-resource-pack-directory
+             (emacsvox-aural-resource-pack 'bart))
+            legacy-bart))
+          (make-directory personal-bart)
+          (emacsvox-test--resource-file personal-bart "button")
+          (emacsvox-aural-refresh-discovered-resource-packs)
+          (should
+           (equal
+            (emacsvox-aural-resource-pack-directory
+             (emacsvox-aural-resource-pack 'bart))
+            personal-bart))
+          (should
+           (equal
+            (car emacsvox-aural-resource-pack-discovery-roots)
+            (file-name-as-directory personal-root)))
+          (delete-directory personal-bart t)
+          (emacsvox-aural-refresh-discovered-resource-packs)
+          (should
+           (equal
+            (emacsvox-aural-resource-pack-directory
+             (emacsvox-aural-resource-pack 'bart))
+            legacy-bart)))
+      (delete-directory root t)
+      (delete-directory personal-root t))))
+
 (ert-deftest emacsvox-aural-resources-discover-manifested-partial-pack ()
   "A data manifest can define inheritance and spatialization for a partial pack."
   (let* ((root (make-temp-file "emacsvox-pack-manifest-" t))
-         (chimes (expand-file-name "chimes" root))
+         (chimes (expand-file-name "packs/chimes" root))
          (partial (expand-file-name "personal-overlay" root))
          (emacsvox-aural-resource-pack-registry
-          (make-hash-table :test #'eq)))
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-personal-sound-packs-directory nil))
     (unwind-protect
         (progn
-          (make-directory chimes)
+          (make-directory chimes t)
           (make-directory partial)
           (emacsvox-test--resource-file chimes "button")
           (let ((item (emacsvox-test--resource-file partial "item")))
@@ -247,11 +298,11 @@
      emacsvox-test--sounds-directory)
     (should
      (string-suffix-p
-      "/chimes/shutdown.ogg"
+      "/packs/chimes/shutdown.ogg"
       (emacsvox-aural-resolve-cue 'shutdown 'chimes t)))
     (should
      (string-suffix-p
-      "/3d/close-object.ogg"
+      "/packs/3d/close-object.ogg"
       (emacsvox-aural-resolve-cue 'shutdown '3d t)))
     (should
      (string-suffix-p
@@ -259,11 +310,11 @@
       (emacsvox-aural-resolve-cue 'emacsvox '3d t)))
     (should
      (string-suffix-p
-      "/3d/repeat-end.ogg"
+      "/packs/3d/repeat-end.ogg"
       (emacsvox-aural-resolve-cue 'repeat-stop '3d t)))
     (should
      (string-suffix-p
-      "/3d/deselect-object.ogg"
+      "/packs/3d/deselect-object.ogg"
       (emacsvox-aural-resolve-cue 'unmark-object '3d t)))))
 
 (ert-deftest emacsvox-aural-resources-require-button-for-standalone-pack ()
@@ -344,6 +395,135 @@
          (equal
           (emacsvox-aural-resolve-cue 'item 'child)
           parent-item))))))
+
+(ert-deftest emacsvox-aural-resources-compose-module-earcon-overlays ()
+  "The active pack overrides a module default before its generic fallback."
+  (let ((emacsvox-aural-cue-registry
+         (copy-hash-table emacsvox-aural-cue-registry)))
+    (emacsvox-test--with-resource-directory
+      (emacsvox-test--with-empty-resource-packs
+        (let* ((plain-directory (expand-file-name "plain" root))
+               (notmuch-directory
+                (expand-file-name "notmuch" parent-directory))
+               (plain-fallback
+                (progn
+                  (make-directory plain-directory)
+                  (emacsvox-test--resource-file
+                   plain-directory "button")
+                  (emacsvox-test--resource-file
+                   plain-directory "item")))
+               (bart-fallback
+                (progn
+                  (emacsvox-test--resource-file
+                   parent-directory "button")
+                  (emacsvox-test--resource-file
+                   parent-directory "item")))
+               (module-default
+                (emacsvox-test--resource-file
+                 child-directory "notmuch-attachment"))
+               (module-override
+                (progn
+                  (make-directory notmuch-directory)
+                  (emacsvox-test--resource-file
+                   notmuch-directory "notmuch-attachment"))))
+          (emacsvox-aural-register-cue
+           'notmuch-attachment
+           :summary "A Notmuch attachment was reached"
+           :fallback 'item
+           :owner 'notmuch)
+          (emacsvox-aural-register-resource-pack
+           'plain
+           :summary "Plain sounds"
+           :directory plain-directory
+           :default-spatialization 'neutral)
+          (emacsvox-aural-register-resource-pack
+           'bart
+           :summary "Bart sounds"
+           :directory parent-directory
+           :default-spatialization 'pre-spatialized)
+          (emacsvox-aural-register-resource-overlay
+           'notmuch-earcons
+           :summary "Notmuch-specific earcons"
+           :owner 'notmuch
+           :directory child-directory
+           :default-spatialization 'stereo)
+          (should
+           (equal
+            (emacsvox-aural-resolve-cue 'notmuch-attachment 'plain)
+            module-default))
+          (should
+           (eq
+            (emacsvox-aural-resource-spatialization
+             module-default 'plain)
+            'stereo))
+          (should
+           (equal
+            (emacsvox-aural-resolve-cue 'notmuch-attachment 'bart)
+            module-override))
+          (should
+           (eq
+            (emacsvox-aural-resource-spatialization
+             module-override 'bart)
+            'pre-spatialized))
+          (let ((emacsvox-aural-disabled-resource-overlays
+                 '(notmuch-earcons)))
+            (should
+             (equal
+              (emacsvox-aural-resolve-cue 'notmuch-attachment 'plain)
+              plain-fallback))
+            (should
+             (equal
+              (emacsvox-aural-resolve-cue 'notmuch-attachment 'bart)
+              bart-fallback)))
+          (should
+           (emacsvox-aural-resource-report-valid
+            (emacsvox-aural-validate-resource-pack 'bart))))))))
+
+(ert-deftest emacsvox-aural-resources-enforce-module-overlay-ownership ()
+  "A module overlay cannot supply core or another module's cue."
+  (let ((emacsvox-aural-cue-registry
+         (copy-hash-table emacsvox-aural-cue-registry)))
+    (emacsvox-test--with-resource-directory
+      (emacsvox-test--with-empty-resource-packs
+        (emacsvox-test--resource-file child-directory "button")
+        (should-error
+         (emacsvox-aural-register-resource-overlay
+          'notmuch-earcons
+          :summary "Invalid Notmuch earcons"
+          :owner 'notmuch
+          :directory child-directory)
+         :type 'emacsvox-aural-resource-error)))))
+
+(ert-deftest emacsvox-aural-resources-report-invalid-themed-module-assets ()
+  "A pack reports foreign files found below an enabled module directory."
+  (let ((emacsvox-aural-cue-registry
+         (copy-hash-table emacsvox-aural-cue-registry)))
+    (emacsvox-test--with-resource-directory
+      (emacsvox-test--with-empty-resource-packs
+        (let ((notmuch-directory
+               (expand-file-name "notmuch" parent-directory)))
+          (make-directory notmuch-directory)
+          (emacsvox-test--resource-file parent-directory "button")
+          (emacsvox-test--resource-file child-directory "notmuch-attachment")
+          (emacsvox-test--resource-file notmuch-directory "foreign")
+          (emacsvox-aural-register-cue
+           'notmuch-attachment
+           :summary "A Notmuch attachment was reached"
+           :fallback 'item
+           :owner 'notmuch)
+          (emacsvox-aural-register-resource-pack
+           'bart :summary "Bart sounds" :directory parent-directory)
+          (emacsvox-aural-register-resource-overlay
+           'notmuch-earcons
+           :summary "Notmuch-specific earcons"
+           :owner 'notmuch
+           :directory child-directory)
+          (let ((report (emacsvox-aural-validate-resource-pack 'bart)))
+            (should-not (emacsvox-aural-resource-report-valid report))
+            (should
+             (equal
+              (emacsvox-aural-resource-report-unknown-assets report)
+              '(notmuch/foreign)))))))))
 
 (ert-deftest emacsvox-aural-resources-report-unknown-assets ()
   "Files without registered cue intent are reported."
