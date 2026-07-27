@@ -110,7 +110,7 @@ Operational semantic contract version: =1=.
 |------------+------+-------+-------+-------+------------+--------+--------+-----------+--------+----------+--------|
 | =accepted= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The current candidate or choice was accepted |
 | =activity-ended= | =event= | =core= | - | - | - | - | - | - | - | - | A repeating or ongoing activity ended |
-| =agent-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | One navigable structural block in an agent transcript |
+| =agent-block= | =role= | =agent-shell= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | One navigable structural block in an agent transcript |
 | =agent-block-kind= | =attribute= | =agent-shell= | =agent-response=, =user-prompt=, =thought=, =tool-call=, =activity-group=, =plan=, =permission=, =error=, =table=, =source-block=, =other= | - | - | - | - | - | - | - | The structural kind of an Agent Shell transcript block |
 | =agent-content-copied= | =event= | =agent-shell= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | Agent Shell content was copied for reuse |
 | =agent-content-inspected= | =event= | =agent-shell= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user explicitly requested Agent Shell content |
@@ -279,6 +279,9 @@ Operational semantic contract version: =1=.
 
 | Identifier | Rules | Source | Intent |
 |------------+-------+--------+--------|
+| =agent-shell-block-type-cues= | =11= | emacsvox-aural-representative | Use distinct semantic cues for Agent Shell block types |
+| =agent-shell-block-type-labels= | =1= | emacsvox-aural-representative | Speak the semantic type when entering an Agent Shell block |
+| =agent-shell-block-visibility-cues= | =4= | emacsvox-aural-representative | Cue folded and expanded Agent Shell blocks on entry and toggle |
 | =dired-entry-state-labels= | =3= | emacsvox-aural-representative | Speak Dired mark and deletion-flag changes after the entry |
 | =magit-section-visibility-cues= | =2= | emacsvox-aural-representative | Add semantic open and close cues when Magit section visibility changes |
 | =mail-message-status-cues= | =3= | emacsvox-aural-representative | Add semantic cues for unread, flagged, and attached messages |

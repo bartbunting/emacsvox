@@ -410,7 +410,7 @@
      :kind role
      :summary "One navigable structural block in an agent transcript"
      :owner agent-shell
-     :occasions (navigation inspection)
+     :occasions (navigation state-change inspection)
      :phases (before content after))
     (agent-source-block
      :kind role
@@ -694,6 +694,168 @@
            :kind cue :cue open-object))))))))
   "Disabled built-in feature layers for migrated user workflows.")
 
+(defconst emacsvox-aural-agent-shell-feature-fragments
+  '((:schema-version 1
+     :id agent-shell-block-type-labels
+     :summary "Speak the semantic type when entering an Agent Shell block"
+     :rules
+     ((:id agent-shell-block-type-label
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :requires (agent-block-kind))
+       :render
+       (:before
+        (:prepend
+         ((:id agent-shell-block-type-label-action
+           :kind speech
+           :text-template "{agent-block-kind}")))))))
+    (:schema-version 1
+     :id agent-shell-block-type-cues
+     :summary "Use distinct semantic cues for Agent Shell block types"
+     :rules
+     ((:id agent-shell-agent-response-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind agent-response)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-agent-response-cue-action
+           :kind cue :cue section)))))
+      (:id agent-shell-user-prompt-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind user-prompt)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-user-prompt-cue-action
+           :kind cue :cue ask-question)))))
+      (:id agent-shell-thought-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind thought)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-thought-cue-action
+           :kind cue :cue progress)))))
+      (:id agent-shell-tool-call-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind tool-call)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-tool-call-cue-action
+           :kind cue :cue button)))))
+      (:id agent-shell-activity-group-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind activity-group)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-activity-group-cue-action
+           :kind cue :cue repeat-active)))))
+      (:id agent-shell-plan-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind plan)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-plan-cue-action
+           :kind cue :cue item)))))
+      (:id agent-shell-permission-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind permission)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-permission-cue-action
+           :kind cue :cue alert-user)))))
+      (:id agent-shell-error-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind error)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-error-cue-action
+           :kind cue :cue warn-user)))))
+      (:id agent-shell-table-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind table)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-table-cue-action
+           :kind cue :cue select-object)))))
+      (:id agent-shell-source-block-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind source-block)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-source-block-cue-action
+           :kind cue :cue doc)))))
+      (:id agent-shell-other-block-cue
+       :match
+       (:module agent-shell :event focus-entered :occasion navigation
+        :agent-block-kind other)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-other-block-cue-action
+           :kind cue :cue large-movement)))))))
+    (:schema-version 1
+     :id agent-shell-block-visibility-cues
+     :summary "Cue folded and expanded Agent Shell blocks on entry and toggle"
+     :rules
+     ((:id agent-shell-navigated-folded-cue
+       :match
+       (:module agent-shell :event focus-entered
+        :occasion navigation :visibility folded)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-navigated-folded-cue-action
+           :kind cue :cue close-object)))))
+      (:id agent-shell-navigated-expanded-cue
+       :match
+       (:module agent-shell :event focus-entered
+        :occasion navigation :visibility expanded)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-navigated-expanded-cue-action
+           :kind cue :cue open-object)))))
+      (:id agent-shell-toggled-folded-cue
+       :match
+       (:module agent-shell :event visibility-changed
+        :occasion state-change :visibility folded)
+       :render
+       (:before
+        (:remove (legacy-cue)
+         :append
+         ((:id agent-shell-toggled-folded-cue-action
+           :kind cue :cue close-object)))))
+      (:id agent-shell-toggled-expanded-cue
+       :match
+       (:module agent-shell :event visibility-changed
+        :occasion state-change :visibility expanded)
+       :render
+       (:before
+        (:remove (legacy-cue)
+         :append
+         ((:id agent-shell-toggled-expanded-cue-action
+           :kind cue :cue open-object))))))))
+  "Optional built-in presentation layers for Agent Shell transcript blocks.")
+
 (defun emacsvox-aural-register-representative-semantics ()
   "Register the representative cross-module semantic vocabulary."
   (dolist (definition emacsvox-aural-representative-semantics)
@@ -703,6 +865,10 @@
         (apply #'emacsvox-aural-register-semantic id metadata))))
   (emacsvox-aural-validate-registry)
   (dolist (data emacsvox-aural-workflow-feature-fragments)
+    (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
+      (emacsvox-aural-register-feature-fragment
+       data :built-in t :source "emacsvox-aural-representative")))
+  (dolist (data emacsvox-aural-agent-shell-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
        data :built-in t :source "emacsvox-aural-representative"))))

@@ -39,6 +39,8 @@
 (defvar emacsvox-agent-shell-background-speech-level)
 (defvar emacsvox-agent-shell--block-navigation-type)
 (defvar emacsvox-agent-shell--block-repeat-map)
+(defvar emacsvox-agent-shell--vertical-navigation-active-p)
+(defvar emacsvox-agent-shell--vertical-navigation-origin)
 (defvar emacsvox-agent-shell-foreground-speech-level)
 (defvar emacsvox-agent-shell--table-navigation-active)
 (defvar emacsvox-agent-shell--table-navigation-map)
@@ -64,6 +66,7 @@
 (defvar agent-shell-mode-map)
 (defvar agent-shell-show-context-usage-indicator)
 (defvar agent-shell-show-session-id)
+(defvar agent-shell-ui--fold-toggle-state)
 (defvar agent-shell-viewport-dismiss-on-send)
 (defvar agent-shell-viewport--position-cache)
 (defvar agent-shell-viewport-edit-mode-map)
@@ -154,6 +157,16 @@
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell--vertical-toggle-hint-setup
                   "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--vertical-navigation-pre-command
+                  "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--vertical-navigation-post-command
+                  "emacsvox-agent-shell" ())
+(declare-function emacsvox-agent-shell--speak-line-around
+                  "emacsvox-agent-shell" (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--toggle-fragment-around
+                  "emacsvox-agent-shell" (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--toggle-all-fragments-around
+                  "emacsvox-agent-shell" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell-next-block-of-type
                   "emacsvox-agent-shell" ())
 (declare-function emacsvox-agent-shell-next-block-at-point
@@ -1602,6 +1615,48 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell--filter-vertical-toggle-hint))
       (should (equal ems--message-filter "original")))))
 
+(ert-deftest emacsvox-agent-shell-vertical-entry-adds-block-facts-once ()
+  "Arrow movement should add facts only when it enters another block."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (let* ((locations (emacsvox-agent-shell--block-locations))
+           (response
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'agent-response))
+             locations))
+           (plan
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'plan))
+             locations))
+           entered-facts entered-module entered-occasion same-block-facts)
+      (goto-char (plist-get response :position))
+      (let ((this-command 'next-line))
+        (emacsvox-agent-shell--vertical-navigation-pre-command))
+      (goto-char (plist-get plan :position))
+      (emacsvox-agent-shell--speak-line-around
+       (lambda (&rest _)
+         (setq
+          entered-facts (copy-tree emacsvox-aural-submission-facts)
+          entered-module emacsvox-aural-submission-module
+          entered-occasion emacsvox-aural-submission-occasion)))
+      (should (eq (plist-get entered-facts :role) 'agent-plan))
+      (should (eq (plist-get entered-facts :agent-block-kind) 'plan))
+      (should (eq (plist-get entered-facts :visibility) 'expanded))
+      (should (equal (plist-get entered-facts :events) '(focus-entered)))
+      (should (eq entered-module 'agent-shell))
+      (should (eq entered-occasion 'navigation))
+      (emacsvox-agent-shell--vertical-navigation-post-command)
+      (goto-char (plist-get plan :position))
+      (let ((this-command 'next-line))
+        (emacsvox-agent-shell--vertical-navigation-pre-command))
+      (search-forward "One step")
+      (let ((emacsvox-aural-submission-facts nil))
+        (emacsvox-agent-shell--speak-line-around
+         (lambda (&rest _)
+           (setq same-block-facts emacsvox-aural-submission-facts))))
+      (should-not same-block-facts))))
+
 (ert-deftest emacsvox-agent-shell-visual-lines-cue-blank-content ()
   "Visual-line speech should preserve Emacsvox's two blank-line pitches."
   (dolist (case '((agent-shell-mode "" 130.8)
@@ -1662,7 +1717,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (memq #'emacsvox-agent-shell--filter-vertical-toggle-hint
            pre-command-hook))
     (should-not
+     (memq #'emacsvox-agent-shell--vertical-navigation-pre-command
+           pre-command-hook))
+    (should-not
      (memq #'emacsvox-agent-shell--restore-message-filter
+           post-command-hook))
+    (should-not
+     (memq #'emacsvox-agent-shell--vertical-navigation-post-command
            post-command-hook))))
 
 (ert-deftest emacsvox-agent-shell-permission-fixture-is-urgent ()
@@ -2644,6 +2705,180 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (emacsvox-agent-shell--block-locations))
       '(user-prompt agent-response activity-group thought tool-call plan
                     permission error agent-response)))))
+
+(ert-deftest emacsvox-agent-shell-foldable-locations-expose-visibility ()
+  "Foldable transcript locations should expose canonical visibility facts."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (let* ((locations (emacsvox-agent-shell--block-locations))
+           (activity
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'activity-group))
+             locations))
+           (plan
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'plan))
+             locations))
+           (activity-facts
+            (emacsvox-agent-shell--block-location-facts
+             activity 'focus-entered))
+           (plan-facts
+            (emacsvox-agent-shell--block-location-facts
+             plan 'focus-entered)))
+      (should (eq (plist-get activity :visibility) 'folded))
+      (should (eq (plist-get plan :visibility) 'expanded))
+      (should (eq (plist-get activity-facts :visibility) 'folded))
+      (should (eq (plist-get plan-facts :visibility) 'expanded)))))
+
+(ert-deftest emacsvox-agent-shell-feature-fragments-are-optional-built-ins ()
+  "Agent Shell feature fragments are read-only and remain opt-in."
+  (dolist
+      (fragment
+       '(agent-shell-block-type-labels
+         agent-shell-block-type-cues
+         agent-shell-block-visibility-cues))
+    (let ((entry (emacsvox-aural-feature-fragment-entry fragment)))
+      (should entry)
+      (should (emacsvox-aural-feature-fragment-entry-built-in entry))
+      (should
+       (equal
+        (emacsvox-aural-feature-fragment-entry-source entry)
+        "emacsvox-aural-representative"))
+      (should-not
+       (emacsvox-aural-feature-fragment-enabled-p fragment)))))
+
+(ert-deftest emacsvox-agent-shell-feature-fragments-compose-on-navigation ()
+  "Agent Shell labels, type cues, and visibility cues compose in order."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(agent-shell-block-type-labels
+           agent-shell-block-type-cues
+           agent-shell-block-visibility-cues))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (facts
+         '(:role agent-thought :events (focus-entered)
+           :agent-block-kind thought :visibility folded))
+        (context
+         '(:module agent-shell :mode agent-shell-mode
+           :occasion navigation)))
+    (let* ((plan (emacsvox-aural-resolve-active facts context))
+           (concrete (emacsvox-aural-compile-plan plan facts context)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-id
+         (emacsvox-aural-concrete-plan-before concrete))
+        '(agent-shell-block-type-label-action
+          agent-shell-thought-cue-action
+          agent-shell-navigated-folded-cue-action)))
+      (should
+       (equal
+        (emacsvox-aural-concrete-action-text
+         (car (emacsvox-aural-concrete-plan-before concrete)))
+        "thought"))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-cue
+         (cdr (emacsvox-aural-concrete-plan-before concrete)))
+        '(progress close-object))))))
+
+(ert-deftest emacsvox-agent-shell-visibility-fragment-replaces-toggle-cue ()
+  "The visibility fragment should replace, not duplicate, the fallback cue."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(agent-shell-block-visibility-cues))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (facts
+         '(:role agent-block :events (visibility-changed)
+           :agent-block-kind activity-group :visibility expanded))
+        (context
+         '(:module agent-shell :mode agent-shell-mode
+           :occasion state-change)))
+    (let ((plan
+           (emacsvox-aural-resolve-legacy-icon
+            'open-object context facts)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-id
+         (emacsvox-aural-render-plan-before plan))
+        '(agent-shell-toggled-expanded-cue-action)))
+      (should
+       (eq
+        (emacsvox-aural-action-cue
+         (car (emacsvox-aural-render-plan-before plan)))
+        'open-object)))))
+
+(ert-deftest emacsvox-agent-shell-fold-toggle-emits-state-change-facts ()
+  "An interactive fragment toggle should announce its new visibility."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (let* ((activity
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'activity-group))
+             (emacsvox-agent-shell--block-locations))))
+      (goto-char (plist-get activity :position))
+      (let* ((presentations
+              (emacsvox-agent-shell-test--capture-presentations
+                (cl-letf
+                    (((symbol-function 'emacsvox-speak-line)
+                      (lambda () (tts-speak "Activity group"))))
+                  (call-interactively
+                   #'agent-shell-ui-toggle-fragment)))))
+        (should (= (length presentations) 2))
+        (dolist (presentation presentations)
+          (let ((facts (nth 2 presentation)))
+            (should (eq (plist-get facts :role) 'agent-block))
+            (should
+             (equal (plist-get facts :events) '(visibility-changed)))
+            (should
+             (eq (plist-get facts :agent-block-kind) 'activity-group))
+            (should (eq (plist-get facts :visibility) 'expanded))
+            (should (eq (nth 3 presentation) 'agent-shell))
+            (should (eq (nth 4 presentation) 'state-change))))
+        (should
+         (equal
+          (mapcar (lambda (presentation) (car presentation))
+                  presentations)
+          '(icon speak)))
+        (should
+         (eq
+          (plist-get
+           (emacsvox-agent-shell--fragment-location-at-position
+            (point))
+           :visibility)
+          'expanded))))))
+
+(ert-deftest emacsvox-agent-shell-toggle-all-emits-one-aggregate-change ()
+  "Toggling all fragments should announce one aggregate visibility result."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (let* ((ems--interactive-fn-name
+            'agent-shell-ui-toggle-all-fragments)
+           (presentations
+            (emacsvox-agent-shell-test--capture-presentations
+              (emacsvox-agent-shell--toggle-all-fragments-around
+               (lambda ()
+                 (setq agent-shell-ui--fold-toggle-state 'collapsed)
+                 'toggled)))))
+      (should (= (length presentations) 2))
+      (dolist (presentation presentations)
+        (let ((facts (nth 2 presentation)))
+          (should (eq (plist-get facts :role) 'agent-session))
+          (should (equal (plist-get facts :events) '(visibility-changed)))
+          (should (eq (plist-get facts :visibility) 'folded))
+          (should (eq (nth 4 presentation) 'state-change))))
+      (should
+       (equal
+        (mapcar (lambda (presentation) (car presentation))
+                presentations)
+        '(icon message))))))
 
 (ert-deftest emacsvox-agent-shell-block-navigation-expands-activity-members ()
   "Selecting a hidden thought or tool should expand its activity group."

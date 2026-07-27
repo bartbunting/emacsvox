@@ -78,6 +78,7 @@
 (declare-function agent-shell-markdown-source-block-at-point
                   "agent-shell-markdown" (&optional pos))
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
+(declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
 
 (defvar emacsvox-comint-autospeak)
 (defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
@@ -85,6 +86,7 @@
 (defvar emacsvox-pronounce-rfc-3339-datetime-pattern)
 (defvar emacsvox-pronounce-sha-checksum-pattern)
 (defvar tts-speaker-process)
+(defvar agent-shell-ui--fold-toggle-state)
 
 ;;;  Customization
 
@@ -407,6 +409,62 @@ icon's text properties so its status voice remains available to Emacsvox."
 (defvar-local emacsvox-agent-shell--saved-message-filter nil
   "Saved local-state flag and value for `ems--message-filter'.")
 
+(defvar-local emacsvox-agent-shell--vertical-navigation-active-p nil
+  "Non-nil while an interactive vertical movement command is running.")
+
+(defvar-local emacsvox-agent-shell--vertical-navigation-origin nil
+  "Semantic block identity captured before vertical movement.")
+
+(defun emacsvox-agent-shell--block-location-identity (location)
+  "Return a stable identity for semantic block LOCATION."
+  (when location
+    (list
+     (plist-get location :type)
+     (plist-get location :position)
+     (plist-get location :end))))
+
+(defun emacsvox-agent-shell--vertical-navigation-pre-command ()
+  "Remember the semantic block before interactive vertical movement."
+  (setq emacsvox-agent-shell--vertical-navigation-active-p
+        (memq this-command '(next-line previous-line)))
+  (when emacsvox-agent-shell--vertical-navigation-active-p
+    (setq emacsvox-agent-shell--vertical-navigation-origin
+          (emacsvox-agent-shell--block-location-identity
+           (emacsvox-agent-shell--block-location-at-point)))))
+
+(defun emacsvox-agent-shell--vertical-navigation-post-command ()
+  "Clear transient vertical block-entry state."
+  (setq emacsvox-agent-shell--vertical-navigation-active-p nil
+        emacsvox-agent-shell--vertical-navigation-origin nil))
+
+(defun emacsvox-agent-shell--vertical-block-entry-facts ()
+  "Return destination facts when vertical movement entered another block."
+  (when emacsvox-agent-shell--vertical-navigation-active-p
+    (when-let* ((location
+                 (emacsvox-agent-shell--block-location-at-point))
+                ((not
+                  (equal
+                   emacsvox-agent-shell--vertical-navigation-origin
+                   (emacsvox-agent-shell--block-location-identity
+                    location)))))
+      (emacsvox-agent-shell--block-location-facts
+       location 'focus-entered))))
+
+(defun emacsvox-agent-shell--call-with-vertical-block-entry
+    (original-function arguments)
+  "Call ORIGINAL-FUNCTION with ARGUMENTS and authoritative entry facts."
+  (if-let* ((facts (emacsvox-agent-shell--vertical-block-entry-facts))
+            (module 'agent-shell)
+            (occasion 'navigation)
+            (context
+             (emacsvox-aural-capture-context module occasion)))
+      (let ((emacsvox-aural-submission-facts facts)
+            (emacsvox-aural-submission-context context)
+            (emacsvox-aural-submission-module module)
+            (emacsvox-aural-submission-occasion occasion))
+        (apply original-function arguments))
+    (apply original-function arguments)))
+
 (defun emacsvox-agent-shell--restore-message-filter ()
   "Restore the message filter saved before vertical motion."
   (when emacsvox-agent-shell--saved-message-filter
@@ -440,19 +498,28 @@ speech until the cursor sensor has run from `post-command-hook'."
 (defun emacsvox-agent-shell--vertical-toggle-hint-setup ()
   "Install buffer-local filtering for vertical collapsible-label entry."
   (add-hook 'pre-command-hook
+            #'emacsvox-agent-shell--vertical-navigation-pre-command nil t)
+  (add-hook 'pre-command-hook
             #'emacsvox-agent-shell--filter-vertical-toggle-hint nil t)
   ;; Cursor sensors run from `post-command-hook'.  Restore afterward so
   ;; non-arrow entry still speaks the action hint.
   (add-hook 'post-command-hook
-            #'emacsvox-agent-shell--restore-message-filter t t))
+            #'emacsvox-agent-shell--restore-message-filter t t)
+  (add-hook 'post-command-hook
+            #'emacsvox-agent-shell--vertical-navigation-post-command t t))
 
 (defun emacsvox-agent-shell--vertical-toggle-hint-cleanup ()
   "Remove vertical collapsible-label filtering from the current buffer."
   (emacsvox-agent-shell--restore-message-filter)
+  (emacsvox-agent-shell--vertical-navigation-post-command)
+  (remove-hook 'pre-command-hook
+               #'emacsvox-agent-shell--vertical-navigation-pre-command t)
   (remove-hook 'pre-command-hook
                #'emacsvox-agent-shell--filter-vertical-toggle-hint t)
   (remove-hook 'post-command-hook
-               #'emacsvox-agent-shell--restore-message-filter t))
+               #'emacsvox-agent-shell--restore-message-filter t)
+  (remove-hook 'post-command-hook
+               #'emacsvox-agent-shell--vertical-navigation-post-command t))
 
 (defvar emacsvox-agent-shell--pending-speech-timer nil
   "Legacy timer left by pause-based response speech.
@@ -1663,9 +1730,16 @@ non-whitespace text."
     (when pitch
       (tts-stop 'all))
     (prog1
-        (apply original-function arguments)
+        (emacsvox-agent-shell--call-with-vertical-block-entry
+         original-function arguments)
       (when pitch
         (tts-tone pitch 150 'force)))))
+
+(defun emacsvox-agent-shell--speak-line-around
+    (original-function &rest arguments)
+  "Add semantic block-entry facts to vertical line speech."
+  (emacsvox-agent-shell--call-with-vertical-block-entry
+   original-function arguments))
 
 (defun emacsvox-agent-shell--tts-speak-around
     (original-function text &rest arguments)
@@ -1834,11 +1908,16 @@ kind."
 
 (defun emacsvox-agent-shell--block-location-facts (location &optional event)
   "Return semantic facts for block LOCATION and optional EVENT."
-  (let ((type (or (plist-get location :type) 'other)))
+  (let ((type (or (plist-get location :type) 'other))
+        attributes)
+    (when-let* ((language (plist-get location :language)))
+      (setq attributes
+            (append attributes (list :agent-source-language language))))
+    (when-let* ((visibility (plist-get location :visibility)))
+      (setq attributes
+            (append attributes (list :visibility visibility))))
     (emacsvox-agent-shell--block-facts
-     type event
-     (when-let* ((language (plist-get location :language)))
-       (list :agent-source-language language)))))
+     type event attributes)))
 
 (defun emacsvox-agent-shell--accept-block-type-default ()
   "Accept the default block type when the minibuffer is empty.
@@ -2164,6 +2243,12 @@ PREDICATE receives TEXT and the start position of each property run."
       (setq text (string-trim (substring-no-properties text)))
       (unless (string-empty-p text) text))))
 
+(defun emacsvox-agent-shell--fragment-visibility (start end state)
+  "Return semantic visibility for foldable fragment STATE from START to END."
+  (when (text-property-any
+         start end 'agent-shell-ui-section 'indicator)
+    (if (map-elt state :collapsed) 'folded 'expanded)))
+
 (defun emacsvox-agent-shell--fragment-location (start end state)
   "Return a semantic location for fragment STATE from START to END."
   (let* ((qualified-id (map-elt state :qualified-id))
@@ -2178,6 +2263,8 @@ PREDICATE receives TEXT and the start position of each property run."
          (indicator
           (text-property-any
            start end 'agent-shell-ui-section 'indicator))
+         (visibility
+          (emacsvox-agent-shell--fragment-visibility start end state))
          (label
           (emacsvox-agent-shell--concise-block-text
            (string-join (delq nil (list left right)) " ")))
@@ -2195,9 +2282,10 @@ PREDICATE receives TEXT and the start position of each property run."
           :state state
           :label label
           :body body
+          :visibility visibility
           :fold-state
           (when indicator
-            (if (map-elt state :collapsed) "collapsed" "expanded")))))
+            (if (eq visibility 'folded) "collapsed" "expanded")))))
 
 (defun emacsvox-agent-shell--fragment-locations ()
   "Return semantic locations for all agent-shell UI fragments."
@@ -2309,12 +2397,16 @@ When METADATA-ONLY is non-nil, do not copy its labels or body."
                (emacsvox-agent-shell--property-range-at-position
                 'agent-shell-ui-state position)))
     (if metadata-only
-        (list :position (car range)
-              :end (cdr range)
-              :type
-              (emacsvox-agent-shell--semantic-block-type
-               (map-elt state :qualified-id) state)
-              :state state)
+        (list
+         :position (car range)
+         :end (cdr range)
+         :type
+         (emacsvox-agent-shell--semantic-block-type
+          (map-elt state :qualified-id) state)
+         :state state
+         :visibility
+         (emacsvox-agent-shell--fragment-visibility
+          (car range) (cdr range) state))
       (emacsvox-agent-shell--fragment-location
        (car range) (cdr range) state))))
 
@@ -2873,10 +2965,8 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (goto-char (plist-get target :position))
           (tts-stop)
           (emacsvox-agent-shell--call-with-aural-presentation
-           (emacsvox-agent-shell--block-facts
-            type 'focus-entered
-            (when-let* ((language (plist-get target :language)))
-              (list :agent-source-language language)))
+           (emacsvox-agent-shell--block-location-facts
+            target 'focus-entered)
            'navigation
            (lambda ()
              (pcase type
@@ -2916,6 +3006,91 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
                ((<= (plist-get fallback :position) position))
                ((< position (plist-get fallback :end))))
      fallback)))
+
+(defun emacsvox-agent-shell--fragment-toggle-target ()
+  "Return the fragment targeted by the public toggle command at point."
+  (or
+   (emacsvox-agent-shell--fragment-location-at-position (point))
+   (when-let* ((location
+                (emacsvox-agent-shell--block-location-at-point))
+               (state (plist-get location :state))
+               (qualified-id (map-elt state :qualified-id))
+               (fragment
+                (emacsvox-agent-shell--fragment-location-by-id
+                 qualified-id (point))))
+     (emacsvox-agent-shell--fragment-location-at-position
+      (plist-get fragment :position)))
+   (save-excursion
+     (when-let* ((match
+                  (text-property-search-forward
+                   'agent-shell-ui-state nil
+                   (lambda (_value state) state))))
+       (emacsvox-agent-shell--fragment-location-at-position
+        (prop-match-beginning match))))))
+
+(defun emacsvox-agent-shell--fragment-after-toggle (location)
+  "Return the current fragment corresponding to pre-toggle LOCATION."
+  (when-let* ((state (plist-get location :state))
+              (qualified-id (map-elt state :qualified-id))
+              (fragment
+               (emacsvox-agent-shell--fragment-location-by-id
+                qualified-id (plist-get location :position))))
+    (emacsvox-agent-shell--fragment-location-at-position
+     (plist-get fragment :position))))
+
+(defun emacsvox-agent-shell--block-visibility-facts (location)
+  "Return state-change facts for foldable block LOCATION."
+  (emacsvox-agent-shell--presentation-facts
+   'agent-block 'visibility-changed nil
+   (list
+    :agent-block-kind
+    (emacsvox-agent-shell--normalize-block-type
+     (plist-get location :type))
+    :visibility (plist-get location :visibility))))
+
+(defun emacsvox-agent-shell--toggle-fragment-around
+    (original-function &rest arguments)
+  "Announce an interactive fragment visibility change."
+  (let ((interactive-p
+         (ems-interactive-p 'agent-shell-ui-toggle-fragment))
+        (before (emacsvox-agent-shell--fragment-toggle-target))
+        result)
+    (setq result (apply original-function arguments))
+    (when (and interactive-p before)
+      (when-let* ((after
+                   (emacsvox-agent-shell--fragment-after-toggle before))
+                  (visibility (plist-get after :visibility))
+                  ((not (eq visibility
+                            (plist-get before :visibility)))))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--block-visibility-facts after)
+         'state-change
+         (if (eq visibility 'folded) 'close-object 'open-object)
+         #'emacsvox-speak-line)))
+    result))
+
+(defun emacsvox-agent-shell--toggle-all-fragments-around
+    (original-function &rest arguments)
+  "Announce the result of interactively toggling all fragments."
+  (let ((interactive-p
+         (ems-interactive-p 'agent-shell-ui-toggle-all-fragments))
+        result)
+    (setq result (apply original-function arguments))
+    (when interactive-p
+      (when-let* ((visibility
+                   (pcase agent-shell-ui--fold-toggle-state
+                     ('collapsed 'folded)
+                     ('expanded 'expanded))))
+        (emacsvox-agent-shell--present-feedback
+         (emacsvox-agent-shell--presentation-facts
+          'agent-session 'visibility-changed nil
+          (list :visibility visibility))
+         'state-change
+         (if (eq visibility 'folded) 'close-object 'open-object)
+         #'message
+         "All Agent Shell blocks %s"
+         (if (eq visibility 'folded) "collapsed" "expanded"))))
+    result))
 
 (defun emacsvox-agent-shell--source-block-at-point ()
   "Return the semantic source block containing point, or signal an error."
@@ -4279,6 +4454,8 @@ DISMISS means the compose window is dismissed."
 (defconst emacsvox-agent-shell--advice-list
   '((emacsvox-speak-visual-line :around
      emacsvox-agent-shell--speak-visual-line-around)
+    (emacsvox-speak-line :around
+     emacsvox-agent-shell--speak-line-around)
     (tts-speak :around emacsvox-agent-shell--tts-speak-around)
     (emacsvox-speak-mode-line :around
      emacsvox-agent-shell--speak-mode-line-around)
@@ -4291,6 +4468,10 @@ DISMISS means the compose window is dismissed."
      emacsvox-agent-shell--agent-shell-new-shell-after)
     (agent-shell-toggle :after
      emacsvox-agent-shell--agent-shell-toggle-after)
+    (agent-shell-ui-toggle-fragment :around
+     emacsvox-agent-shell--toggle-fragment-around)
+    (agent-shell-ui-toggle-all-fragments :around
+     emacsvox-agent-shell--toggle-all-fragments-around)
     (agent-shell-other-buffer :after
      emacsvox-agent-shell--agent-shell-other-buffer-after)
     (agent-shell-interrupt :after
