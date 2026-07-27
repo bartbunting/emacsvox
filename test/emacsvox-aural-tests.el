@@ -55,6 +55,15 @@
      (emacsvox-aural-semantic 'candidate))
     'core)))
 
+(ert-deftest emacsvox-aural-mail-content-supports-state-change ()
+  "Structured message content remains valid while its state changes."
+  (dolist (id '(field unread flagged has-attachments))
+    (should
+     (memq
+      'state-change
+      (emacsvox-aural-semantic-occasions
+       (emacsvox-aural-semantic id))))))
+
 (ert-deftest emacsvox-aural-registers-complete-semantic-metadata ()
   "A valid semantic record retains its documented metadata."
   (emacsvox-test--with-empty-aural-registries

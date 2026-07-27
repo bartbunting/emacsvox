@@ -28,7 +28,7 @@
      :kind role
      :summary "A named field within a structured object"
      :owner core
-     :occasions (navigation continuous inspection)
+     :occasions (navigation continuous state-change inspection)
      :phases (content))
     (field-kind
      :kind attribute
@@ -40,19 +40,19 @@
      :kind state
      :summary "An item has not yet been read"
      :owner core
-     :occasions (navigation continuous notification)
+     :occasions (navigation continuous state-change notification)
      :phases (before content after))
     (flagged
      :kind state
      :summary "An item has been explicitly flagged for attention"
      :owner core
-     :occasions (navigation continuous notification)
+     :occasions (navigation continuous state-change notification)
      :phases (before content after))
     (has-attachments
      :kind state
      :summary "A message contains one or more attachments"
      :owner core
-     :occasions (navigation continuous inspection)
+     :occasions (navigation continuous state-change inspection)
      :phases (before content after))
     (refresh-completed
      :kind event

@@ -175,6 +175,20 @@
        subject emacsvox-aural-module-property summary)
       'notmuch))))
 
+(ert-deftest emacsvox-notmuch-fields-validate-while-opening-message ()
+  "Message fields remain semantic content during a state-change opening."
+  (let* ((summary
+          (emacsvox-notmuch-format-show-message
+           emacsvox-notmuch-test--show-message))
+         (facts
+          (get-text-property
+           0 emacsvox-aural-facts-property summary)))
+    (should
+     (emacsvox-aural-normalize-input
+      facts
+      '(:module notmuch :mode notmuch-show-mode
+        :occasion state-change)))))
+
 (ert-deftest emacsvox-notmuch-status-feedback-shares-message-facts ()
   "Status cues and message speech share states and navigation context."
   (let (captured)
@@ -309,6 +323,33 @@
      (equal
       (mapcar #'car (nreverse events))
       '(icon icon speak)))))
+
+(ert-deftest emacsvox-notmuch-landed-message-speaks-first-body-line ()
+  "Landing on a message speaks its summary followed by visible body text."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "Body separator\n  Message body\nSecond body line\n")
+    (goto-char (point-min))
+    (let (spoken)
+      (cl-letf
+          (((symbol-function 'notmuch-show-message-extent)
+            (lambda () (cons (point-min) (point-max))))
+           ((symbol-function
+             'emacsvox-notmuch--play-status-icons-compatibility)
+            #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text))))
+        (emacsvox-notmuch--speak-landed-message
+         emacsvox-notmuch-test--show-message))
+      (should
+       (string-suffix-p
+        "\n  Message body"
+        (substring-no-properties spoken)))
+      (should-not
+       (string-match-p
+        "Second body line"
+        (substring-no-properties spoken)))
+      (should (= (point) (point-min))))))
 
 (ert-deftest emacsvox-notmuch-show-position-speaks-ordinal-and-details ()
   "The manual position report combines thread position and message details."
@@ -608,7 +649,12 @@
                     ((symbol-function 'emacsvox-icon)
                      (lambda (icon) (push (list 'icon icon) events)))
                     ((symbol-function 'emacsvox-notmuch-speak-show-message)
-                     (lambda (&optional _message) (push '(message) events))))
+                     (lambda (&optional _message body-line)
+                       (push
+                        (list
+                         'message
+                         (substring-no-properties body-line))
+                        events))))
             (emacsvox--advice-notmuch-search-show-thread-after))
           (should
            (save-excursion
@@ -619,7 +665,7 @@
            (equal
             (nreverse events)
             '((icon open-object)
-              (message)))))))))
+              (message "  Message body")))))))))
 
 (ert-deftest emacsvox-notmuch-body-position-keeps-attachment-fallback ()
   "An attachment-only message selects its actionable leaf-part button."
@@ -648,15 +694,115 @@
             (emacsvox-notmuch--move-to-message-body))
           (should (= (point) (button-start attachment-button))))))))
 
-(ert-deftest emacsvox-notmuch-navigation-speaks-selected-result ()
+(ert-deftest emacsvox-notmuch-search-navigation-speaks-selected-result ()
   "Only the active interactive search-navigation command speaks."
-  (let ((ems--interactive-fn-name 'notmuch-search-next-thread)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-notmuch-speak-search-result)
-               (lambda (&optional _result) (push 'result events))))
-      (emacsvox--advice-notmuch-search-next-thread-after)
-      (emacsvox--advice-notmuch-search-previous-thread-after))
-    (should (equal events '(result)))))
+  (with-temp-buffer
+    (setq major-mode 'notmuch-search-mode)
+    (let ((ems--interactive-fn-name 'notmuch-search-next-thread)
+          (thread-ids '("first" "second"))
+          (calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-search-thread-id)
+            (lambda () (pop thread-ids)))
+           ((symbol-function 'emacsvox-notmuch-speak-search-result)
+            (lambda (&optional _result) (push 'result events))))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-search-next-thread-around
+           (lambda ()
+             (cl-incf calls)
+             'moved))
+          'moved))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-search-previous-thread-around
+           (lambda ()
+             (cl-incf calls)
+             'ignored))
+          'ignored)))
+      (should (= calls 2))
+      (should (equal events '(result))))))
+
+(ert-deftest emacsvox-notmuch-search-navigation-announces-boundaries ()
+  "Search navigation announces rather than rereads its boundary result."
+  (dolist
+      (case
+       '((notmuch-search-next-thread
+          emacsvox--advice-notmuch-search-next-thread-around
+          ("last" nil)
+          "End of search results")
+         (notmuch-search-previous-thread
+          emacsvox--advice-notmuch-search-previous-thread-around
+          ("first" "first")
+          "Beginning of search results")))
+    (with-temp-buffer
+      (setq major-mode 'notmuch-search-mode)
+      (let ((ems--interactive-fn-name (nth 0 case))
+            (thread-ids (copy-sequence (nth 2 case)))
+            (calls 0)
+            events)
+        (cl-letf
+            (((symbol-function 'emacsvox-notmuch--current-search-thread-id)
+              (lambda () (pop thread-ids)))
+             ((symbol-function 'emacsvox-notmuch-speak-search-result)
+              (lambda (&optional _result) (push '(result) events)))
+             ((symbol-function 'emacsvox-icon)
+              (lambda (icon) (push (list 'icon icon) events)))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (push (list 'speak text) events))))
+          (should
+           (eq
+            (funcall
+             (nth 1 case)
+             (lambda ()
+               (cl-incf calls)
+               'unchanged))
+            'unchanged)))
+        (should (= calls 1))
+        (should
+         (equal
+          (nreverse events)
+          `((icon warn-user)
+            (speak ,(nth 3 case)))))))))
+
+(ert-deftest emacsvox-notmuch-search-navigation-detects-real-boundaries ()
+  "Actual Notmuch movement functions expose both search boundaries."
+  (with-temp-buffer
+    (let ((first-start (point)))
+      (insert "First result\n")
+      (put-text-property
+       first-start (point) 'notmuch-search-result '(:thread "first")))
+    (let ((last-start (point)))
+      (insert "Last result\n")
+      (put-text-property
+       last-start (point) 'notmuch-search-result '(:thread "last"))
+      (insert "End of search results.\n")
+      (setq major-mode 'notmuch-search-mode)
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name
+             'notmuch-search-previous-thread)
+            events)
+        (cl-letf
+            (((symbol-function 'emacsvox-icon)
+              (lambda (icon) (push (list 'icon icon) events)))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (push (list 'speak text) events))))
+          (notmuch-search-previous-thread)
+          (should
+           (equal
+            (nreverse events)
+            '((icon warn-user)
+              (speak "Beginning of search results"))))
+          (setq events nil
+                ems--interactive-fn-name 'notmuch-search-next-thread)
+          (goto-char last-start)
+          (notmuch-search-next-thread)
+          (should
+           (equal
+            (nreverse events)
+            '((icon warn-user)
+              (speak "End of search results")))))))))
 
 (ert-deftest emacsvox-notmuch-show-navigation-selects-and-speaks-message-body ()
   "Active show navigation selects the message body before speaking."
@@ -671,8 +817,11 @@
             (lambda () (pop message-ids)))
            ((symbol-function 'emacsvox-notmuch--move-to-message-body)
             (lambda () (push 'body events)))
+           ((symbol-function 'emacsvox-notmuch--landed-body-line)
+            (lambda () "Message body"))
            ((symbol-function 'emacsvox-notmuch-speak-show-message)
-            (lambda (&optional _message) (push 'message events))))
+            (lambda (&optional _message body-line)
+              (push (list 'message body-line) events))))
         (emacsvox--advice-notmuch-show-next-open-message-around
          (lambda ()
            (cl-incf calls)
@@ -682,7 +831,10 @@
            (cl-incf calls)
            'unchanged)))
       (should (= calls 2))
-      (should (equal (nreverse events) '(body message))))))
+      (should
+       (equal
+        (nreverse events)
+        '(body (message "Message body")))))))
 
 (ert-deftest emacsvox-notmuch-show-next-navigation-announces-thread-end ()
   "Forward navigation should not reread the final message."

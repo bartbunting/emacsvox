@@ -510,8 +510,9 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      emacsvox-notmuch-show-message-fields))
    emacsvox-notmuch-show-field-separator))
 
-(defun emacsvox-notmuch-speak-show-message (&optional message)
-  "Speak Notmuch MESSAGE, defaulting to the message at point."
+(defun emacsvox-notmuch-speak-show-message (&optional message body-line)
+  "Speak Notmuch MESSAGE, defaulting to the message at point.
+When BODY-LINE is non-nil, speak it after the semantic message summary."
   (interactive)
   (when-let* ((message
                (or
@@ -520,14 +521,43 @@ FACTS describe the object or event, and OCCASION describes the interaction."
                  (eq major-mode 'notmuch-show-mode)
                  (notmuch-show-get-message-properties))))
               (summary (emacsvox-notmuch-format-show-message message)))
-    (emacsvox-notmuch--call-with-aural-presentation
-     (emacsvox-notmuch-message-facts message 'focus-entered)
-     'navigation
-     (lambda ()
-       (emacsvox-notmuch--play-status-icons-compatibility
-        message emacsvox-notmuch-show-status-icons)
-       (tts-speak summary)))
-    summary))
+    (let ((speech
+           (if (and body-line (not (string-empty-p body-line)))
+               (concat summary "\n" body-line)
+             summary)))
+      (emacsvox-notmuch--call-with-aural-presentation
+       (emacsvox-notmuch-message-facts message 'focus-entered)
+       'navigation
+       (lambda ()
+         (emacsvox-notmuch--play-status-icons-compatibility
+          message emacsvox-notmuch-show-status-icons)
+         (tts-speak speech)))
+      speech)))
+
+(defun emacsvox-notmuch--landed-body-line ()
+  "Return the first visible body line after the current landing position."
+  (when (eq major-mode 'notmuch-show-mode)
+    (when-let* ((extent (ignore-errors (notmuch-show-message-extent)))
+                (limit (cdr extent)))
+      (save-excursion
+        (forward-line 1)
+        (when (< (point) limit)
+          (let* ((start (line-beginning-position))
+                 (end (min limit (line-end-position)))
+                 (line
+                  (emacsvox-aural-source-substring start end)))
+            (unless
+                (or
+                 (invisible-p start)
+                 (string-match-p
+                  "\\`[[:space:]]*\\'"
+                  (substring-no-properties line)))
+              line)))))))
+
+(defun emacsvox-notmuch--speak-landed-message (&optional message)
+  "Speak MESSAGE summary and the visible body text reached at point."
+  (emacsvox-notmuch-speak-show-message
+   message (emacsvox-notmuch--landed-body-line)))
 
 (defun emacsvox-notmuch--show-message-position ()
   "Return the current message position and thread size as a cons cell."
@@ -1005,7 +1035,7 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
            (emacsvox-notmuch-message-facts message 'message-opened))))
     (emacsvox-notmuch--present-feedback
      facts 'state-change 'open-object
-     #'emacsvox-notmuch-speak-show-message message)))
+     #'emacsvox-notmuch--speak-landed-message message)))
 
 (defun emacsvox-notmuch--blank-visual-line-pitch ()
   "Return the Emacsvox blank-line pitch in Notmuch Show.
@@ -1053,16 +1083,71 @@ line contains non-whitespace text."
   (emacsvox-notmuch-speak-search-result))
 
 (emacsvox-notmuch--register-after-group
- '(notmuch-search-next-thread
-   notmuch-search-previous-thread
-   notmuch-search-first-thread
+ '(notmuch-search-first-thread
    notmuch-search-last-thread)
  #'emacsvox-notmuch--navigation-feedback)
+
+(defun emacsvox-notmuch--current-search-thread-id ()
+  "Return the thread ID of the Notmuch search result at point."
+  (plist-get (notmuch-search-get-result) :thread))
+
+(defun emacsvox-notmuch--search-boundary-feedback (direction)
+  "Announce the Notmuch search boundary reached in DIRECTION."
+  (emacsvox-notmuch--present-feedback
+   (emacsvox-notmuch-view-facts 'search 'select 'operation-failed)
+   'navigation 'warn-user #'tts-speak
+   (if (eq direction 'forward)
+       "End of search results"
+     "Beginning of search results")))
+
+(defun emacsvox-notmuch--search-navigation-around
+    (target direction original arguments)
+  "Provide boundary-aware search navigation feedback for TARGET.
+DIRECTION is `forward' or `backward'.  Call ORIGINAL once with
+ARGUMENTS, speak a newly selected thread, and announce the search
+boundary when the selected thread does not change."
+  (if (and
+       (eq major-mode 'notmuch-search-mode)
+       (ems-interactive-p target))
+      (let ((before-thread
+             (emacsvox-notmuch--current-search-thread-id))
+            (result (apply original arguments)))
+        (when (eq major-mode 'notmuch-search-mode)
+          (let ((after-thread
+                 (emacsvox-notmuch--current-search-thread-id)))
+            (if (and after-thread
+                     (not (equal before-thread after-thread)))
+                (emacsvox-notmuch-speak-search-result)
+              (emacsvox-notmuch--search-boundary-feedback direction))))
+        result)
+    (apply original arguments)))
+
+(defun emacsvox--advice-notmuch-search-next-thread-around
+    (original &rest arguments)
+  "Provide boundary-aware feedback for `notmuch-search-next-thread'."
+  (emacsvox-notmuch--search-navigation-around
+   'notmuch-search-next-thread 'forward original arguments))
+
+(defun emacsvox--advice-notmuch-search-previous-thread-around
+    (original &rest arguments)
+  "Provide boundary-aware feedback for `notmuch-search-previous-thread'."
+  (emacsvox-notmuch--search-navigation-around
+   'notmuch-search-previous-thread 'backward original arguments))
+
+(push
+ '(notmuch-search-next-thread
+   :around emacsvox--advice-notmuch-search-next-thread-around)
+ emacsvox-notmuch--advice)
+
+(push
+ '(notmuch-search-previous-thread
+   :around emacsvox--advice-notmuch-search-previous-thread-around)
+ emacsvox-notmuch--advice)
 
 (defun emacsvox-notmuch--show-navigation-feedback ()
   "Select and speak the Notmuch message body reached by navigation."
   (emacsvox-notmuch--move-to-message-body)
-  (emacsvox-notmuch-speak-show-message))
+  (emacsvox-notmuch--speak-landed-message))
 
 (defun emacsvox-notmuch--end-of-thread-feedback ()
   "Select the current body and announce the end of its thread."

@@ -277,6 +277,26 @@
        "notice"))
     (should (eq selected 'notification))))
 
+(ert-deftest emacsvox-tts-notification-preserves-semantic-occasion ()
+  "Notification transport does not replace an established semantic occasion."
+  (let ((emacsvox-aural-submission-context
+         '(:module agent-shell :occasion state-change))
+        (emacsvox-aural-submission-occasion 'state-change)
+        captured-context
+        captured-occasion)
+    (cl-letf (((symbol-function 'tts-notify-process) #'ignore)
+              ((symbol-function 'tts-speak)
+               (lambda (_text)
+                 (setq
+                  captured-context
+                  (copy-tree emacsvox-aural-submission-context)
+                  captured-occasion
+                  emacsvox-aural-submission-occasion))))
+      (tts-notify "Session mode changed" 'dont-log))
+    (should (eq captured-occasion 'state-change))
+    (should
+     (eq (plist-get captured-context :occasion) 'state-change))))
+
 (ert-deftest emacsvox-tts-org-fold-uses-current-hidden-spec ()
   "Org link visibility uses the current Emacs 31 folding spec."
   (let (events)

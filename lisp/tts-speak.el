@@ -1853,14 +1853,19 @@ grouping"
   "Speak text on notification stream.
 Notification is logged in the notifications buffer unless `dont-log' is T. "
   
-  (let* ((context
+  (let* ((occasion
+          (or
+           emacsvox-aural-submission-occasion
+           (plist-get emacsvox-aural-submission-context :occasion)
+           'notification))
+         (context
           (copy-tree
            (or
             emacsvox-aural-submission-context
-            (emacsvox-aural-capture-context nil 'notification))))
+            (emacsvox-aural-capture-context nil occasion))))
          (emacsvox-aural-submission-context
-          (plist-put context :occasion 'notification))
-         (emacsvox-aural-submission-occasion 'notification))
+          (plist-put context :occasion occasion))
+         (emacsvox-aural-submission-occasion occasion))
     (unless dont-log (emacsvox-log-notification text))
     (setq emacsvox-last-message text)
     (cond
