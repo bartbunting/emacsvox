@@ -44,6 +44,8 @@
          (emacsvox-aural-presentation-history nil)
          (emacsvox-aural--presentation-sequence 0)
          (emacsvox-aural-tools--last-source-buffer nil)
+         (emacsvox-aural-tools--fragment-preview-last-examples
+          (make-hash-table :test #'eq))
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-effective-resource-pack-changed-hook nil)
@@ -1329,6 +1331,166 @@
          (car (emacsvox-aural-concrete-plan-before queued)))
         "Level one"))
       (should-not emacsvox-aural-enabled-feature-fragments))))
+
+(defun emacsvox-test--register-multiple-fragment-previews ()
+  "Register a two-example presentation option for preview tests."
+  (emacsvox-aural-register-feature-fragment
+   '(:schema-version 1
+     :id heading-earcons
+     :summary "Heading earcons"
+     :rules
+     ((:id level-one-earcon
+       :match (:role heading :level 1 :occasion navigation)
+       :render
+       (:before
+        ((:id level-one-item :kind cue :cue item))))
+      (:id level-two-earcon
+       :match (:role heading :level 2 :occasion navigation)
+       :render
+       (:before
+        ((:id level-two-section :kind cue :cue section))))))
+   :built-in t :collection 'org)
+  (emacsvox-aural-register-feature-fragment-example
+   'heading-earcons 'level-one
+   :rule 'level-one-earcon
+   :summary "Level one heading"
+   :facts '(:role heading :level 1 :content "Roadmap")
+   :context '(:module org :mode org-mode :occasion navigation)
+   :source "test")
+  (emacsvox-aural-register-feature-fragment-example
+   'heading-earcons 'level-two
+   :rule 'level-two-earcon
+   :summary "Level two heading"
+   :facts '(:role heading :level 2 :content "Milestones")
+   :context '(:module org :mode org-mode :occasion navigation)
+   :source "test"))
+
+(ert-deftest emacsvox-aural-fragment-preview-opens-multiple-example-browser ()
+  "Interactive preview uses a persistent browser for multiple examples."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-multiple-fragment-previews)
+    (let ((tts-speaker-process 'speaker)
+          queued
+          spoken
+          (stops 0))
+      (unwind-protect
+          (save-window-excursion
+            (emacsvox-aural-list-feature-fragments)
+            (with-current-buffer "*Aural Feature Fragments*"
+              (should
+               (emacsvox-aural-feature-fragments--goto
+                'heading-earcons))
+              (cl-letf
+                  (((symbol-function 'completing-read)
+                    (lambda (&rest _)
+                      (ert-fail
+                       "Multiple examples must not reopen completion")))
+                   ((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'called-interactively-p)
+                    (lambda (&rest _) t))
+                   ((symbol-function 'emacsvox-icon) #'ignore))
+                (call-interactively
+                 #'emacsvox-aural-feature-fragments-preview)))
+            (with-current-buffer "*Aural Option Preview*"
+              (should
+               (derived-mode-p
+                'emacsvox-aural-feature-fragment-previews-mode))
+              (should
+               (eq
+                emacsvox-aural-feature-fragment-previews-fragment
+                'heading-earcons))
+              (should (= (length tabulated-list-entries) 2))
+              (should (eq (tabulated-list-get-id) 'level-one))
+              (should
+               (eq
+                (lookup-key
+                 emacsvox-aural-feature-fragment-previews-mode-map
+                (kbd "<down>"))
+                #'emacsvox-aural-feature-fragment-previews-next))
+              (should (string-match-p "Level one heading" spoken))
+              (cl-letf
+                  (((symbol-function 'tts-speak) #'ignore)
+                   ((symbol-function 'emacsvox-icon) #'ignore))
+                (emacsvox-aural-feature-fragment-previews-next))
+              (should (eq (tabulated-list-get-id) 'level-two))
+              (should
+               (eq
+                (gethash
+                 'heading-earcons
+                 emacsvox-aural-tools--fragment-preview-last-examples)
+                'level-two))
+              (setq spoken nil)
+              (cl-letf
+                  (((symbol-function 'process-live-p) (lambda (_) t))
+                   ((symbol-function 'tts-stop)
+                    (lambda () (cl-incf stops)))
+                   ((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text)))
+                   ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+                    (lambda (plan &rest _) (setq queued plan)))
+                   ((symbol-function 'tts--protocol-dispatch) #'ignore))
+                (emacsvox-aural-feature-fragment-previews-play))
+              (should (= stops 1))
+              (should queued)
+              (should-not spoken)))
+        (dolist
+            (buffer
+             '("*Aural Option Preview*" "*Aural Feature Fragments*"))
+          (when (get-buffer buffer)
+            (kill-buffer buffer)))))))
+
+(ert-deftest emacsvox-aural-fragment-preview-cue-audition-is-speech-free ()
+  "Cue-only audition bypasses content, training, and presentation history."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-test--register-multiple-fragment-previews)
+    (let* ((example
+            (emacsvox-aural-feature-fragment-example
+             'heading-earcons 'level-one))
+           (tts-speaker-process 'speaker)
+           (emacsvox-aural-plan-presented-hook
+            (list
+             (lambda (_plan)
+               (ert-fail "Cue audition must not run training hooks"))))
+           played
+           (stops 0))
+      (cl-letf
+          (((symbol-function 'process-live-p) (lambda (_) t))
+           ((symbol-function 'tts-stop)
+            (lambda () (cl-incf stops)))
+           ((symbol-function 'tts-speak)
+            (lambda (&rest _)
+              (ert-fail "Cue audition must not speak")))
+           ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+            (lambda (&rest _)
+              (ert-fail "Cue audition must not queue a presentation")))
+           ((symbol-function 'emacsvox-sounds-play-concrete-cue)
+            (lambda (resource sample-id &optional balance)
+              (push (list resource sample-id balance) played))))
+        (let ((result
+               (emacsvox-aural-tools--audition-fragment-preview-cues
+                'heading-earcons example nil)))
+          (should (= stops 1))
+          (should (= (length played) 1))
+          (should
+           (string-suffix-p "/item.ogg" (caar played)))
+          (should
+           (eq
+            (emacsvox-aural-concrete-action-cue
+             (car (plist-get result :cues)))
+            'item))
+          (should-not emacsvox-aural-presentation-history))))))
+
+(ert-deftest emacsvox-aural-fragment-preview-status-message-is-silent ()
+  "Preview status remains visible without entering message speech."
+  (let ((emacsvox-speak-messages t)
+        observed)
+    (cl-letf
+        (((symbol-function 'message)
+          (lambda (&rest _)
+            (setq observed emacsvox-speak-messages))))
+      (emacsvox-aural-tools--preview-message "Preview status"))
+    (should-not observed)))
 
 (ert-deftest emacsvox-aural-fragment-preview-prefers-live-source-context ()
   "Matching source facts and mode take precedence over simulated examples."

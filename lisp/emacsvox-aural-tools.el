@@ -42,6 +42,7 @@
   "Source buffer inspected and customized from the aural home buffer.")
 
 (defvar emacsvox-sounds-current-pack)
+(defvar emacsvox-speak-messages)
 (defvar emacsvox-aural-training-mode nil
   "Non-nil when semantic training explanations are enabled.")
 
@@ -79,6 +80,10 @@
                   "emacsvox-aural-voice-palettes" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function emacsvox-speak-mode-line "emacsvox-speak" ())
+(declare-function emacsvox-sounds-play-concrete-cue
+                  "emacsvox-sounds"
+                  (resource sample-id &optional balance))
+(declare-function tts-stop "tts-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function tts--protocol-queue-code "tts-speak" (code))
@@ -93,6 +98,7 @@
      'emacsvox-aural-semantics-mode
      'emacsvox-aural-schemes-mode
      'emacsvox-aural-feature-fragments-mode
+     'emacsvox-aural-feature-fragment-previews-mode
      'emacsvox-aural-profiles-mode
      'emacsvox-aural-voice-palettes-mode
      'emacsvox-aural-doctor-mode
@@ -2811,6 +2817,19 @@ SCOPE is `personal', `session', or `buffer'."
 (defvar-local emacsvox-aural-feature-fragments-collapsed-collections nil
   "Collections hidden in the current presentation-option manager.")
 
+(defvar emacsvox-aural-tools--fragment-preview-last-examples
+  (make-hash-table :test #'eq)
+  "Most recently selected preview example for each presentation option.")
+
+(defvar-local emacsvox-aural-feature-fragment-previews-fragment nil
+  "Presentation option shown in the current preview buffer.")
+
+(defvar-local emacsvox-aural-feature-fragment-previews-examples nil
+  "Preview examples shown in the current preview buffer.")
+
+(defvar-local emacsvox-aural-feature-fragment-previews-isolated nil
+  "Whether the current preview buffer auditions its option in isolation.")
+
 (defun emacsvox-aural-tools--fragment-collection-row-p (id)
   "Return non-nil when manager row ID represents a collection."
   (and (consp id) (eq (car id) 'collection) (symbolp (cdr id))))
@@ -3320,40 +3339,131 @@ more than one example is available."
      (lambda (id) (memq id members))
      (emacsvox-aural-normalized-feature-fragment-order))))
 
-(defun emacsvox-aural-tools--play-fragment-preview
+(defun emacsvox-aural-tools--resolve-fragment-preview
     (fragment facts context isolated)
-  "Compile and play FRAGMENT for FACTS and CONTEXT.
+  "Resolve FRAGMENT for FACTS and CONTEXT.
 
 When ISOLATED is non-nil, resolve only the option's rules.  Otherwise combine
 it with the active configuration without changing persistent state."
+  (if isolated
+      (emacsvox-aural-resolve
+       facts context
+       (emacsvox-aural-tools--fragment-rules fragment))
+    (let
+        ((emacsvox-aural-enabled-feature-fragments
+          (emacsvox-aural-tools--fragment-preview-enabled-order fragment))
+         (emacsvox-aural--current-rules-cache
+          (make-hash-table :test #'equal)))
+      (emacsvox-aural-resolve-active facts context))))
+
+(defun emacsvox-aural-tools--compile-fragment-preview
+    (fragment facts context isolated)
+  "Compile a concrete preview of FRAGMENT for FACTS and CONTEXT.
+
+ISOLATED has the meaning documented by
+`emacsvox-aural-tools--resolve-fragment-preview'."
   (let* ((facts
           (if (plist-member facts :content)
               (copy-tree facts)
             (plist-put (copy-tree facts) :content "Example")))
          (render
-          (if isolated
-              (emacsvox-aural-resolve
-               facts context
-               (emacsvox-aural-tools--fragment-rules fragment))
-            (let
-                ((emacsvox-aural-enabled-feature-fragments
-                  (emacsvox-aural-tools--fragment-preview-enabled-order
-                   fragment))
-                 (emacsvox-aural--current-rules-cache
-                  (make-hash-table :test #'equal)))
-              (emacsvox-aural-resolve-active facts context))))
-         (concrete (emacsvox-aural-compile-plan render facts context)))
+          (emacsvox-aural-tools--resolve-fragment-preview
+           fragment facts context isolated)))
+    (emacsvox-aural-compile-plan render facts context)))
+
+(defun emacsvox-aural-tools--play-fragment-preview
+    (fragment facts context isolated)
+  "Compile and play FRAGMENT for FACTS and CONTEXT.
+
+When ISOLATED is non-nil, play only the option's rules.  Otherwise combine
+it with the active configuration without changing persistent state."
+  (let ((concrete
+         (emacsvox-aural-tools--compile-fragment-preview
+          fragment facts context isolated)))
     (emacsvox-aural--ensure-speaker)
     (emacsvox-aural-queue-concrete-plan concrete)
     (tts--protocol-dispatch)
     concrete))
+
+(defun emacsvox-aural-tools--stop-preview-speech ()
+  "Stop manager speech before an explicitly requested preview."
+  (when (fboundp 'tts-stop)
+    (tts-stop)))
+
+(defun emacsvox-aural-tools--preview-message (format-string &rest arguments)
+  "Display a preview message without sending it to speech.
+
+FORMAT-STRING and ARGUMENTS have the same meaning as for `message'."
+  (let ((emacsvox-speak-messages nil))
+    (apply #'message format-string arguments)))
+
+(defun emacsvox-aural-tools--fragment-preview-example-input (example)
+  "Return copied facts and context from preview EXAMPLE."
+  (list
+   (copy-tree
+    (emacsvox-aural-feature-fragment-example-facts example))
+   (copy-tree
+    (emacsvox-aural-feature-fragment-example-context example))))
+
+(defun emacsvox-aural-tools--audition-fragment-preview-cues
+    (fragment example isolated)
+  "Audition only the concrete cues for FRAGMENT EXAMPLE.
+
+ISOLATED controls whether compilation includes the active configuration.
+No speech actions, content, presentation history, or training explanations
+are submitted, so speech cannot mask the auditioned cues."
+  (pcase-let*
+      ((`(,facts ,context)
+        (emacsvox-aural-tools--fragment-preview-example-input example))
+       (concrete
+        (emacsvox-aural-tools--compile-fragment-preview
+         fragment facts context isolated))
+       (cues
+        (cl-remove-if-not
+         (lambda (action)
+           (eq
+            (emacsvox-aural-concrete-action-kind action)
+            'cue))
+         (append
+          (emacsvox-aural-concrete-plan-before concrete)
+          (emacsvox-aural-concrete-plan-after concrete)))))
+    (unless cues
+      (user-error
+       "Preview example %s has no earcon"
+       (emacsvox-aural-feature-fragment-example-id example)))
+    (emacsvox-aural--ensure-speaker)
+    (emacsvox-aural-tools--stop-preview-speech)
+    (dolist (cue cues)
+      (let ((balance (emacsvox-aural-concrete-action-balance cue)))
+        (if (and (numberp balance) (not (zerop balance)))
+            (emacsvox-sounds-play-concrete-cue
+             (emacsvox-aural-concrete-action-resource cue)
+             (emacsvox-aural-concrete-action-sample-id cue)
+             balance)
+          (emacsvox-sounds-play-concrete-cue
+           (emacsvox-aural-concrete-action-resource cue)
+           (emacsvox-aural-concrete-action-sample-id cue)))))
+    (puthash
+     fragment
+     (emacsvox-aural-feature-fragment-example-id example)
+     emacsvox-aural-tools--fragment-preview-last-examples)
+    (emacsvox-aural-tools--preview-message
+     "Auditioning %s"
+     (mapconcat
+      (lambda (cue)
+        (emacsvox-aural-tools--humanize
+         (emacsvox-aural-concrete-action-cue cue)))
+      cues ", "))
+    (list :fragment fragment :example example :cues cues :concrete concrete)))
 
 (defun emacsvox-aural-feature-fragments-preview
     (&optional isolated fragment example-id)
   "Preview a presentation option without changing its enabled state.
 
 Use live facts from the remembered source buffer when they match FRAGMENT.
-Otherwise choose a curated or automatically derived simulated example.
+Otherwise use a curated or automatically derived simulated example.  When
+several simulations are available interactively, open a persistent preview
+buffer instead of repeatedly prompting in the minibuffer.
 With prefix argument ISOLATED, play only the option rather than composing it
 with the active configuration.  EXAMPLE-ID selects a simulation directly."
   (interactive "P")
@@ -3366,45 +3476,422 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
          (live
           (unless example-id
             (emacsvox-aural-tools--fragment-live-preview-input fragment)))
-         (example
+         (examples
           (unless live
+            (emacsvox-aural-tools--fragment-preview-examples fragment)))
+         (example
+          (unless (or live
+                      (and
+                       interactivep
+                       (null example-id)
+                       (> (length examples) 1)))
             (emacsvox-aural-tools--fragment-preview-example
-             fragment example-id interactivep)))
-         (kind (if live 'live 'simulated))
+             fragment example-id nil))))
+    (if
+        (and
+         interactivep
+         (null live)
+         (null example-id)
+         (> (length examples) 1))
+        (emacsvox-aural-list-feature-fragment-previews
+         fragment isolated examples t)
+      (let* ((kind (if live 'live 'simulated))
+             (summary
+              (if live
+                  (plist-get live :summary)
+                (emacsvox-aural-feature-fragment-example-summary example)))
+             (facts
+              (copy-tree
+               (if live
+                   (plist-get live :facts)
+                 (emacsvox-aural-feature-fragment-example-facts example))))
+             (context
+              (copy-tree
+               (if live
+                   (plist-get live :context)
+                 (emacsvox-aural-feature-fragment-example-context example))))
+             (announcement
+              (format
+               "%s preview. %s. %s occasion."
+               (if live "Live source context" "Simulated example")
+               summary
+               (emacsvox-aural-tools--humanize
+                (or (plist-get context :occasion) 'continuous)))))
+        (when interactivep
+          (emacsvox-aural-tools--stop-preview-speech))
+        (emacsvox-aural-tools--preview-message "%s" announcement)
+        (when example
+          (puthash
+           fragment
+           (emacsvox-aural-feature-fragment-example-id example)
+           emacsvox-aural-tools--fragment-preview-last-examples))
+        (list
+         :kind kind
+         :fragment fragment
+         :example
+         (and example
+              (emacsvox-aural-feature-fragment-example-id example))
+         :announcement announcement
+         :concrete
+         (emacsvox-aural-tools--play-fragment-preview
+          fragment facts context isolated))))))
+
+(defun emacsvox-aural-tools--fragment-preview-action-description (action)
+  "Return a short user-facing description of render ACTION."
+  (pcase (emacsvox-aural-action-kind action)
+    ('cue
+     (format
+      "%s earcon"
+      (emacsvox-aural-tools--humanize
+       (emacsvox-aural-action-cue action))))
+    ('speech
+     (if-let* ((text (emacsvox-aural-action-text action)))
+         (format "says %s" text)
+       "speech"))
+    ('pause
+     (format
+      "%s second pause"
+      (emacsvox-aural-action-duration action)))
+    (_
+     (emacsvox-aural-tools--humanize
+      (emacsvox-aural-action-kind action)))))
+
+(defun emacsvox-aural-tools--fragment-preview-output-summary
+    (fragment example isolated)
+  "Describe the output of FRAGMENT EXAMPLE under ISOLATED resolution."
+  (pcase-let*
+      ((`(,facts ,context)
+        (emacsvox-aural-tools--fragment-preview-example-input example))
+       (facts
+        (if (plist-member facts :content)
+            facts
+          (plist-put facts :content "Example")))
+       (render
+        (emacsvox-aural-tools--resolve-fragment-preview
+         fragment facts context isolated))
+       (actions
+        (append
+         (emacsvox-aural-render-plan-before render)
+         (emacsvox-aural-render-plan-after render)))
+       (content (emacsvox-aural-render-plan-content render))
+       (voice (emacsvox-aural-content-style-voice content))
+       (parts
+        (mapcar
+         #'emacsvox-aural-tools--fragment-preview-action-description
+         actions)))
+    (when voice
+      (setq
+       parts
+       (append
+        parts
+        (list
+         (format
+          "content voice %s"
+          (if (symbolp voice)
+              (emacsvox-aural-tools--humanize voice)
+            voice))))))
+    (when (not (emacsvox-aural-content-style-speak content))
+      (setq parts (append parts (list "content muted"))))
+    (if parts
+        (string-join parts ", ")
+      "content only")))
+
+(defun emacsvox-aural-tools--fragment-preview-context-summary (example)
+  "Return a short context summary for preview EXAMPLE."
+  (let* ((context
+          (emacsvox-aural-feature-fragment-example-context example))
+         (scope
+          (or
+           (plist-get context :module)
+           (plist-get context :mode)
+           'general))
+         (occasion
+          (or (plist-get context :occasion) 'continuous)))
+    (format
+     "%s, %s"
+     (emacsvox-aural-tools--humanize scope)
+     (emacsvox-aural-tools--humanize occasion))))
+
+(defun emacsvox-aural-tools--fragment-preview-example-kind (example)
+  "Return the user-facing provenance kind of preview EXAMPLE."
+  (if
+      (eq
+       (emacsvox-aural-feature-fragment-example-source example)
+       'automatic)
+      "automatic"
+    "curated"))
+
+(defun emacsvox-aural-tools--fragment-preview-row (example)
+  "Return one tabulated preview row for EXAMPLE."
+  (list
+   (emacsvox-aural-feature-fragment-example-id example)
+   (vector
+    (emacsvox-aural-feature-fragment-example-summary example)
+    (emacsvox-aural-tools--fragment-preview-example-kind example)
+    (emacsvox-aural-tools--humanize
+     (emacsvox-aural-feature-fragment-example-rule example))
+    (emacsvox-aural-tools--fragment-preview-context-summary example)
+    (emacsvox-aural-tools--fragment-preview-output-summary
+     emacsvox-aural-feature-fragment-previews-fragment
+     example
+     emacsvox-aural-feature-fragment-previews-isolated))))
+
+(defun emacsvox-aural-feature-fragment-previews--set-entries ()
+  "Populate the current presentation-option preview buffer."
+  (setq
+   tabulated-list-entries
+   (mapcar
+    #'emacsvox-aural-tools--fragment-preview-row
+    emacsvox-aural-feature-fragment-previews-examples)))
+
+(defun emacsvox-aural-feature-fragment-previews--goto (example-id)
+  "Move to preview EXAMPLE-ID and its first column."
+  (let ((start (point-min))
+        found)
+    (goto-char start)
+    (while (and (not found) (< (point) (point-max)))
+      (if (eq example-id (tabulated-list-get-id))
+          (setq found t)
+        (forward-line 1)))
+    (unless found
+      (goto-char start))
+    (when found
+      (emacsvox-aural-tools--goto-tabulated-column 0))
+    found))
+
+(defun emacsvox-aural-feature-fragment-previews-refresh
+    (&optional example-id)
+  "Refresh preview examples, preserving EXAMPLE-ID and the current column."
+  (interactive)
+  (let ((column
+         (and
+          (derived-mode-p
+           'emacsvox-aural-feature-fragment-previews-mode)
+          (emacsvox-aural-tools--tabulated-column-index)))
+        (selected
+         (or
+          example-id
+          (and
+           (derived-mode-p
+            'emacsvox-aural-feature-fragment-previews-mode)
+           (tabulated-list-get-id))
+          (gethash
+           emacsvox-aural-feature-fragment-previews-fragment
+           emacsvox-aural-tools--fragment-preview-last-examples)
+          (and
+           emacsvox-aural-feature-fragment-previews-examples
+           (emacsvox-aural-feature-fragment-example-id
+            (car emacsvox-aural-feature-fragment-previews-examples))))))
+    (emacsvox-aural-feature-fragment-previews--set-entries)
+    (tabulated-list-print t)
+    (when selected
+      (emacsvox-aural-feature-fragment-previews--goto selected))
+    (when column
+      (emacsvox-aural-tools--goto-tabulated-column column))))
+
+(defun emacsvox-aural-feature-fragment-previews--current-example ()
+  "Return the preview example represented by the current row."
+  (let ((id
+         (or
+          (tabulated-list-get-id)
+          (user-error "Move to a preview example first"))))
+    (or
+     (cl-find
+      id emacsvox-aural-feature-fragment-previews-examples
+      :key #'emacsvox-aural-feature-fragment-example-id
+      :test #'eq)
+     (user-error "Unknown preview example: %S" id))))
+
+(defun emacsvox-aural-feature-fragment-previews--remember-current ()
+  "Remember the preview example selected by the current row."
+  (when-let* ((id (tabulated-list-get-id)))
+    (puthash
+     emacsvox-aural-feature-fragment-previews-fragment
+     id
+     emacsvox-aural-tools--fragment-preview-last-examples))
+  (tabulated-list-get-id))
+
+(defun emacsvox-aural-feature-fragment-previews-speak-current ()
+  "Speak a concise description of the preview example at point."
+  (interactive)
+  (let* ((example
+          (emacsvox-aural-feature-fragment-previews--current-example))
          (summary
-          (if live
-              (plist-get live :summary)
-            (emacsvox-aural-feature-fragment-example-summary example)))
-         (facts
-          (copy-tree
-           (if live
-               (plist-get live :facts)
-             (emacsvox-aural-feature-fragment-example-facts example))))
-         (context
-          (copy-tree
-           (if live
-               (plist-get live :context)
-             (emacsvox-aural-feature-fragment-example-context example))))
-         (announcement
           (format
-           "%s preview. %s. %s occasion."
-           (if live "Live source context" "Simulated example")
-           summary
+           "%s. %s example. Rule %s. Context %s. %s. %s preview."
+           (emacsvox-aural-feature-fragment-example-summary example)
+           (emacsvox-aural-tools--fragment-preview-example-kind example)
            (emacsvox-aural-tools--humanize
-            (or (plist-get context :occasion) 'continuous)))))
-    (message "%s" announcement)
-    (when (and interactivep (fboundp 'tts-speak))
-      (tts-speak announcement))
-    (list
-     :kind kind
-     :fragment fragment
-     :example
-     (and example
-          (emacsvox-aural-feature-fragment-example-id example))
-     :announcement announcement
-     :concrete
-     (emacsvox-aural-tools--play-fragment-preview
-      fragment facts context isolated))))
+            (emacsvox-aural-feature-fragment-example-rule example))
+           (emacsvox-aural-tools--fragment-preview-context-summary example)
+           (emacsvox-aural-tools--fragment-preview-output-summary
+            emacsvox-aural-feature-fragment-previews-fragment
+            example
+            emacsvox-aural-feature-fragment-previews-isolated)
+           (if emacsvox-aural-feature-fragment-previews-isolated
+               "Isolated"
+             "Composed"))))
+    (emacsvox-aural-feature-fragment-previews--remember-current)
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-feature-fragment-previews-speak-current-cell ()
+  "Speak the current preview column title and value."
+  (interactive)
+  (emacsvox-aural-tools--speak-tabulated-cell))
+
+(defun emacsvox-aural-feature-fragment-previews-next ()
+  "Move to and speak the next preview example."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row 1 "preview example list")
+  (emacsvox-aural-feature-fragment-previews--remember-current))
+
+(defun emacsvox-aural-feature-fragment-previews-previous ()
+  "Move to and speak the previous preview example."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row -1 "preview example list")
+  (emacsvox-aural-feature-fragment-previews--remember-current))
+
+(defun emacsvox-aural-feature-fragment-previews-next-column ()
+  "Move right and speak the next preview column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column 1))
+
+(defun emacsvox-aural-feature-fragment-previews-previous-column ()
+  "Move left and speak the previous preview column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column -1))
+
+(defun emacsvox-aural-feature-fragment-previews-play ()
+  "Play the complete preview example at point."
+  (interactive)
+  (let* ((example
+          (emacsvox-aural-feature-fragment-previews--current-example))
+         (id
+          (emacsvox-aural-feature-fragment-example-id example)))
+    (emacsvox-aural-feature-fragment-previews--remember-current)
+    (emacsvox-aural-tools--stop-preview-speech)
+    (emacsvox-aural-feature-fragments-preview
+     emacsvox-aural-feature-fragment-previews-isolated
+     emacsvox-aural-feature-fragment-previews-fragment
+     id)))
+
+(defun emacsvox-aural-feature-fragment-previews-audition-cues ()
+  "Audition only the earcons in the preview example at point."
+  (interactive)
+  (emacsvox-aural-tools--audition-fragment-preview-cues
+   emacsvox-aural-feature-fragment-previews-fragment
+   (emacsvox-aural-feature-fragment-previews--current-example)
+   emacsvox-aural-feature-fragment-previews-isolated))
+
+(defun emacsvox-aural-feature-fragment-previews-toggle-isolated ()
+  "Toggle composed versus isolated resolution in this preview buffer."
+  (interactive)
+  (setq
+   emacsvox-aural-feature-fragment-previews-isolated
+   (not emacsvox-aural-feature-fragment-previews-isolated))
+  (emacsvox-aural-feature-fragment-previews-refresh)
+  (let ((summary
+         (if emacsvox-aural-feature-fragment-previews-isolated
+             "Isolated option preview"
+           "Preview composed with the active configuration")))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-feature-fragment-previews-help ()
+  "Display and speak presentation-option preview help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Aural Presentation Option Preview\n\n"
+      "Each row is a curated or automatically derived representative example.\n"
+      "Full preview reproduces normal presentation.  Cue-only audition stops\n"
+      "manager speech and plays no labels, content, or training explanation.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
+      "RET or P full preview\n"
+      "c cue-only audition  i composed/isolated\n"
+      "SPC speak example    g refresh\n"
+      "o option manager     h aural home\n"
+      "q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode
+    emacsvox-aural-feature-fragment-previews-mode tabulated-list-mode
+  "Aural-Option-Preview"
+  "Spoken browser for representative presentation-option examples."
+  (setq
+   tabulated-list-format
+   [("Example" 38 nil)
+    ("Source" 12 nil)
+    ("Rule" 38 nil)
+    ("Context" 28 nil)
+    ("Output" 0 nil)])
+  (setq tabulated-list-padding 2)
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-feature-fragment-previews--set-entries nil t)
+  (tabulated-list-init-header))
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-feature-fragment-previews-play)
+       ("P" . emacsvox-aural-feature-fragment-previews-play)
+       ("c" . emacsvox-aural-feature-fragment-previews-audition-cues)
+       ("i" . emacsvox-aural-feature-fragment-previews-toggle-isolated)
+       ("SPC" . emacsvox-aural-feature-fragment-previews-speak-current)
+       ("." . emacsvox-aural-feature-fragment-previews-speak-current-cell)
+       ("n" . emacsvox-aural-feature-fragment-previews-next)
+       ("p" . emacsvox-aural-feature-fragment-previews-previous)
+       ("<down>" . emacsvox-aural-feature-fragment-previews-next)
+       ("<up>" . emacsvox-aural-feature-fragment-previews-previous)
+       ("<right>" . emacsvox-aural-feature-fragment-previews-next-column)
+       ("<left>" . emacsvox-aural-feature-fragment-previews-previous-column)
+       ("g" . emacsvox-aural-feature-fragment-previews-refresh)
+       ("o" . emacsvox-aural-list-feature-fragments)
+       ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
+       ("?" . emacsvox-aural-feature-fragment-previews-help)))
+  (define-key
+   emacsvox-aural-feature-fragment-previews-mode-map
+   (kbd (car binding))
+   (cdr binding)))
+
+(defun emacsvox-aural-list-feature-fragment-previews
+    (fragment &optional isolated examples speak)
+  "Open the spoken preview browser for presentation option FRAGMENT.
+
+When ISOLATED is non-nil, initially resolve the option by itself.  EXAMPLES
+may supply an already completed preview-example list.  When SPEAK is non-nil,
+announce the selected example after displaying the buffer."
+  (let* ((examples
+          (or
+           examples
+           (emacsvox-aural-tools--fragment-preview-examples fragment)))
+         (_
+          (unless examples
+            (user-error
+             "Presentation option %s has no rules to preview"
+             fragment)))
+         (buffer (get-buffer-create "*Aural Option Preview*")))
+    (with-current-buffer buffer
+      (emacsvox-aural-feature-fragment-previews-mode)
+      (setq
+       emacsvox-aural-feature-fragment-previews-fragment fragment
+       emacsvox-aural-feature-fragment-previews-examples examples
+       emacsvox-aural-feature-fragment-previews-isolated
+       (not (null isolated)))
+      (emacsvox-aural-feature-fragment-previews-refresh))
+    (pop-to-buffer buffer)
+    (when (and speak (tabulated-list-get-id))
+      (emacsvox-aural-feature-fragment-previews-speak-current))
+    buffer))
 
 (defun emacsvox-aural-tools--install-feature-fragment-state
     (registry enabled &optional order)
@@ -3681,6 +4168,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
       "RET open/toggle      TAB expand/collapse collection\n"
       "SPC speak row        a grouped/active-order view\n"
       "P preview option     C-u P preview option alone\n"
+      "Multiple examples open a reusable preview browser\n"
       "t enable/disable     M-up/M-down reorder enabled options\n"
       "N create personal    c copy as personal\n"
       "e edit personal      d delete personal\n"

@@ -1019,7 +1019,9 @@ implemented discovery and management commands are:
 - =emacsvox-aural-list-feature-fragments=: manage presentation options and
   press =P= to preview the option at point; the default composes the option
   with the active configuration without enabling it, while =C-u P= previews
-  the option alone;
+  the option alone; multiple representative examples open a persistent
+  spoken browser whose full and cue-only auditions do not require repeated
+  minibuffer selection;
 - =emacsvox-list-aural-schemes=: open the spoken manager for viewing,
   editing, copying, deleting, renaming, activating, previewing, and validating
   schemes;
@@ -2751,6 +2753,14 @@ CLOSED: [2026-07-28 Tue]
   inferring the matching presentation occasion when necessary.
 - Clearly announce whether the result uses live source context or a simulated
   example.
+- Open a persistent spoken example browser when an option has several
+  simulations.  Keep Up and Down equivalent to the spoken row commands,
+  remember the last example, and let the user switch between composed and
+  isolated resolution without reopening completion.
+- Separate full presentation preview from cue-only audition.  Cue-only
+  audition stops manager speech and bypasses content, speech actions,
+  presentation history, and training explanations so an earcon can be heard
+  without masking.
 - Let providers register validated, data-only examples tied to exact option
   rules, and derive safe representative inputs for uncovered rules.
 - Supply curated Org heading-level and visibility examples, plus Notmuch
