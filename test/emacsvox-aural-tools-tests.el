@@ -1896,24 +1896,96 @@
         (delete-directory directory t)))))
 
 (ert-deftest emacsvox-aural-scheme-manager-mutations-roll-back-on-save-error ()
-  "Delete and rename leave the live registry untouched when persistence fails."
+  "Failed manager persistence publishes no registry or cache generation."
   (emacsvox-test--with-aural-tools
     (emacsvox-aural-register-scheme
      '(:schema-version 1 :id personal :summary "Personal"
        :parent default :rules ())
      :source "test")
-    (cl-letf
-        (((symbol-function 'emacsvox-aural-save-user-data)
-          (lambda (&rest _) (error "save failed"))))
-      (should-error
-       (emacsvox-delete-aural-scheme 'personal)
-       :type 'error)
+    (let ((registry emacsvox-aural-scheme-registry)
+          (generation emacsvox-aural-configuration-generation)
+          notifications
+          staged-registries)
+      (add-hook
+       'emacsvox-aural-configuration-changed-hook
+       (lambda (&rest event) (push event notifications)))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-save-user-data)
+            (lambda (&rest _)
+              (push emacsvox-aural-scheme-registry staged-registries)
+              (error "save failed"))))
+        (should-error
+         (emacsvox-copy-aural-scheme 'personal 'copied)
+         :type 'error)
+        (should-error
+         (emacsvox-delete-aural-scheme 'personal)
+         :type 'error)
+        (should-error
+         (emacsvox-rename-aural-scheme 'personal 'renamed)
+         :type 'error))
+      (should (= (length staged-registries) 3))
+      (should
+       (cl-every
+        (lambda (staged) (not (eq staged registry)))
+        staged-registries))
+      (should (eq emacsvox-aural-scheme-registry registry))
+      (should (= emacsvox-aural-configuration-generation generation))
+      (should-not notifications)
       (should (emacsvox-aural-scheme-entry 'personal))
-      (should-error
-       (emacsvox-rename-aural-scheme 'personal 'renamed)
-       :type 'error)
-      (should (emacsvox-aural-scheme-entry 'personal))
+      (should-not (emacsvox-aural-scheme-entry 'copied))
       (should-not (emacsvox-aural-scheme-entry 'renamed)))))
+
+(ert-deftest emacsvox-aural-editor-scheme-save-failure-is-transactional ()
+  "Failed editor persistence leaves the live scheme and caches unchanged."
+  (emacsvox-test--with-aural-tools
+    (let ((data
+           '(:schema-version 1
+             :id personal
+             :summary "Personal scheme"
+             :parent default
+             :rules
+             ((:id original
+               :match (:role heading)
+               :render (:content (:voice bolden)))))))
+      (emacsvox-aural-register-scheme data :source "test")
+      (let ((registry emacsvox-aural-scheme-registry)
+            (entry (emacsvox-aural-scheme-entry 'personal))
+            (generation emacsvox-aural-configuration-generation)
+            notifications
+            staged-registry)
+        (add-hook
+         'emacsvox-aural-configuration-changed-hook
+         (lambda (&rest event) (push event notifications)))
+        (with-temp-buffer
+          (emacsvox-aural-scheme-editor-mode)
+          (setq
+           emacsvox-aural-editor-scope 'scheme
+           emacsvox-aural-editor-target 'personal
+           emacsvox-aural-editor-scheme-data (copy-tree data)
+           emacsvox-aural-editor-rules
+           (copy-tree (plist-get data :rules))
+           emacsvox-aural-editor-dirty t)
+          (setf
+           (plist-get (car emacsvox-aural-editor-rules) :enabled)
+           nil)
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-save-user-data)
+                (lambda (&rest _)
+                  (setq
+                   staged-registry emacsvox-aural-scheme-registry)
+                  (error "save failed"))))
+            (should-error
+             (emacsvox-aural-editor-save)
+             :type 'error)))
+        (should-not (eq staged-registry registry))
+        (should (eq emacsvox-aural-scheme-registry registry))
+        (should (eq (emacsvox-aural-scheme-entry 'personal) entry))
+        (should (= emacsvox-aural-configuration-generation generation))
+        (should-not notifications)
+        (should
+         (equal
+          (emacsvox-aural-scheme-entry-data entry)
+          data))))))
 
 (ert-deftest emacsvox-aural-scheme-manager-previews-inactive-scheme ()
   "Preview uses the selected scheme without changing the active scheme."

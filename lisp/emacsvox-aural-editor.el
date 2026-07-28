@@ -880,22 +880,12 @@ LABEL identifies the speech or cue being edited."
            :source emacsvox-aural-schemes-file)))
     (when (and old (emacsvox-aural-scheme-entry-built-in old))
       (user-error "Built-in schemes cannot be edited; copy it first"))
-    (puthash id entry emacsvox-aural-scheme-registry)
-    ;; The staged replacement mutates the live registry object.  Clear caches
-    ;; before validating it, but advance the public generation only on commit.
-    (clrhash emacsvox-aural--current-rules-cache)
-    (clrhash emacsvox-aural--provider-cache)
-    (condition-case error
-        (progn
-          (emacsvox-aural-validate-scheme-registry)
-          (emacsvox-aural-save-user-data)
-          (setq emacsvox-aural-editor-scheme-data data)
-          (emacsvox-aural-configuration-changed 'scheme-edited))
-      (error
-       (if old
-           (puthash id old emacsvox-aural-scheme-registry)
-         (remhash id emacsvox-aural-scheme-registry))
-       (signal (car error) (cdr error))))))
+    (emacsvox-aural-tools--persist-scheme-mutation
+     'scheme-edited
+     (lambda ()
+       (puthash id entry emacsvox-aural-scheme-registry)
+       entry))
+    (setq emacsvox-aural-editor-scheme-data data)))
 
 (defun emacsvox-aural-editor--commit-fragment (rules)
   "Atomically commit personal feature fragment with normalized RULES."

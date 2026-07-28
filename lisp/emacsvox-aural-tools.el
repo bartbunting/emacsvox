@@ -1897,6 +1897,35 @@ scheme at point and prompt when it has more than one presentation."
        :rules)))
    (emacsvox-aural--scheme-chain scheme)))
 
+(defun emacsvox-aural-tools--persist-scheme-mutation (reason mutation)
+  "Persist staged scheme MUTATION, then publish it for REASON.
+
+MUTATION is called with a copied scheme registry and isolated cache state.
+The complete candidate registry is validated and saved before replacing live
+state.  Registration notifications raised while staging remain private; one
+configuration notification for REASON is published after commit.  Return the
+value of MUTATION."
+  (let ((registry (copy-hash-table emacsvox-aural-scheme-registry))
+        result)
+    (let ((emacsvox-aural-scheme-registry registry)
+          (emacsvox-aural-configuration-generation
+           emacsvox-aural-configuration-generation)
+          (emacsvox-aural-configuration-changed-hook nil)
+          (emacsvox-aural--current-rules-cache
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--provider-cache
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--current-rules-cache-hits
+           emacsvox-aural--current-rules-cache-hits)
+          (emacsvox-aural--current-rules-cache-misses
+           emacsvox-aural--current-rules-cache-misses))
+      (setq result (funcall mutation))
+      (emacsvox-aural-validate-scheme-registry)
+      (emacsvox-aural-save-user-data))
+    (setq emacsvox-aural-scheme-registry registry)
+    (emacsvox-aural-configuration-changed reason)
+    result))
+
 (defun emacsvox-copy-aural-scheme (source new-id &optional flattened)
   "Copy SOURCE to personal scheme NEW-ID.
 
@@ -1943,17 +1972,15 @@ the complete effective rules and providers without a parent."
              :summary
              (format
               "Editable scheme inheriting %s: %s"
-              source
+             source
               (emacsvox-aural-scheme-summary source-scheme))
              :parent source
              :rules nil))))
-    (emacsvox-aural-register-scheme
-     data :source emacsvox-aural-schemes-file)
-    (condition-case error
-        (emacsvox-aural-save-user-data)
-      (error
-       (remhash new-id emacsvox-aural-scheme-registry)
-       (signal (car error) (cdr error))))
+    (emacsvox-aural-tools--persist-scheme-mutation
+     'scheme-copied
+     (lambda ()
+       (emacsvox-aural-register-scheme
+        data :source emacsvox-aural-schemes-file)))
     (when (called-interactively-p 'interactive)
       (message "Created personal aural scheme %s" new-id))
     new-id))
@@ -2016,12 +2043,11 @@ selects its parent, or the built-in default when it has no parent."
         (or
          (not (called-interactively-p 'interactive))
          (yes-or-no-p prompt))
-      (let ((registry (copy-hash-table emacsvox-aural-scheme-registry)))
-        (remhash scheme registry)
-        (let ((emacsvox-aural-scheme-registry registry))
-          (emacsvox-aural-save-user-data))
-        (setq emacsvox-aural-scheme-registry registry)
-        (emacsvox-aural-configuration-changed 'scheme-deleted))
+      (emacsvox-aural-tools--persist-scheme-mutation
+       'scheme-deleted
+       (lambda ()
+         (remhash scheme emacsvox-aural-scheme-registry)
+         scheme))
       (when active
         (emacsvox-aural-select-scheme fallback))
       (emacsvox-aural-tools--refresh-scheme-manager
@@ -2076,12 +2102,13 @@ selects its parent, or the built-in default when it has no parent."
      ((and
        (called-interactively-p 'interactive)
        (not (yes-or-no-p prompt)))
-      nil)
+     nil)
      (t
-      (let ((registry (copy-hash-table emacsvox-aural-scheme-registry))
-            (active (eq scheme emacsvox-aural-active-scheme)))
-        (let ((emacsvox-aural-scheme-registry registry))
-          (remhash scheme registry)
+      (let ((active (eq scheme emacsvox-aural-active-scheme)))
+        (emacsvox-aural-tools--persist-scheme-mutation
+         'scheme-renamed
+         (lambda ()
+          (remhash scheme emacsvox-aural-scheme-registry)
           (let ((data
                  (plist-put
                   (copy-tree
@@ -2097,21 +2124,14 @@ selects its parent, or the built-in default when it has no parent."
                      (copy-tree
                       (emacsvox-aural-scheme-entry-data child))
                      :parent new-id)))
-              (remhash dependent registry)
+              (remhash dependent emacsvox-aural-scheme-registry)
               (emacsvox-aural-register-scheme
                data
                :built-in
                (emacsvox-aural-scheme-entry-built-in child)
                :source
                (emacsvox-aural-scheme-entry-source child))))
-          (maphash
-           (lambda (id _)
-             (emacsvox-aural--scheme-chain id)
-             (emacsvox-aural-effective-scheme-rules id))
-           registry)
-          (emacsvox-aural-save-user-data))
-        (setq emacsvox-aural-scheme-registry registry)
-        (emacsvox-aural-configuration-changed 'scheme-renamed)
+          new-id))
         (when active
           (emacsvox-aural-select-scheme new-id))
         (emacsvox-aural-tools--refresh-scheme-manager new-id)
