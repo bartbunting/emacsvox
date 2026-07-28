@@ -81,12 +81,6 @@
       (dolist
           (binding
            '(("RET" . emacsvox-aural-voice-palettes-describe)
-             ("SPC" . emacsvox-aural-voice-palettes-speak-current)
-             ("." . emacsvox-aural-voice-palettes-speak-current-cell)
-             ("n" . emacsvox-aural-voice-palettes-next)
-             ("p" . emacsvox-aural-voice-palettes-previous)
-             ("<right>" . emacsvox-aural-voice-palettes-next-column)
-             ("<left>" . emacsvox-aural-voice-palettes-previous-column)
              ("a" . emacsvox-aural-voice-palettes-activate)
              ("f" . emacsvox-aural-voice-palettes-follow-scheme)
              ("N" . emacsvox-aural-voice-palettes-create)
@@ -99,7 +93,6 @@
              ("x" . emacsvox-aural-voice-palettes-explain)
              ("v" . emacsvox-aural-voice-palettes-describe)
              ("h" . emacsvox-aural)
-             ("q" . emacsvox-aural-quit)
              ("?" . emacsvox-aural-voice-palettes-help)))
         (should
          (eq
@@ -186,7 +179,8 @@
              (derived-mode-p
               'emacsvox-aural-voice-palette-previews-mode))
             (should
-             (derived-mode-p 'emacsvox-aural-voice-palettes-mode))
+             (derived-mode-p 'emacsvox-aural-tabulated-mode))
+            (should (emacsvox-aural-ui-interface-buffer-p))
             (should
              (eq emacsvox-aural-voice-palette-previews-palette 'reading))
             (should (= (length tabulated-list-entries) 27))
@@ -200,10 +194,8 @@
               "from acss-default"))
             (should
              (eq
-              (lookup-key
-               emacsvox-aural-voice-palette-previews-mode-map
-               (kbd "<down>"))
-              #'emacsvox-aural-voice-palette-previews-next))
+              (key-binding (kbd "<down>"))
+              #'emacsvox-aural-ui-next-row))
             (should
              (eq
               (lookup-key
@@ -274,8 +266,7 @@
               (with-current-buffer (cadr buffers)
                 (should (derived-mode-p 'emacsvox-aural-voice-tuner-mode))
                 (should
-                 (derived-mode-p
-                  'emacsvox-aural-voice-palette-previews-mode))
+                 (derived-mode-p 'emacsvox-aural-tabulated-mode))
                 (should (= (length tabulated-list-entries) 5))
                 (should-not emacsvox-aural-voice-tuner-dirty)
                 (should

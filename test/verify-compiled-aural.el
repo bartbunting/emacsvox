@@ -30,6 +30,7 @@
          "emacsvox-aural-resources"
          "emacsvox-aural-schemes"
          "emacsvox-aural-transport"
+         "emacsvox-aural-ui"
          "emacsvox-aural-tools"
          "emacsvox-aural-editor"
          "emacsvox-aural-simple-editor"

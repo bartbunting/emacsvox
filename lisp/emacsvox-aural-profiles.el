@@ -87,27 +87,15 @@
 
 (defun emacsvox-aural-profiles--goto (id)
   "Move to profile ID and its first column."
-  (goto-char (point-min))
-  (while (and (< (point) (point-max))
-              (not (eq id (tabulated-list-get-id))))
-    (forward-line 1))
-  (when (eq id (tabulated-list-get-id))
-    (emacsvox-aural-tools--goto-tabulated-column 0)
-    t))
+  (emacsvox-aural-ui-goto-row id))
 
 (defun emacsvox-aural-profiles-refresh (&optional id)
   "Refresh profiles, preserving ID and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected
-         (or id (tabulated-list-get-id)
-             (emacsvox-aural-profiles--current-id))))
-    (emacsvox-aural-profiles--set-entries)
-    (tabulated-list-print t)
-    (if selected
-        (emacsvox-aural-profiles--goto selected)
-      (goto-char (point-min)))
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-profiles--set-entries
+   id
+   (emacsvox-aural-profiles--current-id)))
 
 (defun emacsvox-aural-profiles--at-point-or-read ()
   "Return the profile at point or prompt for one."
@@ -385,9 +373,14 @@
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
-(define-derived-mode emacsvox-aural-profiles-mode tabulated-list-mode
+(define-derived-mode emacsvox-aural-profiles-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Profiles"
   "Spoken manager for complete aural presentation profiles."
+  (emacsvox-aural-ui-configure-tabulated
+   "presentation profiles"
+   #'emacsvox-aural-profiles-speak-current
+   #'emacsvox-aural-profiles-refresh)
   (setq
    tabulated-list-format
    [("Profile" 24 t)
@@ -419,23 +412,13 @@
     (binding
      '(("RET" . emacsvox-aural-profiles-activate)
        ("a" . emacsvox-aural-profiles-activate)
-       ("SPC" . emacsvox-aural-profiles-speak-current)
-       ("." . emacsvox-aural-profiles-speak-current-cell)
-       ("n" . emacsvox-aural-profiles-next)
-       ("p" . emacsvox-aural-profiles-previous)
-       ("<down>" . emacsvox-aural-profiles-next)
-       ("<up>" . emacsvox-aural-profiles-previous)
-       ("<right>" . emacsvox-aural-profiles-next-column)
-       ("<left>" . emacsvox-aural-profiles-previous-column)
        ("v" . emacsvox-aural-profiles-describe)
        ("N" . emacsvox-aural-profiles-create)
        ("c" . emacsvox-aural-profiles-copy)
        ("u" . emacsvox-aural-profiles-update-from-current)
        ("r" . emacsvox-aural-profiles-rename)
        ("d" . emacsvox-aural-profiles-delete)
-       ("g" . emacsvox-aural-profiles-refresh)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-profiles-help)))
   (define-key
    emacsvox-aural-profiles-mode-map

@@ -1098,7 +1098,7 @@ LABEL identifies the speech or cue being edited."
 
 (defvar emacsvox-aural-scheme-editor-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map special-mode-map)
+    (set-keymap-parent map emacsvox-aural-interface-mode-map)
     (define-key map (kbd "n") #'emacsvox-aural-editor-add-rule)
     (define-key map (kbd "RET") #'emacsvox-aural-editor-edit-rule)
     (define-key map (kbd "e") #'emacsvox-aural-editor-edit-rule)
@@ -1119,7 +1119,8 @@ LABEL identifies the speech or cue being edited."
     map)
   "Keymap for `emacsvox-aural-scheme-editor-mode'.")
 
-(define-derived-mode emacsvox-aural-scheme-editor-mode special-mode
+(define-derived-mode emacsvox-aural-scheme-editor-mode
+    emacsvox-aural-interface-mode
   "Aural-Scheme-Editor"
   "Accessible editor for declarative aural schemes and rule layers."
   (setq-local

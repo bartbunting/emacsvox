@@ -22,6 +22,7 @@
           emacsvox-aural-resources
           emacsvox-aural-schemes
           emacsvox-aural-transport
+          emacsvox-aural-ui
           emacsvox-aural-tools
           emacsvox-aural-editor
           emacsvox-aural-simple-editor
@@ -41,6 +42,7 @@
           emacsvox-aural--resource-error
           emacsvox-aural--migrate-user-data-v1-to-v2
           emacsvox-aural--transport-error
+          emacsvox-aural-ui-interface-buffer-p
           emacsvox-aural-tools--interface-buffer-p
           emacsvox-aural-editor--scope-label
           emacsvox-aural-simple-editor--humanize

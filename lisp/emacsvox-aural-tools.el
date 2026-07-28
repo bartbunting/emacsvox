@@ -16,6 +16,7 @@
 (require 'pp)
 (require 'subr-x)
 (require 'tabulated-list)
+(require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-transport)
 
 (cl-defstruct
@@ -90,44 +91,24 @@
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-dispatch "tts-speak" ())
 
+(defalias 'emacsvox-aural-tools--tabulated-column-index
+  #'emacsvox-aural-ui-tabulated-column-index)
+(defalias 'emacsvox-aural-tools--goto-tabulated-column
+  #'emacsvox-aural-ui-goto-tabulated-column)
+(defalias 'emacsvox-aural-tools--tabulated-cell-description
+  #'emacsvox-aural-ui-tabulated-cell-description)
+(defalias 'emacsvox-aural-tools--speak-tabulated-cell
+  #'emacsvox-aural-ui-speak-current-cell)
+(defalias 'emacsvox-aural-tools--tabulated-boundary
+  #'emacsvox-aural-ui--announce-boundary)
+(defalias 'emacsvox-aural-tools--move-tabulated-row
+  #'emacsvox-aural-ui-move-row)
+(defalias 'emacsvox-aural-tools--move-tabulated-column
+  #'emacsvox-aural-ui-move-column)
+
 (defun emacsvox-aural-tools--interface-buffer-p (&optional buffer)
   "Return non-nil when BUFFER is an aural manager or editor buffer."
-  (with-current-buffer (or buffer (current-buffer))
-    (derived-mode-p
-     'emacsvox-aural-home-mode
-     'emacsvox-aural-semantics-mode
-     'emacsvox-aural-schemes-mode
-     'emacsvox-aural-feature-fragments-mode
-     'emacsvox-aural-feature-fragment-previews-mode
-     'emacsvox-aural-profiles-mode
-     'emacsvox-aural-voice-palettes-mode
-     'emacsvox-aural-voice-palette-previews-mode
-     'emacsvox-aural-voice-tuner-mode
-     'emacsvox-aural-doctor-mode
-     'emacsvox-aural-sound-packs-mode
-     'emacsvox-aural-sound-pack-cues-mode
-     'emacsvox-aural-scheme-editor-mode
-     'emacsvox-aural-simple-editor-mode)))
-
-(defun emacsvox-aural-quit (&optional kill)
-  "Dismiss the current aural interface and report its destination.
-
-When KILL is non-nil, kill the interface buffer as `quit-window' would."
-  (interactive)
-  (unless (emacsvox-aural-tools--interface-buffer-p)
-    (user-error "This is not an aural interface buffer"))
-  (let ((facts
-         '(:role aural-interface :events (aural-interface-closed)))
-        (context
-         (emacsvox-aural-capture-context 'aural-tools 'state-change)))
-    (prog1
-        (quit-window kill)
-      (let ((emacsvox-aural-submission-facts facts)
-            (emacsvox-aural-submission-context context)
-            (emacsvox-aural-submission-module 'aural-tools)
-            (emacsvox-aural-submission-occasion 'state-change))
-        (emacsvox-icon 'close-object)
-        (emacsvox-speak-mode-line)))))
+  (emacsvox-aural-ui-interface-buffer-p buffer))
 
 (defun emacsvox-aural-tools--remember-source-buffer (&optional buffer)
   "Remember BUFFER as the source for aural inspection when appropriate."
@@ -417,33 +398,13 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 
 (defun emacsvox-aural-semantics--goto (semantic)
   "Move to SEMANTIC in the current semantic-list buffer."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq semantic (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row semantic))
 
 (defun emacsvox-aural-semantics-refresh (&optional semantic)
   "Refresh the semantic list, preserving SEMANTIC and the current column."
   (interactive)
-  (let ((column
-         (emacsvox-aural-tools--tabulated-column-index))
-        (selected (or semantic (tabulated-list-get-id))))
-    (emacsvox-aural-semantics--set-entries)
-    (tabulated-list-print t)
-    (if selected
-        (progn
-          (emacsvox-aural-semantics--goto selected)
-          (emacsvox-aural-tools--goto-tabulated-column column))
-      (goto-char (point-min))
-      (emacsvox-aural-tools--goto-tabulated-column 0))))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-semantics--set-entries semantic))
 
 (defun emacsvox-aural-semantics-speak-current ()
   "Speak a concise description of the semantic at point."
@@ -506,9 +467,14 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
-(define-derived-mode emacsvox-aural-semantics-mode tabulated-list-mode
+(define-derived-mode emacsvox-aural-semantics-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Semantics"
   "Major mode for browsing registered aural semantics."
+  (emacsvox-aural-ui-configure-tabulated
+   "semantic list"
+   #'emacsvox-aural-semantics-speak-current
+   #'emacsvox-aural-semantics-refresh)
   (setq
    tabulated-list-format
    [("Identifier" 28 t)
@@ -524,17 +490,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 (dolist
     (binding
      '(("RET" . emacsvox-describe-aural-semantic)
-       ("n" . emacsvox-aural-semantics-next)
-       ("p" . emacsvox-aural-semantics-previous)
-       ("<down>" . emacsvox-aural-semantics-next)
-       ("<up>" . emacsvox-aural-semantics-previous)
-       ("<right>" . emacsvox-aural-semantics-next-column)
-       ("<left>" . emacsvox-aural-semantics-previous-column)
-       ("." . emacsvox-aural-semantics-speak-current-cell)
-       ("SPC" . emacsvox-aural-semantics-speak-current)
-       ("g" . emacsvox-aural-semantics-refresh)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-semantics-help)))
   (define-key
    emacsvox-aural-semantics-mode-map
@@ -917,75 +873,15 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     #'emacsvox-aural-tools--scheme-row
     (emacsvox-aural-scheme-candidates))))
 
-(defun emacsvox-aural-tools--tabulated-column-index ()
-  "Return the current tabulated column index, defaulting to the first."
-  (let ((name
-         (get-text-property
-          (point) 'tabulated-list-column-name)))
-    (or
-     (and
-      name
-      (cl-position
-       name tabulated-list-format
-       :test #'string= :key #'car))
-     0)))
-
-(defun emacsvox-aural-tools--goto-tabulated-column (index)
-  "Move to column INDEX on the current tabulated row."
-  (let ((name (car (aref tabulated-list-format index)))
-        (position (line-beginning-position))
-        (limit (line-end-position))
-        found)
-    (while (and (< position limit) (not found))
-      (if
-          (equal
-           name
-           (get-text-property
-            position 'tabulated-list-column-name))
-          (setq found position)
-        (setq
-         position
-         (next-single-property-change
-          position 'tabulated-list-column-name nil limit))))
-    (when found
-      (goto-char found))
-    found))
-
 (defun emacsvox-aural-schemes--goto-scheme (scheme)
   "Move to SCHEME in the current scheme-manager buffer."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq scheme (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row scheme))
 
 (defun emacsvox-aural-schemes-refresh (&optional scheme)
   "Refresh the scheme manager, preserving SCHEME or the current row."
   (interactive)
-  (let ((column
-         (and
-          (null scheme)
-          (derived-mode-p 'emacsvox-aural-schemes-mode)
-          (emacsvox-aural-tools--tabulated-column-index)))
-        (selected
-         (or
-          scheme
-          (and
-           (derived-mode-p 'emacsvox-aural-schemes-mode)
-           (tabulated-list-get-id)))))
-    (emacsvox-aural-schemes--set-entries)
-    (tabulated-list-print t)
-    (when selected
-      (emacsvox-aural-schemes--goto-scheme selected)
-      (when column
-        (emacsvox-aural-tools--goto-tabulated-column column)))))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-schemes--set-entries scheme))
 
 (defun emacsvox-aural-tools--refresh-scheme-manager (&optional scheme)
   "Refresh an existing scheme-manager buffer and select SCHEME."
@@ -1114,68 +1010,10 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (message "%s" summary))
     summary))
 
-(defun emacsvox-aural-tools--tabulated-cell-description ()
-  "Return the current tabulated cell as titled spoken text."
-  (let* ((entry
-          (or
-           (tabulated-list-get-entry)
-           (user-error "Move to a tabulated row first")))
-         (index (emacsvox-aural-tools--tabulated-column-index))
-         (name (car (aref tabulated-list-format index)))
-         (value (aref entry index))
-         (value (if (listp value) (car value) value))
-         (value (string-trim (format "%s" value))))
-    (format
-     "%s, %s"
-     name
-     (if (string-empty-p value) "blank" value))))
-
-(defun emacsvox-aural-tools--speak-tabulated-cell ()
-  "Speak the current tabulated column title and value."
-  (let ((description
-         (emacsvox-aural-tools--tabulated-cell-description)))
-    (when (fboundp 'emacsvox-icon)
-      (emacsvox-icon 'select-object))
-    (if (fboundp 'tts-speak)
-        (tts-speak description)
-      (message "%s" description))
-    description))
-
 (defun emacsvox-aural-schemes-speak-current-cell ()
   "Speak the current manager column title and value."
   (interactive)
   (emacsvox-aural-tools--speak-tabulated-cell))
-
-(defun emacsvox-aural-tools--tabulated-boundary (message)
-  "Announce tabulated-list boundary MESSAGE."
-  (when (fboundp 'emacsvox-icon)
-    (emacsvox-icon 'warn-user))
-  (if (fboundp 'tts-speak)
-      (tts-speak message)
-    (message "%s" message))
-  message)
-
-(defun emacsvox-aural-tools--move-tabulated-row
-    (direction list-name &optional speaker)
-  "Move a tabulated row in DIRECTION within LIST-NAME and announce it.
-
-SPEAKER defaults to `emacsvox-aural-tools--speak-tabulated-cell'."
-  (let ((origin (point))
-        (column (emacsvox-aural-tools--tabulated-column-index)))
-    (beginning-of-line)
-    (let ((residue (forward-line direction)))
-      (if (and (zerop residue) (tabulated-list-get-id))
-          (progn
-            (emacsvox-aural-tools--goto-tabulated-column column)
-            (funcall
-             (or speaker
-                 #'emacsvox-aural-tools--speak-tabulated-cell)))
-        (goto-char origin)
-        (emacsvox-aural-tools--tabulated-boundary
-         (format
-          "%s of %s."
-          (if (> direction 0) "Bottom" "Top")
-          list-name))))))
 
 (defun emacsvox-aural-schemes-next ()
   "Move to and speak the next scheme."
@@ -1186,20 +1024,6 @@ SPEAKER defaults to `emacsvox-aural-tools--speak-tabulated-cell'."
   "Move to and speak the previous scheme."
   (interactive)
   (emacsvox-aural-tools--move-tabulated-row -1 "scheme list"))
-
-(defun emacsvox-aural-tools--move-tabulated-column (direction)
-  "Move a tabulated column in DIRECTION and speak its title and value."
-  (let* ((index (emacsvox-aural-tools--tabulated-column-index))
-         (last (1- (length tabulated-list-format)))
-         (target (+ index direction)))
-    (cond
-     ((< target 0)
-      (emacsvox-aural-tools--tabulated-boundary "First column."))
-     ((> target last)
-      (emacsvox-aural-tools--tabulated-boundary "Last column."))
-     (t
-      (emacsvox-aural-tools--goto-tabulated-column target)
-      (emacsvox-aural-tools--speak-tabulated-cell)))))
 
 (defun emacsvox-aural-schemes-next-column ()
   "Move right and speak the next manager column title and value."
@@ -1397,9 +1221,14 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
-(define-derived-mode emacsvox-aural-schemes-mode tabulated-list-mode
+(define-derived-mode emacsvox-aural-schemes-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Schemes"
   "Major mode for viewing and managing registered aural schemes."
+  (emacsvox-aural-ui-configure-tabulated
+   "scheme list"
+   #'emacsvox-aural-schemes-speak-current
+   #'emacsvox-aural-schemes-refresh)
   (setq
    tabulated-list-format
    [("Scheme" 24 t)
@@ -1450,44 +1279,8 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  #'emacsvox-preview-aural-scheme)
 (define-key
  emacsvox-aural-schemes-mode-map
- (kbd "n")
- #'emacsvox-aural-schemes-next)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "p")
- #'emacsvox-aural-schemes-previous)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "<down>")
- #'emacsvox-aural-schemes-next)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "<up>")
- #'emacsvox-aural-schemes-previous)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "<right>")
- #'emacsvox-aural-schemes-next-column)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "<left>")
- #'emacsvox-aural-schemes-previous-column)
-(define-key
- emacsvox-aural-schemes-mode-map
  (kbd "v")
  #'emacsvox-validate-aural-scheme)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "SPC")
- #'emacsvox-aural-schemes-speak-current)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd ".")
- #'emacsvox-aural-schemes-speak-current-cell)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "g")
- #'emacsvox-aural-schemes-refresh)
 (define-key
  emacsvox-aural-schemes-mode-map
  (kbd "?")
@@ -1500,11 +1293,6 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  emacsvox-aural-schemes-mode-map
  (kbd "h")
  #'emacsvox-aural)
-(define-key
- emacsvox-aural-schemes-mode-map
- (kbd "q")
- #'emacsvox-aural-quit)
-
 (defun emacsvox-list-aural-schemes ()
   "Open the accessible manager for registered aural schemes."
   (interactive)
@@ -2976,39 +2764,13 @@ SCOPE is `personal', `session', or `buffer'."
 
 (defun emacsvox-aural-feature-fragments--goto (fragment)
   "Move to feature FRAGMENT in the current manager."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (equal fragment (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row fragment))
 
 (defun emacsvox-aural-feature-fragments-refresh (&optional fragment)
   "Refresh the feature-fragment manager, preserving FRAGMENT and column."
   (interactive)
-  (let ((column
-         (and
-          (null fragment)
-          (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
-          (emacsvox-aural-tools--tabulated-column-index)))
-        (selected
-         (or
-          fragment
-          (and
-           (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
-           (tabulated-list-get-id)))))
-    (emacsvox-aural-feature-fragments--set-entries)
-    (tabulated-list-print t)
-    (when selected
-      (emacsvox-aural-feature-fragments--goto selected)
-      (when column
-        (emacsvox-aural-tools--goto-tabulated-column column)))))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-feature-fragments--set-entries fragment))
 
 (defun emacsvox-aural-tools--refresh-fragment-manager (&optional fragment)
   "Refresh an existing feature-fragment manager and select FRAGMENT."
@@ -3653,48 +3415,23 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
 
 (defun emacsvox-aural-feature-fragment-previews--goto (example-id)
   "Move to preview EXAMPLE-ID and its first column."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq example-id (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row example-id))
 
 (defun emacsvox-aural-feature-fragment-previews-refresh
     (&optional example-id)
   "Refresh preview examples, preserving EXAMPLE-ID and the current column."
   (interactive)
-  (let ((column
-         (and
-          (derived-mode-p
-           'emacsvox-aural-feature-fragment-previews-mode)
-          (emacsvox-aural-tools--tabulated-column-index)))
-        (selected
-         (or
-          example-id
-          (and
-           (derived-mode-p
-            'emacsvox-aural-feature-fragment-previews-mode)
-           (tabulated-list-get-id))
-          (gethash
-           emacsvox-aural-feature-fragment-previews-fragment
-           emacsvox-aural-tools--fragment-preview-last-examples)
-          (and
-           emacsvox-aural-feature-fragment-previews-examples
-           (emacsvox-aural-feature-fragment-example-id
-            (car emacsvox-aural-feature-fragment-previews-examples))))))
-    (emacsvox-aural-feature-fragment-previews--set-entries)
-    (tabulated-list-print t)
-    (when selected
-      (emacsvox-aural-feature-fragment-previews--goto selected))
-    (when column
-      (emacsvox-aural-tools--goto-tabulated-column column))))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-feature-fragment-previews--set-entries
+   example-id
+   (or
+    (gethash
+     emacsvox-aural-feature-fragment-previews-fragment
+     emacsvox-aural-tools--fragment-preview-last-examples)
+    (and
+     emacsvox-aural-feature-fragment-previews-examples
+     (emacsvox-aural-feature-fragment-example-id
+      (car emacsvox-aural-feature-fragment-previews-examples))))))
 
 (defun emacsvox-aural-feature-fragment-previews--current-example ()
   "Return the preview example represented by the current row."
@@ -3830,9 +3567,16 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
     (emacsvox-speak-help)))
 
 (define-derived-mode
-    emacsvox-aural-feature-fragment-previews-mode tabulated-list-mode
+    emacsvox-aural-feature-fragment-previews-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Option-Preview"
   "Spoken browser for representative presentation-option examples."
+  (emacsvox-aural-ui-configure-tabulated
+   "preview example list"
+   #'emacsvox-aural-feature-fragment-previews-speak-current
+   #'emacsvox-aural-feature-fragment-previews-refresh
+   nil
+   #'emacsvox-aural-feature-fragment-previews--remember-current)
   (setq
    tabulated-list-format
    [("Example" 38 nil)
@@ -3852,18 +3596,8 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
        ("P" . emacsvox-aural-feature-fragment-previews-play)
        ("c" . emacsvox-aural-feature-fragment-previews-audition-cues)
        ("i" . emacsvox-aural-feature-fragment-previews-toggle-isolated)
-       ("SPC" . emacsvox-aural-feature-fragment-previews-speak-current)
-       ("." . emacsvox-aural-feature-fragment-previews-speak-current-cell)
-       ("n" . emacsvox-aural-feature-fragment-previews-next)
-       ("p" . emacsvox-aural-feature-fragment-previews-previous)
-       ("<down>" . emacsvox-aural-feature-fragment-previews-next)
-       ("<up>" . emacsvox-aural-feature-fragment-previews-previous)
-       ("<right>" . emacsvox-aural-feature-fragment-previews-next-column)
-       ("<left>" . emacsvox-aural-feature-fragment-previews-previous-column)
-       ("g" . emacsvox-aural-feature-fragment-previews-refresh)
        ("o" . emacsvox-aural-list-feature-fragments)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-feature-fragment-previews-help)))
   (define-key
    emacsvox-aural-feature-fragment-previews-mode-map
@@ -4186,9 +3920,14 @@ announce the selected example after displaying the buffer."
     (emacsvox-speak-help)))
 
 (define-derived-mode
-    emacsvox-aural-feature-fragments-mode tabulated-list-mode
+    emacsvox-aural-feature-fragments-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Options"
   "Major mode for viewing and managing aural presentation options."
+  (emacsvox-aural-ui-configure-tabulated
+   "presentation option list"
+   #'emacsvox-aural-feature-fragments-speak-current
+   #'emacsvox-aural-feature-fragments-refresh)
   (setq
    tabulated-list-format
    [("Option" 32 nil)
@@ -4207,14 +3946,6 @@ announce the selected example after displaying the buffer."
     (binding
      '(("RET" . emacsvox-aural-feature-fragments-activate)
        ("TAB" . emacsvox-aural-feature-fragments-toggle-collection)
-       ("SPC" . emacsvox-aural-feature-fragments-speak-current)
-       ("." . emacsvox-aural-feature-fragments-speak-current-cell)
-       ("n" . emacsvox-aural-feature-fragments-next)
-       ("p" . emacsvox-aural-feature-fragments-previous)
-       ("<down>" . next-line)
-       ("<up>" . previous-line)
-       ("<right>" . emacsvox-aural-feature-fragments-next-column)
-       ("<left>" . emacsvox-aural-feature-fragments-previous-column)
        ("a" . emacsvox-aural-feature-fragments-toggle-view)
        ("P" . emacsvox-aural-feature-fragments-preview)
        ("t" . emacsvox-aural-feature-fragments-toggle)
@@ -4225,10 +3956,8 @@ announce the selected example after displaying the buffer."
        ("e" . emacsvox-aural-feature-fragments-edit)
        ("d" . emacsvox-aural-delete-feature-fragment)
        ("v" . emacsvox-aural-show-feature-fragment-validation)
-       ("g" . emacsvox-aural-feature-fragments-refresh)
        ("s" . emacsvox-aural-list-schemes)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-feature-fragments-help)))
   (define-key
    emacsvox-aural-feature-fragments-mode-map
@@ -4404,28 +4133,15 @@ announce the selected example after displaying the buffer."
 
 (defun emacsvox-aural-home--goto (id)
   "Move to home row ID and its first column."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq id (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row id))
 
 (defun emacsvox-aural-home-refresh (&optional id)
   "Refresh aural home status, preserving row ID and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected (or id (tabulated-list-get-id) 'explain)))
-    (setq tabulated-list-entries (emacsvox-aural-home--entries))
-    (tabulated-list-print t)
-    (emacsvox-aural-home--goto selected)
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+  (emacsvox-aural-ui-refresh-tabulated
+   (lambda ()
+     (setq tabulated-list-entries (emacsvox-aural-home--entries)))
+   id 'explain))
 
 (defun emacsvox-aural-home-speak-current ()
   "Speak the complete aural home row at point."
@@ -4559,9 +4275,14 @@ announce the selected example after displaying the buffer."
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
-(define-derived-mode emacsvox-aural-home-mode tabulated-list-mode
+(define-derived-mode emacsvox-aural-home-mode
+    emacsvox-aural-tabulated-mode
   "Emacsvox-Aural"
   "Spoken home mode for aural presentation discovery and interaction."
+  (emacsvox-aural-ui-configure-tabulated
+   "aural home"
+   #'emacsvox-aural-home-speak-current
+   #'emacsvox-aural-home-refresh)
   (setq
    tabulated-list-format
    [("Area" 24 t)
@@ -4576,21 +4297,11 @@ announce the selected example after displaying the buffer."
 (dolist
     (binding
      '(("RET" . emacsvox-aural-home-activate)
-       ("SPC" . emacsvox-aural-home-speak-current)
-       ("." . emacsvox-aural-home-speak-current-cell)
-       ("n" . emacsvox-aural-home-next)
-       ("p" . emacsvox-aural-home-previous)
-       ("<down>" . emacsvox-aural-home-next)
-       ("<up>" . emacsvox-aural-home-previous)
-       ("<right>" . emacsvox-aural-home-next-column)
-       ("<left>" . emacsvox-aural-home-previous-column)
        ("x" . emacsvox-aural-home-explain)
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)
        ("v" . emacsvox-aural-home-toggle-face-presentation)
        ("D" . emacsvox-aural-doctor)
-       ("g" . emacsvox-aural-home-refresh)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-home-help)))
   (define-key
    emacsvox-aural-home-mode-map

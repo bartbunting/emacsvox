@@ -24,6 +24,7 @@
           "emacsvox-aural-resources.el"
           "emacsvox-aural-schemes.el"
           "emacsvox-aural-transport.el"
+          "emacsvox-aural-ui.el"
           "emacsvox-aural-tools.el"
           "emacsvox-aural-editor.el"
           "emacsvox-aural-simple-editor.el"

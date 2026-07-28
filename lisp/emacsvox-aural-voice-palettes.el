@@ -166,28 +166,15 @@
 
 (defun emacsvox-aural-voice-palettes--goto (id)
   "Move to palette ID and its first column."
-  (goto-char (point-min))
-  (while (and (< (point) (point-max))
-              (not (eq id (tabulated-list-get-id))))
-    (forward-line 1))
-  (when (eq id (tabulated-list-get-id))
-    (emacsvox-aural-tools--goto-tabulated-column 0)
-    t))
+  (emacsvox-aural-ui-goto-row id))
 
 (defun emacsvox-aural-voice-palettes-refresh (&optional id)
   "Refresh palettes while preserving ID and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected
-         (or id
-             (tabulated-list-get-id)
-             (emacsvox-aural-voice-palettes--active-id))))
-    (emacsvox-aural-voice-palettes--set-entries)
-    (tabulated-list-print t)
-    (if selected
-        (emacsvox-aural-voice-palettes--goto selected)
-      (goto-char (point-min)))
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-voice-palettes--set-entries
+   id
+   (emacsvox-aural-voice-palettes--active-id)))
 
 (defun emacsvox-aural-voice-palettes--at-point-or-read (&optional prompt)
   "Return the palette at point, or read one using PROMPT."
@@ -792,18 +779,7 @@
 
 (defun emacsvox-aural-voice-palette-previews--goto (voice)
   "Move to VOICE and its first preview column."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq voice (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row voice))
 
 (defun emacsvox-aural-voice-palette-previews--update-header ()
   "Update the current preview buffer's palette and sample heading."
@@ -817,8 +793,7 @@
 (defun emacsvox-aural-voice-palette-previews-refresh (&optional voice)
   "Refresh palette voices, preserving VOICE and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected
+  (let ((selected
          (or
           voice
           (tabulated-list-get-id)
@@ -836,12 +811,10 @@
        emacsvox-aural-voice-palette-previews-palette))
     (unless (assq selected emacsvox-aural-voice-palette-previews-entries)
       (setq selected (caar emacsvox-aural-voice-palette-previews-entries)))
-    (emacsvox-aural-voice-palette-previews--set-entries)
-    (tabulated-list-print t)
-    (emacsvox-aural-voice-palette-previews--update-header)
-    (when selected
-      (emacsvox-aural-voice-palette-previews--goto selected))
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+    (emacsvox-aural-ui-refresh-tabulated
+     #'emacsvox-aural-voice-palette-previews--set-entries
+     selected nil
+     #'emacsvox-aural-voice-palette-previews--update-header)))
 
 (defun emacsvox-aural-voice-palette-previews--current-voice ()
   "Return the effective voice represented by the current preview row."
@@ -1174,18 +1147,7 @@ Return the compiled voice without dispatching the speech queue."
 
 (defun emacsvox-aural-voice-tuner--goto (dimension)
   "Move to tuner DIMENSION and its first column."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq dimension (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row dimension))
 
 (defun emacsvox-aural-voice-tuner--update-header ()
   "Update tuner identity, adapter, and transaction state."
@@ -1202,17 +1164,11 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-tuner-refresh (&optional dimension)
   "Refresh the tuner while preserving DIMENSION and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected
-         (or
-          dimension
-          (tabulated-list-get-id)
-          (car emacsvox-aural-voice-dimensions))))
-    (emacsvox-aural-voice-tuner--set-entries)
-    (tabulated-list-print t)
-    (emacsvox-aural-voice-tuner--update-header)
-    (emacsvox-aural-voice-tuner--goto selected)
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-voice-tuner--set-entries
+   dimension
+   (car emacsvox-aural-voice-dimensions)
+   #'emacsvox-aural-voice-tuner--update-header))
 
 (defun emacsvox-aural-voice-tuner--current-dimension ()
   "Return the voice dimension represented by the current tuner row."
@@ -1554,9 +1510,15 @@ ANNOUNCEMENT overrides the normal setting description."
     (emacsvox-speak-help)))
 
 (define-derived-mode
-    emacsvox-aural-voice-tuner-mode tabulated-list-mode
+    emacsvox-aural-voice-tuner-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Voice-Tuner"
   "Transactional spoken tuner for one personal-palette voice."
+  (emacsvox-aural-ui-configure-tabulated
+   "voice settings"
+   #'emacsvox-aural-voice-tuner-speak-current
+   #'emacsvox-aural-voice-tuner-refresh
+   #'emacsvox-aural-voice-tuner--speak-setting)
   (setq
    tabulated-list-format
    [("Setting" 22 nil)
@@ -1573,13 +1535,6 @@ ANNOUNCEMENT overrides the normal setting description."
    #'emacsvox-aural-voice-tuner--set-entries nil t)
   (tabulated-list-init-header))
 
-;; Like the preview browser, the tuner is logically a specialised palette
-;; interface but intentionally has its own transaction-safe keymap.
-(put
- 'emacsvox-aural-voice-tuner-mode
- 'derived-mode-parent
- 'emacsvox-aural-voice-palette-previews-mode)
-
 (dolist
     (binding
      '(("RET" . emacsvox-aural-voice-tuner-edit)
@@ -1589,11 +1544,6 @@ ANNOUNCEMENT overrides the normal setting description."
        ("u" . emacsvox-aural-voice-tuner-undo)
        ("R" . emacsvox-aural-voice-tuner-restore)
        ("s" . emacsvox-aural-voice-tuner-save)
-       ("SPC" . emacsvox-aural-voice-tuner-speak-current)
-       ("n" . emacsvox-aural-voice-tuner-next)
-       ("p" . emacsvox-aural-voice-tuner-previous)
-       ("<down>" . emacsvox-aural-voice-tuner-next)
-       ("<up>" . emacsvox-aural-voice-tuner-previous)
        ("<right>" . emacsvox-aural-voice-tuner-increase)
        ("<left>" . emacsvox-aural-voice-tuner-decrease)
        ("+" . emacsvox-aural-voice-tuner-increase)
@@ -1679,9 +1629,16 @@ ANNOUNCEMENT overrides the normal setting description."
     (emacsvox-speak-help)))
 
 (define-derived-mode
-    emacsvox-aural-voice-palette-previews-mode tabulated-list-mode
+    emacsvox-aural-voice-palette-previews-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Voice-Preview"
   "Spoken browser for effective voices in one palette."
+  (emacsvox-aural-ui-configure-tabulated
+   "palette voices"
+   #'emacsvox-aural-voice-palette-previews-speak-current
+   #'emacsvox-aural-voice-palette-previews-refresh
+   nil
+   #'emacsvox-aural-voice-palette-previews--remember-current)
   (setq
    tabulated-list-format
    [("Voice" 24 t)
@@ -1695,15 +1652,6 @@ ANNOUNCEMENT overrides the normal setting description."
    #'emacsvox-aural-voice-palette-previews--set-entries nil t)
   (tabulated-list-init-header))
 
-;; A preview is logically a specialised palette manager.  Record that
-;; relationship without inheriting manager key bindings that expect palette
-;; identifiers at point.  This also lets an already-loaded generic aural quit
-;; command recognise the mode when this module alone is reloaded.
-(put
- 'emacsvox-aural-voice-palette-previews-mode
- 'derived-mode-parent
- 'emacsvox-aural-voice-palettes-mode)
-
 (dolist
     (binding
      '(("RET" . emacsvox-aural-voice-palette-previews-play)
@@ -1711,21 +1659,11 @@ ANNOUNCEMENT overrides the normal setting description."
        ("A" . emacsvox-aural-voice-palette-previews-play-all)
        ("t" . emacsvox-aural-voice-palette-previews-set-text)
        ("s" . emacsvox-aural-voice-palette-previews-stop)
-       ("SPC" . emacsvox-aural-voice-palette-previews-speak-current)
-       ("." . emacsvox-aural-voice-palette-previews-speak-current-cell)
-       ("n" . emacsvox-aural-voice-palette-previews-next)
-       ("p" . emacsvox-aural-voice-palette-previews-previous)
-       ("<down>" . emacsvox-aural-voice-palette-previews-next)
-       ("<up>" . emacsvox-aural-voice-palette-previews-previous)
-       ("<right>" . emacsvox-aural-voice-palette-previews-next-column)
-       ("<left>" . emacsvox-aural-voice-palette-previews-previous-column)
        ("e" . emacsvox-aural-voice-palette-previews-tune)
        ("E" . emacsvox-aural-voice-palette-previews-edit)
        ("x" . emacsvox-aural-voice-palette-previews-explain)
-       ("g" . emacsvox-aural-voice-palette-previews-refresh)
        ("o" . emacsvox-aural-voice-palette-previews-open-manager)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-voice-palette-previews-help)))
   (define-key
    emacsvox-aural-voice-palette-previews-mode-map
@@ -1837,9 +1775,14 @@ after displaying the preview buffer."
     (emacsvox-speak-help)))
 
 (define-derived-mode
-    emacsvox-aural-voice-palettes-mode tabulated-list-mode
+    emacsvox-aural-voice-palettes-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Voice-Palettes"
   "Spoken manager for inherited ACSS voice palettes."
+  (emacsvox-aural-ui-configure-tabulated
+   "voice palettes"
+   #'emacsvox-aural-voice-palettes-speak-current
+   #'emacsvox-aural-voice-palettes-refresh)
   (setq
    tabulated-list-format
    [("Palette" 24 t)
@@ -1860,14 +1803,6 @@ after displaying the preview buffer."
 (dolist
     (binding
      '(("RET" . emacsvox-aural-voice-palettes-describe)
-       ("SPC" . emacsvox-aural-voice-palettes-speak-current)
-       ("." . emacsvox-aural-voice-palettes-speak-current-cell)
-       ("n" . emacsvox-aural-voice-palettes-next)
-       ("p" . emacsvox-aural-voice-palettes-previous)
-       ("<down>" . emacsvox-aural-voice-palettes-next)
-       ("<up>" . emacsvox-aural-voice-palettes-previous)
-       ("<right>" . emacsvox-aural-voice-palettes-next-column)
-       ("<left>" . emacsvox-aural-voice-palettes-previous-column)
        ("a" . emacsvox-aural-voice-palettes-activate)
        ("f" . emacsvox-aural-voice-palettes-follow-scheme)
        ("N" . emacsvox-aural-voice-palettes-create)
@@ -1879,9 +1814,7 @@ after displaying the preview buffer."
        ("P" . emacsvox-aural-voice-palettes-preview)
        ("x" . emacsvox-aural-voice-palettes-explain)
        ("v" . emacsvox-aural-voice-palettes-describe)
-       ("g" . emacsvox-aural-voice-palettes-refresh)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-voice-palettes-help)))
   (define-key
    emacsvox-aural-voice-palettes-mode-map

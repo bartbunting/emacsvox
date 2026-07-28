@@ -801,26 +801,34 @@
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
-                     ("SPC" . emacsvox-aural-home-speak-current)
-                     ("." . emacsvox-aural-home-speak-current-cell)
-                     ("n" . emacsvox-aural-home-next)
-                     ("p" . emacsvox-aural-home-previous)
-                     ("<down>" . emacsvox-aural-home-next)
-                     ("<up>" . emacsvox-aural-home-previous)
-                     ("<right>" . emacsvox-aural-home-next-column)
-                     ("<left>" . emacsvox-aural-home-previous-column)
                      ("x" . emacsvox-aural-home-explain)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
-                     ("g" . emacsvox-aural-home-refresh)
-                     ("q" . emacsvox-aural-quit)
                      ("?" . emacsvox-aural-home-help)))
                 (should
                  (eq
                   (lookup-key
                    emacsvox-aural-home-mode-map
                    (kbd (car binding)))
-                  (cdr binding)))))
+                  (cdr binding))))
+              (dolist
+                  (binding
+                   '(("SPC" . emacsvox-aural-ui-speak-current-row)
+                     ("." . emacsvox-aural-ui-speak-current-cell)
+                     ("n" . emacsvox-aural-ui-next-row)
+                     ("C-n" . emacsvox-aural-ui-next-row)
+                     ("<down>" . emacsvox-aural-ui-next-row)
+                     ("p" . emacsvox-aural-ui-previous-row)
+                     ("C-p" . emacsvox-aural-ui-previous-row)
+                     ("<up>" . emacsvox-aural-ui-previous-row)
+                     ("<right>" . emacsvox-aural-ui-next-column)
+                     ("<left>" . emacsvox-aural-ui-previous-column)
+                     ("g" . emacsvox-aural-ui-refresh)
+                     ("q" . emacsvox-aural-quit)))
+                (should
+                 (eq
+                  (key-binding (kbd (car binding)))
+                  (cdr binding))))
               (let (spoken)
                 (with-current-buffer "*Emacsvox Aural*"
                   (cl-letf (((symbol-function 'tts-speak)
@@ -832,7 +840,7 @@
                     (should
                      (string-match-p
                       "Visual face presentation.*off"
-                      spoken)))))
+                      spoken))))))
             (emacsvox-list-aural-semantics)
             (with-current-buffer "*Aural Semantics*"
               (should (derived-mode-p 'emacsvox-aural-semantics-mode))
@@ -901,16 +909,17 @@
 (ert-deftest emacsvox-aural-interfaces-provide-dismissal ()
   "Aural managers use shared exit feedback and editors retain confirmation."
   (dolist
-      (map
-       (list
-        emacsvox-aural-home-mode-map
-        emacsvox-aural-semantics-mode-map
-        emacsvox-aural-schemes-mode-map
-        emacsvox-aural-feature-fragments-mode-map
-        emacsvox-aural-voice-palettes-mode-map
-        emacsvox-aural-voice-palette-previews-mode-map))
-    (should
-     (eq (lookup-key map (kbd "q")) #'emacsvox-aural-quit)))
+      (mode
+       '(emacsvox-aural-home-mode
+         emacsvox-aural-semantics-mode
+         emacsvox-aural-schemes-mode
+         emacsvox-aural-feature-fragments-mode
+         emacsvox-aural-voice-palettes-mode
+         emacsvox-aural-voice-palette-previews-mode))
+    (with-temp-buffer
+      (funcall mode)
+      (should
+       (eq (key-binding (kbd "q")) #'emacsvox-aural-quit))))
   (dolist
       (map
        (list
@@ -1043,16 +1052,8 @@
                ("d" . emacsvox-delete-aural-scheme)
                ("r" . emacsvox-rename-aural-scheme)
                ("a" . emacsvox-aural-schemes-activate)
-               ("n" . emacsvox-aural-schemes-next)
-               ("p" . emacsvox-aural-schemes-previous)
                ("P" . emacsvox-preview-aural-scheme)
-               ("<down>" . emacsvox-aural-schemes-next)
-               ("<up>" . emacsvox-aural-schemes-previous)
-               ("<right>" . emacsvox-aural-schemes-next-column)
-               ("<left>" . emacsvox-aural-schemes-previous-column)
                ("v" . emacsvox-validate-aural-scheme)
-               ("SPC" . emacsvox-aural-schemes-speak-current)
-               ("." . emacsvox-aural-schemes-speak-current-cell)
                ("f" . emacsvox-aural-list-feature-fragments)
                ("h" . emacsvox-aural)
                ("?" . emacsvox-aural-schemes-help)))
@@ -1115,16 +1116,6 @@
                  '(("RET" . emacsvox-aural-feature-fragments-activate)
                    ("TAB"
                     . emacsvox-aural-feature-fragments-toggle-collection)
-                   ("SPC" . emacsvox-aural-feature-fragments-speak-current)
-                   ("." . emacsvox-aural-feature-fragments-speak-current-cell)
-                   ("n" . emacsvox-aural-feature-fragments-next)
-                   ("p" . emacsvox-aural-feature-fragments-previous)
-                   ("<down>" . next-line)
-                   ("<up>" . previous-line)
-                   ("<right>"
-                    . emacsvox-aural-feature-fragments-next-column)
-                   ("<left>"
-                    . emacsvox-aural-feature-fragments-previous-column)
                    ("a" . emacsvox-aural-feature-fragments-toggle-view)
                    ("P" . emacsvox-aural-feature-fragments-preview)
                    ("t" . emacsvox-aural-feature-fragments-toggle)
@@ -1145,14 +1136,16 @@
                 emacsvox-aural-feature-fragments-mode-map
                  (kbd (car binding)))
                 (cdr binding)))))
-            (should
-             (eq
-              (key-binding (kbd "<down>"))
-              (key-binding (kbd "C-n"))))
-            (should
-             (eq
-              (key-binding (kbd "<up>"))
-              (key-binding (kbd "C-p")))))
+            (dolist (key '("n" "C-n" "<down>"))
+              (should
+               (eq
+                (key-binding (kbd key))
+                #'emacsvox-aural-ui-next-row)))
+            (dolist (key '("p" "C-p" "<up>"))
+              (should
+               (eq
+                (key-binding (kbd key))
+                #'emacsvox-aural-ui-previous-row))))
       (when (get-buffer "*Aural Feature Fragments*")
         (kill-buffer "*Aural Feature Fragments*")))))
 
@@ -1411,10 +1404,8 @@
               (should (eq (tabulated-list-get-id) 'level-one))
               (should
                (eq
-                (lookup-key
-                 emacsvox-aural-feature-fragment-previews-mode-map
-                (kbd "<down>"))
-                #'emacsvox-aural-feature-fragment-previews-next))
+                (key-binding (kbd "<down>"))
+                #'emacsvox-aural-ui-next-row))
               (should (string-match-p "Level one heading" spoken))
               (cl-letf
                   (((symbol-function 'tts-speak) #'ignore)

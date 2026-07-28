@@ -285,7 +285,7 @@
           #'emacsvox-aural))
         (should
          (eq
-          (lookup-key emacsvox-aural-profiles-mode-map (kbd "q"))
+          (key-binding (kbd "q"))
           #'emacsvox-aural-quit))
         (cl-letf (((symbol-function 'tts-speak)
                    (lambda (text) (push text spoken)))

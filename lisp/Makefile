@@ -68,6 +68,7 @@ emacsvox-aural-rules.elc \
 emacsvox-aural-resources.elc \
 emacsvox-aural-schemes.elc \
 emacsvox-aural-transport.elc \
+emacsvox-aural-ui.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-editor.elc \
 emacsvox-aural-simple-editor.elc \
@@ -322,7 +323,7 @@ emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
 emacsvox-aural-transport.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
-emacsvox-aural-tools.elc: emacsvox-aural-transport.elc
+emacsvox-aural-tools.elc: emacsvox-aural-ui.elc emacsvox-aural-transport.elc
 emacsvox-aural-editor.elc: emacsvox-aural-tools.elc
 emacsvox-aural-simple-editor.elc: emacsvox-aural-editor.elc
 emacsvox-aural-doctor.elc: emacsvox-aural-tools.elc

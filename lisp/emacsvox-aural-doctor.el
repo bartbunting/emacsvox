@@ -365,15 +365,8 @@
 (defun emacsvox-aural-doctor-refresh (&optional id)
   "Rerun diagnostics, preserving row ID and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected (or id (tabulated-list-get-id) 'home-binding)))
-    (emacsvox-aural-doctor--set-entries)
-    (tabulated-list-print t)
-    (goto-char (point-min))
-    (while (and (< (point) (point-max))
-                (not (eq selected (tabulated-list-get-id))))
-      (forward-line 1))
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-doctor--set-entries id 'home-binding))
 
 (defun emacsvox-aural-doctor-speak-current ()
   "Speak the complete diagnostic finding at point."
@@ -445,9 +438,14 @@
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
-(define-derived-mode emacsvox-aural-doctor-mode tabulated-list-mode
+(define-derived-mode emacsvox-aural-doctor-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Doctor"
   "Spoken diagnostics for aural presentation."
+  (emacsvox-aural-ui-configure-tabulated
+   "aural doctor"
+   #'emacsvox-aural-doctor-speak-current
+   #'emacsvox-aural-doctor-refresh)
   (setq
    tabulated-list-format
    [("Check" 28 t)
@@ -462,18 +460,8 @@
 
 (dolist
     (binding
-     '(("SPC" . emacsvox-aural-doctor-speak-current)
-       ("." . emacsvox-aural-doctor-speak-current-cell)
-       ("n" . emacsvox-aural-doctor-next)
-       ("p" . emacsvox-aural-doctor-previous)
-       ("<down>" . emacsvox-aural-doctor-next)
-       ("<up>" . emacsvox-aural-doctor-previous)
-       ("<right>" . emacsvox-aural-doctor-next-column)
-       ("<left>" . emacsvox-aural-doctor-previous-column)
-       ("r" . emacsvox-aural-doctor-repair-current)
-       ("g" . emacsvox-aural-doctor-refresh)
+     '(("r" . emacsvox-aural-doctor-repair-current)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-doctor-help)))
   (define-key
    emacsvox-aural-doctor-mode-map

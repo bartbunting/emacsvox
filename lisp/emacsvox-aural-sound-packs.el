@@ -133,39 +133,15 @@
 
 (defun emacsvox-aural-sound-packs--goto-id (id)
   "Move to tabulated row ID and its first column."
-  (let ((start (point-min))
-        found)
-    (goto-char start)
-    (while (and (not found) (< (point) (point-max)))
-      (if (eq id (tabulated-list-get-id))
-          (setq found t)
-        (forward-line 1)))
-    (unless found
-      (goto-char start))
-    (when found
-      (emacsvox-aural-tools--goto-tabulated-column 0))
-    found))
+  (emacsvox-aural-ui-goto-row id))
 
 (defun emacsvox-aural-sound-packs-refresh (&optional pack)
   "Refresh the sound-pack manager, preserving PACK and the current column."
   (interactive)
-  (let ((column
-         (and
-          (derived-mode-p 'emacsvox-aural-sound-packs-mode)
-          (emacsvox-aural-tools--tabulated-column-index)))
-        (selected
-         (or
-          pack
-          (and
-           (derived-mode-p 'emacsvox-aural-sound-packs-mode)
-           (tabulated-list-get-id))
-          emacsvox-sounds-current-pack)))
-    (emacsvox-aural-sound-packs--set-entries)
-    (tabulated-list-print t)
-    (when selected
-      (emacsvox-aural-sound-packs--goto-id selected))
-    (when column
-      (emacsvox-aural-tools--goto-tabulated-column column))))
+  (emacsvox-aural-ui-refresh-tabulated
+   #'emacsvox-aural-sound-packs--set-entries
+   pack
+   emacsvox-sounds-current-pack))
 
 (defun emacsvox-aural-sound-packs--spoken-summary (id)
   "Return a natural spoken summary of sound pack ID."
@@ -428,14 +404,11 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
 (defun emacsvox-aural-sound-pack-cues-refresh (&optional cue)
   "Refresh the cue browser, preserving CUE and the current column."
   (interactive)
-  (let ((column (emacsvox-aural-tools--tabulated-column-index))
-        (selected (or cue (tabulated-list-get-id))))
-    (emacsvox-aural-sound-packs--registered-packs)
-    (emacsvox-aural-sound-pack-cues--set-entries)
-    (tabulated-list-print t)
-    (when selected
-      (emacsvox-aural-sound-packs--goto-id selected))
-    (emacsvox-aural-tools--goto-tabulated-column column)))
+  (emacsvox-aural-ui-refresh-tabulated
+   (lambda ()
+     (emacsvox-aural-sound-packs--registered-packs)
+     (emacsvox-aural-sound-pack-cues--set-entries))
+   cue))
 
 (defun emacsvox-aural-sound-pack-cues-speak-current ()
   "Speak the cue, provenance, and intent at point."
@@ -823,9 +796,14 @@ PATH protects completion from invalid inheritance cycles."
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
 
-(define-derived-mode emacsvox-aural-sound-packs-mode tabulated-list-mode
+(define-derived-mode emacsvox-aural-sound-packs-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Sound-Packs"
   "Spoken manager for registered and dynamically discovered sound packs."
+  (emacsvox-aural-ui-configure-tabulated
+   "sound pack list"
+   #'emacsvox-aural-sound-packs-speak-current
+   #'emacsvox-aural-sound-packs-refresh)
   (setq
    tabulated-list-format
    [("Pack" 20 t)
@@ -848,22 +826,12 @@ PATH protects completion from invalid inheritance cycles."
 (dolist
     (binding
      '(("RET" . emacsvox-aural-list-sound-pack-cues)
-       ("SPC" . emacsvox-aural-sound-packs-speak-current)
-       ("." . emacsvox-aural-sound-packs-speak-current-cell)
-       ("n" . emacsvox-aural-sound-packs-next)
-       ("p" . emacsvox-aural-sound-packs-previous)
-       ("<down>" . emacsvox-aural-sound-packs-next)
-       ("<up>" . emacsvox-aural-sound-packs-previous)
-       ("<right>" . emacsvox-aural-sound-packs-next-column)
-       ("<left>" . emacsvox-aural-sound-packs-previous-column)
        ("a" . emacsvox-aural-sound-packs-activate)
        ("P" . emacsvox-aural-sound-packs-audition)
        ("v" . emacsvox-aural-sound-packs-show-validation)
        ("e" . emacsvox-aural-sound-packs-edit-manifest)
        ("o" . emacsvox-aural-sound-packs-open-directory)
-       ("g" . emacsvox-aural-sound-packs-refresh)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-sound-packs-help)))
   (define-key
    emacsvox-aural-sound-packs-mode-map
@@ -891,9 +859,14 @@ PATH protects completion from invalid inheritance cycles."
     (emacsvox-speak-help)))
 
 (define-derived-mode
-    emacsvox-aural-sound-pack-cues-mode tabulated-list-mode
+    emacsvox-aural-sound-pack-cues-mode
+    emacsvox-aural-tabulated-mode
   "Aural-Sound-Cues"
   "Spoken browser for sound-pack cue intent and concrete provenance."
+  (emacsvox-aural-ui-configure-tabulated
+   "sound cue list"
+   #'emacsvox-aural-sound-pack-cues-speak-current
+   #'emacsvox-aural-sound-pack-cues-refresh)
   (setq
    tabulated-list-format
    [("Cue" 24 t)
@@ -912,20 +885,10 @@ PATH protects completion from invalid inheritance cycles."
     (binding
      '(("RET" . emacsvox-aural-sound-pack-cues-audition)
        ("P" . emacsvox-aural-sound-pack-cues-audition)
-       ("SPC" . emacsvox-aural-sound-pack-cues-speak-current)
-       ("." . emacsvox-aural-sound-pack-cues-speak-current-cell)
-       ("n" . emacsvox-aural-sound-pack-cues-next)
-       ("p" . emacsvox-aural-sound-pack-cues-previous)
-       ("<down>" . emacsvox-aural-sound-pack-cues-next)
-       ("<up>" . emacsvox-aural-sound-pack-cues-previous)
-       ("<right>" . emacsvox-aural-sound-pack-cues-next-column)
-       ("<left>" . emacsvox-aural-sound-pack-cues-previous-column)
        ("v" . emacsvox-aural-sound-pack-cues-show-validation)
        ("o" . emacsvox-aural-sound-packs-open-directory)
-       ("g" . emacsvox-aural-sound-pack-cues-refresh)
        ("s" . emacsvox-aural-list-sound-packs)
        ("h" . emacsvox-aural)
-       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-sound-pack-cues-help)))
   (define-key
    emacsvox-aural-sound-pack-cues-mode-map

@@ -1283,7 +1283,7 @@ instead of replacing it."
 
 (defvar emacsvox-aural-simple-editor-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map special-mode-map)
+    (set-keymap-parent map emacsvox-aural-interface-mode-map)
     (define-key map (kbd "TAB") #'emacsvox-aural-simple-editor-next-field)
     (define-key map (kbd "<backtab>")
                 #'emacsvox-aural-simple-editor-previous-field)
@@ -1307,7 +1307,8 @@ instead of replacing it."
     map)
   "Keymap for `emacsvox-aural-simple-editor-mode'.")
 
-(define-derived-mode emacsvox-aural-simple-editor-mode special-mode
+(define-derived-mode emacsvox-aural-simple-editor-mode
+    emacsvox-aural-interface-mode
   "Simple-Aural-Editor"
   "Spoken field editor for one personal aural presentation scheme."
   (setq-local

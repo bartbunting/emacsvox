@@ -94,22 +94,12 @@
         (dolist
             (binding
              '(("RET" . emacsvox-aural-list-sound-pack-cues)
-               ("SPC" . emacsvox-aural-sound-packs-speak-current)
-               ("." . emacsvox-aural-sound-packs-speak-current-cell)
-               ("n" . emacsvox-aural-sound-packs-next)
-               ("p" . emacsvox-aural-sound-packs-previous)
-               ("<down>" . emacsvox-aural-sound-packs-next)
-               ("<up>" . emacsvox-aural-sound-packs-previous)
-               ("<right>" . emacsvox-aural-sound-packs-next-column)
-               ("<left>" . emacsvox-aural-sound-packs-previous-column)
                ("a" . emacsvox-aural-sound-packs-activate)
                ("P" . emacsvox-aural-sound-packs-audition)
                ("v" . emacsvox-aural-sound-packs-show-validation)
                ("e" . emacsvox-aural-sound-packs-edit-manifest)
                ("o" . emacsvox-aural-sound-packs-open-directory)
-               ("g" . emacsvox-aural-sound-packs-refresh)
                ("h" . emacsvox-aural)
-               ("q" . emacsvox-aural-quit)
                ("?" . emacsvox-aural-sound-packs-help)))
           (should
            (eq
@@ -175,20 +165,10 @@
             (binding
              '(("RET" . emacsvox-aural-sound-pack-cues-audition)
                ("P" . emacsvox-aural-sound-pack-cues-audition)
-               ("SPC" . emacsvox-aural-sound-pack-cues-speak-current)
-               ("." . emacsvox-aural-sound-pack-cues-speak-current-cell)
-               ("n" . emacsvox-aural-sound-pack-cues-next)
-               ("p" . emacsvox-aural-sound-pack-cues-previous)
-               ("<down>" . emacsvox-aural-sound-pack-cues-next)
-               ("<up>" . emacsvox-aural-sound-pack-cues-previous)
-               ("<right>" . emacsvox-aural-sound-pack-cues-next-column)
-               ("<left>" . emacsvox-aural-sound-pack-cues-previous-column)
                ("v" . emacsvox-aural-sound-pack-cues-show-validation)
                ("o" . emacsvox-aural-sound-packs-open-directory)
-               ("g" . emacsvox-aural-sound-pack-cues-refresh)
                ("s" . emacsvox-aural-list-sound-packs)
                ("h" . emacsvox-aural)
-               ("q" . emacsvox-aural-quit)
                ("?" . emacsvox-aural-sound-pack-cues-help)))
           (should
            (eq
