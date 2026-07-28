@@ -2077,10 +2077,14 @@ Implemented details:
 - Notmuch and Gnus expose message lifecycle and status facts; Dired exposes
   entry kind and marking state; Magit exposes section, visibility, staging,
   refresh, success, and failure facts;
+- Dired navigation replaces the generic selection cue with =mark-object= when
+  entering a marked entry, and the =dired-marked= filename face uses a distinct
+  voice rather than leaving only the one-character marker voiced;
 - optional mail-status, Dired-state, and Magit-visibility fragments register
   independently of optional package installation;
-- existing spoken text, cue choice, call count, and feedback order remain the
-  compatibility default, with focused tests proving shared semantic context.
+- apart from the state-aware Dired correction above, existing spoken text, cue
+  choice, call count, and feedback order remain the compatibility default, with
+  focused tests proving shared semantic context.
 
 Checks for Slices 17--20: 1,507 expected passes and zero unexpected results in
 the clean full repository suite, with one existing optional Mu4e skip; 97

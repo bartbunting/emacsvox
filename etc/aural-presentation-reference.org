@@ -295,6 +295,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Module | Rules | Source | Intent |
 |------------+--------+-------+--------+--------|
+| =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
 | =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-org | Compatibility presentation for semantic Org headings |
 

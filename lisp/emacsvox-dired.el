@@ -66,12 +66,36 @@
    (dired-special voice-lighten)
    (dired-header voice-smoothen)
    (dired-mark voice-lighten)
+   (dired-marked voice-lighten)
    (dired-perm-write voice-lighten-extra)
    (dired-warning voice-animate-extra)
    (dired-directory voice-bolden)
    (dired-symlink voice-animate)
    (dired-ignored voice-lighten-extra)
    (dired-flagged voice-animate-extra)))
+
+(defconst emacsvox-dired-aural-fragment
+  '(:schema-version 1
+    :id dired-entry-navigation
+    :summary "State-aware navigation feedback for Dired entries"
+    :rules
+    ((:id dired-marked-navigation
+      :match
+      (:role filesystem-entry :module dired :state marked
+       :occasion navigation)
+      :render
+      (:before
+       (:remove (legacy-cue)
+        :append
+        ((:id dired-marked-navigation-cue
+          :kind cue :cue mark-object)))))))
+  "Always-on Dired presentation rules supplied by the module.")
+
+(unless
+    (gethash
+     'dired-entry-navigation emacsvox-aural-module-fragment-registry)
+  (emacsvox-aural-register-module-fragment
+   'dired emacsvox-dired-aural-fragment :source "emacsvox-dired"))
 
 ;;;   functions:
 

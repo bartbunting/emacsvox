@@ -37,9 +37,7 @@
        (expand-file-name
         "../lisp/emacsvox-dired.el"
         (file-name-directory (or load-file-name buffer-file-name)))))
-  ;; Face-to-voice mapping is startup configuration and irrelevant here.
-  (cl-letf (((symbol-function 'voice-setup-add-map) #'ignore))
-    (load module nil nil)))
+  (load module nil nil))
 
 (defun emacsvox-test--dired-advice-function (target)
   "Return the native Emacsvox Dired advice function for TARGET."
@@ -266,6 +264,39 @@
                 :events (entry-marked)
                 :states (marked))))))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-marked-files-have-distinct-voice ()
+  "The whole marked filename, not only its marker, has a distinct voice."
+  (should
+   (eq
+    (voice-setup-get-voice-for-face 'dired-marked)
+    'voice-lighten))
+  (with-temp-buffer
+    (insert (propertize "marked.txt" 'face 'dired-marked))
+    (goto-char (point-min))
+    (should (eq (tts-get-style) 'voice-lighten))))
+
+(ert-deftest emacsvox-dired-marked-navigation-uses-mark-earcon ()
+  "Entering a marked row replaces the generic selection cue."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (context (emacsvox-aural-capture-context 'dired 'navigation))
+        plan)
+    (setq
+     plan
+     (emacsvox-aural-resolve-legacy-icon
+      'select-object context
+      '(:role filesystem-entry :entry-kind file
+        :events (focus-entered) :states (marked))))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-action-cue
+       (emacsvox-aural-render-plan-before plan))
+      '(mark-object)))))
 
 (ert-deftest emacsvox-dired-feedback-shares-semantic-context ()
   "The legacy cue and filename speech see one frozen Dired submission."

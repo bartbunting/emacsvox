@@ -38,6 +38,7 @@
 (require 'emacsvox-aural-org)
 (require 'emacsvox-aural-representative)
 (require 'emacsvox-aural-markdown)
+(require 'emacsvox-dired)
 
 (defconst emacsvox-aural-audit-icon-functions
   '(emacsvox-icon emacsvox-queue-icon)
