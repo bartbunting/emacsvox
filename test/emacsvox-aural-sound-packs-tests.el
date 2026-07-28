@@ -66,6 +66,7 @@
             :summary "Base test sounds"
             :directory base-directory)
            (emacsvox-aural-refresh-discovered-resource-packs)
+           (setq emacsvox-sounds-current-pack 'overlay)
            ,@body)
        (dolist
            (buffer

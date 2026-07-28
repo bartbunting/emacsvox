@@ -286,17 +286,70 @@ It is called  to cache sounds in our theme and prompts directories."
 The value is nil when a compatibility caller selects an unregistered
 directory.")
 
-(defun emacsvox-sounds-refresh-resource-providers (&optional _provider)
+(defvar emacsvox-sounds--silent-theme-selection nil
+  "Non-nil suppresses theme-selection notification and confirmation feedback.")
+
+(defun emacsvox-sounds--fallback-resource-pack ()
+  "Return the best registered sound pack after a selected pack disappears."
+  (let ((scheme-pack
+         (condition-case nil
+             (emacsvox-aural-effective-scheme-provider 'resource-pack)
+           (error nil))))
+    (cond
+     ((and
+       scheme-pack
+       (emacsvox-aural-resource-pack scheme-pack)
+       (eq
+        (emacsvox-aural-resource-pack-kind
+         (emacsvox-aural-resource-pack scheme-pack))
+        'sound))
+      scheme-pack)
+     ((and
+       (emacsvox-aural-resource-pack 'chimes)
+       (eq
+        (emacsvox-aural-resource-pack-kind
+         (emacsvox-aural-resource-pack 'chimes))
+        'sound))
+      'chimes))))
+
+(defun emacsvox-sounds-refresh-resource-providers (&rest _providers)
   "Refresh cached assets after sound-pack or module-overlay changes."
-  (when
-      (and
-       emacsvox-sounds-current-pack
-       (emacsvox-aural-resource-pack emacsvox-sounds-current-pack))
-    (clrhash emacsvox-sounds-cache)
-    (maphash
-     #'emacsvox-sounds-cache-put
-     (emacsvox-aural-effective-assets emacsvox-sounds-current-pack t))
-    (emacsvox-sounds-cache-install-fallbacks))
+  (let ((previous emacsvox-sounds-current-pack))
+    (when previous
+      (when
+          (not
+           (emacsvox-aural-resource-pack emacsvox-sounds-current-pack))
+        (setq emacsvox-sounds-current-pack
+              (emacsvox-sounds--fallback-resource-pack))
+        (setq
+         emacsvox-sounds-current-theme
+         (and
+          emacsvox-sounds-current-pack
+          (emacsvox-aural-resource-pack-directory
+           (emacsvox-aural-resource-pack emacsvox-sounds-current-pack)))))
+      (when (not (eq previous emacsvox-sounds-current-pack))
+        (emacsvox-sounds-release-samples))
+      (clrhash emacsvox-sounds-cache)
+      (when
+          (and
+           emacsvox-sounds-current-pack
+           (emacsvox-aural-resource-pack emacsvox-sounds-current-pack))
+        (maphash
+         #'emacsvox-sounds-cache-put
+         (emacsvox-aural-effective-assets emacsvox-sounds-current-pack t)))
+      (emacsvox-sounds-cache-install-fallbacks)
+      (when
+          (and
+           (not (eq previous emacsvox-sounds-current-pack))
+           emacsvox-play-program
+           emacsvox-pactl
+           (string= emacsvox-play-program emacsvox-pactl))
+        (ems--upload-pulse-samples))
+      (when
+          (and
+           (not (eq previous emacsvox-sounds-current-pack))
+           (fboundp 'emacsvox-aural-configuration-changed))
+        (emacsvox-aural-configuration-changed 'sound-pack))))
   emacsvox-sounds-cache)
 
 (add-hook
@@ -388,20 +441,25 @@ directory.")
     (setq
      emacsvox-sounds-current-pack pack-id
      emacsvox-sounds-current-theme theme-directory)
-    (when (fboundp 'emacsvox-aural-configuration-changed)
+    (when
+        (and
+         (not emacsvox-sounds--silent-theme-selection)
+         (fboundp 'emacsvox-aural-configuration-changed))
       (emacsvox-aural-configuration-changed 'sound-pack))
-    (emacsvox-icon 'button)))
+    (unless emacsvox-sounds--silent-theme-selection
+      (emacsvox-icon 'button))))
 
-(defun emacsvox-sounds-follow-aural-scheme ()
+(defun emacsvox-sounds-follow-aural-scheme (&rest _providers)
   "Select the sound pack inherited by the active aural scheme."
   (when-let* ((pack
                (emacsvox-aural-effective-scheme-provider 'resource-pack)))
     (unless (eq pack emacsvox-sounds-current-pack)
-      (emacsvox-sounds-select-theme pack))))
+      (let ((emacsvox-sounds--silent-theme-selection t))
+        (emacsvox-sounds-select-theme pack)))))
 
 (with-eval-after-load 'emacsvox-aural-schemes
   (add-hook
-   'emacsvox-aural-active-scheme-changed-hook
+   'emacsvox-aural-effective-resource-pack-changed-hook
    #'emacsvox-sounds-follow-aural-scheme))
 
 (defvar ems--play-args nil

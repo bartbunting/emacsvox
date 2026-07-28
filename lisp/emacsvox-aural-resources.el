@@ -88,6 +88,21 @@
 Each function receives the affected pack identifier, or nil for a discovery
 refresh that may affect several packs.")
 
+(defvar emacsvox-aural--defer-resource-pack-notifications nil
+  "Non-nil while a resource-pack transaction is staging registry changes.")
+
+(defvar emacsvox-aural--resource-pack-notification-pending nil
+  "Non-nil when a deferred resource-pack transaction changed the registry.")
+
+(defun emacsvox-aural--resource-packs-changed (&optional id)
+  "Notify resource consumers that pack ID changed.
+
+During discovery transactions, retain one pending notification until the
+complete replacement registry has validated successfully."
+  (if emacsvox-aural--defer-resource-pack-notifications
+      (setq emacsvox-aural--resource-pack-notification-pending t)
+    (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)))
+
 (defvar emacsvox-aural-resource-overlays-changed-hook nil
   "Abnormal hook run after module resource-overlay state changes.
 
@@ -418,7 +433,7 @@ sound directories."
      (lambda (_ overlay)
        (emacsvox-aural--refresh-resource-overlay-pack overlay id))
      emacsvox-aural-resource-overlay-registry)
-    (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)
+    (emacsvox-aural--resource-packs-changed id)
     record))
 
 (defun emacsvox-aural-resource-overlay (id)
@@ -949,7 +964,7 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
       (remhash id emacsvox-aural-resource-pack-registry))
     (when remove
       (emacsvox-aural--refresh-all-resource-overlay-packs)
-      (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook nil))
+      (emacsvox-aural--resource-packs-changed))
     remove))
 
 (defun emacsvox-aural--discovery-root-has-precedence-p (root pack)
@@ -983,7 +998,9 @@ discovered directories with the same identifier."
               root 'full directory-files-no-dot-files-regexp))))
          definitions
          desired
-         remove)
+         remove
+         (emacsvox-aural--defer-resource-pack-notifications t)
+         (emacsvox-aural--resource-pack-notification-pending nil))
     (dolist (directory directories)
       (when-let* ((definition
                    (emacsvox-aural--discovered-resource-pack-definition
@@ -1004,6 +1021,8 @@ discovered directories with the same identifier."
              emacsvox-aural-resource-pack-registry)
             (dolist (id remove)
               (remhash id emacsvox-aural-resource-pack-registry))
+            (when remove
+              (emacsvox-aural--resource-packs-changed))
             (dolist (definition (nreverse definitions))
               (let* ((id (car definition))
                      (existing (emacsvox-aural-resource-pack id)))
@@ -1042,10 +1061,15 @@ discovered directories with the same identifier."
            pack
            (emacsvox-aural--pack-immediately-below-root-p pack root))))
       (delete-dups desired)))
-    (sort
-     desired
-     (lambda (left right)
-       (string-lessp (symbol-name left) (symbol-name right))))))
+    (let ((result
+           (sort
+            desired
+            (lambda (left right)
+              (string-lessp (symbol-name left) (symbol-name right))))))
+      (when emacsvox-aural--resource-pack-notification-pending
+        (let ((emacsvox-aural--defer-resource-pack-notifications nil))
+          (emacsvox-aural--resource-packs-changed)))
+      result)))
 
 (defun emacsvox-aural-refresh-discovered-resource-packs ()
   "Rescan configured discovery roots and return discovered pack identifiers."
@@ -1084,7 +1108,7 @@ discovered directories with the same identifier."
      (lambda (_ overlay)
        (emacsvox-aural--refresh-resource-overlay-pack overlay id))
      emacsvox-aural-resource-overlay-registry)
-    (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)
+    (emacsvox-aural--resource-packs-changed id)
     pack))
 
 (defun emacsvox-aural--effective-pack-assets (id &optional path)

@@ -20,6 +20,7 @@
 (defvar emacsvox-user-directory (expand-file-name "~/.emacsvox/")
   "Emacsvox user data directory.")
 (defvar emacsvox-sounds-current-pack)
+(defvar emacsvox-sounds--silent-theme-selection)
 (defvar read-eval)
 (defvar emacsvox-aural-spatial-enabled)
 (defvar emacsvox-aural-spatial-speech-enabled)
@@ -50,7 +51,7 @@
     (emacsvox-aural-feature-fragment-entry
      (:constructor emacsvox-aural--make-feature-fragment-entry))
   "Registered optional feature fragment."
-  id data compiled built-in source)
+  id data compiled built-in source collection)
 
 (cl-defstruct
     (emacsvox-aural-profile-entry
@@ -74,6 +75,9 @@
 
 (defvar emacsvox-aural-enabled-feature-fragments nil
   "Ordered identifiers of optional feature fragments in the cascade.")
+
+(defvar emacsvox-aural-feature-fragment-order nil
+  "Stable order of optional feature fragments, including disabled entries.")
 
 (defvar emacsvox-aural-user-rules nil
   "Persistent personal rules loaded from `emacsvox-aural-schemes-file'.")
@@ -101,7 +105,7 @@
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 4
+(defconst emacsvox-aural-user-data-schema-version 5
   "Current schema version for the personal scheme data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -120,10 +124,31 @@
   (setq data (plist-put data :voice-palettes nil))
   (plist-put data :schema-version 4))
 
+(defun emacsvox-aural--migrate-user-data-v4-to-v5 (data)
+  "Separate stable fragment order from enablement in version 4 user DATA."
+  (let ((enabled
+         (copy-sequence (plist-get data :enabled-feature-fragments)))
+        (personal
+         (sort
+          (mapcar
+           (lambda (fragment) (plist-get fragment :id))
+           (plist-get data :feature-fragments))
+          (lambda (left right)
+            (string-lessp (symbol-name left) (symbol-name right))))))
+    (setq
+     data
+     (plist-put
+      data :feature-fragment-order
+      (append
+       enabled
+       (cl-remove-if (lambda (id) (memq id enabled)) personal))))
+    (plist-put data :schema-version 5)))
+
 (defconst emacsvox-aural--built-in-user-data-migrations
   '((1 . emacsvox-aural--migrate-user-data-v1-to-v2)
     (2 . emacsvox-aural--migrate-user-data-v2-to-v3)
-    (3 . emacsvox-aural--migrate-user-data-v3-to-v4))
+    (3 . emacsvox-aural--migrate-user-data-v3-to-v4)
+    (4 . emacsvox-aural--migrate-user-data-v4-to-v5))
   "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil
@@ -144,6 +169,13 @@ consulting this extension alist.")
 
 (defvar emacsvox-aural-voice-palette-changed-hook nil
   "Hook run after the selected voice-palette override changes.")
+
+(defvar emacsvox-aural-effective-resource-pack-changed-hook nil
+  "Abnormal hook run when the active scheme's effective sound pack changes.
+
+Each function receives the previous and current resource-pack identifiers.
+This includes provider changes caused by reloading the active scheme while
+retaining the same scheme identifier.")
 
 (defvar emacsvox-aural-configuration-generation 0
   "Monotonic generation of compiled aural presentation configuration.")
@@ -267,18 +299,23 @@ REASON is a diagnostic symbol describing the completed state change."
     compiled))
 
 (cl-defun emacsvox-aural-register-feature-fragment
-    (data &key built-in source)
+    (data &key built-in source collection)
   "Compile and register optional feature fragment DATA.
 
-BUILT-IN marks a read-only fragment and SOURCE is retained for diagnostics."
+BUILT-IN marks a read-only fragment, SOURCE is retained for diagnostics, and
+COLLECTION names its user-facing integration group."
   (let* ((compiled (emacsvox-aural--compile-feature-fragment data source))
-         (id (emacsvox-aural-scheme-id compiled)))
+         (id (emacsvox-aural-scheme-id compiled))
+         (collection (or collection (if built-in 'general 'personal))))
+    (emacsvox-aural--require-symbol
+     collection "Feature fragment collection")
     (when (emacsvox-aural-feature-fragment-entry id)
       (emacsvox-aural--scheme-error
        "Feature fragment is already registered: %S" id))
     (let ((entry
            (emacsvox-aural--make-feature-fragment-entry
             :id id
+            :collection collection
             :data (copy-tree data)
             :compiled compiled
             :built-in built-in
@@ -307,6 +344,18 @@ BUILT-IN marks a read-only fragment and SOURCE is retained for diagnostics."
   "Return non-nil when feature fragment ID is enabled."
   (memq id emacsvox-aural-enabled-feature-fragments))
 
+(defun emacsvox-aural-feature-fragment-collection (entry)
+  "Return the user-facing collection for feature-fragment ENTRY.
+
+Records created before collection metadata was added retain their existing
+slot layout and fall back to `general' or `personal'."
+  (or
+   (ignore-errors
+     (emacsvox-aural-feature-fragment-entry-collection entry))
+   (if (emacsvox-aural-feature-fragment-entry-built-in entry)
+       'general
+     'personal)))
+
 (defun emacsvox-aural--validate-enabled-feature-fragments
     (ids &optional registry)
   "Validate ordered feature fragment IDS against REGISTRY and return IDS."
@@ -327,12 +376,95 @@ BUILT-IN marks a read-only fragment and SOURCE is retained for diagnostics."
       (push id seen)))
   ids)
 
+(defun emacsvox-aural--validate-feature-fragment-order
+    (ids &optional registry enabled)
+  "Validate stable feature fragment order IDS.
+
+REGISTRY defaults to the live feature-fragment registry.  When ENABLED is
+non-nil, every enabled identifier must occur in IDS."
+  (unless (and (listp ids) (proper-list-p ids))
+    (emacsvox-aural--scheme-error
+     "Feature fragment order must be a proper list: %S" ids))
+  (let ((registry
+         (or registry emacsvox-aural-feature-fragment-registry))
+        seen)
+    (dolist (id ids)
+      (emacsvox-aural--require-symbol id "Ordered feature fragment")
+      (when (memq id seen)
+        (emacsvox-aural--scheme-error
+         "Feature fragment occurs more than once in stable order: %S" id))
+      (when
+          (and registry
+               (not (gethash id registry)))
+        (emacsvox-aural--scheme-error
+         "Unknown ordered feature fragment: %S" id))
+      (push id seen))
+    (dolist (id enabled)
+      (unless (memq id ids)
+        (emacsvox-aural--scheme-error
+         "Enabled feature fragment is absent from stable order: %S" id))))
+  ids)
+
+(defun emacsvox-aural-normalized-feature-fragment-order
+    (&optional registry order)
+  "Return stable ORDER completed with every entry in REGISTRY.
+
+Existing entries retain their position.  Newly registered entries are
+appended alphabetically, so registration and hash-table order cannot affect
+the manager."
+  (let* ((registry
+          (or registry emacsvox-aural-feature-fragment-registry))
+         (order
+          (copy-sequence
+           (or order emacsvox-aural-feature-fragment-order)))
+         known missing)
+    (emacsvox-aural--validate-feature-fragment-order order registry)
+    (dolist (id order)
+      (when (gethash id registry)
+        (push id known)))
+    (maphash
+     (lambda (id _)
+       (unless (memq id order)
+         (push id missing)))
+     registry)
+    (append
+     (nreverse known)
+     (sort
+      missing
+      (lambda (left right)
+        (string-lessp (symbol-name left) (symbol-name right)))))))
+
+(defun emacsvox-aural--merge-enabled-feature-fragment-order
+    (enabled &optional order registry)
+  "Return stable ORDER with ENABLED entries occurring in their active order."
+  (let* ((registry
+          (or registry emacsvox-aural-feature-fragment-registry))
+         (result
+          (emacsvox-aural-normalized-feature-fragment-order registry order))
+         positions)
+    (emacsvox-aural--validate-enabled-feature-fragments enabled registry)
+    (cl-loop
+     for id in result
+     for index from 0
+     when (memq id enabled)
+     do (push index positions))
+    (setq positions (nreverse positions))
+    (cl-mapc
+     (lambda (position id)
+       (setcar (nthcdr position result) id))
+     positions enabled)
+    result))
+
 (defun emacsvox-aural-set-enabled-feature-fragments (ids)
   "Set ordered enabled feature fragment IDS and run the change hook."
   (emacsvox-aural--validate-enabled-feature-fragments ids)
-  (setq emacsvox-aural-enabled-feature-fragments (copy-sequence ids))
-  (emacsvox-aural-configuration-changed 'feature-fragments)
-  (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
+  (let ((previous (emacsvox-aural--capture-coordinated-state)))
+    (setq
+     emacsvox-aural-feature-fragment-order
+     (emacsvox-aural--merge-enabled-feature-fragment-order ids)
+     emacsvox-aural-enabled-feature-fragments (copy-sequence ids))
+    (emacsvox-aural--notify-coordinated-state-change
+     previous 'feature-fragments '(feature-fragments)))
   emacsvox-aural-enabled-feature-fragments)
 
 (defun emacsvox-aural--scheme-chain (id &optional path)
@@ -417,6 +549,63 @@ PROPERTY is `resource-pack' or `voice-palette'."
           provider)
       (cdr cached))))
 
+(defun emacsvox-aural--capture-coordinated-state ()
+  "Return a data-only snapshot of coordinated presentation state."
+  (list
+   :scheme emacsvox-aural-active-scheme
+   :feature-fragments
+   (copy-sequence emacsvox-aural-enabled-feature-fragments)
+   :voice-palette emacsvox-aural-voice-palette-override
+   :resource-pack
+   (condition-case nil
+       (emacsvox-aural-effective-scheme-provider 'resource-pack)
+     (emacsvox-aural-scheme-error nil))))
+
+(defun emacsvox-aural--notify-coordinated-state-change
+    (previous reason &optional force)
+  "Publish one completed presentation-state change from PREVIOUS.
+
+REASON advances the configuration generation once.  FORCE is a list of
+category symbols whose established command hook should run even when its
+stored value is unchanged."
+  (let ((current (emacsvox-aural--capture-coordinated-state)))
+    (emacsvox-aural-configuration-changed reason)
+    (unless
+        (equal
+         (plist-get previous :resource-pack)
+         (plist-get current :resource-pack))
+      (run-hook-with-args
+       'emacsvox-aural-effective-resource-pack-changed-hook
+       (plist-get previous :resource-pack)
+       (plist-get current :resource-pack)))
+    (when
+        (or
+         (memq 'active-scheme force)
+         (not
+          (eq
+           (plist-get previous :scheme)
+           (plist-get current :scheme))))
+      (run-hooks 'emacsvox-aural-active-scheme-changed-hook))
+    (when
+        (or
+         (memq 'feature-fragments force)
+         (not
+          (equal
+           (plist-get previous :feature-fragments)
+           (plist-get current :feature-fragments))))
+      (run-hooks 'emacsvox-aural-feature-fragments-changed-hook))
+    (when
+        (or
+         (memq 'voice-palette force)
+         (not
+          (eq
+           (plist-get previous :voice-palette)
+           (plist-get current :voice-palette))))
+      (run-hook-with-args
+       'emacsvox-aural-voice-palette-changed-hook
+       emacsvox-aural-voice-palette-override))
+    current))
+
 (defun emacsvox-aural--validate-scheme-providers (id &optional defer-packs)
   "Validate provider references for scheme ID.
 
@@ -474,9 +663,10 @@ not loaded yet; validation is deferred until the complete registry check."
   (emacsvox-aural--scheme-chain id)
   (emacsvox-aural-effective-scheme-rules id)
   (emacsvox-aural--validate-scheme-providers id t)
-  (setq emacsvox-aural-active-scheme id)
-  (emacsvox-aural-configuration-changed 'active-scheme)
-  (run-hooks 'emacsvox-aural-active-scheme-changed-hook)
+  (let ((previous (emacsvox-aural--capture-coordinated-state)))
+    (setq emacsvox-aural-active-scheme id)
+    (emacsvox-aural--notify-coordinated-state-change
+     previous 'active-scheme '(active-scheme)))
   id)
 
 (defun emacsvox-aural--compile-rule-list
@@ -1040,6 +1230,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
          (old-scheme emacsvox-aural-active-scheme)
          (old-fragments
           (copy-sequence emacsvox-aural-enabled-feature-fragments))
+         (old-fragment-order
+          (copy-sequence emacsvox-aural-feature-fragment-order))
          (old-palette emacsvox-aural-voice-palette-override)
          (old-pack
           (and
@@ -1053,7 +1245,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
            :output emacsvox-aural-spatial-output
            :maximum-separation emacsvox-aural-spatial-maximum-separation
            :remapping emacsvox-aural-spatial-remapping))
-         completed)
+         (previous (emacsvox-aural--capture-coordinated-state))
+         state-committed)
     (when pack
       (unless (emacsvox-aural-resource-pack pack)
         (emacsvox-aural--scheme-error
@@ -1062,33 +1255,37 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
       (require 'emacsvox-sounds))
     (unwind-protect
         (progn
-          ;; The profile selects its pack once after the scheme hook.  Suppress
-          ;; only the ordinary follow-scheme theme switch to avoid two reloads.
-          (let ((emacsvox-aural-active-scheme-changed-hook
-                 (remove
-                  'emacsvox-sounds-follow-aural-scheme
-                  (copy-sequence
-                   emacsvox-aural-active-scheme-changed-hook))))
-            (emacsvox-aural-select-scheme scheme))
-          (emacsvox-aural-set-enabled-feature-fragments fragments)
-          (setq emacsvox-aural-voice-palette-override palette)
-          (emacsvox-aural--apply-profile-spatial spatial)
           (when pack
-            (emacsvox-sounds-select-theme pack))
-          (setq completed t)
-          (emacsvox-aural-configuration-changed 'profile-applied)
-          (unless (eq old-palette palette)
-            (run-hook-with-args
-             'emacsvox-aural-voice-palette-changed-hook palette))
+            ;; Prepare the fallible concrete provider before publishing any
+            ;; coordinated scheme state or running its observer hooks.
+            (let ((emacsvox-sounds--silent-theme-selection t))
+              (emacsvox-sounds-select-theme pack)))
+          (setq
+           emacsvox-aural-active-scheme scheme
+           emacsvox-aural-feature-fragment-order
+           (emacsvox-aural--merge-enabled-feature-fragment-order fragments)
+           emacsvox-aural-enabled-feature-fragments
+           (copy-sequence fragments)
+           emacsvox-aural-voice-palette-override palette)
+          (emacsvox-aural--apply-profile-spatial spatial)
+          ;; From this point the complete profile is live.  Observer failures
+          ;; must not roll it back to a state they were never told about.
+          (setq state-committed t)
+          (emacsvox-aural--notify-coordinated-state-change
+           previous 'profile-applied
+           '(active-scheme feature-fragments))
           (run-hook-with-args 'emacsvox-aural-profile-applied-hook id))
-      (unless completed
+      (unless state-committed
         (setq
          emacsvox-aural-active-scheme old-scheme
+         emacsvox-aural-feature-fragment-order old-fragment-order
          emacsvox-aural-enabled-feature-fragments old-fragments
          emacsvox-aural-voice-palette-override old-palette)
         (emacsvox-aural--apply-profile-spatial old-spatial)
         (when old-pack
-          (ignore-errors (emacsvox-sounds-select-theme old-pack)))))
+          (ignore-errors
+            (let ((emacsvox-sounds--silent-theme-selection t))
+              (emacsvox-sounds-select-theme old-pack))))))
     id))
 
 (defun emacsvox-aural-profile-current-p (id)
@@ -1152,9 +1349,10 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
       (and palette (not (emacsvox-aural-voice-palette palette)))
     (emacsvox-aural--scheme-error
      "Unknown voice palette: %S" palette))
-  (setq emacsvox-aural-voice-palette-override palette)
-  (emacsvox-aural-configuration-changed 'voice-palette)
-  (run-hook-with-args 'emacsvox-aural-voice-palette-changed-hook palette)
+  (let ((previous (emacsvox-aural--capture-coordinated-state)))
+    (setq emacsvox-aural-voice-palette-override palette)
+    (emacsvox-aural--notify-coordinated-state-change
+     previous 'voice-palette '(voice-palette)))
   palette)
 
 (defun emacsvox-aural--validate-user-data (data)
@@ -1164,6 +1362,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
         (schemes (plist-get data :schemes))
         (fragments (plist-get data :feature-fragments))
         (enabled (plist-get data :enabled-feature-fragments))
+        (order (plist-get data :feature-fragment-order))
         (palettes (plist-get data :voice-palettes))
         (profiles (plist-get data :profiles))
         (rules (plist-get data :user-rules))
@@ -1174,7 +1373,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (memq
            key
            '(:schema-version :schemes :feature-fragments
-             :enabled-feature-fragments :voice-palettes
+             :enabled-feature-fragments :feature-fragment-order :voice-palettes
              :profiles :user-rules))
           collect key)))
     (unless (eq version emacsvox-aural-user-data-schema-version)
@@ -1218,6 +1417,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (puthash id t fragment-registry)))
       (emacsvox-aural--validate-enabled-feature-fragments
        enabled fragment-registry)
+      (emacsvox-aural--validate-feature-fragment-order
+       order fragment-registry enabled)
       (dolist (palette palettes)
         (condition-case error
             (let* ((compiled
@@ -1322,9 +1523,11 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
 
 The file is read as data and is never evaluated."
   (when-let* ((data (emacsvox-aural-read-user-data file)))
-    (let ((schemes (plist-get data :schemes))
+    (let ((previous (emacsvox-aural--capture-coordinated-state))
+          (schemes (plist-get data :schemes))
           (fragments (plist-get data :feature-fragments))
           (enabled (plist-get data :enabled-feature-fragments))
+          (order (plist-get data :feature-fragment-order))
           (palettes (plist-get data :voice-palettes))
           (profiles (plist-get data :profiles))
           (rules (plist-get data :user-rules))
@@ -1362,6 +1565,7 @@ The file is read as data and is never evaluated."
           (push
            (emacsvox-aural--make-feature-fragment-entry
             :id id
+            :collection 'personal
             :data (copy-tree fragment)
             :compiled compiled
             :built-in nil
@@ -1414,6 +1618,7 @@ The file is read as data and is never evaluated."
             (emacsvox-aural-voice-palette-registry palette-registry)
             (emacsvox-aural-profile-registry profile-registry)
             (emacsvox-aural-enabled-feature-fragments enabled)
+            (emacsvox-aural-feature-fragment-order order)
             (emacsvox-aural-user-rules rules))
         (maphash
          (lambda (id _)
@@ -1433,10 +1638,13 @@ The file is read as data and is never evaluated."
        emacsvox-aural-feature-fragment-registry fragment-registry
        emacsvox-aural-voice-palette-registry palette-registry
        emacsvox-aural-profile-registry profile-registry
+       emacsvox-aural-feature-fragment-order
+       (emacsvox-aural-normalized-feature-fragment-order
+        fragment-registry order)
        emacsvox-aural-enabled-feature-fragments (copy-sequence enabled)
        emacsvox-aural-user-rules (copy-tree rules))
-      (emacsvox-aural-configuration-changed 'user-data-loaded)
-      (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
+      (emacsvox-aural--notify-coordinated-state-change
+       previous 'user-data-loaded '(feature-fragments))
       data)))
 
 (defun emacsvox-aural-user-data ()
@@ -1505,6 +1713,8 @@ The file is read as data and is never evaluated."
      :feature-fragments fragments
      :enabled-feature-fragments
      (copy-sequence emacsvox-aural-enabled-feature-fragments)
+     :feature-fragment-order
+     (emacsvox-aural-normalized-feature-fragment-order)
      :voice-palettes palettes
      :profiles profiles
      :user-rules (copy-tree emacsvox-aural-user-rules))))

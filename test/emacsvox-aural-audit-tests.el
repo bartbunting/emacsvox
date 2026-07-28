@@ -136,7 +136,7 @@
     (should (string-match-p "| =heading= | =role= | =core= |" first))
     (should
      (string-match-p
-      "| =org-heading-level-labels= | =1= | emacsvox-aural-org |"
+      "| =org-heading-level-labels= | =org= | =1= | emacsvox-aural-org |"
       first))
     (should (string-match-p "| =chimes= | =sound= |" first))
     (should (string-match-p "| =bolden= | =voice-bolden= |" first))))

@@ -885,11 +885,18 @@
   (dolist (data emacsvox-aural-workflow-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-representative")))
+       data :built-in t :source "emacsvox-aural-representative"
+       :collection
+       (pcase (plist-get data :id)
+         ('mail-message-status-cues 'mail)
+         ('dired-entry-state-labels 'dired)
+         ('magit-section-visibility-cues 'magit)
+         (_ 'general)))))
   (dolist (data emacsvox-aural-agent-shell-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-representative"))))
+       data :built-in t :source "emacsvox-aural-representative"
+       :collection 'agent-shell))))
 
 (emacsvox-aural-register-representative-semantics)
 

@@ -24,6 +24,7 @@
          (emacsvox-aural-voice-palette-registry
           (copy-hash-table emacsvox-aural-voice-palette-registry))
          (emacsvox-aural-enabled-feature-fragments nil)
+         (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-voice-palette-override nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
@@ -38,6 +39,7 @@
          (emacsvox-aural--current-rules-cache-misses 0)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
+         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-user-data-migrations nil))
      (emacsvox-aural--register-default-scheme)
@@ -389,6 +391,30 @@
     (emacsvox-aural-register-feature-fragment
      (emacsvox-test--scheme 'valid-fragment "Valid" ())
      :built-in t)
+    (should
+     (eq
+      (emacsvox-aural-feature-fragment-entry-collection
+       (emacsvox-aural-feature-fragment-entry 'valid-fragment))
+      'general))
+    (let* ((entry
+            (emacsvox-aural-feature-fragment-entry 'valid-fragment))
+           (legacy-entry
+            (record
+             'emacsvox-aural-feature-fragment-entry
+             (emacsvox-aural-feature-fragment-entry-id entry)
+             (emacsvox-aural-feature-fragment-entry-data entry)
+             (emacsvox-aural-feature-fragment-entry-compiled entry)
+             (emacsvox-aural-feature-fragment-entry-built-in entry)
+             (emacsvox-aural-feature-fragment-entry-source entry))))
+      (should
+       (eq
+        (emacsvox-aural-feature-fragment-collection legacy-entry)
+        'general)))
+    (should-error
+     (emacsvox-aural-register-feature-fragment
+      (emacsvox-test--scheme 'bad-collection "Invalid collection" ())
+      :collection "not-a-symbol")
+     :type 'emacsvox-aural-rule-error)
     (emacsvox-aural-set-enabled-feature-fragments '(valid-fragment))
     (should-error
      (emacsvox-aural-set-enabled-feature-fragments '(missing-fragment))
@@ -684,6 +710,43 @@
              :type 'emacsvox-aural-scheme-error))
         (delete-directory directory t)))))
 
+(ert-deftest emacsvox-aural-schemes-reload-notifies-provider-change ()
+  "Reloading an active definition reconciles its changed sound provider."
+  (emacsvox-test--with-isolated-schemes
+    (let* ((directory (make-temp-file "emacsvox-provider-reload-" t))
+           (file (expand-file-name "aural.el" directory))
+           changes)
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-scheme
+             (emacsvox-test--scheme
+              'work "Old work scheme" nil :parent 'default))
+            (emacsvox-aural-select-scheme 'work)
+            (add-hook
+             'emacsvox-aural-effective-resource-pack-changed-hook
+             (lambda (old new) (push (list old new) changes)))
+            (emacsvox-test--write-lisp-data
+             file
+             (list
+              :schema-version emacsvox-aural-user-data-schema-version
+              :schemes
+              (list
+               (emacsvox-test--scheme
+                'work "New work scheme" nil
+                :parent 'default :resource-pack '3d))
+              :feature-fragments nil
+              :enabled-feature-fragments nil
+              :voice-palettes nil
+              :profiles nil
+              :user-rules nil))
+            (emacsvox-aural-load-user-data file)
+            (should
+             (equal
+              (emacsvox-aural-effective-scheme-provider 'resource-pack)
+              '3d))
+            (should (equal changes '((chimes 3d)))))
+        (delete-directory directory t)))))
+
 (ert-deftest emacsvox-aural-schemes-migrate-versioned-user-data ()
   "Registered migration hooks advance old data to the current schema."
   (emacsvox-test--with-isolated-schemes
@@ -697,13 +760,36 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 4
+        '(:schema-version 5
           :schemes nil
           :user-rules nil
           :feature-fragments nil
           :enabled-feature-fragments nil
           :profiles nil
-          :voice-palettes nil))))
+          :voice-palettes nil
+          :feature-fragment-order nil))))
+    (let ((migrated
+           (emacsvox-aural-migrate-user-data
+            '(:schema-version 4
+              :schemes nil
+              :feature-fragments
+              ((:schema-version 1
+                :id personal-a
+                :summary "A"
+                :rules nil)
+               (:schema-version 1
+                :id personal-b
+                :summary "B"
+                :rules nil))
+              :enabled-feature-fragments (personal-b)
+              :voice-palettes nil
+              :profiles nil
+              :user-rules nil))))
+      (should (eq (plist-get migrated :schema-version) 5))
+      (should
+       (equal
+        (plist-get migrated :feature-fragment-order)
+        '(personal-b personal-a))))
     (should-error
      (emacsvox-aural-migrate-user-data
       '(:schema-version 0 :schemes nil :user-rules nil))

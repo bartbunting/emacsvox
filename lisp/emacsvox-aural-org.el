@@ -284,7 +284,8 @@
   (dolist (data (emacsvox-org-aural-feature-fragment-data))
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-org"))))
+       data :built-in t :source "emacsvox-aural-org"
+       :collection 'org))))
 
 (emacsvox-org-register-aural-presentation)
 

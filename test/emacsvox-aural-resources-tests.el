@@ -139,6 +139,31 @@
           (should-not (emacsvox-aural-resource-pack 'bart)))
       (delete-directory root t))))
 
+(ert-deftest emacsvox-aural-resources-notify-after-discovery-removal ()
+  "A completed discovery transaction reports removal exactly once."
+  (let* ((root (make-temp-file "emacsvox-pack-removal-notify-" t))
+         (bart (expand-file-name "bart" root))
+         (emacsvox-aural-resource-pack-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-resource-overlay-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-resource-packs-changed-hook nil)
+         notifications)
+    (unwind-protect
+        (progn
+          (make-directory bart)
+          (emacsvox-test--resource-file bart "button")
+          (add-hook
+           'emacsvox-aural-resource-packs-changed-hook
+           (lambda (id) (push id notifications)))
+          (emacsvox-aural-discover-resource-packs root)
+          (setq notifications nil)
+          (delete-directory bart t)
+          (emacsvox-aural-discover-resource-packs root)
+          (should-not (emacsvox-aural-resource-pack 'bart))
+          (should (equal notifications '(nil))))
+      (delete-directory root t))))
+
 (ert-deftest emacsvox-aural-resources-prefer-personal-packs-to-legacy-root ()
   "The personal pack root wins over, then falls back to, legacy `sounds/'."
   (let* ((root (make-temp-file "emacsvox-pack-roots-" t))

@@ -817,11 +817,18 @@ LABEL identifies the speech or cue being edited."
          (emacsvox-aural-validate-scheme emacsvox-aural-editor-target))))
     ('fragment
      (let* ((data (emacsvox-aural-editor--working-scheme-data))
+            (old
+             (emacsvox-aural-feature-fragment-entry
+              emacsvox-aural-editor-target))
             (compiled
              (emacsvox-aural--compile-feature-fragment data "editor"))
             (entry
              (emacsvox-aural--make-feature-fragment-entry
               :id emacsvox-aural-editor-target
+              :collection
+              (if old
+                  (emacsvox-aural-feature-fragment-collection old)
+                'personal)
               :data data
               :compiled compiled
               :source "editor"))
@@ -900,7 +907,12 @@ LABEL identifies the speech or cue being edited."
          (compiled (emacsvox-aural--compile-feature-fragment data "editor"))
          (entry
           (emacsvox-aural--make-feature-fragment-entry
-           :id id :data data :compiled compiled
+           :id id
+           :collection
+           (if old
+               (emacsvox-aural-feature-fragment-collection old)
+             'personal)
+           :data data :compiled compiled
            :source emacsvox-aural-schemes-file))
          (registry
           (copy-hash-table

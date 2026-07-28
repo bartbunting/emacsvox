@@ -532,6 +532,27 @@ This lets one fragment append a cue while another appends speech, preserving
 the base scheme's inherited presentation.  Persistent personal rules remain
 stronger than every fragment.
 
+There are two deliberately different fragment concepts:
+
+- a module compatibility fragment is an automatic, read-only default that
+  preserves an integration's established presentation;
+- an optional feature fragment is exposed to users as a *presentation
+  option*.  Core, an integration module, a third-party extension, or personal
+  data may provide one.
+
+Every presentation option has a collection, such as =org=, =mail=,
+=agent-shell=, or =personal=.  The collection is navigation metadata: it
+groups related options in the manager but does not affect matching,
+specificity, or precedence.  An integration may use its own collection, while
+an option shared by several integrations may use a broader collection such
+as =mail=.
+
+Presentation-option order is stored independently from enablement.  The
+stable order contains disabled options as well as enabled ones.  Disabling
+and later re-enabling an option therefore restores its former precedence
+instead of moving it to the strongest end.  Only an explicit reorder in the
+active-order view changes precedence.
+
 Within one layer, the resolver orders rules by documented selector
 specificity:
 
@@ -614,11 +635,12 @@ data and individual schemes are independently versioned; migration functions
 must explicitly advance an older version.  Invalid replacement data is fully
 staged and validated before it can replace the live personal registry.
 
-Personal data schema version 3 stores named presentation profiles alongside
-personal feature-fragment definitions, their ordered enabled identifiers,
-schemes, and persistent rules.  Version 1 and version 2 data migrate
-automatically with no profiles; version 1 also starts with no fragments
-enabled.
+Personal data schema version 5 stores named presentation profiles alongside
+personal presentation-option definitions, their stable order, their ordered
+enabled identifiers, voice palettes, schemes, and persistent rules.  Versions
+1 through 4 migrate automatically.  The version 4 migration derives stable
+order from the former enabled order, followed by disabled personal options,
+so toggling no longer changes precedence.
 
 =emacsvox-aural-active-scheme= is a Customize option.  Startup loads the
 personal data, validates scheme inheritance and providers, and selects the
@@ -736,7 +758,12 @@ Discovery synchronizes when completion or theme selection asks for available
 packs.  It adds new directories, reloads manifests, and removes registrations
 for directories that have gone away.  The explicit command
 =emacsvox-aural-refresh-discovered-resource-packs= is available when immediate
-refresh is useful.
+refresh is useful.  One synchronization stages and validates the complete
+replacement registry before publishing a single pack-change notification.  A
+failed synchronization publishes nothing.  If a removed directory supplied
+the selected pack, the live sound cache moves silently to the active scheme's
+registered pack, then to =chimes= when necessary, so semantic and legacy cue
+paths cannot disagree.
 
 ** Module-distributed earcons
 
@@ -1033,7 +1060,7 @@ lead to:
 |----------------------+-------------------------------------------------------|
 | Explain at point     | Spoken and detailed presentation provenance           |
 | Schemes              | Base-scheme manager                                    |
-| Feature fragments    | Independently enabled presentation layers             |
+| Presentation options | Grouped, independently enabled presentation layers    |
 | Current buffer rules | Advanced editor scoped to the remembered source       |
 | Semantic vocabulary  | Registered roles, events, states, and attributes       |
 | Sound packs          | Spoken pack manager and cue-provenance browser          |
@@ -1106,33 +1133,41 @@ no parent.  Renaming a scheme updates direct child schemes atomically.  Copy,
 delete, and rename changes are saved through the same data-only atomic
 persistence contract as the editors.
 
-** Accessible feature-fragment manager contract
+** Accessible presentation-option manager contract
 
-=emacsvox-aural-list-feature-fragments= opens the ordered fragment manager.
-Enabled fragments appear first in their cascade order, followed by disabled
-fragments.  Each row reports enabled position, built-in or personal
-ownership, rule count, validation state, and intent summary.
+=emacsvox-aural-list-feature-fragments= opens the presentation-option manager.
+Its normal grouped view organizes options by their declared collection.
+Collection rows report enabled and total counts and are expanded by default.
+Child rows report enabled position, built-in or personal ownership, rule
+count, validation state, and intent summary.  Press =a= for the active-order
+view, which contains only enabled options in exact cascade order from weaker
+to stronger.
 
 The manager exposes these stable operations:
 
 | Key                 | Operation                                             |
 |---------------------+-------------------------------------------------------|
-| =n= / =p=           | Move to the next or previous fragment                 |
+| =n= / =p=           | Move to the next or previous row                      |
 | =Arrows=            | Move by row or column and speak its title and value   |
-| =RET= / =SPC= / =.= | View details, speak the row, or speak the titled cell |
-| =t=                 | Enable or disable the fragment                        |
-| =M-up= / =M-down=   | Move an enabled fragment earlier or later             |
-| =N= / =c=           | Create an empty personal fragment or copy one         |
-| =e= / =d=           | Edit or delete a personal fragment                    |
+| =RET= / =TAB=       | Toggle a collection, or view option details           |
+| =SPC= / =.=         | Speak the row, or speak the titled cell               |
+| =a=                 | Switch between grouped and active-order views         |
+| =t=                 | Enable or disable the option without moving it        |
+| =M-up= / =M-down=   | Reorder an option in the active-order view            |
+| =N= / =c=           | Create an empty personal option or copy one           |
+| =e= / =d=           | Edit or delete a personal option                      |
 | =v= / =g= / =?=     | Validate, refresh, or display and speak help          |
 | =s=                 | Return to the scheme manager                          |
 | =h=                 | Return to the aural home                              |
 
 Row, column, and list-boundary speech uses the same accessibility contract as
-the scheme and semantic managers.  Built-ins are viewable, copyable, and
-independently toggleable but remain read-only.  Personal fragments use the
+the scheme and semantic managers.  Collection expansion is buffer-local and
+does not change configuration.  Built-ins are viewable, copyable, and
+independently toggleable but remain read-only.  Personal options use the
 advanced guided rule editor; create, copy, edit, delete, enable, disable, and
-reorder operations share the versioned atomic persistence path.
+reorder operations share the versioned atomic persistence path.  The grouped
+view is for discovery; precedence can be changed only in the unambiguous
+active-order view.
 
 ** Accessible sound-pack workbench contract
 
@@ -1837,10 +1872,10 @@ CLOSED: [2026-07-26 Sun]
   =emacsvox-aural-...= command aliases without removing established names.
 - Keep exactly one active base scheme while adding explicitly ordered,
   independently enabled feature fragments.
-- Persist personal fragments, enabled order, and automatic schema migration
-  through the existing data-only atomic store.
-- Provide a spoken fragment manager for viewing, creating, copying, editing,
-  deleting, validating, toggling, and reordering fragments.
+- Persist personal fragments, stable and enabled order, and automatic schema
+  migration through the existing data-only atomic store.
+- Provide a spoken presentation-option manager for viewing, creating, copying,
+  editing, deleting, validating, toggling, and reordering fragments.
 
 Deliverable: users can layer optional features over inherited presentation
 without copying a complete scheme, and all list managers provide predictable
@@ -2050,11 +2085,18 @@ as concise, verbose, or task-specific setups in one operation.
 
 Implemented details:
 
-- personal data schema version 3 persists profile references and migrates
-  version 1 and version 2 data without evaluating code;
+- profile support entered in personal data schema version 3; the current
+  schema version 5 persists profile references, voice palettes, and stable
+  presentation-option order while migrating versions 1 through 4 without
+  evaluating code;
 - profile application validates the complete target, applies scheme,
-  fragments, sound, voice, and spatial state as one transaction, and restores
-  the previous live configuration on error;
+  fragments, sound, voice, and spatial state as one transaction; its fallible
+  sound selection completes before coordinated variables and hooks are
+  published, so a failed application emits no intermediate scheme or fragment
+  state;
+- coordinated state changes advance the configuration generation once and
+  notify from the final state; reloading an active scheme also reports an
+  effective sound-provider change when its identifier stays the same;
 - =emacsvox-aural-list-profiles= provides spoken create, copy, update,
   activate, rename, delete, view, validate, refresh, and home commands.
 
@@ -2653,6 +2695,23 @@ traces, and warning-as-error compilation of the changed runtime files pass.
 The complete source suite has 1,575 tests: 1,573 pass, the optional Mu4e test
 is skipped, and the sole failure is the in-progress untracked =sounds/bart/=
 pack described above.
+
+** DONE Slice 33: Grouped Presentation Options
+CLOSED: [2026-07-28 Tue]
+
+- Distinguish automatic module compatibility fragments from optional feature
+  fragments, which the user interface names presentation options.
+- Allow core, integration, third-party, and personal providers to contribute
+  options, with explicit collection metadata for discovery.
+- Group options under expandable collection rows while retaining a separate
+  active-order view from weakest to strongest.
+- Persist stable order independently from enablement so toggling an option
+  never changes its precedence.
+- Migrate version 4 personal data to schema version 5 atomically.
+
+Deliverable: related options are discoverable together without making
+collection membership part of rule resolution, and precedence changes only
+through an explicit reorder.
 
 * Test Gates
 

@@ -1379,7 +1379,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
       "r rename personal    a activate\n"
       "P preview            v validate\n"
       "SPC speak row        g refresh\n"
-      "f feature fragments  h aural home\n"
+      "f presentation options  h aural home\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
     (emacsvox-speak-help)))
@@ -2757,29 +2757,63 @@ SCOPE is `personal', `session', or `buffer'."
      :disabled-rules disabled
      :semantic-diagnostics semantic-diagnostics)))
 
+(defvar-local emacsvox-aural-feature-fragments-view 'grouped
+  "Current presentation-option manager view.")
+
+(defvar-local emacsvox-aural-feature-fragments-collapsed-collections nil
+  "Collections hidden in the current presentation-option manager.")
+
+(defun emacsvox-aural-tools--fragment-collection-row-p (id)
+  "Return non-nil when manager row ID represents a collection."
+  (and (consp id) (eq (car id) 'collection) (symbolp (cdr id))))
+
+(defun emacsvox-aural-tools--fragment-collection-row-id (collection)
+  "Return manager row identifier for COLLECTION."
+  (cons 'collection collection))
+
 (defun emacsvox-aural-tools--fragment-at-point-or-read (&optional prompt)
-  "Return the feature fragment at point, or read one using PROMPT."
-  (or
-   (and
-    (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
-    (tabulated-list-get-id))
-   (let ((candidates (emacsvox-aural-feature-fragment-candidates)))
-     (unless candidates
-       (user-error "No feature fragments are registered"))
-     (intern
-      (completing-read
-       (or prompt "Aural feature fragment: ")
-       candidates nil 'must-match)))))
+  "Return the presentation option at point, or read one using PROMPT."
+  (let ((id
+         (and
+          (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+          (tabulated-list-get-id))))
+    (cond
+     ((and (symbolp id) (emacsvox-aural-feature-fragment-entry id))
+      id)
+     ((emacsvox-aural-tools--fragment-collection-row-p id)
+      (user-error
+       "%s is a collection; press TAB or RET to expand or collapse it"
+       (emacsvox-aural-tools--humanize (cdr id))))
+     (t
+      (let ((candidates (emacsvox-aural-feature-fragment-candidates)))
+        (unless candidates
+          (user-error "No presentation options are registered"))
+        (intern
+         (completing-read
+          (or prompt "Aural presentation option: ")
+          candidates nil 'must-match)))))))
 
 (defun emacsvox-aural-tools--ordered-feature-fragment-ids ()
-  "Return enabled feature fragment IDs first, then disabled IDs."
-  (append
-   (copy-sequence emacsvox-aural-enabled-feature-fragments)
-   (cl-loop
-    for candidate in (emacsvox-aural-feature-fragment-candidates)
-    for id = (intern candidate)
-    unless (memq id emacsvox-aural-enabled-feature-fragments)
-    collect id)))
+  "Return registered presentation options in stable order."
+  (emacsvox-aural-normalized-feature-fragment-order))
+
+(defun emacsvox-aural-tools--fragment-collections ()
+  "Return presentation-option collections and their stably ordered entries."
+  (let (collections)
+    (dolist (id (emacsvox-aural-tools--ordered-feature-fragment-ids))
+      (let* ((entry (emacsvox-aural-feature-fragment-entry id))
+             (collection
+              (emacsvox-aural-feature-fragment-collection entry))
+             (cell (assq collection collections)))
+        (if cell
+            (setcdr cell (append (cdr cell) (list id)))
+          (push (list collection id) collections))))
+    (sort
+     collections
+     (lambda (left right)
+       (string-lessp
+        (symbol-name (car left))
+        (symbol-name (car right)))))))
 
 (defun emacsvox-aural-tools--fragment-kind (entry)
   "Return a user-facing kind name for feature fragment ENTRY."
@@ -2788,7 +2822,7 @@ SCOPE is `personal', `session', or `buffer'."
     "personal"))
 
 (defun emacsvox-aural-tools--fragment-row (id)
-  "Return a tabulated manager row for feature fragment ID."
+  "Return a tabulated manager row for presentation option ID."
   (let* ((entry (emacsvox-aural-feature-fragment-entry id))
          (compiled
           (emacsvox-aural-feature-fragment-entry-compiled entry))
@@ -2798,7 +2832,9 @@ SCOPE is `personal', `session', or `buffer'."
     (list
      id
      (vector
-      (symbol-name id)
+      (if (eq emacsvox-aural-feature-fragments-view 'grouped)
+          (format "  %s" (emacsvox-aural-tools--humanize id))
+        (emacsvox-aural-tools--humanize id))
       (if position (format "enabled %d" (1+ position)) "disabled")
       (emacsvox-aural-tools--fragment-kind entry)
       (format
@@ -2809,13 +2845,60 @@ SCOPE is `personal', `session', or `buffer'."
         "invalid")
       (emacsvox-aural-scheme-summary compiled)))))
 
+(defun emacsvox-aural-tools--fragment-collection-row (collection ids)
+  "Return a tabulated manager row for COLLECTION containing IDS."
+  (let* ((enabled
+          (cl-count-if
+           (lambda (id)
+             (emacsvox-aural-feature-fragment-enabled-p id))
+           ids))
+         (rules
+          (cl-loop
+           for id in ids
+           sum
+           (length
+            (emacsvox-aural-scheme-rules
+             (emacsvox-aural-feature-fragment-entry-compiled
+              (emacsvox-aural-feature-fragment-entry id))))))
+         (collapsed
+          (memq
+           collection
+           emacsvox-aural-feature-fragments-collapsed-collections)))
+    (list
+     (emacsvox-aural-tools--fragment-collection-row-id collection)
+     (vector
+      (capitalize (emacsvox-aural-tools--humanize collection))
+      (format "%d of %d enabled" enabled (length ids))
+      "collection"
+      (number-to-string rules)
+      ""
+      (format
+       "%s; %s to %s"
+       (if collapsed "collapsed" "expanded")
+       "TAB or RET"
+       (if collapsed "expand" "collapse"))))))
+
 (defun emacsvox-aural-feature-fragments--set-entries ()
-  "Populate the current feature-fragment manager."
+  "Populate the current presentation-option manager."
   (setq
    tabulated-list-entries
-   (mapcar
-    #'emacsvox-aural-tools--fragment-row
-    (emacsvox-aural-tools--ordered-feature-fragment-ids))))
+   (if (eq emacsvox-aural-feature-fragments-view 'active)
+       (mapcar
+        #'emacsvox-aural-tools--fragment-row
+        emacsvox-aural-enabled-feature-fragments)
+     (cl-mapcan
+      (lambda (collection)
+        (let ((id (car collection))
+              (fragments (cdr collection)))
+          (cons
+           (emacsvox-aural-tools--fragment-collection-row id fragments)
+           (unless
+               (memq
+                id
+                emacsvox-aural-feature-fragments-collapsed-collections)
+             (mapcar
+              #'emacsvox-aural-tools--fragment-row fragments)))))
+      (emacsvox-aural-tools--fragment-collections)))))
 
 (defun emacsvox-aural-feature-fragments--goto (fragment)
   "Move to feature FRAGMENT in the current manager."
@@ -2823,7 +2906,7 @@ SCOPE is `personal', `session', or `buffer'."
         found)
     (goto-char start)
     (while (and (not found) (< (point) (point-max)))
-      (if (eq fragment (tabulated-list-get-id))
+      (if (equal fragment (tabulated-list-get-id))
           (setq found t)
         (forward-line 1)))
     (unless found
@@ -2861,7 +2944,7 @@ SCOPE is `personal', `session', or `buffer'."
         (emacsvox-aural-feature-fragments-refresh fragment)))))
 
 (defun emacsvox-aural-tools--fragment-spoken-summary (fragment)
-  "Return a concise spoken summary of feature FRAGMENT."
+  "Return a concise spoken summary of presentation option FRAGMENT."
   (let* ((entry (emacsvox-aural-feature-fragment-entry fragment))
          (compiled
           (emacsvox-aural-feature-fragment-entry-compiled entry))
@@ -2870,9 +2953,11 @@ SCOPE is `personal', `session', or `buffer'."
          (count (length (emacsvox-aural-scheme-rules compiled)))
          (report (emacsvox-aural-validate-feature-fragment fragment)))
     (format
-     "%s. %s feature fragment. %s. %s. %d %s. %s."
+     "%s. %s %s presentation option. %s. %s. %d %s. %s."
      (emacsvox-aural-tools--humanize fragment)
      (emacsvox-aural-tools--fragment-kind entry)
+     (emacsvox-aural-tools--humanize
+      (emacsvox-aural-feature-fragment-collection entry))
      (if position
          (format "Enabled at position %d" (1+ position))
        "Disabled")
@@ -2883,13 +2968,35 @@ SCOPE is `personal', `session', or `buffer'."
          "Valid"
        "Invalid; press v for diagnostics"))))
 
+(defun emacsvox-aural-tools--fragment-collection-spoken-summary
+    (collection)
+  "Return a concise spoken summary for manager COLLECTION."
+  (let* ((ids (cdr (assq collection
+                          (emacsvox-aural-tools--fragment-collections))))
+         (enabled
+          (cl-count-if
+           #'emacsvox-aural-feature-fragment-enabled-p ids))
+         (collapsed
+          (memq
+           collection
+           emacsvox-aural-feature-fragments-collapsed-collections)))
+    (format
+     "%s collection. %d of %d options enabled. %s."
+     (emacsvox-aural-tools--humanize collection)
+     enabled
+     (length ids)
+     (if collapsed "Collapsed" "Expanded"))))
+
 (defun emacsvox-aural-feature-fragments-speak-current ()
-  "Speak a concise description of the feature fragment at point."
+  "Speak the presentation option or collection at point."
   (interactive)
-  (let* ((fragment
-          (emacsvox-aural-tools--fragment-at-point-or-read))
+  (let* ((id (tabulated-list-get-id))
          (summary
-          (emacsvox-aural-tools--fragment-spoken-summary fragment)))
+          (if (emacsvox-aural-tools--fragment-collection-row-p id)
+              (emacsvox-aural-tools--fragment-collection-spoken-summary
+               (cdr id))
+            (emacsvox-aural-tools--fragment-spoken-summary
+             (emacsvox-aural-tools--fragment-at-point-or-read)))))
     (if (fboundp 'tts-speak)
         (tts-speak summary)
       (message "%s" summary))
@@ -2901,16 +3008,16 @@ SCOPE is `personal', `session', or `buffer'."
   (emacsvox-aural-tools--speak-tabulated-cell))
 
 (defun emacsvox-aural-feature-fragments-next ()
-  "Move to and speak the next feature fragment."
+  "Move to and speak the next presentation-option row."
   (interactive)
   (emacsvox-aural-tools--move-tabulated-row
-   1 "feature fragment list"))
+   1 "presentation option list"))
 
 (defun emacsvox-aural-feature-fragments-previous ()
-  "Move to and speak the previous feature fragment."
+  "Move to and speak the previous presentation-option row."
   (interactive)
   (emacsvox-aural-tools--move-tabulated-row
-   -1 "feature fragment list"))
+   -1 "presentation option list"))
 
 (defun emacsvox-aural-feature-fragments-next-column ()
   "Move right and speak the next feature-fragment column."
@@ -2922,14 +3029,66 @@ SCOPE is `personal', `session', or `buffer'."
   (interactive)
   (emacsvox-aural-tools--move-tabulated-column -1))
 
+(defun emacsvox-aural-feature-fragments-toggle-collection ()
+  "Expand or collapse the presentation-option collection at point."
+  (interactive)
+  (let ((id (tabulated-list-get-id)))
+    (unless (emacsvox-aural-tools--fragment-collection-row-p id)
+      (user-error "Move to a collection row before expanding or collapsing"))
+    (let ((collection (cdr id)))
+      (if
+          (memq
+           collection
+           emacsvox-aural-feature-fragments-collapsed-collections)
+          (setq
+           emacsvox-aural-feature-fragments-collapsed-collections
+           (delq
+            collection
+            emacsvox-aural-feature-fragments-collapsed-collections))
+        (push
+         collection
+         emacsvox-aural-feature-fragments-collapsed-collections))
+      (emacsvox-aural-feature-fragments-refresh id)
+      (emacsvox-aural-feature-fragments-speak-current))))
+
+(defun emacsvox-aural-feature-fragments-activate ()
+  "Open the option at point, or toggle its collection."
+  (interactive)
+  (if
+      (emacsvox-aural-tools--fragment-collection-row-p
+       (tabulated-list-get-id))
+      (emacsvox-aural-feature-fragments-toggle-collection)
+    (emacsvox-aural-describe-feature-fragment)))
+
+(defun emacsvox-aural-feature-fragments-toggle-view ()
+  "Switch between grouped discovery and active precedence views."
+  (interactive)
+  (let ((selected
+         (and
+          (symbolp (tabulated-list-get-id))
+          (tabulated-list-get-id))))
+    (setq
+     emacsvox-aural-feature-fragments-view
+     (if (eq emacsvox-aural-feature-fragments-view 'grouped)
+         'active
+       'grouped))
+    (emacsvox-aural-feature-fragments-refresh selected)
+    (let ((message
+           (if (eq emacsvox-aural-feature-fragments-view 'grouped)
+               "Grouped presentation options view"
+             "Active presentation order, weakest to strongest")))
+      (if (fboundp 'tts-speak)
+          (tts-speak message)
+        (message "%s" message)))))
+
 (defun emacsvox-aural-describe-feature-fragment (&optional fragment)
-  "Describe registered feature FRAGMENT and its presentations."
+  "Describe registered presentation option FRAGMENT."
   (interactive)
   (let* ((fragment
           (or
            fragment
            (emacsvox-aural-tools--fragment-at-point-or-read
-            "View feature fragment: ")))
+            "View presentation option: ")))
          (entry
           (or
            (emacsvox-aural-feature-fragment-entry fragment)
@@ -2940,7 +3099,7 @@ SCOPE is `personal', `session', or `buffer'."
          (summary
           (emacsvox-aural-tools--fragment-spoken-summary fragment)))
     (with-help-window (help-buffer)
-      (princ (format "Aural feature fragment: %s\n\n" fragment))
+      (princ (format "Aural presentation option: %s\n\n" fragment))
       (princ
        (format
         "Status: %s\n"
@@ -2953,6 +3112,11 @@ SCOPE is `personal', `session', or `buffer'."
        (format
         "Kind: %s\n"
         (emacsvox-aural-tools--fragment-kind entry)))
+      (princ
+       (format
+         "Collection: %s\n"
+         (emacsvox-aural-tools--humanize
+          (emacsvox-aural-feature-fragment-collection entry))))
       (princ
        (format "Summary: %s\n"
                (emacsvox-aural-scheme-summary compiled)))
@@ -2980,13 +3144,24 @@ SCOPE is `personal', `session', or `buffer'."
     summary))
 
 (defun emacsvox-aural-tools--install-feature-fragment-state
-    (registry enabled)
-  "Validate and persist feature-fragment REGISTRY and ENABLED order."
+    (registry enabled &optional order)
+  "Validate and persist fragment REGISTRY, ENABLED state, and stable ORDER."
   (emacsvox-aural--validate-enabled-feature-fragments enabled registry)
-  (let ((old-registry emacsvox-aural-feature-fragment-registry)
-        (old-enabled emacsvox-aural-enabled-feature-fragments))
+  (let* ((previous (emacsvox-aural--capture-coordinated-state))
+         (old-registry emacsvox-aural-feature-fragment-registry)
+         (old-enabled emacsvox-aural-enabled-feature-fragments)
+         (old-order emacsvox-aural-feature-fragment-order)
+         (candidate-order
+          (cl-remove-if-not
+           (lambda (id) (gethash id registry))
+           (copy-sequence
+            (or order emacsvox-aural-feature-fragment-order))))
+         (candidate-order
+          (emacsvox-aural--merge-enabled-feature-fragment-order
+           enabled candidate-order registry)))
     (setq
      emacsvox-aural-feature-fragment-registry registry
+     emacsvox-aural-feature-fragment-order candidate-order
      emacsvox-aural-enabled-feature-fragments (copy-sequence enabled))
     (condition-case error
         (progn
@@ -2996,22 +3171,23 @@ SCOPE is `personal', `session', or `buffer'."
       (error
        (setq
         emacsvox-aural-feature-fragment-registry old-registry
+        emacsvox-aural-feature-fragment-order old-order
         emacsvox-aural-enabled-feature-fragments old-enabled)
        (signal (car error) (cdr error))))
-    (emacsvox-aural-configuration-changed 'feature-fragments)
-    (run-hooks 'emacsvox-aural-feature-fragments-changed-hook)
+    (emacsvox-aural--notify-coordinated-state-change
+     previous 'feature-fragments '(feature-fragments))
     enabled))
 
 (defun emacsvox-aural-create-feature-fragment (id &optional summary)
   "Create disabled personal feature fragment ID with SUMMARY."
   (interactive
-   (let* ((answer (read-string "New feature fragment identifier: "))
+   (let* ((answer (read-string "New presentation option identifier: "))
           (_
            (when (string-empty-p answer)
-             (user-error "Feature fragment identifier cannot be empty"))))
+             (user-error "Presentation option identifier cannot be empty"))))
      (list (intern answer) nil)))
   (when (emacsvox-aural-feature-fragment-entry id)
-    (user-error "Feature fragment already exists: %S" id))
+    (user-error "Presentation option already exists: %S" id))
   (let ((registry
          (copy-hash-table emacsvox-aural-feature-fragment-registry))
         (data
@@ -3019,7 +3195,7 @@ SCOPE is `personal', `session', or `buffer'."
           :schema-version emacsvox-aural-scheme-schema-version
           :id id
           :summary
-          (or summary (format "Personal feature fragment %s" id))
+          (or summary (format "Personal presentation option %s" id))
           :rules nil)))
     (let ((emacsvox-aural-feature-fragment-registry registry))
       (emacsvox-aural-register-feature-fragment
@@ -3036,17 +3212,17 @@ SCOPE is `personal', `session', or `buffer'."
   "Copy feature fragment SOURCE to disabled personal fragment NEW-ID."
   (interactive
    (let* ((source
-           (emacsvox-aural-tools--fragment-at-point-or-read
-            "Copy feature fragment: "))
+          (emacsvox-aural-tools--fragment-at-point-or-read
+            "Copy presentation option: "))
           (answer
            (read-string
-            "New personal feature fragment identifier: "
+            "New personal presentation option identifier: "
             (format "%s-copy" source))))
      (when (string-empty-p answer)
-       (user-error "Feature fragment identifier cannot be empty"))
+       (user-error "Presentation option identifier cannot be empty"))
      (list source (intern answer))))
   (when (emacsvox-aural-feature-fragment-entry new-id)
-    (user-error "Feature fragment already exists: %S" new-id))
+    (user-error "Presentation option already exists: %S" new-id))
   (let* ((source-entry
           (or
            (emacsvox-aural-feature-fragment-entry source)
@@ -3070,7 +3246,7 @@ SCOPE is `personal', `session', or `buffer'."
     (emacsvox-aural-tools--install-feature-fragment-state
      registry emacsvox-aural-enabled-feature-fragments)
     (emacsvox-aural-tools--refresh-fragment-manager new-id)
-    (message "Created personal feature fragment %s" new-id)
+    (message "Created personal presentation option %s" new-id)
     new-id))
 
 (defun emacsvox-aural-delete-feature-fragment (&optional fragment)
@@ -3080,19 +3256,19 @@ SCOPE is `personal', `session', or `buffer'."
           (or
            fragment
            (emacsvox-aural-tools--fragment-at-point-or-read
-            "Delete personal feature fragment: ")))
+            "Delete personal presentation option: ")))
          (entry
           (or
            (emacsvox-aural-feature-fragment-entry fragment)
            (user-error "Unknown feature fragment: %S" fragment))))
     (when (emacsvox-aural-feature-fragment-entry-built-in entry)
-      (user-error "Built-in feature fragment %s cannot be deleted" fragment))
+      (user-error "Built-in presentation option %s cannot be deleted" fragment))
     (when
         (or
          (not (called-interactively-p 'interactive))
          (yes-or-no-p
           (format
-           "Delete personal feature fragment %s%s? "
+           "Delete personal presentation option %s%s? "
            fragment
            (if (emacsvox-aural-feature-fragment-enabled-p fragment)
                " and disable it"
@@ -3108,11 +3284,11 @@ SCOPE is `personal', `session', or `buffer'."
         (emacsvox-aural-tools--install-feature-fragment-state
          registry enabled))
       (emacsvox-aural-tools--refresh-fragment-manager)
-      (message "Deleted personal feature fragment %s" fragment)
+      (message "Deleted personal presentation option %s" fragment)
       fragment)))
 
 (defun emacsvox-aural-feature-fragments-toggle (&optional fragment)
-  "Enable or disable feature FRAGMENT and persist the new order."
+  "Enable or disable feature FRAGMENT without changing its stable order."
   (interactive)
   (let* ((fragment
           (or
@@ -3125,21 +3301,31 @@ SCOPE is `personal', `session', or `buffer'."
               (delq
                fragment
                (copy-sequence emacsvox-aural-enabled-feature-fragments))
-            (append
-             emacsvox-aural-enabled-feature-fragments
-             (list fragment)))))
+            (let ((members
+                   (cons
+                    fragment
+                    (copy-sequence
+                     emacsvox-aural-enabled-feature-fragments))))
+              (cl-remove-if-not
+               (lambda (id) (memq id members))
+               (emacsvox-aural-normalized-feature-fragment-order))))))
     (emacsvox-aural-tools--install-feature-fragment-state
      (copy-hash-table emacsvox-aural-feature-fragment-registry)
      enabled)
     (emacsvox-aural-tools--refresh-fragment-manager fragment)
     (message
-     "%s feature fragment %s"
+     "%s presentation option %s"
      (if enabled-p "Disabled" "Enabled")
      fragment)
     (not enabled-p)))
 
 (defun emacsvox-aural-feature-fragments-move (offset)
   "Move the enabled feature fragment at point by OFFSET."
+  (when
+      (and
+       (derived-mode-p 'emacsvox-aural-feature-fragments-mode)
+       (eq emacsvox-aural-feature-fragments-view 'grouped))
+    (user-error "Press a to switch to active order before reordering options"))
   (let* ((fragment
           (emacsvox-aural-tools--fragment-at-point-or-read))
          (index
@@ -3152,18 +3338,27 @@ SCOPE is `personal', `session', or `buffer'."
               (length emacsvox-aural-enabled-feature-fragments)))
           (emacsvox-aural-tools--tabulated-boundary
            (if (< offset 0)
-               "First enabled feature fragment."
-             "Last enabled feature fragment."))
+               "First enabled presentation option."
+             "Last enabled presentation option."))
         (let ((enabled
                (copy-sequence
-                emacsvox-aural-enabled-feature-fragments)))
+                emacsvox-aural-enabled-feature-fragments))
+              (order
+               (emacsvox-aural-normalized-feature-fragment-order)))
           (cl-rotatef
            (nth index enabled)
            (nth destination enabled))
+          (let ((left
+                 (cl-position
+                  fragment order))
+                (right
+                 (cl-position
+                  (nth index enabled) order)))
+            (cl-rotatef (nth left order) (nth right order)))
           (emacsvox-aural-tools--install-feature-fragment-state
            (copy-hash-table
             emacsvox-aural-feature-fragment-registry)
-           enabled)
+           enabled order)
           (emacsvox-aural-tools--refresh-fragment-manager fragment)
           (emacsvox-aural-feature-fragments-speak-current))))))
 
@@ -3185,7 +3380,7 @@ SCOPE is `personal', `session', or `buffer'."
          (entry (emacsvox-aural-feature-fragment-entry fragment)))
     (when (emacsvox-aural-feature-fragment-entry-built-in entry)
       (user-error
-       "Built-in feature fragment %s is read-only; press c to copy it"
+       "Built-in presentation option %s is read-only; press c to copy it"
        fragment))
     (require 'emacsvox-aural-editor)
     (emacsvox-edit-aural-feature-fragment fragment)))
@@ -3202,23 +3397,26 @@ SCOPE is `personal', `session', or `buffer'."
           (emacsvox-aural-validate-feature-fragment fragment)))
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-tools--display-validation
-       report "feature fragment"))
+       report "presentation option"))
     report))
 
 (defun emacsvox-aural-feature-fragments-help ()
-  "Display and speak feature-fragment manager help."
+  "Display and speak presentation-option manager help."
   (interactive)
   (with-help-window (help-buffer)
     (princ
      (concat
-      "Aural Feature Fragment Manager\n\n"
-      "One base scheme is active.  Enabled feature fragments add independent\n"
-      "presentation in the displayed order.  Personal overrides remain stronger.\n"
+      "Aural Presentation Options\n\n"
+      "The grouped view organizes options by the integration that supplies them.\n"
+      "TAB or RET on a collection expands or collapses it.  The active-order view\n"
+      "shows enabled options from weakest to strongest.  Toggling an option never\n"
+      "changes its stable precedence.  Personal overrides remain stronger.\n"
       "Row and column movement speaks titles, values, and list boundaries.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
-      "RET view details     SPC speak row\n"
-      "t enable/disable     M-up/M-down reorder enabled fragments\n"
+      "RET open/toggle      TAB expand/collapse collection\n"
+      "SPC speak row        a grouped/active-order view\n"
+      "t enable/disable     M-up/M-down reorder enabled options\n"
       "N create personal    c copy as personal\n"
       "e edit personal      d delete personal\n"
       "v validate           g refresh\n"
@@ -3229,16 +3427,16 @@ SCOPE is `personal', `session', or `buffer'."
 
 (define-derived-mode
     emacsvox-aural-feature-fragments-mode tabulated-list-mode
-  "Aural-Fragments"
-  "Major mode for viewing and managing aural feature fragments."
+  "Aural-Options"
+  "Major mode for viewing and managing aural presentation options."
   (setq
    tabulated-list-format
-   [("Fragment" 28 t)
-    ("Status" 12 t)
-    ("Kind" 10 t)
-    ("Rules" 8 t)
-    ("Validation" 12 t)
-    ("Summary" 0 t)])
+   [("Option" 32 nil)
+    ("Status" 16 nil)
+    ("Kind" 12 nil)
+    ("Rules" 8 nil)
+    ("Validation" 12 nil)
+    ("Summary" 0 nil)])
   (setq tabulated-list-padding 2)
   (add-hook
    'tabulated-list-revert-hook
@@ -3247,7 +3445,8 @@ SCOPE is `personal', `session', or `buffer'."
 
 (dolist
     (binding
-     '(("RET" . emacsvox-aural-describe-feature-fragment)
+     '(("RET" . emacsvox-aural-feature-fragments-activate)
+       ("TAB" . emacsvox-aural-feature-fragments-toggle-collection)
        ("SPC" . emacsvox-aural-feature-fragments-speak-current)
        ("." . emacsvox-aural-feature-fragments-speak-current-cell)
        ("n" . emacsvox-aural-feature-fragments-next)
@@ -3256,6 +3455,7 @@ SCOPE is `personal', `session', or `buffer'."
        ("<up>" . emacsvox-aural-feature-fragments-previous)
        ("<right>" . emacsvox-aural-feature-fragments-next-column)
        ("<left>" . emacsvox-aural-feature-fragments-previous-column)
+       ("a" . emacsvox-aural-feature-fragments-toggle-view)
        ("t" . emacsvox-aural-feature-fragments-toggle)
        ("<M-up>" . emacsvox-aural-feature-fragments-move-up)
        ("<M-down>" . emacsvox-aural-feature-fragments-move-down)
@@ -3275,7 +3475,7 @@ SCOPE is `personal', `session', or `buffer'."
    (cdr binding)))
 
 (defun emacsvox-aural-list-feature-fragments ()
-  "Open the accessible manager for aural feature fragments."
+  "Open the accessible manager for aural presentation options."
   (interactive)
   (emacsvox-aural-tools--remember-source-buffer)
   (let ((buffer (get-buffer-create "*Aural Feature Fragments*")))
@@ -3290,9 +3490,9 @@ SCOPE is `personal', `session', or `buffer'."
       (when (called-interactively-p 'interactive)
         (if (fboundp 'tts-speak)
             (tts-speak
-             "No feature fragments are registered.  Press N to create one.")
+             "No presentation options are registered.  Press N to create one.")
           (message
-           "No feature fragments are registered.  Press N to create one."))))
+           "No presentation options are registered.  Press N to create one."))))
     buffer))
 
 (defun emacsvox-aural-home--source-buffer ()
@@ -3391,9 +3591,9 @@ SCOPE is `personal', `session', or `buffer'."
      (list
       'features
       (vector
-       "Feature fragments"
+       "Presentation options"
        (emacsvox-aural-home--enabled-fragment-status)
-       "Layer and order independent presentation additions"))
+       "Browse grouped optional presentation additions and their active order"))
      (list
       'face-presentation
       (vector

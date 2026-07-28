@@ -27,6 +27,7 @@
          (emacsvox-aural-feature-fragment-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-enabled-feature-fragments nil)
+         (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)
          (emacsvox-aural-buffer-rules nil)
@@ -43,6 +44,7 @@
          (emacsvox-aural-tools--last-source-buffer nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
+         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-face-presentation-enabled t)
          (emacsvox-aural-face-presentation-changed-hook nil)
@@ -1062,7 +1064,7 @@
        ((:id built-in-heading
          :match (:role heading)
          :render (:content (:speak t)))))
-     :built-in t :source "test")
+     :built-in t :source "test" :collection 'org)
     (emacsvox-aural-register-feature-fragment
      '(:schema-version 1
        :id personal-fragment
@@ -1088,10 +1090,20 @@
               (should (equal (aref personal 1) "enabled 1"))
               (should (equal (aref personal 2) "personal"))
               (should (equal (aref built-in 1) "enabled 2"))
-              (should (equal (aref built-in 2) "built-in")))
+              (should (equal (aref built-in 2) "built-in"))
+              (should
+               (assoc
+                (cons 'collection 'org)
+                tabulated-list-entries))
+              (should
+               (assoc
+                (cons 'collection 'personal)
+                tabulated-list-entries)))
             (dolist
                 (binding
-                 '(("RET" . emacsvox-aural-describe-feature-fragment)
+                 '(("RET" . emacsvox-aural-feature-fragments-activate)
+                   ("TAB"
+                    . emacsvox-aural-feature-fragments-toggle-collection)
                    ("SPC" . emacsvox-aural-feature-fragments-speak-current)
                    ("." . emacsvox-aural-feature-fragments-speak-current-cell)
                    ("n" . emacsvox-aural-feature-fragments-next)
@@ -1102,6 +1114,7 @@
                     . emacsvox-aural-feature-fragments-next-column)
                    ("<left>"
                     . emacsvox-aural-feature-fragments-previous-column)
+                   ("a" . emacsvox-aural-feature-fragments-toggle-view)
                    ("t" . emacsvox-aural-feature-fragments-toggle)
                    ("<M-up>" . emacsvox-aural-feature-fragments-move-up)
                    ("<M-down>" . emacsvox-aural-feature-fragments-move-down)
@@ -1147,15 +1160,101 @@
                    ((symbol-function 'emacsvox-icon) #'ignore))
                 (emacsvox-aural-feature-fragments-previous)
                 (should
-                 (equal spoken "Top of feature fragment list."))
+                 (equal spoken "Option, General"))
+                (emacsvox-aural-feature-fragments-previous)
+                (should
+                 (equal spoken "Top of presentation option list."))
                 (emacsvox-aural-feature-fragments-next)
                 (should
-                 (equal spoken "Fragment, second-fragment"))
+                 (equal spoken "Option, first fragment"))
                 (emacsvox-aural-feature-fragments-next)
                 (should
-                 (equal spoken "Bottom of feature fragment list."))
+                 (equal spoken "Option, second fragment"))
+                (emacsvox-aural-feature-fragments-next)
+                (should
+                 (equal spoken "Bottom of presentation option list."))
                 (emacsvox-aural-feature-fragments-next-column)
                 (should (equal spoken "Status, enabled 2"))))))
+      (when (get-buffer "*Aural Feature Fragments*")
+        (kill-buffer "*Aural Feature Fragments*")))))
+
+(ert-deftest emacsvox-aural-fragment-toggle-preserves-stable-order ()
+  "Disabling and re-enabling an option must not alter its precedence."
+  (emacsvox-test--with-aural-tools
+    (dolist (id '(notmuch-status notmuch-attachments))
+      (emacsvox-aural-register-feature-fragment
+       (list
+        :schema-version 1
+        :id id
+        :summary (symbol-name id)
+        :rules nil)
+       :built-in t :source "test" :collection 'notmuch))
+    (emacsvox-aural-set-enabled-feature-fragments
+     '(notmuch-status notmuch-attachments))
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-save-user-data) #'ignore))
+      (emacsvox-aural-feature-fragments-toggle 'notmuch-status)
+      (should
+       (equal
+        emacsvox-aural-enabled-feature-fragments
+        '(notmuch-attachments)))
+      (emacsvox-aural-feature-fragments-toggle 'notmuch-status))
+    (should
+     (equal
+      emacsvox-aural-enabled-feature-fragments
+      '(notmuch-status notmuch-attachments)))
+    (should
+     (equal
+      emacsvox-aural-feature-fragment-order
+      '(notmuch-status notmuch-attachments)))))
+
+(ert-deftest emacsvox-aural-fragment-manager-groups-and-collapses-options ()
+  "Collections are spoken, collapsible, and separate from active precedence."
+  (emacsvox-test--with-aural-tools
+    (dolist
+        (definition
+         '((org-levels org)
+           (org-cues org)
+           (personal-headings personal)))
+      (emacsvox-aural-register-feature-fragment
+       (list
+        :schema-version 1
+        :id (car definition)
+        :summary (symbol-name (car definition))
+        :rules nil)
+       :built-in (not (eq (cadr definition) 'personal))
+       :source "test"
+       :collection (cadr definition)))
+    (emacsvox-aural-set-enabled-feature-fragments
+     '(org-levels personal-headings))
+    (unwind-protect
+        (save-window-excursion
+          (emacsvox-aural-list-feature-fragments)
+          (with-current-buffer "*Aural Feature Fragments*"
+            (should
+             (emacsvox-aural-feature-fragments--goto
+              (cons 'collection 'org)))
+            (let (spoken)
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text))))
+                (emacsvox-aural-feature-fragments-toggle-collection))
+              (should
+               (equal
+                spoken
+                "org collection. 1 of 2 options enabled. Collapsed.")))
+            (should-not (assq 'org-levels tabulated-list-entries))
+            (cl-letf (((symbol-function 'tts-speak) #'ignore))
+              (emacsvox-aural-feature-fragments-toggle-collection))
+            (should (assq 'org-levels tabulated-list-entries))
+            (emacsvox-aural-feature-fragments--goto 'org-levels)
+            (cl-letf (((symbol-function 'tts-speak) #'ignore))
+              (emacsvox-aural-feature-fragments-toggle-view))
+            (should (eq emacsvox-aural-feature-fragments-view 'active))
+            (should
+             (equal
+              (mapcar #'car tabulated-list-entries)
+              '(org-levels personal-headings)))))
       (when (get-buffer "*Aural Feature Fragments*")
         (kill-buffer "*Aural Feature Fragments*")))))
 
@@ -1188,6 +1287,7 @@
                   #'ignore))
               (with-temp-buffer
                 (emacsvox-aural-feature-fragments-mode)
+                (setq emacsvox-aural-feature-fragments-view 'active)
                 (setq
                  tabulated-list-entries
                  (list

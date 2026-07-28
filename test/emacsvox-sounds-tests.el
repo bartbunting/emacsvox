@@ -82,6 +82,47 @@
       (should-not (gethash 'only-in-one emacsvox-sounds-cache))
       (should (gethash 'only-in-two emacsvox-sounds-cache)))))
 
+(ert-deftest emacsvox-sounds-reconciles-removed-active-pack ()
+  "Discovery removal selects the scheme pack and discards stale cache entries."
+  (emacsvox-test--with-sound-tree
+    (let* ((bart (expand-file-name "bart" root))
+           (chimes-button (emacsvox-test--sound-file theme-one "button"))
+           (emacsvox-aural-resource-pack-registry
+            (make-hash-table :test #'eq))
+           (emacsvox-aural-resource-overlay-registry
+            (make-hash-table :test #'eq))
+           (emacsvox-aural-resource-packs-changed-hook
+            '(emacsvox-sounds-refresh-resource-providers))
+           (emacsvox-aural-resource-pack-discovery-roots nil)
+           (emacsvox-aural-personal-sound-packs-directory nil)
+           (emacsvox-aural-configuration-generation 0)
+           (emacsvox-aural-configuration-changed-hook nil)
+           (emacsvox-aural--current-rules-cache
+            (make-hash-table :test #'equal))
+           (emacsvox-aural--provider-cache
+            (make-hash-table :test #'equal))
+           (emacsvox-sounds-current-pack nil)
+           (emacsvox-sounds-current-theme nil)
+           (emacsvox-sounds-cache (make-hash-table))
+           (emacsvox-play-program nil))
+      (make-directory bart)
+      (emacsvox-test--sound-file bart "button")
+      (emacsvox-aural-register-resource-pack
+       'chimes :summary "Fallback pack" :directory theme-one)
+      (emacsvox-aural-discover-resource-packs root)
+      (setq
+       emacsvox-sounds-current-pack 'bart
+       emacsvox-sounds-current-theme bart)
+      (puthash 'stale-only
+               (expand-file-name "stale.ogg" bart)
+               emacsvox-sounds-cache)
+      (delete-directory bart t)
+      (emacsvox-aural-discover-resource-packs root)
+      (should (eq emacsvox-sounds-current-pack 'chimes))
+      (should-not (gethash 'stale-only emacsvox-sounds-cache))
+      (should (equal (gethash 'button emacsvox-sounds-cache)
+                     chimes-button)))))
+
 (ert-deftest emacsvox-sounds-selects-registered-pack-and-aliases ()
   "Registered selection records the pack and installs compatibility aliases."
   (let ((emacsvox-sounds-cache (make-hash-table))
@@ -184,7 +225,8 @@
   (let ((emacsvox-aural-scheme-registry
          (make-hash-table :test #'eq))
         (emacsvox-aural-active-scheme 'default)
-        (emacsvox-aural-active-scheme-changed-hook
+        (emacsvox-aural-active-scheme-changed-hook nil)
+        (emacsvox-aural-effective-resource-pack-changed-hook
          '(emacsvox-sounds-follow-aural-scheme))
         (emacsvox-sounds-cache (make-hash-table))
         (emacsvox-sounds-current-pack 'chimes)
@@ -198,7 +240,11 @@
        :parent default
        :resource-pack 3d
        :rules ()))
-    (emacsvox-aural-select-scheme 'spatial)
+    (let ((generation emacsvox-aural-configuration-generation))
+      (emacsvox-aural-select-scheme 'spatial)
+      (should
+       (= emacsvox-aural-configuration-generation
+          (1+ generation))))
     (should (eq emacsvox-sounds-current-pack '3d))
     (should
      (string-suffix-p

@@ -38,13 +38,17 @@ The semantic vocabulary list now provides the same titled-cell and boundary
 navigation.  Preferred interactive command aliases share the discoverable
 ~emacsvox-aural-~ prefix; established verb-first names remain compatible.
 One base scheme remains active at a time, with any number of independently
-enabled feature fragments layered over it in explicit order.  Fragments can
-add speech, cues, or styling without copying or replacing the base scheme;
-persistent personal rules remain stronger.
-Use ~emacsvox-aural-list-feature-fragments~ for the spoken fragment manager.
-It supports viewing, creating, copying, editing, deleting, validating,
-enabling or disabling, and reordering fragments; all changes save atomically.
-Optional built-in Org fragments independently add a heading-level label, a
+enabled presentation options layered over it in explicit order.  These are
+the user-facing form of optional feature fragments: they can add speech, cues,
+or styling without copying or replacing the base scheme, while persistent
+personal rules remain stronger.
+Use ~emacsvox-aural-list-feature-fragments~ for the spoken presentation-option
+manager.  Its normal view groups options into expandable integration
+collections; press ~a~ for enabled options in exact weakest-to-strongest
+order.  Toggling preserves an option's stable precedence.  The manager
+supports viewing, creating, copying, editing, deleting, validating, toggling,
+and explicitly reordering options; all changes save atomically.
+Optional built-in Org options independently add a heading-level label, a
 section cue, or folded/opened feedback.  Speech actions may safely substitute
 registered semantic values with templates such as ~Heading {level}~; every
 field must be guaranteed by the selector, and Emacs converts the result to

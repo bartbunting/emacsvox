@@ -421,6 +421,10 @@
       (should entry)
       (should (emacsvox-aural-feature-fragment-entry-built-in entry))
       (should
+       (eq
+        (emacsvox-aural-feature-fragment-entry-collection entry)
+        'org))
+      (should
        (equal
         (emacsvox-aural-feature-fragment-entry-source entry)
         "emacsvox-aural-org"))

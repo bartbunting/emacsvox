@@ -2742,6 +2742,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should entry)
       (should (emacsvox-aural-feature-fragment-entry-built-in entry))
       (should
+       (eq
+        (emacsvox-aural-feature-fragment-entry-collection entry)
+        'agent-shell))
+      (should
        (equal
         (emacsvox-aural-feature-fragment-entry-source entry)
         "emacsvox-aural-representative"))

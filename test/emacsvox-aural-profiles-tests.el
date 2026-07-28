@@ -24,9 +24,11 @@
          (emacsvox-aural-profile-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-enabled-feature-fragments nil)
+         (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-voice-palette-override nil)
          (emacsvox-aural-active-scheme-changed-hook nil)
+         (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-profile-applied-hook nil)
          (emacsvox-aural-spatial-enabled t)
@@ -110,7 +112,19 @@
   "A failed concrete sound switch restores every already changed setting."
   (emacsvox-test--with-aural-profiles
     (emacsvox-aural-register-profile (emacsvox-test--profile-data))
-    (let ((old-spatial emacsvox-aural-spatial-output))
+    (let ((old-spatial emacsvox-aural-spatial-output)
+          fragment-notifications
+          scheme-notifications)
+      (add-hook
+       'emacsvox-aural-feature-fragments-changed-hook
+       (lambda ()
+         (push
+          (copy-sequence emacsvox-aural-enabled-feature-fragments)
+          fragment-notifications)))
+      (add-hook
+       'emacsvox-aural-active-scheme-changed-hook
+       (lambda ()
+         (push emacsvox-aural-active-scheme scheme-notifications)))
       (cl-letf
           (((symbol-function 'emacsvox-sounds-select-theme)
             (lambda (&rest _) (error "sound switch failed"))))
@@ -119,10 +133,12 @@
       (should-not emacsvox-aural-enabled-feature-fragments)
       (should-not emacsvox-aural-voice-palette-override)
       (should (eq emacsvox-aural-spatial-output old-spatial))
-      (should (eq emacsvox-sounds-current-pack 'chimes)))))
+      (should (eq emacsvox-sounds-current-pack 'chimes))
+      (should-not fragment-notifications)
+      (should-not scheme-notifications))))
 
 (ert-deftest emacsvox-aural-profiles-persist-and-load-references ()
-  "Version 3 storage atomically preserves profiles referencing personal data."
+  "Current storage atomically preserves profiles referencing personal data."
   (emacsvox-test--with-aural-profiles
     (let* ((directory (make-temp-file "emacsvox-profiles-" t))
            (emacsvox-aural-schemes-file
@@ -137,7 +153,7 @@
              (eq
               (plist-get
                (emacsvox-aural-read-user-data) :schema-version)
-              4))
+              5))
             (setq emacsvox-aural-profile-registry
                   (make-hash-table :test #'eq))
             (emacsvox-aural-load-user-data)

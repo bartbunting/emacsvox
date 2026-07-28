@@ -283,7 +283,8 @@
   (dolist (data emacsvox-markdown-aural-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-markdown"))))
+       data :built-in t :source "emacsvox-aural-markdown"
+       :collection 'markdown))))
 
 (emacsvox-markdown-register-aural-presentation)
 
