@@ -881,7 +881,7 @@
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-next)
-                (should (equal spoken "Area, Presentation profiles"))
+                (should (equal spoken "Presentation profiles, Area"))
                 (emacsvox-aural-home-next-column)
                 (should
                  (string-prefix-p "Current status, " spoken))
@@ -1151,7 +1151,7 @@
         (kill-buffer "*Aural Feature Fragments*")))))
 
 (ert-deftest emacsvox-aural-fragment-manager-navigation-speaks-edges ()
-  "Fragment movement speaks titled cells and boundaries without repetition."
+  "Fragment movement speaks value-first cells and boundaries without repeats."
   (emacsvox-test--with-aural-tools
     (dolist (id '(first-fragment second-fragment))
       (emacsvox-aural-register-feature-fragment
@@ -1174,16 +1174,16 @@
                    ((symbol-function 'emacsvox-icon) #'ignore))
                 (emacsvox-aural-feature-fragments-previous)
                 (should
-                 (equal spoken "Option, General"))
+                 (equal spoken "General, Option"))
                 (emacsvox-aural-feature-fragments-previous)
                 (should
                  (equal spoken "Top of presentation option list."))
                 (emacsvox-aural-feature-fragments-next)
                 (should
-                 (equal spoken "Option, first fragment"))
+                 (equal spoken "first fragment, Option"))
                 (emacsvox-aural-feature-fragments-next)
                 (should
-                 (equal spoken "Option, second fragment"))
+                 (equal spoken "second fragment, Option"))
                 (emacsvox-aural-feature-fragments-next)
                 (should
                  (equal spoken "Bottom of presentation option list."))
@@ -1717,18 +1717,18 @@
                 (should (equal spoken "Top of scheme list."))
                 (emacsvox-aural-schemes-next)
                 (should (eq (tabulated-list-get-id) 'second))
-                (should (equal spoken "Scheme, second"))
+                (should (equal spoken "second, Scheme"))
                 (emacsvox-aural-schemes-next)
                 (should (eq (tabulated-list-get-id) 'second))
                 (should (equal spoken "Bottom of scheme list."))
                 (emacsvox-aural-schemes-previous)
                 (should (eq (tabulated-list-get-id) 'default))
-                (should (equal spoken "Scheme, default"))))))
+                (should (equal spoken "default, Scheme"))))))
       (when (get-buffer "*Aural Schemes*")
         (kill-buffer "*Aural Schemes*")))))
 
 (ert-deftest emacsvox-aural-semantic-list-navigation-speaks-titles-and-edges ()
-  "Semantic row and column movement announces titles and list boundaries."
+  "Semantic movement uses direction-aware order and announces boundaries."
   (emacsvox-test--with-aural-tools
     (unwind-protect
         (save-window-excursion
@@ -1754,7 +1754,7 @@
                 (should
                  (equal
                   spoken
-                  (format "Identifier, %s" second)))
+                  (format "%s, Identifier" second)))
                 (emacsvox-aural-semantics-next-column)
                 (should (string-prefix-p "Kind, " spoken))
                 (emacsvox-aural-semantics--goto last)

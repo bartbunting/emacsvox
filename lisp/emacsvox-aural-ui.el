@@ -184,8 +184,10 @@ identifier, or nil when the refreshed interface has no rows."
     (emacsvox-aural-ui--synchronize-window-points)
     selected))
 
-(defun emacsvox-aural-ui-tabulated-cell-description ()
-  "Return the current tabulated cell as titled spoken text."
+(defun emacsvox-aural-ui-tabulated-cell-description (&optional value-first)
+  "Return the current tabulated cell as titled spoken text.
+
+When VALUE-FIRST is non-nil, put the cell value before its column title."
   (let* ((entry
           (or
            (tabulated-list-get-entry)
@@ -195,16 +197,19 @@ identifier, or nil when the refreshed interface has no rows."
          (value (aref entry index))
          (value (if (listp value) (car value) value))
          (value (string-trim (format "%s" value))))
-    (format
-     "%s, %s"
-     name
-     (if (string-empty-p value) "blank" value))))
+    (let ((value (if (string-empty-p value) "blank" value)))
+      (if value-first
+          (format "%s, %s" value name)
+        (format "%s, %s" name value)))))
 
-(defun emacsvox-aural-ui-speak-current-cell ()
-  "Speak the current tabulated column title and value."
+(defun emacsvox-aural-ui-speak-current-cell (&optional value-first)
+  "Speak the current tabulated cell.
+
+Speak its column title first by default.  When VALUE-FIRST is non-nil, speak
+the cell value first."
   (interactive)
   (let ((description
-         (emacsvox-aural-ui-tabulated-cell-description)))
+         (emacsvox-aural-ui-tabulated-cell-description value-first)))
     (when (fboundp 'emacsvox-icon)
       (emacsvox-icon 'select-object))
     (if (fboundp 'tts-speak)
@@ -241,11 +246,10 @@ LIST-NAME and SPEAKER override the current buffer's configured values."
       (if (and (zerop residue) (tabulated-list-get-id))
           (progn
             (emacsvox-aural-ui-goto-tabulated-column column)
-            (funcall
-             (or
-              speaker
-              emacsvox-aural-ui-move-speaker
-              #'emacsvox-aural-ui-speak-current-cell))
+            (if-let* ((move-speaker
+                       (or speaker emacsvox-aural-ui-move-speaker)))
+                (funcall move-speaker)
+              (emacsvox-aural-ui-speak-current-cell t))
             (when emacsvox-aural-ui-after-move-function
               (funcall emacsvox-aural-ui-after-move-function))
             (emacsvox-aural-ui--synchronize-window-points)

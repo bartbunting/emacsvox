@@ -109,7 +109,7 @@
             (cdr binding))))))))
 
 (ert-deftest emacsvox-aural-sound-pack-manager-speaks-navigation ()
-  "Pack and cue navigation speak titled cells and explicit boundaries."
+  "Pack and cue navigation use direction-aware order and explicit boundaries."
   (emacsvox-test--with-sound-workbench
     (save-window-excursion
       (emacsvox-aural-list-sound-packs 'base)
@@ -122,7 +122,7 @@
             (emacsvox-aural-sound-packs-previous)
             (should (equal spoken "Top of sound pack list."))
             (emacsvox-aural-sound-packs-next)
-            (should (equal spoken "Pack, overlay"))
+            (should (equal spoken "overlay, Pack"))
             (emacsvox-aural-sound-packs-next-column)
             (should (equal spoken "Status, active")))))
       (emacsvox-aural-list-sound-pack-cues 'overlay)

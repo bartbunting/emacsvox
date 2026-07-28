@@ -89,6 +89,32 @@
       (should (equal spoken '(second)))
       (should (equal moved '(second))))))
 
+(ert-deftest emacsvox-aural-ui-cell-order-follows-movement-direction ()
+  "Rows speak value first while columns and explicit cells speak title first."
+  (with-temp-buffer
+    (emacsvox-test-aural-ui-mode)
+    (setq emacsvox-test-aural-ui-entries
+          '((first ["First" "one"])
+            (second ["Second" "two"])))
+    (emacsvox-aural-ui-refresh-tabulated
+     #'emacsvox-test-aural-ui--populate)
+    (let (spoken)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (push text spoken)))
+           ((symbol-function 'emacsvox-icon) #'ignore))
+        (emacsvox-aural-ui-next-row)
+        (emacsvox-aural-ui-next-column)
+        (emacsvox-aural-ui-speak-current-cell)
+        (emacsvox-aural-ui-previous-row))
+      (should
+       (equal
+        (nreverse spoken)
+        '("Second, Name"
+          "Value, two"
+          "Value, two"
+          "one, Value"))))))
+
 (ert-deftest emacsvox-aural-ui-refresh-preserves-compound-row-and-window-point ()
   "Refresh should preserve an equal row ID, column, and visible window point."
   (save-window-excursion
