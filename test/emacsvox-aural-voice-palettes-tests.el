@@ -303,6 +303,49 @@
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-navigation-announces-values ()
+  "Up and Down announce each setting together with its current value."
+  (emacsvox-test--with-voice-palettes
+    (emacsvox-aural-register-voice-palette-data
+     emacsvox-test--voice-palette-data)
+    (let (buffers spoken)
+      (unwind-protect
+          (save-window-excursion
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+                  (lambda ()
+                    '(:adapter outloud
+                      :dimensions
+                      (family average-pitch pitch-range stress richness))))
+                 ((symbol-function 'tts-speak)
+                  (lambda (text) (setq spoken text)))
+                 ((symbol-function 'emacsvox-icon) #'ignore))
+              (setq buffers (emacsvox-test--open-reading-voice-tuner 'aside))
+              (with-current-buffer (cadr buffers)
+                (setq
+                 emacsvox-aural-voice-tuner-working-style
+                 (plist-put
+                  (copy-tree emacsvox-aural-voice-tuner-working-style)
+                  :average-pitch 9))
+                (emacsvox-aural-voice-tuner-refresh 'family)
+                (setq spoken nil)
+                (emacsvox-aural-voice-tuner-next)
+                (should (eq (tabulated-list-get-id) 'average-pitch))
+                (should
+                 (equal
+                  spoken
+                  "Average Pitch 9. Supported By Outloud."))
+                (emacsvox-aural-voice-tuner-next)
+                (should (eq (tabulated-list-get-id) 'pitch-range))
+                (emacsvox-aural-voice-tuner-previous)
+                (should (eq (tabulated-list-get-id) 'average-pitch))
+                (should
+                 (equal
+                  spoken
+                  "Average Pitch 9. Supported By Outloud.")))))
+        (dolist (buffer buffers)
+          (when (buffer-live-p buffer) (kill-buffer buffer)))))))
+
 (ert-deftest emacsvox-aural-voice-tuner-adjusts-auditions-and-undoes ()
   "Adjustments remain temporary, audition immediately, and can be undone."
   (emacsvox-test--with-voice-palettes
@@ -387,7 +430,10 @@
      emacsvox-test--voice-palette-data)
     (let (buffers
           saved
-          dismissed)
+          dismissed
+          events
+          (refresh-source
+           (symbol-function 'emacsvox-aural-voice-tuner--refresh-source)))
       (unwind-protect
           (save-window-excursion
             (cl-letf
@@ -423,7 +469,12 @@
                  ((symbol-function 'emacsvox-aural-capture-context) #'ignore)
                  ((symbol-function 'quit-window)
                   (lambda (&optional _kill _window)
-                    (setq dismissed t)))
+                    (setq dismissed t)
+                    (push 'quit events)))
+                 ((symbol-function 'emacsvox-aural-voice-tuner--refresh-source)
+                  (lambda (&rest arguments)
+                    (push 'refresh events)
+                    (apply refresh-source arguments)))
                  ((symbol-function 'emacsvox-icon) #'ignore)
                  ((symbol-function 'emacsvox-speak-mode-line) #'ignore))
               (setq buffers (emacsvox-test--open-reading-voice-tuner 'aside))
@@ -447,7 +498,10 @@
                (emacsvox-aural-voice 'aside 'reading)
                :average-pitch)
               7))
-            (should dismissed))
+            (should dismissed)
+            (should (equal (nreverse events) '(quit refresh)))
+            (with-current-buffer (car buffers)
+              (should (eq (tabulated-list-get-id) 'aside))))
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 

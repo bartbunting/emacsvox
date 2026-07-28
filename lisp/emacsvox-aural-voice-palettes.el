@@ -1244,12 +1244,16 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-tuner-next ()
   "Move to and speak the next tunable dimension."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "voice settings"))
+  (emacsvox-aural-tools--move-tabulated-row
+   1 "voice settings"
+   #'emacsvox-aural-voice-tuner--speak-setting))
 
 (defun emacsvox-aural-voice-tuner-previous ()
   "Move to and speak the previous tunable dimension."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "voice settings"))
+  (emacsvox-aural-tools--move-tabulated-row
+   -1 "voice settings"
+   #'emacsvox-aural-voice-tuner--speak-setting))
 
 (defun emacsvox-aural-voice-tuner--setting-announcement (dimension)
   "Describe the current DIMENSION value and adapter support."
@@ -1262,6 +1266,18 @@ Return the compiled voice without dispatching the speech queue."
    (if (emacsvox-aural-voice-tuner--supported-p dimension)
        "."
      "; this setting is saved but is not applied in this audition.")))
+
+(defun emacsvox-aural-voice-tuner--speak-setting ()
+  "Speak the current setting name, value, and adapter support."
+  (let ((summary
+         (emacsvox-aural-voice-tuner--setting-announcement
+          (emacsvox-aural-voice-tuner--current-dimension))))
+    (when (fboundp 'emacsvox-icon)
+      (emacsvox-icon 'select-object))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
 
 (defun emacsvox-aural-voice-tuner-audition (&optional announcement)
   "Audition the unsaved working style after optional ANNOUNCEMENT."
@@ -1465,39 +1481,45 @@ ANNOUNCEMENT overrides the normal setting description."
     (emacsvox-aural-voice-tuner-audition
      "Restored the voice style from when the tuner opened.")))
 
-(defun emacsvox-aural-voice-tuner--refresh-source ()
-  "Refresh the source preview buffer after a tuner save."
-  (let ((source emacsvox-aural-voice-tuner-source-buffer)
-        (palette emacsvox-aural-voice-tuner-palette)
-        (voice emacsvox-aural-voice-tuner-voice))
-    (when (buffer-live-p source)
-      (with-current-buffer source
-        (when
-            (and
-             (derived-mode-p
-              'emacsvox-aural-voice-palette-previews-mode)
-             (eq
-              emacsvox-aural-voice-palette-previews-palette
-              palette))
-          (emacsvox-aural-voice-palette-previews-refresh voice))))))
+(defun emacsvox-aural-voice-tuner--refresh-source
+    (source palette voice)
+  "Refresh SOURCE after saving VOICE in PALETTE and keep VOICE selected."
+  (when (buffer-live-p source)
+    (with-current-buffer source
+      (when
+          (and
+           (derived-mode-p
+            'emacsvox-aural-voice-palette-previews-mode)
+           (eq
+            emacsvox-aural-voice-palette-previews-palette
+            palette))
+        (emacsvox-aural-voice-palette-previews-refresh voice)
+        (let ((position (point)))
+          (dolist (window (get-buffer-window-list source nil t))
+            (set-window-point window position)))))))
 
 (defun emacsvox-aural-voice-tuner-save ()
   "Atomically save the working style and return to the voice preview."
   (interactive)
-  (when emacsvox-aural-voice-tuner-dirty
-    (emacsvox-aural-voice-palettes--install-entry-definition
-     emacsvox-aural-voice-tuner-palette
-     emacsvox-aural-voice-tuner-voice
-     emacsvox-aural-voice-tuner-working-style)
-    (setq
-     emacsvox-aural-voice-tuner-original-definition
-     (copy-tree emacsvox-aural-voice-tuner-working-style)
-     emacsvox-aural-voice-tuner-initial-style
-     (copy-tree emacsvox-aural-voice-tuner-working-style)
-     emacsvox-aural-voice-tuner-history nil
-     emacsvox-aural-voice-tuner-dirty nil)
-    (emacsvox-aural-voice-tuner--refresh-source))
-  (emacsvox-aural-quit t))
+  (let ((source emacsvox-aural-voice-tuner-source-buffer)
+        (palette emacsvox-aural-voice-tuner-palette)
+        (voice emacsvox-aural-voice-tuner-voice)
+        saved)
+    (when emacsvox-aural-voice-tuner-dirty
+      (emacsvox-aural-voice-palettes--install-entry-definition
+       palette voice emacsvox-aural-voice-tuner-working-style)
+      (setq
+       emacsvox-aural-voice-tuner-original-definition
+       (copy-tree emacsvox-aural-voice-tuner-working-style)
+       emacsvox-aural-voice-tuner-initial-style
+       (copy-tree emacsvox-aural-voice-tuner-working-style)
+       emacsvox-aural-voice-tuner-history nil
+       emacsvox-aural-voice-tuner-dirty nil
+       saved t))
+    (emacsvox-aural-quit t)
+    (when saved
+      (emacsvox-aural-voice-tuner--refresh-source
+       source palette voice))))
 
 (defun emacsvox-aural-voice-tuner-quit ()
   "Cancel tuning, asking before discarding unsaved changes."

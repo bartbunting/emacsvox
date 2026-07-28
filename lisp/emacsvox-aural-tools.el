@@ -1155,8 +1155,11 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
     (message "%s" message))
   message)
 
-(defun emacsvox-aural-tools--move-tabulated-row (direction list-name)
-  "Move a tabulated row in DIRECTION within LIST-NAME and speak the cell."
+(defun emacsvox-aural-tools--move-tabulated-row
+    (direction list-name &optional speaker)
+  "Move a tabulated row in DIRECTION within LIST-NAME and announce it.
+
+SPEAKER defaults to `emacsvox-aural-tools--speak-tabulated-cell'."
   (let ((origin (point))
         (column (emacsvox-aural-tools--tabulated-column-index)))
     (beginning-of-line)
@@ -1164,7 +1167,9 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (if (and (zerop residue) (tabulated-list-get-id))
           (progn
             (emacsvox-aural-tools--goto-tabulated-column column)
-            (emacsvox-aural-tools--speak-tabulated-cell))
+            (funcall
+             (or speaker
+                 #'emacsvox-aural-tools--speak-tabulated-cell)))
         (goto-char origin)
         (emacsvox-aural-tools--tabulated-boundary
          (format
