@@ -208,19 +208,44 @@ The established icon-then-speech ordering is preserved."
   "Call ORIG-FUN with ARGUMENTS and present a Dired marking action.
 
 TARGET controls interactive feedback.  ICON, EVENT, and resulting STATE
-describe the entry at point before the command advances to the next row."
+describe the entry at point before the command advances to the next row.
+The next row is spoken before the action cue so its speech cannot cancel the
+cue on single-stream speech servers."
   (if (ems-interactive-p target)
       (let* ((facts (emacsvox-dired-action-facts event state))
              (context
               (emacsvox-aural-capture-context 'dired 'state-change))
              (result (apply orig-fun arguments)))
+        (emacsvox-dired-present-current
+         nil 'navigation 'focus-entered)
         (let ((emacsvox-aural-submission-context context))
           (emacsvox-dired--present-feedback
            facts 'state-change icon #'ignore))
-        (emacsvox-dired-present-current
-         nil 'navigation 'focus-entered)
         result)
     (apply orig-fun arguments)))
+
+(defun emacsvox--advice-dired-quit-window-around (orig-fun &rest arguments)
+  "Call ORIG-FUN and report an interactive dismissal originating in Dired."
+  (let* ((dired-p (derived-mode-p 'dired-mode))
+         (interactive-p
+          (and dired-p (ems-interactive-p 'quit-window)))
+         (context
+          (and
+           interactive-p
+           (emacsvox-aural-capture-context 'dired 'state-change)))
+         (result (apply orig-fun arguments)))
+    (when interactive-p
+      (let ((emacsvox-aural-submission-context context))
+        (emacsvox-dired--present-feedback
+         '(:role filesystem-listing
+           :events (filesystem-listing-closed))
+         'state-change 'close-object #'emacsvox-speak-mode-line)))
+    result))
+
+(advice-add
+ 'quit-window :around
+ #'emacsvox--advice-dired-quit-window-around
+ '((name . emacsvox-dired)))
 
 ;;;   advice:
 

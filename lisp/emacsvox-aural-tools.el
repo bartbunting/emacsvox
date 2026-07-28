@@ -3650,8 +3650,12 @@ SCOPE is `personal', `session', or `buffer'."
  'emacsvox-aural-voice-palette-changed-hook
  #'emacsvox-aural-home-refresh-if-live)
 
-(defun emacsvox-aural-concise-explanation (facts context)
-  "Return a concise spoken explanation of FACTS in CONTEXT."
+(defun emacsvox-aural-tools--concise-explanation
+    (facts context concrete-cues concrete-p)
+  "Return a concise explanation of FACTS and CONTEXT.
+
+When CONCRETE-P is non-nil, describe CONCRETE-CUES that actually survived
+resolution instead of the legacy cue that initiated resolution."
   (let (parts)
     (when-let* ((role (plist-get facts :role)))
       (push (emacsvox-aural-tools--humanize role) parts))
@@ -3679,10 +3683,15 @@ SCOPE is `personal', `session', or `buffer'."
               (emacsvox-aural-tools--humanize
                (plist-get facts keyword)))
              parts)))))
-    (when-let* ((cue (plist-get context :legacy-cue)))
-      (push
-       (format "legacy cue %s" (emacsvox-aural-tools--humanize cue))
-       parts))
+    (if concrete-p
+        (dolist (cue concrete-cues)
+          (push
+           (format "earcon %s" (emacsvox-aural-tools--humanize cue))
+           parts))
+      (when-let* ((cue (plist-get context :legacy-cue)))
+        (push
+         (format "legacy cue %s" (emacsvox-aural-tools--humanize cue))
+         parts)))
     (dolist (face (plist-get context :legacy-faces))
       (push
        (format "visual face %s" (emacsvox-aural-tools--humanize face))
@@ -3695,6 +3704,26 @@ SCOPE is `personal', `session', or `buffer'."
     (if parts
         (concat (string-join (nreverse (delete-dups parts)) ", ") ".")
       "Unannotated content.")))
+
+(defun emacsvox-aural-concise-explanation (facts context)
+  "Return a concise spoken explanation of FACTS in CONTEXT."
+  (emacsvox-aural-tools--concise-explanation facts context nil nil))
+
+(defun emacsvox-aural-concise-plan-explanation (plan)
+  "Return a concise explanation of the presentation actually in PLAN."
+  (let ((cues
+         (delete-dups
+          (delq
+           nil
+           (mapcar
+            #'emacsvox-aural-concrete-action-cue
+            (append
+             (emacsvox-aural-concrete-plan-before plan)
+             (emacsvox-aural-concrete-plan-after plan)))))))
+    (emacsvox-aural-tools--concise-explanation
+     (emacsvox-aural-concrete-plan-facts plan)
+     (emacsvox-aural-concrete-plan-context plan)
+     cues t)))
 
 (defun emacsvox-aural-tools--queue-training-explanation (text)
   "Queue training explanation TEXT in the configured training voice."
@@ -3714,10 +3743,7 @@ SCOPE is `personal', `session', or `buffer'."
 
 (defun emacsvox-aural-tools--training-presented (plan)
   "Retain a concise semantic explanation after concrete PLAN."
-  (let ((text
-         (emacsvox-aural-concise-explanation
-          (emacsvox-aural-concrete-plan-facts plan)
-          (emacsvox-aural-concrete-plan-context plan))))
+  (let ((text (emacsvox-aural-concise-plan-explanation plan)))
     (if (emacsvox-aural-tools--training-command-active-p)
         (push text emacsvox-aural-tools--pending-training-explanations)
       (emacsvox-aural-tools--queue-training-explanation text))))

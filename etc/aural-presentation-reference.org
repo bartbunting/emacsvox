@@ -167,6 +167,7 @@ Operational semantic contract version: =1=.
 | =field-kind= | =attribute= | =core= | =symbol= | =field= | - | - | - | - | - | - | The module-defined purpose of a structured field |
 | =filesystem-entry= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A file, directory, symbolic link, or other directory entry |
 | =filesystem-listing= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A directory or search-result listing of filesystem entries |
+| =filesystem-listing-closed= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem listing was dismissed |
 | =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
 | =focus-entered= | =event= | =core= | - | - | - | - | - | - | - | - | Navigation arrived at an aural object |
 | =folded= | =state= | =core= | - | - | - | - | - | - | - | - | Descendants of an object are hidden |

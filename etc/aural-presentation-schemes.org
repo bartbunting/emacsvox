@@ -1010,7 +1010,9 @@ played through a local adapter.  It queues concrete explanatory text directly
 and never recursively invokes semantic resolution.  During an interactive
 command, explanations are retained until =post-command-hook= so an
 icon-then-speech sequence cannot flush the icon's explanation before it is
-heard.  Training narration uses the palette-aware
+heard.  The explanation names the concrete earcon that survived rule
+composition, rather than a legacy cue that may have been replaced or
+suppressed.  Training narration uses the palette-aware
 =emacsvox-aural-training-voice=, which defaults to =annotate=, and returns to
 the default voice afterward.  Detailed inspection uses
 =emacsvox-explain-aural-presentation=.
@@ -2080,6 +2082,9 @@ Implemented details:
 - Dired navigation replaces the generic selection cue with =mark-object= when
   entering a marked entry, and the =dired-marked= filename face uses a distinct
   voice rather than leaving only the one-character marker voiced;
+- mark and unmark action cues follow the next-row speech so single-stream
+  servers cannot cancel them, while dismissing a Dired window emits a
+  mode-scoped =close-object= presentation;
 - optional mail-status, Dired-state, and Magit-visibility fragments register
   independently of optional package installation;
 - apart from the state-aware Dired correction above, existing spoken text, cue

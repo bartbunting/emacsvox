@@ -30,7 +30,8 @@
     (dired-mark :around emacsvox--advice-dired-mark-around)
     (dired-flag-file-deletion
      :around emacsvox--advice-dired-flag-file-deletion-around)
-    (dired-unmark :around emacsvox--advice-dired-unmark-around))
+    (dired-unmark :around emacsvox--advice-dired-unmark-around)
+    (quit-window :around emacsvox--advice-dired-quit-window-around))
   "Remaining hand-written Dired advice migrated to final native form.")
 
 (let ((module
@@ -99,10 +100,10 @@
         (emacsvox-aural-tools--pending-training-explanations nil)
         events)
     (cl-letf
-        (((symbol-function 'emacsvox-dired-entry-facts)
+         (((symbol-function 'emacsvox-dired-entry-facts)
           (lambda (&rest _)
             '(:role filesystem-entry :entry-kind file
-              :events (focus-entered))))
+              :events (focus-entered) :states (marked))))
          ((symbol-function 'process-live-p) (lambda (_) t))
          ((symbol-function 'emacsvox-sounds-play-concrete-cue)
           (lambda (&rest _) (push 'earcon events)))
@@ -138,7 +139,7 @@
         (code "RESET")
         (code "TRAINING")
         (text
-         "filesystem entry, focus entered, entry kind file, legacy cue select object, navigation occasion.")
+         "filesystem entry, focus entered, marked, entry kind file, earcon mark object, navigation occasion.")
         (code "RESET")
         dispatch)))))
 
@@ -351,7 +352,7 @@
     (should
      (equal
       (nreverse events)
-      '(mark original (icon delete-object) line unmark)))))
+      '(mark original line (icon delete-object) unmark)))))
 
 (ert-deftest emacsvox-dired-marking-freezes-the-action-target ()
   "The action cue keeps pre-command facts while next-row speech is navigation."
@@ -376,10 +377,88 @@
      (equal
       (nreverse events)
       '(original
+        next-row
         (action
          (:role filesystem-entry :entry-kind file
-          :events (entry-marked) :states (marked)))
-        next-row)))))
+          :events (entry-marked) :states (marked))))))))
+
+(ert-deftest emacsvox-dired-interactive-mark-actions-confirm-after-navigation ()
+  "Real interactive mark and unmark commands leave their cues audible."
+  (let* ((directory (make-temp-file "emacsvox-dired-actions-" t))
+         (first (expand-file-name "first.txt" directory))
+         (second (expand-file-name "second.txt" directory))
+         buffer
+         events)
+    (unwind-protect
+        (progn
+          (write-region "first" nil first nil 'silent)
+          (write-region "second" nil second nil 'silent)
+          (setq buffer (dired-noselect directory))
+          (with-current-buffer buffer
+            (cl-letf
+                (((symbol-function 'emacsvox-dired-present-current)
+                  (lambda (&rest _) (push 'next-row events)))
+                 ((symbol-function 'emacsvox-icon)
+                  (lambda (icon) (push (list 'icon icon) events))))
+              (dired-goto-file first)
+              (funcall-interactively #'dired-mark nil t)
+              (dired-goto-file first)
+              (funcall-interactively #'dired-unmark nil t))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory directory t))
+    (should
+     (equal
+      (nreverse events)
+      '(next-row
+        (icon mark-object)
+        next-row
+        (icon deselect-object))))))
+
+(ert-deftest emacsvox-dired-quit-feedback-is-mode-scoped ()
+  "Only an interactive quit originating in Dired gets Dired feedback."
+  (let ((ems--interactive-fn-name 'quit-window)
+        (calls 0)
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list
+              'icon icon emacsvox-aural-submission-facts
+              (plist-get emacsvox-aural-submission-context :module))
+             events)))
+         ((symbol-function 'emacsvox-speak-mode-line)
+          (lambda () (push 'mode-line events))))
+      (with-temp-buffer
+        (setq major-mode 'dired-mode)
+        (should
+         (eq
+          'dismissed
+          (emacsvox--advice-dired-quit-window-around
+           (lambda ()
+             (setq calls (1+ calls))
+             (setq major-mode 'fundamental-mode)
+             'dismissed)))))
+      (setq ems--interactive-fn-name 'quit-window)
+      (with-temp-buffer
+        (should
+         (eq
+          'ordinary
+          (emacsvox--advice-dired-quit-window-around
+           (lambda ()
+             (setq calls (1+ calls))
+             'ordinary))))))
+    (should (eq ems--interactive-fn-name 'quit-window))
+    (should (= calls 2))
+    (should
+     (equal
+      (nreverse events)
+      '((icon close-object
+         (:role filesystem-listing
+          :events (filesystem-listing-closed))
+         dired)
+        mode-line)))))
 
 (ert-deftest emacsvox-dired-query-cue-remains-unconditional ()
   "Dired queries always cue before deciding whether prompting is needed."

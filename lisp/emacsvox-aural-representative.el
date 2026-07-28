@@ -157,6 +157,12 @@
      :owner dired
      :occasions (navigation state-change inspection)
      :phases (before content after))
+    (filesystem-listing-closed
+     :kind event
+     :summary "A filesystem listing was dismissed"
+     :owner dired
+     :occasions (state-change)
+     :phases (before content after))
     (confirmation-request
      :kind role
      :summary "A prompt asking the user to confirm an action"

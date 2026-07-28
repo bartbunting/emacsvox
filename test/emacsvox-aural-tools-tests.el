@@ -770,7 +770,7 @@
           (code "RESET")
           (code "TRAINING")
           (text
-           "product identity, legacy cue emacsvox, notification occasion.")
+           "product identity, earcon emacsvox, notification occasion.")
           (code "RESET")
           dispatch))))))
 
