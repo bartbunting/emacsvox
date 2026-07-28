@@ -292,6 +292,204 @@
         (kill-buffer buffer)
         (kill-buffer source)))))
 
+(ert-deftest emacsvox-aural-tools-recent-feedback-browses-frozen-output ()
+  "Recent feedback exposes exact records for explanation and audition."
+  (emacsvox-test--with-aural-tools
+    (let* ((source (generate-new-buffer " *aural-feedback-source*"))
+           (source-name (buffer-name source))
+           (render
+            (emacsvox-aural--make-render-plan
+             :content
+             (emacsvox-aural--make-content-style :voice 'bolden)))
+           (cue
+            (emacsvox-aural--make-concrete-action
+             :id 'directory-cue
+             :kind 'cue
+             :cue 'item
+             :resource "/tmp/item.ogg"
+             :sample-id 'item-sample))
+           (old-plan
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "Documents"
+              :speak t
+              :voice-request 'lighten)
+             :facts
+             '(:role filesystem-entry :entry-kind directory)
+             :context
+             '(:module dired :mode dired-mode
+               :mode-lineage (dired-mode) :occasion navigation)
+             :source-plan render
+             :degradations nil
+             :rule-provenance nil))
+           (new-plan
+            (emacsvox-aural--make-concrete-plan
+             :before (list cue)
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "Network"
+              :speak t
+              :voice-request 'bolden)
+             :facts
+             '(:role filesystem-entry :entry-kind directory)
+             :context
+             '(:module dired :mode dired-mode
+               :mode-lineage (dired-mode) :occasion navigation)
+             :source-plan render
+             :degradations '((:reason unsupported-space))
+             :rule-provenance
+             '((:id directory-rule
+                :semantic-matches
+                ((:kind role :selected object :actual filesystem-entry
+                  :distance 1))))))
+           (old-record
+            (emacsvox-aural--make-presentation-record
+             :id 1
+             :queued-at (seconds-to-time 100)
+             :plan old-plan
+             :source-buffer-name source-name
+             :source-position 1))
+           (new-record
+            (emacsvox-aural--make-presentation-record
+             :id 2
+             :queued-at (seconds-to-time 200)
+             :plan new-plan
+             :source-buffer-name source-name
+             :source-position 2))
+           spoken explained replayed auditioned remapped)
+      (setq
+       emacsvox-aural-presentation-history
+       (list new-record old-record))
+      (unwind-protect
+          (save-window-excursion
+            (with-current-buffer source
+              (emacsvox-aural-list-recent-feedback))
+            (with-current-buffer "*Recent Aural Feedback*"
+              (should
+               (derived-mode-p 'emacsvox-aural-recent-feedback-mode))
+              (should (eq emacsvox-aural-ui-source-buffer source))
+              (should
+               (equal
+                (mapcar #'car tabulated-list-entries)
+                '(2 1)))
+              (should (= (tabulated-list-get-id) 2))
+              (should
+               (eq
+                (key-binding (kbd "RET"))
+                #'emacsvox-aural-recent-feedback-explain))
+              (should
+               (eq
+                (key-binding (kbd "P"))
+                #'emacsvox-aural-recent-feedback-replay))
+              (should
+               (eq
+                (key-binding (kbd "p"))
+                #'emacsvox-aural-ui-previous-row))
+              (should
+               (eq
+                (key-binding (kbd "c"))
+                #'emacsvox-aural-recent-feedback-audition-cues))
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text))))
+                (emacsvox-aural-recent-feedback-speak-current))
+              (dolist
+                  (detail
+                   '("Network"
+                     "filesystem entry"
+                     "Voice bolden"
+                     "Earcons item"
+                     "1 degradation"
+                     "1 semantic fallback"))
+                (should (string-match-p detail spoken)))
+              (cl-letf
+                  (((symbol-function
+                     'emacsvox-aural-tools--display-explanation)
+                    (lambda (explanation &rest _)
+                      (setq explained explanation)))
+                   ((symbol-function 'emacsvox-aural-preview-play-plan)
+                    (lambda (plan) (setq replayed plan)))
+                   ((symbol-function 'emacsvox-aural-preview-play-cues)
+                    (lambda (cues) (setq auditioned cues)))
+                   ((symbol-function
+                     'emacsvox-aural-remap-voice-at-point)
+                    (lambda (&optional record)
+                      (setq remapped record))))
+                (emacsvox-aural-recent-feedback-explain)
+                (should
+                 (eq
+                  (emacsvox-aural-explanation-basis explained)
+                  'exact-queued))
+                (should
+                 (= (emacsvox-aural-explanation-presentation-id explained)
+                    2))
+                (emacsvox-aural-recent-feedback-replay)
+                (should (eq replayed new-plan))
+                (emacsvox-aural-recent-feedback-audition-cues)
+                (should (equal auditioned (list cue)))
+                (emacsvox-aural-recent-feedback-remap-voice)
+                (should (eq remapped new-record)))))
+        (when (get-buffer "*Recent Aural Feedback*")
+          (kill-buffer "*Recent Aural Feedback*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-tools-record-remap-requires-matching-source ()
+  "Historical remapping never guesses a live buffer from a retained name."
+  (emacsvox-test--with-aural-tools
+    (let* ((source (generate-new-buffer " *aural-record-source*"))
+           (plan
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "Network" :speak t :voice-request 'bolden)
+             :facts
+             '(:role filesystem-entry :entry-kind directory)
+             :context '(:module dired :mode dired-mode)
+             :source-plan
+             (emacsvox-aural--make-render-plan
+              :content
+              (emacsvox-aural--make-content-style :voice 'bolden))))
+           (record
+            (emacsvox-aural--make-presentation-record
+             :id 1
+             :queued-at (current-time)
+             :plan plan
+             :source-buffer-name (buffer-name source))))
+      (unwind-protect
+          (progn
+            (with-current-buffer source
+              (should
+               (eq
+                (plist-get
+                 (emacsvox-aural-tools--remap-source-input record)
+                 :source)
+                source)))
+            (with-temp-buffer
+              (should-not
+               (plist-get
+                (emacsvox-aural-tools--remap-source-input record)
+                :source)))
+            (let (choices)
+              (cl-letf
+                  (((symbol-function 'completing-read)
+                    (lambda (_prompt collection &rest _)
+                      (setq choices collection)
+                      "always (personal)")))
+                (should
+                 (eq
+                  (emacsvox-aural-tools--voice-remap-scope nil)
+                  'personal)))
+              (should-not (member "this buffer" choices))))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-tools-recent-feedback-reports-empty-history ()
+  "Opening recent feedback explains when no record is retained."
+  (emacsvox-test--with-aural-tools
+    (should-error
+     (emacsvox-aural-list-recent-feedback)
+     :type 'user-error)))
+
 (ert-deftest emacsvox-aural-tools-explain-and-preview-visual-faces ()
   "Point diagnosis and preview preserve ordered face compatibility context."
   (emacsvox-test--with-aural-tools
@@ -915,14 +1113,15 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain remap profiles schemes voices features face-presentation
-                  buffer-rules semantics sounds spatial spatial-settings
-                  training diagnostics)))
+                '(explain remap recent-feedback profiles schemes voices
+                  features face-presentation buffer-rules semantics sounds
+                  spatial spatial-settings training diagnostics)))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
                      ("x" . emacsvox-aural-home-explain)
                      ("r" . emacsvox-aural-home-remap-voice)
+                     ("H" . emacsvox-aural-home-recent-feedback)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
                      ("?" . emacsvox-aural-home-help)))
@@ -1003,6 +1202,8 @@
                 (emacsvox-aural-home-next)
                 (should (equal spoken "Remap voice at point, Area"))
                 (emacsvox-aural-home-next)
+                (should (equal spoken "Recent aural feedback, Area"))
+                (emacsvox-aural-home-next)
                 (should (equal spoken "Presentation profiles, Area"))
                 (emacsvox-aural-home-next-column)
                 (should
@@ -1021,6 +1222,7 @@
         emacsvox-aural-semantics-mode-map
         emacsvox-aural-schemes-mode-map
         emacsvox-aural-feature-fragments-mode-map
+        emacsvox-aural-recent-feedback-mode-map
         emacsvox-aural-voice-palettes-mode-map
         emacsvox-aural-voice-palette-previews-mode-map
         emacsvox-aural-voice-tuner-mode-map
@@ -1037,6 +1239,7 @@
          emacsvox-aural-semantics-mode
          emacsvox-aural-schemes-mode
          emacsvox-aural-feature-fragments-mode
+         emacsvox-aural-recent-feedback-mode
          emacsvox-aural-voice-palettes-mode
          emacsvox-aural-voice-palette-previews-mode))
     (with-temp-buffer

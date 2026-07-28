@@ -44,9 +44,11 @@ derived mode, session, or individual buffer.
 
 Use =M-x emacsvox-aural=, or =C-e H=, to open the spoken aural home.  It
 reports current status and routes to saved profiles, schemes, feature
-fragments, buffer-local rules, semantic vocabulary, sound packs, spatial
-controls, training, and the Aural Doctor.  From an ordinary buffer, =C-e E=
-always runs
+fragments, recent exact feedback, buffer-local rules, semantic vocabulary,
+sound packs, spatial controls, training, and the Aural Doctor.  Press =H= in
+Aural Home, or run =M-x emacsvox-aural-list-recent-feedback=, to browse,
+explain, replay, audition, or remap one of the retained presentations.  From
+an ordinary buffer, =C-e E= always runs
 =emacsvox-aural-explain-presentation= at point so presentation problems can
 be inspected directly.  Press =h= in any aural manager or editor to return
 home.

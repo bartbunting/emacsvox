@@ -1737,38 +1737,65 @@ always identify whether they describe heard output or a simulation."
        explanation t occasion-counts))
     explanation))
 
-(defun emacsvox-aural-tools--remap-source-input ()
-  "Return the latest presentation input for the current ordinary source.
+(defun emacsvox-aural-tools--remap-source-input (&optional record)
+  "Return presentation input for optional frozen RECORD or the current source.
 
-Prefer the exact last queued presentation because it retains the voice and
-semantic context the user actually heard.  Fall back to inspectable facts at
-point when no queued presentation is available."
-  (let ((source (emacsvox-aural-inspection-source-buffer)))
-    (unless source
-      (user-error "No live source buffer is available"))
-    (with-current-buffer source
-      (if-let* ((record (emacsvox-aural-last-presentation source)))
-          (let* ((concrete (emacsvox-aural-presentation-record-plan record))
-                 (render (emacsvox-aural-concrete-plan-source-plan concrete)))
-            (list
-             :source source
-             :facts (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
-             :context
-             (copy-tree (emacsvox-aural-concrete-plan-context concrete))
-             :render render))
-        (let* ((facts (emacsvox-aural-facts-at-point))
-               (_
-                (unless facts
-                  (user-error
-                   "No presentation is recorded here; move away and back, then retry")))
-               (context (emacsvox-aural-context-at-point))
-               (explanation (emacsvox-aural-explain facts context)))
+For RECORD, use its exact frozen voice and semantic context.  Associate it
+with the current inspection source only when the buffer name still matches;
+history deliberately does not retain source buffers.  Without RECORD, prefer
+the latest exact presentation from the current source and fall back to
+inspectable facts at point."
+  (if record
+      (progn
+        (unless (emacsvox-aural-presentation-record-p record)
+          (user-error "Not an aural presentation record: %S" record))
+        (let* ((concrete
+                (emacsvox-aural-presentation-record-plan record))
+               (source
+                (emacsvox-aural-inspection-source-buffer))
+               (source
+                (and
+                 source
+                 (equal
+                  (buffer-name source)
+                  (emacsvox-aural-presentation-record-source-buffer-name
+                   record))
+                 source)))
           (list
            :source source
-           :facts (copy-tree facts)
-           :context (copy-tree context)
-           :render
-           (emacsvox-aural-explanation-render-plan explanation)))))))
+           :facts (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
+           :context
+           (copy-tree (emacsvox-aural-concrete-plan-context concrete))
+           :render (emacsvox-aural-concrete-plan-source-plan concrete))))
+    (let ((source (emacsvox-aural-inspection-source-buffer)))
+      (unless source
+        (user-error "No live source buffer is available"))
+      (with-current-buffer source
+        (if-let* ((record (emacsvox-aural-last-presentation source)))
+            (let* ((concrete
+                    (emacsvox-aural-presentation-record-plan record))
+                   (render
+                    (emacsvox-aural-concrete-plan-source-plan concrete)))
+              (list
+               :source source
+               :facts
+               (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
+               :context
+               (copy-tree (emacsvox-aural-concrete-plan-context concrete))
+               :render render))
+          (let* ((facts (emacsvox-aural-facts-at-point))
+                 (_
+                  (unless facts
+                    (user-error
+                     "No presentation is recorded here; move away and back, then retry")))
+                 (context (emacsvox-aural-context-at-point))
+                 (explanation (emacsvox-aural-explain facts context)))
+            (list
+             :source source
+             :facts (copy-tree facts)
+             :context (copy-tree context)
+             :render
+             (emacsvox-aural-explanation-render-plan explanation))))))))
 
 (defun emacsvox-aural-tools--voice-remap-selector (facts context)
   "Derive a stable object selector from FACTS and CONTEXT.
@@ -1862,12 +1889,16 @@ facts do not distinguish the object."
         (emacsvox-aural-effective-voice-entries palette))))
      #'string-lessp)))
 
-(defun emacsvox-aural-tools--voice-remap-scope ()
-  "Read and return a rule-layer scope for a point voice override."
+(defun emacsvox-aural-tools--voice-remap-scope (source-available)
+  "Read a voice-override scope.
+
+Offer buffer-local persistence only when SOURCE-AVAILABLE is non-nil."
   (pcase
       (completing-read
        "Keep this voice change: "
-       '("always (personal)" "this Emacs session" "this buffer")
+       (append
+        '("always (personal)" "this Emacs session")
+        (when source-available '("this buffer")))
        nil 'must-match nil nil "always (personal)")
     ("always (personal)" 'personal)
     ("this Emacs session" 'session)
@@ -1905,16 +1936,20 @@ facts do not distinguish the object."
       (delq nil parts)
       "-"))))
 
-(defun emacsvox-aural-remap-voice-at-point ()
-  "Prepare a scoped named-voice override for the presentation at point.
+(defun emacsvox-aural-remap-voice-at-point (&optional record)
+  "Prepare a scoped named-voice override for RECORD or presentation at point.
 
-The latest presentation heard in the source buffer supplies exact facts and
-context.  The generated rule ignores transient events and occasions, but
-retains object kind, state, and provider identity.  It opens unsaved in the
-advanced rule editor so the selector can be reviewed or refined before `s'
-saves it."
+When RECORD is non-nil, use that frozen presentation from recent feedback.
+Otherwise the latest presentation heard in the source buffer supplies exact
+facts and context.  The generated rule ignores transient events and
+occasions, but retains object kind, state, and provider identity.  It opens
+unsaved in the advanced rule editor so the selector can be reviewed or
+  refined before `s' saves it."
   (interactive)
-  (let* ((input (emacsvox-aural-tools--remap-source-input))
+  (let* ((input
+          (if record
+              (emacsvox-aural-tools--remap-source-input record)
+            (emacsvox-aural-tools--remap-source-input)))
          (facts (plist-get input :facts))
          (context (plist-get input :context))
          (render (plist-get input :render))
@@ -1946,7 +1981,7 @@ saves it."
          (voice
           (unless (or (string-empty-p answer) (string= answer "default"))
             (intern answer)))
-         (scope (emacsvox-aural-tools--voice-remap-scope))
+         (scope (emacsvox-aural-tools--voice-remap-scope source))
          (rule
           (list
            :id (emacsvox-aural-tools--voice-remap-rule-id scope selector)
@@ -1957,6 +1992,341 @@ saves it."
     (message
      "Prepared %s voice override for %s; review it and press s to save"
      scope description)))
+
+(defun emacsvox-aural-recent-feedback--record (&optional id)
+  "Return the retained feedback record for optional row ID."
+  (let ((id
+         (or id
+             (tabulated-list-get-id)
+             (user-error "Move to a recent feedback row first"))))
+    (or
+     (cl-find
+      id emacsvox-aural-presentation-history
+      :key #'emacsvox-aural-presentation-record-id
+      :test #'eql)
+     (user-error
+      "Feedback record %s has expired; press g to refresh" id))))
+
+(defun emacsvox-aural-recent-feedback--actions (record)
+  "Return the ordered before and after actions from RECORD."
+  (let ((plan (emacsvox-aural-presentation-record-plan record)))
+    (append
+     (emacsvox-aural-concrete-plan-before plan)
+     (emacsvox-aural-concrete-plan-after plan))))
+
+(defun emacsvox-aural-recent-feedback--cues (record)
+  "Return the concrete cue actions from RECORD."
+  (cl-remove-if-not
+   (lambda (action)
+     (eq (emacsvox-aural-concrete-action-kind action) 'cue))
+   (emacsvox-aural-recent-feedback--actions record)))
+
+(defun emacsvox-aural-recent-feedback--clean-text (text &optional width)
+  "Return single-line TEXT, optionally truncated to WIDTH."
+  (let ((text
+         (string-trim
+          (replace-regexp-in-string
+           "[[:space:]\n\r]+" " " (or text "")))))
+    (if (and width (> (string-width text) width))
+        (truncate-string-to-width text width nil nil "...")
+      text)))
+
+(defun emacsvox-aural-recent-feedback--content (record)
+  "Return a concise description of RECORD's exact content."
+  (let* ((plan (emacsvox-aural-presentation-record-plan record))
+         (content (emacsvox-aural-concrete-plan-content plan))
+         (text
+          (emacsvox-aural-recent-feedback--clean-text
+           (emacsvox-aural-concrete-content-text content)
+           72))
+         (speech
+          (cl-remove-if-not
+           (lambda (action)
+             (eq (emacsvox-aural-concrete-action-kind action) 'speech))
+           (emacsvox-aural-recent-feedback--actions record))))
+    (cond
+     ((and
+       (emacsvox-aural-concrete-content-speak content)
+       (not (string-empty-p text)))
+      text)
+     ((not (string-empty-p text))
+      (format "Content suppressed: %s" text))
+     (speech
+      (format
+       "Speech: %s"
+       (mapconcat
+        (lambda (action)
+          (emacsvox-aural-recent-feedback--clean-text
+           (emacsvox-aural-concrete-action-text action)))
+        speech ", ")))
+     ((emacsvox-aural-recent-feedback--cues record) "Earcon only")
+     ((cl-some
+       (lambda (action)
+         (eq (emacsvox-aural-concrete-action-kind action) 'pause))
+       (emacsvox-aural-recent-feedback--actions record))
+      "Pause only")
+     (t "No audible output"))))
+
+(defun emacsvox-aural-recent-feedback--voice (record)
+  "Return a concise exact voice description for RECORD."
+  (let* ((content
+          (emacsvox-aural-concrete-plan-content
+           (emacsvox-aural-presentation-record-plan record)))
+         (request
+          (emacsvox-aural-concrete-content-voice-request content)))
+    (cond
+     ((not (emacsvox-aural-concrete-content-speak content)) "suppressed")
+     ((null request) "default")
+     ((symbolp request) (emacsvox-aural-tools--humanize request))
+     ((emacsvox-aural-voice-style-p request)
+      (cond
+       ((plist-get request :preset)
+        (format
+         "%s preset"
+         (emacsvox-aural-tools--humanize
+          (plist-get request :preset))))
+       ((plist-get request :family)
+        (format
+         "%s base voice"
+         (emacsvox-aural-tools--humanize
+          (plist-get request :family))))
+       (t "custom voice")))
+     (t (format "%s" request)))))
+
+(defun emacsvox-aural-recent-feedback--cue-summary (record)
+  "Return the ordered earcon names from RECORD."
+  (if-let* ((cues (emacsvox-aural-recent-feedback--cues record)))
+      (mapconcat
+       (lambda (action)
+         (emacsvox-aural-tools--humanize
+          (emacsvox-aural-concrete-action-cue action)))
+       cues ", ")
+    "none"))
+
+(defun emacsvox-aural-recent-feedback--semantic-fallback-count (record)
+  "Return the number of semantic fallback matches retained in RECORD."
+  (cl-loop
+   for rule in
+   (emacsvox-aural-concrete-plan-rule-provenance
+    (emacsvox-aural-presentation-record-plan record))
+   sum
+   (cl-count-if
+    (lambda (detail)
+      (let ((distance (plist-get detail :distance)))
+        (and (numberp distance) (> distance 0))))
+    (plist-get rule :semantic-matches))))
+
+(defun emacsvox-aural-recent-feedback--status (record)
+  "Return fallback and degradation status for RECORD."
+  (let* ((plan (emacsvox-aural-presentation-record-plan record))
+         (degradations
+          (length (emacsvox-aural-concrete-plan-degradations plan)))
+         (fallbacks
+          (emacsvox-aural-recent-feedback--semantic-fallback-count
+           record))
+         parts)
+    (when (> degradations 0)
+      (push
+       (format
+        "%d %s"
+        degradations
+        (if (= degradations 1) "degradation" "degradations"))
+       parts))
+    (when (> fallbacks 0)
+      (push
+       (format
+        "%d semantic %s"
+        fallbacks
+        (if (= fallbacks 1) "fallback" "fallbacks"))
+       parts))
+    (if parts
+        (string-join (nreverse parts) ", ")
+      "ok")))
+
+(defun emacsvox-aural-recent-feedback--entry (record)
+  "Return a tabulated-list entry for RECORD."
+  (let* ((plan (emacsvox-aural-presentation-record-plan record))
+         (facts (emacsvox-aural-concrete-plan-facts plan))
+         (context (emacsvox-aural-concrete-plan-context plan)))
+    (list
+     (emacsvox-aural-presentation-record-id record)
+     (vector
+      (emacsvox-aural-recent-feedback--content record)
+      (emacsvox-aural-tools--facts-description facts context)
+      (emacsvox-aural-recent-feedback--clean-text
+       (or
+        (emacsvox-aural-presentation-record-source-buffer-name record)
+        "unknown"))
+      (emacsvox-aural-tools--humanize
+       (or (plist-get context :occasion) 'unknown))
+      (emacsvox-aural-recent-feedback--voice record)
+      (emacsvox-aural-recent-feedback--cue-summary record)
+      (emacsvox-aural-recent-feedback--status record)
+      (format-time-string
+       "%H:%M:%S"
+       (emacsvox-aural-presentation-record-queued-at record))))))
+
+(defun emacsvox-aural-recent-feedback--entries ()
+  "Return newest-first tabulated entries for retained feedback."
+  (mapcar
+   #'emacsvox-aural-recent-feedback--entry
+   emacsvox-aural-presentation-history))
+
+(defun emacsvox-aural-recent-feedback-refresh (&optional id)
+  "Refresh recent feedback, preserving optional record ID."
+  (interactive)
+  (emacsvox-aural-ui-refresh-tabulated
+   (lambda ()
+     (setq
+      tabulated-list-entries
+      (emacsvox-aural-recent-feedback--entries)))
+   id
+   (when-let* ((record (car emacsvox-aural-presentation-history)))
+     (emacsvox-aural-presentation-record-id record))))
+
+(defun emacsvox-aural-recent-feedback-speak-current ()
+  "Speak all useful fields for the feedback record at point."
+  (interactive)
+  (let* ((entry
+          (or
+           (tabulated-list-get-entry)
+           (user-error "Move to a recent feedback row first")))
+         (summary
+          (format
+           (concat
+            "%s. Object %s. Source %s. Occasion %s. Voice %s. "
+            "Earcons %s. Status %s. Heard at %s.")
+           (aref entry 0)
+           (aref entry 1)
+           (aref entry 2)
+           (aref entry 3)
+           (aref entry 4)
+           (aref entry 5)
+           (aref entry 6)
+           (aref entry 7))))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-recent-feedback-explain ()
+  "Explain the exact frozen feedback record at point."
+  (interactive)
+  (emacsvox-aural-tools--display-explanation
+   (emacsvox-aural-explain-record
+    (emacsvox-aural-recent-feedback--record))
+   t))
+
+(defun emacsvox-aural-recent-feedback-replay ()
+  "Replay the complete frozen presentation at point."
+  (interactive)
+  (let* ((record (emacsvox-aural-recent-feedback--record))
+         (id (emacsvox-aural-presentation-record-id record)))
+    (emacsvox-aural-preview-play-plan
+     (emacsvox-aural-presentation-record-plan record))
+    (emacsvox-aural-recent-feedback-refresh id)
+    (emacsvox-aural-preview-message
+     "Replayed aural presentation %s" id)
+    record))
+
+(defun emacsvox-aural-recent-feedback-audition-cues ()
+  "Audition only the exact earcons in the feedback record at point."
+  (interactive)
+  (let* ((record (emacsvox-aural-recent-feedback--record))
+         (cues (emacsvox-aural-recent-feedback--cues record)))
+    (unless cues
+      (user-error "This feedback record contains no earcons"))
+    (emacsvox-aural-preview-play-cues cues)
+    (emacsvox-aural-preview-message
+     "Auditioning %s"
+     (emacsvox-aural-recent-feedback--cue-summary record))
+    cues))
+
+(defun emacsvox-aural-recent-feedback-remap-voice ()
+  "Prepare a voice override from the frozen feedback record at point."
+  (interactive)
+  (emacsvox-aural-remap-voice-at-point
+   (emacsvox-aural-recent-feedback--record)))
+
+(defun emacsvox-aural-recent-feedback-help ()
+  "Display and speak recent aural feedback help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Recent Aural Feedback\n\n"
+      "Each row is one exact frozen presentation that was actually queued.\n"
+      "The browser never re-resolves it using the current configuration.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
+      "SPC speak record     RET or e explain exact output\n"
+      "P replay all         c audition only its earcons\n"
+      "r prepare voice remap from this record\n"
+      "g refresh            h aural home\n"
+      "q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode
+    emacsvox-aural-recent-feedback-mode
+    emacsvox-aural-tabulated-mode
+  "Aural-Feedback"
+  "Spoken browser for exact recently queued aural presentations."
+  (emacsvox-aural-ui-configure-tabulated
+   "recent aural feedback"
+   #'emacsvox-aural-recent-feedback-speak-current
+   #'emacsvox-aural-recent-feedback-refresh)
+  (setq
+   tabulated-list-format
+   [("Content" 34 nil)
+    ("Object" 32 nil)
+    ("Source" 22 nil)
+    ("Occasion" 14 nil)
+    ("Voice" 18 nil)
+    ("Earcons" 24 nil)
+    ("Status" 24 nil)
+    ("Time" 8 nil)])
+  (setq tabulated-list-padding 2)
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-recent-feedback-refresh nil t)
+  (tabulated-list-init-header))
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-recent-feedback-explain)
+       ("e" . emacsvox-aural-recent-feedback-explain)
+       ("P" . emacsvox-aural-recent-feedback-replay)
+       ("c" . emacsvox-aural-recent-feedback-audition-cues)
+       ("r" . emacsvox-aural-recent-feedback-remap-voice)
+       ("h" . emacsvox-aural)
+       ("?" . emacsvox-aural-recent-feedback-help)))
+  (define-key
+   emacsvox-aural-recent-feedback-mode-map
+   (kbd (car binding))
+   (cdr binding)))
+
+(defun emacsvox-aural-list-recent-feedback (&optional source-buffer)
+  "Open the spoken browser for exact retained aural feedback.
+
+SOURCE-BUFFER supplies the ordinary source to retain for navigation and
+possible buffer-local remapping.  History itself contains only frozen data,
+buffer names, and positions."
+  (interactive)
+  (unless emacsvox-aural-presentation-history
+    (user-error
+     "No recent aural feedback is retained; history limit is %s"
+     emacsvox-aural-presentation-history-limit))
+  (let* ((source
+          (emacsvox-aural-inspection-remember-source-buffer
+           (or source-buffer (current-buffer))))
+         (buffer (get-buffer-create "*Recent Aural Feedback*")))
+    (with-current-buffer buffer
+      (emacsvox-aural-recent-feedback-mode)
+      (emacsvox-aural-inspection-attach-source source)
+      (emacsvox-aural-recent-feedback-refresh))
+    (emacsvox-aural-ui-pop-to-buffer buffer)
+    buffer))
 
 (defun emacsvox-aural-tools--fragment-rules (fragment)
   "Return the compiled presentation rules for feature FRAGMENT."
@@ -3785,6 +4155,20 @@ announce the selected example after displaying the buffer."
         #'symbol-name emacsvox-aural-enabled-feature-fragments ", "))
     "none enabled"))
 
+(defun emacsvox-aural-home--recent-feedback-status ()
+  "Return concise status for retained aural feedback."
+  (cond
+   ((and
+     (natnump emacsvox-aural-presentation-history-limit)
+     (zerop emacsvox-aural-presentation-history-limit))
+    "disabled")
+   (emacsvox-aural-presentation-history
+    (format
+     "%d of %s retained"
+     (length emacsvox-aural-presentation-history)
+     emacsvox-aural-presentation-history-limit))
+   (t "none retained")))
+
 (defun emacsvox-aural-home--face-presentation-status ()
   "Return face-scheme and source-buffer Voice Lock status."
   (let ((source (emacsvox-aural-home--source-buffer)))
@@ -3848,6 +4232,12 @@ announce the selected example after displaying the buffer."
       (vector
        "Remap voice at point" source-name
        "Prepare a persistent, session, or buffer voice override for the current item"))
+     (list
+      'recent-feedback
+      (vector
+       "Recent aural feedback"
+       (emacsvox-aural-home--recent-feedback-status)
+       "Browse, explain, replay, audition, and remap exact presentations that were heard"))
      (list
       'profiles
       (vector
@@ -3991,6 +4381,12 @@ announce the selected example after displaying the buffer."
   (emacsvox-aural-home--call-in-source
    #'emacsvox-aural-remap-voice-at-point))
 
+(defun emacsvox-aural-home-recent-feedback ()
+  "Open exact retained presentations from Aural Home."
+  (interactive)
+  (emacsvox-aural-list-recent-feedback
+   (emacsvox-aural-home--source-buffer)))
+
 (defun emacsvox-aural-home-profiles ()
   "Open the complete presentation-profile manager."
   (interactive)
@@ -4019,6 +4415,8 @@ announce the selected example after displaying the buffer."
      (emacsvox-aural-home-explain))
     ('remap
      (emacsvox-aural-home-remap-voice))
+    ('recent-feedback
+     (emacsvox-aural-home-recent-feedback))
     ('profiles (emacsvox-aural-home-profiles))
     ('schemes (emacsvox-aural-list-schemes))
     ('voices (emacsvox-aural-home-voice-palettes))
@@ -4059,6 +4457,7 @@ announce the selected example after displaying the buffer."
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
       "x explain at point   r remap voice at point\n"
+      "H recent feedback\n"
       "P presentation profiles\n"
       "V voice palettes     v face rules toggle\n"
       "D aural doctor\n"
@@ -4097,6 +4496,7 @@ announce the selected example after displaying the buffer."
      '(("RET" . emacsvox-aural-home-activate)
        ("x" . emacsvox-aural-home-explain)
        ("r" . emacsvox-aural-home-remap-voice)
+       ("H" . emacsvox-aural-home-recent-feedback)
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)
        ("v" . emacsvox-aural-home-toggle-face-presentation)

@@ -1017,6 +1017,10 @@ implemented discovery and management commands are:
   selector without transient events or occasions, choose a named palette
   voice and persistence scope, and open the generated override unsaved for
   review;
+- =emacsvox-aural-list-recent-feedback=: browse the bounded newest-first
+  history of exact frozen presentations; explain, replay, or audition the
+  earcons of any retained record, and start a voice remap from that record
+  without requiring the original feedback to be reproduced;
 - =emacsvox-describe-aural-spatial-capabilities=: show speech, ordered-cue,
   local-cue, final-output, and user-policy spatial settings;
 - =emacsvox-preview-aural-rule=: render a rule against representative or
@@ -1084,7 +1088,8 @@ source for contextual explanation and buffer-local editing.  The first row is
 =Explain at point=; =C-e E= invokes the same
 =emacsvox-aural-explain-presentation= diagnosis directly from an ordinary
 buffer.  The next row is =Remap voice at point=; =r= invokes it from anywhere
-in the home.
+in the home.  The third row is =Recent aural feedback=; =H= opens the exact
+presentation history without changing the remembered source.
 
 The normal point-remapping workflow is:
 
@@ -1101,6 +1106,17 @@ follows Dired directories rather than one arrow-key action.  The resulting
 semantic override supersedes the compatibility =dired-directory= face
 mapping without changing that global face table.
 
+The recent-feedback browser displays exact spoken content, semantic object,
+source name, occasion, voice request, ordered earcons, degradation or semantic
+fallback status, and queue time.  =RET= or =e= explains the frozen plan, =P=
+replays its complete before/content/after sequence, =c= directly auditions
+only its concrete earcons without speech or history, and =r= starts the same
+review-before-save voice-remapping workflow from the selected record.  A
+historical record never retains a source buffer.  Buffer-local persistence is
+therefore offered only when the browser remains attached to a live source
+whose name matches the record; personal and session remaps remain available
+after the source closes.
+
 The home is a status-and-routing view rather than another editor.  Its rows
 lead to:
 
@@ -1108,6 +1124,7 @@ lead to:
 |----------------------+-------------------------------------------------------|
 | Explain at point     | Spoken and detailed presentation provenance           |
 | Remap voice at point | Prepare a scoped named-voice override for the item     |
+| Recent aural feedback | Exact heard-output browser and replay                 |
 | Schemes              | Base-scheme manager                                    |
 | Presentation options | Grouped, independently enabled presentation layers    |
 | Current buffer rules | Advanced editor scoped to the remembered source       |
@@ -1121,8 +1138,8 @@ lead to:
 =n=, =p=, Up, and Down move by row.  Left and Right move by column and speak
 the column title and value.  =.= repeats the titled cell, =SPC= speaks the
 complete row, =RET= performs its primary operation, =x= always explains the
-remembered source, =r= prepares a point voice remap, and =?= displays and
-speaks help.  Top, bottom, first
+remembered source, =r= prepares a point voice remap, =H= opens recent
+feedback, and =?= displays and speaks help.  Top, bottom, first
 column, and last column boundaries are announced instead of silently
 repeating a value.  Every routed aural manager and editor binds =h= to return
 home without losing the remembered source.  Every aural manager, browser, and
@@ -2870,6 +2887,32 @@ Emacs 31 source suite has 1,629 tests: 1,628 pass and the optional Mu4e test is
 skipped.  All changed Lisp modules compile, compiled aural parity and
 build-tree startup pass, all 27 semantic traces match, and the aural and TTS
 audits are clean.
+
+** DONE Slice 37: Recent Aural Feedback
+CLOSED: [2026-07-29 Wed]
+
+- Expose the existing bounded frozen presentation history as a newest-first
+  spoken table routed from Aural Home.
+- Show exact content, semantic object, source name, occasion, voice, earcons,
+  degradation or fallback status, and queue time without re-resolving current
+  rules.
+- Explain the selected exact plan, replay its full ordered presentation, and
+  audition its earcons without manager speech, training hooks, or another
+  history entry.
+- Allow the existing point-remap wizard to start from a selected record.
+  Retain personal and session scopes after a source closes, but offer buffer
+  scope only for the still-attached matching source buffer.
+
+Deliverable: confusing or hard-to-reproduce feedback can be identified,
+replayed, explained, and remapped after it has passed.
+
+Checks: all 73 focused Aural tools and editor tests pass.  The complete Emacs
+31 source suite has 1,655 tests: 1,654 pass and the optional Mu4e test is
+skipped.  The changed Lisp compiles with warnings treated as errors, compiled
+Aural parity and normal build-tree startup pass, and the generated reference
+and Aural audit are clean.  The standalone repository name audit continues to
+report the eight pre-existing Windows speech compatibility names in untouched
+files.
 
 * Test Gates
 
