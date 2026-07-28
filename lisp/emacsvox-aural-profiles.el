@@ -429,10 +429,12 @@
 (defun emacsvox-aural-list-profiles (&optional profile)
   "Open the spoken manager for saved presentation PROFILE configurations."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Presentation Profiles*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Presentation Profiles*")))
     (with-current-buffer buffer
       (emacsvox-aural-profiles-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-profiles-refresh
        (or profile (emacsvox-aural-profiles--current-id))))
     (pop-to-buffer buffer)

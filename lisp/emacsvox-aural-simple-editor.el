@@ -41,7 +41,7 @@
   "Return the simple field at point, or nil."
   (or
    (get-text-property
-    (or (emacsvox-aural-tools--point-position) (point-min))
+    (or (emacsvox-aural-inspection-point-position) (point-min))
     emacsvox-aural-simple-editor--field-property)
    (and
     (> (point) (point-min))
@@ -1358,7 +1358,9 @@ instead of replacing it."
 
 (defun emacsvox-aural-simple-editor-open (&optional scheme)
   "Open the simple spoken editor for personal SCHEME."
-  (let* ((scheme
+  (let* ((source
+          (emacsvox-aural-inspection-remember-source-buffer))
+         (scheme
           (or scheme
               (emacsvox-aural-simple-editor--read-scheme)))
          (entry (emacsvox-aural-scheme-entry scheme)))
@@ -1373,6 +1375,7 @@ instead of replacing it."
             (format "*Simple Aural Scheme: %s*" scheme))))
       (with-current-buffer buffer
         (emacsvox-aural-simple-editor-mode)
+        (emacsvox-aural-inspection-attach-source source)
         (setq
          emacsvox-aural-editor-scope 'scheme
          emacsvox-aural-editor-target scheme

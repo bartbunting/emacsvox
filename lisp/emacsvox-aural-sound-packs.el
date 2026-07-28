@@ -898,10 +898,12 @@ PATH protects completion from invalid inheritance cycles."
 (defun emacsvox-aural-list-sound-packs (&optional pack)
   "Open the spoken sound-pack manager, selecting PACK when supplied."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Sound Packs*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Sound Packs*")))
     (with-current-buffer buffer
       (emacsvox-aural-sound-packs-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-sound-packs-refresh
        (or pack emacsvox-sounds-current-pack)))
     (pop-to-buffer buffer)
@@ -915,7 +917,9 @@ PATH protects completion from invalid inheritance cycles."
 (defun emacsvox-aural-list-sound-pack-cues (&optional pack)
   "Open the spoken cue browser for PACK or the sound pack at point."
   (interactive)
-  (let* ((pack
+  (let* ((source
+          (emacsvox-aural-inspection-remember-source-buffer))
+         (pack
           (or
            pack
            (emacsvox-aural-sound-packs--pack-at-point-or-read)))
@@ -926,6 +930,7 @@ PATH protects completion from invalid inheritance cycles."
       (user-error "Unknown sound pack: %S" pack))
     (with-current-buffer buffer
       (emacsvox-aural-sound-pack-cues-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (setq emacsvox-aural-sound-pack-cues-pack pack)
       (emacsvox-aural-sound-pack-cues-refresh))
     (pop-to-buffer buffer)

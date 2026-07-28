@@ -39,6 +39,7 @@
   (require 'emacsvox-aural-transport-tests)
   (require 'emacsvox-aural-validation-tests)
   (require 'emacsvox-aural-ui-tests)
+  (require 'emacsvox-aural-inspection-tests)
   (require 'emacsvox-aural-tools-tests)
   (require 'emacsvox-aural-doctor-tests)
   (require 'emacsvox-aural-profiles-tests)

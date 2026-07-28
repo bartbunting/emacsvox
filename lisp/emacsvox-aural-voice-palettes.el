@@ -1572,7 +1572,9 @@ ANNOUNCEMENT overrides the normal setting description."
     (when (emacsvox-aural-voice-palette-built-in palette)
       (user-error
        "Built-in palette; press o, then c to make an editable copy"))
-    (let* ((definition (emacsvox-aural-voice voice palette-id))
+    (let* ((inspection-source
+            (emacsvox-aural-inspection-remember-source-buffer))
+           (definition (emacsvox-aural-voice voice palette-id))
            (style
             (emacsvox-aural-voice-tuner--complete-style
              definition palette-id))
@@ -1590,6 +1592,7 @@ ANNOUNCEMENT overrides the normal setting description."
           (user-error "Kept the existing unsaved voice tuner")))
       (with-current-buffer buffer
         (emacsvox-aural-voice-tuner-mode)
+        (emacsvox-aural-inspection-attach-source inspection-source)
         (setq
          emacsvox-aural-voice-tuner-palette palette-id
          emacsvox-aural-voice-tuner-voice voice
@@ -1676,12 +1679,15 @@ ANNOUNCEMENT overrides the normal setting description."
 
 VOICE selects the initial row.  When SPEAK is non-nil, announce that row
 after displaying the preview buffer."
-  (let ((entries (emacsvox-aural-voice-palettes--preview-entries palette))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (entries (emacsvox-aural-voice-palettes--preview-entries palette))
         (buffer (get-buffer-create "*Aural Voice Palette Preview*")))
     (unless entries
       (user-error "Voice palette %s has no effective voices" palette))
     (with-current-buffer buffer
       (emacsvox-aural-voice-palette-previews-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (setq
        emacsvox-aural-voice-palette-previews-palette palette
        emacsvox-aural-voice-palette-previews-entries entries
@@ -1825,10 +1831,12 @@ after displaying the preview buffer."
 (defun emacsvox-aural-list-voice-palettes (&optional palette)
   "Open the spoken manager for voice PALETTE providers."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Voice Palettes*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Voice Palettes*")))
     (with-current-buffer buffer
       (emacsvox-aural-voice-palettes-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-voice-palettes-refresh
        (or palette (emacsvox-aural-voice-palettes--active-id))))
     (pop-to-buffer buffer)

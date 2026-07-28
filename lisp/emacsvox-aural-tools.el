@@ -19,6 +19,7 @@
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-validation)
+(require 'emacsvox-aural-inspection)
 
 (cl-defstruct
     (emacsvox-aural-explanation
@@ -29,12 +30,6 @@
 
 (defvar emacsvox-aural-tools--last-explanation nil
   "Most recently displayed aural presentation explanation.")
-
-(defvar emacsvox-aural-tools--last-source-buffer nil
-  "Most recent non-aural buffer used as an aural inspection source.")
-
-(defvar-local emacsvox-aural-home-source-buffer nil
-  "Source buffer inspected and customized from the aural home buffer.")
 
 (defvar emacsvox-sounds-current-pack)
 (defvar emacsvox-speak-messages)
@@ -104,78 +99,12 @@
   "Return non-nil when BUFFER is an aural manager or editor buffer."
   (emacsvox-aural-ui-interface-buffer-p buffer))
 
-(defun emacsvox-aural-tools--remember-source-buffer (&optional buffer)
-  "Remember BUFFER as the source for aural inspection when appropriate."
-  (let ((buffer (or buffer (current-buffer))))
-    (when
-        (and
-         (buffer-live-p buffer)
-         (not (minibufferp buffer))
-         (not (emacsvox-aural-tools--interface-buffer-p buffer)))
-      (setq emacsvox-aural-tools--last-source-buffer buffer)))
-  emacsvox-aural-tools--last-source-buffer)
-
-(defun emacsvox-aural-tools--point-position ()
-  "Return a position at or immediately before point that can hold properties."
-  (cond
-   ((= (point-min) (point-max)) nil)
-   ((= (point) (point-max)) (1- (point)))
-   (t (point))))
-
-(defun emacsvox-aural-tools--plan-at-point ()
-  "Return the frozen concrete aural plan at point, or nil."
-  (when-let* ((position (emacsvox-aural-tools--point-position)))
-    (get-text-property
-     position emacsvox-aural-concrete-plan-property)))
-
-(defun emacsvox-aural-facts-at-point ()
-  "Return semantic facts attached to the object at point, or nil."
-  (when-let* ((position (emacsvox-aural-tools--point-position)))
-    (or
-     (get-text-property
-      position emacsvox-aural-facts-property)
-     (when-let* ((plan (emacsvox-aural-tools--plan-at-point)))
-       (copy-tree (emacsvox-aural-concrete-plan-facts plan))))))
-
-(defun emacsvox-aural-context-at-point ()
-  "Return frozen presentation context at point or capture current context."
-  (or
-   (when-let* ((plan (emacsvox-aural-tools--plan-at-point)))
-     (copy-tree (emacsvox-aural-concrete-plan-context plan)))
-   (let ((context (emacsvox-aural-capture-context))
-         (position (emacsvox-aural-tools--point-position)))
-     (when position
-       (let* ((provenance
-               (emacsvox-aural-capture-source-faces position))
-              (faces
-               (mapcar
-                (lambda (entry) (plist-get entry :face))
-                provenance)))
-         (when faces
-           (setq
-            context
-            (plist-put context :legacy-faces (copy-sequence faces)))
-           (setq
-            context
-            (plist-put
-             context :legacy-face-source
-             (emacsvox-aural--source-face-summary provenance)))
-           (setq
-            context
-            (plist-put
-             context :legacy-face-provenance
-             (copy-tree provenance))))))
-     context)))
-
-(defun emacsvox-aural-tools--context-for-occasion (context occasion)
-  "Return a copy of CONTEXT whose presentation OCCASION is frozen."
-  (plist-put (copy-tree context) :occasion occasion))
-
 (defun emacsvox-aural-tools--matching-rules-for-occasion
     (facts context occasion)
   "Return rules matching FACTS in CONTEXT for OCCASION."
   (let* ((context
-          (emacsvox-aural-tools--context-for-occasion context occasion))
+          (emacsvox-aural-inspection-context-for-occasion
+           context occasion))
          (rules (emacsvox-aural-current-rules context))
          (input (emacsvox-aural-normalize-input facts context)))
     (emacsvox-aural-matching-rules rules input)))
@@ -213,7 +142,7 @@ Prefer the current occasion when it ties for the most matching rules."
 Infer an informative occasion unless CHOOSE-OCCASION is non-nil, in which
 case prompt with the inferred occasion as the default.  A frozen concrete
 plan at point always supplies its actual occasion as the initial default."
-  (let* ((plan (emacsvox-aural-tools--plan-at-point))
+  (let* ((plan (emacsvox-aural-inspection-plan-at-point))
          (facts
           (if plan
               (copy-tree (emacsvox-aural-concrete-plan-facts plan))
@@ -234,15 +163,16 @@ plan at point always supplies its actual occasion as the initial default."
             inferred)))
     (list
      facts
-     (emacsvox-aural-tools--context-for-occasion context occasion))))
+     (emacsvox-aural-inspection-context-for-occasion
+      context occasion))))
 
 (defun emacsvox-aural-tools--interactive-explanation-input
     (choose-occasion)
   "Return exact queued input, or simulated input when CHOOSE-OCCASION."
-  (let* ((source
-          (if (emacsvox-aural-tools--interface-buffer-p)
-              emacsvox-aural-tools--last-source-buffer
-            (current-buffer)))
+  (let* ((interface
+          (emacsvox-aural-tools--interface-buffer-p))
+         (source
+          (emacsvox-aural-inspection-source-buffer))
          (record
           (and
            (not choose-occasion)
@@ -250,9 +180,16 @@ plan at point always supplies its actual occasion as the initial default."
            (emacsvox-aural-last-presentation source))))
     (if record
         (list nil nil record)
-      (append
-       (emacsvox-aural-tools--read-explanation-input choose-occasion)
-       (list nil)))))
+      (when (and interface (null source))
+        (user-error "No live source buffer is available"))
+      (let ((input
+             (if (eq source (current-buffer))
+                 (emacsvox-aural-tools--read-explanation-input
+                  choose-occasion)
+               (with-current-buffer source
+                 (emacsvox-aural-tools--read-explanation-input
+                  choose-occasion)))))
+        (append input (list nil))))))
 
 (defun emacsvox-aural-tools--read-semantic (&optional prompt allow-empty)
   "Read a registered semantic using PROMPT.
@@ -494,10 +431,12 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 (defun emacsvox-list-aural-semantics ()
   "Open the accessible list of registered semantic vocabulary."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Semantics*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Semantics*")))
     (with-current-buffer buffer
       (emacsvox-aural-semantics-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-semantics-refresh))
     (pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
@@ -1044,10 +983,12 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
 (defun emacsvox-list-aural-schemes ()
   "Open the accessible manager for registered aural schemes."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Schemes*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Schemes*")))
     (with-current-buffer buffer
       (emacsvox-aural-schemes-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-schemes-refresh emacsvox-aural-active-scheme))
     (pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
@@ -1747,7 +1688,7 @@ always identify whether they describe heard output or a simulation."
    (emacsvox-aural-tools--interactive-explanation-input
     current-prefix-arg))
   (when (called-interactively-p 'interactive)
-    (emacsvox-aural-tools--remember-source-buffer))
+    (emacsvox-aural-inspection-remember-source-buffer))
   (let* ((facts
           (and
            (null record)
@@ -1770,64 +1711,6 @@ always identify whether they describe heard output or a simulation."
        explanation t occasion-counts))
     explanation))
 
-(defun emacsvox-aural-tools--representative-input (rule)
-  "Return representative facts and context that match RULE."
-  (let* ((selector (emacsvox-aural-rule-selector rule))
-         (facts nil)
-         (context
-          (emacsvox-aural-capture-context
-           (emacsvox-aural-selector-module selector)
-           (or
-            (emacsvox-aural-selector-occasion selector)
-            'inspection))))
-    (when-let* ((role (emacsvox-aural-selector-role selector)))
-      (setq facts (plist-put facts :role role)))
-    (when-let* ((events (emacsvox-aural-selector-events selector)))
-      (setq facts (plist-put facts :events (copy-sequence events))))
-    (when-let* ((states (emacsvox-aural-selector-states selector)))
-      (setq facts (plist-put facts :states (copy-sequence states))))
-    (dolist
-        (attribute (emacsvox-aural-selector-attributes selector))
-      (setq
-       facts
-       (plist-put
-        facts
-        (intern (format ":%s" (car attribute)))
-        (cdr attribute))))
-    (dolist
-        (attribute
-         (emacsvox-aural-selector-required-attributes selector))
-      (unless
-          (assq attribute (emacsvox-aural-selector-attributes selector))
-        (let* ((record (emacsvox-aural-semantic attribute))
-               (value
-                (or
-                 (car (emacsvox-aural-semantic-allowed-values record))
-                 (pcase (emacsvox-aural-semantic-value-type record)
-                   ('positive-integer 1)
-                   ('integer 0)
-                   ('number 0)
-                   ('string "example")
-                   ('symbol 'example)
-                   ('boolean t)
-                   (_ 'example)))))
-          (setq
-           facts
-           (plist-put
-            facts
-            (intern (format ":%s" attribute))
-            value)))))
-    (when-let* ((mode (emacsvox-aural-selector-mode selector)))
-      (setq context (plist-put context :mode mode))
-      (setq
-       context
-       (plist-put context :mode-lineage
-                  (emacsvox-aural-mode-lineage mode))))
-    (when-let* ((face (emacsvox-aural-selector-legacy-face selector)))
-      (setq context (plist-put context :legacy-faces (list face)))
-      (setq context (plist-put context :legacy-face-source 'preview)))
-    (list facts context)))
-
 (defun emacsvox-aural-tools--fragment-rules (fragment)
   "Return the compiled presentation rules for feature FRAGMENT."
   (let ((entry
@@ -1840,7 +1723,7 @@ always identify whether they describe heard output or a simulation."
 (defun emacsvox-aural-tools--automatic-fragment-example (fragment rule)
   "Return an automatically derived preview example for FRAGMENT RULE."
   (pcase-let* ((`(,facts ,context)
-                 (emacsvox-aural-tools--representative-input rule))
+                 (emacsvox-aural-inspection-representative-input rule))
                 (rule-id (emacsvox-aural-rule-id rule))
                 (facts
                  (if (plist-member facts :content)
@@ -1907,7 +1790,7 @@ always identify whether they describe heard output or a simulation."
       (user-error "Rule is not available in the current context: %S" rule-id))
     (pcase-let*
         ((`(,representative-facts ,representative-context)
-          (emacsvox-aural-tools--representative-input rule))
+          (emacsvox-aural-inspection-representative-input rule))
          (facts
           (copy-tree
            (or facts
@@ -1974,7 +1857,7 @@ scheme at point and prompt when it has more than one presentation."
              scheme rule-id))))
     (pcase-let*
         ((`(,facts ,context)
-          (emacsvox-aural-tools--representative-input rule))
+          (emacsvox-aural-inspection-representative-input rule))
          (content
           (if (called-interactively-p 'interactive)
               (read-string "Preview content: " "Example")
@@ -2667,57 +2550,60 @@ SCOPE is `personal', `session', or `buffer'."
 
 The source facts and mode remain real.  When necessary, choose the occasion
 that lets the greatest number of fragment rules match those facts."
-  (when
-      (buffer-live-p emacsvox-aural-tools--last-source-buffer)
-    (with-current-buffer emacsvox-aural-tools--last-source-buffer
-      (when-let* ((facts (emacsvox-aural-facts-at-point)))
-        (let* ((rules (emacsvox-aural-tools--fragment-rules fragment))
-               (base-context (emacsvox-aural-context-at-point))
-               (current
-                (or (plist-get base-context :occasion) 'continuous))
-               (occasions
-                (delete-dups
-                 (cons
-                  current
-                  (delq
-                   nil
-                   (mapcar
-                    (lambda (rule)
-                      (emacsvox-aural-selector-occasion
-                       (emacsvox-aural-rule-selector rule)))
-                    rules)))))
-               best-context
-               best-count)
-          (dolist (occasion occasions)
-            (let* ((context
-                    (emacsvox-aural-tools--context-for-occasion
-                     base-context occasion))
-                   (count
-                    (length
-                     (emacsvox-aural-tools--fragment-matching-rules
-                      fragment facts context))))
-              (when (> count (or best-count 0))
-                (setq best-context context
-                      best-count count))))
-          (when best-context
-            (unless (plist-member facts :content)
-              (let ((content
-                     (string-trim
-                      (buffer-substring-no-properties
-                       (line-beginning-position)
-                       (line-end-position)))))
-                (setq
-                 facts
-                 (plist-put
-                  (copy-tree facts)
-                  :content
-                  (if (string-empty-p content) "Example" content)))))
-            (list
-             :kind 'live
-             :summary
-             (format "%s at point" (buffer-name))
-             :facts facts
-             :context best-context)))))))
+  (let ((source
+         (if (emacsvox-aural-tools--interface-buffer-p)
+             (emacsvox-aural-inspection-source-buffer)
+           (emacsvox-aural-inspection-last-source-buffer))))
+    (when source
+      (with-current-buffer source
+        (when-let* ((facts (emacsvox-aural-facts-at-point)))
+          (let* ((rules (emacsvox-aural-tools--fragment-rules fragment))
+                 (base-context (emacsvox-aural-context-at-point))
+                 (current
+                  (or (plist-get base-context :occasion) 'continuous))
+                 (occasions
+                  (delete-dups
+                   (cons
+                    current
+                    (delq
+                     nil
+                     (mapcar
+                      (lambda (rule)
+                        (emacsvox-aural-selector-occasion
+                         (emacsvox-aural-rule-selector rule)))
+                      rules)))))
+                 best-context
+                 best-count)
+            (dolist (occasion occasions)
+              (let* ((context
+                      (emacsvox-aural-inspection-context-for-occasion
+                       base-context occasion))
+                     (count
+                      (length
+                       (emacsvox-aural-tools--fragment-matching-rules
+                        fragment facts context))))
+                (when (> count (or best-count 0))
+                  (setq best-context context
+                        best-count count))))
+            (when best-context
+              (unless (plist-member facts :content)
+                (let ((content
+                       (string-trim
+                        (buffer-substring-no-properties
+                         (line-beginning-position)
+                         (line-end-position)))))
+                  (setq
+                   facts
+                   (plist-put
+                    (copy-tree facts)
+                    :content
+                    (if (string-empty-p content) "Example" content)))))
+              (list
+               :kind 'live
+               :summary
+               (format "%s at point" (buffer-name))
+               :facts facts
+               :context best-context))))))))
 
 (defun emacsvox-aural-tools--fragment-preview-example
     (fragment &optional example-id prompt)
@@ -3270,7 +3156,9 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
 When ISOLATED is non-nil, initially resolve the option by itself.  EXAMPLES
 may supply an already completed preview-example list.  When SPEAK is non-nil,
 announce the selected example after displaying the buffer."
-  (let* ((examples
+  (let* ((source
+          (emacsvox-aural-inspection-remember-source-buffer))
+         (examples
           (or
            examples
            (emacsvox-aural-tools--fragment-preview-examples fragment)))
@@ -3282,6 +3170,7 @@ announce the selected example after displaying the buffer."
          (buffer (get-buffer-create "*Aural Option Preview*")))
     (with-current-buffer buffer
       (emacsvox-aural-feature-fragment-previews-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (setq
        emacsvox-aural-feature-fragment-previews-fragment fragment
        emacsvox-aural-feature-fragment-previews-examples examples
@@ -3626,10 +3515,12 @@ announce the selected example after displaying the buffer."
 (defun emacsvox-aural-list-feature-fragments ()
   "Open the accessible manager for aural presentation options."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Feature Fragments*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Feature Fragments*")))
     (with-current-buffer buffer
       (emacsvox-aural-feature-fragments-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-feature-fragments-refresh
        (car emacsvox-aural-enabled-feature-fragments)))
     (pop-to-buffer buffer)
@@ -3646,11 +3537,7 @@ announce the selected example after displaying the buffer."
 
 (defun emacsvox-aural-home--source-buffer ()
   "Return the live inspection source for the current aural home buffer."
-  (cond
-   ((buffer-live-p emacsvox-aural-home-source-buffer)
-    emacsvox-aural-home-source-buffer)
-   ((buffer-live-p emacsvox-aural-tools--last-source-buffer)
-    emacsvox-aural-tools--last-source-buffer)))
+  (emacsvox-aural-inspection-source-buffer))
 
 (defun emacsvox-aural-home--enabled-fragment-status ()
   "Return concise status for enabled aural feature fragments."
@@ -3970,19 +3857,13 @@ announce the selected example after displaying the buffer."
 (defun emacsvox-aural (&optional source-buffer)
   "Open the spoken aural home using SOURCE-BUFFER for contextual operations."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer
-   (or source-buffer (current-buffer)))
-  (let* ((buffer (get-buffer-create "*Emacsvox Aural*"))
-         (source
-          (or
-           (and (buffer-live-p source-buffer) source-buffer)
-           (and
-            (buffer-live-p emacsvox-aural-tools--last-source-buffer)
-            emacsvox-aural-tools--last-source-buffer))))
+  (let* ((source
+          (emacsvox-aural-inspection-remember-source-buffer
+           (or source-buffer (current-buffer))))
+         (buffer (get-buffer-create "*Emacsvox Aural*")))
     (with-current-buffer buffer
       (emacsvox-aural-home-mode)
-      (when source
-        (setq emacsvox-aural-home-source-buffer source))
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-home-refresh 'explain))
     (pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)

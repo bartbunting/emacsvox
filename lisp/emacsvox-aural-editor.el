@@ -175,7 +175,7 @@
   (or
    (get-text-property
     (or
-     (emacsvox-aural-tools--point-position)
+     (emacsvox-aural-inspection-point-position)
      (point-min))
     emacsvox-aural-editor--rule-index-property)
    (user-error "Move point to a displayed rule first")))
@@ -1011,7 +1011,7 @@ LABEL identifies the speech or cue being edited."
   "Return representative facts and context for compiled RULE."
   (pcase-let
       ((`(,facts ,context)
-        (emacsvox-aural-tools--representative-input rule)))
+        (emacsvox-aural-inspection-representative-input rule)))
     (unless (plist-get facts :content)
       (setq facts (plist-put facts :content "Example")))
     (list facts context)))
@@ -1152,7 +1152,7 @@ LABEL identifies the speech or cue being edited."
 
 SCOPE is `personal', `session', `buffer', `scheme', or `fragment'.  SCHEME
 identifies a personal scheme or feature fragment.  SOURCE-BUFFER defaults to
-the current buffer for buffer scope."
+the ordinary source associated with the current buffer for buffer scope."
   (interactive
    (list
     (intern
@@ -1160,9 +1160,10 @@ the current buffer for buffer scope."
       "Edit aural scope: "
       '("personal" "session" "buffer" "scheme" "fragment")
       nil 'must-match))))
-  (let* ((source-buffer (or source-buffer (current-buffer)))
-         (_source
-          (emacsvox-aural-tools--remember-source-buffer source-buffer))
+  (let* ((origin-buffer (or source-buffer (current-buffer)))
+         (source-buffer
+          (emacsvox-aural-inspection-remember-source-buffer
+           origin-buffer))
          (scheme
           (when (memq scope '(scheme fragment))
             (or
@@ -1194,6 +1195,8 @@ the current buffer for buffer scope."
             ('personal emacsvox-aural-user-rules)
             ('session emacsvox-aural-session-rules)
             ('buffer
+             (unless source-buffer
+               (user-error "No live source buffer is available"))
              (buffer-local-value
               'emacsvox-aural-buffer-rules source-buffer))
             ('scheme
@@ -1223,6 +1226,7 @@ the current buffer for buffer scope."
          (buffer (get-buffer-create name)))
     (with-current-buffer buffer
       (emacsvox-aural-scheme-editor-mode)
+      (emacsvox-aural-inspection-attach-source source-buffer)
       (setq
        emacsvox-aural-editor-scope scope
        emacsvox-aural-editor-target
@@ -1251,7 +1255,6 @@ the current buffer for buffer scope."
 (defun emacsvox-edit-aural-scheme (&optional scheme)
   "Open the simple spoken editor for personal SCHEME."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
   (require 'emacsvox-aural-simple-editor)
   (emacsvox-aural-simple-editor-open scheme))
 

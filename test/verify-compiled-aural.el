@@ -32,6 +32,7 @@
          "emacsvox-aural-transport"
          "emacsvox-aural-validation"
          "emacsvox-aural-ui"
+         "emacsvox-aural-inspection"
          "emacsvox-aural-tools"
          "emacsvox-aural-editor"
          "emacsvox-aural-simple-editor"
@@ -63,6 +64,7 @@
          emacsvox-aural--migrate-user-data-v1-to-v2
          emacsvox-aural--transport-error
          emacsvox-aural-validation--report
+         emacsvox-aural-inspection-source-buffer
          emacsvox-aural-tools--training-presented
          emacsvox-aural-editor--scope-label
          emacsvox-aural-simple-editor--humanize

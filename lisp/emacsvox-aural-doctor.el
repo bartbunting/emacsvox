@@ -248,10 +248,7 @@
 
 (defun emacsvox-aural-doctor--face-presentation-finding ()
   "Report independent explicit-face and legacy Voice Lock controls."
-  (let ((source
-         (and
-          (buffer-live-p emacsvox-aural-tools--last-source-buffer)
-          emacsvox-aural-tools--last-source-buffer)))
+  (let ((source (emacsvox-aural-inspection-source-buffer)))
     (emacsvox-aural-doctor--finding
      'face-presentation 'info "Visual face presentation"
      (format
@@ -472,10 +469,12 @@
 (defun emacsvox-aural-doctor ()
   "Open the spoken Aural Doctor and announce its overall result."
   (interactive)
-  (emacsvox-aural-tools--remember-source-buffer)
-  (let ((buffer (get-buffer-create "*Aural Doctor*")))
+  (let ((source
+         (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Doctor*")))
     (with-current-buffer buffer
       (emacsvox-aural-doctor-mode)
+      (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-doctor-refresh))
     (pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)

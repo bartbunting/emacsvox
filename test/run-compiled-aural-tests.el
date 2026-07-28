@@ -26,6 +26,7 @@
           "emacsvox-aural-transport.el"
           "emacsvox-aural-validation.el"
           "emacsvox-aural-ui.el"
+          "emacsvox-aural-inspection.el"
           "emacsvox-aural-tools.el"
           "emacsvox-aural-editor.el"
           "emacsvox-aural-simple-editor.el"

@@ -24,6 +24,7 @@
           emacsvox-aural-transport
           emacsvox-aural-validation
           emacsvox-aural-ui
+          emacsvox-aural-inspection
           emacsvox-aural-tools
           emacsvox-aural-editor
           emacsvox-aural-simple-editor
@@ -45,6 +46,7 @@
           emacsvox-aural--transport-error
           emacsvox-aural-validation--report
           emacsvox-aural-ui-interface-buffer-p
+          emacsvox-aural-inspection-source-buffer
           emacsvox-aural-tools--interface-buffer-p
           emacsvox-aural-editor--scope-label
           emacsvox-aural-simple-editor--humanize

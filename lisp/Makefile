@@ -70,6 +70,7 @@ emacsvox-aural-schemes.elc \
 emacsvox-aural-transport.elc \
 emacsvox-aural-validation.elc \
 emacsvox-aural-ui.elc \
+emacsvox-aural-inspection.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-editor.elc \
 emacsvox-aural-simple-editor.elc \
@@ -325,8 +326,10 @@ emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
 emacsvox-aural-transport.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 emacsvox-aural-validation.elc: emacsvox-aural-transport.elc
+emacsvox-aural-inspection.elc: \
+emacsvox-aural-ui.elc emacsvox-aural-transport.elc
 emacsvox-aural-tools.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-validation.elc
+emacsvox-aural-inspection.elc emacsvox-aural-validation.elc
 emacsvox-aural-editor.elc: emacsvox-aural-tools.elc
 emacsvox-aural-simple-editor.elc: emacsvox-aural-editor.elc
 emacsvox-aural-doctor.elc: emacsvox-aural-tools.elc
