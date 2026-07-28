@@ -54,6 +54,12 @@
   id data compiled built-in source collection)
 
 (cl-defstruct
+    (emacsvox-aural-feature-fragment-example
+     (:constructor emacsvox-aural--make-feature-fragment-example))
+  "Validated data-only preview example for one optional fragment rule."
+  fragment id rule summary facts context source)
+
+(cl-defstruct
     (emacsvox-aural-profile-entry
      (:constructor emacsvox-aural--make-profile-entry))
   "Registered named presentation profile."
@@ -69,6 +75,10 @@
 (defvar emacsvox-aural-feature-fragment-registry
   (make-hash-table :test #'eq)
   "Map optional feature fragment identifiers to their records.")
+
+(defvar emacsvox-aural-feature-fragment-example-registry
+  (make-hash-table :test #'equal)
+  "Map fragment and example identifiers to validated preview examples.")
 
 (defvar emacsvox-aural-profile-registry (make-hash-table :test #'eq)
   "Map personal presentation profile identifiers to their records.")
@@ -355,6 +365,88 @@ slot layout and fall back to `general' or `personal'."
    (if (emacsvox-aural-feature-fragment-entry-built-in entry)
        'general
      'personal)))
+
+(defun emacsvox-aural-feature-fragment-example (fragment id)
+  "Return FRAGMENT's registered preview example record named ID, or nil."
+  (gethash
+   (cons fragment id)
+   emacsvox-aural-feature-fragment-example-registry))
+
+(defun emacsvox-aural-feature-fragment-examples (fragment)
+  "Return registered preview examples for feature FRAGMENT in stable order."
+  (let (examples)
+    (maphash
+     (lambda (key example)
+       (when (eq (car key) fragment)
+         (push example examples)))
+     emacsvox-aural-feature-fragment-example-registry)
+    (sort
+     examples
+     (lambda (left right)
+       (string-lessp
+        (symbol-name
+         (emacsvox-aural-feature-fragment-example-id left))
+        (symbol-name
+         (emacsvox-aural-feature-fragment-example-id right)))))))
+
+(cl-defun emacsvox-aural-register-feature-fragment-example
+    (fragment id &key rule summary facts context source)
+  "Register data-only preview example ID for feature FRAGMENT.
+
+RULE names the fragment rule demonstrated by FACTS and CONTEXT.  SUMMARY is a
+nonempty user-facing description, and SOURCE is retained for diagnostics.
+Registering the same definition again is idempotent."
+  (emacsvox-aural--require-symbol fragment "Preview example fragment")
+  (emacsvox-aural--require-symbol id "Preview example identifier")
+  (emacsvox-aural--require-symbol rule "Preview example rule")
+  (unless (and (stringp summary) (not (string-empty-p summary)))
+    (emacsvox-aural--rule-error
+     "Preview example summary must be a nonempty string: %S" summary))
+  (emacsvox-aural--require-plist facts "Preview example facts")
+  (emacsvox-aural--require-plist (or context nil) "Preview example context")
+  (let* ((fragment-entry
+          (or
+           (emacsvox-aural-feature-fragment-entry fragment)
+           (emacsvox-aural--rule-error
+            "Unknown preview example fragment: %S" fragment)))
+         (rules
+          (emacsvox-aural-scheme-rules
+           (emacsvox-aural-feature-fragment-entry-compiled fragment-entry)))
+         (compiled-rule
+          (or
+           (cl-find rule rules :key #'emacsvox-aural-rule-id :test #'eq)
+           (emacsvox-aural--rule-error
+            "Fragment %S has no previewed rule %S" fragment rule)))
+         (input
+          (emacsvox-aural-normalize-input facts (or context nil)))
+         (key (cons fragment id))
+         (entry
+          (emacsvox-aural--make-feature-fragment-example
+           :fragment fragment
+           :id id
+           :rule rule
+           :summary summary
+           :facts (copy-tree facts)
+           :context (copy-tree context)
+           :source source))
+         (existing (gethash key
+                            emacsvox-aural-feature-fragment-example-registry)))
+    (unless (emacsvox-aural-rule-enabled compiled-rule)
+      (emacsvox-aural--rule-error
+       "Preview example %S names disabled fragment rule %S" id rule))
+    (unless (emacsvox-aural-rule-matches-p compiled-rule input)
+      (emacsvox-aural--rule-error
+       "Preview example %S does not match fragment rule %S" id rule))
+    (cond
+     ((null existing)
+      (puthash
+       key entry emacsvox-aural-feature-fragment-example-registry)
+      entry)
+     ((equal existing entry) existing)
+     (t
+      (emacsvox-aural--rule-error
+       "Preview example is already registered differently: %S for %S"
+       id fragment)))))
 
 (defun emacsvox-aural--validate-enabled-feature-fragments
     (ids &optional registry)

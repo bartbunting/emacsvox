@@ -60,9 +60,10 @@
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-simple-editor)
 (require 'emacsvox-aural-sound-packs)
-(require 'emacsvox-aural-org)
-(require 'emacsvox-aural-representative)
-(require 'emacsvox-aural-markdown)
+(require 'emacsvox-aural-provider-org)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-provider-markdown)
+(require 'emacsvox-aural-provider-notmuch)
 
 ;;;   Customize groups
 

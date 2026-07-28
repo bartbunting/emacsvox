@@ -19,6 +19,8 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-feature-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-feature-fragment-example-registry
+          (make-hash-table :test #'equal))
          (emacsvox-aural-profile-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-voice-palette-registry
@@ -427,6 +429,66 @@
      (equal
       emacsvox-aural-enabled-feature-fragments
       '(valid-fragment)))))
+
+(ert-deftest emacsvox-aural-schemes-validate-fragment-preview-examples ()
+  "Provider examples are data-only, rule-specific, and idempotent."
+  (emacsvox-test--with-isolated-schemes
+    (emacsvox-aural-register-feature-fragment
+     '(:schema-version 1
+       :id heading-label
+       :summary "Label headings"
+       :rules
+       ((:id heading-label-rule
+         :match (:role heading :module org :occasion navigation)
+         :render
+         (:before
+          ((:id heading-label-action :kind speech :text "Heading"))))
+        (:id parked-heading-rule
+         :enabled nil
+         :match (:role heading :module org :occasion navigation)
+         :render (:content (:voice bolden)))))
+     :built-in t :collection 'org)
+    (let* ((arguments
+            '(:rule heading-label-rule
+              :summary "An Org heading"
+              :facts (:role heading :content "Roadmap")
+              :context
+              (:module org :mode org-mode :occasion navigation)
+              :source "test"))
+           (first
+            (apply
+             #'emacsvox-aural-register-feature-fragment-example
+             'heading-label 'org-heading arguments))
+           (second
+            (apply
+             #'emacsvox-aural-register-feature-fragment-example
+             'heading-label 'org-heading arguments)))
+      (should (eq first second))
+      (should
+       (eq
+        (emacsvox-aural-feature-fragment-example
+         'heading-label 'org-heading)
+        first))
+      (should
+       (equal
+        (emacsvox-aural-feature-fragment-examples 'heading-label)
+        (list first))))
+    (should-error
+     (emacsvox-aural-register-feature-fragment-example
+      'heading-label 'not-a-heading
+      :rule 'heading-label-rule
+      :summary "Wrong semantic context"
+     :facts '(:role message :content "Mail")
+     :context '(:module org :mode org-mode :occasion navigation))
+     :type 'emacsvox-aural-rule-error)
+    (should-error
+     (emacsvox-aural-register-feature-fragment-example
+      'heading-label 'parked-heading
+      :rule 'parked-heading-rule
+      :summary "Disabled example"
+      :facts '(:role heading :content "Roadmap")
+      :context '(:module org :mode org-mode :occasion navigation))
+     :type 'emacsvox-aural-rule-error)))
 
 (ert-deftest emacsvox-aural-schemes-preserve-legacy-personality-by-default ()
   "An unmatched explicit or face-derived legacy personality is retained."

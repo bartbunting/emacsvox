@@ -28,9 +28,10 @@
           emacsvox-aural-doctor
           emacsvox-aural-profiles
           emacsvox-aural-voice-palettes
-          emacsvox-aural-org
-          emacsvox-aural-representative
-          emacsvox-aural-markdown
+          emacsvox-aural-provider-org
+          emacsvox-aural-provider-workflows
+          emacsvox-aural-provider-markdown
+          emacsvox-aural-provider-notmuch
           emacsvox-sounds
           emacsvox-aural-sound-packs))
        (functions
@@ -47,8 +48,9 @@
           emacsvox-aural-profiles--ids
           emacsvox-aural-voice-palettes--active-id
           emacsvox-org--require-aural-semantics
-          emacsvox-aural-register-representative-semantics
+          emacsvox-aural-register-workflow-provider
           emacsvox-markdown-register-aural-presentation
+          emacsvox-notmuch-register-aural-preview-examples
           emacsvox-toggle-icons
           emacsvox-aural-sound-packs--symbol-less-p)))
   (add-to-list 'load-path lisp-directory)
@@ -57,6 +59,11 @@
   (load setup nil nil)
   (dolist (feature features)
     (require feature))
+  (dolist (external-feature '(org markdown-mode notmuch))
+    (when (featurep external-feature)
+      (error
+       "Data-only providers loaded external package feature %S"
+       external-feature)))
   (dolist (function functions)
     (let ((file (symbol-file function 'defun)))
       (unless (and file (string-suffix-p ".elc" file))

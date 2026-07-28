@@ -1,4 +1,4 @@
-;;; emacsvox-aural-markdown.el --- Data-only Markdown presentation -*- lexical-binding: t; -*-
+;;; emacsvox-aural-provider-markdown.el --- Data-only Markdown aural provider -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -12,7 +12,7 @@
 ;;; Code:
 
 (require 'emacsvox-aural-schemes)
-(require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-provider-workflows)
 
 (defconst emacsvox-markdown-aural-semantics
   '((markdown-content
@@ -279,14 +279,14 @@
        'markdown-compatibility emacsvox-aural-module-fragment-registry)
     (emacsvox-aural-register-module-fragment
      'markdown emacsvox-markdown-aural-compatibility-fragment
-     :source "emacsvox-aural-markdown"))
+     :source "emacsvox-aural-provider-markdown"))
   (dolist (data emacsvox-markdown-aural-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-markdown"
+       data :built-in t :source "emacsvox-aural-provider-markdown"
        :collection 'markdown))))
 
 (emacsvox-markdown-register-aural-presentation)
 
-(provide 'emacsvox-aural-markdown)
-;;; emacsvox-aural-markdown.el ends here
+(provide 'emacsvox-aural-provider-markdown)
+;;; emacsvox-aural-provider-markdown.el ends here

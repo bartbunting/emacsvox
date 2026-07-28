@@ -19,7 +19,7 @@ Use =M-x emacsvox-aural-doctor= to inspect the live bindings, loaded source or b
 
 Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
 
-Use =M-x emacsvox-aural-list-feature-fragments= to manage independent presentation additions over the active base scheme.  The user interface calls these presentation options and groups them into expandable integration collections.  Core, integration modules, third-party extensions, and personal data may provide options; collection membership affects discovery only.  Press =a= to show enabled options in exact weakest-to-strongest cascade order.  Enabling or disabling an option preserves that stable order.  Create, copy, edit, delete, validate, toggle, and reorder changes use the same atomic personal-data store.  Built-in Org options can add a dynamic heading-level label, section cue, or visibility-change wording without replacing the active scheme.
+Use =M-x emacsvox-aural-list-feature-fragments= to manage independent presentation additions over the active base scheme.  The user interface calls these presentation options and groups them into expandable integration collections.  Core, integration modules, third-party extensions, and personal data may provide options; collection membership affects discovery only.  Press =a= to show enabled options in exact weakest-to-strongest cascade order.  Enabling or disabling an option preserves that stable order.  Press =P= to preview an option composed with the active configuration without enabling it, or =C-u P= to hear the option alone.  Preview uses matching facts from the remembered source buffer when possible and announces that as live source context; otherwise it announces and uses a simulated example.  Create, copy, edit, delete, validate, toggle, and reorder changes use the same atomic personal-data store.  Built-in Org options can add a dynamic heading-level label, section cue, or visibility-change wording without replacing the active scheme.
 
 Use =M-x emacsvox-aural-list-sound-packs= to inspect active state, inheritance, native and effective assets, coverage, spatialization, validation, directory, and intent.  Its cue browser identifies native, inherited, fallback, and missing resources and auditions the frozen concrete file without activating the inspected pack.  Discovered personal packs have a guided, atomic, data-only manifest editor.
 
@@ -93,7 +93,9 @@ For persistent formatted text, attach =emacsvox-aural-facts= and =emacsvox-aural
 
 A module may register a read-only fragment for compatibility defaults, but the fragment still matches semantic facts and emits modality.  Keep meaning in the registry and presentation in rules.  Preserve established output during migration, add facts around it, and let users override the new facts.  Add new core semantics only when their intent is shared; use a module-owned identifier for genuinely private meaning.
 
-A module or third-party extension may also register optional, read-only feature fragments, presented to users as presentation options.  Supply a =:collection= symbol to group related options under the integration that owns them.  Use a broader collection when an option intentionally spans several integrations.  Collection membership never changes rule matching or cascade order; enabled precedence is controlled separately.
+A module or third-party extension may also register optional, read-only feature fragments, presented to users as presentation options.  Supply a =:collection= symbol to group related options under the integration that owns them.  Use a broader collection when an option intentionally spans several integrations.  Collection membership never changes rule matching or cascade order; enabled precedence is controlled separately.  Providers may call =emacsvox-aural-register-feature-fragment-example= after the option is registered.  Name the exact option rule demonstrated and supply a short summary plus data-only =:facts= and =:context=.  Registration normalizes the input and rejects examples that do not match their named rule.  Curated examples are runtime provider metadata, not persistent personal data.  Preview derives a representative simulation for each enabled rule not covered by a curated example.
+
+Repository data-only providers use the flat library name =emacsvox-aural-provider-SCOPE.el=.  A provider may register semantic metadata and presentation data, but must not load its external package, inspect live buffers, install package hooks or advice, or speak.  The corresponding =emacsvox-SCOPE.el= integration requires the provider and owns live fact capture and feedback.  Cross-integration definitions use a descriptive shared scope such as =workflows=.
 
 Extension checklist:
 
@@ -282,27 +284,27 @@ Operational semantic contract version: =1=.
 
 ** Built-in Feature Fragments
 
-| Identifier | Collection | Rules | Source | Intent |
-|------------+------------+-------+--------+--------|
-| =agent-shell-block-type-cues= | =agent-shell= | =11= | emacsvox-aural-representative | Use distinct semantic cues for Agent Shell block types |
-| =agent-shell-block-type-labels= | =agent-shell= | =1= | emacsvox-aural-representative | Speak the semantic type when entering an Agent Shell block |
-| =agent-shell-block-visibility-cues= | =agent-shell= | =4= | emacsvox-aural-representative | Cue folded and expanded Agent Shell blocks on entry and toggle |
-| =dired-entry-state-labels= | =dired= | =3= | emacsvox-aural-representative | Speak Dired mark and deletion-flag changes after the entry |
-| =magit-section-visibility-cues= | =magit= | =2= | emacsvox-aural-representative | Add semantic open and close cues when Magit section visibility changes |
-| =mail-message-status-cues= | =mail= | =3= | emacsvox-aural-representative | Add semantic cues for unread, flagged, and attached messages |
-| =markdown-heading-level-labels= | =markdown= | =1= | emacsvox-aural-markdown | Speak Markdown heading levels before heading contents |
-| =markdown-task-state-labels= | =markdown= | =2= | emacsvox-aural-markdown | Speak checked and unchecked state after Markdown tasks |
-| =org-heading-level-labels= | =org= | =1= | emacsvox-aural-org | Speak an Org heading's level before inherited presentation |
-| =org-heading-section-cues= | =org= | =1= | emacsvox-aural-org | Add a section cue before navigated Org headings |
-| =org-heading-visibility-changes= | =org= | =2= | emacsvox-aural-org | Speak an Org heading's level and new visibility after cycling |
+| Identifier | Collection | Rules | Curated Examples | Source | Intent |
+|------------+------------+-------+------------------+--------+--------|
+| =agent-shell-block-type-cues= | =agent-shell= | =11= | =0= | emacsvox-aural-provider-workflows | Use distinct semantic cues for Agent Shell block types |
+| =agent-shell-block-type-labels= | =agent-shell= | =1= | =0= | emacsvox-aural-provider-workflows | Speak the semantic type when entering an Agent Shell block |
+| =agent-shell-block-visibility-cues= | =agent-shell= | =4= | =0= | emacsvox-aural-provider-workflows | Cue folded and expanded Agent Shell blocks on entry and toggle |
+| =dired-entry-state-labels= | =dired= | =3= | =0= | emacsvox-aural-provider-workflows | Speak Dired mark and deletion-flag changes after the entry |
+| =magit-section-visibility-cues= | =magit= | =2= | =0= | emacsvox-aural-provider-workflows | Add semantic open and close cues when Magit section visibility changes |
+| =mail-message-status-cues= | =mail= | =3= | =2= | emacsvox-aural-provider-workflows | Add semantic cues for unread, flagged, and attached messages |
+| =markdown-heading-level-labels= | =markdown= | =1= | =0= | emacsvox-aural-provider-markdown | Speak Markdown heading levels before heading contents |
+| =markdown-task-state-labels= | =markdown= | =2= | =0= | emacsvox-aural-provider-markdown | Speak checked and unchecked state after Markdown tasks |
+| =org-heading-level-labels= | =org= | =1= | =1= | emacsvox-aural-provider-org | Speak an Org heading's level before inherited presentation |
+| =org-heading-section-cues= | =org= | =1= | =0= | emacsvox-aural-provider-org | Add a section cue before navigated Org headings |
+| =org-heading-visibility-changes= | =org= | =2= | =1= | emacsvox-aural-provider-org | Speak an Org heading's level and new visibility after cycling |
 
 ** Module Compatibility Fragments
 
 | Identifier | Module | Rules | Source | Intent |
 |------------+--------+-------+--------+--------|
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
-| =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-markdown | Compatibility cues for semantic Markdown presentation |
-| =org-compatibility= | =org= | =2= | emacsvox-aural-org | Compatibility presentation for semantic Org headings |
+| =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
+| =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |
 
 * Sound Pack Author Reference
 

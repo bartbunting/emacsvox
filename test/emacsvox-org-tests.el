@@ -427,9 +427,27 @@
       (should
        (equal
         (emacsvox-aural-feature-fragment-entry-source entry)
-        "emacsvox-aural-org"))
+        "emacsvox-aural-provider-org"))
       (should-not
-       (emacsvox-aural-feature-fragment-enabled-p fragment)))))
+       (emacsvox-aural-feature-fragment-enabled-p fragment))))
+  (dolist
+      (definition
+       '((org-heading-level-labels org-level-three
+          org-fragment-heading-level-label)
+         (org-heading-visibility-changes org-level-two-folded
+          org-fragment-heading-folded)))
+    (let ((example
+           (emacsvox-aural-feature-fragment-example
+            (nth 0 definition) (nth 1 definition))))
+      (should example)
+      (should
+       (eq
+        (emacsvox-aural-feature-fragment-example-rule example)
+        (nth 2 definition)))
+      (should
+       (equal
+        (emacsvox-aural-feature-fragment-example-source example)
+        "emacsvox-aural-provider-org")))))
 
 (ert-deftest emacsvox-org-feature-fragments-compose-with-the-base-scheme ()
   "Optional Org features add to rather than replace inherited presentation."
@@ -475,7 +493,9 @@
         "Heading 3"))
       (should (eq (plist-get level-rule :origin) 'fragment))
       (should
-       (equal (plist-get level-rule :source) "emacsvox-aural-org")))))
+       (equal
+        (plist-get level-rule :source)
+        "emacsvox-aural-provider-org")))))
 
 (ert-deftest emacsvox-org-arrow-and-structural-navigation-present-alike ()
   "Down-arrow and Org structural navigation present one heading identically."

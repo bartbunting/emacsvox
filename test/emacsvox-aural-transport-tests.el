@@ -27,6 +27,8 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-feature-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-feature-fragment-example-registry
+          (make-hash-table :test #'equal))
          (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-user-rules nil)
          (emacsvox-aural-session-rules nil)

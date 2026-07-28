@@ -51,7 +51,7 @@
 (require 'cl-lib)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
-(require 'emacsvox-aural-org)
+(require 'emacsvox-aural-provider-org)
 (require 'emacsvox-amark)
 (require 'org)
 (require 'org-element)

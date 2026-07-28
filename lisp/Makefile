@@ -74,9 +74,10 @@ emacsvox-aural-simple-editor.elc \
 emacsvox-aural-doctor.elc \
 emacsvox-aural-profiles.elc \
 emacsvox-aural-voice-palettes.elc \
-emacsvox-aural-org.elc \
-emacsvox-aural-representative.elc \
-emacsvox-aural-markdown.elc \
+emacsvox-aural-provider-org.elc \
+emacsvox-aural-provider-workflows.elc \
+emacsvox-aural-provider-markdown.elc \
+emacsvox-aural-provider-notmuch.elc \
 emacsvox-sounds.elc \
 emacsvox-aural-sound-packs.elc
 
@@ -327,9 +328,10 @@ emacsvox-aural-simple-editor.elc: emacsvox-aural-editor.elc
 emacsvox-aural-doctor.elc: emacsvox-aural-tools.elc
 emacsvox-aural-profiles.elc: emacsvox-aural-tools.elc
 emacsvox-aural-voice-palettes.elc: emacsvox-aural-tools.elc
-emacsvox-aural-org.elc: emacsvox-aural-schemes.elc
-emacsvox-aural-representative.elc: emacsvox-aural-schemes.elc
-emacsvox-aural-markdown.elc: emacsvox-aural-representative.elc
+emacsvox-aural-provider-org.elc: emacsvox-aural-schemes.elc
+emacsvox-aural-provider-workflows.elc: emacsvox-aural-schemes.elc
+emacsvox-aural-provider-markdown.elc: emacsvox-aural-provider-workflows.elc
+emacsvox-aural-provider-notmuch.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
 emacsvox-aural-sound-packs.elc: \
 emacsvox-aural-tools.elc emacsvox-sounds.elc

@@ -136,7 +136,11 @@
     (should (string-match-p "| =heading= | =role= | =core= |" first))
     (should
      (string-match-p
-      "| =org-heading-level-labels= | =org= | =1= | emacsvox-aural-org |"
+      "| =org-heading-level-labels= | =org= | =1= | =1= | emacsvox-aural-provider-org |"
+      first))
+    (should
+     (string-match-p
+      "| =mail-message-status-cues= | =mail= | =3= | =2= | emacsvox-aural-provider-workflows |"
       first))
     (should (string-match-p "| =chimes= | =sound= |" first))
     (should (string-match-p "| =bolden= | =voice-bolden= |" first))))

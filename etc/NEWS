@@ -48,6 +48,22 @@ collections; press ~a~ for enabled options in exact weakest-to-strongest
 order.  Toggling preserves an option's stable precedence.  The manager
 supports viewing, creating, copying, editing, deleting, validating, toggling,
 and explicitly reordering options; all changes save atomically.
+Press ~P~ to preview an option without changing its enabled state; the normal
+preview composes it with the active configuration, while ~C-u P~ plays the
+option alone.  A matching object in the remembered source buffer is previewed
+with its live facts and mode.  Otherwise the manager clearly identifies a
+simulation and offers representative examples supplied by the integration,
+with safe selector-derived examples for rules the provider did not cover.
+Org supplies heading-level and folded-heading examples.  Notmuch supplies
+unread-result and attachment examples for the shared mail-status option.
+Data-only integration definitions now use the
+~emacsvox-aural-provider-SCOPE.el~ naming convention.  Org, Markdown,
+Notmuch, and shared workflow providers are available at startup without
+loading their external packages; the corresponding ~emacsvox-SCOPE.el~
+libraries retain live hooks, fact capture, advice, and speech commands.
+The former internal libraries ~emacsvox-aural-org~,
+~emacsvox-aural-markdown~, and ~emacsvox-aural-representative~ have been
+replaced by the provider names without compatibility aliases.
 Optional built-in Org options independently add a heading-level label, a
 section cue, or folded/opened feedback.  Speech actions may safely substitute
 registered semantic values with templates such as ~Heading {level}~; every

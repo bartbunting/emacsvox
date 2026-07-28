@@ -547,6 +547,25 @@ specificity, or precedence.  An integration may use its own collection, while
 an option shared by several integrations may use a broader collection such
 as =mail=.
 
+Providers may also register curated, data-only preview examples for individual
+option rules.  Each example names its option and rule and supplies a short
+summary, semantic facts, and source context.  Registration normalizes the
+input and rejects an example unless the named rule actually matches it.
+Examples are runtime metadata rather than persistent personal configuration;
+they cannot execute code or change the cascade.  Rules without a curated
+example receive a selector-derived simulation automatically, so every enabled
+rule remains previewable.
+
+Data-only integration providers use the flat library name
+=emacsvox-aural-provider-SCOPE.el=.  They may register semantics, schemes,
+module compatibility fragments, presentation options, and preview examples,
+but must not load the external package, inspect live buffers, install package
+hooks or advice, or produce speech directly.  The corresponding
+=emacsvox-SCOPE.el= integration owns those runtime responsibilities and
+requires its provider.  Shared domains use a descriptive scope such as
+=workflows= rather than pretending that reusable mail, filesystem, version
+control, programming, or completion semantics belong to one integration.
+
 Presentation-option order is stored independently from enablement.  The
 stable order contains disabled options as well as enabled ones.  Disabling
 and later re-enabling an option therefore restores its former precedence
@@ -995,6 +1014,10 @@ implemented discovery and management commands are:
   local-cue, final-output, and user-policy spatial settings;
 - =emacsvox-preview-aural-rule=: render a rule against representative or
   current content;
+- =emacsvox-aural-list-feature-fragments=: manage presentation options and
+  press =P= to preview the option at point; the default composes the option
+  with the active configuration without enabling it, while =C-u P= previews
+  the option alone;
 - =emacsvox-list-aural-schemes=: open the spoken manager for viewing,
   editing, copying, deleting, renaming, activating, previewing, and validating
   schemes;
@@ -2674,7 +2697,7 @@ Result:
   builds.  Clean compiled startup also exposed and fixed the missing runtime
   =cl-lib= prerequisite and a top-level =cl-pushnew= expansion in the
   preamble.
-- Isolated compiled parity now compiles and loads all 17 aural components,
+- Isolated compiled parity now compiles and loads all 18 aural components,
   sound support, and the keymap.  Source startup detection and normal
   build-tree startup have dedicated gates.
 - Org is the next completed migrated module.  All established cue and speech
@@ -2712,6 +2735,45 @@ CLOSED: [2026-07-28 Tue]
 Deliverable: related options are discoverable together without making
 collection membership part of rule resolution, and precedence changes only
 through an explicit reorder.
+
+** DONE Slice 34: Representative Presentation-Option Previews
+CLOSED: [2026-07-28 Tue]
+
+- Add =P= to the presentation-option manager, with =C-u P= for an isolated
+  option-only preview.
+- Prefer facts at point in the remembered source buffer when the selected
+  option matches them.  Preserve the real object, module, and mode while
+  inferring the matching presentation occasion when necessary.
+- Clearly announce whether the result uses live source context or a simulated
+  example.
+- Let providers register validated, data-only examples tied to exact option
+  rules, and derive safe representative inputs for uncovered rules.
+- Supply curated Org heading-level and visibility examples, plus Notmuch
+  unread-message and attachment examples for the shared mail option.
+- Compose normal previews with the active scheme and options through temporary
+  dynamic state, without enabling, reordering, or persisting the option.
+
+Deliverable: presentation options can be auditioned meaningfully outside
+their modes, while live semantic context is used whenever it is applicable.
+
+** DONE Slice 35: Aural Provider Library Convention
+CLOSED: [2026-07-28 Tue]
+
+- Keep the established flat =lisp/= load path and distinguish data-only
+  registration libraries with the
+  =emacsvox-aural-provider-SCOPE.el= convention.
+- Rename the Org and Markdown providers and the shared workflow catalogue
+  without retaining ambiguous old library names.
+- Extract Notmuch preview metadata from the live integration into a provider
+  that does not load Notmuch.
+- Load provider metadata before personal aural data, while live integrations
+  continue to own hooks, advice, fact capture, and speech commands.
+- Update build dependencies, compiled-startup verification, audits, tests,
+  generated references, and source provenance together.
+
+Deliverable: provider libraries are lexically grouped, their data-only
+contract is visible from their names, and Notmuch previews exist before the
+Notmuch package is loaded.
 
 * Test Gates
 

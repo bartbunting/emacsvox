@@ -30,9 +30,10 @@
           "emacsvox-aural-doctor.el"
           "emacsvox-aural-profiles.el"
           "emacsvox-aural-voice-palettes.el"
-          "emacsvox-aural-org.el"
-          "emacsvox-aural-representative.el"
-          "emacsvox-aural-markdown.el"
+          "emacsvox-aural-provider-org.el"
+          "emacsvox-aural-provider-workflows.el"
+          "emacsvox-aural-provider-markdown.el"
+          "emacsvox-aural-provider-notmuch.el"
           "emacsvox-sounds.el"
           "emacsvox-aural-sound-packs.el"
           "emacsvox-keymap.el"))

@@ -46,7 +46,7 @@
 (require 'button)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
-(require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-provider-notmuch)
 (require 'subr-x)
 (require 'wid-edit)
 

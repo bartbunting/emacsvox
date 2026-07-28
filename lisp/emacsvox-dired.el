@@ -54,7 +54,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
-(require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-provider-workflows)
 (require 'dired)
 
 ;;;  Define personalities

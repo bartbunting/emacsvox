@@ -65,7 +65,7 @@
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
-(require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-provider-workflows)
 (require 'agent-shell nil 'noerror)
 (require 'shell-maker nil 'noerror)
 

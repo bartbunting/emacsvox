@@ -8,7 +8,7 @@
 
 (require 'ert)
 (require 'emacsvox-aural)
-(require 'emacsvox-aural-representative)
+(require 'emacsvox-aural-provider-workflows)
 
 (defmacro emacsvox-test--with-empty-aural-registries (&rest body)
   "Run BODY with isolated empty semantic and occasion registries."
@@ -32,7 +32,7 @@
        '(navigation continuous state-change edit inspection notification))
     (should (emacsvox-aural-occasion id))))
 
-(ert-deftest emacsvox-aural-representative-semantics-are-owned-and-valid ()
+(ert-deftest emacsvox-aural-workflow-semantics-are-owned-and-valid ()
   "Cross-module semantics are available before integrations load."
   (should (emacsvox-aural-validate-registry))
   (dolist

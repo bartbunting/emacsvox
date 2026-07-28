@@ -35,9 +35,10 @@
 
 (require 'emacsvox-sounds)
 (require 'emacsvox-aural-tools)
-(require 'emacsvox-aural-org)
-(require 'emacsvox-aural-representative)
-(require 'emacsvox-aural-markdown)
+(require 'emacsvox-aural-provider-org)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-provider-markdown)
+(require 'emacsvox-aural-provider-notmuch)
 (require 'emacsvox-dired)
 
 (defconst emacsvox-aural-audit-icon-functions
@@ -408,8 +409,12 @@ below a presentation boundary."
    "extensions, and personal data may provide options; collection membership "
    "affects discovery only.  Press =a= to show enabled options in exact "
    "weakest-to-strongest cascade order.  Enabling or disabling an option "
-   "preserves that stable order.  Create, copy, edit, delete, validate, "
-   "toggle, and reorder changes use the same atomic personal-data store.  "
+   "preserves that stable order.  Press =P= to preview an option composed "
+   "with the active configuration without enabling it, or =C-u P= to hear "
+   "the option alone.  Preview uses matching facts from the remembered source "
+   "buffer when possible and announces that as live source context; otherwise "
+   "it announces and uses a simulated example.  Create, copy, edit, delete, "
+   "validate, toggle, and reorder changes use the same atomic personal-data store.  "
    "Built-in Org options can add a dynamic heading-level label, section cue, "
    "or visibility-change wording without replacing the active scheme.\n\n"
    "Use =M-x emacsvox-aural-list-sound-packs= to inspect active state, "
@@ -620,7 +625,21 @@ below a presentation boundary."
    "=:collection= symbol to group related options under the integration that "
    "owns them.  Use a broader collection when an option intentionally spans "
    "several integrations.  Collection membership never changes rule matching "
-   "or cascade order; enabled precedence is controlled separately.\n\n"
+   "or cascade order; enabled precedence is controlled separately.  Providers "
+   "may call =emacsvox-aural-register-feature-fragment-example= after the "
+   "option is registered.  Name the exact option rule demonstrated and supply "
+   "a short summary plus data-only =:facts= and =:context=.  Registration "
+   "normalizes the input and rejects examples that do not match their named "
+   "rule.  Curated examples are runtime provider metadata, not persistent "
+   "personal data.  Preview derives a representative simulation for each "
+   "enabled rule not covered by a curated example.\n\n"
+   "Repository data-only providers use the flat library name "
+   "=emacsvox-aural-provider-SCOPE.el=.  A provider may register semantic "
+   "metadata and presentation data, but must not load its external package, "
+   "inspect live buffers, install package hooks or advice, or speak.  The "
+   "corresponding =emacsvox-SCOPE.el= integration requires the provider and "
+   "owns live fact capture and feedback.  Cross-integration definitions use a "
+   "descriptive shared scope such as =workflows=.\n\n"
    "Extension checklist:\n\n"
    "1. Search the registry for an existing intent and reuse it when exact.\n"
    "2. Register new metadata before a saved scheme could reference it.\n"
@@ -731,7 +750,7 @@ below a presentation boundary."
     (emacsvox-aural-audit--built-in-schemes)))
   (insert "** Built-in Feature Fragments\n\n")
   (emacsvox-aural-audit--insert-table
-   '("Identifier" "Collection" "Rules" "Source" "Intent")
+   '("Identifier" "Collection" "Rules" "Curated Examples" "Source" "Intent")
    (mapcar
     (lambda (entry)
       (let ((scheme
@@ -740,6 +759,9 @@ below a presentation boundary."
          (emacsvox-aural-feature-fragment-entry-id entry)
          (emacsvox-aural-feature-fragment-collection entry)
          (length (emacsvox-aural-scheme-rules scheme))
+         (length
+          (emacsvox-aural-feature-fragment-examples
+           (emacsvox-aural-feature-fragment-entry-id entry)))
          (emacsvox-aural-feature-fragment-entry-source entry)
          (emacsvox-aural-scheme-summary scheme))))
     (emacsvox-aural-audit--built-in-feature-fragments)))

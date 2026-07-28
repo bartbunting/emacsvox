@@ -36,15 +36,21 @@
          "emacsvox-aural-doctor"
          "emacsvox-aural-profiles"
          "emacsvox-aural-voice-palettes"
-         "emacsvox-aural-org"
-         "emacsvox-aural-representative"
-         "emacsvox-aural-markdown"
+         "emacsvox-aural-provider-org"
+         "emacsvox-aural-provider-workflows"
+         "emacsvox-aural-provider-markdown"
+         "emacsvox-aural-provider-notmuch"
          "emacsvox-sounds"
          "emacsvox-aural-sound-packs"
          "emacsvox-keymap"))
     (load
      (expand-file-name (concat library ".elc") build-directory)
      nil nil))
+  (dolist (external-feature '(org markdown-mode notmuch))
+    (when (featurep external-feature)
+      (error
+       "Data-only providers loaded external package feature %S"
+       external-feature)))
   (dolist
       (function
        '(tts--protocol-queue-text
@@ -61,8 +67,9 @@
          emacsvox-aural-profiles--ids
          emacsvox-aural-voice-palettes--active-id
          emacsvox-org--require-aural-semantics
-         emacsvox-aural-register-representative-semantics
+         emacsvox-aural-register-workflow-provider
          emacsvox-markdown-register-aural-presentation
+         emacsvox-notmuch-register-aural-preview-examples
          emacsvox-toggle-icons
          emacsvox-aural-sound-packs--symbol-less-p
          emacsvox-keymap-update))

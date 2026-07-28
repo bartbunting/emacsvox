@@ -46,7 +46,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
-(require 'emacsvox-aural-markdown)
+(require 'emacsvox-aural-provider-markdown)
 
 ;;;  Silence byte-compiler:
 

@@ -2748,7 +2748,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should
        (equal
         (emacsvox-aural-feature-fragment-entry-source entry)
-        "emacsvox-aural-representative"))
+        "emacsvox-aural-provider-workflows"))
       (should-not
        (emacsvox-aural-feature-fragment-enabled-p fragment)))))
 

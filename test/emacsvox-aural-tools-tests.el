@@ -26,6 +26,8 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-feature-fragment-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-feature-fragment-example-registry
+          (make-hash-table :test #'equal))
          (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-user-rules nil)
@@ -1108,13 +1110,14 @@
                    ("." . emacsvox-aural-feature-fragments-speak-current-cell)
                    ("n" . emacsvox-aural-feature-fragments-next)
                    ("p" . emacsvox-aural-feature-fragments-previous)
-                   ("<down>" . emacsvox-aural-feature-fragments-next)
-                   ("<up>" . emacsvox-aural-feature-fragments-previous)
+                   ("<down>" . next-line)
+                   ("<up>" . previous-line)
                    ("<right>"
                     . emacsvox-aural-feature-fragments-next-column)
                    ("<left>"
                     . emacsvox-aural-feature-fragments-previous-column)
                    ("a" . emacsvox-aural-feature-fragments-toggle-view)
+                   ("P" . emacsvox-aural-feature-fragments-preview)
                    ("t" . emacsvox-aural-feature-fragments-toggle)
                    ("<M-up>" . emacsvox-aural-feature-fragments-move-up)
                    ("<M-down>" . emacsvox-aural-feature-fragments-move-down)
@@ -1130,9 +1133,17 @@
               (should
                (eq
                 (lookup-key
-                 emacsvox-aural-feature-fragments-mode-map
+                emacsvox-aural-feature-fragments-mode-map
                  (kbd (car binding)))
-                (cdr binding))))))
+                (cdr binding)))))
+            (should
+             (eq
+              (key-binding (kbd "<down>"))
+              (key-binding (kbd "C-n"))))
+            (should
+             (eq
+              (key-binding (kbd "<up>"))
+              (key-binding (kbd "C-p")))))
       (when (get-buffer "*Aural Feature Fragments*")
         (kill-buffer "*Aural Feature Fragments*")))))
 
@@ -1257,6 +1268,123 @@
               '(org-levels personal-headings)))))
       (when (get-buffer "*Aural Feature Fragments*")
         (kill-buffer "*Aural Feature Fragments*")))))
+
+(ert-deftest emacsvox-aural-fragment-preview-completes-curated-examples ()
+  "Curated examples take precedence and uncovered rules derive simulations."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-feature-fragment
+     '(:schema-version 1
+       :id heading-levels
+       :summary "Heading levels"
+       :rules
+       ((:id level-one-rule
+         :match (:role heading :level 1 :occasion navigation)
+         :render
+         (:before
+          ((:id level-one-label :kind speech :text "Level one"))))
+        (:id level-two-rule
+         :match (:role heading :level 2 :occasion navigation)
+         :render
+         (:before
+          ((:id level-two-label :kind speech :text "Level two"))))))
+     :built-in t :collection 'org)
+    (emacsvox-aural-register-feature-fragment-example
+     'heading-levels 'org-level-one
+     :rule 'level-one-rule
+     :summary "Level one Org heading"
+     :facts '(:role heading :level 1 :content "Project roadmap")
+     :context
+     '(:module org :mode org-mode :occasion navigation)
+     :source "test")
+    (let ((examples
+           (emacsvox-aural-tools--fragment-preview-examples 'heading-levels)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-feature-fragment-example-id examples)
+        '(org-level-one automatic-level-two-rule)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-feature-fragment-example-source examples)
+        '("test" automatic))))
+    (let ((tts-speaker-process 'speaker)
+          queued
+          result)
+      (cl-letf
+          (((symbol-function 'process-live-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+            (lambda (plan &rest _) (setq queued plan)))
+           ((symbol-function 'tts--protocol-dispatch) #'ignore))
+        (setq
+         result
+         (emacsvox-aural-feature-fragments-preview
+          nil 'heading-levels 'org-level-one)))
+      (should (eq (plist-get result :kind) 'simulated))
+      (should (eq (plist-get result :example) 'org-level-one))
+      (should (eq (plist-get result :concrete) queued))
+      (should
+       (equal
+        (emacsvox-aural-concrete-action-text
+         (car (emacsvox-aural-concrete-plan-before queued)))
+        "Level one"))
+      (should-not emacsvox-aural-enabled-feature-fragments))))
+
+(ert-deftest emacsvox-aural-fragment-preview-prefers-live-source-context ()
+  "Matching source facts and mode take precedence over simulated examples."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-feature-fragment
+     '(:schema-version 1
+       :id org-level
+       :summary "Org level"
+       :rules
+       ((:id org-level-rule
+         :match
+         (:role heading :module org :occasion navigation :requires (level))
+         :render
+         (:before
+          ((:id org-level-label :kind speech
+            :text-template "Heading {level}"))))))
+     :built-in t :collection 'org)
+    (let ((source (generate-new-buffer " *aural-preview-source*"))
+          (tts-speaker-process 'speaker)
+          queued)
+      (unwind-protect
+          (progn
+            (with-current-buffer source
+              (insert "Roadmap")
+              (add-text-properties
+               (point-min) (point-max)
+               (list
+                emacsvox-aural-facts-property
+                '(:role heading :level 2)))
+              (setq major-mode 'org-mode)
+              (setq-local emacsvox-aural-module 'org)
+              (goto-char (point-min)))
+            (setq emacsvox-aural-tools--last-source-buffer source)
+            (cl-letf
+                (((symbol-function 'process-live-p) (lambda (_) t))
+                 ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+                  (lambda (plan &rest _) (setq queued plan)))
+                 ((symbol-function 'tts--protocol-dispatch) #'ignore))
+              (let ((result
+                     (emacsvox-aural-feature-fragments-preview
+                      nil 'org-level)))
+                (should (eq (plist-get result :kind) 'live))
+                (should-not (plist-get result :example))
+                (should
+                 (equal
+                  (plist-get
+                   (emacsvox-aural-concrete-plan-facts queued)
+                   :content)
+                  "Roadmap"))
+                (should
+                 (eq
+                  (plist-get
+                   (emacsvox-aural-concrete-plan-context queued)
+                   :occasion)
+                  'navigation)))))
+        (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-fragment-manager-mutates-persistent-state ()
   "Toggle, reorder, copy, create, and delete persist one coherent state."

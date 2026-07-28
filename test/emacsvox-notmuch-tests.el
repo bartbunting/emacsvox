@@ -24,6 +24,25 @@
     (should (eq emacsvox-aural-module 'notmuch))
     (should (local-variable-p 'emacsvox-aural-module))))
 
+(ert-deftest emacsvox-notmuch-registers-mail-preview-examples ()
+  "Notmuch supplies validated simulations for optional mail presentation."
+  (dolist
+      (definition
+       '((notmuch-unread-message workflow-mail-unread)
+         (notmuch-message-with-attachment workflow-mail-attachments)))
+    (let ((example
+           (emacsvox-aural-feature-fragment-example
+            'mail-message-status-cues (car definition))))
+      (should example)
+      (should
+       (eq
+        (emacsvox-aural-feature-fragment-example-rule example)
+        (cadr definition)))
+      (should
+       (equal
+        (emacsvox-aural-feature-fragment-example-source example)
+        "emacsvox-aural-provider-notmuch")))))
+
 (ert-deftest emacsvox-notmuch-hello-navigation-speaks-search-name-and-count ()
   "Tabbing through saved searches should speak their names and counts."
   (with-temp-buffer

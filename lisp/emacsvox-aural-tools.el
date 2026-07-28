@@ -2279,6 +2279,54 @@ always identify whether they describe heard output or a simulation."
       (setq context (plist-put context :legacy-face-source 'preview)))
     (list facts context)))
 
+(defun emacsvox-aural-tools--fragment-rules (fragment)
+  "Return the compiled presentation rules for feature FRAGMENT."
+  (let ((entry
+         (or
+          (emacsvox-aural-feature-fragment-entry fragment)
+          (user-error "Unknown presentation option: %S" fragment))))
+    (emacsvox-aural-scheme-rules
+     (emacsvox-aural-feature-fragment-entry-compiled entry))))
+
+(defun emacsvox-aural-tools--automatic-fragment-example (fragment rule)
+  "Return an automatically derived preview example for FRAGMENT RULE."
+  (pcase-let* ((`(,facts ,context)
+                 (emacsvox-aural-tools--representative-input rule))
+                (rule-id (emacsvox-aural-rule-id rule))
+                (facts
+                 (if (plist-member facts :content)
+                     facts
+                   (plist-put (copy-tree facts) :content "Example"))))
+    (emacsvox-aural--make-feature-fragment-example
+     :fragment fragment
+     :id (intern (format "automatic-%s" rule-id))
+     :rule rule-id
+     :summary
+     (format
+      "Automatically derived %s"
+      (emacsvox-aural-tools--humanize rule-id))
+     :facts facts
+     :context context
+     :source 'automatic)))
+
+(defun emacsvox-aural-tools--fragment-preview-examples (fragment)
+  "Return curated and automatically completed examples for FRAGMENT."
+  (let* ((curated
+          (emacsvox-aural-feature-fragment-examples fragment))
+         (covered
+          (mapcar
+           #'emacsvox-aural-feature-fragment-example-rule curated)))
+    (append
+     curated
+     (cl-loop
+      for rule in (emacsvox-aural-tools--fragment-rules fragment)
+      when
+      (and
+       (emacsvox-aural-rule-enabled rule)
+       (not (memq (emacsvox-aural-rule-id rule) covered)))
+      collect
+      (emacsvox-aural-tools--automatic-fragment-example fragment rule)))))
+
 (defun emacsvox-aural-tools--rule-candidates (&optional context)
   "Return completion candidates for rules relevant to CONTEXT."
   (mapcar
@@ -3120,6 +3168,19 @@ SCOPE is `personal', `session', or `buffer'."
       (princ
        (format "Summary: %s\n"
                (emacsvox-aural-scheme-summary compiled)))
+      (let ((examples
+             (emacsvox-aural-feature-fragment-examples fragment)))
+        (princ
+         (format
+          "Curated preview examples: %d%s\n"
+          (length examples)
+          (if examples
+              (format
+               " (%s)"
+               (mapconcat
+                #'emacsvox-aural-feature-fragment-example-summary
+                examples ", "))
+            ""))))
       (princ
        (format
         "Source: %s\n\nPresentations\n\n"
@@ -3142,6 +3203,208 @@ SCOPE is `personal', `session', or `buffer'."
       (when (fboundp 'tts-speak)
         (tts-speak summary)))
     summary))
+
+(defun emacsvox-aural-tools--fragment-matching-rules
+    (fragment facts context)
+  "Return FRAGMENT rules matching FACTS and CONTEXT."
+  (condition-case nil
+      (let ((input (emacsvox-aural-normalize-input facts context)))
+        (cl-remove-if-not
+         (lambda (rule)
+           (emacsvox-aural-rule-matches-p rule input))
+         (emacsvox-aural-tools--fragment-rules fragment)))
+    (emacsvox-aural-rule-error nil)))
+
+(defun emacsvox-aural-tools--fragment-live-preview-input (fragment)
+  "Return a live source preview input for FRAGMENT, or nil.
+
+The source facts and mode remain real.  When necessary, choose the occasion
+that lets the greatest number of fragment rules match those facts."
+  (when
+      (buffer-live-p emacsvox-aural-tools--last-source-buffer)
+    (with-current-buffer emacsvox-aural-tools--last-source-buffer
+      (when-let* ((facts (emacsvox-aural-facts-at-point)))
+        (let* ((rules (emacsvox-aural-tools--fragment-rules fragment))
+               (base-context (emacsvox-aural-context-at-point))
+               (current
+                (or (plist-get base-context :occasion) 'continuous))
+               (occasions
+                (delete-dups
+                 (cons
+                  current
+                  (delq
+                   nil
+                   (mapcar
+                    (lambda (rule)
+                      (emacsvox-aural-selector-occasion
+                       (emacsvox-aural-rule-selector rule)))
+                    rules)))))
+               best-context
+               best-count)
+          (dolist (occasion occasions)
+            (let* ((context
+                    (emacsvox-aural-tools--context-for-occasion
+                     base-context occasion))
+                   (count
+                    (length
+                     (emacsvox-aural-tools--fragment-matching-rules
+                      fragment facts context))))
+              (when (> count (or best-count 0))
+                (setq best-context context
+                      best-count count))))
+          (when best-context
+            (unless (plist-member facts :content)
+              (let ((content
+                     (string-trim
+                      (buffer-substring-no-properties
+                       (line-beginning-position)
+                       (line-end-position)))))
+                (setq
+                 facts
+                 (plist-put
+                  (copy-tree facts)
+                  :content
+                  (if (string-empty-p content) "Example" content)))))
+            (list
+             :kind 'live
+             :summary
+             (format "%s at point" (buffer-name))
+             :facts facts
+             :context best-context)))))))
+
+(defun emacsvox-aural-tools--fragment-preview-example
+    (fragment &optional example-id prompt)
+  "Return one simulated example for FRAGMENT.
+
+EXAMPLE-ID selects a particular example.  When PROMPT is non-nil, ask when
+more than one example is available."
+  (let ((examples
+         (emacsvox-aural-tools--fragment-preview-examples fragment)))
+    (unless examples
+      (user-error "Presentation option %s has no rules to preview" fragment))
+    (cond
+     (example-id
+      (or
+       (cl-find
+        example-id examples
+        :key #'emacsvox-aural-feature-fragment-example-id
+        :test #'eq)
+       (user-error
+        "Presentation option %s has no preview example %s"
+        fragment example-id)))
+     ((or (= (length examples) 1) (not prompt))
+      (car examples))
+     (t
+      (let* ((choices
+              (mapcar
+               (lambda (example)
+                 (cons
+                  (format
+                   "%s [%s]"
+                   (emacsvox-aural-feature-fragment-example-summary example)
+                   (emacsvox-aural-feature-fragment-example-id example))
+                  example))
+               examples))
+             (answer
+              (completing-read
+               "Preview example: " choices nil 'must-match)))
+        (cdr (assoc answer choices)))))))
+
+(defun emacsvox-aural-tools--fragment-preview-enabled-order (fragment)
+  "Return enabled option order with FRAGMENT included at stable precedence."
+  (let ((members
+         (cons
+          fragment
+          (copy-sequence emacsvox-aural-enabled-feature-fragments))))
+    (cl-remove-if-not
+     (lambda (id) (memq id members))
+     (emacsvox-aural-normalized-feature-fragment-order))))
+
+(defun emacsvox-aural-tools--play-fragment-preview
+    (fragment facts context isolated)
+  "Compile and play FRAGMENT for FACTS and CONTEXT.
+
+When ISOLATED is non-nil, resolve only the option's rules.  Otherwise combine
+it with the active configuration without changing persistent state."
+  (let* ((facts
+          (if (plist-member facts :content)
+              (copy-tree facts)
+            (plist-put (copy-tree facts) :content "Example")))
+         (render
+          (if isolated
+              (emacsvox-aural-resolve
+               facts context
+               (emacsvox-aural-tools--fragment-rules fragment))
+            (let
+                ((emacsvox-aural-enabled-feature-fragments
+                  (emacsvox-aural-tools--fragment-preview-enabled-order
+                   fragment))
+                 (emacsvox-aural--current-rules-cache
+                  (make-hash-table :test #'equal)))
+              (emacsvox-aural-resolve-active facts context))))
+         (concrete (emacsvox-aural-compile-plan render facts context)))
+    (emacsvox-aural--ensure-speaker)
+    (emacsvox-aural-queue-concrete-plan concrete)
+    (tts--protocol-dispatch)
+    concrete))
+
+(defun emacsvox-aural-feature-fragments-preview
+    (&optional isolated fragment example-id)
+  "Preview a presentation option without changing its enabled state.
+
+Use live facts from the remembered source buffer when they match FRAGMENT.
+Otherwise choose a curated or automatically derived simulated example.
+With prefix argument ISOLATED, play only the option rather than composing it
+with the active configuration.  EXAMPLE-ID selects a simulation directly."
+  (interactive "P")
+  (let* ((interactivep (called-interactively-p 'interactive))
+         (fragment
+          (or
+           fragment
+           (emacsvox-aural-tools--fragment-at-point-or-read
+            "Preview presentation option: ")))
+         (live
+          (unless example-id
+            (emacsvox-aural-tools--fragment-live-preview-input fragment)))
+         (example
+          (unless live
+            (emacsvox-aural-tools--fragment-preview-example
+             fragment example-id interactivep)))
+         (kind (if live 'live 'simulated))
+         (summary
+          (if live
+              (plist-get live :summary)
+            (emacsvox-aural-feature-fragment-example-summary example)))
+         (facts
+          (copy-tree
+           (if live
+               (plist-get live :facts)
+             (emacsvox-aural-feature-fragment-example-facts example))))
+         (context
+          (copy-tree
+           (if live
+               (plist-get live :context)
+             (emacsvox-aural-feature-fragment-example-context example))))
+         (announcement
+          (format
+           "%s preview. %s. %s occasion."
+           (if live "Live source context" "Simulated example")
+           summary
+           (emacsvox-aural-tools--humanize
+            (or (plist-get context :occasion) 'continuous)))))
+    (message "%s" announcement)
+    (when (and interactivep (fboundp 'tts-speak))
+      (tts-speak announcement))
+    (list
+     :kind kind
+     :fragment fragment
+     :example
+     (and example
+          (emacsvox-aural-feature-fragment-example-id example))
+     :announcement announcement
+     :concrete
+     (emacsvox-aural-tools--play-fragment-preview
+      fragment facts context isolated))))
 
 (defun emacsvox-aural-tools--install-feature-fragment-state
     (registry enabled &optional order)
@@ -3411,11 +3674,13 @@ SCOPE is `personal', `session', or `buffer'."
       "TAB or RET on a collection expands or collapses it.  The active-order view\n"
       "shows enabled options from weakest to strongest.  Toggling an option never\n"
       "changes its stable precedence.  Personal overrides remain stronger.\n"
-      "Row and column movement speaks titles, values, and list boundaries.\n\n"
-      "n or down next       p or up previous\n"
+      "n/p and column movement speak titles, values, and list boundaries.\n\n"
+      "C-n or down next     C-p or up previous\n"
+      "n next titled row    p previous titled row\n"
       "left/right column    . speak titled cell\n"
       "RET open/toggle      TAB expand/collapse collection\n"
       "SPC speak row        a grouped/active-order view\n"
+      "P preview option     C-u P preview option alone\n"
       "t enable/disable     M-up/M-down reorder enabled options\n"
       "N create personal    c copy as personal\n"
       "e edit personal      d delete personal\n"
@@ -3451,11 +3716,12 @@ SCOPE is `personal', `session', or `buffer'."
        ("." . emacsvox-aural-feature-fragments-speak-current-cell)
        ("n" . emacsvox-aural-feature-fragments-next)
        ("p" . emacsvox-aural-feature-fragments-previous)
-       ("<down>" . emacsvox-aural-feature-fragments-next)
-       ("<up>" . emacsvox-aural-feature-fragments-previous)
+       ("<down>" . next-line)
+       ("<up>" . previous-line)
        ("<right>" . emacsvox-aural-feature-fragments-next-column)
        ("<left>" . emacsvox-aural-feature-fragments-previous-column)
        ("a" . emacsvox-aural-feature-fragments-toggle-view)
+       ("P" . emacsvox-aural-feature-fragments-preview)
        ("t" . emacsvox-aural-feature-fragments-toggle)
        ("<M-up>" . emacsvox-aural-feature-fragments-move-up)
        ("<M-down>" . emacsvox-aural-feature-fragments-move-down)

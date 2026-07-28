@@ -1,4 +1,4 @@
-;;; emacsvox-aural-org.el --- Data-only Org aural schemes -*- lexical-binding: t; -*-
+;;; emacsvox-aural-provider-org.el --- Data-only Org aural provider -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -246,6 +246,23 @@
            :kind speech
            :text-template "Heading {level} is now opened")))))))))
 
+(defconst emacsvox-org-aural-feature-fragment-examples
+  '((org-heading-level-labels org-level-three
+     :rule org-fragment-heading-level-label
+     :summary "Level three Org heading"
+     :facts
+     (:role heading :level 3 :visibility expanded
+      :content "Project milestones")
+     :context (:module org :mode org-mode :occasion navigation))
+    (org-heading-visibility-changes org-level-two-folded
+     :rule org-fragment-heading-folded
+     :summary "Level two Org heading folded"
+     :facts
+     (:role heading :events (state-changed) :level 2 :visibility folded
+      :content "Implementation details")
+     :context (:module org :mode org-mode :occasion state-change)))
+  "Curated data-only previews for optional Org presentation features.")
+
 (defun emacsvox-org-register-aural-presentation ()
   "Register Org compatibility rules, examples, and optional fragments."
   (dolist (definition emacsvox-org-aural-semantic-definitions)
@@ -276,18 +293,25 @@
           ((:id org-heading-edit-open
             :kind cue
             :cue open-object))))))
-     :source "emacsvox-aural-org"))
+     :source "emacsvox-aural-provider-org"))
   (dolist (data (emacsvox-org-aural-example-scheme-data))
     (unless (emacsvox-aural-scheme-entry (plist-get data :id))
       (emacsvox-aural-register-scheme
-       data :built-in t :source "emacsvox-aural-org")))
+       data :built-in t :source "emacsvox-aural-provider-org")))
   (dolist (data (emacsvox-org-aural-feature-fragment-data))
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-org"
-       :collection 'org))))
+       data :built-in t :source "emacsvox-aural-provider-org"
+       :collection 'org)))
+  (dolist (definition emacsvox-org-aural-feature-fragment-examples)
+    (apply
+     #'emacsvox-aural-register-feature-fragment-example
+     (car definition)
+     (cadr definition)
+     :source "emacsvox-aural-provider-org"
+     (cddr definition))))
 
 (emacsvox-org-register-aural-presentation)
 
-(provide 'emacsvox-aural-org)
-;;; emacsvox-aural-org.el ends here
+(provide 'emacsvox-aural-provider-org)
+;;; emacsvox-aural-provider-org.el ends here

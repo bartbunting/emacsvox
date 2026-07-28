@@ -1,4 +1,4 @@
-;;; emacsvox-aural-representative.el --- Cross-module aural semantics -*- lexical-binding: t; -*-
+;;; emacsvox-aural-provider-workflows.el --- Shared workflow aural provider -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Emacsvox Contributors
 
@@ -6,8 +6,8 @@
 
 ;;; Commentary:
 
-;; Register the lightweight semantic vocabulary shared by the representative
-;; Notmuch, Agent Shell, Python, and Vertico migrations.  This file has no
+;; Register the lightweight semantic vocabulary shared by the Notmuch, Gnus,
+;; Dired, Magit, Agent Shell, Python, and Vertico integrations.  This file has no
 ;; dependency on those packages, so personal schemes can validate at startup
 ;; before any integration is loaded.
 
@@ -16,7 +16,7 @@
 (require 'emacsvox-aural)
 (require 'emacsvox-aural-schemes)
 
-(defconst emacsvox-aural-representative-semantics
+(defconst emacsvox-aural-workflow-semantics
   '((message
      :kind role
      :summary "A mail or communication message"
@@ -874,9 +874,9 @@
            :kind cue :cue open-object))))))))
   "Optional built-in presentation layers for Agent Shell transcript blocks.")
 
-(defun emacsvox-aural-register-representative-semantics ()
-  "Register the representative cross-module semantic vocabulary."
-  (dolist (definition emacsvox-aural-representative-semantics)
+(defun emacsvox-aural-register-workflow-provider ()
+  "Register the shared cross-module workflow semantic vocabulary."
+  (dolist (definition emacsvox-aural-workflow-semantics)
     (let ((id (car definition))
           (metadata (cdr definition)))
       (unless (emacsvox-aural-semantic id)
@@ -885,7 +885,7 @@
   (dolist (data emacsvox-aural-workflow-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-representative"
+       data :built-in t :source "emacsvox-aural-provider-workflows"
        :collection
        (pcase (plist-get data :id)
          ('mail-message-status-cues 'mail)
@@ -895,10 +895,10 @@
   (dolist (data emacsvox-aural-agent-shell-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment
-       data :built-in t :source "emacsvox-aural-representative"
+       data :built-in t :source "emacsvox-aural-provider-workflows"
        :collection 'agent-shell))))
 
-(emacsvox-aural-register-representative-semantics)
+(emacsvox-aural-register-workflow-provider)
 
-(provide 'emacsvox-aural-representative)
-;;; emacsvox-aural-representative.el ends here
+(provide 'emacsvox-aural-provider-workflows)
+;;; emacsvox-aural-provider-workflows.el ends here
