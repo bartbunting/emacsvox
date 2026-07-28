@@ -42,6 +42,12 @@
      :owner core
      :occasions (navigation state-change inspection)
      :phases (before content after))
+    (aural-interface-opened
+     :kind event
+     :summary "An Emacsvox aural interface was displayed"
+     :owner core
+     :occasions (state-change)
+     :phases (before content after))
     (aural-interface-closed
      :kind event
      :summary "An Emacsvox aural interface was dismissed"

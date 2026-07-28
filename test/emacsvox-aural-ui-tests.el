@@ -41,6 +41,56 @@
     (special-mode)
     (should-not (emacsvox-aural-ui-interface-buffer-p))))
 
+(ert-deftest emacsvox-aural-ui-open-announces-semantic-interface-event ()
+  "Opening an interface plays one remappable cue after displaying it."
+  (let ((noninteractive nil)
+        displayed
+        events)
+    (cl-letf
+        (((symbol-function 'pop-to-buffer)
+          (lambda (buffer)
+            (setq displayed buffer)
+            'selected-window))
+         ((symbol-function 'emacsvox-aural-capture-context)
+          (lambda (module occasion)
+            (list :module module :occasion occasion)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (cue)
+            (push
+             (list
+              cue
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context)
+              emacsvox-aural-submission-module
+              emacsvox-aural-submission-occasion)
+             events))))
+      (should
+       (eq
+        (emacsvox-aural-ui-pop-to-buffer "*Aural Test*")
+        'selected-window)))
+    (should (equal displayed "*Aural Test*"))
+    (should
+     (equal
+      events
+      '((open-object
+         (:role aural-interface :events (aural-interface-opened))
+         (:module aural-tools :occasion state-change)
+         aural-tools
+         state-change))))))
+
+(ert-deftest emacsvox-aural-ui-open-remains-silent-in-batch-sessions ()
+  "Programmatic batch interface setup does not attempt audio output."
+  (let ((noninteractive t))
+    (cl-letf
+        (((symbol-function 'pop-to-buffer) (lambda (_) 'selected-window))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _)
+            (ert-fail "Batch interface opening must remain silent"))))
+      (should
+       (eq
+        (emacsvox-aural-ui-pop-to-buffer "*Aural Test*")
+        'selected-window)))))
+
 (ert-deftest emacsvox-aural-ui-common-tabulated-bindings-are-consistent ()
   "All conventional row keys should use the spoken navigation commands."
   (with-temp-buffer

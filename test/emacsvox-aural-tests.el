@@ -37,7 +37,9 @@
   (should (emacsvox-aural-validate-registry))
   (dolist
       (id
-       '(message field field-kind unread flagged has-attachments
+       '(message field field-kind
+         aural-interface aural-interface-opened aural-interface-closed
+         unread flagged has-attachments
          refresh-completed refresh-failed code-construct syntax-role
          boundary-entered candidate selected accepted completion-index
          agent-session agent-response agent-thought agent-tool

@@ -907,7 +907,7 @@ PATH protects completion from invalid inheritance cycles."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-sound-packs-refresh
        (or pack emacsvox-sounds-current-pack)))
-    (pop-to-buffer buffer)
+    (emacsvox-aural-ui-pop-to-buffer buffer)
     (when
         (and
          (called-interactively-p 'interactive)
@@ -934,7 +934,7 @@ PATH protects completion from invalid inheritance cycles."
       (emacsvox-aural-inspection-attach-source source)
       (setq emacsvox-aural-sound-pack-cues-pack pack)
       (emacsvox-aural-sound-pack-cues-refresh))
-    (pop-to-buffer buffer)
+    (emacsvox-aural-ui-pop-to-buffer buffer)
     (when
         (and
          (called-interactively-p 'interactive)

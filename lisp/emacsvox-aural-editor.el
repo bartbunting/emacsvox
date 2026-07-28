@@ -1229,7 +1229,7 @@ the ordinary source associated with the current buffer for buffer scope."
        emacsvox-aural-editor-rules (copy-tree rules)
        emacsvox-aural-editor-dirty nil)
       (emacsvox-aural-editor-refresh))
-    (pop-to-buffer buffer)))
+    (emacsvox-aural-ui-pop-to-buffer buffer)))
 
 (defun emacsvox-edit-aural-scheme-advanced (&optional scheme)
   "Open the advanced declarative editor for personal SCHEME."

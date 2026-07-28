@@ -72,6 +72,27 @@ as the ordinary buffer from which this interface was opened."
   (with-current-buffer (or buffer (current-buffer))
     emacsvox-aural-ui-interface-buffer))
 
+(defun emacsvox-aural-ui-pop-to-buffer (buffer)
+  "Display aural interface BUFFER and announce that it opened.
+
+Interactive Emacs sessions play the scheme-resolved `open-object' cue with
+semantic event `aural-interface-opened'.  Batch sessions remain silent.
+Return the window selected by `pop-to-buffer'."
+  (let ((window (pop-to-buffer buffer)))
+    (when
+        (and
+         (not noninteractive)
+         (fboundp 'emacsvox-icon))
+      (let ((emacsvox-aural-submission-facts
+             '(:role aural-interface :events (aural-interface-opened)))
+            (emacsvox-aural-submission-context
+             (emacsvox-aural-capture-context
+              'aural-tools 'state-change))
+            (emacsvox-aural-submission-module 'aural-tools)
+            (emacsvox-aural-submission-occasion 'state-change))
+        (emacsvox-icon 'open-object)))
+    window))
+
 (defun emacsvox-aural-ui-configure-tabulated
     (list-name row-speaker refresh-function
                &optional move-speaker after-move-function)

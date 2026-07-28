@@ -430,7 +430,7 @@ MUTATION."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-profiles-refresh
        (or profile (emacsvox-aural-profiles--current-id))))
-    (pop-to-buffer buffer)
+    (emacsvox-aural-ui-pop-to-buffer buffer)
     (if (tabulated-list-get-id)
         (when (called-interactively-p 'interactive)
           (emacsvox-aural-profiles-speak-current))

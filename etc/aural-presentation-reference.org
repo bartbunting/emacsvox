@@ -153,6 +153,7 @@ Operational semantic contract version: =1=.
 | =agent-viewport-refreshed= | =event= | =agent-shell= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | An Agent Shell viewport finished refreshing |
 | =aural-interface= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | An Emacsvox aural manager, browser, or editor |
 | =aural-interface-closed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Emacsvox aural interface was dismissed |
+| =aural-interface-opened= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Emacsvox aural interface was displayed |
 | =boundary-entered= | =event= | =core= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation arrived at a source-code boundary |
 | =candidate= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | One available completion candidate |
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |

@@ -476,7 +476,7 @@
       (emacsvox-aural-doctor-mode)
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-doctor-refresh))
-    (pop-to-buffer buffer)
+    (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
       (let ((summary
              (concat

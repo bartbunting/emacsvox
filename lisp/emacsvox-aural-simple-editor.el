@@ -1387,7 +1387,7 @@ instead of replacing it."
            (emacsvox-aural-scheme-entry-data entry) :rules))
          emacsvox-aural-editor-dirty nil)
         (emacsvox-aural-simple-editor-refresh))
-      (pop-to-buffer buffer)
+      (emacsvox-aural-ui-pop-to-buffer buffer)
       (emacsvox-aural-simple-editor--speak-current-field)
       buffer)))
 

@@ -1613,7 +1613,7 @@ ANNOUNCEMENT overrides the normal setting description."
          emacsvox-aural-voice-tuner-preview-text text
          emacsvox-aural-voice-tuner-source-buffer source)
         (emacsvox-aural-voice-tuner-refresh))
-      (pop-to-buffer buffer)
+      (emacsvox-aural-ui-pop-to-buffer buffer)
       (emacsvox-aural-voice-tuner-speak-current)
       buffer)))
 
@@ -1702,7 +1702,7 @@ after displaying the preview buffer."
        emacsvox-aural-voice-palette-previews-text
        emacsvox-aural-voice-palettes-preview-text)
       (emacsvox-aural-voice-palette-previews-refresh voice))
-    (pop-to-buffer buffer)
+    (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (and speak (tabulated-list-get-id))
       (emacsvox-aural-voice-palette-previews-speak-current))
     buffer))
@@ -1847,7 +1847,7 @@ after displaying the preview buffer."
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-voice-palettes-refresh
        (or palette (emacsvox-aural-voice-palettes--active-id))))
-    (pop-to-buffer buffer)
+    (emacsvox-aural-ui-pop-to-buffer buffer)
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-voice-palettes-speak-current))
     buffer))
