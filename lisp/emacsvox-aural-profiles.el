@@ -224,24 +224,39 @@
       (emacsvox-aural-profiles-speak-current))
     id))
 
+(defun emacsvox-aural-profiles--persist-mutation (mutation)
+  "Persist MUTATION against staged profile state, then publish it.
+
+MUTATION is called with copies of the profile registry and selected profile
+dynamically installed.  If mutation, validation, or persistence fails, the
+live registry and selected profile remain unchanged.  Return the value of
+MUTATION."
+  (let ((registry (copy-hash-table emacsvox-aural-profile-registry))
+        (active-profile emacsvox-aural-active-profile)
+        result)
+    (let ((emacsvox-aural-profile-registry registry)
+          (emacsvox-aural-active-profile active-profile))
+      (setq result (funcall mutation)
+            active-profile emacsvox-aural-active-profile)
+      (emacsvox-aural-save-user-data))
+    (setq
+     emacsvox-aural-profile-registry registry
+     emacsvox-aural-active-profile active-profile)
+    result))
+
 (defun emacsvox-aural-profiles-create ()
   "Save the complete current presentation configuration as a new profile."
   (interactive)
   (let* ((id (emacsvox-aural-profiles--read-new-id))
-         (old-active emacsvox-aural-active-profile)
          (summary
           (read-string "Profile purpose: "
                        (format "Saved presentation profile %s" id)))
          (data (emacsvox-aural-capture-profile-data id summary)))
-    (emacsvox-aural-register-profile
-     data :source emacsvox-aural-schemes-file)
-    (setq emacsvox-aural-active-profile id)
-    (condition-case error
-        (emacsvox-aural-save-user-data)
-      (error
-       (remhash id emacsvox-aural-profile-registry)
-       (setq emacsvox-aural-active-profile old-active)
-       (signal (car error) (cdr error))))
+    (emacsvox-aural-profiles--persist-mutation
+     (lambda ()
+       (emacsvox-aural-register-profile
+        data :source emacsvox-aural-schemes-file)
+       (setq emacsvox-aural-active-profile id)))
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-profiles-speak-current)
     id))
@@ -262,13 +277,10 @@
                        (plist-get source-data :summary)))
          (data (plist-put (copy-tree source-data) :id id)))
     (setq data (plist-put data :summary summary))
-    (emacsvox-aural-register-profile
-     data :source emacsvox-aural-schemes-file)
-    (condition-case error
-        (emacsvox-aural-save-user-data)
-      (error
-       (remhash id emacsvox-aural-profile-registry)
-       (signal (car error) (cdr error))))
+    (emacsvox-aural-profiles--persist-mutation
+     (lambda ()
+       (emacsvox-aural-register-profile
+        data :source emacsvox-aural-schemes-file)))
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-profiles-speak-current)
     id))
@@ -277,21 +289,17 @@
   "Replace the profile at point with the complete current configuration."
   (interactive)
   (let* ((id (emacsvox-aural-profiles--at-point-or-read))
-         (old (emacsvox-aural-profile-entry id))
-         (old-active emacsvox-aural-active-profile)
          (summary
           (plist-get
-           (emacsvox-aural-profile-entry-data old) :summary))
+           (emacsvox-aural-profile-entry-data
+            (emacsvox-aural-profile-entry id))
+           :summary))
          (data (emacsvox-aural-capture-profile-data id summary)))
-    (emacsvox-aural-register-profile
-     data :source emacsvox-aural-schemes-file :replace t)
-    (setq emacsvox-aural-active-profile id)
-    (condition-case error
-        (emacsvox-aural-save-user-data)
-      (error
-       (puthash id old emacsvox-aural-profile-registry)
-       (setq emacsvox-aural-active-profile old-active)
-       (signal (car error) (cdr error))))
+    (emacsvox-aural-profiles--persist-mutation
+     (lambda ()
+       (emacsvox-aural-register-profile
+        data :source emacsvox-aural-schemes-file :replace t)
+       (setq emacsvox-aural-active-profile id)))
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-profiles-speak-current)
     id))
@@ -300,28 +308,22 @@
   "Rename the presentation profile at point."
   (interactive)
   (let* ((old-id (emacsvox-aural-profiles--at-point-or-read))
-         (old-entry (emacsvox-aural-profile-entry old-id))
-         (old-active emacsvox-aural-active-profile)
          (new-id
           (emacsvox-aural-profiles--read-new-id
            "Rename profile to: " (symbol-name old-id)))
          (data
           (plist-put
-           (copy-tree (emacsvox-aural-profile-entry-data old-entry))
+           (copy-tree
+            (emacsvox-aural-profile-entry-data
+             (emacsvox-aural-profile-entry old-id)))
            :id new-id)))
-    (remhash old-id emacsvox-aural-profile-registry)
-    (when (eq old-id emacsvox-aural-active-profile)
-      (setq emacsvox-aural-active-profile new-id))
-    (condition-case error
-        (progn
-          (emacsvox-aural-register-profile
-           data :source emacsvox-aural-schemes-file)
-          (emacsvox-aural-save-user-data))
-      (error
-       (remhash new-id emacsvox-aural-profile-registry)
-       (puthash old-id old-entry emacsvox-aural-profile-registry)
-       (setq emacsvox-aural-active-profile old-active)
-       (signal (car error) (cdr error))))
+    (emacsvox-aural-profiles--persist-mutation
+     (lambda ()
+       (remhash old-id emacsvox-aural-profile-registry)
+       (when (eq old-id emacsvox-aural-active-profile)
+         (setq emacsvox-aural-active-profile new-id))
+       (emacsvox-aural-register-profile
+        data :source emacsvox-aural-schemes-file)))
     (emacsvox-aural-profiles-refresh new-id)
     (emacsvox-aural-profiles-speak-current)
     new-id))
@@ -329,20 +331,11 @@
 (defun emacsvox-aural-profiles-delete ()
   "Delete the personal presentation profile at point."
   (interactive)
-  (let* ((id (emacsvox-aural-profiles--at-point-or-read))
-         (entry (emacsvox-aural-profile-entry id))
-         (old-active emacsvox-aural-active-profile))
+  (let ((id (emacsvox-aural-profiles--at-point-or-read)))
     (unless (yes-or-no-p (format "Delete presentation profile %s? " id))
       (user-error "Deletion cancelled"))
-    (remhash id emacsvox-aural-profile-registry)
-    (when (eq id emacsvox-aural-active-profile)
-      (setq emacsvox-aural-active-profile nil))
-    (condition-case error
-        (emacsvox-aural-save-user-data)
-      (error
-       (puthash id entry emacsvox-aural-profile-registry)
-       (setq emacsvox-aural-active-profile old-active)
-       (signal (car error) (cdr error))))
+    (emacsvox-aural-profiles--persist-mutation
+     (lambda () (emacsvox-aural-delete-profile id)))
     (emacsvox-aural-profiles-refresh)
     (if (tabulated-list-get-id)
         (emacsvox-aural-profiles-speak-current)

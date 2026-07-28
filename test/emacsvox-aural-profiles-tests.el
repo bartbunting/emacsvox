@@ -183,6 +183,70 @@
           (should (emacsvox-aural-profile-entry 'first))
           (should-not (emacsvox-aural-profile-entry 'renamed)))))))
 
+(ert-deftest emacsvox-aural-profiles-manager-mutations-are-transactional ()
+  "Failed persistence publishes none of the five profile mutations."
+  (dolist
+      (case
+       '((emacsvox-aural-profiles-create
+          created ("created" "work") created)
+         (emacsvox-aural-profiles-copy
+          copied ("copied" "work") work)
+         (emacsvox-aural-profiles-update-from-current
+          unused ("work") work)
+         (emacsvox-aural-profiles-rename
+          renamed ("renamed") renamed)
+         (emacsvox-aural-profiles-delete
+          unused nil nil)))
+    (emacsvox-test--with-aural-profiles
+      (emacsvox-aural-register-profile
+       (emacsvox-test--profile-data)
+       :source emacsvox-aural-schemes-file)
+      (setq
+       emacsvox-aural-active-profile 'work
+       emacsvox-aural-enabled-feature-fragments '(profile-feature)
+       emacsvox-aural-spatial-output 'mono)
+      (let* ((command (nth 0 case))
+             (new-id (nth 1 case))
+             (expected-ids (nth 2 case))
+             (expected-active (nth 3 case))
+             (original-registry emacsvox-aural-profile-registry)
+             (original-entry (emacsvox-aural-profile-entry 'work))
+             (original-live-state
+              (list
+               (emacsvox-aural--capture-coordinated-state)
+               emacsvox-aural-spatial-output))
+             staged-registry
+             staged-ids
+             staged-active)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-profiles--at-point-or-read)
+              (lambda () 'work))
+             ((symbol-function 'emacsvox-aural-profiles--read-new-id)
+              (lambda (&rest _) new-id))
+             ((symbol-function 'read-string)
+              (lambda (&rest _) "Transactional profile"))
+             ((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
+             ((symbol-function 'emacsvox-aural-save-user-data)
+              (lambda (&rest _)
+                (setq
+                 staged-registry emacsvox-aural-profile-registry
+                 staged-ids (emacsvox-aural-profile-candidates)
+                 staged-active emacsvox-aural-active-profile)
+                (error "Simulated persistence failure"))))
+          (should-error (funcall command)))
+        (should-not (eq staged-registry original-registry))
+        (should (equal staged-ids expected-ids))
+        (should (eq staged-active expected-active))
+        (should (eq emacsvox-aural-profile-registry original-registry))
+        (should (eq (emacsvox-aural-profile-entry 'work) original-entry))
+        (should (eq emacsvox-aural-active-profile 'work))
+        (should
+         (equal
+          (list
+           (emacsvox-aural--capture-coordinated-state)
+           emacsvox-aural-spatial-output)
+          original-live-state))))))
+
 (ert-deftest emacsvox-aural-profiles-application-rolls-back-on-error ()
   "A failed concrete sound switch restores every already changed setting."
   (emacsvox-test--with-aural-profiles
