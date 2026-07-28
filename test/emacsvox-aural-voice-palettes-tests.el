@@ -131,7 +131,85 @@
            (eq
             (emacsvox-aural-voice-palette-parent
              (emacsvox-aural-voice-palette 'reading))
-            'acss-default)))))))
+            'acss-default))
+          (let (staged-registry staged-summary)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-save-user-data)
+                  (lambda (&optional _)
+                    (setq
+                     staged-registry
+                     emacsvox-aural-voice-palette-registry
+                     staged-summary
+                     (emacsvox-aural-voice-palette-summary
+                      (emacsvox-aural-voice-palette 'reading)))
+                    (error "Simulated persistence failure"))))
+              (should-error
+               (emacsvox-aural-voice-palettes--install-data
+                (plist-put
+                 (copy-tree emacsvox-test--voice-palette-data)
+                 :summary "Unsaved replacement")
+                'reading)))
+            (should-not (eq staged-registry before))
+            (should (equal staged-summary "Unsaved replacement"))
+            (should (eq emacsvox-aural-voice-palette-registry before))
+            (should
+             (equal
+              (emacsvox-aural-voice-palette-summary
+               (emacsvox-aural-voice-palette 'reading))
+              "Reading voices"))))))))
+
+(ert-deftest emacsvox-aural-voice-palettes-delete-is-transactional ()
+  "Failed deletion persistence leaves the palette and override live."
+  (emacsvox-test--with-voice-palettes
+    (emacsvox-aural-register-voice-palette-data
+     emacsvox-test--voice-palette-data)
+    (setq emacsvox-aural-voice-palette-override 'reading)
+    (let ((before emacsvox-aural-voice-palette-registry)
+          staged-registry
+          staged-entry)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-palettes--at-point-or-read)
+            (lambda (&optional _) 'reading))
+           ((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
+           ((symbol-function 'emacsvox-aural-save-user-data)
+            (lambda (&optional _)
+              (setq
+               staged-registry emacsvox-aural-voice-palette-registry
+               staged-entry (emacsvox-aural-voice-palette 'reading))
+              (error "Simulated persistence failure"))))
+        (should-error (emacsvox-aural-voice-palettes-delete)))
+      (should-not (eq staged-registry before))
+      (should-not staged-entry)
+      (should (eq emacsvox-aural-voice-palette-registry before))
+      (should (emacsvox-aural-voice-palette 'reading))
+      (should (eq emacsvox-aural-voice-palette-override 'reading))
+      (let ((selected 'not-called)
+            saved-registry)
+        (cl-letf
+            (((symbol-function
+               'emacsvox-aural-voice-palettes--at-point-or-read)
+              (lambda (&optional _) 'reading))
+             ((symbol-function 'yes-or-no-p) (lambda (&rest _) t))
+             ((symbol-function 'emacsvox-aural-save-user-data)
+              (lambda (&optional _)
+                (setq
+                 saved-registry
+                 emacsvox-aural-voice-palette-registry)))
+             ((symbol-function 'emacsvox-aural-select-voice-palette)
+              (lambda (palette)
+                (setq
+                 selected palette
+                 emacsvox-aural-voice-palette-override palette)))
+             ((symbol-function 'emacsvox-aural-voice-palettes-refresh)
+              #'ignore)
+             ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+              #'ignore))
+          (should
+           (eq (emacsvox-aural-voice-palettes-delete) 'reading)))
+        (should (eq saved-registry emacsvox-aural-voice-palette-registry))
+        (should-not (emacsvox-aural-voice-palette 'reading))
+        (should-not selected)
+        (should-not emacsvox-aural-voice-palette-override)))))
 
 (ert-deftest emacsvox-aural-voice-palettes-activate-and-follow-scheme ()
   "The manager can select an override and return control to the scheme."

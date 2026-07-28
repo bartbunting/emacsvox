@@ -221,28 +221,42 @@
           (if current (symbol-name current) "acss-default"))))
     (unless (equal answer "none") (intern answer))))
 
-(defun emacsvox-aural-voice-palettes--install-data (data &optional old-id)
-  "Atomically install personal palette DATA, replacing OLD-ID when non-nil."
+(defun emacsvox-aural-voice-palettes--persist-mutation (mutation)
+  "Persist MUTATION against a staged palette registry, then publish it.
+
+MUTATION is called with a copy of the voice-palette registry dynamically
+installed.  The complete candidate registry is validated and saved before it
+replaces live state.  Return the value of MUTATION."
   (let ((registry
          (copy-hash-table emacsvox-aural-voice-palette-registry))
-        record)
-    (when old-id
-      (remhash old-id registry))
+        result)
     (let ((emacsvox-aural-voice-palette-registry registry))
-      (setq
-       record
-       (emacsvox-aural-compile-voice-palette-data
-        data nil emacsvox-aural-schemes-file))
-      (let ((id (emacsvox-aural-voice-palette-id record)))
-        (when (gethash id registry)
-          (user-error "Voice palette already exists: %s" id))
-        (puthash id record registry)
-        (maphash
-         (lambda (palette-id _)
-           (emacsvox-aural-effective-voice-entries palette-id))
-         registry)
-        (emacsvox-aural-save-user-data)))
+      (setq result (funcall mutation))
+      (maphash
+       (lambda (palette-id _)
+         (emacsvox-aural-effective-voice-entries palette-id))
+       registry)
+      (emacsvox-aural-save-user-data))
     (setq emacsvox-aural-voice-palette-registry registry)
+    result))
+
+(defun emacsvox-aural-voice-palettes--install-data (data &optional old-id)
+  "Atomically install personal palette DATA, replacing OLD-ID when non-nil."
+  (let ((record
+         (emacsvox-aural-voice-palettes--persist-mutation
+          (lambda ()
+            (when old-id
+              (remhash old-id emacsvox-aural-voice-palette-registry))
+            (let* ((record
+                    (emacsvox-aural-compile-voice-palette-data
+                     data nil emacsvox-aural-schemes-file))
+                   (id (emacsvox-aural-voice-palette-id record)))
+              (when
+                  (gethash id emacsvox-aural-voice-palette-registry)
+                (user-error "Voice palette already exists: %s" id))
+              (puthash
+               id record emacsvox-aural-voice-palette-registry)
+              record)))))
     (emacsvox-aural-home-refresh-if-live)
     record))
 
@@ -646,12 +660,10 @@
        id (string-join references ", ")))
     (unless (yes-or-no-p (format "Delete voice palette %s? " id))
       (user-error "Deletion cancelled"))
-    (let ((registry
-           (copy-hash-table emacsvox-aural-voice-palette-registry)))
-      (remhash id registry)
-      (let ((emacsvox-aural-voice-palette-registry registry))
-        (emacsvox-aural-save-user-data))
-      (setq emacsvox-aural-voice-palette-registry registry))
+    (emacsvox-aural-voice-palettes--persist-mutation
+     (lambda ()
+       (remhash id emacsvox-aural-voice-palette-registry)
+       id))
     (when (eq id emacsvox-aural-voice-palette-override)
       (emacsvox-aural-select-voice-palette nil))
     (emacsvox-aural-voice-palettes-refresh)
