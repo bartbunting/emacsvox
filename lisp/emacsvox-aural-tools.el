@@ -45,6 +45,14 @@
 (defvar emacsvox-aural-training-mode nil
   "Non-nil when semantic training explanations are enabled.")
 
+(defcustom emacsvox-aural-training-voice 'annotate
+  "Palette-aware voice used for semantic training explanations."
+  :type 'symbol
+  :group 'emacsvox-aural)
+
+(defvar emacsvox-aural-tools--pending-training-explanations nil
+  "Training explanations waiting for the current command to finish.")
+
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
 (declare-function emacsvox-edit-aural-scheme
                   "emacsvox-aural-editor" (&optional scheme))
@@ -3688,26 +3696,62 @@ SCOPE is `personal', `session', or `buffer'."
         (concat (string-join (nreverse (delete-dups parts)) ", ") ".")
       "Unannotated content.")))
 
+(defun emacsvox-aural-tools--queue-training-explanation (text)
+  "Queue training explanation TEXT in the configured training voice."
+  (let ((voice-command
+         (emacsvox-aural-compile-voice emacsvox-aural-training-voice)))
+    (unless (eq voice-command 'inaudible)
+      (tts--protocol-queue-code (tts-voice-reset-code))
+      (when voice-command
+        (tts--protocol-queue-code voice-command))
+      (tts--protocol-queue-text text)
+      (tts--protocol-queue-code (tts-voice-reset-code)))))
+
+(defun emacsvox-aural-tools--training-command-active-p ()
+  "Return non-nil while an interactive command is being presented."
+  (or this-command
+      (and (boundp 'real-this-command) real-this-command)))
+
 (defun emacsvox-aural-tools--training-presented (plan)
-  "Queue a concise semantic explanation after concrete PLAN."
+  "Retain a concise semantic explanation after concrete PLAN."
   (let ((text
          (emacsvox-aural-concise-explanation
           (emacsvox-aural-concrete-plan-facts plan)
           (emacsvox-aural-concrete-plan-context plan))))
-    (tts--protocol-queue-code (tts-voice-reset-code))
-    (tts--protocol-queue-text text)))
+    (if (emacsvox-aural-tools--training-command-active-p)
+        (push text emacsvox-aural-tools--pending-training-explanations)
+      (emacsvox-aural-tools--queue-training-explanation text))))
+
+(defun emacsvox-aural-tools--flush-training-explanations ()
+  "Queue deferred training explanations after normal command feedback."
+  (when emacsvox-aural-tools--pending-training-explanations
+    (let ((explanations
+           (nreverse emacsvox-aural-tools--pending-training-explanations)))
+      (setq emacsvox-aural-tools--pending-training-explanations nil)
+      (dolist (text explanations)
+        (emacsvox-aural-tools--queue-training-explanation text))
+      (tts--protocol-dispatch))))
 
 (define-minor-mode emacsvox-aural-training-mode
   "Speak concise semantics after each normal aural presentation."
   :global t
   :group 'emacsvox-aural
   (if emacsvox-aural-training-mode
-      (add-hook
-       'emacsvox-aural-plan-presented-hook
-       #'emacsvox-aural-tools--training-presented)
+      (progn
+        (setq emacsvox-aural-tools--pending-training-explanations nil)
+        (add-hook
+         'emacsvox-aural-plan-presented-hook
+         #'emacsvox-aural-tools--training-presented)
+        (add-hook
+         'post-command-hook
+         #'emacsvox-aural-tools--flush-training-explanations t))
     (remove-hook
      'emacsvox-aural-plan-presented-hook
-     #'emacsvox-aural-tools--training-presented)))
+     #'emacsvox-aural-tools--training-presented)
+    (remove-hook
+     'post-command-hook
+     #'emacsvox-aural-tools--flush-training-explanations)
+    (setq emacsvox-aural-tools--pending-training-explanations nil)))
 
 ;; Keep the established verb-first commands while exposing one discoverable
 ;; `emacsvox-aural-' command namespace.

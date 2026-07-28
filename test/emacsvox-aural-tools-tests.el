@@ -46,7 +46,12 @@
          (emacsvox-aural-face-presentation-enabled t)
          (emacsvox-aural-face-presentation-changed-hook nil)
          (emacsvox-aural-plan-presented-hook nil)
+         (post-command-hook nil)
+         (this-command nil)
+         (real-this-command nil)
          (emacsvox-aural-training-mode nil)
+         (emacsvox-aural-training-voice 'annotate)
+         (emacsvox-aural-tools--pending-training-explanations nil)
          (emacsvox-sounds-current-pack 'chimes)
          (emacsvox-aural-spatial-enabled t)
          (emacsvox-aural-spatial-speech-enabled t)
@@ -709,7 +714,11 @@
            (plan (emacsvox-aural-compile-plan render facts context))
            events)
       (cl-letf
-          (((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
+          (((symbol-function 'emacsvox-aural-compile-voice)
+            (lambda (voice)
+              (should (eq voice 'annotate))
+              "TRAINING"))
+           ((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
            ((symbol-function 'tts--protocol-queue-code)
             (lambda (code) (push (list 'code code) events)))
            ((symbol-function 'tts--protocol-queue-text)
@@ -719,10 +728,14 @@
               (emacsvox-aural-training-mode 1)
               (emacsvox-aural-queue-concrete-plan plan))
           (emacsvox-aural-training-mode -1)))
-      (should
-       (equal
-        (car (last (nreverse events)))
-        '(text "heading, level 1, inspection occasion."))))))
+      (let ((ordered (nreverse events)))
+        (should
+         (equal
+          (last ordered 4)
+          '((code "RESET")
+            (code "TRAINING")
+            (text "heading, level 1, inspection occasion.")
+            (code "RESET"))))))))
 
 (ert-deftest emacsvox-aural-tools-training-identifies-standalone-legacy-cue ()
   "A local compatibility cue is followed by its frozen semantic explanation."
@@ -734,6 +747,10 @@
           (((symbol-function 'process-live-p) (lambda (_) t))
            ((symbol-function 'emacsvox-sounds-play-concrete-cue)
             (lambda (&rest _) (push 'local-cue events)))
+           ((symbol-function 'emacsvox-aural-compile-voice)
+            (lambda (voice)
+              (should (eq voice 'annotate))
+              "TRAINING"))
            ((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
            ((symbol-function 'tts--protocol-queue-code)
             (lambda (code) (push (list 'code code) events)))
@@ -751,8 +768,10 @@
         (nreverse events)
         '(local-cue
           (code "RESET")
+          (code "TRAINING")
           (text
            "product identity, legacy cue emacsvox, notification occasion.")
+          (code "RESET")
           dispatch))))))
 
 (ert-deftest emacsvox-aural-tools-list-buffers-use-accessible-modes ()

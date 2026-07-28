@@ -1007,7 +1007,12 @@ command should identify every matched rule and why it won or composed.
 The implemented =emacsvox-aural-training-mode= adds its concise semantic
 identification after the concrete plan, including after a standalone cue
 played through a local adapter.  It queues concrete explanatory text directly
-and never recursively invokes semantic resolution.  Detailed inspection uses
+and never recursively invokes semantic resolution.  During an interactive
+command, explanations are retained until =post-command-hook= so an
+icon-then-speech sequence cannot flush the icon's explanation before it is
+heard.  Training narration uses the palette-aware
+=emacsvox-aural-training-voice=, which defaults to =annotate=, and returns to
+the default voice afterward.  Detailed inspection uses
 =emacsvox-explain-aural-presentation=.
 
 ** Accessible aural-home contract

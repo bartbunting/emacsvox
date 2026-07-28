@@ -111,7 +111,12 @@
           :context '(:occasion navigation)))
         events)
     (cl-letf
-        (((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
+        (((symbol-function 'emacsvox-aural-compile-voice)
+          (lambda (voice)
+            (unless (eq voice 'annotate)
+              (error "Unexpected training voice: %S" voice))
+            "TRAINING"))
+         ((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
          ((symbol-function 'tts--protocol-queue-code)
           (lambda (code) (push (list 'code code) events)))
          ((symbol-function 'tts--protocol-queue-text)
@@ -121,7 +126,9 @@
         (equal
          (nreverse events)
          '((code "RESET")
-           (text "heading, level 2, navigation occasion.")))
+           (code "TRAINING")
+           (text "heading, level 2, navigation occasion.")
+           (code "RESET")))
       (error "Compiled training bypassed protocol extension points: %S"
              events)))
   (let* ((calls 0)

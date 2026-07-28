@@ -9,6 +9,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-tools)
 
 (defconst emacsvox-test--dired-advice-targets
   '(dired ido-dired dired-jump dired-other-window dired-other-frame
@@ -86,6 +87,62 @@
    (equal
     (emacsvox-test--dired-feedback 'locate)
     '(speak-line (icon open-object)))))
+
+(ert-deftest emacsvox-dired-training-follows-earcon-and-filename ()
+  "Training identifies the movement cue after normal Dired feedback."
+  (let ((this-command 'dired-next-line)
+        (real-this-command 'dired-next-line)
+        (post-command-hook nil)
+        (tts-speaker-process 'speaker)
+        (emacsvox-use-icons t)
+        (emacsvox-aural-plan-presented-hook nil)
+        (emacsvox-aural-training-mode nil)
+        (emacsvox-aural-training-voice 'annotate)
+        (emacsvox-aural-tools--pending-training-explanations nil)
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-entry-facts)
+          (lambda (&rest _)
+            '(:role filesystem-entry :entry-kind file
+              :events (focus-entered))))
+         ((symbol-function 'process-live-p) (lambda (_) t))
+         ((symbol-function 'emacsvox-sounds-play-concrete-cue)
+          (lambda (&rest _) (push 'earcon events)))
+         ((symbol-function 'emacsvox-aural-compile-voice)
+          (lambda (voice)
+            (should (eq voice 'annotate))
+            "TRAINING"))
+         ((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
+         ((symbol-function 'tts--protocol-queue-code)
+          (lambda (code) (push (list 'code code) events)))
+         ((symbol-function 'tts--protocol-queue-text)
+          (lambda (text) (push (list 'text text) events)))
+         ((symbol-function 'tts--protocol-dispatch)
+          (lambda () (push 'dispatch events))))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-training-mode 1)
+            (emacsvox-dired-present-current
+             'select-object 'navigation 'focus-entered
+             (lambda () (push 'filename events)))
+            (should
+             (equal
+              (nreverse (copy-sequence events))
+              '(earcon dispatch filename)))
+            (run-hooks 'post-command-hook))
+        (emacsvox-aural-training-mode -1)))
+    (should
+     (equal
+      (nreverse events)
+      '(earcon
+        dispatch
+        filename
+        (code "RESET")
+        (code "TRAINING")
+        (text
+         "filesystem entry, focus entered, entry kind file, legacy cue select object, navigation occasion.")
+        (code "RESET")
+        dispatch)))))
 
 (ert-deftest emacsvox-dired-converted-advice-ignores-noninteractive-calls ()
   "Migrated feedback remains restricted to interactive commands."
