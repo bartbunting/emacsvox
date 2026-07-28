@@ -18,6 +18,7 @@
 (require 'tabulated-list)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-validation)
 (require 'emacsvox-aural-inspection)
 
@@ -70,10 +71,6 @@
                   "emacsvox-aural-voice-palettes" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function emacsvox-speak-mode-line "emacsvox-speak" ())
-(declare-function emacsvox-sounds-play-concrete-cue
-                  "emacsvox-sounds"
-                  (resource sample-id &optional balance))
-(declare-function tts-stop "tts-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function tts--protocol-queue-code "tts-speak" (code))
@@ -94,6 +91,10 @@
   #'emacsvox-aural-ui-move-row)
 (defalias 'emacsvox-aural-tools--move-tabulated-column
   #'emacsvox-aural-ui-move-column)
+(defalias 'emacsvox-aural-tools--stop-preview-speech
+  #'emacsvox-aural-preview-stop)
+(defalias 'emacsvox-aural-tools--preview-message
+  #'emacsvox-aural-preview-message)
 
 (defun emacsvox-aural-tools--interface-buffer-p (&optional buffer)
   "Return non-nil when BUFFER is an aural manager or editor buffer."
@@ -1810,10 +1811,7 @@ always identify whether they describe heard output or a simulation."
           (if content (plist-put facts :content content) facts))
          (render (emacsvox-aural-resolve facts context (list rule)))
          (concrete (emacsvox-aural-compile-plan render facts context)))
-      (emacsvox-aural--ensure-speaker)
-      (emacsvox-aural-queue-concrete-plan concrete)
-      (tts--protocol-dispatch)
-      concrete)))
+      (emacsvox-aural-preview-play-plan concrete))))
 
 (defun emacsvox-preview-aural-scheme (&optional scheme rule-id)
   "Preview a representative presentation from SCHEME.
@@ -2694,22 +2692,7 @@ it with the active configuration without changing persistent state."
   (let ((concrete
          (emacsvox-aural-tools--compile-fragment-preview
           fragment facts context isolated)))
-    (emacsvox-aural--ensure-speaker)
-    (emacsvox-aural-queue-concrete-plan concrete)
-    (tts--protocol-dispatch)
-    concrete))
-
-(defun emacsvox-aural-tools--stop-preview-speech ()
-  "Stop manager speech before an explicitly requested preview."
-  (when (fboundp 'tts-stop)
-    (tts-stop)))
-
-(defun emacsvox-aural-tools--preview-message (format-string &rest arguments)
-  "Display a preview message without sending it to speech.
-
-FORMAT-STRING and ARGUMENTS have the same meaning as for `message'."
-  (let ((emacsvox-speak-messages nil))
-    (apply #'message format-string arguments)))
+    (emacsvox-aural-preview-play-plan concrete)))
 
 (defun emacsvox-aural-tools--fragment-preview-example-input (example)
   "Return copied facts and context from preview EXAMPLE."
@@ -2745,23 +2728,12 @@ are submitted, so speech cannot mask the auditioned cues."
       (user-error
        "Preview example %s has no earcon"
        (emacsvox-aural-feature-fragment-example-id example)))
-    (emacsvox-aural--ensure-speaker)
-    (emacsvox-aural-tools--stop-preview-speech)
-    (dolist (cue cues)
-      (let ((balance (emacsvox-aural-concrete-action-balance cue)))
-        (if (and (numberp balance) (not (zerop balance)))
-            (emacsvox-sounds-play-concrete-cue
-             (emacsvox-aural-concrete-action-resource cue)
-             (emacsvox-aural-concrete-action-sample-id cue)
-             balance)
-          (emacsvox-sounds-play-concrete-cue
-           (emacsvox-aural-concrete-action-resource cue)
-           (emacsvox-aural-concrete-action-sample-id cue)))))
+    (emacsvox-aural-preview-play-cues cues)
     (puthash
      fragment
      (emacsvox-aural-feature-fragment-example-id example)
      emacsvox-aural-tools--fragment-preview-last-examples)
-    (emacsvox-aural-tools--preview-message
+    (emacsvox-aural-preview-message
      "Auditioning %s"
      (mapconcat
       (lambda (cue)
@@ -2831,9 +2803,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
                summary
                (emacsvox-aural-tools--humanize
                 (or (plist-get context :occasion) 'continuous)))))
-        (when interactivep
-          (emacsvox-aural-tools--stop-preview-speech))
-        (emacsvox-aural-tools--preview-message "%s" announcement)
+        (emacsvox-aural-preview-message "%s" announcement)
         (when example
           (puthash
            fragment
@@ -3061,7 +3031,6 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
          (id
           (emacsvox-aural-feature-fragment-example-id example)))
     (emacsvox-aural-feature-fragment-previews--remember-current)
-    (emacsvox-aural-tools--stop-preview-speech)
     (emacsvox-aural-feature-fragments-preview
      emacsvox-aural-feature-fragment-previews-isolated
      emacsvox-aural-feature-fragment-previews-fragment

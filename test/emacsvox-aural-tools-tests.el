@@ -635,6 +635,7 @@
           queued)
       (cl-letf
           (((symbol-function 'process-live-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-preview-stop) #'ignore)
            ((symbol-function 'emacsvox-aural-queue-concrete-plan)
             (lambda (plan &rest _) (setq queued plan)))
            ((symbol-function 'tts--protocol-dispatch) #'ignore))
@@ -1315,6 +1316,7 @@
           result)
       (cl-letf
           (((symbol-function 'process-live-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-preview-stop) #'ignore)
            ((symbol-function 'emacsvox-aural-queue-concrete-plan)
             (lambda (plan &rest _) (setq queued plan)))
            ((symbol-function 'tts--protocol-dispatch) #'ignore))
@@ -1524,6 +1526,7 @@
             (setq emacsvox-aural-tools--last-source-buffer source)
             (cl-letf
                 (((symbol-function 'process-live-p) (lambda (_) t))
+                 ((symbol-function 'emacsvox-aural-preview-stop) #'ignore)
                  ((symbol-function 'emacsvox-aural-queue-concrete-plan)
                   (lambda (plan &rest _) (setq queued plan)))
                  ((symbol-function 'tts--protocol-dispatch) #'ignore))
@@ -1931,6 +1934,7 @@
           queued)
       (cl-letf
           (((symbol-function 'process-live-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-preview-stop) #'ignore)
            ((symbol-function 'emacsvox-aural-queue-concrete-plan)
             (lambda (plan &rest _) (setq queued plan)))
            ((symbol-function 'tts--protocol-dispatch) #'ignore))

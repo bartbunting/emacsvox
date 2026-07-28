@@ -65,6 +65,7 @@
     "emacsvox-aural-resources.el"
     "emacsvox-aural-schemes.el"
     "emacsvox-aural-transport.el"
+    "emacsvox-aural-preview.el"
     "emacsvox-aural-validation.el"
     "emacsvox-aural-ui.el"
     "emacsvox-aural-inspection.el"

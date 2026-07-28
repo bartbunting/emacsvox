@@ -15,6 +15,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-preview)
 
 (declare-function emacsvox-aural-simple-editor-open
                   "emacsvox-aural-simple-editor" (&optional scheme))
@@ -1026,9 +1027,7 @@ LABEL identifies the speech or cue being edited."
         ((`(,facts ,context) (emacsvox-aural-editor--rule-example rule))
          (render (emacsvox-aural-resolve facts context (list rule)))
          (concrete (emacsvox-aural-compile-plan render facts context)))
-      (emacsvox-aural--ensure-speaker)
-      (emacsvox-aural-queue-concrete-plan concrete)
-      (tts--protocol-dispatch))))
+      (emacsvox-aural-preview-play-plan concrete))))
 
 (defun emacsvox-aural-editor-explain-rule ()
   "Explain the selected unsaved working rule against representative facts."

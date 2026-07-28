@@ -22,6 +22,7 @@
           emacsvox-aural-resources
           emacsvox-aural-schemes
           emacsvox-aural-transport
+          emacsvox-aural-preview
           emacsvox-aural-validation
           emacsvox-aural-ui
           emacsvox-aural-inspection
@@ -44,6 +45,7 @@
           emacsvox-aural--resource-error
           emacsvox-aural--migrate-user-data-v1-to-v2
           emacsvox-aural--transport-error
+          emacsvox-aural-preview-play-plan
           emacsvox-aural-validation--report
           emacsvox-aural-ui-interface-buffer-p
           emacsvox-aural-inspection-source-buffer

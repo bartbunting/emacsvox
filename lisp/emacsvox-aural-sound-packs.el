@@ -18,6 +18,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-preview)
 (require 'emacsvox-sounds)
 
 (declare-function dired "dired" (dirname &optional switches))
@@ -491,10 +492,10 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
            pack-id)))
     (unless resource
       (user-error "Cue %s is missing from sound pack %s" cue pack-id))
-    (emacsvox-sounds-play-concrete-cue
+    (emacsvox-aural-preview-play-cue
      resource
      (emacsvox-aural-sample-id provider resolved resource))
-    (message
+    (emacsvox-aural-preview-message
      "Auditioning %s from %s"
      cue provider)
     detail))

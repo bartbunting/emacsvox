@@ -14,13 +14,13 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-preview)
 
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
-(declare-function tts--protocol-dispatch "tts-speak" ())
 (declare-function tts-voice-family-capability
                   "tts-speak" (family &optional capabilities))
 (declare-function tts-voice-family-id
@@ -917,21 +917,18 @@ Return the compiled voice without dispatching the speech queue."
   (let ((voice
          (emacsvox-aural-voice-palette-previews--current-voice)))
     (emacsvox-aural-voice-palette-previews--remember-current)
-    (emacsvox-aural--ensure-speaker)
-    (emacsvox-aural-tools--stop-preview-speech)
+    (emacsvox-aural-preview-begin t)
     (let ((compiled
            (emacsvox-aural-voice-palettes--queue-preview
             emacsvox-aural-voice-palette-previews-palette
             voice
             emacsvox-aural-voice-palette-previews-text)))
-      (tts--protocol-dispatch)
-      compiled)))
+      (emacsvox-aural-preview-dispatch compiled))))
 
 (defun emacsvox-aural-voice-palette-previews-play-all ()
   "Audition every effective voice using the same comparison text."
   (interactive)
-  (emacsvox-aural--ensure-speaker)
-  (emacsvox-aural-tools--stop-preview-speech)
+  (emacsvox-aural-preview-begin t)
   (let ((count 0)
         unavailable)
     (dolist (entry emacsvox-aural-voice-palette-previews-entries)
@@ -948,8 +945,8 @@ Return the compiled voice without dispatching the speech queue."
           unavailable))))
     (unless (> count 0)
       (user-error "No voices in this palette can be previewed"))
-    (tts--protocol-dispatch)
-    (emacsvox-aural-tools--preview-message
+    (emacsvox-aural-preview-dispatch)
+    (emacsvox-aural-preview-message
      "Previewing %d voice%s%s; press s to stop"
      count
      (if (= count 1) "" "s")
@@ -961,8 +958,8 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-palette-previews-stop ()
   "Stop the current voice audition."
   (interactive)
-  (emacsvox-aural-tools--stop-preview-speech)
-  (emacsvox-aural-tools--preview-message "Voice preview stopped"))
+  (emacsvox-aural-preview-stop)
+  (emacsvox-aural-preview-message "Voice preview stopped"))
 
 (defun emacsvox-aural-voice-palette-previews-set-text ()
   "Set the comparison text used by this preview buffer."
@@ -1242,8 +1239,7 @@ Return the compiled voice without dispatching the speech queue."
          (emacsvox-aural-compile-voice-style
           emacsvox-aural-voice-tuner-working-style
           emacsvox-aural-voice-tuner-palette)))
-    (emacsvox-aural--ensure-speaker)
-    (emacsvox-aural-tools--stop-preview-speech)
+    (emacsvox-aural-preview-begin t)
     (when announcement
       (tts--protocol-queue-code (tts-voice-reset-code))
       (tts--protocol-queue-text announcement))
@@ -1251,9 +1247,9 @@ Return the compiled voice without dispatching the speech queue."
      compiled
      emacsvox-aural-voice-tuner-voice
      emacsvox-aural-voice-tuner-preview-text)
-    (tts--protocol-dispatch)
+    (emacsvox-aural-preview-dispatch)
     (when announcement
-      (emacsvox-aural-tools--preview-message "%s" announcement))
+      (emacsvox-aural-preview-message "%s" announcement))
     compiled))
 
 (defun emacsvox-aural-voice-tuner--update-dirty ()
