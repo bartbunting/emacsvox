@@ -22,6 +22,60 @@
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-dispatch "tts-speak" ())
 
+(defcustom emacsvox-aural-voice-palettes-preview-text
+  "The quick brown fox jumps over the lazy dog. Numbers one, two, three."
+  "Comparison text used when auditioning voices from a palette."
+  :type 'string
+  :group 'emacsvox-aural)
+
+(defvar emacsvox-aural-voice-palettes--last-preview-voices
+  (make-hash-table :test #'eq)
+  "Most recently selected preview voice for each palette.")
+
+(defvar-local emacsvox-aural-voice-palette-previews-palette nil
+  "Voice palette shown in the current preview buffer.")
+
+(defvar-local emacsvox-aural-voice-palette-previews-entries nil
+  "Effective voice entries shown in the current preview buffer.")
+
+(defvar-local emacsvox-aural-voice-palette-previews-text nil
+  "Comparison text used by the current preview buffer.")
+
+(defconst emacsvox-aural-voice-tuner--dimension-descriptions
+  '((family . "Voice family")
+    (average-pitch . "Overall pitch from zero through nine")
+    (pitch-range . "Pitch variation from zero through nine")
+    (stress . "Word emphasis from zero through nine")
+    (richness . "Spectral richness from zero through nine"))
+  "Spoken descriptions of tunable voice dimensions.")
+
+(defvar-local emacsvox-aural-voice-tuner-palette nil
+  "Personal palette containing the voice being tuned.")
+
+(defvar-local emacsvox-aural-voice-tuner-voice nil
+  "Voice name represented by the current tuner.")
+
+(defvar-local emacsvox-aural-voice-tuner-original-definition nil
+  "Persisted voice definition from which the tuner started.")
+
+(defvar-local emacsvox-aural-voice-tuner-initial-style nil
+  "Complete ACSS working style from which tuning started.")
+
+(defvar-local emacsvox-aural-voice-tuner-working-style nil
+  "Complete unsaved ACSS style currently being auditioned.")
+
+(defvar-local emacsvox-aural-voice-tuner-history nil
+  "Earlier tuner working styles, newest first.")
+
+(defvar-local emacsvox-aural-voice-tuner-dirty nil
+  "Whether the tuner working style differs from its initial style.")
+
+(defvar-local emacsvox-aural-voice-tuner-preview-text nil
+  "Comparison text spoken by the current tuner.")
+
+(defvar-local emacsvox-aural-voice-tuner-source-buffer nil
+  "Voice-palette preview buffer that opened the current tuner.")
+
 (defun emacsvox-aural-voice-palettes--active-id ()
   "Return the currently effective voice palette."
   (or
@@ -456,16 +510,28 @@
     (emacsvox-aural-voice-palettes-speak-current)
     id))
 
-(defun emacsvox-aural-voice-palettes-edit-entry ()
-  "Create or replace one direct voice entry in the personal palette at point."
-  (interactive)
-  (let* ((id (emacsvox-aural-voice-palettes--at-point-or-read))
-         (palette (emacsvox-aural-voice-palette id)))
+(defun emacsvox-aural-voice-palettes--install-entry-definition
+    (id name definition)
+  "Install complete voice DEFINITION as NAME in personal palette ID."
+  (let* ((palette (emacsvox-aural-voice-palette id))
+         (data (emacsvox-aural-voice-palette-data-form palette))
+         (updated
+          (emacsvox-aural-voice-palettes--put-entry
+           data
+           (emacsvox-aural-voice-palettes--entry-data name definition))))
     (when (emacsvox-aural-voice-palette-built-in palette)
       (user-error "Copy the built-in palette first, then edit the copy"))
-    (let* ((data (emacsvox-aural-voice-palette-data-form palette))
-           (name (emacsvox-aural-voice-palettes--read-entry-name id))
-           (direct (emacsvox-aural-voice-palettes--direct-entry data name))
+    (emacsvox-aural-voice-palettes--install-data updated id)
+    (message "Saved voice %s in palette %s" name id)
+    name))
+
+(defun emacsvox-aural-voice-palettes--edit-entry (id name)
+  "Create or replace voice NAME in personal palette ID."
+  (let* ((palette (emacsvox-aural-voice-palette id))
+         (data (emacsvox-aural-voice-palette-data-form palette)))
+    (when (emacsvox-aural-voice-palette-built-in palette)
+      (user-error "Copy the built-in palette first, then edit the copy"))
+    (let* ((direct (emacsvox-aural-voice-palettes--direct-entry data name))
            (current
             (if direct
                 (or
@@ -473,16 +539,18 @@
                  (plist-get (cdr direct) :style))
               (emacsvox-aural-voice name id)))
            (definition
-            (emacsvox-aural-voice-palettes--read-definition current))
-           (updated
-            (emacsvox-aural-voice-palettes--put-entry
-             data
-             (emacsvox-aural-voice-palettes--entry-data
-              name definition))))
-      (emacsvox-aural-voice-palettes--install-data updated id)
-      (emacsvox-aural-voice-palettes-refresh id)
-      (message "Saved voice %s in palette %s" name id)
-      name)))
+            (emacsvox-aural-voice-palettes--read-definition current)))
+      (emacsvox-aural-voice-palettes--install-entry-definition
+       id name definition))))
+
+(defun emacsvox-aural-voice-palettes-edit-entry ()
+  "Create or replace one direct voice entry in the personal palette at point."
+  (interactive)
+  (let* ((id (emacsvox-aural-voice-palettes--at-point-or-read))
+         (name (emacsvox-aural-voice-palettes--read-entry-name id)))
+    (prog1
+        (emacsvox-aural-voice-palettes--edit-entry id name)
+      (emacsvox-aural-voice-palettes-refresh id))))
 
 (defun emacsvox-aural-voice-palettes-edit-metadata ()
   "Edit summary and parent of the personal palette at point."
@@ -628,31 +696,951 @@
      (emacsvox-aural-effective-voice-entries id))
     nil 'must-match)))
 
-(defun emacsvox-aural-voice-palettes-preview ()
-  "Preview one named voice from the palette at point."
+(defun emacsvox-aural-voice-palettes--entry-provider (name palette-id)
+  "Return the palette that directly provides voice NAME to PALETTE-ID."
+  (let ((current palette-id)
+        provider)
+    (while (and current (not provider))
+      (let ((palette (emacsvox-aural-voice-palette current)))
+        (when (assq name (emacsvox-aural-voice-palette-entries palette))
+          (setq provider current))
+        (setq current (emacsvox-aural-voice-palette-parent palette))))
+    provider))
+
+(defun emacsvox-aural-voice-palettes--preview-entries (palette)
+  "Return effective entries for PALETTE in predictable voice-name order."
+  (sort
+   (copy-sequence (emacsvox-aural-effective-voice-entries palette))
+   (lambda (left right)
+     (string-lessp
+      (symbol-name (car left))
+      (symbol-name (car right))))))
+
+(defun emacsvox-aural-voice-palettes--definition-summary (definition)
+  "Return a concise display description of voice DEFINITION."
+  (if (symbolp definition)
+      (format "personality %s" definition)
+    (string-trim
+     (replace-regexp-in-string
+      "[\n\t ]+" " " (prin1-to-string definition)))))
+
+(defun emacsvox-aural-voice-palettes--effective-summary (compiled)
+  "Return a concise effective-style description for COMPILED voice data."
+  (string-trim
+   (replace-regexp-in-string
+    "[\n\t ]+" " "
+    (prin1-to-string
+     (emacsvox-aural-compiled-voice-style compiled)))))
+
+(defun emacsvox-aural-voice-palettes--preview-status (compiled)
+  "Return concise audition status for COMPILED voice data."
+  (let ((command (emacsvox-aural-compiled-voice-command compiled))
+        (degradations
+         (emacsvox-aural-compiled-voice-degradations compiled)))
+    (cond
+     ((eq command 'inaudible) "inaudible")
+     (degradations
+      (format
+       "%d fallback%s"
+       (length degradations)
+       (if (= (length degradations) 1) "" "s")))
+     (t "ready"))))
+
+(defun emacsvox-aural-voice-palette-previews--row (entry)
+  "Return one tabulated preview row for effective voice ENTRY."
+  (let* ((name (car entry))
+         (definition (cdr entry))
+         (palette emacsvox-aural-voice-palette-previews-palette)
+         (provider
+          (emacsvox-aural-voice-palettes--entry-provider name palette)))
+    (condition-case error
+        (let ((compiled
+               (emacsvox-aural-compile-voice-style name palette)))
+          (list
+           name
+           (vector
+            (symbol-name name)
+            (if (eq provider palette)
+                "direct"
+              (format "from %s" provider))
+            (emacsvox-aural-voice-palettes--definition-summary definition)
+            (emacsvox-aural-voice-palettes--effective-summary compiled)
+            (emacsvox-aural-voice-palettes--preview-status compiled))))
+      (error
+       (list
+        name
+        (vector
+         (symbol-name name)
+         (if (eq provider palette)
+             "direct"
+           (format "from %s" provider))
+         (emacsvox-aural-voice-palettes--definition-summary definition)
+         "unavailable"
+         (error-message-string error)))))))
+
+(defun emacsvox-aural-voice-palette-previews--set-entries ()
+  "Populate the current voice-palette preview buffer."
+  (setq
+   tabulated-list-entries
+   (mapcar
+    #'emacsvox-aural-voice-palette-previews--row
+    emacsvox-aural-voice-palette-previews-entries)))
+
+(defun emacsvox-aural-voice-palette-previews--goto (voice)
+  "Move to VOICE and its first preview column."
+  (let ((start (point-min))
+        found)
+    (goto-char start)
+    (while (and (not found) (< (point) (point-max)))
+      (if (eq voice (tabulated-list-get-id))
+          (setq found t)
+        (forward-line 1)))
+    (unless found
+      (goto-char start))
+    (when found
+      (emacsvox-aural-tools--goto-tabulated-column 0))
+    found))
+
+(defun emacsvox-aural-voice-palette-previews--update-header ()
+  "Update the current preview buffer's palette and sample heading."
+  (setq
+   header-line-format
+   (format
+    " Palette: %s    Comparison text: %s"
+    emacsvox-aural-voice-palette-previews-palette
+    emacsvox-aural-voice-palette-previews-text)))
+
+(defun emacsvox-aural-voice-palette-previews-refresh (&optional voice)
+  "Refresh palette voices, preserving VOICE and the current column."
   (interactive)
-  (let* ((id (emacsvox-aural-voice-palettes--at-point-or-read))
-         (voice (emacsvox-aural-voice-palettes--read-voice id))
-         (text (read-string "Preview text: " "This is a voice preview."))
-         (compiled (emacsvox-aural-compile-voice-style voice id))
-         (command (emacsvox-aural-compiled-voice-command compiled)))
+  (let ((column (emacsvox-aural-tools--tabulated-column-index))
+        (selected
+         (or
+          voice
+          (tabulated-list-get-id)
+          (gethash
+           emacsvox-aural-voice-palette-previews-palette
+           emacsvox-aural-voice-palettes--last-preview-voices)
+          (caar emacsvox-aural-voice-palette-previews-entries))))
+    (setq
+     emacsvox-aural-voice-palette-previews-entries
+     (emacsvox-aural-voice-palettes--preview-entries
+      emacsvox-aural-voice-palette-previews-palette))
+    (unless emacsvox-aural-voice-palette-previews-entries
+      (user-error
+       "Voice palette %s has no effective voices"
+       emacsvox-aural-voice-palette-previews-palette))
+    (unless (assq selected emacsvox-aural-voice-palette-previews-entries)
+      (setq selected (caar emacsvox-aural-voice-palette-previews-entries)))
+    (emacsvox-aural-voice-palette-previews--set-entries)
+    (tabulated-list-print t)
+    (emacsvox-aural-voice-palette-previews--update-header)
+    (when selected
+      (emacsvox-aural-voice-palette-previews--goto selected))
+    (emacsvox-aural-tools--goto-tabulated-column column)))
+
+(defun emacsvox-aural-voice-palette-previews--current-voice ()
+  "Return the effective voice represented by the current preview row."
+  (or
+   (tabulated-list-get-id)
+   (user-error "Move to a voice first")))
+
+(defun emacsvox-aural-voice-palette-previews--remember-current ()
+  "Remember the voice selected by the current preview row."
+  (when-let* ((voice (tabulated-list-get-id)))
+    (puthash
+     emacsvox-aural-voice-palette-previews-palette
+     voice
+     emacsvox-aural-voice-palettes--last-preview-voices))
+  (tabulated-list-get-id))
+
+(defun emacsvox-aural-voice-palette-previews-speak-current ()
+  "Speak the complete palette voice row at point."
+  (interactive)
+  (let* ((voice
+          (emacsvox-aural-voice-palette-previews--current-voice))
+         (row
+          (or
+           (cadr (assq voice tabulated-list-entries))
+           (user-error "Unknown voice: %s" voice)))
+         (summary
+          (format
+           "%s. Source %s. Requested %s. Effective %s. Status %s."
+           (aref row 0)
+           (aref row 1)
+           (aref row 2)
+           (aref row 3)
+           (aref row 4))))
+    (emacsvox-aural-voice-palette-previews--remember-current)
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-voice-palette-previews-speak-current-cell ()
+  "Speak the current preview column title and value."
+  (interactive)
+  (emacsvox-aural-tools--speak-tabulated-cell))
+
+(defun emacsvox-aural-voice-palette-previews-next ()
+  "Move to and speak the next effective voice."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row 1 "palette voices")
+  (emacsvox-aural-voice-palette-previews--remember-current))
+
+(defun emacsvox-aural-voice-palette-previews-previous ()
+  "Move to and speak the previous effective voice."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row -1 "palette voices")
+  (emacsvox-aural-voice-palette-previews--remember-current))
+
+(defun emacsvox-aural-voice-palette-previews-next-column ()
+  "Move right and speak the next voice column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column 1))
+
+(defun emacsvox-aural-voice-palette-previews-previous-column ()
+  "Move left and speak the previous voice column."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-column -1))
+
+(defun emacsvox-aural-voice-palettes--preview-sample (voice text)
+  "Return comparison TEXT labelled with VOICE."
+  (format
+   "%s voice. %s"
+   (capitalize (emacsvox-aural-tools--humanize voice))
+   text))
+
+(defun emacsvox-aural-voice-palettes--queue-compiled-preview
+    (compiled label text)
+  "Queue COMPILED voice speaking comparison TEXT under voice LABEL."
+  (let ((command (emacsvox-aural-compiled-voice-command compiled)))
     (when (eq command 'inaudible)
-      (user-error "The selected voice suppresses speech"))
-    (emacsvox-aural--ensure-speaker)
+      (user-error "Voice %s suppresses speech" label))
     (tts--protocol-queue-code (tts-voice-reset-code))
     (when command
       (tts--protocol-queue-code command))
-    (tts--protocol-queue-text text)
+    (tts--protocol-queue-text
+     (emacsvox-aural-voice-palettes--preview-sample label text))
     (tts--protocol-queue-code (tts-voice-reset-code))
-    (tts--protocol-dispatch)
     compiled))
 
-(defun emacsvox-aural-voice-palettes-explain ()
+(defun emacsvox-aural-voice-palettes--queue-preview
+    (palette voice text)
+  "Queue VOICE from PALETTE speaking comparison TEXT.
+
+Return the compiled voice without dispatching the speech queue."
+  (emacsvox-aural-voice-palettes--queue-compiled-preview
+   (emacsvox-aural-compile-voice-style voice palette)
+   voice text))
+
+(defun emacsvox-aural-voice-palette-previews-play ()
+  "Audition the effective voice at point with the comparison text."
+  (interactive)
+  (let ((voice
+         (emacsvox-aural-voice-palette-previews--current-voice)))
+    (emacsvox-aural-voice-palette-previews--remember-current)
+    (emacsvox-aural--ensure-speaker)
+    (emacsvox-aural-tools--stop-preview-speech)
+    (let ((compiled
+           (emacsvox-aural-voice-palettes--queue-preview
+            emacsvox-aural-voice-palette-previews-palette
+            voice
+            emacsvox-aural-voice-palette-previews-text)))
+      (tts--protocol-dispatch)
+      compiled)))
+
+(defun emacsvox-aural-voice-palette-previews-play-all ()
+  "Audition every effective voice using the same comparison text."
+  (interactive)
+  (emacsvox-aural--ensure-speaker)
+  (emacsvox-aural-tools--stop-preview-speech)
+  (let ((count 0)
+        unavailable)
+    (dolist (entry emacsvox-aural-voice-palette-previews-entries)
+      (condition-case error
+          (progn
+            (emacsvox-aural-voice-palettes--queue-preview
+             emacsvox-aural-voice-palette-previews-palette
+             (car entry)
+             emacsvox-aural-voice-palette-previews-text)
+            (cl-incf count))
+        (error
+         (push
+          (format "%s: %s" (car entry) (error-message-string error))
+          unavailable))))
+    (unless (> count 0)
+      (user-error "No voices in this palette can be previewed"))
+    (tts--protocol-dispatch)
+    (emacsvox-aural-tools--preview-message
+     "Previewing %d voice%s%s; press s to stop"
+     count
+     (if (= count 1) "" "s")
+     (if unavailable
+         (format ", skipped %d unavailable" (length unavailable))
+       ""))
+    (list :queued count :unavailable (nreverse unavailable))))
+
+(defun emacsvox-aural-voice-palette-previews-stop ()
+  "Stop the current voice audition."
+  (interactive)
+  (emacsvox-aural-tools--stop-preview-speech)
+  (emacsvox-aural-tools--preview-message "Voice preview stopped"))
+
+(defun emacsvox-aural-voice-palette-previews-set-text ()
+  "Set the comparison text used by this preview buffer."
+  (interactive)
+  (let ((text
+         (string-trim
+          (read-string
+           "Voice comparison text: "
+           emacsvox-aural-voice-palette-previews-text))))
+    (when (string-empty-p text)
+      (user-error "Comparison text cannot be empty"))
+    (setq emacsvox-aural-voice-palette-previews-text text)
+    (emacsvox-aural-voice-palette-previews--update-header)
+    (if (fboundp 'tts-speak)
+        (tts-speak "Voice comparison text updated")
+      (message "Voice comparison text updated"))
+    text))
+
+(defun emacsvox-aural-voice-palette-previews-open-manager ()
+  "Return to the palette manager for the current preview palette."
+  (interactive)
+  (emacsvox-aural-list-voice-palettes
+   emacsvox-aural-voice-palette-previews-palette))
+
+(defun emacsvox-aural-voice-palette-previews-explain ()
+  "Explain the effective voice at point."
+  (interactive)
+  (emacsvox-aural-voice-palettes-explain
+   emacsvox-aural-voice-palette-previews-palette
+   (emacsvox-aural-voice-palette-previews--current-voice)))
+
+(defun emacsvox-aural-voice-palette-previews-edit ()
+  "Replace the effective voice at point using the guided definition editor."
+  (interactive)
+  (let* ((palette-id emacsvox-aural-voice-palette-previews-palette)
+         (palette (emacsvox-aural-voice-palette palette-id))
+         (voice
+          (emacsvox-aural-voice-palette-previews--current-voice)))
+    (when (emacsvox-aural-voice-palette-built-in palette)
+      (user-error
+       "Built-in palette; press o, then c to make an editable copy"))
+    (emacsvox-aural-voice-palettes--edit-entry palette-id voice)
+    (emacsvox-aural-voice-palette-previews-refresh voice)
+    voice))
+
+(defun emacsvox-aural-voice-tuner--complete-style
+    (definition palette)
+  "Return a complete ACSS style for DEFINITION resolved through PALETTE."
+  (let* ((requested
+          (and
+           (emacsvox-aural-voice-style-p definition)
+           (copy-tree definition)))
+         (compiled
+          (unless requested
+            (emacsvox-aural-compile-voice-style definition palette)))
+         (source
+          (or
+           requested
+           (and
+            compiled
+            (copy-tree
+             (emacsvox-aural-compiled-voice-style compiled)))))
+         style)
+    (dolist (dimension emacsvox-aural-voice-dimensions)
+      (let ((key (emacsvox-aural--voice-dimension-key dimension)))
+        (setq
+         style
+         (plist-put
+          style key
+          (and source (plist-get source key))))))
+    style))
+
+(defun emacsvox-aural-voice-tuner--adapter ()
+  "Return the active tuner adapter identifier."
+  (plist-get (emacsvox-aural-active-voice-capabilities) :adapter))
+
+(defun emacsvox-aural-voice-tuner--supported-p (dimension)
+  "Return non-nil when the active adapter supports DIMENSION."
+  (memq
+   dimension
+   (plist-get
+    (emacsvox-aural-active-voice-capabilities) :dimensions)))
+
+(defun emacsvox-aural-voice-tuner--value (dimension)
+  "Return the current requested value for DIMENSION."
+  (plist-get
+   emacsvox-aural-voice-tuner-working-style
+   (emacsvox-aural--voice-dimension-key dimension)))
+
+(defun emacsvox-aural-voice-tuner--display-value (value)
+  "Return a user-facing description of voice VALUE."
+  (if (null value) "adapter default" (format "%s" value)))
+
+(defun emacsvox-aural-voice-tuner--support-description (dimension)
+  "Describe active adapter support for DIMENSION."
+  (format
+   "%s by %s"
+   (if (emacsvox-aural-voice-tuner--supported-p dimension)
+       "supported"
+     "unsupported")
+   (emacsvox-aural-tools--humanize
+    (emacsvox-aural-voice-tuner--adapter))))
+
+(defun emacsvox-aural-voice-tuner--effective-value (dimension)
+  "Describe the auditioned value for DIMENSION."
+  (if (emacsvox-aural-voice-tuner--supported-p dimension)
+      (emacsvox-aural-voice-tuner--display-value
+       (emacsvox-aural-voice-tuner--value dimension))
+    "not applied"))
+
+(defun emacsvox-aural-voice-tuner--row (dimension)
+  "Return one tabulated tuner row for DIMENSION."
+  (list
+   dimension
+   (vector
+    (capitalize (emacsvox-aural-tools--humanize dimension))
+    (emacsvox-aural-voice-tuner--display-value
+     (emacsvox-aural-voice-tuner--value dimension))
+    (emacsvox-aural-voice-tuner--effective-value dimension)
+    (emacsvox-aural-voice-tuner--support-description dimension)
+    (or
+     (alist-get
+      dimension
+      emacsvox-aural-voice-tuner--dimension-descriptions)
+     ""))))
+
+(defun emacsvox-aural-voice-tuner--set-entries ()
+  "Populate the current voice tuner."
+  (setq
+   tabulated-list-entries
+   (mapcar
+    #'emacsvox-aural-voice-tuner--row
+    emacsvox-aural-voice-dimensions)))
+
+(defun emacsvox-aural-voice-tuner--goto (dimension)
+  "Move to tuner DIMENSION and its first column."
+  (let ((start (point-min))
+        found)
+    (goto-char start)
+    (while (and (not found) (< (point) (point-max)))
+      (if (eq dimension (tabulated-list-get-id))
+          (setq found t)
+        (forward-line 1)))
+    (unless found
+      (goto-char start))
+    (when found
+      (emacsvox-aural-tools--goto-tabulated-column 0))
+    found))
+
+(defun emacsvox-aural-voice-tuner--update-header ()
+  "Update tuner identity, adapter, and transaction state."
+  (setq
+   header-line-format
+   (format
+    " Voice: %s    Palette: %s    Adapter: %s    %s"
+    emacsvox-aural-voice-tuner-voice
+    emacsvox-aural-voice-tuner-palette
+    (emacsvox-aural-voice-tuner--adapter)
+    (if emacsvox-aural-voice-tuner-dirty "modified" "unchanged")))
+  (force-mode-line-update))
+
+(defun emacsvox-aural-voice-tuner-refresh (&optional dimension)
+  "Refresh the tuner while preserving DIMENSION and the current column."
+  (interactive)
+  (let ((column (emacsvox-aural-tools--tabulated-column-index))
+        (selected
+         (or
+          dimension
+          (tabulated-list-get-id)
+          (car emacsvox-aural-voice-dimensions))))
+    (emacsvox-aural-voice-tuner--set-entries)
+    (tabulated-list-print t)
+    (emacsvox-aural-voice-tuner--update-header)
+    (emacsvox-aural-voice-tuner--goto selected)
+    (emacsvox-aural-tools--goto-tabulated-column column)))
+
+(defun emacsvox-aural-voice-tuner--current-dimension ()
+  "Return the voice dimension represented by the current tuner row."
+  (or
+   (tabulated-list-get-id)
+   (user-error "Move to a voice setting first")))
+
+(defun emacsvox-aural-voice-tuner-speak-current ()
+  "Speak the complete tuner row at point."
+  (interactive)
+  (let* ((dimension (emacsvox-aural-voice-tuner--current-dimension))
+         (row
+          (or
+           (cadr (assq dimension tabulated-list-entries))
+           (user-error "Unknown voice setting: %s" dimension)))
+         (summary
+          (format
+           "%s. Requested %s. Auditioned %s. %s. %s."
+           (aref row 0)
+           (aref row 1)
+           (aref row 2)
+           (aref row 3)
+           (aref row 4))))
+    (if (fboundp 'tts-speak)
+        (tts-speak summary)
+      (message "%s" summary))
+    summary))
+
+(defun emacsvox-aural-voice-tuner-next ()
+  "Move to and speak the next tunable dimension."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row 1 "voice settings"))
+
+(defun emacsvox-aural-voice-tuner-previous ()
+  "Move to and speak the previous tunable dimension."
+  (interactive)
+  (emacsvox-aural-tools--move-tabulated-row -1 "voice settings"))
+
+(defun emacsvox-aural-voice-tuner--setting-announcement (dimension)
+  "Describe the current DIMENSION value and adapter support."
+  (format
+   "%s %s. %s%s"
+   (capitalize (emacsvox-aural-tools--humanize dimension))
+   (emacsvox-aural-voice-tuner--display-value
+    (emacsvox-aural-voice-tuner--value dimension))
+   (capitalize
+    (emacsvox-aural-voice-tuner--support-description dimension))
+   (if (emacsvox-aural-voice-tuner--supported-p dimension)
+       "."
+     "; this setting is saved but is not applied in this audition.")))
+
+(defun emacsvox-aural-voice-tuner-audition (&optional announcement)
+  "Audition the unsaved working style after optional ANNOUNCEMENT."
+  (interactive)
+  (let ((compiled
+         (emacsvox-aural-compile-voice-style
+          emacsvox-aural-voice-tuner-working-style
+          emacsvox-aural-voice-tuner-palette)))
+    (emacsvox-aural--ensure-speaker)
+    (emacsvox-aural-tools--stop-preview-speech)
+    (when announcement
+      (tts--protocol-queue-code (tts-voice-reset-code))
+      (tts--protocol-queue-text announcement))
+    (emacsvox-aural-voice-palettes--queue-compiled-preview
+     compiled
+     emacsvox-aural-voice-tuner-voice
+     emacsvox-aural-voice-tuner-preview-text)
+    (tts--protocol-dispatch)
+    (when announcement
+      (emacsvox-aural-tools--preview-message "%s" announcement))
+    compiled))
+
+(defun emacsvox-aural-voice-tuner--update-dirty ()
+  "Update and return the tuner dirty state."
+  (setq
+   emacsvox-aural-voice-tuner-dirty
+   (not
+    (equal
+     emacsvox-aural-voice-tuner-working-style
+     emacsvox-aural-voice-tuner-initial-style))))
+
+(defun emacsvox-aural-voice-tuner--set-value
+    (dimension value &optional announcement)
+  "Set DIMENSION to VALUE, refresh, and audition the working style.
+
+ANNOUNCEMENT overrides the normal setting description."
+  (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+         (current (plist-get emacsvox-aural-voice-tuner-working-style key)))
+    (unless (equal current value)
+      (push
+       (copy-tree emacsvox-aural-voice-tuner-working-style)
+       emacsvox-aural-voice-tuner-history)
+      (setq
+       emacsvox-aural-voice-tuner-working-style
+       (plist-put
+        (copy-tree emacsvox-aural-voice-tuner-working-style)
+        key value))
+      (emacsvox-aural-voice-tuner--update-dirty)
+      (emacsvox-aural-voice-tuner-refresh dimension)
+      (emacsvox-aural-voice-tuner-audition
+       (or
+        announcement
+        (emacsvox-aural-voice-tuner--setting-announcement dimension))))
+    value))
+
+(defun emacsvox-aural-voice-tuner--numeric-dimension ()
+  "Return the current numeric dimension, or report a family-row error."
+  (let ((dimension (emacsvox-aural-voice-tuner--current-dimension)))
+    (when (eq dimension 'family)
+      (user-error "Press RET to edit the voice family"))
+    dimension))
+
+(defun emacsvox-aural-voice-tuner-increase ()
+  "Increase the current numeric dimension and audition it."
+  (interactive)
+  (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
+         (current (emacsvox-aural-voice-tuner--value dimension))
+         (value (if (numberp current) (1+ current) 5)))
+    (when (> value 9)
+      (user-error "%s is already at nine" dimension))
+    (emacsvox-aural-voice-tuner--set-value dimension value)))
+
+(defun emacsvox-aural-voice-tuner-decrease ()
+  "Decrease the current numeric dimension and audition it."
+  (interactive)
+  (let* ((dimension (emacsvox-aural-voice-tuner--numeric-dimension))
+         (current (emacsvox-aural-voice-tuner--value dimension))
+         (value (if (numberp current) (1- current) 5)))
+    (when (< value 0)
+      (user-error "%s is already at zero" dimension))
+    (emacsvox-aural-voice-tuner--set-value dimension value)))
+
+(defun emacsvox-aural-voice-tuner-set-digit ()
+  "Set the current numeric dimension from the typed digit and audition it."
+  (interactive)
+  (emacsvox-aural-voice-tuner--set-value
+   (emacsvox-aural-voice-tuner--numeric-dimension)
+   (- last-command-event ?0)))
+
+(defun emacsvox-aural-voice-tuner-use-default ()
+  "Use the adapter default for the current dimension and audition it."
+  (interactive)
+  (emacsvox-aural-voice-tuner--set-value
+   (emacsvox-aural-voice-tuner--current-dimension)
+   nil))
+
+(defun emacsvox-aural-voice-tuner-edit ()
+  "Edit the current dimension and audition the new value."
+  (interactive)
+  (let* ((dimension (emacsvox-aural-voice-tuner--current-dimension))
+         (current (emacsvox-aural-voice-tuner--value dimension))
+         (value
+          (if (eq dimension 'family)
+              (let ((answer
+                     (string-trim
+                      (read-string
+                       "Voice family; blank means adapter default: "
+                       (and current (format "%s" current))))))
+                (unless (string-empty-p answer) (intern answer)))
+            (emacsvox-aural-voice-palettes--read-style-number
+             dimension current))))
+    (emacsvox-aural-voice-tuner--set-value dimension value)))
+
+(defun emacsvox-aural-voice-tuner-undo ()
+  "Undo the most recent unsaved tuner change and audition it."
+  (interactive)
+  (unless emacsvox-aural-voice-tuner-history
+    (user-error "No tuner change to undo"))
+  (let ((dimension (emacsvox-aural-voice-tuner--current-dimension)))
+    (setq
+     emacsvox-aural-voice-tuner-working-style
+     (pop emacsvox-aural-voice-tuner-history))
+    (emacsvox-aural-voice-tuner--update-dirty)
+    (emacsvox-aural-voice-tuner-refresh dimension)
+    (emacsvox-aural-voice-tuner-audition "Undid the last voice change.")))
+
+(defun emacsvox-aural-voice-tuner-restore ()
+  "Restore and audition the style present when the tuner opened."
+  (interactive)
+  (when
+      (equal
+       emacsvox-aural-voice-tuner-working-style
+       emacsvox-aural-voice-tuner-initial-style)
+    (user-error "The starting voice style is already restored"))
+  (let ((dimension (emacsvox-aural-voice-tuner--current-dimension)))
+    (push
+     (copy-tree emacsvox-aural-voice-tuner-working-style)
+     emacsvox-aural-voice-tuner-history)
+    (setq
+     emacsvox-aural-voice-tuner-working-style
+     (copy-tree emacsvox-aural-voice-tuner-initial-style))
+    (emacsvox-aural-voice-tuner--update-dirty)
+    (emacsvox-aural-voice-tuner-refresh dimension)
+    (emacsvox-aural-voice-tuner-audition
+     "Restored the voice style from when the tuner opened.")))
+
+(defun emacsvox-aural-voice-tuner--refresh-source ()
+  "Refresh the source preview buffer after a tuner save."
+  (let ((source emacsvox-aural-voice-tuner-source-buffer)
+        (palette emacsvox-aural-voice-tuner-palette)
+        (voice emacsvox-aural-voice-tuner-voice))
+    (when (buffer-live-p source)
+      (with-current-buffer source
+        (when
+            (and
+             (derived-mode-p
+              'emacsvox-aural-voice-palette-previews-mode)
+             (eq
+              emacsvox-aural-voice-palette-previews-palette
+              palette))
+          (emacsvox-aural-voice-palette-previews-refresh voice))))))
+
+(defun emacsvox-aural-voice-tuner-save ()
+  "Atomically save the working style and return to the voice preview."
+  (interactive)
+  (when emacsvox-aural-voice-tuner-dirty
+    (emacsvox-aural-voice-palettes--install-entry-definition
+     emacsvox-aural-voice-tuner-palette
+     emacsvox-aural-voice-tuner-voice
+     emacsvox-aural-voice-tuner-working-style)
+    (setq
+     emacsvox-aural-voice-tuner-original-definition
+     (copy-tree emacsvox-aural-voice-tuner-working-style)
+     emacsvox-aural-voice-tuner-initial-style
+     (copy-tree emacsvox-aural-voice-tuner-working-style)
+     emacsvox-aural-voice-tuner-history nil
+     emacsvox-aural-voice-tuner-dirty nil)
+    (emacsvox-aural-voice-tuner--refresh-source))
+  (emacsvox-aural-quit t))
+
+(defun emacsvox-aural-voice-tuner-quit ()
+  "Cancel tuning, asking before discarding unsaved changes."
+  (interactive)
+  (when
+      (or
+       (not emacsvox-aural-voice-tuner-dirty)
+       (yes-or-no-p "Discard unsaved voice tuning changes? "))
+    (emacsvox-aural-quit t)))
+
+(defun emacsvox-aural-voice-tuner-help ()
+  "Display and speak voice tuner help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Aural Voice Tuner\n\n"
+      "Changes are temporary until saved.  Every adjustment announces the\n"
+      "new value and adapter support, then auditions the same comparison text.\n"
+      "Unsupported dimensions remain portable but do not affect this adapter.\n"
+      "Saving a changed personality converts this palette entry to a complete\n"
+      "custom ACSS style; cancelling preserves its original definition.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right decrease/increase numeric value\n"
+      "0 through 9 set numeric value directly\n"
+      "RET or e edit        d use adapter default\n"
+      "P audition           u undo last change\n"
+      "R restore opening style\n"
+      "s save and return    q cancel and return\n"
+      "h aural home         ? help\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode
+    emacsvox-aural-voice-tuner-mode tabulated-list-mode
+  "Aural-Voice-Tuner"
+  "Transactional spoken tuner for one personal-palette voice."
+  (setq
+   tabulated-list-format
+   [("Setting" 22 nil)
+    ("Requested" 18 nil)
+    ("Auditioned" 18 nil)
+    ("Adapter" 28 nil)
+    ("Meaning" 0 nil)])
+  (setq tabulated-list-padding 2)
+  (setq-local
+   mode-line-process
+   '(:eval (when emacsvox-aural-voice-tuner-dirty " [modified]")))
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-voice-tuner--set-entries nil t)
+  (tabulated-list-init-header))
+
+;; Like the preview browser, the tuner is logically a specialised palette
+;; interface but intentionally has its own transaction-safe keymap.
+(put
+ 'emacsvox-aural-voice-tuner-mode
+ 'derived-mode-parent
+ 'emacsvox-aural-voice-palette-previews-mode)
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-voice-tuner-edit)
+       ("e" . emacsvox-aural-voice-tuner-edit)
+       ("d" . emacsvox-aural-voice-tuner-use-default)
+       ("P" . emacsvox-aural-voice-tuner-audition)
+       ("u" . emacsvox-aural-voice-tuner-undo)
+       ("R" . emacsvox-aural-voice-tuner-restore)
+       ("s" . emacsvox-aural-voice-tuner-save)
+       ("SPC" . emacsvox-aural-voice-tuner-speak-current)
+       ("n" . emacsvox-aural-voice-tuner-next)
+       ("p" . emacsvox-aural-voice-tuner-previous)
+       ("<down>" . emacsvox-aural-voice-tuner-next)
+       ("<up>" . emacsvox-aural-voice-tuner-previous)
+       ("<right>" . emacsvox-aural-voice-tuner-increase)
+       ("<left>" . emacsvox-aural-voice-tuner-decrease)
+       ("+" . emacsvox-aural-voice-tuner-increase)
+       ("-" . emacsvox-aural-voice-tuner-decrease)
+       ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-voice-tuner-quit)
+       ("?" . emacsvox-aural-voice-tuner-help)))
+  (define-key
+   emacsvox-aural-voice-tuner-mode-map
+   (kbd (car binding))
+   (cdr binding)))
+
+(dotimes (digit 10)
+  (define-key
+   emacsvox-aural-voice-tuner-mode-map
+   (char-to-string (+ ?0 digit))
+   #'emacsvox-aural-voice-tuner-set-digit))
+
+(defun emacsvox-aural-voice-palette-previews-tune ()
+  "Open a transactional tuner for the effective voice at point."
+  (interactive)
+  (let* ((palette-id emacsvox-aural-voice-palette-previews-palette)
+         (palette (emacsvox-aural-voice-palette palette-id))
+         (voice
+          (emacsvox-aural-voice-palette-previews--current-voice)))
+    (when (emacsvox-aural-voice-palette-built-in palette)
+      (user-error
+       "Built-in palette; press o, then c to make an editable copy"))
+    (let* ((definition (emacsvox-aural-voice voice palette-id))
+           (style
+            (emacsvox-aural-voice-tuner--complete-style
+             definition palette-id))
+           (source (current-buffer))
+           (text emacsvox-aural-voice-palette-previews-text)
+           (buffer (get-buffer-create "*Aural Voice Tuner*")))
+      (when
+          (with-current-buffer buffer
+            (and
+             (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
+             emacsvox-aural-voice-tuner-dirty))
+        (unless
+            (yes-or-no-p
+             "Discard the unsaved voice tuner before opening another voice? ")
+          (user-error "Kept the existing unsaved voice tuner")))
+      (with-current-buffer buffer
+        (emacsvox-aural-voice-tuner-mode)
+        (setq
+         emacsvox-aural-voice-tuner-palette palette-id
+         emacsvox-aural-voice-tuner-voice voice
+         emacsvox-aural-voice-tuner-original-definition
+         (copy-tree definition)
+         emacsvox-aural-voice-tuner-initial-style (copy-tree style)
+         emacsvox-aural-voice-tuner-working-style (copy-tree style)
+         emacsvox-aural-voice-tuner-history nil
+         emacsvox-aural-voice-tuner-dirty nil
+         emacsvox-aural-voice-tuner-preview-text text
+         emacsvox-aural-voice-tuner-source-buffer source)
+        (emacsvox-aural-voice-tuner-refresh))
+      (pop-to-buffer buffer)
+      (emacsvox-aural-voice-tuner-speak-current)
+      buffer)))
+
+(defun emacsvox-aural-voice-palette-previews-help ()
+  "Display and speak voice-palette preview help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Aural Voice Palette Preview\n\n"
+      "Each row is one effective voice, including inherited voices.  Every\n"
+      "audition uses the same comparison text so differences are easier to\n"
+      "hear.  The voice name is spoken in the voice being auditioned.\n\n"
+      "n or down next       p or up previous\n"
+      "left/right column    . speak titled cell\n"
+      "RET or P preview     A preview every voice\n"
+      "t comparison text    s stop preview\n"
+      "SPC speak voice      e tune voice\n"
+      "E replace definition\n"
+      "x explain voice\n"
+      "g refresh            o palette manager\n"
+      "h aural home         q quit\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode
+    emacsvox-aural-voice-palette-previews-mode tabulated-list-mode
+  "Aural-Voice-Preview"
+  "Spoken browser for effective voices in one palette."
+  (setq
+   tabulated-list-format
+   [("Voice" 24 t)
+    ("Source" 22 t)
+    ("Requested" 42 t)
+    ("Effective" 48 t)
+    ("Status" 0 t)])
+  (setq tabulated-list-padding 2)
+  (add-hook
+   'tabulated-list-revert-hook
+   #'emacsvox-aural-voice-palette-previews--set-entries nil t)
+  (tabulated-list-init-header))
+
+;; A preview is logically a specialised palette manager.  Record that
+;; relationship without inheriting manager key bindings that expect palette
+;; identifiers at point.  This also lets an already-loaded generic aural quit
+;; command recognise the mode when this module alone is reloaded.
+(put
+ 'emacsvox-aural-voice-palette-previews-mode
+ 'derived-mode-parent
+ 'emacsvox-aural-voice-palettes-mode)
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-voice-palette-previews-play)
+       ("P" . emacsvox-aural-voice-palette-previews-play)
+       ("A" . emacsvox-aural-voice-palette-previews-play-all)
+       ("t" . emacsvox-aural-voice-palette-previews-set-text)
+       ("s" . emacsvox-aural-voice-palette-previews-stop)
+       ("SPC" . emacsvox-aural-voice-palette-previews-speak-current)
+       ("." . emacsvox-aural-voice-palette-previews-speak-current-cell)
+       ("n" . emacsvox-aural-voice-palette-previews-next)
+       ("p" . emacsvox-aural-voice-palette-previews-previous)
+       ("<down>" . emacsvox-aural-voice-palette-previews-next)
+       ("<up>" . emacsvox-aural-voice-palette-previews-previous)
+       ("<right>" . emacsvox-aural-voice-palette-previews-next-column)
+       ("<left>" . emacsvox-aural-voice-palette-previews-previous-column)
+       ("e" . emacsvox-aural-voice-palette-previews-tune)
+       ("E" . emacsvox-aural-voice-palette-previews-edit)
+       ("x" . emacsvox-aural-voice-palette-previews-explain)
+       ("g" . emacsvox-aural-voice-palette-previews-refresh)
+       ("o" . emacsvox-aural-voice-palette-previews-open-manager)
+       ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
+       ("?" . emacsvox-aural-voice-palette-previews-help)))
+  (define-key
+   emacsvox-aural-voice-palette-previews-mode-map
+   (kbd (car binding))
+   (cdr binding)))
+
+(defun emacsvox-aural-list-voice-palette-previews
+    (palette &optional voice speak)
+  "Open the spoken effective-voice browser for PALETTE.
+
+VOICE selects the initial row.  When SPEAK is non-nil, announce that row
+after displaying the preview buffer."
+  (let ((entries (emacsvox-aural-voice-palettes--preview-entries palette))
+        (buffer (get-buffer-create "*Aural Voice Palette Preview*")))
+    (unless entries
+      (user-error "Voice palette %s has no effective voices" palette))
+    (with-current-buffer buffer
+      (emacsvox-aural-voice-palette-previews-mode)
+      (setq
+       emacsvox-aural-voice-palette-previews-palette palette
+       emacsvox-aural-voice-palette-previews-entries entries
+       emacsvox-aural-voice-palette-previews-text
+       emacsvox-aural-voice-palettes-preview-text)
+      (emacsvox-aural-voice-palette-previews-refresh voice))
+    (pop-to-buffer buffer)
+    (when (and speak (tabulated-list-get-id))
+      (emacsvox-aural-voice-palette-previews-speak-current))
+    buffer))
+
+(defun emacsvox-aural-voice-palettes-preview (&optional id)
+  "Browse and audition all effective voices in palette ID or at point."
+  (interactive)
+  (let ((id (or id (emacsvox-aural-voice-palettes--at-point-or-read))))
+    (emacsvox-aural-list-voice-palette-previews
+     id nil (called-interactively-p 'interactive))))
+
+(defun emacsvox-aural-voice-palettes-explain (&optional id voice)
   "Explain one effective voice and its adapter fallback."
   (interactive)
-  (let* ((id (emacsvox-aural-voice-palettes--at-point-or-read))
-         (voice (emacsvox-aural-voice-palettes--read-voice
-                 id "Voice to explain: "))
+  (let* ((id (or id (emacsvox-aural-voice-palettes--at-point-or-read)))
+         (voice
+          (or
+           voice
+           (emacsvox-aural-voice-palettes--read-voice
+            id "Voice to explain: ")))
          (definition (emacsvox-aural-voice voice id))
          (compiled (emacsvox-aural-compile-voice-style voice id))
          (capability (emacsvox-aural-compiled-voice-capability compiled))
@@ -712,7 +1700,7 @@
       "N create             c copy\n"
       "e edit voice         E edit summary and parent\n"
       "D delete voice       d delete palette\n"
-      "P preview voice      x explain voice\n"
+      "P browse voices      x explain voice\n"
       "v view and validate  g refresh\n"
       "h aural home         q quit\n")))
   (when (fboundp 'emacsvox-speak-help)

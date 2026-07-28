@@ -101,6 +101,8 @@
      'emacsvox-aural-feature-fragment-previews-mode
      'emacsvox-aural-profiles-mode
      'emacsvox-aural-voice-palettes-mode
+     'emacsvox-aural-voice-palette-previews-mode
+     'emacsvox-aural-voice-tuner-mode
      'emacsvox-aural-doctor-mode
      'emacsvox-aural-sound-packs-mode
      'emacsvox-aural-sound-pack-cues-mode

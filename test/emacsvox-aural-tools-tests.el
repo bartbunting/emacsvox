@@ -891,6 +891,8 @@
         emacsvox-aural-schemes-mode-map
         emacsvox-aural-feature-fragments-mode-map
         emacsvox-aural-voice-palettes-mode-map
+        emacsvox-aural-voice-palette-previews-mode-map
+        emacsvox-aural-voice-tuner-mode-map
         emacsvox-aural-scheme-editor-mode-map
         emacsvox-aural-simple-editor-mode-map))
     (should
@@ -905,7 +907,8 @@
         emacsvox-aural-semantics-mode-map
         emacsvox-aural-schemes-mode-map
         emacsvox-aural-feature-fragments-mode-map
-        emacsvox-aural-voice-palettes-mode-map))
+        emacsvox-aural-voice-palettes-mode-map
+        emacsvox-aural-voice-palette-previews-mode-map))
     (should
      (eq (lookup-key map (kbd "q")) #'emacsvox-aural-quit)))
   (dolist
@@ -916,7 +919,11 @@
     (should
      (eq
       (lookup-key map (kbd "q"))
-      #'emacsvox-aural-editor-quit))))
+      #'emacsvox-aural-editor-quit)))
+  (should
+   (eq
+    (lookup-key emacsvox-aural-voice-tuner-mode-map (kbd "q"))
+    #'emacsvox-aural-voice-tuner-quit)))
 
 (ert-deftest emacsvox-aural-quit-presents-mode-scoped-close-feedback ()
   "Dismissing an aural interface cues its close and speaks the destination."

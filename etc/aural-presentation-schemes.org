@@ -2528,8 +2528,22 @@ Implemented details:
   Aural Home.  It lists provider status and inheritance; copies and creates
   personal palettes; edits metadata and guided complete styles; deletes
   entries or unreferenced personal palettes; activates an override or follows
-  the scheme; previews compiled voices; and explains requested/effective
-  styles, adapter capability, provenance, and fallback.
+  the scheme; opens a persistent spoken browser over every direct and
+  inherited voice; auditions one voice or the complete palette against shared,
+  editable comparison text; edits the selected voice directly for personal
+  palettes; and explains requested/effective styles, adapter capability,
+  provenance, and fallback.  Built-in palettes remain immutable and must be
+  copied before editing.
+- The preview browser opens a transactional spoken tuner for a selected
+  personal-palette voice.  The tuner presents family, average pitch, pitch
+  range, stress, and richness one row at a time; announces requested versus
+  auditioned values and active-adapter support; and auditions the shared
+  comparison text immediately after each adjustment.  Arrow keys, direct
+  digits, adapter-default reset, undo, and full restore support rapid
+  comparison.  Save atomically publishes the complete style, while cancel
+  leaves the registered palette unchanged.  Unsupported settings remain
+  portable in saved data but are explicitly identified as not applied by the
+  current adapter.
 - General presentation explanation now speaks composed voice styles naturally
   and includes requested voice data, effective ACSS, adapter capability, and
   dimension provenance in its technical detail.
