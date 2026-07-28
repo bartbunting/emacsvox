@@ -2184,6 +2184,68 @@ unsaved in the advanced rule editor so the selector can be reviewed or
    (when-let* ((record (car emacsvox-aural-presentation-history)))
      (emacsvox-aural-presentation-record-id record))))
 
+(defun emacsvox-aural-tools--speak-history-setting (text)
+  "Speak history setting TEXT without recording that announcement."
+  (let ((emacsvox-aural-submission-context
+         (plist-put
+          (emacsvox-aural-capture-context
+           'aural-tools 'state-change)
+          :history-recording-inhibited t)))
+    (if (fboundp 'tts-speak)
+        (tts-speak text)
+      (message "%s" text)))
+  text)
+
+(defun emacsvox-aural-toggle-interface-history-recording ()
+  "Toggle retention of presentations originating inside Aural interfaces."
+  (interactive)
+  (setq
+   emacsvox-aural-history-record-interface-presentations
+   (not emacsvox-aural-history-record-interface-presentations))
+  (when (derived-mode-p 'emacsvox-aural-recent-feedback-mode)
+    (emacsvox-aural-recent-feedback-refresh))
+  (emacsvox-aural-home-refresh-if-live)
+  (emacsvox-aural-tools--speak-history-setting
+   (format
+    "Aural interface history recording %s"
+    (if emacsvox-aural-history-record-interface-presentations
+        "on"
+      "off")))
+  emacsvox-aural-history-record-interface-presentations)
+
+(defun emacsvox-aural-set-history-limit (limit)
+  "Set the retained presentation history LIMIT for this Emacs session.
+
+LIMIT may be any natural number.  Zero disables history.  Lowering the limit
+immediately discards the oldest excess records; increasing it affects future
+recording.  Customize `emacsvox-aural-presentation-history-limit' to persist
+the value across sessions."
+  (interactive
+   (list
+    (read-number
+     "Maximum retained aural presentations: "
+     emacsvox-aural-presentation-history-limit)))
+  (unless (natnump limit)
+    (user-error "Aural history limit must be a natural number: %S" limit))
+  (setq emacsvox-aural-presentation-history-limit limit)
+  (cond
+   ((zerop limit)
+    (setq emacsvox-aural-presentation-history nil))
+   ((> (length emacsvox-aural-presentation-history) limit)
+    (setcdr
+     (nthcdr (1- limit) emacsvox-aural-presentation-history)
+     nil)))
+  (when (derived-mode-p 'emacsvox-aural-recent-feedback-mode)
+    (emacsvox-aural-recent-feedback-refresh))
+  (emacsvox-aural-home-refresh-if-live)
+  (emacsvox-aural-tools--speak-history-setting
+   (if (zerop limit)
+       "Aural presentation history disabled"
+     (format
+      "Aural presentation history limit %d. Larger histories retain more spoken text in memory"
+      limit)))
+  limit)
+
 (defun emacsvox-aural-recent-feedback-speak-current ()
   "Speak all useful fields for the feedback record at point."
   (interactive)
@@ -2262,6 +2324,8 @@ unsaved in the advanced rule editor so the selector can be reviewed or
       "SPC speak record     RET or e explain exact output\n"
       "P replay all         c audition only its earcons\n"
       "r prepare voice remap from this record\n"
+      "i include/exclude Aural UI feedback\n"
+      "L set retained history limit\n"
       "g refresh            h aural home\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -2299,6 +2363,8 @@ unsaved in the advanced rule editor so the selector can be reviewed or
        ("P" . emacsvox-aural-recent-feedback-replay)
        ("c" . emacsvox-aural-recent-feedback-audition-cues)
        ("r" . emacsvox-aural-recent-feedback-remap-voice)
+       ("i" . emacsvox-aural-toggle-interface-history-recording)
+       ("L" . emacsvox-aural-set-history-limit)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-recent-feedback-help)))
   (define-key
@@ -4157,17 +4223,22 @@ announce the selected example after displaying the buffer."
 
 (defun emacsvox-aural-home--recent-feedback-status ()
   "Return concise status for retained aural feedback."
-  (cond
-   ((and
-     (natnump emacsvox-aural-presentation-history-limit)
-     (zerop emacsvox-aural-presentation-history-limit))
-    "disabled")
-   (emacsvox-aural-presentation-history
-    (format
-     "%d of %s retained"
-     (length emacsvox-aural-presentation-history)
-     emacsvox-aural-presentation-history-limit))
-   (t "none retained")))
+  (format
+   "%s; Aural UI %s"
+   (cond
+    ((and
+      (natnump emacsvox-aural-presentation-history-limit)
+      (zerop emacsvox-aural-presentation-history-limit))
+     "disabled")
+    (emacsvox-aural-presentation-history
+     (format
+      "%d of %s retained"
+      (length emacsvox-aural-presentation-history)
+      emacsvox-aural-presentation-history-limit))
+    (t "none retained"))
+   (if emacsvox-aural-history-record-interface-presentations
+       "included"
+     "excluded")))
 
 (defun emacsvox-aural-home--face-presentation-status ()
   "Return face-scheme and source-buffer Voice Lock status."

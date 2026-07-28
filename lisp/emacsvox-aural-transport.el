@@ -103,6 +103,8 @@
 (defvar emacsvox-aural-submission-occasion nil
   "Dynamically bound occasion for the current speech submission.")
 
+(defvar emacsvox-aural-ui-interface-buffer)
+
 (defvar emacsvox-aural-plan-presented-hook nil
   "Abnormal hook run after queueing one concrete aural plan.
 
@@ -115,6 +117,15 @@ Standalone local cues run this hook after playback has been requested.")
 History records contain frozen data and source names and positions, but never
 retain source buffers.  Set this to zero to disable history."
   :type 'natnum
+  :group 'emacsvox-aural)
+
+(defcustom emacsvox-aural-history-record-interface-presentations nil
+  "Whether presentations originating in Aural interfaces enter history.
+
+Leave this nil during normal use so interface navigation, opening, closing,
+help, previews, and status speech do not displace source-buffer feedback.
+Enable it temporarily when diagnosing presentation inside the Aural UI."
+  :type 'boolean
   :group 'emacsvox-aural)
 
 (defvar emacsvox-aural-presentation-history nil
@@ -177,10 +188,23 @@ occasion, or a new queued icon changes.")
 
 (defun emacsvox-aural-capture-context (&optional module occasion)
   "Capture immutable source context for MODULE and OCCASION."
-  (copy-tree
-   (emacsvox-aural-current-context
-    (or module emacsvox-aural-submission-module)
-    (or occasion emacsvox-aural-submission-occasion 'continuous))))
+  (let ((context
+         (copy-tree
+          (emacsvox-aural-current-context
+           (or module emacsvox-aural-submission-module)
+           (or
+            occasion
+            emacsvox-aural-submission-occasion
+            'continuous)))))
+    (when
+        (and
+         (boundp 'emacsvox-aural-ui-interface-buffer)
+         emacsvox-aural-ui-interface-buffer
+         (not emacsvox-aural-history-record-interface-presentations))
+      (setq
+       context
+       (plist-put context :history-recording-inhibited t)))
+    context))
 
 (defun emacsvox-aural--resource-pack ()
   "Return the effective sound pack at the current submission boundary."
@@ -1751,65 +1775,68 @@ rather than the source-plan content."
     (emacsvox-aural--transport-error
      "Presentation history limit must be a natural number: %S"
      emacsvox-aural-presentation-history-limit))
-  (if (zerop emacsvox-aural-presentation-history-limit)
-      (setq emacsvox-aural-presentation-history nil)
-    (let* ((context (emacsvox-aural-concrete-plan-context plan))
-           (frozen (emacsvox-aural--history-value plan))
-           (frozen-context
-            (plist-put
-             (emacsvox-aural-concrete-plan-context frozen)
-             :source-buffer nil))
-           (record
-            (emacsvox-aural--make-presentation-record
-             :id (cl-incf emacsvox-aural--presentation-sequence)
-             :queued-at (current-time)
-             :plan frozen
-             :source-buffer-name (plist-get context :source-buffer-name)
-             :source-position (plist-get context :source-position)
-             :object-id
-             (emacsvox-aural--history-value
-              (emacsvox-aural-concrete-plan-object-id plan))
-             :run-id
-             (emacsvox-aural--history-value
-              (emacsvox-aural-concrete-plan-run-id plan)))))
-      (setf
-       (emacsvox-aural-concrete-plan-context frozen)
-       frozen-context)
-      (when
-          (and
-           emacsvox-aural--history-respect-icon-policy
-           (boundp 'emacsvox-use-icons)
-           (not emacsvox-use-icons))
+  (let ((context (emacsvox-aural-concrete-plan-context plan)))
+    (cond
+     ((zerop emacsvox-aural-presentation-history-limit)
+      (setq emacsvox-aural-presentation-history nil))
+     ((plist-get context :history-recording-inhibited) nil)
+     (t
+      (let* ((frozen (emacsvox-aural--history-value plan))
+             (frozen-context
+              (plist-put
+               (emacsvox-aural-concrete-plan-context frozen)
+               :source-buffer nil))
+             (record
+              (emacsvox-aural--make-presentation-record
+               :id (cl-incf emacsvox-aural--presentation-sequence)
+               :queued-at (current-time)
+               :plan frozen
+               :source-buffer-name (plist-get context :source-buffer-name)
+               :source-position (plist-get context :source-position)
+               :object-id
+               (emacsvox-aural--history-value
+                (emacsvox-aural-concrete-plan-object-id plan))
+               :run-id
+               (emacsvox-aural--history-value
+                (emacsvox-aural-concrete-plan-run-id plan)))))
         (setf
-         (emacsvox-aural-concrete-plan-before frozen)
-         (cl-remove
-          'cue
-          (emacsvox-aural-concrete-plan-before frozen)
-          :key #'emacsvox-aural-concrete-action-kind))
-        (setf
-         (emacsvox-aural-concrete-plan-after frozen)
-         (cl-remove
-          'cue
-          (emacsvox-aural-concrete-plan-after frozen)
-          :key #'emacsvox-aural-concrete-action-kind))
-        (push
-         '(:reason icons-disabled-at-queue)
-         (emacsvox-aural-concrete-plan-degradations frozen)))
-      (when text-supplied-p
-        (setf
-         (emacsvox-aural-concrete-content-text
-          (emacsvox-aural-concrete-plan-content frozen))
-         (and text (substring-no-properties text))))
-      (push record emacsvox-aural-presentation-history)
-      (when
-          (> (length emacsvox-aural-presentation-history)
-             emacsvox-aural-presentation-history-limit)
-        (setcdr
-         (nthcdr
-          (1- emacsvox-aural-presentation-history-limit)
-          emacsvox-aural-presentation-history)
-         nil))
-      record)))
+         (emacsvox-aural-concrete-plan-context frozen)
+         frozen-context)
+        (when
+            (and
+             emacsvox-aural--history-respect-icon-policy
+             (boundp 'emacsvox-use-icons)
+             (not emacsvox-use-icons))
+          (setf
+           (emacsvox-aural-concrete-plan-before frozen)
+           (cl-remove
+            'cue
+            (emacsvox-aural-concrete-plan-before frozen)
+            :key #'emacsvox-aural-concrete-action-kind))
+          (setf
+           (emacsvox-aural-concrete-plan-after frozen)
+           (cl-remove
+            'cue
+            (emacsvox-aural-concrete-plan-after frozen)
+            :key #'emacsvox-aural-concrete-action-kind))
+          (push
+           '(:reason icons-disabled-at-queue)
+           (emacsvox-aural-concrete-plan-degradations frozen)))
+        (when text-supplied-p
+          (setf
+           (emacsvox-aural-concrete-content-text
+            (emacsvox-aural-concrete-plan-content frozen))
+           (and text (substring-no-properties text))))
+        (push record emacsvox-aural-presentation-history)
+        (when
+            (> (length emacsvox-aural-presentation-history)
+               emacsvox-aural-presentation-history-limit)
+          (setcdr
+           (nthcdr
+            (1- emacsvox-aural-presentation-history-limit)
+            emacsvox-aural-presentation-history)
+           nil))
+        record)))))
 
 (defun emacsvox-aural-last-presentation (&optional source)
   "Return the latest frozen presentation record for optional SOURCE.

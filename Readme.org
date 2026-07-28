@@ -51,7 +51,10 @@ explain, replay, audition, or remap one of the retained presentations.  From
 an ordinary buffer, =C-e E= always runs
 =emacsvox-aural-explain-presentation= at point so presentation problems can
 be inspected directly.  Press =h= in any aural manager or editor to return
-home.
+home.  Aural-interface feedback is excluded from history by default; press
+=i= in the recent-feedback browser to include it temporarily for diagnosis.
+Press =L= there to set any nonnegative history limit for the current session,
+or customize =emacsvox-aural-presentation-history-limit= to persist it.
 
 Use =M-x emacsvox-aural-list-profiles= to save and switch complete named
 configurations.  A profile references one base scheme and ordered feature

@@ -42,7 +42,9 @@
          (emacsvox-aural--current-rules-cache-hits 0)
          (emacsvox-aural--current-rules-cache-misses 0)
          (emacsvox-aural-presentation-history nil)
+         (emacsvox-aural-presentation-history-limit 20)
          (emacsvox-aural--presentation-sequence 0)
+         (emacsvox-aural-history-record-interface-presentations nil)
          (emacsvox-aural--file-digest-cache
           (make-hash-table :test #'equal))
          (emacsvox-aural-unsupported-volume-policy 'degrade)
@@ -123,6 +125,21 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (should (eq (plist-get context :occasion) 'navigation))
       (should (plist-get context :face-presentation-enabled))
       (should (plist-get context :voice-lock-enabled)))))
+
+(ert-deftest emacsvox-aural-transport-marks-interface-history-at-source ()
+  "Aural UI capture policy is frozen before speech enters its scratch buffer."
+  (with-temp-buffer
+    (setq-local emacsvox-aural-ui-interface-buffer t)
+    (let ((emacsvox-aural-history-record-interface-presentations nil))
+      (should
+       (plist-get
+        (emacsvox-aural-capture-context 'aural-tools 'navigation)
+        :history-recording-inhibited)))
+    (let ((emacsvox-aural-history-record-interface-presentations t))
+      (should-not
+       (plist-get
+        (emacsvox-aural-capture-context 'aural-tools 'navigation)
+        :history-recording-inhibited)))))
 
 (ert-deftest emacsvox-aural-transport-renders-templates-before-queueing ()
   "Semantic templates become concrete text at the source boundary."
@@ -744,6 +761,25 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                 (seq-some #'retains-buffer-p value))
                (t nil))))
           (should-not (retains-buffer-p record)))))))
+
+(ert-deftest emacsvox-aural-transport-excludes-inhibited-interface-history ()
+  "Interface presentations leave existing source history and sequence intact."
+  (emacsvox-test--with-transport-scheme
+    (let* ((kept 'existing-source-record)
+           (emacsvox-aural-presentation-history (list kept))
+           (plan
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "Aural row" :speak t)
+             :facts '(:role aural-interface)
+             :context
+             '(:module aural-tools :mode emacsvox-aural-tabulated-mode
+               :mode-lineage (emacsvox-aural-tabulated-mode)
+               :occasion navigation :history-recording-inhibited t))))
+      (should-not (emacsvox-aural-record-presentation plan))
+      (should (equal emacsvox-aural-presentation-history (list kept)))
+      (should (zerop emacsvox-aural--presentation-sequence)))))
 
 (ert-deftest emacsvox-aural-transport-scales-long-multi-face-document ()
   "Long face-rich text reuses one rule snapshot within bounded resources."

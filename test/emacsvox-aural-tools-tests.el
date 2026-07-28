@@ -43,7 +43,9 @@
          (emacsvox-aural--current-rules-cache-hits 0)
          (emacsvox-aural--current-rules-cache-misses 0)
          (emacsvox-aural-presentation-history nil)
+         (emacsvox-aural-presentation-history-limit 20)
          (emacsvox-aural--presentation-sequence 0)
+         (emacsvox-aural-history-record-interface-presentations nil)
          (emacsvox-aural-tools--last-source-buffer nil)
          (emacsvox-aural-tools--fragment-preview-last-examples
           (make-hash-table :test #'eq))
@@ -390,6 +392,14 @@
                (eq
                 (key-binding (kbd "c"))
                 #'emacsvox-aural-recent-feedback-audition-cues))
+              (should
+               (eq
+                (key-binding (kbd "i"))
+                #'emacsvox-aural-toggle-interface-history-recording))
+              (should
+               (eq
+                (key-binding (kbd "L"))
+                #'emacsvox-aural-set-history-limit))
               (cl-letf
                   (((symbol-function 'tts-speak)
                     (lambda (text) (setq spoken text))))
@@ -429,7 +439,25 @@
                 (emacsvox-aural-recent-feedback-audition-cues)
                 (should (equal auditioned (list cue)))
                 (emacsvox-aural-recent-feedback-remap-voice)
-                (should (eq remapped new-record)))))
+                (should (eq remapped new-record)))
+              (cl-letf
+                  (((symbol-function 'tts-speak)
+                    (lambda (text) (setq spoken text))))
+                (should
+                 (emacsvox-aural-toggle-interface-history-recording))
+                (should
+                 (equal spoken
+                        "Aural interface history recording on"))
+                (should-not
+                 (emacsvox-aural-toggle-interface-history-recording))
+                (should
+                 (equal spoken
+                        "Aural interface history recording off"))
+                (should (= (emacsvox-aural-set-history-limit 1) 1))
+                (should (= (length emacsvox-aural-presentation-history) 1))
+                (should (= (emacsvox-aural-set-history-limit 250) 250))
+                (should
+                 (= emacsvox-aural-presentation-history-limit 250)))))
         (when (get-buffer "*Recent Aural Feedback*")
           (kill-buffer "*Recent Aural Feedback*"))
         (kill-buffer source)))))
