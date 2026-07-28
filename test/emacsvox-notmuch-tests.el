@@ -24,6 +24,17 @@
     (should (eq emacsvox-aural-module 'notmuch))
     (should (local-variable-p 'emacsvox-aural-module))))
 
+(ert-deftest emacsvox-notmuch-search-arrows-match-control-line-movement ()
+  "Search-buffer arrows use the same movement as C-n and C-p."
+  (with-temp-buffer
+    (use-local-map notmuch-search-mode-map)
+    (dolist (keys '(("<down>" . "C-n")
+                    ("<up>" . "C-p")))
+      (should
+       (eq
+        (key-binding (kbd (car keys)))
+        (key-binding (kbd (cdr keys))))))))
+
 (ert-deftest emacsvox-notmuch-registers-mail-preview-examples ()
   "Notmuch supplies validated simulations for optional mail presentation."
   (dolist

@@ -21,9 +21,10 @@
   (mapcar #'intern (emacsvox-aural-profile-candidates)))
 
 (defun emacsvox-aural-profiles--current-id ()
-  "Return the first profile equal to the live configuration, or nil."
-  (cl-find-if #'emacsvox-aural-profile-current-p
-              (emacsvox-aural-profiles--ids)))
+  "Return the selected presentation-profile identifier, or nil."
+  (and
+   (emacsvox-aural-profile-entry emacsvox-aural-active-profile)
+   emacsvox-aural-active-profile))
 
 (defun emacsvox-aural-profiles-status ()
   "Return concise status for presentation profiles."
@@ -31,9 +32,11 @@
         (current (emacsvox-aural-profiles--current-id)))
     (cond
      (current
-      (format "%s active; %d saved" current count))
+      (format
+       "%s %s; %d saved"
+       current (emacsvox-aural-profile-status current) count))
      ((zerop count) "none saved")
-     (t (format "%d saved; current settings are unsaved" count)))))
+     (t (format "%d saved; no profile selected" count)))))
 
 (defun emacsvox-aural-profiles--validation (id)
   "Return (VALID . DETAIL) for profile ID."
@@ -63,7 +66,7 @@
      id
      (vector
       (symbol-name id)
-      (if (emacsvox-aural-profile-current-p id) "active" "")
+      (symbol-name (emacsvox-aural-profile-status id))
       (symbol-name (plist-get data :scheme))
       (if-let* ((fragments (plist-get data :feature-fragments)))
           (mapconcat #'symbol-name fragments ", ")
@@ -142,9 +145,9 @@
            (emacsvox-aural-profile-entry id)))
          (summary
           (format
-           "%s. %s. Scheme %s. Fragments %s. Sound %s. Voice %s. Spatial %s. %s"
+           "%s. %s. Scheme %s. Options %s. Sound %s. Voice %s. Spatial %s. %s"
            (emacsvox-aural-tools--humanize id)
-           (if (emacsvox-aural-profile-current-p id) "active" "inactive")
+           (emacsvox-aural-profile-status id)
            (plist-get data :scheme)
            (if-let* ((fragments (plist-get data :feature-fragments)))
                (mapconcat
@@ -195,12 +198,14 @@
     (with-help-window (help-buffer)
       (princ (format "Presentation profile: %s\n\n" id))
       (princ (format "Summary: %s\n" (plist-get data :summary)))
-      (princ (format "Current: %s\n"
-                     (if (emacsvox-aural-profile-current-p id) "yes" "no")))
+      (princ
+       (format
+        "Status: %s\n"
+        (emacsvox-aural-profile-status id)))
       (princ (format "Scheme: %s\n" (plist-get data :scheme)))
       (princ
        (format
-        "Feature fragments: %S\n"
+        "Presentation options: %S\n"
         (plist-get data :feature-fragments)))
       (princ (format "Sound pack: %s\n"
                      (or (plist-get data :sound-pack) "from scheme")))
@@ -224,6 +229,7 @@
   (interactive)
   (let ((id (emacsvox-aural-profiles--at-point-or-read)))
     (emacsvox-aural-apply-profile id)
+    (emacsvox-aural-save-user-data)
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-home-refresh-if-live)
     (when (called-interactively-p 'interactive)
@@ -234,16 +240,19 @@
   "Save the complete current presentation configuration as a new profile."
   (interactive)
   (let* ((id (emacsvox-aural-profiles--read-new-id))
+         (old-active emacsvox-aural-active-profile)
          (summary
           (read-string "Profile purpose: "
                        (format "Saved presentation profile %s" id)))
          (data (emacsvox-aural-capture-profile-data id summary)))
     (emacsvox-aural-register-profile
      data :source emacsvox-aural-schemes-file)
+    (setq emacsvox-aural-active-profile id)
     (condition-case error
         (emacsvox-aural-save-user-data)
       (error
        (remhash id emacsvox-aural-profile-registry)
+       (setq emacsvox-aural-active-profile old-active)
        (signal (car error) (cdr error))))
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-profiles-speak-current)
@@ -281,16 +290,19 @@
   (interactive)
   (let* ((id (emacsvox-aural-profiles--at-point-or-read))
          (old (emacsvox-aural-profile-entry id))
+         (old-active emacsvox-aural-active-profile)
          (summary
           (plist-get
            (emacsvox-aural-profile-entry-data old) :summary))
          (data (emacsvox-aural-capture-profile-data id summary)))
     (emacsvox-aural-register-profile
      data :source emacsvox-aural-schemes-file :replace t)
+    (setq emacsvox-aural-active-profile id)
     (condition-case error
         (emacsvox-aural-save-user-data)
       (error
        (puthash id old emacsvox-aural-profile-registry)
+       (setq emacsvox-aural-active-profile old-active)
        (signal (car error) (cdr error))))
     (emacsvox-aural-profiles-refresh id)
     (emacsvox-aural-profiles-speak-current)
@@ -301,6 +313,7 @@
   (interactive)
   (let* ((old-id (emacsvox-aural-profiles--at-point-or-read))
          (old-entry (emacsvox-aural-profile-entry old-id))
+         (old-active emacsvox-aural-active-profile)
          (new-id
           (emacsvox-aural-profiles--read-new-id
            "Rename profile to: " (symbol-name old-id)))
@@ -309,6 +322,8 @@
            (copy-tree (emacsvox-aural-profile-entry-data old-entry))
            :id new-id)))
     (remhash old-id emacsvox-aural-profile-registry)
+    (when (eq old-id emacsvox-aural-active-profile)
+      (setq emacsvox-aural-active-profile new-id))
     (condition-case error
         (progn
           (emacsvox-aural-register-profile
@@ -317,6 +332,7 @@
       (error
        (remhash new-id emacsvox-aural-profile-registry)
        (puthash old-id old-entry emacsvox-aural-profile-registry)
+       (setq emacsvox-aural-active-profile old-active)
        (signal (car error) (cdr error))))
     (emacsvox-aural-profiles-refresh new-id)
     (emacsvox-aural-profiles-speak-current)
@@ -326,14 +342,18 @@
   "Delete the personal presentation profile at point."
   (interactive)
   (let* ((id (emacsvox-aural-profiles--at-point-or-read))
-         (entry (emacsvox-aural-profile-entry id)))
+         (entry (emacsvox-aural-profile-entry id))
+         (old-active emacsvox-aural-active-profile))
     (unless (yes-or-no-p (format "Delete presentation profile %s? " id))
       (user-error "Deletion cancelled"))
     (remhash id emacsvox-aural-profile-registry)
+    (when (eq id emacsvox-aural-active-profile)
+      (setq emacsvox-aural-active-profile nil))
     (condition-case error
         (emacsvox-aural-save-user-data)
       (error
        (puthash id entry emacsvox-aural-profile-registry)
+       (setq emacsvox-aural-active-profile old-active)
        (signal (car error) (cdr error))))
     (emacsvox-aural-profiles-refresh)
     (if (tabulated-list-get-id)
@@ -350,8 +370,10 @@
      (concat
       "Aural Presentation Profiles\n\n"
       "A profile switches one complete named configuration. It references a\n"
-      "base scheme and ordered fragments and captures sound, voice, and spatial\n"
-      "choices. Edit rules in the existing scheme and fragment managers.\n\n"
+      "base scheme and ordered presentation options and captures sound, voice,\n"
+      "and spatial choices. Exactly one profile identity can be selected.\n"
+      "Active means its saved values match; modified means live settings have\n"
+      "changed since selection. Edit rules in the scheme and option managers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET or a activate    SPC speak profile\n"
@@ -371,7 +393,7 @@
    [("Profile" 24 t)
     ("Status" 10 t)
     ("Scheme" 20 t)
-    ("Fragments" 28 t)
+    ("Options" 28 t)
     ("Sound" 16 t)
     ("Voice" 18 t)
     ("Spatial" 14 t)
@@ -381,6 +403,17 @@
   (add-hook
    'tabulated-list-revert-hook #'emacsvox-aural-profiles--set-entries nil t)
   (tabulated-list-init-header))
+
+(defun emacsvox-aural-profiles-refresh-if-live (&rest _ignored)
+  "Refresh the presentation-profile manager when it is open."
+  (when-let* ((buffer (get-buffer "*Aural Presentation Profiles*")))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-profiles-mode)
+        (emacsvox-aural-profiles-refresh)))))
+
+(add-hook
+ 'emacsvox-aural-configuration-changed-hook
+ #'emacsvox-aural-profiles-refresh-if-live)
 
 (dolist
     (binding

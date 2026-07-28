@@ -23,6 +23,7 @@
           (make-hash-table :test #'equal))
          (emacsvox-aural-profile-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-active-profile nil)
          (emacsvox-aural-voice-palette-registry
           (copy-hash-table emacsvox-aural-voice-palette-registry))
          (emacsvox-aural-enabled-feature-fragments nil)
@@ -822,14 +823,15 @@
        (equal
         (emacsvox-aural-migrate-user-data
          '(:schema-version 0 :schemes nil :user-rules nil))
-        '(:schema-version 5
+        '(:schema-version 6
           :schemes nil
           :user-rules nil
           :feature-fragments nil
           :enabled-feature-fragments nil
           :profiles nil
           :voice-palettes nil
-          :feature-fragment-order nil))))
+          :feature-fragment-order nil
+          :active-profile nil))))
     (let ((migrated
            (emacsvox-aural-migrate-user-data
             '(:schema-version 4
@@ -847,11 +849,25 @@
               :voice-palettes nil
               :profiles nil
               :user-rules nil))))
-      (should (eq (plist-get migrated :schema-version) 5))
+      (should (eq (plist-get migrated :schema-version) 6))
       (should
        (equal
         (plist-get migrated :feature-fragment-order)
-        '(personal-b personal-a))))
+        '(personal-b personal-a)))
+      (should-not (plist-get migrated :active-profile)))
+    (should-error
+     (emacsvox-aural--validate-user-data
+      (list
+       :schema-version emacsvox-aural-user-data-schema-version
+       :schemes nil
+       :feature-fragments nil
+       :enabled-feature-fragments nil
+       :feature-fragment-order nil
+       :voice-palettes nil
+       :profiles nil
+       :active-profile 'missing
+       :user-rules nil))
+     :type 'emacsvox-aural-scheme-error)
     (should-error
      (emacsvox-aural-migrate-user-data
       '(:schema-version 0 :schemes nil :user-rules nil))

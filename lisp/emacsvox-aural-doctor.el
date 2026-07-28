@@ -132,15 +132,19 @@
       (error-message-string error)))))
 
 (defun emacsvox-aural-doctor--profile-finding ()
-  "Report saved profiles and whether the live setup matches one."
+  "Report saved profiles and selected-profile status."
   (require 'emacsvox-aural-profiles)
   (let ((count (hash-table-count emacsvox-aural-profile-registry))
         (current (emacsvox-aural-profiles--current-id)))
     (emacsvox-aural-doctor--finding
      'presentation-profile 'info "Presentation profile"
-     (cond (current (format "%s active" current))
-           ((zerop count) "none saved")
-           (t "customized"))
+     (cond
+      (current
+       (format
+        "%s %s"
+        current (emacsvox-aural-profile-status current)))
+      ((zerop count) "none saved")
+      (t "none selected"))
      (format "%d saved profile%s"
              count (if (= count 1) "" "s")))))
 

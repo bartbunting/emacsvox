@@ -63,6 +63,7 @@
                   (tags orig-tags &optional face))
 
 (defvar notmuch-archive-tags)
+(defvar notmuch-search-mode-map)
 (defvar notmuch-show-mode-map)
 (defvar notmuch-show-part-button-default-action)
 
@@ -1834,6 +1835,10 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
          '(notmuch notmuch-hello notmuch-lib notmuch-search notmuch-show))
   (eval `(with-eval-after-load ',feature
            (emacsvox-notmuch--install-advice))))
+
+(with-eval-after-load 'notmuch
+  (define-key notmuch-search-mode-map (kbd "<down>") #'next-line)
+  (define-key notmuch-search-mode-map (kbd "<up>") #'previous-line))
 
 (with-eval-after-load 'notmuch-show
   (define-key

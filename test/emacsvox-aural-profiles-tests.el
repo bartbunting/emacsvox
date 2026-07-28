@@ -25,6 +25,7 @@
           (make-hash-table :test #'equal))
          (emacsvox-aural-profile-registry
           (make-hash-table :test #'eq))
+         (emacsvox-aural-active-profile nil)
          (emacsvox-aural-enabled-feature-fragments nil)
          (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-active-scheme 'default)
@@ -105,10 +106,82 @@
         emacsvox-aural-enabled-feature-fragments
         '(profile-feature)))
       (should (eq emacsvox-aural-voice-palette-override 'acss-default))
+      (should (eq emacsvox-aural-active-profile 'work))
       (should (eq emacsvox-aural-spatial-output 'mono))
       (should (= emacsvox-aural-spatial-maximum-separation 0.5))
       (should-not emacsvox-aural-spatial-cue-enabled)
       (should (emacsvox-aural-profile-current-p 'work)))))
+
+(ert-deftest emacsvox-aural-profiles-select-one-identical-profile ()
+  "Identical saved configurations do not both appear active."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data 'first))
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data 'second))
+    (cl-letf
+        (((symbol-function 'emacsvox-sounds-select-theme)
+          (lambda (pack)
+            (setq emacsvox-sounds-current-pack pack))))
+      (emacsvox-aural-apply-profile 'first)
+      (should (eq (emacsvox-aural-profile-status 'first) 'active))
+      (should (eq (emacsvox-aural-profile-status 'second) 'inactive))
+      (emacsvox-aural-apply-profile 'second)
+      (should (eq (emacsvox-aural-profile-status 'first) 'inactive))
+      (should (eq (emacsvox-aural-profile-status 'second) 'active)))))
+
+(ert-deftest emacsvox-aural-profiles-selected-profile-becomes-modified ()
+  "Changing live configuration retains selected identity as modified."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (cl-letf
+        (((symbol-function 'emacsvox-sounds-select-theme)
+          (lambda (pack)
+            (setq emacsvox-sounds-current-pack pack))))
+      (emacsvox-aural-apply-profile 'work))
+    (emacsvox-aural-set-enabled-feature-fragments nil)
+    (should (eq emacsvox-aural-active-profile 'work))
+    (should (eq (emacsvox-aural-profile-status 'work) 'modified))
+    (should-not (emacsvox-aural-profile-current-p 'work))
+    (should (eq (emacsvox-aural-profiles--current-id) 'work))
+    (should
+     (equal
+      (aref (cadr (emacsvox-aural-profiles--row 'work)) 1)
+      "modified"))))
+
+(ert-deftest emacsvox-aural-profiles-report-invalid-selected-profile ()
+  "A selected profile with a missing component is invalid, not modified."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (setq emacsvox-aural-active-profile 'work)
+    (remhash 'default emacsvox-aural-scheme-registry)
+    (should (eq (emacsvox-aural-profile-status 'work) 'invalid))))
+
+(ert-deftest emacsvox-aural-profiles-manager-maintains-selected-identity ()
+  "Profile lifecycle commands update only the intended selected identity."
+  (emacsvox-test--with-aural-profiles
+    (let ((new-ids '(first copied renamed)))
+      (with-temp-buffer
+        (emacsvox-aural-profiles-mode)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-profiles--read-new-id)
+              (lambda (&rest _) (pop new-ids)))
+             ((symbol-function 'read-string)
+              (lambda (&rest _) "Profile purpose"))
+             ((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
+             ((symbol-function 'tts-speak) #'ignore)
+             ((symbol-function 'emacsvox-icon) #'ignore)
+             ((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+          (emacsvox-aural-profiles-create)
+          (should (eq emacsvox-aural-active-profile 'first))
+          (emacsvox-aural-profiles-copy)
+          (should (eq emacsvox-aural-active-profile 'first))
+          (emacsvox-aural-profiles-update-from-current)
+          (should (eq emacsvox-aural-active-profile 'copied))
+          (emacsvox-aural-profiles-rename)
+          (should (eq emacsvox-aural-active-profile 'renamed))
+          (emacsvox-aural-profiles-delete)
+          (should-not emacsvox-aural-active-profile)
+          (should (emacsvox-aural-profile-entry 'first))
+          (should-not (emacsvox-aural-profile-entry 'renamed)))))))
 
 (ert-deftest emacsvox-aural-profiles-application-rolls-back-on-error ()
   "A failed concrete sound switch restores every already changed setting."
@@ -134,6 +207,7 @@
       (should (eq emacsvox-aural-active-scheme 'default))
       (should-not emacsvox-aural-enabled-feature-fragments)
       (should-not emacsvox-aural-voice-palette-override)
+      (should-not emacsvox-aural-active-profile)
       (should (eq emacsvox-aural-spatial-output old-spatial))
       (should (eq emacsvox-sounds-current-pack 'chimes))
       (should-not fragment-notifications)
@@ -150,15 +224,23 @@
             (emacsvox-aural-register-profile
              (emacsvox-test--profile-data)
              :source emacsvox-aural-schemes-file)
+            (setq emacsvox-aural-active-profile 'work)
             (emacsvox-aural-save-user-data)
             (should
              (eq
               (plist-get
                (emacsvox-aural-read-user-data) :schema-version)
-              5))
+              6))
+            (should
+             (eq
+              (plist-get
+               (emacsvox-aural-read-user-data) :active-profile)
+              'work))
             (setq emacsvox-aural-profile-registry
-                  (make-hash-table :test #'eq))
+                  (make-hash-table :test #'eq)
+                  emacsvox-aural-active-profile nil)
             (emacsvox-aural-load-user-data)
+            (should (eq emacsvox-aural-active-profile 'work))
             (should
              (equal
               (emacsvox-aural-profile-entry-data
@@ -185,7 +267,10 @@
        (eq
         (plist-get (plist-get data :spatial) :remapping)
         'center))
-      (should (emacsvox-aural--validate-profile-data data)))))
+      (should (emacsvox-aural--validate-profile-data data))
+      (emacsvox-aural-register-profile data)
+      (setq emacsvox-aural-active-profile 'captured)
+      (should (eq (emacsvox-aural-profile-status 'captured) 'active)))))
 
 (ert-deftest emacsvox-aural-profiles-manager-speaks-cells-and-boundaries ()
   "The profile manager follows the shared accessible table contract."

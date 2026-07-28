@@ -83,6 +83,12 @@
 (defvar emacsvox-aural-profile-registry (make-hash-table :test #'eq)
   "Map personal presentation profile identifiers to their records.")
 
+(defvar emacsvox-aural-active-profile nil
+  "Identifier of the presentation profile most recently selected.
+
+The profile remains selected when live settings diverge from its saved
+configuration; callers can then report it as modified.")
+
 (defvar emacsvox-aural-enabled-feature-fragments nil
   "Ordered identifiers of optional feature fragments in the cascade.")
 
@@ -115,7 +121,7 @@
   :type 'file
   :group 'emacsvox-aural)
 
-(defconst emacsvox-aural-user-data-schema-version 5
+(defconst emacsvox-aural-user-data-schema-version 6
   "Current schema version for the personal scheme data file.")
 
 (defun emacsvox-aural--migrate-user-data-v1-to-v2 (data)
@@ -154,11 +160,17 @@
        (cl-remove-if (lambda (id) (memq id enabled)) personal))))
     (plist-put data :schema-version 5)))
 
+(defun emacsvox-aural--migrate-user-data-v5-to-v6 (data)
+  "Add selected presentation-profile identity to version 5 user DATA."
+  (setq data (plist-put data :active-profile nil))
+  (plist-put data :schema-version 6))
+
 (defconst emacsvox-aural--built-in-user-data-migrations
   '((1 . emacsvox-aural--migrate-user-data-v1-to-v2)
     (2 . emacsvox-aural--migrate-user-data-v2-to-v3)
     (3 . emacsvox-aural--migrate-user-data-v3-to-v4)
-    (4 . emacsvox-aural--migrate-user-data-v4-to-v5))
+    (4 . emacsvox-aural--migrate-user-data-v4-to-v5)
+    (5 . emacsvox-aural--migrate-user-data-v5-to-v6))
   "Required migrations supplied by Emacsvox.")
 
 (defvar emacsvox-aural-user-data-migrations nil
@@ -1243,6 +1255,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
     (emacsvox-aural--scheme-error
      "Unknown presentation profile: %S" id))
   (remhash id emacsvox-aural-profile-registry)
+  (when (eq id emacsvox-aural-active-profile)
+    (setq emacsvox-aural-active-profile nil))
   id)
 
 (defun emacsvox-aural-capture-profile-data (id summary)
@@ -1325,6 +1339,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
          (old-fragment-order
           (copy-sequence emacsvox-aural-feature-fragment-order))
          (old-palette emacsvox-aural-voice-palette-override)
+         (old-profile emacsvox-aural-active-profile)
          (old-pack
           (and
            (boundp 'emacsvox-sounds-current-pack)
@@ -1358,7 +1373,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
            (emacsvox-aural--merge-enabled-feature-fragment-order fragments)
            emacsvox-aural-enabled-feature-fragments
            (copy-sequence fragments)
-           emacsvox-aural-voice-palette-override palette)
+           emacsvox-aural-voice-palette-override palette
+           emacsvox-aural-active-profile id)
           (emacsvox-aural--apply-profile-spatial spatial)
           ;; From this point the complete profile is live.  Observer failures
           ;; must not roll it back to a state they were never told about.
@@ -1372,7 +1388,8 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
          emacsvox-aural-active-scheme old-scheme
          emacsvox-aural-feature-fragment-order old-fragment-order
          emacsvox-aural-enabled-feature-fragments old-fragments
-         emacsvox-aural-voice-palette-override old-palette)
+         emacsvox-aural-voice-palette-override old-palette
+         emacsvox-aural-active-profile old-profile)
         (emacsvox-aural--apply-profile-spatial old-spatial)
         (when old-pack
           (ignore-errors
@@ -1380,11 +1397,16 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
               (emacsvox-sounds-select-theme old-pack))))))
     id))
 
-(defun emacsvox-aural-profile-current-p (id)
+(defun emacsvox-aural-profile-matches-current-p (id)
   "Return non-nil when live presentation settings equal profile ID."
   (when-let* ((entry (emacsvox-aural-profile-entry id)))
     (let* ((data (emacsvox-aural-profile-entry-data entry))
            (spatial (plist-get data :spatial))
+           (palette (plist-get data :voice-palette))
+           (live-palette
+            (or
+             emacsvox-aural-voice-palette-override
+             (emacsvox-aural-effective-scheme-provider 'voice-palette)))
            (pack
             (or
              (plist-get data :sound-pack)
@@ -1395,9 +1417,9 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
        (equal
         (plist-get data :feature-fragments)
         emacsvox-aural-enabled-feature-fragments)
-       (eq
-        (plist-get data :voice-palette)
-        emacsvox-aural-voice-palette-override)
+       (if palette
+           (eq palette live-palette)
+         (null emacsvox-aural-voice-palette-override))
        (or
         (not (boundp 'emacsvox-sounds-current-pack))
         (eq pack emacsvox-sounds-current-pack))
@@ -1431,9 +1453,30 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
            emacsvox-aural-spatial-maximum-separation))
          (or
           (not (plist-member spatial :remapping))
-          (eq
+           (eq
            (plist-get spatial :remapping)
            emacsvox-aural-spatial-remapping))))))))
+
+(defun emacsvox-aural--profile-valid-p (id)
+  "Return non-nil when profile ID still has valid component references."
+  (condition-case nil
+      (when-let* ((entry (emacsvox-aural-profile-entry id)))
+        (emacsvox-aural--validate-profile-data
+         (emacsvox-aural-profile-entry-data entry))
+        t)
+    (error nil)))
+
+(defun emacsvox-aural-profile-status (id)
+  "Return `active', `modified', `inactive', or `invalid' for profile ID."
+  (cond
+   ((not (emacsvox-aural--profile-valid-p id)) 'invalid)
+   ((not (eq id emacsvox-aural-active-profile)) 'inactive)
+   ((emacsvox-aural-profile-matches-current-p id) 'active)
+   (t 'modified)))
+
+(defun emacsvox-aural-profile-current-p (id)
+  "Return non-nil when profile ID is selected and exactly matches live settings."
+  (eq (emacsvox-aural-profile-status id) 'active))
 
 (defun emacsvox-aural-select-voice-palette (&optional palette)
   "Select voice PALETTE as a global override, or nil to follow the scheme."
@@ -1457,6 +1500,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
         (order (plist-get data :feature-fragment-order))
         (palettes (plist-get data :voice-palettes))
         (profiles (plist-get data :profiles))
+        (active-profile (plist-get data :active-profile))
         (rules (plist-get data :user-rules))
         (unknown
          (cl-loop
@@ -1466,7 +1510,7 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
            key
            '(:schema-version :schemes :feature-fragments
              :enabled-feature-fragments :feature-fragment-order :voice-palettes
-             :profiles :user-rules))
+             :profiles :active-profile :user-rules))
           collect key)))
     (unless (eq version emacsvox-aural-user-data-schema-version)
       (emacsvox-aural--scheme-error
@@ -1535,7 +1579,14 @@ When REPLACE is non-nil, replace an existing personal entry of the same ID."
           (when (memq id profile-ids)
             (emacsvox-aural--scheme-error
              "Duplicate presentation profile: %S" id))
-          (push id profile-ids))))
+          (push id profile-ids)))
+      (when active-profile
+        (emacsvox-aural--require-symbol
+         active-profile "Active presentation profile")
+        (unless (memq active-profile profile-ids)
+          (emacsvox-aural--scheme-error
+           "Active presentation profile is not saved: %S"
+           active-profile))))
     (emacsvox-aural--compile-rule-list rules 'user "user data")
     data))
 
@@ -1622,6 +1673,7 @@ The file is read as data and is never evaluated."
           (order (plist-get data :feature-fragment-order))
           (palettes (plist-get data :voice-palettes))
           (profiles (plist-get data :profiles))
+          (active-profile (plist-get data :active-profile))
           (rules (plist-get data :user-rules))
           (registry (emacsvox-aural--built-in-scheme-registry))
           (fragment-registry
@@ -1730,6 +1782,7 @@ The file is read as data and is never evaluated."
        emacsvox-aural-feature-fragment-registry fragment-registry
        emacsvox-aural-voice-palette-registry palette-registry
        emacsvox-aural-profile-registry profile-registry
+       emacsvox-aural-active-profile active-profile
        emacsvox-aural-feature-fragment-order
        (emacsvox-aural-normalized-feature-fragment-order
         fragment-registry order)
@@ -1809,6 +1862,7 @@ The file is read as data and is never evaluated."
      (emacsvox-aural-normalized-feature-fragment-order)
      :voice-palettes palettes
      :profiles profiles
+     :active-profile emacsvox-aural-active-profile
      :user-rules (copy-tree emacsvox-aural-user-rules))))
 
 (defun emacsvox-aural-save-user-data (&optional file)

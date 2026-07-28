@@ -654,12 +654,14 @@ data and individual schemes are independently versioned; migration functions
 must explicitly advance an older version.  Invalid replacement data is fully
 staged and validated before it can replace the live personal registry.
 
-Personal data schema version 5 stores named presentation profiles alongside
+Personal data schema version 6 stores named presentation profiles and the
+single selected profile identity alongside
 personal presentation-option definitions, their stable order, their ordered
 enabled identifiers, voice palettes, schemes, and persistent rules.  Versions
-1 through 4 migrate automatically.  The version 4 migration derives stable
+1 through 5 migrate automatically.  The version 4 migration derives stable
 order from the former enabled order, followed by disabled personal options,
-so toggling no longer changes precedence.
+so toggling no longer changes precedence.  The version 5 migration adds an
+initially empty =:active-profile= reference.
 
 =emacsvox-aural-active-scheme= is a Customize option.  Startup loads the
 personal data, validates scheme inheritance and providers, and selects the
@@ -2092,6 +2094,9 @@ CLOSED: [2026-07-26 Sun]
 - Persist named profiles that reference one registered base scheme, an ordered
   set of registered feature fragments, and optional sound-pack, voice-palette,
   and portable-spatial settings.
+- Persist one selected profile identity.  Report it as active while the live
+  configuration matches and modified after settings diverge; identical
+  unselected profiles remain inactive.
 - Apply a profile transactionally: validate every reference before changing
   live state, then switch the complete configuration and run existing change
   hooks.
@@ -2109,9 +2114,9 @@ as concise, verbose, or task-specific setups in one operation.
 Implemented details:
 
 - profile support entered in personal data schema version 3; the current
-  schema version 5 persists profile references, voice palettes, and stable
-  presentation-option order while migrating versions 1 through 4 without
-  evaluating code;
+  schema version 6 persists profile references, selected identity, voice
+  palettes, and stable presentation-option order while migrating versions 1
+  through 5 without evaluating code;
 - profile application validates the complete target, applies scheme,
   fragments, sound, voice, and spatial state as one transaction; its fallible
   sound selection completes before coordinated variables and hooks are

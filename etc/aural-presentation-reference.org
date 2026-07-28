@@ -13,7 +13,7 @@ The built-in =default= scheme preserves existing Emacsvox voices and auditory ic
 
 Visual face presentation is a separate default-on control.  Use the =Visual face presentation= row, press =v= in the aural home, or run =M-x emacsvox-aural-toggle-face-presentation= to toggle rules with a =:legacy-face= selector.  Turning it off does not disable semantic role, event, state, or attribute rules.  Voice Lock remains a per-buffer compatibility control: it gates only historical face/personality-to-voice mapping and =:legacy-personality= matching.  The source state of both controls is frozen into each presentation and reported by explanation and the Aural Doctor.
 
-Use =M-x emacsvox-aural-list-profiles= to save and switch complete named configurations.  A profile references one base scheme and ordered feature fragments and may capture sound-pack, voice-palette, and portable-spatial settings.  It never copies rules: edit those in the scheme and fragment managers.  Profile activation validates every reference before changing the live configuration and rolls the complete change back on failure.
+Use =M-x emacsvox-aural-list-profiles= to save and switch complete named configurations.  A profile references one base scheme and ordered feature fragments and may capture sound-pack, voice-palette, and portable-spatial settings.  It never copies rules: edit those in the scheme and fragment managers.  Profile activation validates every reference before changing the live configuration and rolls the complete change back on failure.  Exactly one persisted profile identity is selected.  It is active while live values match its saved configuration and modified after settings diverge; other profiles remain inactive even when their values match.
 
 Use =M-x emacsvox-aural-doctor= to inspect the live bindings, loaded source or byte-code, active scheme and fragments, saved profiles, sound resources, personal data, spatial fallback, speech server, and training state, including the independent face and Voice Lock controls.  It does not start the server or repair anything automatically.  The =r= command runs the explicitly offered safe repair for one row.
 
@@ -47,7 +47,7 @@ Portable space is normalized =:balance= from =-1.0= left through =+1.0= right.  
 
 * Scheme Author Reference
 
-Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data; evaluation syntax is rejected by the reader.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:schemes=, =:feature-fragments=, =:feature-fragment-order=, =:enabled-feature-fragments=, =:voice-palettes=, =:profiles=, and =:user-rules= fields.
+Personal data lives in =~/.emacsvox/aural-schemes.el=.  It is versioned declarative Lisp data; evaluation syntax is rejected by the reader.  Prefer the accessible editor; if data is authored directly, retain the outer =:schema-version=, =:schemes=, =:feature-fragments=, =:feature-fragment-order=, =:enabled-feature-fragments=, =:voice-palettes=, =:profiles=, =:active-profile=, and =:user-rules= fields.
 
 A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:parent=, optional =:resource-pack= and =:voice-palette=, and =:rules=.  Every rule has a globally stable =:id=, optional boolean =:enabled=, optional integer =:order=, a =:match= plist, and a =:render= plist.
 
