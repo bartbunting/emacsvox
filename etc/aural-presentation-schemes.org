@@ -1012,6 +1012,11 @@ implemented discovery and management commands are:
   speak a concise before/content/after explanation, and show captured facts,
   matching rules, cascade order, concrete resources, and backend fallback in
   a Help buffer; a prefix argument selects the occasion explicitly;
+- =emacsvox-aural-remap-voice-at-point=: start from the last presentation
+  actually heard in the source buffer, derive a stable object/provider
+  selector without transient events or occasions, choose a named palette
+  voice and persistence scope, and open the generated override unsaved for
+  review;
 - =emacsvox-describe-aural-spatial-capabilities=: show speech, ordered-cue,
   local-cue, final-output, and user-policy spatial settings;
 - =emacsvox-preview-aural-rule=: render a rule against representative or
@@ -1078,7 +1083,23 @@ the default voice afterward.  Detailed inspection uses
 source for contextual explanation and buffer-local editing.  The first row is
 =Explain at point=; =C-e E= invokes the same
 =emacsvox-aural-explain-presentation= diagnosis directly from an ordinary
-buffer.
+buffer.  The next row is =Remap voice at point=; =r= invokes it from anywhere
+in the home.
+
+The normal point-remapping workflow is:
+
+1. move to the object whose voice should change;
+2. press =C-e H= and then =r=;
+3. choose a voice from the active palette;
+4. choose personal, session, or current-buffer lifetime;
+5. review the generated rule and press =s= to save it.
+
+For example, on a Dired directory this derives =filesystem-entry=,
+=entry-kind directory=, and =module dired=.  It does not retain the
+=focus-entered= movement event or the navigation occasion, so the voice
+follows Dired directories rather than one arrow-key action.  The resulting
+semantic override supersedes the compatibility =dired-directory= face
+mapping without changing that global face table.
 
 The home is a status-and-routing view rather than another editor.  Its rows
 lead to:
@@ -1086,6 +1107,7 @@ lead to:
 | Row                  | Destination or operation                              |
 |----------------------+-------------------------------------------------------|
 | Explain at point     | Spoken and detailed presentation provenance           |
+| Remap voice at point | Prepare a scoped named-voice override for the item     |
 | Schemes              | Base-scheme manager                                    |
 | Presentation options | Grouped, independently enabled presentation layers    |
 | Current buffer rules | Advanced editor scoped to the remembered source       |
@@ -1099,13 +1121,17 @@ lead to:
 =n=, =p=, Up, and Down move by row.  Left and Right move by column and speak
 the column title and value.  =.= repeats the titled cell, =SPC= speaks the
 complete row, =RET= performs its primary operation, =x= always explains the
-remembered source, and =?= displays and speaks help.  Top, bottom, first
+remembered source, =r= prepares a point voice remap, and =?= displays and
+speaks help.  Top, bottom, first
 column, and last column boundaries are announced instead of silently
 repeating a value.  Every routed aural manager and editor binds =h= to return
 home without losing the remembered source.  Every aural manager, browser, and
 editor binds =q= to a shared semantic dismissal command that presents
 =close-object= and speaks the destination mode line.  Editors retain their
 unsaved-change confirmation before that dismissal feedback.
+Every Aural manager, browser, preview, doctor, and editor also presents the
+scheme-resolved =open-object= cue with semantic event
+=aural-interface-opened= after it becomes current.
 
 ** Accessible semantic-list contract
 

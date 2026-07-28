@@ -12,6 +12,7 @@
 (require 'emacsvox-sounds)
 (require 'tts-speak)
 (require 'voice-setup)
+(require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-simple-editor)
@@ -172,6 +173,124 @@
          (eq
           (plist-get (emacsvox-aural-context-at-point) :mode)
           'emacs-lisp-mode))))))
+
+(ert-deftest emacsvox-aural-tools-voice-remap-derives-stable-dired-selector ()
+  "Dired directory remaps use semantic identity, not transient movement."
+  (let ((selector
+         (emacsvox-aural-tools--voice-remap-selector
+          '(:role filesystem-entry
+            :entry-kind directory
+            :events (focus-entered))
+          '(:module dired
+            :mode dired-mode
+            :occasion navigation
+            :legacy-faces (dired-directory)))))
+    (should
+     (equal
+      selector
+      '(:role filesystem-entry
+        :entry-kind directory
+        :module dired)))
+    (should-not (plist-member selector :events))
+    (should-not (plist-member selector :occasion))
+    (should-not (plist-member selector :legacy-face))))
+
+(ert-deftest emacsvox-aural-tools-voice-remap-prefills-named-voice-rule ()
+  "The point wizard prepares a reviewable scoped rule without saving it."
+  (emacsvox-test--with-aural-tools
+    (let* ((source (generate-new-buffer " *aural-remap-source*"))
+           (render
+            (emacsvox-aural--make-render-plan
+             :content
+             (emacsvox-aural--make-content-style
+              :voice 'voice-bolden)))
+           answers
+           prepared)
+      (unwind-protect
+          (cl-letf
+              (((symbol-function
+                 'emacsvox-aural-tools--remap-source-input)
+                (lambda ()
+                  (list
+                   :source source
+                   :facts
+                   '(:role filesystem-entry
+                     :entry-kind directory
+                     :events (focus-entered))
+                   :context
+                   '(:module dired
+                     :mode dired-mode
+                     :occasion navigation
+                     :legacy-faces (dired-directory))
+                   :render render)))
+               ((symbol-function 'completing-read)
+                (lambda (prompt &rest _)
+                  (push prompt answers)
+                  (if (string-prefix-p "Voice for " prompt)
+                      "animate"
+                    "always (personal)")))
+               ((symbol-function
+                 'emacsvox-aural-editor--open-prefilled-rule)
+                (lambda (scope rule source-buffer)
+                  (setq prepared
+                        (list scope rule source-buffer)))))
+            (emacsvox-aural-remap-voice-at-point)
+            (should
+             (equal
+              prepared
+              (list
+               'personal
+               '(:id
+                 personal-remap-dired-filesystem-entry-entry-kind-directory-voice
+                 :match
+                 (:role filesystem-entry
+                  :entry-kind directory
+                  :module dired)
+                 :render (:content (:voice animate)))
+               source)))
+            (should
+             (string-match-p
+              "currently bolden"
+              (car (last answers)))))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-editor-prefilled-rule-is-dirty-and-selected ()
+  "A point remap replaces its stable draft and selects it for review."
+  (emacsvox-test--with-aural-tools
+    (let* ((name "*Aural Editor: session*")
+           (buffer (get-buffer-create name))
+           (source (generate-new-buffer " *aural-remap-editor-source*"))
+           (old
+            '(:id session-remap-dired-directory-voice
+              :match (:module dired)
+              :render (:content (:voice bolden))))
+           (new
+            '(:id session-remap-dired-directory-voice
+              :match (:module dired :role filesystem-entry)
+              :render (:content (:voice animate)))))
+      (unwind-protect
+          (progn
+            (with-current-buffer buffer
+              (emacsvox-aural-scheme-editor-mode)
+              (setq
+               emacsvox-aural-editor-scope 'session
+               emacsvox-aural-editor-rules (list old)
+               emacsvox-aural-editor-dirty nil))
+            (cl-letf
+                (((symbol-function 'emacsvox-edit-aural-rules)
+                  (lambda (&rest _) buffer)))
+              (should
+               (eq
+                (emacsvox-aural-editor--open-prefilled-rule
+                 'session new source)
+                buffer)))
+            (with-current-buffer buffer
+              (should emacsvox-aural-editor-dirty)
+              (should (equal emacsvox-aural-editor-rules (list new)))
+              (should
+               (= (emacsvox-aural-editor--index-at-point) 0))))
+        (kill-buffer buffer)
+        (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-tools-explain-and-preview-visual-faces ()
   "Point diagnosis and preview preserve ordered face compatibility context."
@@ -796,13 +915,14 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain profiles schemes voices features face-presentation
+                '(explain remap profiles schemes voices features face-presentation
                   buffer-rules semantics sounds spatial spatial-settings
                   training diagnostics)))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
                      ("x" . emacsvox-aural-home-explain)
+                     ("r" . emacsvox-aural-home-remap-voice)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
                      ("?" . emacsvox-aural-home-help)))
@@ -880,6 +1000,8 @@
               (with-current-buffer "*Emacsvox Aural*"
                 (emacsvox-aural-home-previous)
                 (should (equal spoken "Top of aural home."))
+                (emacsvox-aural-home-next)
+                (should (equal spoken "Remap voice at point, Area"))
                 (emacsvox-aural-home-next)
                 (should (equal spoken "Presentation profiles, Area"))
                 (emacsvox-aural-home-next-column)

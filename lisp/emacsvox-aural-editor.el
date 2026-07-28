@@ -1136,6 +1136,52 @@ LABEL identifies the speech or cue being edited."
      emacsvox-aural-feature-fragment-registry)
     (sort ids #'string-lessp)))
 
+(defun emacsvox-aural-editor--open-prefilled-rule
+    (scope rule source-buffer)
+  "Open SCOPE with unsaved RULE for SOURCE-BUFFER selected.
+
+SCOPE must be `personal', `session', or `buffer'.  Replace an existing
+working rule with the same identifier, otherwise append RULE.  Refuse to
+discard changes from an already open dirty editor."
+  (unless (memq scope '(personal session buffer))
+    (user-error "Point remapping cannot target a %S editor" scope))
+  (let* ((name (format "*Aural Editor: %s*" scope))
+         (existing (get-buffer name))
+         (id (plist-get rule :id)))
+    (when
+        (and
+         existing
+         (buffer-local-value 'emacsvox-aural-editor-dirty existing))
+      (user-error
+       "Save or quit the modified %s editor before preparing another remap"
+       scope))
+    (emacsvox-edit-aural-rules scope nil source-buffer)
+    (let ((buffer (get-buffer name)))
+      (with-current-buffer buffer
+        (let ((index
+               (cl-position
+                id emacsvox-aural-editor-rules
+                :key (lambda (entry) (plist-get entry :id))
+                :test #'eq)))
+          (if index
+              (setf
+               (nth index emacsvox-aural-editor-rules)
+               (copy-tree rule))
+            (setq
+             index (length emacsvox-aural-editor-rules)
+             emacsvox-aural-editor-rules
+             (append
+              emacsvox-aural-editor-rules
+              (list (copy-tree rule)))))
+          (emacsvox-aural-editor--mark-dirty)
+          (emacsvox-aural-editor-refresh)
+          (when-let* ((position
+                       (text-property-any
+                        (point-min) (point-max)
+                        emacsvox-aural-editor--rule-index-property index)))
+            (goto-char position))))
+      buffer)))
+
 (defun emacsvox-edit-aural-rules (scope &optional scheme source-buffer)
   "Open an accessible rule editor for SCOPE.
 

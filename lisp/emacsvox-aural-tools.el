@@ -55,6 +55,8 @@
                   (scope &optional scheme source-buffer))
 (declare-function emacsvox-edit-aural-feature-fragment
                   "emacsvox-aural-editor" (&optional fragment))
+(declare-function emacsvox-aural-editor--open-prefilled-rule
+                  "emacsvox-aural-editor" (scope rule source-buffer))
 (declare-function emacsvox-aural-list-sound-packs
                   "emacsvox-aural-sound-packs" (&optional pack))
 (declare-function emacsvox-aural-doctor
@@ -70,6 +72,7 @@
 (declare-function emacsvox-aural-voice-palettes-status
                   "emacsvox-aural-voice-palettes" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
+(declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (declare-function emacsvox-speak-mode-line "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 (declare-function tts-voice-reset-code "tts-speak" ())
@@ -1379,6 +1382,12 @@ selected occasion has no matching rule."
          (rules (emacsvox-aural-explanation-matching-rules explanation))
          (render (emacsvox-aural-explanation-render-plan explanation))
          (concrete (emacsvox-aural-explanation-concrete-plan explanation))
+         (voice-source
+          (cdr
+           (assq
+            'voice
+            (emacsvox-aural-content-style-provenance
+             (emacsvox-aural-render-plan-content render)))))
          (before (emacsvox-aural-concrete-plan-before concrete))
          (after (emacsvox-aural-concrete-plan-after concrete))
          (faces (plist-get context :legacy-faces))
@@ -1466,11 +1475,16 @@ selected occasion has no matching rule."
        (concat
         (emacsvox-aural-tools--spoken-content render concrete)
         ".")
+       (when voice-source
+         (format
+          "The content voice comes from %s."
+          (emacsvox-aural-tools--humanize voice-source)))
        (when after
          (format
           "After the content, %s."
           (mapconcat
-           #'emacsvox-aural-tools--spoken-action after ", then ")))))
+           #'emacsvox-aural-tools--spoken-action after ", then ")))
+       "To change this object's voice, choose Remap voice at point from Aural Home."))
       " ")))
 
 (defun emacsvox-aural-tools--display-explanation
@@ -1662,13 +1676,24 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
         (emacsvox-aural-concrete-content-voice-style content)
         (emacsvox-aural-concrete-content-voice-capability content)
         (emacsvox-aural-concrete-content-voice-provenance content)))
+      (when-let* ((voice-source
+                   (cdr
+                    (assq
+                     'voice
+                     (emacsvox-aural-content-style-provenance
+                      (emacsvox-aural-render-plan-content render))))))
+        (princ (format "Voice source: %S\n" voice-source)))
       (when-let* ((suppressed
                    (emacsvox-aural-explanation-suppressed-actions
                     explanation)))
         (princ (format "\nSuppressed or removed actions: %S\n" suppressed)))
       (when-let* ((degradations
                    (emacsvox-aural-concrete-plan-degradations concrete)))
-        (princ (format "\nBackend degradation: %S\n" degradations))))
+        (princ (format "\nBackend degradation: %S\n" degradations)))
+      (princ
+       (concat
+        "\nTo change this object's voice, choose Remap at point from "
+        "Aural Home, or run M-x emacsvox-aural-remap-voice-at-point.\n")))
     (when speak
       (when (fboundp 'emacsvox-icon)
         (emacsvox-icon 'help))
@@ -1711,6 +1736,227 @@ always identify whether they describe heard output or a simulation."
       (emacsvox-aural-tools--display-explanation
        explanation t occasion-counts))
     explanation))
+
+(defun emacsvox-aural-tools--remap-source-input ()
+  "Return the latest presentation input for the current ordinary source.
+
+Prefer the exact last queued presentation because it retains the voice and
+semantic context the user actually heard.  Fall back to inspectable facts at
+point when no queued presentation is available."
+  (let ((source (emacsvox-aural-inspection-source-buffer)))
+    (unless source
+      (user-error "No live source buffer is available"))
+    (with-current-buffer source
+      (if-let* ((record (emacsvox-aural-last-presentation source)))
+          (let* ((concrete (emacsvox-aural-presentation-record-plan record))
+                 (render (emacsvox-aural-concrete-plan-source-plan concrete)))
+            (list
+             :source source
+             :facts (copy-tree (emacsvox-aural-concrete-plan-facts concrete))
+             :context
+             (copy-tree (emacsvox-aural-concrete-plan-context concrete))
+             :render render))
+        (let* ((facts (emacsvox-aural-facts-at-point))
+               (_
+                (unless facts
+                  (user-error
+                   "No presentation is recorded here; move away and back, then retry")))
+               (context (emacsvox-aural-context-at-point))
+               (explanation (emacsvox-aural-explain facts context)))
+          (list
+           :source source
+           :facts (copy-tree facts)
+           :context (copy-tree context)
+           :render
+           (emacsvox-aural-explanation-render-plan explanation)))))))
+
+(defun emacsvox-aural-tools--voice-remap-selector (facts context)
+  "Derive a stable object selector from FACTS and CONTEXT.
+
+Transient events and the current occasion are deliberately omitted.  Object
+states remain specific, while MODULE (or MODE when there is no module) keeps
+the override local to its provider.  A visual face is used only when semantic
+facts do not distinguish the object."
+  (let ((role (plist-get facts :role))
+        (states (copy-sequence (plist-get facts :states)))
+        selector
+        attributes)
+    (when role
+      (setq selector (plist-put selector :role role)))
+    (dolist (semantic (emacsvox-aural-semantics))
+      (when (eq (emacsvox-aural-semantic-kind semantic) 'attribute)
+        (let* ((id (emacsvox-aural-semantic-id semantic))
+               (key (intern (format ":%s" id))))
+          (when (plist-member facts key)
+            (push id attributes)
+            (setq
+             selector
+             (plist-put selector key (copy-tree (plist-get facts key))))))))
+    (when states
+      (setq selector (plist-put selector :states states)))
+    (if-let* ((module (plist-get context :module)))
+        (setq selector (plist-put selector :module module))
+      (when-let* ((mode (plist-get context :mode)))
+        (setq selector (plist-put selector :mode mode))))
+    (when
+        (and
+         (null role)
+         (null attributes)
+         (null states)
+         (plist-get context :legacy-faces))
+      (setq
+       selector
+       (plist-put
+        selector :legacy-face (car (plist-get context :legacy-faces)))))
+    (unless selector
+      (user-error
+       "This presentation has no stable semantic, mode, or face identity"))
+    selector))
+
+(defun emacsvox-aural-tools--voice-remap-current-voice (render context)
+  "Return the requested voice represented by RENDER and CONTEXT."
+  (or
+   (emacsvox-aural-content-style-voice
+    (emacsvox-aural-render-plan-content render))
+   (cl-loop
+    for face in (plist-get context :legacy-faces)
+    thereis
+    (and
+     (fboundp 'voice-setup-get-voice-for-face)
+     (voice-setup-get-voice-for-face face)))))
+
+(defun emacsvox-aural-tools--voice-remap-default-name (voice)
+  "Return the active palette name corresponding to VOICE."
+  (let* ((palette
+          (or
+           (emacsvox-aural-effective-scheme-provider 'voice-palette)
+           'acss-default))
+         (entries (emacsvox-aural-effective-voice-entries palette)))
+    (cond
+     ((null voice) "default")
+     ((assq voice entries) (symbol-name voice))
+     ((cl-find voice entries :key #'cdr :test #'equal)
+      (symbol-name
+       (car (cl-find voice entries :key #'cdr :test #'equal))))
+     ((and
+       (symbolp voice)
+       (string-prefix-p "voice-" (symbol-name voice))
+       (assq
+        (intern (string-remove-prefix "voice-" (symbol-name voice)))
+        entries))
+      (string-remove-prefix "voice-" (symbol-name voice)))
+     (t "default"))))
+
+(defun emacsvox-aural-tools--voice-remap-candidates ()
+  "Return named voices available from the active palette."
+  (let ((palette
+         (or
+          (emacsvox-aural-effective-scheme-provider 'voice-palette)
+          'acss-default)))
+    (sort
+     (delete-dups
+      (append
+       '("default" "inaudible")
+       (mapcar
+        (lambda (entry) (symbol-name (car entry)))
+        (emacsvox-aural-effective-voice-entries palette))))
+     #'string-lessp)))
+
+(defun emacsvox-aural-tools--voice-remap-scope ()
+  "Read and return a rule-layer scope for a point voice override."
+  (pcase
+      (completing-read
+       "Keep this voice change: "
+       '("always (personal)" "this Emacs session" "this buffer")
+       nil 'must-match nil nil "always (personal)")
+    ("always (personal)" 'personal)
+    ("this Emacs session" 'session)
+    ("this buffer" 'buffer)))
+
+(defun emacsvox-aural-tools--voice-remap-rule-id (scope selector)
+  "Return a stable rule identifier for SCOPE and SELECTOR."
+  (let ((parts
+         (delq
+          nil
+          (list
+           scope 'remap
+           (plist-get selector :module)
+           (plist-get selector :mode)
+           (plist-get selector :role)))))
+    (setq parts (append parts (plist-get selector :states)))
+    (dolist (semantic (emacsvox-aural-semantics))
+      (when (eq (emacsvox-aural-semantic-kind semantic) 'attribute)
+        (let* ((id (emacsvox-aural-semantic-id semantic))
+               (key (intern (format ":%s" id))))
+          (when (plist-member selector key)
+            (setq parts
+                  (append parts (list id (plist-get selector key))))))))
+    (setq
+     parts
+     (append parts (list (plist-get selector :legacy-face) 'voice)))
+    (intern
+     (mapconcat
+      (lambda (part)
+        (string-trim
+         (replace-regexp-in-string
+          "[^[:alnum:]-]+" "-"
+          (downcase (format "%s" part)))
+         "-" "-"))
+      (delq nil parts)
+      "-"))))
+
+(defun emacsvox-aural-remap-voice-at-point ()
+  "Prepare a scoped named-voice override for the presentation at point.
+
+The latest presentation heard in the source buffer supplies exact facts and
+context.  The generated rule ignores transient events and occasions, but
+retains object kind, state, and provider identity.  It opens unsaved in the
+advanced rule editor so the selector can be reviewed or refined before `s'
+saves it."
+  (interactive)
+  (let* ((input (emacsvox-aural-tools--remap-source-input))
+         (facts (plist-get input :facts))
+         (context (plist-get input :context))
+         (render (plist-get input :render))
+         (source (plist-get input :source))
+         (selector
+          (emacsvox-aural-tools--voice-remap-selector facts context))
+         (compiled-selector
+          (emacsvox-aural-rule-selector
+           (emacsvox-aural-compile-rule
+            (list
+             :id 'point-voice-remap-preview
+             :match selector
+             :render '(:content (:voice default)))
+            'user)))
+         (description
+          (emacsvox-aural-tools--selector-description compiled-selector))
+         (current
+          (emacsvox-aural-tools--voice-remap-current-voice render context))
+         (default
+          (emacsvox-aural-tools--voice-remap-default-name current))
+         (answer
+          (completing-read
+           (format
+            "Voice for %s (currently %s): "
+            description
+            (emacsvox-aural-tools--humanize default))
+           (emacsvox-aural-tools--voice-remap-candidates)
+           nil 'must-match nil nil default))
+         (voice
+          (unless (or (string-empty-p answer) (string= answer "default"))
+            (intern answer)))
+         (scope (emacsvox-aural-tools--voice-remap-scope))
+         (rule
+          (list
+           :id (emacsvox-aural-tools--voice-remap-rule-id scope selector)
+           :match selector
+           :render (list :content (list :voice voice)))))
+    (require 'emacsvox-aural-editor)
+    (emacsvox-aural-editor--open-prefilled-rule scope rule source)
+    (message
+     "Prepared %s voice override for %s; review it and press s to save"
+     scope description)))
 
 (defun emacsvox-aural-tools--fragment-rules (fragment)
   "Return the compiled presentation rules for feature FRAGMENT."
@@ -3598,6 +3844,11 @@ announce the selected example after displaying the buffer."
        "Explain at point" source-name
        "Show and speak why the current item sounds as it does"))
      (list
+      'remap
+      (vector
+       "Remap voice at point" source-name
+       "Prepare a persistent, session, or buffer voice override for the current item"))
+     (list
       'profiles
       (vector
        "Presentation profiles"
@@ -3734,6 +3985,12 @@ announce the selected example after displaying the buffer."
   (emacsvox-aural-home--call-in-source
    #'emacsvox-aural-explain-presentation))
 
+(defun emacsvox-aural-home-remap-voice ()
+  "Prepare a voice override for the remembered source item."
+  (interactive)
+  (emacsvox-aural-home--call-in-source
+   #'emacsvox-aural-remap-voice-at-point))
+
 (defun emacsvox-aural-home-profiles ()
   "Open the complete presentation-profile manager."
   (interactive)
@@ -3760,6 +4017,8 @@ announce the selected example after displaying the buffer."
              (user-error "Move to an aural home row first"))
     ('explain
      (emacsvox-aural-home-explain))
+    ('remap
+     (emacsvox-aural-home-remap-voice))
     ('profiles (emacsvox-aural-home-profiles))
     ('schemes (emacsvox-aural-list-schemes))
     ('voices (emacsvox-aural-home-voice-palettes))
@@ -3799,13 +4058,16 @@ announce the selected example after displaying the buffer."
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
-      "x explain at point   P presentation profiles\n"
+      "x explain at point   r remap voice at point\n"
+      "P presentation profiles\n"
       "V voice palettes     v face rules toggle\n"
       "D aural doctor\n"
       "g refresh\n"
       "? display and speak this help\n"
       "C-e H opens this home from any ordinary buffer\n"
       "C-e E explains presentation from any ordinary buffer\n"
+      "To remap an item, move to it, open C-e H, then press r.\n"
+      "The generated override opens unsaved; review it and press s to save.\n"
       "h returns here from any aural manager or editor\n"
       "q quit\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -3834,6 +4096,7 @@ announce the selected example after displaying the buffer."
     (binding
      '(("RET" . emacsvox-aural-home-activate)
        ("x" . emacsvox-aural-home-explain)
+       ("r" . emacsvox-aural-home-remap-voice)
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)
        ("v" . emacsvox-aural-home-toggle-face-presentation)
