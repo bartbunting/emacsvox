@@ -1136,18 +1136,12 @@ LABEL identifies the speech or cue being edited."
      emacsvox-aural-feature-fragment-registry)
     (sort ids #'string-lessp)))
 
-(defun emacsvox-aural-editor--open-prefilled-rule
-    (scope rule source-buffer)
-  "Open SCOPE with unsaved RULE for SOURCE-BUFFER selected.
-
-SCOPE must be `personal', `session', or `buffer'.  Replace an existing
-working rule with the same identifier, otherwise append RULE.  Refuse to
-discard changes from an already open dirty editor."
+(defun emacsvox-aural-editor--open-remap-target (scope source-buffer)
+  "Open and return a clean remap editor for SCOPE and SOURCE-BUFFER."
   (unless (memq scope '(personal session buffer))
     (user-error "Point remapping cannot target a %S editor" scope))
   (let* ((name (format "*Aural Editor: %s*" scope))
-         (existing (get-buffer name))
-         (id (plist-get rule :id)))
+         (existing (get-buffer name)))
     (when
         (and
          existing
@@ -1156,31 +1150,84 @@ discard changes from an already open dirty editor."
        "Save or quit the modified %s editor before preparing another remap"
        scope))
     (emacsvox-edit-aural-rules scope nil source-buffer)
-    (let ((buffer (get-buffer name)))
-      (with-current-buffer buffer
-        (let ((index
-               (cl-position
-                id emacsvox-aural-editor-rules
-                :key (lambda (entry) (plist-get entry :id))
-                :test #'eq)))
-          (if index
-              (setf
-               (nth index emacsvox-aural-editor-rules)
-               (copy-tree rule))
-            (setq
-             index (length emacsvox-aural-editor-rules)
-             emacsvox-aural-editor-rules
-             (append
-              emacsvox-aural-editor-rules
-              (list (copy-tree rule)))))
-          (emacsvox-aural-editor--mark-dirty)
-          (emacsvox-aural-editor-refresh)
-          (when-let* ((position
-                       (text-property-any
-                        (point-min) (point-max)
-                        emacsvox-aural-editor--rule-index-property index)))
-            (goto-char position))))
-      buffer)))
+    (get-buffer name)))
+
+(defun emacsvox-aural-editor--open-prefilled-rule
+    (scope rule source-buffer)
+  "Open SCOPE with unsaved RULE for SOURCE-BUFFER selected.
+
+SCOPE must be `personal', `session', or `buffer'.  Replace an existing
+working rule with the same identifier, otherwise append RULE.  Refuse to
+discard changes from an already open dirty editor."
+  (let ((buffer
+         (emacsvox-aural-editor--open-remap-target
+          scope source-buffer))
+        (id (plist-get rule :id)))
+    (unless buffer
+      (error "Aural %s editor did not open" scope))
+    (with-current-buffer buffer
+      (let ((index
+             (cl-position
+              id emacsvox-aural-editor-rules
+              :key (lambda (entry) (plist-get entry :id))
+              :test #'eq)))
+        (if index
+            (setf
+             (nth index emacsvox-aural-editor-rules)
+             (copy-tree rule))
+          (setq
+           index (length emacsvox-aural-editor-rules)
+           emacsvox-aural-editor-rules
+           (append
+            emacsvox-aural-editor-rules
+            (list (copy-tree rule)))))
+        (emacsvox-aural-editor--mark-dirty)
+        (emacsvox-aural-editor-refresh)
+        (when-let* ((position
+                     (text-property-any
+                      (point-min) (point-max)
+                      emacsvox-aural-editor--rule-index-property index)))
+          (goto-char position))))
+    buffer))
+
+(defun emacsvox-aural-editor--open-without-rule
+    (scope rule-id source-buffer)
+  "Open SCOPE with RULE-ID removed but unsaved for SOURCE-BUFFER.
+
+This restores inherited behavior after the edited scope is saved."
+  (let ((buffer
+         (emacsvox-aural-editor--open-remap-target
+          scope source-buffer)))
+    (unless buffer
+      (error "Aural %s editor did not open" scope))
+    (with-current-buffer buffer
+      (let ((index
+             (cl-position
+              rule-id emacsvox-aural-editor-rules
+              :key (lambda (entry) (plist-get entry :id))
+              :test #'eq)))
+        (unless index
+          (user-error
+           "No generated earcon override exists in %s scope for this presentation"
+           scope))
+        (setq
+         emacsvox-aural-editor-rules
+         (append
+          (cl-subseq emacsvox-aural-editor-rules 0 index)
+          (nthcdr (1+ index) emacsvox-aural-editor-rules)))
+        (emacsvox-aural-editor--mark-dirty)
+        (emacsvox-aural-editor-refresh)
+        (when emacsvox-aural-editor-rules
+          (let* ((target
+                  (min index
+                       (1- (length emacsvox-aural-editor-rules))))
+                 (position
+                  (text-property-any
+                   (point-min) (point-max)
+                   emacsvox-aural-editor--rule-index-property target)))
+            (when position
+              (goto-char position))))))
+    buffer))
 
 (defun emacsvox-edit-aural-rules (scope &optional scheme source-buffer)
   "Open an accessible rule editor for SCOPE.

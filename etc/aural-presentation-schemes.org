@@ -1088,8 +1088,9 @@ source for contextual explanation and buffer-local editing.  The first row is
 =Explain at point=; =C-e E= invokes the same
 =emacsvox-aural-explain-presentation= diagnosis directly from an ordinary
 buffer.  The next row is =Remap voice at point=; =r= invokes it from anywhere
-in the home.  The third row is =Recent aural feedback=; =H= opens the exact
-presentation history without changing the remembered source.
+in the home.  =Remap earcon at point= follows it; =R= invokes that workflow.
+The fourth row is =Recent aural feedback=; =H= opens the exact presentation
+history without changing the remembered source.
 
 The normal point-remapping workflow is:
 
@@ -1106,16 +1107,34 @@ follows Dired directories rather than one arrow-key action.  The resulting
 semantic override supersedes the compatibility =dired-directory= face
 mapping without changing that global face table.
 
+Earcon remapping starts from the exact concrete plan last heard at point, or
+from a selected recent-feedback record.  It distinguishes each cue by before
+or after phase, action identifier, and source rule when a presentation has
+several.  The selected concrete file is auditioned in isolation before the
+user chooses to replace or suppress that action, or to remove a prior
+generated override and restore inherited behavior.  A replacement is also
+auditioned through the active sound pack before its unsaved rule opens.
+Generated rules remove only the chosen action identifier at its frozen
+object, run, or transition anchor; they do not copy the rest of the phase.
+If separate contributions reuse the same action identifier in that phase and
+anchor, the wizard refuses the ambiguous removal instead of changing both.
+Unlike object-wide voice remaps, earcon selectors retain the exact semantic
+event and occasion so a state-change sound cannot leak into routine
+navigation.  The replacement preserves any requested volume and spatial
+placement from the original action.  Personal, session, and live-buffer
+scopes use stable generated identifiers, allowing a later =Restore inherited
+behavior= operation to prepare the corresponding rule deletion for review.
+
 The recent-feedback browser displays exact spoken content, semantic object,
 source name, occasion, voice request, ordered earcons, degradation or semantic
 fallback status, and queue time.  =RET= or =e= explains the frozen plan, =P=
 replays its complete before/content/after sequence, =c= directly auditions
-only its concrete earcons without speech or history, and =r= starts the same
-review-before-save voice-remapping workflow from the selected record.  A
-historical record never retains a source buffer.  Buffer-local persistence is
-therefore offered only when the browser remains attached to a live source
-whose name matches the record; personal and session remaps remain available
-after the source closes.
+only its concrete earcons without speech or history, =r= starts the same
+review-before-save voice-remapping workflow from the selected record, and
+=R= remaps one of that record's exact earcons.  A historical record never
+retains a source buffer.  Buffer-local persistence is therefore offered only
+when the browser remains attached to a live source whose name matches the
+record; personal and session remaps remain available after the source closes.
 
 Presentations originating in registered Aural interface buffers are excluded
 from history by default, so opening, closing, navigating, previewing, and
@@ -1138,6 +1157,7 @@ lead to:
 |----------------------+-------------------------------------------------------|
 | Explain at point     | Spoken and detailed presentation provenance           |
 | Remap voice at point | Prepare a scoped named-voice override for the item     |
+| Remap earcon at point | Replace, suppress, or restore one exact cue action    |
 | Recent aural feedback | Exact heard-output browser and replay                 |
 | Schemes              | Base-scheme manager                                    |
 | Presentation options | Grouped, independently enabled presentation layers    |
@@ -1152,8 +1172,9 @@ lead to:
 =n=, =p=, Up, and Down move by row.  Left and Right move by column and speak
 the column title and value.  =.= repeats the titled cell, =SPC= speaks the
 complete row, =RET= performs its primary operation, =x= always explains the
-remembered source, =r= prepares a point voice remap, =H= opens recent
-feedback, and =?= displays and speaks help.  Top, bottom, first
+remembered source, =r= prepares a point voice remap, =R= prepares a precise
+earcon remap, =H= opens recent feedback, and =?= displays and speaks help.
+Top, bottom, first
 column, and last column boundaries are announced instead of silently
 repeating a value.  Every routed aural manager and editor binds =h= to return
 home without losing the remembered source.  Every aural manager, browser, and
@@ -2951,6 +2972,29 @@ complete Emacs 31 source suite has 1,657 tests: 1,656 pass and the optional
 Mu4e test is skipped.  The changed Lisp compiles with warnings treated as
 errors, compiled Aural parity passes, and the generated reference and Aural
 audit are clean.
+
+** DONE Slice 39: Precise Earcon Remapping
+CLOSED: [2026-07-29 Wed]
+
+- Add a direct earcon-remapping route to Aural Home and Recent Aural Feedback
+  alongside the existing voice workflow.
+- Identify one exact concrete before or after cue by phase, action identifier,
+  and source rule, and audition it without speech or another history record.
+- Generate narrowly scoped replacement or suppression rules that retain
+  transition context, lifecycle anchor, volume, and spatial request without
+  copying the rest of the phase.
+- Audition replacements through the active sound pack and support restoring
+  inherited behavior by preparing removal of the stable generated override.
+
+Deliverable: a user can start from a confusing sound that was actually heard
+and prepare a reviewable personal, session, or buffer-local correction without
+first discovering its declarative rule by hand.
+
+Checks: all 11 focused remap, editor, recent-feedback, and Home tests pass.
+The complete Emacs 31 source suite has 1,665 tests: 1,664 pass and the
+optional Mu4e test is skipped.  Changed Lisp compiles with warnings treated as
+errors, compiled Aural parity and normal build-tree startup pass, and the
+generated reference and Aural audit are clean.
 
 * Test Gates
 

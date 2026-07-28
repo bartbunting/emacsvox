@@ -256,6 +256,334 @@
               (car (last answers)))))
         (kill-buffer source)))))
 
+(ert-deftest emacsvox-aural-tools-earcon-remap-keeps-transition-context ()
+  "Earcon remaps retain event and occasion unlike object-wide voice remaps."
+  (let ((selector
+         (emacsvox-aural-tools--earcon-remap-selector
+          '(:role filesystem-entry
+            :entry-kind directory
+            :events (state-changed))
+          '(:module dired
+            :mode dired-mode
+            :occasion state-change))))
+    (should
+     (equal
+      selector
+      '(:role filesystem-entry
+        :entry-kind directory
+        :module dired
+        :events (state-changed)
+        :occasion state-change)))))
+
+(ert-deftest emacsvox-aural-tools-earcon-remap-selects-one-exact-phase ()
+  "Multiple earcons are distinguished by phase, action, and source."
+  (let* ((before
+          (emacsvox-aural--make-concrete-action
+           :id 'open-cue :kind 'cue :cue 'open-object
+           :source 'open-rule))
+         (after
+          (emacsvox-aural--make-concrete-action
+           :id 'mark-cue :kind 'cue :cue 'mark-object
+           :source 'mark-rule))
+         (concrete
+          (emacsvox-aural--make-concrete-plan
+           :before (list before)
+           :after (list after)))
+         choice)
+    (cl-letf
+        (((symbol-function 'completing-read)
+          (lambda (_prompt collection &rest _)
+            (cl-find-if
+             (lambda (candidate)
+               (string-prefix-p "After position" candidate))
+             collection))))
+      (setq choice
+            (emacsvox-aural-tools--earcon-remap-choice concrete)))
+    (should (eq (plist-get choice :phase) 'after))
+    (should (eq (plist-get choice :action) after))))
+
+(ert-deftest emacsvox-aural-tools-earcon-remap-rejects-duplicate-action-id ()
+  "An ambiguous remove-by-ID operation is never described as exact."
+  (let* ((first
+          (emacsvox-aural--make-concrete-action
+           :id 'shared-cue :kind 'cue :cue 'item :anchor 'object))
+         (second
+          (emacsvox-aural--make-concrete-action
+           :id 'shared-cue :kind 'cue :cue 'button :anchor 'object))
+         (concrete
+          (emacsvox-aural--make-concrete-plan
+           :before (list first second))))
+    (should-error
+     (emacsvox-aural-tools--validate-earcon-remap-choice
+      (list :phase 'before :action first)
+      concrete)
+     :type 'user-error)))
+
+(ert-deftest emacsvox-aural-tools-earcon-replacement-preview-is-cue-only ()
+  "A replacement resolves through the active pack and bypasses speech."
+  (emacsvox-test--with-aural-tools
+    (let (played)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-preview-play-cues)
+            (lambda (cues) (setq played cues))))
+        (let ((result
+               (emacsvox-aural-tools--preview-replacement-earcon
+                '(:id replacement :kind cue :cue button :anchor object)
+                '(:role filesystem-entry)
+                '(:module dired :occasion navigation))))
+          (should (eq result (car played)))
+          (should
+           (eq
+            (emacsvox-aural-concrete-action-cue result)
+            'button))
+          (should
+           (string-suffix-p
+            "/button.ogg"
+            (emacsvox-aural-concrete-action-resource result))))))))
+
+(ert-deftest emacsvox-aural-tools-earcon-remap-prefills-exact-action-rule ()
+  "The earcon wizard replaces one anchored action without freezing its phase."
+  (emacsvox-test--with-aural-tools
+    (let* ((source (generate-new-buffer " *aural-earcon-remap-source*"))
+           (action
+            (emacsvox-aural--make-concrete-action
+             :id 'directory-cue
+             :kind 'cue
+             :cue 'item
+             :resource "/tmp/item.ogg"
+             :sample-id 'item
+             :source 'dired-directory-rule
+             :anchor 'object
+             :requested-volume 0.6
+             :requested-space '(:balance -0.2)))
+           (concrete
+            (emacsvox-aural--make-concrete-plan
+             :before (list action)))
+           prepared
+           previewed
+           auditions)
+      (unwind-protect
+          (cl-letf
+              (((symbol-function
+                 'emacsvox-aural-tools--remap-source-input)
+                (lambda ()
+                  (list
+                   :source source
+                   :facts
+                   '(:role filesystem-entry
+                     :entry-kind directory
+                     :events (state-changed))
+                   :context
+                   '(:module dired
+                     :mode dired-mode
+                     :occasion state-change)
+                   :concrete concrete)))
+               ((symbol-function 'completing-read)
+                (lambda (prompt &rest _)
+                  (cond
+                   ((string-prefix-p "Change " prompt) "replace it")
+                   ((string-prefix-p "Keep this " prompt)
+                    "always (personal)")
+                   ((string-prefix-p "Replacement " prompt) "button")
+                   (t (ert-fail (format "Unexpected prompt: %s" prompt))))))
+               ((symbol-function 'emacsvox-aural-preview-play-cues)
+                (lambda (cues)
+                  (push cues auditions)))
+               ((symbol-function
+                 'emacsvox-aural-tools--preview-replacement-earcon)
+                (lambda (data facts context)
+                  (setq previewed (list data facts context))))
+               ((symbol-function
+                 'emacsvox-aural-editor--open-prefilled-rule)
+                (lambda (scope rule source-buffer)
+                  (setq prepared (list scope rule source-buffer)))))
+            (emacsvox-aural-remap-earcon-at-point)
+            (should
+             (equal
+              prepared
+              (list
+               'personal
+               '(:id
+                 personal-remap-dired-filesystem-entry-event-state-changed-occasion-state-change-entry-kind-directory-earcon-before-directory-cue
+                 :match
+                 (:role filesystem-entry
+                  :entry-kind directory
+                  :module dired
+                  :events (state-changed)
+                  :occasion state-change)
+                 :render
+                 (:before
+                  (:anchor object
+                   :remove (directory-cue)
+                   :prepend
+                   ((:id directory-cue
+                     :kind cue
+                     :cue button
+                     :anchor object
+                     :volume 0.6
+                     :space (:balance -0.2))))))
+               source)))
+            (should (equal auditions (list (list action))))
+            (should
+             (equal
+              previewed
+              (list
+               '(:id directory-cue
+                 :kind cue
+                 :cue button
+                 :anchor object
+                 :volume 0.6
+                 :space (:balance -0.2))
+               '(:role filesystem-entry
+                 :entry-kind directory
+                 :events (state-changed))
+               '(:module dired
+                 :mode dired-mode
+                 :occasion state-change))))
+            (should
+             (emacsvox-aural-compile-rule (cadr prepared) 'user))
+            (let* ((base
+                    (emacsvox-aural-compile-rule
+                     '(:id base-directory-cue
+                       :match
+                       (:role filesystem-entry
+                        :entry-kind directory
+                        :module dired
+                        :events (state-changed)
+                        :occasion state-change)
+                       :render
+                       (:before
+                        ((:id directory-cue
+                          :kind cue
+                          :cue item
+                          :anchor object))))
+                     'core))
+                   (override
+                    (emacsvox-aural-compile-rule
+                     (cadr prepared) 'user))
+                   (resolved
+                    (emacsvox-aural-resolve
+                     '(:role filesystem-entry
+                       :entry-kind directory
+                       :events (state-changed))
+                     '(:module dired :occasion state-change)
+                     (list base override)
+                     'object))
+                   (actions
+                    (emacsvox-aural-render-plan-before resolved)))
+              (should (= (length actions) 1))
+              (should
+               (eq (emacsvox-aural-action-cue (car actions)) 'button))))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-tools-earcon-remap-can-suppress-one-action ()
+  "Suppressing an earcon removes only its exact ID at its frozen anchor."
+  (emacsvox-test--with-aural-tools
+    (let* ((source (generate-new-buffer " *aural-earcon-suppress-source*"))
+           (action
+            (emacsvox-aural--make-concrete-action
+             :id 'marked-cue
+             :kind 'cue
+             :cue 'mark-object
+             :resource "/tmp/mark.ogg"
+             :sample-id 'mark
+             :source 'dired-mark-rule
+             :anchor 'transition))
+           (concrete
+            (emacsvox-aural--make-concrete-plan
+             :after (list action)))
+           prepared)
+      (unwind-protect
+          (cl-letf
+              (((symbol-function
+                 'emacsvox-aural-tools--remap-source-input)
+                (lambda ()
+                  (list
+                   :source source
+                   :facts
+                   '(:role filesystem-entry
+                     :states (marked)
+                     :events (state-changed))
+                   :context
+                   '(:module dired :occasion state-change)
+                   :concrete concrete)))
+               ((symbol-function 'completing-read)
+                (lambda (prompt &rest _)
+                  (if (string-prefix-p "Change " prompt)
+                      "suppress it"
+                    "this Emacs session")))
+               ((symbol-function 'emacsvox-aural-preview-play-cues)
+                #'ignore)
+               ((symbol-function
+                 'emacsvox-aural-editor--open-prefilled-rule)
+                (lambda (scope rule source-buffer)
+                  (setq prepared (list scope rule source-buffer)))))
+            (emacsvox-aural-remap-earcon-at-point)
+            (should
+             (equal
+              prepared
+              (list
+               'session
+               '(:id
+                 session-remap-dired-filesystem-entry-marked-event-state-changed-occasion-state-change-earcon-after-marked-cue
+                 :match
+                 (:role filesystem-entry
+                  :states (marked)
+                  :module dired
+                  :events (state-changed)
+                  :occasion state-change)
+                 :render
+                 (:after
+                  (:anchor transition :remove (marked-cue))))
+               source)))
+            (should
+             (emacsvox-aural-compile-rule (cadr prepared) 'user)))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-tools-earcon-remap-can-restore-generated-rule ()
+  "Restoration targets the same stable scope-specific generated rule."
+  (emacsvox-test--with-aural-tools
+    (let* ((action
+            (emacsvox-aural--make-concrete-action
+             :id 'directory-cue
+             :kind 'cue
+             :cue 'button
+             :resource "/tmp/button.ogg"
+             :sample-id 'button
+             :anchor 'object))
+           (concrete
+            (emacsvox-aural--make-concrete-plan
+             :before (list action)))
+           removed)
+      (cl-letf
+          (((symbol-function
+             'emacsvox-aural-tools--remap-source-input)
+            (lambda ()
+              (list
+               :facts
+               '(:role filesystem-entry :entry-kind directory)
+               :context
+               '(:module dired :occasion navigation)
+               :concrete concrete)))
+           ((symbol-function 'completing-read)
+            (lambda (prompt &rest _)
+              (if (string-prefix-p "Change " prompt)
+                  "restore inherited behavior"
+                "this Emacs session")))
+           ((symbol-function 'emacsvox-aural-preview-play-cues)
+            #'ignore)
+           ((symbol-function
+             'emacsvox-aural-editor--open-without-rule)
+            (lambda (scope rule-id source)
+              (setq removed (list scope rule-id source)))))
+        (emacsvox-aural-remap-earcon-at-point))
+      (should
+       (equal
+        removed
+        '(session
+          session-remap-dired-filesystem-entry-occasion-navigation-entry-kind-directory-earcon-before-directory-cue
+          nil))))))
+
 (ert-deftest emacsvox-aural-editor-prefilled-rule-is-dirty-and-selected ()
   "A point remap replaces its stable draft and selects it for review."
   (emacsvox-test--with-aural-tools
@@ -291,6 +619,45 @@
               (should (equal emacsvox-aural-editor-rules (list new)))
               (should
                (= (emacsvox-aural-editor--index-at-point) 0))))
+        (kill-buffer buffer)
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-editor-remap-removal-restores-inheritance-unsaved ()
+  "Removing a generated remap opens as a reviewable unsaved deletion."
+  (emacsvox-test--with-aural-tools
+    (let* ((name "*Aural Editor: session*")
+           (buffer (get-buffer-create name))
+           (source
+            (generate-new-buffer " *aural-remap-removal-source*"))
+           (keep
+            '(:id keep-rule
+              :match (:module dired)
+              :render (:content (:voice bolden))))
+           (remove
+            '(:id session-remap-dired-item-earcon-before-item-cue
+              :match (:module dired :role filesystem-entry)
+              :render (:before (:remove (item-cue))))))
+      (unwind-protect
+          (progn
+            (with-current-buffer buffer
+              (emacsvox-aural-scheme-editor-mode)
+              (setq
+               emacsvox-aural-editor-scope 'session
+               emacsvox-aural-editor-rules (list keep remove)
+               emacsvox-aural-editor-dirty nil))
+            (cl-letf
+                (((symbol-function 'emacsvox-edit-aural-rules)
+                  (lambda (&rest _) buffer)))
+              (should
+               (eq
+                (emacsvox-aural-editor--open-without-rule
+                 'session
+                 'session-remap-dired-item-earcon-before-item-cue
+                 source)
+                buffer)))
+            (with-current-buffer buffer
+              (should emacsvox-aural-editor-dirty)
+              (should (equal emacsvox-aural-editor-rules (list keep)))))
         (kill-buffer buffer)
         (kill-buffer source)))))
 
@@ -359,7 +726,7 @@
              :plan new-plan
              :source-buffer-name source-name
              :source-position 2))
-           spoken explained replayed auditioned remapped)
+           spoken explained replayed auditioned remapped remapped-earcon)
       (setq
        emacsvox-aural-presentation-history
        (list new-record old-record))
@@ -394,6 +761,10 @@
                 #'emacsvox-aural-recent-feedback-audition-cues))
               (should
                (eq
+                (key-binding (kbd "R"))
+                #'emacsvox-aural-recent-feedback-remap-earcon))
+              (should
+               (eq
                 (key-binding (kbd "i"))
                 #'emacsvox-aural-toggle-interface-history-recording))
               (should
@@ -425,7 +796,11 @@
                    ((symbol-function
                      'emacsvox-aural-remap-voice-at-point)
                     (lambda (&optional record)
-                      (setq remapped record))))
+                      (setq remapped record)))
+                   ((symbol-function
+                     'emacsvox-aural-remap-earcon-at-point)
+                    (lambda (&optional record)
+                      (setq remapped-earcon record))))
                 (emacsvox-aural-recent-feedback-explain)
                 (should
                  (eq
@@ -439,7 +814,9 @@
                 (emacsvox-aural-recent-feedback-audition-cues)
                 (should (equal auditioned (list cue)))
                 (emacsvox-aural-recent-feedback-remap-voice)
-                (should (eq remapped new-record)))
+                (should (eq remapped new-record))
+                (emacsvox-aural-recent-feedback-remap-earcon)
+                (should (eq remapped-earcon new-record)))
               (cl-letf
                   (((symbol-function 'tts-speak)
                     (lambda (text) (setq spoken text))))
@@ -1141,14 +1518,16 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain remap recent-feedback profiles schemes voices
-                  features face-presentation buffer-rules semantics sounds
-                  spatial spatial-settings training diagnostics)))
+                '(explain remap remap-earcon recent-feedback profiles
+                  schemes voices features face-presentation buffer-rules
+                  semantics sounds spatial spatial-settings training
+                  diagnostics)))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
                      ("x" . emacsvox-aural-home-explain)
                      ("r" . emacsvox-aural-home-remap-voice)
+                     ("R" . emacsvox-aural-home-remap-earcon)
                      ("H" . emacsvox-aural-home-recent-feedback)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
@@ -1229,6 +1608,8 @@
                 (should (equal spoken "Top of aural home."))
                 (emacsvox-aural-home-next)
                 (should (equal spoken "Remap voice at point, Area"))
+                (emacsvox-aural-home-next)
+                (should (equal spoken "Remap earcon at point, Area"))
                 (emacsvox-aural-home-next)
                 (should (equal spoken "Recent aural feedback, Area"))
                 (emacsvox-aural-home-next)
