@@ -21,6 +21,10 @@
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-dispatch "tts-speak" ())
+(declare-function tts-voice-family-capability
+                  "tts-speak" (family &optional capabilities))
+(declare-function tts-voice-family-id
+                  "tts-speak" (family &optional capabilities))
 
 (defcustom emacsvox-aural-voice-palettes-preview-text
   "The quick brown fox jumps over the lazy dog. Numbers one, two, three."
@@ -42,7 +46,7 @@
   "Comparison text used by the current preview buffer.")
 
 (defconst emacsvox-aural-voice-tuner--dimension-descriptions
-  '((family . "Voice family")
+  '((family . "Base voice, stored as a portable or synth-specific ACSS family")
     (average-pitch . "Overall pitch from zero through nine")
     (pitch-range . "Pitch variation from zero through nine")
     (stress . "Word emphasis from zero through nine")
@@ -1079,6 +1083,40 @@ Return the compiled voice without dispatching the speech queue."
   "Return a user-facing description of voice VALUE."
   (if (null value) "adapter default" (format "%s" value)))
 
+(defun emacsvox-aural-voice-tuner--dimension-label (dimension)
+  "Return the user-facing tuner label for DIMENSION."
+  (if (eq dimension 'family)
+      "Base Voice (ACSS Family)"
+    (capitalize (emacsvox-aural-tools--humanize dimension))))
+
+(defun emacsvox-aural-voice-tuner--family-description
+    (family &optional effective)
+  "Describe requested FAMILY, or its EFFECTIVE adapter realization."
+  (if (null family)
+      "adapter default"
+    (let* ((capability (emacsvox-aural-active-voice-capabilities))
+           (resolved
+            (and
+             effective
+             (fboundp 'tts-voice-family-id)
+             (tts-voice-family-id family capability)))
+           (display-id (or resolved family))
+           (entry
+            (and
+             (fboundp 'tts-voice-family-capability)
+             (tts-voice-family-capability display-id capability)))
+           (label (plist-get (cdr entry) :label)))
+      (if label
+          (format "%s — %s" display-id label)
+        (format "%s" display-id)))))
+
+(defun emacsvox-aural-voice-tuner--requested-value (dimension)
+  "Describe the requested tuner value for DIMENSION."
+  (let ((value (emacsvox-aural-voice-tuner--value dimension)))
+    (if (eq dimension 'family)
+        (emacsvox-aural-voice-tuner--family-description value)
+      (emacsvox-aural-voice-tuner--display-value value))))
+
 (defun emacsvox-aural-voice-tuner--support-description (dimension)
   "Describe active adapter support for DIMENSION."
   (format
@@ -1092,8 +1130,23 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-tuner--effective-value (dimension)
   "Describe the auditioned value for DIMENSION."
   (if (emacsvox-aural-voice-tuner--supported-p dimension)
-      (emacsvox-aural-voice-tuner--display-value
-       (emacsvox-aural-voice-tuner--value dimension))
+      (if (eq dimension 'family)
+          (let* ((value (emacsvox-aural-voice-tuner--value dimension))
+                 (capability (emacsvox-aural-active-voice-capabilities))
+                 (selection (plist-get capability :family-selection))
+                 (resolved
+                  (and
+                   value
+                   (fboundp 'tts-voice-family-id)
+                   (tts-voice-family-id value capability))))
+            (cond
+             ((null value) "adapter default")
+             ((and (eq selection 'enumerated) (null resolved))
+              "adapter default; requested family unavailable")
+             (t
+              (emacsvox-aural-voice-tuner--family-description value t))))
+        (emacsvox-aural-voice-tuner--display-value
+         (emacsvox-aural-voice-tuner--value dimension)))
     "not applied"))
 
 (defun emacsvox-aural-voice-tuner--row (dimension)
@@ -1101,9 +1154,8 @@ Return the compiled voice without dispatching the speech queue."
   (list
    dimension
    (vector
-    (capitalize (emacsvox-aural-tools--humanize dimension))
-    (emacsvox-aural-voice-tuner--display-value
-     (emacsvox-aural-voice-tuner--value dimension))
+    (emacsvox-aural-voice-tuner--dimension-label dimension)
+    (emacsvox-aural-voice-tuner--requested-value dimension)
     (emacsvox-aural-voice-tuner--effective-value dimension)
     (emacsvox-aural-voice-tuner--support-description dimension)
     (or
@@ -1203,9 +1255,8 @@ Return the compiled voice without dispatching the speech queue."
   "Describe the current DIMENSION value and adapter support."
   (format
    "%s %s. %s%s"
-   (capitalize (emacsvox-aural-tools--humanize dimension))
-   (emacsvox-aural-voice-tuner--display-value
-    (emacsvox-aural-voice-tuner--value dimension))
+   (emacsvox-aural-voice-tuner--dimension-label dimension)
+   (emacsvox-aural-voice-tuner--requested-value dimension)
    (capitalize
     (emacsvox-aural-voice-tuner--support-description dimension))
    (if (emacsvox-aural-voice-tuner--supported-p dimension)
@@ -1307,6 +1358,68 @@ ANNOUNCEMENT overrides the normal setting description."
    (emacsvox-aural-voice-tuner--current-dimension)
    nil))
 
+(defun emacsvox-aural-voice-tuner--family-candidates (capability)
+  "Return accessible completion choices from family CAPABILITY."
+  (let (choices)
+    (dolist (generic (plist-get capability :generic-families))
+      (let* ((entry
+              (and
+               (fboundp 'tts-voice-family-capability)
+               (tts-voice-family-capability generic capability)))
+             (label (plist-get (cdr entry) :label)))
+        (push
+         (cons
+          (format
+           "%s — portable%s"
+           generic
+           (if label (format "; currently %s" label) ""))
+          generic)
+         choices)))
+    (dolist (entry (plist-get capability :families))
+      (let ((id (car entry))
+            (label (plist-get (cdr entry) :label)))
+        (push
+         (cons
+          (if label (format "%s — %s" id label) (format "%s" id))
+          id)
+         choices)))
+    (nreverse choices)))
+
+(defun emacsvox-aural-voice-tuner--read-family (current)
+  "Read a base voice or ACSS family, initially CURRENT."
+  (let* ((capability (emacsvox-aural-active-voice-capabilities))
+         (selection
+          (or
+           (plist-get capability :family-selection)
+           (cond
+            ((plist-get capability :families) 'enumerated)
+            ((emacsvox-aural-voice-tuner--supported-p 'family) 'free-form)
+            (t 'unsupported)))))
+    (pcase selection
+      ('unsupported
+       (user-error
+        "The %s adapter does not support inline base-voice changes"
+        (plist-get capability :adapter)))
+      ('enumerated
+       (let* ((choices
+               (cons
+                '("adapter default" . nil)
+                (emacsvox-aural-voice-tuner--family-candidates capability)))
+              (initial-entry
+               (cl-find current choices :key #'cdr :test #'equal))
+              (answer
+               (completing-read
+                "Base voice; choose a portable family or exact voice: "
+                choices nil t nil nil (car-safe initial-entry))))
+         (cdr (assoc-string answer choices))))
+      (_
+       (let ((answer
+              (string-trim
+               (read-string
+                "Installed base voice; blank means adapter default: "
+                (and current (format "%s" current))))))
+         (unless (string-empty-p answer) answer))))))
+
 (defun emacsvox-aural-voice-tuner-edit ()
   "Edit the current dimension and audition the new value."
   (interactive)
@@ -1314,12 +1427,7 @@ ANNOUNCEMENT overrides the normal setting description."
          (current (emacsvox-aural-voice-tuner--value dimension))
          (value
           (if (eq dimension 'family)
-              (let ((answer
-                     (string-trim
-                      (read-string
-                       "Voice family; blank means adapter default: "
-                       (and current (format "%s" current))))))
-                (unless (string-empty-p answer) (intern answer)))
+              (emacsvox-aural-voice-tuner--read-family current)
             (emacsvox-aural-voice-palettes--read-style-number
              dimension current))))
     (emacsvox-aural-voice-tuner--set-value dimension value)))

@@ -223,6 +223,66 @@
       (speaker "tts_set_punctuations some\nd\n")
       (speaker "tts_reset \n")))))
 
+(ert-deftest emacsvox-tts-voice-capabilities-are-adapter-owned-and-copied ()
+  "The generic interface returns an isolated adapter descriptor."
+  (let* ((descriptor
+          '(:adapter test
+            :source static
+            :family-selection enumerated
+            :families ((test-voice :label "Test voice"))
+            :dimensions (family)))
+         (tts-voice-capabilities-function (lambda () descriptor))
+         (first (tts-voice-capabilities))
+         (second (tts-voice-capabilities)))
+    (should (equal first descriptor))
+    (setcar (plist-get first :dimensions) 'average-pitch)
+    (should (equal (plist-get second :dimensions) '(family)))
+    (should (equal (plist-get descriptor :dimensions) '(family)))))
+
+(ert-deftest emacsvox-tts-outloud-describes-and-compiles-base-voices ()
+  "Eloquence publishes all presets and compiles portable family names."
+  (let* ((capabilities (outloud-voice-capabilities))
+         command)
+    (should (eq (plist-get capabilities :adapter) 'outloud))
+    (should (eq (plist-get capabilities :family-selection) 'enumerated))
+    (should (= (length (plist-get capabilities :families)) 8))
+    (should
+     (eq (tts-voice-family-id 'female capabilities) 'outloud-v2))
+    (should (eq (tts-voice-family-id "V7" capabilities) 'outloud-v7))
+    (cl-letf (((symbol-function 'outloud-define-voice)
+               (lambda (_name value) (setq command value))))
+      (outloud-define-voice-from-acss
+       'test-outloud-family
+       (make-acss :family 'female :average-pitch 5)))
+    (should (string-match-p (regexp-quote "`v2") command))
+    (should (string-match-p (regexp-quote "`vb65") command))))
+
+(ert-deftest emacsvox-tts-dectalk-describes-and-compiles-base-voices ()
+  "DECtalk publishes its built-ins and accepts non-Paul ACSS settings."
+  (let* ((capabilities (dectalk-voice-capabilities))
+         command)
+    (should (eq (plist-get capabilities :adapter) 'dectalk))
+    (should (eq (plist-get capabilities :family-selection) 'enumerated))
+    (should (= (length (plist-get capabilities :families)) 9))
+    (should (eq (tts-voice-family-id 'female capabilities) 'betty))
+    (should (eq (tts-voice-family-id 'child capabilities) 'kit))
+    (cl-letf (((symbol-function 'dectalk-define-voice)
+               (lambda (_name value) (setq command value))))
+      (dectalk-define-voice-from-acss
+       'test-dectalk-family
+       (make-acss :family 'betty :average-pitch 5)))
+    (should (string-match-p (regexp-quote ":nb") command))
+    (should (string-match-p (regexp-quote "ap 122") command))))
+
+(ert-deftest emacsvox-tts-free-form-mac-families-compile-installed-names ()
+  "The macOS adapters preserve free-form installed voice identifiers."
+  (should
+   (equal (mac-get-family-code "Samantha")
+          " [{voice samantha}] "))
+  (should
+   (equal (swiftmac-get-family-code "en-US:Alex")
+          " [{voice en-US:Alex}] ")))
+
 (ert-deftest emacsvox-tts-protocol-synchronizes-buffer-state ()
   "The synchronization command snapshots the current speech state."
   (let ((tts-punctuation-mode 'none)
@@ -575,7 +635,7 @@ variables; nil removes the variable."
                   (and (boundp symbol) (symbol-value symbol))))
           '(tts-default-voice tts-default-speech-rate
             tts-speech-rate-step tts-speech-rate-base
-            tts-handle-unicode)))
+            tts-handle-unicode tts-voice-capabilities-function)))
         defaults
         character-scale
         untouched-charsets)
@@ -608,7 +668,10 @@ variables; nil removes the variable."
                'dectalk-get-voice-command))
           (should
            (eq (symbol-function 'tts-define-voice-from-acss)
-               'dectalk-define-voice-from-acss)))
+               'dectalk-define-voice-from-acss))
+          (should
+           (eq tts-voice-capabilities-function
+               #'dectalk-voice-capabilities)))
       (dolist (entry saved-state)
         (if (nth 1 entry)
             (set (car entry) (nth 2 entry))
@@ -654,8 +717,9 @@ variables; nil removes the variable."
     (cl-progv
         '(tts-default-voice tts-default-speech-rate
           tts-speech-rate-step tts-speech-rate-base
-          tts-speech-rate tts-handle-unicode)
-        '(nil 1 2 3 4 nil)
+          tts-speech-rate tts-handle-unicode
+          tts-voice-capabilities-function)
+        '(nil 1 2 3 4 nil nil)
       (cl-letf (((symbol-function 'set-default)
                  (lambda (symbol value)
                    (push (cons symbol value) defaults)))
@@ -687,7 +751,10 @@ variables; nil removes the variable."
              'outloud-get-voice-command))
         (should
          (eq (symbol-function 'tts-define-voice-from-acss)
-             'outloud-define-voice-from-acss))))
+             'outloud-define-voice-from-acss))
+        (should
+         (eq tts-voice-capabilities-function
+             #'outloud-voice-capabilities))))
     (should
      (equal
       (nreverse defaults)
@@ -740,8 +807,9 @@ variables; nil removes the variable."
         character-table-setup
         untouched-charsets)
     (cl-progv
-        '(tts-default-voice tts-default-speech-rate)
-        '(unset 1)
+        '(tts-default-voice tts-default-speech-rate
+          tts-voice-capabilities-function)
+        '(unset 1 nil)
       (cl-letf (((symbol-function 'set-default)
                  (lambda (symbol value)
                    (push (cons symbol value) defaults)))
@@ -766,7 +834,10 @@ variables; nil removes the variable."
              'espeak-get-voice-command))
         (should
          (eq (symbol-function 'tts-define-voice-from-acss)
-             'espeak-define-voice-from-acss))))
+             'espeak-define-voice-from-acss))
+        (should
+         (eq tts-voice-capabilities-function
+             #'espeak-voice-capabilities))))
     (should
      (equal
       defaults
@@ -800,8 +871,8 @@ variables; nil removes the variable."
         untouched-charsets)
     (cl-progv
         '(tts-default-voice tts-default-speech-rate
-          emacsvox-play-program)
-        '(unset 1 local-player)
+          emacsvox-play-program tts-voice-capabilities-function)
+        '(unset 1 local-player nil)
       (cl-letf (((symbol-function 'set-default)
                  (lambda (symbol value)
                    (push (cons symbol value) defaults)))
@@ -825,7 +896,10 @@ variables; nil removes the variable."
              'swiftmac-get-voice-command))
         (should
          (eq (symbol-function 'tts-define-voice-from-acss)
-             'swiftmac-define-voice-from-acss))))
+             'swiftmac-define-voice-from-acss))
+        (should
+         (eq tts-voice-capabilities-function
+             #'swiftmac-voice-capabilities))))
     (should
      (equal
       defaults
@@ -862,8 +936,8 @@ variables; nil removes the variable."
         untouched-charsets)
     (cl-progv
         '(tts-default-voice tts-default-speech-rate
-          emacsvox-play-program)
-        '(unset 1 local-player)
+          emacsvox-play-program tts-voice-capabilities-function)
+        '(unset 1 local-player nil)
       (cl-letf (((symbol-function 'set-default)
                  (lambda (symbol value)
                    (push (cons symbol value) defaults)))
@@ -888,7 +962,10 @@ variables; nil removes the variable."
              'mac-get-voice-command))
         (should
          (eq (symbol-function 'tts-define-voice-from-acss)
-             'mac-define-voice-from-acss))))
+             'mac-define-voice-from-acss))
+        (should
+         (eq tts-voice-capabilities-function
+             #'mac-voice-capabilities))))
     (should
      (equal
       defaults
@@ -923,8 +1000,9 @@ variables; nil removes the variable."
   "The Plain adapter configures generic TTS state and dispatch."
   (let (defaults)
     (cl-progv
-        '(tts-default-voice tts-default-speech-rate)
-        '(unset 1)
+        '(tts-default-voice tts-default-speech-rate
+          tts-voice-capabilities-function)
+        '(unset 1 nil)
       (cl-letf (((symbol-function 'set-default)
                  (lambda (symbol value)
                    (push (cons symbol value) defaults)))
@@ -944,7 +1022,10 @@ variables; nil removes the variable."
              'plain-get-voice-command))
         (should
          (eq (symbol-function 'tts-define-voice-from-acss)
-             'plain-define-voice-from-acss))))
+             'plain-define-voice-from-acss))
+        (should
+         (eq tts-voice-capabilities-function
+             #'plain-voice-capabilities))))
     (should
      (equal
       defaults

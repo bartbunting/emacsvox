@@ -42,6 +42,23 @@
 
 (defvar tts-character-to-speech-table)
 (defvar tts-default-speech-rate)
+(defvar tts-voice-capabilities-function)
+
+(defun espeak-voice-capabilities ()
+  "Return the normalized ACSS capabilities of the eSpeak adapter.
+
+Language and installed eSpeak voice selection currently occur through the
+server's language interface rather than inline ACSS family commands."
+  '(:adapter espeak
+    :source static
+    :family-selection unsupported
+    :families nil
+    :generic-families nil
+    :dimensions (average-pitch pitch-range richness)
+    :parameters
+    ((average-pitch :type integer :minimum 0 :maximum 9 :default 5)
+     (pitch-range :type integer :minimum 0 :maximum 9 :default 5)
+     (richness :type integer :minimum 0 :maximum 9 :default 5))))
 
 ;;;  Customizations:
 
@@ -290,6 +307,7 @@ and TABLE gives the values along that dimension."
   (fset 'tts-get-voice-command 'espeak-get-voice-command)
   (fset
    'tts-define-voice-from-acss 'espeak-define-voice-from-acss)
+  (setq tts-voice-capabilities-function #'espeak-voice-capabilities)
   (setq tts-default-voice nil)
   (setq tts-default-speech-rate espeak-default-speech-rate)
   (set-default 'tts-default-speech-rate espeak-default-speech-rate)

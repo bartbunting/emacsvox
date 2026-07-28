@@ -587,12 +587,67 @@
       (should
        (equal
         (nreverse events)
-        '((code "RESET")
-          (code "<voice-bolden>")
+        `((code "RESET")
+          (code
+           ,(format
+             "<%s>"
+             (if (boundp 'voice-bolden)
+                 (symbol-value 'voice-bolden)
+               'voice-bolden)))
           (text
            "Heading voice. The quick brown fox jumps over the lazy dog.")
           (code "RESET")
           dispatch))))))
+
+(ert-deftest emacsvox-aural-voice-tuner-offers-portable-and-exact-families ()
+  "Enumerated adapters expose generic choices beside native base voices."
+  (let (offered)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+          (lambda ()
+            '(:adapter outloud
+              :family-selection enumerated
+              :generic-families (male female)
+              :families
+              ((paul :label "Adult male 1" :generic (male))
+               (outloud-v2
+                :label "Adult female 1"
+                :generic (female)))
+              :dimensions (family))))
+         ((symbol-function 'completing-read)
+          (lambda (_prompt collection &rest _)
+            (setq offered collection)
+            (car
+             (cl-find-if
+              (lambda (entry)
+                (eq (cdr entry) 'female))
+              collection)))))
+      (should
+       (eq (emacsvox-aural-voice-tuner--read-family nil)
+           'female)))
+    (should
+     (cl-find-if
+      (lambda (entry) (eq (cdr entry) 'outloud-v2))
+      offered))
+    (should
+     (string-match-p
+      "portable.*currently Adult female 1"
+      (car
+       (cl-find-if
+        (lambda (entry) (eq (cdr entry) 'female))
+        offered))))))
+
+(ert-deftest emacsvox-aural-voice-tuner-rejects-unsupported-family-edit ()
+  "Adapters without inline family selection explain that limitation."
+  (cl-letf
+      (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+        (lambda ()
+          '(:adapter espeak
+            :family-selection unsupported
+            :dimensions (average-pitch pitch-range richness)))))
+    (should-error
+     (emacsvox-aural-voice-tuner--read-family nil)
+     :type 'user-error)))
 
 (ert-deftest emacsvox-aural-voice-palette-preview-can-queue-all-voices ()
   "Play-all queues every voice against one comparison before dispatch."

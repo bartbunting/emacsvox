@@ -50,6 +50,23 @@
 
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
+(defvar tts-voice-capabilities-function)
+
+(defun mac-voice-capabilities ()
+  "Return macOS voice and normalized ACSS capabilities.
+
+The server accepts installed voice names, but this adapter does not yet
+enumerate them back to Emacs."
+  '(:adapter mac
+    :source static
+    :family-selection free-form
+    :families nil
+    :generic-families nil
+    :dimensions (family average-pitch pitch-range)
+    :parameters
+    ((family :type string)
+     (average-pitch :type integer :minimum 0 :maximum 9 :default 5)
+     (pitch-range :type integer :minimum 0 :maximum 9 :default 5))))
 
 ;;; mac:
 ;;;###autoload
@@ -122,7 +139,14 @@ COMMAND-STRING to the TTS engine."
 
 (defun mac-get-family-code (name)
   "Get control code for voice family NAME."
-  (mac-get-voice-command-internal name))
+  (cond
+   ((null name) mac-default-voice-string)
+   ((gethash name mac-voice-table))
+   (t
+    (format
+     " [{voice %s}] "
+     (downcase
+      (if (symbolp name) (symbol-name name) name))))))
 
 ;;;   hash table for mapping families to their dimensions
 
@@ -142,8 +166,11 @@ and TABLE gives the values along that dimension."
 (defun mac-css-get-code-table (family dimension)
   "Retrieve table of values for specified FAMILY and DIMENSION."
   
-  (let ((key (intern (format "%s-%s" family dimension))))
-    (gethash key mac-css-code-tables)))
+  (let ((key (intern (format "%s-%s" (or family 'paul) dimension)))
+        (fallback (intern (format "paul-%s" dimension))))
+    (or
+     (gethash key mac-css-code-tables)
+     (gethash fallback mac-css-code-tables))))
 
 ;;;   average pitch
 
@@ -291,6 +318,7 @@ and TABLE gives the values along that dimension."
   (fset 'tts-voice-defined-p 'mac-voice-defined-p)
   (fset 'tts-get-voice-command 'mac-get-voice-command)
   (fset 'tts-define-voice-from-acss 'mac-define-voice-from-acss)
+  (setq tts-voice-capabilities-function #'mac-voice-capabilities)
   (setq tts-default-speech-rate mac-default-speech-rate)
   (set-default 'tts-default-speech-rate mac-default-speech-rate)
   (tts-unicode-update-untouched-charsets

@@ -45,7 +45,7 @@
 
 ;;  Required modules: 
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
 
 (defvar tts-default-speech-rate)
@@ -53,6 +53,7 @@
 (defvar tts-speech-rate)
 (defvar tts-speech-rate-base)
 (defvar tts-speech-rate-step)
+(defvar tts-voice-capabilities-function)
 
 ;;;  Customizations:
 
@@ -105,7 +106,163 @@
 
 ;;;  voice definitions
 
-(outloud-define-voice 'paul  " `v1 ")
+(defconst outloud-family-definitions
+  '((paul
+     :label "Adult male 1"
+     :native-id "v1"
+     :command " `v1 "
+     :aliases (outloud-v1 v1)
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 1
+     :default t)
+    (outloud-v2
+     :label "Adult female 1"
+     :native-id "v2"
+     :command " `v2 "
+     :aliases (v2)
+     :generic (female)
+     :gender female
+     :age adult
+     :variant 1)
+    (outloud-v3
+     :label "Child 1"
+     :native-id "v3"
+     :command " `v3 "
+     :aliases (v3)
+     :generic (child)
+     :age child
+     :variant 1)
+    (outloud-v4
+     :label "Adult male 2"
+     :native-id "v4"
+     :command " `v4 "
+     :aliases (v4)
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 2)
+    (outloud-v5
+     :label "Adult male 3"
+     :native-id "v5"
+     :command " `v5 "
+     :aliases (v5)
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 3)
+    (outloud-v6
+     :label "Elderly female 2"
+     :native-id "v6"
+     :command " `v6 "
+     :aliases (v6)
+     :generic (female)
+     :gender female
+     :age old
+     :variant 2)
+    (outloud-v7
+     :label "Elderly female 1"
+     :native-id "v7"
+     :command " `v7 "
+     :aliases (v7)
+     :generic (female)
+     :gender female
+     :age old
+     :variant 1)
+    (outloud-v8
+     :label "Adult male 1 variant"
+     :native-id "v8"
+     :command " `v8 "
+     :aliases (v8)
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 4))
+  "Eloquence preset voices and their portable selection metadata.")
+
+(defun outloud--family-name (value)
+  "Return a comparison name for Eloquence family VALUE."
+  (cond
+   ((symbolp value) (symbol-name value))
+   ((stringp value) value)
+   (t nil)))
+
+(defun outloud--family-name-equal-p (left right)
+  "Return non-nil when Eloquence family names LEFT and RIGHT match."
+  (let ((left-name (outloud--family-name left))
+        (right-name (outloud--family-name right)))
+    (and
+     left-name right-name
+     (string-equal (downcase left-name) (downcase right-name)))))
+
+(defun outloud-family-definition (family)
+  "Return the Eloquence preset definition matching FAMILY."
+  (let (exact generic)
+    (dolist (entry outloud-family-definitions)
+      (when
+          (or
+           (outloud--family-name-equal-p family (car entry))
+           (cl-some
+            (lambda (alias)
+              (outloud--family-name-equal-p family alias))
+            (plist-get (cdr entry) :aliases)))
+        (setq exact entry))
+      (when
+          (and
+           (null generic)
+           (cl-some
+            (lambda (name)
+              (outloud--family-name-equal-p family name))
+            (plist-get (cdr entry) :generic)))
+        (setq generic entry)))
+    (or exact generic)))
+
+(defun outloud-get-family-code (family)
+  "Return the native Eloquence preset command for FAMILY."
+  (or
+   (plist-get
+    (cdr (outloud-family-definition family))
+    :command)
+   ""))
+
+(defun outloud--capability-family (entry)
+  "Return public capability data for Eloquence family ENTRY."
+  (let ((properties (cdr entry)))
+    (list
+     (car entry)
+     :label (plist-get properties :label)
+     :native-id (plist-get properties :native-id)
+     :aliases (copy-sequence (plist-get properties :aliases))
+     :generic (copy-sequence (plist-get properties :generic))
+     :gender (plist-get properties :gender)
+     :age (plist-get properties :age)
+     :variant (plist-get properties :variant)
+     :default (plist-get properties :default))))
+
+(defun outloud-voice-capabilities ()
+  "Return static Eloquence voice and normalized ACSS capabilities."
+  (list
+   :adapter 'outloud
+   :source 'static
+   :family-selection 'enumerated
+   :families
+   (mapcar #'outloud--capability-family outloud-family-definitions)
+   :generic-families '(male female child)
+   :dimensions '(family average-pitch pitch-range stress richness)
+   :parameters
+   '((family :type choice :default paul)
+     (average-pitch :type integer :minimum 0 :maximum 9 :default 5)
+     (pitch-range :type integer :minimum 0 :maximum 9 :default 5)
+     (stress :type integer :minimum 0 :maximum 9 :default 5)
+     (richness :type integer :minimum 0 :maximum 9 :default 5))))
+
+(dolist (entry outloud-family-definitions)
+  (let ((id (car entry))
+        (properties (cdr entry)))
+    (outloud-define-voice id (plist-get properties :command))
+    (dolist (alias (plist-get properties :aliases))
+      (outloud-define-voice alias (plist-get properties :command)))))
 
 ;;  mapping css parameters to tts codes
 ;;  --- see../servers /linux-outloud/lib/voice-params.org
@@ -123,8 +280,13 @@
 (defun outloud-css-get-code-table (family dimension)
   "Retrieve table of values for  FAMILY and DIMENSION."
   
-  (let ((key (intern (format "%s-%s" family dimension))))
-    (gethash key outloud-css-code-tables)))
+  (let* ((definition (outloud-family-definition family))
+         (canonical (or (car-safe definition) 'paul))
+         (key (intern (format "%s-%s" canonical dimension)))
+         (fallback (intern (format "paul-%s" dimension))))
+    (or
+     (gethash key outloud-css-code-tables)
+     (gethash fallback outloud-css-code-tables))))
 
 ;;;   average pitch
 
@@ -275,6 +437,7 @@
   (let* ((family(acss-family style))
          (command
           (concat
+           (outloud-get-family-code family)
            (outloud-get-average-pitch-code (acss-average-pitch style) family)
            (outloud-get-pitch-range-code (acss-pitch-range style) family)
            (outloud-get-stress-code (acss-stress style) family)
@@ -290,6 +453,7 @@
   (fset 'tts-get-voice-command 'outloud-get-voice-command)
   (fset
    'tts-define-voice-from-acss 'outloud-define-voice-from-acss)
+  (setq tts-voice-capabilities-function #'outloud-voice-capabilities)
   (setq tts-default-voice 'paul)
   (setq tts-default-speech-rate outloud-default-speech-rate)
   (set-default 'tts-default-speech-rate outloud-default-speech-rate)

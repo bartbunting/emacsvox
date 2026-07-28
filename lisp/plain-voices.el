@@ -50,6 +50,17 @@
 
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
+(defvar tts-voice-capabilities-function)
+
+(defun plain-voice-capabilities ()
+  "Return the no-op Plain adapter's voice capabilities."
+  '(:adapter plain
+    :source static
+    :family-selection unsupported
+    :families nil
+    :generic-families nil
+    :dimensions nil
+    :parameters nil))
 
 ;;; plain:
 ;;;###autoload
@@ -331,6 +342,7 @@ and TABLE gives the values along that dimension."
   (fset 'tts-voice-defined-p 'plain-voice-defined-p)
   (fset 'tts-define-voice-from-acss
         'plain-define-voice-from-acss)
+  (setq tts-voice-capabilities-function #'plain-voice-capabilities)
   (setq tts-default-speech-rate plain-default-speech-rate)
   (set-default 'tts-default-speech-rate plain-default-speech-rate))
 

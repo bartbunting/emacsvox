@@ -138,6 +138,32 @@ Move the generic implementation to =tts-speak.el=, provide only =tts-speak=,
 remove transitional aliases, and require a zero legacy audit outside files
 that describe real DECtalk backends or historical archives.
 
+* Adapter Voice Capability Interface
+
+The generic TTS layer exposes =tts-voice-capabilities=.  The selected adapter
+installs =tts-voice-capabilities-function= when it is configured, just as it
+installs its voice compiler.  The returned plist describes:
+
+- the adapter and whether the data is static, discovered, or a compatibility
+  fallback;
+- whether inline base-voice selection is =enumerated=, =free-form=, or
+  =unsupported=;
+- enumerated native identifiers, aliases, labels, and portable traits;
+- supported normalized ACSS dimensions and their parameter ranges.
+
+=tts-voice-family-id= resolves an exact native identifier or alias first, then
+a portable characteristic such as =male=, =female=, or =child=.  Callers save
+the portable request and resolve it at compilation time.  Consequently, a
+=female= palette style selects Outloud's first female preset when Eloquence is
+active and Betty when DECtalk is active.  An exact engine identifier remains
+exact and degrades visibly to the adapter default if it is not available
+after a synth change.
+
+The descriptor is returned through a function so a future adapter can discover
+voices dynamically.  Current catalogues are static because the speech-server
+protocol sends commands from Emacs but has no general response channel for
+enumerating installed voices.
+
 * Completion Criteria
 
 - All generic runtime and consumer code uses =tts-= names.

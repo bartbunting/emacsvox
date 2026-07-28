@@ -45,11 +45,12 @@
 
 ;;  required modules
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)
 
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
+(defvar tts-voice-capabilities-function)
 
 ;;;  Customizations:
 
@@ -121,7 +122,146 @@
 ;;;  voice definitions
 
 ;; the nine predefined voices:
-(dectalk-define-voice 'paul "[:np ]")
+(defconst dectalk-family-definitions
+  '((paul
+     :label "Perfect Paul"
+     :command "[:np ]"
+     :family-code ":np"
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 1
+     :default t)
+    (betty
+     :label "Beautiful Betty"
+     :command "[:nb ]"
+     :family-code ":nb"
+     :generic (female)
+     :gender female
+     :age adult
+     :variant 1)
+    (harry
+     :label "Huge Harry"
+     :command "[:nh ]"
+     :family-code ":nh"
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 2)
+    (frank
+     :label "Frail Frank"
+     :command "[:nf ]"
+     :family-code ":nf"
+     :generic (male)
+     :gender male
+     :age old
+     :variant 3)
+    (kit
+     :label "Kit the Kid"
+     :command "[:nk ]"
+     :family-code ":nk"
+     :generic (child)
+     :age child
+     :variant 1)
+    (rita
+     :label "Rough Rita"
+     :command "[:nr ]"
+     :family-code ":nr"
+     :generic (female)
+     :gender female
+     :age adult
+     :variant 2)
+    (ursula
+     :label "Uppity Ursula"
+     :command "[:nu ]"
+     :family-code ":nu"
+     :generic (female)
+     :gender female
+     :age adult
+     :variant 3)
+    (dennis
+     :label "Doctor Dennis"
+     :command "[:nd ]"
+     :family-code ":nd"
+     :generic (male)
+     :gender male
+     :age adult
+     :variant 4)
+    (wendy
+     :label "Whispering Wendy"
+     :command "[:nw ]"
+     :family-code ":nw"
+     :generic (female)
+     :gender female
+     :age adult
+     :variant 4))
+  "DECtalk built-in voices and portable selection metadata.")
+
+(defun dectalk--family-name (value)
+  "Return a comparison name for DECtalk family VALUE."
+  (cond
+   ((symbolp value) (symbol-name value))
+   ((stringp value) value)
+   (t nil)))
+
+(defun dectalk--family-name-equal-p (left right)
+  "Return non-nil when DECtalk family names LEFT and RIGHT match."
+  (let ((left-name (dectalk--family-name left))
+        (right-name (dectalk--family-name right)))
+    (and
+     left-name right-name
+     (string-equal (downcase left-name) (downcase right-name)))))
+
+(defun dectalk-family-definition (family)
+  "Return the DECtalk built-in definition matching FAMILY."
+  (let (exact generic)
+    (dolist (entry dectalk-family-definitions)
+      (when
+          (dectalk--family-name-equal-p family (car entry))
+        (setq exact entry))
+      (when
+          (and
+           (null generic)
+           (cl-some
+            (lambda (name)
+              (dectalk--family-name-equal-p family name))
+            (plist-get (cdr entry) :generic)))
+        (setq generic entry)))
+    (or exact generic)))
+
+(defun dectalk--capability-family (entry)
+  "Return public capability data for DECtalk family ENTRY."
+  (let ((properties (cdr entry)))
+    (list
+     (car entry)
+     :label (plist-get properties :label)
+     :generic (copy-sequence (plist-get properties :generic))
+     :gender (plist-get properties :gender)
+     :age (plist-get properties :age)
+     :variant (plist-get properties :variant)
+     :default (plist-get properties :default))))
+
+(defun dectalk-voice-capabilities ()
+  "Return static DECtalk voice and normalized ACSS capabilities."
+  (list
+   :adapter 'dectalk
+   :source 'static
+   :family-selection 'enumerated
+   :families
+   (mapcar #'dectalk--capability-family dectalk-family-definitions)
+   :generic-families '(male female child)
+   :dimensions '(family average-pitch pitch-range stress richness)
+   :parameters
+   '((family :type choice :default paul)
+     (average-pitch :type integer :minimum 0 :maximum 9 :default 5)
+     (pitch-range :type integer :minimum 0 :maximum 9 :default 5)
+     (stress :type integer :minimum 0 :maximum 9 :default 5)
+     (richness :type integer :minimum 0 :maximum 9 :default 5))))
+
+(dolist (entry dectalk-family-definitions)
+  (dectalk-define-voice
+   (car entry)
+   (plist-get (cdr entry) :command)))
 
 ;;;   Mapping css parameters to Dectalk codes
 
@@ -144,10 +284,14 @@
   
   (when (stringp name)
     (setq name (intern name)))
-  (or (cadr (assq  name dectalk-family-table))
+  (or (cadr (assq name dectalk-family-table))
+      (plist-get (cdr (dectalk-family-definition name)) :family-code)
       ""))
 
-(dectalk-set-family-code 'paul ":np")
+(dolist (entry dectalk-family-definitions)
+  (dectalk-set-family-code
+   (car entry)
+   (plist-get (cdr entry) :family-code)))
 
 ;;;   hash table for mapping families to their dimensions
 
@@ -165,8 +309,13 @@ and TABLE gives the values along that dimension."
 (defun dectalk-css-get-code-table (family dimension)
   "Retrieve table of values for  FAMILY and DIMENSION."
   
-  (let ((key (intern (format "%s-%s" family dimension))))
-    (gethash key dectalk-css-code-tables)))
+  (let* ((definition (dectalk-family-definition family))
+         (canonical (or (car-safe definition) 'paul))
+         (key (intern (format "%s-%s" canonical dimension)))
+         (fallback (intern (format "paul-%s" dimension))))
+    (or
+     (gethash key dectalk-css-code-tables)
+     (gethash fallback dectalk-css-code-tables))))
 
 ;;;   average pitch
 
@@ -361,6 +510,7 @@ and TABLE gives the values along that dimension."
   (fset 'tts-get-voice-command 'dectalk-get-voice-command)
   (fset
    'tts-define-voice-from-acss 'dectalk-define-voice-from-acss)
+  (setq tts-voice-capabilities-function #'dectalk-voice-capabilities)
   (setq tts-default-speech-rate dectalk-default-speech-rate)
   (set-default 'tts-default-speech-rate dectalk-default-speech-rate)
   (setq tts-speech-rate-step 50

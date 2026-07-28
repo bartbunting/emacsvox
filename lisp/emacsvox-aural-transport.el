@@ -28,6 +28,9 @@
 (declare-function tts-get-voice-command "tts-speak" (voice))
 (declare-function tts-get-voice-for-face "tts-speak" (face))
 (declare-function tts-initialize "tts-speak" ())
+(declare-function tts-voice-capabilities "tts-speak" ())
+(declare-function tts-voice-family-id
+                  "tts-speak" (family &optional capabilities))
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function voice-from-acss "voice-setup" (style))
 (declare-function make-acss "voice-setup" (&rest slots))
@@ -277,8 +280,8 @@ PACK and CUE remain readable while RESOURCE contents distinguish generations."
         (symbol-value resolved)
       resolved)))
 
-(defun emacsvox-aural--active-voice-adapter ()
-  "Return the active ACSS adapter identifier."
+(defun emacsvox-aural--legacy-voice-adapter ()
+  "Identify the active legacy ACSS adapter from its compiler function."
   (let ((implementation
          (and
           (fboundp 'tts-define-voice-from-acss)
@@ -295,19 +298,77 @@ PACK and CUE remain readable while RESOURCE contents distinguish generations."
          (plain-define-voice-from-acss . plain))))
      'unknown)))
 
-(defun emacsvox-aural-active-voice-capabilities ()
-  "Return declared ACSS capabilities of the active speech adapter."
-  (let* ((adapter (emacsvox-aural--active-voice-adapter))
-         (dimensions
-          (pcase adapter
-            ('dectalk emacsvox-aural-voice-dimensions)
-            ('outloud '(average-pitch pitch-range stress richness))
-            ('espeak '(family average-pitch pitch-range richness))
-            ((or 'mac 'swiftmac) '(family average-pitch pitch-range))
-            (_ nil))))
+(defun emacsvox-aural--legacy-voice-capabilities (adapter)
+  "Return compatibility voice capabilities for legacy ADAPTER."
+  (let ((dimensions
+         (pcase adapter
+           ('dectalk emacsvox-aural-voice-dimensions)
+           ('outloud '(average-pitch pitch-range stress richness))
+           ('espeak '(family average-pitch pitch-range richness))
+           ((or 'mac 'swiftmac) '(family average-pitch pitch-range))
+           (_ nil))))
     (list
      :adapter adapter
-     :dimensions (copy-sequence dimensions))))
+     :source 'compatibility
+     :family-selection
+     (cond
+      ((not (memq 'family dimensions)) 'unsupported)
+      ((memq adapter '(mac swiftmac)) 'free-form)
+      (t 'free-form))
+     :families nil
+     :generic-families nil
+     :dimensions (copy-sequence dimensions)
+     :parameters nil)))
+
+(defun emacsvox-aural-active-voice-capabilities ()
+  "Return adapter-owned ACSS capabilities for the active speech adapter."
+  (let* ((reported
+          (and
+           (fboundp 'tts-voice-capabilities)
+           (tts-voice-capabilities)))
+         (adapter (emacsvox-aural--legacy-voice-adapter)))
+    (copy-tree
+     (if
+         (and
+          reported
+          (not (eq (plist-get reported :adapter) 'unknown)))
+         reported
+       (emacsvox-aural--legacy-voice-capabilities adapter)))))
+
+(defun emacsvox-aural--voice-family-selection (capability)
+  "Return the family-selection policy declared by CAPABILITY."
+  (or
+   (plist-get capability :family-selection)
+   (cond
+    ((plist-get capability :families) 'enumerated)
+    ((memq 'family (plist-get capability :dimensions)) 'free-form)
+    (t 'unsupported))))
+
+(defun emacsvox-aural--resolve-voice-family (family capability)
+  "Resolve requested FAMILY through active CAPABILITY.
+
+Return nil when an enumerated adapter cannot provide the requested family."
+  (pcase (emacsvox-aural--voice-family-selection capability)
+    ('enumerated
+     (and
+      (fboundp 'tts-voice-family-id)
+      (tts-voice-family-id family capability)))
+    ('free-form family)
+    (_ nil)))
+
+(defun emacsvox-aural--unavailable-family-degradation
+    (family capability &optional voice)
+  "Describe unavailable FAMILY under CAPABILITY for optional palette VOICE."
+  (append
+   (list
+    :reason 'unavailable-voice-family
+    :adapter (plist-get capability :adapter))
+   (when voice (list :voice voice))
+   (list
+    :dimension 'family
+    :requested family
+    :available
+    (mapcar #'car (plist-get capability :families)))))
 
 (defun emacsvox-aural-voice-palette-capability-degradations
     (&optional palette)
@@ -324,15 +385,29 @@ and are not reconstructed or rejected here."
         (dolist (dimension emacsvox-aural-voice-dimensions)
           (let* ((key (emacsvox-aural--voice-dimension-key dimension))
                  (value (plist-get (cdr entry) key)))
-            (when (and value (not (memq dimension supported)))
-              (push
-               (list
-                :reason 'unsupported-voice-dimension
-                :adapter (plist-get capability :adapter)
-                :voice (car entry)
-                :dimension dimension
-                :requested value)
-               degradations))))))
+            (when value
+              (cond
+               ((not (memq dimension supported))
+                (push
+                 (list
+                  :reason 'unsupported-voice-dimension
+                  :adapter (plist-get capability :adapter)
+                  :voice (car entry)
+                  :dimension dimension
+                  :requested value)
+                 degradations))
+               ((and
+                 (eq dimension 'family)
+                 (eq
+                  (emacsvox-aural--voice-family-selection capability)
+                  'enumerated)
+                 (not
+                  (emacsvox-aural--resolve-voice-family
+                   value capability)))
+                (push
+                 (emacsvox-aural--unavailable-family-degradation
+                  value capability (car entry))
+                 degradations))))))))
     (nreverse degradations)))
 (defun emacsvox-aural--empty-voice-style ()
   "Return a complete device-independent default voice style."
@@ -430,6 +505,21 @@ and are not reconstructed or rejected here."
             (setq effective (plist-put effective key nil))
             (cond
              ((null value))
+             ((and
+               (eq dimension 'family)
+               (memq dimension supported))
+              (let ((family
+                     (emacsvox-aural--resolve-voice-family
+                      value capability)))
+                (if family
+                    (progn
+                      (setq command-style
+                            (plist-put command-style key family))
+                      (setq effective (plist-put effective key family)))
+                  (push
+                   (emacsvox-aural--unavailable-family-degradation
+                    value capability)
+                   degradations))))
              ((memq dimension supported)
               (setq command-style (plist-put command-style key value))
               (setq effective (plist-put effective key value)))

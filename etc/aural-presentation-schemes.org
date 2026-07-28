@@ -2514,11 +2514,11 @@ Implemented details:
   dimension.  Concrete compilation records requested and effective styles,
   the active adapter capability, dimension provenance, and explicit fallback
   records while queueing only the final precompiled command.
-- Adapter capability is taken from the function installed as
-  =tts-define-voice-from-acss=.  Dectalk, Outloud, eSpeak, Mac, SwiftMac,
-  Plain, and an unconfigured adapter declare only the dimensions they
-  actually implement.  Existing adapter-owned personalities are preserved
-  without reconstructing or rejecting their backend commands.
+- Adapter capability was initially inferred from the function installed as
+  =tts-define-voice-from-acss=.  Slice 36 replaces that inference for current
+  adapters with an explicit adapter-owned descriptor while retaining it as a
+  compatibility fallback.  Existing adapter-owned personalities are
+  preserved without reconstructing or rejecting their backend commands.
 - Personal scheme data schema 4 stores versioned voice palettes.  Palette
   entries are either existing personality symbols or complete declarative
   ACSS presets.  Reading disables reader evaluation; migration, inheritance,
@@ -2803,6 +2803,47 @@ CLOSED: [2026-07-28 Tue]
 Deliverable: provider libraries are lexically grouped, their data-only
 contract is visible from their names, and Notmuch previews exist before the
 Notmuch package is loaded.
+
+** DONE Slice 36: Synth-Aware Base Voices
+CLOSED: [2026-07-28 Tue]
+
+- Add a generic TTS capability interface whose descriptor is owned by the
+  selected adapter.  It identifies the adapter and capability source, whether
+  base-voice selection is enumerated, free-form, or unsupported, available
+  native families and aliases, portable family traits, supported normalized
+  ACSS dimensions, and parameter ranges.
+- Treat ACSS =:family= as base-voice selection.  Preserve =male=, =female=,
+  and =child= as portable requests, while allowing an adapter-specific
+  identifier when the user deliberately wants one exact synth voice.
+- Describe all eight Eloquence presets and all nine DECtalk built-in voices.
+  Compile the selected native base voice before applying explicitly requested
+  normalized ACSS dimensions.  Until per-family calibration tables exist,
+  non-default families use the established Paul tables for explicit numeric
+  overrides; omitted dimensions retain the native preset's own defaults.
+- Re-resolve portable family requests every time a voice is compiled, so the
+  same palette follows a speech-server change.  An unavailable exact family
+  falls back to the new adapter default and records an
+  =unavailable-voice-family= degradation with the requested and available
+  identifiers.
+- Let Mac and SwiftMac accept a free-form installed voice name.  Report that
+  eSpeak currently selects language and voice outside inline ACSS family
+  commands, and that Plain provides no voice styling.
+- Make the voice tuner label family as the base voice, offer portable and
+  native choices for enumerated adapters, accept installed names for
+  free-form adapters, reject unsupported edits clearly, and show the current
+  adapter realization separately from the saved request.
+- Keep capability data static today.  The function-valued interface permits a
+  future server-backed discovery implementation, but the current
+  fire-and-forget speech protocol has no response channel for enumeration.
+
+Deliverable: voice palettes adapt predictably when the speech synthesizer
+changes, without pretending every engine has the same voices or controls.
+
+Checks: 110 focused TTS, transport, and voice-manager results pass.  The full
+Emacs 31 source suite has 1,629 tests: 1,628 pass and the optional Mu4e test is
+skipped.  All changed Lisp modules compile, compiled aural parity and
+build-tree startup pass, all 27 semantic traces match, and the aural and TTS
+audits are clean.
 
 * Test Gates
 

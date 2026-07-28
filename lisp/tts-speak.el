@@ -1443,6 +1443,94 @@ Set by \\[tts-set-punctuations].")
 (defalias 'tts-define-voice-from-acss #'ignore)
 (defalias 'tts-voice-defined-p (lambda (&rest _) t))
 
+(defun tts-default-voice-capabilities ()
+  "Return the compatibility capability descriptor for an unknown adapter."
+  '(:adapter unknown
+    :source compatibility
+    :family-selection unsupported
+    :families nil
+    :generic-families nil
+    :dimensions nil
+    :parameters nil))
+
+(defvar tts-voice-capabilities-function
+  #'tts-default-voice-capabilities
+  "Function returning the active speech adapter's voice capabilities.
+
+The returned data is a plist.  `:adapter' identifies the adapter;
+`:source' says whether its data is static, discovered, or a compatibility
+fallback; `:family-selection' is `enumerated', `free-form', or
+`unsupported'; `:families' contains entries of the form
+(ID :label LABEL ...); `:dimensions' lists supported normalized ACSS
+dimensions; and `:parameters' describes their accepted values.")
+
+(defun tts-voice-capabilities ()
+  "Return an isolated copy of the active adapter's voice capabilities."
+  (let ((capabilities
+         (and
+          (functionp tts-voice-capabilities-function)
+          (funcall tts-voice-capabilities-function))))
+    (copy-tree
+     (if (and (listp capabilities) (plist-get capabilities :adapter))
+         capabilities
+       (tts-default-voice-capabilities)))))
+
+(defun tts--voice-family-name (value)
+  "Return a comparison name for voice-family VALUE."
+  (cond
+   ((symbolp value) (symbol-name value))
+   ((stringp value) value)
+   (t nil)))
+
+(defun tts--voice-family-name-equal-p (left right)
+  "Return non-nil when voice-family names LEFT and RIGHT are equal."
+  (let ((left-name (tts--voice-family-name left))
+        (right-name (tts--voice-family-name right)))
+    (and
+     left-name right-name
+     (string-equal
+      (downcase left-name)
+      (downcase right-name)))))
+
+(defun tts-voice-family-capability (family &optional capabilities)
+  "Return the family entry matching FAMILY in CAPABILITIES.
+
+Exact identifiers and aliases win.  Generic family names such as `female'
+then select the first entry advertising that generic characteristic."
+  (let* ((capabilities (or capabilities (tts-voice-capabilities)))
+         (families (plist-get capabilities :families))
+         exact)
+    (dolist (entry families)
+      (when
+          (or
+           (tts--voice-family-name-equal-p family (car entry))
+           (cl-some
+            (lambda (alias)
+              (tts--voice-family-name-equal-p family alias))
+            (plist-get (cdr entry) :aliases)))
+        (setq exact entry)))
+    (or
+     exact
+     (cl-find-if
+      (lambda (entry)
+        (cl-some
+         (lambda (generic)
+           (tts--voice-family-name-equal-p family generic))
+         (plist-get (cdr entry) :generic)))
+      families))))
+
+(defun tts-voice-family-id (family &optional capabilities)
+  "Return the canonical adapter family identifier matching FAMILY."
+  (car-safe (tts-voice-family-capability family capabilities)))
+
+(defun tts-voice-parameter-capability (dimension &optional capabilities)
+  "Return the parameter descriptor for ACSS DIMENSION."
+  (assq
+   dimension
+   (plist-get
+    (or capabilities (tts-voice-capabilities))
+    :parameters)))
+
 (defun tts-voice-reset-code ()
   "Return voice reset code."
   (tts-get-voice-command tts-default-voice))

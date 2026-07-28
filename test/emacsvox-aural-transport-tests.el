@@ -373,6 +373,86 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (should (eq (plist-get degradation :dimension) 'richness))
       (should (eq (plist-get degradation :adapter) 'limited)))))
 
+(ert-deftest emacsvox-aural-transport-uses-adapter-owned-voice-capabilities ()
+  "The aural layer consumes the descriptor selected by the TTS adapter."
+  (let ((tts-voice-capabilities-function
+         (lambda ()
+           '(:adapter selected
+             :source static
+             :family-selection unsupported
+             :dimensions (average-pitch)))))
+    (let ((capabilities (emacsvox-aural-active-voice-capabilities)))
+      (should (eq (plist-get capabilities :adapter) 'selected))
+      (should (equal (plist-get capabilities :dimensions)
+                     '(average-pitch))))))
+
+(ert-deftest emacsvox-aural-transport-portable-family-follows-synth ()
+  "A generic family is realized by the active adapter on every compile."
+  (let ((cases
+         '(((:adapter outloud
+             :family-selection enumerated
+             :families
+             ((outloud-v2 :label "Adult female 1" :generic (female)))
+             :dimensions (family))
+            . outloud-v2)
+           ((:adapter dectalk
+             :family-selection enumerated
+             :families
+             ((betty :label "Beautiful Betty" :generic (female)))
+             :dimensions (family))
+            . betty))))
+    (dolist (case cases)
+      (let (generated)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+              (lambda () (copy-tree (car case))))
+             ((symbol-function 'voice-from-acss)
+              (lambda (style)
+                (setq generated style)
+                'generated-family))
+             ((symbol-function 'tts-get-voice-command)
+              (lambda (_) "<family>")))
+          (let ((compiled
+                 (emacsvox-aural-compile-voice-style
+                  '(:family female))))
+            (should
+             (eq
+              (plist-get
+               (emacsvox-aural-compiled-voice-style compiled)
+               :family)
+              (cdr case)))
+            (should (equal
+                     (emacsvox-aural-compiled-voice-command compiled)
+                     "<family>"))))
+        (should (eq (acss-family generated) (cdr case)))))))
+
+(ert-deftest emacsvox-aural-transport-degrades-unavailable-exact-family ()
+  "An adapter-specific family falls back visibly after a synth change."
+  (cl-letf
+      (((symbol-function 'emacsvox-aural-active-voice-capabilities)
+        (lambda ()
+          '(:adapter dectalk
+            :family-selection enumerated
+            :families
+            ((paul :generic (male)) (betty :generic (female)))
+            :dimensions (family)))))
+    (let* ((compiled
+            (emacsvox-aural-compile-voice-style
+             '(:family outloud-v7)))
+           (degradation
+            (car (emacsvox-aural-compiled-voice-degradations compiled))))
+      (should-not (emacsvox-aural-compiled-voice-command compiled))
+      (should-not
+       (plist-get
+        (emacsvox-aural-compiled-voice-style compiled)
+        :family))
+      (should
+       (eq (plist-get degradation :reason)
+           'unavailable-voice-family))
+      (should (eq (plist-get degradation :adapter) 'dectalk))
+      (should (eq (plist-get degradation :requested) 'outloud-v7))
+      (should (equal (plist-get degradation :available) '(paul betty))))))
+
 (ert-deftest emacsvox-aural-spatial-reduces-azimuth-to-stereo ()
   "Listener-relative azimuth uses the documented sine stereo fallback."
   (should
