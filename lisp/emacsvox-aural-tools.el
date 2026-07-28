@@ -78,6 +78,7 @@
 (declare-function emacsvox-aural-voice-palettes-status
                   "emacsvox-aural-voice-palettes" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
+(declare-function emacsvox-speak-mode-line "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function tts--protocol-queue-code "tts-speak" (code))
@@ -99,6 +100,26 @@
      'emacsvox-aural-sound-pack-cues-mode
      'emacsvox-aural-scheme-editor-mode
      'emacsvox-aural-simple-editor-mode)))
+
+(defun emacsvox-aural-quit (&optional kill)
+  "Dismiss the current aural interface and report its destination.
+
+When KILL is non-nil, kill the interface buffer as `quit-window' would."
+  (interactive)
+  (unless (emacsvox-aural-tools--interface-buffer-p)
+    (user-error "This is not an aural interface buffer"))
+  (let ((facts
+         '(:role aural-interface :events (aural-interface-closed)))
+        (context
+         (emacsvox-aural-capture-context 'aural-tools 'state-change)))
+    (prog1
+        (quit-window kill)
+      (let ((emacsvox-aural-submission-facts facts)
+            (emacsvox-aural-submission-context context)
+            (emacsvox-aural-submission-module 'aural-tools)
+            (emacsvox-aural-submission-occasion 'state-change))
+        (emacsvox-icon 'close-object)
+        (emacsvox-speak-mode-line)))))
 
 (defun emacsvox-aural-tools--remember-source-buffer (&optional buffer)
   "Remember BUFFER as the source for aural inspection when appropriate."
@@ -505,6 +526,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
        ("SPC" . emacsvox-aural-semantics-speak-current)
        ("g" . emacsvox-aural-semantics-refresh)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-semantics-help)))
   (define-key
    emacsvox-aural-semantics-mode-map
@@ -1465,6 +1487,10 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
  emacsvox-aural-schemes-mode-map
  (kbd "h")
  #'emacsvox-aural)
+(define-key
+ emacsvox-aural-schemes-mode-map
+ (kbd "q")
+ #'emacsvox-aural-quit)
 
 (defun emacsvox-list-aural-schemes ()
   "Open the accessible manager for registered aural schemes."
@@ -3241,6 +3267,7 @@ SCOPE is `personal', `session', or `buffer'."
        ("g" . emacsvox-aural-feature-fragments-refresh)
        ("s" . emacsvox-aural-list-schemes)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-feature-fragments-help)))
   (define-key
    emacsvox-aural-feature-fragments-mode-map
@@ -3602,6 +3629,7 @@ SCOPE is `personal', `session', or `buffer'."
        ("v" . emacsvox-aural-home-toggle-face-presentation)
        ("D" . emacsvox-aural-doctor)
        ("g" . emacsvox-aural-home-refresh)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-home-help)))
   (define-key
    emacsvox-aural-home-mode-map

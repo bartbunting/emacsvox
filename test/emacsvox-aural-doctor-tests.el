@@ -118,6 +118,10 @@
            (eq
             (lookup-key emacsvox-aural-doctor-mode-map (kbd "h"))
             #'emacsvox-aural))
+          (should
+           (eq
+            (lookup-key emacsvox-aural-doctor-mode-map (kbd "q"))
+            #'emacsvox-aural-quit))
           (cl-letf
               (((symbol-function 'tts-speak)
                 (lambda (text) (push text spoken)))

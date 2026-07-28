@@ -1048,7 +1048,10 @@ complete row, =RET= performs its primary operation, =x= always explains the
 remembered source, and =?= displays and speaks help.  Top, bottom, first
 column, and last column boundaries are announced instead of silently
 repeating a value.  Every routed aural manager and editor binds =h= to return
-home without losing the remembered source.
+home without losing the remembered source.  Every aural manager, browser, and
+editor binds =q= to a shared semantic dismissal command that presents
+=close-object= and speaks the destination mode line.  Editors retain their
+unsaved-change confirmation before that dismissal feedback.
 
 ** Accessible semantic-list contract
 

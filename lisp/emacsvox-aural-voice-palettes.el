@@ -763,6 +763,7 @@
        ("v" . emacsvox-aural-voice-palettes-describe)
        ("g" . emacsvox-aural-voice-palettes-refresh)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-voice-palettes-help)))
   (define-key
    emacsvox-aural-voice-palettes-mode-map

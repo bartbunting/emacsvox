@@ -863,6 +863,7 @@ PATH protects completion from invalid inheritance cycles."
        ("o" . emacsvox-aural-sound-packs-open-directory)
        ("g" . emacsvox-aural-sound-packs-refresh)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-sound-packs-help)))
   (define-key
    emacsvox-aural-sound-packs-mode-map
@@ -924,6 +925,7 @@ PATH protects completion from invalid inheritance cycles."
        ("g" . emacsvox-aural-sound-pack-cues-refresh)
        ("s" . emacsvox-aural-list-sound-packs)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-sound-pack-cues-help)))
   (define-key
    emacsvox-aural-sound-pack-cues-mode-map

@@ -36,6 +36,18 @@
      :owner core
      :roles (field)
      :value-type symbol)
+    (aural-interface
+     :kind role
+     :summary "An Emacsvox aural manager, browser, or editor"
+     :owner core
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (aural-interface-closed
+     :kind event
+     :summary "An Emacsvox aural interface was dismissed"
+     :owner core
+     :occasions (state-change)
+     :phases (before content after))
     (unread
      :kind state
      :summary "An item has not yet been read"

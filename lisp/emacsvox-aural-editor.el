@@ -1082,7 +1082,7 @@ LABEL identifies the speech or cue being edited."
       (or
        (not emacsvox-aural-editor-dirty)
        (yes-or-no-p "Discard unsaved aural editor changes? "))
-    (quit-window t)))
+    (emacsvox-aural-quit t)))
 
 (defvar emacsvox-aural-scheme-editor-mode-map
   (let ((map (make-sparse-keymap)))

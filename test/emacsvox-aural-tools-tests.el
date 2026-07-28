@@ -15,6 +15,7 @@
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-simple-editor)
+(require 'emacsvox-aural-voice-palettes)
 
 (defmacro emacsvox-test--with-aural-tools (&rest body)
   "Run BODY with isolated scheme, override, and training state."
@@ -806,6 +807,7 @@
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
                      ("g" . emacsvox-aural-home-refresh)
+                     ("q" . emacsvox-aural-quit)
                      ("?" . emacsvox-aural-home-help)))
                 (should
                  (eq
@@ -887,6 +889,72 @@
         emacsvox-aural-simple-editor-mode-map))
     (should
      (eq (lookup-key map (kbd "h")) #'emacsvox-aural))))
+
+(ert-deftest emacsvox-aural-interfaces-provide-dismissal ()
+  "Aural managers use shared exit feedback and editors retain confirmation."
+  (dolist
+      (map
+       (list
+        emacsvox-aural-home-mode-map
+        emacsvox-aural-semantics-mode-map
+        emacsvox-aural-schemes-mode-map
+        emacsvox-aural-feature-fragments-mode-map
+        emacsvox-aural-voice-palettes-mode-map))
+    (should
+     (eq (lookup-key map (kbd "q")) #'emacsvox-aural-quit)))
+  (dolist
+      (map
+       (list
+        emacsvox-aural-scheme-editor-mode-map
+        emacsvox-aural-simple-editor-mode-map))
+    (should
+     (eq
+      (lookup-key map (kbd "q"))
+      #'emacsvox-aural-editor-quit))))
+
+(ert-deftest emacsvox-aural-quit-presents-mode-scoped-close-feedback ()
+  "Dismissing an aural interface cues its close and speaks the destination."
+  (let (events)
+    (with-temp-buffer
+      (emacsvox-aural-feature-fragments-mode)
+      (cl-letf
+          (((symbol-function 'quit-window)
+            (lambda (&optional kill)
+              (push (list 'quit kill) events)
+              'dismissed))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon)
+              (push
+               (list
+                'icon icon emacsvox-aural-submission-facts
+                (plist-get emacsvox-aural-submission-context :module)
+                emacsvox-aural-submission-occasion)
+               events)))
+           ((symbol-function 'emacsvox-speak-mode-line)
+            (lambda () (push 'mode-line events))))
+        (should (eq (emacsvox-aural-quit) 'dismissed))))
+    (should
+     (equal
+      (nreverse events)
+      '((quit nil)
+        (icon close-object
+         (:role aural-interface :events (aural-interface-closed))
+         aural-tools state-change)
+        mode-line)))))
+
+(ert-deftest emacsvox-aural-editor-quit-confirms-before-shared-dismissal ()
+  "Dirty editors still confirm before using shared aural exit feedback."
+  (let ((emacsvox-aural-editor-dirty t)
+        calls)
+    (cl-letf
+        (((symbol-function 'yes-or-no-p) (lambda (&rest _) nil))
+         ((symbol-function 'emacsvox-aural-quit)
+          (lambda (&optional kill) (push kill calls))))
+      (emacsvox-aural-editor-quit)
+      (should-not calls)
+      (setq emacsvox-aural-editor-dirty nil)
+      (emacsvox-aural-editor-quit)
+      (should (equal calls '(t))))))
 
 (ert-deftest emacsvox-aural-tools-expose-discoverable-command-namespace ()
   "Preferred aural command names coexist with established compatibility names."

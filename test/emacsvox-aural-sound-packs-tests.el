@@ -108,6 +108,7 @@
                ("o" . emacsvox-aural-sound-packs-open-directory)
                ("g" . emacsvox-aural-sound-packs-refresh)
                ("h" . emacsvox-aural)
+               ("q" . emacsvox-aural-quit)
                ("?" . emacsvox-aural-sound-packs-help)))
           (should
            (eq
@@ -186,6 +187,7 @@
                ("g" . emacsvox-aural-sound-pack-cues-refresh)
                ("s" . emacsvox-aural-list-sound-packs)
                ("h" . emacsvox-aural)
+               ("q" . emacsvox-aural-quit)
                ("?" . emacsvox-aural-sound-pack-cues-help)))
           (should
            (eq

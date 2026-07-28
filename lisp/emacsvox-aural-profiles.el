@@ -402,6 +402,7 @@
        ("d" . emacsvox-aural-profiles-delete)
        ("g" . emacsvox-aural-profiles-refresh)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-profiles-help)))
   (define-key
    emacsvox-aural-profiles-mode-map

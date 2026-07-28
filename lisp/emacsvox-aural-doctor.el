@@ -469,6 +469,7 @@
        ("r" . emacsvox-aural-doctor-repair-current)
        ("g" . emacsvox-aural-doctor-refresh)
        ("h" . emacsvox-aural)
+       ("q" . emacsvox-aural-quit)
        ("?" . emacsvox-aural-doctor-help)))
   (define-key
    emacsvox-aural-doctor-mode-map
