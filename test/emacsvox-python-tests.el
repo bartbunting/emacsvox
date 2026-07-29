@@ -71,8 +71,9 @@
            'python-indent-dedent-line-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone)
-                 (lambda (&rest _) (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)
                    (push (list 'character character) events))))
@@ -92,7 +93,7 @@
       (should
        (equal
         (nreverse events)
-        '(tone (character 120) original))))))
+        '((edit deletion) (character 120) original))))))
 
 (ert-deftest emacsvox-python-whitespace-backspace-reports-indent ()
   "Whitespace backspace reports indentation after one original call."
@@ -102,8 +103,9 @@
            'python-indent-dedent-line-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone)
-                 (lambda (&rest _) (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'tts-notify)
                  (lambda (text) (push (list 'notify text) events))))
         (should
@@ -120,7 +122,7 @@
       (should
        (equal
         (nreverse events)
-        '(tone original (notify "Indent 3 ")))))))
+        '((edit deletion) original (notify "Indent 3 ")))))))
 
 (ert-deftest emacsvox-python-shell-feedback-cues-only-outer-command ()
   "Nested send operations produce one cue for the interactive command."

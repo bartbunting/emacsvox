@@ -152,7 +152,7 @@
   "Speak character you're deleting."
   (if (ems-interactive-p 'python-indent-dedent-line-backspace)
       (let ((ws (= 32 (char-syntax (preceding-char)))))
-        (tts-tone 500 100 'force)
+        (emacsvox-speak-edit-operation 'deletion)
         (unless ws
           (emacsvox-speak-this-char (preceding-char)))
         (prog1 (funcall orig-fun arg)
