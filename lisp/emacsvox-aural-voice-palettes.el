@@ -14,6 +14,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-description)
 (require 'emacsvox-aural-preview)
 
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
@@ -317,7 +318,7 @@ replaces live state.  Return the value of MUTATION."
   (let* ((prompt
           (format
            "%s, 0 through 9; blank means default%s: "
-           (emacsvox-aural-tools--humanize dimension)
+           (emacsvox-aural-humanize dimension)
            (if current (format " [%s]" current) "")))
          (answer (string-trim (read-string prompt))))
     (cond
@@ -383,7 +384,7 @@ replaces live state.  Return the value of MUTATION."
          (summary
           (format
            "%s. %s. %s. Parent %s. %d direct voices, %d effective. %s. %s"
-           (emacsvox-aural-tools--humanize id)
+           (emacsvox-aural-humanize id)
            (if (eq id (emacsvox-aural-voice-palettes--active-id))
                "active"
              "inactive")
@@ -897,7 +898,7 @@ replaces live state.  Return the value of MUTATION."
   "Return comparison TEXT labelled with VOICE."
   (format
    "%s voice. %s"
-   (capitalize (emacsvox-aural-tools--humanize voice))
+   (capitalize (emacsvox-aural-humanize voice))
    text))
 
 (defun emacsvox-aural-voice-palettes--queue-compiled-preview
@@ -1069,7 +1070,7 @@ Return the compiled voice without dispatching the speech queue."
   "Return the user-facing tuner label for DIMENSION."
   (if (eq dimension 'family)
       "Base Voice (ACSS Family)"
-    (capitalize (emacsvox-aural-tools--humanize dimension))))
+    (capitalize (emacsvox-aural-humanize dimension))))
 
 (defun emacsvox-aural-voice-tuner--family-description
     (family &optional effective)
@@ -1106,7 +1107,7 @@ Return the compiled voice without dispatching the speech queue."
    (if (emacsvox-aural-voice-tuner--supported-p dimension)
        "supported"
      "unsupported")
-   (emacsvox-aural-tools--humanize
+   (emacsvox-aural-humanize
     (emacsvox-aural-voice-tuner--adapter))))
 
 (defun emacsvox-aural-voice-tuner--effective-value (dimension)

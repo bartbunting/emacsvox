@@ -16,6 +16,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-description)
 
 (declare-function emacsvox-aural-editor-open-rule
                   "emacsvox-aural-editor"
@@ -133,7 +134,7 @@
     ('cue
      (format
       "earcon %s"
-      (emacsvox-aural-tools--humanize
+      (emacsvox-aural-humanize
        (or (plist-get action :cue)
            (plist-get action :name)))))
     ('speech
@@ -181,7 +182,7 @@
          (format
           "remove %s"
           (mapconcat
-           #'emacsvox-aural-tools--humanize ids ", "))
+           #'emacsvox-aural-humanize ids ", "))
          parts))
       (when-let* ((actions (plist-get phase :prepend)))
         (push
@@ -216,7 +217,7 @@
         (push
          (format
           "voice %s"
-          (emacsvox-aural-tools--humanize
+          (emacsvox-aural-humanize
            (or (plist-get content :voice) 'default)))
          parts))
       (when (plist-member content :volume)
@@ -251,7 +252,7 @@
 
 (defun emacsvox-aural-overrides--target-summary (record)
   "Return concise selector text for override RECORD."
-  (emacsvox-aural-tools--selector-description
+  (emacsvox-aural-describe-selector
    (emacsvox-aural-rule-selector
     (emacsvox-aural-override-record-compiled record))))
 
@@ -370,7 +371,7 @@
           (format
            "%s scope. %s. Target %s. Changes %s. %s. %s."
            (emacsvox-aural-override-record-scope record)
-           (emacsvox-aural-tools--humanize (plist-get rule :id))
+           (emacsvox-aural-humanize (plist-get rule :id))
            (emacsvox-aural-overrides--target-summary record)
            (emacsvox-aural-overrides--change-summary record)
            (if (emacsvox-aural-overrides--enabled-p record)

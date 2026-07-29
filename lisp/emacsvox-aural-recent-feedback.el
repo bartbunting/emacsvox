@@ -16,6 +16,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-description)
 
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
@@ -104,18 +105,18 @@
     (cond
      ((not (emacsvox-aural-concrete-content-speak content)) "suppressed")
      ((null request) "default")
-     ((symbolp request) (emacsvox-aural-tools--humanize request))
+     ((symbolp request) (emacsvox-aural-humanize request))
      ((emacsvox-aural-voice-style-p request)
       (cond
        ((plist-get request :preset)
         (format
          "%s preset"
-         (emacsvox-aural-tools--humanize
+         (emacsvox-aural-humanize
           (plist-get request :preset))))
        ((plist-get request :family)
         (format
          "%s base voice"
-         (emacsvox-aural-tools--humanize
+         (emacsvox-aural-humanize
           (plist-get request :family))))
        (t "custom voice")))
      (t (format "%s" request)))))
@@ -125,7 +126,7 @@
   (if-let* ((cues (emacsvox-aural-recent-feedback--cues record)))
       (mapconcat
        (lambda (action)
-         (emacsvox-aural-tools--humanize
+         (emacsvox-aural-humanize
           (emacsvox-aural-concrete-action-cue action)))
        cues ", ")
     "none"))
@@ -184,7 +185,7 @@
        (or
         (emacsvox-aural-presentation-record-source-buffer-name record)
         "unknown"))
-      (emacsvox-aural-tools--humanize
+      (emacsvox-aural-humanize
        (or (plist-get context :occasion) 'unknown))
       (emacsvox-aural-recent-feedback--voice record)
       (emacsvox-aural-recent-feedback--cue-summary record)
@@ -432,4 +433,3 @@ buffer names, and positions."
 
 (provide 'emacsvox-aural-recent-feedback)
 ;;; emacsvox-aural-recent-feedback.el ends here
-

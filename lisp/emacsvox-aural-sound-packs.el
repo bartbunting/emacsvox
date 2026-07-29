@@ -18,6 +18,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-description)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-sounds)
 
@@ -160,7 +161,7 @@
      (delq
       nil
       (list
-       (format "%s." (emacsvox-aural-tools--humanize id))
+       (format "%s." (emacsvox-aural-humanize id))
        (format
         "%s %s %s pack."
         (if (eq id emacsvox-sounds-current-pack) "Active" "Inactive")
@@ -171,15 +172,15 @@
        (when-let* ((parent (emacsvox-aural-resource-pack-parent pack)))
          (format
           "Parent %s."
-          (emacsvox-aural-tools--humanize parent)))
+          (emacsvox-aural-humanize parent)))
        (format "%d native and %d effective assets." direct effective)
        (format
         "Coverage %s."
-        (emacsvox-aural-tools--humanize
+        (emacsvox-aural-humanize
          (emacsvox-aural-sound-packs--profile-status pack)))
        (format
         "Spatialization %s."
-        (emacsvox-aural-tools--humanize
+        (emacsvox-aural-humanize
          (emacsvox-aural-resource-pack-default-spatialization pack)))
        (format "%s." (emacsvox-aural-sound-packs--report-status report))
        (format "%s." (emacsvox-aural-resource-pack-summary pack))))
@@ -428,7 +429,7 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
             (list
              (format
               "%s."
-              (emacsvox-aural-tools--humanize cue))
+              (emacsvox-aural-humanize cue))
              (format
               "%s."
               (emacsvox-aural-sound-cue-detail-availability detail))
@@ -437,13 +438,13 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
                            detail)))
                (format
                 "Provided by %s."
-                (emacsvox-aural-tools--humanize provider)))
+                (emacsvox-aural-humanize provider)))
              (when-let* ((spatial
                           (emacsvox-aural-sound-cue-detail-spatialization
                            detail)))
                (format
                 "Spatialization %s."
-                (emacsvox-aural-tools--humanize spatial)))
+                (emacsvox-aural-humanize spatial)))
              (format
               "%s."
               (emacsvox-aural-sound-cue-detail-intent detail))))
@@ -578,7 +579,7 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
     (let ((spoken
            (format
             "Sound pack %s, %s."
-            (emacsvox-aural-tools--humanize pack-id)
+            (emacsvox-aural-humanize pack-id)
             status)))
       (if (fboundp 'tts-speak)
           (tts-speak spoken)

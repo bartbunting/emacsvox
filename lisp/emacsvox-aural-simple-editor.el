@@ -15,6 +15,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-editor)
+(require 'emacsvox-aural-description)
 
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function emacsvox-speak-line "emacsvox-speak" ())
@@ -26,7 +27,7 @@
 
 (defun emacsvox-aural-simple-editor--humanize (value)
   "Return VALUE as natural words."
-  (emacsvox-aural-tools--humanize value))
+  (emacsvox-aural-humanize value))
 
 (defun emacsvox-aural-simple-editor--plist-delete (plist property)
   "Return a copy of PLIST without PROPERTY."

@@ -1237,7 +1237,7 @@
            (input (emacsvox-aural-tools--representative-input rule)))
       (should
        (equal
-        (emacsvox-aural-tools--selector-description selector)
+        (emacsvox-aural-describe-selector selector)
         "visual face font lock warning face"))
       (should
        (equal

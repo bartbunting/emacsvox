@@ -17,6 +17,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-description)
 
 (declare-function emacsvox-edit-aural-feature-fragment
                   "emacsvox-aural-editor" (&optional fragment))
@@ -46,7 +47,7 @@
      :summary
      (format
       "Automatically derived %s"
-      (emacsvox-aural-tools--humanize rule-id))
+      (emacsvox-aural-humanize rule-id))
      :facts facts
      :context context
      :source 'automatic)))
@@ -109,7 +110,7 @@
      ((emacsvox-aural-tools--fragment-collection-row-p id)
       (user-error
        "%s is a collection; press TAB or RET to expand or collapse it"
-       (emacsvox-aural-tools--humanize (cdr id))))
+       (emacsvox-aural-humanize (cdr id))))
      (t
       (let ((candidates (emacsvox-aural-feature-fragment-candidates)))
         (unless candidates
@@ -159,8 +160,8 @@
      id
      (vector
       (if (eq emacsvox-aural-feature-fragments-view 'grouped)
-          (format "  %s" (emacsvox-aural-tools--humanize id))
-        (emacsvox-aural-tools--humanize id))
+          (format "  %s" (emacsvox-aural-humanize id))
+        (emacsvox-aural-humanize id))
       (if position (format "enabled %d" (1+ position)) "disabled")
       (emacsvox-aural-tools--fragment-kind entry)
       (format
@@ -193,7 +194,7 @@
     (list
      (emacsvox-aural-tools--fragment-collection-row-id collection)
      (vector
-      (capitalize (emacsvox-aural-tools--humanize collection))
+      (capitalize (emacsvox-aural-humanize collection))
       (format "%d of %d enabled" enabled (length ids))
       "collection"
       (number-to-string rules)
@@ -254,9 +255,9 @@
          (report (emacsvox-aural-validate-feature-fragment fragment)))
     (format
      "%s. %s %s presentation option. %s. %s. %d %s. %s."
-     (emacsvox-aural-tools--humanize fragment)
+     (emacsvox-aural-humanize fragment)
      (emacsvox-aural-tools--fragment-kind entry)
-     (emacsvox-aural-tools--humanize
+     (emacsvox-aural-humanize
       (emacsvox-aural-feature-fragment-collection entry))
      (if position
          (format "Enabled at position %d" (1+ position))
@@ -282,7 +283,7 @@
            emacsvox-aural-feature-fragments-collapsed-collections)))
     (format
      "%s collection. %d of %d options enabled. %s."
-     (emacsvox-aural-tools--humanize collection)
+     (emacsvox-aural-humanize collection)
      enabled
      (length ids)
      (if collapsed "Collapsed" "Expanded"))))
@@ -415,7 +416,7 @@
       (princ
        (format
          "Collection: %s\n"
-         (emacsvox-aural-tools--humanize
+         (emacsvox-aural-humanize
           (emacsvox-aural-feature-fragment-collection entry))))
       (princ
        (format "Summary: %s\n"
@@ -437,7 +438,7 @@
        (format
         "Source: %s\n\nPresentations\n\n"
         (emacsvox-aural-feature-fragment-entry-source entry)))
-      (emacsvox-aural-tools--print-scheme-rules
+      (emacsvox-aural-print-rules
        (emacsvox-aural-scheme-rules compiled))
       (princ
        (format
@@ -661,7 +662,7 @@ are submitted, so speech cannot mask the auditioned cues."
      "Auditioning %s"
      (mapconcat
       (lambda (cue)
-        (emacsvox-aural-tools--humanize
+        (emacsvox-aural-humanize
          (emacsvox-aural-concrete-action-cue cue)))
       cues ", "))
     (list :fragment fragment :example example :cues cues :concrete concrete)))
@@ -725,7 +726,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
                "%s preview. %s. %s occasion."
                (if live "Live source context" "Simulated example")
                summary
-               (emacsvox-aural-tools--humanize
+               (emacsvox-aural-humanize
                 (or (plist-get context :occasion) 'continuous)))))
         (emacsvox-aural-preview-message "%s" announcement)
         (when example
@@ -750,7 +751,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
     ('cue
      (format
       "%s earcon"
-      (emacsvox-aural-tools--humanize
+      (emacsvox-aural-humanize
        (emacsvox-aural-action-cue action))))
     ('speech
      (if-let* ((text (emacsvox-aural-action-text action)))
@@ -761,7 +762,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
       "%s second pause"
       (emacsvox-aural-action-duration action)))
     (_
-     (emacsvox-aural-tools--humanize
+     (emacsvox-aural-humanize
       (emacsvox-aural-action-kind action)))))
 
 (defun emacsvox-aural-tools--fragment-preview-output-summary
@@ -796,7 +797,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
          (format
           "content voice %s"
           (if (symbolp voice)
-              (emacsvox-aural-tools--humanize voice)
+              (emacsvox-aural-humanize voice)
             voice))))))
     (when (not (emacsvox-aural-content-style-speak content))
       (setq parts (append parts (list "content muted"))))
@@ -817,8 +818,8 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
           (or (plist-get context :occasion) 'continuous)))
     (format
      "%s, %s"
-     (emacsvox-aural-tools--humanize scope)
-     (emacsvox-aural-tools--humanize occasion))))
+     (emacsvox-aural-humanize scope)
+     (emacsvox-aural-humanize occasion))))
 
 (defun emacsvox-aural-tools--fragment-preview-example-kind (example)
   "Return the user-facing provenance kind of preview EXAMPLE."
@@ -836,7 +837,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
    (vector
     (emacsvox-aural-feature-fragment-example-summary example)
     (emacsvox-aural-tools--fragment-preview-example-kind example)
-    (emacsvox-aural-tools--humanize
+    (emacsvox-aural-humanize
      (emacsvox-aural-feature-fragment-example-rule example))
     (emacsvox-aural-tools--fragment-preview-context-summary example)
     (emacsvox-aural-tools--fragment-preview-output-summary
@@ -904,7 +905,7 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
            "%s. %s example. Rule %s. Context %s. %s. %s preview."
            (emacsvox-aural-feature-fragment-example-summary example)
            (emacsvox-aural-tools--fragment-preview-example-kind example)
-           (emacsvox-aural-tools--humanize
+           (emacsvox-aural-humanize
             (emacsvox-aural-feature-fragment-example-rule example))
            (emacsvox-aural-tools--fragment-preview-context-summary example)
            (emacsvox-aural-tools--fragment-preview-output-summary

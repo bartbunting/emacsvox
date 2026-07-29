@@ -15,6 +15,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-description)
 
 (defun emacsvox-aural-profiles--ids ()
   "Return registered profile identifiers in display order."
@@ -134,12 +135,12 @@
          (summary
           (format
            "%s. %s. Scheme %s. Options %s. Sound %s. Voice %s. Spatial %s. %s"
-           (emacsvox-aural-tools--humanize id)
+           (emacsvox-aural-humanize id)
            (emacsvox-aural-profile-status id)
            (plist-get data :scheme)
            (if-let* ((fragments (plist-get data :feature-fragments)))
                (mapconcat
-                #'emacsvox-aural-tools--humanize fragments ", ")
+                #'emacsvox-aural-humanize fragments ", ")
              "none")
            (or (plist-get data :sound-pack) "from scheme")
            (or (plist-get data :voice-palette) "from scheme")

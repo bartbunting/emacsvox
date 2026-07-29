@@ -18,6 +18,7 @@
 (require 'tabulated-list)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-description)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-aural-validation)
 (require 'emacsvox-aural-inspection)
@@ -114,6 +115,14 @@
   #'emacsvox-aural-preview-stop)
 (defalias 'emacsvox-aural-tools--preview-message
   #'emacsvox-aural-preview-message)
+(defalias 'emacsvox-aural-tools--humanize
+  #'emacsvox-aural-humanize)
+(defalias 'emacsvox-aural-tools--selector-description
+  #'emacsvox-aural-describe-selector)
+(defalias 'emacsvox-aural-tools--print-scheme-rules
+  #'emacsvox-aural-print-rules)
+(defalias 'emacsvox-aural-tools--format-action
+  #'emacsvox-aural-describe-concrete-action)
 
 (defun emacsvox-aural-tools--interface-buffer-p (&optional buffer)
   "Return non-nil when BUFFER is an aural manager or editor buffer."
@@ -368,9 +377,9 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
          (summary
           (format
            "%s. %s, owner %s. %s"
-           (emacsvox-aural-tools--humanize semantic)
+           (emacsvox-aural-humanize semantic)
            (emacsvox-aural-semantic-kind record)
-           (emacsvox-aural-tools--humanize
+           (emacsvox-aural-humanize
             (emacsvox-aural-semantic-owner record))
            (emacsvox-aural-semantic-summary record))))
     (if (fboundp 'tts-speak)
@@ -615,77 +624,6 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (when (derived-mode-p 'emacsvox-aural-schemes-mode)
         (emacsvox-aural-schemes-refresh scheme)))))
 
-(defun emacsvox-aural-tools--selector-description (selector)
-  "Return a concise natural description of compiled SELECTOR."
-  (let (parts)
-    (when-let* ((role (emacsvox-aural-selector-role selector)))
-      (push
-       (format "role %s" (emacsvox-aural-tools--humanize role))
-       parts))
-    (dolist (event (emacsvox-aural-selector-events selector))
-      (push
-       (format "event %s" (emacsvox-aural-tools--humanize event))
-       parts))
-    (dolist (state (emacsvox-aural-selector-states selector))
-      (push
-       (format "state %s" (emacsvox-aural-tools--humanize state))
-       parts))
-    (dolist (attribute (emacsvox-aural-selector-attributes selector))
-      (push
-       (format
-        "%s %s"
-        (emacsvox-aural-tools--humanize (car attribute))
-        (emacsvox-aural-tools--humanize (cdr attribute)))
-       parts))
-    (dolist
-        (attribute
-         (emacsvox-aural-selector-required-attributes selector))
-      (push
-       (format
-        "%s present"
-        (emacsvox-aural-tools--humanize attribute))
-       parts))
-    (when-let* ((module (emacsvox-aural-selector-module selector)))
-      (push
-       (format "module %s" (emacsvox-aural-tools--humanize module))
-       parts))
-    (when-let* ((mode (emacsvox-aural-selector-mode selector)))
-      (push
-       (format "mode %s" (emacsvox-aural-tools--humanize mode))
-       parts))
-    (when-let* ((occasion (emacsvox-aural-selector-occasion selector)))
-      (push
-       (format
-        "occasion %s"
-        (emacsvox-aural-tools--humanize occasion))
-       parts))
-    (when-let* ((cue (emacsvox-aural-selector-legacy-cue selector)))
-      (push
-       (format "legacy cue %s" (emacsvox-aural-tools--humanize cue))
-       parts))
-    (when-let* ((face (emacsvox-aural-selector-legacy-face selector)))
-      (push
-       (format "visual face %s" (emacsvox-aural-tools--humanize face))
-       parts))
-    (when (emacsvox-aural-selector-legacy-personality selector)
-      (push "legacy voice property" parts))
-    (if parts
-        (string-join (nreverse parts) ", ")
-      "all content")))
-
-(defun emacsvox-aural-tools--print-scheme-rules (rules)
-  "Print natural descriptions of compiled presentation RULES."
-  (if (null rules)
-      (princ "None.\n")
-    (dolist (rule rules)
-      (princ
-       (format
-        "%s%s - applies to %s\n"
-        (emacsvox-aural-rule-id rule)
-        (if (emacsvox-aural-rule-enabled rule) "" " (disabled)")
-        (emacsvox-aural-tools--selector-description
-         (emacsvox-aural-rule-selector rule)))))))
-
 (defun emacsvox-aural-tools--scheme-spoken-summary (scheme)
   "Return a concise spoken summary of SCHEME."
   (let* ((entry (emacsvox-aural-scheme-entry scheme))
@@ -702,7 +640,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
      (delq
       nil
       (list
-       (format "%s." (emacsvox-aural-tools--humanize scheme))
+       (format "%s." (emacsvox-aural-humanize scheme))
        (format
         "%s%s scheme."
         (if (eq scheme emacsvox-aural-active-scheme) "Active " "")
@@ -711,11 +649,11 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
        (when parent
          (format
           "Based on %s."
-          (emacsvox-aural-tools--humanize parent)))
+          (emacsvox-aural-humanize parent)))
        (when pack
          (format
           "Sound pack %s."
-          (emacsvox-aural-tools--humanize pack)))
+          (emacsvox-aural-humanize pack)))
        (format
         "%d effective %s."
         count
@@ -842,14 +780,14 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
           'voice-palette scheme)
          "none")))
       (princ "\nDirect presentations\n\n")
-      (emacsvox-aural-tools--print-scheme-rules direct)
+      (emacsvox-aural-print-rules direct)
       (princ "\nInherited presentations\n\n")
-      (emacsvox-aural-tools--print-scheme-rules inherited)
+      (emacsvox-aural-print-rules inherited)
       (princ
        (format
         "\nEffective presentation order (%d total)\n\n"
         (length effective)))
-      (emacsvox-aural-tools--print-scheme-rules effective)
+      (emacsvox-aural-print-rules effective)
       (princ
        (format
         "\nValidation: %s\n"
@@ -1190,52 +1128,6 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
       :position
       (emacsvox-aural-presentation-record-source-position record)))))
 
-(defun emacsvox-aural-tools--format-action (action)
-  "Return a concise description of concrete ACTION."
-  (let* ((balance (emacsvox-aural-concrete-action-balance action))
-         (anchor
-          (or (emacsvox-aural-concrete-action-anchor action) 'undivided))
-         (spatial
-         (if (numberp balance)
-              (format
-               ", balance %.3f (%s)"
-               balance
-               (emacsvox-aural-concrete-action-spatial-capability action))
-            ""))
-         (volume
-          (when-let* ((requested
-                       (emacsvox-aural-concrete-action-requested-volume
-                        action)))
-            (format
-             ", volume %S (%s)"
-             requested
-             (emacsvox-aural-concrete-action-volume-capability action)))))
-    (concat
-     (pcase (emacsvox-aural-concrete-action-kind action)
-       ('cue
-        (format
-         "%s: cue %s -> %s"
-         (emacsvox-aural-concrete-action-id action)
-         (emacsvox-aural-concrete-action-cue action)
-         (emacsvox-aural-concrete-action-resource action)))
-       ('speech
-        (format
-         "%s: speak %S%s"
-         (emacsvox-aural-concrete-action-id action)
-         (emacsvox-aural-concrete-action-text action)
-         (if-let* ((voice
-                    (emacsvox-aural-concrete-action-voice-command action)))
-             (format " using %S" voice)
-           "")))
-       ('pause
-        (format
-         "%s: pause %s"
-         (emacsvox-aural-concrete-action-id action)
-         (emacsvox-aural-concrete-action-duration action))))
-     spatial
-     volume
-     (format ", %s anchored" anchor))))
-
 (defun emacsvox-describe-aural-spatial-capabilities ()
   "Describe current spatial backends and user policy."
   (interactive)
@@ -1258,20 +1150,12 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
     (princ
      "\nUnsupported spatial requests remain audible at the center.\n")))
 
-(defun emacsvox-aural-tools--humanize (value)
-  "Return VALUE in a form suitable for visual and spoken help."
-  (cond
-   ((symbolp value)
-    (replace-regexp-in-string "-" " " (symbol-name value)))
-   ((stringp value) value)
-   (t (format "%s" value))))
-
 (defun emacsvox-aural-tools--facts-description (facts context)
   "Return a concise natural-language description of FACTS in CONTEXT."
   (let* ((input (emacsvox-aural-normalize-input facts context))
          (parts
           (when-let* ((role (emacsvox-aural-input-role input)))
-            (list (emacsvox-aural-tools--humanize role)))))
+            (list (emacsvox-aural-humanize role)))))
     (dolist (attribute (emacsvox-aural-input-attributes input))
       (setq
        parts
@@ -1280,14 +1164,14 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
         (list
          (format
           "%s %s"
-          (emacsvox-aural-tools--humanize (car attribute))
-          (emacsvox-aural-tools--humanize (cdr attribute)))))))
+          (emacsvox-aural-humanize (car attribute))
+          (emacsvox-aural-humanize (cdr attribute)))))))
     (dolist (state (emacsvox-aural-input-states input))
       (setq
        parts
        (append
         parts
-        (list (emacsvox-aural-tools--humanize state)))))
+        (list (emacsvox-aural-humanize state)))))
     (dolist (event (emacsvox-aural-input-events input))
       (setq
        parts
@@ -1296,7 +1180,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
         (list
          (format
           "event %s"
-          (emacsvox-aural-tools--humanize event))))))
+          (emacsvox-aural-humanize event))))))
     (dolist (face (emacsvox-aural-input-legacy-faces input))
       (setq
        parts
@@ -1305,7 +1189,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
         (list
          (format
           "visual face %s"
-          (emacsvox-aural-tools--humanize face))))))
+          (emacsvox-aural-humanize face))))))
     (if parts
         (string-join parts ", ")
       "unclassified content")))
@@ -1319,7 +1203,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
      ('cue
       (format
        "play the %s cue"
-       (emacsvox-aural-tools--humanize
+       (emacsvox-aural-humanize
         (emacsvox-aural-concrete-action-cue action))))
      ('pause
       (format
@@ -1348,7 +1232,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
                     (push
                      (format
                       "%s %s"
-                      (emacsvox-aural-tools--humanize dimension)
+                      (emacsvox-aural-humanize dimension)
                       (or (plist-get voice key) "default"))
                      dimensions))))
               (string-join
@@ -1357,13 +1241,13 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
                   (list
                    (format
                     "the %s preset"
-                    (emacsvox-aural-tools--humanize preset))))
+                    (emacsvox-aural-humanize preset))))
                 (nreverse dimensions))
                ", with ")))
            (voice
             (format
              "the %s voice"
-             (emacsvox-aural-tools--humanize voice)))
+             (emacsvox-aural-humanize voice)))
            (t "its existing voice")))
          (balance (emacsvox-aural-concrete-content-balance content)))
     (if (not (emacsvox-aural-concrete-content-speak content))
@@ -1386,7 +1270,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
      (lambda (entry)
        (format
         "%s, %d %s"
-        (emacsvox-aural-tools--humanize (car entry))
+        (emacsvox-aural-humanize (car entry))
         (cdr entry)
         (if (= (cdr entry) 1) "rule" "rules")))
      matching
@@ -1474,14 +1358,14 @@ selected occasion has no matching rule."
          "Simulation using the current configuration.")
        (format
         "Scheme %s."
-        (emacsvox-aural-tools--humanize scheme))
+        (emacsvox-aural-humanize scheme))
        (format
         "%s."
         (capitalize
          (emacsvox-aural-tools--facts-description facts context)))
        (format
         "Occasion %s."
-        (emacsvox-aural-tools--humanize occasion))
+        (emacsvox-aural-humanize occasion))
        (concat
         (emacsvox-aural-tools--face-policy-description context)
         ".")
@@ -1490,15 +1374,15 @@ selected occasion has no matching rule."
           "Captured visual %s %s, strongest first, from %s."
           (if (= (length faces) 1) "face" "faces")
           (mapconcat
-           #'emacsvox-aural-tools--humanize faces ", ")
-          (emacsvox-aural-tools--humanize
+           #'emacsvox-aural-humanize faces ", ")
+          (emacsvox-aural-humanize
            (or face-source 'unspecified-source))))
        (if rules
            (format
             "%d %s matched. Strongest rule %s."
             (length rules)
             (if (= (length rules) 1) "rule" "rules")
-             (emacsvox-aural-tools--humanize
+             (emacsvox-aural-humanize
               (plist-get (car (last rules)) :id)))
          (concat
           "No rule matched."
@@ -1527,7 +1411,7 @@ selected occasion has no matching rule."
        (when voice-source
          (format
           "The content voice comes from %s."
-          (emacsvox-aural-tools--humanize voice-source)))
+          (emacsvox-aural-humanize voice-source)))
        (when after
          (format
           "After the content, %s."
@@ -1654,7 +1538,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
             (princ
              (format
               "  %s\n"
-              (emacsvox-aural-tools--format-action action))))
+              (emacsvox-aural-describe-concrete-action action))))
         (princ "  Nothing.\n"))
       (princ
        (format
@@ -1666,7 +1550,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
             (princ
              (format
               "  %s\n"
-              (emacsvox-aural-tools--format-action action))))
+              (emacsvox-aural-describe-concrete-action action))))
         (princ "  Nothing.\n"))
       (princ "\nMatching rules, weakest to strongest\n\n")
       (if rules
@@ -2031,7 +1915,7 @@ unsaved in the advanced rule editor so the selector can be reviewed or
              :render '(:content (:voice default)))
             'user)))
          (description
-          (emacsvox-aural-tools--selector-description compiled-selector))
+          (emacsvox-aural-describe-selector compiled-selector))
          (current
           (emacsvox-aural-tools--voice-remap-current-voice render context))
          (default
@@ -2041,7 +1925,7 @@ unsaved in the advanced rule editor so the selector can be reviewed or
            (format
             "Voice for %s (currently %s): "
             description
-            (emacsvox-aural-tools--humanize default))
+            (emacsvox-aural-humanize default))
            (emacsvox-aural-tools--voice-remap-candidates)
            nil 'must-match nil nil default))
          (voice
@@ -2109,10 +1993,10 @@ than every presentation of an object."
                   "%s position %d: %s; action %s; source %s"
                   (capitalize (symbol-name phase))
                   (1+ index)
-                  (emacsvox-aural-tools--humanize cue)
-                  (emacsvox-aural-tools--humanize id)
+                  (emacsvox-aural-humanize cue)
+                  (emacsvox-aural-humanize id)
                   (if source
-                      (emacsvox-aural-tools--humanize source)
+                      (emacsvox-aural-humanize source)
                     "unknown"))))
            (push
             (cons
@@ -2244,7 +2128,7 @@ generated change opens unsaved in the advanced editor for review."
              :render '(:content (:voice default)))
             'user)))
          (description
-          (emacsvox-aural-tools--selector-description compiled-selector))
+          (emacsvox-aural-describe-selector compiled-selector))
          (choice
           (emacsvox-aural-tools--validate-earcon-remap-choice
            (emacsvox-aural-tools--earcon-remap-choice concrete)
@@ -2259,7 +2143,7 @@ generated change opens unsaved in the advanced editor for review."
                 (completing-read
                  (format
                   "Change %s earcon for %s: "
-                  (emacsvox-aural-tools--humanize current-cue)
+                  (emacsvox-aural-humanize current-cue)
                   description)
                  '("replace it" "suppress it" "restore inherited behavior")
                  nil 'must-match nil nil "replace it")
@@ -2289,7 +2173,7 @@ generated change opens unsaved in the advanced editor for review."
                     (completing-read
                      (format
                       "Replacement for %s: "
-                      (emacsvox-aural-tools--humanize current-cue))
+                      (emacsvox-aural-humanize current-cue))
                      (emacsvox-aural-tools--earcon-remap-candidates)
                      nil 'must-match nil nil
                      (symbol-name current-cue)))
@@ -2737,19 +2621,19 @@ When CONCRETE-P is non-nil, describe CONCRETE-CUES that actually survived
 resolution instead of the legacy cue that initiated resolution."
   (let (parts)
     (when-let* ((role (plist-get facts :role)))
-      (push (emacsvox-aural-tools--humanize role) parts))
+      (push (emacsvox-aural-humanize role) parts))
     (dolist
         (event
          (append
           (when-let* ((one (plist-get facts :event))) (list one))
           (copy-sequence (plist-get facts :events))))
-      (push (emacsvox-aural-tools--humanize event) parts))
+      (push (emacsvox-aural-humanize event) parts))
     (dolist
         (state
          (append
           (when-let* ((one (plist-get facts :state))) (list one))
           (copy-sequence (plist-get facts :states))))
-      (push (emacsvox-aural-tools--humanize state) parts))
+      (push (emacsvox-aural-humanize state) parts))
     (dolist (record (emacsvox-aural-semantics))
       (when (eq (emacsvox-aural-semantic-kind record) 'attribute)
         (let* ((id (emacsvox-aural-semantic-id record))
@@ -2758,27 +2642,27 @@ resolution instead of the legacy cue that initiated resolution."
             (push
              (format
               "%s %s"
-              (emacsvox-aural-tools--humanize id)
-              (emacsvox-aural-tools--humanize
+              (emacsvox-aural-humanize id)
+              (emacsvox-aural-humanize
                (plist-get facts keyword)))
              parts)))))
     (if concrete-p
         (dolist (cue concrete-cues)
           (push
-           (format "earcon %s" (emacsvox-aural-tools--humanize cue))
+           (format "earcon %s" (emacsvox-aural-humanize cue))
            parts))
       (when-let* ((cue (plist-get context :legacy-cue)))
         (push
-         (format "legacy cue %s" (emacsvox-aural-tools--humanize cue))
+         (format "legacy cue %s" (emacsvox-aural-humanize cue))
          parts)))
     (dolist (face (plist-get context :legacy-faces))
       (push
-       (format "visual face %s" (emacsvox-aural-tools--humanize face))
+       (format "visual face %s" (emacsvox-aural-humanize face))
        parts))
     (when-let* ((occasion (plist-get context :occasion)))
       (push
        (format "%s occasion"
-               (emacsvox-aural-tools--humanize occasion))
+               (emacsvox-aural-humanize occasion))
        parts))
     (if parts
         (concat (string-join (nreverse (delete-dups parts)) ", ") ".")
