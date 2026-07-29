@@ -719,25 +719,24 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
   "Cue and identify the current button in a Notmuch Show buffer."
   (when-let* ((button (button-at (point))))
     (if-let* ((part (emacsvox-notmuch--part-at-point button)))
-        (emacsvox-notmuch--present-feedback
+        (emacsvox-notmuch--submit-text-feedback
          (emacsvox-notmuch-part-facts part 'select 'focus-entered)
          'navigation
          (if (plist-get part :filename) 'item 'button)
-         #'tts-speak (emacsvox-notmuch-format-part part))
-      (emacsvox-notmuch--present-feedback
+         (emacsvox-notmuch-format-part part))
+      (emacsvox-notmuch--submit-text-feedback
        '(:role message-part :message-part-kind button
          :mail-action-kind select :events (focus-entered))
-       'navigation 'large-movement #'tts-speak (button-label button)))))
+       'navigation 'large-movement (button-label button)))))
 
 (defun emacsvox-notmuch--part-action-feedback (action part)
   "Confirm ACTION on Notmuch MIME PART."
   (let ((save-p (eq action 'save)))
-    (emacsvox-notmuch--present-feedback
+    (emacsvox-notmuch--submit-text-feedback
      (emacsvox-notmuch-part-facts
       part (if save-p 'save 'show) 'operation-completed)
      'state-change
      (if save-p 'save-object 'open-object)
-     #'tts-speak
      (format "%s %s"
              (if save-p "Saved" "Opened")
              (emacsvox-notmuch--part-action-object part)))))
@@ -1332,14 +1331,13 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox-notmuch--part-visibility-feedback (hidden part)
   "Report whether Notmuch MIME PART is HIDDEN."
-  (emacsvox-notmuch--present-feedback
+  (emacsvox-notmuch--submit-text-feedback
    (append
     (emacsvox-notmuch-part-facts
      part (if hidden 'hide 'show) 'visibility-changed)
     (list :visibility (if hidden 'folded 'expanded)))
    'state-change
    (if hidden 'close-object 'open-object)
-   #'tts-speak
    (format "%s %s"
            (emacsvox-notmuch--part-action-object part)
            (if hidden "hidden" "shown"))))
@@ -1386,7 +1384,7 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
             (plist-get message :body))))
          (result (apply original arguments)))
     (when (ems-interactive-p 'notmuch-show-save-attachments)
-      (emacsvox-notmuch--present-feedback
+      (emacsvox-notmuch--submit-text-feedback
        (append
         (if message
             (emacsvox-notmuch-message-facts message)
@@ -1394,7 +1392,6 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
         '(:mail-action-kind save :events (operation-completed)))
        'state-change
        (if (and count (> count 0)) 'save-object 'select-object)
-       #'tts-speak
        (if (and count (> count 0))
            "Finished saving attachments"
          "No attachments to save")))

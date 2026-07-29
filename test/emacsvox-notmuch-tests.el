@@ -690,13 +690,10 @@
     (goto-char (point-min))
     (let ((ems--interactive-fn-name 'notmuch-show-next-button)
           events)
-      (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'tts-speak)
-                 (lambda (text)
-                   (push
-                    (list 'speak (substring-no-properties text))
-                    events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (emacsvox-test--notmuch-submission-recorder
+             (lambda (event) (push event events)))))
         (emacsvox--advice-notmuch-show-next-button-after))
       (should
        (equal
@@ -716,10 +713,10 @@
     (let ((ems--interactive-fn-name 'notmuch-show-save-part)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speak text) events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (emacsvox-test--notmuch-submission-recorder
+             (lambda (event) (push event events)))))
         (should
          (eq
           (emacsvox--advice-notmuch-show-save-part-around
@@ -744,10 +741,10 @@
     (goto-char (point-min))
     (let ((ems--interactive-fn-name 'notmuch-show-view-part)
           events)
-      (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speak text) events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (emacsvox-test--notmuch-submission-recorder
+             (lambda (event) (push event events)))))
         (emacsvox--advice-notmuch-show-view-part-around
          (lambda () 'opened)))
       (should
@@ -772,10 +769,10 @@
             (notmuch-show-part-button-default-action
              'notmuch-show-save-part)
             events)
-        (cl-letf (((symbol-function 'emacsvox-icon)
-                   (lambda (icon) (push (list 'icon icon) events)))
-                  ((symbol-function 'tts-speak)
-                   (lambda (text) (push (list 'speak text) events))))
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
           (emacsvox--advice-notmuch-show-part-button-default-around
            (lambda (&optional _button)
              (emacsvox--advice-notmuch-show-save-part-around
@@ -801,10 +798,10 @@
       (let ((ems--interactive-fn-name
              'notmuch-show-part-button-default)
             events)
-        (cl-letf (((symbol-function 'emacsvox-icon)
-                   (lambda (icon) (push (list 'icon icon) events)))
-                  ((symbol-function 'tts-speak)
-                   (lambda (text) (push (list 'speak text) events))))
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
           (emacsvox--advice-notmuch-show-part-button-default-around
            (lambda (&optional part-button)
              (button-put part-button :notmuch-part-hidden t)
@@ -817,32 +814,117 @@
             (speak "attachment report.pdf hidden"))))))))
 
 (ert-deftest emacsvox-notmuch-part-action-has-semantic-context ()
-  "MIME-part action cues and speech share structured Notmuch intent."
+  "A MIME-part action submits its cue, text, and structured intent once."
   (let ((part '(:filename "report.pdf" :content-type "application/pdf"))
-        events)
+        captured)
     (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list icon emacsvox-aural-submission-facts
-                   emacsvox-aural-submission-occasion)
-             events)))
-         ((symbol-function 'tts-speak)
-          (lambda (text)
-            (push
-             (list text emacsvox-aural-submission-facts)
-             events))))
-      (emacsvox-notmuch--part-action-feedback 'save part))
-    (should
-     (equal
-      (nreverse events)
-      '((save-object
-         (:role message-part :message-part-kind attachment
-          :mail-action-kind save :events (operation-completed))
-         state-change)
-        ("Saved attachment report.pdf"
-         (:role message-part :message-part-kind attachment
-          :mail-action-kind save :events (operation-completed))))))))
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (cons content arguments))
+            'submission)))
+      (should
+       (eq
+        (emacsvox-notmuch--part-action-feedback 'save part)
+        'submission)))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should (equal content "Saved attachment report.pdf"))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role message-part :message-part-kind attachment
+          :mail-action-kind save :events (operation-completed))))
+      (should (eq (plist-get arguments :module) 'notmuch))
+      (should (eq (plist-get arguments :occasion) 'state-change))
+      (should (= (length actions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value (car actions))
+        'save-object)))))
+
+(ert-deftest emacsvox-notmuch-native-part-navigation-presents-once ()
+  "Attachment navigation preserves voice and one ordered transaction."
+  (dolist (icons-enabled '(t nil))
+    (with-temp-buffer
+      (insert-text-button
+       "[ report.pdf: application/pdf ]" 'action #'ignore)
+      (put-text-property
+       (point-min) (point-max)
+       :notmuch-part emacsvox-notmuch-test--attachment)
+      (goto-char (point-min))
+      (let ((emacsvox-aural-active-scheme 'default)
+            (emacsvox-aural-enabled-feature-fragments nil)
+            (emacsvox-aural-user-rules nil)
+            (emacsvox-aural-session-rules nil)
+            (emacsvox-aural-buffer-rules nil)
+            (emacsvox-aural-presentation-history nil)
+            (emacsvox-aural-presentation-history-limit 20)
+            (emacsvox-aural--presentation-sequence 0)
+            (emacsvox-aural--submission-sequence 0)
+            (emacsvox-aural-plan-presented-hook nil)
+            (emacsvox-use-icons icons-enabled)
+            (emacsvox-aural-face-presentation-enabled t)
+            (voice-lock-mode t)
+            events
+            submission)
+        (cl-letf
+            (((symbol-function 'tts-speak)
+              (lambda (prepared)
+                (with-temp-buffer
+                  (insert prepared)
+                  (tts-audio-format (point-min) (point-max)))))
+             ((symbol-function 'emacsvox-queue-resource)
+              (lambda (_resource) (push 'cue events)))
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text) (push (list 'text text) events)))
+             ((symbol-function 'tts--protocol-silence) #'ignore))
+          (setq submission (emacsvox-notmuch--speak-show-button)))
+        (should (emacsvox-aural-submission-p submission))
+        (should
+         (equal
+          (nreverse events)
+          (if icons-enabled
+              '(cue
+                (text
+                 "Attachment report.pdf, application/pdf, 58 KiB"))
+            '((text
+               "Attachment report.pdf, application/pdf, 58 KiB")))))
+        (should (= (length emacsvox-aural-presentation-history) 1))
+        (should
+         (= (emacsvox-aural-presentation-record-transaction-id
+             (emacsvox-aural-last-presentation))
+            1))
+        (let* ((plans (emacsvox-aural-submission-plans submission))
+               (plan (car plans))
+               (facts (emacsvox-aural-concrete-plan-facts plan))
+               (content (emacsvox-aural-concrete-plan-content plan))
+               (context (emacsvox-aural-concrete-plan-context plan)))
+          (should (= (length plans) 1))
+          (should (eq (plist-get facts :role) 'message-part))
+          (should
+           (eq (plist-get facts :message-part-kind) 'attachment))
+          (should (eq (plist-get facts :mail-action-kind) 'select))
+          (should (equal (plist-get facts :events) '(focus-entered)))
+          (should
+           (equal
+            (mapcar
+             #'emacsvox-aural-concrete-action-cue
+             (emacsvox-aural-concrete-plan-before plan))
+            (and icons-enabled '(item))))
+          (should
+           (eq
+            (emacsvox-aural-concrete-content-voice-request content)
+            'voice-annotate))
+          (should (eq (plist-get context :module) 'notmuch))
+          (should (eq (plist-get context :occasion) 'navigation))
+          (should
+           (eq
+            (plist-get context :icons-enabled)
+            icons-enabled)))))))
 
 (ert-deftest emacsvox-notmuch-show-save-attachments-confirms-completion ()
   "Saving all message attachments gives one completion confirmation."
@@ -850,10 +932,9 @@
         events)
     (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
                (lambda () emacsvox-notmuch-test--show-message))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events))))
+              ((symbol-function 'emacsvox-aural-submit)
+               (emacsvox-test--notmuch-submission-recorder
+                (lambda (event) (push event events)))))
       (emacsvox--advice-notmuch-show-save-attachments-around
        (lambda () 'saved)))
     (should
