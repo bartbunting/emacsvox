@@ -1358,7 +1358,7 @@ which-func without turning that mode on.  "
            (if (= 1 (point-min))
                ""
              "with narrowing in effect. ")))
-(voice-setup-set-voice-for-face 'header-line 'voice-bolden)
+(voice-setup-add-map '((header-line voice-bolden)))
 
 (defun emacsvox--sox-multiwindow ()
   "Use `window-edges' and plays a sound cuew."

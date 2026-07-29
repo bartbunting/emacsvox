@@ -49,7 +49,7 @@
 
 ;;;  Map personalities:
 
-(voice-setup-set-voice-for-face 'yas-field-highlight-face 'voice-animate)
+(voice-setup-add-map '((yas-field-highlight-face voice-animate)))
 
 ;;;  Advice interactive commands:
 

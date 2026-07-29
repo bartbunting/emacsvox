@@ -63,6 +63,99 @@
   (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
     (voice-setup-toggle-silence-personality)))
 
+(defmacro emacsvox-test--with-isolated-face-mappings (&rest body)
+  "Run BODY with isolated face mappings and provenance."
+  (declare (indent 0) (debug t))
+  `(let ((voice-setup-face-voice-table
+          (make-hash-table :test #'eq))
+         (voice-setup-face-voice-provenance-table
+          (make-hash-table :test #'eq))
+         (voice-setup--face-mapping-sequence 0)
+         (voice-setup-local-map nil)
+         (emacsvox-aural-suppressed-personalities nil))
+     ,@body))
+
+(ert-deftest emacsvox-voice-face-mapping-records-provenance ()
+  "Mapping APIs retain module provenance without changing their result."
+  (emacsvox-test--with-isolated-face-mappings
+    (should
+     (eq
+      (voice-setup-set-voice-for-face
+       'font-lock-warning-face 'voice-brighten 'warning-module)
+      'voice-brighten))
+    (should
+     (eq
+      (voice-setup-get-voice-for-face 'font-lock-warning-face)
+      'voice-brighten))
+    (should
+     (equal
+      (voice-setup-face-mapping-provenance
+       'font-lock-warning-face)
+      '((:face font-lock-warning-face
+         :voice voice-brighten
+         :origin warning-module
+         :sequence 1))))))
+
+(ert-deftest emacsvox-voice-face-mapping-infers-file-origin ()
+  "Top-level mapping declarations infer a stable module from their file."
+  (emacsvox-test--with-isolated-face-mappings
+    (let ((load-file-name "/tmp/emacsvox-example.elc"))
+      (voice-setup-add-map
+       '((font-lock-comment-face voice-monotone))))
+    (should
+     (eq
+      (plist-get
+       (car
+        (voice-setup-face-mapping-provenance
+         'font-lock-comment-face))
+       :origin)
+      'emacsvox-example))))
+
+(ert-deftest emacsvox-voice-face-mapping-deduplicates-reloads ()
+  "Reloading one declaration does not grow its provenance history."
+  (emacsvox-test--with-isolated-face-mappings
+    (dotimes (_ 2)
+      (voice-setup-set-voice-for-face
+       'font-lock-keyword-face 'voice-animate 'keyword-module))
+    (should
+     (= 1
+        (length
+         (voice-setup-face-mapping-provenance
+          'font-lock-keyword-face))))))
+
+(ert-deftest emacsvox-voice-face-mapping-conflicts-are-deterministic ()
+  "Conflict diagnostics are sorted and preserve the effective last mapping."
+  (emacsvox-test--with-isolated-face-mappings
+    (voice-setup-set-voice-for-face
+     'font-lock-warning-face 'voice-brighten 'warning-a)
+    (voice-setup-set-voice-for-face
+     'font-lock-warning-face 'voice-animate 'warning-b)
+    (voice-setup-set-voice-for-face
+     'font-lock-comment-face 'voice-monotone 'comment-a)
+    (voice-setup-set-voice-for-face
+     'font-lock-comment-face 'voice-smoothen 'comment-b)
+    (voice-setup-set-voice-for-face
+     'font-lock-string-face 'voice-lighten 'string-a)
+    (voice-setup-set-voice-for-face
+     'font-lock-string-face 'voice-lighten 'string-b)
+    (let ((conflicts (voice-setup-face-mapping-conflicts)))
+      (should
+       (equal
+        (mapcar
+         (lambda (diagnostic) (plist-get diagnostic :face))
+         conflicts)
+        '(font-lock-comment-face font-lock-warning-face)))
+      (should
+       (eq
+        (plist-get (cadr conflicts) :effective)
+        'voice-animate))
+      (should
+       (equal
+        (mapcar
+         (lambda (record) (plist-get record :origin))
+         (plist-get (cadr conflicts) :declarations))
+        '(warning-a warning-b))))))
+
 (ert-deftest emacsvox-voice-personality-precedes-face-mapping ()
   "An explicit personality currently takes precedence over the visual face."
   (with-temp-buffer

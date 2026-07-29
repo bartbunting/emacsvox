@@ -23,6 +23,27 @@
   (should (fboundp 'magit-diff-show-or-scroll-up))
   (should (fboundp 'git-rebase-squash)))
 
+(ert-deftest emacsvox-magit-face-mapping-conflict-is-visible ()
+  "The duplicate Magit face declaration is reported with provenance."
+  (let* ((diagnostic
+          (voice-setup-face-mapping-diagnostic
+           'magit-diff-added-highlight))
+         (declarations (plist-get diagnostic :declarations)))
+    (should (plist-get diagnostic :conflict))
+    (should
+     (equal
+      (mapcar
+       (lambda (record) (plist-get record :voice))
+       declarations)
+      '(voice-animate voice-animate-extra)))
+    (should
+     (equal
+      (delete-dups
+       (mapcar
+        (lambda (record) (plist-get record :origin))
+        declarations))
+      '(emacsvox-magit)))))
+
 (ert-deftest emacsvox-magit-removed-targets-are-not-recreated ()
   "Do not install phantom advice for removed Magit commands."
   (dolist

@@ -96,7 +96,7 @@
 (defvar emacsvox-hydra--lv-cache nil
   "Emacsvox's private cache of the last lv message.")
 
-(voice-setup-set-voice-for-face 'lv-separator  'inaudible)
+(voice-setup-add-map '((lv-separator inaudible)))
 
 (defun emacsvox--advice-lv-message-after (&rest _)
   "speak."  (emacsvox-icon 'help)

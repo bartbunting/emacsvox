@@ -175,6 +175,13 @@ Define a voice for it if needed, then return the symbol."
 (defvar voice-setup-face-voice-table (make-hash-table :test #'eq)
   "Face to voice mapping.")
 
+(defvar voice-setup-face-voice-provenance-table
+  (make-hash-table :test #'eq)
+  "Face mapping declaration history keyed by face.")
+
+(defvar voice-setup--face-mapping-sequence 0
+  "Monotonic sequence for face mapping declarations.")
+
 (defconst voice-setup--missing-voice (make-symbol "missing-voice"))
 
 (defvar-local voice-setup-local-map nil
@@ -196,9 +203,55 @@ compatibility mappings.")
    (setq emacsvox-aural-suppressed-personalities
          (make-hash-table :test #'equal))))
 
-(defsubst voice-setup-set-voice-for-face (face voice)
-  "Map face  to  voice."
-  
+(defun voice-setup--face-mapping-origin (&optional origin)
+  "Return a stable module symbol for mapping ORIGIN."
+  (let ((origin
+         (or
+          origin
+          load-file-name
+          (and
+           (boundp 'byte-compile-current-file)
+           (symbol-value 'byte-compile-current-file))
+          buffer-file-name
+          'runtime)))
+    (cond
+     ((symbolp origin) origin)
+     ((stringp origin)
+      (intern (file-name-base (file-name-sans-extension origin))))
+     (t
+      (error "Face mapping origin must be a symbol or file name: %S"
+             origin)))))
+
+(defun voice-setup--record-face-mapping (face voice origin)
+  "Record the declaration mapping FACE to VOICE from ORIGIN."
+  (let ((history
+         (gethash face voice-setup-face-voice-provenance-table)))
+    (unless
+        (cl-find-if
+         (lambda (record)
+           (and
+            (equal (plist-get record :voice) voice)
+            (eq (plist-get record :origin) origin)))
+         history)
+      (let ((record
+             (list
+              :face face
+              :voice voice
+              :origin origin
+              :sequence (cl-incf voice-setup--face-mapping-sequence))))
+        (puthash
+         face
+         (append history (list record))
+         voice-setup-face-voice-provenance-table)))))
+
+(defun voice-setup-set-voice-for-face (face voice &optional origin)
+  "Map FACE to VOICE and record its declaration ORIGIN.
+
+ORIGIN may be a module symbol or file name.  It defaults to the currently
+loaded source file and falls back to `runtime'.  Existing callers retain
+last-registration-wins behavior."
+  (voice-setup--record-face-mapping
+   face voice (voice-setup--face-mapping-origin origin))
   (setf (gethash face voice-setup-face-voice-table) voice))
 
 (defsubst voice-setup-get-voice-for-face (face)
@@ -213,12 +266,51 @@ compatibility mappings.")
         (gethash face voice-setup-face-voice-table)
       local)))
 
-(defun voice-setup-add-map (fv-alist)
-  "Sets up face to voice mapping given in fv-alist."
-  (cl-loop
-   for fv in fv-alist
-   do
-   (voice-setup-set-voice-for-face (cl-first fv) (cl-second fv))))
+(defun voice-setup-add-map (fv-alist &optional origin)
+  "Set face-to-voice mappings from FV-ALIST with declaration ORIGIN."
+  (let ((origin (voice-setup--face-mapping-origin origin)))
+    (cl-loop
+     for fv in fv-alist
+     do
+     (voice-setup-set-voice-for-face
+      (cl-first fv) (cl-second fv) origin))))
+
+(defun voice-setup-face-mapping-provenance (face)
+  "Return data-only declaration history for FACE."
+  (copy-tree
+   (gethash face voice-setup-face-voice-provenance-table)))
+
+(defun voice-setup-face-mapping-diagnostic (face)
+  "Return the effective mapping and declaration provenance for FACE."
+  (let* ((declarations
+          (voice-setup-face-mapping-provenance face))
+         (voices
+          (delete-dups
+           (mapcar
+            (lambda (record) (plist-get record :voice))
+            declarations))))
+    (list
+     :face face
+     :effective (gethash face voice-setup-face-voice-table)
+     :conflict (> (length voices) 1)
+     :declarations declarations)))
+
+(defun voice-setup-face-mapping-conflicts ()
+  "Return deterministic diagnostics for loaded conflicting face mappings."
+  (let (conflicts)
+    (maphash
+     (lambda (face _)
+       (let ((diagnostic
+              (voice-setup-face-mapping-diagnostic face)))
+         (when (plist-get diagnostic :conflict)
+           (push diagnostic conflicts))))
+     voice-setup-face-voice-provenance-table)
+    (sort
+     conflicts
+     (lambda (left right)
+       (string-lessp
+        (symbol-name (plist-get left :face))
+        (symbol-name (plist-get right :face)))))))
 
 ;;;   special form defvoice
 

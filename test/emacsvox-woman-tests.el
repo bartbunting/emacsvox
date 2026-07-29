@@ -3,10 +3,28 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'woman)
+(require 'emacsvox-man)
 (load
  (expand-file-name "../lisp/emacsvox-woman.el"
                    (file-name-directory (or load-file-name buffer-file-name)))
  nil nil)
+
+(ert-deftest emacsvox-woman-man-face-mapping-conflict-is-visible ()
+  "The conflicting Man and WoMan mapping is reported with provenance."
+  (let* ((diagnostic
+          (voice-setup-face-mapping-diagnostic 'Man-overstrike))
+         (declarations (plist-get diagnostic :declarations)))
+    (should (plist-get diagnostic :conflict))
+    (should
+     (equal
+      (mapcar
+       (lambda (record)
+         (cons
+          (plist-get record :origin)
+          (plist-get record :voice)))
+       declarations)
+      '((emacsvox-man . voice-bolden-medium)
+        (emacsvox-woman . voice-animate))))))
 
 (ert-deftest emacsvox-woman-advice-is-directly-registered ()
   (dolist (target '(WoMan-next-manpage WoMan-previous-manpage))

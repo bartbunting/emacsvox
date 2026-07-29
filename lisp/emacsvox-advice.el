@@ -107,7 +107,7 @@ DOCSTRING and BODY define the feedback function for each command."
 
 ;;;   Advice Replace
 
-(voice-setup-set-voice-for-face 'query-replace 'voice-animate)
+(voice-setup-add-map '((query-replace voice-animate)))
 
 (emacsvox-advice--define-interactive-after-advice
     (query-replace query-replace-regexp)
@@ -764,7 +764,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 ;;;  advice minibuffer to speak
 
-(voice-setup-set-voice-for-face 'minibuffer-prompt 'voice-bolden)
+(voice-setup-add-map '((minibuffer-prompt voice-bolden)))
 
 (defun emacsvox--advice-quoted-insert-after (&rest _)
   "Speak the character inserted by interactive `quoted-insert'."
@@ -971,8 +971,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 
 (with-eval-after-load "eldoc"
   (add-hook 'eldoc-display-functions #'emacsvox-speak-eldoc)
-  (voice-setup-set-voice-for-face
-   'eldoc-highlight-function-argument 'voice-bolden))
+  (voice-setup-add-map
+   '((eldoc-highlight-function-argument voice-bolden))
+   'emacsvox-advice))
 
 (defvar ange-ftp-last-percent)
 
