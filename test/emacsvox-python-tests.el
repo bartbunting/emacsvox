@@ -134,22 +134,90 @@
     (should (equal events '((icon task-done))))))
 
 (ert-deftest emacsvox-python-indentation-uses-native-bounds ()
-  "Python indentation feedback counts explicit START and END bounds."
+  "Python indentation submits explicit bounds as one aural transaction."
   (with-temp-buffer
     (insert "one\ntwo\nthree\n")
     (let ((ems--interactive-fn-name 'indent-region)
-          events)
-      (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speech text) events))))
+          submitted)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submitted (cons content arguments)))))
         (emacsvox--advice-python-indent-region-after
+         (point-min) (point-max)))
+      (let* ((arguments (cdr submitted))
+             (action
+              (car (plist-get arguments :compatibility-actions))))
+        (should
+         (equal
+          (car submitted)
+          "Indented region   containing 3 lines"))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role code-construct :events (object-changed)
+            :syntax-role block)))
+        (should (eq (plist-get arguments :module) 'python))
+        (should (eq (plist-get arguments :occasion) 'edit))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value action)
+          'right))))))
+
+(ert-deftest emacsvox-python-shift-feedback-is-target-aware ()
+  "Only the matching block shift submits its explicit result."
+  (with-temp-buffer
+    (insert "one\ntwo\n")
+    (let ((ems--interactive-fn-name 'python-indent-shift-left)
+          submitted)
+      (cl-letf
+          (((symbol-function 'emacsvox-python--submit-edit-feedback)
+            (lambda (icon text) (push (list icon text) submitted))))
+        (emacsvox--advice-python-indent-shift-right-after
+         (point-min) (point-max))
+        (emacsvox--advice-python-indent-shift-left-after
          (point-min) (point-max)))
       (should
        (equal
-        (nreverse events)
-        '((icon right)
-          (speech "Indented region   containing 3 lines")))))))
+        submitted
+        '((left "Left shifted block  containing 2 lines")))))))
+
+(ert-deftest emacsvox-python-indent-native-plan-resolves-cue-once ()
+  "Python indent speech and compatibility cue share one resolved object."
+  (with-temp-buffer
+    (python-mode)
+    (insert "one\ntwo\n")
+    (let ((ems--interactive-fn-name 'indent-region)
+          prepared)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (setq prepared text)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (&rest _)
+              (ert-fail "Native indentation called legacy icon transport"))))
+        (emacsvox--advice-python-indent-region-after
+         (point-min) (point-max)))
+      (let* ((plan (emacsvox-aural-concrete-plan-at 0 prepared))
+             (before (emacsvox-aural-concrete-plan-before plan)))
+        (should
+         (equal
+          (substring-no-properties prepared)
+          "Indented region   containing 2 lines"))
+        (should
+         (= 1
+            (cl-count
+             'right before
+             :key #'emacsvox-aural-concrete-action-cue)))
+        (should
+         (equal
+          (emacsvox-aural-concrete-plan-facts plan)
+          '(:role code-construct :events (object-changed)
+            :syntax-role block)))
+        (should
+         (natnump
+          (plist-get
+           (emacsvox-aural-concrete-plan-context plan)
+           :presentation-transaction-id)))))))
 
 (ert-deftest emacsvox-python-navigation-feedback-is-target-aware ()
   "Only the matching Python navigation command produces feedback."

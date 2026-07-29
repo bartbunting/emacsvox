@@ -47,6 +47,7 @@
 ;;   Required modules:
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 
@@ -75,6 +76,17 @@
      :role 'code-construct
      :events '(boundary-entered focus-entered)
      :syntax-role syntax-role)))
+
+(defun emacsvox-python--submit-edit-feedback (icon text)
+  "Submit Python edit TEXT with optional leading compatibility ICON."
+  (emacsvox-aural-submit
+   text
+   :facts
+   '(:role code-construct :events (object-changed) :syntax-role block)
+   :module 'python
+   :occasion 'edit
+   :compatibility-actions
+   (and icon (list (emacsvox-aural-compatibility-icon icon)))))
 
 ;;;  interactive programming
 
@@ -163,8 +175,8 @@
     (start end &rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'python-indent-shift-left)
-    (emacsvox-icon 'left)
-    (tts-speak
+    (emacsvox-python--submit-edit-feedback
+     'left
      (format "Left shifted block  containing %s lines"
              (count-lines start end)))))
 
@@ -175,7 +187,8 @@
     (start end &rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'python-indent-shift-right)
-    (tts-speak
+    (emacsvox-python--submit-edit-feedback
+     nil
      (format "Right shifted block  containing %s lines"
              (count-lines start end)))))
 
@@ -185,8 +198,8 @@
 (defun emacsvox--advice-python-indent-region-after (start end)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'indent-region)
-    (emacsvox-icon 'right)
-    (tts-speak
+    (emacsvox-python--submit-edit-feedback
+     'right
      (format "Indented region   containing %s lines"
              (count-lines start end)))))
 

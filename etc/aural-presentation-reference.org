@@ -161,7 +161,7 @@ Operational semantic contract version: =1=.
 | =boundary-entered= | =event= | =core= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation arrived at a source-code boundary |
 | =candidate= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | One available completion candidate |
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
-| =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
+| =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
 | =completion-index= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Zero-based position of a candidate in a completion list |
 | =confirmation-request= | =role= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A prompt asking the user to confirm an action |
 | =deletion-flagged= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem entry is flagged for deletion |

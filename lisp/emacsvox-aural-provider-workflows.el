@@ -351,7 +351,7 @@
      :kind role
      :summary "A structural construct in source code"
      :owner core
-     :occasions (navigation continuous inspection)
+     :occasions (navigation continuous edit inspection)
      :phases (before content after))
     (syntax-role
      :kind attribute
