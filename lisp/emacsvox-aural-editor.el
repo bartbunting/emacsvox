@@ -859,7 +859,7 @@ LABEL identifies the speech or cue being edited."
       (let ((report (emacsvox-aural-editor--validation-report)))
         (if (eq report t)
             (message "Working aural rules are valid")
-          (emacsvox-aural-tools--display-validation
+          (emacsvox-aural-display-validation
            report
            (if (eq emacsvox-aural-editor-scope 'fragment)
                "feature fragment"
@@ -881,7 +881,7 @@ LABEL identifies the speech or cue being edited."
            :source emacsvox-aural-schemes-file)))
     (when (and old (emacsvox-aural-scheme-entry-built-in old))
       (user-error "Built-in schemes cannot be edited; copy it first"))
-    (emacsvox-aural-tools--persist-scheme-mutation
+    (emacsvox-aural-persist-scheme-mutation
      'scheme-edited
      (lambda ()
        (puthash id entry emacsvox-aural-scheme-registry)

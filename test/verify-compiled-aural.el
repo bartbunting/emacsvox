@@ -35,6 +35,7 @@
          "emacsvox-aural-validation"
          "emacsvox-aural-ui"
          "emacsvox-aural-inspection"
+         "emacsvox-aural-scheme-manager"
          "emacsvox-aural-tools"
          "emacsvox-aural-recent-feedback"
          "emacsvox-aural-feature-fragments"
@@ -73,6 +74,7 @@
          emacsvox-aural-preview-play-plan
          emacsvox-aural-validation--report
          emacsvox-aural-inspection-source-buffer
+         emacsvox-aural-scheme-manager--scheme-row
          emacsvox-aural-tools--training-presented
          emacsvox-aural-recent-feedback--entries
          emacsvox-aural-feature-fragments--set-entries

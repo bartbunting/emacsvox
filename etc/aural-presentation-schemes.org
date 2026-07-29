@@ -3094,6 +3094,33 @@ skipped.  Changed Lisp compiles with warnings treated as errors, compiled
 Aural parity and normal build-tree startup pass, and the generated reference
 and Aural audit are current.
 
+** DONE Slice 42: Separate Scheme Management from Explanation
+CLOSED: [2026-07-29 Wed]
+
+- Introduce =emacsvox-aural-description.el= as the neutral implementation of
+  natural value, selector, rule, and concrete-action descriptions used by
+  managers, editors, and explanation buffers.
+- Move the spoken scheme table, detail view, preview and validation commands,
+  activation, copying, renaming, and deletion into
+  =emacsvox-aural-scheme-manager.el=.
+- Keep atomic registry persistence with the scheme data model and validation
+  report display with the validation subsystem rather than making either
+  depend on the interactive manager.
+- Retain established public commands and old private entry points as
+  compatibility aliases while in-tree callers use responsibility-specific
+  names.
+
+Deliverable: scheme management and explanation can evolve independently.
+=emacsvox-aural-tools.el= is reduced again, from 2,890 to 1,844 lines, and is
+now focused on semantic discovery, explanation, contextual remapping, spatial
+inspection, and training.
+
+Checks: all 89 focused Aural tools and editor tests pass.  The complete Emacs
+31 source suite has 1,672 tests: 1,671 pass and the optional Mu4e test is
+skipped.  Changed Lisp compiles with warnings treated as errors, compiled
+Aural parity and normal build-tree startup pass, and the generated reference
+and Aural audit are current.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:

@@ -13,6 +13,7 @@
 (require 'tts-speak)
 (require 'voice-setup)
 (require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-feature-fragments)
@@ -2703,7 +2704,7 @@
      :source "test")
     (emacsvox-aural-select-scheme 'spoken-personal)
     (let ((summary
-           (emacsvox-aural-tools--scheme-spoken-summary
+           (emacsvox-aural-scheme-manager--spoken-summary
             'spoken-personal)))
       (should (string-match-p "spoken personal" summary))
       (should (string-match-p "Active personal scheme" summary))
@@ -2725,10 +2726,13 @@
      :built-in t
      :source "emacsvox-aural-provider-org")
     (let* ((entry (emacsvox-aural-scheme-entry 'org-example))
-           (row (cadr (emacsvox-aural-tools--scheme-row "org-example"))))
+           (row
+            (cadr
+             (emacsvox-aural-scheme-manager--scheme-row
+              "org-example"))))
       (should
        (equal
-        (emacsvox-aural-tools--scheme-provider entry)
+        (emacsvox-aural-scheme-manager--scheme-provider entry)
         "Org integration"))
       (should (equal (aref row 7) "Org integration")))))
 
@@ -2884,7 +2888,7 @@
      :type 'user-error)
     (cl-letf
         (((symbol-function
-           'emacsvox-aural-tools--scheme-at-point-or-read)
+           'emacsvox-aural-scheme-manager--scheme-at-point-or-read)
           (lambda (&rest _) 'default)))
       (should-error
        (emacsvox-aural-schemes-edit)

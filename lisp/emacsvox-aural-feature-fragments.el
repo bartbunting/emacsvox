@@ -1329,7 +1329,7 @@ announce the selected example after displaying the buffer."
          (report
           (emacsvox-aural-validate-feature-fragment fragment)))
     (when (called-interactively-p 'interactive)
-      (emacsvox-aural-tools--display-validation
+      (emacsvox-aural-display-validation
        report "presentation option"))
     report))
 

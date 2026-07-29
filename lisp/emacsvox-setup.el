@@ -70,6 +70,7 @@
     "emacsvox-aural-validation.el"
     "emacsvox-aural-ui.el"
     "emacsvox-aural-inspection.el"
+    "emacsvox-aural-scheme-manager.el"
     "emacsvox-aural-tools.el"
     "emacsvox-aural-recent-feedback.el"
     "emacsvox-aural-feature-fragments.el"

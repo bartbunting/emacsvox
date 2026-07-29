@@ -13,6 +13,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'help-mode)
 (require 'subr-x)
 (require 'emacsvox-aural-transport)
 
@@ -305,8 +306,46 @@
   (emacsvox-aural-validation--report
    fragment #'emacsvox-aural-validation--prepare-fragment))
 
+(defun emacsvox-aural-display-validation (report &optional kind)
+  "Display validation REPORT for object KIND in a help buffer."
+  (with-help-window (help-buffer)
+    (princ
+     (format
+      "Aural %s %s: %s\n\n"
+      (or kind "scheme")
+      (emacsvox-aural-validation-report-scheme report)
+      (if (emacsvox-aural-validation-report-valid report)
+          "valid"
+        "invalid")))
+    (dolist (error (emacsvox-aural-validation-report-errors report))
+      (princ (format "Error: %s\n" error)))
+    (dolist (warning (emacsvox-aural-validation-report-warnings report))
+      (princ (format "Warning: %s\n" warning)))
+    (when-let* ((rules
+                 (emacsvox-aural-validation-report-unreachable-rules
+                  report)))
+      (princ (format "Unreachable rules: %S\n" rules)))
+    (when-let* ((ties
+                 (emacsvox-aural-validation-report-ambiguous-ties
+                  report)))
+      (princ (format "Ambiguous ties: %S\n" ties)))
+    (when-let* ((disabled
+                 (emacsvox-aural-validation-report-disabled-rules
+                  report)))
+      (princ (format "Disabled rules: %S\n" disabled)))
+    (when-let* ((assets
+                 (emacsvox-aural-validation-report-missing-assets
+                  report)))
+      (princ (format "Missing assets: %S\n" assets)))
+    (when-let* ((voices
+                 (emacsvox-aural-validation-report-unavailable-voices
+                  report)))
+      (princ (format "Unavailable voices: %S\n" voices)))))
+
 ;; Keep private entry points used by older extensions while callers migrate
 ;; to the responsibility-specific namespace.
+(defalias 'emacsvox-aural-tools--display-validation
+  #'emacsvox-aural-display-validation)
 (defalias 'emacsvox-aural-tools--all-phase-actions
   #'emacsvox-aural-validation--all-phase-actions)
 (defalias 'emacsvox-aural-tools--rule-actions

@@ -14,6 +14,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-description)
 

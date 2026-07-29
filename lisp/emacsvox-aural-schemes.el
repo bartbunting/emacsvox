@@ -1909,6 +1909,38 @@ An existing file is copied to FILE~ before replacement."
      :built-in t
      :source "built-in")))
 
+(defun emacsvox-aural-persist-scheme-mutation (reason mutation)
+  "Persist staged scheme MUTATION, then publish it for REASON.
+
+MUTATION is called with a copied scheme registry and isolated cache state.
+The complete candidate registry is validated and saved before replacing live
+state.  Registration notifications raised while staging remain private; one
+configuration notification for REASON is published after commit.  Return the
+value of MUTATION."
+  (let ((registry (copy-hash-table emacsvox-aural-scheme-registry))
+        result)
+    (let ((emacsvox-aural-scheme-registry registry)
+          (emacsvox-aural-configuration-generation
+           emacsvox-aural-configuration-generation)
+          (emacsvox-aural-configuration-changed-hook nil)
+          (emacsvox-aural--current-rules-cache
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--provider-cache
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--current-rules-cache-hits
+           emacsvox-aural--current-rules-cache-hits)
+          (emacsvox-aural--current-rules-cache-misses
+           emacsvox-aural--current-rules-cache-misses))
+      (setq result (funcall mutation))
+      (emacsvox-aural-validate-scheme-registry)
+      (emacsvox-aural-save-user-data))
+    (setq emacsvox-aural-scheme-registry registry)
+    (emacsvox-aural-configuration-changed reason)
+    result))
+
+(defalias 'emacsvox-aural-tools--persist-scheme-mutation
+  #'emacsvox-aural-persist-scheme-mutation)
+
 (emacsvox-aural--register-default-scheme)
 
 (provide 'emacsvox-aural-schemes)
