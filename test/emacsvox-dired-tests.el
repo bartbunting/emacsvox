@@ -61,6 +61,19 @@
                (lambda (icon) (push (list 'icon icon) events)))
               ((symbol-function 'emacsvox-speak-mode-line)
                (lambda () (push 'speak-mode-line events)))
+              ((symbol-function 'emacsvox-dired--current-entry-content)
+               (lambda () "entry"))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (_content &rest arguments)
+                 (dolist
+                     (action
+                      (plist-get arguments :compatibility-actions))
+                   (push
+                    (list
+                     'icon
+                     (emacsvox-aural-compatibility-action-value action))
+                    events))
+                 (push 'speak-dired-line events)))
               ((symbol-function 'emacsvox-dired-speak-line)
                (lambda () (push 'speak-dired-line events)))
               ((symbol-function 'emacsvox-speak-line)
@@ -299,38 +312,141 @@
        (emacsvox-aural-render-plan-before plan))
       '(mark-object)))))
 
-(ert-deftest emacsvox-dired-feedback-shares-semantic-context ()
-  "The legacy cue and filename speech see one frozen Dired submission."
-  (let (events)
+(ert-deftest emacsvox-dired-navigation-uses-one-native-submission ()
+  "Default current-entry feedback submits content and cue together."
+  (let ((content (propertize "entry.txt" 'personality 'voice-lighten))
+        calls)
     (cl-letf
         (((symbol-function 'emacsvox-dired-entry-facts)
           (lambda (&rest _)
             '(:role filesystem-entry :entry-kind file
               :events (focus-entered))))
+         ((symbol-function 'emacsvox-dired--current-entry-content)
+          (lambda () content))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (submitted &rest arguments)
+            (push (cons submitted arguments) calls)
+            'submission)))
+      (emacsvox-dired-present-current
+       'select-object 'navigation 'focus-entered))
+    (should (= (length calls) 1))
+    (pcase-let* ((`(,submitted . ,arguments) (car calls))
+                 (actions (plist-get arguments :compatibility-actions))
+                 (action (car actions)))
+      (should (equal submitted "entry.txt"))
+      (should (eq (get-text-property 0 'personality submitted) 'voice-lighten))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role filesystem-entry :entry-kind file
+          :events (focus-entered))))
+      (should (eq (plist-get arguments :module) 'dired))
+      (should (eq (plist-get arguments :occasion) 'navigation))
+      (should (= (length actions) 1))
+      (should (eq (emacsvox-aural-compatibility-action-phase action) 'before))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'select-object)))))
+
+(ert-deftest emacsvox-dired-missing-filename-keeps-legacy-fallback ()
+  "A non-entry row still cues, speaks the line, and dings."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-entry-facts)
+          (lambda (&rest _)
+            '(:role filesystem-entry :entry-kind other
+              :events (focus-entered))))
+         ((symbol-function 'emacsvox-dired--current-entry-content)
+          (lambda () nil))
          ((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list icon emacsvox-aural-submission-facts
-                   (plist-get emacsvox-aural-submission-context :module)
-                   emacsvox-aural-submission-occasion)
-             events)))
-         ((symbol-function 'emacsvox-dired-speak-line)
-          (lambda ()
-            (push
-             (list 'line emacsvox-aural-submission-facts)
-             events))))
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'emacsvox-speak-line)
+          (lambda () (push 'line events)))
+         ((symbol-function 'ding)
+          (lambda (&rest _) (push 'ding events))))
       (emacsvox-dired-present-current
        'select-object 'navigation 'focus-entered))
     (should
      (equal
-      (nreverse events)
-      '((select-object
-         (:role filesystem-entry :entry-kind file
-          :events (focus-entered))
-         dired navigation)
-        (line
-         (:role filesystem-entry :entry-kind file
-          :events (focus-entered))))))))
+      (nreverse events) '((icon select-object) line ding)))))
+
+(ert-deftest emacsvox-dired-native-navigation-resolves-and-presents-once ()
+  "Marked-entry navigation preserves voice and one ordered transaction."
+  (dolist (icons-enabled '(t nil))
+    (let ((emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments nil)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          (emacsvox-aural-presentation-history nil)
+          (emacsvox-aural-presentation-history-limit 20)
+          (emacsvox-aural--presentation-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (emacsvox-aural-plan-presented-hook nil)
+          (emacsvox-use-icons icons-enabled)
+          (emacsvox-aural-face-presentation-enabled t)
+          (voice-lock-mode t)
+          events
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-dired-entry-facts)
+            (lambda (&rest _)
+              '(:role filesystem-entry :entry-kind file
+                :events (focus-entered) :states (marked))))
+           ((symbol-function 'emacsvox-dired--current-entry-content)
+            (lambda ()
+              (propertize
+               "marked.txt" 'personality 'voice-lighten)))
+           ((symbol-function 'tts-speak)
+            (lambda (prepared)
+              (with-temp-buffer
+                (insert prepared)
+                (tts-audio-format (point-min) (point-max)))))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_resource) (push 'cue events)))
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET"))
+           ((symbol-function 'tts--protocol-queue-code) #'ignore)
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text) (push (list 'text text) events)))
+           ((symbol-function 'tts--protocol-silence) #'ignore))
+        (setq
+         submission
+         (emacsvox-dired-present-current
+          'select-object 'navigation 'focus-entered)))
+      (should (emacsvox-aural-submission-p submission))
+      (should
+       (equal
+        (nreverse events)
+        (if icons-enabled
+            '(cue (text "marked.txt"))
+          '((text "marked.txt")))))
+      (should (= (length emacsvox-aural-presentation-history) 1))
+      (should
+       (= (emacsvox-aural-presentation-record-transaction-id
+           (emacsvox-aural-last-presentation))
+          1))
+      (let* ((plans (emacsvox-aural-submission-plans submission))
+             (plan (car plans))
+             (content (emacsvox-aural-concrete-plan-content plan)))
+        (should (= (length plans) 1))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (emacsvox-aural-concrete-plan-before plan))
+          (and icons-enabled '(mark-object))))
+        (should
+         (eq
+          (emacsvox-aural-concrete-content-voice-request content)
+          'voice-lighten))
+        (should
+         (eq
+          (plist-get
+           (emacsvox-aural-concrete-plan-context plan)
+           :icons-enabled)
+          icons-enabled))))))
 
 (ert-deftest emacsvox-dired-marking-feedback-is-target-aware ()
   "Only the matching command emits action cue then next-row speech."

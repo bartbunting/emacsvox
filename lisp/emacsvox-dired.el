@@ -53,6 +53,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 (require 'dired)
@@ -99,18 +100,23 @@
 
 ;;;   functions:
 
-(defun emacsvox-dired--speak-line-compatibility ()
-  "Speak the dired line intelligently.
-If in locate-mode, speak full pathname."
-  
+(defun emacsvox-dired--current-entry-content ()
+  "Return voice-preserving speech content for the current Dired entry."
   (let ((filename
          (dired-get-filename (if (eq major-mode 'locate-mode) nil 'no-dir) t))
         (personality (tts-get-style)))
-    (cond
-     (filename (tts-speak (propertize filename 'personality personality))
-               (setq emacsvox-speak-last-spoken-word-position (point)))
-     (t (emacsvox-speak-line)
-        (ding)))))
+    (when filename
+      (propertize filename 'personality personality))))
+
+(defun emacsvox-dired--speak-line-compatibility ()
+  "Speak the Dired line intelligently.
+If in locate-mode, speak the full pathname."
+  (if-let* ((content (emacsvox-dired--current-entry-content)))
+      (progn
+        (tts-speak content)
+        (setq emacsvox-speak-last-spoken-word-position (point)))
+    (emacsvox-speak-line)
+    (ding)))
 
 (defun emacsvox-dired-speak-line ()
   "Speak the current Dired entry with semantic navigation context."
@@ -173,9 +179,27 @@ from the Dired marker column."
   "Present the current entry with ICON, OCCASION, EVENT, and SPEAKER.
 
 The established icon-then-speech ordering is preserved."
-  (emacsvox-dired--present-feedback
-   (emacsvox-dired-entry-facts event)
-   occasion icon (or speaker #'emacsvox-dired-speak-line)))
+  (let ((facts (emacsvox-dired-entry-facts event)))
+    (if speaker
+        (emacsvox-dired--present-feedback
+         facts occasion icon speaker)
+      (if-let* ((content (emacsvox-dired--current-entry-content)))
+          (prog1
+              (emacsvox-aural-submit
+               content
+               :facts facts
+               :module 'dired
+               :occasion occasion
+               :compatibility-actions
+               ;; The Dired fragment owns marked-entry navigation cues.
+               (when
+                   (and
+                    icon
+                    (not (memq 'marked (plist-get facts :states))))
+                 (list (emacsvox-aural-compatibility-icon icon))))
+            (setq emacsvox-speak-last-spoken-word-position (point)))
+        (emacsvox-dired--present-feedback
+         facts occasion icon #'emacsvox-dired-speak-line)))))
 
 (defun emacsvox-dired-inspection-facts (kind)
   "Return current-entry facts for inspection KIND."
