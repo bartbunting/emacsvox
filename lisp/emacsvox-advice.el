@@ -475,7 +475,7 @@ announced when the change leaves point at the end of the buffer.  ARGUMENTS
 are passed through unchanged."
   (if (ems-interactive-p target)
       (progn
-        (emacsvox-speak--present-edit-operation operation)
+        (emacsvox-speak-edit-operation operation)
         (let ((result (apply original arguments)))
           (cond
            ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
@@ -537,7 +537,7 @@ are passed through unchanged."
 (defun emacsvox--backward-delete-char-around (target original arguments)
   "Speak before TARGET deletes backward, then call ORIGINAL with ARGUMENTS."
   (when (ems-interactive-p target)
-    (emacsvox-speak--present-edit-operation 'deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char)))
   (apply original arguments))
 
@@ -563,7 +563,7 @@ are passed through unchanged."
 (defun emacsvox--delete-char-around (target original arguments)
   "Speak before TARGET deletes a character, then call ORIGINAL with ARGUMENTS."
   (when (ems-interactive-p target)
-    (emacsvox-speak--present-edit-operation 'deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-char t))
   (apply original arguments))
 
@@ -589,7 +589,7 @@ are passed through unchanged."
   (when (ems-interactive-p 'kill-word)
     (save-excursion
       (skip-syntax-forward " ")
-      (emacsvox-speak--present-edit-operation 'deletion)
+      (emacsvox-speak-edit-operation 'deletion)
       (emacsvox-speak-word 1))))
 
 (advice-add
@@ -602,7 +602,7 @@ are passed through unchanged."
     (save-excursion
       (let ((start (point)))
         (forward-word -1)
-        (emacsvox-speak--present-edit-operation 'deletion)
+        (emacsvox-speak-edit-operation 'deletion)
         (emacsvox-speak-region (point) start)))))
 
 (advice-add
@@ -613,14 +613,14 @@ are passed through unchanged."
     (kill-line kill-whole-line)
     "Speak the line before killing it."
   (emacsvox-icon 'delete-object)
-  (emacsvox-speak--present-edit-operation 'deletion)
+  (emacsvox-speak-edit-operation 'deletion)
   (emacsvox-speak-line 1))
 
 (defun emacsvox--advice-kill-sexp-before (&rest _)
   "Speak the killed  sexp."
   (when (ems-interactive-p 'kill-sexp)
     (emacsvox-icon 'delete-object)
-    (emacsvox-speak--present-edit-operation 'deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-sexp 1)))
 
 (advice-add
@@ -631,7 +631,7 @@ are passed through unchanged."
   "Speak the kill."
   (when (ems-interactive-p 'kill-sentence)
     (emacsvox-icon 'delete-object)
-    (emacsvox-speak--present-edit-operation 'deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-line 1)))
 
 (advice-add
@@ -1854,7 +1854,7 @@ See command \\[emacsvox-toggle-line-echo]. Otherwise cue the user to
 the newly created  line."
   (if emacsvox-line-echo
       (emacsvox-read-previous-line)
-    (emacsvox-speak--present-edit-operation 'line-created)))
+    (emacsvox-speak-edit-operation 'line-created)))
 
 (defun emacsvox--eval-filter-return (target result)
   "Speak an interactive evaluation RESULT and return it unchanged.

@@ -783,8 +783,13 @@ Preserve the silence and server-lifecycle behavior of legacy tone helpers."
   (emacsvox-speak--present-action-fact
    :line-condition condition 'navigation t))
 
-(defun emacsvox-speak--present-edit-operation (operation)
-  "Present semantic editing OPERATION without text content."
+;;;###autoload
+(defun emacsvox-speak-edit-operation (operation)
+  "Present semantic editing OPERATION without text content.
+
+This compatibility adapter preserves the silence and server-lifecycle
+behavior of legacy edit-tone helpers.  It deliberately does not inherit
+surrounding object facts or content."
   (emacsvox-speak--present-action-fact
    :edit-operation operation 'edit))
 

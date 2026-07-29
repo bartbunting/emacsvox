@@ -676,7 +676,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                 (push (list 'tone pitch duration force) events)))
              ((symbol-function 'tts--protocol-dispatch)
               (lambda () (push 'dispatch events))))
-          (emacsvox-speak--present-edit-operation (car case)))
+          (emacsvox-speak-edit-operation (car case)))
         (should
          (equal
           (nreverse events)
