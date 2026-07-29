@@ -331,8 +331,9 @@
     (let ((ems--interactive-fn-name 'comint-delchar-or-maybe-eof)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone-deletion)
-                 (lambda () (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-char)
                  (lambda (&rest _) (push 'character events))))
         (should
@@ -346,8 +347,47 @@
            1)
           'delete-result)))
       (should (= calls 1))
-      (should (equal (nreverse events) '(tone character original)))
+      (should
+       (equal
+        (nreverse events)
+        '((edit deletion) character original)))
       (should (equal (buffer-string) "y")))))
+
+(ert-deftest emacsvox-comint-delete-or-eof-keeps-eof-free-of-edit-feedback ()
+  "The EOF branch reports EOF and does not present a deletion."
+  (with-temp-buffer
+    (insert "xy")
+    (goto-char (point-max))
+    (let ((ems--interactive-fn-name 'comint-delchar-or-maybe-eof)
+          (calls 0)
+          events)
+      (cl-letf
+          (((symbol-function 'message)
+            (lambda (format-string &rest arguments)
+              (push
+               (list 'message
+                     (apply #'format format-string arguments))
+               events)))
+           ((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (operation)
+              (push (list 'edit operation) events)))
+           ((symbol-function 'emacsvox-speak-char)
+            (lambda (&rest _) (push 'character events))))
+        (should
+         (eq
+          (emacsvox--advice-comint-delchar-or-maybe-eof-around
+           (lambda (argument)
+             (cl-incf calls)
+             (push (list 'original argument) events)
+             'eof-result)
+           nil)
+          'eof-result)))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((message "Sending EOF to comint process")
+          (original nil)))))))
 
 (provide 'emacsvox-comint-tests)
 ;;; emacsvox-comint-tests.el ends here
