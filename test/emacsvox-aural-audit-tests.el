@@ -79,6 +79,8 @@
            (signature (car (plist-get report :signatures))))
       (should (= (plist-get report :raw-literal-count) 1))
       (should (= (plist-get report :raw-dynamic-count) 1))
+      (should (zerop (plist-get report :permitted-low-level-count)))
+      (should (= (length (plist-get report :unmigrated-calls)) 5))
       (should-not (plist-get report :parse-errors))
       (should
        (equal
@@ -90,6 +92,38 @@
        (equal
         (plist-get (cdr signature) :files)
         '("lisp/example.el"))))))
+
+(ert-deftest emacsvox-aural-audit-permits-only-low-level-tone-definitions ()
+  "Only the exact retained compatibility helper bodies pass tone policy."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     (concat
+      "(defsubst tts-tone-deletion () (tts-tone 500 75 'force))\n"
+      "(defsubst tts-tone-upcase () (tts-tone 800 100 'force))\n"
+      "(defsubst tts-tone-downcase () (tts-tone 600 100 'force))\n")
+     "tts-speak.el")
+    (let ((report (emacsvox-aural-audit-source-tones root)))
+      (should (= (plist-get report :permitted-low-level-count) 3))
+      (should-not (plist-get report :missing-low-level-calls))
+      (should-not (plist-get report :unmigrated-calls)))))
+
+(ert-deftest emacsvox-aural-audit-rejects-duplicate-low-level-tone ()
+  "A permitted helper may contain its exact retained tone only once."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     (concat
+      "(defsubst tts-tone-deletion ()\n"
+      "  (tts-tone 500 75 'force)\n"
+      "  (tts-tone 500 75 'force))\n"
+      "(defsubst tts-tone-upcase () (tts-tone 800 100 'force))\n"
+      "(defsubst tts-tone-downcase () (tts-tone 600 100 'force))\n")
+     "tts-speak.el")
+    (let ((report (emacsvox-aural-audit-source-tones root)))
+      (should (= (plist-get report :permitted-low-level-count) 3))
+      (should-not (plist-get report :missing-low-level-calls))
+      (should (= (length (plist-get report :unmigrated-calls)) 1)))))
 
 (ert-deftest emacsvox-aural-audit-does-not-count-definition-names-as-calls ()
   "Function names in definitions are not executable cue or tone calls."
@@ -201,6 +235,21 @@
        (equal
         (mapcar #'car (plist-get audit :unknown-cues))
         '(not-a-registered-cue))))))
+
+(ert-deftest emacsvox-aural-audit-rejects-unmigrated-tone-calls ()
+  "Application-level legacy tones fail the repository contract."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     "(defun application-feedback () (tts-tone 440 100))\n")
+    (emacsvox-aural-write-reference root)
+    (let* ((audit (emacsvox-aural-audit-directory root))
+           (failure (car (plist-get audit :unmigrated-tone-calls))))
+      (should-not (emacsvox-aural-audit-clean-p audit))
+      (should (equal (plist-get failure :file) "lisp/example.el"))
+      (should (eq (plist-get failure :function) 'application-feedback))
+      (should (eq (plist-get failure :tone-function) 'tts-tone))
+      (should (equal (plist-get failure :signature) '(440 100 nil))))))
 
 (ert-deftest emacsvox-aural-reference-is-deterministic-and-complete ()
   "The generated reference should expose each author contract and registry."

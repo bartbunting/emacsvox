@@ -50,6 +50,21 @@
   '(tts-tone tts-tone-deletion tts-tone-upcase tts-tone-downcase)
   "Legacy tone entry points included in the migration inventory.")
 
+(defconst emacsvox-aural-audit-permitted-low-level-tone-calls
+  '((:file "lisp/tts-speak.el"
+     :function tts-tone-deletion
+     :tone-function tts-tone
+     :signature (500 75 force))
+    (:file "lisp/tts-speak.el"
+     :function tts-tone-upcase
+     :tone-function tts-tone
+     :signature (800 100 force))
+    (:file "lisp/tts-speak.el"
+     :function tts-tone-downcase
+     :tone-function tts-tone
+     :signature (600 100 force)))
+  "Raw tones retained solely as low-level compatibility definitions.")
+
 (defconst emacsvox-aural-audit-complete-resolution-functions
   '(emacsvox-aural-submit
     emacsvox-aural-submit-actions
@@ -145,9 +160,11 @@ listed calls, or in an internal function whose name ends in
         (emacsvox-aural-audit--walk-source-form tail visitor))))))
 
 (defun emacsvox-aural-audit--scan-source-forms (root visitor)
-  "Call VISITOR with each executable form and relative file below ROOT.
+  "Call VISITOR for each executable form below ROOT.
 
-Return source parse errors without evaluating reader forms."
+VISITOR receives the form, its relative file, and the containing top-level
+function when statically known.  Return source parse errors without evaluating
+reader forms."
   (let (parse-errors)
     (dolist (file (emacsvox-aural-audit--source-files root))
       (let ((relative (file-relative-name file root)))
@@ -161,10 +178,18 @@ Return source parse errors without evaluating reader forms."
                     (progn
                       (forward-comment (point-max))
                       (not (eobp)))
-                  (emacsvox-aural-audit--walk-source-form
-                   (read (current-buffer))
-                   (lambda (form)
-                     (funcall visitor form relative))))
+                  (let* ((top-level (read (current-buffer)))
+                         (function
+                          (and
+                           (memq
+                            (car-safe top-level)
+                            '(defun defsubst cl-defun))
+                           (symbolp (cadr top-level))
+                           (cadr top-level))))
+                    (emacsvox-aural-audit--walk-source-form
+                     top-level
+                     (lambda (form)
+                       (funcall visitor form relative function)))))
               (error
                (push
                 (format
@@ -187,7 +212,7 @@ dynamic-call count, and source parse errors."
          (parse-errors
           (emacsvox-aural-audit--scan-source-forms
            root
-           (lambda (form relative)
+           (lambda (form relative _function)
              (when
                  (memq
                   (car form)
@@ -249,32 +274,54 @@ dynamic-call count, and source parse errors."
 
 Raw `tts-tone' calls with literal pitch, duration, and force arguments are
 grouped by signature.  Calls with computed arguments are counted as dynamic.
-The three historical named helpers are counted separately.  Source is read
-with `read-eval' disabled and never evaluated."
+The three historical named helpers are counted separately.  Exact low-level
+compatibility definitions are permitted; every other legacy tone call is
+reported as unmigrated.  Source is read with `read-eval' disabled and never
+evaluated."
   (let* ((root (emacsvox-aural-audit--root root))
          (usage (make-hash-table :test #'eq))
          (signatures (make-hash-table :test #'equal))
          (raw-literal-count 0)
          (raw-dynamic-count 0)
+         (permitted-low-level-count 0)
+         (missing-low-level-calls
+          (copy-tree emacsvox-aural-audit-permitted-low-level-tone-calls))
+         unmigrated-calls
          (parse-errors
           (emacsvox-aural-audit--scan-source-forms
            root
-           (lambda (form relative)
+           (lambda (form relative function)
              (when
                  (memq
                   (car form)
                   emacsvox-aural-audit-tone-functions)
                (emacsvox-aural-audit--record-source-usage
                 (car form) relative usage)
-               (when (eq (car form) 'tts-tone)
-                 (if-let* ((signature
-                            (emacsvox-aural-audit--literal-tone-signature
-                             form)))
+               (let* ((tone-function (car form))
+                      (signature
+                       (and
+                        (eq tone-function 'tts-tone)
+                        (emacsvox-aural-audit--literal-tone-signature form)))
+                      (call
+                       (list
+                        :file relative
+                        :function function
+                        :tone-function tone-function
+                        :signature signature)))
+                 (if (member call missing-low-level-calls)
+                     (progn
+                       (cl-incf permitted-low-level-count)
+                       (setq
+                        missing-low-level-calls
+                        (delete call missing-low-level-calls)))
+                   (push call unmigrated-calls))
+                 (when (eq tone-function 'tts-tone)
+                   (if signature
                      (progn
                        (cl-incf raw-literal-count)
                        (emacsvox-aural-audit--record-source-usage
                         signature relative signatures))
-                   (cl-incf raw-dynamic-count))))))))
+                     (cl-incf raw-dynamic-count)))))))))
     (let (usage-entries signature-entries)
       (maphash
        (lambda (function data)
@@ -299,6 +346,9 @@ with `read-eval' disabled and never evaluated."
                         (format "%S" (car right)))))
        :raw-literal-count raw-literal-count
        :raw-dynamic-count raw-dynamic-count
+       :permitted-low-level-count permitted-low-level-count
+       :missing-low-level-calls missing-low-level-calls
+       :unmigrated-calls (nreverse unmigrated-calls)
        :parse-errors parse-errors))))
 
 (defun emacsvox-aural-audit--compatibility-function-p (function)
@@ -1402,6 +1452,11 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
      :tone-signatures (plist-get tones :signatures)
      :raw-literal-tone-count (plist-get tones :raw-literal-count)
      :raw-dynamic-tone-count (plist-get tones :raw-dynamic-count)
+     :permitted-low-level-tone-count
+     (plist-get tones :permitted-low-level-count)
+     :missing-low-level-tone-calls
+     (plist-get tones :missing-low-level-calls)
+     :unmigrated-tone-calls (plist-get tones :unmigrated-calls)
      :unknown-cues (nreverse unknown)
      :context-free-icons context-free-icons
      :nested-submission-resolutions nested-resolutions
@@ -1419,6 +1474,8 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
    (null (plist-get audit :unknown-cues))
    (null (plist-get audit :context-free-icons))
    (null (plist-get audit :nested-submission-resolutions))
+   (null (plist-get audit :missing-low-level-tone-calls))
+   (null (plist-get audit :unmigrated-tone-calls))
    (null (plist-get audit :parse-errors))
    (null (plist-get audit :errors))
    (plist-get audit :reference-current)))
@@ -1467,6 +1524,11 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
       '(tts-tone-deletion tts-tone-upcase tts-tone-downcase)
       "")
      "\n"
+     (format
+      "Tone policy: %d permitted low-level calls, %d unmigrated calls, %d missing calls\n"
+      (plist-get audit :permitted-low-level-tone-count)
+      (length (plist-get audit :unmigrated-tone-calls))
+      (length (plist-get audit :missing-low-level-tone-calls)))
      (mapconcat
       (lambda (entry)
         (pcase-let ((`(,pitch ,duration ,force) (car entry)))
@@ -1477,6 +1539,26 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
            (if force (format "/%s" force) "")
            (plist-get (cdr entry) :count))))
       (plist-get audit :tone-signatures)
+      "")
+     (mapconcat
+      (lambda (call)
+        (format
+         "Unmigrated tone call %s in %s%s\n"
+         (plist-get call :tone-function)
+         (plist-get call :file)
+         (if-let* ((function (plist-get call :function)))
+             (format " (%s)" function)
+           "")))
+      (plist-get audit :unmigrated-tone-calls)
+      "")
+     (mapconcat
+      (lambda (call)
+        (format
+         "Missing low-level tone call %s in %s (%s)\n"
+         (plist-get call :tone-function)
+         (plist-get call :file)
+         (plist-get call :function)))
+      (plist-get audit :missing-low-level-tone-calls)
       "")
      (mapconcat
       (lambda (entry)
