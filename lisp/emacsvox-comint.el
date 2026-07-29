@@ -353,6 +353,78 @@ events.  Carriage-return chunks replace pending progress output."
           'command-prompt 'command-prompt-ready)
          'notification 'item #'ignore)))))
 
+(defun emacsvox-comint--flush-pending-output ()
+  "Present and clear any final non-newline process output."
+  (let ((output emacsvox-comint--pending-output))
+    (setq emacsvox-comint--pending-output ""
+          emacsvox-comint--prompt-awaiting-padding nil)
+    (when
+        (and
+         (emacsvox-comint--automatic-feedback-p)
+         output
+         (not (string-empty-p (string-trim output))))
+      (emacsvox-comint--submit
+       output
+       (emacsvox-comint-facts
+        'command-output 'command-output-received)
+       'continuous))))
+
+(defun emacsvox-comint--process-terminal-p (process)
+  "Return non-nil when PROCESS has reached a terminal status."
+  (memq (process-status process) '(exit signal closed failed)))
+
+(defun emacsvox-comint--handle-process-exit (process _event)
+  "Flush and announce one terminal event for PROCESS."
+  (when
+      (and
+       (emacsvox-comint--process-terminal-p process)
+       (not (process-get process 'emacsvox-comint-exit-presented)))
+    (process-put process 'emacsvox-comint-exit-presented t)
+    (when-let* ((buffer (process-buffer process))
+                ((buffer-live-p buffer)))
+      (with-current-buffer buffer
+        (emacsvox-comint--flush-pending-output)
+        (when (emacsvox-comint--automatic-feedback-p)
+          (let* ((status (process-status process))
+                 (exit-status
+                  (and
+                   (memq status '(exit signal))
+                   (process-exit-status process)))
+                 (normal
+                  (or
+                   (eq status 'closed)
+                   (and (eq status 'exit) (zerop exit-status)))))
+            (emacsvox-comint--present-feedback
+             (emacsvox-comint-facts
+              'command-interaction 'command-process-exited 'process-exit
+              (when (integerp exit-status)
+                (list :command-exit-status exit-status)))
+             'notification
+             (if normal 'close-object 'warn-user)
+             #'ignore)))))))
+
+(defun emacsvox-comint-install-process-sentinel ()
+  "Wrap the current Comint process sentinel with aural lifecycle handling."
+  (when-let* ((process (get-buffer-process (current-buffer))))
+    (let ((sentinel (process-sentinel process))
+          (installed
+           (process-get process 'emacsvox-comint-sentinel-wrapper)))
+      (unless (and installed (eq sentinel installed))
+        (let ((previous sentinel)
+              wrapper)
+          (setq
+           wrapper
+           (lambda (proc event)
+             (condition-case error-data
+                 (emacsvox-comint--handle-process-exit proc event)
+               (error
+                (message
+                 "Emacsvox Comint process feedback failed: %s"
+                 (error-message-string error-data))))
+             (when previous (funcall previous proc event))))
+          (process-put process 'emacsvox-comint-sentinel-wrapper wrapper)
+          (set-process-sentinel process wrapper))))))
+
 (defun emacsvox-comint--inserted-output (process start)
   "Return normalized output inserted for PROCESS since marker START."
   (when-let* ((buffer (process-buffer process))
@@ -416,6 +488,8 @@ events.  Carriage-return chunks replace pending progress output."
   (emacsvox-pronounce-refresh-pronunciations))
 
 (add-hook 'comint-mode-hook 'emacsvox-comint-speech-setup)
+(add-hook 'comint-exec-hook #'emacsvox-comint-install-process-sentinel)
+(add-hook 'shell-mode-hook #'emacsvox-comint-install-process-sentinel)
 
 ;;;  Advice comint:
 

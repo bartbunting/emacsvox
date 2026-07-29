@@ -55,7 +55,9 @@
          (command-submitted event)
          (command-output-received event)
          (command-prompt-ready event)
-         (command-process-signalled event)))
+         (command-process-signalled event)
+         (command-process-exited event)
+         (command-exit-status attribute)))
     (pcase-let ((`(,id ,kind) entry))
       (let ((semantic (emacsvox-aural-semantic id)))
         (should semantic)
@@ -430,6 +432,135 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
                  'filter-result)
                'test-process "final")
               'filter-result))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-comint-process-exit-flushes-output-and-announces-once ()
+  "Terminal process state flushes partial output before one close event."
+  (let ((buffer (generate-new-buffer " *emacsvox-comint-exit*"))
+        process
+        (original-calls 0)
+        events)
+    (unwind-protect
+        (progn
+          (setq process
+                (make-pipe-process
+                 :name "emacsvox-comint-exit"
+                 :buffer buffer
+                 :noquery t))
+          (with-current-buffer buffer
+            (comint-mode)
+            (setq-local emacsvox-comint-autospeak t)
+            (setq-local emacsvox-comint-output-monitor t)
+            (setq-local emacsvox-comint--pending-output "final partial")
+            (set-process-sentinel
+             process
+             (lambda (_process _event) (cl-incf original-calls)))
+            (emacsvox-comint-install-process-sentinel))
+          (let ((wrapper (process-sentinel process)))
+            (cl-letf
+                (((symbol-function 'process-status)
+                  (lambda (candidate)
+                    (should (eq candidate process))
+                    'exit))
+                 ((symbol-function 'process-exit-status)
+                  (lambda (candidate)
+                    (should (eq candidate process))
+                    0))
+                 ((symbol-function 'emacsvox-comint--submit)
+                  (lambda (content facts occasion &rest _)
+                    (setq
+                     events
+                     (append
+                      events
+                      (list (list 'output content facts occasion))))))
+                 ((symbol-function 'emacsvox-comint--present-feedback)
+                  (lambda (facts occasion icon function &rest arguments)
+                    (setq
+                     events
+                     (append
+                      events
+                      (list (list 'exit facts occasion icon))))
+                    (apply function arguments))))
+              (funcall wrapper process "finished\n")
+              (funcall wrapper process "finished\n"))))
+          (with-current-buffer buffer
+            (should (equal emacsvox-comint--pending-output "")))
+          (should (= original-calls 2))
+          (should
+           (equal
+            events
+            '((output
+               "final partial"
+               (:role command-output
+                :command-interaction-kind repl
+                :events (command-output-received))
+               continuous)
+              (exit
+               (:role command-interaction
+                :command-interaction-kind repl
+                :events (command-process-exited)
+                :command-operation process-exit
+                :command-exit-status 0)
+               notification close-object))))
+      (when (processp process)
+        (set-process-sentinel process nil)
+        (ignore-errors (delete-process process)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-comint-process-sentinel-wraps-a-nil-sentinel-once ()
+  "Lifecycle installation handles processes without an existing sentinel."
+  (let ((buffer (generate-new-buffer " *emacsvox-comint-sentinel*"))
+        process)
+    (unwind-protect
+        (progn
+          (setq process
+                (make-pipe-process
+                 :name "emacsvox-comint-sentinel"
+                 :buffer buffer
+                 :noquery t))
+          (set-process-sentinel process nil)
+          (with-current-buffer buffer
+            (comint-mode)
+            (emacsvox-comint-install-process-sentinel)
+            (let ((installed (process-sentinel process)))
+              (should (functionp installed))
+              (emacsvox-comint-install-process-sentinel)
+              (should (eq (process-sentinel process) installed)))))
+      (when (processp process)
+        (set-process-sentinel process nil)
+        (ignore-errors (delete-process process)))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-comint-failed-process-uses-warning-cue ()
+  "A signalled command process is distinct from a normal session close."
+  (let ((buffer (generate-new-buffer " *emacsvox-comint-failure*"))
+        process
+        icons)
+    (unwind-protect
+        (progn
+          (setq process
+                (make-pipe-process
+                 :name "emacsvox-comint-failure"
+                 :buffer buffer
+                 :noquery t))
+          (with-current-buffer buffer
+            (comint-mode)
+            (setq-local emacsvox-comint-autospeak t)
+            (setq-local emacsvox-comint-output-monitor t))
+          (cl-letf
+              (((symbol-function 'process-status)
+                (lambda (_process) 'signal))
+               ((symbol-function 'process-exit-status)
+                (lambda (_process) 9))
+               ((symbol-function 'emacsvox-comint--present-feedback)
+                (lambda (_facts _occasion icon function &rest arguments)
+                  (push icon icons)
+                  (apply function arguments))))
+            (emacsvox-comint--handle-process-exit process "killed\n"))
+          (should (equal icons '(warn-user))))
+      (when (processp process)
+        (set-process-sentinel process nil)
+        (ignore-errors (delete-process process)))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-comint-split-prompt-drives-procfs-tracking-once ()

@@ -464,7 +464,13 @@
      (submit delete-output clear-buffer kill-input send-eof signal
              completion history-navigation command-navigation
              output-navigation prompt-navigation input-boundary copy-input
-             accumulate insert-argument setting))
+             accumulate insert-argument setting process-exit))
+    (command-exit-status
+     :kind attribute
+     :summary "Numeric exit status of a completed command process"
+     :owner core
+     :roles (command-interaction)
+     :value-type integer)
     (command-input-origin
      :kind attribute
      :summary "Where presented command input came from"
@@ -500,6 +506,13 @@
      :owner core
      :roles (command-interaction)
      :occasions (state-change notification)
+     :phases (before content after))
+    (command-process-exited
+     :kind event
+     :summary "An interactive command process exited or disconnected"
+     :owner core
+     :roles (command-interaction)
+     :occasions (notification)
      :phases (before content after))
     (selected
      :kind state
