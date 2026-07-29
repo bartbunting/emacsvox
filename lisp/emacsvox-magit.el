@@ -48,6 +48,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 
@@ -454,15 +455,37 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 
 ;;;  Magit Blame:
 
-(defun emacsvox-magit-blame-speak ()
-  "Summarize current blame chunk."
-  (emacsvox-magit--present-feedback
-   (emacsvox-magit-blame-facts 'focus-entered)
-   'navigation 'left
-   #'tts-speak
-   (concat
-    (buffer-substring (line-beginning-position) (line-end-position))
-    (ems--display-props-get))))
+(defun emacsvox-magit--blame-content ()
+  "Return the voice-preserving summary of the current blame chunk."
+  (concat
+   (buffer-substring (line-beginning-position) (line-end-position))
+   (ems--display-props-get)))
+
+(defun emacsvox-magit-blame-speak (&optional movement-icon)
+  "Summarize the current blame chunk.
+Present optional MOVEMENT-ICON after the chunk."
+  (let ((content (emacsvox-magit--blame-content))
+        (facts (emacsvox-magit-blame-facts 'focus-entered)))
+    (if (> (length content) 0)
+        (emacsvox-aural-submit
+         content
+         :facts facts
+         :module 'magit
+         :occasion 'navigation
+         :compatibility-actions
+         (append
+          (list (emacsvox-aural-compatibility-icon 'left))
+          (when movement-icon
+            (list
+             (emacsvox-aural-compatibility-icon
+              movement-icon 'after)))))
+      (emacsvox-magit--call-with-aural-presentation
+       facts 'navigation
+       (lambda ()
+         (emacsvox-icon 'left)
+         (tts-speak content)
+         (when movement-icon
+           (emacsvox-icon movement-icon)))))))
 
 (cl-loop
  for target in
@@ -476,12 +499,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   `(defun ,advice-function (&rest _)
      "speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-magit--call-with-aural-presentation
-        (emacsvox-magit-blame-facts 'focus-entered)
-        'navigation
-        (lambda ()
-          (emacsvox-magit-blame-speak)
-          (emacsvox-icon 'large-movement)))))))
+       (emacsvox-magit-blame-speak 'large-movement)))))
 
 (defun emacsvox--advice-magit-blame-quit-after (&rest _)
   "speak."
