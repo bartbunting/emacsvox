@@ -14,6 +14,7 @@
 (require 'voice-setup)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-feature-fragments)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-overrides)
