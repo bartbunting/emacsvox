@@ -1045,8 +1045,41 @@ Return speech events plus the target character.  DIRECTION is `forward' or
      (equal
       (mapcar
        #'emacsvox-aural-compatibility-action-value
-       (plist-get (cadr (nth 2 captured)) :compatibility-actions))
+      (plist-get (cadr (nth 2 captured)) :compatibility-actions))
       '(task-done)))))
+
+(ert-deftest emacsvox-agent-shell-fallback-content-is-native ()
+  "Unknown and generic content should use native content transactions."
+  (let (captured direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest _arguments)
+            (push
+             (list
+              content
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'tts-speak)
+          (lambda (&rest _) (push 'speech direct-output))))
+      (let ((emacsvox-agent-shell-speech-level 'full))
+        (emacsvox-agent-shell--speak-content "Unknown body" 'unknown))
+      (let ((emacsvox-agent-shell-speech-level 'response))
+        (emacsvox-agent-shell--speak-content "Hidden body" 'unknown)
+        (emacsvox-agent-shell--speak-content "Generic body" 'other)))
+    (should-not direct-output)
+    (setq captured (nreverse captured))
+    (should
+     (equal
+      (mapcar #'car captured)
+      '("Unknown body"
+        "Additional agent content available."
+        "Generic body")))
+    (dolist (entry captured)
+      (should (eq (plist-get (nth 1 entry) :role) 'agent-block))
+      (should (eq (plist-get (nth 1 entry) :agent-block-kind) 'other))
+      (should (eq (plist-get (nth 2 entry) :module) 'agent-shell))
+      (should (eq (plist-get (nth 2 entry) :occasion) 'continuous)))))
 
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-package-header ()
   "Speech setup should not replace agent-shell's semantic header."

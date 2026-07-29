@@ -1842,14 +1842,15 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
       ('unknown
        (cond
         ((emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (tts-speak trimmed-content))
+         (emacsvox-agent-shell--submit-content-text trimmed-content))
         ((emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (tts-speak "Additional agent content available."))))
+         (emacsvox-agent-shell--submit-content-text
+          "Additional agent content available."))))
       (_
        ;; Fallback: speak if content is substantial
        (when (and (> (length trimmed-content) 0)
                   (emacsvox-agent-shell--speech-level-at-least-p 'response))
-         (tts-speak trimmed-content))))))
+         (emacsvox-agent-shell--submit-content-text trimmed-content))))))
 
 (defun emacsvox-agent-shell-content-facts (block-type)
   "Return semantic facts for Agent Shell BLOCK-TYPE."
