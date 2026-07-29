@@ -39,8 +39,9 @@
     (let ((ems--interactive-fn-name 'yaml-electric-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone-deletion)
-                 (lambda () (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (char) (push (list 'char char) events))))
         (should
@@ -51,10 +52,38 @@
              (cl-incf calls)
              (should (= arg 2))
              (delete-char -1)
+             (push 'original events)
              'deleted)
            2))))
       (should (= calls 1))
-      (should (equal (nreverse events) '(tone (char 97)))))))
+      (should
+       (equal
+        (nreverse events)
+        '(original (edit deletion) (char 97)))))))
+
+(ert-deftest emacsvox-yaml-backspace-is-quiet-programmatically ()
+  "Programmatic electric backspace calls once without edit feedback."
+  (with-temp-buffer
+    (insert "ab")
+    (let ((ems--interactive-fn-name nil)
+          (calls 0)
+          feedback)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (&rest _) (setq feedback t)))
+           ((symbol-function 'emacsvox-speak-this-char)
+            (lambda (&rest _) (setq feedback t))))
+        (should
+         (eq
+          (emacsvox--advice-yaml-electric-backspace-around
+           (lambda (arg)
+             (cl-incf calls)
+             (should (= arg 3))
+             'programmatic-result)
+           3)
+          'programmatic-result)))
+      (should (= calls 1))
+      (should-not feedback))))
 
 (ert-deftest emacsvox-yaml-feedback-is-target-aware ()
   "Only matching interactive YAML motion speaks."
