@@ -82,6 +82,7 @@ emacsvox-aural-spatial.elc \
 emacsvox-aural-rules.elc \
 emacsvox-aural-resources.elc \
 emacsvox-aural-schemes.elc \
+emacsvox-aural-source.elc \
 emacsvox-aural-transport.elc \
 emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc \
@@ -347,9 +348,12 @@ emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
 emacsvox-aural-history.elc: \
 emacsvox-aural.elc emacsvox-aural-concrete.elc
+emacsvox-aural-source.elc: \
+emacsvox-aural-history.elc emacsvox-aural-schemes.elc
 emacsvox-aural-transport.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-history.elc \
-emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
+emacsvox-aural-schemes.elc emacsvox-aural-source.elc \
+emacsvox-aural-spatial.elc
 tts-speak.elc: emacsvox-aural-transport.elc
 voice-setup.elc: tts-speak.elc
 voice-defs.elc: voice-setup.elc
@@ -362,7 +366,8 @@ emacsvox-aural-concrete.elc emacsvox-aural-rules.elc
 emacsvox-aural-preview.elc: emacsvox-aural-transport.elc
 emacsvox-aural-validation.elc: emacsvox-aural-transport.elc
 emacsvox-aural-inspection.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-transport.elc
+emacsvox-aural-concrete.elc emacsvox-aural-rules.elc \
+emacsvox-aural-source.elc emacsvox-aural-ui.elc
 emacsvox-aural-scheme-manager.elc: \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc emacsvox-aural-validation.elc

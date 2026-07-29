@@ -60,7 +60,8 @@
   (dolist
       (source
        '("emacsvox-aural-concrete.el"
-         "emacsvox-aural-history.el"))
+         "emacsvox-aural-history.el"
+         "emacsvox-aural-source.el"))
     (should (member source emacsvox-setup--startup-sources))))
 
 (ert-deftest emacsvox-setup-prefers-source-while-loading-stale-tree ()

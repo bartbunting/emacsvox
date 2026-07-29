@@ -15,7 +15,9 @@
 
 (require 'cl-lib)
 (require 'emacsvox-aural-ui)
-(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-concrete)
+(require 'emacsvox-aural-rules)
+(require 'emacsvox-aural-source)
 
 (defvar emacsvox-aural-inspection-last-source-buffer nil
   "Most recent ordinary buffer used as an aural inspection source.")

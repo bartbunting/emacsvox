@@ -54,6 +54,16 @@
        feature)))
   (dolist
       (library
+       '("emacsvox-aural-source"
+         "emacsvox-aural-ui"
+         "emacsvox-aural-inspection"))
+    (load
+     (expand-file-name (concat library ".elc") build-directory)
+     nil nil))
+  (when (featurep 'emacsvox-aural-transport)
+    (error "Aural source and inspection boundaries loaded queue transport"))
+  (dolist
+      (library
        '("tts-speak"
          "voice-setup"
          "voice-defs"
@@ -65,13 +75,9 @@
          "swiftmac-voices"
          "emacsvox-pronounce"
          "emacsvox-speak"
-         "emacsvox-aural-resources"
-         "emacsvox-aural-schemes"
          "emacsvox-aural-transport"
          "emacsvox-aural-preview"
          "emacsvox-aural-validation"
-         "emacsvox-aural-ui"
-         "emacsvox-aural-inspection"
          "emacsvox-aural-scheme-manager"
          "emacsvox-aural-semantics"
          "emacsvox-aural-explanation"
@@ -119,6 +125,7 @@
          emacsvox-aural--rule-error
          emacsvox-aural--resource-error
          emacsvox-aural--migrate-user-data-v1-to-v2
+         emacsvox-aural-capture-source-faces
          emacsvox-aural--transport-error
          emacsvox-aural-describe-selector
          emacsvox-aural-preview-play-plan

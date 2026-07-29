@@ -18,6 +18,10 @@
   'emacsvox-aural-transport-error
   "Cannot compile or queue an Emacsvox aural presentation")
 
+(defconst emacsvox-aural-concrete-plan-property
+  'emacsvox-aural-concrete-plan
+  "Text property holding a source-resolved concrete plan.")
+
 (cl-defstruct
     (emacsvox-aural-concrete-action
      (:constructor emacsvox-aural--make-concrete-action))

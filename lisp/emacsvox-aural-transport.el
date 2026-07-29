@@ -16,6 +16,7 @@
 (require 'subr-x)
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-history)
+(require 'emacsvox-aural-source)
 (require 'emacsvox-aural-schemes)
 (require 'emacsvox-aural-spatial)
 
@@ -43,26 +44,6 @@
 (defvar tts-speaker-process)
 (defvar voice-lock-mode)
 
-(cl-defstruct
-    (emacsvox-aural-source-run
-     (:constructor emacsvox-aural--make-source-run))
-  "One source formatting run captured inside an aural object."
-  start end facts context icon)
-
-(defvar emacsvox-aural-submission-context nil
-  "Dynamically bound source context for the current speech submission.")
-
-(defvar emacsvox-aural-submission-facts nil
-  "Dynamically bound semantic facts for the current speech submission.")
-
-(defvar emacsvox-aural-submission-module nil
-  "Dynamically bound module for the current speech submission.")
-
-(defvar emacsvox-aural-submission-occasion nil
-  "Dynamically bound occasion for the current speech submission.")
-
-(defvar emacsvox-aural-ui-interface-buffer)
-
 (defcustom emacsvox-aural-unsupported-volume-policy 'degrade
   "Policy for explicit volume when the active transport cannot apply it.
 
@@ -77,60 +58,11 @@ capability degradation.  `reject' signals an error before anything is queued."
   (make-hash-table :test #'equal)
   "Content digests keyed by canonical file identity and metadata.")
 
-(defconst emacsvox-aural-concrete-plan-property
-  'emacsvox-aural-concrete-plan
-  "Text property holding a source-resolved concrete plan.")
-
-(defconst emacsvox-aural-facts-property
-  'emacsvox-aural-facts
-  "Text property holding semantic facts for one formatted text run.")
-
-(defconst emacsvox-aural-module-property
-  'emacsvox-aural-module
-  "Text property overriding the semantic module for one text run.")
-
-(defconst emacsvox-aural-occasion-property
-  'emacsvox-aural-occasion
-  "Text property overriding presentation occasion for one text run.")
-
-(defconst emacsvox-aural-object-property
-  'emacsvox-aural-object
-  "Text property explicitly identifying one aural object.
-
-Adjacent text with the same non-nil value belongs to one object even when
-run-local semantic or presentation properties change.  Without this property,
-the complete submission is one inferred object until semantic facts, module,
-occasion, or a new queued icon changes.")
-
-(defconst emacsvox-aural-source-faces-property
-  'emacsvox-aural-source-faces
-  "Text property holding an authoritative named source-face snapshot.")
-
 (defun emacsvox-aural--transport-error (format-string &rest arguments)
   "Signal a transport error described by FORMAT-STRING and ARGUMENTS."
   (signal
    'emacsvox-aural-transport-error
    (list (apply #'format format-string arguments))))
-
-(defun emacsvox-aural-capture-context (&optional module occasion)
-  "Capture immutable source context for MODULE and OCCASION."
-  (let ((context
-         (copy-tree
-          (emacsvox-aural-current-context
-           (or module emacsvox-aural-submission-module)
-           (or
-            occasion
-            emacsvox-aural-submission-occasion
-            'continuous)))))
-    (when
-        (and
-         (boundp 'emacsvox-aural-ui-interface-buffer)
-         emacsvox-aural-ui-interface-buffer
-         (not emacsvox-aural-history-record-interface-presentations))
-      (setq
-       context
-       (plist-put context :history-recording-inhibited t)))
-    context))
 
 (defun emacsvox-aural--resource-pack ()
   "Return the effective sound pack at the current submission boundary."
@@ -1017,147 +949,6 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
      emacsvox-aural-configuration-generation
      :rule-provenance
      (emacsvox-aural--frozen-rule-provenance plan facts context))))
-
-(defun emacsvox-aural-face-names (value)
-  "Return ordered named faces explicitly represented by face VALUE.
-
-Anonymous attribute plists contribute only named faces reached through
-`:inherit'.  Duplicate names retain their first, strongest position."
-  (cl-labels
-      ((collect
-        (item)
-        (cond
-         ((and (symbolp item) (facep item)) (list item))
-         ((and (stringp item) (facep item))
-          (when-let* ((name (intern-soft item)))
-            (list name)))
-         ((and (proper-list-p item) (keywordp (car item)))
-          (collect (plist-get item :inherit)))
-         ((proper-list-p item)
-          (apply #'append (mapcar #'collect item)))
-         (t nil))))
-    (delete-dups (collect value))))
-
-(defun emacsvox-aural--source-face-records
-    (value source property &optional overlay)
-  "Return provenance records for named faces in VALUE.
-
-SOURCE is `overlay' or `text-property', PROPERTY is `face' or
-`font-lock-face', and OVERLAY supplies source range and priority metadata."
-  (mapcar
-   (lambda (face)
-     (append
-      (list
-       :face face
-       :source source
-       :property property)
-      (when overlay
-        (list
-         :priority (copy-tree (overlay-get overlay 'priority))
-         :overlay-start (overlay-start overlay)
-         :overlay-end (overlay-end overlay)))))
-   (emacsvox-aural-face-names value)))
-
-(defun emacsvox-aural--normalize-source-face-records (records)
-  "Deduplicate ordered source-face RECORDS and assign stable order."
-  (let (seen result)
-    (dolist (record records)
-      (let ((face (plist-get record :face)))
-        (unless (memq face seen)
-          (push face seen)
-          (setq
-           result
-           (append
-            result
-            (list
-             (plist-put
-              (copy-tree record) :order (length result))))))))
-    result))
-
-(defun emacsvox-aural-capture-source-faces (&optional position buffer)
-  "Capture ordered named source faces at POSITION in BUFFER.
-
-Overlay faces are ordered by decreasing Emacs overlay priority, followed by
-the explicit `face' and `font-lock-face' text properties.  Within each source,
-`face' precedes `font-lock-face'.  Returned provenance is data-only and never
-retains an overlay object.  POSITION and BUFFER default to point and the
-current buffer."
-  (with-current-buffer (or buffer (current-buffer))
-    (let ((position (or position (point)))
-          records)
-      (dolist (overlay (overlays-at position t))
-        (dolist (property '(face font-lock-face))
-          (when-let* ((value (overlay-get overlay property)))
-            (setq
-             records
-             (append
-              records
-              (emacsvox-aural--source-face-records
-               value 'overlay property overlay))))))
-      (dolist (property '(face font-lock-face))
-        (when-let* ((value (get-text-property position property)))
-          (setq
-           records
-           (append
-            records
-            (emacsvox-aural--source-face-records
-             value 'text-property property)))))
-      (emacsvox-aural--normalize-source-face-records records))))
-
-(defun emacsvox-aural-source-substring (start end &optional buffer)
-  "Copy START through END from BUFFER with source-face snapshots.
-
-This is the source-boundary counterpart of `buffer-substring'.  It preserves
-ordinary text properties and annotates the returned string with ordered,
-data-only overlay and text-property face provenance without changing BUFFER."
-  (with-current-buffer (or buffer (current-buffer))
-    (let ((text (buffer-substring start end))
-          (position start))
-      (while (< position end)
-        (let* ((next (next-char-property-change position end))
-               (snapshot
-                (emacsvox-aural-capture-source-faces position)))
-          (when snapshot
-            (add-text-properties
-             (- position start) (- next start)
-             (list
-              emacsvox-aural-source-faces-property
-              (copy-tree snapshot))
-             text))
-          (setq position next)))
-      text)))
-
-(defun emacsvox-aural--string-face-snapshot (text position)
-  "Return authoritative source-face records for TEXT at POSITION."
-  (or
-   (copy-tree
-    (get-text-property
-     position emacsvox-aural-source-faces-property text))
-   (let (records)
-     (dolist (property '(face font-lock-face))
-       (when-let* ((value (get-text-property position property text)))
-         (setq
-          records
-          (append
-           records
-           (emacsvox-aural--source-face-records
-            value 'text-property property)))))
-     (emacsvox-aural--normalize-source-face-records records))))
-
-(defun emacsvox-aural--source-face-names (snapshot)
-  "Return ordered names from source-face SNAPSHOT."
-  (mapcar
-   (lambda (record) (plist-get record :face))
-   snapshot))
-
-(defun emacsvox-aural--source-face-summary (snapshot)
-  "Return the strongest source identifier represented by SNAPSHOT."
-  (when-let* ((record (car snapshot))
-              (source (plist-get record :source))
-              (property (plist-get record :property)))
-    (if (eq source 'overlay)
-        (intern (format "overlay-%s" property))
-      property)))
 
 (defun emacsvox-aural--string-face-value (text position)
   "Return face value and source property for TEXT at POSITION."
