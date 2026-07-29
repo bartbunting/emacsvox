@@ -1792,6 +1792,18 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
    :compatibility-actions
    (list (emacsvox-aural-compatibility-icon icon))))
 
+(defun emacsvox-agent-shell--submit-text-feedback
+    (text facts occasion &optional icon)
+  "Submit Agent Shell TEXT with FACTS, OCCASION, and optional compatibility ICON."
+  (emacsvox-aural-submit
+   text
+   :facts facts
+   :module 'agent-shell
+   :occasion occasion
+   :compatibility-actions
+   (when icon
+     (list (emacsvox-aural-compatibility-icon icon)))))
+
 (defun emacsvox-agent-shell--speak-content-compatibility (content block-type)
   "Speak CONTENT based on BLOCK-TYPE with appropriate feedback."
   (let ((trimmed-content (string-trim content)))
@@ -2332,15 +2344,16 @@ PREDICATE receives TEXT and the start position of each property run."
   (if-let* ((answer (emacsvox-agent-shell--latest-agent-answer)))
       (progn
         (tts-stop)
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         answer
          (emacsvox-agent-shell--presentation-facts
           'agent-response 'agent-content-inspected)
-         'inspection 'item #'tts-speak answer))
-    (emacsvox-agent-shell--present-feedback
+         'inspection 'item))
+    (emacsvox-agent-shell--submit-text-feedback
+     "No agent response available."
      (emacsvox-agent-shell--presentation-facts
       'agent-response 'operation-failed)
-     'inspection 'warn-user #'tts-speak
-     "No agent response available.")))
+     'inspection 'warn-user)))
 
 (defun emacsvox-agent-shell-speak-response-overview ()
   "Speak a concise structural overview of the latest agent answer."
@@ -2348,16 +2361,16 @@ PREDICATE receives TEXT and the start position of each property run."
   (if-let* ((answer (emacsvox-agent-shell--latest-agent-answer)))
       (progn
         (tts-stop)
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--response-overview answer)
          (emacsvox-agent-shell--presentation-facts
           'agent-response 'agent-content-inspected)
-         'inspection 'item #'tts-speak
-         (emacsvox-agent-shell--response-overview answer)))
-    (emacsvox-agent-shell--present-feedback
+         'inspection 'item))
+    (emacsvox-agent-shell--submit-text-feedback
+     "No agent response available."
      (emacsvox-agent-shell--presentation-facts
       'agent-response 'operation-failed)
-     'inspection 'warn-user #'tts-speak
-     "No agent response available.")))
+     'inspection 'warn-user)))
 
 (defun emacsvox-agent-shell--concise-block-text (text)
   "Return a concise single-line version of block TEXT."

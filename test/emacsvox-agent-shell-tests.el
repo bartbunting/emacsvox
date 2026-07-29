@@ -1081,6 +1081,50 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (eq (plist-get (nth 2 entry) :module) 'agent-shell))
       (should (eq (plist-get (nth 2 entry) :occasion) 'continuous)))))
 
+(ert-deftest emacsvox-agent-shell-response-inspection-is-native ()
+  "Response inspection outcomes should use explicit native transactions."
+  (let ((answer "Complete answer")
+        captured
+        compatibility-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--latest-agent-answer)
+          (lambda () answer))
+         ((symbol-function 'emacsvox-agent-shell--response-overview)
+          (lambda (_text) "Response overview"))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) captured)))
+         ((symbol-function 'emacsvox-agent-shell--present-feedback)
+          (lambda (&rest _) (push 'compatibility compatibility-output))))
+      (emacsvox-agent-shell-speak-last-response)
+      (emacsvox-agent-shell-speak-response-overview)
+      (setq answer nil)
+      (emacsvox-agent-shell-speak-last-response)
+      (emacsvox-agent-shell-speak-response-overview))
+    (should-not compatibility-output)
+    (setq captured (nreverse captured))
+    (should
+     (equal
+      (mapcar #'car captured)
+      '("Complete answer"
+        "Response overview"
+        "No agent response available."
+        "No agent response available.")))
+    (dolist (entry captured)
+      (let* ((arguments (cdr entry))
+             (facts (plist-get arguments :facts))
+             (actions (plist-get arguments :compatibility-actions)))
+        (should (eq (plist-get facts :role) 'agent-response))
+        (should (eq (plist-get arguments :module) 'agent-shell))
+        (should (eq (plist-get arguments :occasion) 'inspection))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-compatibility-action-value actions)
+          (if (member (car entry)
+                      '("Complete answer" "Response overview"))
+              '(item)
+            '(warn-user))))))))
+
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-package-header ()
   "Speech setup should not replace agent-shell's semantic header."
   (with-temp-buffer
