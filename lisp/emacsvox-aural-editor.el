@@ -38,7 +38,10 @@
 (defvar-local emacsvox-aural-editor-dirty nil
   "Non-nil when working editor data differs from its saved source.")
 
-(defconst emacsvox-aural-editor--rule-index-property
+(defvaralias 'emacsvox-aural-editor--rule-index-property
+  'emacsvox-aural-editor-rule-index-property)
+
+(defconst emacsvox-aural-editor-rule-index-property
   'emacsvox-aural-editor-rule-index
   "Text property identifying the rule displayed at point.")
 
@@ -57,7 +60,7 @@
     ('fragment
      (format "personal feature fragment %s" emacsvox-aural-editor-target))))
 
-(defun emacsvox-aural-editor--rule-enabled-p (rule)
+(defun emacsvox-aural-editor-rule-enabled-p (rule)
   "Return non-nil when declarative RULE is enabled."
   (if (plist-member rule :enabled)
       (plist-get rule :enabled)
@@ -148,7 +151,7 @@
              "%d. %s [%s]\n"
              (1+ index)
              (plist-get rule :id)
-             (if (emacsvox-aural-editor--rule-enabled-p rule)
+             (if (emacsvox-aural-editor-rule-enabled-p rule)
                  "enabled"
                "disabled")))
            (insert (format "   Match: %S\n" (plist-get rule :match)))
@@ -169,7 +172,7 @@
               (plist-get render :after))))
            (put-text-property
             start (point)
-            emacsvox-aural-editor--rule-index-property index)))
+            emacsvox-aural-editor-rule-index-property index)))
       (insert "No rules.  Press n to add one.\n"))
     (goto-char (min position (point-max)))))
 
@@ -180,7 +183,7 @@
     (or
      (emacsvox-aural-inspection-point-position)
      (point-min))
-    emacsvox-aural-editor--rule-index-property)
+    emacsvox-aural-editor-rule-index-property)
    (user-error "Move point to a displayed rule first")))
 
 (defun emacsvox-aural-editor--rule-at-point ()
@@ -189,7 +192,7 @@
    (emacsvox-aural-editor--index-at-point)
    emacsvox-aural-editor-rules))
 
-(defun emacsvox-aural-editor--mark-dirty ()
+(defun emacsvox-aural-editor-mark-dirty ()
   "Mark the current editor dirty and refresh its mode line."
   (setq emacsvox-aural-editor-dirty t)
   (force-mode-line-update))
@@ -202,7 +205,7 @@
     (if default "yes" "no"))
    "yes"))
 
-(defun emacsvox-aural-editor--mode-candidates ()
+(defun emacsvox-aural-editor-mode-candidates ()
   "Return known major-mode command names for completion."
   (let (modes)
     (mapatoms
@@ -214,13 +217,13 @@
          (push (symbol-name symbol) modes))))
     (sort (delete-dups modes) #'string-lessp)))
 
-(defun emacsvox-aural-editor--face-candidates ()
+(defun emacsvox-aural-editor-face-candidates ()
   "Return currently defined visual face names for completion."
   (sort
    (delete-dups (mapcar #'symbol-name (face-list)))
    #'string-lessp))
 
-(defun emacsvox-aural-editor--read-symbol-or-nil
+(defun emacsvox-aural-editor-read-symbol-or-nil
     (prompt &optional default candidates require-match)
   "Read a symbol using PROMPT, DEFAULT, and CANDIDATES.
 
@@ -235,7 +238,7 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
     (unless (or (string-empty-p answer) (string= answer none))
       (intern answer))))
 
-(defun emacsvox-aural-editor--read-attribute-value (record old)
+(defun emacsvox-aural-editor-read-attribute-value (record old)
   "Read a value for attribute RECORD, offering OLD as the default."
   (if-let* ((values (emacsvox-aural-semantic-allowed-values record)))
       (intern
@@ -288,7 +291,7 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
        (plist-put
         selector
         (intern (format ":%s" semantic))
-        (emacsvox-aural-editor--read-attribute-value record nil))))))
+        (emacsvox-aural-editor-read-attribute-value record nil))))))
 
 (defun emacsvox-aural-editor--read-selector (&optional old)
   "Read a selector through completion, optionally preserving OLD."
@@ -335,35 +338,35 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
            selector
            (plist-put selector :requires (nreverse required)))))
       (when-let* ((module
-                   (emacsvox-aural-editor--read-symbol-or-nil
+                   (emacsvox-aural-editor-read-symbol-or-nil
                     "Module (empty for any): ")))
         (setq selector (plist-put selector :module module)))
       (when-let* ((mode
-                   (emacsvox-aural-editor--read-symbol-or-nil
+                   (emacsvox-aural-editor-read-symbol-or-nil
                     "Major mode (empty for any): "
                     nil
-                    (emacsvox-aural-editor--mode-candidates))))
+                    (emacsvox-aural-editor-mode-candidates))))
         (setq selector (plist-put selector :mode mode)))
       (when-let* ((occasion
-                   (emacsvox-aural-editor--read-symbol-or-nil
+                   (emacsvox-aural-editor-read-symbol-or-nil
                     "Occasion (empty for any): "
                     nil
                     (emacsvox-aural-occasion-candidates)
                     'must-match)))
         (setq selector (plist-put selector :occasion occasion)))
       (when-let* ((cue
-                   (emacsvox-aural-editor--read-symbol-or-nil
+                   (emacsvox-aural-editor-read-symbol-or-nil
                     "Legacy cue (empty for none): ")))
         (setq selector (plist-put selector :legacy-cue cue)))
       (when-let* ((face
-                   (emacsvox-aural-editor--read-symbol-or-nil
+                   (emacsvox-aural-editor-read-symbol-or-nil
                     "Visual face (empty for none): "
                     nil
-                    (emacsvox-aural-editor--face-candidates))))
+                    (emacsvox-aural-editor-face-candidates))))
         (setq selector (plist-put selector :legacy-face face)))
       selector)))
 
-(defun emacsvox-aural-editor--cue-candidates ()
+(defun emacsvox-aural-editor-cue-candidates ()
   "Return registered cue identifiers for completion."
   (let (cues)
     (maphash
@@ -371,7 +374,7 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
      emacsvox-aural-cue-registry)
     (sort cues #'string-lessp)))
 
-(defun emacsvox-aural-editor--voice-candidates ()
+(defun emacsvox-aural-editor-voice-candidates ()
   "Return selected palette voice names plus special voice values."
   (let* ((palette
           (or
@@ -389,7 +392,7 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
   (let ((answer
          (completing-read
           (or prompt "Voice: ")
-          (emacsvox-aural-editor--voice-candidates)
+          (emacsvox-aural-editor-voice-candidates)
           nil nil nil nil "default")))
     (unless (or (string-empty-p answer) (string= answer "default"))
       (intern answer))))
@@ -471,7 +474,7 @@ LABEL identifies the speech or cue being edited."
          (intern
           (completing-read
            "Semantic cue: "
-           (emacsvox-aural-editor--cue-candidates)
+           (emacsvox-aural-editor-cue-candidates)
            nil 'must-match)))))
       ('pause
        (setq
@@ -582,7 +585,7 @@ LABEL identifies the speech or cue being edited."
            (voice-answer
             (completing-read
              "Content voice: "
-             (append '("unchanged") (emacsvox-aural-editor--voice-candidates))
+             (append '("unchanged") (emacsvox-aural-editor-voice-candidates))
              nil nil nil nil "unchanged"))
            (space
             (emacsvox-aural-editor--read-space
@@ -613,7 +616,7 @@ LABEL identifies the speech or cue being edited."
          (enabled
           (emacsvox-aural-editor--read-boolean
            "Enable this rule? "
-           (if old (emacsvox-aural-editor--rule-enabled-p old) t)))
+           (if old (emacsvox-aural-editor-rule-enabled-p old) t)))
          (old-render (plist-get old :render))
          (selector
           (emacsvox-aural-editor--read-selector
@@ -649,7 +652,7 @@ LABEL identifies the speech or cue being edited."
       (cl-subseq emacsvox-aural-editor-rules 0 index)
       (list rule)
       (nthcdr index emacsvox-aural-editor-rules)))
-    (emacsvox-aural-editor--mark-dirty)
+    (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
 
 (defun emacsvox-aural-editor-edit-rule ()
@@ -660,7 +663,7 @@ LABEL identifies the speech or cue being edited."
           (emacsvox-aural-editor--read-rule
            (nth index emacsvox-aural-editor-rules))))
     (setf (nth index emacsvox-aural-editor-rules) rule)
-    (emacsvox-aural-editor--mark-dirty)
+    (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
 
 (defun emacsvox-aural-editor-copy-rule ()
@@ -680,7 +683,7 @@ LABEL identifies the speech or cue being edited."
       (cl-subseq emacsvox-aural-editor-rules 0 (1+ index))
       (list rule)
       (nthcdr (1+ index) emacsvox-aural-editor-rules)))
-    (emacsvox-aural-editor--mark-dirty)
+    (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
 
 (defun emacsvox-aural-editor-delete-rule ()
@@ -694,7 +697,7 @@ LABEL identifies the speech or cue being edited."
        (append
         (cl-subseq emacsvox-aural-editor-rules 0 index)
         (nthcdr (1+ index) emacsvox-aural-editor-rules)))
-      (emacsvox-aural-editor--mark-dirty)
+      (emacsvox-aural-editor-mark-dirty)
       (emacsvox-aural-editor-refresh))))
 
 (defun emacsvox-aural-editor-toggle-rule ()
@@ -706,9 +709,9 @@ LABEL identifies the speech or cue being edited."
      rule
      (plist-put
       rule :enabled
-      (not (emacsvox-aural-editor--rule-enabled-p rule))))
+      (not (emacsvox-aural-editor-rule-enabled-p rule))))
     (setf (nth index emacsvox-aural-editor-rules) rule)
-    (emacsvox-aural-editor--mark-dirty)
+    (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
 
 (defun emacsvox-aural-editor-move-rule (offset)
@@ -722,13 +725,13 @@ LABEL identifies the speech or cue being edited."
        (nth index emacsvox-aural-editor-rules)
        (nth destination emacsvox-aural-editor-rules))
       (setf (nth destination emacsvox-aural-editor-rules) rule))
-    (emacsvox-aural-editor--mark-dirty)
+    (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)
     (goto-char (point-min))
     (let ((position
            (text-property-any
             (point-min) (point-max)
-            emacsvox-aural-editor--rule-index-property destination)))
+            emacsvox-aural-editor-rule-index-property destination)))
       (when position (goto-char position)))))
 
 (defun emacsvox-aural-editor-move-rule-up ()
@@ -755,7 +758,7 @@ LABEL identifies the speech or cue being edited."
            (plist-get data :summary)))
          (parent
           (when (eq emacsvox-aural-editor-scope 'scheme)
-            (emacsvox-aural-editor--read-symbol-or-nil
+            (emacsvox-aural-editor-read-symbol-or-nil
              "Parent scheme (empty for none): "
              (plist-get data :parent)
              (remove
@@ -764,7 +767,7 @@ LABEL identifies the speech or cue being edited."
              'must-match)))
          (pack
           (when (eq emacsvox-aural-editor-scope 'scheme)
-            (emacsvox-aural-editor--read-symbol-or-nil
+            (emacsvox-aural-editor-read-symbol-or-nil
              "Sound pack (empty to inherit): "
              (plist-get data :resource-pack)
              (emacsvox-aural-resource-pack-candidates 'sound)
@@ -775,7 +778,7 @@ LABEL identifies the speech or cue being edited."
               (maphash
                (lambda (id _) (push (symbol-name id) values))
                emacsvox-aural-voice-palette-registry)
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Voice palette (empty to inherit): "
                (plist-get data :voice-palette)
                values 'must-match)))))
@@ -785,10 +788,10 @@ LABEL identifies the speech or cue being edited."
       (setq data (plist-put data :resource-pack pack))
       (setq data (plist-put data :voice-palette palette)))
     (setq emacsvox-aural-editor-scheme-data data)
-    (emacsvox-aural-editor--mark-dirty)
+    (emacsvox-aural-editor-mark-dirty)
     (emacsvox-aural-editor-refresh)))
 
-(defun emacsvox-aural-editor--normalized-rules ()
+(defun emacsvox-aural-editor-normalized-rules ()
   "Return working rules with visible list order recorded explicitly."
   (cl-loop
    for rule in emacsvox-aural-editor-rules
@@ -800,9 +803,9 @@ LABEL identifies the speech or cue being edited."
   (plist-put
    (copy-tree emacsvox-aural-editor-scheme-data)
    :rules
-   (emacsvox-aural-editor--normalized-rules)))
+   (emacsvox-aural-editor-normalized-rules)))
 
-(defun emacsvox-aural-editor--validation-report ()
+(defun emacsvox-aural-editor-validation-report ()
   "Validate working data and return a report or simple success marker."
   (pcase emacsvox-aural-editor-scope
     ('scheme
@@ -849,7 +852,7 @@ LABEL identifies the speech or cue being edited."
               ('session 'session)
               ('buffer 'buffer))))
        (emacsvox-aural--compile-rule-list
-        (emacsvox-aural-editor--normalized-rules)
+        (emacsvox-aural-editor-normalized-rules)
         origin "editor")
        t))))
 
@@ -857,7 +860,7 @@ LABEL identifies the speech or cue being edited."
   "Validate all working rules and display diagnostics."
   (interactive)
   (condition-case error
-      (let ((report (emacsvox-aural-editor--validation-report)))
+      (let ((report (emacsvox-aural-editor-validation-report)))
         (if (eq report t)
             (message "Working aural rules are valid")
           (emacsvox-aural-display-validation
@@ -867,7 +870,7 @@ LABEL identifies the speech or cue being edited."
              "scheme"))))
     (error (user-error "%s" (error-message-string error)))))
 
-(defun emacsvox-aural-editor--commit-scheme (rules)
+(defun emacsvox-aural-editor-commit-scheme (rules)
   "Atomically commit personal scheme with normalized RULES."
   (let* ((id emacsvox-aural-editor-target)
          (old (emacsvox-aural-scheme-entry id))
@@ -965,8 +968,8 @@ LABEL identifies the speech or cue being edited."
 (defun emacsvox-aural-editor-save ()
   "Validate and atomically save or apply current working rules."
   (interactive)
-  (let* ((rules (emacsvox-aural-editor--normalized-rules))
-         (report (emacsvox-aural-editor--validation-report)))
+  (let* ((rules (emacsvox-aural-editor-normalized-rules))
+         (report (emacsvox-aural-editor-validation-report)))
     (when
         (and
          (not (eq report t))
@@ -977,7 +980,7 @@ LABEL identifies the speech or cue being edited."
         (emacsvox-aural-validation-report-errors report)
         "; ")))
     (pcase emacsvox-aural-editor-scope
-      ('scheme (emacsvox-aural-editor--commit-scheme rules))
+      ('scheme (emacsvox-aural-editor-commit-scheme rules))
       ('fragment (emacsvox-aural-editor--commit-fragment rules))
       (_ (emacsvox-aural-editor--commit-layer rules)))
     (setq
@@ -1118,7 +1121,7 @@ LABEL identifies the speech or cue being edited."
    mode-line-process
    '(:eval (when emacsvox-aural-editor-dirty " [modified]"))))
 
-(defun emacsvox-aural-editor--personal-scheme-candidates ()
+(defun emacsvox-aural-editor-personal-scheme-candidates ()
   "Return editable non-built-in aural scheme identifiers."
   (let (ids)
     (maphash
@@ -1183,12 +1186,12 @@ discard changes from an already open dirty editor."
            (append
             emacsvox-aural-editor-rules
             (list (copy-tree rule)))))
-        (emacsvox-aural-editor--mark-dirty)
+        (emacsvox-aural-editor-mark-dirty)
         (emacsvox-aural-editor-refresh)
         (when-let* ((position
                      (text-property-any
                       (point-min) (point-max)
-                      emacsvox-aural-editor--rule-index-property index)))
+                      emacsvox-aural-editor-rule-index-property index)))
           (goto-char position))))
     buffer))
 
@@ -1221,7 +1224,7 @@ This restores inherited behavior after the edited scope is saved."
          (append
           (cl-subseq emacsvox-aural-editor-rules 0 index)
           (nthcdr (1+ index) emacsvox-aural-editor-rules)))
-        (emacsvox-aural-editor--mark-dirty)
+        (emacsvox-aural-editor-mark-dirty)
         (emacsvox-aural-editor-refresh)
         (when emacsvox-aural-editor-rules
           (let* ((target
@@ -1230,7 +1233,7 @@ This restores inherited behavior after the edited scope is saved."
                  (position
                   (text-property-any
                    (point-min) (point-max)
-                   emacsvox-aural-editor--rule-index-property target)))
+                   emacsvox-aural-editor-rule-index-property target)))
             (when position
               (goto-char position))))))
     buffer))
@@ -1262,7 +1265,7 @@ the ordinary source associated with the current buffer for buffer scope."
              scheme
              (let ((candidates
                     (if (eq scope 'scheme)
-                        (emacsvox-aural-editor--personal-scheme-candidates)
+                        (emacsvox-aural-editor-personal-scheme-candidates)
                       (emacsvox-aural-editor--personal-fragment-candidates))))
                (unless candidates
                  (user-error
@@ -1360,7 +1363,7 @@ the ordinary source whose buffer-local rules should be edited."
         (when-let* ((position
                      (text-property-any
                       (point-min) (point-max)
-                      emacsvox-aural-editor--rule-index-property
+                      emacsvox-aural-editor-rule-index-property
                       index)))
           (goto-char position)
           (when-let* ((window (get-buffer-window buffer t)))
@@ -1391,6 +1394,31 @@ the ordinary source whose buffer-local rules should be edited."
   #'emacsvox-edit-aural-scheme)
 (defalias 'emacsvox-aural-edit-feature-fragment
   #'emacsvox-edit-aural-feature-fragment)
+
+(defalias 'emacsvox-aural-editor--rule-enabled-p
+  #'emacsvox-aural-editor-rule-enabled-p)
+(defalias 'emacsvox-aural-editor--mark-dirty
+  #'emacsvox-aural-editor-mark-dirty)
+(defalias 'emacsvox-aural-editor--mode-candidates
+  #'emacsvox-aural-editor-mode-candidates)
+(defalias 'emacsvox-aural-editor--face-candidates
+  #'emacsvox-aural-editor-face-candidates)
+(defalias 'emacsvox-aural-editor--read-symbol-or-nil
+  #'emacsvox-aural-editor-read-symbol-or-nil)
+(defalias 'emacsvox-aural-editor--read-attribute-value
+  #'emacsvox-aural-editor-read-attribute-value)
+(defalias 'emacsvox-aural-editor--cue-candidates
+  #'emacsvox-aural-editor-cue-candidates)
+(defalias 'emacsvox-aural-editor--voice-candidates
+  #'emacsvox-aural-editor-voice-candidates)
+(defalias 'emacsvox-aural-editor--normalized-rules
+  #'emacsvox-aural-editor-normalized-rules)
+(defalias 'emacsvox-aural-editor--validation-report
+  #'emacsvox-aural-editor-validation-report)
+(defalias 'emacsvox-aural-editor--commit-scheme
+  #'emacsvox-aural-editor-commit-scheme)
+(defalias 'emacsvox-aural-editor--personal-scheme-candidates
+  #'emacsvox-aural-editor-personal-scheme-candidates)
 
 (provide 'emacsvox-aural-editor)
 ;;; emacsvox-aural-editor.el ends here

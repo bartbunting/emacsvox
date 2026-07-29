@@ -578,7 +578,7 @@
                    (= 1
                       (get-text-property
                        (point)
-                       emacsvox-aural-editor--rule-index-property)))))))
+                       emacsvox-aural-editor-rule-index-property)))))))
         (when (get-buffer "*Aural Editor: session*")
           (kill-buffer "*Aural Editor: session*"))
         (kill-buffer source)))))
@@ -3508,12 +3508,12 @@
         (goto-char
          (text-property-any
           (point-min) (point-max)
-          emacsvox-aural-editor--rule-index-property 0))
+          emacsvox-aural-editor-rule-index-property 0))
         (emacsvox-aural-editor-toggle-rule)
         (goto-char
          (text-property-any
           (point-min) (point-max)
-          emacsvox-aural-editor--rule-index-property 1))
+          emacsvox-aural-editor-rule-index-property 1))
         (emacsvox-aural-editor-move-rule-up)
         (emacsvox-aural-editor-save)
         (should

@@ -91,6 +91,7 @@
           emacsvox-aural-explanation--training-presented
           emacsvox-aural-editor--scope-label
           emacsvox-aural-editor-open-prefilled-rule
+          emacsvox-aural-editor-normalized-rules
           emacsvox-aural-simple-editor--humanize
           emacsvox-aural-doctor--finding
           emacsvox-aural-profiles--ids

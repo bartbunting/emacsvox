@@ -143,7 +143,7 @@ RULE-INDEX associates the line with a working declarative rule."
        'mouse-face 'highlight
        'help-echo "Press RET to edit this field")
       (when (numberp rule-index)
-        (list emacsvox-aural-editor--rule-index-property rule-index))))))
+        (list emacsvox-aural-editor-rule-index-property rule-index))))))
 
 (defun emacsvox-aural-simple-editor--semantic-candidates (kind)
   "Return completion candidates for semantic KIND."
@@ -508,7 +508,7 @@ RULE-INDEX associates the line with a working declarative rule."
             (plist-get rule :id))))
          (emacsvox-aural-simple-editor--insert-field
           "Status:"
-          (if (emacsvox-aural-editor--rule-enabled-p rule)
+          (if (emacsvox-aural-editor-rule-enabled-p rule)
               "enabled"
             "disabled")
           (list :kind 'enabled :rule index)
@@ -560,7 +560,7 @@ RULE-INDEX associates the line with a working declarative rule."
 
 (defun emacsvox-aural-simple-editor--mark-and-refresh (&optional field)
   "Mark working data dirty, refresh, and return to FIELD."
-  (emacsvox-aural-editor--mark-dirty)
+  (emacsvox-aural-editor-mark-dirty)
   (emacsvox-aural-simple-editor-refresh)
   (when field
     (emacsvox-aural-simple-editor--goto-field field))
@@ -637,7 +637,7 @@ RULE-INDEX associates the line with a working declarative rule."
             match
             (plist-put
              match key
-             (emacsvox-aural-editor--read-attribute-value
+             (emacsvox-aural-editor-read-attribute-value
               record (plist-get match key))))
            (let ((required
                   (delq id (copy-sequence (plist-get match :requires)))))
@@ -684,7 +684,7 @@ RULE-INDEX associates the line with a working declarative rule."
     (pcase choice
       ('object
        (let ((role
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Object (none means any): "
                (plist-get match :role)
                (emacsvox-aural-simple-editor--semantic-candidates 'role)
@@ -723,7 +723,7 @@ RULE-INDEX associates the line with a working declarative rule."
              (emacsvox-aural-simple-editor--edit-attribute match)))
       ('module
        (let ((module
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Module (none means any): "
                (plist-get match :module)
                (emacsvox-aural-simple-editor--module-candidates))))
@@ -732,16 +732,16 @@ RULE-INDEX associates the line with a working declarative rule."
          (when module (setq match (plist-put match :module module)))))
       ('major-mode
        (let ((mode
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Major mode (none means any): "
                (plist-get match :mode)
-               (emacsvox-aural-editor--mode-candidates))))
+               (emacsvox-aural-editor-mode-candidates))))
          (setq match
                (emacsvox-aural-simple-editor--plist-delete match :mode))
          (when mode (setq match (plist-put match :mode mode)))))
       ('occasion
        (let ((occasion
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Occasion (none means any): "
                (plist-get match :occasion)
                (emacsvox-aural-occasion-candidates)
@@ -752,10 +752,10 @@ RULE-INDEX associates the line with a working declarative rule."
            (setq match (plist-put match :occasion occasion)))))
       ('visual-face
        (let ((face
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Visual face (none means any): "
                (plist-get match :legacy-face)
-               (emacsvox-aural-editor--face-candidates))))
+               (emacsvox-aural-editor-face-candidates))))
          (setq
           match
           (emacsvox-aural-simple-editor--plist-delete
@@ -806,7 +806,7 @@ RULE-INDEX associates the line with a working declarative rule."
    (intern
     (completing-read
      "Sound cue: "
-     (emacsvox-aural-editor--cue-candidates)
+     (emacsvox-aural-editor-cue-candidates)
      nil 'must-match))))
 
 (defun emacsvox-aural-simple-editor--edit-phase
@@ -882,7 +882,7 @@ instead of replacing it."
            "Content voice: "
            (append
             '("keep current" "inherit" "default")
-            (emacsvox-aural-editor--voice-candidates))
+            (emacsvox-aural-editor-voice-candidates))
            nil 'must-match nil nil "keep current"))
          (space
           (emacsvox-aural-simple-editor--read-space
@@ -939,7 +939,7 @@ instead of replacing it."
           (plist-get emacsvox-aural-editor-scheme-data :summary)))))
       ('parent
        (let ((parent
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Based on scheme (none for no parent): "
                (plist-get emacsvox-aural-editor-scheme-data :parent)
                (remove
@@ -953,7 +953,7 @@ instead of replacing it."
            :parent parent))))
       ('resource-pack
        (let ((pack
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Sound pack (none means inherit): "
                (plist-get
                 emacsvox-aural-editor-scheme-data :resource-pack)
@@ -966,7 +966,7 @@ instead of replacing it."
            :resource-pack pack))))
       ('voice-palette
        (let ((palette
-              (emacsvox-aural-editor--read-symbol-or-nil
+              (emacsvox-aural-editor-read-symbol-or-nil
                "Voice palette (none means inherit): "
                (plist-get
                 emacsvox-aural-editor-scheme-data :voice-palette)
@@ -985,7 +985,7 @@ instead of replacing it."
           (nth index emacsvox-aural-editor-rules)
           (plist-put
            rule :enabled
-           (not (emacsvox-aural-editor--rule-enabled-p rule))))))
+           (not (emacsvox-aural-editor-rule-enabled-p rule))))))
       ('match
        (let* ((rule
                (copy-tree
@@ -1068,7 +1068,7 @@ instead of replacing it."
             (intern
              (completing-read
               "Visual face: "
-              (emacsvox-aural-editor--face-candidates)
+              (emacsvox-aural-editor-face-candidates)
               nil 'must-match))))
          (role
           (when (string= target-kind "semantic object")
@@ -1086,12 +1086,12 @@ instead of replacing it."
              (or face role)))))
          (id (emacsvox-aural-simple-editor--unique-rule-id name))
          (module
-          (emacsvox-aural-editor--read-symbol-or-nil
+          (emacsvox-aural-editor-read-symbol-or-nil
            "Module (none means any): "
            (and (eq role 'heading) 'org)
            (emacsvox-aural-simple-editor--module-candidates)))
          (occasion
-          (emacsvox-aural-editor--read-symbol-or-nil
+          (emacsvox-aural-editor-read-symbol-or-nil
            "Occasion (none means any): "
            'navigation
            (emacsvox-aural-occasion-candidates)
@@ -1109,7 +1109,7 @@ instead of replacing it."
           (setq match (plist-put match :level level)))))
     (when role
       (let ((state
-             (emacsvox-aural-editor--read-symbol-or-nil
+             (emacsvox-aural-editor-read-symbol-or-nil
               "Required state (none means any): "
               nil
               (emacsvox-aural-simple-editor--semantic-candidates 'state)
@@ -1178,21 +1178,21 @@ instead of replacing it."
      (nth index emacsvox-aural-editor-rules)
      (plist-put
       rule :enabled
-      (not (emacsvox-aural-editor--rule-enabled-p rule))))
+      (not (emacsvox-aural-editor-rule-enabled-p rule))))
     (emacsvox-aural-simple-editor--mark-and-refresh
      (list :kind 'enabled :rule index))))
 
 (defun emacsvox-aural-simple-editor-save ()
   "Validate and save the current personal scheme."
   (interactive)
-  (let* ((rules (emacsvox-aural-editor--normalized-rules))
-         (report (emacsvox-aural-editor--validation-report)))
+  (let* ((rules (emacsvox-aural-editor-normalized-rules))
+         (report (emacsvox-aural-editor-validation-report)))
     (unless (emacsvox-aural-validation-report-valid report)
       (user-error
        "Cannot save scheme: %s"
        (string-join
         (emacsvox-aural-validation-report-errors report) "; ")))
-    (emacsvox-aural-editor--commit-scheme rules)
+    (emacsvox-aural-editor-commit-scheme rules)
     (setq
      emacsvox-aural-editor-rules (copy-tree rules)
      emacsvox-aural-editor-dirty nil)
@@ -1347,7 +1347,7 @@ instead of replacing it."
   "Read a personal scheme, offering to copy a built-in."
   (let* ((copy "[Copy a built-in scheme]")
          (personal
-          (emacsvox-aural-editor--personal-scheme-candidates))
+          (emacsvox-aural-editor-personal-scheme-candidates))
          (choice
           (completing-read
            "Edit personal aural scheme: "

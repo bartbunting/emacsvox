@@ -167,6 +167,7 @@
          emacsvox-aural-home--entries
          emacsvox-aural-editor--scope-label
          emacsvox-aural-editor-open-prefilled-rule
+         emacsvox-aural-editor-normalized-rules
          emacsvox-aural-overrides--collect
          emacsvox-aural-simple-editor--humanize
          emacsvox-aural-doctor--finding
