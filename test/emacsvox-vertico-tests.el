@@ -20,8 +20,10 @@
   "Vertico insertion advice preserves the result and calls once."
   (with-temp-buffer
     (let ((calls 0))
-      (cl-letf (((symbol-function 'emacsvox-icon) #'ignore)
-                ((symbol-function 'emacsvox-speak-region) #'ignore))
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-region-content)
+            (lambda (&rest _) "candidate"))
+           ((symbol-function 'emacsvox-aural-submit) #'ignore))
         (should
          (eq 'inserted
              (emacsvox--advice-vertico-insert-around
@@ -32,39 +34,45 @@
         (should (= calls 1))))))
 
 (ert-deftest emacsvox-vertico-acceptance-carries-candidate-semantics ()
-  "Accepted-candidate cue and speech share completion facts and context."
+  "Accepted-candidate content and cue share one semantic submission."
   (with-temp-buffer
     (let ((vertico--index 2)
+          bounds
           captured)
       (cl-letf
-          (((symbol-function 'emacsvox-icon)
-            (lambda (icon)
-              (push
-               (list
-                icon
-                (copy-tree emacsvox-aural-submission-facts)
-                (copy-tree emacsvox-aural-submission-context))
-               captured)))
+          (((symbol-function 'emacsvox-speak-region-content)
+            (lambda (start end)
+              (setq bounds (list start end))
+              (buffer-substring start end)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments))))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (&rest _)
+              (ert-fail "Normal acceptance used the legacy icon path")))
            ((symbol-function 'emacsvox-speak-region)
             (lambda (&rest _)
-              (push
-               (list
-                'speech
-                (copy-tree emacsvox-aural-submission-facts)
-                (copy-tree emacsvox-aural-submission-context))
-               captured))))
+              (ert-fail "Normal acceptance used legacy region speech"))))
         (emacsvox--advice-vertico-insert-around
          (lambda () (insert "candidate"))))
-      (setq captured (nreverse captured))
-      (should (equal (mapcar #'car captured) '(complete speech)))
-      (dolist (entry captured)
-        (should (eq (plist-get (cadr entry) :role) 'candidate))
-        (should (equal (plist-get (cadr entry) :events) '(accepted)))
-        (should (equal (plist-get (cadr entry) :states) '(selected)))
-        (should (= (plist-get (cadr entry) :completion-index) 2))
-        (should (eq (plist-get (caddr entry) :module) 'vertico))
+      (should (equal bounds '(1 10)))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "candidate"))
+        (should (eq (plist-get facts :role) 'candidate))
+        (should (equal (plist-get facts :events) '(accepted)))
+        (should (equal (plist-get facts :states) '(selected)))
+        (should (= (plist-get facts :completion-index) 2))
+        (should (eq (plist-get arguments :module) 'vertico))
+        (should (eq (plist-get arguments :occasion) 'state-change))
         (should
-         (eq (plist-get (caddr entry) :occasion) 'state-change))))))
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           actions)
+          '(complete)))))))
 
 (ert-deftest emacsvox-vertico-acceptance-preserves-region-content ()
   "Accepted-candidate speech preserves bounds, properties, and return value."
@@ -72,26 +80,36 @@
     (insert "prefix ")
     (let ((vertico--index 2)
           (emacsvox-speak-voice-annotated-paragraphs t)
-          events)
+          captured)
       (should
        (eq
         'inserted
         (cl-letf
-            (((symbol-function 'emacsvox-icon)
-              (lambda (icon) (push (list 'icon icon) events)))
+            (((symbol-function 'emacsvox-aural-submit)
+              (lambda (content &rest arguments)
+                (setq captured (cons content arguments))))
+             ((symbol-function 'emacsvox-icon)
+              (lambda (&rest _)
+                (ert-fail "Normal acceptance used the legacy icon path")))
              ((symbol-function 'tts-speak)
-              (lambda (text) (push (list 'speak text) events))))
+              (lambda (&rest _)
+                (ert-fail "Normal acceptance used direct speech"))))
           (emacsvox--advice-vertico-insert-around
            (lambda ()
              (insert (propertize "candidate" 'personality 'voice-lighten))
              'inserted)))))
-      (setq events (nreverse events))
-      (should (equal (mapcar #'car events) '(icon speak)))
-      (should (eq (cadar events) 'complete))
-      (let ((spoken (cadadr events)))
+      (pcase-let* ((`(,spoken . ,arguments) captured)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
         (should (equal spoken "candidate"))
         (should
-         (eq (get-text-property 0 'personality spoken) 'voice-lighten)))
+         (eq (get-text-property 0 'personality spoken) 'voice-lighten))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           actions)
+          '(complete))))
       (should (equal (buffer-string) "prefix candidate"))
       (should
        (eq
@@ -106,9 +124,14 @@
           captured)
       (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
       (cl-letf
-          (((symbol-function 'emacsvox-icon) #'ignore)
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _) (setq captured content)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (&rest _)
+              (ert-fail "Normal acceptance used the legacy icon path")))
            ((symbol-function 'tts-speak)
-            (lambda (text) (setq captured text))))
+            (lambda (&rest _)
+              (ert-fail "Normal acceptance used direct speech"))))
         (emacsvox--advice-vertico-insert-around
          (lambda () (insert "first\n\nsecond"))))
       (should emacsvox-speak-voice-annotated-paragraphs)
@@ -306,6 +329,91 @@
         (should (eq (plist-get context :occasion) 'navigation))
         (should
          (eq (plist-get context :icons-enabled) icons-enabled))))))
+
+(ert-deftest emacsvox-vertico-native-acceptance-presents-one-transaction ()
+  "Accepted content and its completion cue form one native transaction."
+  (dolist (icons-enabled '(t nil))
+    (with-temp-buffer
+      (let ((vertico--index 2)
+            (emacsvox-aural-active-scheme 'default)
+            (emacsvox-aural-enabled-feature-fragments nil)
+            (emacsvox-aural-user-rules nil)
+            (emacsvox-aural-session-rules nil)
+            (emacsvox-aural-buffer-rules nil)
+            (emacsvox-aural-presentation-history nil)
+            (emacsvox-aural-presentation-history-limit 20)
+            (emacsvox-aural--presentation-sequence 0)
+            (emacsvox-aural--submission-sequence 0)
+            (emacsvox-aural-plan-presented-hook nil)
+            (emacsvox-use-icons icons-enabled)
+            (emacsvox-aural-face-presentation-enabled t)
+            (voice-lock-mode t)
+            (submit-function (symbol-function 'emacsvox-aural-submit))
+            events
+            submission)
+        (setq-local emacsvox-speak-voice-annotated-paragraphs t)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest arguments)
+                (setq submission (apply submit-function arguments))))
+             ((symbol-function 'tts-speak)
+              (lambda (prepared)
+                (with-temp-buffer
+                  (insert prepared)
+                  (tts-audio-format (point-min) (point-max)))))
+             ((symbol-function 'emacsvox-queue-resource)
+              (lambda (_resource) (push 'cue events)))
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text) (push (list 'text text) events)))
+             ((symbol-function 'tts--protocol-silence) #'ignore))
+          (should
+           (eq
+            'inserted
+            (emacsvox--advice-vertico-insert-around
+             (lambda ()
+               (insert
+                (propertize
+                 "candidate" 'personality 'voice-lighten))
+               'inserted)))))
+        (should (emacsvox-aural-submission-p submission))
+        (should
+         (equal
+          (nreverse events)
+          (if icons-enabled
+              '(cue (text "candidate"))
+            '((text "candidate")))))
+        (should (= (length emacsvox-aural-presentation-history) 1))
+        (should
+         (= (emacsvox-aural-presentation-record-transaction-id
+             (emacsvox-aural-last-presentation))
+            1))
+        (let* ((plans (emacsvox-aural-submission-plans submission))
+               (plan (car plans))
+               (facts (emacsvox-aural-concrete-plan-facts plan))
+               (content (emacsvox-aural-concrete-plan-content plan))
+               (context (emacsvox-aural-concrete-plan-context plan)))
+          (should (= (length plans) 1))
+          (should (eq (plist-get facts :role) 'candidate))
+          (should (equal (plist-get facts :events) '(accepted)))
+          (should (equal (plist-get facts :states) '(selected)))
+          (should (= (plist-get facts :completion-index) 2))
+          (should
+           (equal
+            (mapcar
+             #'emacsvox-aural-concrete-action-cue
+             (emacsvox-aural-concrete-plan-before plan))
+            (and icons-enabled '(complete))))
+          (should
+           (eq
+            (emacsvox-aural-concrete-content-voice-request content)
+            'voice-lighten))
+          (should (eq (plist-get context :module) 'vertico))
+          (should (eq (plist-get context :occasion) 'state-change))
+          (should
+           (eq (plist-get context :icons-enabled) icons-enabled)))))))
 
 (provide 'emacsvox-vertico-tests)
 ;;; emacsvox-vertico-tests.el ends here

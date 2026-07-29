@@ -633,20 +633,30 @@ the sense of the filter. "
 (defvar ems--large-text-size 40000
   "Upper limit on what we attempt to speak in one shot.")
 
+(defun emacsvox-speak-region-content (start end)
+  "Prepare and return speech content from START to END.
+
+For a region smaller than `ems--large-text-size', preserve source formatting
+and apply the paragraph voice annotation used by `emacsvox-speak-region'.
+Return nil for a region large enough to require windowful speech."
+  (let ((inhibit-modification-hooks t)
+        (deactivate-mark nil))
+    (when (< (abs (- start end)) ems--large-text-size)
+      (unless emacsvox-speak-voice-annotated-paragraphs
+        (save-restriction
+          (narrow-to-region start end)
+          (emacsvox-speak-voice-annotate-paragraphs)))
+      (emacsvox-aural-source-substring start end))))
+
 (defun emacsvox-speak-region (start end)
   "Speak region bounded by start and end. "
   (interactive "r")
   (let ((inhibit-modification-hooks t)
         (deactivate-mark nil))
-    (when (and
-           (< (abs (- start end )) ems--large-text-size)
-           (not emacsvox-speak-voice-annotated-paragraphs))
-      (save-restriction
-        (narrow-to-region start end)
-        (emacsvox-speak-voice-annotate-paragraphs)))
-    (if (< (abs (- start end )) ems--large-text-size)
-        (tts-speak (emacsvox-aural-source-substring start end))
-      (call-interactively #' emacsvox-speak-windowful))))
+    (let ((content (emacsvox-speak-region-content start end)))
+      (if content
+          (tts-speak content)
+        (call-interactively #'emacsvox-speak-windowful)))))
 
 (defun emacsvox-speak-extent (beg end &optional no-case)
   "Speak extent delimited by beg and end.

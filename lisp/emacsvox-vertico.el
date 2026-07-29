@@ -99,21 +99,45 @@ When ACCEPTED-P is non-nil, record candidate acceptance instead of navigation."
       (when icon (emacsvox-icon icon))
       (when text (tts-speak text)))))
 
+(defun emacsvox-vertico--speak-accepted-region-legacy (facts start end)
+  "Present accepted region START to END with legacy FACTS bindings."
+  (let* ((context
+          (emacsvox-aural-capture-context 'vertico 'state-change))
+         (emacsvox-aural-submission-facts facts)
+         (emacsvox-aural-submission-context context)
+         (emacsvox-aural-submission-module 'vertico)
+         (emacsvox-aural-submission-occasion 'state-change))
+    (emacsvox-icon 'complete)
+    (emacsvox-speak-region start end)))
+
+(defun emacsvox-vertico--submit-accepted-region (facts start end)
+  "Submit accepted region START to END with FACTS.
+
+Keep empty and oversized regions on their characterized legacy paths."
+  (let ((content
+         (unless (= start end)
+           (emacsvox-speak-region-content start end))))
+    (if content
+        (emacsvox-aural-submit
+         content
+         :facts facts
+         :module 'vertico
+         :occasion 'state-change
+         :compatibility-actions
+         (list (emacsvox-aural-compatibility-icon 'complete)))
+      (emacsvox-vertico--speak-accepted-region-legacy
+       facts start end))))
+
 ;;;  Advice interactive commands
 
 (defun emacsvox--advice-vertico-insert-around (orig-fun &rest args)
   "Call ORIG-FUN once and speak the inserted completion."
   (let ((orig-point (point))
         (result (apply orig-fun args)))
-    (let* ((facts (emacsvox-vertico-candidate-facts t))
-           (context
-            (emacsvox-aural-capture-context 'vertico 'state-change))
-           (emacsvox-aural-submission-facts facts)
-           (emacsvox-aural-submission-context context)
-           (emacsvox-aural-submission-module 'vertico)
-           (emacsvox-aural-submission-occasion 'state-change))
-      (emacsvox-icon 'complete)
-      (emacsvox-speak-region orig-point (point)))
+    (emacsvox-vertico--submit-accepted-region
+     (emacsvox-vertico-candidate-facts t)
+     orig-point
+     (point))
     result))
 
 (defun emacsvox--advice-vertico--exhibit-after (&rest _)
