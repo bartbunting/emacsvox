@@ -163,6 +163,9 @@
          emacsvox-aural-semantics--set-entries
          emacsvox-aural-explanation--training-presented
          emacsvox-aural-recent-feedback--entries
+         emacsvox-aural-ui-announce-boundary
+         emacsvox-aural-feature-fragments-install-state
+         emacsvox-aural-feature-fragments-refresh-if-live
          emacsvox-aural-feature-fragments--set-entries
          emacsvox-aural-home--entries
          emacsvox-aural-editor--scope-label

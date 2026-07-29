@@ -86,9 +86,12 @@
           emacsvox-aural-preview-play-plan
           emacsvox-aural-validation--report
           emacsvox-aural-ui-interface-buffer-p
+          emacsvox-aural-ui-announce-boundary
           emacsvox-aural-inspection-source-buffer
           emacsvox-aural-semantics--set-entries
           emacsvox-aural-explanation--training-presented
+          emacsvox-aural-feature-fragments-install-state
+          emacsvox-aural-feature-fragments-refresh-if-live
           emacsvox-aural-editor--scope-label
           emacsvox-aural-editor-open-prefilled-rule
           emacsvox-aural-editor-normalized-rules

@@ -248,7 +248,7 @@ the cell value first."
     emacsvox-aural-ui-row-speaker
     #'emacsvox-aural-ui-speak-current-cell)))
 
-(defun emacsvox-aural-ui--announce-boundary (message)
+(defun emacsvox-aural-ui-announce-boundary (message)
   "Announce tabulated-list boundary MESSAGE."
   (when (fboundp 'emacsvox-icon)
     (emacsvox-icon 'warn-user))
@@ -278,7 +278,7 @@ LIST-NAME and SPEAKER override the current buffer's configured values."
             (emacsvox-aural-ui--synchronize-window-points)
             (tabulated-list-get-id))
         (goto-char origin)
-        (emacsvox-aural-ui--announce-boundary
+        (emacsvox-aural-ui-announce-boundary
          (format
           "%s of %s."
           (if (> direction 0) "Bottom" "Top")
@@ -302,9 +302,9 @@ LIST-NAME and SPEAKER override the current buffer's configured values."
          (target (+ index direction)))
     (cond
      ((< target 0)
-      (emacsvox-aural-ui--announce-boundary "First column."))
+      (emacsvox-aural-ui-announce-boundary "First column."))
      ((> target last)
-      (emacsvox-aural-ui--announce-boundary "Last column."))
+      (emacsvox-aural-ui-announce-boundary "Last column."))
      (t
       (emacsvox-aural-ui-goto-tabulated-column target)
       (emacsvox-aural-ui-speak-current-cell)))))
@@ -390,6 +390,9 @@ When KILL is non-nil, kill the interface buffer as `quit-window' would."
   "Aural-Tabulated"
   "Base mode for spoken tabulated aural interfaces."
   (emacsvox-aural-ui-register-interface))
+
+(defalias 'emacsvox-aural-ui--announce-boundary
+  #'emacsvox-aural-ui-announce-boundary)
 
 (provide 'emacsvox-aural-ui)
 

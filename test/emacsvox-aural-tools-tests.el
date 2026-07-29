@@ -53,7 +53,7 @@
          (emacsvox-aural--presentation-sequence 0)
          (emacsvox-aural-history-record-interface-presentations nil)
          (emacsvox-aural-inspection-last-source-buffer nil)
-         (emacsvox-aural-tools--fragment-preview-last-examples
+         (emacsvox-aural-feature-fragments--fragment-preview-last-examples
           (make-hash-table :test #'eq))
          (emacsvox-aural-active-scheme 'default)
          (emacsvox-aural-active-scheme-changed-hook nil)
@@ -2348,7 +2348,7 @@
      '(:module org :mode org-mode :occasion navigation)
      :source "test")
     (let ((examples
-           (emacsvox-aural-tools--fragment-preview-examples 'heading-levels)))
+           (emacsvox-aural-feature-fragments--fragment-preview-examples 'heading-levels)))
       (should
        (equal
         (mapcar
@@ -2466,7 +2466,7 @@
                (eq
                 (gethash
                  'heading-earcons
-                 emacsvox-aural-tools--fragment-preview-last-examples)
+                 emacsvox-aural-feature-fragments--fragment-preview-last-examples)
                 'level-two))
               (setq spoken nil)
               (cl-letf
@@ -2516,7 +2516,7 @@
             (lambda (resource sample-id &optional balance)
               (push (list resource sample-id balance) played))))
         (let ((result
-               (emacsvox-aural-tools--audition-fragment-preview-cues
+               (emacsvox-aural-feature-fragments--audition-fragment-preview-cues
                 'heading-earcons example nil)))
           (should (= stops 1))
           (should (= (length played) 1))
@@ -2630,7 +2630,7 @@
                 (setq
                  tabulated-list-entries
                  (list
-                  (emacsvox-aural-tools--fragment-row 'disposable)))
+                  (emacsvox-aural-feature-fragments--fragment-row 'disposable)))
                 (tabulated-list-print)
                 (emacsvox-aural-feature-fragments-move-up)))
             (should

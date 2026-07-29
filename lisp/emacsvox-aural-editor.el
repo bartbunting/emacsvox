@@ -919,10 +919,10 @@ LABEL identifies the speech or cue being edited."
       (user-error
        "Built-in feature fragments cannot be edited; copy it first"))
     (puthash id entry registry)
-    (emacsvox-aural-tools--install-feature-fragment-state
+    (emacsvox-aural-feature-fragments-install-state
      registry emacsvox-aural-enabled-feature-fragments)
     (setq emacsvox-aural-editor-scheme-data data)
-    (emacsvox-aural-tools--refresh-fragment-manager id)))
+    (emacsvox-aural-feature-fragments-refresh-if-live id)))
 
 (defun emacsvox-aural-editor--commit-layer (rules)
   "Atomically commit normalized RULES to the selected override layer."
