@@ -177,7 +177,8 @@ is the default inherited by a newly created TTS scratch buffer."
     (rename-buffer "transport-source" t)
     (setq
      major-mode 'emacs-lisp-mode
-     emacsvox-aural-module 'elisp)
+     emacsvox-aural-module 'elisp
+     voice-lock-mode t)
     (let ((context (emacsvox-aural-capture-context nil 'navigation)))
       (should (eq (plist-get context :source-buffer) (current-buffer)))
       (should
@@ -1431,7 +1432,9 @@ is the default inherited by a newly created TTS scratch buffer."
           queued)
       (unwind-protect
           (with-temp-buffer
-            (setq major-mode 'emacs-lisp-mode)
+            (setq
+             major-mode 'emacs-lisp-mode
+             voice-lock-mode t)
             (cl-letf
                 (((symbol-function 'process-live-p) (lambda (_) t))
                  ((symbol-function 'tts-get-voice-command)

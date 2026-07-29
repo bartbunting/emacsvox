@@ -211,8 +211,8 @@
     (should (eq (car captured) 'fundamental-mode))
     (should-not (eq (car captured) 'emacsvox-test-source-mode))))
 
-(ert-deftest emacsvox-voice-global-disable-does-not-govern-new-buffer ()
-  "Characterize a new buffer retaining Voice Lock after global disable."
+(ert-deftest emacsvox-voice-global-mode-governs-new-buffers ()
+  "New buffers follow the disabled or enabled global Voice Lock state."
   (let ((global-state global-voice-lock-mode)
         (default-state (default-value 'voice-lock-mode))
         (buffer-states
@@ -222,27 +222,51 @@
               (list
                buffer
                (local-variable-p 'voice-lock-mode)
-               voice-lock-mode)))
+               voice-lock-mode
+               (local-variable-p 'voice-lock-mode--set-explicitly)
+               voice-lock-mode--set-explicitly)))
           (buffer-list)))
-        created)
+        disabled-buffer
+        enabled-buffer)
     (unwind-protect
         (progn
           (global-voice-lock-mode -1)
-          (setq created (generate-new-buffer " *voice-lock-new*"))
-          (with-current-buffer created
+          (setq
+           disabled-buffer
+           (generate-new-buffer " *voice-lock-disabled*"))
+          (with-current-buffer disabled-buffer
+            (fundamental-mode)
             (should-not global-voice-lock-mode)
+            (should-not voice-lock-mode))
+          (global-voice-lock-mode 1)
+          (setq
+           enabled-buffer
+           (generate-new-buffer " *voice-lock-enabled*"))
+          (with-current-buffer enabled-buffer
+            (fundamental-mode)
+            (should global-voice-lock-mode)
             (should voice-lock-mode)))
-      (when (buffer-live-p created)
-        (kill-buffer created))
-      (setq global-voice-lock-mode global-state)
+      (dolist (buffer (list disabled-buffer enabled-buffer))
+        (when (buffer-live-p buffer)
+          (kill-buffer buffer)))
+      (global-voice-lock-mode (if global-state 1 -1))
       (set-default 'voice-lock-mode default-state)
       (dolist (state buffer-states)
-        (pcase-let ((`(,buffer ,local ,value) state))
+        (pcase-let
+            ((`(,buffer ,local ,value ,explicit-local ,explicit-value)
+              state))
           (when (buffer-live-p buffer)
             (with-current-buffer buffer
               (if local
                   (set (make-local-variable 'voice-lock-mode) value)
-                (kill-local-variable 'voice-lock-mode)))))))))
+                (kill-local-variable 'voice-lock-mode))
+              (if explicit-local
+                  (set
+                   (make-local-variable
+                    'voice-lock-mode--set-explicitly)
+                   explicit-value)
+                (kill-local-variable
+                 'voice-lock-mode--set-explicitly)))))))))
 
 (ert-deftest emacsvox-voice-speak-line-snapshots-overlay-faces ()
   "Normal line speech captures overlay faces before copying source text."

@@ -236,7 +236,7 @@ Define a voice for it if needed, then return the symbol."
 
 (define-minor-mode voice-lock-mode
   "Toggle voice lock mode."
-  :init-value t
+  :init-value nil
   :keymap nil
   (when (called-interactively-p 'interactive)
     (let ((state (if voice-lock-mode 'on 'off)))
@@ -245,7 +245,7 @@ Define a voice for it if needed, then return the symbol."
 (defun voice-lock-mode--turn-on ()
   "Turn on Voice Lock mode ."
   (interactive)
-  (voice-lock-mode))
+  (voice-lock-mode 1))
 
 (define-globalized-minor-mode global-voice-lock-mode
   voice-lock-mode

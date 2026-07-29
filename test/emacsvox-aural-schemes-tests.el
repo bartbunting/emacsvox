@@ -499,6 +499,7 @@
              '(:content "legacy")
              '(:mode text-mode
                :occasion continuous
+               :voice-lock-enabled t
                :legacy-personality voice-comment
                :legacy-source face)))
            (content (emacsvox-aural-render-plan-content plan)))
@@ -519,6 +520,7 @@
              (list
               :mode 'text-mode
               :occasion 'continuous
+              :voice-lock-enabled t
               :legacy-personality style)))
            (content (emacsvox-aural-render-plan-content plan)))
       (should
@@ -559,6 +561,7 @@
              '(:content "legacy")
              '(:mode text-mode
                :occasion continuous
+               :voice-lock-enabled t
                :legacy-personality voice-comment)))))
       (should
        (eq
@@ -576,6 +579,7 @@
              '(:content "legacy")
              '(:mode text-mode
                :occasion continuous
+               :voice-lock-enabled t
                :legacy-personality voice-comment)))))
       (should-not (emacsvox-aural-content-style-voice content))
       (should
@@ -662,6 +666,7 @@
              '(:content "comment")
              '(:mode org-mode
                :occasion continuous
+               :voice-lock-enabled t
                :legacy-personality voice-comment))))
           (text-content
            (emacsvox-aural-render-plan-content
@@ -669,6 +674,7 @@
              '(:content "comment")
              '(:mode text-mode
                :occasion continuous
+               :voice-lock-enabled t
                :legacy-personality voice-comment)))))
       (should
        (eq
