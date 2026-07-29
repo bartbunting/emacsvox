@@ -888,6 +888,52 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (icon warn-user)
       (speak "approve?")))))
 
+(ert-deftest emacsvox-agent-shell-content-text-uses-atomic-submissions ()
+  "Response, user, and plan text each use one native content transaction."
+  (let ((emacsvox-agent-shell-speech-level 'full)
+        captured
+        direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon direct-output)))
+         ((symbol-function 'tts-speak)
+          (lambda (&rest _) (push 'speech direct-output))))
+      (emacsvox-agent-shell--speak-content "Answer" 'agent-message)
+      (emacsvox-agent-shell--speak-content "Prompt" 'user-message)
+      (emacsvox-agent-shell--speak-content "One step" 'plan))
+    (should-not direct-output)
+    (setq captured (nreverse captured))
+    (should (= (length captured) 3))
+    (dolist
+        (entry
+         (cl-mapcar
+          #'list
+          captured
+          '((agent-response "Answer" nil)
+            (agent-user-prompt "User: Prompt" item)
+            (agent-plan "Plan: One step" item))))
+      (pcase-let* ((`(,submission (,role ,text ,icon)) entry)
+                   (`(,content ,arguments ,facts ,context) submission)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content text))
+        (should (eq (plist-get facts :role) role))
+        (should (eq (plist-get context :module) 'agent-shell))
+        (should (eq (plist-get context :occasion) 'continuous))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-compatibility-action-value actions)
+          (and icon (list icon))))))))
+
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-package-header ()
   "Speech setup should not replace agent-shell's semantic header."
   (with-temp-buffer
@@ -5027,7 +5073,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (let ((emacsvox-agent-shell-speech-level 'full))
               (emacsvox-agent-shell--speak-content "One step" 'plan))))
          (presentation (car presentations)))
-    (should (eq (car presentation) 'icon))
+    (should (eq (car presentation) 'submit))
     (should (eq (plist-get (nth 2 presentation) :role) 'agent-plan))
     (should (eq (nth 3 presentation) 'agent-shell))
     (should (eq (nth 4 presentation) 'continuous))

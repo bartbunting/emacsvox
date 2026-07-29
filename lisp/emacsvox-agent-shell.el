@@ -1776,17 +1776,25 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
          (> (length block-id) 10)) 'tool-call)
    (t 'unknown)))
 
+(defun emacsvox-agent-shell--submit-content-text (text &optional icon)
+  "Submit Agent Shell content TEXT with optional compatibility ICON."
+  (emacsvox-aural-submit
+   text
+   :compatibility-actions
+   (when icon
+     (list (emacsvox-aural-compatibility-icon icon)))))
+
 (defun emacsvox-agent-shell--speak-content-compatibility (content block-type)
   "Speak CONTENT based on BLOCK-TYPE with appropriate feedback."
   (let ((trimmed-content (string-trim content)))
     (pcase block-type
       ('agent-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (tts-speak trimmed-content)))
+         (emacsvox-agent-shell--submit-content-text trimmed-content)))
       ('user-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-icon 'item)
-         (tts-speak (concat "User: " trimmed-content))))
+         (emacsvox-agent-shell--submit-content-text
+          (concat "User: " trimmed-content) 'item)))
       ('thought
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (pcase emacsvox-agent-shell-speak-thought-process
@@ -1813,8 +1821,8 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
             (emacsvox-icon 'task-done)))))
       ('plan
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-icon 'item)
-         (tts-speak (concat "Plan: " trimmed-content))))
+         (emacsvox-agent-shell--submit-content-text
+          (concat "Plan: " trimmed-content) 'item)))
       ('error
        (emacsvox-agent-shell--deliver-announcement
         'warn-user trimmed-content))
