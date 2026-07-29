@@ -3070,6 +3070,30 @@ skipped.  Changed Lisp compiles with warnings treated as errors, compiled
 Aural parity and normal build-tree startup pass, Org lint is clean, and the
 generated reference and Aural audit are current.
 
+** DONE Slice 41: Split Aural Tools by Responsibility
+CLOSED: [2026-07-29 Wed]
+
+- Move the Presentation Options manager, feature-fragment previews, and
+  mutation transactions into =emacsvox-aural-feature-fragments.el=.
+- Move captured presentation history, replay, inspection, and history
+  controls into =emacsvox-aural-recent-feedback.el=.
+- Move the status and routing control centre into
+  =emacsvox-aural-home.el=, while retaining one lightweight refresh callback
+  in the core so independent managers do not have to load the Home interface.
+- Preserve public command names, normal startup loading, autoload entry
+  points, compiled build ordering, and existing behavior.
+
+Deliverable: =emacsvox-aural-tools.el= is reduced from 5,143 to 2,890 lines
+and once again concentrates on semantic and scheme discovery, explanation,
+remapping, preview, mutation, and training rather than housing every Aural
+interface.
+
+Checks: all 89 focused Aural tools and editor tests pass.  The complete Emacs
+31 source suite has 1,672 tests: 1,671 pass and the optional Mu4e test is
+skipped.  Changed Lisp compiles with warnings treated as errors, compiled
+Aural parity and normal build-tree startup pass, and the generated reference
+and Aural audit are current.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:

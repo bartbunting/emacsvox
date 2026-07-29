@@ -75,6 +75,7 @@ emacsvox-aural-inspection.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-recent-feedback.elc \
 emacsvox-aural-feature-fragments.elc \
+emacsvox-aural-home.elc \
 emacsvox-aural-editor.elc \
 emacsvox-aural-overrides.elc \
 emacsvox-aural-simple-editor.elc \
@@ -338,6 +339,9 @@ emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
 emacsvox-aural-validation.elc
 emacsvox-aural-recent-feedback.elc: emacsvox-aural-tools.elc
 emacsvox-aural-feature-fragments.elc: emacsvox-aural-tools.elc
+emacsvox-aural-home.elc: \
+emacsvox-aural-tools.elc emacsvox-aural-recent-feedback.elc \
+emacsvox-aural-feature-fragments.elc
 emacsvox-aural-editor.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-feature-fragments.elc
 emacsvox-aural-overrides.elc: \

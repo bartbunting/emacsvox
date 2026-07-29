@@ -16,6 +16,7 @@
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-feature-fragments)
+(require 'emacsvox-aural-home)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-overrides)
 (require 'emacsvox-aural-simple-editor)

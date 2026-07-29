@@ -57,6 +57,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-home)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-simple-editor)
 (require 'emacsvox-aural-sound-packs)

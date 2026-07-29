@@ -37,6 +37,7 @@
          "emacsvox-aural-tools"
          "emacsvox-aural-recent-feedback"
          "emacsvox-aural-feature-fragments"
+         "emacsvox-aural-home"
          "emacsvox-aural-editor"
          "emacsvox-aural-overrides"
          "emacsvox-aural-simple-editor"
@@ -73,6 +74,7 @@
          emacsvox-aural-tools--training-presented
          emacsvox-aural-recent-feedback--entries
          emacsvox-aural-feature-fragments--set-entries
+         emacsvox-aural-home--entries
          emacsvox-aural-editor--scope-label
          emacsvox-aural-overrides--collect
          emacsvox-aural-simple-editor--humanize
