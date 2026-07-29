@@ -44,13 +44,17 @@ values.  Suppression affects content voice policy, not semantic actions.")
 
 (declare-function tts-speak "tts-speak" (text))
 
-(defun emacsvox-aural-voice-lock-enabled-p (&optional buffer)
-  "Return whether legacy Voice Lock compatibility is active in BUFFER.
+(defun emacsvox-aural-compatibility-voice-enabled-p (&optional buffer)
+  "Return whether legacy compatibility voices are active in BUFFER.
 
 Before Voice Lock is loaded, preserve the historical enabled default."
   (with-current-buffer (or buffer (current-buffer))
     (or (not (boundp 'voice-lock-mode))
         (not (null voice-lock-mode)))))
+
+(defun emacsvox-aural-voice-lock-enabled-p (&optional buffer)
+  "Return whether the Voice Lock compatibility adapter is active in BUFFER."
+  (emacsvox-aural-compatibility-voice-enabled-p buffer))
 
 (defun emacsvox-aural-voice-inaudible-p (voice)
   "Return non-nil when VOICE requests compatibility content suppression."

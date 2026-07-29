@@ -12,6 +12,7 @@
 (require 'tts-speak)
 (require 'voice-setup)
 (require 'emacsvox-speak)
+(require 'emacsvox-aural-compatibility-voice)
 
 (defvar emacsvox-pronounce-personality)
 (defvar emacsvox-pronounce-table)
@@ -482,6 +483,41 @@
     (with-temp-buffer
       (fundamental-mode)
       (should-not voice-lock-mode))))
+
+(ert-deftest emacsvox-aural-compatibility-voice-control-is-buffer-local ()
+  "The aural control changes only the selected Voice Lock adapter."
+  (emacsvox-test--with-preserved-voice-lock-state
+    (global-voice-lock-mode -1)
+    (let ((first (generate-new-buffer " *compatibility-voice-first*"))
+          (second (generate-new-buffer " *compatibility-voice-second*"))
+          (emacsvox-aural-compatibility-voice-changed-hook nil)
+          events)
+      (unwind-protect
+          (progn
+            (add-hook
+             'emacsvox-aural-compatibility-voice-changed-hook
+             (lambda (buffer enabled)
+               (push (list buffer enabled (current-buffer)) events)))
+            (should
+             (emacsvox-aural-set-compatibility-voice-enabled t first))
+            (should
+             (emacsvox-aural-compatibility-voice-enabled-p first))
+            (should (emacsvox-aural-voice-lock-enabled-p first))
+            (should-not
+             (emacsvox-aural-compatibility-voice-enabled-p second))
+            (should-not
+             (emacsvox-aural-toggle-compatibility-voice nil first))
+            (with-current-buffer second
+              (voice-lock-mode 1))
+            (should
+             (equal
+              (nreverse events)
+              (list
+               (list first t first)
+               (list first nil first)
+               (list second t second)))))
+        (kill-buffer first)
+        (kill-buffer second)))))
 
 (ert-deftest emacsvox-voice-global-mode-follows-derived-modes ()
   "Derived modes inherit global Voice Lock after their hooks run."

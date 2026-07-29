@@ -16,6 +16,7 @@
 (require 'emacsvox-aural-history)
 (require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-compatibility-voice)
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-feature-fragments)
@@ -78,15 +79,31 @@
      "excluded")))
 
 (defun emacsvox-aural-home--face-presentation-status ()
-  "Return face-scheme and source-buffer Voice Lock status."
+  "Return explicit visual-face scheme status."
+  (if emacsvox-aural-face-presentation-enabled "on" "off"))
+
+(defun emacsvox-aural-home--compatibility-voice-status ()
+  "Return source-buffer legacy compatibility voice status."
   (let ((source (emacsvox-aural-home--source-buffer)))
-    (format
-     "%s; Voice Lock %s%s"
-     (if emacsvox-aural-face-presentation-enabled "on" "off")
-     (if (emacsvox-aural-voice-lock-enabled-p source) "on" "off")
-     (if source
-         (format " in %s" (buffer-name source))
-       ""))))
+    (if source
+        (format
+         "%s in %s"
+         (if
+             (emacsvox-aural-compatibility-voice-enabled-p source)
+             "on"
+           "off")
+         (buffer-name source))
+      "no live source buffer")))
+
+(defun emacsvox-aural-home--compatibility-voice-changed (buffer _enabled)
+  "Refresh live Aural Home after compatibility voice policy changes."
+  (when-let* ((home (get-buffer "*Emacsvox Aural*")))
+    (with-current-buffer home
+      (when
+          (and
+           (derived-mode-p 'emacsvox-aural-home-mode)
+           (eq buffer (emacsvox-aural-home--source-buffer)))
+        (emacsvox-aural-home-refresh)))))
 
 (defun emacsvox-aural-home--profile-status ()
   "Return concise status for complete saved presentation profiles."
@@ -191,7 +208,13 @@
       (vector
        "Visual face presentation"
        (emacsvox-aural-home--face-presentation-status)
-       "Toggle explicit face scheme rules; Voice Lock independently controls legacy voices"))
+       "Toggle explicit scheme rules selected by visual faces"))
+     (list
+      'compatibility-voice
+      (vector
+       "Legacy compatibility voices"
+       (emacsvox-aural-home--compatibility-voice-status)
+       "Toggle legacy face and personality voices in the source buffer"))
      (list
       'buffer-rules
       (vector
@@ -344,6 +367,16 @@
   (emacsvox-aural-home-refresh 'face-presentation)
   (emacsvox-aural-home-speak-current))
 
+(defun emacsvox-aural-home-toggle-compatibility-voice ()
+  "Toggle compatibility voices in the source buffer and speak status."
+  (interactive)
+  (let ((source (emacsvox-aural-home--source-buffer)))
+    (unless source
+      (user-error "No live source buffer is available"))
+    (emacsvox-aural-toggle-compatibility-voice nil source)
+    (emacsvox-aural-home-refresh 'compatibility-voice)
+    (emacsvox-aural-home-speak-current)))
+
 (defun emacsvox-aural-home-activate ()
   "Perform the primary operation for the aural home row at point."
   (interactive)
@@ -365,6 +398,8 @@
     ('features (emacsvox-aural-list-feature-fragments))
     ('face-presentation
      (emacsvox-aural-home-toggle-face-presentation))
+    ('compatibility-voice
+     (emacsvox-aural-home-toggle-compatibility-voice))
     ('buffer-rules
      (let ((source (emacsvox-aural-home--source-buffer)))
        (unless source
@@ -408,6 +443,7 @@
       "H recent feedback\n"
       "P presentation profiles\n"
       "V voice palettes     v face rules toggle\n"
+      "l legacy compatibility voices toggle\n"
       "D aural doctor\n"
       "g refresh\n"
       "? display and speak this help\n"
@@ -450,6 +486,7 @@
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)
        ("v" . emacsvox-aural-home-toggle-face-presentation)
+       ("l" . emacsvox-aural-home-toggle-compatibility-voice)
        ("D" . emacsvox-aural-doctor)
        ("?" . emacsvox-aural-home-help)))
   (define-key
@@ -483,6 +520,9 @@
 (add-hook
  'emacsvox-aural-face-presentation-changed-hook
  #'emacsvox-aural-ui-refresh-home-if-live)
+(add-hook
+ 'emacsvox-aural-compatibility-voice-changed-hook
+ #'emacsvox-aural-home--compatibility-voice-changed)
 (add-hook
  'emacsvox-aural-voice-palette-changed-hook
  #'emacsvox-aural-ui-refresh-home-if-live)

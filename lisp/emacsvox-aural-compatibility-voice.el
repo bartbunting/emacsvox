@@ -1,0 +1,80 @@
+;;; emacsvox-aural-compatibility-voice.el --- Legacy voice policy -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 Emacsvox Contributors
+
+;; This file is not part of GNU Emacs, but the same permissions apply.
+
+;;; Commentary:
+
+;; Aural-facing control over the per-buffer legacy face and personality voice
+;; adapter.  Voice Lock remains the compatibility implementation while aural
+;; presentation owns the user-facing policy.
+
+;;; Code:
+
+(require 'emacsvox-aural)
+(require 'voice-setup)
+
+(declare-function tts-speak "tts-speak" (text))
+
+(defvar emacsvox-aural-compatibility-voice-changed-hook nil
+  "Hook run after compatibility voice policy changes in a buffer.
+
+Hook functions receive the buffer and its new enabled state.")
+
+(defun emacsvox-aural--voice-lock-mode-changed ()
+  "Publish a Voice Lock adapter change through the aural policy hook."
+  (run-hook-with-args
+   'emacsvox-aural-compatibility-voice-changed-hook
+   (current-buffer)
+   (emacsvox-aural-compatibility-voice-enabled-p)))
+
+(add-hook
+ 'voice-lock-mode-hook
+ #'emacsvox-aural--voice-lock-mode-changed)
+
+(defun emacsvox-aural-set-compatibility-voice-enabled
+    (enabled &optional buffer)
+  "Set legacy compatibility voices to ENABLED in BUFFER.
+
+This controls only legacy face and personality voice mapping.  Semantic
+presentation and explicit visual-face scheme rules remain independent."
+  (unless (memq enabled '(nil t))
+    (error "Compatibility voice state must be nil or t: %S" enabled))
+  (let ((buffer (or buffer (current-buffer))))
+    (unless (buffer-live-p buffer)
+      (user-error "Compatibility voice source buffer is no longer live"))
+    (with-current-buffer buffer
+      (voice-lock-mode (if enabled 1 -1))
+      (emacsvox-aural-compatibility-voice-enabled-p buffer))))
+
+;;;###autoload
+(defun emacsvox-aural-toggle-compatibility-voice (&optional arg buffer)
+  "Toggle legacy compatibility voices in BUFFER.
+
+With a positive prefix ARG, enable them.  With zero or a negative prefix,
+disable them.  This does not change semantic presentation or explicit
+visual-face scheme rules."
+  (interactive "P")
+  (let* ((buffer (or buffer (current-buffer)))
+         (enabled
+          (if (null arg)
+              (not
+               (emacsvox-aural-compatibility-voice-enabled-p buffer))
+            (> (prefix-numeric-value arg) 0)))
+         (current
+          (emacsvox-aural-set-compatibility-voice-enabled
+           enabled buffer)))
+    (when (called-interactively-p 'interactive)
+      (let ((text
+             (format
+              "Legacy compatibility voices %s in %s."
+              (if current "enabled" "disabled")
+              (buffer-name buffer))))
+        (if (fboundp 'tts-speak)
+            (tts-speak text)
+          (message "%s" text))))
+    current))
+
+(provide 'emacsvox-aural-compatibility-voice)
+;;; emacsvox-aural-compatibility-voice.el ends here

@@ -1706,7 +1706,7 @@
         "Visual face scheme presentation is disabled" summary))
       (should
        (string-match-p
-        "Voice Lock is disabled" summary)))))
+        "Legacy compatibility voices are disabled" summary)))))
 
 (ert-deftest emacsvox-aural-tools-preview-uses-representative-context ()
   "Rule preview constructs selector-matching facts and mode context."
@@ -1884,9 +1884,9 @@
                (equal
                 (mapcar #'car tabulated-list-entries)
                 '(explain remap remap-earcon overrides recent-feedback profiles
-                  schemes voices features face-presentation buffer-rules
-                  semantics sounds spatial spatial-settings training
-                  diagnostics)))
+                  schemes voices features face-presentation
+                  compatibility-voice buffer-rules semantics sounds spatial
+                  spatial-settings training diagnostics)))
               (dolist
                   (binding
                    '(("RET" . emacsvox-aural-home-activate)
@@ -1897,6 +1897,7 @@
                      ("H" . emacsvox-aural-home-recent-feedback)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
+                     ("l" . emacsvox-aural-home-toggle-compatibility-voice)
                      ("?" . emacsvox-aural-home-help)))
                 (should
                  (eq
@@ -1923,6 +1924,8 @@
                   (key-binding (kbd (car binding)))
                   (cdr binding))))
               (let (spoken)
+                (with-current-buffer source
+                  (voice-lock-mode 1))
                 (with-current-buffer "*Emacsvox Aural*"
                   (cl-letf (((symbol-function 'tts-speak)
                              (lambda (text) (setq spoken text))))
@@ -1931,8 +1934,22 @@
                     (should-not
                      emacsvox-aural-face-presentation-enabled)
                     (should
+                     (emacsvox-aural-compatibility-voice-enabled-p
+                      source))
+                    (should
                      (string-match-p
                       "Visual face presentation.*off"
+                      spoken))
+                    (emacsvox-aural-home--goto 'compatibility-voice)
+                    (emacsvox-aural-home-toggle-compatibility-voice)
+                    (should-not
+                     (emacsvox-aural-compatibility-voice-enabled-p
+                      source))
+                    (should-not
+                     emacsvox-aural-face-presentation-enabled)
+                    (should
+                     (string-match-p
+                      "Legacy compatibility voices.*off"
                       spoken))))))
             (emacsvox-list-aural-semantics)
             (with-current-buffer "*Aural Semantics*"

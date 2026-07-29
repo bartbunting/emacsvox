@@ -28,6 +28,7 @@
           emacsvox-pronounce
           emacsvox-speak
           emacsvox-aural
+          emacsvox-aural-compatibility-voice
           emacsvox-aural-concrete
           emacsvox-aural-history
           emacsvox-aural-spatial
@@ -70,7 +71,10 @@
           swiftmac-voice-capabilities
           emacsvox-pronounce-refresh-pronunciations
           emacsvox-speak-line
+          emacsvox-aural-compatibility-voice-enabled-p
           emacsvox-aural-voice-lock-enabled-p
+          emacsvox-aural-set-compatibility-voice-enabled
+          emacsvox-aural-toggle-compatibility-voice
           emacsvox-aural--make-concrete-plan
           emacsvox-aural-record-presentation
           emacsvox-aural-call-with-presentation-transaction

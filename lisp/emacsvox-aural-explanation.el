@@ -401,9 +401,12 @@ plan at point always supplies its actual occasion as the initial default."
     fallback))
 
 (defun emacsvox-aural-explanation--face-policy-description (context)
-  "Describe frozen face and Voice Lock controls in CONTEXT."
+  "Describe frozen visual-face and compatibility controls in CONTEXT."
   (format
-   "Visual face scheme presentation is %s. Voice Lock is %s and controls only legacy face and personality voice mapping"
+   (concat
+    "Visual face scheme presentation is %s. "
+    "Legacy compatibility voices are %s and control only face and "
+    "personality voice mapping; Voice Lock is the compatibility adapter")
    (if
        (emacsvox-aural-explanation--context-control
         context :face-presentation-enabled
@@ -413,7 +416,7 @@ plan at point always supplies its actual occasion as the initial default."
    (if
        (emacsvox-aural-explanation--context-control
         context :voice-lock-enabled
-        (emacsvox-aural-voice-lock-enabled-p))
+        (emacsvox-aural-compatibility-voice-enabled-p))
        "enabled"
      "disabled")))
 

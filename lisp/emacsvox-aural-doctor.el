@@ -245,18 +245,29 @@
    "Training adds a concise semantic explanation after presentations"))
 
 (defun emacsvox-aural-doctor--face-presentation-finding ()
-  "Report independent explicit-face and legacy Voice Lock controls."
+  "Report explicit visual-face scheme policy."
+  (emacsvox-aural-doctor--finding
+   'face-presentation 'info "Visual face presentation"
+   (if emacsvox-aural-face-presentation-enabled "enabled" "disabled")
+   (concat
+    "This global setting controls only explicit :legacy-face scheme rules. "
+    "Legacy compatibility voices and semantic presentation remain "
+    "independent.")))
+
+(defun emacsvox-aural-doctor--compatibility-voice-finding ()
+  "Report legacy compatibility voice policy for the inspection source."
   (let ((source (emacsvox-aural-inspection-source-buffer)))
     (emacsvox-aural-doctor--finding
-     'face-presentation 'info "Visual face presentation"
-     (format
-      "face %s; Voice Lock %s"
-      (if emacsvox-aural-face-presentation-enabled "enabled" "disabled")
-      (if (emacsvox-aural-voice-lock-enabled-p source) "enabled" "disabled"))
+     'compatibility-voice 'info "Legacy compatibility voices"
+     (if
+         (emacsvox-aural-compatibility-voice-enabled-p source)
+         "enabled"
+       "disabled")
      (concat
-      "Explicit :legacy-face scheme rules use the global face control. "
-      "Voice Lock is per buffer and controls only legacy face/personality "
-      "voice mapping. Semantic presentation remains active."))))
+      "This per-buffer aural setting controls only legacy face and "
+      "personality voice mapping. Voice Lock remains its compatibility "
+      "implementation; visual-face rules and semantic presentation remain "
+      "independent."))))
 
 (defun emacsvox-aural-doctor-run ()
   "Return current aural installation and configuration findings."
@@ -280,6 +291,7 @@
     (emacsvox-aural-doctor--personal-data-finding)
     (emacsvox-aural-doctor--spatial-finding)
     (emacsvox-aural-doctor--face-presentation-finding)
+    (emacsvox-aural-doctor--compatibility-voice-finding)
     (emacsvox-aural-doctor--speech-server-finding)
     (emacsvox-aural-doctor--training-finding))))
 

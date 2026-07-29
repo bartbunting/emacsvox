@@ -33,6 +33,7 @@
           "emacsvox-aural-transport.el"
           "tts-speak.el"
           "voice-setup.el"
+          "emacsvox-aural-compatibility-voice.el"
           "voice-defs.el"
           "dectalk-voices.el"
           "plain-voices.el"

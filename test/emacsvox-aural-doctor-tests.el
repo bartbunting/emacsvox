@@ -86,6 +86,10 @@
          (face-policy
           (cl-find
            'face-presentation findings
+           :key #'emacsvox-aural-doctor-finding-id))
+         (compatibility-voice
+          (cl-find
+           'compatibility-voice findings
            :key #'emacsvox-aural-doctor-finding-id)))
     (unwind-protect
         (progn
@@ -99,10 +103,16 @@
             'active-scheme findings
             :key #'emacsvox-aural-doctor-finding-id))
           (should face-policy)
+          (should compatibility-voice)
           (should
            (string-match-p
-            "Voice Lock"
-            (emacsvox-aural-doctor-finding-detail face-policy))))
+            "explicit :legacy-face"
+            (emacsvox-aural-doctor-finding-detail face-policy)))
+          (should
+           (string-match-p
+            "Voice Lock remains its compatibility implementation"
+            (emacsvox-aural-doctor-finding-detail
+             compatibility-voice))))
       (delete-directory directory t))))
 
 (ert-deftest emacsvox-aural-doctor-manager-is-spoken-and-refreshable ()
