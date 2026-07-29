@@ -969,14 +969,14 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
              ((eq (widget-type widget) 'link)
               (format "%s link" label))
              (t label))))
-      (emacsvox-notmuch--present-feedback
+      (emacsvox-notmuch--submit-text-feedback
        (list
         :role 'message-part
         :message-part-kind
         (if (eq (widget-type widget) 'link) 'link 'button)
         :mail-action-kind 'select
         :events '(focus-entered))
-       'navigation 'item #'tts-speak summary))))
+       'navigation 'item summary))))
 
 (defun emacsvox-notmuch--hello-widget-navigation-around
     (target original arguments)
@@ -1781,10 +1781,10 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
     (let* ((count (emacsvox-notmuch--search-result-count))
            (noun (if (= count 1) "thread" "threads"))
            (summary (format "Search refreshed, %d %s" count noun)))
-      (emacsvox-notmuch--present-feedback
+      (emacsvox-notmuch--submit-text-feedback
        (emacsvox-notmuch-view-facts
         'search 'refresh 'refresh-completed)
-       'notification 'task-done #'tts-speak summary))))
+       'notification 'task-done summary))))
 
 (defun emacsvox-notmuch--mark-refresh-process ()
   "Mark the current Notmuch search process for completion feedback."
@@ -1813,11 +1813,10 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
            (zerop (process-exit-status process))
            (buffer-live-p buffer))
           (emacsvox-notmuch--announce-refresh-complete buffer)
-        (emacsvox-notmuch--present-feedback
+        (emacsvox-notmuch--submit-text-feedback
          (emacsvox-notmuch-view-facts
           'search 'refresh 'refresh-failed)
-         'notification 'warn-user
-         #'tts-speak "Search refresh failed")))))
+         'notification 'warn-user "Search refresh failed")))))
 
 (push
  '(notmuch-search-refresh-view

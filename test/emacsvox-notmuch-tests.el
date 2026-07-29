@@ -83,10 +83,10 @@
            (original-calls 0))
       (widget-setup)
       (goto-char (point-min))
-      (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speak text) events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (emacsvox-test--notmuch-submission-recorder
+             (lambda (event) (push event events)))))
         (should
          (eq
           (emacsvox--advice-widget-forward-notmuch-around
@@ -1804,10 +1804,9 @@
                 (lambda (_process) 0))
                ((symbol-function 'process-buffer)
                 (lambda (_process) buffer))
-               ((symbol-function 'emacsvox-icon)
-                (lambda (icon) (push (list 'icon icon) events)))
-               ((symbol-function 'tts-speak)
-                (lambda (text) (push (list 'speak text) events))))
+               ((symbol-function 'emacsvox-aural-submit)
+                (emacsvox-test--notmuch-submission-recorder
+                 (lambda (event) (push event events)))))
             (emacsvox--advice-notmuch-search-process-sentinel-after
              'process nil)))
       (kill-buffer buffer))
@@ -1817,6 +1816,47 @@
       `((property ,emacsvox-notmuch--refresh-process-property nil)
         (icon task-done)
         (speak "Search refreshed, 2 threads"))))))
+
+(ert-deftest emacsvox-notmuch-refresh-failure-submits-notification ()
+  "A marked failed refresh submits one warning notification."
+  (let (captured events)
+    (cl-letf
+        (((symbol-function 'process-get)
+          (lambda (_process property)
+            (eq property emacsvox-notmuch--refresh-process-property)))
+         ((symbol-function 'process-put)
+          (lambda (_process property value)
+            (push (list property value) events)))
+         ((symbol-function 'process-status)
+          (lambda (_process) 'signal))
+         ((symbol-function 'process-buffer)
+          (lambda (_process) nil))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (cons content arguments))
+            'submission)))
+      (emacsvox--advice-notmuch-search-process-sentinel-after
+       'process nil))
+    (should
+     (equal
+      events
+      `((,emacsvox-notmuch--refresh-process-property nil))))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should (equal content "Search refresh failed"))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role mail-view :mail-view-kind search
+          :mail-action-kind refresh :events (refresh-failed))))
+      (should (eq (plist-get arguments :module) 'notmuch))
+      (should (eq (plist-get arguments :occasion) 'notification))
+      (should (= (length actions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value (car actions))
+        'warn-user)))))
 
 (provide 'emacsvox-notmuch-tests)
 ;;; emacsvox-notmuch-tests.el ends here
