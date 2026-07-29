@@ -1222,8 +1222,12 @@ the body retains semantic faces and omits markup that is no longer displayed."
          (cond
           ((and focused
                 (emacsvox-agent-shell--speech-level-at-least-p 'response))
-           (emacsvox-icon 'item)
-           (tts-speak (concat "Agent update: " body)))
+           (emacsvox-aural-submit
+            (concat "Agent update: " body)
+            :module 'agent-shell
+            :occasion 'notification
+            :compatibility-actions
+            (list (emacsvox-aural-compatibility-icon 'item))))
           ((and (not focused)
                 (emacsvox-agent-shell--speech-level-at-least-p 'notify))
            (tts-notify-icon 'item)

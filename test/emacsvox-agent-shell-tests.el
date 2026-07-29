@@ -1388,10 +1388,48 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should-not
        (emacsvox-agent-shell-test--capture-events
          (emacsvox-agent-shell-test--render-response-section
-          :namespace-id "out-of-turn"
-          :block-id "message-1-agent_message_chunk"
-          :body " ignored" :append t)
+         :namespace-id "out-of-turn"
+         :block-id "message-1-agent_message_chunk"
+         :body " ignored" :append t)
          (sit-for 0.01))))))
+
+(ert-deftest emacsvox-agent-shell-focused-out-of-turn-is-one-submission ()
+  "A focused out-of-turn cue and response use one native transaction."
+  (let ((emacsvox-comint-autospeak t)
+        (emacsvox-agent-shell-speech-level 'response)
+        captured
+        direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--session-focused-p)
+          (lambda (&optional _) t))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon direct-output)))
+         ((symbol-function 'tts-speak)
+          (lambda (&rest _) (push 'speech direct-output))))
+      (emacsvox-agent-shell--deliver-out-of-turn-body "Rendered update"))
+    (should-not direct-output)
+    (should (= (length captured) 1))
+    (pcase-let* ((`(,content ,arguments ,facts ,context)
+                   (car captured))
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should (equal content "Agent update: Rendered update"))
+      (should (eq (plist-get facts :role) 'agent-response))
+      (should (eq (plist-get context :module) 'agent-shell))
+      (should (eq (plist-get context :occasion) 'notification))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-compatibility-action-value actions)
+        '(item))))))
 
 (ert-deftest emacsvox-agent-shell-out-of-turn-background-notifies-by-name ()
   "A background out-of-turn message should identify its session, not its body."
