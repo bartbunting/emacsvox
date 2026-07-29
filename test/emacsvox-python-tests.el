@@ -267,5 +267,168 @@
         '(boundary-entered focus-entered)))
       (should (eq (plist-get (caddr entry) :module) 'python)))))
 
+(ert-deftest emacsvox-python-navigation-preserves-line-properties ()
+  "Ordinary navigation preserves line voice and post-speech cue order."
+  (with-temp-buffer
+    (insert (propertize "value = 1" 'personality 'voice-lighten))
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'python-nav-forward-statement)
+          (emacsvox-show-point nil)
+          (emacsvox-audio-indentation nil)
+          (tts-punctuation-mode 'all)
+          events)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text)
+              (push
+               (list
+                'speak
+                text
+                (copy-tree emacsvox-aural-submission-facts)
+                (copy-tree emacsvox-aural-submission-context))
+               events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-python-nav-forward-statement-after))
+      (setq events (nreverse events))
+      (should (equal (mapcar #'car events) '(speak icon)))
+      (should (eq (cadadr events) 'paragraph))
+      (let ((speech (car events)))
+        (should (equal (cadr speech) "value = 1"))
+        (should
+         (eq
+          (get-text-property 0 'personality (cadr speech))
+          'voice-lighten))
+        (should (eq (plist-get (nth 2 speech) :role) 'code-construct))
+        (should
+         (equal
+          (plist-get (nth 2 speech) :events)
+          '(boundary-entered focus-entered)))
+        (should
+         (eq (plist-get (nth 2 speech) :syntax-role) 'statement))
+        (should (eq (plist-get (nth 3 speech) :module) 'python))))))
+
+(ert-deftest emacsvox-python-navigation-preserves-line-and-point-cues ()
+  "Line-local and show-point cues precede speech and the paragraph cue."
+  (with-temp-buffer
+    (insert (propertize "value" 'auditory-icon 'item))
+    (goto-char (+ (point-min) 2))
+    (let ((ems--interactive-fn-name 'python-nav-forward-statement)
+          (emacsvox-show-point t)
+          (emacsvox-audio-indentation nil)
+          (tts-punctuation-mode 'all)
+          events)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text) (push (list 'speak text) events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-python-nav-forward-statement-after))
+      (setq events (nreverse events))
+      (should
+       (equal
+        (mapcar
+         (lambda (event)
+           (if (eq (car event) 'icon) (cadr event) (car event)))
+         events)
+        '(item tick-tick speak paragraph)))
+      (let ((spoken (cadr (nth 2 events))))
+        (should (equal spoken "value"))
+        (should
+         (eq (get-text-property 2 'personality spoken) voice-animate))
+        (should (= (get-text-property 2 'pause spoken) 5)))
+      (should-not (get-text-property 2 'personality (buffer-string)))
+      (should-not (get-text-property 2 'pause (buffer-string))))))
+
+(ert-deftest emacsvox-python-navigation-preserves-structural-line-cues ()
+  "Hidden and displayed line structure cues precede speech."
+  (with-temp-buffer
+    (insert "hidden")
+    (put-text-property
+     (point-min) (1+ (point-min)) 'emacsvox-hidden-block t)
+    (let ((overlay (make-overlay (point-min) (1+ (point-min)))))
+      (overlay-put overlay 'before-string "prefix"))
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'python-nav-forward-block)
+          (emacsvox-show-point nil)
+          (emacsvox-audio-indentation nil)
+          (tts-punctuation-mode 'all)
+          events)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text) (push (list 'speak text) events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-python-nav-forward-block-after))
+      (should
+       (equal
+        (mapcar
+         (lambda (event)
+           (if (eq (car event) 'icon) (cadr event) (car event)))
+         (nreverse events))
+        '(ellipses left speak paragraph))))))
+
+(ert-deftest emacsvox-python-navigation-preserves-blank-line-tones ()
+  "Empty and whitespace navigation retain their distinct tones and final cue."
+  (dolist (case '(("" 130.8) ("   " 261.6)))
+    (with-temp-buffer
+      (insert (car case))
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name 'python-nav-forward-statement)
+            (emacsvox-show-point nil)
+            (emacsvox-audio-indentation nil)
+            (tts-punctuation-mode 'all)
+            events)
+        (cl-letf
+            (((symbol-function 'tts-stop) #'ignore)
+             ((symbol-function 'tts-speak)
+              (lambda (&rest _)
+                (ert-fail "Blank line reached speech transport")))
+             ((symbol-function 'tts-tone)
+              (lambda (&rest arguments)
+                (push (cons 'tone arguments) events)))
+             ((symbol-function 'emacsvox-icon)
+              (lambda (icon) (push (list 'icon icon) events))))
+          (emacsvox--advice-python-nav-forward-statement-after))
+        (setq events (nreverse events))
+        (should (equal (mapcar #'car events) '(tone icon)))
+        (should (= (cadar events) (cadr case)))
+        (should (equal (cdar events) (list (cadr case) 150 'force)))
+        (should (equal (cadr events) '(icon paragraph)))))))
+
+(ert-deftest emacsvox-python-navigation-preserves-long-line-confirmation ()
+  "Long navigation retains confirmation, source marking, speech, and cue order."
+  (with-temp-buffer
+    (insert "long")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'python-nav-forward-statement)
+          (emacsvox-show-point nil)
+          (emacsvox-audio-indentation nil)
+          (ems--speak-max-length 3)
+          (tts-punctuation-mode 'all)
+          (visual-line-mode nil)
+          (selective-display nil)
+          events)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'y-or-n-p)
+            (lambda (_prompt)
+              (push '(confirm) events)
+              nil))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (push (list 'speak text) events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-python-nav-forward-statement-after))
+      (should
+       (equal
+        (mapcar #'car (nreverse events))
+        '(confirm speak icon)))
+      (should (get-text-property (point-min) 'start-line))
+      (should (= ems--speak-max-length 8)))))
+
 (provide 'emacsvox-python-tests)
 ;;; emacsvox-python-tests.el ends here
