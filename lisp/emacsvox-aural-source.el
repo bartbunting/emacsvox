@@ -82,6 +82,31 @@ occasion, or a new queued icon changes.")
        (plist-put context :history-recording-inhibited t)))
     context))
 
+(cl-defun emacsvox-aural-call-with-submission
+    (function &key facts context module occasion arguments)
+  "Call FUNCTION with ARGUMENTS inside one frozen aural submission.
+
+FACTS, CONTEXT, MODULE, and OCCASION describe the source presentation.
+An enclosing submission remains authoritative so nested compatibility
+helpers cannot replace more specific presentation intent."
+  (let* ((effective-facts
+          (or emacsvox-aural-submission-facts facts))
+         (effective-module
+          (or emacsvox-aural-submission-module module))
+         (effective-occasion
+          (or emacsvox-aural-submission-occasion occasion 'continuous))
+         (effective-context
+          (or
+           emacsvox-aural-submission-context
+           context
+           (emacsvox-aural-capture-context
+            effective-module effective-occasion)))
+         (emacsvox-aural-submission-facts effective-facts)
+         (emacsvox-aural-submission-context effective-context)
+         (emacsvox-aural-submission-module effective-module)
+         (emacsvox-aural-submission-occasion effective-occasion))
+    (apply function arguments)))
+
 (defun emacsvox-aural-face-names (value)
   "Return ordered named faces explicitly represented by face VALUE.
 

@@ -130,22 +130,12 @@ If in locate-mode, speak full pathname."
     (facts occasion function &rest arguments)
   "Call FUNCTION with ARGUMENTS in a frozen Dired presentation.
 FACTS describe the object or event, and OCCASION describes the interaction."
-  (let* ((effective-facts
-          (or emacsvox-aural-submission-facts facts
-              '(:role filesystem-listing)))
-         (effective-occasion
-          (or emacsvox-aural-submission-occasion occasion 'navigation))
-         (effective-module
-          (or emacsvox-aural-submission-module 'dired))
-         (context
-          (or emacsvox-aural-submission-context
-              (emacsvox-aural-capture-context
-               effective-module effective-occasion)))
-         (emacsvox-aural-submission-facts effective-facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module effective-module)
-         (emacsvox-aural-submission-occasion effective-occasion))
-    (apply function arguments)))
+  (emacsvox-aural-call-with-submission
+   function
+   :facts (or facts '(:role filesystem-listing))
+   :module 'dired
+   :occasion (or occasion 'navigation)
+   :arguments arguments))
 
 (defun emacsvox-dired--present-feedback
     (facts occasion icon function &rest arguments)

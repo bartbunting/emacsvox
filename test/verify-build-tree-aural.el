@@ -81,6 +81,7 @@
           emacsvox-aural-effective-resource-pack
           emacsvox-aural-compile-plan
           emacsvox-aural-capture-source-faces
+          emacsvox-aural-call-with-submission
           emacsvox-aural-prepare-text
           emacsvox-aural--transport-error
           emacsvox-aural-preview-play-plan

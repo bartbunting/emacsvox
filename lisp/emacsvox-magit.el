@@ -170,22 +170,12 @@
     (facts occasion function &rest arguments)
   "Call FUNCTION with ARGUMENTS in a frozen Magit presentation.
 FACTS describe the object or event, and OCCASION describes the interaction."
-  (let* ((effective-facts
-          (or emacsvox-aural-submission-facts facts
-              '(:role vcs-view :vcs-view-kind other)))
-         (effective-occasion
-          (or emacsvox-aural-submission-occasion occasion 'navigation))
-         (effective-module
-          (or emacsvox-aural-submission-module 'magit))
-         (context
-          (or emacsvox-aural-submission-context
-              (emacsvox-aural-capture-context
-               effective-module effective-occasion)))
-         (emacsvox-aural-submission-facts effective-facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module effective-module)
-         (emacsvox-aural-submission-occasion effective-occasion))
-    (apply function arguments)))
+  (emacsvox-aural-call-with-submission
+   function
+   :facts (or facts '(:role vcs-view :vcs-view-kind other))
+   :module 'magit
+   :occasion (or occasion 'navigation)
+   :arguments arguments))
 
 (defun emacsvox-magit--present-feedback
     (facts occasion icon function &rest arguments)

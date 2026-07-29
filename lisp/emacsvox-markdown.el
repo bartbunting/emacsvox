@@ -148,22 +148,12 @@
 
 FACTS and OCCASION apply unless an enclosing, more specific submission is
 already active."
-  (let* ((effective-facts
-          (or emacsvox-aural-submission-facts facts
-              '(:role markdown-content)))
-         (effective-occasion
-          (or emacsvox-aural-submission-occasion occasion 'navigation))
-         (effective-module
-          (or emacsvox-aural-submission-module 'markdown))
-         (context
-          (or emacsvox-aural-submission-context
-              (emacsvox-aural-capture-context
-               effective-module effective-occasion)))
-         (emacsvox-aural-submission-facts effective-facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module effective-module)
-         (emacsvox-aural-submission-occasion effective-occasion))
-    (apply function arguments)))
+  (emacsvox-aural-call-with-submission
+   function
+   :facts (or facts '(:role markdown-content))
+   :module 'markdown
+   :occasion (or occasion 'navigation)
+   :arguments arguments))
 
 (defun emacsvox-markdown-speak-heading ()
   "Speak the current heading with level information."

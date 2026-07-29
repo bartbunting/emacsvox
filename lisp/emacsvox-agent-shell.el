@@ -658,22 +658,12 @@ A selected viewport counts as focus for its associated shell buffer."
 FACTS and OCCASION describe this boundary.  An enclosing, more specific
 submission remains authoritative so compatibility helpers can safely use this
 function without replacing lifecycle, permission, tool, or content intent."
-  (let* ((effective-facts
-          (or emacsvox-aural-submission-facts facts
-              '(:role agent-session)))
-         (effective-occasion
-          (or emacsvox-aural-submission-occasion occasion 'continuous))
-         (effective-module
-          (or emacsvox-aural-submission-module 'agent-shell))
-         (context
-          (or emacsvox-aural-submission-context
-              (emacsvox-aural-capture-context
-               effective-module effective-occasion)))
-         (emacsvox-aural-submission-facts effective-facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module effective-module)
-         (emacsvox-aural-submission-occasion effective-occasion))
-    (apply function arguments)))
+  (emacsvox-aural-call-with-submission
+   function
+   :facts (or facts '(:role agent-session))
+   :module 'agent-shell
+   :occasion (or occasion 'continuous)
+   :arguments arguments))
 
 (defun emacsvox-agent-shell--presentation-facts
     (role &optional event states attributes)

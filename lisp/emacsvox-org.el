@@ -100,22 +100,12 @@ Optional EVENT records the registered event that caused its presentation."
 
 FACTS and OCCASION apply unless an enclosing submission already supplies more
 specific values."
-  (let* ((effective-facts
-          (or emacsvox-aural-submission-facts facts
-              '(:role org-content)))
-         (effective-occasion
-          (or emacsvox-aural-submission-occasion occasion 'navigation))
-         (effective-module
-          (or emacsvox-aural-submission-module 'org))
-         (context
-          (or emacsvox-aural-submission-context
-              (emacsvox-aural-capture-context
-               effective-module effective-occasion)))
-         (emacsvox-aural-submission-facts effective-facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module effective-module)
-         (emacsvox-aural-submission-occasion effective-occasion))
-    (apply function arguments)))
+  (emacsvox-aural-call-with-submission
+   function
+   :facts (or facts '(:role org-content))
+   :module 'org
+   :occasion (or occasion 'navigation)
+   :arguments arguments))
 
 (defun emacsvox-org--present-feedback
     (facts occasion icon function &rest arguments)

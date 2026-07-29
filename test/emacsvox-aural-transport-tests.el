@@ -107,6 +107,67 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         text (length text))))
     (nreverse plans)))
 
+(ert-deftest emacsvox-aural-source-call-with-submission-freezes-boundary ()
+  "The shared source boundary captures once and preserves nested intent."
+  (let (captures observed)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-capture-context)
+          (lambda (module occasion)
+            (push (list module occasion) captures)
+            (list :module module :occasion occasion :frozen t))))
+      (should
+       (eq
+        (emacsvox-aural-call-with-submission
+         (lambda (&rest arguments)
+           (setq
+            observed
+            (list
+             arguments
+             emacsvox-aural-submission-facts
+             emacsvox-aural-submission-context
+             emacsvox-aural-submission-module
+             emacsvox-aural-submission-occasion))
+           'called)
+         :facts '(:role message)
+         :module 'notmuch
+         :occasion 'navigation
+         :arguments '(one two))
+        'called)))
+    (should (equal captures '((notmuch navigation))))
+    (should
+     (equal
+      observed
+      '((one two)
+        (:role message)
+        (:module notmuch :occasion navigation :frozen t)
+        notmuch navigation)))
+    (let ((emacsvox-aural-submission-facts '(:role heading))
+          (emacsvox-aural-submission-context
+           '(:module org :occasion state-change :frozen outer))
+          (emacsvox-aural-submission-module 'org)
+          (emacsvox-aural-submission-occasion 'state-change))
+      (setq observed nil)
+      (emacsvox-aural-call-with-submission
+       (lambda ()
+         (setq
+          observed
+          (list
+           emacsvox-aural-submission-facts
+           emacsvox-aural-submission-context
+           emacsvox-aural-submission-module
+           emacsvox-aural-submission-occasion)))
+       :facts '(:role message)
+       :context '(:module notmuch :occasion navigation)
+       :module 'notmuch
+       :occasion 'navigation)
+      (should
+       (equal
+        observed
+        '((:role heading)
+          (:module org :occasion state-change :frozen outer)
+          org state-change)))
+      (should (equal captures '((notmuch navigation)))))))
+
 (defun emacsvox-test--tts-source-policy-result
     (text faces voice-lock source-icons scratch-icons)
   "Speak TEXT and summarize source policy at the real TTS scratch boundary.
