@@ -9,7 +9,7 @@
 
 (require 'ert)
 (require 'emacsvox-aural-inspection)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-explanation)
 
 (ert-deftest emacsvox-aural-inspection-propagates-nested-source ()
   "Nested interfaces retain the original ordinary inspection source."
@@ -133,14 +133,14 @@
                 (((symbol-function 'emacsvox-aural-last-presentation)
                   (lambda (&rest _) nil))
                  ((symbol-function
-                   'emacsvox-aural-tools--read-explanation-input)
+                   'emacsvox-aural-explanation--read-explanation-input)
                   (lambda (_)
                     (setq observed (current-buffer))
                     (list '(:role example)
                           '(:occasion inspection)))))
               (should
                (equal
-                (emacsvox-aural-tools--interactive-explanation-input nil)
+                (emacsvox-aural-explanation--interactive-explanation-input nil)
                 '((:role example) (:occasion inspection) nil)))))
           (should (eq observed source)))
       (dolist (buffer (list source interface))

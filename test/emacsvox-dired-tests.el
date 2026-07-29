@@ -9,7 +9,7 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'emacsvox-preamble)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-explanation)
 
 (defconst emacsvox-test--dired-advice-targets
   '(dired ido-dired dired-jump dired-other-window dired-other-frame
@@ -97,7 +97,7 @@
         (emacsvox-aural-plan-presented-hook nil)
         (emacsvox-aural-training-mode nil)
         (emacsvox-aural-training-voice 'annotate)
-        (emacsvox-aural-tools--pending-training-explanations nil)
+        (emacsvox-aural-explanation--pending-training-explanations nil)
         events)
     (cl-letf
          (((symbol-function 'emacsvox-dired-entry-facts)

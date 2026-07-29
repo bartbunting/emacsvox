@@ -58,6 +58,7 @@
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-semantics)
+(require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-home)
 (require 'emacsvox-aural-editor)

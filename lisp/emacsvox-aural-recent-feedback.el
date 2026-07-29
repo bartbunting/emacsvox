@@ -16,6 +16,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-description)
 
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
@@ -180,7 +181,7 @@
      (emacsvox-aural-presentation-record-id record)
      (vector
       (emacsvox-aural-recent-feedback--content record)
-      (emacsvox-aural-tools--facts-description facts context)
+      (emacsvox-aural-explanation-facts-description facts context)
       (emacsvox-aural-recent-feedback--clean-text
        (or
         (emacsvox-aural-presentation-record-source-buffer-name record)
@@ -302,7 +303,7 @@ the value across sessions."
 (defun emacsvox-aural-recent-feedback-explain ()
   "Explain the exact frozen feedback record at point."
   (interactive)
-  (emacsvox-aural-tools--display-explanation
+  (emacsvox-aural-explanation-display
    (emacsvox-aural-explain-record
     (emacsvox-aural-recent-feedback--record))
    t))

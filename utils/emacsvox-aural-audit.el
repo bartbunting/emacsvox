@@ -34,7 +34,7 @@
   "Sound directory used while loading resource registries for the audit.")
 
 (require 'emacsvox-sounds)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-provider-org)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-provider-markdown)

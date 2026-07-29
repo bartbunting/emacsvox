@@ -27,6 +27,7 @@
           emacsvox-aural-ui
           emacsvox-aural-inspection
           emacsvox-aural-semantics
+          emacsvox-aural-explanation
           emacsvox-aural-tools
           emacsvox-aural-editor
           emacsvox-aural-simple-editor
@@ -51,6 +52,7 @@
           emacsvox-aural-ui-interface-buffer-p
           emacsvox-aural-inspection-source-buffer
           emacsvox-aural-semantics--set-entries
+          emacsvox-aural-explanation--training-presented
           emacsvox-aural-editor--scope-label
           emacsvox-aural-simple-editor--humanize
           emacsvox-aural-doctor--finding

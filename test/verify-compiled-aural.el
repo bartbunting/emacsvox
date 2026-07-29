@@ -37,6 +37,7 @@
          "emacsvox-aural-inspection"
          "emacsvox-aural-scheme-manager"
          "emacsvox-aural-semantics"
+         "emacsvox-aural-explanation"
          "emacsvox-aural-tools"
          "emacsvox-aural-recent-feedback"
          "emacsvox-aural-feature-fragments"
@@ -77,7 +78,7 @@
          emacsvox-aural-inspection-source-buffer
          emacsvox-aural-scheme-manager--scheme-row
          emacsvox-aural-semantics--set-entries
-         emacsvox-aural-tools--training-presented
+         emacsvox-aural-explanation--training-presented
          emacsvox-aural-recent-feedback--entries
          emacsvox-aural-feature-fragments--set-entries
          emacsvox-aural-home--entries
@@ -151,7 +152,7 @@
           (lambda (code) (push (list 'code code) events)))
          ((symbol-function 'tts--protocol-queue-text)
           (lambda (text) (push (list 'text text) events))))
-      (emacsvox-aural-tools--training-presented plan))
+      (emacsvox-aural-explanation--training-presented plan))
     (unless
         (equal
          (nreverse events)

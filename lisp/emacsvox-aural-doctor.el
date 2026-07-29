@@ -15,7 +15,8 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'tabulated-list)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-explanation)
 
 (defvar emacsvox-keymap)
 (defvar emacsvox-prefix)

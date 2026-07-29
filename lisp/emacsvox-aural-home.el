@@ -15,6 +15,7 @@
 (require 'tabulated-list)
 (require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-feature-fragments)
 

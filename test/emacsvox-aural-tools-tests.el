@@ -14,6 +14,7 @@
 (require 'voice-setup)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-scheme-manager)
+(require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-recent-feedback)
 (require 'emacsvox-aural-feature-fragments)
@@ -66,7 +67,7 @@
          (real-this-command nil)
          (emacsvox-aural-training-mode nil)
          (emacsvox-aural-training-voice 'annotate)
-         (emacsvox-aural-tools--pending-training-explanations nil)
+         (emacsvox-aural-explanation--pending-training-explanations nil)
          (emacsvox-sounds-current-pack 'chimes)
          (emacsvox-aural-spatial-enabled t)
          (emacsvox-aural-spatial-speech-enabled t)
@@ -1093,7 +1094,7 @@
                 (should (string-match-p detail spoken)))
               (cl-letf
                   (((symbol-function
-                     'emacsvox-aural-tools--display-explanation)
+                     'emacsvox-aural-explanation-display)
                     (lambda (explanation &rest _)
                       (setq explained explanation)))
                    ((symbol-function 'emacsvox-aural-preview-play-plan)
@@ -1409,12 +1410,12 @@
              :occasion continuous)))
       (should
        (eq
-        (emacsvox-aural-tools--best-explanation-occasion
+        (emacsvox-aural-explanation--best-explanation-occasion
          facts context)
         'navigation))
       (should
        (equal
-        (emacsvox-aural-tools--occasion-match-counts facts context)
+        (emacsvox-aural-explanation--occasion-match-counts facts context)
         '((continuous . 0)
           (edit . 0)
           (inspection . 0)
@@ -1447,7 +1448,7 @@
                 "continuous")))
           (pcase-let
               ((`(,facts ,context)
-                (emacsvox-aural-tools--read-explanation-input t)))
+                (emacsvox-aural-explanation--read-explanation-input t)))
             (should (equal facts '(:role heading :level 1)))
             (should (eq (plist-get context :occasion) 'continuous))
             (should (equal default "navigation"))))))))
@@ -1470,7 +1471,7 @@
       (goto-char (point-min))
       (pcase-let
           ((`(,facts ,context)
-            (emacsvox-aural-tools--read-explanation-input nil)))
+            (emacsvox-aural-explanation--read-explanation-input nil)))
         (should (equal facts '(:role heading :level 1)))
         (should (eq (plist-get context :occasion) 'continuous))))))
 
@@ -1491,7 +1492,7 @@
               :occasion navigation))
            (explanation (emacsvox-aural-explain facts context))
            (counts
-            (emacsvox-aural-tools--occasion-match-counts facts context))
+            (emacsvox-aural-explanation--occasion-match-counts facts context))
            icon spoken)
       (unwind-protect
           (progn
@@ -1501,7 +1502,7 @@
                  ((symbol-function 'tts-speak)
                   (lambda (text) (setq spoken text))))
               (save-window-excursion
-                (emacsvox-aural-tools--display-explanation
+                (emacsvox-aural-explanation-display
                  explanation t counts)))
             (should (eq icon 'help))
             (should
@@ -1554,7 +1555,7 @@
         (let ((record (emacsvox-aural-last-presentation (current-buffer))))
           (should
            (equal
-            (emacsvox-aural-tools--interactive-explanation-input nil)
+            (emacsvox-aural-explanation--interactive-explanation-input nil)
             (list nil nil record)))
           (emacsvox-aural-register-scheme
            '(:schema-version 1
@@ -1572,7 +1573,7 @@
           (let* ((exact (emacsvox-aural-explain-record record))
                  (simulation (emacsvox-aural-explain facts context))
                  (spoken
-                  (emacsvox-aural-tools--spoken-explanation exact)))
+                  (emacsvox-aural-explanation--spoken-explanation exact)))
             (should
              (eq
               (emacsvox-aural-explanation-basis exact)
@@ -1608,7 +1609,7 @@
              (string-match-p "Exact queued presentation" spoken))
             (unwind-protect
                 (save-window-excursion
-                  (emacsvox-aural-tools--display-explanation exact)
+                  (emacsvox-aural-explanation-display exact)
                   (with-current-buffer "*Help*"
                     (should
                      (string-match-p
@@ -1633,9 +1634,9 @@
               :voice-lock-enabled nil))
            (explanation (emacsvox-aural-explain facts context))
            (summary
-            (emacsvox-aural-tools--spoken-explanation
+            (emacsvox-aural-explanation--spoken-explanation
              explanation
-             (emacsvox-aural-tools--occasion-match-counts
+             (emacsvox-aural-explanation--occasion-match-counts
               facts context))))
       (should
        (string-match-p

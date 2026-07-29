@@ -8,7 +8,7 @@
 
 (require 'cl-lib)
 (require 'ert)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-explanation)
 (require 'emacsvox-advice)
 
 (let ((module
@@ -307,14 +307,14 @@
       (emacsvox-org-refresh-aural-heading)
       (pcase-let*
           ((`(,facts ,context)
-            (emacsvox-aural-tools--read-explanation-input nil))
+            (emacsvox-aural-explanation--read-explanation-input nil))
            (explanation (emacsvox-aural-explain facts context))
            (matches
             (mapcar
              (lambda (entry) (plist-get entry :id))
              (emacsvox-aural-explanation-matching-rules explanation)))
            (summary
-            (emacsvox-aural-tools--spoken-explanation explanation)))
+            (emacsvox-aural-explanation--spoken-explanation explanation)))
         (should (eq (plist-get context :occasion) 'navigation))
         (should
          (equal

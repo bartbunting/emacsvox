@@ -14,8 +14,8 @@
 
 (require 'cl-lib)
 (require 'subr-x)
-(require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-semantics)
+(require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-feature-fragments)
 (require 'emacsvox-aural-preview)
 
@@ -1054,7 +1054,7 @@ LABEL identifies the speech or cue being edited."
            :render-plan render
            :concrete-plan concrete
            :suppressed-actions nil)))
-      (emacsvox-aural-tools--display-explanation
+      (emacsvox-aural-explanation-display
        explanation (called-interactively-p 'interactive)))))
 
 (defun emacsvox-aural-editor-help ()

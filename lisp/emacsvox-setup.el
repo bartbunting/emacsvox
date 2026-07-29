@@ -72,6 +72,7 @@
     "emacsvox-aural-inspection.el"
     "emacsvox-aural-scheme-manager.el"
     "emacsvox-aural-semantics.el"
+    "emacsvox-aural-explanation.el"
     "emacsvox-aural-tools.el"
     "emacsvox-aural-recent-feedback.el"
     "emacsvox-aural-feature-fragments.el"
