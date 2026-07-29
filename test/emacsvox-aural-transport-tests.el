@@ -107,6 +107,70 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         text (length text))))
     (nreverse plans)))
 
+(defun emacsvox-test--tts-source-policy-result
+    (text faces voice-lock source-icons scratch-icons)
+  "Speak TEXT and summarize source policy at the real TTS scratch boundary.
+
+FACES and VOICE-LOCK are the source presentation controls.
+SOURCE-ICONS is the source buffer's local icon setting, while SCRATCH-ICONS
+is the default inherited by a newly created TTS scratch buffer."
+  (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+    (kill-buffer scratch))
+  (let ((original-icons (default-value 'emacsvox-use-icons))
+        (queue-plan (symbol-function 'emacsvox-aural-queue-concrete-plan))
+        (tts-speaker-process 'speaker)
+        (tts-stop-immediately nil)
+        (tts-quiet nil)
+        (emacsvox-pronounce-table nil)
+        (emacsvox-pronounce-personality nil)
+        summary
+        resources)
+    (unwind-protect
+        (progn
+          (set-default 'emacsvox-use-icons scratch-icons)
+          (with-temp-buffer
+            (setq-local voice-lock-mode voice-lock)
+            (setq-local emacsvox-use-icons source-icons)
+            (let ((emacsvox-aural-face-presentation-enabled faces))
+              (cl-letf
+                  (((symbol-function 'process-live-p) (lambda (_) t))
+                   ((symbol-function 'tts-get-voice-command)
+                    (lambda (voice) (format "<%s>" voice)))
+                   ((symbol-function 'tts-voice-reset-code)
+                    (lambda () "RESET"))
+                   ((symbol-function 'tts--protocol-sync) #'ignore)
+                   ((symbol-function 'tts--protocol-dispatch) #'ignore)
+                   ((symbol-function 'tts--protocol-queue-code) #'ignore)
+                   ((symbol-function 'tts--protocol-queue-text) #'ignore)
+                   ((symbol-function 'tts--protocol-silence) #'ignore)
+                   ((symbol-function 'emacsvox-queue-resource)
+                    (lambda (resource) (push resource resources)))
+                   ((symbol-function 'emacsvox-aural-queue-concrete-plan)
+                    (lambda (concrete &optional final-text)
+                      (setq
+                       summary
+                       (list
+                        :context
+                        (copy-tree
+                         (emacsvox-aural-concrete-plan-context concrete))
+                        :cues
+                        (mapcar
+                         #'emacsvox-aural-concrete-action-cue
+                         (emacsvox-aural-concrete-plan-before concrete))
+                        :voice-command
+                        (emacsvox-aural-concrete-content-voice-command
+                         (emacsvox-aural-concrete-plan-content concrete))))
+                      (funcall queue-plan concrete final-text)))
+                   ((symbol-function 'tts-move-across-a-chunk)
+                    (lambda (&rest _)
+                      (goto-char (point-max))
+                      t)))
+                (tts-speak text)))))
+      (set-default 'emacsvox-use-icons original-icons)
+      (when-let* ((scratch (get-buffer " *tts-scratch-buffer* ")))
+        (kill-buffer scratch)))
+    (append summary (list :resources (nreverse resources)))))
+
 (ert-deftest emacsvox-aural-transport-captures-source-context ()
   "Source buffer, name, mode, module, and occasion are frozen together."
   (with-temp-buffer
@@ -1185,6 +1249,71 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                   (emacsvox-test--transport-adapter-command
                    expected-voice)))
               (should-not voice-command))))))))
+
+(ert-deftest emacsvox-aural-transport-tts-speak-control-matrix ()
+  "The three presentation controls remain independent through real TTS."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-face
+        :match (:legacy-face font-lock-warning-face)
+        :render
+        (:before
+         ((:id warning-cue :kind cue :cue warn-user))
+         :content (:voice bolden)))))
+    (let ((text
+           (propertize
+            "warning"
+            'face 'font-lock-warning-face
+            'personality 'voice-lighten
+            'auditory-icon 'item)))
+      (dolist
+          (case
+           '((t t t (item warn-user) voice-bolden)
+             (t t nil (item warn-user) voice-bolden)
+             (t nil t (item warn-user) voice-bolden)
+             (t nil nil (item warn-user) voice-bolden)
+             (nil t t (item) voice-lighten)
+             (nil t nil (item) voice-lighten)
+             (nil nil t (item) nil)
+             (nil nil nil (item) nil)))
+        (pcase-let
+            ((`(,faces ,voice-lock ,icons ,cues ,voice) case))
+          (let* ((result
+                  (emacsvox-test--tts-source-policy-result
+                   text faces voice-lock icons icons))
+                 (context (plist-get result :context))
+                 (resources (plist-get result :resources)))
+            (should
+             (eq
+              (plist-get context :face-presentation-enabled)
+              faces))
+            (should
+             (eq (plist-get context :voice-lock-enabled) voice-lock))
+            (should (equal (plist-get result :cues) cues))
+            (if voice
+                (should
+                 (equal
+                  (plist-get result :voice-command)
+                  (emacsvox-test--transport-adapter-command voice)))
+              (should-not (plist-get result :voice-command)))
+            (should
+             (= (length resources)
+                (if icons (length cues) 0)))))))))
+
+(ert-deftest emacsvox-aural-transport-tts-speak-uses-scratch-icon-default ()
+  "Characterize the current loss of source-local icon policy in TTS."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text (propertize "item" 'auditory-icon 'item))
+           (source-off
+            (emacsvox-test--tts-source-policy-result
+             text nil nil nil t))
+           (source-on
+            (emacsvox-test--tts-source-policy-result
+             text nil nil t nil)))
+      (should (equal (plist-get source-off :cues) '(item)))
+      (should (= (length (plist-get source-off :resources)) 1))
+      (should (equal (plist-get source-on :cues) '(item)))
+      (should-not (plist-get source-on :resources)))))
 
 (ert-deftest emacsvox-aural-transport-tts-speak-keeps-source-snapshot ()
   "Scratch-buffer formatting receives a plan resolved in the source mode."

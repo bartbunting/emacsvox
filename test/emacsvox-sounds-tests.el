@@ -82,6 +82,31 @@
       (should-not (gethash 'only-in-one emacsvox-sounds-cache))
       (should (gethash 'only-in-two emacsvox-sounds-cache)))))
 
+(ert-deftest emacsvox-sounds-arbitrary-theme-does-not-govern-icon-resolver ()
+  "Characterize compatibility cache selection being ignored by icons."
+  (emacsvox-test--with-sound-tree
+    (let* ((custom (emacsvox-test--sound-file theme-one "item"))
+           (emacsvox-prompts-dir prompts)
+           (emacsvox-sounds-cache (make-hash-table))
+           (emacsvox-sounds-owned-samples (make-hash-table :test #'equal))
+           (emacsvox-sounds-current-pack 'chimes)
+           (emacsvox-sounds-current-theme nil)
+           (emacsvox-sounds--silent-theme-selection t)
+           (emacsvox-use-icons t)
+           (emacsvox-play-program nil)
+           played)
+      (emacsvox-sounds-select-theme theme-one)
+      (should-not emacsvox-sounds-current-pack)
+      (should (equal (gethash 'item emacsvox-sounds-cache) custom))
+      (cl-letf
+          (((symbol-function 'emacsvox-sounds-play-concrete-cue)
+            (lambda (resource _sample-id)
+              (setq played resource))))
+        (emacsvox-icon 'item))
+      (should
+       (string-suffix-p "/packs/chimes/item.ogg" played))
+      (should-not (equal played custom)))))
+
 (ert-deftest emacsvox-sounds-reconciles-removed-active-pack ()
   "Discovery removal selects the scheme pack and discards stale cache entries."
   (emacsvox-test--with-sound-tree

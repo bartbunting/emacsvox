@@ -252,6 +252,99 @@
       (should
        (eq (plist-get (caddr entry) :occasion) 'navigation)))))
 
+(ert-deftest emacsvox-notmuch-status-fragment-currently-resolves-repeatedly ()
+  "Characterize duplicate status actions across icons and summary separators."
+  (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+         (emacsvox-notmuch-show-status-icons '(("unread" . new-mail)))
+         (emacsvox-aural-enabled-feature-fragments
+          '(mail-message-status-cues))
+         (emacsvox-aural-feature-fragment-order nil)
+         (emacsvox-aural-user-rules nil)
+         (emacsvox-aural-session-rules nil)
+         (emacsvox-aural-buffer-rules nil)
+         (emacsvox-aural-active-scheme 'default)
+         (emacsvox-aural-configuration-generation 0)
+         (emacsvox-aural--current-rules-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--provider-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-sounds-current-pack 'chimes)
+         (emacsvox-use-icons t)
+         (present-legacy
+          (symbol-function 'emacsvox-aural-present-legacy-icon))
+         traces)
+    (setf (plist-get message :tags) '("inbox" "unread"))
+    (cl-labels
+        ((record-plan
+          (kind text plan)
+          (push
+           (list
+            kind
+            text
+            (mapcar
+             #'emacsvox-aural-concrete-action-id
+             (emacsvox-aural-concrete-plan-before plan))
+            (mapcar
+             #'emacsvox-aural-concrete-action-id
+             (emacsvox-aural-concrete-plan-after plan)))
+           traces)))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-present-legacy-icon)
+            (lambda (icon &optional context)
+              (let ((plan (funcall present-legacy icon context)))
+                (record-plan 'icon nil plan)
+                plan)))
+           ((symbol-function 'emacsvox-aural-queue-concrete-plan) #'ignore)
+           ((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
+           ((symbol-function 'tts--protocol-dispatch) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text)
+              (let ((prepared (emacsvox-aural-prepare-text text))
+                    (position 0))
+                (while (< position (length prepared))
+                  (let* ((next
+                          (next-single-property-change
+                           position
+                           emacsvox-aural-concrete-plan-property
+                           prepared
+                           (length prepared)))
+                         (plan
+                          (emacsvox-aural-concrete-plan-at
+                           position prepared)))
+                    (record-plan
+                     'speech
+                     (substring-no-properties prepared position next)
+                     plan)
+                    (setq position next)))))))
+        (emacsvox-notmuch-speak-show-message message)))
+    (setq traces (nreverse traces))
+    (let* ((icon (car traces))
+           (separators
+            (cl-remove-if-not
+             (lambda (trace)
+               (and
+                (eq (car trace) 'speech)
+                (equal (cadr trace) ", ")))
+             traces))
+           (before (apply #'append (mapcar #'caddr traces)))
+           (after (apply #'append (mapcar #'cadddr traces))))
+      (should
+       (equal
+        icon
+        '(icon nil
+          (legacy-cue workflow-mail-unread-cue)
+          (workflow-mail-attachments-label))))
+      (should (= (length separators) 5))
+      (dolist (separator separators)
+        (should
+         (equal
+          (cddr separator)
+          '((workflow-mail-unread-cue)
+            (workflow-mail-attachments-label)))))
+      (should (= (cl-count 'legacy-cue before) 1))
+      (should (= (cl-count 'workflow-mail-unread-cue before) 6))
+      (should (= (cl-count 'workflow-mail-attachments-label after) 6)))))
+
 (ert-deftest emacsvox-notmuch-search-result-fields-are-configurable ()
   "Search-result fields can be reordered and omitted."
   (let ((emacsvox-notmuch-search-result-fields '(subject authors))

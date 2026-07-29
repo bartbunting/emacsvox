@@ -211,6 +211,39 @@
     (should (eq (car captured) 'fundamental-mode))
     (should-not (eq (car captured) 'emacsvox-test-source-mode))))
 
+(ert-deftest emacsvox-voice-global-disable-does-not-govern-new-buffer ()
+  "Characterize a new buffer retaining Voice Lock after global disable."
+  (let ((global-state global-voice-lock-mode)
+        (default-state (default-value 'voice-lock-mode))
+        (buffer-states
+         (mapcar
+          (lambda (buffer)
+            (with-current-buffer buffer
+              (list
+               buffer
+               (local-variable-p 'voice-lock-mode)
+               voice-lock-mode)))
+          (buffer-list)))
+        created)
+    (unwind-protect
+        (progn
+          (global-voice-lock-mode -1)
+          (setq created (generate-new-buffer " *voice-lock-new*"))
+          (with-current-buffer created
+            (should-not global-voice-lock-mode)
+            (should voice-lock-mode)))
+      (when (buffer-live-p created)
+        (kill-buffer created))
+      (setq global-voice-lock-mode global-state)
+      (set-default 'voice-lock-mode default-state)
+      (dolist (state buffer-states)
+        (pcase-let ((`(,buffer ,local ,value) state))
+          (when (buffer-live-p buffer)
+            (with-current-buffer buffer
+              (if local
+                  (set (make-local-variable 'voice-lock-mode) value)
+                (kill-local-variable 'voice-lock-mode)))))))))
+
 (ert-deftest emacsvox-voice-speak-line-snapshots-overlay-faces ()
   "Normal line speech captures overlay faces before copying source text."
   (with-temp-buffer
