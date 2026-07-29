@@ -1740,6 +1740,24 @@ An existing file is copied to FILE~ before replacement."
          (:before
           ((:id core-edit-deletion-tone-action
             :kind tone :tone edit-deletion))))
+        (:id core-edit-uppercase-tone
+         :match (:edit-operation uppercase)
+         :render
+         (:before
+          ((:id core-edit-uppercase-tone-action
+            :kind tone :tone edit-uppercase))))
+        (:id core-edit-lowercase-tone
+         :match (:edit-operation lowercase)
+         :render
+         (:before
+          ((:id core-edit-lowercase-tone-action
+            :kind tone :tone edit-lowercase))))
+        (:id core-edit-capitalize-tone
+         :match (:edit-operation capitalize)
+         :render
+         (:before
+          ((:id core-edit-capitalize-tone-action
+            :kind tone :tone edit-uppercase))))
         (:id core-empty-line-tone
          :match (:line-condition empty)
          :render

@@ -641,55 +641,63 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
               (emacsvox-aural-concrete-action-tone tone)
               (nth 2 case)))))))))
 
-(ert-deftest emacsvox-speak-edit-operation-submits-first-class-deletion-tone ()
-  "Core deletion resolves one named tone under the edit occasion."
+(ert-deftest emacsvox-speak-edit-operations-submit-first-class-tones ()
+  "Core edit operations resolve named tones under the edit occasion."
   (emacsvox-test--with-transport-scheme
     (emacsvox-test--transport-scheme nil)
-    (let ((emacsvox-aural-presentation-history nil)
-          (emacsvox-aural-submission-facts
-           '(:role field :content "deleted text"))
-          (emacsvox-aural-submission-context nil)
-          (emacsvox-aural-submission-module nil)
-          (emacsvox-aural-submission-occasion nil)
-          (tts-quiet nil)
-          (tts-speaker-process 'speaker)
-          events)
-      (cl-letf
-          (((symbol-function 'process-live-p)
-            (lambda (process) (eq process 'speaker)))
-           ((symbol-function 'tts-initialize)
-            (lambda ()
-              (ert-fail "Live deletion transport was reinitialized")))
-           ((symbol-function 'tts--protocol-queue-text)
-            (lambda (text)
-              (ert-fail
-               (format "Deletion queued content: %S" text))))
-           ((symbol-function 'tts--protocol-tone)
-            (lambda (pitch duration &optional force)
-              (push (list 'tone pitch duration force) events)))
-           ((symbol-function 'tts--protocol-dispatch)
-            (lambda () (push 'dispatch events))))
-        (emacsvox-speak--present-edit-operation 'deletion))
-      (should
-       (equal
-        (nreverse events)
-        '((tone 500 75 nil) dispatch)))
-      (let* ((record (emacsvox-aural-last-presentation))
-             (plan
-              (car
-               (emacsvox-aural-presentation-record-effective-plans
-                record)))
-             (facts (emacsvox-aural-concrete-plan-facts plan))
-             (context (emacsvox-aural-concrete-plan-context plan))
-             (tone (car (emacsvox-aural-concrete-plan-before plan))))
-        (should-not (plist-member facts :role))
-        (should-not (plist-member facts :content))
-        (should (eq (plist-get facts :edit-operation) 'deletion))
-        (should (eq (plist-get context :occasion) 'edit))
+    (dolist
+        (case
+         '((deletion edit-deletion 500 75)
+           (uppercase edit-uppercase 800 100)
+           (lowercase edit-lowercase 600 100)
+           (capitalize edit-uppercase 800 100)))
+      (let ((emacsvox-aural-presentation-history nil)
+            (emacsvox-aural-submission-facts
+             '(:role field :content "changed text"))
+            (emacsvox-aural-submission-context nil)
+            (emacsvox-aural-submission-module nil)
+            (emacsvox-aural-submission-occasion nil)
+            (tts-quiet nil)
+            (tts-speaker-process 'speaker)
+            events)
+        (cl-letf
+            (((symbol-function 'process-live-p)
+              (lambda (process) (eq process 'speaker)))
+             ((symbol-function 'tts-initialize)
+              (lambda ()
+                (ert-fail "Live edit transport was reinitialized")))
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text)
+                (ert-fail
+                 (format "Edit queued content: %S" text))))
+             ((symbol-function 'tts--protocol-tone)
+              (lambda (pitch duration &optional force)
+                (push (list 'tone pitch duration force) events)))
+             ((symbol-function 'tts--protocol-dispatch)
+              (lambda () (push 'dispatch events))))
+          (emacsvox-speak--present-edit-operation (car case)))
         (should
-         (eq
-          (emacsvox-aural-concrete-action-tone tone)
-          'edit-deletion))))))
+         (equal
+          (nreverse events)
+          (list
+           (list 'tone (nth 2 case) (nth 3 case) nil)
+           'dispatch)))
+        (let* ((record (emacsvox-aural-last-presentation))
+               (plan
+                (car
+                 (emacsvox-aural-presentation-record-effective-plans
+                  record)))
+               (facts (emacsvox-aural-concrete-plan-facts plan))
+               (context (emacsvox-aural-concrete-plan-context plan))
+               (tone (car (emacsvox-aural-concrete-plan-before plan))))
+          (should-not (plist-member facts :role))
+          (should-not (plist-member facts :content))
+          (should (eq (plist-get facts :edit-operation) (car case)))
+          (should (eq (plist-get context :occasion) 'edit))
+          (should
+           (eq
+            (emacsvox-aural-concrete-action-tone tone)
+            (nth 1 case))))))))
 
 (ert-deftest emacsvox-speak-line-condition-preserves-legacy-silence ()
   "Quiet mode or an unavailable existing server still suppresses line tones."

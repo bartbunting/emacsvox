@@ -346,6 +346,12 @@ themed overrides below an active sound pack."
   '((edit-deletion
      "Text was deleted"
      500 75 t)
+    (edit-lowercase
+     "Text was changed to lowercase"
+     600 100 t)
+    (edit-uppercase
+     "Text was changed to uppercase or capitalized"
+     800 100 t)
     (line-empty
      "An empty display line was reached"
      130.8 150 t)

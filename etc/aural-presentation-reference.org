@@ -166,7 +166,7 @@ Operational semantic contract version: =1=.
 | =completion-index= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Zero-based position of a candidate in a completion list |
 | =confirmation-request= | =role= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A prompt asking the user to confirm an action |
 | =deletion-flagged= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem entry is flagged for deletion |
-| =edit-operation= | =attribute= | =core= | =deletion= | - | - | - | - | =edit= | - | - | The text-editing operation being presented |
+| =edit-operation= | =attribute= | =core= | =deletion=, =uppercase=, =lowercase=, =capitalize= | - | - | - | - | =edit= | - | - | The text-editing operation being presented |
 | =entry-deletion-flagged= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry was flagged for deletion |
 | =entry-inspected= | =event= | =dired= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user requested a property of a filesystem entry |
 | =entry-inspection-kind= | =attribute= | =dired= | =size=, =modification-time=, =access-time=, =symbolic-link-target=, =permissions=, =file-type= | - | - | - | - | - | - | - | The requested property of a filesystem entry |
@@ -282,7 +282,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =6= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =9= | Compatibility-preserving Emacsvox presentation |
 | =org-before-after= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings use explicit speech before and after contents |
 | =org-combined= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings combine a label, cue, and content voice |
 | =org-cue-only= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings introduced by one semantic section cue |
@@ -420,6 +420,8 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 | Identifier | Pitch (Hz) | Duration (ms) | Legacy Force | Owner | Intent |
 |------------+------------+---------------+--------------+-------+--------|
 | =edit-deletion= | =500= | =75= | =t= | =core= | Text was deleted |
+| =edit-lowercase= | =600= | =100= | =t= | =core= | Text was changed to lowercase |
+| =edit-uppercase= | =800= | =100= | =t= | =core= | Text was changed to uppercase or capitalized |
 | =line-decoration= | =1047= | =150= | =t= | =core= | A decorative punctuation line was reached |
 | =line-empty= | =130.8= | =150= | =t= | =core= | An empty display line was reached |
 | =line-separator= | =523.3= | =150= | =t= | =core= | A horizontal separator line was reached |

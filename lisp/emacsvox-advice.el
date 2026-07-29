@@ -468,14 +468,14 @@ When on a close delimiter, speak matching delimiter after a small delay. "
 ;;;  Advise modify case commands to speak
 
 (defun emacsvox--case-word-around
-    (target tone final-message original arguments)
+    (target operation final-message original arguments)
   "Call ORIGINAL once, then speak TARGET's case change.
-TONE is played before an interactive change.  FINAL-MESSAGE is announced when
-the change leaves point at the end of the buffer.  ARGUMENTS are passed through
-unchanged."
+OPERATION is presented before an interactive change.  FINAL-MESSAGE is
+announced when the change leaves point at the end of the buffer.  ARGUMENTS
+are passed through unchanged."
   (if (ems-interactive-p target)
       (progn
-        (funcall tone)
+        (emacsvox-speak--present-edit-operation operation)
         (let ((result (apply original arguments)))
           (cond
            ((and (numberp current-prefix-arg) (< current-prefix-arg 0))
@@ -492,9 +492,9 @@ unchanged."
     (apply original arguments)))
 
 (defun emacsvox--advice-upcase-word-around (original &rest arguments)
-  "Provide a tone, then speak after `upcase-word'."
+  "Present the edit, then speak after `upcase-word'."
   (emacsvox--case-word-around
-   'upcase-word #'tts-tone-upcase "Upper cased final word in buffer"
+   'upcase-word 'uppercase "Upper cased final word in buffer"
    original arguments))
 
 (advice-add
@@ -502,9 +502,9 @@ unchanged."
  '((name . emacsvox)))
 
 (defun emacsvox--advice-downcase-word-around (original &rest arguments)
-  "Provide a tone, then speak after `downcase-word'."
+  "Present the edit, then speak after `downcase-word'."
   (emacsvox--case-word-around
-   'downcase-word #'tts-tone-downcase "Lower cased final word in buffer"
+   'downcase-word 'lowercase "Lower cased final word in buffer"
    original arguments))
 
 (advice-add
@@ -512,9 +512,9 @@ unchanged."
  '((name . emacsvox)))
 
 (defun emacsvox--advice-capitalize-word-around (original &rest arguments)
-  "Provide a tone, then speak after `capitalize-word'."
+  "Present the edit, then speak after `capitalize-word'."
   (emacsvox--case-word-around
-   'capitalize-word #'tts-tone-upcase "Capitalized final word in buffer"
+   'capitalize-word 'capitalize "Capitalized final word in buffer"
    original arguments))
 
 (advice-add

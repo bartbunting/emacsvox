@@ -163,11 +163,13 @@
   (should
    (equal
     (emacsvox-aural-tone-candidates)
-    '("edit-deletion" "line-decoration" "line-empty" "line-separator"
-      "line-unspeakable" "line-whitespace")))
+    '("edit-deletion" "edit-lowercase" "edit-uppercase" "line-decoration"
+      "line-empty" "line-separator" "line-unspeakable" "line-whitespace")))
   (dolist
       (expected
        '((edit-deletion 500 75 t)
+         (edit-lowercase 600 100 t)
+         (edit-uppercase 800 100 t)
          (line-empty 130.8 150 t)
          (line-whitespace 261.6 150 t)
          (line-separator 523.3 150 t)

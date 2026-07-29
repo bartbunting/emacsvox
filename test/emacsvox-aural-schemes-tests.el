@@ -140,17 +140,26 @@
 (ert-deftest emacsvox-aural-default-scheme-owns-first-class-tones ()
   "Default tones are semantic rules that stronger policy can suppress."
   (emacsvox-test--with-isolated-schemes
-    (let* ((plan
-            (emacsvox-aural-resolve-active
-             '(:edit-operation deletion)
-             '(:mode text-mode :occasion edit)))
-           (action (car (emacsvox-aural-render-plan-before plan))))
-      (should
-       (equal
-        (emacsvox-aural-render-plan-matched-rules plan)
-        '(core-edit-deletion-tone)))
-      (should (eq (emacsvox-aural-action-kind action) 'tone))
-      (should (eq (emacsvox-aural-action-tone action) 'edit-deletion)))
+    (dolist
+        (mapping
+         '((deletion core-edit-deletion-tone edit-deletion)
+           (uppercase core-edit-uppercase-tone edit-uppercase)
+           (lowercase core-edit-lowercase-tone edit-lowercase)
+           (capitalize core-edit-capitalize-tone edit-uppercase)))
+      (let* ((plan
+              (emacsvox-aural-resolve-active
+               (list :edit-operation (car mapping))
+               '(:mode text-mode :occasion edit)))
+             (action (car (emacsvox-aural-render-plan-before plan))))
+        (should
+         (equal
+          (emacsvox-aural-render-plan-matched-rules plan)
+          (list (cadr mapping))))
+        (should (eq (emacsvox-aural-action-kind action) 'tone))
+        (should
+         (eq
+          (emacsvox-aural-action-tone action)
+          (caddr mapping)))))
     (dolist
         (mapping
          '((empty core-empty-line-tone line-empty)

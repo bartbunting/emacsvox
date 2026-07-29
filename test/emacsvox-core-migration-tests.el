@@ -457,7 +457,7 @@
     (should (equal (buffer-string) (concat "a b" (string 160) "c")))))
 
 (ert-deftest emacsvox-core-case-word-advice-calls-original-once-interactively ()
-  "Interactive case changes play a tone, call once, then speak ahead."
+  "Interactive case changes submit an operation, call once, then speak ahead."
   (with-temp-buffer
     (insert "alpha beta gamma")
     (goto-char 1)
@@ -465,8 +465,9 @@
           (current-prefix-arg nil)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone-upcase)
-                 (lambda () (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak--present-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-word)
                  (lambda (&rest _)
                    (push (list 'speak-word (point)) events))))
@@ -484,15 +485,15 @@
       (should
        (equal
         (nreverse events)
-        '(tone (original (1)) (speak-word 7)))))))
+        '((edit uppercase) (original (1)) (speak-word 7)))))))
 
 (ert-deftest emacsvox-core-case-word-advice-calls-original-once-programmatically ()
   "Programmatic case changes call once without speech feedback."
   (let ((ems--interactive-fn-name nil)
         (calls 0)
         feedback)
-    (cl-letf (((symbol-function 'tts-tone-downcase)
-               (lambda () (setq feedback t)))
+    (cl-letf (((symbol-function 'emacsvox-speak--present-edit-operation)
+               (lambda (&rest _) (setq feedback t)))
               ((symbol-function 'emacsvox-speak-word)
                (lambda (&rest _) (setq feedback t))))
       (should
@@ -505,6 +506,27 @@
         'case-result)))
     (should (= calls 1))
     (should-not feedback)))
+
+(ert-deftest emacsvox-core-case-word-advices-use-distinct-edit-operations ()
+  "Each case command identifies its operation to presentation policy."
+  (let (calls)
+    (cl-letf
+        (((symbol-function 'emacsvox--case-word-around)
+          (lambda (target operation final-message original arguments)
+            (push
+             (list target operation final-message original arguments)
+             calls))))
+      (emacsvox--advice-upcase-word-around #'ignore 1)
+      (emacsvox--advice-downcase-word-around #'ignore 2)
+      (emacsvox--advice-capitalize-word-around #'ignore 3))
+    (should
+     (equal
+      (mapcar
+       (lambda (call) (list (nth 0 call) (nth 1 call) (nth 4 call)))
+       (nreverse calls))
+      '((upcase-word uppercase (1))
+        (downcase-word lowercase (2))
+        (capitalize-word capitalize (3)))))))
 
 (ert-deftest emacsvox-keyboard-macro-advice-calls-original-once ()
   "An interactive keyboard macro runs once, quietly, before its completion cue."
