@@ -252,6 +252,21 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      (when icon (emacsvox-icon icon))
      (apply function arguments))))
 
+(defun emacsvox-notmuch--submit-text-feedback
+    (facts occasion icon text)
+  "Submit explicit TEXT with FACTS, OCCASION, and leading ICON."
+  (if (and (stringp text) (> (length text) 0))
+      (emacsvox-aural-submit
+       text
+       :facts facts
+       :module 'notmuch
+       :occasion occasion
+       :compatibility-actions
+       (when icon
+         (list (emacsvox-aural-compatibility-icon icon))))
+    (emacsvox-notmuch--present-feedback
+     facts occasion icon #'tts-speak text)))
+
 (defun emacsvox-notmuch-view-facts (kind action event)
   "Return semantic facts for Notmuch view KIND, ACTION, and EVENT."
   (append
@@ -1089,9 +1104,9 @@ line contains non-whitespace text."
 
 (defun emacsvox-notmuch--search-boundary-feedback (direction)
   "Announce the Notmuch search boundary reached in DIRECTION."
-  (emacsvox-notmuch--present-feedback
+  (emacsvox-notmuch--submit-text-feedback
    (emacsvox-notmuch-view-facts 'search 'select 'operation-failed)
-   'navigation 'warn-user #'tts-speak
+   'navigation 'warn-user
    (if (eq direction 'forward)
        "End of search results"
      "Beginning of search results")))
@@ -1148,16 +1163,16 @@ boundary when the selected thread does not change."
 (defun emacsvox-notmuch--end-of-thread-feedback ()
   "Select the current body and announce the end of its thread."
   (emacsvox-notmuch--move-to-message-body)
-  (emacsvox-notmuch--present-feedback
+  (emacsvox-notmuch--submit-text-feedback
    (emacsvox-notmuch-thread-facts 'select 'focus-entered)
-   'navigation 'select-object #'tts-speak "End of thread"))
+   'navigation 'select-object "End of thread"))
 
 (defun emacsvox-notmuch--beginning-of-thread-feedback ()
   "Select the current body and announce the beginning of its thread."
   (emacsvox-notmuch--move-to-message-body)
-  (emacsvox-notmuch--present-feedback
+  (emacsvox-notmuch--submit-text-feedback
    (emacsvox-notmuch-thread-facts 'select 'focus-entered)
-   'navigation 'select-object #'tts-speak "Beginning of thread"))
+   'navigation 'select-object "Beginning of thread"))
 
 (defun emacsvox-notmuch--next-navigation-around
     (target original arguments)
@@ -1404,9 +1419,9 @@ the selected message changes; otherwise speak the visible window."
            ((not (equal before-message after-message))
             (emacsvox-notmuch-speak-show-message))
            ((and (eq target 'notmuch-show-advance) (eobp))
-            (emacsvox-notmuch--present-feedback
+            (emacsvox-notmuch--submit-text-feedback
              (emacsvox-notmuch-thread-facts 'select 'focus-entered)
-             'navigation 'select-object #'tts-speak "End of thread"))
+             'navigation 'select-object "End of thread"))
            (t
             (emacsvox-notmuch--present-feedback
              '(:role message-part :message-part-kind page

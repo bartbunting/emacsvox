@@ -10,6 +10,18 @@
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
 
+(defun emacsvox-test--notmuch-submission-recorder (record)
+  "Return a native submission stub that passes logical events to RECORD."
+  (lambda (content &rest arguments)
+    (dolist (action (plist-get arguments :compatibility-actions))
+      (funcall
+       record
+       (list
+        'icon
+        (emacsvox-aural-compatibility-action-value action))))
+    (funcall record (list 'speak (substring-no-properties content)))
+    'submission))
+
 (ert-deftest emacsvox-notmuch-advice-is-current-and-direct ()
   "Current Notmuch targets use native advice directly."
   (dolist (entry emacsvox-notmuch--advice)
@@ -244,6 +256,124 @@
          #'emacsvox-aural-compatibility-action-value
          (plist-get arguments :compatibility-actions))
         '(new-mail mark-object))))))
+
+(ert-deftest emacsvox-notmuch-boundary-feedback-uses-one-native-submission ()
+  "A search boundary carries its cue and semantics in one submission."
+  (let (captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (cons content arguments))
+            'submission)))
+      (should
+       (eq
+        (emacsvox-notmuch--search-boundary-feedback 'forward)
+        'submission)))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should (equal content "End of search results"))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role mail-view :mail-view-kind search
+          :mail-action-kind select :events (operation-failed))))
+      (should (eq (plist-get arguments :module) 'notmuch))
+      (should (eq (plist-get arguments :occasion) 'navigation))
+      (should (= (length actions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value (car actions))
+        'warn-user)))))
+
+(ert-deftest emacsvox-notmuch-empty-text-feedback-keeps-legacy-fallback ()
+  "Empty feedback still preserves the legacy cue and speech call."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (&rest _)
+            (ert-fail "Empty text entered native submission")))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'tts-speak)
+          (lambda (text) (push (list 'speak text) events))))
+      (emacsvox-notmuch--submit-text-feedback
+       '(:role mail-view :mail-view-kind search)
+       'navigation 'warn-user ""))
+    (should
+     (equal
+      (nreverse events)
+      '((icon warn-user) (speak ""))))))
+
+(ert-deftest emacsvox-notmuch-native-boundary-presents-one-transaction ()
+  "A search boundary resolves once and obeys the auditory-icon setting."
+  (dolist (icons-enabled '(t nil))
+    (let ((emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments nil)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          (emacsvox-aural-presentation-history nil)
+          (emacsvox-aural-presentation-history-limit 20)
+          (emacsvox-aural--presentation-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (emacsvox-aural-plan-presented-hook nil)
+          (emacsvox-use-icons icons-enabled)
+          (emacsvox-aural-face-presentation-enabled t)
+          (voice-lock-mode t)
+          events
+          submission)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (prepared)
+              (with-temp-buffer
+                (insert prepared)
+                (tts-audio-format (point-min) (point-max)))))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_resource) (push 'cue events)))
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET"))
+           ((symbol-function 'tts--protocol-queue-code) #'ignore)
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text) (push (list 'text text) events)))
+           ((symbol-function 'tts--protocol-silence) #'ignore))
+        (setq
+         submission
+         (emacsvox-notmuch--search-boundary-feedback 'forward)))
+      (should (emacsvox-aural-submission-p submission))
+      (should
+       (equal
+        (nreverse events)
+        (if icons-enabled
+            '(cue (text "End of search results"))
+          '((text "End of search results")))))
+      (should (= (length emacsvox-aural-presentation-history) 1))
+      (should
+       (= (emacsvox-aural-presentation-record-transaction-id
+           (emacsvox-aural-last-presentation))
+          1))
+      (let* ((plans (emacsvox-aural-submission-plans submission))
+             (plan (car plans))
+             (content (emacsvox-aural-concrete-plan-content plan))
+             (context (emacsvox-aural-concrete-plan-context plan)))
+        (should (= (length plans) 1))
+        (should
+         (equal
+          (emacsvox-aural-concrete-plan-facts plan)
+          '(:role mail-view :events (operation-failed)
+            :mail-action-kind select :mail-view-kind search)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (emacsvox-aural-concrete-plan-before plan))
+          (and icons-enabled '(warn-user))))
+        (should-not
+         (emacsvox-aural-concrete-content-voice-request content))
+        (should (eq (plist-get context :module) 'notmuch))
+        (should (eq (plist-get context :occasion) 'navigation))
+        (should
+         (eq (plist-get context :icons-enabled) icons-enabled))))))
 
 (ert-deftest emacsvox-notmuch-status-fragment-resolves-once-per-message ()
   "One message transaction emits each status action once."
@@ -877,10 +1007,9 @@
               (lambda () (pop thread-ids)))
              ((symbol-function 'emacsvox-notmuch-speak-search-result)
               (lambda (&optional _result) (push '(result) events)))
-             ((symbol-function 'emacsvox-icon)
-              (lambda (icon) (push (list 'icon icon) events)))
-             ((symbol-function 'tts-speak)
-              (lambda (text) (push (list 'speak text) events))))
+             ((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
           (should
            (eq
             (funcall
@@ -914,10 +1043,9 @@
              'notmuch-search-previous-thread)
             events)
         (cl-letf
-            (((symbol-function 'emacsvox-icon)
-              (lambda (icon) (push (list 'icon icon) events)))
-             ((symbol-function 'tts-speak)
-              (lambda (text) (push (list 'speak text) events))))
+            (((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
           (notmuch-search-previous-thread)
           (should
            (equal
@@ -988,10 +1116,9 @@
               (lambda () (push '(body) events)))
              ((symbol-function 'emacsvox-notmuch-speak-show-message)
               (lambda (&optional _message) (push '(message) events)))
-             ((symbol-function 'emacsvox-icon)
-              (lambda (icon) (push (list 'icon icon) events)))
-             ((symbol-function 'tts-speak)
-              (lambda (text) (push (list 'speak text) events))))
+             ((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
           (should
            (eq
             (funcall
@@ -1030,10 +1157,9 @@
               (lambda () (push '(body) events)))
              ((symbol-function 'emacsvox-notmuch-speak-show-message)
               (lambda (&optional _message) (push '(message) events)))
-             ((symbol-function 'emacsvox-icon)
-              (lambda (icon) (push (list 'icon icon) events)))
-             ((symbol-function 'tts-speak)
-              (lambda (text) (push (list 'speak text) events))))
+             ((symbol-function 'emacsvox-aural-submit)
+              (emacsvox-test--notmuch-submission-recorder
+               (lambda (event) (push event events)))))
           (should
            (eq
             (funcall
@@ -1184,6 +1310,37 @@
         (nreverse events)
         '((icon scroll)
           (window)))))))
+
+(ert-deftest emacsvox-notmuch-show-advance-announces-thread-end ()
+  "Space submits one semantic boundary when it cannot advance."
+  (with-temp-buffer
+    (setq major-mode 'notmuch-show-mode)
+    (insert "message body")
+    (goto-char (point-max))
+    (let ((ems--interactive-fn-name 'notmuch-show-advance)
+          (calls 0)
+          feedback)
+      (cl-letf
+          (((symbol-function 'emacsvox-notmuch--current-show-message-id)
+            (lambda () "same"))
+           ((symbol-function 'emacsvox-notmuch--submit-text-feedback)
+            (lambda (&rest arguments)
+              (setq feedback arguments)
+              'submission)))
+        (should
+         (eq
+          (emacsvox--advice-notmuch-show-advance-around
+           (lambda ()
+             (cl-incf calls)
+             'at-end))
+          'at-end)))
+      (should (= calls 1))
+      (should
+       (equal
+        feedback
+        '((:role message-thread :mail-action-kind select
+           :events (focus-entered))
+          navigation select-object "End of thread"))))))
 
 (ert-deftest emacsvox-notmuch-show-rewind-is-target-aware ()
   "Programmatic rewind remains quiet and preserves its return value."
