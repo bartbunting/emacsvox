@@ -101,12 +101,20 @@
       "(defun duplicate-feedback (text)\n"
       "  (emacsvox-aural-submit\n"
       "   (progn (emacsvox-icon 'item) (tts-speak text))\n"
-      "   :facts '(:role message)))\n")
+      "   :facts '(:role message)))\n"
+      "(defun duplicate-action-feedback ()\n"
+      "  (emacsvox-aural-submit-actions\n"
+      "   :facts\n"
+      "   (progn (emacsvox-aural-present '(:event boundary))\n"
+      "          '(:event boundary))))\n")
      "emacsvox-notmuch.el")
     (should
      (equal
       (emacsvox-aural-audit-nested-submission-resolutions root)
       '((:file "lisp/emacsvox-notmuch.el"
+         :function duplicate-action-feedback
+         :resolver emacsvox-aural-present)
+        (:file "lisp/emacsvox-notmuch.el"
          :function duplicate-feedback
          :resolver emacsvox-icon)
         (:file "lisp/emacsvox-notmuch.el"

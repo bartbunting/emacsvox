@@ -184,6 +184,7 @@
          emacsvox-aural-prepare-text
          emacsvox-aural-compatibility-icon
          emacsvox-aural-submit
+         emacsvox-aural-submit-actions
          emacsvox-aural--transport-error
          emacsvox-aural-describe-selector
          emacsvox-aural-preview-play-plan

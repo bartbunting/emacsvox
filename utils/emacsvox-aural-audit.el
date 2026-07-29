@@ -47,6 +47,7 @@
 
 (defconst emacsvox-aural-audit-complete-resolution-functions
   '(emacsvox-aural-submit
+    emacsvox-aural-submit-actions
     emacsvox-aural-present
     emacsvox-aural-present-legacy-icon
     emacsvox-aural-prepare-text
@@ -374,7 +375,11 @@ below a presentation boundary."
                     (walk body-form nil function))))
                (t
                 (let* ((head (car form))
-                       (native (eq head 'emacsvox-aural-submit)))
+                       (native
+                        (memq
+                         head
+                         '(emacsvox-aural-submit
+                           emacsvox-aural-submit-actions))))
                   (when
                       (and
                        inside-submission
@@ -735,7 +740,11 @@ below a presentation boundary."
    "Attach the same non-nil =emacsvox-aural-object= value across adjacent "
    "runs when an explicitly identified object must span those changes.  For "
    "transient output with explicit content, call =emacsvox-aural-submit= with "
-   "=:facts=, =:module=, and =:occasion=.  Put preserved cue order in "
+   "=:facts=, =:module=, and =:occasion=.  For a semantic event that has no "
+   "object text, call =emacsvox-aural-submit-actions= with those same facts "
+   "and source details; matching rules may emit speech, cues, pauses, or "
+   "named tones without inventing empty speech content.  Put preserved cue "
+   "order for text-bearing submissions in "
    "=:compatibility-actions= using =emacsvox-aural-compatibility-icon=; its "
    "optional phase is =before= by default or =after=.  The submission resolves "
    "semantic policy once, merges only cue-specific legacy adapter policy, "
@@ -1086,7 +1095,9 @@ below a presentation boundary."
    "or clears an existing voice or cue, the old presentation remains.\n\n"
    "To migrate a direct icon path, first characterize its text, cue, and order. "
    "Register or reuse the intent, then pass explicit text and the preserved "
-   "cue to one =emacsvox-aural-submit= call.  Express the cue as an ordered "
+   "cue to one =emacsvox-aural-submit= call.  For cue-, pause-, or tone-only "
+   "feedback, use =emacsvox-aural-submit-actions= so the active scheme owns "
+   "the modality.  Express a preserved compatibility cue as an ordered "
    "=emacsvox-aural-compatibility-icon= action rather than calling "
    "=emacsvox-icon= beside the submission.  Legacy cue remaps and suppression "
    "rules that must affect this adapter should select =:legacy-cue= explicitly; "

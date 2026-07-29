@@ -364,6 +364,167 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
            plans)
           '(1 1)))))))
 
+(ert-deftest emacsvox-aural-action-submission-queues-one-native-transaction ()
+  "Action-only rules queue in order and retain one exact transaction."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id folded-heading
+        :match (:role heading :state folded)
+        :render
+        (:before
+         ((:id empty :kind tone :tone line-empty))
+         :after
+         ((:id trailing-gap :kind pause :duration 40))))))
+    (let* ((emacsvox-aural--submission-sequence 0)
+           (facts '(:role heading :state folded))
+           (context
+            (append
+             (emacsvox-test--transport-context)
+             '(:icons-enabled nil)))
+           events
+           submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural--ensure-speaker)
+            (lambda () (push 'ensure events)))
+           ((symbol-function 'tts--protocol-tone)
+            (lambda (pitch duration &optional force)
+              (push (list 'tone pitch duration force) events)))
+           ((symbol-function 'tts--protocol-silence)
+            (lambda (duration &optional _force)
+              (push (list 'pause duration) events)))
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text)
+              (ert-fail
+               (format "Action-only submission queued content: %S" text))))
+           ((symbol-function 'tts--protocol-dispatch)
+            (lambda () (push 'dispatch events))))
+        (setq
+         submission
+         (emacsvox-aural-submit-actions
+          :facts facts
+          :context context)))
+      (should
+       (equal
+        (nreverse events)
+        '(ensure (tone 130.8 150 t) (pause 40) dispatch)))
+      (should (emacsvox-aural-submission-p submission))
+      (should (= (emacsvox-aural-submission-id submission) 1))
+      (should (equal (emacsvox-aural-submission-facts submission) facts))
+      (should (equal (emacsvox-aural-submission-context submission) context))
+      (should-not (emacsvox-aural-submission-content submission))
+      (should-not
+       (emacsvox-aural-submission-compatibility-actions submission))
+      (should-not
+       (emacsvox-aural-submission-prepared-content submission))
+      (let* ((plans (emacsvox-aural-submission-plans submission))
+             (plan (car plans))
+             (record (emacsvox-aural-last-presentation)))
+        (should (= (length plans) 1))
+        (should
+         (= (plist-get
+             (emacsvox-aural-concrete-plan-context plan)
+             :presentation-transaction-id)
+            1))
+        (should (= (length emacsvox-aural-presentation-history) 1))
+        (should
+         (= (emacsvox-aural-presentation-record-effective-transaction-id
+             record)
+            1))
+        (should
+         (equal
+          (emacsvox-aural-presentation-record-effective-plans record)
+          (list plan)))))))
+
+(ert-deftest emacsvox-aural-action-submission-presents-enabled-cue ()
+  "An enabled semantic cue uses the ordered transport and enters history."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id heading
+        :match (:role heading)
+        :render
+        (:before ((:id item :kind cue :cue item))))))
+    (let ((context
+           (append
+            (emacsvox-test--transport-context)
+            '(:icons-enabled t)))
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural--ensure-speaker)
+            (lambda () (push 'ensure events)))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_resource) (push 'cue events)))
+           ((symbol-function 'tts--protocol-dispatch)
+            (lambda () (push 'dispatch events))))
+        (emacsvox-aural-submit-actions
+         :facts '(:role heading)
+         :context context))
+      (should (equal (nreverse events) '(ensure cue dispatch)))
+      (should (= (length emacsvox-aural-presentation-history) 1)))))
+
+(ert-deftest emacsvox-aural-action-submission-skips-disabled-cue ()
+  "A cue-only result disabled at its source performs no lifecycle work."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id heading
+        :match (:role heading)
+        :render
+        (:before ((:id item :kind cue :cue item))))))
+    (let ((context
+           (append
+            (emacsvox-test--transport-context)
+            '(:icons-enabled nil)))
+          events
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural--ensure-speaker)
+            (lambda () (push 'ensure events)))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_resource) (push 'cue events)))
+           ((symbol-function 'tts--protocol-dispatch)
+            (lambda () (push 'dispatch events))))
+        (setq
+         submission
+         (emacsvox-aural-submit-actions
+          :facts '(:role heading)
+          :context context)))
+      (should-not events)
+      (should (= (length (emacsvox-aural-submission-plans submission)) 1))
+      (should-not emacsvox-aural-presentation-history))))
+
+(ert-deftest emacsvox-aural-action-submission-skips-empty-plan ()
+  "An unmatched action-only submission neither starts nor dispatches."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme nil)
+    (let (events submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural--ensure-speaker)
+            (lambda () (push 'ensure events)))
+           ((symbol-function 'tts--protocol-dispatch)
+            (lambda () (push 'dispatch events))))
+        (setq
+         submission
+         (emacsvox-aural-submit-actions
+          :facts '(:role heading)
+          :context
+          (append
+           (emacsvox-test--transport-context)
+           '(:icons-enabled t)))))
+      (should-not events)
+      (should (= (length (emacsvox-aural-submission-plans submission)) 1))
+      (should-not emacsvox-aural-presentation-history))))
+
+(ert-deftest emacsvox-aural-action-submission-rejects-content ()
+  "Action-only facts cannot smuggle even empty object content."
+  (dolist (content '(nil ""))
+    (should-error
+     (emacsvox-aural-submit-actions
+      :facts (list :role 'heading :content content)
+      :context
+      (append
+       (emacsvox-test--transport-context)
+       '(:icons-enabled t)))
+     :type 'emacsvox-aural-submission-error)))
+
 (defun emacsvox-test--tts-source-policy-result
     (text faces voice-lock source-icons scratch-icons)
   "Speak TEXT and summarize source policy at the real TTS scratch boundary.

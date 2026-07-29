@@ -13,12 +13,14 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-history)
 (require 'emacsvox-aural-planner)
 (require 'emacsvox-aural-source)
 
 (declare-function tts-speak "tts-speak" (text))
+(autoload 'emacsvox-aural-present "emacsvox-aural-transport")
 
 (define-error
   'emacsvox-aural-submission-error
@@ -180,6 +182,48 @@ PHASE is `before' by default and may alternatively be `after'."
       (emacsvox-aural-call-with-presentation-transaction
        id #'tts-speak prepared)
       submission)))
+
+(defun emacsvox-aural--submit-actions ()
+  "Submit the dynamically frozen semantic facts without object content."
+  (let* ((id (cl-incf emacsvox-aural--submission-sequence))
+         (facts (copy-tree emacsvox-aural-submission-facts))
+         (context (copy-tree emacsvox-aural-submission-context))
+         (plan-context
+          (plist-put
+           (copy-tree context)
+           :presentation-transaction-id id))
+         (plan
+          (emacsvox-aural-call-with-presentation-transaction
+           id #'emacsvox-aural-present facts plan-context)))
+    (emacsvox-aural--make-submission
+     :id id
+     :facts facts
+     :context context
+     :content nil
+     :compatibility-actions nil
+     :prepared-content nil
+     :plans (list plan))))
+
+(cl-defun emacsvox-aural-submit-actions
+    (&key facts context module occasion)
+  "Present semantic FACTS as one action-only native transaction.
+
+FACTS describe one user-visible event or object but supply no spoken object
+content.  Matching rules may still produce ordered speech, cue, pause, or tone
+actions.  Frozen CONTEXT controls policy; MODULE and OCCASION are used when it
+must be captured.  A resolution with no enabled output does not start the
+speech server, dispatch, or create a presentation-history record."
+  (when (plist-member facts :content)
+    (emacsvox-aural--submission-error
+     "Action-only aural facts cannot contain spoken content: %S"
+     (plist-get facts :content)))
+  (emacsvox-aural-call-with-submission
+   #'emacsvox-aural--submit-actions
+   :facts facts
+   :context context
+   :module (or module (plist-get context :module))
+   :occasion
+   (or occasion (plist-get context :occasion) 'notification)))
 
 (cl-defun emacsvox-aural-submit
     (content &key facts context module occasion compatibility-actions)

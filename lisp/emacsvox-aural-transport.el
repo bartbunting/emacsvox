@@ -275,6 +275,30 @@ cleanup, without rerunning semantic or contextual resolution."
        (process-live-p tts-speaker-process))
     (tts-initialize)))
 
+(defun emacsvox-aural--concrete-action-output-p (action context)
+  "Return non-nil when concrete ACTION produces output under CONTEXT."
+  (pcase (emacsvox-aural-concrete-action-kind action)
+    ('cue (emacsvox-aural-icons-enabled-p context))
+    ((or 'pause 'speech 'tone) t)
+    (_ nil)))
+
+(defun emacsvox-aural--concrete-plan-output-p (plan)
+  "Return non-nil when concrete PLAN has output under its frozen policy."
+  (let* ((context (emacsvox-aural-concrete-plan-context plan))
+         (content (emacsvox-aural-concrete-plan-content plan))
+         (text (emacsvox-aural-concrete-content-text content)))
+    (or
+     (cl-some
+      (lambda (action)
+        (emacsvox-aural--concrete-action-output-p action context))
+      (append
+       (emacsvox-aural-concrete-plan-before plan)
+       (emacsvox-aural-concrete-plan-after plan)))
+     (and
+      (emacsvox-aural-concrete-content-speak content)
+      (stringp text)
+      (not (string-empty-p text))))))
+
 (defun emacsvox-aural-present-legacy-icon (icon &optional context)
   "Present legacy ICON through concrete transport.
 Resolve it using CONTEXT or the dynamically captured submission context."
@@ -362,9 +386,10 @@ Use CONTEXT when supplied, otherwise capture the submission context."
           (emacsvox-aural-compile-plan
            (emacsvox-aural-resolve-active facts context)
            facts context)))
-    (emacsvox-aural--ensure-speaker)
-    (emacsvox-aural-queue-concrete-plan plan)
-    (tts--protocol-dispatch)
+    (when (emacsvox-aural--concrete-plan-output-p plan)
+      (emacsvox-aural--ensure-speaker)
+      (emacsvox-aural-queue-concrete-plan plan)
+      (tts--protocol-dispatch))
     plan))
 
 (provide 'emacsvox-aural-transport)
