@@ -163,39 +163,241 @@
       'dirstack-result))
     (should (= calls 1))))
 
+(defun emacsvox-test--comint-output-chunk
+    (buffer process-marker raw-output &optional inserted-output)
+  "Run one advised process output chunk in BUFFER.
+PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
+  (cl-letf (((symbol-function 'process-buffer)
+             (lambda (process)
+               (should (eq process 'test-process))
+               buffer))
+            ((symbol-function 'process-mark)
+             (lambda (process)
+               (should (eq process 'test-process))
+               process-marker)))
+    (emacsvox--advice-comint-output-filter-around
+     (lambda (process output)
+       (should (eq process 'test-process))
+       (should (equal output raw-output))
+       (with-current-buffer buffer
+         (goto-char process-marker)
+         (insert (or inserted-output raw-output))
+         (set-marker process-marker (point)))
+       'filter-result)
+     'test-process raw-output)))
+
 (ert-deftest emacsvox-comint-output-filter-calls-original-once ()
-  "Each Comint process chunk is inserted once before autospeech."
+  "Each process chunk is inserted once before normalized aural submission."
   (with-temp-buffer
-    (insert "ordinary output\n")
     (let ((output-buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
           (emacsvox-comint-output-monitor t)
           (emacsvox-comint-autospeak t)
-          (comint-last-output-start (point-min))
-          (shell-prompt-pattern "\\`never-a-prompt\\'")
           (comint-prompt-regexp "\\`never-a-prompt\\'")
-          (calls 0)
           events)
-      (cl-letf (((symbol-function 'process-buffer)
-                 (lambda (process)
-                   (should (eq process 'test-process))
-                   output-buffer))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speak text) events))))
+      (cl-letf (((symbol-function 'emacsvox-comint--submit)
+                 (lambda (content facts occasion &rest _)
+                   (push (list 'submit content facts occasion) events))))
         (should
          (eq
-          (emacsvox--advice-comint-output-filter-around
-           (lambda (process output)
-             (cl-incf calls)
-             (push (list 'original process output) events)
-             'filter-result)
-           'test-process
-           "chunk")
+          (emacsvox-test--comint-output-chunk
+           output-buffer process-marker "ordinary output\n")
           'filter-result)))
-      (should (= calls 1))
       (should
        (equal
         (nreverse events)
-        '((original test-process "chunk") (speak "chunk")))))))
+        '((submit
+           "ordinary output\n"
+           (:role command-output
+            :command-interaction-kind repl
+            :events (command-output-received))
+           continuous)))))))
+
+(ert-deftest emacsvox-comint-output-waits-for-logical-line-boundaries ()
+  "Partial process chunks produce one logical output presentation."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (comint-prompt-regexp "\\`never-a-prompt\\'")
+          events)
+      (cl-letf (((symbol-function 'emacsvox-comint--submit)
+                 (lambda (content &rest _)
+                   (push content events))))
+        (emacsvox-test--comint-output-chunk buffer process-marker "par")
+        (should-not events)
+        (should (equal emacsvox-comint--pending-output "par"))
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "tial\nsecond")
+        (should (equal events '("partial\n")))
+        (should (equal emacsvox-comint--pending-output "second"))))))
+
+(ert-deftest emacsvox-comint-output-separates-trailing-prompt ()
+  "Output and a prompt in one process chunk become separate ordered events."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (comint-prompt-regexp "[$] ")
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-comint--submit)
+            (lambda (content &rest _)
+              (push (list 'output content) events)))
+           ((symbol-function 'emacsvox-comint--present-feedback)
+            (lambda (facts occasion icon function &rest arguments)
+              (push (list 'prompt facts occasion icon) events)
+              (apply function arguments))))
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "result\n$ "))
+      (should
+       (equal
+        (nreverse events)
+        '((output "result\n")
+          (prompt
+           (:role command-prompt
+            :command-interaction-kind repl
+            :events (command-prompt-ready))
+           notification item))))
+      (should (equal emacsvox-comint--last-prompt "$ "))
+      (should (equal emacsvox-comint--pending-output "")))))
+
+(ert-deftest emacsvox-comint-output-reassembles-a-split-prompt ()
+  "A prompt split across process chunks produces one prompt event."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (comint-prompt-regexp "[$] ")
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-comint--submit)
+            (lambda (&rest _) (push 'output events)))
+           ((symbol-function 'emacsvox-comint--present-feedback)
+            (lambda (_facts _occasion icon function &rest arguments)
+              (push icon events)
+              (apply function arguments))))
+        (emacsvox-test--comint-output-chunk buffer process-marker "$")
+        (should-not events)
+        (emacsvox-test--comint-output-chunk buffer process-marker " "))
+      (should (equal events '(item)))
+      (should (equal emacsvox-comint--pending-output "")))))
+
+(ert-deftest emacsvox-comint-known-prompt-delimits-non-newline-output ()
+  "A known prompt preserves preceding output that has no final newline."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (emacsvox-comint--last-prompt "$ ")
+          (comint-prompt-regexp "[$] ")
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-comint--submit)
+            (lambda (content &rest _)
+              (push (list 'output content) events)))
+           ((symbol-function 'emacsvox-comint--present-feedback)
+            (lambda (_facts _occasion icon function &rest arguments)
+              (push (list 'prompt icon) events)
+              (apply function arguments))))
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "value")
+        (should-not events)
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "$ "))
+      (should
+       (equal
+        (nreverse events)
+        '((output "value") (prompt item)))))))
+
+(ert-deftest emacsvox-comint-carriage-return-replaces-pending-progress ()
+  "Carriage-motion output does not speak every overwritten progress value."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (emacsvox-comint--last-prompt "$ ")
+          (comint-prompt-regexp "[$] ")
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-comint--submit)
+            (lambda (content &rest _) (push content events)))
+           ((symbol-function 'emacsvox-comint--present-feedback)
+            (lambda (_facts _occasion _icon function &rest arguments)
+              (apply function arguments))))
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "10 percent")
+        ;; Model the normalized text left by Comint carriage motion.
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "\r20 percent" "20 percent")
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "$ "))
+      (should (equal events '("20 percent"))))))
+
+(ert-deftest emacsvox-comint-output-submits-normalized-buffer-text ()
+  "Autospeech uses post-filter buffer text rather than raw terminal escapes."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor t)
+          (emacsvox-comint-autospeak t)
+          (comint-prompt-regexp "\\`never-a-prompt\\'")
+          events)
+      (cl-letf (((symbol-function 'emacsvox-comint--submit)
+                 (lambda (content &rest _) (push content events))))
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "\e[31merror\e[0m\n" "error\n"))
+      (should (equal events '("error\n"))))))
+
+(ert-deftest emacsvox-comint-output-does-not-backlog-ineligible-speech ()
+  "Disabled or unmonitored output is discarded instead of spoken later."
+  (with-temp-buffer
+    (let ((buffer (current-buffer))
+          (process-marker (copy-marker (point-min)))
+          (emacsvox-comint-output-monitor nil)
+          (emacsvox-comint-autospeak t)
+          (comint-prompt-regexp "\\`never-a-prompt\\'")
+          events)
+      (cl-letf
+          (((symbol-function 'window-buffer)
+            (lambda (&optional _window) (get-buffer-create " *elsewhere*")))
+           ((symbol-function 'emacsvox-comint--submit)
+            (lambda (&rest _) (push 'submit events))))
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "hidden partial")
+        (should-not events)
+        (should (equal emacsvox-comint--pending-output ""))
+        (setq emacsvox-comint-output-monitor t)
+        (emacsvox-test--comint-output-chunk
+         buffer process-marker "visible\n"))
+      (should (equal events '(submit))))))
+
+(ert-deftest emacsvox-comint-output-survives-a-killed-process-buffer ()
+  "A process buffer killed by the original filter does not cause feedback errors."
+  (let ((buffer (generate-new-buffer " *emacsvox-dead-comint*"))
+        process-marker)
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (setq process-marker (copy-marker (point-min))))
+          (cl-letf (((symbol-function 'process-buffer)
+                     (lambda (_process) buffer))
+                    ((symbol-function 'process-mark)
+                     (lambda (_process) process-marker)))
+            (should
+             (eq
+              (emacsvox--advice-comint-output-filter-around
+               (lambda (&rest _)
+                 (kill-buffer buffer)
+                 'filter-result)
+               'test-process "final")
+              'filter-result))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (ert-deftest emacsvox-comint-completion-history-advice-is-directly-registered ()
   "Comint completion and history-display advice uses native advice directly."

@@ -47,7 +47,7 @@
 
 ;;   Required modules:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-submission)
@@ -107,6 +107,12 @@ When  on,  comint output is spoken even when the
 buffer is not current or its window live.")
 
 (make-variable-buffer-local 'emacsvox-comint-output-monitor)
+
+(defvar-local emacsvox-comint--pending-output ""
+  "Normalized process output waiting for a logical line or prompt boundary.")
+
+(defvar-local emacsvox-comint--last-prompt nil
+  "Most recently recognized command prompt, without text properties.")
 
 ;;;###autoload
 (ems-generate-switcher 'emacsvox-toggle-comint-output-monitor
@@ -173,6 +179,128 @@ When ICON is non-nil, preserve it in ICON-PHASE, which defaults to `before'."
    (when icon
      (list
       (emacsvox-aural-compatibility-icon icon icon-phase)))))
+
+(defun emacsvox-comint--full-prompt-match-p (text)
+  "Return non-nil when TEXT is exactly a configured Comint prompt."
+  (and
+   (> (length text) 0)
+   (cl-some
+    (lambda (regexp)
+      (and
+       (stringp regexp)
+       (> (length regexp) 0)
+       (condition-case nil
+           (string-match-p
+            (concat "\\`\\(?:" regexp "\\)\\'")
+            (substring-no-properties text))
+         (invalid-regexp nil))))
+    (delq
+     nil
+     (list
+      comint-prompt-regexp
+      (and (derived-mode-p 'shell-mode) shell-prompt-pattern))))))
+
+(defun emacsvox-comint--split-final-prompt (text)
+  "Split a recognized final prompt from TEXT.
+Return (OUTPUT . PROMPT), or nil when TEXT does not end in a prompt.  A
+previously observed prompt can delimit output that did not end in a newline."
+  (let* ((plain (substring-no-properties text))
+         (known emacsvox-comint--last-prompt)
+         (known-start
+          (and
+           (stringp known)
+           (> (length known) 0)
+           (string-suffix-p known plain)
+           (- (length text) (length known)))))
+    (cond
+     (known-start
+      (cons
+       (substring text 0 known-start)
+       (substring text known-start)))
+     (t
+      (let* ((line-start
+              (if-let* ((newline (string-match "[^\n]*\\'" plain)))
+                  newline
+                0))
+             (tail (substring text line-start)))
+        (when (emacsvox-comint--full-prompt-match-p tail)
+          (cons (substring text 0 line-start) tail)))))))
+
+(defun emacsvox-comint--partition-output (text replace-p)
+  "Partition normalized inserted TEXT into output, prompt, and pending text.
+When REPLACE-P is non-nil, TEXT replaces pending carriage-motion output."
+  (let* ((combined
+          (if replace-p
+              text
+            (concat emacsvox-comint--pending-output text)))
+         (prompt-split (emacsvox-comint--split-final-prompt combined))
+         output prompt)
+    (if prompt-split
+        (setq output (car prompt-split)
+              prompt (cdr prompt-split)
+              emacsvox-comint--pending-output ""
+              emacsvox-comint--last-prompt
+              (substring-no-properties prompt))
+      (let* ((plain (substring-no-properties combined))
+             (pending-start
+              (if-let* ((newline (string-match "[^\n]*\\'" plain)))
+                  newline
+                0)))
+        (setq output (substring combined 0 pending-start)
+              emacsvox-comint--pending-output
+              (substring combined pending-start))))
+    (list :output output :prompt prompt
+          :pending emacsvox-comint--pending-output)))
+
+(defun emacsvox-comint--automatic-feedback-p ()
+  "Return non-nil when process output should be presented in this buffer."
+  (and
+   emacsvox-comint-autospeak
+   (or
+    emacsvox-comint-output-monitor
+    (eq (current-buffer) (window-buffer (selected-window))))))
+
+(defun emacsvox-comint--present-process-output (text raw-output)
+  "Present normalized inserted TEXT corresponding to RAW-OUTPUT.
+Arbitrary process chunks are assembled into complete output and prompt
+events.  Carriage-return chunks replace pending progress output."
+  (let* ((partition
+          (emacsvox-comint--partition-output
+           text (string-prefix-p "\r" raw-output)))
+         (output (plist-get partition :output))
+         (prompt (plist-get partition :prompt))
+         (present-p (emacsvox-comint--automatic-feedback-p)))
+    (if (not present-p)
+        ;; Never announce output later merely because autospeak or monitoring
+        ;; was enabled after it arrived.
+        (setq emacsvox-comint--pending-output "")
+      (when
+          (and
+           output
+           (not (string-empty-p (string-trim output))))
+        (emacsvox-comint--submit
+         output
+         (emacsvox-comint-facts
+          'command-output 'command-output-received)
+         'continuous))
+      (when prompt
+        (emacsvox-comint--present-feedback
+         (emacsvox-comint-facts
+          'command-prompt 'command-prompt-ready)
+         'notification 'item #'ignore)))))
+
+(defun emacsvox-comint--inserted-output (process start)
+  "Return normalized output inserted for PROCESS since marker START."
+  (when-let* ((buffer (process-buffer process))
+              ((buffer-live-p buffer))
+              ((eq buffer (marker-buffer start)))
+              (process-mark (process-mark process))
+              ((eq buffer (marker-buffer process-mark))))
+    (with-current-buffer buffer
+      (let ((beginning (marker-position start))
+            (end (marker-position process-mark)))
+        (when (<= beginning end)
+          (buffer-substring beginning end))))))
 
 ;;;###autoload
 (defun emacsvox-comint-speech-setup ()
@@ -465,28 +593,23 @@ When ICON is non-nil, preserve it in ICON-PHASE, which defaults to `before'."
 
 (defun emacsvox--advice-comint-output-filter-around
     (original process output)
-  "Call ORIGINAL once for PROCESS and OUTPUT, then provide autospeech."
-  (let ((monitor emacsvox-comint-output-monitor)
-        (buffer (process-buffer process)))
-    (let ((result (funcall original process output)))
-      (with-current-buffer buffer
-        (when
-            (and (not (string-match "^\r" output))
-                 comint-last-output-start
-                 (or monitor (eq (window-buffer) buffer)))
-          (let
-              ((prompt-p
-                (save-excursion
-                  (goto-char comint-last-output-start)
-                  (or (looking-at shell-prompt-pattern)
-                      (looking-at comint-prompt-regexp)))))
-            (cond
-             ((and emacsvox-comint-autospeak (not prompt-p))
-              (tts-speak output))
-             (prompt-p
-              (when emacsvox-comint-autospeak
-                (emacsvox-icon 'item)))))))
-      result)))
+  "Call ORIGINAL once, then present normalized logical PROCESS output."
+  (let* ((buffer (ignore-errors (process-buffer process)))
+         (start
+          (and
+           (buffer-live-p buffer)
+           (ignore-errors (copy-marker (process-mark process))))))
+    (unwind-protect
+        (let ((result (funcall original process output)))
+          (when-let* ((text
+                       (and start
+                            (ignore-errors
+                              (emacsvox-comint--inserted-output
+                               process start)))))
+            (with-current-buffer (marker-buffer start)
+              (emacsvox-comint--present-process-output text output)))
+          result)
+      (when start (set-marker start nil)))))
 
 (advice-add
  'comint-output-filter :around
