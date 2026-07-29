@@ -22,6 +22,10 @@
 (defvar emacsvox-keymap)
 (defvar emacsvox-prefix)
 (defvar tts-speaker-process)
+(defvar voice-setup-face-voice-table)
+
+(declare-function voice-setup-face-mapping-conflicts
+                  "voice-setup" ())
 
 (cl-defstruct
     (emacsvox-aural-doctor-finding
@@ -272,6 +276,51 @@
       "implementation; visual-face rules and semantic presentation remain "
       "independent."))))
 
+(defun emacsvox-aural-doctor--face-mapping-conflict-description
+    (diagnostic)
+  "Return concise provenance text for face mapping DIAGNOSTIC."
+  (format
+   "%s: effective %s; declared %s"
+   (plist-get diagnostic :face)
+   (or (plist-get diagnostic :effective) "none")
+   (mapconcat
+    (lambda (record)
+      (format
+       "%s=%s"
+       (plist-get record :origin)
+       (plist-get record :voice)))
+    (plist-get diagnostic :declarations)
+    ", ")))
+
+(defun emacsvox-aural-doctor--face-mapping-finding ()
+  "Report conflicting legacy face-to-voice declarations."
+  (if (not (fboundp 'voice-setup-face-mapping-conflicts))
+      (emacsvox-aural-doctor--finding
+       'face-mapping-conflicts 'info "Legacy face mappings" "unavailable"
+       "The compatibility voice provider has not been loaded")
+    (let ((conflicts (voice-setup-face-mapping-conflicts)))
+      (if conflicts
+          (emacsvox-aural-doctor--finding
+           'face-mapping-conflicts 'warning "Legacy face mappings"
+           (format
+            "%d conflict%s"
+            (length conflicts)
+            (if (= (length conflicts) 1) "" "s"))
+           (mapconcat
+            #'emacsvox-aural-doctor--face-mapping-conflict-description
+            conflicts
+            "; "))
+        (emacsvox-aural-doctor--finding
+         'face-mapping-conflicts 'ok "Legacy face mappings" "no conflicts"
+         (format
+          "%d loaded face mappings have unambiguous voices"
+          (if
+              (and
+               (boundp 'voice-setup-face-voice-table)
+               (hash-table-p voice-setup-face-voice-table))
+              (hash-table-count voice-setup-face-voice-table)
+            0)))))))
+
 (defun emacsvox-aural-doctor-run ()
   "Return current aural installation and configuration findings."
   (append
@@ -295,6 +344,7 @@
     (emacsvox-aural-doctor--spatial-finding)
     (emacsvox-aural-doctor--face-presentation-finding)
     (emacsvox-aural-doctor--compatibility-voice-finding)
+    (emacsvox-aural-doctor--face-mapping-finding)
     (emacsvox-aural-doctor--speech-server-finding)
     (emacsvox-aural-doctor--training-finding))))
 

@@ -72,6 +72,59 @@
       (key-binding (kbd "C-e E"))
       'emacsvox-aural-explain-presentation))))
 
+(ert-deftest emacsvox-aural-doctor-reports-face-mapping-conflicts ()
+  "Doctor names each conflicting face, declaration, and effective voice."
+  (let ((voice-setup-face-voice-table
+         (make-hash-table :test #'eq))
+        (voice-setup-face-voice-provenance-table
+         (make-hash-table :test #'eq))
+        (voice-setup--face-mapping-sequence 0))
+    (voice-setup-set-voice-for-face
+     'font-lock-warning-face 'voice-brighten 'warning-a)
+    (voice-setup-set-voice-for-face
+     'font-lock-warning-face 'voice-animate 'warning-b)
+    (voice-setup-set-voice-for-face
+     'font-lock-comment-face 'voice-monotone 'comment-a)
+    (voice-setup-set-voice-for-face
+     'font-lock-comment-face 'voice-monotone 'comment-b)
+    (let ((finding (emacsvox-aural-doctor--face-mapping-finding)))
+      (should
+       (eq
+        (emacsvox-aural-doctor-finding-severity finding)
+        'warning))
+      (should
+       (equal
+        (emacsvox-aural-doctor-finding-status finding)
+        "1 conflict"))
+      (should
+       (equal
+        (emacsvox-aural-doctor-finding-detail finding)
+        (concat
+         "font-lock-warning-face: effective voice-animate; "
+         "declared warning-a=voice-brighten, "
+         "warning-b=voice-animate"))))))
+
+(ert-deftest emacsvox-aural-doctor-accepts-unambiguous-face-mappings ()
+  "Repeated declarations of one voice are not reported as conflicts."
+  (let ((voice-setup-face-voice-table
+         (make-hash-table :test #'eq))
+        (voice-setup-face-voice-provenance-table
+         (make-hash-table :test #'eq))
+        (voice-setup--face-mapping-sequence 0))
+    (voice-setup-set-voice-for-face
+     'font-lock-comment-face 'voice-monotone 'comment-a)
+    (voice-setup-set-voice-for-face
+     'font-lock-comment-face 'voice-monotone 'comment-b)
+    (let ((finding (emacsvox-aural-doctor--face-mapping-finding)))
+      (should
+       (eq
+        (emacsvox-aural-doctor-finding-severity finding)
+        'ok))
+      (should
+       (equal
+        (emacsvox-aural-doctor-finding-status finding)
+        "no conflicts")))))
+
 (ert-deftest emacsvox-aural-doctor-runs-without-starting-speech ()
   "A complete diagnostic pass only reports the speech-server state."
   (let* ((directory (make-temp-file "emacsvox-doctor-data-" t))
@@ -90,6 +143,10 @@
          (compatibility-voice
           (cl-find
            'compatibility-voice findings
+           :key #'emacsvox-aural-doctor-finding-id))
+         (face-mappings
+          (cl-find
+           'face-mapping-conflicts findings
            :key #'emacsvox-aural-doctor-finding-id)))
     (unwind-protect
         (progn
@@ -104,6 +161,7 @@
             :key #'emacsvox-aural-doctor-finding-id))
           (should face-policy)
           (should compatibility-voice)
+          (should face-mappings)
           (should
            (string-match-p
             "explicit :legacy-face"

@@ -71,6 +71,8 @@
           swiftmac-voice-capabilities
           emacsvox-pronounce-refresh-pronunciations
           emacsvox-speak-line
+          voice-setup-face-mapping-diagnostic
+          voice-setup-face-mapping-conflicts
           emacsvox-aural-compatibility-voice-enabled-p
           emacsvox-aural-voice-lock-enabled-p
           emacsvox-aural-set-compatibility-voice-enabled
