@@ -121,8 +121,9 @@
     (let ((ems--interactive-fn-name 'calculator-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone)
-                 (lambda (&rest _) (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (char) (push (list 'char char) events))))
         (should
@@ -137,7 +138,7 @@
       (should
        (equal
         (nreverse events)
-        '(tone (char 57) original))))))
+        '((edit deletion) (char 57) original))))))
 
 (ert-deftest emacsvox-calculator-after-feedback-is-target-aware ()
   "Only the matching Calculator after advice produces feedback."

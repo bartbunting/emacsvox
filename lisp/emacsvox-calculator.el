@@ -150,7 +150,7 @@
 (defun emacsvox--advice-calculator-backspace-around (orig-fun &rest args)
   "Speak character you're deleting."
   (when (ems-interactive-p 'calculator-backspace)
-    (tts-tone 500 100 'force)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char)))
   (apply orig-fun args))
 
