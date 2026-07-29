@@ -465,7 +465,7 @@ When reading mode is active, strip markup from speech."
         (emacsvox-markdown-facts-at-point 'object-changed)
         'edit
         (lambda ()
-          (tts-tone 500 100 'force)
+          (emacsvox-speak-edit-operation 'deletion)
           (emacsvox-speak-this-char (preceding-char)))))
      (apply original arguments)))
  (push (list target :around advice-function) emacsvox-markdown--advice))

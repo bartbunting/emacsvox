@@ -57,15 +57,37 @@
   (with-temp-buffer
     (insert "x")
     (let ((calls 0)
-          (ems--interactive-fn-name 'markdown-outdent-or-delete))
-      (cl-letf (((symbol-function 'tts-tone) #'ignore)
-                ((symbol-function 'emacsvox-speak-this-char) #'ignore))
+          (ems--interactive-fn-name 'markdown-outdent-or-delete)
+          (tts-quiet nil)
+          (tts-speaker-process 'speaker)
+          events)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speaker)))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments)
+              (push (cons 'actions arguments) events)))
+           ((symbol-function 'emacsvox-speak-this-char)
+            (lambda (character)
+              (push (list 'character character) events))))
         (should
          (eq
           'deleted
           (emacsvox--advice-markdown-outdent-or-delete-around
-           (lambda () (cl-incf calls) 'deleted)))))
-      (should (= calls 1)))))
+           (lambda ()
+             (cl-incf calls)
+             (push 'original events)
+             'deleted)))))
+      (should (= calls 1))
+      (should
+       (equal
+        (nreverse events)
+        '((actions
+           :facts (:edit-operation deletion)
+           :module markdown
+           :occasion edit)
+          (character 120)
+          original))))))
 
 (ert-deftest emacsvox-markdown-aural-vocabulary-is-registered ()
   "Markdown roles, attributes, states, and events are available at startup."
