@@ -1017,21 +1017,85 @@
       '((icon close-object) speak-line)))))
 
 (ert-deftest emacsvox-org-todo-feedback-reports-current-state ()
-  "Interactive TODO changes cue and report the resulting state."
+  "Interactive TODO changes submit the resulting state once."
   (let ((ems--interactive-fn-name 'org-todo)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'org-get-todo-state)
-               (lambda () "DONE"))
-              ((symbol-function 'message)
-               (lambda (format-string &rest args)
-                 (push (apply #'format format-string args) events))))
+        submitted)
+    (cl-letf
+        (((symbol-function 'org-get-todo-state)
+          (lambda () "DONE"))
+         ((symbol-function 'emacsvox-org--submit-message-feedback)
+          (lambda (facts occasion icon text)
+            (setq submitted (list facts occasion icon text)))))
       (emacsvox--advice-org-todo-after))
     (should
      (equal
-      (nreverse events)
-      '((icon button) "DONE")))))
+      submitted
+      '((:role org-content :events (state-changed)
+         :org-action todo-changed)
+        state-change button "DONE")))))
+
+(ert-deftest emacsvox-org-state-messages-use-native-submission ()
+  "Org state messages remain visible but have one native audible owner."
+  (let ((emacsvox-speak-messages t)
+        events)
+    (cl-letf
+        (((symbol-function 'message)
+          (lambda (format-string &rest arguments)
+            (push
+             (list
+              'message
+              (apply #'format format-string arguments)
+              emacsvox-speak-messages)
+             events)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (list 'submit content arguments) events))))
+      (emacsvox-org--submit-message-feedback
+       '(:role org-content :events (state-changed)
+         :org-action todo-changed)
+       'state-change 'button "DONE"))
+    (should (eq (caar events) 'submit))
+    (should (equal (cadr (car events)) "DONE"))
+    (let* ((arguments (nth 2 (car events)))
+           (action
+            (car (plist-get arguments :compatibility-actions))))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role org-content :events (state-changed)
+          :org-action todo-changed)))
+      (should (eq (plist-get arguments :module) 'org))
+      (should (eq (plist-get arguments :occasion) 'state-change))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'button)))
+    (should
+     (equal
+      (cadr events)
+      '(message "DONE" nil)))))
+
+(ert-deftest emacsvox-org-table-and-fill-state-feedback-is-explicit ()
+  "Table toggling and paragraph fill submit stable text and semantics."
+  (let ((ems--interactive-fn-name 'orgtbl-mode)
+        (orgtbl-mode t)
+        submitted)
+    (cl-letf
+        (((symbol-function 'emacsvox-org--submit-message-feedback)
+          (lambda (facts occasion icon text)
+            (push (list facts occasion icon text) submitted))))
+      (emacsvox--advice-orgtbl-mode-after)
+      (setq ems--interactive-fn-name 'org-fill-paragraph)
+      (emacsvox--advice-org-fill-paragraph-after))
+    (should
+     (equal
+      (nreverse submitted)
+      '(((:role org-table :events (state-changed)
+          :org-action table-mode-toggled)
+         state-change on "Turned on org table mode.")
+        ((:role org-paragraph :events (object-changed)
+          :org-action paragraph-filled)
+         edit fill-object "Filled current paragraph"))))))
 
 (ert-deftest emacsvox-org-capture-advice-is-directly-registered ()
   "Org capture advice uses native advice directly."

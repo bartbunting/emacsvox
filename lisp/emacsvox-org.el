@@ -59,6 +59,7 @@
 (require 'org-table "org-table" 'no-error)
 (defvar org-ans2 nil)
 (defvar org-multi-keymap)
+(defvar emacsvox-speak-messages)
 
 ;;;  Semantic aural presentation:
 
@@ -126,6 +127,22 @@ ARGUMENTS are passed to FUNCTION."
    (lambda ()
      (apply function arguments)
      (when icon (emacsvox-icon icon)))))
+
+(defun emacsvox-org--submit-message-feedback
+    (facts occasion icon text)
+  "Display TEXT and submit it with FACTS, OCCASION, and leading ICON.
+
+Message speech is inhibited because the native submission owns the audible
+presentation."
+  (let ((emacsvox-speak-messages nil))
+    (message "%s" text))
+  (emacsvox-aural-submit
+   text
+   :facts facts
+   :module 'org
+   :occasion occasion
+   :compatibility-actions
+   (and icon (list (emacsvox-aural-compatibility-icon icon)))))
 
 (defun emacsvox-org-refresh-aural-heading ()
   "Refresh semantic text properties on the Org heading at point."
@@ -667,12 +684,12 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-orgtbl-mode-after (&rest _)
   "Report the new state after interactively toggling Org table mode."
   (when (ems-interactive-p 'orgtbl-mode)
-    (let ((state (if orgtbl-mode 'on 'off)))
-      (emacsvox-org--present-feedback
+    (let* ((state (if orgtbl-mode 'on 'off))
+           (text (format "Turned %s org table mode." state)))
+      (emacsvox-org--submit-message-feedback
        (emacsvox-org--feedback-facts
         'org-table 'state-changed 'table-mode-toggled)
-       'state-change state
-       (lambda () (message "Turned %s org table mode." state))))))
+       'state-change state text))))
 
 (advice-add
  'orgtbl-mode :after #'emacsvox--advice-orgtbl-mode-after
@@ -1079,11 +1096,10 @@ arg just opens the file"
 (defun emacsvox--advice-org-fill-paragraph-after (&rest _)
   "Report an interactively filled Org paragraph."
   (when (ems-interactive-p 'org-fill-paragraph)
-    (emacsvox-org--present-feedback
+    (emacsvox-org--submit-message-feedback
      (emacsvox-org--feedback-facts
       'org-paragraph 'object-changed 'paragraph-filled)
-     'edit 'fill-object
-     (lambda () (message "Filled current paragraph")))))
+     'edit 'fill-object "Filled current paragraph")))
 
 (advice-add
  'org-fill-paragraph :after
@@ -1093,13 +1109,12 @@ arg just opens the file"
 (defun emacsvox--advice-org-todo-after (&rest _)
   "Report the state after interactively changing an Org TODO item."
   (when (ems-interactive-p 'org-todo)
-    (emacsvox-org--present-feedback
-     (emacsvox-org--feedback-facts
-      'org-content 'state-changed 'todo-changed)
-     'state-change 'button
-     (lambda ()
-       (let ((state (org-get-todo-state)))
-         (if (null state) (message "State unset") (message state)))))))
+    (let ((state (org-get-todo-state)))
+      (emacsvox-org--submit-message-feedback
+       (emacsvox-org--feedback-facts
+        'org-content 'state-changed 'todo-changed)
+       'state-change 'button
+       (or state "State unset")))))
 
 (advice-add
  'org-todo :after #'emacsvox--advice-org-todo-after
