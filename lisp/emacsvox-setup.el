@@ -78,6 +78,7 @@
     "emacsvox-aural-resources.el"
     "emacsvox-aural-schemes.el"
     "emacsvox-aural-providers.el"
+    "emacsvox-aural-compiler.el"
     "emacsvox-aural-source.el"
     "emacsvox-aural-transport.el"
     "emacsvox-aural-description.el"

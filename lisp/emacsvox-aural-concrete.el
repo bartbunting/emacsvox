@@ -18,6 +18,12 @@
   'emacsvox-aural-transport-error
   "Cannot compile or queue an Emacsvox aural presentation")
 
+(defun emacsvox-aural--transport-error (format-string &rest arguments)
+  "Signal a transport error described by FORMAT-STRING and ARGUMENTS."
+  (signal
+   'emacsvox-aural-transport-error
+   (list (apply #'format format-string arguments))))
+
 (defconst emacsvox-aural-concrete-plan-property
   'emacsvox-aural-concrete-plan
   "Text property holding a source-resolved concrete plan.")

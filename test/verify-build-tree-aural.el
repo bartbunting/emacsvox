@@ -35,6 +35,7 @@
           emacsvox-aural-resources
           emacsvox-aural-schemes
           emacsvox-aural-providers
+          emacsvox-aural-compiler
           emacsvox-aural-source
           emacsvox-aural-transport
           emacsvox-aural-preview
@@ -74,6 +75,7 @@
           emacsvox-aural--resource-error
           emacsvox-aural--migrate-user-data-v1-to-v2
           emacsvox-aural-effective-resource-pack
+          emacsvox-aural-compile-plan
           emacsvox-aural-capture-source-faces
           emacsvox-aural--transport-error
           emacsvox-aural-preview-play-plan

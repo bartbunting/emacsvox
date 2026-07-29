@@ -35,6 +35,7 @@
       (feature
        '(emacsvox-aural-resources
          emacsvox-aural-schemes
+         emacsvox-aural-compiler
          emacsvox-aural-transport))
     (when (featurep feature)
       (error
@@ -47,6 +48,7 @@
       (feature
        '(emacsvox-aural-resources
          emacsvox-aural-schemes
+         emacsvox-aural-compiler
          emacsvox-aural-transport))
     (when (featurep feature)
       (error
@@ -55,6 +57,7 @@
   (dolist
       (library
        '("emacsvox-aural-providers"
+         "emacsvox-aural-compiler"
          "emacsvox-aural-source"
          "emacsvox-aural-ui"
          "emacsvox-aural-inspection"))
@@ -62,7 +65,8 @@
      (expand-file-name (concat library ".elc") build-directory)
      nil nil))
   (when (featurep 'emacsvox-aural-transport)
-    (error "Aural source and inspection boundaries loaded queue transport"))
+    (error
+     "Aural compiler, source, and inspection boundaries loaded queue transport"))
   (dolist
       (library
        '("tts-speak"
@@ -127,6 +131,7 @@
          emacsvox-aural--resource-error
          emacsvox-aural--migrate-user-data-v1-to-v2
          emacsvox-aural-effective-resource-pack
+         emacsvox-aural-compile-plan
          emacsvox-aural-capture-source-faces
          emacsvox-aural--transport-error
          emacsvox-aural-describe-selector
