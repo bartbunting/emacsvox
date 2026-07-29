@@ -35,7 +35,7 @@
 (declare-function emacsvox-aural-list-profiles
                   "emacsvox-aural-profiles" (&optional profile))
 (declare-function emacsvox-aural-profiles-status
-                  "emacsvox-aural-profiles" ())
+                  "emacsvox-aural-profiles" (&optional source-buffer))
 (declare-function emacsvox-aural-list-sound-packs
                   "emacsvox-aural-sound-packs" (&optional pack))
 (declare-function emacsvox-aural-list-voice-palettes
