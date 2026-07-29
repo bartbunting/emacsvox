@@ -37,5 +37,27 @@
       (should (= ems--vterm-opoint expected-point))
       (should (= ems--vterm-char expected-char)))))
 
+(ert-deftest emacsvox-vterm-redraw-presents-detected-deletion-in-order ()
+  "A one-column backspace redraw presents deletion before its character."
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char (point-max))
+    (emacsvox-vterm-snapshot)
+    (delete-char -1)
+    (let ((last-command-event 127)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (operation)
+              (push (list 'edit operation) events)))
+           ((symbol-function 'emacsvox-speak-this-char)
+            (lambda (character)
+              (push (list 'character character) events))))
+        (emacsvox--advice-vterm--redraw-after))
+      (should
+       (equal
+        (nreverse events)
+        '((edit deletion) (character 98)))))))
+
 (provide 'emacsvox-vterm-tests)
 ;;; emacsvox-vterm-tests.el ends here

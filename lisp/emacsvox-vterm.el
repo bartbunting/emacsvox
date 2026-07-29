@@ -206,7 +206,8 @@
     (cond
      ((and (memq last-command-event '(127 backspace)) (= new-row row)
            (= -1 (- new-column column)))
-      (tts-tone-deletion) (emacsvox-speak-this-char current-char))
+      (emacsvox-speak-edit-operation 'deletion)
+      (emacsvox-speak-this-char current-char))
      ((and (= new-row row) (= 1 (- new-column column)))
       (ems-with-messages-silenced (message "char insert"))
       (if (eq 32 last-command-event)
