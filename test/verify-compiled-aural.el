@@ -23,6 +23,25 @@
   (add-to-list 'load-path build-directory)
   (dolist
       (library
+       '("emacsvox-aural"
+         "emacsvox-aural-concrete"
+         "emacsvox-aural-spatial"
+         "emacsvox-aural-rules"
+         "emacsvox-aural-description"))
+    (load
+     (expand-file-name (concat library ".elc") build-directory)
+     nil nil))
+  (dolist
+      (feature
+       '(emacsvox-aural-resources
+         emacsvox-aural-schemes
+         emacsvox-aural-transport))
+    (when (featurep feature)
+      (error
+       "Pure aural description boundary loaded higher layer %S"
+       feature)))
+  (dolist
+      (library
        '("tts-speak"
          "voice-setup"
          "voice-defs"
@@ -34,13 +53,9 @@
          "swiftmac-voices"
          "emacsvox-pronounce"
          "emacsvox-speak"
-         "emacsvox-aural"
-         "emacsvox-aural-spatial"
-         "emacsvox-aural-rules"
          "emacsvox-aural-resources"
          "emacsvox-aural-schemes"
          "emacsvox-aural-transport"
-         "emacsvox-aural-description"
          "emacsvox-aural-preview"
          "emacsvox-aural-validation"
          "emacsvox-aural-ui"
@@ -86,6 +101,7 @@
          emacsvox-pronounce-refresh-pronunciations
          emacsvox-speak-line
          emacsvox-aural-voice-lock-enabled-p
+         emacsvox-aural--make-concrete-plan
          emacsvox-aural-spatial-clamp
          emacsvox-aural--rule-error
          emacsvox-aural--resource-error

@@ -18,6 +18,7 @@
        (build-directory (make-temp-file "emacsvox-compiled-aural-" t))
        (files
         '("emacsvox-aural.el"
+          "emacsvox-aural-concrete.el"
           "emacsvox-aural-spatial.el"
           "emacsvox-aural-rules.el"
           "emacsvox-aural-resources.el"

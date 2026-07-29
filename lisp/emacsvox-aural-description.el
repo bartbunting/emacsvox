@@ -12,7 +12,8 @@
 ;;; Code:
 
 (require 'subr-x)
-(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-concrete)
+(require 'emacsvox-aural-rules)
 
 (defun emacsvox-aural-humanize (value)
   "Return VALUE in a form suitable for visual and spoken help."

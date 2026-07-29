@@ -28,6 +28,7 @@
           emacsvox-pronounce
           emacsvox-speak
           emacsvox-aural
+          emacsvox-aural-concrete
           emacsvox-aural-spatial
           emacsvox-aural-rules
           emacsvox-aural-resources
@@ -63,6 +64,7 @@
           emacsvox-pronounce-refresh-pronunciations
           emacsvox-speak-line
           emacsvox-aural-voice-lock-enabled-p
+          emacsvox-aural--make-concrete-plan
           emacsvox-aural-spatial-clamp
           emacsvox-aural--rule-error
           emacsvox-aural--resource-error

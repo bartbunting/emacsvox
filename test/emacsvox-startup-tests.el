@@ -55,6 +55,11 @@
          "emacsvox-speak.el"))
     (should (member source emacsvox-setup--startup-sources))))
 
+(ert-deftest emacsvox-setup-tracks-extracted-aural-services ()
+  "The stale guard covers independently compiled aural service modules."
+  (dolist (source '("emacsvox-aural-concrete.el"))
+    (should (member source emacsvox-setup--startup-sources))))
+
 (ert-deftest emacsvox-setup-prefers-source-while-loading-stale-tree ()
   "Stale startup byte-code enables `load-prefer-newer' for dependencies."
   (let ((load-path (copy-sequence load-path))
