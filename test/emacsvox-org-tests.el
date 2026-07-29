@@ -813,20 +813,73 @@
       (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-timestamp-feedback-is-target-aware ()
-  "Only the matching timestamp command cues and speaks its value."
+  "Only the matching timestamp command submits one complete presentation."
   (let ((ems--interactive-fn-name 'org-timestamp-up)
         (org-last-changed-timestamp "<2026-07-23 Thu>")
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events))))
+        submissions)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) submissions))))
       (emacsvox--advice-org-timestamp-down-after)
       (emacsvox--advice-org-timestamp-up-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon select-object) (speak "<2026-07-23 Thu>"))))))
+    (should (= (length submissions) 1))
+    (let* ((submission (car submissions))
+           (arguments (cdr submission))
+           (action (car (plist-get arguments :compatibility-actions))))
+      (should (equal (car submission) "<2026-07-23 Thu>"))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role org-content :events (object-changed)
+          :org-action timestamp-changed)))
+      (should (eq (plist-get arguments :module) 'org))
+      (should (eq (plist-get arguments :occasion) 'edit))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'select-object))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'before)))))
+
+(ert-deftest emacsvox-org-timestamp-native-plan-resolves-cue-once ()
+  "Timestamp speech and its compatibility cue share one resolved object."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (let ((ems--interactive-fn-name 'org-timestamp-up)
+          (org-last-changed-timestamp "<2026-07-23 Thu>")
+          prepared)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (setq prepared text)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (&rest _)
+              (ert-fail "Native timestamp feedback called legacy icon transport"))))
+        (emacsvox--advice-org-timestamp-up-after))
+      (let* ((plan (emacsvox-aural-concrete-plan-at 0 prepared))
+             (before (emacsvox-aural-concrete-plan-before plan)))
+        (should
+         (equal
+          (substring-no-properties prepared)
+          "<2026-07-23 Thu>"))
+        (should
+         (= 1
+            (cl-count
+             'select-object before
+             :key #'emacsvox-aural-concrete-action-cue)))
+        (should
+         (equal
+          (plist-get
+           (emacsvox-aural-concrete-plan-facts plan)
+           :events)
+          '(object-changed)))
+        (should
+         (natnump
+          (plist-get
+           (emacsvox-aural-concrete-plan-context plan)
+           :presentation-transaction-id)))))))
 
 (ert-deftest emacsvox-org-calendar-feedback-remains-unconditional ()
   "Calendar expression results speak even outside an interactive call."

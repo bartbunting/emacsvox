@@ -50,6 +50,7 @@
 
 (require 'cl-lib)
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-org)
 (require 'emacsvox-amark)
@@ -566,10 +567,16 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after an interactive Org timestamp adjustment."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-aural-submit
+          org-last-changed-timestamp
+          :facts
           (emacsvox-org--feedback-facts
            'org-content 'object-changed 'timestamp-changed)
-          'edit 'select-object #'tts-speak org-last-changed-timestamp)))
+          :module 'org
+          :occasion 'edit
+          :compatibility-actions
+          (list
+           (emacsvox-aural-compatibility-icon 'select-object)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
