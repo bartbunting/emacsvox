@@ -1003,13 +1003,13 @@ When INCLUDE-AUTO is non-nil, include the automatic focus-aware choice."
                         emacsvox-agent-shell-foreground-speech-level
                         emacsvox-agent-shell-background-speech-level)
               (format "Agent speech %s for %s." level label))))
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     announcement
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed nil
       (list :agent-speech-level level))
      'state-change
-     (if (eq level 'quiet) 'off 'select-object)
-     #'tts-speak announcement)
+     (if (eq level 'quiet) 'off 'select-object))
     level))
 
 (defun emacsvox-agent-shell-select-speech-level ()
@@ -1042,14 +1042,13 @@ When INCLUDE-AUTO is non-nil, include the automatic focus-aware choice."
     (setq emacsvox-agent-shell-background-speech-level level)
     (when (memq level '(notify quiet))
       (emacsvox-agent-shell--cancel-background-pending-speech))
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (format "Background agent speech %s." level)
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed nil
       (list :agent-speech-level level))
      'state-change
-     (if (eq level 'quiet) 'off 'select-object)
-     #'tts-speak
-     (format "Background agent speech %s." level))))
+     (if (eq level 'quiet) 'off 'select-object))))
 
 (defun emacsvox-agent-shell-cycle-speech-level (&optional reset)
   "Cycle automatic speech for the current agent-shell session.

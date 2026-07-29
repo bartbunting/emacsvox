@@ -1339,6 +1339,52 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (mapcar #'emacsvox-aural-compatibility-action-value actions)
           '(item)))))))
 
+(ert-deftest emacsvox-agent-shell-speech-level-feedback-is-native ()
+  "Session and background speech controls should submit selected levels."
+  (let ((shell (generate-new-buffer "Codex Agent @ native-level"))
+        (emacsvox-agent-shell-background-speech-level 'full)
+        captured
+        compatibility-output)
+    (unwind-protect
+        (progn
+          (with-current-buffer shell
+            (setq major-mode 'agent-shell-mode))
+          (cl-letf
+              (((symbol-function 'emacsvox-agent-shell--session-buffer)
+                (lambda (&optional _buffer) shell))
+               ((symbol-function 'emacsvox-agent-shell--read-speech-level)
+                (lambda (&rest _) 'quiet))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push (cons content arguments) captured)))
+               ((symbol-function 'emacsvox-agent-shell--present-feedback)
+                (lambda (&rest _)
+                  (push 'compatibility compatibility-output))))
+            (emacsvox-agent-shell--set-session-speech-level shell 'response)
+            (emacsvox-agent-shell-select-background-speech-level))
+          (should-not compatibility-output)
+          (setq captured (nreverse captured))
+          (should
+           (equal
+            (mapcar #'car captured)
+            '("Agent speech response for Codex Agent @ native-level."
+              "Background agent speech quiet.")))
+          (dolist (entry captured)
+            (let* ((arguments (cdr entry))
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+              (should (eq (plist-get facts :role) 'agent-session))
+              (should
+               (equal (plist-get facts :events) '(agent-setting-changed)))
+              (should (memq (plist-get facts :agent-speech-level)
+                            '(response quiet)))
+              (should (eq (plist-get arguments :module) 'agent-shell))
+              (should (eq (plist-get arguments :occasion) 'state-change))
+              (should (= (length actions) 1)))))
+      (when (buffer-live-p shell)
+        (kill-buffer shell)))))
+
 (ert-deftest emacsvox-agent-shell-mode-line-command-speaks-full-header ()
   "Interactive mode-line speech should read and voice semantic agent state."
   (let ((buffer (generate-new-buffer " *agent-mode-line-header-test*")))
