@@ -334,18 +334,6 @@ bound to \\[tts-toggle-caps].")
     (get-text-property (or pos (point)) 'personality)
     (tts-get-voice-for-face (get-text-property (or pos (point)) 'face)))))
 
-;;;  Tone Helpers:
-
-;; Deletion Tone.
-(defsubst tts-tone-deletion ()
-  (tts-tone 500 75 'force))
-;; Upcase Tone.
-(defsubst tts-tone-upcase ()
-  (tts-tone 800 100 'force))
-;; Downcase tone.
-(defsubst tts-tone-downcase ()
-  (tts-tone 600 100 'force))
-
 ;;;  helper: apply pronunciations
 
 ;; moved here from the emacsvox-pronounce module for efficient

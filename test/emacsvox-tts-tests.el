@@ -55,8 +55,11 @@
     dtk-tone-upcase
     dtk-tone-downcase
     dtk-silence
-    dtk-tone)
-  "Removed DECtalk-era names for generic tones and silence.")
+    dtk-tone
+    tts-tone-deletion
+    tts-tone-upcase
+    tts-tone-downcase)
+  "Removed legacy names for generic tones and silence.")
 
 (defconst emacsvox-test--legacy-punctuation-functions
   '(dtk-set-punctuations
@@ -429,7 +432,7 @@
   (should-not (boundp 'dtk-notify-process)))
 
 (ert-deftest emacsvox-tts-legacy-audio-cue-functions-are-removed ()
-  "Generic tones and silence no longer expose DECtalk-era names."
+  "Generic tones and silence no longer expose legacy helper names."
   (dolist (function emacsvox-test--legacy-audio-cue-functions)
     (should-not (fboundp function))))
 

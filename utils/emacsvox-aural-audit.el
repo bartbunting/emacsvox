@@ -48,22 +48,9 @@
 
 (defconst emacsvox-aural-audit-tone-functions
   '(tts-tone tts-tone-deletion tts-tone-upcase tts-tone-downcase)
-  "Legacy tone entry points included in the migration inventory.")
+  "Legacy tone entry points rejected by the migration audit.
 
-(defconst emacsvox-aural-audit-permitted-low-level-tone-calls
-  '((:file "lisp/tts-speak.el"
-     :function tts-tone-deletion
-     :tone-function tts-tone
-     :signature (500 75 force))
-    (:file "lisp/tts-speak.el"
-     :function tts-tone-upcase
-     :tone-function tts-tone
-     :signature (800 100 force))
-    (:file "lisp/tts-speak.el"
-     :function tts-tone-downcase
-     :tone-function tts-tone
-     :signature (600 100 force)))
-  "Raw tones retained solely as low-level compatibility definitions.")
+The removed named helpers remain listed so calls cannot be reintroduced.")
 
 (defconst emacsvox-aural-audit-complete-resolution-functions
   '(emacsvox-aural-submit
@@ -274,18 +261,14 @@ dynamic-call count, and source parse errors."
 
 Raw `tts-tone' calls with literal pitch, duration, and force arguments are
 grouped by signature.  Calls with computed arguments are counted as dynamic.
-The three historical named helpers are counted separately.  Exact low-level
-compatibility definitions are permitted; every other legacy tone call is
-reported as unmigrated.  Source is read with `read-eval' disabled and never
-evaluated."
+Calls to the three removed historical helpers are counted separately.  Every
+legacy tone call is reported as unmigrated.  Source is read with `read-eval'
+disabled and never evaluated."
   (let* ((root (emacsvox-aural-audit--root root))
          (usage (make-hash-table :test #'eq))
          (signatures (make-hash-table :test #'equal))
          (raw-literal-count 0)
          (raw-dynamic-count 0)
-         (permitted-low-level-count 0)
-         (missing-low-level-calls
-          (copy-tree emacsvox-aural-audit-permitted-low-level-tone-calls))
          unmigrated-calls
          (parse-errors
           (emacsvox-aural-audit--scan-source-forms
@@ -308,13 +291,7 @@ evaluated."
                         :function function
                         :tone-function tone-function
                         :signature signature)))
-                 (if (member call missing-low-level-calls)
-                     (progn
-                       (cl-incf permitted-low-level-count)
-                       (setq
-                        missing-low-level-calls
-                        (delete call missing-low-level-calls)))
-                   (push call unmigrated-calls))
+                 (push call unmigrated-calls)
                  (when (eq tone-function 'tts-tone)
                    (if signature
                      (progn
@@ -346,8 +323,6 @@ evaluated."
                         (format "%S" (car right)))))
        :raw-literal-count raw-literal-count
        :raw-dynamic-count raw-dynamic-count
-       :permitted-low-level-count permitted-low-level-count
-       :missing-low-level-calls missing-low-level-calls
        :unmigrated-calls (nreverse unmigrated-calls)
        :parse-errors parse-errors))))
 
@@ -1452,10 +1427,6 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
      :tone-signatures (plist-get tones :signatures)
      :raw-literal-tone-count (plist-get tones :raw-literal-count)
      :raw-dynamic-tone-count (plist-get tones :raw-dynamic-count)
-     :permitted-low-level-tone-count
-     (plist-get tones :permitted-low-level-count)
-     :missing-low-level-tone-calls
-     (plist-get tones :missing-low-level-calls)
      :unmigrated-tone-calls (plist-get tones :unmigrated-calls)
      :unknown-cues (nreverse unknown)
      :context-free-icons context-free-icons
@@ -1474,7 +1445,6 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
    (null (plist-get audit :unknown-cues))
    (null (plist-get audit :context-free-icons))
    (null (plist-get audit :nested-submission-resolutions))
-   (null (plist-get audit :missing-low-level-tone-calls))
    (null (plist-get audit :unmigrated-tone-calls))
    (null (plist-get audit :parse-errors))
    (null (plist-get audit :errors))
@@ -1525,10 +1495,8 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
       "")
      "\n"
      (format
-      "Tone policy: %d permitted low-level calls, %d unmigrated calls, %d missing calls\n"
-      (plist-get audit :permitted-low-level-tone-count)
-      (length (plist-get audit :unmigrated-tone-calls))
-      (length (plist-get audit :missing-low-level-tone-calls)))
+      "Tone policy: %d unmigrated calls\n"
+      (length (plist-get audit :unmigrated-tone-calls)))
      (mapconcat
       (lambda (entry)
         (pcase-let ((`(,pitch ,duration ,force) (car entry)))
@@ -1550,15 +1518,6 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
              (format " (%s)" function)
            "")))
       (plist-get audit :unmigrated-tone-calls)
-      "")
-     (mapconcat
-      (lambda (call)
-        (format
-         "Missing low-level tone call %s in %s (%s)\n"
-         (plist-get call :tone-function)
-         (plist-get call :file)
-         (plist-get call :function)))
-      (plist-get audit :missing-low-level-tone-calls)
       "")
      (mapconcat
       (lambda (entry)
