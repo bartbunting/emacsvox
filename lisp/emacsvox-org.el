@@ -480,7 +480,7 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-delete-char-around (original n)
   "Cue deletion and call ORIGINAL once with N."
   (when (ems-interactive-p 'org-delete-char)
-    (tts-tone-deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-char t))
   (funcall original n))
 

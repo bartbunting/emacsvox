@@ -1177,8 +1177,9 @@
   (let ((ems--interactive-fn-name 'org-delete-char)
         calls
         events)
-    (cl-letf (((symbol-function 'tts-tone-deletion)
-               (lambda () (push 'deletion-tone events)))
+    (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+               (lambda (operation)
+                 (push (list 'edit operation) events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (delete-p) (push (list 'speak-char delete-p) events))))
       (should
@@ -1193,15 +1194,15 @@
     (should
      (equal
       (nreverse events)
-      '(deletion-tone (speak-char t))))))
+      '((edit deletion) (speak-char t))))))
 
 (ert-deftest emacsvox-org-delete-char-is-quiet-programmatically ()
   "Programmatic Org deletion calls the original once without feedback."
   (let ((ems--interactive-fn-name nil)
         calls
         feedback)
-    (cl-letf (((symbol-function 'tts-tone-deletion)
-               (lambda () (setq feedback t)))
+    (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+               (lambda (&rest _) (setq feedback t)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (setq feedback t))))
       (emacsvox--advice-org-delete-char-around
