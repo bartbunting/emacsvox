@@ -946,10 +946,11 @@ Return non-nil when an announcement was delivered."
     (when-let* ((state (emacsvox-agent-shell--header-state))
                 (speech
                  (emacsvox-agent-shell--format-brief-header state)))
-      (emacsvox-agent-shell--present-feedback
+      (emacsvox-agent-shell--submit-text-feedback
+       speech
        (emacsvox-agent-shell--presentation-facts
         'agent-session 'agent-content-inspected)
-       'inspection 'item #'tts-notify speech)
+       'inspection 'item)
       t)))
 
 (defun emacsvox-agent-shell-speak-header ()
@@ -960,10 +961,11 @@ Return non-nil when an announcement was delivered."
               (user-error "Agent header state is unavailable")))
          (speech (emacsvox-agent-shell--format-full-header state)))
     (tts-stop)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     speech
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-content-inspected)
-     'inspection 'item #'tts-speak speech)))
+     'inspection 'item)))
 
 (defun emacsvox-agent-shell--next-speech-level (level)
   "Return the speech level following LEVEL in the interactive cycle."

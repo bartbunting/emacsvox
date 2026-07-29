@@ -1273,7 +1273,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell-test--capture-events
           (emacsvox-agent-shell--speak-focus-header-if-needed))
         '((icon item)
-          (notify "Codex agent, emacsvox-support, busy.")))))))
+          (speak "Codex agent, emacsvox-support, busy.")))))))
 
 (ert-deftest emacsvox-agent-shell-text-header-keeps-emacsvox-path ()
   "A textual agent header should not be replaced by semantic fallback speech."
@@ -1301,6 +1301,43 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (icon item)
         (speak
          "Codex agent. Project emacsvox-support. Model GPT-5.6-Sol."))))))
+
+(ert-deftest emacsvox-agent-shell-header-feedback-is-native ()
+  "Brief and explicit headers should use native inspection transactions."
+  (let (captured compatibility-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--unspoken-graphical-header-p)
+          (lambda () t))
+         ((symbol-function 'emacsvox-agent-shell--header-state)
+          (lambda (&optional _buffer)
+            '(:agent "Codex agent" :project "emacsvox")))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) captured)))
+         ((symbol-function 'emacsvox-agent-shell--present-feedback)
+          (lambda (&rest _) (push 'compatibility compatibility-output))))
+      (emacsvox-agent-shell--speak-focus-header-if-needed)
+      (emacsvox-agent-shell-speak-header))
+    (should-not compatibility-output)
+    (setq captured (nreverse captured))
+    (should
+     (equal
+      (mapcar #'car captured)
+      '("Codex agent, emacsvox."
+        "Codex agent. Project emacsvox.")))
+    (dolist (entry captured)
+      (let* ((arguments (cdr entry))
+             (facts (plist-get arguments :facts))
+             (actions (plist-get arguments :compatibility-actions)))
+        (should (eq (plist-get facts :role) 'agent-session))
+        (should
+         (equal (plist-get facts :events) '(agent-content-inspected)))
+        (should (eq (plist-get arguments :module) 'agent-shell))
+        (should (eq (plist-get arguments :occasion) 'inspection))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-compatibility-action-value actions)
+          '(item)))))))
 
 (ert-deftest emacsvox-agent-shell-mode-line-command-speaks-full-header ()
   "Interactive mode-line speech should read and voice semantic agent state."
