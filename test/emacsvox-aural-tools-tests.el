@@ -26,6 +26,7 @@
 
 (defconst emacsvox-test--core-default-rule-ids
   '(core-edit-deletion-tone
+    core-edit-line-created-tone
     core-edit-uppercase-tone
     core-edit-lowercase-tone
     core-edit-capitalize-tone
@@ -2206,7 +2207,7 @@
           (should (equal (aref row 1) "active"))
           (should (equal (aref row 2) "personal"))
           (should (equal (aref row 3) "default"))
-          (should (equal (aref row 5) "1 direct, 10 total"))
+          (should (equal (aref row 5) "1 direct, 11 total"))
           (should (equal (aref row 7) "you (personal)")))
         (should
          (eq
@@ -2831,7 +2832,7 @@
       (should (string-match-p "Provided by you (personal)" summary))
       (should (string-match-p "Based on default" summary))
       (should (string-match-p "Sound pack chimes" summary))
-      (should (string-match-p "10 effective presentations" summary))
+      (should (string-match-p "11 effective presentations" summary))
       (should (string-match-p "Valid" summary)))))
 
 (ert-deftest emacsvox-aural-scheme-manager-identifies-integration-provider ()
@@ -2992,7 +2993,7 @@
               (should (string-match-p "parent-heading" text))
               (should
                (string-match-p
-                "Effective presentation order (11 total)"
+                "Effective presentation order (12 total)"
                 text)))))
       (when (get-buffer "*Help*")
         (kill-buffer "*Help*")))))

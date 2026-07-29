@@ -143,6 +143,7 @@
     (dolist
         (mapping
          '((deletion core-edit-deletion-tone edit-deletion)
+           (line-created core-edit-line-created-tone edit-line-created)
            (uppercase core-edit-uppercase-tone edit-uppercase)
            (lowercase core-edit-lowercase-tone edit-lowercase)
            (capitalize core-edit-capitalize-tone edit-uppercase)))

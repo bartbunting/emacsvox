@@ -147,6 +147,26 @@
          'navigation
          '(:events (object-changed focus-entered))))))))
 
+(ert-deftest emacsvox-core-newline-advice-preserves-line-echo-policy ()
+  "Newline speech wins over the semantic line-created cue."
+  (dolist (line-echo '(nil t))
+    (let ((ems--interactive-fn-name 'newline)
+          (emacsvox-line-echo line-echo)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-read-previous-line)
+            (lambda () (push 'previous-line events)))
+           ((symbol-function 'emacsvox-speak--present-edit-operation)
+            (lambda (operation)
+              (push (list 'edit-operation operation) events))))
+        (emacsvox--advice-newline-after))
+      (should
+       (equal
+        (nreverse events)
+        (if line-echo
+            '(previous-line)
+          '((edit-operation line-created))))))))
+
 (ert-deftest emacsvox-core-migrated-advice-is-native ()
   "Individually migrated editing advice is native and inspectable."
   (dolist (entry emacsvox-test--core-direct-advice)

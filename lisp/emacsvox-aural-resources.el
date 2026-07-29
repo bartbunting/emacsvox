@@ -346,6 +346,9 @@ themed overrides below an active sound pack."
   '((edit-deletion
      "Text was deleted"
      500 75 t)
+    (edit-line-created
+     "A new line was created"
+     225 75 t)
     (edit-lowercase
      "Text was changed to lowercase"
      600 100 t)

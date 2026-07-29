@@ -1854,7 +1854,7 @@ See command \\[emacsvox-toggle-line-echo]. Otherwise cue the user to
 the newly created  line."
   (if emacsvox-line-echo
       (emacsvox-read-previous-line)
-    (tts-tone 225 75 'force)))
+    (emacsvox-speak--present-edit-operation 'line-created)))
 
 (defun emacsvox--eval-filter-return (target result)
   "Speak an interactive evaluation RESULT and return it unchanged.

@@ -587,7 +587,7 @@ Registry validation rejects missing targets and alias cycles."
      :kind 'attribute
      :summary "The text-editing operation being presented"
      :value-type 'symbol
-     :allowed-values '(deletion uppercase lowercase capitalize)
+     :allowed-values '(deletion line-created uppercase lowercase capitalize)
      :occasions '(edit)
      :usage
      "Lets presentation policy replace fixed feedback for editing operations."))

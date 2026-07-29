@@ -648,6 +648,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (dolist
         (case
          '((deletion edit-deletion 500 75)
+           (line-created edit-line-created 225 75)
            (uppercase edit-uppercase 800 100)
            (lowercase edit-lowercase 600 100)
            (capitalize edit-uppercase 800 100)))
