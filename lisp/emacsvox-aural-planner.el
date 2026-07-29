@@ -257,6 +257,91 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
      :scores scores
      :semantic-matches semantic-matches)))
 
+(defun emacsvox-aural--compatibility-action-id
+    (icon index action-id)
+  "Return a transaction-local ID for ICON action ACTION-ID at INDEX."
+  (intern
+   (format
+    "compatibility-%s-%d-%s"
+    icon index action-id)))
+
+(defun emacsvox-aural--compatibility-render-plan
+    (action facts context index)
+  "Resolve compatibility ACTION under FACTS and CONTEXT at INDEX."
+  (let ((phase (plist-get action :phase))
+        (kind (plist-get action :kind))
+        (icon (plist-get action :value)))
+    (unless (and (memq phase '(before after))
+                 (eq kind 'legacy-icon)
+                 (symbolp icon))
+      (emacsvox-aural--transport-error
+       "Invalid source compatibility action: %S" action))
+    (let* ((render
+            (emacsvox-aural-resolve-legacy-icon-adapter
+             icon context facts))
+           (actions
+            (mapcar
+             (lambda (source-action)
+               (let ((copy (copy-emacsvox-aural-action source-action)))
+                 (setf
+                  (emacsvox-aural-action-id copy)
+                  (emacsvox-aural--compatibility-action-id
+                   icon index
+                   (emacsvox-aural-action-id source-action)))
+                 copy))
+             (append
+              (emacsvox-aural-render-plan-before render)
+              (emacsvox-aural-render-plan-after render)))))
+      (emacsvox-aural--make-render-plan
+       :before (and (eq phase 'before) actions)
+       :content (emacsvox-aural--make-content-style :speak t)
+       :after (and (eq phase 'after) actions)
+       :matched-rules
+       (copy-sequence (emacsvox-aural-render-plan-matched-rules render))
+       :rule-scores
+       (copy-tree (emacsvox-aural-render-plan-rule-scores render))
+       :semantic-matches
+       (copy-tree
+        (emacsvox-aural-render-plan-semantic-matches render))))))
+
+(defun emacsvox-aural--merge-object-compatibility
+    (object-plan actions facts context)
+  "Merge ordered compatibility ACTIONS into semantic OBJECT-PLAN."
+  (if (null actions)
+      object-plan
+    (let* ((compatibility-plans
+            (cl-loop
+             for action in actions
+             for index from 1
+             collect
+             (emacsvox-aural--compatibility-render-plan
+              action facts context index)))
+           (provenance
+            (apply
+             #'emacsvox-aural--merge-rule-provenance
+             object-plan compatibility-plans)))
+      (emacsvox-aural--make-render-plan
+       :before
+       (append
+        (apply
+         #'append
+         (mapcar
+          #'emacsvox-aural-render-plan-before
+          compatibility-plans))
+        (emacsvox-aural-render-plan-before object-plan))
+       :content (emacsvox-aural-render-plan-content object-plan)
+       :after
+       (append
+        (emacsvox-aural-render-plan-after object-plan)
+        (apply
+         #'append
+         (mapcar
+          #'emacsvox-aural-render-plan-after
+          compatibility-plans)))
+       :matched-rules (plist-get provenance :rules)
+       :rule-scores (plist-get provenance :scores)
+       :semantic-matches (plist-get provenance :semantic-matches)))))
+
 (defun emacsvox-aural--combine-run-plan
     (object-plan run-plan transition-plan previous-transition next-transition
      first-p last-p)
@@ -355,7 +440,8 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
      :object-end-p last-p)))
 
 (defun emacsvox-aural--prepare-object
-    (text start end base-facts base-context object-id)
+    (text start end base-facts base-context object-id
+          &optional compatibility-actions)
   "Attach frozen nested plans to one object from START to END in TEXT."
   (let ((object-icon (get-text-property start 'auditory-icon text))
         (position start)
@@ -369,7 +455,11 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
         (setq position run-end)))
     (setq runs (nreverse runs))
     (let* ((object-render
-            (emacsvox-aural--resolve-source-object runs 'object))
+            (emacsvox-aural--merge-object-compatibility
+             (emacsvox-aural--resolve-source-object runs 'object)
+             compatibility-actions
+             (emacsvox-aural-source-run-facts (car runs))
+             (emacsvox-aural-source-run-context (car runs))))
            (object-concrete
             (emacsvox-aural-compile-plan
              object-render
@@ -431,7 +521,8 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
           (list emacsvox-aural-concrete-plan-property concrete)
           text))))))
 
-(defun emacsvox-aural-prepare-text (text &optional facts context)
+(defun emacsvox-aural-prepare-text
+    (text &optional facts context compatibility-actions)
   "Freeze object and formatting-run decisions in TEXT.
 
 FACTS default to `emacsvox-aural-submission-facts'.  CONTEXT defaults to the
@@ -439,7 +530,8 @@ dynamically captured submission context or a fresh source-buffer snapshot.
 The returned string retains legacy properties and adds concrete nested plans.
 One inferred object spans the submission until semantic context or a queued
 icon changes.  `emacsvox-aural-object-property' can group complex runs
-explicitly."
+explicitly.  COMPATIBILITY-ACTIONS, when non-nil, are normalized source
+adapter records applied to the first explicit presentation object."
   (unless (stringp text)
     (emacsvox-aural--transport-error
      "Aural text preparation requires a string: %S" text))
@@ -463,8 +555,10 @@ explicitly."
               (or explicit
                   (list 'inferred-object (cl-incf sequence)))))
         (emacsvox-aural--prepare-object
-         prepared position end base-facts base-context object-id)
-        (setq position end)))
+         prepared position end base-facts base-context object-id
+         compatibility-actions)
+        (setq position end
+              compatibility-actions nil)))
     prepared))
 
 (defun emacsvox-aural-prepared-text-p (text)

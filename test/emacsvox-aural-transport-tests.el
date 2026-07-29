@@ -12,6 +12,7 @@
 (require 'ert)
 (require 'seq)
 (require 'emacsvox-sounds)
+(require 'emacsvox-aural-submission)
 (require 'tts-speak)
 (require 'voice-setup)
 
@@ -167,6 +168,116 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (:module org :occasion state-change :frozen outer)
           org state-change)))
       (should (equal captures '((notmuch navigation)))))))
+
+(ert-deftest emacsvox-aural-submission-combines-one-object-and-legacy-actions ()
+  "One native submission resolves object policy once around ordered adapters."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id heading-cue
+        :match (:role heading)
+        :render
+        (:before
+         ((:id semantic-heading :kind cue :cue new-mail
+           :anchor object))))))
+    (let* ((emacsvox-aural--submission-sequence 0)
+           (context
+            '(:module org
+              :mode org-mode
+              :mode-lineage (org-mode outline-mode text-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled t
+              :icons-enabled t))
+           (content
+            (concat
+             (propertize
+              "First"
+              emacsvox-aural-facts-property
+              '(:role heading :level 1))
+             (propertize
+              "Second"
+              emacsvox-aural-facts-property
+              '(:role heading :level 2))))
+           spoken
+           submission)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text))))
+        (setq
+         submission
+         (emacsvox-aural-submit
+          content
+          :facts '(:role heading)
+          :context context
+          :compatibility-actions
+          (list
+           (emacsvox-aural-compatibility-icon 'item)
+           (emacsvox-aural-compatibility-icon 'button)
+           (emacsvox-aural-compatibility-icon 'repeat-stop 'after)))))
+      (should (emacsvox-aural-submission-p submission))
+      (should
+       (eq spoken
+           (emacsvox-aural-submission-prepared-content submission)))
+      (let* ((plans (emacsvox-aural-submission-plans submission))
+             (first (car plans))
+             (last (car (last plans)))
+             (all-before
+              (apply
+               #'append
+               (mapcar #'emacsvox-aural-concrete-plan-before plans)))
+             (all-after
+              (apply
+               #'append
+               (mapcar #'emacsvox-aural-concrete-plan-after plans))))
+        (should (= (length plans) 2))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-concrete-plan-object-id plans)
+          '((submission 1) (submission 1))))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (emacsvox-aural-concrete-plan-before first))
+          '(item button new-mail)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (emacsvox-aural-concrete-plan-after last))
+          '(repeat-stop)))
+        (should
+         (= (cl-count 'new-mail all-before
+                      :key #'emacsvox-aural-concrete-action-cue)
+            1))
+        (should
+         (= (cl-count 'item all-before
+                      :key #'emacsvox-aural-concrete-action-cue)
+            1))
+        (should
+         (= (cl-count 'button all-before
+                      :key #'emacsvox-aural-concrete-action-cue)
+            1))
+        (should
+         (= (cl-count 'repeat-stop all-after
+                      :key #'emacsvox-aural-concrete-action-cue)
+            1))
+        (should
+         (equal
+          (plist-get
+           (emacsvox-aural-submission-facts submission)
+           :events)
+          '(activity-ended)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-id
+           (cl-remove
+            'semantic-heading
+            (emacsvox-aural-concrete-plan-before first)
+            :key #'emacsvox-aural-concrete-action-id))
+          '(compatibility-item-1-legacy-cue
+            compatibility-button-2-legacy-cue)))))))
 
 (defun emacsvox-test--tts-source-policy-result
     (text faces voice-lock source-icons scratch-icons)

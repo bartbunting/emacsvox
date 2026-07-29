@@ -77,6 +77,7 @@
          "emacsvox-aural-compiler"
          "emacsvox-aural-source"
          "emacsvox-aural-planner"
+         "emacsvox-aural-submission"
          "emacsvox-aural-ui"
          "emacsvox-aural-inspection"))
     (load
@@ -156,6 +157,8 @@
          emacsvox-aural-capture-source-faces
          emacsvox-aural-call-with-submission
          emacsvox-aural-prepare-text
+         emacsvox-aural-compatibility-icon
+         emacsvox-aural-submit
          emacsvox-aural--transport-error
          emacsvox-aural-describe-selector
          emacsvox-aural-preview-play-plan

@@ -82,6 +82,7 @@
     "emacsvox-aural-compiler.el"
     "emacsvox-aural-source.el"
     "emacsvox-aural-planner.el"
+    "emacsvox-aural-submission.el"
     "emacsvox-aural-transport.el"
     "emacsvox-aural-description.el"
     "emacsvox-aural-preview.el"

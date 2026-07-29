@@ -40,6 +40,7 @@
           emacsvox-aural-source
           emacsvox-aural-planner
           emacsvox-aural-transport
+          emacsvox-aural-submission
           emacsvox-aural-preview
           emacsvox-aural-validation
           emacsvox-aural-ui
@@ -84,6 +85,8 @@
           emacsvox-aural-capture-source-faces
           emacsvox-aural-call-with-submission
           emacsvox-aural-prepare-text
+          emacsvox-aural-compatibility-icon
+          emacsvox-aural-submit
           emacsvox-aural--transport-error
           emacsvox-aural-preview-play-plan
           emacsvox-aural-validation--report
