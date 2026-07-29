@@ -49,6 +49,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-submission)
 (require 'comint)
 (require 'shell)
 
@@ -112,9 +114,70 @@ buffer is not current or its window live.")
                        "Toggle  Emacsvox comint monitor.
 Interactive PREFIX arg means toggle the global default value. ")
 
+;;; Semantic aural presentation:
+
+(defun emacsvox-comint--module ()
+  "Return the aural module for the current command-interaction buffer."
+  (if (derived-mode-p 'shell-mode) 'shell 'comint))
+
+(defun emacsvox-comint--interaction-kind ()
+  "Return the semantic command-interaction kind for the current buffer."
+  (if (derived-mode-p 'shell-mode) 'shell 'repl))
+
+(defun emacsvox-comint-enable-aural-context ()
+  "Identify the current command-interaction buffer to aural schemes."
+  (setq-local emacsvox-aural-module (emacsvox-comint--module)))
+
+(defun emacsvox-comint-facts (role &optional event operation properties)
+  "Return command-interaction facts for ROLE.
+EVENT and OPERATION describe the interaction.  PROPERTIES is an additional
+property list appended to the result."
+  (append
+   (list :role role
+         :command-interaction-kind
+         (emacsvox-comint--interaction-kind))
+   (when event (list :events (list event)))
+   (when operation (list :command-operation operation))
+   properties))
+
+(defun emacsvox-comint--call-with-aural-presentation
+    (facts occasion function &rest arguments)
+  "Call FUNCTION with ARGUMENTS in one frozen command presentation.
+FACTS describe the object or event, and OCCASION describes the interaction."
+  (emacsvox-aural-call-with-submission
+   function
+   :facts (or facts (emacsvox-comint-facts 'command-interaction))
+   :module (emacsvox-comint--module)
+   :occasion (or occasion 'navigation)
+   :arguments arguments))
+
+(defun emacsvox-comint--present-feedback
+    (facts occasion icon function &rest arguments)
+  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
+  (emacsvox-comint--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (when icon (emacsvox-icon icon))
+     (apply function arguments))))
+
+(defun emacsvox-comint--submit
+    (content facts occasion &optional icon icon-phase)
+  "Submit CONTENT with FACTS and OCCASION as one aural transaction.
+When ICON is non-nil, preserve it in ICON-PHASE, which defaults to `before'."
+  (emacsvox-aural-submit
+   content
+   :facts facts
+   :module (emacsvox-comint--module)
+   :occasion occasion
+   :compatibility-actions
+   (when icon
+     (list
+      (emacsvox-aural-compatibility-icon icon icon-phase)))))
+
 ;;;###autoload
 (defun emacsvox-comint-speech-setup ()
   "Speech setup."
+  (emacsvox-comint-enable-aural-context)
   (setq buffer-undo-list  t)
   (define-key comint-mode-map "\C-o" 'switch-to-completions)
   (when emacsvox-use-header-line

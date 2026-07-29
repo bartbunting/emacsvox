@@ -7,9 +7,10 @@
 ;;; Commentary:
 
 ;; Register the lightweight semantic vocabulary shared by the Notmuch, Gnus,
-;; Dired, Magit, Agent Shell, Python, Vertico, BS, Corfu, Tabulated List, and
-;; Solitaire integrations.  This file has no dependency on those packages, so
-;; personal schemes can validate at startup before any integration is loaded.
+;; Dired, Magit, Shell/Comint, Agent Shell, Python, Vertico, BS, Corfu,
+;; Tabulated List, and Solitaire integrations.  This file has no dependency on
+;; those packages, so personal schemes can validate at startup before any
+;; integration is loaded.
 
 ;;; Code:
 
@@ -420,6 +421,85 @@
      :summary "One available completion candidate"
      :owner core
      :occasions (navigation state-change)
+     :phases (before content after))
+    (command-interaction
+     :kind role
+     :summary "An interactive shell or command-interpreter session"
+     :owner core
+     :occasions
+     (navigation continuous state-change edit inspection notification)
+     :phases (before content after))
+    (command-input
+     :kind role
+     :summary "Input entered into an interactive command session"
+     :owner core
+     :occasions (navigation state-change edit inspection)
+     :phases (before content after))
+    (command-output
+     :kind role
+     :summary "Process output from an interactive command session"
+     :owner core
+     :occasions (navigation continuous inspection notification)
+     :phases (before content after))
+    (command-prompt
+     :kind role
+     :summary "A command session prompt ready to receive input"
+     :owner core
+     :occasions (navigation continuous notification)
+     :phases (before content after))
+    (command-interaction-kind
+     :kind attribute
+     :summary "The kind of interactive command session"
+     :owner core
+     :roles (command-interaction command-input command-output command-prompt)
+     :value-type symbol
+     :allowed-values (shell repl))
+    (command-operation
+     :kind attribute
+     :summary "The command-session operation being presented"
+     :owner core
+     :roles (command-interaction command-input command-output command-prompt)
+     :value-type symbol
+     :allowed-values
+     (submit delete-output clear-buffer kill-input send-eof signal
+             completion history-navigation command-navigation
+             output-navigation prompt-navigation input-boundary copy-input
+             accumulate insert-argument))
+    (command-input-origin
+     :kind attribute
+     :summary "Where presented command input came from"
+     :owner core
+     :roles (command-input)
+     :value-type symbol
+     :allowed-values
+     (current history copied completion accumulated previous-argument))
+    (command-submitted
+     :kind event
+     :summary "Input was submitted to an interactive command process"
+     :owner core
+     :roles (command-input)
+     :occasions (state-change)
+     :phases (before content after))
+    (command-output-received
+     :kind event
+     :summary "Logical process output became ready for presentation"
+     :owner core
+     :roles (command-output)
+     :occasions (continuous notification)
+     :phases (before content after))
+    (command-prompt-ready
+     :kind event
+     :summary "An interactive command process became ready for input"
+     :owner core
+     :roles (command-prompt)
+     :occasions (continuous notification)
+     :phases (before content after))
+    (command-process-signalled
+     :kind event
+     :summary "The user sent EOF or another signal to a command process"
+     :owner core
+     :roles (command-interaction)
+     :occasions (state-change notification)
      :phases (before content after))
     (selected
      :kind state

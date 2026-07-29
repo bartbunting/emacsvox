@@ -41,6 +41,51 @@
     (should (eq (key-binding (kbd "TAB")) 'indent-for-tab-command))
     (should (eq (key-binding (kbd "C-c C-o")) 'comint-delete-output))))
 
+(ert-deftest emacsvox-comint-registers-command-semantic-vocabulary ()
+  "Shell migration facts are registered before integrations submit them."
+  (dolist
+      (entry
+       '((command-interaction role)
+         (command-input role)
+         (command-output role)
+         (command-prompt role)
+         (command-interaction-kind attribute)
+         (command-operation attribute)
+         (command-input-origin attribute)
+         (command-submitted event)
+         (command-output-received event)
+         (command-prompt-ready event)
+         (command-process-signalled event)))
+    (pcase-let ((`(,id ,kind) entry))
+      (let ((semantic (emacsvox-aural-semantic id)))
+        (should semantic)
+        (should (eq (emacsvox-aural-semantic-kind semantic) kind))))))
+
+(ert-deftest emacsvox-comint-context-distinguishes-shell-from-shared-comint ()
+  "Shell buffers and generic Comint buffers expose distinct module context."
+  (with-temp-buffer
+    (comint-mode)
+    (should (eq emacsvox-aural-module 'comint))
+    (should
+     (equal
+      (emacsvox-comint-facts
+       'command-input 'focus-entered 'history-navigation
+       '(:command-input-origin history))
+      '(:role command-input
+        :command-interaction-kind repl
+        :events (focus-entered)
+        :command-operation history-navigation
+        :command-input-origin history))))
+  (with-temp-buffer
+    (shell-mode)
+    (should (eq emacsvox-aural-module 'shell))
+    (should
+     (equal
+      (emacsvox-comint-facts 'command-prompt 'command-prompt-ready)
+      '(:role command-prompt
+        :command-interaction-kind shell
+        :events (command-prompt-ready))))))
+
 (defconst emacsvox-test--comint-navigation-history-after-targets
   '(comint-history-isearch-backward
     comint-history-isearch-backward-regexp
