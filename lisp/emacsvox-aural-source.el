@@ -62,6 +62,13 @@ occasion, or a new queued icon changes.")
   'emacsvox-aural-source-faces
   "Text property holding an authoritative named source-face snapshot.")
 
+(defun emacsvox-aural-source-text-property (position property &optional object)
+  "Return the actual PROPERTY at POSITION in OBJECT.
+
+Unlike `get-text-property', do not resolve `char-property-alias-alist'.
+OBJECT defaults to the current buffer and may also be a string."
+  (plist-get (text-properties-at position object) property))
+
 (defun emacsvox-aural-capture-context (&optional module occasion)
   "Capture immutable source context for MODULE and OCCASION."
   (let ((context
@@ -184,7 +191,9 @@ current buffer."
               (emacsvox-aural--source-face-records
                value 'overlay property overlay))))))
       (dolist (property '(face font-lock-face))
-        (when-let* ((value (get-text-property position property)))
+        (when-let* ((value
+                     (emacsvox-aural-source-text-property
+                      position property)))
           (setq
            records
            (append
@@ -224,7 +233,9 @@ data-only overlay and text-property face provenance without changing BUFFER."
      position emacsvox-aural-source-faces-property text))
    (let (records)
      (dolist (property '(face font-lock-face))
-       (when-let* ((value (get-text-property position property text)))
+       (when-let* ((value
+                    (emacsvox-aural-source-text-property
+                     position property text)))
          (setq
           records
           (append

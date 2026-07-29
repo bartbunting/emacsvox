@@ -15,6 +15,7 @@
 
 (defvar emacsvox-pronounce-personality)
 (defvar emacsvox-pronounce-table)
+(defvar ems--voiceify-overlays)
 
 (defmacro emacsvox-test--with-preserved-voice-lock-state (&rest body)
   "Run BODY and restore global and per-buffer Voice Lock state."
@@ -57,6 +58,11 @@
   "Voice-Test"
   "Major mode used to characterize global Voice Lock inheritance.")
 
+(defun emacsvox-test--toggle-local-silence ()
+  "Toggle local silence without presenting the command's feedback cue."
+  (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+    (voice-setup-toggle-silence-personality)))
+
 (ert-deftest emacsvox-voice-personality-precedes-face-mapping ()
   "An explicit personality currently takes precedence over the visual face."
   (with-temp-buffer
@@ -80,6 +86,87 @@
        'emacsvox-test-face 'voice-from-face
        voice-setup-face-voice-table)
       (should (eq (tts-get-style (point-min)) 'voice-from-face)))))
+
+(ert-deftest emacsvox-voice-face-silencing-is-buffer-local ()
+  "Silencing a mapped face does not mutate its global mapping."
+  (let ((voice-setup-face-voice-table (make-hash-table :test #'eq)))
+    (puthash
+     'font-lock-warning-face 'voice-from-face
+     voice-setup-face-voice-table)
+    (with-temp-buffer
+      (insert (propertize "text" 'face 'font-lock-warning-face))
+      (goto-char (point-min))
+      (should (eq (tts-get-style) 'voice-from-face))
+      (emacsvox-test--toggle-local-silence)
+      (should (eq (tts-get-style) 'inaudible))
+      (should
+       (eq
+        (gethash 'font-lock-warning-face voice-setup-face-voice-table)
+        'voice-from-face))
+      (with-temp-buffer
+        (insert (propertize "text" 'face 'font-lock-warning-face))
+        (should (eq (tts-get-style (point-min)) 'voice-from-face)))
+      (emacsvox-test--toggle-local-silence)
+      (should (eq (tts-get-style) 'voice-from-face)))))
+
+(ert-deftest emacsvox-voice-personality-silencing-is-buffer-local ()
+  "An explicit personality can be silenced in only the current buffer."
+  (with-temp-buffer
+    (insert (propertize "text" 'personality 'voice-explicit))
+    (goto-char (point-min))
+    (should (eq (tts-get-style) 'voice-explicit))
+    (emacsvox-test--toggle-local-silence)
+    (should (eq (tts-get-style) 'inaudible))
+    (with-temp-buffer
+      (insert (propertize "text" 'personality 'voice-explicit))
+      (should (eq (tts-get-style (point-min)) 'voice-explicit)))
+    (emacsvox-test--toggle-local-silence)
+    (should (eq (tts-get-style) 'voice-explicit))))
+
+(ert-deftest emacsvox-voice-silencing-sees-overlay-and-font-lock-faces ()
+  "Local silencing follows the same source faces captured by aural speech."
+  (let ((ems--voiceify-overlays nil)
+        (voice-setup-face-voice-table (make-hash-table :test #'eq)))
+    (puthash
+     'font-lock-warning-face 'voice-overlay
+     voice-setup-face-voice-table)
+    (puthash
+     'font-lock-comment-face 'voice-font-lock
+     voice-setup-face-voice-table)
+    (with-temp-buffer
+      (setq-local default-text-properties nil)
+      (setq-local char-property-alias-alist nil)
+      (let ((inhibit-modification-hooks t))
+        (insert "text")
+        (set-text-properties
+         (point-min) (point-max)
+         '(font-lock-face font-lock-comment-face)))
+      (goto-char (point-min))
+      (let ((overlay (make-overlay (point-min) (point-max))))
+        (overlay-put overlay 'priority 5)
+        (overlay-put overlay 'face 'font-lock-warning-face)
+        (should-not
+         (emacsvox-aural-source-text-property
+          (point) 'personality))
+        (emacsvox-test--toggle-local-silence)
+        (should
+         (eq
+          (voice-setup-get-voice-for-face
+           'font-lock-warning-face)
+          'inaudible))
+        (should
+         (eq
+          (voice-setup-get-voice-for-face
+           'font-lock-comment-face)
+          'voice-font-lock))
+        (emacsvox-test--toggle-local-silence)
+        (delete-overlay overlay))
+      (emacsvox-test--toggle-local-silence)
+      (should
+       (eq
+        (voice-setup-get-voice-for-face
+         'font-lock-comment-face)
+        'inaudible)))))
 
 (ert-deftest emacsvox-voice-acss-generates-stable-name-and-definition ()
   "An ACSS style is named from its dimensions and defined only when absent."

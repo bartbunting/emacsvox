@@ -33,6 +33,12 @@ legacy face/personality-to-voice compatibility mapping."
 (defvar emacsvox-aural-face-presentation-changed-hook nil
   "Hook run after explicit visual-face presentation is toggled.")
 
+(defvar-local emacsvox-aural-suppressed-personalities nil
+  "Compatibility personalities suppressed in the current buffer.
+
+The value is nil or an `equal' hash table whose keys are legacy personality
+values.  Suppression affects content voice policy, not semantic actions.")
+
 (defvar voice-lock-mode)
 (defvar emacsvox-use-icons)
 
@@ -45,6 +51,22 @@ Before Voice Lock is loaded, preserve the historical enabled default."
   (with-current-buffer (or buffer (current-buffer))
     (or (not (boundp 'voice-lock-mode))
         (not (null voice-lock-mode)))))
+
+(defun emacsvox-aural-voice-inaudible-p (voice)
+  "Return non-nil when VOICE requests compatibility content suppression."
+  (or
+   (eq voice 'inaudible)
+   (and (proper-list-p voice) (memq 'inaudible voice))))
+
+(defun emacsvox-aural-filter-compatibility-voice (voice)
+  "Apply the current buffer's local compatibility policy to VOICE."
+  (if
+      (and
+       voice
+       emacsvox-aural-suppressed-personalities
+       (gethash voice emacsvox-aural-suppressed-personalities))
+      'inaudible
+    voice))
 
 (defun emacsvox-aural-icons-enabled-p (&optional context buffer)
   "Return whether cue actions are enabled for CONTEXT in BUFFER.

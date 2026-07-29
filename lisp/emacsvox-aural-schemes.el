@@ -933,10 +933,12 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
              (plist-get context :voice-lock-enabled)
            (emacsvox-aural-voice-lock-enabled-p))
          legacy
-         (not
-          (assq
-           'voice
-           (emacsvox-aural-content-style-provenance content))))
+         (or
+          (emacsvox-aural-voice-inaudible-p legacy)
+          (not
+           (assq
+            'voice
+            (emacsvox-aural-content-style-provenance content)))))
       (setf (emacsvox-aural-content-style-voice content) legacy)
       (setf
        (emacsvox-aural-content-style-voice-provenance content)

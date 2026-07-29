@@ -329,9 +329,10 @@ bound to \\[tts-toggle-caps].")
 
 (defsubst tts-get-style (&optional pos)
   " Return  style based on personality or face at `POS'.   "
-  (or
-   (get-text-property (or pos (point)) 'personality)
-   (tts-get-voice-for-face (get-text-property (or pos (point)) 'face))))
+  (emacsvox-aural-filter-compatibility-voice
+   (or
+    (get-text-property (or pos (point)) 'personality)
+    (tts-get-voice-for-face (get-text-property (or pos (point)) 'face)))))
 
 ;;;  Tone Helpers:
 

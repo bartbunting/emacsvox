@@ -96,6 +96,15 @@
 (require 'tts-speak)
 (eval-when-compile (require 'easy-mmode))
 
+(declare-function
+ emacsvox-aural-capture-source-faces
+ "emacsvox-aural-source" (&optional position buffer))
+(declare-function
+ emacsvox-aural-source-text-property
+ "emacsvox-aural-source" (position property &optional object))
+
+(defvar emacsvox-aural-suppressed-personalities)
+
 ;;;  customization group
 
 (defgroup voice-fonts nil
@@ -166,6 +175,27 @@ Define a voice for it if needed, then return the symbol."
 (defvar voice-setup-face-voice-table (make-hash-table :test #'eq)
   "Face to voice mapping.")
 
+(defconst voice-setup--missing-voice (make-symbol "missing-voice"))
+
+(defvar-local voice-setup-local-map nil
+  "Buffer-local face-to-personality overrides.
+
+Entries shadow `voice-setup-face-voice-table' without mutating its global
+compatibility mappings.")
+
+(defun voice-setup--ensure-local-map ()
+  "Return the current buffer's writable local face override table."
+  (or
+   voice-setup-local-map
+   (setq voice-setup-local-map (make-hash-table :test #'eq))))
+
+(defun voice-setup--ensure-local-personality-map ()
+  "Return the current buffer's writable personality suppression table."
+  (or
+   emacsvox-aural-suppressed-personalities
+   (setq emacsvox-aural-suppressed-personalities
+         (make-hash-table :test #'equal))))
+
 (defsubst voice-setup-set-voice-for-face (face voice)
   "Map face  to  voice."
   
@@ -173,8 +203,15 @@ Define a voice for it if needed, then return the symbol."
 
 (defsubst voice-setup-get-voice-for-face (face)
   "Return face to  voice."
-  
-  (gethash face voice-setup-face-voice-table))
+
+  (let ((local
+         (if voice-setup-local-map
+             (gethash
+              face voice-setup-local-map voice-setup--missing-voice)
+           voice-setup--missing-voice)))
+    (if (eq local voice-setup--missing-voice)
+        (gethash face voice-setup-face-voice-table)
+      local)))
 
 (defun voice-setup-add-map (fv-alist)
   "Sets up face to voice mapping given in fv-alist."
@@ -267,36 +304,65 @@ Define a voice for it if needed, then return the symbol."
 
 ;;;  interactively silence personalities
 
-(defvar  voice-setup-local-map (make-hash-table :test #'eq)
-  "Buffer local face->personality.")
-;; We toggle audibility at point by:
-;; If face at point is currently audible, its face->personality
-;; map is cached in hash-table voice-setup-local-map, and its
-;; face->personality map is updated to be inaudible.
-;; If personality at point is inaudible, and there is a cached value,
-;; then the original face->personality mapping is restored from the
-;; cached value.
+(defun voice-setup--mapped-face-at-point ()
+  "Return the strongest mapped source face at point."
+  (cl-loop
+   for record in (emacsvox-aural-capture-source-faces)
+   for face = (plist-get record :face)
+   when (voice-setup-get-voice-for-face face)
+   return face))
+
+(defun voice-setup--report-local-suppression (silenced kind value)
+  "Report that VALUE of KIND was SILENCED or restored."
+  (if silenced
+      (progn
+        (message "Silenced %s %s in this buffer" kind value)
+        (emacsvox-icon 'close-object))
+    (message "Made %s %s audible in this buffer." kind value)
+    (emacsvox-icon 'item)))
 
 (defun voice-setup-toggle-silence-personality ()
-  "Toggle audibility of personality under point  . "
+  "Toggle local audibility of the personality or mapped face at point."
   (interactive)
-  
-  (let* ((face (get-text-property (point) 'face))
-         (f (if (listp face)   (cl-first face)face))
-         (personality (voice-setup-get-voice-for-face f))
-         (orig (gethash f voice-setup-local-map)))
+
+  (let* ((personality
+          (emacsvox-aural-source-text-property
+           (point) 'personality))
+         (face (unless personality (voice-setup--mapped-face-at-point))))
     (cond
-     ((null personality) (message "No personality here."))
-     ((and orig (eq personality  'inaudible))  ; currently inaudible,
-      (voice-setup-set-voice-for-face f  orig) ; restore orig
-      (remhash f voice-setup-local-map)        ; clean cache
-      (message "Made face %s audible." f)
-      (emacsvox-icon 'item))
-     (t
-      (voice-setup-set-voice-for-face f  'inaudible) ; update
-      (puthash f personality voice-setup-local-map)  ; cache
-      (message "Silenced face %s" f)
-      (emacsvox-icon 'close-object)))))
+     (personality
+      (cond
+       ((and
+         emacsvox-aural-suppressed-personalities
+         (gethash personality emacsvox-aural-suppressed-personalities))
+        (remhash personality emacsvox-aural-suppressed-personalities)
+        (voice-setup--report-local-suppression
+         nil "personality" personality))
+       ((emacsvox-aural-voice-inaudible-p personality)
+        (message "Personality %s is already inaudible." personality))
+       (t
+        (puthash
+         personality t (voice-setup--ensure-local-personality-map))
+        (voice-setup--report-local-suppression
+         t "personality" personality))))
+     (face
+      (if
+          (and
+           voice-setup-local-map
+           (not
+            (eq
+             (gethash
+              face voice-setup-local-map voice-setup--missing-voice)
+             voice-setup--missing-voice)))
+          (progn
+            (remhash face voice-setup-local-map)
+            (voice-setup--report-local-suppression nil "face" face))
+        (let ((mapped (gethash face voice-setup-face-voice-table)))
+          (if (emacsvox-aural-voice-inaudible-p mapped)
+              (message "Face %s is already inaudible." face)
+            (puthash face 'inaudible (voice-setup--ensure-local-map))
+            (voice-setup--report-local-suppression t "face" face)))))
+     (t (message "No personality or mapped face here.")))))
 
 (provide 'voice-setup)
 ;;;  end of file

@@ -23,24 +23,29 @@
 
 (defun emacsvox-aural--string-face-value (text position)
   "Return face value and source property for TEXT at POSITION."
-  (let ((face (get-text-property position 'face text)))
+  (let ((face
+         (emacsvox-aural-source-text-property
+          position 'face text)))
     (if face
         (cons face 'face)
       (when-let* ((font-lock-face
-                   (get-text-property position 'font-lock-face text)))
+                   (emacsvox-aural-source-text-property
+                    position 'font-lock-face text)))
         (cons font-lock-face 'font-lock-face)))))
 
 (defun emacsvox-aural--string-style (text position &optional face-snapshot)
   "Return legacy personality or FACE-SNAPSHOT-derived style in TEXT."
-  (or
-   (get-text-property position 'personality text)
-   (when (fboundp 'tts-get-voice-for-face)
-     (or
-      (cl-loop
-       for face in (emacsvox-aural--source-face-names face-snapshot)
-       thereis (tts-get-voice-for-face face))
-      (tts-get-voice-for-face
-       (car (emacsvox-aural--string-face-value text position)))))))
+  (emacsvox-aural-filter-compatibility-voice
+   (or
+    (emacsvox-aural-source-text-property
+     position 'personality text)
+    (when (fboundp 'tts-get-voice-for-face)
+      (or
+       (cl-loop
+        for face in (emacsvox-aural--source-face-names face-snapshot)
+        thereis (tts-get-voice-for-face face))
+       (tts-get-voice-for-face
+        (car (emacsvox-aural--string-face-value text position))))))))
 
 (defun emacsvox-aural--next-non-nil-property
     (text position property limit)
@@ -136,7 +141,8 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
     (text position end base-facts base-context object-icon)
   "Capture one source formatting run from POSITION to END in TEXT."
   (let* ((explicit
-          (get-text-property position 'personality text))
+          (emacsvox-aural-source-text-property
+           position 'personality text))
          (face-snapshot
           (emacsvox-aural--string-face-snapshot text position))
          (legacy-faces

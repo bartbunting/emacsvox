@@ -108,6 +108,19 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         text (length text))))
     (nreverse plans)))
 
+(ert-deftest emacsvox-aural-source-text-property-ignores-aliases ()
+  "Source capture distinguishes actual properties from character aliases."
+  (let ((text (propertize "face" 'face 'font-lock-comment-face)))
+    (with-temp-buffer
+      (setq-local char-property-alias-alist '((personality face)))
+      (should
+       (eq
+        (get-text-property 0 'personality text)
+        'font-lock-comment-face))
+      (should-not
+       (emacsvox-aural-source-text-property
+        0 'personality text)))))
+
 (ert-deftest emacsvox-aural-source-call-with-submission-freezes-boundary ()
   "The shared source boundary captures once and preserves nested intent."
   (let (captures observed)
@@ -1494,6 +1507,74 @@ is the default inherited by a newly created TTS scratch buffer."
                   (emacsvox-test--transport-adapter-command
                    expected-voice)))
               (should-not voice-command))))))))
+
+(ert-deftest emacsvox-aural-transport-inaudible-overrides-face-rule-voice ()
+  "Compatibility inaudibility remains authoritative over a face-rule voice."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-face
+        :match (:legacy-face font-lock-warning-face)
+        :render
+        (:before
+         ((:id warning-cue :kind cue :cue warn-user))
+         :content (:voice bolden)))))
+    (let* ((voice-lock-mode t)
+           (text
+            (propertize
+             "warning"
+             'face 'font-lock-warning-face
+             'personality 'inaudible))
+           (prepared (emacsvox-aural-prepare-text text))
+           (plan (emacsvox-aural-concrete-plan-at 0 prepared))
+           (content (emacsvox-aural-concrete-plan-content plan)))
+      (should-not (emacsvox-aural-concrete-content-speak content))
+      (should-not
+       (emacsvox-aural-concrete-content-voice-command content))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-cue
+         (emacsvox-aural-concrete-plan-before plan))
+        '(warn-user))))))
+
+(ert-deftest emacsvox-aural-transport-freezes-local-suppression-at-source ()
+  "Face and personality suppression become frozen source presentation policy."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id warning-face
+        :match (:legacy-face font-lock-warning-face)
+        :render (:content (:voice bolden)))))
+    (let ((voice-lock-mode t)
+          (voice-setup-face-voice-table (make-hash-table :test #'eq)))
+      (puthash
+       'font-lock-warning-face 'voice-lighten
+       voice-setup-face-voice-table)
+      (dolist
+          (text
+           (list
+            (propertize
+             "face" 'face 'font-lock-warning-face)
+            (propertize
+             "personality" 'personality 'voice-lighten)))
+        (with-temp-buffer
+          (insert text)
+          (goto-char (point-min))
+          (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))
+            (voice-setup-toggle-silence-personality))
+          (let* ((source
+                  (emacsvox-aural-source-substring
+                   (point-min) (point-max)))
+                 (prepared (emacsvox-aural-prepare-text source))
+                 (plan (emacsvox-aural-concrete-plan-at 0 prepared)))
+            (should
+             (eq
+              (plist-get
+               (emacsvox-aural-concrete-plan-context plan)
+               :legacy-personality)
+              'inaudible))
+            (should-not
+             (emacsvox-aural-concrete-content-speak
+              (emacsvox-aural-concrete-plan-content plan)))))))))
 
 (ert-deftest emacsvox-aural-transport-tts-speak-control-matrix ()
   "The three presentation controls remain independent through real TTS."
