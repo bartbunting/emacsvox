@@ -381,7 +381,13 @@ themed overrides below an active sound pack."
      1047 150 t)
     (line-unspeakable
      "A nonempty line with no speakable content was reached"
-     2093 150 t))
+     2093 150 t)
+    (solitaire-hole
+     "A hole occupies a Solitaire board cell"
+     800 100 nil)
+    (solitaire-stone
+     "A stone occupies a Solitaire board cell"
+     400 150 nil))
   "Built-in tones matching established nonverbal presentation signals.")
 
 (defconst emacsvox-aural-default-voice-entries

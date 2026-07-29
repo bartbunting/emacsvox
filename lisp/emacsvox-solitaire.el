@@ -40,6 +40,8 @@
 ;;   Required modules:
 
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-submission)
 (require 'solitaire)
 
 ;;;   Introduction 
@@ -82,9 +84,21 @@
   
   (tts-speak (format "%d stones" solitaire-stones)))
 
-(defun emacsvox-solitaire-stone  () (tts-tone 400 150))
+(defun emacsvox-solitaire--present-cell-tone (kind)
+  "Present the tone for a Solitaire cell containing KIND."
+  (emacsvox-aural-submit-actions
+   :facts (list :role 'game-cell :game-cell-kind kind)
+   :module 'solitaire
+   :occasion 'inspection))
 
-(defun emacsvox-solitaire-hole () (tts-tone 800 100))
+(defun emacsvox-solitaire-stone ()
+  "Present the compatibility tone for a Solitaire stone."
+  (emacsvox-solitaire--present-cell-tone 'stone))
+
+(defun emacsvox-solitaire-hole ()
+  "Present the compatibility tone for a Solitaire hole."
+  (emacsvox-solitaire--present-cell-tone 'hole))
+
 (defun emacsvox-solitaire-speak-row ()
   "Speak current row."
   (interactive)

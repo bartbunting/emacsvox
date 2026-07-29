@@ -166,7 +166,8 @@
     '("buffer-modified" "buffer-read-only" "completion-separator"
       "edit-deletion" "edit-line-created" "edit-lowercase" "edit-uppercase"
       "field-empty" "line-decoration" "line-empty" "line-separator"
-      "line-unspeakable" "line-whitespace")))
+      "line-unspeakable" "line-whitespace" "solitaire-hole"
+      "solitaire-stone")))
   (dolist
       (expected
        '((buffer-modified 700 100 nil)
@@ -181,7 +182,9 @@
          (line-whitespace 261.6 150 t)
          (line-separator 523.3 150 t)
          (line-decoration 1047 150 t)
-         (line-unspeakable 2093 150 t)))
+         (line-unspeakable 2093 150 t)
+         (solitaire-hole 800 100 nil)
+         (solitaire-stone 400 150 nil)))
     (let ((tone (emacsvox-aural-tone (car expected))))
       (should tone)
       (should (= (emacsvox-aural-tone-pitch tone) (nth 1 expected)))

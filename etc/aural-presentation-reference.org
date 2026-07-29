@@ -187,6 +187,8 @@ Operational semantic contract version: =1=.
 | =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
 | =focus-entered= | =event= | =core= | - | - | - | - | - | - | - | - | Navigation arrived at an aural object |
 | =folded= | =state= | =core= | - | - | - | - | - | - | - | - | Descendants of an object are hidden |
+| =game-cell= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | One position on a game board |
+| =game-cell-kind= | =attribute= | =core= | =symbol= | =game-cell= | - | - | - | - | - | - | The module-defined contents of a game-board cell |
 | =game-over= | =event= | =core= | - | - | - | - | - | - | - | - | A game ended without successful completion |
 | =has-attachments= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A message contains one or more attachments |
 | =heading= | =role= | =core= | - | - | - | - | - | - | - | - | A titled structural section |
@@ -320,6 +322,7 @@ Operational semantic contract version: =1=.
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
 | =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |
+| =solitaire-cell-tones= | =solitaire= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for Solitaire board cells |
 | =tabulated-list-field-state-tones= | =tabulated-list= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for empty Tabulated List fields |
 
 * Sound Pack Author Reference
@@ -440,6 +443,8 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 | =line-separator= | =523.3= | =150= | =t= | =core= | A horizontal separator line was reached |
 | =line-unspeakable= | =2093= | =150= | =t= | =core= | A nonempty line with no speakable content was reached |
 | =line-whitespace= | =261.6= | =150= | =t= | =core= | A display line containing only whitespace was reached |
+| =solitaire-hole= | =800= | =100= | - | =core= | A hole occupies a Solitaire board cell |
+| =solitaire-stone= | =400= | =150= | - | =core= | A stone occupies a Solitaire board cell |
 
 * Voice Palette Author Reference
 

@@ -43,6 +43,52 @@
   (should
    (eq (lookup-key solitaire-mode-map "q") 'quit-window)))
 
+(ert-deftest emacsvox-solitaire-cell-policy-uses-named-tones ()
+  "Stone and hole meanings resolve to their established named tones."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural--current-rules-cache
+         (make-hash-table :test #'equal)))
+    (dolist
+        (case
+         '((stone solitaire-stone-tone solitaire-stone)
+           (hole solitaire-hole-tone solitaire-hole)))
+      (let* ((plan
+              (emacsvox-aural-resolve-active
+               (list :role 'game-cell :game-cell-kind (car case))
+               '(:module solitaire
+                 :mode solitaire-mode
+                 :occasion inspection)))
+             (action (car (emacsvox-aural-render-plan-before plan))))
+        (should
+         (equal
+          (emacsvox-aural-render-plan-matched-rules plan)
+          (list (nth 1 case))))
+        (should (eq (emacsvox-aural-action-kind action) 'tone))
+        (should (eq (emacsvox-aural-action-tone action) (nth 2 case)))))))
+
+(ert-deftest emacsvox-solitaire-cell-tone-adapters-submit-meaning ()
+  "Legacy stone and hole functions submit semantic cell facts."
+  (let (submissions)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
+            (push arguments submissions))))
+      (emacsvox-solitaire-stone)
+      (emacsvox-solitaire-hole))
+    (should
+     (equal
+      (nreverse submissions)
+      '((:facts (:role game-cell :game-cell-kind stone)
+         :module solitaire
+         :occasion inspection)
+        (:facts (:role game-cell :game-cell-kind hole)
+         :module solitaire
+         :occasion inspection))))))
+
 (ert-deftest emacsvox-solitaire-horizontal-feedback-is-target-aware ()
   "Horizontal movement optionally announces the current column."
   (let ((ems--interactive-fn-name 'solitaire-right)

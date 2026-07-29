@@ -7,9 +7,9 @@
 ;;; Commentary:
 
 ;; Register the lightweight semantic vocabulary shared by the Notmuch, Gnus,
-;; Dired, Magit, Agent Shell, Python, Vertico, and BS integrations.  This file
-;; has no dependency on those packages, so personal schemes can validate at
-;; startup before any integration is loaded.
+;; Dired, Magit, Agent Shell, Python, Vertico, BS, Corfu, Tabulated List, and
+;; Solitaire integrations.  This file has no dependency on those packages, so
+;; personal schemes can validate at startup before any integration is loaded.
 
 ;;; Code:
 
@@ -214,6 +214,18 @@
      :owner core
      :occasions (notification)
      :phases (before content after))
+    (game-cell
+     :kind role
+     :summary "One position on a game board"
+     :owner core
+     :occasions (navigation continuous state-change inspection)
+     :phases (before content after))
+    (game-cell-kind
+     :kind attribute
+     :summary "The module-defined contents of a game-board cell"
+     :owner core
+     :roles (game-cell)
+     :value-type symbol)
     (entry-kind
      :kind attribute
      :summary "The filesystem kind of a directory entry"
@@ -712,6 +724,29 @@
         (:append
          ((:id corfu-separator-inserted-tone-action
            :kind tone :tone completion-separator)))))))
+    (solitaire
+     :schema-version 1
+     :id solitaire-cell-tones
+     :summary "Compatibility tones for Solitaire board cells"
+     :rules
+     ((:id solitaire-stone-tone
+       :match
+       (:role game-cell :module solitaire :game-cell-kind stone
+        :occasion inspection)
+       :render
+       (:before
+        (:append
+         ((:id solitaire-stone-tone-action
+           :kind tone :tone solitaire-stone)))))
+      (:id solitaire-hole-tone
+       :match
+       (:role game-cell :module solitaire :game-cell-kind hole
+        :occasion inspection)
+       :render
+       (:before
+        (:append
+         ((:id solitaire-hole-tone-action
+           :kind tone :tone solitaire-hole)))))))
     (tabulated-list
      :schema-version 1
      :id tabulated-list-field-state-tones
