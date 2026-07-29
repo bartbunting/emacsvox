@@ -16,6 +16,7 @@
 (require 'subr-x)
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-history)
+(require 'emacsvox-aural-providers)
 (require 'emacsvox-aural-source)
 (require 'emacsvox-aural-schemes)
 (require 'emacsvox-aural-spatial)
@@ -38,8 +39,6 @@
 (declare-function voice-from-acss "voice-setup" (style))
 (declare-function make-acss "voice-setup" (&rest slots))
 
-(defvar emacsvox-sounds-current-pack)
-(defvar emacsvox-aural-voice-palette-override)
 (defvar emacsvox-use-icons)
 (defvar tts-speaker-process)
 (defvar voice-lock-mode)
@@ -63,28 +62,6 @@ capability degradation.  `reject' signals an error before anything is queued."
   (signal
    'emacsvox-aural-transport-error
    (list (apply #'format format-string arguments))))
-
-(defun emacsvox-aural--resource-pack ()
-  "Return the effective sound pack at the current submission boundary."
-  (or
-   (and
-    (boundp 'emacsvox-sounds-current-pack)
-    emacsvox-sounds-current-pack
-    (emacsvox-aural-resource-pack emacsvox-sounds-current-pack)
-    emacsvox-sounds-current-pack)
-   (emacsvox-aural-effective-scheme-provider 'resource-pack)
-   'chimes))
-
-(defun emacsvox-aural--voice-palette ()
-  "Return the effective voice palette at the current submission boundary."
-  (or
-   (and
-    emacsvox-aural-voice-palette-override
-    (emacsvox-aural-voice-palette
-     emacsvox-aural-voice-palette-override)
-    emacsvox-aural-voice-palette-override)
-   (emacsvox-aural-effective-scheme-provider 'voice-palette)
-   'acss-default))
 
 (defun emacsvox-aural-clear-file-digest-cache (&optional _pack)
   "Clear cached sound digests after a resource-pack change.
@@ -258,7 +235,7 @@ Return nil when an enumerated adapter cannot provide the requested family."
 
 Existing personality-backed presets are adapter-owned compatibility values
 and are not reconstructed or rejected here."
-  (let* ((palette (or palette (emacsvox-aural--voice-palette)))
+  (let* ((palette (or palette (emacsvox-aural-effective-voice-palette)))
          (capability (emacsvox-aural-active-voice-capabilities))
          (supported (plist-get capability :dimensions))
          degradations)
@@ -447,7 +424,7 @@ and are not reconstructed or rejected here."
 
 PALETTE defaults to the active palette.  PROVENANCE maps the winning preset
 and ACSS dimensions to the rules that supplied them."
-  (let* ((palette (or palette (emacsvox-aural--voice-palette)))
+  (let* ((palette (or palette (emacsvox-aural-effective-voice-palette)))
          (capability (emacsvox-aural-active-voice-capabilities)))
     (cond
      ((null voice)
@@ -865,8 +842,8 @@ CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
              context :icons-enabled
              (emacsvox-aural-icons-enabled-p context))))
          (facts (emacsvox-aural-canonical-facts facts))
-         (pack (emacsvox-aural--resource-pack))
-         (palette (emacsvox-aural--voice-palette))
+         (pack (emacsvox-aural-effective-resource-pack))
+         (palette (emacsvox-aural-effective-voice-palette))
          (cue-target (or cue-target 'queued-cue))
          (style (emacsvox-aural-render-plan-content plan))
          (voice

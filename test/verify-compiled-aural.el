@@ -54,7 +54,8 @@
        feature)))
   (dolist
       (library
-       '("emacsvox-aural-source"
+       '("emacsvox-aural-providers"
+         "emacsvox-aural-source"
          "emacsvox-aural-ui"
          "emacsvox-aural-inspection"))
     (load
@@ -125,6 +126,7 @@
          emacsvox-aural--rule-error
          emacsvox-aural--resource-error
          emacsvox-aural--migrate-user-data-v1-to-v2
+         emacsvox-aural-effective-resource-pack
          emacsvox-aural-capture-source-faces
          emacsvox-aural--transport-error
          emacsvox-aural-describe-selector

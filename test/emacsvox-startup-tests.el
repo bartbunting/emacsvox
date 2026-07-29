@@ -61,6 +61,7 @@
       (source
        '("emacsvox-aural-concrete.el"
          "emacsvox-aural-history.el"
+         "emacsvox-aural-providers.el"
          "emacsvox-aural-source.el"))
     (should (member source emacsvox-setup--startup-sources))))
 
