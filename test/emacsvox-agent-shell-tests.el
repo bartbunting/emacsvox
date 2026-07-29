@@ -991,6 +991,63 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (eq (plist-get context :module) 'agent-shell))
       (should (eq (plist-get context :occasion) 'continuous)))))
 
+(ert-deftest emacsvox-agent-shell-rendered-tool-content-is-native ()
+  "Rendered tool content modes should each use one native transaction."
+  (let ((emacsvox-agent-shell-speech-level 'full)
+        (emacsvox-agent-shell-speak-tool-calls t)
+        captured
+        direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              'content content arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
+            (push
+             (list
+              'actions arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon direct-output)))
+         ((symbol-function 'tts-speak)
+          (lambda (&rest _) (push 'speech direct-output))))
+      (let ((emacsvox-agent-shell-tool-output-verbosity 'full))
+        (emacsvox-agent-shell--speak-content "Complete output" 'tool-call))
+      (let ((emacsvox-agent-shell-tool-output-verbosity 'summary))
+        (emacsvox-agent-shell--speak-content
+         "One\nTwo\nThree\nFour" 'tool-call))
+      (let ((emacsvox-agent-shell-tool-output-verbosity 'status))
+        (emacsvox-agent-shell--speak-content "Completed" 'tool-call)))
+    (should-not direct-output)
+    (setq captured (nreverse captured))
+    (should (= (length captured) 3))
+    (should (equal (mapcar #'car captured) '(content content actions)))
+    (should (equal (mapcar #'cadr (seq-take captured 2))
+                   '("Complete output" "One Two Three")))
+    (dolist (entry captured)
+      (let ((facts (if (eq (car entry) 'content)
+                       (nth 3 entry)
+                     (nth 2 entry)))
+            (context (if (eq (car entry) 'content)
+                         (nth 4 entry)
+                       (nth 3 entry))))
+        (should (eq (plist-get facts :role) 'agent-tool))
+        (should (eq (plist-get context :module) 'agent-shell))
+        (should (eq (plist-get context :occasion) 'continuous))))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+       (plist-get (cadr (nth 2 captured)) :compatibility-actions))
+      '(task-done)))))
+
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-package-header ()
   "Speech setup should not replace agent-shell's semantic header."
   (with-temp-buffer

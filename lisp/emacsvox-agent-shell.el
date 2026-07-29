@@ -1820,16 +1820,18 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
        (when (and emacsvox-agent-shell-speak-tool-calls
                   (emacsvox-agent-shell--speech-level-at-least-p 'full))
          (pcase emacsvox-agent-shell-tool-output-verbosity
-           ('full (tts-speak trimmed-content))
+           ('full
+            (emacsvox-agent-shell--submit-content-text trimmed-content))
            ('summary
             ;; Extract just the first few lines or a summary
             (let ((lines (split-string trimmed-content "\n" t)))
               (if (<= (length lines) 3)
-                  (tts-speak trimmed-content)
-                (tts-speak (string-join (seq-take lines 3) " ")))))
+                  (emacsvox-agent-shell--submit-content-text trimmed-content)
+                (emacsvox-agent-shell--submit-content-text
+                 (string-join (seq-take lines 3) " ")))))
            ('status
             ;; Just play an icon for status-only mode
-            (emacsvox-icon 'task-done)))))
+            (emacsvox-agent-shell--submit-content-icon 'task-done)))))
       ('plan
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (emacsvox-agent-shell--submit-content-text
