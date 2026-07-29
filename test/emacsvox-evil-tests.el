@@ -37,6 +37,53 @@
       (emacsvox--advice-evil-delete-before 3 8))
     (should (equal (nreverse events) '(delete-object (3 8))))))
 
+(ert-deftest emacsvox-evil-character-deletion-preserves-feedback-order ()
+  "Evil character deletion speaks the character before edit feedback."
+  (with-temp-buffer
+    (insert "xy")
+    (let (events)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-char)
+            (lambda (delete-p)
+              (push (list 'character delete-p) events)))
+           ((symbol-function 'emacsvox-speak-this-char)
+            (lambda (character)
+              (push (list 'this-character character) events)))
+           ((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (operation)
+              (push (list 'edit operation) events))))
+        (goto-char (point-min))
+        (let ((ems--interactive-fn-name 'evil-delete-char))
+          (emacsvox--advice-evil-delete-char-before))
+        (goto-char (point-max))
+        (let ((ems--interactive-fn-name 'evil-delete-backward-char))
+          (emacsvox--advice-evil-delete-backward-char-before)))
+      (should
+       (equal
+        (nreverse events)
+        '((character t)
+          (edit deletion)
+          (this-character 121)
+          (edit deletion)))))))
+
+(ert-deftest emacsvox-evil-character-deletion-is-target-aware ()
+  "Only the matching Evil character-deletion advice gives feedback."
+  (with-temp-buffer
+    (insert "xy")
+    (goto-char (point-max))
+    (let ((ems--interactive-fn-name 'evil-delete-char)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-char)
+            (lambda (&rest _) (push 'character events)))
+           ((symbol-function 'emacsvox-speak-this-char)
+            (lambda (&rest _) (push 'this-character events)))
+           ((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (&rest _) (push 'edit events))))
+        (emacsvox--advice-evil-delete-backward-char-before)
+        (emacsvox--advice-evil-delete-char-before))
+      (should (equal (nreverse events) '(character edit))))))
+
 (ert-deftest emacsvox-evil-completion-calls-original-once ()
   "Native Evil completion advice preserves result and invocation count."
   (with-temp-buffer

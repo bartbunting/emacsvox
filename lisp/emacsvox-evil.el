@@ -181,7 +181,8 @@
 (defun emacsvox--advice-evil-delete-char-before (&rest _)
   "Speak char we are deleting."
   (when (ems-interactive-p 'evil-delete-char)
-    (emacsvox-speak-char t) (tts-tone-deletion)))
+    (emacsvox-speak-char t)
+    (emacsvox-speak-edit-operation 'deletion)))
 
 (push '(evil-delete-char :before
         emacsvox--advice-evil-delete-char-before)
@@ -190,7 +191,8 @@
 (defun emacsvox--advice-evil-delete-backward-char-before (&rest _)
   "Speak char we are deleting."
   (when (ems-interactive-p 'evil-delete-backward-char)
-    (emacsvox-speak-this-char (preceding-char)) (tts-tone-deletion)))
+    (emacsvox-speak-this-char (preceding-char))
+    (emacsvox-speak-edit-operation 'deletion)))
 
 (push '(evil-delete-backward-char :before
         emacsvox--advice-evil-delete-backward-char-before)
