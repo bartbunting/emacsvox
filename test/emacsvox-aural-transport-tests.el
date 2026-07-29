@@ -525,6 +525,113 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
        '(:icons-enabled t)))
      :type 'emacsvox-aural-submission-error)))
 
+(ert-deftest emacsvox-speak-line-detects-semantic-conditions-in-order ()
+  "Line classification preserves blank and punctuation-policy precedence."
+  (let ((tts-punctuation-mode 'some))
+    (dolist
+        (case
+         '(("" empty)
+           (" \t" whitespace-only)
+           ("---" separator)
+           ("!@#" decorative)
+           ("☃" unspeakable)
+           ("text" nil)))
+      (should
+       (eq
+        (emacsvox-speak--line-condition (car case))
+        (cadr case)))))
+  (let ((tts-punctuation-mode 'all))
+    (should (eq (emacsvox-speak--line-condition "") 'empty))
+    (should
+     (eq
+      (emacsvox-speak--line-condition " ")
+      'whitespace-only))
+    (dolist (line '("---" "!@#" "☃"))
+      (should-not (emacsvox-speak--line-condition line)))))
+
+(ert-deftest emacsvox-speak-line-submits-first-class-condition-tones ()
+  "Core line conditions compose with object facts and resolve to named tones."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme nil)
+    (dolist
+        (case
+         '(("" empty line-empty 130.8)
+           (" \t" whitespace-only line-whitespace 261.6)
+           ("---" separator line-separator 523.3)
+           ("!@#" decorative line-decoration 1047)
+           ("☃" unspeakable line-unspeakable 2093)))
+      (with-temp-buffer
+        (insert (car case))
+        (goto-char (point-min))
+        (let ((emacsvox-show-point nil)
+              (emacsvox-audio-indentation nil)
+              (emacsvox-aural-presentation-history nil)
+              (emacsvox-aural-submission-facts
+               '(:role heading :content "stale object text"))
+              (emacsvox-aural-submission-context nil)
+              (emacsvox-aural-submission-module nil)
+              (emacsvox-aural-submission-occasion nil)
+              (tts-punctuation-mode 'some)
+              (tts-quiet nil)
+              (tts-speaker-process 'speaker)
+              events)
+          (cl-letf
+              (((symbol-function 'process-live-p)
+                (lambda (process) (eq process 'speaker)))
+               ((symbol-function 'tts-stop) #'ignore)
+               ((symbol-function 'tts-initialize)
+                (lambda ()
+                  (ert-fail "Live line-tone transport was reinitialized")))
+               ((symbol-function 'tts-speak)
+                (lambda (&rest _)
+                  (ert-fail "A line condition entered text speech")))
+               ((symbol-function 'tts--protocol-queue-text)
+                (lambda (text)
+                  (ert-fail
+                   (format "A line condition queued content: %S" text))))
+               ((symbol-function 'tts--protocol-tone)
+                (lambda (pitch duration &optional force)
+                  (push (list 'tone pitch duration force) events)))
+               ((symbol-function 'tts--protocol-dispatch)
+                (lambda () (push 'dispatch events))))
+            (emacsvox-speak-line))
+          (should
+           (equal
+            (nreverse events)
+            (list (list 'tone (nth 3 case) 150 nil) 'dispatch)))
+          (let* ((record (emacsvox-aural-last-presentation))
+                 (plan
+                  (car
+                   (emacsvox-aural-presentation-record-effective-plans
+                    record)))
+                 (facts (emacsvox-aural-concrete-plan-facts plan))
+                 (tone
+                  (car (emacsvox-aural-concrete-plan-before plan))))
+            (should (eq (plist-get facts :role) 'heading))
+            (should-not (plist-member facts :content))
+            (should
+             (eq
+              (plist-get facts :line-condition)
+              (nth 1 case)))
+            (should
+             (eq
+              (emacsvox-aural-concrete-action-tone tone)
+              (nth 2 case)))))))))
+
+(ert-deftest emacsvox-speak-line-condition-preserves-legacy-silence ()
+  "Quiet mode or an unavailable existing server still suppresses line tones."
+  (dolist (state '((t t) (nil nil)))
+    (let ((tts-quiet (car state))
+          (tts-speaker-process 'speaker)
+          submitted)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (_process) (cadr state)))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest _arguments) (setq submitted t))))
+        (emacsvox-speak--present-line-condition 'empty))
+      (should-not submitted))))
+
 (defun emacsvox-test--tts-source-policy-result
     (text faces voice-lock source-icons scratch-icons)
   "Speak TEXT and summarize source policy at the real TTS scratch boundary.

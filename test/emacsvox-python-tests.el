@@ -434,9 +434,9 @@
          (nreverse events))
         '(ellipses left submission))))))
 
-(ert-deftest emacsvox-python-navigation-preserves-blank-line-tones ()
-  "Empty and whitespace navigation retain their distinct tones and final cue."
-  (dolist (case '(("" 130.8) ("   " 261.6)))
+(ert-deftest emacsvox-python-navigation-composes-semantic-line-conditions ()
+  "Blank navigation composes line condition with Python facts and final cue."
+  (dolist (case '(("" empty) ("   " whitespace-only)))
     (with-temp-buffer
       (insert (car case))
       (goto-char (point-min))
@@ -447,22 +447,39 @@
             events)
         (cl-letf
             (((symbol-function 'tts-stop) #'ignore)
+             ((symbol-function 'process-live-p) (lambda (_process) t))
              ((symbol-function 'tts-speak)
               (lambda (&rest _)
                 (ert-fail "Blank line reached speech transport")))
              ((symbol-function 'emacsvox-aural-submit)
               (lambda (&rest _)
                 (ert-fail "Blank line entered native submission")))
-             ((symbol-function 'tts-tone)
+             ((symbol-function 'emacsvox-aural-submit-actions)
               (lambda (&rest arguments)
-                (push (cons 'tone arguments) events)))
+                (let ((facts (plist-get arguments :facts)))
+                  (push
+                   (list
+                    'actions
+                    (plist-get facts :line-condition)
+                    (plist-get facts :role)
+                    (plist-get facts :events)
+                    emacsvox-aural-submission-module
+                    emacsvox-aural-submission-occasion)
+                   events))))
+             ((symbol-function 'tts-tone)
+              (lambda (&rest _)
+                (ert-fail "Blank line used a raw legacy tone")))
              ((symbol-function 'emacsvox-icon)
               (lambda (icon) (push (list 'icon icon) events))))
           (emacsvox--advice-python-nav-forward-statement-after))
         (setq events (nreverse events))
-        (should (equal (mapcar #'car events) '(tone icon)))
-        (should (= (cadar events) (cadr case)))
-        (should (equal (cdar events) (list (cadr case) 150 'force)))
+        (should
+         (equal
+          (car events)
+          (list
+           'actions (cadr case) 'code-construct
+           '(boundary-entered focus-entered)
+           'python 'navigation)))
         (should (equal (cadr events) '(icon paragraph)))))))
 
 (ert-deftest emacsvox-python-navigation-preserves-long-line-confirmation ()

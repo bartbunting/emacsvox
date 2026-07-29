@@ -1733,7 +1733,37 @@ An existing file is copied to FILE~ before replacement."
        :summary "Compatibility-preserving Emacsvox presentation"
        :resource-pack chimes
        :voice-palette acss-default
-       :rules ())
+       :rules
+       ((:id core-empty-line-tone
+         :match (:line-condition empty)
+         :render
+         (:before
+          ((:id core-empty-line-tone-action
+            :kind tone :tone line-empty))))
+        (:id core-whitespace-line-tone
+         :match (:line-condition whitespace-only)
+         :render
+         (:before
+          ((:id core-whitespace-line-tone-action
+            :kind tone :tone line-whitespace))))
+        (:id core-separator-line-tone
+         :match (:line-condition separator)
+         :render
+         (:before
+          ((:id core-separator-line-tone-action
+            :kind tone :tone line-separator))))
+        (:id core-decorative-line-tone
+         :match (:line-condition decorative)
+         :render
+         (:before
+          ((:id core-decorative-line-tone-action
+            :kind tone :tone line-decoration))))
+        (:id core-unspeakable-line-tone
+         :match (:line-condition unspeakable)
+         :render
+         (:before
+          ((:id core-unspeakable-line-tone-action
+            :kind tone :tone line-unspeakable))))))
      :built-in t
      :source "built-in")))
 

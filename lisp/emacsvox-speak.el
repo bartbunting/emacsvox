@@ -61,11 +61,13 @@ speech library load independently during native compilation.")
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
+(require 'subr-x)
 (require 'voice-setup)
 (require 'voice-defs)
 (require 'tts-speak)
 (require 'emacsvox-pronounce)
 (require 'emacsvox-sounds)
+(require 'emacsvox-aural-submission)
 (require 'sox-gen)
 (require 'shr)
 (declare-function operate-on-rectangle "rect" (function start end coerce-tabs))
@@ -703,6 +705,48 @@ with a long string of gibberish.")
   "^[[:space:]]+$"
   "Pattern that matches white space.")
 
+(defun emacsvox-speak--line-condition (line)
+  "Return the semantic condition represented by LINE, or nil for speech."
+  (cond
+   ((string-empty-p line) 'empty)
+   ((string-match-p emacsvox-speak-blank-line-regexp line)
+    'whitespace-only)
+   ((eq 'all tts-punctuation-mode) nil)
+   ((string-match-p emacsvox-horizontal-rule line) 'separator)
+   ((string-match-p emacsvox-decoration-rule line) 'decorative)
+   ((string-match-p emacsvox-unspeakable-rule line) 'unspeakable)))
+
+(defun emacsvox-speak--line-condition-facts (condition)
+  "Return current semantic facts extended with line CONDITION.
+
+Object content belongs to text-bearing submissions and is deliberately
+excluded from this action-only presentation."
+  (let ((tail emacsvox-aural-submission-facts)
+        facts)
+    (while tail
+      (unless (eq (car tail) :content)
+        (setq
+         facts
+         (append
+          facts
+          (list (car tail) (copy-tree (cadr tail))))))
+      (setq tail (cddr tail)))
+    (plist-put facts :line-condition condition)))
+
+(defun emacsvox-speak--present-line-condition (condition)
+  "Present semantic line CONDITION while preserving legacy silence policy."
+  (unless
+      (or
+       tts-quiet
+       (not (process-live-p tts-speaker-process)))
+    (let* ((facts (emacsvox-speak--line-condition-facts condition))
+           (emacsvox-aural-submission-facts facts))
+      (emacsvox-aural-submit-actions
+       :facts facts
+       :module emacsvox-aural-submission-module
+       :occasion
+       (or emacsvox-aural-submission-occasion 'navigation)))))
+
 (ems-generate-switcher 'emacsvox-toggle-audio-indentation
                        'emacsvox-audio-indentation
                        "Toggle state of  Emacsvox  audio indentation.
@@ -774,22 +818,8 @@ their established tone paths without calling SPEAKER."
         (before 'left)
         (after 'right)
         (t 'more))))
-    (cond
-     ;; C1..C5
-     ((string-equal "" line)
-      (tts-tone 130.8 150 'force))
-     ((string-match emacsvox-speak-blank-line-regexp line) ;only white space
-      (tts-tone 261.6 150 'force))
-     ((and (not (eq 'all tts-punctuation-mode))
-           (string-match emacsvox-horizontal-rule line))
-      (tts-tone 523.3 150 t))
-     ((and (not (eq 'all tts-punctuation-mode))
-           (string-match emacsvox-decoration-rule line))
-      (tts-tone 1047 150 t))
-     ((and (not (eq 'all tts-punctuation-mode))
-           (string-match emacsvox-unspeakable-rule line))
-      (tts-tone 2093 150 t))
-     (t
+    (if-let* ((condition (emacsvox-speak--line-condition line)))
+        (emacsvox-speak--present-line-condition condition)
       (let*
           ((l (length line))
            (speakable ;; should we speak this line?
@@ -818,7 +848,7 @@ their established tone paths without calling SPEAKER."
             (setq linenum (format "%d" linenum))
             (setq linenum (propertize linenum 'personality voice-lighten))
             (setq line (concat linenum line)))
-          (funcall speaker line)))))))
+          (funcall speaker line))))))
 
 (defun emacsvox-speak-line (&optional arg)
   "Speaks current line.  With prefix ARG, speaks the rest of the

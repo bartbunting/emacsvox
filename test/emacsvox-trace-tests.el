@@ -7,6 +7,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'emacsvox-aural-transport)
 (require 'emacsvox-trace)
 
 (ert-deftest emacsvox-trace-records-semantic-output-in-order ()
@@ -53,6 +54,24 @@
     (let ((inhibit-message t))
       (emacsvox-trace-capture (lambda () (message "captured"))))
     (should (eq (symbol-function 'message) original))))
+
+(ert-deftest emacsvox-trace-records-first-class-tone-metadata ()
+  "Trace capture represents a concrete tone like the legacy tone API."
+  (let* ((action
+          (emacsvox-aural--make-concrete-action
+           :id 'line-empty
+           :kind 'tone
+           :pitch 130.8
+           :duration 150
+           :force t))
+         (result
+          (emacsvox-trace-capture
+           (lambda ()
+             (emacsvox-aural-queue-concrete-action action)))))
+    (should
+     (equal
+      (plist-get result :events)
+      '((tone 130.8 150 force))))))
 
 (ert-deftest emacsvox-trace-scenario-captures-result-and-buffer-state ()
   "A scenario records command output, return value, and final editor state."

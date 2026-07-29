@@ -380,7 +380,8 @@ voice-defs.elc: voice-setup.elc
 dectalk-voices.elc plain-voices.elc espeak-voices.elc \
 outloud-voices.elc mac-voices.elc swiftmac-voices.elc: voice-defs.elc
 emacsvox-speak.elc: \
-tts-speak.elc voice-setup.elc voice-defs.elc emacsvox-pronounce.elc
+tts-speak.elc voice-setup.elc voice-defs.elc emacsvox-pronounce.elc \
+emacsvox-aural-submission.elc
 emacsvox-aural-description.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-rules.elc
 emacsvox-aural-preview.elc: emacsvox-aural-transport.elc

@@ -187,6 +187,7 @@ Operational semantic contract version: =1=.
 | =has-attachments= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A message contains one or more attachments |
 | =heading= | =role= | =core= | - | - | - | - | - | - | - | - | A titled structural section |
 | =level= | =attribute= | =core= | =positive-integer= | - | - | - | - | - | - | - | One-based structural depth |
+| =line-condition= | =attribute= | =core= | =empty=, =whitespace-only=, =separator=, =decorative=, =unspeakable= | - | - | - | - | - | - | - | Why the selected line segment is represented without text |
 | =mail-action-kind= | =attribute= | =core= | =open=, =close=, =compose=, =select=, =unsubscribe=, =catch-up=, =restore=, =list=, =customize=, =toggle-topic=, =show=, =hide=, =scroll=, =activate=, =modify=, =save=, =archive=, =tag=, =search=, =refresh= | - | - | - | - | - | - | - | The mail-reader operation whose feedback is being presented |
 | =mail-group= | =role= | =gnus= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail or news group containing messages |
 | =mail-view= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A mail reader group, summary, article, compose, or server view |
@@ -280,7 +281,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
 |------------+-------------+--------+------------+---------------+-------+--------|
-| =default= | Emacsvox core | - | =chimes= | =acss-default= | =0= | Compatibility-preserving Emacsvox presentation |
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =5= | Compatibility-preserving Emacsvox presentation |
 | =org-before-after= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings use explicit speech before and after contents |
 | =org-combined= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings combine a label, cue, and content voice |
 | =org-cue-only= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings introduced by one semantic section cue |

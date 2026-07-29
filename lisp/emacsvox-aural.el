@@ -571,6 +571,16 @@ Registry validation rejects missing targets and alias cycles."
      :summary "Whether structural descendants are visible"
      :value-type 'symbol
      :allowed-values '(folded expanded)))
+  (unless (emacsvox-aural-semantic 'line-condition)
+    (emacsvox-aural-register-semantic
+     'line-condition
+     :kind 'attribute
+     :summary "Why the selected line segment is represented without text"
+     :value-type 'symbol
+     :allowed-values
+     '(empty whitespace-only separator decorative unspeakable)
+     :usage
+     "Describes the result of line selection, filtering, and punctuation policy."))
   (unless (emacsvox-aural-semantic-alias 'collapsed)
     (emacsvox-aural-register-semantic-alias
      'collapsed 'folded

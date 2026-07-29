@@ -137,6 +137,41 @@
     (insert "\n")
     (write-region (point-min) (point-max) file nil 'silent)))
 
+(ert-deftest emacsvox-aural-default-scheme-owns-line-condition-tones ()
+  "Default line tones are semantic rules that stronger policy can suppress."
+  (emacsvox-test--with-isolated-schemes
+    (dolist
+        (mapping
+         '((empty core-empty-line-tone line-empty)
+           (whitespace-only core-whitespace-line-tone line-whitespace)
+           (separator core-separator-line-tone line-separator)
+           (decorative core-decorative-line-tone line-decoration)
+           (unspeakable core-unspeakable-line-tone line-unspeakable)))
+      (let* ((plan
+              (emacsvox-aural-resolve-active
+               (list :line-condition (car mapping))
+               '(:mode text-mode :occasion navigation)))
+             (action (car (emacsvox-aural-render-plan-before plan))))
+        (should
+         (equal
+          (emacsvox-aural-render-plan-matched-rules plan)
+          (list (cadr mapping))))
+        (should (eq (emacsvox-aural-action-kind action) 'tone))
+        (should
+         (eq
+          (emacsvox-aural-action-tone action)
+          (caddr mapping)))))
+    (setq
+     emacsvox-aural-user-rules
+     '((:id suppress-empty-line
+        :match (:line-condition empty)
+        :render (:before (:suppress t)))))
+    (should-not
+     (emacsvox-aural-render-plan-before
+      (emacsvox-aural-resolve-active
+       '(:line-condition empty)
+       '(:mode text-mode :occasion navigation))))))
+
 (ert-deftest emacsvox-aural-schemes-inherit-rules-and-providers ()
   "A child inherits providers and its equally specific rule wins."
   (emacsvox-test--with-isolated-schemes

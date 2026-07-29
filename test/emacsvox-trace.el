@@ -14,6 +14,8 @@
 (defvar emacsvox-trace--events nil
   "Events accumulated by the active trace capture.")
 
+(defvar tts-speaker-process)
+
 (defun emacsvox-trace--record (kind &rest values)
   "Record an event of KIND containing VALUES."
   (push (cons kind values) emacsvox-trace--events))
@@ -62,6 +64,41 @@
       (emacsvox-trace--record 'message (substring-no-properties text))))
   (apply original format-string arguments))
 
+(defun emacsvox-trace--call-with-aural-output-capture
+    (thunk original-process-live-p)
+  "Call THUNK while capturing first-class aural output.
+
+Use ORIGINAL-PROCESS-LIVE-P for processes other than the trace speaker.
+Legacy implementations without concrete aural actions call THUNK directly."
+  (if
+      (not (fboundp 'emacsvox-aural-queue-concrete-action))
+      (funcall thunk)
+    (let ((queue-action
+           (symbol-function 'emacsvox-aural-queue-concrete-action))
+          (tts-speaker-process 'emacsvox-trace-speaker))
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process)
+              (if (eq process 'emacsvox-trace-speaker)
+                  t
+                (funcall original-process-live-p process))))
+           ((symbol-function 'tts--protocol-dispatch) #'ignore)
+           ((symbol-function 'emacsvox-aural-queue-concrete-action)
+            (lambda (action &optional context)
+              (if
+                  (eq
+                   (emacsvox-aural-concrete-action-kind action)
+                   'tone)
+                  (emacsvox-trace--record
+                   'tone
+                   (emacsvox-aural-concrete-action-pitch action)
+                   (emacsvox-aural-concrete-action-duration action)
+                   (and
+                    (emacsvox-aural-concrete-action-force action)
+                    'force))
+                (funcall queue-action action context)))))
+        (funcall thunk)))))
+
 (defun emacsvox-trace-capture (thunk)
   "Call THUNK while recording semantic output and return a result plist.
 
@@ -69,6 +106,7 @@ The result contains =:value= and chronological =:events=.  Low-level output
 functions are replaced temporarily, so no speech server or sound player is
 used."
   (let ((original-message (symbol-function 'message))
+        (original-process-live-p (symbol-function 'process-live-p))
         emacsvox-trace--events
         value)
     (cl-letf (((symbol-function 'tts-speak) #'emacsvox-trace--speak)
@@ -114,7 +152,10 @@ used."
                  (apply
                   #'emacsvox-trace--message
                   original-message format-string arguments))))
-      (setq value (funcall thunk)))
+      (setq
+       value
+       (emacsvox-trace--call-with-aural-output-capture
+        thunk original-process-live-p)))
     (list :value value :events (nreverse emacsvox-trace--events))))
 
 (defun emacsvox-trace-normalize-value (value &optional scenario-buffer)
