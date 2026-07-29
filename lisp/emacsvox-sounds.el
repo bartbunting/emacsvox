@@ -147,9 +147,7 @@ Optional interactive PREFIX arg toggles global value."
 
 (defun emacsvox-icon (icon)
   "Produce an auditory ICON."
-  
-  (when emacsvox-use-icons
-    (emacsvox-aural-present-legacy-icon icon)))
+  (emacsvox-aural-present-legacy-icon icon))
 ;;;  emacsvox-prompts:
 
 (defvar emacsvox-prompts-dir

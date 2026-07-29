@@ -927,6 +927,8 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
    emacsvox-aural-face-presentation-enabled
    :voice-lock-enabled
    (emacsvox-aural-voice-lock-enabled-p)
+   :icons-enabled
+   (emacsvox-aural-icons-enabled-p)
    :legacy-personality legacy-personality
    :legacy-source legacy-source
    :source-buffer (current-buffer)

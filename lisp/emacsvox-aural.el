@@ -34,6 +34,7 @@ legacy face/personality-to-voice compatibility mapping."
   "Hook run after explicit visual-face presentation is toggled.")
 
 (defvar voice-lock-mode)
+(defvar emacsvox-use-icons)
 
 (declare-function tts-speak "tts-speak" (text))
 
@@ -44,6 +45,19 @@ Before Voice Lock is loaded, preserve the historical enabled default."
   (with-current-buffer (or buffer (current-buffer))
     (or (not (boundp 'voice-lock-mode))
         (not (null voice-lock-mode)))))
+
+(defun emacsvox-aural-icons-enabled-p (&optional context buffer)
+  "Return whether cue actions are enabled for CONTEXT in BUFFER.
+
+An explicit `:icons-enabled' value in CONTEXT is authoritative.  Otherwise
+read the buffer-local `emacsvox-use-icons' value in BUFFER, defaulting to
+enabled before the sound compatibility layer has been loaded."
+  (if (plist-member context :icons-enabled)
+      (plist-get context :icons-enabled)
+    (with-current-buffer (or buffer (current-buffer))
+      (or
+       (not (boundp 'emacsvox-use-icons))
+       (not (null emacsvox-use-icons))))))
 
 ;;;###autoload
 (defun emacsvox-aural-toggle-face-presentation (&optional arg)

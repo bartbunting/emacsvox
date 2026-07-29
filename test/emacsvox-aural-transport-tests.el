@@ -188,7 +188,8 @@ is the default inherited by a newly created TTS scratch buffer."
       (should (eq (plist-get context :module) 'elisp))
       (should (eq (plist-get context :occasion) 'navigation))
       (should (plist-get context :face-presentation-enabled))
-      (should (plist-get context :voice-lock-enabled)))))
+      (should (plist-get context :voice-lock-enabled))
+      (should (plist-get context :icons-enabled)))))
 
 (ert-deftest emacsvox-aural-transport-marks-interface-history-at-source ()
   "Aural UI capture policy is frozen before speech enters its scratch buffer."
@@ -1289,6 +1290,7 @@ is the default inherited by a newly created TTS scratch buffer."
               faces))
             (should
              (eq (plist-get context :voice-lock-enabled) voice-lock))
+            (should (eq (plist-get context :icons-enabled) icons))
             (should (equal (plist-get result :cues) cues))
             (if voice
                 (should
@@ -1300,8 +1302,8 @@ is the default inherited by a newly created TTS scratch buffer."
              (= (length resources)
                 (if icons (length cues) 0)))))))))
 
-(ert-deftest emacsvox-aural-transport-tts-speak-uses-scratch-icon-default ()
-  "Characterize the current loss of source-local icon policy in TTS."
+(ert-deftest emacsvox-aural-transport-tts-speak-keeps-source-icon-policy ()
+  "Scratch-buffer formatting honors the frozen source-local icon policy."
   (emacsvox-test--with-transport-scheme
     (let* ((text (propertize "item" 'auditory-icon 'item))
            (source-off
@@ -1311,9 +1313,17 @@ is the default inherited by a newly created TTS scratch buffer."
             (emacsvox-test--tts-source-policy-result
              text nil nil t nil)))
       (should (equal (plist-get source-off :cues) '(item)))
-      (should (= (length (plist-get source-off :resources)) 1))
+      (should-not
+       (plist-get
+        (plist-get source-off :context)
+        :icons-enabled))
+      (should-not (plist-get source-off :resources))
       (should (equal (plist-get source-on :cues) '(item)))
-      (should-not (plist-get source-on :resources)))))
+      (should
+       (plist-get
+        (plist-get source-on :context)
+        :icons-enabled))
+      (should (= (length (plist-get source-on :resources)) 1)))))
 
 (ert-deftest emacsvox-aural-transport-tts-speak-keeps-source-snapshot ()
   "Scratch-buffer formatting receives a plan resolved in the source mode."
@@ -1530,7 +1540,7 @@ is the default inherited by a newly created TTS scratch buffer."
         'navigation)))))
 
 (ert-deftest emacsvox-aural-transport-rich-icon-plan-uses-server-queue ()
-  "A spoken replacement joins the ordered server queue instead of racing it."
+  "A spoken replacement is queued whether or not cue audio is enabled."
   (emacsvox-test--with-transport-scheme
     (setq
      emacsvox-aural-user-rules
@@ -1541,22 +1551,23 @@ is the default inherited by a newly created TTS scratch buffer."
          (:remove (legacy-cue)
           :append
           ((:id spoken-item :kind speech :text "item")))))))
-    (let ((tts-speaker-process 'speaker)
-          (emacsvox-use-icons t)
-          events)
-      (cl-letf
-          (((symbol-function 'process-live-p) (lambda (_) t))
-           ((symbol-function 'emacsvox-sounds-play-concrete-cue)
-            (lambda (&rest _) (push 'local events)))
-           ((symbol-function 'tts--protocol-queue-text)
-            (lambda (text) (push (list 'text text) events)))
-           ((symbol-function 'tts--protocol-dispatch)
-            (lambda () (push 'dispatch events))))
-        (emacsvox-icon 'item))
-      (should
-       (equal
-        (nreverse events)
-        '((text "item") dispatch))))))
+    (dolist (icons-enabled '(t nil))
+      (let ((tts-speaker-process 'speaker)
+            (emacsvox-use-icons icons-enabled)
+            events)
+        (cl-letf
+            (((symbol-function 'process-live-p) (lambda (_) t))
+             ((symbol-function 'emacsvox-sounds-play-concrete-cue)
+              (lambda (&rest _) (push 'local events)))
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text) (push (list 'text text) events)))
+             ((symbol-function 'tts--protocol-dispatch)
+              (lambda () (push 'dispatch events))))
+          (emacsvox-icon 'item))
+        (should
+         (equal
+          (nreverse events)
+          '((text "item") dispatch)))))))
 
 (ert-deftest emacsvox-aural-transport-unknown-icon-falls-back-concretely ()
   "An unknown legacy cue is compiled to the concrete button fallback."

@@ -999,7 +999,14 @@ according to `emacsvox-aural-unsupported-volume-policy'."
 
 CUE-TARGET defaults to `queued-cue'; immediate local cue callers use
 `local-cue' so capabilities are frozen before playback."
-  (let* ((facts (emacsvox-aural-canonical-facts facts))
+  (let* ((context (copy-tree context))
+         (context
+          (if (plist-member context :icons-enabled)
+              context
+            (plist-put
+             context :icons-enabled
+             (emacsvox-aural-icons-enabled-p context))))
+         (facts (emacsvox-aural-canonical-facts facts))
          (pack (emacsvox-aural--resource-pack))
          (palette (emacsvox-aural--voice-palette))
          (cue-target (or cue-target 'queued-cue))
@@ -1686,14 +1693,11 @@ explicitly."
   (get-text-property
    position emacsvox-aural-concrete-plan-property object))
 
-(defun emacsvox-aural-queue-concrete-action (action)
-  "Queue concrete ACTION without semantic or contextual resolution."
+(defun emacsvox-aural-queue-concrete-action (action &optional context)
+  "Queue concrete ACTION under frozen CONTEXT without resolving again."
   (pcase (emacsvox-aural-concrete-action-kind action)
     ('cue
-     (when
-         (or
-          (not (boundp 'emacsvox-use-icons))
-          emacsvox-use-icons)
+     (when (emacsvox-aural-icons-enabled-p context)
        (let ((resource
               (emacsvox-aural-concrete-action-resource action))
              (balance
@@ -1805,8 +1809,7 @@ rather than the source-plan content."
         (when
             (and
              emacsvox-aural--history-respect-icon-policy
-             (boundp 'emacsvox-use-icons)
-             (not emacsvox-use-icons))
+             (not (emacsvox-aural-icons-enabled-p context)))
           (setf
            (emacsvox-aural-concrete-plan-before frozen)
            (cl-remove
@@ -1820,7 +1823,7 @@ rather than the source-plan content."
             (emacsvox-aural-concrete-plan-after frozen)
             :key #'emacsvox-aural-concrete-action-kind))
           (push
-           '(:reason icons-disabled-at-queue)
+           '(:reason icons-disabled-at-source)
            (emacsvox-aural-concrete-plan-degradations frozen)))
         (when text-supplied-p
           (setf
@@ -1947,12 +1950,14 @@ Each run is a list of PLAN, final text, and an optional leading pause."
     (when-let* ((pause (nth 2 first)))
       (tts--protocol-silence pause))
     (dolist (action (emacsvox-aural-concrete-plan-before first-plan))
-      (emacsvox-aural-queue-concrete-action action))
+      (emacsvox-aural-queue-concrete-action
+       action (emacsvox-aural-concrete-plan-context first-plan)))
     (emacsvox-aural--queue-concrete-content
      (emacsvox-aural-concrete-plan-content first-plan)
      payload)
     (dolist (action (emacsvox-aural-concrete-plan-after last-plan))
-      (emacsvox-aural-queue-concrete-action action))
+      (emacsvox-aural-queue-concrete-action
+       action (emacsvox-aural-concrete-plan-context last-plan)))
     (dolist (run runs)
       (emacsvox-aural--finish-concrete-plan
        (car run) (nth 1 run) t))
@@ -1995,8 +2000,9 @@ them."
 
 When TEXT is supplied it replaces the plan's source text after normal TTS
 cleanup, without rerunning semantic or contextual resolution."
-  (dolist (action (emacsvox-aural-concrete-plan-before plan))
-    (emacsvox-aural-queue-concrete-action action))
+  (let ((context (emacsvox-aural-concrete-plan-context plan)))
+    (dolist (action (emacsvox-aural-concrete-plan-before plan))
+      (emacsvox-aural-queue-concrete-action action context)))
   (let* ((content (emacsvox-aural-concrete-plan-content plan))
          (payload
          (if text-supplied-p
@@ -2004,7 +2010,8 @@ cleanup, without rerunning semantic or contextual resolution."
             (emacsvox-aural-concrete-content-text content))))
     (emacsvox-aural--queue-concrete-content content payload)
     (dolist (action (emacsvox-aural-concrete-plan-after plan))
-      (emacsvox-aural-queue-concrete-action action))
+      (emacsvox-aural-queue-concrete-action
+       action (emacsvox-aural-concrete-plan-context plan)))
     (emacsvox-aural--finish-concrete-plan
      plan payload text-supplied-p)))
 
@@ -2060,9 +2067,12 @@ Resolve it using CONTEXT or the dynamically captured submission context."
         (emacsvox-aural-compile-plan
          render facts context
          (if local-cue-p 'local-cue 'queued-cue)))
-       (cue (emacsvox-aural--standalone-cue plan)))
+       (cue (emacsvox-aural--standalone-cue plan))
+       (icons-enabled
+        (emacsvox-aural-icons-enabled-p
+         (emacsvox-aural-concrete-plan-context plan))))
     (cond
-     (cue
+     ((and cue icons-enabled)
       (let ((balance
              (emacsvox-aural-concrete-action-balance cue)))
         (if (and (numberp balance) (not (zerop balance)))
@@ -2079,6 +2089,7 @@ Resolve it using CONTEXT or the dynamically captured submission context."
         (run-hook-with-args
          'emacsvox-aural-plan-presented-hook plan)
         (tts--protocol-dispatch)))
+     (cue nil)
      ((or
        (emacsvox-aural-concrete-plan-before plan)
        (emacsvox-aural-concrete-plan-after plan))

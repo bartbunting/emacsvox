@@ -62,7 +62,7 @@
 
 (defconst emacsvox-aural--context-keys
   '(:module :mode :mode-lineage :occasion :legacy-cue
-    :face-presentation-enabled :voice-lock-enabled
+    :face-presentation-enabled :voice-lock-enabled :icons-enabled
     :legacy-face-source :legacy-faces :legacy-face-provenance
     :legacy-personality
     :legacy-source :source-buffer :source-buffer-name :source-position
@@ -1302,6 +1302,7 @@ LAYER-ORDER records inheritance order within one origin."
           (if (plist-member context :voice-lock-enabled)
               (plist-get context :voice-lock-enabled)
             (emacsvox-aural-voice-lock-enabled-p)))
+         (icons-enabled (emacsvox-aural-icons-enabled-p context))
          (legacy-cue (plist-get context :legacy-cue))
          (legacy-face-source (plist-get context :legacy-face-source))
          (legacy-faces (plist-get context :legacy-faces))
@@ -1336,6 +1337,10 @@ LAYER-ORDER records inheritance order within one origin."
       (emacsvox-aural--rule-error
        "Context Voice Lock state must be boolean: %S"
        voice-lock-enabled))
+    (unless (memq icons-enabled '(nil t))
+      (emacsvox-aural--rule-error
+       "Context auditory icon state must be boolean: %S"
+       icons-enabled))
     (when legacy-cue
       (emacsvox-aural--require-symbol legacy-cue "Context legacy cue"))
     (when legacy-face-source

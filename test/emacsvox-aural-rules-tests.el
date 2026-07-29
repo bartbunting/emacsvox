@@ -866,6 +866,11 @@
       :legacy-faces (font-lock-warning-face "not-a-face")))
    :type 'emacsvox-aural-rule-error)
   (should-error
+   (emacsvox-aural-normalize-input
+    nil
+    '(:mode text-mode :occasion navigation :icons-enabled yes))
+   :type 'emacsvox-aural-rule-error)
+  (should-error
    (emacsvox-test--compile-rule
     'invalid-face
     '(:legacy-face "not-a-face")
