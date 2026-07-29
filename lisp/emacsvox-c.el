@@ -64,7 +64,7 @@
 (defun emacsvox--advice-c-electric-delete-forward-before (&rest _)
   "Speak the following character before an interactive deletion."
   (when (ems-interactive-p 'c-electric-delete-forward)
-    (tts-tone-deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (following-char))))
 
 (advice-add
@@ -75,7 +75,7 @@
 (defun emacsvox--advice-c-hungry-delete-forward-before (&rest _)
   "Speak the reference character before an interactive hungry deletion."
   (when (ems-interactive-p 'c-hungry-delete-forward)
-    (tts-tone-deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char))))
 
 (advice-add
@@ -86,7 +86,7 @@
 (defun emacsvox--advice-c-hungry-delete-backwards-before (&rest _)
   "Speak the preceding character before an interactive hungry deletion."
   (when (ems-interactive-p 'c-hungry-delete-backwards)
-    (tts-tone-deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char))))
 
 (advice-add
@@ -97,7 +97,7 @@
 (defun emacsvox--advice-c-electric-backspace-before (&rest _)
   "Speak the preceding character before an interactive backspace."
   (when (ems-interactive-p 'c-electric-backspace)
-    (tts-tone-deletion)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char))))
 
 (advice-add
@@ -122,7 +122,8 @@
 (defun emacsvox--advice-c-electric-delete-before (&rest _)
   "Speak char before deleting it."
   (when (ems-interactive-p 'c-electric-delete)
-    (emacsvox-speak-this-char (preceding-char)) (tts-tone-deletion)))
+    (emacsvox-speak-this-char (preceding-char))
+    (emacsvox-speak-edit-operation 'deletion)))
 
 (advice-add
  'c-electric-delete :before

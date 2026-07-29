@@ -73,8 +73,9 @@
           (ems--interactive-fn-name 'c-electric-delete-forward)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone-deletion)
-                 (lambda () (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)
                    (push (list 'char character) events)))
@@ -88,7 +89,7 @@
       (should
        (equal
         (nreverse events)
-        '(tone (char 98) (original 1)))))))
+        '((edit deletion) (char 98) (original 1)))))))
 
 (ert-deftest emacsvox-c-deletion-feedback-is-target-aware ()
   "Only the matching interactive deletion command gives feedback."
@@ -97,14 +98,38 @@
     (goto-char 2)
     (let ((ems--interactive-fn-name 'c-hungry-delete-backwards)
           events)
-      (cl-letf (((symbol-function 'tts-tone-deletion)
-                 (lambda () (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)
                    (push (list 'char character) events))))
         (emacsvox--advice-c-hungry-delete-forward-before)
         (emacsvox--advice-c-hungry-delete-backwards-before))
-      (should (equal (nreverse events) '(tone (char 97)))))))
+      (should
+       (equal
+        (nreverse events)
+        '((edit deletion) (char 97)))))))
+
+(ert-deftest emacsvox-c-electric-delete-preserves-character-first-order ()
+  "Electric delete speaks the character before its semantic edit feedback."
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char 2)
+    (let ((ems--interactive-fn-name 'c-electric-delete)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (operation)
+              (push (list 'edit operation) events)))
+           ((symbol-function 'emacsvox-speak-this-char)
+            (lambda (character)
+              (push (list 'char character) events))))
+        (emacsvox--advice-c-electric-delete-before))
+      (should
+       (equal
+        (nreverse events)
+        '((char 97) (edit deletion)))))))
 
 (defconst emacsvox-test--c-navigation-after-targets
   '(c-up-conditional
