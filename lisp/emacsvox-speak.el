@@ -740,8 +740,8 @@ boundary as a blank line."
          ((string-match-p emacsvox-speak-blank-line-regexp line)
           'whitespace-only))))))
 
-(defun emacsvox-speak--line-condition-facts (condition)
-  "Return current semantic facts extended with line CONDITION.
+(defun emacsvox-speak--action-facts (key value)
+  "Return current semantic facts extended with KEY and VALUE.
 
 Object content belongs to text-bearing submissions and is deliberately
 excluded from this action-only presentation."
@@ -755,21 +755,38 @@ excluded from this action-only presentation."
           facts
           (list (car tail) (copy-tree (cadr tail))))))
       (setq tail (cddr tail)))
-    (plist-put facts :line-condition condition)))
+    (plist-put facts key value)))
 
-(defun emacsvox-speak--present-line-condition (condition)
-  "Present semantic line CONDITION while preserving legacy silence policy."
+(defun emacsvox-speak--present-action-fact
+    (key value default-occasion &optional inherit-facts)
+  "Present KEY and VALUE under DEFAULT-OCCASION without text content.
+
+When INHERIT-FACTS is non-nil, compose with compatible outer submission facts.
+Preserve the silence and server-lifecycle behavior of legacy tone helpers."
   (unless
       (or
        tts-quiet
        (not (process-live-p tts-speaker-process)))
-    (let* ((facts (emacsvox-speak--line-condition-facts condition))
+    (let* ((facts
+            (if inherit-facts
+                (emacsvox-speak--action-facts key value)
+              (list key value)))
            (emacsvox-aural-submission-facts facts))
       (emacsvox-aural-submit-actions
        :facts facts
        :module emacsvox-aural-submission-module
        :occasion
-       (or emacsvox-aural-submission-occasion 'navigation)))))
+       (or emacsvox-aural-submission-occasion default-occasion)))))
+
+(defun emacsvox-speak--present-line-condition (condition)
+  "Present semantic line CONDITION while preserving legacy silence policy."
+  (emacsvox-speak--present-action-fact
+   :line-condition condition 'navigation t))
+
+(defun emacsvox-speak--present-edit-operation (operation)
+  "Present semantic editing OPERATION without text content."
+  (emacsvox-speak--present-action-fact
+   :edit-operation operation 'edit))
 
 (ems-generate-switcher 'emacsvox-toggle-audio-indentation
                        'emacsvox-audio-indentation

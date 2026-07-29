@@ -581,6 +581,16 @@ Registry validation rejects missing targets and alias cycles."
      '(empty whitespace-only separator decorative unspeakable)
      :usage
      "Describes the result of line selection, filtering, and punctuation policy."))
+  (unless (emacsvox-aural-semantic 'edit-operation)
+    (emacsvox-aural-register-semantic
+     'edit-operation
+     :kind 'attribute
+     :summary "The text-editing operation being presented"
+     :value-type 'symbol
+     :allowed-values '(deletion)
+     :occasions '(edit)
+     :usage
+     "Lets presentation policy replace fixed feedback for editing operations."))
   (unless (emacsvox-aural-semantic-alias 'collapsed)
     (emacsvox-aural-register-semantic-alias
      'collapsed 'folded

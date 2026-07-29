@@ -158,16 +158,17 @@
         (cadr definition)))))
   (should-not (memq 'shutdown emacsvox-aural-legacy-complete-cues)))
 
-(ert-deftest emacsvox-aural-resources-register-default-line-tones ()
-  "Built-in line tones retain the existing pitches and durations by name."
+(ert-deftest emacsvox-aural-resources-register-default-tones ()
+  "Built-in tones retain the existing pitches and durations by name."
   (should
    (equal
     (emacsvox-aural-tone-candidates)
-    '("line-decoration" "line-empty" "line-separator"
+    '("edit-deletion" "line-decoration" "line-empty" "line-separator"
       "line-unspeakable" "line-whitespace")))
   (dolist
       (expected
-       '((line-empty 130.8 150 t)
+       '((edit-deletion 500 75 t)
+         (line-empty 130.8 150 t)
          (line-whitespace 261.6 150 t)
          (line-separator 523.3 150 t)
          (line-decoration 1047 150 t)

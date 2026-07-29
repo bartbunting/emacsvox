@@ -537,7 +537,7 @@ unchanged."
 (defun emacsvox--backward-delete-char-around (target original arguments)
   "Speak before TARGET deletes backward, then call ORIGINAL with ARGUMENTS."
   (when (ems-interactive-p target)
-    (tts-tone-deletion)
+    (emacsvox-speak--present-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char)))
   (apply original arguments))
 
@@ -563,7 +563,7 @@ unchanged."
 (defun emacsvox--delete-char-around (target original arguments)
   "Speak before TARGET deletes a character, then call ORIGINAL with ARGUMENTS."
   (when (ems-interactive-p target)
-    (tts-tone-deletion)
+    (emacsvox-speak--present-edit-operation 'deletion)
     (emacsvox-speak-char t))
   (apply original arguments))
 
@@ -588,7 +588,8 @@ unchanged."
   "Speak word beingkilled."
   (when (ems-interactive-p 'kill-word)
     (save-excursion
-      (skip-syntax-forward " ") (tts-tone-deletion)
+      (skip-syntax-forward " ")
+      (emacsvox-speak--present-edit-operation 'deletion)
       (emacsvox-speak-word 1))))
 
 (advice-add
@@ -600,7 +601,8 @@ unchanged."
   (when (ems-interactive-p 'backward-kill-word)
     (save-excursion
       (let ((start (point)))
-        (forward-word -1) (tts-tone-deletion)
+        (forward-word -1)
+        (emacsvox-speak--present-edit-operation 'deletion)
         (emacsvox-speak-region (point) start)))))
 
 (advice-add
@@ -611,13 +613,14 @@ unchanged."
     (kill-line kill-whole-line)
     "Speak the line before killing it."
   (emacsvox-icon 'delete-object)
-  (tts-tone-deletion)
+  (emacsvox-speak--present-edit-operation 'deletion)
   (emacsvox-speak-line 1))
 
 (defun emacsvox--advice-kill-sexp-before (&rest _)
   "Speak the killed  sexp."
   (when (ems-interactive-p 'kill-sexp)
-    (emacsvox-icon 'delete-object) (tts-tone-deletion)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak--present-edit-operation 'deletion)
     (emacsvox-speak-sexp 1)))
 
 (advice-add
@@ -627,7 +630,8 @@ unchanged."
 (defun emacsvox--advice-kill-sentence-before (&rest _)
   "Speak the kill."
   (when (ems-interactive-p 'kill-sentence)
-    (emacsvox-icon 'delete-object) (tts-tone-deletion)
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak--present-edit-operation 'deletion)
     (emacsvox-speak-line 1)))
 
 (advice-add

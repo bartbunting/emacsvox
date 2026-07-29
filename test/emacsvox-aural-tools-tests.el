@@ -24,13 +24,14 @@
 (require 'emacsvox-aural-simple-editor)
 (require 'emacsvox-aural-voice-palettes)
 
-(defconst emacsvox-test--core-line-rule-ids
-  '(core-empty-line-tone
+(defconst emacsvox-test--core-default-rule-ids
+  '(core-edit-deletion-tone
+    core-empty-line-tone
     core-whitespace-line-tone
     core-separator-line-tone
     core-decorative-line-tone
     core-unspeakable-line-tone)
-  "Rule IDs providing the default line-condition presentation policy.")
+  "Rule IDs providing the default first-class tone policy.")
 
 (defmacro emacsvox-test--with-aural-tools (&rest body)
   "Run BODY with isolated scheme, override, and training state."
@@ -132,7 +133,7 @@
         (mapcar
          #'emacsvox-aural-rule-id
          (emacsvox-aural-effective-scheme-rules 'disabled-test))
-        emacsvox-test--core-line-rule-ids))
+        emacsvox-test--core-default-rule-ids))
       (should-not (emacsvox-aural-scheme-required-cues compiled))
       (should
        (equal
@@ -1811,7 +1812,7 @@
                #'emacsvox-aural-rule-id
                (emacsvox-aural-effective-scheme-rules 'flat-copy))
               (append
-               emacsvox-test--core-line-rule-ids
+               emacsvox-test--core-default-rule-ids
                '(source-rule))))
             (should (file-exists-p emacsvox-aural-schemes-file)))
         (delete-directory directory t)))))
@@ -2202,7 +2203,7 @@
           (should (equal (aref row 1) "active"))
           (should (equal (aref row 2) "personal"))
           (should (equal (aref row 3) "default"))
-          (should (equal (aref row 5) "1 direct, 6 total"))
+          (should (equal (aref row 5) "1 direct, 7 total"))
           (should (equal (aref row 7) "you (personal)")))
         (should
          (eq
@@ -2827,7 +2828,7 @@
       (should (string-match-p "Provided by you (personal)" summary))
       (should (string-match-p "Based on default" summary))
       (should (string-match-p "Sound pack chimes" summary))
-      (should (string-match-p "6 effective presentations" summary))
+      (should (string-match-p "7 effective presentations" summary))
       (should (string-match-p "Valid" summary)))))
 
 (ert-deftest emacsvox-aural-scheme-manager-identifies-integration-provider ()
@@ -2988,7 +2989,7 @@
               (should (string-match-p "parent-heading" text))
               (should
                (string-match-p
-                "Effective presentation order (7 total)"
+                "Effective presentation order (8 total)"
                 text)))))
       (when (get-buffer "*Help*")
         (kill-buffer "*Help*")))))
@@ -3581,7 +3582,7 @@
                  (plist-get
                   (emacsvox-aural-scheme-entry-data entry) :rules))
                 (append
-                 emacsvox-test--core-line-rule-ids
+                 emacsvox-test--core-default-rule-ids
                  '(built-in-rule))))))
         (delete-directory directory t)))))
 
@@ -3688,7 +3689,7 @@
                 (mapcar
                  #'emacsvox-aural-rule-id
                  (emacsvox-aural-effective-scheme-rules 'personal))
-                emacsvox-test--core-line-rule-ids)))
+                emacsvox-test--core-default-rule-ids)))
             (should (file-exists-p emacsvox-aural-schemes-file)))
         (delete-directory directory t)))))
 

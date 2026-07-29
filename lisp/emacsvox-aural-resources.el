@@ -343,7 +343,10 @@ themed overrides below an active sound pack."
   "The 55 cues shared by the bundled chimes and 3d resource packs.")
 
 (defconst emacsvox-aural-default-tone-definitions
-  '((line-empty
+  '((edit-deletion
+     "Text was deleted"
+     500 75 t)
+    (line-empty
      "An empty display line was reached"
      130.8 150 t)
     (line-whitespace
@@ -358,7 +361,7 @@ themed overrides below an active sound pack."
     (line-unspeakable
      "A nonempty line with no speakable content was reached"
      2093 150 t))
-  "Built-in tones matching the established line-presentation signals.")
+  "Built-in tones matching established nonverbal presentation signals.")
 
 (defconst emacsvox-aural-default-voice-entries
   '((animate . voice-animate)

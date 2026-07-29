@@ -1734,7 +1734,13 @@ An existing file is copied to FILE~ before replacement."
        :resource-pack chimes
        :voice-palette acss-default
        :rules
-       ((:id core-empty-line-tone
+       ((:id core-edit-deletion-tone
+         :match (:edit-operation deletion)
+         :render
+         (:before
+          ((:id core-edit-deletion-tone-action
+            :kind tone :tone edit-deletion))))
+        (:id core-empty-line-tone
          :match (:line-condition empty)
          :render
          (:before

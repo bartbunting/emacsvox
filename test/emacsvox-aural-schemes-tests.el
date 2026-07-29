@@ -137,9 +137,20 @@
     (insert "\n")
     (write-region (point-min) (point-max) file nil 'silent)))
 
-(ert-deftest emacsvox-aural-default-scheme-owns-line-condition-tones ()
-  "Default line tones are semantic rules that stronger policy can suppress."
+(ert-deftest emacsvox-aural-default-scheme-owns-first-class-tones ()
+  "Default tones are semantic rules that stronger policy can suppress."
   (emacsvox-test--with-isolated-schemes
+    (let* ((plan
+            (emacsvox-aural-resolve-active
+             '(:edit-operation deletion)
+             '(:mode text-mode :occasion edit)))
+           (action (car (emacsvox-aural-render-plan-before plan))))
+      (should
+       (equal
+        (emacsvox-aural-render-plan-matched-rules plan)
+        '(core-edit-deletion-tone)))
+      (should (eq (emacsvox-aural-action-kind action) 'tone))
+      (should (eq (emacsvox-aural-action-tone action) 'edit-deletion)))
     (dolist
         (mapping
          '((empty core-empty-line-tone line-empty)

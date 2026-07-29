@@ -206,8 +206,9 @@
   (let ((ems--interactive-fn-name 'delete-forward-char)
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'tts-tone-deletion)
-               (lambda () (push 'tone events)))
+    (cl-letf (((symbol-function 'emacsvox-speak--present-edit-operation)
+               (lambda (operation)
+                 (push (list 'edit-operation operation) events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest arguments)
                  (push (cons 'speak-char arguments) events))))
@@ -224,14 +225,17 @@
     (should
      (equal
       (nreverse events)
-      '(tone (speak-char t) (original 2 killflag))))))
+      '((edit-operation deletion)
+        (speak-char t)
+        (original 2 killflag))))))
 
 (ert-deftest emacsvox-core-delete-advice-is-quiet-programmatically ()
   "Programmatic deletion calls the original without speech feedback."
   (let ((ems--interactive-fn-name nil)
         events)
-    (cl-letf (((symbol-function 'tts-tone-deletion)
-               (lambda () (push 'tone events)))
+    (cl-letf (((symbol-function 'emacsvox-speak--present-edit-operation)
+               (lambda (operation)
+                 (push (list 'edit-operation operation) events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (push 'speech events))))
       (should
