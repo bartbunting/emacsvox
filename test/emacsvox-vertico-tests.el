@@ -66,6 +66,102 @@
         (should
          (eq (plist-get (caddr entry) :occasion) 'state-change))))))
 
+(ert-deftest emacsvox-vertico-acceptance-preserves-region-content ()
+  "Accepted-candidate speech preserves bounds, properties, and return value."
+  (with-temp-buffer
+    (insert "prefix ")
+    (let ((vertico--index 2)
+          (emacsvox-speak-voice-annotated-paragraphs t)
+          events)
+      (should
+       (eq
+        'inserted
+        (cl-letf
+            (((symbol-function 'emacsvox-icon)
+              (lambda (icon) (push (list 'icon icon) events)))
+             ((symbol-function 'tts-speak)
+              (lambda (text) (push (list 'speak text) events))))
+          (emacsvox--advice-vertico-insert-around
+           (lambda ()
+             (insert (propertize "candidate" 'personality 'voice-lighten))
+             'inserted)))))
+      (setq events (nreverse events))
+      (should (equal (mapcar #'car events) '(icon speak)))
+      (should (eq (cadar events) 'complete))
+      (let ((spoken (cadadr events)))
+        (should (equal spoken "candidate"))
+        (should
+         (eq (get-text-property 0 'personality spoken) 'voice-lighten)))
+      (should (equal (buffer-string) "prefix candidate"))
+      (should
+       (eq
+        (get-text-property 7 'personality (buffer-string))
+        'voice-lighten)))))
+
+(ert-deftest emacsvox-vertico-acceptance-annotates-paragraphs-before-speech ()
+  "Accepted multiline text retains region-reader paragraph annotation."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          (emacsvox-speak-paragraph-personality 'voice-animate)
+          captured)
+      (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
+      (cl-letf
+          (((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq captured text))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () (insert "first\n\nsecond"))))
+      (should emacsvox-speak-voice-annotated-paragraphs)
+      (should (equal captured "first\n\nsecond"))
+      (should
+       (eq (get-text-property 7 'personality captured) 'voice-animate))
+      (should
+       (eq (get-text-property 8 'personality (buffer-string))
+           'voice-animate)))))
+
+(ert-deftest emacsvox-vertico-empty-acceptance-keeps-region-reader-behavior ()
+  "An empty insertion still cues and sends an empty speech request."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          events)
+      (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
+      (cl-letf
+          (((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events)))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (push (list 'speak text) events))))
+        (emacsvox--advice-vertico-insert-around (lambda () 'unchanged)))
+      (should
+       (equal
+        (nreverse events)
+        '((icon complete) (speak ""))))
+      (should emacsvox-speak-voice-annotated-paragraphs))))
+
+(ert-deftest emacsvox-vertico-large-acceptance-keeps-windowful-fallback ()
+  "An oversized insertion retains cue order and the windowful fallback."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          (ems--large-text-size 3)
+          events)
+      (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
+      (cl-letf
+          (((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events)))
+           ((symbol-function 'tts-speak)
+            (lambda (&rest _)
+              (ert-fail "Oversized insertion reached direct speech")))
+           ((symbol-function 'emacsvox-speak-windowful)
+            (lambda ()
+              (interactive)
+              (push '(windowful) events))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () (insert "large"))))
+      (should
+       (equal
+        (nreverse events)
+        '((icon complete) (windowful))))
+      (should-not emacsvox-speak-voice-annotated-paragraphs))))
+
 (ert-deftest emacsvox-vertico-candidate-navigation-submits-once ()
   "Candidate navigation submits trimmed text and its conditional cue once."
   (dolist
