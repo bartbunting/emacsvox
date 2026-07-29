@@ -15,6 +15,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-semantics)
 (require 'emacsvox-aural-feature-fragments)
 (require 'emacsvox-aural-preview)
 
@@ -300,7 +301,7 @@ An empty answer returns nil.  REQUIRE-MATCH is passed to `completing-read'."
       (while
           (setq
            semantic
-           (emacsvox-aural-tools--read-semantic
+           (emacsvox-aural-semantics-read
             "Add semantic selector (empty to finish): " t))
         (setq
          selector
