@@ -51,8 +51,9 @@
     (let ((ems--interactive-fn-name 'cperl-electric-backspace)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'tts-tone)
-                 (lambda (&rest _) (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)
                    (push (list 'character character) events))))
@@ -72,7 +73,29 @@
       (should
        (equal
         (nreverse events)
-        '(tone (character 120) original))))))
+        '((edit deletion) (character 120) original))))))
+
+(ert-deftest emacsvox-cperl-backspace-is-quiet-programmatically ()
+  "Programmatic CPerl backspace calls once without feedback."
+  (let ((ems--interactive-fn-name nil)
+        (calls 0)
+        feedback)
+    (cl-letf
+        (((symbol-function 'emacsvox-speak-edit-operation)
+          (lambda (&rest _) (setq feedback t)))
+         ((symbol-function 'emacsvox-speak-this-char)
+          (lambda (&rest _) (setq feedback t))))
+      (should
+       (eq
+        (emacsvox--advice-cperl-electric-backspace-around
+         (lambda (&rest arguments)
+           (cl-incf calls)
+           (should (equal arguments '(2)))
+           'programmatic-result)
+         2)
+        'programmatic-result)))
+    (should (= calls 1))
+    (should-not feedback)))
 
 (ert-deftest emacsvox-cperl-linefeed-calls-original-once ()
   "CPerl linefeed cues indentation before one original call."
