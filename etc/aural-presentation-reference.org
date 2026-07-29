@@ -179,7 +179,7 @@ Operational semantic contract version: =1=.
 | =filesystem-entry= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A file, directory, symbolic link, or other directory entry |
 | =filesystem-listing= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A directory or search-result listing of filesystem entries |
 | =filesystem-listing-closed= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem listing was dismissed |
-| =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
+| =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
 | =focus-entered= | =event= | =core= | - | - | - | - | - | - | - | - | Navigation arrived at an aural object |
 | =folded= | =state= | =core= | - | - | - | - | - | - | - | - | Descendants of an object are hidden |
 | =game-over= | =event= | =core= | - | - | - | - | - | - | - | - | A game ended without successful completion |
@@ -244,7 +244,7 @@ Operational semantic contract version: =1=.
 | =state-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered state changed |
 | =syntax-role= | =attribute= | =core= | =symbol= | - | - | - | - | - | - | - | The language-defined structural role of source code |
 | =unchecked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is incomplete |
-| =unread= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =notification= | =before=, =content=, =after= | - | An item has not yet been read |
+| =unread= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An item has not yet been read |
 | =unstaged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is not staged for commit |
 | =vcs-blame-chunk= | =role= | =magit= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | One annotated source chunk in a version-control blame view |
 | =vcs-commit-displayed= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control commit was displayed |

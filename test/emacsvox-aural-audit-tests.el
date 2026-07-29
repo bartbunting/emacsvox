@@ -87,6 +87,32 @@
          :function unsafe-feedback
          :icon-function emacsvox-icon))))))
 
+(ert-deftest emacsvox-aural-audit-rejects-nested-submission-resolvers ()
+  "A native transaction cannot contain another complete presentation path."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     (concat
+      "(defun safe-feedback (text)\n"
+      "  (emacsvox-aural-submit\n"
+      "   text :facts '(:role message)\n"
+      "   :compatibility-actions\n"
+      "   (list (emacsvox-aural-compatibility-icon 'item))))\n"
+      "(defun duplicate-feedback (text)\n"
+      "  (emacsvox-aural-submit\n"
+      "   (progn (emacsvox-icon 'item) (tts-speak text))\n"
+      "   :facts '(:role message)))\n")
+     "emacsvox-notmuch.el")
+    (should
+     (equal
+      (emacsvox-aural-audit-nested-submission-resolutions root)
+      '((:file "lisp/emacsvox-notmuch.el"
+         :function duplicate-feedback
+         :resolver emacsvox-icon)
+        (:file "lisp/emacsvox-notmuch.el"
+         :function duplicate-feedback
+         :resolver tts-speak))))))
+
 (ert-deftest emacsvox-aural-audit-never-evaluates-reader-forms ()
   "The source audit should reject `#.' without evaluating its payload."
   (emacsvox-test--with-aural-audit-root (root)

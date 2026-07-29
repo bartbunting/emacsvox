@@ -58,13 +58,13 @@
      :kind state
      :summary "An item has not yet been read"
      :owner core
-     :occasions (navigation continuous state-change notification)
+     :occasions (navigation continuous state-change inspection notification)
      :phases (before content after))
     (flagged
      :kind state
      :summary "An item has been explicitly flagged for attention"
      :owner core
-     :occasions (navigation continuous state-change notification)
+     :occasions (navigation continuous state-change inspection notification)
      :phases (before content after))
     (has-attachments
      :kind state

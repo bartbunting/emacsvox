@@ -45,6 +45,17 @@
   '(emacsvox-icon emacsvox-queue-icon)
   "Functions whose literal cue arguments are included in the source audit.")
 
+(defconst emacsvox-aural-audit-complete-resolution-functions
+  '(emacsvox-aural-submit
+    emacsvox-aural-present
+    emacsvox-aural-present-legacy-icon
+    emacsvox-aural-prepare-text
+    emacsvox-icon
+    emacsvox-queue-icon
+    tts-speak
+    tts-notify)
+  "Calls that must not resolve again inside a native submission.")
+
 (defconst emacsvox-aural-audit-migrated-icon-boundaries
   '((emacsvox-agent-shell.el
      emacsvox-agent-shell--call-with-aural-presentation
@@ -326,6 +337,84 @@ below a presentation boundary."
                (plist-get right :icon-function)
                (plist-get right :compatibility-function))))
          (string-lessp left-key right-key))))))
+
+(defun emacsvox-aural-audit-nested-submission-resolutions (&optional root)
+  "Return complete resolver calls nested inside native submissions below ROOT."
+  (let ((root (emacsvox-aural-audit--root root))
+        failures)
+    (dolist
+        (file
+         (directory-files
+          (expand-file-name "lisp" root) t "\\.el\\'" 'nosort))
+      (let (forms)
+        (with-temp-buffer
+          (insert-file-contents file)
+          (emacs-lisp-mode)
+          (goto-char (point-min))
+          (let ((read-eval nil))
+            (condition-case nil
+                (while
+                    (progn
+                      (forward-comment (point-max))
+                      (not (eobp)))
+                  (push (read (current-buffer)) forms))
+              (error nil))))
+        (cl-labels
+            ((walk
+              (form inside-submission containing-function)
+              (cond
+               ((atom form) nil)
+               ((eq (car form) 'quote) nil)
+               ((eq (car form) 'defun)
+                (let ((function
+                       (if (symbolp (cadr form))
+                           (cadr form)
+                         containing-function)))
+                  (dolist (body-form (cdddr form))
+                    (walk body-form nil function))))
+               (t
+                (let* ((head (car form))
+                       (native (eq head 'emacsvox-aural-submit)))
+                  (when
+                      (and
+                       inside-submission
+                       (memq
+                        head
+                        emacsvox-aural-audit-complete-resolution-functions))
+                    (push
+                     (list
+                      :file (file-relative-name file root)
+                      :function containing-function
+                      :resolver head)
+                     failures))
+                  (let ((tail (cdr form)))
+                    (while (consp tail)
+                      (walk
+                       (car tail)
+                       (or inside-submission native)
+                       containing-function)
+                      (setq tail (cdr tail)))
+                    (when tail
+                      (walk
+                       tail
+                       (or inside-submission native)
+                       containing-function))))))))
+          (dolist (form (nreverse forms))
+            (walk form nil nil)))))
+    (sort
+     failures
+     (lambda (left right)
+       (string-lessp
+        (format
+         "%s:%s:%s"
+         (plist-get left :file)
+         (plist-get left :function)
+         (plist-get left :resolver))
+        (format
+         "%s:%s:%s"
+         (plist-get right :file)
+         (plist-get right :function)
+         (plist-get right :resolver)))))))
 
 (defun emacsvox-aural-audit--org-value (value)
   "Return VALUE formatted for an Org table cell."
@@ -1083,6 +1172,8 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
          (usage (plist-get source :usage))
          (context-free-icons
           (emacsvox-aural-audit-context-free-icons root))
+         (nested-resolutions
+          (emacsvox-aural-audit-nested-submission-resolutions root))
          unknown
          errors)
     (dolist (entry usage)
@@ -1142,6 +1233,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
      :dynamic-count (plist-get source :dynamic-count)
      :unknown-cues (nreverse unknown)
      :context-free-icons context-free-icons
+     :nested-submission-resolutions nested-resolutions
      :parse-errors (plist-get source :parse-errors)
      :errors (nreverse errors)
      :reference-current (emacsvox-aural-reference-current-p root)))))
@@ -1151,6 +1243,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
   (and
    (null (plist-get audit :unknown-cues))
    (null (plist-get audit :context-free-icons))
+   (null (plist-get audit :nested-submission-resolutions))
    (null (plist-get audit :parse-errors))
    (null (plist-get audit :errors))
    (plist-get audit :reference-current)))
@@ -1205,6 +1298,17 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
              (format " via %s" adapter)
            "")))
       (plist-get audit :context-free-icons)
+      "")
+     (mapconcat
+      (lambda (failure)
+        (format
+         "Nested resolver %s inside native submission in %s%s\n"
+         (plist-get failure :resolver)
+         (plist-get failure :file)
+         (if-let* ((function (plist-get failure :function)))
+             (format " (%s)" function)
+           "")))
+      (plist-get audit :nested-submission-resolutions)
       "")
      (mapconcat
       (lambda (error) (concat "Source parse error: " error "\n"))

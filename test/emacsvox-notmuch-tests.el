@@ -220,40 +220,33 @@
         :occasion state-change)))))
 
 (ert-deftest emacsvox-notmuch-status-feedback-shares-message-facts ()
-  "Status cues and message speech share states and navigation context."
+  "Status cues and message speech enter one semantic submission."
   (let (captured)
     (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list
-              icon
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             captured)))
-         ((symbol-function 'tts-speak)
-          (lambda (_text)
-            (push
-             (list
-              'speech
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             captured))))
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (list content arguments)))))
       (emacsvox-notmuch-speak-search-result
        emacsvox-notmuch-test--search-result))
-    (setq captured (nreverse captured))
-    (should (equal (mapcar #'car captured) '(new-mail mark-object speech)))
-    (dolist (entry captured)
-      (should (eq (plist-get (cadr entry) :role) 'message))
+    (let ((arguments (cadr captured)))
+      (should (stringp (car captured)))
+      (should (eq (plist-get arguments :module) 'notmuch))
+      (should (eq (plist-get arguments :occasion) 'navigation))
       (should
-       (equal (plist-get (cadr entry) :states) '(unread flagged)))
+       (eq (plist-get (plist-get arguments :facts) :role) 'message))
       (should
-       (eq (plist-get (caddr entry) :module) 'notmuch))
+       (equal
+        (plist-get (plist-get arguments :facts) :states)
+        '(unread flagged)))
       (should
-       (eq (plist-get (caddr entry) :occasion) 'navigation)))))
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get arguments :compatibility-actions))
+        '(new-mail mark-object))))))
 
-(ert-deftest emacsvox-notmuch-status-fragment-currently-resolves-repeatedly ()
-  "Characterize duplicate status actions across icons and summary separators."
+(ert-deftest emacsvox-notmuch-status-fragment-resolves-once-per-message ()
+  "One message transaction emits each status action once."
   (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
          (emacsvox-notmuch-show-status-icons '(("unread" . new-mail)))
          (emacsvox-aural-enabled-feature-fragments
@@ -270,8 +263,6 @@
           (make-hash-table :test #'equal))
          (emacsvox-sounds-current-pack 'chimes)
          (emacsvox-use-icons t)
-         (present-legacy
-          (symbol-function 'emacsvox-aural-present-legacy-icon))
          traces)
     (setf (plist-get message :tags) '("inbox" "unread"))
     (cl-labels
@@ -289,37 +280,27 @@
              (emacsvox-aural-concrete-plan-after plan)))
            traces)))
       (cl-letf
-          (((symbol-function 'emacsvox-aural-present-legacy-icon)
-            (lambda (icon &optional context)
-              (let ((plan (funcall present-legacy icon context)))
-                (record-plan 'icon nil plan)
-                plan)))
-           ((symbol-function 'emacsvox-aural-queue-concrete-plan) #'ignore)
-           ((symbol-function 'emacsvox-aural--ensure-speaker) #'ignore)
-           ((symbol-function 'tts--protocol-dispatch) #'ignore)
-           ((symbol-function 'tts-speak)
+          (((symbol-function 'tts-speak)
             (lambda (text)
-              (let ((prepared (emacsvox-aural-prepare-text text))
-                    (position 0))
-                (while (< position (length prepared))
+              (let ((position 0))
+                (while (< position (length text))
                   (let* ((next
                           (next-single-property-change
                            position
                            emacsvox-aural-concrete-plan-property
-                           prepared
-                           (length prepared)))
+                           text
+                           (length text)))
                          (plan
                           (emacsvox-aural-concrete-plan-at
-                           position prepared)))
+                           position text)))
                     (record-plan
                      'speech
-                     (substring-no-properties prepared position next)
+                     (substring-no-properties text position next)
                      plan)
                     (setq position next)))))))
         (emacsvox-notmuch-speak-show-message message)))
     (setq traces (nreverse traces))
-    (let* ((icon (car traces))
-           (separators
+    (let* ((separators
             (cl-remove-if-not
              (lambda (trace)
                (and
@@ -330,20 +311,20 @@
            (after (apply #'append (mapcar #'cadddr traces))))
       (should
        (equal
-        icon
-        '(icon nil
-          (legacy-cue workflow-mail-unread-cue)
-          (workflow-mail-attachments-label))))
+        (caddr (car traces))
+        '(compatibility-new-mail-1-legacy-cue
+          workflow-mail-unread-cue)))
+      (should
+       (equal
+        (cadddr (car (last traces)))
+        '(workflow-mail-attachments-label)))
       (should (= (length separators) 5))
       (dolist (separator separators)
-        (should
-         (equal
-          (cddr separator)
-          '((workflow-mail-unread-cue)
-            (workflow-mail-attachments-label)))))
-      (should (= (cl-count 'legacy-cue before) 1))
-      (should (= (cl-count 'workflow-mail-unread-cue before) 6))
-      (should (= (cl-count 'workflow-mail-attachments-label after) 6)))))
+        (should (equal (cddr separator) '(nil nil))))
+      (should
+       (= (cl-count 'compatibility-new-mail-1-legacy-cue before) 1))
+      (should (= (cl-count 'workflow-mail-unread-cue before) 1))
+      (should (= (cl-count 'workflow-mail-attachments-label after) 1)))))
 
 (ert-deftest emacsvox-notmuch-search-result-fields-are-configurable ()
   "Search-result fields can be reordered and omitted."
@@ -358,9 +339,21 @@
 
 (ert-deftest emacsvox-notmuch-search-status-uses-icons-not-words ()
   "Configured status tags play icons and remain out of speech."
-  (let (events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
+  (let ((status-actions
+         (symbol-function
+          'emacsvox-notmuch--status-compatibility-actions))
+        events)
+    (cl-letf (((symbol-function
+                'emacsvox-notmuch--status-compatibility-actions)
+               (lambda (&rest arguments)
+                 (let ((actions (apply status-actions arguments)))
+                   (dolist (action actions)
+                     (push
+                      (list
+                       'icon
+                       (emacsvox-aural-compatibility-action-value action))
+                      events))
+                   actions)))
               ((symbol-function 'tts-speak)
                (lambda (text)
                  (push
@@ -432,9 +425,21 @@
 
 (ert-deftest emacsvox-notmuch-show-status-uses-icons-not-words ()
   "Message status uses auditory icons and stays out of spoken tags."
-  (let (events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
+  (let ((status-actions
+         (symbol-function
+          'emacsvox-notmuch--status-compatibility-actions))
+        events)
+    (cl-letf (((symbol-function
+                'emacsvox-notmuch--status-compatibility-actions)
+               (lambda (&rest arguments)
+                 (let ((actions (apply status-actions arguments)))
+                   (dolist (action actions)
+                     (push
+                      (list
+                       'icon
+                       (emacsvox-aural-compatibility-action-value action))
+                      events))
+                   actions)))
               ((symbol-function 'tts-speak)
                (lambda (text)
                  (push
@@ -456,9 +461,9 @@
     (let (spoken)
       (cl-letf
           (((symbol-function 'notmuch-show-message-extent)
-            (lambda () (cons (point-min) (point-max))))
+           (lambda () (cons (point-min) (point-max))))
            ((symbol-function
-             'emacsvox-notmuch--play-status-icons-compatibility)
+             'emacsvox-notmuch--status-compatibility-actions)
             #'ignore)
            ((symbol-function 'tts-speak)
             (lambda (text) (setq spoken text))))
@@ -492,8 +497,10 @@
                 ((symbol-function 'notmuch-show-get-message-properties)
                  (lambda () emacsvox-notmuch-test--show-message))
                 ((symbol-function
-                  'emacsvox-notmuch--play-status-icons-compatibility)
-                 (lambda (&rest _) (push '(status-icons) events)))
+                  'emacsvox-notmuch--status-compatibility-actions)
+                 (lambda (&rest _)
+                   (push '(status-icons) events)
+                   nil))
                 ((symbol-function 'tts-speak)
                  (lambda (text)
                    (push

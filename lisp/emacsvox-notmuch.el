@@ -45,6 +45,7 @@
 (require 'cl-lib)
 (require 'button)
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-notmuch)
 (require 'subr-x)
@@ -396,26 +397,28 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      emacsvox-notmuch-search-result-fields))
    emacsvox-notmuch-search-field-separator))
 
-(defun emacsvox-notmuch--play-status-icons-compatibility
+(defun emacsvox-notmuch--status-compatibility-actions
     (result status-icons)
-  "Play STATUS-ICONS for statuses present in Notmuch RESULT."
+  "Return ordered STATUS-ICON adapters present in Notmuch RESULT."
   (let ((tags (plist-get result :tags)))
-    (dolist (entry status-icons)
-      (when (and (cdr entry) (member (car entry) tags))
-        (emacsvox-icon (cdr entry))))))
+    (cl-loop
+     for (tag . icon) in status-icons
+     when (and icon (member tag tags))
+     collect (emacsvox-aural-compatibility-icon icon))))
 
 (defun emacsvox-notmuch-speak-search-result (&optional result)
   "Speak Notmuch search RESULT, defaulting to the result at point."
   (interactive)
   (when-let* ((result (or result (notmuch-search-get-result)))
               (summary (emacsvox-notmuch-format-search-result result)))
-    (emacsvox-notmuch--call-with-aural-presentation
-     (emacsvox-notmuch-message-facts result 'focus-entered)
-     'navigation
-     (lambda ()
-       (emacsvox-notmuch--play-status-icons-compatibility
-        result emacsvox-notmuch-search-status-icons)
-       (tts-speak summary)))
+    (emacsvox-aural-submit
+     summary
+     :facts (emacsvox-notmuch-message-facts result 'focus-entered)
+     :module 'notmuch
+     :occasion 'navigation
+     :compatibility-actions
+     (emacsvox-notmuch--status-compatibility-actions
+      result emacsvox-notmuch-search-status-icons))
     summary))
 
 ;;;  Show Messages:
@@ -516,13 +519,14 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
            (if (and body-line (not (string-empty-p body-line)))
                (concat summary "\n" body-line)
              summary)))
-      (emacsvox-notmuch--call-with-aural-presentation
-       (emacsvox-notmuch-message-facts message 'focus-entered)
-       'navigation
-       (lambda ()
-         (emacsvox-notmuch--play-status-icons-compatibility
-          message emacsvox-notmuch-show-status-icons)
-         (tts-speak speech)))
+      (emacsvox-aural-submit
+       speech
+       :facts (emacsvox-notmuch-message-facts message 'focus-entered)
+       :module 'notmuch
+       :occasion 'navigation
+       :compatibility-actions
+       (emacsvox-notmuch--status-compatibility-actions
+        message emacsvox-notmuch-show-status-icons))
       speech)))
 
 (defun emacsvox-notmuch--landed-body-line ()
@@ -578,13 +582,14 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
             (if (string-empty-p details)
                 position-summary
               (concat position-summary ", " details))))
-      (emacsvox-notmuch--call-with-aural-presentation
-       (emacsvox-notmuch-message-facts message)
-       'inspection
-       (lambda ()
-         (emacsvox-notmuch--play-status-icons-compatibility
-          message emacsvox-notmuch-show-status-icons)
-         (tts-speak summary)))
+      (emacsvox-aural-submit
+       summary
+       :facts (emacsvox-notmuch-message-facts message)
+       :module 'notmuch
+       :occasion 'inspection
+       :compatibility-actions
+       (emacsvox-notmuch--status-compatibility-actions
+        message emacsvox-notmuch-show-status-icons))
       summary)))
 
 (defun emacsvox-notmuch--current-show-message-id ()
