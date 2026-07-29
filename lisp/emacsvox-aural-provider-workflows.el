@@ -409,6 +409,12 @@
      :owner core
      :occasions (state-change)
      :phases (before content after))
+    (completion-separator-inserted
+     :kind event
+     :summary "A completion separator was inserted without accepting a candidate"
+     :owner corfu
+     :occasions (edit)
+     :phases (before content after))
     (completion-index
      :kind attribute
      :summary "Zero-based position of a candidate in a completion list"
@@ -692,6 +698,20 @@
         (:append
          ((:id bs-buffer-read-only-tone-action
            :kind tone :tone buffer-read-only)))))))
+    (corfu
+     :schema-version 1
+     :id corfu-completion-edit-tones
+     :summary "Compatibility tone for Corfu completion edits"
+     :rules
+     ((:id corfu-separator-inserted-tone
+       :match
+       (:module corfu :event completion-separator-inserted
+        :occasion edit)
+       :render
+       (:before
+        (:append
+         ((:id corfu-separator-inserted-tone-action
+           :kind tone :tone completion-separator)))))))
     (tabulated-list
      :schema-version 1
      :id tabulated-list-field-state-tones

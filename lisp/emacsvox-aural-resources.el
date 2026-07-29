@@ -349,6 +349,9 @@ themed overrides below an active sound pack."
     (buffer-read-only
      "A buffer is read-only"
      250 100 nil)
+    (completion-separator
+     "A completion separator was inserted"
+     500 50 nil)
     (edit-deletion
      "Text was deleted"
      500 75 t)

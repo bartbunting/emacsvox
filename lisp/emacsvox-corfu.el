@@ -48,6 +48,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-submission)
 (require 'corfu nil 'noerror)
 
 ;;;  Map Faces:
@@ -127,7 +129,10 @@
   "Confirm insertion of a Corfu separator."
   (when (ems-interactive-p 'corfu-insert-separator)
     (emacsvox-icon 'select-object)
-    (tts-tone 500 50)))
+    (emacsvox-aural-submit-actions
+     :facts '(:events (completion-separator-inserted))
+     :module 'corfu
+     :occasion 'edit)))
 
 (defun emacsvox--advice-corfu-complete-after (&rest _)
   "Speak completed text."

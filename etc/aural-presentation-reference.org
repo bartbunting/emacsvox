@@ -165,6 +165,7 @@ Operational semantic contract version: =1=.
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
 | =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
 | =completion-index= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Zero-based position of a candidate in a completion list |
+| =completion-separator-inserted= | =event= | =corfu= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A completion separator was inserted without accepting a candidate |
 | =confirmation-request= | =role= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A prompt asking the user to confirm an action |
 | =deletion-flagged= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem entry is flagged for deletion |
 | =edit-operation= | =attribute= | =core= | =deletion=, =line-created=, =uppercase=, =lowercase=, =capitalize= | - | - | - | - | =edit= | - | - | The text-editing operation being presented |
@@ -315,6 +316,7 @@ Operational semantic contract version: =1=.
 | Identifier | Module | Rules | Source | Intent |
 |------------+--------+-------+--------+--------|
 | =bs-buffer-state-tones= | =bs= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for buffer state in BS |
+| =corfu-completion-edit-tones= | =corfu= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for Corfu completion edits |
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
 | =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |
@@ -427,6 +429,7 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 |------------+------------+---------------+--------------+-------+--------|
 | =buffer-modified= | =700= | =100= | - | =core= | A buffer has unsaved modifications |
 | =buffer-read-only= | =250= | =100= | - | =core= | A buffer is read-only |
+| =completion-separator= | =500= | =50= | - | =core= | A completion separator was inserted |
 | =edit-deletion= | =500= | =75= | =t= | =core= | Text was deleted |
 | =edit-line-created= | =225= | =75= | =t= | =core= | A new line was created |
 | =edit-lowercase= | =600= | =100= | =t= | =core= | Text was changed to lowercase |
