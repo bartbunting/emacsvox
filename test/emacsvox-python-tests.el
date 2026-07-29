@@ -219,53 +219,95 @@
            (emacsvox-aural-concrete-plan-context plan)
            :presentation-transaction-id)))))))
 
+(ert-deftest emacsvox-python-line-speaker-keeps-standard-transport ()
+  "The line callback boundary preserves normal and supplied speech delivery."
+  (with-temp-buffer
+    (insert "line")
+    (goto-char (point-min))
+    (let ((emacsvox-show-point nil)
+          (emacsvox-audio-indentation nil)
+          (tts-punctuation-mode 'all)
+          standard
+          supplied)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq standard text))))
+        (emacsvox-speak-line)
+        (emacsvox-speak-line-with-speaker
+         (lambda (text) (setq supplied text))))
+      (should (equal standard "line"))
+      (should (equal supplied "line")))))
+
 (ert-deftest emacsvox-python-navigation-feedback-is-target-aware ()
   "Only the matching Python navigation command produces feedback."
   (let ((ems--interactive-fn-name 'python-nav-backward-block)
         events)
-    (cl-letf (((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
+    (cl-letf
+        (((symbol-function 'emacsvox-speak-line-with-speaker)
+          (lambda (speaker &optional _arg)
+            (push 'line events)
+            (funcall speaker "line")))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (let ((action
+                   (car
+                    (plist-get arguments :compatibility-actions))))
+              (push
+               (list
+                'submission content
+                (emacsvox-aural-compatibility-action-value action)
+                (emacsvox-aural-compatibility-action-phase action))
+               events))))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _)
+            (ert-fail "Speech-producing navigation used legacy fallback"))))
       (emacsvox--advice-python-nav-forward-block-after)
       (emacsvox--advice-python-nav-backward-block-after))
     (should
      (equal
       (nreverse events)
-      '(line (icon paragraph))))))
+      '(line (submission "line" paragraph after))))))
 
 (ert-deftest emacsvox-python-navigation-carries-code-semantics ()
-  "Python navigation speech and its cue share construct facts and context."
+  "Python navigation speech and its cue share one semantic submission."
   (let ((ems--interactive-fn-name 'python-nav-forward-defun)
         captured)
     (cl-letf
-        (((symbol-function 'emacsvox-speak-line)
-          (lambda ()
-            (push
-             (list
-              'line
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             captured)))
+        (((symbol-function 'emacsvox-speak-line-with-speaker)
+          (lambda (speaker &optional _arg)
+            (funcall speaker "line")))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (cons content arguments))))
          ((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list
-              icon
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             captured))))
+          (lambda (&rest _)
+            (ert-fail "Speech-producing navigation used legacy fallback"))))
       (emacsvox--advice-python-nav-forward-defun-after))
-    (setq captured (nreverse captured))
-    (should (equal (mapcar #'car captured) '(line paragraph)))
-    (dolist (entry captured)
-      (should (eq (plist-get (cadr entry) :role) 'code-construct))
-      (should (eq (plist-get (cadr entry) :syntax-role) 'function))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (facts (plist-get arguments :facts))
+                 (context (plist-get arguments :context))
+                 (action
+                  (car
+                   (plist-get arguments :compatibility-actions))))
+      (should (equal content "line"))
+      (should (eq (plist-get facts :role) 'code-construct))
+      (should (eq (plist-get facts :syntax-role) 'function))
       (should
        (equal
-        (plist-get (cadr entry) :events)
+        (plist-get facts :events)
         '(boundary-entered focus-entered)))
-      (should (eq (plist-get (caddr entry) :module) 'python)))))
+      (should (eq (plist-get arguments :module) 'python))
+      (should (eq (plist-get arguments :occasion) 'navigation))
+      (should (eq (plist-get context :module) 'python))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'paragraph))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'after)))))
 
 (ert-deftest emacsvox-python-navigation-preserves-line-properties ()
   "Ordinary navigation preserves line voice and post-speech cue order."
@@ -276,38 +318,42 @@
           (emacsvox-show-point nil)
           (emacsvox-audio-indentation nil)
           (tts-punctuation-mode 'all)
-          events)
+          captured)
       (cl-letf
           (((symbol-function 'tts-stop) #'ignore)
-           ((symbol-function 'tts-speak)
-            (lambda (text)
-              (push
-               (list
-                'speak
-                text
-                (copy-tree emacsvox-aural-submission-facts)
-                (copy-tree emacsvox-aural-submission-context))
-               events)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments))))
            ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events))))
+            (lambda (&rest _)
+              (ert-fail "Ordinary navigation used a legacy icon"))))
         (emacsvox--advice-python-nav-forward-statement-after))
-      (setq events (nreverse events))
-      (should (equal (mapcar #'car events) '(speak icon)))
-      (should (eq (cadadr events) 'paragraph))
-      (let ((speech (car events)))
-        (should (equal (cadr speech) "value = 1"))
+      (pcase-let* ((`(,speech . ,arguments) captured)
+                   (facts (plist-get arguments :facts))
+                   (context (plist-get arguments :context))
+                   (action
+                    (car
+                     (plist-get arguments :compatibility-actions))))
+        (should (equal speech "value = 1"))
         (should
          (eq
-          (get-text-property 0 'personality (cadr speech))
+          (get-text-property 0 'personality speech)
           'voice-lighten))
-        (should (eq (plist-get (nth 2 speech) :role) 'code-construct))
+        (should (eq (plist-get facts :role) 'code-construct))
         (should
          (equal
-          (plist-get (nth 2 speech) :events)
+          (plist-get facts :events)
           '(boundary-entered focus-entered)))
+        (should (eq (plist-get facts :syntax-role) 'statement))
+        (should (eq (plist-get context :module) 'python))
         (should
-         (eq (plist-get (nth 2 speech) :syntax-role) 'statement))
-        (should (eq (plist-get (nth 3 speech) :module) 'python))))))
+         (eq
+          (emacsvox-aural-compatibility-action-value action)
+          'paragraph))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-phase action)
+          'after))))))
 
 (ert-deftest emacsvox-python-navigation-preserves-line-and-point-cues ()
   "Line-local and show-point cues precede speech and the paragraph cue."
@@ -321,8 +367,14 @@
           events)
       (cl-letf
           (((symbol-function 'tts-stop) #'ignore)
-           ((symbol-function 'tts-speak)
-            (lambda (text) (push (list 'speak text) events)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                'submission content
+                (car
+                 (plist-get arguments :compatibility-actions)))
+               events)))
            ((symbol-function 'emacsvox-icon)
             (lambda (icon) (push (list 'icon icon) events))))
         (emacsvox--advice-python-nav-forward-statement-after))
@@ -333,12 +385,22 @@
          (lambda (event)
            (if (eq (car event) 'icon) (cadr event) (car event)))
          events)
-        '(item tick-tick speak paragraph)))
-      (let ((spoken (cadr (nth 2 events))))
+        '(item tick-tick submission)))
+      (let* ((submission (nth 2 events))
+             (spoken (cadr submission))
+             (action (nth 2 submission)))
         (should (equal spoken "value"))
         (should
          (eq (get-text-property 2 'personality spoken) voice-animate))
-        (should (= (get-text-property 2 'pause spoken) 5)))
+        (should (= (get-text-property 2 'pause spoken) 5))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value action)
+          'paragraph))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-phase action)
+          'after)))
       (should-not (get-text-property 2 'personality (buffer-string)))
       (should-not (get-text-property 2 'pause (buffer-string))))))
 
@@ -358,8 +420,9 @@
           events)
       (cl-letf
           (((symbol-function 'tts-stop) #'ignore)
-           ((symbol-function 'tts-speak)
-            (lambda (text) (push (list 'speak text) events)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _)
+              (push (list 'submission content) events)))
            ((symbol-function 'emacsvox-icon)
             (lambda (icon) (push (list 'icon icon) events))))
         (emacsvox--advice-python-nav-forward-block-after))
@@ -369,7 +432,7 @@
          (lambda (event)
            (if (eq (car event) 'icon) (cadr event) (car event)))
          (nreverse events))
-        '(ellipses left speak paragraph))))))
+        '(ellipses left submission))))))
 
 (ert-deftest emacsvox-python-navigation-preserves-blank-line-tones ()
   "Empty and whitespace navigation retain their distinct tones and final cue."
@@ -387,6 +450,9 @@
              ((symbol-function 'tts-speak)
               (lambda (&rest _)
                 (ert-fail "Blank line reached speech transport")))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest _)
+                (ert-fail "Blank line entered native submission")))
              ((symbol-function 'tts-tone)
               (lambda (&rest arguments)
                 (push (cons 'tone arguments) events)))
@@ -418,17 +484,109 @@
             (lambda (_prompt)
               (push '(confirm) events)
               nil))
-           ((symbol-function 'tts-speak)
-            (lambda (text) (push (list 'speak text) events)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                'submission content
+                (car
+                 (plist-get arguments :compatibility-actions)))
+               events)))
            ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events))))
+            (lambda (&rest _)
+              (ert-fail "Long speech used a legacy icon"))))
         (emacsvox--advice-python-nav-forward-statement-after))
       (should
        (equal
         (mapcar #'car (nreverse events))
-        '(confirm speak icon)))
+        '(confirm submission)))
       (should (get-text-property (point-min) 'start-line))
       (should (= ems--speak-max-length 8)))))
+
+(ert-deftest emacsvox-python-navigation-native-submission-presents-once ()
+  "Python line speech and its trailing cue form one native transaction."
+  (dolist (icons-enabled '(t nil))
+    (with-temp-buffer
+      (insert (propertize "value = 1" 'personality 'voice-lighten))
+      (goto-char (point-min))
+      (let ((ems--interactive-fn-name 'python-nav-forward-statement)
+            (emacsvox-show-point nil)
+            (emacsvox-audio-indentation nil)
+            (tts-punctuation-mode 'all)
+            (emacsvox-aural-active-scheme 'default)
+            (emacsvox-aural-enabled-feature-fragments nil)
+            (emacsvox-aural-user-rules nil)
+            (emacsvox-aural-session-rules nil)
+            (emacsvox-aural-buffer-rules nil)
+            (emacsvox-aural-presentation-history nil)
+            (emacsvox-aural-presentation-history-limit 20)
+            (emacsvox-aural--presentation-sequence 0)
+            (emacsvox-aural--submission-sequence 0)
+            (emacsvox-aural-plan-presented-hook nil)
+            (emacsvox-use-icons icons-enabled)
+            (emacsvox-aural-face-presentation-enabled t)
+            (voice-lock-mode t)
+            (submit-function (symbol-function 'emacsvox-aural-submit))
+            events
+            submission)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest arguments)
+                (setq submission (apply submit-function arguments))))
+             ((symbol-function 'tts-stop) #'ignore)
+             ((symbol-function 'tts-speak)
+              (lambda (prepared)
+                (with-temp-buffer
+                  (insert prepared)
+                  (tts-audio-format (point-min) (point-max)))))
+             ((symbol-function 'emacsvox-queue-resource)
+              (lambda (_resource) (push 'cue events)))
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET"))
+             ((symbol-function 'tts--protocol-queue-code) #'ignore)
+             ((symbol-function 'tts--protocol-queue-text)
+              (lambda (text) (push (list 'text text) events)))
+             ((symbol-function 'tts--protocol-silence) #'ignore))
+          (emacsvox--advice-python-nav-forward-statement-after))
+        (should (emacsvox-aural-submission-p submission))
+        (should
+         (equal
+          (nreverse events)
+          (if icons-enabled
+              '((text "value = 1") cue)
+            '((text "value = 1")))))
+        (should (= (length emacsvox-aural-presentation-history) 1))
+        (should
+         (= (emacsvox-aural-presentation-record-transaction-id
+             (emacsvox-aural-last-presentation))
+            1))
+        (let* ((plans (emacsvox-aural-submission-plans submission))
+               (plan (car plans))
+               (facts (emacsvox-aural-concrete-plan-facts plan))
+               (content (emacsvox-aural-concrete-plan-content plan))
+               (context (emacsvox-aural-concrete-plan-context plan)))
+          (should (= (length plans) 1))
+          (should (eq (plist-get facts :role) 'code-construct))
+          (should
+           (equal
+            (plist-get facts :events)
+            '(boundary-entered focus-entered)))
+          (should (eq (plist-get facts :syntax-role) 'statement))
+          (should-not (emacsvox-aural-concrete-plan-before plan))
+          (should
+           (equal
+            (mapcar
+             #'emacsvox-aural-concrete-action-cue
+             (emacsvox-aural-concrete-plan-after plan))
+            (and icons-enabled '(paragraph))))
+          (should
+           (eq
+            (emacsvox-aural-concrete-content-voice-request content)
+            'voice-lighten))
+          (should (eq (plist-get context :module) 'python))
+          (should (eq (plist-get context :occasion) 'navigation))
+          (should
+           (eq (plist-get context :icons-enabled) icons-enabled)))))))
 
 (provide 'emacsvox-python-tests)
 ;;; emacsvox-python-tests.el ends here

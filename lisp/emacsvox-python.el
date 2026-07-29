@@ -228,8 +228,22 @@
            (emacsvox-aural-submission-context context)
            (emacsvox-aural-submission-module 'python)
            (emacsvox-aural-submission-occasion 'navigation))
-      (emacsvox-speak-line)
-      (emacsvox-icon 'paragraph))))
+      (let (spoken)
+        (emacsvox-speak-line-with-speaker
+         (lambda (content)
+           (setq spoken t)
+           (emacsvox-aural-submit
+            content
+            :facts facts
+            :context context
+            :module 'python
+            :occasion 'navigation
+            :compatibility-actions
+            (list
+             (emacsvox-aural-compatibility-icon
+              'paragraph 'after)))))
+        (unless spoken
+          (emacsvox-icon 'paragraph))))))
 
 (defun emacsvox--advice-python-nav-up-list-after (&rest _)
   "Speak after navigating up a list."

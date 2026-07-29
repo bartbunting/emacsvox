@@ -713,24 +713,13 @@ results in the Dectalk producing a tone whose length is a function of the
 line's indentation.  Specifying `speak'
 results in the number of initial spaces being spoken.")
 
-(defun emacsvox-speak-line (&optional arg)
-  "Speaks current line.  With prefix ARG, speaks the rest of the
-line from point.  Negative prefix optional arg speaks from start
-of line to point.  Indicates indentation with a spoken message if
-audio indentation is on see `emacsvox-toggle-audio-indentation'
-bound to \\[emacsvox-toggle-audio-indentation].  Indicates
-position of point with an aural highlight if option
-`emacsvox-show-point' is on --see command
-`emacsvox-toggle-show-point' bound to
-\\[emacsvox-toggle-show-point].  Lines that start hidden blocks
-of text, e.g.  outline header lines, or header lines of blocks
-created by command `emacsvox-hide-or-expose-block' are indicated
-with auditory icon ellipses. Presence of additional
-presentational overlays (created via property display,
-before-string, or after-string) is indicated with auditory icon
-`left', `right', or `more' as appropriate.  These can then be
-spoken using command \\[emacsvox-speak-overlay-properties]."
-  (interactive "P")
+(defun emacsvox-speak-line-with-speaker (speaker &optional arg)
+  "Present the current line, delivering speakable text to SPEAKER.
+
+ARG and all line-selection and presentation behavior match
+`emacsvox-speak-line'.  SPEAKER is called only when line policy selects
+speech; empty, whitespace, decorative, and otherwise unspeakable lines retain
+their established tone paths without calling SPEAKER."
   (tts-stop 'all)
   (when (listp arg) (setq arg (car arg)))
   (let* ((inhibit-field-text-motion t)
@@ -829,7 +818,27 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
             (setq linenum (format "%d" linenum))
             (setq linenum (propertize linenum 'personality voice-lighten))
             (setq line (concat linenum line)))
-          (tts-speak line)))))))
+          (funcall speaker line)))))))
+
+(defun emacsvox-speak-line (&optional arg)
+  "Speaks current line.  With prefix ARG, speaks the rest of the
+line from point.  Negative prefix optional arg speaks from start
+of line to point.  Indicates indentation with a spoken message if
+audio indentation is on see `emacsvox-toggle-audio-indentation'
+bound to \\[emacsvox-toggle-audio-indentation].  Indicates
+position of point with an aural highlight if option
+`emacsvox-show-point' is on --see command
+`emacsvox-toggle-show-point' bound to
+\\[emacsvox-toggle-show-point].  Lines that start hidden blocks
+of text, e.g.  outline header lines, or header lines of blocks
+created by command `emacsvox-hide-or-expose-block' are indicated
+with auditory icon ellipses. Presence of additional
+presentational overlays (created via property display,
+before-string, or after-string) is indicated with auditory icon
+`left', `right', or `more' as appropriate.  These can then be
+spoken using command \\[emacsvox-speak-overlay-properties]."
+  (interactive "P")
+  (emacsvox-speak-line-with-speaker #'tts-speak arg))
 
 (defun ems--display-props-get ()
   "Return  speakable display, before-string or after-string property if any."
