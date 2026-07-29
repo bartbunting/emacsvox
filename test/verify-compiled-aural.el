@@ -85,6 +85,21 @@
     (load
      (expand-file-name (concat library ".elc") build-directory)
      nil nil))
+  (load
+   (expand-file-name
+    "emacsvox-aural-compatibility-voice.elc"
+    build-directory)
+   nil nil)
+  (dolist (feature '(tts-speak voice-setup))
+    (when (featurep feature)
+      (error
+       "Compatibility voice policy loaded low-level provider %S"
+       feature)))
+  (unless
+      (string-match-p
+       "emacsvox-aural-compatibility-voice"
+       (or (symbol-file 'voice-lock-mode 'defun) ""))
+    (error "Aural compatibility policy does not own voice-lock-mode"))
   (when (featurep 'emacsvox-aural-transport)
     (error
      "Aural compiler, planner, source, and inspection loaded queue transport"))
@@ -92,7 +107,6 @@
       (library
        '("tts-speak"
          "voice-setup"
-         "emacsvox-aural-compatibility-voice"
          "voice-defs"
          "dectalk-voices"
          "plain-voices"

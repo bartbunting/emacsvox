@@ -13,9 +13,37 @@
 ;;; Code:
 
 (require 'emacsvox-aural)
-(require 'voice-setup)
 
+(declare-function emacsvox-icon "emacsvox-sounds" (icon))
 (declare-function tts-speak "tts-speak" (text))
+
+(define-minor-mode voice-lock-mode
+  "Toggle the legacy face and personality voice compatibility adapter."
+  :init-value nil
+  :keymap nil
+  (when (called-interactively-p 'interactive)
+    (emacsvox-icon (if voice-lock-mode 'on 'off))))
+
+(defun voice-lock-mode--turn-on ()
+  "Turn on the Voice Lock compatibility adapter."
+  (interactive)
+  (voice-lock-mode 1))
+
+(define-globalized-minor-mode global-voice-lock-mode
+  voice-lock-mode
+  voice-lock-mode--turn-on
+  :init-value t
+  :group 'emacsvox-aural
+  (when (called-interactively-p 'interactive)
+    (emacsvox-icon (if global-voice-lock-mode 'on 'off))))
+
+(defvar text-property-default-nonsticky)
+
+(unless (assq 'personality text-property-default-nonsticky)
+  (push (cons 'personality t) text-property-default-nonsticky))
+
+(unless (assq 'voice-lock-mode minor-mode-alist)
+  (push '(voice-lock-mode " Voice") minor-mode-alist))
 
 (defvar emacsvox-aural-compatibility-voice-changed-hook nil
   "Hook run after compatibility voice policy changes in a buffer.

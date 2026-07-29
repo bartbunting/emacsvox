@@ -59,6 +59,15 @@
   "Voice-Test"
   "Major mode used to characterize global Voice Lock inheritance.")
 
+(ert-deftest emacsvox-voice-lock-mode-is-owned-by-aural-compatibility ()
+  "Legacy mode symbols live outside the ACSS and face provider."
+  (should
+   (string-match-p
+    "emacsvox-aural-compatibility-voice"
+    (or (symbol-file 'voice-lock-mode 'defun) "")))
+  (should (featurep 'voice-setup))
+  (should (featurep 'emacsvox-aural-compatibility-voice)))
+
 (defun emacsvox-test--toggle-local-silence ()
   "Toggle local silence without presenting the command's feedback cue."
   (cl-letf (((symbol-function 'emacsvox-icon) #'ignore))

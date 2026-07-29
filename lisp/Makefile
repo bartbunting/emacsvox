@@ -354,8 +354,7 @@ emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
 emacsvox-aural-profile-service.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
-emacsvox-aural-compatibility-voice.elc: \
-emacsvox-aural.elc voice-setup.elc
+emacsvox-aural-compatibility-voice.elc: emacsvox-aural.elc
 emacsvox-aural-history.elc: \
 emacsvox-aural.elc emacsvox-aural-concrete.elc
 emacsvox-aural-providers.elc: emacsvox-aural-schemes.elc
@@ -375,7 +374,8 @@ emacsvox-aural-submission.elc: \
 emacsvox-aural-concrete.elc emacsvox-aural-planner.elc \
 emacsvox-aural-source.elc
 tts-speak.elc: emacsvox-aural-transport.elc
-voice-setup.elc: tts-speak.elc
+voice-setup.elc: \
+tts-speak.elc emacsvox-aural-compatibility-voice.elc
 voice-defs.elc: voice-setup.elc
 dectalk-voices.elc plain-voices.elc espeak-voices.elc \
 outloud-voices.elc mac-voices.elc swiftmac-voices.elc: voice-defs.elc

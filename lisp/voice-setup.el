@@ -49,7 +49,9 @@
 ;;  spoken in `voice-function-name-personality'.
 ;; Reserved words will be spoken in `voice-keyword-personality'.
 ;; 
-;; To audio-format  text , use M-x voice-lock-mode.
+;; Legacy Voice Lock modes are provided by
+;; `emacsvox-aural-compatibility-voice'.  This module retains ACSS, face
+;; mapping, and local compatibility-provider machinery.
 ;; When this minor mode is on, the voices of the current line are
 ;; updated with every insertion or deletion.
 ;; 
@@ -360,39 +362,9 @@ last-registration-wins behavior."
            (setq ,voice (voice-setup-acss-from-style val))
            (set-default sym val)))))
 
-;;;  new light-weight voice lock
+(require 'emacsvox-aural-compatibility-voice)
+
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
-
-(define-minor-mode voice-lock-mode
-  "Toggle voice lock mode."
-  :init-value nil
-  :keymap nil
-  (when (called-interactively-p 'interactive)
-    (let ((state (if voice-lock-mode 'on 'off)))
-      (emacsvox-icon state))))
-
-(defun voice-lock-mode--turn-on ()
-  "Turn on Voice Lock mode ."
-  (interactive)
-  (voice-lock-mode 1))
-
-(define-globalized-minor-mode global-voice-lock-mode
-  voice-lock-mode
-  voice-lock-mode--turn-on
-  :init-value t
-  :group 'voice-lock
-  (when (called-interactively-p 'interactive)
-    (let ((state (if global-voice-lock-mode 'on 'off)))
-      (emacsvox-icon state)))
-  )
-
-;; Install ourselves:
-(cl-declaim (special text-property-default-nonsticky))
-(unless (assq 'personality text-property-default-nonsticky)
-  (push  (cons 'personality t) text-property-default-nonsticky))
-
-(unless (assq 'voice-lock-mode minor-mode-alist)
-  (setq minor-mode-alist (cons '(voice-lock-mode " Voice") minor-mode-alist)))
 
 ;;;  interactively silence personalities
 

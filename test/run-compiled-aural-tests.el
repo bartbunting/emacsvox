@@ -18,6 +18,7 @@
        (build-directory (make-temp-file "emacsvox-compiled-aural-" t))
        (files
         '("emacsvox-aural.el"
+          "emacsvox-aural-compatibility-voice.el"
           "emacsvox-aural-concrete.el"
           "emacsvox-aural-history.el"
           "emacsvox-aural-spatial.el"
@@ -33,7 +34,6 @@
           "emacsvox-aural-transport.el"
           "tts-speak.el"
           "voice-setup.el"
-          "emacsvox-aural-compatibility-voice.el"
           "voice-defs.el"
           "dectalk-voices.el"
           "plain-voices.el"
