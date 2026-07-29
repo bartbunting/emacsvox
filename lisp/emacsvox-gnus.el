@@ -60,6 +60,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-hide)
@@ -194,12 +195,27 @@ new Gnus mark is not otherwise portable."
      (when event (list :events (list event)))
      (when states (list :states (delete-dups (nreverse states)))))))
 
+(defun emacsvox-gnus--submit-subject (facts occasion &optional icon)
+  "Submit the current subject with FACTS, OCCASION, and leading ICON."
+  (let ((subject (gnus-summary-article-subject)))
+    (if (and (stringp subject) (> (length subject) 0))
+        (emacsvox-aural-submit
+         subject
+         :facts facts
+         :module 'gnus
+         :occasion occasion
+         :compatibility-actions
+         (when icon
+           (list (emacsvox-aural-compatibility-icon icon))))
+      (emacsvox-gnus--present-feedback
+       facts occasion icon #'tts-speak subject))))
+
 (defun emacsvox-gnus-present-subject
     (icon occasion event &optional extra-states)
   "Present the current subject with ICON and semantic message context."
-  (emacsvox-gnus--present-feedback
+  (emacsvox-gnus--submit-subject
    (emacsvox-gnus-message-facts event extra-states)
-   occasion icon #'emacsvox-gnus-summary-speak-subject))
+   occasion icon))
 
 (defun emacsvox-gnus-present-group
     (icon occasion event speaker &optional icon-after)
@@ -219,9 +235,9 @@ When ICON-AFTER is non-nil, preserve speaker-before-icon ordering."
 
 (defun emacsvox-gnus-summary-speak-subject ()
   "Speak the current Gnus subject with semantic message context."
-  (emacsvox-gnus--call-with-aural-presentation
+  (emacsvox-gnus--submit-subject
    (emacsvox-gnus-message-facts 'focus-entered)
-   'navigation #'tts-speak (gnus-summary-article-subject)))
+   'navigation))
 
 (defun emacsvox-gnus-speak-article-body ()
   "Speak the visible Gnus article body with semantic context."

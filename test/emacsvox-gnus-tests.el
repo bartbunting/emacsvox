@@ -166,39 +166,131 @@
           :events (message-marked)
           :states (marked unread)))))))
 
-(ert-deftest emacsvox-gnus-subject-feedback-shares-semantic-context ()
-  "Gnus subject cues and speech share message facts and navigation context."
-  (let (events)
+(ert-deftest emacsvox-gnus-subject-feedback-uses-one-native-submission ()
+  "Gnus subject content and cue share one semantic submission."
+  (let ((subject (propertize "Subject" 'personality 'voice-lighten))
+        calls)
     (cl-letf
         (((symbol-function 'emacsvox-gnus-message-facts)
           (lambda (&rest _)
             '(:role message :states (unread)
               :events (focus-entered))))
+         ((symbol-function 'gnus-summary-article-subject)
+          (lambda () subject))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) calls)
+            'submission)))
+      (emacsvox-gnus-present-subject
+       'select-object 'navigation 'focus-entered))
+    (should (= (length calls) 1))
+    (pcase-let* ((`(,content . ,arguments) (car calls))
+                 (actions (plist-get arguments :compatibility-actions))
+                 (action (car actions)))
+      (should (equal content "Subject"))
+      (should
+       (eq (get-text-property 0 'personality content) 'voice-lighten))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role message :states (unread)
+          :events (focus-entered))))
+      (should (eq (plist-get arguments :module) 'gnus))
+      (should (eq (plist-get arguments :occasion) 'navigation))
+      (should (= (length actions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'select-object)))))
+
+(ert-deftest emacsvox-gnus-missing-subject-keeps-legacy-fallback ()
+  "A missing subject still cues before passing nil to legacy speech."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-gnus-message-facts)
+          (lambda (&rest _) '(:role message)))
+         ((symbol-function 'gnus-summary-article-subject)
+          (lambda () nil))
          ((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list icon emacsvox-aural-submission-facts
-                   (plist-get emacsvox-aural-submission-context :module))
-             events)))
-         ((symbol-function 'emacsvox-gnus-summary-speak-subject)
-          (lambda ()
-            (push
-             (list 'subject emacsvox-aural-submission-facts
-                   emacsvox-aural-submission-occasion)
-             events))))
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'tts-speak)
+          (lambda (content) (push (list 'text content) events))))
       (emacsvox-gnus-present-subject
        'select-object 'navigation 'focus-entered))
     (should
      (equal
-      (nreverse events)
-      '((select-object
-         (:role message :states (unread)
-          :events (focus-entered))
-         gnus)
-        (subject
-         (:role message :states (unread)
-          :events (focus-entered))
-         navigation))))))
+      (nreverse events) '((icon select-object) (text nil))))))
+
+(ert-deftest emacsvox-gnus-native-subject-composes-mail-fragment-once ()
+  "Unread subject policy composes once with its compatibility cue."
+  (dolist (icons-enabled '(t nil))
+    (let ((emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments
+           '(mail-message-status-cues))
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          (emacsvox-aural-presentation-history nil)
+          (emacsvox-aural-presentation-history-limit 20)
+          (emacsvox-aural--presentation-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (emacsvox-aural-plan-presented-hook nil)
+          (emacsvox-use-icons icons-enabled)
+          (emacsvox-aural-face-presentation-enabled t)
+          (voice-lock-mode t)
+          events
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-gnus-message-facts)
+            (lambda (&rest _)
+              '(:role message :states (unread)
+                :events (focus-entered))))
+           ((symbol-function 'gnus-summary-article-subject)
+            (lambda ()
+              (propertize "Subject" 'personality 'voice-lighten)))
+           ((symbol-function 'tts-speak)
+            (lambda (prepared)
+              (with-temp-buffer
+                (insert prepared)
+                (tts-audio-format (point-min) (point-max)))))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_resource) (push 'cue events)))
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET"))
+           ((symbol-function 'tts--protocol-queue-code) #'ignore)
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text) (push (list 'text text) events)))
+           ((symbol-function 'tts--protocol-silence) #'ignore))
+        (setq
+         submission
+         (emacsvox-gnus-present-subject
+          'select-object 'navigation 'focus-entered)))
+      (should (emacsvox-aural-submission-p submission))
+      (should
+       (equal
+        (nreverse events)
+        (if icons-enabled
+            '(cue cue (text "Subject"))
+          '((text "Subject")))))
+      (should (= (length emacsvox-aural-presentation-history) 1))
+      (should
+       (= (emacsvox-aural-presentation-record-transaction-id
+           (emacsvox-aural-last-presentation))
+          1))
+      (let* ((plans (emacsvox-aural-submission-plans submission))
+             (plan (car plans))
+             (content (emacsvox-aural-concrete-plan-content plan)))
+        (should (= (length plans) 1))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (emacsvox-aural-concrete-plan-before plan))
+          (and icons-enabled '(select-object new-mail))))
+        (should
+         (eq
+          (emacsvox-aural-concrete-content-voice-request content)
+          'voice-lighten))))))
 
 (ert-deftest emacsvox-gnus-close-feedback-is-target-aware ()
   "Only the matching interactive Gnus exit emits close feedback."
@@ -310,8 +402,19 @@
           events)
       (cl-letf (((symbol-function 'emacsvox-icon)
                  (lambda (icon) (push (list 'icon icon) events)))
-                ((symbol-function 'emacsvox-gnus-summary-speak-subject)
-                 (lambda () (push 'speak-subject events))))
+                ((symbol-function 'gnus-summary-article-subject)
+                 (lambda () "Second subject"))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (_content &rest arguments)
+                   (dolist
+                       (action
+                        (plist-get arguments :compatibility-actions))
+                     (push
+                      (list
+                       'icon
+                       (emacsvox-aural-compatibility-action-value action))
+                      events))
+                   (push 'speak-subject events))))
         (should
          (eq
           (emacsvox--advice-gnus-summary-clear-mark-forward-around
@@ -340,8 +443,19 @@
                  (lambda (icon) (push (list 'icon icon) events)))
                 ((symbol-function 'gnus-summary-article-subject)
                  (lambda () "Second subject"))
-                ((symbol-function 'tts-speak)
-                 (lambda (text) (push (list 'speak text) events))))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (dolist
+                       (action
+                        (plist-get arguments :compatibility-actions))
+                     (push
+                      (list
+                       'icon
+                       (emacsvox-aural-compatibility-action-value action))
+                      events))
+                   (push
+                    (list 'speak (substring-no-properties content))
+                    events))))
         (should
          (eq
           (emacsvox--advice-gnus-summary-next-subject-around
@@ -397,10 +511,19 @@
   "Only matching interactive thread movement cues and speaks."
   (let ((ems--interactive-fn-name 'gnus-summary-down-thread)
         events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-gnus-summary-speak-subject)
-               (lambda () (push 'speak-subject events))))
+    (cl-letf (((symbol-function 'gnus-summary-article-subject)
+               (lambda () "Thread subject"))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (_content &rest arguments)
+                 (dolist
+                     (action
+                      (plist-get arguments :compatibility-actions))
+                   (push
+                    (list
+                     'icon
+                     (emacsvox-aural-compatibility-action-value action))
+                    events))
+                 (push 'speak-subject events))))
       (emacsvox--advice-gnus-summary-up-thread-after)
       (emacsvox--advice-gnus-summary-down-thread-after))
     (should
