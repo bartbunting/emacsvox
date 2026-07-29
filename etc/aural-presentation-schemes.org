@@ -3197,6 +3197,45 @@ skipped.  Changed Lisp compiles with warnings treated as errors, compiled
 Aural parity and normal build-tree startup pass, and the generated reference
 and Aural audit are current.
 
+** DONE Slice 46: Shell and Comint End-to-End Semantic Presentation
+CLOSED: [2026-07-30 Thu]
+
+- Register command-session roles, lifecycle events, operations, input origin,
+  interaction kind, and process exit status independently of presentation.
+- Identify =shell-mode= as the =shell= module and shared Comint-derived modes
+  as =comint= while retaining the same reusable runtime integration.
+- Assemble normalized inserted process text into logical output and prompt
+  events across arbitrary process chunks, ANSI filtering, carriage-return
+  progress updates, non-newline output, and split prompts.
+- Route input, output, prompt, navigation, completion, history, editing,
+  settings, signals, and process completion through frozen semantic
+  presentation boundaries while preserving established speech and cue order.
+- Preserve the stock Emacs 31 completion and input-history interfaces,
+  including sorting, highlighting, metadata, scrolling, keymaps, and window
+  behavior, while adding one accessible nonblocking announcement.
+- Update local Shell directory tracking from =/proc/PID/cwd= only after a
+  complete logical prompt, retaining stock Shell tracking for remote or
+  ineligible processes.
+- Flush final partial output and distinguish normal process closure from
+  failed or signalled completion without replacing package-owned sentinels.
+- Enforce the completed integration in the migrated-module audit, leaving the
+  two direct compatibility icon calls only inside the central semantic
+  presentation adapters.
+
+Deliverable: Shell and shared Comint interactions expose coherent
+command-session intent without duplicate chunk speech, prompt cues, completion
+interfaces, or process-lifecycle feedback.  Voice Lock, explicit aural face
+presentation, and auditory-icon enablement remain independent controls;
+semantic command output is not gated by the two voice controls.
+
+Checks: 43 focused Shell/Comint tests pass, including one complete command
+submit, output, and prompt lifecycle and live local Shell checks for logical
+output, process exit, and directory tracking.  The complete Emacs 31 source
+suite has 1,833 tests: 1,832 pass and the optional Mu4e test is skipped.
+Compiled aural parity, normal build-tree startup, all 27 semantic traces,
+warning-as-error compilation of the changed runtime, the generated reference,
+and the Aural, advice, and TTS audits pass.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:

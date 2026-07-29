@@ -823,6 +823,70 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
         (nreverse events)
         '((stop all) (icon more)))))))
 
+(ert-deftest emacsvox-comint-command-lifecycle-is-ordered-and-singular ()
+  "One command produces one submit, output, and prompt presentation in order."
+  (with-temp-buffer
+    (shell-mode)
+    (let ((ems--interactive-fn-name 'comint-send-input)
+          (emacsvox-comint-autospeak t)
+          (emacsvox-comint-output-monitor t)
+          (comint-prompt-regexp "[$] ")
+          events)
+      (cl-letf
+          (((symbol-function 'tts-stop)
+            (lambda (&rest arguments)
+              (push (cons 'stop arguments) events)))
+           ((symbol-function 'emacsvox-aural-call-with-submission)
+            (lambda (function &rest arguments)
+              (push
+               (list
+                'boundary
+                (plist-get arguments :facts)
+                (plist-get arguments :module)
+                (plist-get arguments :occasion))
+               events)
+              (apply function (plist-get arguments :arguments))))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                'submission
+                content
+                (plist-get arguments :facts)
+                (plist-get arguments :module)
+                (plist-get arguments :occasion))
+               events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon)
+              (push (list 'icon icon) events))))
+        (emacsvox--advice-comint-send-input-after)
+        (emacsvox-comint--present-process-output
+         "result\n$ " "result\n$ "))
+      (should
+       (equal
+        (nreverse events)
+        '((stop all)
+          (boundary
+           (:role command-input
+            :command-interaction-kind shell
+            :events (command-submitted)
+            :command-operation submit
+            :command-input-origin current)
+           shell state-change)
+          (icon more)
+          (submission
+           "result\n"
+           (:role command-output
+            :command-interaction-kind shell
+            :events (command-output-received))
+           shell continuous)
+          (boundary
+           (:role command-prompt
+            :command-interaction-kind shell
+            :events (command-prompt-ready))
+           shell notification)
+          (icon item)))))))
+
 (ert-deftest emacsvox-comint-magic-space-calls-original-once ()
   "Interactive magic space preserves one original call and its result."
   (with-temp-buffer
