@@ -80,6 +80,8 @@
                   "agent-shell-markdown" (&optional pos))
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
+(declare-function agent-shell-ui--toggle-fragment-at-point
+                  "agent-shell-ui" ())
 (declare-function emacsvox-speak--present-line-condition
                   "emacsvox-speak" (condition))
 (declare-function emacsvox-speak--visual-line-condition
@@ -3200,12 +3202,15 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
      (plist-get location :type))
     :visibility (plist-get location :visibility))))
 
-(defun emacsvox-agent-shell--toggle-fragment-around
-    (original-function &rest arguments)
-  "Announce an interactive fragment visibility change."
-  (let ((interactive-p
-         (ems-interactive-p 'agent-shell-ui-toggle-fragment))
-        (before (emacsvox-agent-shell--fragment-toggle-target))
+(defun emacsvox-agent-shell--call-toggle-fragment
+    (original-function arguments interactive-p)
+  "Call fragment toggle ORIGINAL-FUNCTION with ARGUMENTS.
+
+When INTERACTIVE-P is non-nil, announce a resulting visibility change."
+  (let ((before
+         (and
+          interactive-p
+          (emacsvox-agent-shell--fragment-toggle-target)))
         result)
     (setq result (apply original-function arguments))
     (when (and interactive-p before)
@@ -3220,6 +3225,21 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
          (if (eq visibility 'folded) 'close-object 'open-object)
          #'emacsvox-speak-line)))
     result))
+
+(defun emacsvox-agent-shell--toggle-fragment-around
+    (original-function &rest arguments)
+  "Announce a public interactive fragment visibility change."
+  (emacsvox-agent-shell--call-toggle-fragment
+   original-function arguments
+   (ems-interactive-p 'agent-shell-ui-toggle-fragment)))
+
+(defun emacsvox-agent-shell--toggle-fragment-action-around
+    (original-function &rest arguments)
+  "Announce a fragment toggle invoked by an inline RET or mouse action."
+  (let ((target ems--interactive-fn-name))
+    (emacsvox-agent-shell--call-toggle-fragment
+     original-function arguments
+     (and (functionp target) (ems-interactive-p target)))))
 
 (defun emacsvox-agent-shell--toggle-all-fragments-around
     (original-function &rest arguments)
@@ -4630,6 +4650,8 @@ Return nil when the configured verbosity requests status cues only."
      emacsvox-agent-shell--agent-shell-toggle-after)
     (agent-shell-ui-toggle-fragment :around
      emacsvox-agent-shell--toggle-fragment-around)
+    (agent-shell-ui--toggle-fragment-at-point :around
+     emacsvox-agent-shell--toggle-fragment-action-around)
     (agent-shell-ui-toggle-all-fragments :around
      emacsvox-agent-shell--toggle-all-fragments-around)
     (agent-shell-other-buffer :after

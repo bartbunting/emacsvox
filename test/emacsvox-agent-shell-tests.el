@@ -169,6 +169,9 @@
                   "emacsvox-agent-shell" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--toggle-fragment-around
                   "emacsvox-agent-shell" (original-function &rest arguments))
+(declare-function emacsvox-agent-shell--toggle-fragment-action-around
+                  "emacsvox-agent-shell"
+                  (original-function &rest arguments))
 (declare-function emacsvox-agent-shell--toggle-all-fragments-around
                   "emacsvox-agent-shell" (original-function &rest arguments))
 (declare-function emacsvox-agent-shell-next-block-of-type
@@ -256,6 +259,8 @@
 (declare-function agent-shell--format-plan "agent-shell" (entries))
 (declare-function agent-shell--save-tool-call
                   "agent-shell" (state tool-call-id tool-call))
+(declare-function agent-shell-ui--toggle-fragment-at-point
+                  "agent-shell-ui" ())
 (declare-function agent-shell-markdown-replace-markup
                   "agent-shell-markdown" (&rest arguments))
 (declare-function agent-shell-ui-make-fragment-model
@@ -3216,6 +3221,56 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (point))
            :visibility)
           'expanded))))))
+
+(ert-deftest emacsvox-agent-shell-fold-action-ret-announces-both-states ()
+  "The inline RET action should announce expansion and collapse."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (let* ((activity
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'activity-group))
+             (emacsvox-agent-shell--block-locations))))
+      (goto-char (plist-get activity :position))
+      (let ((action (key-binding (kbd "RET"))))
+        (should (functionp action))
+        (should-not (eq action 'agent-shell-ui-toggle-fragment))
+        (should
+         (equal
+          (emacsvox-agent-shell-test--capture-events
+            (cl-letf
+                (((symbol-function 'emacsvox-speak-line)
+                  (lambda () (tts-speak "Activity group"))))
+              (call-interactively action)
+              (call-interactively (key-binding (kbd "RET")))))
+          '((icon open-object)
+            (speak "Activity group")
+            (icon close-object)
+            (speak "Activity group")))))
+      (should
+       (eq
+        (plist-get
+         (emacsvox-agent-shell--fragment-location-at-position (point))
+         :visibility)
+        'folded)))))
+
+(ert-deftest emacsvox-agent-shell-internal-fold-toggle-remains-silent ()
+  "Programmatic use of the internal fold primitive should remain silent."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (let* ((activity
+            (seq-find
+             (lambda (location)
+               (eq (plist-get location :type) 'activity-group))
+             (emacsvox-agent-shell--block-locations))))
+      (goto-char (plist-get activity :position))
+      (should-not
+       (emacsvox-agent-shell-test--capture-events
+         (agent-shell-ui--toggle-fragment-at-point)))
+      (should
+       (eq
+        (plist-get
+         (emacsvox-agent-shell--fragment-location-at-position (point))
+         :visibility)
+        'expanded)))))
 
 (ert-deftest emacsvox-agent-shell-toggle-all-emits-one-aggregate-change ()
   "Toggling all fragments should announce one aggregate visibility result."
