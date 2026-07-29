@@ -464,7 +464,7 @@
      (submit delete-output clear-buffer kill-input send-eof signal
              completion history-navigation command-navigation
              output-navigation prompt-navigation input-boundary copy-input
-             accumulate insert-argument))
+             accumulate insert-argument setting))
     (command-input-origin
      :kind attribute
      :summary "Where presented command input came from"

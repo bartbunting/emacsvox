@@ -83,8 +83,12 @@ Interactive PREFIX arg means toggle  global default value. "
    (t (make-local-variable 'emacsvox-comint-autospeak)
       (setq emacsvox-comint-autospeak (not emacsvox-comint-autospeak))))
   (when (called-interactively-p 'interactive)
-    (emacsvox-icon (if emacsvox-comint-autospeak 'on 'off))
-    (message
+    (emacsvox-comint--present-feedback
+     (emacsvox-comint-facts
+      'command-interaction 'state-changed 'setting)
+     'state-change
+     (if emacsvox-comint-autospeak 'on 'off)
+     #'message
      (format "Turned emacsvox-comint-autospeak %s  %s."
              (if emacsvox-comint-autospeak "on" "off")
              (if prefix "" " locally")))))
@@ -116,12 +120,6 @@ buffer is not current or its window live.")
 
 (defvar-local emacsvox-comint--prompt-awaiting-padding nil
   "Non-nil when a just-recognized prompt may receive trailing whitespace.")
-
-;;;###autoload
-(ems-generate-switcher 'emacsvox-toggle-comint-output-monitor
-                       'emacsvox-comint-output-monitor
-                       "Toggle  Emacsvox comint monitor.
-Interactive PREFIX arg means toggle the global default value. ")
 
 ;;; Semantic aural presentation:
 
@@ -169,6 +167,16 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      (when icon (emacsvox-icon icon))
      (apply function arguments))))
 
+(defun emacsvox-comint--present-feedback-after
+    (facts occasion icon function &rest arguments)
+  "Under FACTS and OCCASION, call FUNCTION then present ICON.
+ARGUMENTS are passed to FUNCTION."
+  (emacsvox-comint--call-with-aural-presentation
+   facts occasion
+   (lambda ()
+     (apply function arguments)
+     (when icon (emacsvox-icon icon)))))
+
 (defun emacsvox-comint--submit
     (content facts occasion &optional icon icon-phase)
   "Submit CONTENT with FACTS and OCCASION as one aural transaction.
@@ -182,6 +190,36 @@ When ICON is non-nil, preserve it in ICON-PHASE, which defaults to `before'."
    (when icon
      (list
       (emacsvox-aural-compatibility-icon icon icon-phase)))))
+
+;;;###autoload
+(defun emacsvox-toggle-comint-output-monitor (&optional prefix)
+  "Toggle whether autospeech follows this Comint buffer in the background.
+Interactive PREFIX toggles the global default and applies it locally."
+  (interactive "P")
+  (if prefix
+      (progn
+        (setq-default
+         emacsvox-comint-output-monitor
+         (not (default-value 'emacsvox-comint-output-monitor)))
+        (setq emacsvox-comint-output-monitor
+              (default-value 'emacsvox-comint-output-monitor)))
+    (setq emacsvox-comint-output-monitor
+          (not emacsvox-comint-output-monitor)))
+  (when
+      (and
+       (boundp 'tts-speaker-process)
+       (process-live-p tts-speaker-process))
+    (tts--protocol-sync))
+  (when (called-interactively-p 'interactive)
+    (emacsvox-comint--present-feedback
+     (emacsvox-comint-facts
+      'command-interaction 'state-changed 'setting)
+     'state-change
+     (if emacsvox-comint-output-monitor 'on 'off)
+     #'message
+     (format "Turned %s emacsvox-comint-output-monitor  %s."
+             (if emacsvox-comint-output-monitor "on" "off")
+             (if prefix "" " locally")))))
 
 (defun emacsvox-comint--full-prompt-match-p (text)
   "Return non-nil when TEXT is exactly a configured Comint prompt."
@@ -379,8 +417,10 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox--advice-comint-delete-output-after (&rest _)
   "Cue and speak after interactively deleting Comint output."
   (when (ems-interactive-p 'comint-delete-output)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-speak-line)))
+    (emacsvox-comint--present-feedback
+     (emacsvox-comint-facts
+      'command-output 'object-changed 'delete-output)
+     'state-change 'delete-object #'emacsvox-speak-line)))
 
 (advice-add
  'comint-delete-output :after
@@ -401,16 +441,21 @@ events.  Carriage-return chunks replace pending progress output."
        (when (ems-interactive-p ',target)
          (save-excursion
            (comint-bol-or-process-mark)
-           (emacsvox-icon 'select-object)
-           (emacsvox-speak-line 1))))
+           (emacsvox-comint--present-feedback
+            (emacsvox-comint-facts
+             'command-input 'focus-entered 'history-navigation
+             '(:command-input-origin history))
+            'navigation 'select-object #'emacsvox-speak-line 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-comint-clear-buffer-after (&rest _)
   "Cue and speak after interactively clearing a Comint buffer."
   (when (ems-interactive-p 'comint-clear-buffer)
-    (emacsvox-icon 'delete-object)
-    (emacsvox-speak-line)))
+    (emacsvox-comint--present-feedback
+     (emacsvox-comint-facts
+      'command-interaction 'object-changed 'clear-buffer)
+     'state-change 'delete-object #'emacsvox-speak-line)))
 
 (advice-add
  'comint-clear-buffer :after
@@ -430,9 +475,16 @@ events.  Carriage-return chunks replace pending progress output."
            (if (= (point) (+ origin count))
                (save-excursion
                  (forward-word -1)
-                 (emacsvox-speak-word))
-             (emacsvox-icon 'complete)
-             (emacsvox-speak-region
+                 (emacsvox-comint--call-with-aural-presentation
+                  (emacsvox-comint-facts
+                   'command-input 'object-changed 'completion
+                   '(:command-input-origin current))
+                  'edit #'emacsvox-speak-word))
+             (emacsvox-comint--present-feedback
+              (emacsvox-comint-facts
+               'command-input 'object-changed 'completion
+               '(:command-input-origin completion))
+              'edit 'complete #'emacsvox-speak-region
               (comint-line-beginning-position) (point)))
            result))))))
 
@@ -450,8 +502,11 @@ events.  Carriage-return chunks replace pending progress output."
         (funcall original index)
       (let ((origin (point))
             (result (funcall original index)))
-        (emacsvox-speak-region origin (point))
-        (emacsvox-icon 'yank-object)
+        (emacsvox-comint--present-feedback-after
+         (emacsvox-comint-facts
+          'command-input 'object-changed 'insert-argument
+          '(:command-input-origin previous-argument))
+         'edit 'yank-object #'emacsvox-speak-region origin (point))
         result))))
 
 (advice-add
@@ -499,9 +554,17 @@ events.  Carriage-return chunks replace pending progress output."
   "Give deletion or EOF feedback, then call ORIGINAL once with ARGUMENT."
   (when (ems-interactive-p 'comint-delchar-or-maybe-eof)
     (if (= (point) (point-max))
-        (message "Sending EOF to comint process")
-      (emacsvox-speak-edit-operation 'deletion)
-      (emacsvox-speak-char t)))
+        (emacsvox-comint--call-with-aural-presentation
+         (emacsvox-comint-facts
+          'command-interaction 'command-process-signalled 'send-eof)
+         'state-change #'message "Sending EOF to comint process")
+      (emacsvox-comint--call-with-aural-presentation
+       (emacsvox-comint-facts
+        'command-input 'object-changed nil)
+       'edit
+       (lambda ()
+         (emacsvox-speak-edit-operation 'deletion)
+         (emacsvox-speak-char t)))))
   (funcall original argument))
 
 (advice-add
@@ -512,7 +575,10 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox--advice-comint-send-eof-before (&rest _)
   "Announce an interactive EOF sent to the subprocess."
   (when (ems-interactive-p 'comint-send-eof)
-    (message "Sending EOF to subprocess")))
+    (emacsvox-comint--call-with-aural-presentation
+     (emacsvox-comint-facts
+      'command-interaction 'command-process-signalled 'send-eof)
+     'state-change #'message "Sending EOF to subprocess")))
 
 (advice-add
  'comint-send-eof :before
@@ -524,8 +590,11 @@ events.  Carriage-return chunks replace pending progress output."
   (when (ems-interactive-p 'comint-accumulate)
     (save-excursion
       (comint-bol)
-      (emacsvox-icon 'select-object)
-      (emacsvox-speak-line 1))))
+      (emacsvox-comint--present-feedback
+       (emacsvox-comint-facts
+        'command-input 'focus-entered 'accumulate
+        '(:command-input-origin accumulated))
+       'edit 'select-object #'emacsvox-speak-line 1))))
 
 (advice-add
  'comint-accumulate :before
@@ -546,8 +615,11 @@ events.  Carriage-return chunks replace pending progress output."
        (when (ems-interactive-p ',target)
          (save-excursion
            (goto-char (comint-line-beginning-position))
-           (emacsvox-speak-line 1))
-         (emacsvox-icon 'select-object)))
+           (emacsvox-comint--present-feedback-after
+            (emacsvox-comint-facts
+             'command-input 'focus-entered 'history-navigation
+             '(:command-input-origin history))
+            'navigation 'select-object #'emacsvox-speak-line 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -563,8 +635,11 @@ events.  Carriage-return chunks replace pending progress output."
        "Cue and speak after interactive shell command movement."
        (when (ems-interactive-p ',target)
          (let ((emacsvox-show-point t))
-           (emacsvox-speak-line)
-           (emacsvox-icon 'item))))
+           (emacsvox-comint--present-feedback-after
+            (emacsvox-comint-facts
+             'command-input 'focus-entered 'command-navigation
+             '(:command-input-origin current))
+            'navigation 'item #'emacsvox-speak-line))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -572,8 +647,11 @@ events.  Carriage-return chunks replace pending progress output."
   "Speak the output selected by an interactive Comint command."
   (when (ems-interactive-p 'comint-show-output)
     (let ((emacsvox-show-point t))
-      (emacsvox-icon 'large-movement)
-      (emacsvox-speak-region (point) (mark)))))
+      (emacsvox-comint--present-feedback
+       (emacsvox-comint-facts
+        'command-output 'focus-entered 'output-navigation)
+       'navigation 'large-movement #'emacsvox-speak-region
+       (point) (mark)))))
 
 (advice-add
  'comint-show-output :after
@@ -584,8 +662,10 @@ events.  Carriage-return chunks replace pending progress output."
   "Cue and speak after showing maximum Comint output."
   (when (ems-interactive-p 'comint-show-maximum-output)
     (let ((emacsvox-show-point t))
-      (emacsvox-speak-line)
-      (emacsvox-icon 'scroll))))
+      (emacsvox-comint--present-feedback-after
+       (emacsvox-comint-facts
+        'command-output 'focus-entered 'output-navigation)
+       'navigation 'scroll #'emacsvox-speak-line))))
 
 (advice-add
  'comint-show-maximum-output :after
@@ -596,8 +676,11 @@ events.  Carriage-return chunks replace pending progress output."
   "Cue and speak after moving to the Comint input boundary."
   (when (ems-interactive-p 'comint-bol-or-process-mark)
     (let ((emacsvox-show-point t))
-      (emacsvox-speak-line)
-      (emacsvox-icon 'select-object))))
+      (emacsvox-comint--present-feedback-after
+       (emacsvox-comint-facts
+        'command-input 'focus-entered 'input-boundary
+        '(:command-input-origin current))
+       'navigation 'select-object #'emacsvox-speak-line))))
 
 (advice-add
  'comint-bol-or-process-mark :after
@@ -607,8 +690,11 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox--advice-comint-copy-old-input-after (&rest _)
   "Cue and speak input copied interactively from Comint history."
   (when (ems-interactive-p 'comint-copy-old-input)
-    (emacsvox-icon 'yank-object)
-    (emacsvox-speak-line)))
+    (emacsvox-comint--present-feedback
+     (emacsvox-comint-facts
+      'command-input 'object-changed 'copy-input
+      '(:command-input-origin copied))
+     'edit 'yank-object #'emacsvox-speak-line)))
 
 (advice-add
  'comint-copy-old-input :after
@@ -647,9 +733,14 @@ events.  Carriage-return chunks replace pending progress output."
     (with-output-to-temp-buffer "*Completions*"
       (display-completion-list completions))
     (with-current-buffer (get-buffer "*Completions*")
-      (setq-local comint-displayed-dynamic-completions completions))
-    (next-completion 1)
-    (tts-speak (buffer-substring (point) (point-max)))))
+      (setq-local comint-displayed-dynamic-completions completions)
+      (goto-char (point-min))
+      (next-completion 1))
+    (emacsvox-comint--submit
+     (car completions)
+     (emacsvox-comint-facts
+      'command-interaction 'focus-entered 'completion)
+     'navigation)))
 
 (advice-add
  'comint-dynamic-list-completions :around
@@ -674,8 +765,11 @@ events.  Carriage-return chunks replace pending progress output."
           'all
           (save-excursion
             (goto-char (comint-line-beginning-position))
-            (emacsvox-speak-line 1)))
-         (emacsvox-icon 'item)))
+            (emacsvox-comint--present-feedback-after
+             (emacsvox-comint-facts
+              'command-input 'focus-entered 'history-navigation
+              '(:command-input-origin history))
+             'navigation 'item #'emacsvox-speak-line 1)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -684,7 +778,11 @@ events.  Carriage-return chunks replace pending progress output."
   (setq emacsvox-comint--prompt-awaiting-padding nil)
   (when (ems-interactive-p 'comint-send-input)
     (tts-stop 'all)
-    (emacsvox-icon 'more)))
+    (emacsvox-comint--present-feedback
+     (emacsvox-comint-facts
+      'command-input 'command-submitted 'submit
+      '(:command-input-origin current))
+     'state-change 'more #'ignore)))
 
 (advice-add
  'comint-send-input :after
@@ -701,18 +799,24 @@ events.  Carriage-return chunks replace pending progress output."
      (defun ,function (&rest _)
        "Cue and speak after interactive movement between Comint prompts."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'item)
-         (if (eolp)
-             (emacsvox-speak-line)
-           (emacsvox-speak-line 1))))
+         (emacsvox-comint--present-feedback
+          (emacsvox-comint-facts
+           'command-prompt 'focus-entered 'prompt-navigation)
+          'navigation 'item #'emacsvox-speak-line
+          (unless (eolp) 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-comint-get-next-from-history-after (&rest _)
   "Cue and speak after interactively fetching the next history item."
   (when (ems-interactive-p 'comint-get-next-from-history)
-    (emacsvox-icon 'item)
-    (save-excursion (comint-bol) (emacsvox-speak-line 1))))
+    (save-excursion
+      (comint-bol)
+      (emacsvox-comint--present-feedback
+       (emacsvox-comint-facts
+        'command-input 'focus-entered 'history-navigation
+        '(:command-input-origin history))
+       'navigation 'item #'emacsvox-speak-line 1))))
 
 (advice-add
  'comint-get-next-from-history :after
@@ -741,9 +845,13 @@ events.  Carriage-return chunks replace pending progress output."
           (forward-line 3)
           (while (search-backward "completion" nil 'move)
             (replace-match "history reference")))
-        (emacsvox-icon 'help)
         (next-completion 1)
-        (tts-speak (emacsvox-get-current-completion))))))
+        (emacsvox-comint--submit
+         (emacsvox-get-current-completion)
+         (emacsvox-comint-facts
+          'command-input 'focus-entered 'history-navigation
+          '(:command-input-origin history))
+         'navigation 'help)))))
 
 (advice-add
  'comint-dynamic-list-input-ring :around
@@ -763,18 +871,27 @@ events.  Carriage-return chunks replace pending progress output."
      (defun ,function (&rest _)
        "Report an interactive signal sent to a Comint subjob."
        (when (ems-interactive-p ',target)
-         (message ,announcement)))
+         (emacsvox-comint--call-with-aural-presentation
+          (emacsvox-comint-facts
+           'command-interaction 'command-process-signalled 'signal)
+          'state-change #'message ,announcement)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-comint-kill-input-before (&rest _)
   "Cue and speak input about to be killed interactively."
   (when (ems-interactive-p 'comint-kill-input)
-    (emacsvox-icon 'delete-object)
-    (let
-        ((pmark (process-mark (get-buffer-process (current-buffer)))))
-      (when (> (point) (marker-position pmark))
-        (emacsvox-speak-region pmark (point))))))
+    (when-let* ((process (get-buffer-process (current-buffer)))
+                (pmark (process-mark process))
+                ((marker-position pmark)))
+      (emacsvox-comint--present-feedback
+       (emacsvox-comint-facts
+        'command-input 'object-changed 'kill-input
+        '(:command-input-origin current))
+       'edit 'delete-object
+       (lambda ()
+         (when (> (point) (marker-position pmark))
+           (emacsvox-speak-region pmark (point))))))))
 
 (advice-add
  'comint-kill-input :before
@@ -785,7 +902,10 @@ events.  Carriage-return chunks replace pending progress output."
     (&rest _)
   "Speak filename completions displayed by an interactive Comint command."
   (when (ems-interactive-p 'comint-dynamic-list-filename-completions)
-    (emacsvox-speak-completions-if-available)))
+    (emacsvox-comint--call-with-aural-presentation
+     (emacsvox-comint-facts
+      'command-interaction 'focus-entered 'completion)
+     'navigation #'emacsvox-speak-completions-if-available)))
 
 (advice-add
  'comint-dynamic-list-filename-completions :after

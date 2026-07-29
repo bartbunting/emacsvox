@@ -85,7 +85,11 @@ The removed named helpers remain listed so calls cannot be reintroduced.")
      emacsvox-dired--present-feedback)
     (emacsvox-magit.el
      emacsvox-magit--call-with-aural-presentation
-     emacsvox-magit--present-feedback))
+     emacsvox-magit--present-feedback)
+    (emacsvox-comint.el
+     emacsvox-comint--call-with-aural-presentation
+     emacsvox-comint--present-feedback
+     emacsvox-comint--present-feedback-after))
   "Migrated modules and calls that establish semantic icon context.
 
 A direct icon call in one of these modules must occur below one of its

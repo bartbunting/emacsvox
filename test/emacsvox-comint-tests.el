@@ -130,6 +130,39 @@
       (nreverse events)
       '(line (icon item))))))
 
+(ert-deftest emacsvox-comint-navigation-has-one-semantic-boundary ()
+  "Shell command navigation preserves speech-first order in one transaction."
+  (with-temp-buffer
+    (shell-mode)
+    (let ((ems--interactive-fn-name 'shell-forward-command)
+          boundaries
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-call-with-submission)
+            (lambda (function &rest arguments)
+              (push
+               (list
+                (plist-get arguments :facts)
+                (plist-get arguments :module)
+                (plist-get arguments :occasion))
+               boundaries)
+              (apply function (plist-get arguments :arguments))))
+           ((symbol-function 'emacsvox-speak-line)
+            (lambda (&rest _) (push 'line events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-shell-forward-command-after))
+      (should
+       (equal
+        boundaries
+        '(((:role command-input
+            :command-interaction-kind shell
+            :events (focus-entered)
+            :command-operation command-navigation
+            :command-input-origin current)
+           shell navigation))))
+      (should (equal (nreverse events) '(line (icon item)))))))
+
 (ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
   "Comint output and subprocess advice uses native advice directly."
   (dolist
@@ -497,9 +530,9 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
                     ((symbol-function 'next-completion)
                      (lambda (count)
                        (push (list 'next count) events)))
-                    ((symbol-function 'tts-speak)
-                     (lambda (text)
-                       (push (list 'speak text) events)
+                    ((symbol-function 'emacsvox-comint--submit)
+                     (lambda (text facts occasion &rest _)
+                       (push (list 'submit text facts occasion) events)
                        'completion-result)))
             (should
              (eq
@@ -517,7 +550,13 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
       (nreverse events)
       '((display ("alpha" "zeta"))
         (next 1)
-        (speak ""))))))
+        (submit
+         "alpha"
+         (:role command-interaction
+          :command-interaction-kind repl
+          :events (focus-entered)
+          :command-operation completion)
+         navigation))))))
 
 (ert-deftest emacsvox-comint-input-ring-selects-one-display-path ()
   "Input history replaces the stock UI only for interactive calls."
@@ -567,6 +606,45 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
           :before emacsvox--advice-comint-kill-input-before)))
     (pcase-let ((`(,target ,where ,function) entry))
       (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-comint-send-input-announces-one-semantic-lifecycle-event ()
+  "Submitting input stops stale speech and cues one frozen command event."
+  (with-temp-buffer
+    (comint-mode)
+    (let ((ems--interactive-fn-name 'comint-send-input)
+          (emacsvox-comint--prompt-awaiting-padding t)
+          boundaries
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-call-with-submission)
+            (lambda (function &rest arguments)
+              (push
+               (list
+                (plist-get arguments :facts)
+                (plist-get arguments :module)
+                (plist-get arguments :occasion))
+               boundaries)
+              (apply function (plist-get arguments :arguments))))
+           ((symbol-function 'tts-stop)
+            (lambda (&rest arguments)
+              (push (cons 'stop arguments) events)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (icon) (push (list 'icon icon) events))))
+        (emacsvox--advice-comint-send-input-after))
+      (should-not emacsvox-comint--prompt-awaiting-padding)
+      (should
+       (equal
+        boundaries
+        '(((:role command-input
+            :command-interaction-kind repl
+            :events (command-submitted)
+            :command-operation submit
+            :command-input-origin current)
+           comint state-change))))
+      (should
+       (equal
+        (nreverse events)
+        '((stop all) (icon more)))))))
 
 (ert-deftest emacsvox-comint-magic-space-calls-original-once ()
   "Interactive magic space preserves one original call and its result."
@@ -638,6 +716,69 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
        (equal
         (nreverse events)
         `((region ,origin ,(point)) (icon yank-object)))))))
+
+(ert-deftest emacsvox-comint-kill-input-is-safe-without-a-live-process ()
+  "A dead Shell buffer does not fail while preparing kill-input feedback."
+  (with-temp-buffer
+    (comint-mode)
+    (let ((ems--interactive-fn-name 'comint-kill-input)
+          presented)
+      (cl-letf (((symbol-function 'get-buffer-process)
+                 (lambda (&rest _) nil))
+                ((symbol-function 'emacsvox-comint--present-feedback)
+                 (lambda (&rest _) (setq presented t))))
+        (should-not (emacsvox--advice-comint-kill-input-before)))
+      (should-not presented))))
+
+(ert-deftest emacsvox-comint-output-policy-is-independent-of-voice-controls ()
+  "Voice Lock and face policy do not suppress native Shell output events."
+  (dolist
+      (settings
+       '((nil nil nil)
+         (nil t t)
+         (t nil t)
+         (t t nil)))
+    (pcase-let ((`(,voice-lock ,face-presentation ,icons) settings))
+      (with-temp-buffer
+        (let ((voice-lock-mode voice-lock)
+              (emacsvox-aural-face-presentation-enabled face-presentation)
+              (emacsvox-use-icons icons)
+              (emacsvox-comint-output-monitor t)
+              (emacsvox-comint-autospeak t)
+              (comint-prompt-regexp "[$] ")
+              output-events prompt-events)
+          (cl-letf
+              (((symbol-function 'emacsvox-comint--submit)
+                (lambda (content &rest _)
+                  (push content output-events)))
+               ((symbol-function 'emacsvox-comint--present-feedback)
+                (lambda (facts _occasion icon function &rest arguments)
+                  (push (list facts icon) prompt-events)
+                  (apply function arguments))))
+            (emacsvox-comint--present-process-output
+             "result\n$ " "result\n$ "))
+          (should (equal output-events '("result\n")))
+          (should (= (length prompt-events) 1)))))))
+
+(ert-deftest emacsvox-toggle-comint-output-monitor-preserves-local-and-global-use ()
+  "The semantic replacement for the generated switcher keeps its API."
+  (let ((original-default
+         (default-value 'emacsvox-comint-output-monitor)))
+    (unwind-protect
+        (with-temp-buffer
+          (setq-local emacsvox-comint-output-monitor nil)
+          (emacsvox-toggle-comint-output-monitor)
+          (should emacsvox-comint-output-monitor)
+          (emacsvox-toggle-comint-output-monitor)
+          (should-not emacsvox-comint-output-monitor)
+          (let ((expected (not original-default)))
+            (emacsvox-toggle-comint-output-monitor t)
+            (should
+             (eq
+              (default-value 'emacsvox-comint-output-monitor)
+              expected))
+            (should (eq emacsvox-comint-output-monitor expected))))
+      (setq-default emacsvox-comint-output-monitor original-default))))
 
 (ert-deftest emacsvox-comint-delete-or-eof-calls-original-once-after-feedback ()
   "Delete-or-EOF gives feedback before one original call."
