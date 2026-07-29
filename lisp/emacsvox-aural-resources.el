@@ -94,11 +94,29 @@ refresh that may affect several packs.")
 (defvar emacsvox-aural--resource-pack-notification-pending nil
   "Non-nil when a deferred resource-pack transaction changed the registry.")
 
+(defvar emacsvox-aural-resource-generation 0
+  "Generation of the registered resource packs and enabled overlays.")
+
+(defvar emacsvox-aural--effective-assets-cache
+  (make-hash-table :test #'equal)
+  "Effective asset tables keyed by resource generation and pack selection.")
+
+(defvar emacsvox-aural--resource-spatialization-cache
+  (make-hash-table :test #'equal)
+  "Resolved resource ownership keyed by generation and lookup inputs.")
+
+(defun emacsvox-aural--invalidate-resource-caches ()
+  "Advance the resource generation and clear derived resource indexes."
+  (cl-incf emacsvox-aural-resource-generation)
+  (clrhash emacsvox-aural--effective-assets-cache)
+  (clrhash emacsvox-aural--resource-spatialization-cache))
+
 (defun emacsvox-aural--resource-packs-changed (&optional id)
   "Notify resource consumers that pack ID changed.
 
 During discovery transactions, retain one pending notification until the
 complete replacement registry has validated successfully."
+  (emacsvox-aural--invalidate-resource-caches)
   (if emacsvox-aural--defer-resource-pack-notifications
       (setq emacsvox-aural--resource-pack-notification-pending t)
     (run-hook-with-args 'emacsvox-aural-resource-packs-changed-hook id)))
@@ -190,6 +208,7 @@ standard personal discovery root.  The directory need not exist."
 
 (defun emacsvox-aural--resource-overlays-changed (&optional id)
   "Notify resource consumers that overlay ID or enablement changed."
+  (emacsvox-aural--invalidate-resource-caches)
   (run-hook-with-args 'emacsvox-aural-resource-overlays-changed-hook id)
   (when (fboundp 'emacsvox-aural-configuration-changed)
     (emacsvox-aural-configuration-changed 'resource-overlays)))
@@ -1047,10 +1066,11 @@ discovered directories with the same identifier."
         (error
          (clrhash emacsvox-aural-resource-pack-registry)
          (maphash
-          (lambda (id pack)
+         (lambda (id pack)
             (puthash id pack emacsvox-aural-resource-pack-registry))
           snapshot)
          (emacsvox-aural--refresh-all-resource-overlay-packs)
+         (emacsvox-aural--invalidate-resource-caches)
          (signal (car error) (cdr error)))))
     (setq
      desired
@@ -1193,8 +1213,9 @@ PATH protects this helper from invalid inheritance cycles."
           (emacsvox-aural--copy-resource-assets module-assets assets)))))
   assets)
 
-(defun emacsvox-aural-effective-assets (pack-id &optional include-prompts)
-  "Return effective assets for PACK-ID, including module resource overlays.
+(defun emacsvox-aural--build-effective-assets
+    (pack-id &optional include-prompts)
+  "Build effective assets for PACK-ID, including module resource overlays.
 
 When INCLUDE-PROMPTS is non-nil, prompt resources form the weakest layer.
 Enabled module defaults come next.  Each selected-pack inheritance layer then
@@ -1217,6 +1238,36 @@ adds its flat assets followed by OWNER-named module-subdirectory overrides."
     (emacsvox-aural--apply-pack-assets-with-overlays pack-id assets)
     assets))
 
+(defun emacsvox-aural--cached-effective-assets
+    (pack-id &optional include-prompts)
+  "Return the immutable cached effective assets for PACK-ID.
+
+INCLUDE-PROMPTS has the same meaning as in
+`emacsvox-aural-effective-assets'."
+  (let* ((key
+          (list
+           emacsvox-aural-resource-generation
+           pack-id
+           (and include-prompts t)
+           (copy-sequence emacsvox-aural-disabled-resource-overlays)))
+         (cached
+          (gethash key emacsvox-aural--effective-assets-cache)))
+    (or
+     cached
+     (let ((assets
+            (emacsvox-aural--build-effective-assets
+             pack-id include-prompts)))
+       (puthash key assets emacsvox-aural--effective-assets-cache)
+       assets))))
+
+(defun emacsvox-aural-effective-assets (pack-id &optional include-prompts)
+  "Return effective assets for PACK-ID, including module resource overlays.
+
+When INCLUDE-PROMPTS is non-nil, prompt resources form the weakest layer.
+The returned table is a fresh copy and may be modified by the caller."
+  (copy-hash-table
+   (emacsvox-aural--cached-effective-assets pack-id include-prompts)))
+
 (defun emacsvox-aural--resolve-cue-in-assets (cue assets &optional path)
   "Resolve CUE through ASSETS and registered fallback, detecting PATH cycles."
   (when (memq cue path)
@@ -1234,7 +1285,7 @@ adds its flat assets followed by OWNER-named module-subdirectory overrides."
 
 When INCLUDE-PROMPTS is non-nil, include prompt resources."
   (emacsvox-aural--resolve-cue-in-assets
-   cue (emacsvox-aural-effective-assets pack-id include-prompts)))
+   cue (emacsvox-aural--cached-effective-assets pack-id include-prompts)))
 
 (defun emacsvox-aural--resource-spatialization-in-pack
     (resource pack-id &optional path)
@@ -1270,9 +1321,9 @@ PATH protects this helper from invalid inheritance cycles."
        (emacsvox-aural--resource-spatialization-in-pack
         resource parent (cons pack-id path))))))
 
-(defun emacsvox-aural-resource-spatialization
+(defun emacsvox-aural--compute-resource-spatialization
     (resource pack-id &optional include-prompts path)
-  "Return spatialization metadata for RESOURCE selected through PACK-ID.
+  "Compute spatialization metadata for RESOURCE selected through PACK-ID.
 
 INCLUDE-PROMPTS includes the prompt pack in the lookup.  PATH detects pack
 inheritance cycles.  The metadata comes from the pack that actually owns the
@@ -1295,6 +1346,34 @@ resolved file, rather than unconditionally from the selected child pack."
             (emacsvox-aural-resource-pack 'prompts))
      (emacsvox-aural--resource-spatialization-in-pack resource 'prompts))
    'neutral))
+
+(defun emacsvox-aural-resource-spatialization
+    (resource pack-id &optional include-prompts path)
+  "Return spatialization metadata for RESOURCE selected through PACK-ID.
+
+INCLUDE-PROMPTS includes the prompt pack in the lookup.  PATH detects pack
+inheritance cycles.  Results are cached for the current resource generation."
+  (let* ((key
+          (list
+           emacsvox-aural-resource-generation
+           resource
+           pack-id
+           (and include-prompts t)
+           (copy-sequence emacsvox-aural-disabled-resource-overlays)
+           path))
+         (missing (make-symbol "missing"))
+         (cached
+          (gethash
+           key emacsvox-aural--resource-spatialization-cache missing)))
+    (if (eq cached missing)
+        (let ((spatialization
+               (emacsvox-aural--compute-resource-spatialization
+                resource pack-id include-prompts path)))
+          (puthash
+           key spatialization
+           emacsvox-aural--resource-spatialization-cache)
+          spatialization)
+      cached)))
 
 (defun emacsvox-aural--pack-profile-cues (pack)
   "Return declared requirement cues for PACK."

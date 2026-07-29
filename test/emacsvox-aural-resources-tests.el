@@ -7,6 +7,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'emacsvox-aural-resources)
 
@@ -53,8 +54,93 @@
           (make-hash-table :test #'eq))
          (emacsvox-aural-personal-sound-packs-directory nil)
          (emacsvox-aural-disabled-resource-overlays nil)
-         (emacsvox-aural-resource-overlays-changed-hook nil))
+         (emacsvox-aural-resource-packs-changed-hook nil)
+         (emacsvox-aural-resource-overlays-changed-hook nil)
+         (emacsvox-aural-resource-generation 0)
+         (emacsvox-aural--effective-assets-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--resource-spatialization-cache
+          (make-hash-table :test #'equal)))
      ,@body))
+
+(ert-deftest emacsvox-aural-resources-cache-effective-assets-by-generation ()
+  "Cue resolution reuses cached assets without exposing the cached table."
+  (emacsvox-test--with-resource-directory
+    (emacsvox-test--with-empty-resource-packs
+      (emacsvox-test--resource-file parent-directory "button")
+      (emacsvox-aural-register-resource-pack
+       'test
+       :summary "Test"
+       :directory parent-directory)
+      (let ((builds 0)
+            (original
+             (symbol-function
+              'emacsvox-aural--build-effective-assets)))
+        (cl-letf
+            (((symbol-function 'emacsvox-aural--build-effective-assets)
+              (lambda (&rest arguments)
+                (cl-incf builds)
+                (apply original arguments))))
+          (let ((first (emacsvox-aural-effective-assets 'test))
+                (second (emacsvox-aural-effective-assets 'test)))
+            (should (= builds 1))
+            (should-not (eq first second))
+            (puthash 'private "/tmp/private.ogg" first)
+            (should-not (gethash 'private second))
+            (should-not
+             (gethash
+              'private
+              (emacsvox-aural-effective-assets 'test))))
+          (emacsvox-aural-resolve-cue 'button 'test)
+          (should (= builds 1))
+          (emacsvox-test--resource-file parent-directory "item")
+          (let ((generation emacsvox-aural-resource-generation))
+            (emacsvox-aural-refresh-resource-pack 'test)
+            (should
+             (> emacsvox-aural-resource-generation generation)))
+          (should
+           (gethash
+            'item
+            (emacsvox-aural-effective-assets 'test)))
+          (should (= builds 2)))))))
+
+(ert-deftest emacsvox-aural-resources-cache-ownership-by-generation ()
+  "Spatial ownership is recomputed only after a resource change."
+  (emacsvox-test--with-resource-directory
+    (emacsvox-test--with-empty-resource-packs
+      (let ((resource
+             (emacsvox-test--resource-file
+              parent-directory "button")))
+        (emacsvox-aural-register-resource-pack
+         'test
+         :summary "Test"
+         :directory parent-directory
+         :default-spatialization 'stereo)
+        (let ((computations 0)
+              (original
+               (symbol-function
+                'emacsvox-aural--compute-resource-spatialization)))
+          (cl-letf
+              (((symbol-function
+                 'emacsvox-aural--compute-resource-spatialization)
+                (lambda (&rest arguments)
+                  (cl-incf computations)
+                  (apply original arguments))))
+            (should
+             (eq
+              (emacsvox-aural-resource-spatialization resource 'test)
+              'stereo))
+            (should
+             (eq
+              (emacsvox-aural-resource-spatialization resource 'test)
+              'stereo))
+            (should (= computations 1))
+            (emacsvox-aural--resource-packs-changed 'test)
+            (should
+             (eq
+              (emacsvox-aural-resource-spatialization resource 'test)
+              'stereo))
+            (should (= computations 2))))))))
 
 (ert-deftest emacsvox-aural-resources-register-intent-for-every-bundled-cue ()
   "Shared and prompt assets have registered intent descriptions."
