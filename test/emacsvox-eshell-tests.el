@@ -136,9 +136,9 @@
     (insert "ab")
     (let ((ems--interactive-fn-name 'eshell-delete-backward-char)
           events)
-      (cl-letf (((symbol-function 'tts-tone)
-                 (lambda (&rest arguments)
-                   (push (cons 'tone arguments) events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)
                    (push (list 'char character) events)))
@@ -150,7 +150,51 @@
       (should
        (equal
         (nreverse events)
-        '((tone 500 100 force) (char 98)))))))
+        '((edit deletion) (char 98)))))))
+
+(ert-deftest emacsvox-eshell-forward-deletion-preserves-feedback-order ()
+  "Eshell forward deletion presents edit feedback before its character."
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'eshell-delchar-or-maybe-eof)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (operation)
+              (push (list 'edit operation) events)))
+           ((symbol-function 'emacsvox-speak-char)
+            (lambda (delete-p)
+              (push (list 'char delete-p) events))))
+        (emacsvox--advice-eshell-delchar-or-maybe-eof-before))
+      (should
+       (equal
+        (nreverse events)
+        '((edit deletion) (char t)))))))
+
+(ert-deftest emacsvox-eshell-forward-deletion-keeps-eof-isolated ()
+  "Eshell EOF reports its action without deletion feedback."
+  (with-temp-buffer
+    (insert "ab")
+    (goto-char (point-max))
+    (let ((ems--interactive-fn-name 'eshell-delchar-or-maybe-eof)
+          events)
+      (cl-letf
+          (((symbol-function 'message)
+            (lambda (format-string &rest arguments)
+              (push
+               (list 'message
+                     (apply #'format format-string arguments))
+               events)))
+           ((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (&rest _) (push 'edit events)))
+           ((symbol-function 'emacsvox-speak-char)
+            (lambda (&rest _) (push 'char events))))
+        (emacsvox--advice-eshell-delchar-or-maybe-eof-before))
+      (should
+       (equal
+        events
+        '((message "Sending EOF to comint process")))))))
 
 (ert-deftest emacsvox-eshell-output-feedback-is-target-aware ()
   "Only matching interactive output deletion produces its feedback."
