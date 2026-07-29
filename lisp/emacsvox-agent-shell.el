@@ -66,6 +66,7 @@
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-submission)
 (require 'agent-shell nil 'noerror)
 (require 'shell-maker nil 'noerror)
 
@@ -697,9 +698,12 @@ FACTS and OCCASION are frozen before either modality is delivered."
    '(:role agent-session) 'notification
    (lambda ()
      (if (emacsvox-agent-shell--session-focused-p)
-         (progn
-           (emacsvox-icon icon)
-           (tts-speak text))
+         (emacsvox-aural-submit
+          text
+          :module 'agent-shell
+          :occasion 'notification
+          :compatibility-actions
+          (list (emacsvox-aural-compatibility-icon icon)))
        (tts-notify-icon icon)
        (tts-notify
         (format "%s. %s"

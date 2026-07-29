@@ -292,6 +292,21 @@
                  ((symbol-function 'emacsvox-icon)
                   (lambda (icon)
                     (push (list 'icon icon) ,event-log)))
+                 ((symbol-function 'emacsvox-aural-submit)
+                  (lambda (text &rest arguments)
+                    (dolist
+                        (action
+                         (plist-get arguments :compatibility-actions))
+                      (when
+                          (eq
+                           (emacsvox-aural-compatibility-action-kind action)
+                           'legacy-icon)
+                        (push
+                         (list
+                          'icon
+                          (emacsvox-aural-compatibility-action-value action))
+                         ,event-log)))
+                    (push (list 'speak text) ,event-log)))
                  ((symbol-function 'message)
                   (lambda (format-string &rest arguments)
                     (push (list 'message
@@ -2008,6 +2023,48 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (icon task-done)
         (icon progress)
         (icon task-done))))))
+
+(ert-deftest emacsvox-agent-shell-focused-announcement-is-one-submission ()
+  "Focused icon and speech feedback use one native aural transaction."
+  (let (captured direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--session-focused-p)
+          (lambda (&optional _) t))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon direct-output)))
+         ((symbol-function 'tts-speak)
+          (lambda (&rest _) (push 'speech direct-output))))
+      (emacsvox-agent-shell--call-with-aural-presentation
+       (emacsvox-agent-shell--presentation-facts
+        'agent-error 'processing-failed)
+       'notification
+       #'emacsvox-agent-shell--deliver-announcement
+       'warn-user
+       "Agent error: Connection lost."))
+    (should-not direct-output)
+    (should (= (length captured) 1))
+    (pcase-let* ((`(,content ,arguments ,facts ,context)
+                   (car captured))
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should (equal content "Agent error: Connection lost."))
+      (should (eq (plist-get facts :role) 'agent-error))
+      (should (equal (plist-get facts :events) '(processing-failed)))
+      (should (eq (plist-get context :module) 'agent-shell))
+      (should (eq (plist-get context :occasion) 'notification))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-compatibility-action-value actions)
+        '(warn-user))))))
 
 (ert-deftest emacsvox-agent-shell-lifecycle-carries-aural-facts ()
   "Configured processing icons retain semantic lifecycle facts and context."
