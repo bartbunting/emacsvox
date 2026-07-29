@@ -244,7 +244,7 @@
       first))
     (should
      (string-match-p
-      "| =mail-message-status-cues= | =mail= | =3= | =2= | emacsvox-aural-provider-workflows |"
+      "| =mail-message-status-cues= | =mail= | =5= | =4= | emacsvox-aural-provider-workflows |"
       first))
     (should (string-match-p "| =chimes= | =sound= |" first))
     (should (string-match-p "| =bolden= | =voice-bolden= |" first))))

@@ -332,7 +332,10 @@ themed overrides below an active sound pack."
   "Intent descriptions for theme-independent prompt cues.")
 
 (defconst emacsvox-aural--mail-cue-definitions
-  '((mail-unread "An unread mail message was reached" new-mail))
+  '((mail-forwarded "A forwarded mail message was reached" right)
+    (mail-has-attachment "A mail message with attachments was reached" doc)
+    (mail-replied "A replied-to mail message was reached" left)
+    (mail-unread "An unread mail message was reached" new-mail))
   "Mail-state cues and their generic compatibility fallbacks.")
 
 (defconst emacsvox-aural-legacy-complete-cues

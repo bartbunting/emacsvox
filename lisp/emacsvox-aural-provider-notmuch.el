@@ -30,7 +30,23 @@
      (:role message :states (has-attachments)
       :content "Bob, meeting notes")
      :context
-     (:module notmuch :mode notmuch-show-mode :occasion navigation)))
+     (:module notmuch :mode notmuch-show-mode :occasion navigation))
+    (mail-message-status-cues notmuch-forwarded-message
+     :rule workflow-mail-forwarded
+     :summary "Forwarded Notmuch message"
+     :facts
+     (:role message :states (forwarded)
+      :content "Carol, project handoff")
+     :context
+     (:module notmuch :mode notmuch-search-mode :occasion navigation))
+    (mail-message-status-cues notmuch-replied-message
+     :rule workflow-mail-replied
+     :summary "Replied-to Notmuch message"
+     :facts
+     (:role message :states (replied)
+      :content "David, meeting follow-up")
+     :context
+     (:module notmuch :mode notmuch-search-mode :occasion navigation)))
   "Curated data-only Notmuch previews for optional mail presentation.")
 
 (defun emacsvox-notmuch-register-aural-preview-examples ()

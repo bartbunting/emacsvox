@@ -190,6 +190,16 @@ new Gnus mark is not otherwise portable."
          (and (boundp 'gnus-dormant-mark)
               (equal mark gnus-dormant-mark)))
       (push 'flagged states))
+    (when
+        (and
+         (boundp 'gnus-replied-mark)
+         (equal mark gnus-replied-mark))
+      (push 'replied states))
+    (when
+        (and
+         (boundp 'gnus-forwarded-mark)
+         (equal mark gnus-forwarded-mark))
+      (push 'forwarded states))
     (append
      (list :role 'message)
      (when event (list :events (list event)))

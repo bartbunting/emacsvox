@@ -187,6 +187,7 @@ Operational semantic contract version: =1=.
 | =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
 | =focus-entered= | =event= | =core= | - | - | - | - | - | - | - | - | Navigation arrived at an aural object |
 | =folded= | =state= | =core= | - | - | - | - | - | - | - | - | Descendants of an object are hidden |
+| =forwarded= | =state= | =mail= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A mail message has been forwarded |
 | =game-cell= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | One position on a game board |
 | =game-cell-kind= | =attribute= | =core= | =symbol= | =game-cell= | - | - | - | - | - | - | The module-defined contents of a game-board cell |
 | =game-over= | =event= | =core= | - | - | - | - | - | - | - | - | A game ended without successful completion |
@@ -247,6 +248,7 @@ Operational semantic contract version: =1=.
 | =read-only= | =state= | =core= | - | =buffer-entry= | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer does not permit ordinary editing |
 | =refresh-completed= | =event= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A displayed collection finished refreshing |
 | =refresh-failed= | =event= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A displayed collection failed to refresh |
+| =replied= | =state= | =mail= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A mail message has been replied to |
 | =section-kind= | =attribute= | =magit= | =symbol= | =vcs-section= | - | - | - | - | - | - | The integration-defined kind of a structural section |
 | =selected= | =state= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | An item is the current selection |
 | =selection-cleared= | =event= | =core= | - | - | - | - | - | - | - | - | A mark or selection was removed |
@@ -306,7 +308,7 @@ Operational semantic contract version: =1=.
 | =agent-shell-block-visibility-cues= | =agent-shell= | =4= | =0= | emacsvox-aural-provider-workflows | Cue folded and expanded Agent Shell blocks on entry and toggle |
 | =dired-entry-state-labels= | =dired= | =3= | =0= | emacsvox-aural-provider-workflows | Speak Dired mark and deletion-flag changes after the entry |
 | =magit-section-visibility-cues= | =magit= | =2= | =0= | emacsvox-aural-provider-workflows | Add semantic open and close cues when Magit section visibility changes |
-| =mail-message-status-cues= | =mail= | =3= | =2= | emacsvox-aural-provider-workflows | Add semantic cues for unread, flagged, and attached messages |
+| =mail-message-status-cues= | =mail= | =5= | =4= | emacsvox-aural-provider-workflows | Add semantic cues for unread, replied, forwarded, flagged, and attached messages |
 | =markdown-heading-level-labels= | =markdown= | =1= | =0= | emacsvox-aural-provider-markdown | Speak Markdown heading levels before heading contents |
 | =markdown-task-state-labels= | =markdown= | =2= | =0= | emacsvox-aural-provider-markdown | Speak checked and unchecked state after Markdown tasks |
 | =org-heading-level-labels= | =org= | =1= | =1= | emacsvox-aural-provider-org | Speak an Org heading's level before inherited presentation |
@@ -375,6 +377,9 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 | =launch-wm= | =prompt= | =core= | - | A window manager is starting |
 | =left= | =cue= | =core= | - | Movement or placement is toward the left |
 | =locking-up= | =prompt= | =core= | - | The desktop session is being locked |
+| =mail-forwarded= | =cue= | =mail= | =right= | A forwarded mail message was reached |
+| =mail-has-attachment= | =cue= | =mail= | =doc= | A mail message with attachments was reached |
+| =mail-replied= | =cue= | =mail= | =left= | A replied-to mail message was reached |
 | =mail-unread= | =cue= | =mail= | =new-mail= | An unread mail message was reached |
 | =mark-object= | =cue= | =core= | - | An object was marked or selected |
 | =modified-object= | =cue= | =core= | - | An object has unsaved modifications |

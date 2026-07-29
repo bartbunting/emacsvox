@@ -116,6 +116,8 @@ it is spoken."
 
 (defcustom emacsvox-notmuch-search-status-icons
   '(("unread" . mail-unread)
+    ("replied" . mail-replied)
+    ("forwarded" . mail-forwarded)
     ("flagged" . mark-object))
   "Map Notmuch status tags to auditory icons.
 
@@ -124,7 +126,8 @@ played.  Tags present in this alist are omitted from the spoken
 `tags' field.  Remove an entry to speak that status as an ordinary
 tag, or give it a nil icon to keep the status silent.  When the
 `mail-message-status-cues' presentation option is enabled, its semantic
-rules own unread and flagged cues while these entries still suppress words."
+rules own unread, replied, forwarded, and flagged cues while these entries
+still suppress words."
   :type '(alist
           :key-type (string :tag "Status tag")
           :value-type
@@ -161,6 +164,8 @@ list to change when it is spoken."
 
 (defcustom emacsvox-notmuch-show-status-icons
   '(("unread" . mail-unread)
+    ("replied" . mail-replied)
+    ("forwarded" . mail-forwarded)
     ("flagged" . mark-object))
   "Map Notmuch message status tags to auditory icons.
 
@@ -169,7 +174,8 @@ played.  Tags present in this alist are omitted from the spoken
 `tags' field.  Remove an entry to speak that status as an ordinary
 tag, or give it a nil icon to keep the status silent.  When the
 `mail-message-status-cues' presentation option is enabled, its semantic
-rules own unread and flagged cues while these entries still suppress words."
+rules own unread, replied, forwarded, and flagged cues while these entries
+still suppress words."
   :type '(alist
           :key-type (string :tag "Status tag")
           :value-type
@@ -318,6 +324,8 @@ FACTS describe the object or event, and OCCASION describes the interaction."
   (let ((tags (plist-get message :tags))
         states)
     (when (member "unread" tags) (push 'unread states))
+    (when (member "replied" tags) (push 'replied states))
+    (when (member "forwarded" tags) (push 'forwarded states))
     (when (member "flagged" tags) (push 'flagged states))
     (when
         (and
@@ -421,21 +429,45 @@ FACTS describe the object or event, and OCCASION describes the interaction."
    emacsvox-notmuch-search-field-separator))
 
 (defun emacsvox-notmuch--status-compatibility-actions
-    (result status-icons)
-  "Return ordered STATUS-ICON adapters present in Notmuch RESULT."
-  (let ((tags (plist-get result :tags)))
-    (cl-loop
-     for (tag . icon) in status-icons
-     when
-     (and
-      icon
-      (member tag tags)
-      (not
-       (and
-        (member tag '("unread" "flagged"))
-        (emacsvox-aural-feature-fragment-enabled-p
-         'mail-message-status-cues))))
-     collect (emacsvox-aural-compatibility-icon icon))))
+    (result status-icons occasion &optional include-attachments)
+  "Return ordered status adapters present in Notmuch RESULT.
+
+STATUS-ICONS maps tags to compatibility cues.  OCCASION identifies the
+presentation being prepared.  When INCLUDE-ATTACHMENTS is non-nil, append an
+after-content attachment cue when RESULT contains a named MIME attachment."
+  (let* ((tags (plist-get result :tags))
+         (semantic-navigation
+          (and
+           (eq occasion 'navigation)
+           (emacsvox-aural-feature-fragment-enabled-p
+            'mail-message-status-cues)))
+         (actions
+          (cl-loop
+           for (tag . icon) in status-icons
+           when
+           (and
+            icon
+            (member tag tags)
+            (not
+             (and
+              semantic-navigation
+              (member tag '("unread" "replied" "forwarded" "flagged")))))
+           collect (emacsvox-aural-compatibility-icon icon))))
+    (when
+        (and
+         include-attachments
+         (not semantic-navigation)
+         (> (emacsvox-notmuch--attachment-count
+             (plist-get result :body))
+            0))
+      (setq
+       actions
+       (append
+        actions
+        (list
+         (emacsvox-aural-compatibility-icon
+          'mail-has-attachment 'after)))))
+    actions))
 
 (defun emacsvox-notmuch-speak-search-result (&optional result)
   "Speak Notmuch search RESULT, defaulting to the result at point."
@@ -449,7 +481,7 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      :occasion 'navigation
      :compatibility-actions
      (emacsvox-notmuch--status-compatibility-actions
-      result emacsvox-notmuch-search-status-icons))
+      result emacsvox-notmuch-search-status-icons 'navigation))
     summary))
 
 ;;;  Show Messages:
@@ -557,7 +589,7 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
        :occasion 'navigation
        :compatibility-actions
        (emacsvox-notmuch--status-compatibility-actions
-        message emacsvox-notmuch-show-status-icons))
+        message emacsvox-notmuch-show-status-icons 'navigation t))
       speech)))
 
 (defun emacsvox-notmuch--landed-body-line ()
@@ -620,7 +652,7 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
        :occasion 'inspection
        :compatibility-actions
        (emacsvox-notmuch--status-compatibility-actions
-        message emacsvox-notmuch-show-status-icons))
+        message emacsvox-notmuch-show-status-icons 'inspection t))
       summary)))
 
 (defun emacsvox-notmuch--current-show-message-id ()

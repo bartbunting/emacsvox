@@ -159,25 +159,33 @@
   (should-not (memq 'shutdown emacsvox-aural-legacy-complete-cues)))
 
 (ert-deftest emacsvox-aural-resources-register-mail-state-earcon ()
-  "Unread mail has a module-owned default with a generic fallback."
+  "Mail states have module-owned defaults with generic fallbacks."
   (emacsvox-test--with-empty-resource-packs
     (emacsvox-aural-register-bundled-resources
      emacsvox-test--sounds-directory)
-    (let* ((cue (emacsvox-aural-cue 'mail-unread))
-           (overlay (emacsvox-aural-resource-overlay 'mail-earcons))
-           (resource
-            (emacsvox-aural-resolve-cue 'mail-unread 'chimes)))
-      (should cue)
-      (should (eq (emacsvox-aural-cue-owner cue) 'mail))
-      (should (eq (emacsvox-aural-cue-fallback cue) 'new-mail))
+    (let ((overlay (emacsvox-aural-resource-overlay 'mail-earcons)))
       (should overlay)
       (should (eq (emacsvox-aural-resource-overlay-owner overlay) 'mail))
-      (should
-       (equal
-        resource
-        (expand-file-name
-         "modules/mail/mail-unread.ogg"
-         emacsvox-test--sounds-directory))))))
+      (dolist
+          (definition
+           '((mail-forwarded right "mail-forwarded.ogg")
+             (mail-has-attachment doc "mail-has-attachment.ogg")
+             (mail-replied left "mail-replied.ogg")
+             (mail-unread new-mail "mail-unread.ogg")))
+        (let ((cue (emacsvox-aural-cue (nth 0 definition))))
+          (should cue)
+          (should (eq (emacsvox-aural-cue-owner cue) 'mail))
+          (should
+           (eq
+            (emacsvox-aural-cue-fallback cue)
+            (nth 1 definition)))
+          (should
+           (equal
+            (emacsvox-aural-resolve-cue
+             (nth 0 definition) 'chimes)
+            (expand-file-name
+             (concat "modules/mail/" (nth 2 definition))
+             emacsvox-test--sounds-directory))))))))
 
 (ert-deftest emacsvox-aural-resources-register-default-tones ()
   "Built-in tones retain the existing pitches and durations by name."

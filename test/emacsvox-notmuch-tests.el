@@ -52,7 +52,9 @@
   (dolist
       (definition
        '((notmuch-unread-message workflow-mail-unread)
-         (notmuch-message-with-attachment workflow-mail-attachments)))
+         (notmuch-message-with-attachment workflow-mail-attachments)
+         (notmuch-forwarded-message workflow-mail-forwarded)
+         (notmuch-replied-message workflow-mail-replied)))
     (let ((example
            (emacsvox-aural-feature-fragment-example
             'mail-message-status-cues (car definition))))
@@ -260,6 +262,61 @@
          (plist-get arguments :compatibility-actions))
         '(mail-unread mark-object))))))
 
+(ert-deftest emacsvox-notmuch-recognizes-replied-and-forwarded-statuses ()
+  "Replied and forwarded tags produce portable facts and distinct cues."
+  (let* ((message '(:tags ("forwarded" "replied")))
+         (facts (emacsvox-notmuch-message-facts message))
+         (actions
+          (emacsvox-notmuch--status-compatibility-actions
+           message emacsvox-notmuch-search-status-icons 'navigation)))
+    (should
+     (equal
+      (plist-get facts :states)
+      '(replied forwarded)))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+       actions)
+      '(mail-replied mail-forwarded)))))
+
+(ert-deftest emacsvox-notmuch-attachment-cue-follows-message-content ()
+  "The compatibility path places one attachment cue after the message."
+  (let* ((emacsvox-aural-enabled-feature-fragments nil)
+         (actions
+          (emacsvox-notmuch--status-compatibility-actions
+           emacsvox-notmuch-test--show-message
+           nil 'navigation t)))
+    (should (= (length actions) 1))
+    (should
+     (eq
+      (emacsvox-aural-compatibility-action-value (car actions))
+      'mail-has-attachment))
+    (should
+     (eq
+      (emacsvox-aural-compatibility-action-phase (car actions))
+      'after))))
+
+(ert-deftest emacsvox-notmuch-inspection-retains-compatibility-status-cues ()
+  "Navigation-only semantic rules do not silence inspection feedback."
+  (let* ((emacsvox-aural-enabled-feature-fragments
+          '(mail-message-status-cues))
+         (actions
+          (emacsvox-notmuch--status-compatibility-actions
+           emacsvox-notmuch-test--show-message
+           emacsvox-notmuch-show-status-icons 'inspection t)))
+    (should
+     (equal
+      (mapcar
+       (lambda (action)
+         (list
+          (emacsvox-aural-compatibility-action-value action)
+          (emacsvox-aural-compatibility-action-phase action)))
+       actions)
+      '((mail-unread before)
+        (mark-object before)
+        (mail-has-attachment after))))))
+
 (ert-deftest emacsvox-notmuch-boundary-feedback-uses-one-native-submission ()
   "A search boundary carries its cue and semantics in one submission."
   (let (captured)
@@ -383,6 +440,8 @@
   (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
          (emacsvox-notmuch-show-status-icons
           '(("unread" . mail-unread)
+            ("replied" . mail-replied)
+            ("forwarded" . mail-forwarded)
             ("flagged" . mark-object)))
          (emacsvox-aural-enabled-feature-fragments
           '(mail-message-status-cues))
@@ -399,7 +458,9 @@
          (emacsvox-sounds-current-pack 'chimes)
          (emacsvox-use-icons t)
          traces)
-    (setf (plist-get message :tags) '("inbox" "unread" "flagged"))
+    (setf
+     (plist-get message :tags)
+     '("inbox" "unread" "replied" "forwarded" "flagged"))
     (cl-labels
         ((record-plan
           (kind text plan)
@@ -448,19 +509,27 @@
        (equal
         (caddr (car traces))
         '(workflow-mail-unread-cue
+          workflow-mail-replied-cue
+          workflow-mail-forwarded-cue
           workflow-mail-flagged-cue)))
       (should
        (equal
         (cadddr (car (last traces)))
-        '(workflow-mail-attachments-label)))
+        '(workflow-mail-attachments-cue)))
       (should (= (length separators) 5))
       (dolist (separator separators)
         (should (equal (cddr separator) '(nil nil))))
       (should
        (= (cl-count 'compatibility-mail-unread-1-legacy-cue before) 0))
+      (should
+       (= (cl-count 'compatibility-mail-replied-1-legacy-cue before) 0))
+      (should
+       (= (cl-count 'compatibility-mail-forwarded-1-legacy-cue before) 0))
       (should (= (cl-count 'workflow-mail-unread-cue before) 1))
+      (should (= (cl-count 'workflow-mail-replied-cue before) 1))
+      (should (= (cl-count 'workflow-mail-forwarded-cue before) 1))
       (should (= (cl-count 'workflow-mail-flagged-cue before) 1))
-      (should (= (cl-count 'workflow-mail-attachments-label after) 1)))))
+      (should (= (cl-count 'workflow-mail-attachments-cue after) 1)))))
 
 (ert-deftest emacsvox-notmuch-search-result-fields-are-configurable ()
   "Search-result fields can be reordered and omitted."
@@ -585,8 +654,12 @@
        emacsvox-notmuch-test--show-message))
     (should
      (equal
-      (mapcar #'car (nreverse events))
-      '(icon icon speak)))))
+      (nreverse events)
+      '((icon mail-unread)
+        (icon mark-object)
+        (icon mail-has-attachment)
+        (speak
+         "Alice Smith <alice@example.com>, today, Bart Bunting <bart@example.com>, Project Team <team@example.com>, inbox, 2 attachments"))))))
 
 (ert-deftest emacsvox-notmuch-landed-message-speaks-first-body-line ()
   "Landing on a message speaks its summary followed by visible body text."

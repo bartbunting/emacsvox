@@ -42,7 +42,7 @@ SRC="../lisp"
 BATCH = -batch -q -no-site-file     \
 -f package-initialize \
 --eval '(setq file-name-handler-alist nil gc-cons-threshold 64000000 \
-load-source-file-function  nil)'
+load-source-file-function nil load-prefer-newer t)'
 DEPS= -l $(SRC)/emacsvox-preamble.el -l $(SRC)/emacsvox-loaddefs.el
 
 COMPILE =  -f batch-byte-compile

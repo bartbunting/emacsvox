@@ -155,7 +155,9 @@
   "Gnus maps portable marks and explicit operations to message facts."
   (let ((gnus-unread-mark ?u)
         (gnus-ticked-mark ?!)
-        (gnus-dormant-mark ??))
+        (gnus-dormant-mark ??)
+        (gnus-replied-mark ?A)
+        (gnus-forwarded-mark ?F))
     (cl-letf (((symbol-function 'gnus-summary-article-mark)
                (lambda () ?u)))
       (should
@@ -164,7 +166,19 @@
          'message-marked '(marked))
         '(:role message
           :events (message-marked)
-          :states (marked unread)))))))
+          :states (marked unread)))))
+    (cl-letf (((symbol-function 'gnus-summary-article-mark)
+               (lambda () ?A)))
+      (should
+       (equal
+        (emacsvox-gnus-message-facts)
+        '(:role message :states (replied)))))
+    (cl-letf (((symbol-function 'gnus-summary-article-mark)
+               (lambda () ?F)))
+      (should
+       (equal
+        (emacsvox-gnus-message-facts)
+        '(:role message :states (forwarded)))))))
 
 (ert-deftest emacsvox-gnus-subject-feedback-uses-one-native-submission ()
   "Gnus subject content and cue share one semantic submission."

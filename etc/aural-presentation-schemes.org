@@ -1511,7 +1511,7 @@ core registry entry immediately:
 | Integration   | Semantic facts or events                         | Occasion                          | Existing presentation source                 |
 |---------------+--------------------------------------------------+-----------------------------------+----------------------------------------------|
 | Org           | heading, level, folded, focus/state/object change | navigation, continuous, edit      | level faces, spoken line, movement/open cues |
-| Notmuch       | message, field, unread, flagged, attachments      | navigation, continuous            | field faces, ordered speech, status cues     |
+| Notmuch       | message, field, mail status, attachments            | navigation, continuous            | field faces, ordered speech, status cues     |
 | Programming   | code construct, syntax role, boundary             | navigation, continuous, inspection | font-lock faces, speech, movement cues       |
 | Completion    | candidate, selected, accepted, list opened/closed | navigation, state-change          | candidate faces and complete/select cues     |
 | Agent Shell   | response, thought, tool, permission, processing   | continuous, notification          | verbosity choices, speech, lifecycle cues    |
@@ -1924,8 +1924,9 @@ Implemented details:
   thought, tool, permission, and processing semantics;
 - Notmuch search and show fields carry persistent =field= and =field-kind=
   facts without losing their existing face-derived voices, while message
-  speech and status cues share unread, flagged, and attachment state and
-  refresh completion or failure is a semantic notification;
+  speech and status cues share unread, replied, forwarded, flagged, and
+  attachment state and refresh completion or failure is a semantic
+  notification;
 - Agent Shell session and viewport buffers identify their module, lifecycle
   events describe processing start, completion, and failure, and content
   describes response, thought, tool, or permission intent;
@@ -2260,7 +2261,8 @@ Implemented details:
 CLOSED: [2026-07-26 Sun]
 
 - Complete the mail vertical slice across Notmuch and Gnus with message,
-  unread, flagged, attachment, selection, refresh, and lifecycle facts.
+  unread, replied, forwarded, flagged, attachment, selection, refresh, and
+  lifecycle facts.
 - Add Dired file, directory, marked, deletion-flagged, selection, navigation,
   and operation facts.
 - Add Magit section, visibility, staging, navigation, refresh, success, and

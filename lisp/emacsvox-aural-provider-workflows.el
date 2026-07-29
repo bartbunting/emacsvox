@@ -93,10 +93,22 @@
      :owner core
      :occasions (navigation continuous state-change inspection notification)
      :phases (before content after))
+    (forwarded
+     :kind state
+     :summary "A mail message has been forwarded"
+     :owner mail
+     :occasions (navigation continuous state-change inspection)
+     :phases (before content after))
     (has-attachments
      :kind state
      :summary "A message contains one or more attachments"
      :owner core
+     :occasions (navigation continuous state-change inspection)
+     :phases (before content after))
+    (replied
+     :kind state
+     :summary "A mail message has been replied to"
+     :owner mail
      :occasions (navigation continuous state-change inspection)
      :phases (before content after))
     (refresh-completed
@@ -766,7 +778,8 @@
 (defconst emacsvox-aural-workflow-feature-fragments
   '((:schema-version 1
      :id mail-message-status-cues
-     :summary "Add semantic cues for unread, flagged, and attached messages"
+     :summary
+     "Add semantic cues for unread, replied, forwarded, flagged, and attached messages"
      :rules
      ((:id workflow-mail-unread
        :match (:role message :state unread :occasion navigation)
@@ -774,6 +787,18 @@
        (:before
         (:append
          ((:id workflow-mail-unread-cue :kind cue :cue mail-unread)))))
+      (:id workflow-mail-replied
+       :match (:role message :state replied :occasion navigation)
+       :render
+       (:before
+        (:append
+         ((:id workflow-mail-replied-cue :kind cue :cue mail-replied)))))
+      (:id workflow-mail-forwarded
+       :match (:role message :state forwarded :occasion navigation)
+       :render
+       (:before
+        (:append
+         ((:id workflow-mail-forwarded-cue :kind cue :cue mail-forwarded)))))
       (:id workflow-mail-flagged
        :match (:role message :state flagged :occasion navigation)
        :render
@@ -785,8 +810,8 @@
        :render
        (:after
         (:append
-         ((:id workflow-mail-attachments-label
-           :kind speech :text "has attachments")))))))
+         ((:id workflow-mail-attachments-cue
+           :kind cue :cue mail-has-attachment)))))))
     (:schema-version 1
      :id dired-entry-state-labels
      :summary "Speak Dired mark and deletion-flag changes after the entry"
