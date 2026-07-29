@@ -1198,6 +1198,8 @@ a complete user file before its entries replace the live registries."
          (fragments (plist-get data :feature-fragments))
          (pack (plist-get data :sound-pack))
          (palette (plist-get data :voice-palette))
+         (compatibility-voice
+          (plist-get data :compatibility-voice-enabled))
          (spatial (plist-get data :spatial))
          (scheme-registry
           (or scheme-registry emacsvox-aural-scheme-registry))
@@ -1212,7 +1214,8 @@ a complete user file before its entries replace the live registries."
            (memq
             key
             '(:id :summary :scheme :feature-fragments
-              :sound-pack :voice-palette :spatial))
+              :sound-pack :voice-palette
+              :compatibility-voice-enabled :spatial))
            collect key)))
     (when unknown
       (emacsvox-aural--scheme-error
@@ -1249,6 +1252,12 @@ a complete user file before its entries replace the live registries."
         (emacsvox-aural--scheme-error
          "Presentation profile %S names unknown voice palette %S"
          id palette)))
+    (when
+        (and
+         (plist-member data :compatibility-voice-enabled)
+         (not (memq compatibility-voice '(nil t))))
+      (emacsvox-aural--scheme-error
+       "Presentation profile compatibility voice state must be boolean"))
     (emacsvox-aural--validate-profile-spatial spatial)
     data))
 

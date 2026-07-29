@@ -11,6 +11,7 @@
 (require 'ert)
 (require 'emacsvox-sounds)
 (require 'emacsvox-aural-profiles)
+(require 'emacsvox-aural-compatibility-voice)
 
 (defmacro emacsvox-test--with-aural-profiles (&rest body)
   "Run BODY with isolated presentation scheme and profile state."
@@ -34,6 +35,9 @@
          (emacsvox-aural-effective-resource-pack-changed-hook nil)
          (emacsvox-aural-feature-fragments-changed-hook nil)
          (emacsvox-aural-profile-applied-hook nil)
+         (emacsvox-aural-compatibility-voice-changed-hook nil)
+         (voice-lock-mode t)
+         (voice-lock-mode--set-explicitly nil)
          (emacsvox-aural-spatial-enabled t)
          (emacsvox-aural-spatial-speech-enabled t)
          (emacsvox-aural-spatial-cue-enabled t)
@@ -60,12 +64,13 @@
    :feature-fragments '(profile-feature)
    :sound-pack 'chimes
    :voice-palette 'acss-default
+   :compatibility-voice-enabled nil
    :spatial
    '(:enabled t :speech-enabled t :cue-enabled nil
      :output mono :maximum-separation 0.5 :remapping reverse)))
 
 (ert-deftest emacsvox-aural-profiles-validate-component-references ()
-  "Profiles reject unknown schemes, fragments, packs, and palettes."
+  "Profiles reject unknown components and invalid compatibility state."
   (emacsvox-test--with-aural-profiles
     (should
      (emacsvox-aural-register-profile
@@ -81,6 +86,13 @@
            (plist-put
             (emacsvox-test--profile-data 'bad)
             :voice-palette 'missing)))
+      (should-error
+       (emacsvox-aural-register-profile bad)
+       :type 'emacsvox-aural-scheme-error))
+    (let ((bad
+           (plist-put
+            (emacsvox-test--profile-data 'bad)
+            :compatibility-voice-enabled 'sometimes)))
       (should-error
        (emacsvox-aural-register-profile bad)
        :type 'emacsvox-aural-scheme-error))))
@@ -110,6 +122,55 @@
       (should (eq emacsvox-aural-spatial-output 'mono))
       (should (= emacsvox-aural-spatial-maximum-separation 0.5))
       (should-not emacsvox-aural-spatial-cue-enabled)
+      (should-not
+       (emacsvox-aural-compatibility-voice-enabled-p))
+      (should
+       (equal
+        (aref (cadr (emacsvox-aural-profiles--row 'work)) 6)
+        "off"))
+      (should (emacsvox-aural-profile-current-p 'work)))))
+
+(ert-deftest emacsvox-aural-profiles-target-source-compatibility-voice ()
+  "Applying a profile changes only its selected source buffer's policy."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (let ((source (generate-new-buffer " *profile-source*"))
+          (other (generate-new-buffer " *profile-other*")))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-set-compatibility-voice-enabled t source)
+            (emacsvox-aural-set-compatibility-voice-enabled t other)
+            (cl-letf
+                (((symbol-function 'emacsvox-sounds-select-theme)
+                  (lambda (pack)
+                    (setq emacsvox-sounds-current-pack pack))))
+              (emacsvox-aural-apply-profile 'work source))
+            (should-not
+             (emacsvox-aural-compatibility-voice-enabled-p source))
+            (should
+             (emacsvox-aural-compatibility-voice-enabled-p other))
+            (should
+             (eq (emacsvox-aural-profile-status 'work source) 'active))
+            (should
+             (eq (emacsvox-aural-profile-status 'work other) 'modified)))
+        (kill-buffer source)
+        (kill-buffer other)))))
+
+(ert-deftest emacsvox-aural-profiles-old-data-leaves-compatibility-unchanged ()
+  "Profiles without compatibility policy retain their historical behavior."
+  (emacsvox-test--with-aural-profiles
+    (let ((data
+           (cl-loop
+            for (key value) on (emacsvox-test--profile-data) by #'cddr
+            unless (eq key :compatibility-voice-enabled)
+            append (list key value))))
+      (emacsvox-aural-register-profile data)
+      (cl-letf
+          (((symbol-function 'emacsvox-sounds-select-theme)
+            (lambda (pack)
+              (setq emacsvox-sounds-current-pack pack))))
+        (emacsvox-aural-apply-profile 'work))
+      (should (emacsvox-aural-compatibility-voice-enabled-p))
       (should (emacsvox-aural-profile-current-p 'work)))))
 
 (ert-deftest emacsvox-aural-profiles-select-one-identical-profile ()
@@ -158,30 +219,34 @@
 (ert-deftest emacsvox-aural-profiles-manager-maintains-selected-identity ()
   "Profile lifecycle commands update only the intended selected identity."
   (emacsvox-test--with-aural-profiles
-    (let ((new-ids '(first copied renamed)))
-      (with-temp-buffer
-        (emacsvox-aural-profiles-mode)
-        (cl-letf
-            (((symbol-function 'emacsvox-aural-profiles--read-new-id)
-              (lambda (&rest _) (pop new-ids)))
-             ((symbol-function 'read-string)
-              (lambda (&rest _) "Profile purpose"))
-             ((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
-             ((symbol-function 'tts-speak) #'ignore)
-             ((symbol-function 'emacsvox-icon) #'ignore)
-             ((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
-          (emacsvox-aural-profiles-create)
-          (should (eq emacsvox-aural-active-profile 'first))
-          (emacsvox-aural-profiles-copy)
-          (should (eq emacsvox-aural-active-profile 'first))
-          (emacsvox-aural-profiles-update-from-current)
-          (should (eq emacsvox-aural-active-profile 'copied))
-          (emacsvox-aural-profiles-rename)
-          (should (eq emacsvox-aural-active-profile 'renamed))
-          (emacsvox-aural-profiles-delete)
-          (should-not emacsvox-aural-active-profile)
-          (should (emacsvox-aural-profile-entry 'first))
-          (should-not (emacsvox-aural-profile-entry 'renamed)))))))
+    (let ((new-ids '(first copied renamed))
+          (source (generate-new-buffer " *profile-manager-source*")))
+      (unwind-protect
+          (with-temp-buffer
+            (emacsvox-aural-profiles-mode)
+            (emacsvox-aural-inspection-attach-source source)
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-profiles--read-new-id)
+                  (lambda (&rest _) (pop new-ids)))
+                 ((symbol-function 'read-string)
+                  (lambda (&rest _) "Profile purpose"))
+                 ((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
+                 ((symbol-function 'tts-speak) #'ignore)
+                 ((symbol-function 'emacsvox-icon) #'ignore)
+                 ((symbol-function 'yes-or-no-p) (lambda (&rest _) t)))
+              (emacsvox-aural-profiles-create)
+              (should (eq emacsvox-aural-active-profile 'first))
+              (emacsvox-aural-profiles-copy)
+              (should (eq emacsvox-aural-active-profile 'first))
+              (emacsvox-aural-profiles-update-from-current)
+              (should (eq emacsvox-aural-active-profile 'copied))
+              (emacsvox-aural-profiles-rename)
+              (should (eq emacsvox-aural-active-profile 'renamed))
+              (emacsvox-aural-profiles-delete)
+              (should-not emacsvox-aural-active-profile)
+              (should (emacsvox-aural-profile-entry 'first))
+              (should-not (emacsvox-aural-profile-entry 'renamed))))
+        (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-profiles-manager-mutations-are-transactional ()
   "Failed persistence publishes none of the five profile mutations."
@@ -277,6 +342,32 @@
       (should-not fragment-notifications)
       (should-not scheme-notifications))))
 
+(ert-deftest emacsvox-aural-profiles-roll-back-compatibility-voice ()
+  "A compatibility hook failure restores profile and source-buffer state."
+  (emacsvox-test--with-aural-profiles
+    (emacsvox-aural-register-profile (emacsvox-test--profile-data))
+    (let ((source (generate-new-buffer " *profile-rollback-source*")))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-set-compatibility-voice-enabled t source)
+            (add-hook
+             'emacsvox-aural-compatibility-voice-changed-hook
+             (lambda (_buffer enabled)
+               (unless enabled
+                 (error "Compatibility observer failed"))))
+            (cl-letf
+                (((symbol-function 'emacsvox-sounds-select-theme)
+                  (lambda (pack)
+                    (setq emacsvox-sounds-current-pack pack))))
+              (should-error
+               (emacsvox-aural-apply-profile 'work source)))
+            (should
+             (emacsvox-aural-compatibility-voice-enabled-p source))
+            (should-not emacsvox-aural-active-profile)
+            (should-not emacsvox-aural-enabled-feature-fragments)
+            (should-not emacsvox-aural-voice-palette-override))
+        (kill-buffer source)))))
+
 (ert-deftest emacsvox-aural-profiles-persist-and-load-references ()
   "Current storage atomically preserves profiles referencing personal data."
   (emacsvox-test--with-aural-profiles
@@ -328,40 +419,50 @@
         '(profile-feature)))
       (should (eq (plist-get data :sound-pack) 'chimes))
       (should
+       (plist-get data :compatibility-voice-enabled))
+      (should
        (eq
         (plist-get (plist-get data :spatial) :remapping)
         'center))
       (should (emacsvox-aural--validate-profile-data data))
       (emacsvox-aural-register-profile data)
       (setq emacsvox-aural-active-profile 'captured)
+      (should
+       (equal
+        (aref (cadr (emacsvox-aural-profiles--row 'captured)) 6)
+        "on"))
       (should (eq (emacsvox-aural-profile-status 'captured) 'active)))))
 
 (ert-deftest emacsvox-aural-profiles-manager-speaks-cells-and-boundaries ()
   "The profile manager follows the shared accessible table contract."
   (emacsvox-test--with-aural-profiles
     (emacsvox-aural-register-profile (emacsvox-test--profile-data))
-    (let (spoken)
-      (with-temp-buffer
-        (emacsvox-aural-profiles-mode)
-        (should
-         (eq
-          (lookup-key emacsvox-aural-profiles-mode-map (kbd "h"))
-          #'emacsvox-aural))
-        (should
-         (eq
-          (key-binding (kbd "q"))
-          #'emacsvox-aural-quit))
-        (cl-letf (((symbol-function 'tts-speak)
-                   (lambda (text) (push text spoken)))
-                  ((symbol-function 'emacsvox-icon) #'ignore))
-          (emacsvox-aural-profiles-refresh)
-          (emacsvox-aural-profiles-speak-current-cell)
-          (should (string-match-p "Profile" (car spoken)))
-          (goto-char (point-min))
-          (emacsvox-aural-profiles-previous)
-          (should
-           (string-match-p
-            "top of presentation profiles" (car spoken))))))))
+    (let ((source (generate-new-buffer " *profile-cells-source*"))
+          spoken)
+      (unwind-protect
+          (with-temp-buffer
+            (emacsvox-aural-profiles-mode)
+            (emacsvox-aural-inspection-attach-source source)
+            (should
+             (eq
+              (lookup-key emacsvox-aural-profiles-mode-map (kbd "h"))
+              #'emacsvox-aural))
+            (should
+             (eq
+              (key-binding (kbd "q"))
+              #'emacsvox-aural-quit))
+            (cl-letf (((symbol-function 'tts-speak)
+                       (lambda (text) (push text spoken)))
+                      ((symbol-function 'emacsvox-icon) #'ignore))
+              (emacsvox-aural-profiles-refresh)
+              (emacsvox-aural-profiles-speak-current-cell)
+              (should (string-match-p "Profile" (car spoken)))
+              (goto-char (point-min))
+              (emacsvox-aural-profiles-previous)
+              (should
+               (string-match-p
+                "top of presentation profiles" (car spoken)))))
+        (kill-buffer source)))))
 
 (provide 'emacsvox-aural-profiles-tests)
 ;;; emacsvox-aural-profiles-tests.el ends here

@@ -140,7 +140,10 @@
       (current
        (format
         "%s %s"
-        current (emacsvox-aural-profile-status current)))
+        current
+        (emacsvox-aural-profile-status
+         current
+         (emacsvox-aural-inspection-source-buffer))))
       ((zerop count) "none saved")
       (t "none selected"))
      (format "%d saved profile%s"

@@ -108,7 +108,8 @@
 (defun emacsvox-aural-home--profile-status ()
   "Return concise status for complete saved presentation profiles."
   (require 'emacsvox-aural-profiles)
-  (emacsvox-aural-profiles-status))
+  (emacsvox-aural-profiles-status
+   (emacsvox-aural-home--source-buffer)))
 
 (defun emacsvox-aural-home--overrides-status ()
   "Return concise status for the strongest presentation rule layers."
@@ -185,7 +186,7 @@
       (vector
        "Presentation profiles"
        (emacsvox-aural-home--profile-status)
-       "Save and switch complete scheme, fragment, sound, voice, and spatial configurations"))
+       "Save and switch complete presentation and source compatibility configurations"))
      (list
       'schemes
       (vector

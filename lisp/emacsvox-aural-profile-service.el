@@ -21,6 +21,8 @@
 
 (declare-function emacsvox-sounds-select-theme
                   "emacsvox-sounds" (&optional theme))
+(autoload 'emacsvox-aural-set-compatibility-voice-enabled
+  "emacsvox-aural-compatibility-voice")
 
 (defun emacsvox-aural-current-profile-id ()
   "Return the selected presentation-profile identifier, or nil."
@@ -28,39 +30,50 @@
    (emacsvox-aural-profile-entry emacsvox-aural-active-profile)
    emacsvox-aural-active-profile))
 
-(defun emacsvox-aural-capture-profile-data (id summary)
-  "Return profile data named ID with SUMMARY from the current configuration."
+(defun emacsvox-aural--profile-source-buffer (&optional buffer)
+  "Return live profile source BUFFER, defaulting to the current buffer."
+  (let ((buffer (or buffer (current-buffer))))
+    (unless (buffer-live-p buffer)
+      (user-error "Presentation profile source buffer is no longer live"))
+    buffer))
+
+(defun emacsvox-aural-capture-profile-data (id summary &optional source-buffer)
+  "Return profile data ID with SUMMARY for SOURCE-BUFFER's configuration."
   (emacsvox-aural--require-symbol id "Presentation profile identifier")
   (unless (and (stringp summary) (not (string-empty-p summary)))
     (emacsvox-aural--scheme-error
      "Presentation profile requires a summary"))
-  (list
-   :id id
-   :summary summary
-   :scheme emacsvox-aural-active-scheme
-   :feature-fragments
-   (copy-sequence emacsvox-aural-enabled-feature-fragments)
-   :sound-pack
-   (or
-    (and
-     (boundp 'emacsvox-sounds-current-pack)
-     emacsvox-sounds-current-pack)
-    (emacsvox-aural-effective-scheme-provider 'resource-pack))
-   :voice-palette
-   (or
-    emacsvox-aural-voice-palette-override
-    (emacsvox-aural-effective-scheme-provider 'voice-palette))
-   :spatial
-   (list
-    :enabled emacsvox-aural-spatial-enabled
-    :speech-enabled emacsvox-aural-spatial-speech-enabled
-    :cue-enabled emacsvox-aural-spatial-cue-enabled
-    :output emacsvox-aural-spatial-output
-    :maximum-separation emacsvox-aural-spatial-maximum-separation
-    :remapping
-    (if (symbolp emacsvox-aural-spatial-remapping)
-        emacsvox-aural-spatial-remapping
-      'normal))))
+  (let ((source
+         (emacsvox-aural--profile-source-buffer source-buffer)))
+    (list
+     :id id
+     :summary summary
+     :scheme emacsvox-aural-active-scheme
+     :feature-fragments
+     (copy-sequence emacsvox-aural-enabled-feature-fragments)
+     :sound-pack
+     (or
+      (and
+       (boundp 'emacsvox-sounds-current-pack)
+       emacsvox-sounds-current-pack)
+      (emacsvox-aural-effective-scheme-provider 'resource-pack))
+     :voice-palette
+     (or
+      emacsvox-aural-voice-palette-override
+      (emacsvox-aural-effective-scheme-provider 'voice-palette))
+     :compatibility-voice-enabled
+     (emacsvox-aural-compatibility-voice-enabled-p source)
+     :spatial
+     (list
+      :enabled emacsvox-aural-spatial-enabled
+      :speech-enabled emacsvox-aural-spatial-speech-enabled
+      :cue-enabled emacsvox-aural-spatial-cue-enabled
+      :output emacsvox-aural-spatial-output
+      :maximum-separation emacsvox-aural-spatial-maximum-separation
+      :remapping
+      (if (symbolp emacsvox-aural-spatial-remapping)
+          emacsvox-aural-spatial-remapping
+        'normal)))))
 
 (defun emacsvox-aural--apply-profile-spatial (spatial)
   "Apply validated profile SPATIAL settings."
@@ -84,8 +97,8 @@
       (setq emacsvox-aural-spatial-remapping
             (plist-get spatial :remapping)))))
 
-(defun emacsvox-aural-apply-profile (id)
-  "Validate and transactionally apply presentation profile ID."
+(defun emacsvox-aural-apply-profile (id &optional source-buffer)
+  "Validate and transactionally apply profile ID to SOURCE-BUFFER."
   (let* ((entry
           (or
            (emacsvox-aural-profile-entry id)
@@ -101,6 +114,14 @@
            (emacsvox-aural-effective-scheme-provider
             'resource-pack scheme)))
          (palette (plist-get data :voice-palette))
+         (compatibility-present
+          (plist-member data :compatibility-voice-enabled))
+         (compatibility
+          (plist-get data :compatibility-voice-enabled))
+         (source
+          (emacsvox-aural--profile-source-buffer source-buffer))
+         (old-compatibility
+          (emacsvox-aural-compatibility-voice-enabled-p source))
          (spatial (plist-get data :spatial))
          (old-scheme emacsvox-aural-active-scheme)
          (old-fragments
@@ -145,6 +166,9 @@
            emacsvox-aural-voice-palette-override palette
            emacsvox-aural-active-profile id)
           (emacsvox-aural--apply-profile-spatial spatial)
+          (when compatibility-present
+            (emacsvox-aural-set-compatibility-voice-enabled
+             compatibility source))
           ;; From this point the complete profile is live.  Observer failures
           ;; must not roll it back to a state they were never told about.
           (setq state-committed t)
@@ -160,16 +184,22 @@
          emacsvox-aural-voice-palette-override old-palette
          emacsvox-aural-active-profile old-profile)
         (emacsvox-aural--apply-profile-spatial old-spatial)
+        (when compatibility-present
+          (ignore-errors
+            (emacsvox-aural-set-compatibility-voice-enabled
+             old-compatibility source)))
         (when old-pack
           (ignore-errors
             (let ((emacsvox-sounds--silent-theme-selection t))
               (emacsvox-sounds-select-theme old-pack))))))
     id))
 
-(defun emacsvox-aural-profile-matches-current-p (id)
-  "Return non-nil when live presentation settings equal profile ID."
+(defun emacsvox-aural-profile-matches-current-p (id &optional source-buffer)
+  "Return whether live settings for SOURCE-BUFFER equal profile ID."
   (when-let* ((entry (emacsvox-aural-profile-entry id)))
     (let* ((data (emacsvox-aural-profile-entry-data entry))
+           (source
+            (emacsvox-aural--profile-source-buffer source-buffer))
            (spatial (plist-get data :spatial))
            (palette (plist-get data :voice-palette))
            (live-palette
@@ -192,6 +222,11 @@
        (or
         (not (boundp 'emacsvox-sounds-current-pack))
         (eq pack emacsvox-sounds-current-pack))
+       (or
+        (not (plist-member data :compatibility-voice-enabled))
+        (eq
+         (plist-get data :compatibility-voice-enabled)
+         (emacsvox-aural-compatibility-voice-enabled-p source)))
        (or
         (null spatial)
         (and
@@ -235,17 +270,17 @@
         t)
     (error nil)))
 
-(defun emacsvox-aural-profile-status (id)
-  "Return `active', `modified', `inactive', or `invalid' for profile ID."
+(defun emacsvox-aural-profile-status (id &optional source-buffer)
+  "Return status for profile ID in SOURCE-BUFFER."
   (cond
    ((not (emacsvox-aural--profile-valid-p id)) 'invalid)
    ((not (eq id emacsvox-aural-active-profile)) 'inactive)
-   ((emacsvox-aural-profile-matches-current-p id) 'active)
+   ((emacsvox-aural-profile-matches-current-p id source-buffer) 'active)
    (t 'modified)))
 
-(defun emacsvox-aural-profile-current-p (id)
-  "Return non-nil when profile ID is selected and exactly matches live settings."
-  (eq (emacsvox-aural-profile-status id) 'active))
+(defun emacsvox-aural-profile-current-p (id &optional source-buffer)
+  "Return whether profile ID is selected and matches SOURCE-BUFFER."
+  (eq (emacsvox-aural-profile-status id source-buffer) 'active))
 
 (provide 'emacsvox-aural-profile-service)
 ;;; emacsvox-aural-profile-service.el ends here
