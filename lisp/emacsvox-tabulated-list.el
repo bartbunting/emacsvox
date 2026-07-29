@@ -52,6 +52,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-submission)
 (require 'tabulated-list)
 
 ;;;  Map Faces:
@@ -61,6 +63,20 @@
    (tabulated-list-fake-header voice-bolden)))
 
 ;;;  Interactive Commands:
+
+(defun emacsvox-tabulated-list--cell-facts (empty)
+  "Return semantic facts for the current field, including EMPTY state."
+  (append
+   '(:role field)
+   (when empty '(:states (empty)))))
+
+(defun emacsvox-tabulated-list--submit-cell (content facts)
+  "Submit cell CONTENT and FACTS through aural presentation policy."
+  (if (zerop (length content))
+      (emacsvox-aural-submit-actions
+       :facts facts :module 'tabulated-list :occasion 'navigation)
+    (emacsvox-aural-submit
+     content :facts facts :module 'tabulated-list :occasion 'navigation)))
 
 (defun emacsvox-tabulated-list-speak-cell ()
   "Speak current cell. "
@@ -78,11 +94,14 @@
       (when (= (1- (length tabulated-list-format)) col)
         (emacsvox-icon 'right))
       (when (listp value) (setq value (car value)))
-      (when (zerop (length (string-trim value)))
-        (tts-tone 261.6 150 'force))    ;blank
-      (if (called-interactively-p 'interactive) 
-          (tts-speak (concat name " " value))
-        (tts-speak  value)))))
+      (let* ((empty (zerop (length (string-trim value))))
+             (content
+              (if (called-interactively-p 'interactive)
+                  (concat name " " value)
+                value)))
+        (emacsvox-tabulated-list--submit-cell
+         content
+         (emacsvox-tabulated-list--cell-facts empty))))))
 
 (cl-loop
  for target in

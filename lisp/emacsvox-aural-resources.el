@@ -361,6 +361,9 @@ themed overrides below an active sound pack."
     (edit-uppercase
      "Text was changed to uppercase or capitalized"
      800 100 t)
+    (field-empty
+     "A structured field contains no text"
+     261.6 150 t)
     (line-empty
      "An empty display line was reached"
      130.8 150 t)

@@ -168,6 +168,7 @@ Operational semantic contract version: =1=.
 | =confirmation-request= | =role= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A prompt asking the user to confirm an action |
 | =deletion-flagged= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem entry is flagged for deletion |
 | =edit-operation= | =attribute= | =core= | =deletion=, =line-created=, =uppercase=, =lowercase=, =capitalize= | - | - | - | - | =edit= | - | - | The text-editing operation being presented |
+| =empty= | =state= | =core= | - | =field= | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A structured field contains no text |
 | =entry-deletion-flagged= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry was flagged for deletion |
 | =entry-inspected= | =event= | =dired= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user requested a property of a filesystem entry |
 | =entry-inspection-kind= | =attribute= | =dired= | =size=, =modification-time=, =access-time=, =symbolic-link-target=, =permissions=, =file-type= | - | - | - | - | - | - | - | The requested property of a filesystem entry |
@@ -177,7 +178,7 @@ Operational semantic contract version: =1=.
 | =entry-staged= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control entry was staged |
 | =entry-unmarked= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry mark was removed |
 | =entry-unstaged= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control entry was unstaged |
-| =field= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =content= | - | A named field within a structured object |
+| =field= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A named field within a structured object |
 | =field-kind= | =attribute= | =core= | =symbol= | =field= | - | - | - | - | - | - | The module-defined purpose of a structured field |
 | =filesystem-entry= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A file, directory, symbolic link, or other directory entry |
 | =filesystem-listing= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A directory or search-result listing of filesystem entries |
@@ -317,6 +318,7 @@ Operational semantic contract version: =1=.
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
 | =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |
+| =tabulated-list-field-state-tones= | =tabulated-list= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for empty Tabulated List fields |
 
 * Sound Pack Author Reference
 
@@ -429,6 +431,7 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 | =edit-line-created= | =225= | =75= | =t= | =core= | A new line was created |
 | =edit-lowercase= | =600= | =100= | =t= | =core= | Text was changed to lowercase |
 | =edit-uppercase= | =800= | =100= | =t= | =core= | Text was changed to uppercase or capitalized |
+| =field-empty= | =261.6= | =150= | =t= | =core= | A structured field contains no text |
 | =line-decoration= | =1047= | =150= | =t= | =core= | A decorative punctuation line was reached |
 | =line-empty= | =130.8= | =150= | =t= | =core= | An empty display line was reached |
 | =line-separator= | =523.3= | =150= | =t= | =core= | A horizontal separator line was reached |

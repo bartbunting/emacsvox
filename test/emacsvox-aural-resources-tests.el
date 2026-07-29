@@ -164,8 +164,9 @@
    (equal
     (emacsvox-aural-tone-candidates)
     '("buffer-modified" "buffer-read-only" "edit-deletion"
-      "edit-line-created" "edit-lowercase" "edit-uppercase" "line-decoration"
-      "line-empty" "line-separator" "line-unspeakable" "line-whitespace")))
+      "edit-line-created" "edit-lowercase" "edit-uppercase" "field-empty"
+      "line-decoration" "line-empty" "line-separator" "line-unspeakable"
+      "line-whitespace")))
   (dolist
       (expected
        '((buffer-modified 700 100 nil)
@@ -174,6 +175,7 @@
          (edit-line-created 225 75 t)
          (edit-lowercase 600 100 t)
          (edit-uppercase 800 100 t)
+         (field-empty 261.6 150 t)
          (line-empty 130.8 150 t)
          (line-whitespace 261.6 150 t)
          (line-separator 523.3 150 t)

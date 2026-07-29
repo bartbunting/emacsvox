@@ -29,13 +29,20 @@
      :summary "A named field within a structured object"
      :owner core
      :occasions (navigation continuous state-change inspection)
-     :phases (content))
+     :phases (before content after))
     (field-kind
      :kind attribute
      :summary "The module-defined purpose of a structured field"
      :owner core
      :roles (field)
      :value-type symbol)
+    (empty
+     :kind state
+     :summary "A structured field contains no text"
+     :owner core
+     :roles (field)
+     :occasions (navigation continuous inspection)
+     :phases (before content after))
     (aural-interface
      :kind role
      :summary "An Emacsvox aural manager, browser, or editor"
@@ -684,7 +691,21 @@
        (:before
         (:append
          ((:id bs-buffer-read-only-tone-action
-           :kind tone :tone buffer-read-only))))))))
+           :kind tone :tone buffer-read-only)))))))
+    (tabulated-list
+     :schema-version 1
+     :id tabulated-list-field-state-tones
+     :summary "Compatibility tone for empty Tabulated List fields"
+     :rules
+     ((:id tabulated-list-empty-field-tone
+       :match
+       (:role field :module tabulated-list :state empty
+        :occasion navigation)
+       :render
+       (:before
+        (:append
+         ((:id tabulated-list-empty-field-tone-action
+           :kind tone :tone field-empty))))))))
   "Automatic compatibility policy for shared workflow integrations.")
 
 (defconst emacsvox-aural-workflow-feature-fragments
