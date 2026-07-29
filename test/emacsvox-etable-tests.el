@@ -129,8 +129,46 @@
            'original-result))))
       (should
        (equal
-        (nreverse events)
-        '((speak "indent 0") speak-now original))))))
+       (nreverse events)
+       '((speak "indent 0") speak-now original))))))
+
+(ert-deftest emacsvox-etable-newline-presents-line-created-after-stop ()
+  "Cell newline finishes work and stops before line-created feedback."
+  (let ((ems--interactive-fn-name '*table--cell-newline)
+        (emacsvox-line-echo nil)
+        (tts-stop-immediately t)
+        events)
+    (cl-letf
+        (((symbol-function 'table--finish-delayed-tasks)
+          (lambda () (push 'finish events)))
+         ((symbol-function 'tts-stop)
+          (lambda () (push 'stop events)))
+         ((symbol-function 'emacsvox-speak-edit-operation)
+          (lambda (operation)
+            (push (list 'edit operation) events))))
+      (emacsvox--advice-*table--cell-newline-before))
+    (should
+     (equal
+      (nreverse events)
+      '(finish stop (edit line-created))))))
+
+(ert-deftest emacsvox-etable-newline-line-echo-skips-edit-feedback ()
+  "Cell newline with line echo speaks instead of presenting a tone."
+  (let ((ems--interactive-fn-name '*table--cell-newline)
+        (emacsvox-line-echo t)
+        (tts-stop-immediately t)
+        events)
+    (cl-letf
+        (((symbol-function 'table--finish-delayed-tasks)
+          (lambda () (push 'finish events)))
+         ((symbol-function 'tts-stop)
+          (lambda () (push 'stop events)))
+         ((symbol-function 'emacsvox-speak-line)
+          (lambda () (push 'line events)))
+         ((symbol-function 'emacsvox-speak-edit-operation)
+          (lambda (&rest _) (push 'edit events))))
+      (emacsvox--advice-*table--cell-newline-before))
+    (should (equal (nreverse events) '(finish line)))))
 
 (ert-deftest emacsvox-etable-open-line-uses-explicit-count ()
   "Open-line feedback uses its native COUNT argument."

@@ -133,7 +133,7 @@
     (table--finish-delayed-tasks)
     (cond (emacsvox-line-echo (emacsvox-speak-line))
           (t (if tts-stop-immediately (tts-stop))
-             (tts-tone 225 120 'force)))))
+             (emacsvox-speak-edit-operation 'line-created)))))
 
 (advice-add
  '*table--cell-newline :before
