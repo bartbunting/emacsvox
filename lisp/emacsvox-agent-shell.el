@@ -535,9 +535,16 @@ a timer created by an older loaded version.")
 (make-variable-buffer-local 'emacsvox-agent-shell--pending-speech-qualified-ids)
 
 (defvar emacsvox-agent-shell--pending-bodies nil
-  "Hash table mapping qualified ID to its latest rendered turn-content body.")
+  "Legacy hash table mapping qualified ID to rendered turn-content body.
+Current response capture keeps buffer markers instead, but this table remains
+available so a timer created by an older loaded version can finish safely.")
 
 (make-variable-buffer-local 'emacsvox-agent-shell--pending-bodies)
+
+(defvar emacsvox-agent-shell--pending-section-markers nil
+  "Hash table mapping pending qualified IDs to body marker pairs.")
+
+(make-variable-buffer-local 'emacsvox-agent-shell--pending-section-markers)
 
 (defvar-local emacsvox-agent-shell--response-turn-active-p nil
   "Non-nil while a submitted agent turn can produce semantic sections.")
@@ -549,7 +556,10 @@ a timer created by an older loaded version.")
   "Out-of-turn message IDs awaiting delivery, in arrival order.")
 
 (defvar-local emacsvox-agent-shell--out-of-turn-bodies nil
-  "Hash table of latest rendered out-of-turn bodies by qualified ID.")
+  "Legacy hash table of rendered out-of-turn bodies by qualified ID.")
+
+(defvar-local emacsvox-agent-shell--out-of-turn-section-markers nil
+  "Hash table mapping out-of-turn qualified IDs to body marker pairs.")
 
 (defvar-local emacsvox-agent-shell--out-of-turn-delivered-ids nil
   "Hash table of out-of-turn qualified IDs already delivered once.")
@@ -1095,12 +1105,79 @@ selects the configured foreground or background level."
          (emacsvox-agent-shell--speech-level-at-least-p
           'response buffer))))
 
+(defun emacsvox-agent-shell--release-section-marker-pair (pair)
+  "Detach the start and end markers in section marker PAIR."
+  (when (markerp (car-safe pair))
+    (set-marker (car pair) nil))
+  (when (markerp (cdr-safe pair))
+    (set-marker (cdr pair) nil)))
+
+(defun emacsvox-agent-shell--clear-section-markers (table)
+  "Detach and remove every marker pair in hash TABLE."
+  (when (hash-table-p table)
+    (maphash
+     (lambda (_qualified-id pair)
+       (emacsvox-agent-shell--release-section-marker-pair pair))
+     table)
+    (clrhash table)))
+
+(defun emacsvox-agent-shell--forget-section-markers
+    (table qualified-id)
+  "Detach and remove QUALIFIED-ID's marker pair from hash TABLE."
+  (when (hash-table-p table)
+    (when-let* ((pair (gethash qualified-id table)))
+      (emacsvox-agent-shell--release-section-marker-pair pair))
+    (remhash qualified-id table)))
+
+(defun emacsvox-agent-shell--remember-section-markers
+    (table qualified-id body-start body-end)
+  "Update TABLE's body markers for QUALIFIED-ID to BODY-START and BODY-END.
+The end marker advances when text is inserted at the boundary, so a streamed
+append remains covered even before the next section-hook invocation."
+  (let ((pair (gethash qualified-id table)))
+    (if (and (markerp (car-safe pair))
+             (markerp (cdr-safe pair)))
+        (progn
+          (set-marker (car pair) body-start (current-buffer))
+          (set-marker (cdr pair) body-end (current-buffer)))
+      (setq pair
+            (cons (copy-marker body-start)
+                  (copy-marker body-end t)))
+      (puthash qualified-id pair table))
+    pair))
+
+(defun emacsvox-agent-shell--section-marker-snapshot
+    (qualified-id pair)
+  "Return QUALIFIED-ID and final rendered body represented by marker PAIR."
+  (when-let* ((start-marker (car-safe pair))
+              (end-marker (cdr-safe pair))
+              ((markerp start-marker))
+              ((markerp end-marker))
+              ((eq (marker-buffer start-marker) (current-buffer)))
+              ((eq (marker-buffer end-marker) (current-buffer)))
+              (body-start (marker-position start-marker))
+              (body-end (marker-position end-marker))
+              ((< body-start body-end))
+              ((eq (get-text-property body-start 'agent-shell-ui-section)
+                   'body))
+              (state
+               (get-text-property body-start 'agent-shell-ui-state))
+              ((equal qualified-id (map-elt state :qualified-id)))
+              (body
+               (string-trim
+                (buffer-substring body-start body-end)))
+              ((not (string-empty-p body))))
+    (cons qualified-id body)))
+
 (defun emacsvox-agent-shell--cancel-pending-speech ()
   "Cancel and discard response speech pending in the current shell."
   (when (timerp emacsvox-agent-shell--pending-speech-timer)
     (cancel-timer emacsvox-agent-shell--pending-speech-timer))
   (setq emacsvox-agent-shell--pending-speech-timer nil
         emacsvox-agent-shell--pending-speech-qualified-ids nil)
+  (emacsvox-agent-shell--clear-section-markers
+   emacsvox-agent-shell--pending-section-markers)
+  (setq emacsvox-agent-shell--pending-section-markers nil)
   (when (hash-table-p emacsvox-agent-shell--pending-bodies)
     (clrhash emacsvox-agent-shell--pending-bodies)))
 
@@ -1172,22 +1249,53 @@ the body retains semantic faces and omits markup that is no longer displayed."
                    qualified-id
                    emacsvox-agent-shell--out-of-turn-delivered-ids)
             (when-let* ((body
-                         (and
-                          (hash-table-p
-                           emacsvox-agent-shell--out-of-turn-bodies)
-                          (gethash
-                           qualified-id
-                           emacsvox-agent-shell--out-of-turn-bodies))))
+                         (or
+                          (when-let*
+                              ((pair
+                                (and
+                                 (hash-table-p
+                                  emacsvox-agent-shell--out-of-turn-section-markers)
+                                 (gethash
+                                  qualified-id
+                                  emacsvox-agent-shell--out-of-turn-section-markers)))
+                               (snapshot
+                                (emacsvox-agent-shell--section-marker-snapshot
+                                 qualified-id pair)))
+                            (cdr snapshot))
+                          (and
+                           (hash-table-p
+                            emacsvox-agent-shell--out-of-turn-bodies)
+                           (gethash
+                            qualified-id
+                            emacsvox-agent-shell--out-of-turn-bodies)))))
               (puthash
                qualified-id t
                emacsvox-agent-shell--out-of-turn-delivered-ids)
               (emacsvox-agent-shell--deliver-out-of-turn-body body)))
+          (emacsvox-agent-shell--forget-section-markers
+           emacsvox-agent-shell--out-of-turn-section-markers
+           qualified-id)
           (when (hash-table-p emacsvox-agent-shell--out-of-turn-bodies)
             (remhash qualified-id
                      emacsvox-agent-shell--out-of-turn-bodies)))))))
 
+(defun emacsvox-agent-shell--schedule-out-of-turn-delivery (qualified-id)
+  "Queue QUALIFIED-ID for coalesced out-of-turn speech."
+  (unless (member qualified-id
+                  emacsvox-agent-shell--out-of-turn-pending-ids)
+    (setq emacsvox-agent-shell--out-of-turn-pending-ids
+          (append emacsvox-agent-shell--out-of-turn-pending-ids
+                  (list qualified-id))))
+  (when (timerp emacsvox-agent-shell--out-of-turn-speech-timer)
+    (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer))
+  (setq emacsvox-agent-shell--out-of-turn-speech-timer
+        (run-with-timer
+         (max 0 emacsvox-agent-shell-speech-delay) nil
+         #'emacsvox-agent-shell--deliver-out-of-turn-pending
+         (current-buffer))))
+
 (defun emacsvox-agent-shell--record-out-of-turn-snapshot (snapshot)
-  "Coalesce the latest rendered out-of-turn message SNAPSHOT for speech."
+  "Coalesce legacy rendered out-of-turn message SNAPSHOT for speech."
   (let ((qualified-id (car snapshot))
         (body (cdr snapshot)))
     (unless (and (hash-table-p
@@ -1200,43 +1308,65 @@ the body retains semantic faces and omits markup that is no longer displayed."
               (make-hash-table :test #'equal)))
       (puthash qualified-id body
                emacsvox-agent-shell--out-of-turn-bodies)
-      (unless (member qualified-id
-                      emacsvox-agent-shell--out-of-turn-pending-ids)
-        (setq emacsvox-agent-shell--out-of-turn-pending-ids
-              (append emacsvox-agent-shell--out-of-turn-pending-ids
-                      (list qualified-id))))
-      (when (timerp emacsvox-agent-shell--out-of-turn-speech-timer)
-        (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer))
-      (setq emacsvox-agent-shell--out-of-turn-speech-timer
-            (run-with-timer
-             (max 0 emacsvox-agent-shell-speech-delay) nil
-             #'emacsvox-agent-shell--deliver-out-of-turn-pending
-             (current-buffer))))))
+      (emacsvox-agent-shell--schedule-out-of-turn-delivery
+       qualified-id))))
+
+(defun emacsvox-agent-shell--record-out-of-turn-section
+    (qualified-id body-start body-end)
+  "Coalesce QUALIFIED-ID's rendered BODY-START to BODY-END for later speech."
+  (unless (and (hash-table-p
+                emacsvox-agent-shell--out-of-turn-delivered-ids)
+               (gethash
+                qualified-id
+                emacsvox-agent-shell--out-of-turn-delivered-ids))
+    (unless (hash-table-p
+             emacsvox-agent-shell--out-of-turn-section-markers)
+      (setq emacsvox-agent-shell--out-of-turn-section-markers
+            (make-hash-table :test #'equal)))
+    (emacsvox-agent-shell--remember-section-markers
+     emacsvox-agent-shell--out-of-turn-section-markers
+     qualified-id body-start body-end)
+    (emacsvox-agent-shell--schedule-out-of-turn-delivery
+     qualified-id)))
 
 (defun emacsvox-agent-shell--record-response-section (range)
-  "Record semantic turn content or an explicit out-of-turn message in RANGE."
+  "Remember semantic turn content or an out-of-turn message in RANGE.
+Only buffer markers are updated while a response streams.  Rendered text is
+copied once, when the turn completes or the out-of-turn debounce timer fires."
   (when-let* ((body-start (map-nested-elt range '(:body :start)))
               ((< body-start (point-max)))
+              ((eq (get-text-property body-start 'agent-shell-ui-section)
+                   'body))
+              (body-end
+               (or (next-single-property-change
+                    body-start 'agent-shell-ui-section nil (point-max))
+                   (point-max)))
+              ((< body-start body-end))
               (state
                (get-text-property body-start 'agent-shell-ui-state))
               (qualified-id (map-elt state :qualified-id))
+              ((and (stringp qualified-id)
+                    (string-match-p
+                     "\\(?:agent_message_chunk\\|agent_thought_chunk\\|-plan\\)\\'"
+                     qualified-id)))
               ((or emacsvox-agent-shell--response-turn-active-p
                    (emacsvox-agent-shell--out-of-turn-message-id-p
-                    qualified-id)))
-              (snapshot
-               (emacsvox-agent-shell--response-section-snapshot range)))
+                    qualified-id))))
     (if (emacsvox-agent-shell--out-of-turn-message-id-p qualified-id)
-        (emacsvox-agent-shell--record-out-of-turn-snapshot snapshot)
-      (let ((body (cdr snapshot)))
-        (unless (hash-table-p emacsvox-agent-shell--pending-bodies)
-          (setq emacsvox-agent-shell--pending-bodies
+        (emacsvox-agent-shell--record-out-of-turn-section
+         qualified-id body-start body-end)
+      (unless (hash-table-p
+               emacsvox-agent-shell--pending-section-markers)
+        (setq emacsvox-agent-shell--pending-section-markers
                 (make-hash-table :test #'equal)))
-        (puthash qualified-id body emacsvox-agent-shell--pending-bodies)
-        (unless (member qualified-id
-                        emacsvox-agent-shell--pending-speech-qualified-ids)
-          (setq emacsvox-agent-shell--pending-speech-qualified-ids
-                (append emacsvox-agent-shell--pending-speech-qualified-ids
-                        (list qualified-id))))))))
+      (emacsvox-agent-shell--remember-section-markers
+       emacsvox-agent-shell--pending-section-markers
+       qualified-id body-start body-end)
+      (unless (member qualified-id
+                      emacsvox-agent-shell--pending-speech-qualified-ids)
+        (setq emacsvox-agent-shell--pending-speech-qualified-ids
+              (append emacsvox-agent-shell--pending-speech-qualified-ids
+                      (list qualified-id)))))))
 
 (defun emacsvox-agent-shell--out-of-turn-cleanup ()
   "Cancel and clear out-of-turn speech state in the current shell."
@@ -1244,11 +1374,14 @@ the body retains semantic faces and omits markup that is no longer displayed."
     (cancel-timer emacsvox-agent-shell--out-of-turn-speech-timer))
   (setq emacsvox-agent-shell--out-of-turn-speech-timer nil
         emacsvox-agent-shell--out-of-turn-pending-ids nil)
+  (emacsvox-agent-shell--clear-section-markers
+   emacsvox-agent-shell--out-of-turn-section-markers)
   (when (hash-table-p emacsvox-agent-shell--out-of-turn-bodies)
     (clrhash emacsvox-agent-shell--out-of-turn-bodies))
   (when (hash-table-p emacsvox-agent-shell--out-of-turn-delivered-ids)
     (clrhash emacsvox-agent-shell--out-of-turn-delivered-ids))
-  (setq emacsvox-agent-shell--out-of-turn-bodies nil
+  (setq emacsvox-agent-shell--out-of-turn-section-markers nil
+        emacsvox-agent-shell--out-of-turn-bodies nil
         emacsvox-agent-shell--out-of-turn-delivered-ids nil))
 
 (defun emacsvox-agent-shell--response-section-setup ()
@@ -1574,10 +1707,25 @@ the body retains semantic faces and omits markup that is no longer displayed."
     (with-current-buffer buffer
       (when (emacsvox-agent-shell--should-speak-p buffer)
         (dolist (qualified-id qualified-ids)
-          (when-let* ((content (and emacsvox-agent-shell--pending-bodies
-                                    (gethash
-                                     qualified-id
-                                     emacsvox-agent-shell--pending-bodies)))
+          (when-let* ((content
+                       (or
+                        (when-let*
+                            ((pair
+                              (and
+                               (hash-table-p
+                                emacsvox-agent-shell--pending-section-markers)
+                               (gethash
+                                qualified-id
+                                emacsvox-agent-shell--pending-section-markers)))
+                             (snapshot
+                              (emacsvox-agent-shell--section-marker-snapshot
+                               qualified-id pair)))
+                          (cdr snapshot))
+                        (and
+                         (hash-table-p emacsvox-agent-shell--pending-bodies)
+                         (gethash
+                          qualified-id
+                          emacsvox-agent-shell--pending-bodies))))
                       (block-id
                        (if (string-match "-\\([^-]+\\)$" qualified-id)
                            (match-string 1 qualified-id)
@@ -1588,10 +1736,13 @@ the body retains semantic faces and omits markup that is no longer displayed."
             (when (not (string-empty-p trimmed))
               (emacsvox-agent-shell--speak-content
                trimmed block-type)))))
+      (emacsvox-agent-shell--clear-section-markers
+       emacsvox-agent-shell--pending-section-markers)
       (when emacsvox-agent-shell--pending-bodies
         (clrhash emacsvox-agent-shell--pending-bodies))
-      (setq emacsvox-agent-shell--pending-speech-qualified-ids nil)
-      (setq emacsvox-agent-shell--pending-speech-timer nil))))
+      (setq emacsvox-agent-shell--pending-section-markers nil
+            emacsvox-agent-shell--pending-speech-qualified-ids nil
+            emacsvox-agent-shell--pending-speech-timer nil))))
 
 (defun emacsvox-agent-shell--execute-delayed-speech (buffer qualified-ids)
   "Deliver pending QUALIFIED-IDS left by an older timer in BUFFER.
