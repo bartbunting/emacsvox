@@ -66,7 +66,7 @@
     :legacy-face-source :legacy-faces :legacy-face-provenance
     :legacy-personality
     :legacy-source :source-buffer :source-buffer-name :source-position
-    :history-recording-inhibited)
+    :history-recording-inhibited :presentation-transaction-id)
   "Keys accepted in a presentation context plist.")
 
 (cl-defstruct
@@ -1324,6 +1324,8 @@ LAYER-ORDER records inheritance order within one origin."
          (source-position (plist-get context :source-position))
          (history-recording-inhibited
           (plist-get context :history-recording-inhibited))
+         (presentation-transaction-id
+          (plist-get context :presentation-transaction-id))
          (lineage
           (or
            (plist-get context :mode-lineage)
@@ -1404,6 +1406,11 @@ LAYER-ORDER records inheritance order within one origin."
       (emacsvox-aural--rule-error
        "Context history recording inhibition must be boolean: %S"
        history-recording-inhibited))
+    (when presentation-transaction-id
+      (unless (natnump presentation-transaction-id)
+        (emacsvox-aural--rule-error
+         "Context presentation transaction ID must be a natural number: %S"
+         presentation-transaction-id)))
     (when lineage
       (unless (and (listp lineage) (cl-every #'symbolp lineage))
         (emacsvox-aural--rule-error

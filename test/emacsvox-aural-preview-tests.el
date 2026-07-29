@@ -28,6 +28,34 @@
       (should (eq (emacsvox-aural-preview-play-plan plan) plan)))
     (should (equal events '(stop ensure queue dispatch)))))
 
+(ert-deftest emacsvox-aural-preview-runs-retain-one-transaction ()
+  "A multi-run preview queues and dispatches within one history transaction."
+  (let ((runs '((first "First" nil) (second "Second" 0.1)))
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural--ensure-speaker)
+          (lambda () (push 'ensure events)))
+         ((symbol-function 'tts-stop)
+          (lambda () (push 'stop events)))
+         ((symbol-function 'emacsvox-aural-call-with-presentation-transaction)
+          (lambda (id function &rest arguments)
+            (push (list 'transaction id) events)
+            (apply function arguments)))
+         ((symbol-function 'emacsvox-aural-queue-concrete-runs)
+          (lambda (queued)
+            (should (equal queued runs))
+            (push 'queue events)))
+         ((symbol-function 'tts--protocol-dispatch)
+          (lambda () (push 'dispatch events))))
+      (should
+       (equal
+        (emacsvox-aural-preview-play-runs runs 7)
+        runs)))
+    (should
+     (equal
+      (nreverse events)
+      '(stop ensure (transaction 7) queue dispatch)))))
+
 (ert-deftest emacsvox-aural-preview-cues-bypass-speech-transport ()
   "Cue-only previews stop old speech and play concrete resources directly."
   (let ((cues

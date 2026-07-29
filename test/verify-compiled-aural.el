@@ -145,6 +145,9 @@
          emacsvox-aural-voice-lock-enabled-p
          emacsvox-aural--make-concrete-plan
          emacsvox-aural-record-presentation
+         emacsvox-aural-call-with-presentation-transaction
+         emacsvox-aural-presentation-record-effective-plans
+         emacsvox-aural-presentation-record-effective-transaction-id
          emacsvox-aural-spatial-clamp
          emacsvox-aural--rule-error
          emacsvox-aural-rule-actions
@@ -162,6 +165,7 @@
          emacsvox-aural--transport-error
          emacsvox-aural-describe-selector
          emacsvox-aural-preview-play-plan
+         emacsvox-aural-preview-play-runs
          emacsvox-aural-validation--report
          emacsvox-aural-inspection-source-buffer
          emacsvox-aural-scheme-manager--scheme-row

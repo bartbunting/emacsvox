@@ -56,6 +56,18 @@ their concrete audio resources do not use the speech queue."
   (emacsvox-aural-queue-concrete-plan concrete)
   (emacsvox-aural-preview-dispatch concrete))
 
+(defun emacsvox-aural-preview-play-runs (runs &optional transaction-id)
+  "Stop old output and replay exact concrete RUNS once.
+
+RUNS have the form accepted by `emacsvox-aural-queue-concrete-runs'.
+TRANSACTION-ID, when non-nil, retains the replay as one history transaction."
+  (emacsvox-aural-preview-begin t)
+  (if transaction-id
+      (emacsvox-aural-call-with-presentation-transaction
+       transaction-id #'emacsvox-aural-queue-concrete-runs runs)
+    (emacsvox-aural-queue-concrete-runs runs))
+  (emacsvox-aural-preview-dispatch runs))
+
 (defun emacsvox-aural-preview--play-cue (resource sample-id balance)
   "Play concrete cue RESOURCE with SAMPLE-ID and optional BALANCE."
   (if (and (numberp balance) (not (zerop balance)))

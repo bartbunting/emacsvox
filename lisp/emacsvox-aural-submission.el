@@ -14,6 +14,7 @@
 
 (require 'cl-lib)
 (require 'emacsvox-aural-concrete)
+(require 'emacsvox-aural-history)
 (require 'emacsvox-aural-planner)
 (require 'emacsvox-aural-source)
 
@@ -170,7 +171,14 @@ PHASE is `before' by default and may alternatively be `after'."
              (mapcar #'copy-emacsvox-aural-compatibility-action actions)
              :prepared-content prepared
              :plans plans)))
-      (tts-speak prepared)
+      (dolist (plan plans)
+        (setf
+         (emacsvox-aural-concrete-plan-context plan)
+         (plist-put
+          (emacsvox-aural-concrete-plan-context plan)
+          :presentation-transaction-id id)))
+      (emacsvox-aural-call-with-presentation-transaction
+       id #'tts-speak prepared)
       submission)))
 
 (cl-defun emacsvox-aural-submit

@@ -1203,6 +1203,63 @@
      (emacsvox-aural-list-recent-feedback)
      :type 'user-error)))
 
+(ert-deftest emacsvox-aural-tools-recent-feedback-preserves-transaction-runs ()
+  "Recent feedback summarizes and replays every frozen transaction run."
+  (emacsvox-test--with-aural-tools
+    (let* ((first
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "First" :speak t :voice-request 'bolden)
+             :context
+             '(:occasion navigation :presentation-transaction-id 7)))
+           (second
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "Second" :speak t :voice-request 'animate)
+             :context
+             '(:occasion navigation :presentation-transaction-id 7)))
+           (record
+            (emacsvox-aural--make-presentation-record
+             :id 1
+             :queued-at (current-time)
+             :plan first
+             :plans (list first second)
+             :pauses '(nil 0.1)
+             :transaction-id 7))
+           replayed replay-id)
+      (should
+       (equal
+        (emacsvox-aural-recent-feedback--content record)
+        "FirstSecond"))
+      (should
+       (equal
+        (emacsvox-aural-recent-feedback--voice record)
+        "2 voices"))
+      (setq emacsvox-aural-presentation-history (list record))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-recent-feedback--record)
+            (lambda (&optional _) record))
+           ((symbol-function 'emacsvox-aural-preview-play-runs)
+            (lambda (runs transaction-id)
+              (setq replayed runs
+                    replay-id transaction-id)))
+           ((symbol-function 'emacsvox-aural-recent-feedback-refresh)
+            #'ignore)
+           ((symbol-function 'emacsvox-aural-preview-message)
+            #'ignore))
+        (emacsvox-aural-recent-feedback-replay))
+      (should (= replay-id 7))
+      (should
+       (equal
+        (mapcar #'cadr replayed)
+        '("First" "Second")))
+      (should
+       (equal
+        (mapcar (lambda (run) (nth 2 run)) replayed)
+        '(nil 0.1))))))
+
 (ert-deftest emacsvox-aural-tools-explain-and-preview-visual-faces ()
   "Point diagnosis and preview preserve ordered face compatibility context."
   (emacsvox-test--with-aural-tools

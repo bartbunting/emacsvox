@@ -844,6 +844,12 @@
 
 (ert-deftest emacsvox-aural-rules-validate-facts-and-context ()
   "Unknown semantics, invalid attributes, and unknown context keys fail."
+  (should
+   (emacsvox-aural-input-p
+    (emacsvox-aural-normalize-input
+     '(:role heading)
+     '(:module org :mode org-mode :occasion navigation
+       :presentation-transaction-id 3))))
   (should-error
    (emacsvox-aural-normalize-input
     '(:role not-registered)
@@ -869,6 +875,12 @@
    (emacsvox-aural-normalize-input
     nil
     '(:mode text-mode :occasion navigation :icons-enabled yes))
+   :type 'emacsvox-aural-rule-error)
+  (should-error
+   (emacsvox-aural-normalize-input
+    nil
+    '(:mode text-mode :occasion navigation
+      :presentation-transaction-id invalid))
    :type 'emacsvox-aural-rule-error)
   (should-error
    (emacsvox-test--compile-rule

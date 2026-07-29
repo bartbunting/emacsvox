@@ -39,10 +39,12 @@
 
 (defun emacsvox-aural-recent-feedback--actions (record)
   "Return the ordered before and after actions from RECORD."
-  (let ((plan (emacsvox-aural-presentation-record-plan record)))
-    (append
-     (emacsvox-aural-concrete-plan-before plan)
-     (emacsvox-aural-concrete-plan-after plan))))
+  (cl-mapcan
+   (lambda (plan)
+     (append
+      (copy-sequence (emacsvox-aural-concrete-plan-before plan))
+      (copy-sequence (emacsvox-aural-concrete-plan-after plan))))
+   (emacsvox-aural-presentation-record-effective-plans record)))
 
 (defun emacsvox-aural-recent-feedback--cues (record)
   "Return the concrete cue actions from RECORD."
@@ -63,11 +65,17 @@
 
 (defun emacsvox-aural-recent-feedback--content (record)
   "Return a concise description of RECORD's exact content."
-  (let* ((plan (emacsvox-aural-presentation-record-plan record))
-         (content (emacsvox-aural-concrete-plan-content plan))
+  (let* ((plans
+          (emacsvox-aural-presentation-record-effective-plans record))
+         (contents
+          (mapcar #'emacsvox-aural-concrete-plan-content plans))
          (text
           (emacsvox-aural-recent-feedback--clean-text
-           (emacsvox-aural-concrete-content-text content)
+           (mapconcat
+            (lambda (content)
+              (or (emacsvox-aural-concrete-content-text content) ""))
+            contents
+            "")
            72))
          (speech
           (cl-remove-if-not
@@ -76,7 +84,7 @@
            (emacsvox-aural-recent-feedback--actions record))))
     (cond
      ((and
-       (emacsvox-aural-concrete-content-speak content)
+       (cl-some #'emacsvox-aural-concrete-content-speak contents)
        (not (string-empty-p text)))
       text)
      ((not (string-empty-p text))
@@ -99,13 +107,24 @@
 
 (defun emacsvox-aural-recent-feedback--voice (record)
   "Return a concise exact voice description for RECORD."
-  (let* ((content
-          (emacsvox-aural-concrete-plan-content
-           (emacsvox-aural-presentation-record-plan record)))
+  (let* ((contents
+          (mapcar
+           #'emacsvox-aural-concrete-plan-content
+           (emacsvox-aural-presentation-record-effective-plans record)))
+         (content (car contents))
+         (requests
+          (delete-dups
+           (mapcar
+            #'emacsvox-aural-concrete-content-voice-request
+            contents)))
          (request
           (emacsvox-aural-concrete-content-voice-request content)))
     (cond
-     ((not (emacsvox-aural-concrete-content-speak content)) "suppressed")
+     ((cdr requests)
+      (format "%d voices" (length requests)))
+     ((not
+       (cl-some #'emacsvox-aural-concrete-content-speak contents))
+      "suppressed")
      ((null request) "default")
      ((symbolp request) (emacsvox-aural-humanize request))
      ((emacsvox-aural-voice-style-p request)
@@ -136,21 +155,26 @@
 (defun emacsvox-aural-recent-feedback--semantic-fallback-count (record)
   "Return the number of semantic fallback matches retained in RECORD."
   (cl-loop
-   for rule in
-   (emacsvox-aural-concrete-plan-rule-provenance
-    (emacsvox-aural-presentation-record-plan record))
+   for plan in
+   (emacsvox-aural-presentation-record-effective-plans record)
    sum
-   (cl-count-if
-    (lambda (detail)
-      (let ((distance (plist-get detail :distance)))
-        (and (numberp distance) (> distance 0))))
-    (plist-get rule :semantic-matches))))
+   (cl-loop
+    for rule in (emacsvox-aural-concrete-plan-rule-provenance plan)
+    sum
+    (cl-count-if
+     (lambda (detail)
+       (let ((distance (plist-get detail :distance)))
+         (and (numberp distance) (> distance 0))))
+     (plist-get rule :semantic-matches)))))
 
 (defun emacsvox-aural-recent-feedback--status (record)
   "Return fallback and degradation status for RECORD."
-  (let* ((plan (emacsvox-aural-presentation-record-plan record))
-         (degradations
-          (length (emacsvox-aural-concrete-plan-degradations plan)))
+  (let* ((degradations
+          (cl-loop
+           for plan in
+           (emacsvox-aural-presentation-record-effective-plans record)
+           sum
+           (length (emacsvox-aural-concrete-plan-degradations plan))))
          (fallbacks
           (emacsvox-aural-recent-feedback--semantic-fallback-count
            record))
@@ -313,9 +337,15 @@ the value across sessions."
   "Replay the complete frozen presentation at point."
   (interactive)
   (let* ((record (emacsvox-aural-recent-feedback--record))
-         (id (emacsvox-aural-presentation-record-id record)))
-    (emacsvox-aural-preview-play-plan
-     (emacsvox-aural-presentation-record-plan record))
+         (id (emacsvox-aural-presentation-record-id record))
+         (plans
+          (emacsvox-aural-presentation-record-effective-plans record)))
+    (if (cdr plans)
+        (emacsvox-aural-preview-play-runs
+         (emacsvox-aural-presentation-record-runs record)
+         (emacsvox-aural-presentation-record-effective-transaction-id
+          record))
+      (emacsvox-aural-preview-play-plan (car plans)))
     (emacsvox-aural-recent-feedback-refresh id)
     (emacsvox-aural-preview-message
      "Replayed aural presentation %s" id)

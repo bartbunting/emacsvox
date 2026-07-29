@@ -279,6 +279,77 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           '(compatibility-item-1-legacy-cue
             compatibility-button-2-legacy-cue)))))))
 
+(ert-deftest emacsvox-aural-submission-records-one-exact-history-transaction ()
+  "Clause and formatting runs remain exact inside one history transaction."
+  (emacsvox-test--with-transport-scheme
+    (let* ((emacsvox-aural--submission-sequence 0)
+           (context
+            '(:module org
+              :mode org-mode
+              :mode-lineage (org-mode outline-mode text-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled t
+              :icons-enabled t))
+           (content
+            (concat
+             (propertize "First" 'personality 'voice-bolden)
+             (propertize
+              "Second" 'personality 'voice-animate 'pause 0.15)))
+           queued)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (prepared)
+              (with-temp-buffer
+                (insert prepared)
+                (let ((split
+                       (next-single-property-change
+                        (point-min)
+                        emacsvox-aural-concrete-plan-property
+                        (current-buffer)
+                        (point-max))))
+                  (tts-audio-format (point-min) split)
+                  (tts-audio-format split (point-max))))))
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET"))
+           ((symbol-function 'tts--protocol-queue-code) #'ignore)
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text) (push text queued)))
+           ((symbol-function 'tts--protocol-silence) #'ignore))
+        (emacsvox-aural-submit
+         content :facts '(:role heading) :context context))
+      (should (equal (nreverse queued) '("First" "Second")))
+      (should (= (length emacsvox-aural-presentation-history) 1))
+      (let* ((record (emacsvox-aural-last-presentation))
+             (plans
+              (emacsvox-aural-presentation-record-effective-plans
+               record))
+             (runs (emacsvox-aural-presentation-record-runs record)))
+        (should (= (emacsvox-aural-presentation-record-transaction-id record) 1))
+        (should (= (length plans) 2))
+        (should-not (emacsvox-aural-presentation-record-run-id record))
+        (should
+         (equal
+          (mapcar
+           (lambda (plan)
+             (emacsvox-aural-concrete-content-text
+              (emacsvox-aural-concrete-plan-content plan)))
+           plans)
+          '("First" "Second")))
+        (should
+         (equal
+          (mapcar (lambda (run) (nth 2 run)) runs)
+          '(nil 0.15)))
+        (should
+         (equal
+          (mapcar
+           (lambda (plan)
+             (plist-get
+              (emacsvox-aural-concrete-plan-context plan)
+              :presentation-transaction-id))
+           plans)
+          '(1 1)))))))
+
 (defun emacsvox-test--tts-source-policy-result
     (text faces voice-lock source-icons scratch-icons)
   "Speak TEXT and summarize source policy at the real TTS scratch boundary.

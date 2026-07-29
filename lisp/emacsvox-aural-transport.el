@@ -33,6 +33,9 @@
 
 (defvar tts-speaker-process)
 
+(defvar emacsvox-aural--queued-run-leading-pause nil
+  "Leading pause retained while queueing one concrete formatting run.")
+
 (defun emacsvox-aural-queue-concrete-action (action &optional context)
   "Queue concrete ACTION under frozen CONTEXT without resolving again."
   (pcase (emacsvox-aural-concrete-action-kind action)
@@ -109,13 +112,14 @@
         (funcall emacsvox-aural-speech-balance-function 0.0)))))
 
 (defun emacsvox-aural--finish-concrete-plan
-    (plan text text-supplied-p)
+    (plan text text-supplied-p &optional pause)
   "Record and finish concrete PLAN after queueing.
 
-TEXT is the final payload when TEXT-SUPPLIED-P is non-nil."
+TEXT is the final payload when TEXT-SUPPLIED-P is non-nil.  PAUSE is the
+run's leading transport pause."
   (let ((emacsvox-aural--history-respect-icon-policy t))
     (if text-supplied-p
-        (emacsvox-aural-record-presentation plan text)
+        (emacsvox-aural-record-presentation plan text pause)
       (emacsvox-aural-record-presentation plan)))
   (when
       (or
@@ -184,7 +188,7 @@ Each run is a list of PLAN, final text, and an optional leading pause."
        action (emacsvox-aural-concrete-plan-context last-plan)))
     (dolist (run runs)
       (emacsvox-aural--finish-concrete-plan
-       (car run) (nth 1 run) t))
+       (car run) (nth 1 run) t (nth 2 run)))
     last-plan))
 
 (defun emacsvox-aural-queue-concrete-runs (runs)
@@ -205,7 +209,8 @@ them."
               (pcase-let ((`(,plan ,text ,pause) (car group)))
                 (when pause
                   (tts--protocol-silence pause))
-                (emacsvox-aural-queue-concrete-plan plan text)))
+                (let ((emacsvox-aural--queued-run-leading-pause pause))
+                  (emacsvox-aural-queue-concrete-plan plan text))))
             (setq group nil
                   previous nil))))
       (dolist (run runs)
@@ -237,7 +242,8 @@ cleanup, without rerunning semantic or contextual resolution."
       (emacsvox-aural-queue-concrete-action
        action (emacsvox-aural-concrete-plan-context plan)))
     (emacsvox-aural--finish-concrete-plan
-     plan payload text-supplied-p)))
+     plan payload text-supplied-p
+     emacsvox-aural--queued-run-leading-pause)))
 
 (defun emacsvox-aural--standalone-cue (plan)
   "Return PLAN's one standalone cue action, or nil."
