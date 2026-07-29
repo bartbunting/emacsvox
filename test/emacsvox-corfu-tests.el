@@ -5,6 +5,7 @@
 (require 'package)
 (package-initialize)
 (require 'corfu)
+(require 'shell)
 (load (expand-file-name "../lisp/emacsvox-corfu.el"
                         (file-name-directory (or load-file-name buffer-file-name)))
       nil nil)
@@ -21,10 +22,190 @@
   (let ((ems--interactive-fn-name 'corfu-next)
         (calls 0))
     (cl-letf (((symbol-function 'emacsvox-corfu--speak-candidate)
-               (lambda () (cl-incf calls))))
+               (lambda (&rest _) (cl-incf calls))))
       (emacsvox--advice-corfu-previous-after)
       (emacsvox--advice-corfu-next-after))
     (should (= calls 1))))
+
+(ert-deftest emacsvox-corfu-opening-announces-first-candidate-and-count ()
+  "Opening Corfu announces the first choice and total without selecting it."
+  (with-temp-buffer
+    (let ((corfu-mode t)
+          (corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index -1)
+          (corfu--total 2)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-corfu--update-after))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "emacs/, 2 completions"))
+        (should
+         (eq (get-text-property 0 'personality content) voice-bolden))
+        (should
+         (eq
+          (get-text-property
+           (string-match "2 completions" content)
+           'personality content)
+          voice-annotate))
+        (should (eq (plist-get facts :role) 'candidate))
+        (should (equal (plist-get facts :events) '(focus-entered)))
+        (should-not (plist-member facts :states))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           actions)
+          '(open-object)))))))
+
+(ert-deftest emacsvox-corfu-navigation-speaks-position-and-voices ()
+  "Candidate navigation distinguishes selection, annotation, and position."
+  (with-temp-buffer
+    (let ((corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index 0)
+          (corfu--total 2)
+          (corfu--metadata nil)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox-corfu--speak-candidate nil t))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions))
+                   (position (string-match "1 of 2" content)))
+        (should (equal content "emacs/, 1 of 2"))
+        (should
+         (eq (get-text-property 0 'personality content) voice-bolden))
+        (should
+         (eq (get-text-property position 'personality content)
+             voice-annotate))
+        (should (equal (plist-get facts :states) '(selected)))
+        (should (= (plist-get facts :completion-index) 0))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           actions)
+          '(large-movement)))))))
+
+(ert-deftest emacsvox-corfu-complete-announces-common-expansion ()
+  "TAB on the prompt distinguishes common expansion from acceptance."
+  (with-temp-buffer
+    (insert "~/src/em")
+    (let ((completion-in-region--data
+           (list (point-min) (point-max) nil nil))
+          (completion-in-region-mode t)
+          (corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index -1)
+          (corfu--total 2)
+          (corfu--metadata nil)
+          (ems--interactive-fn-name 'corfu-complete)
+          (calls 0)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (should
+         (eq
+          'expanded
+          (emacsvox--advice-corfu-complete-around
+           (lambda ()
+             (cl-incf calls)
+             (delete-region (point-min) (point-max))
+             (insert "~/src/emacs")
+             'expanded)))))
+      (should (= calls 1))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content
+                       "Expanded to ~/src/emacs, 2 completions"))
+        (should
+         (equal (plist-get facts :events) '(operation-completed)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           actions)
+          '(item)))))))
+
+(ert-deftest emacsvox-corfu-insert-submits-accepted-candidate ()
+  "RET acceptance uses candidate semantics and a completion cue."
+  (with-temp-buffer
+    (let ((corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index 1)
+          (corfu--total 2)
+          (corfu--metadata nil)
+          (ems--interactive-fn-name 'corfu-insert)
+          (calls 0)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (should
+         (eq
+          'inserted
+          (emacsvox--advice-corfu-insert-around
+           (lambda ()
+             (cl-incf calls)
+             'inserted)))))
+      (should (= calls 1))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "emacsvox/, 2 of 2"))
+        (should (equal (plist-get facts :events) '(accepted)))
+        (should (equal (plist-get facts :states) '(selected)))
+        (should (= (plist-get facts :completion-index) 1))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           actions)
+          '(complete)))))))
+
+(ert-deftest emacsvox-corfu-shell-directory-completion-preserves-input ()
+  "Corfu completes a sole Shell directory without selecting a candidate."
+  (let ((root (file-name-as-directory
+               (make-temp-file "emacsvox-corfu-shell-" t))))
+    (unwind-protect
+        (progn
+          (make-directory (expand-file-name "src" root))
+          (with-temp-buffer
+            (setq default-directory root)
+            (shell-mode)
+            (insert "cd sr")
+            (let ((corfu-preselect 'prompt)
+                  (corfu-preview-current nil))
+              (corfu-mode 1)
+              (cl-letf
+                  (((symbol-function 'corfu--popup-show)
+                    (lambda (&rest _)))
+                   ((symbol-function 'corfu--popup-hide)
+                    (lambda (&rest _)))
+                   ((symbol-function 'emacsvox-aural-submit)
+                    (lambda (&rest _))))
+                (completion-at-point)
+                (should (equal (buffer-string) "cd src/"))
+                (should completion-in-region-mode)
+                (should (= corfu--index -1))
+                (should (equal default-directory root))
+                (corfu-insert)
+                (should-not completion-in-region-mode)
+                (should (equal (buffer-string) "cd src/"))))))
+      (delete-directory root t))))
 
 (ert-deftest emacsvox-corfu-separator-policy-uses-named-tone ()
   "Separator insertion resolves its short confirmation tone by intent."
