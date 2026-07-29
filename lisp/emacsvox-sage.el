@@ -204,7 +204,7 @@
   (when (ems-interactive-p 'sage-shell:delchar-or-maybe-eof)
     (if (= (point) (point-max))
         (message "Sending EOF to comint process")
-      (tts-tone-deletion)
+      (emacsvox-speak-edit-operation 'deletion)
       (emacsvox-speak-char t)))
   (apply orig-fun args))
 
