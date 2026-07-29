@@ -59,7 +59,7 @@
          (vector (symbol-name voice) "" "" "" ""))))
       (tabulated-list-print t)
       (goto-char (point-min))
-      (emacsvox-aural-tools--goto-tabulated-column 0)
+      (emacsvox-aural-ui-goto-tabulated-column 0)
       (cl-letf (((symbol-function 'tts-speak) #'ignore))
         (emacsvox-aural-voice-palette-previews-tune)))
     (list source (get-buffer "*Aural Voice Tuner*"))))
@@ -112,7 +112,7 @@
                saved
                (emacsvox-aural-voice-palette 'reading))
               "saved"))
-           ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+           ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
             #'ignore))
         (emacsvox-aural-voice-palettes--install-data
          emacsvox-test--voice-palette-data)
@@ -202,7 +202,7 @@
                  emacsvox-aural-voice-palette-override palette)))
              ((symbol-function 'emacsvox-aural-voice-palettes-refresh)
               #'ignore)
-             ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+             ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
               #'ignore))
           (should
            (eq (emacsvox-aural-voice-palettes-delete) 'reading)))
@@ -221,7 +221,7 @@
       (emacsvox-aural-voice-palettes-refresh 'reading)
       (cl-letf
           (((symbol-function 'tts-speak) #'ignore)
-           ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+           ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
             #'ignore))
         (emacsvox-aural-voice-palettes-activate)
         (should (eq emacsvox-aural-voice-palette-override 'reading))
@@ -304,7 +304,7 @@
         (save-window-excursion
           (cl-letf
               (((symbol-function 'emacsvox-aural-save-user-data) #'ignore)
-               ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+               ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
                 #'ignore)
                ((symbol-function 'emacsvox-aural-voice-palettes--read-definition)
                 (lambda (current)
@@ -533,7 +533,7 @@
                      saved
                      (copy-tree
                       (emacsvox-aural-voice 'aside 'reading)))))
-                 ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+                 ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
                   #'ignore)
                  ((symbol-function 'emacsvox-aural-capture-context) #'ignore)
                  ((symbol-function 'quit-window)
@@ -664,7 +664,7 @@
     (emacsvox-aural-voice-palette-previews-mode)
     (let (dismissed)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-tools--interface-buffer-p)
+          (((symbol-function 'emacsvox-aural-ui-interface-buffer-p)
             (lambda (&optional buffer)
               (with-current-buffer (or buffer (current-buffer))
                 (derived-mode-p 'emacsvox-aural-voice-palettes-mode))))

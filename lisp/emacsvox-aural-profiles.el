@@ -14,7 +14,9 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'tabulated-list)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-description)
 
 (defun emacsvox-aural-profiles--ids ()
@@ -155,27 +157,27 @@
 (defun emacsvox-aural-profiles-speak-current-cell ()
   "Speak the current profile column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-profiles-next ()
   "Move to and speak the next presentation profile."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "presentation profiles"))
+  (emacsvox-aural-ui-move-row 1 "presentation profiles"))
 
 (defun emacsvox-aural-profiles-previous ()
   "Move to and speak the previous presentation profile."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "presentation profiles"))
+  (emacsvox-aural-ui-move-row -1 "presentation profiles"))
 
 (defun emacsvox-aural-profiles-next-column ()
   "Move right and speak the next profile column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-profiles-previous-column ()
   "Move left and speak the previous profile column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-profiles-describe (&optional id)
   "Display and speak complete details for profile ID."
@@ -220,7 +222,7 @@
     (emacsvox-aural-apply-profile id)
     (emacsvox-aural-save-user-data)
     (emacsvox-aural-profiles-refresh id)
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-profiles-speak-current))
     id))

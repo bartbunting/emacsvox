@@ -856,27 +856,6 @@ selects its parent, or the built-in default when it has no parent."
         (message "Renamed personal aural scheme %s to %s" scheme new-id)
         new-id)))))
 
-;; Keep private entry points used by older extensions while callers migrate
-;; to the responsibility-specific namespace.
-(defalias 'emacsvox-aural-tools--scheme-at-point-or-read
-  #'emacsvox-aural-scheme-manager--scheme-at-point-or-read)
-(defalias 'emacsvox-aural-tools--scheme-kind
-  #'emacsvox-aural-scheme-manager--scheme-kind)
-(defalias 'emacsvox-aural-tools--scheme-provider
-  #'emacsvox-aural-scheme-manager--scheme-provider)
-(defalias 'emacsvox-aural-tools--scheme-row
-  #'emacsvox-aural-scheme-manager--scheme-row)
-(defalias 'emacsvox-aural-tools--refresh-scheme-manager
-  #'emacsvox-aural-scheme-manager--refresh-if-live)
-(defalias 'emacsvox-aural-tools--scheme-spoken-summary
-  #'emacsvox-aural-scheme-manager--spoken-summary)
-(defalias 'emacsvox-aural-tools--rule-candidates
-  #'emacsvox-aural-scheme-manager--rule-candidates)
-(defalias 'emacsvox-aural-tools--flattened-rules
-  #'emacsvox-aural-scheme-manager--flattened-rules)
-(defalias 'emacsvox-aural-tools--scheme-dependents
-  #'emacsvox-aural-scheme-manager--dependents)
-
 (defalias 'emacsvox-aural-list-schemes
   #'emacsvox-list-aural-schemes)
 (defalias 'emacsvox-aural-describe-scheme

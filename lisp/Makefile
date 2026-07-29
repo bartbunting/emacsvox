@@ -345,26 +345,39 @@ emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
 emacsvox-aural-validation.elc emacsvox-aural-description.elc \
 emacsvox-aural-scheme-manager.elc
 emacsvox-aural-recent-feedback.elc: emacsvox-aural-tools.elc
-emacsvox-aural-feature-fragments.elc: emacsvox-aural-tools.elc
+emacsvox-aural-feature-fragments.elc: \
+emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
+emacsvox-aural-validation.elc emacsvox-aural-description.elc
 emacsvox-aural-home.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-recent-feedback.elc \
 emacsvox-aural-feature-fragments.elc emacsvox-aural-scheme-manager.elc
 emacsvox-aural-editor.elc: \
 emacsvox-aural-tools.elc emacsvox-aural-feature-fragments.elc
 emacsvox-aural-overrides.elc: \
-emacsvox-aural-tools.elc emacsvox-aural-editor.elc
+emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
+emacsvox-aural-validation.elc emacsvox-aural-description.elc \
+emacsvox-aural-editor.elc
 emacsvox-aural-simple-editor.elc: \
 emacsvox-aural-editor.elc emacsvox-aural-scheme-manager.elc
 emacsvox-aural-doctor.elc: emacsvox-aural-tools.elc
-emacsvox-aural-profiles.elc: emacsvox-aural-tools.elc
-emacsvox-aural-voice-palettes.elc: emacsvox-aural-tools.elc
+emacsvox-aural-profiles.elc: \
+emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+emacsvox-aural-inspection.elc emacsvox-aural-description.elc
+emacsvox-aural-voice-palettes.elc: \
+emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
+emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
+emacsvox-aural-preview.elc
 emacsvox-aural-provider-org.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-workflows.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-markdown.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-notmuch.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
 emacsvox-aural-sound-packs.elc: \
-emacsvox-aural-tools.elc emacsvox-sounds.elc
+emacsvox-aural-ui.elc emacsvox-aural-inspection.elc \
+emacsvox-aural-description.elc \
+emacsvox-aural-preview.elc emacsvox-sounds.elc
 emacsvox.elc: emacsvox-preamble.elc emacsvox-keymap.elc $(AURAL_OBJECTS)
 emacsvox-setup.elc: emacsvox-preamble.elc emacsvox.elc
 

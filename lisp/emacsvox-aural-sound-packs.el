@@ -17,7 +17,8 @@
 (require 'pp)
 (require 'subr-x)
 (require 'tabulated-list)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-description)
 (require 'emacsvox-aural-preview)
 (require 'emacsvox-sounds)
@@ -200,27 +201,27 @@
 (defun emacsvox-aural-sound-packs-speak-current-cell ()
   "Speak the current sound-pack column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-sound-packs-next ()
   "Move to and speak the next sound pack."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "sound pack list"))
+  (emacsvox-aural-ui-move-row 1 "sound pack list"))
 
 (defun emacsvox-aural-sound-packs-previous ()
   "Move to and speak the previous sound pack."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "sound pack list"))
+  (emacsvox-aural-ui-move-row -1 "sound pack list"))
 
 (defun emacsvox-aural-sound-packs-next-column ()
   "Move right and speak the next sound-pack column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-sound-packs-previous-column ()
   "Move left and speak the previous sound-pack column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-sound-packs-activate ()
   "Activate the sound pack at point."
@@ -231,7 +232,7 @@
       (user-error "Only sound packs can be activated as an auditory theme"))
     (emacsvox-sounds-select-theme id)
     (emacsvox-aural-sound-packs-refresh id)
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     (when (called-interactively-p 'interactive)
       (emacsvox-aural-sound-packs-speak-current))
     id))
@@ -457,27 +458,27 @@ FALLBACK-PATH protects cue fallback inspection from cycles."
 (defun emacsvox-aural-sound-pack-cues-speak-current-cell ()
   "Speak the current cue-browser column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-sound-pack-cues-next ()
   "Move to and speak the next cue."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "sound cue list"))
+  (emacsvox-aural-ui-move-row 1 "sound cue list"))
 
 (defun emacsvox-aural-sound-pack-cues-previous ()
   "Move to and speak the previous cue."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "sound cue list"))
+  (emacsvox-aural-ui-move-row -1 "sound cue list"))
 
 (defun emacsvox-aural-sound-pack-cues-next-column ()
   "Move right and speak the next cue column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-sound-pack-cues-previous-column ()
   "Move left and speak the previous cue column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-sound-packs--audition (pack-id cue)
   "Audition CUE as resolved through PACK-ID and return its detail."
@@ -771,7 +772,7 @@ PATH protects completion from invalid inheritance cycles."
              :default-spatialization spatial)))
       (emacsvox-aural-sound-packs--write-manifest pack data)
       (emacsvox-aural-sound-packs-refresh id)
-      (emacsvox-aural-home-refresh-if-live)
+      (emacsvox-aural-ui-refresh-home-if-live)
       (message "Saved sound-pack manifest for %s" id)
       (when (called-interactively-p 'interactive)
         (emacsvox-aural-sound-packs-speak-current))

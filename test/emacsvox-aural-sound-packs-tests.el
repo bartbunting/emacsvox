@@ -43,7 +43,7 @@
            emacsvox-aural-resource-pack-registry)
           (emacsvox-aural-resource-pack-discovery-roots (list root))
           (emacsvox-sounds-current-pack 'overlay)
-          (emacsvox-aural-tools--last-source-buffer nil))
+          (emacsvox-aural-inspection-last-source-buffer nil))
      (unwind-protect
          (progn
            (make-directory base-directory)
@@ -258,7 +258,7 @@
                   (setq
                    selected pack
                    emacsvox-sounds-current-pack pack)))
-               ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+               ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
                 #'ignore)
                ((symbol-function 'tts-speak)
                 (lambda (text) (setq spoken text))))
@@ -301,7 +301,7 @@
                    (t (ert-fail (format "Unexpected prompt: %s" prompt))))))
                ((symbol-function 'completing-read-multiple)
                 (lambda (&rest _) nil))
-               ((symbol-function 'emacsvox-aural-home-refresh-if-live)
+               ((symbol-function 'emacsvox-aural-ui-refresh-home-if-live)
                 #'ignore))
             (emacsvox-aural-sound-packs-edit-manifest))))
       (let ((pack (emacsvox-aural-resource-pack 'overlay))

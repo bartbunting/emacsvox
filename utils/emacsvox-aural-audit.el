@@ -783,7 +783,7 @@ below a presentation boundary."
       (let ((scheme (emacsvox-aural-scheme-entry-compiled entry)))
         (list
          (emacsvox-aural-scheme-entry-id entry)
-         (emacsvox-aural-tools--scheme-provider entry)
+         (emacsvox-aural-scheme-manager--scheme-provider entry)
          (emacsvox-aural-scheme-parent scheme)
          (emacsvox-aural-effective-scheme-provider
           'resource-pack (emacsvox-aural-scheme-entry-id entry))

@@ -13,7 +13,9 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'tabulated-list)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-description)
 (require 'emacsvox-aural-preview)
 
@@ -258,7 +260,7 @@ replaces live state.  Return the value of MUTATION."
               (puthash
                id record emacsvox-aural-voice-palette-registry)
               record)))))
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     record))
 
 (defun emacsvox-aural-voice-palettes--replace-entries (data entries)
@@ -402,27 +404,27 @@ replaces live state.  Return the value of MUTATION."
 (defun emacsvox-aural-voice-palettes-speak-current-cell ()
   "Speak the current palette column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-voice-palettes-next ()
   "Move to and speak the next voice palette."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "voice palettes"))
+  (emacsvox-aural-ui-move-row 1 "voice palettes"))
 
 (defun emacsvox-aural-voice-palettes-previous ()
   "Move to and speak the previous voice palette."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "voice palettes"))
+  (emacsvox-aural-ui-move-row -1 "voice palettes"))
 
 (defun emacsvox-aural-voice-palettes-next-column ()
   "Move right and speak the next palette column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-voice-palettes-previous-column ()
   "Move left and speak the previous palette column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-voice-palettes-describe (&optional id)
   "Display and speak the effective voices in palette ID."
@@ -668,7 +670,7 @@ replaces live state.  Return the value of MUTATION."
     (when (eq id emacsvox-aural-voice-palette-override)
       (emacsvox-aural-select-voice-palette nil))
     (emacsvox-aural-voice-palettes-refresh)
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     id))
 
 (defun emacsvox-aural-voice-palettes-activate ()
@@ -677,7 +679,7 @@ replaces live state.  Return the value of MUTATION."
   (let ((id (emacsvox-aural-voice-palettes--at-point-or-read)))
     (emacsvox-aural-select-voice-palette id)
     (emacsvox-aural-voice-palettes-refresh id)
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     (emacsvox-aural-voice-palettes-speak-current)
     id))
 
@@ -687,7 +689,7 @@ replaces live state.  Return the value of MUTATION."
   (emacsvox-aural-select-voice-palette nil)
   (emacsvox-aural-voice-palettes-refresh
    (emacsvox-aural-voice-palettes--active-id))
-  (emacsvox-aural-home-refresh-if-live)
+  (emacsvox-aural-ui-refresh-home-if-live)
   (emacsvox-aural-voice-palettes-speak-current))
 
 (defun emacsvox-aural-voice-palettes--read-voice (id &optional prompt)
@@ -870,29 +872,29 @@ replaces live state.  Return the value of MUTATION."
 (defun emacsvox-aural-voice-palette-previews-speak-current-cell ()
   "Speak the current preview column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-voice-palette-previews-next ()
   "Move to and speak the next effective voice."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "palette voices")
+  (emacsvox-aural-ui-move-row 1 "palette voices")
   (emacsvox-aural-voice-palette-previews--remember-current))
 
 (defun emacsvox-aural-voice-palette-previews-previous ()
   "Move to and speak the previous effective voice."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "palette voices")
+  (emacsvox-aural-ui-move-row -1 "palette voices")
   (emacsvox-aural-voice-palette-previews--remember-current))
 
 (defun emacsvox-aural-voice-palette-previews-next-column ()
   "Move right and speak the next voice column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-voice-palette-previews-previous-column ()
   "Move left and speak the previous voice column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-voice-palettes--preview-sample (voice text)
   "Return comparison TEXT labelled with VOICE."
@@ -1210,14 +1212,14 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-tuner-next ()
   "Move to and speak the next tunable dimension."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row
+  (emacsvox-aural-ui-move-row
    1 "voice settings"
    #'emacsvox-aural-voice-tuner--speak-setting))
 
 (defun emacsvox-aural-voice-tuner-previous ()
   "Move to and speak the previous tunable dimension."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row
+  (emacsvox-aural-ui-move-row
    -1 "voice settings"
    #'emacsvox-aural-voice-tuner--speak-setting))
 

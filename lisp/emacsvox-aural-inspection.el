@@ -17,11 +17,6 @@
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-transport)
 
-(defvaralias 'emacsvox-aural-tools--last-source-buffer
-  'emacsvox-aural-inspection-last-source-buffer)
-(defvaralias 'emacsvox-aural-home-source-buffer
-  'emacsvox-aural-ui-source-buffer)
-
 (defvar emacsvox-aural-inspection-last-source-buffer nil
   "Most recent ordinary buffer used as an aural inspection source.")
 
@@ -205,19 +200,6 @@ from later adopting an unrelated global fallback."
       (setq context (plist-put context :legacy-faces (list face)))
       (setq context (plist-put context :legacy-face-source 'preview)))
     (list facts context)))
-
-;; Compatibility entry points retained while extensions migrate to the
-;; responsibility-specific namespace.
-(defalias 'emacsvox-aural-tools--remember-source-buffer
-  #'emacsvox-aural-inspection-remember-source-buffer)
-(defalias 'emacsvox-aural-tools--point-position
-  #'emacsvox-aural-inspection-point-position)
-(defalias 'emacsvox-aural-tools--plan-at-point
-  #'emacsvox-aural-inspection-plan-at-point)
-(defalias 'emacsvox-aural-tools--context-for-occasion
-  #'emacsvox-aural-inspection-context-for-occasion)
-(defalias 'emacsvox-aural-tools--representative-input
-  #'emacsvox-aural-inspection-representative-input)
 
 (provide 'emacsvox-aural-inspection)
 

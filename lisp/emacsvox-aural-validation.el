@@ -342,31 +342,6 @@
                   report)))
       (princ (format "Unavailable voices: %S\n" voices)))))
 
-;; Keep private entry points used by older extensions while callers migrate
-;; to the responsibility-specific namespace.
-(defalias 'emacsvox-aural-tools--display-validation
-  #'emacsvox-aural-display-validation)
-(defalias 'emacsvox-aural-tools--all-phase-actions
-  #'emacsvox-aural-validation--all-phase-actions)
-(defalias 'emacsvox-aural-tools--rule-actions
-  #'emacsvox-aural-validation--rule-actions)
-(defalias 'emacsvox-aural-tools--content-patch-empty-p
-  #'emacsvox-aural-validation--content-patch-empty-p)
-(defalias 'emacsvox-aural-tools--phase-empty-p
-  #'emacsvox-aural-validation--phase-empty-p)
-(defalias 'emacsvox-aural-tools--rule-ineffective-p
-  #'emacsvox-aural-validation--rule-ineffective-p)
-(defalias 'emacsvox-aural-tools--ambiguous-ties
-  #'emacsvox-aural-validation--ambiguous-ties)
-(defalias 'emacsvox-aural-tools--semantic-diagnostics
-  #'emacsvox-aural-validation--semantic-diagnostics)
-(defalias 'emacsvox-aural-tools--rule-voices
-  #'emacsvox-aural-validation--rule-voices)
-(defalias 'emacsvox-aural-tools--voice-available-p
-  #'emacsvox-aural-validation--voice-available-p)
-(defalias 'emacsvox-aural-tools--scheme-cues
-  #'emacsvox-aural-validation--scheme-cues)
-
 (provide 'emacsvox-aural-validation)
 
 ;;; emacsvox-aural-validation.el ends here

@@ -28,6 +28,8 @@
 (declare-function emacsvox-speak-mode-line
                   "emacsvox-speak"
                   (&optional buffer-info))
+(declare-function emacsvox-aural-home-refresh
+                  "emacsvox-aural-home" (&optional id))
 (declare-function tts-speak "tts-speak" (text))
 
 (defvar-local emacsvox-aural-ui-interface-buffer nil
@@ -323,6 +325,13 @@ LIST-NAME and SPEAKER override the current buffer's configured values."
   (if emacsvox-aural-ui-refresh-function
       (funcall emacsvox-aural-ui-refresh-function)
     (revert-buffer)))
+
+(defun emacsvox-aural-ui-refresh-home-if-live (&rest _ignored)
+  "Refresh the aural home buffer when it is currently available."
+  (when-let* ((buffer (get-buffer "*Emacsvox Aural*")))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-home-mode)
+        (emacsvox-aural-home-refresh)))))
 
 (defun emacsvox-aural-quit (&optional kill)
   "Dismiss the current aural interface and report its destination.

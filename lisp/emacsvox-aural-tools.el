@@ -48,8 +48,6 @@
   "Training explanations waiting for the current command to finish.")
 
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
-(declare-function emacsvox-aural-home-refresh
-                  "emacsvox-aural-home" (&optional id))
 (declare-function emacsvox-aural-editor--open-prefilled-rule
                   "emacsvox-aural-editor" (scope rule source-buffer))
 (declare-function emacsvox-aural-editor--open-without-rule
@@ -65,37 +63,6 @@
 
 (autoload 'emacsvox-aural "emacsvox-aural-home"
   "Open the spoken aural presentation home." t)
-
-(defalias 'emacsvox-aural-tools--tabulated-column-index
-  #'emacsvox-aural-ui-tabulated-column-index)
-(defalias 'emacsvox-aural-tools--goto-tabulated-column
-  #'emacsvox-aural-ui-goto-tabulated-column)
-(defalias 'emacsvox-aural-tools--tabulated-cell-description
-  #'emacsvox-aural-ui-tabulated-cell-description)
-(defalias 'emacsvox-aural-tools--speak-tabulated-cell
-  #'emacsvox-aural-ui-speak-current-cell)
-(defalias 'emacsvox-aural-tools--tabulated-boundary
-  #'emacsvox-aural-ui--announce-boundary)
-(defalias 'emacsvox-aural-tools--move-tabulated-row
-  #'emacsvox-aural-ui-move-row)
-(defalias 'emacsvox-aural-tools--move-tabulated-column
-  #'emacsvox-aural-ui-move-column)
-(defalias 'emacsvox-aural-tools--stop-preview-speech
-  #'emacsvox-aural-preview-stop)
-(defalias 'emacsvox-aural-tools--preview-message
-  #'emacsvox-aural-preview-message)
-(defalias 'emacsvox-aural-tools--humanize
-  #'emacsvox-aural-humanize)
-(defalias 'emacsvox-aural-tools--selector-description
-  #'emacsvox-aural-describe-selector)
-(defalias 'emacsvox-aural-tools--print-scheme-rules
-  #'emacsvox-aural-print-rules)
-(defalias 'emacsvox-aural-tools--format-action
-  #'emacsvox-aural-describe-concrete-action)
-
-(defun emacsvox-aural-tools--interface-buffer-p (&optional buffer)
-  "Return non-nil when BUFFER is an aural manager or editor buffer."
-  (emacsvox-aural-ui-interface-buffer-p buffer))
 
 (defun emacsvox-aural-tools--matching-rules-for-occasion
     (facts context occasion)
@@ -168,7 +135,7 @@ plan at point always supplies its actual occasion as the initial default."
     (choose-occasion)
   "Return exact queued input, or simulated input when CHOOSE-OCCASION."
   (let* ((interface
-          (emacsvox-aural-tools--interface-buffer-p))
+          (emacsvox-aural-ui-interface-buffer-p))
          (source
           (emacsvox-aural-inspection-source-buffer))
          (record
@@ -268,7 +235,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
    (cl-some
     (lambda (action)
       (memq semantic (emacsvox-aural-action-template-fields action)))
-    (emacsvox-aural-tools--rule-actions rule))))
+    (emacsvox-aural-validation--rule-actions rule))))
 
 (defun emacsvox-aural-tools--rules-for-semantic (semantic)
   "Return registered presentation and rule identifiers using SEMANTIC."
@@ -359,27 +326,27 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
 (defun emacsvox-aural-semantics-speak-current-cell ()
   "Speak the current semantic column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-semantics-next ()
   "Move to and speak the next semantic."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "semantic list"))
+  (emacsvox-aural-ui-move-row 1 "semantic list"))
 
 (defun emacsvox-aural-semantics-previous ()
   "Move to and speak the previous semantic."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "semantic list"))
+  (emacsvox-aural-ui-move-row -1 "semantic list"))
 
 (defun emacsvox-aural-semantics-next-column ()
   "Move right and speak the next semantic column title and value."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-semantics-previous-column ()
   "Move left and speak the previous semantic column title and value."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-semantics-help ()
   "Display and speak semantic-list help."
@@ -511,7 +478,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
           #'emacsvox-aural-action-id
           (cl-mapcan
            (lambda (rule)
-             (copy-sequence (emacsvox-aural-tools--rule-actions rule)))
+             (copy-sequence (emacsvox-aural-validation--rule-actions rule)))
            rules)))
         (retained
          (mapcar
@@ -1690,13 +1657,6 @@ SCOPE is `personal', `session', or `buffer'."
     (when (called-interactively-p 'interactive)
       (message "Reset %s aural overrides" scope))
     t))
-
-(defun emacsvox-aural-home-refresh-if-live (&rest _ignored)
-  "Refresh the aural home buffer when it is currently available."
-  (when-let* ((buffer (get-buffer "*Emacsvox Aural*")))
-    (with-current-buffer buffer
-      (when (derived-mode-p 'emacsvox-aural-home-mode)
-        (emacsvox-aural-home-refresh)))))
 
 (defun emacsvox-aural-tools--concise-explanation
     (facts context concrete-cues concrete-p)

@@ -49,7 +49,6 @@
           emacsvox-aural-validation--report
           emacsvox-aural-ui-interface-buffer-p
           emacsvox-aural-inspection-source-buffer
-          emacsvox-aural-tools--interface-buffer-p
           emacsvox-aural-editor--scope-label
           emacsvox-aural-simple-editor--humanize
           emacsvox-aural-doctor--finding

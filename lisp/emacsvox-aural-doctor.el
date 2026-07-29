@@ -384,27 +384,27 @@
 (defun emacsvox-aural-doctor-speak-current-cell ()
   "Speak the current diagnostic column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-doctor-next ()
   "Move to and speak the next diagnostic finding."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "aural doctor"))
+  (emacsvox-aural-ui-move-row 1 "aural doctor"))
 
 (defun emacsvox-aural-doctor-previous ()
   "Move to and speak the previous diagnostic finding."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "aural doctor"))
+  (emacsvox-aural-ui-move-row -1 "aural doctor"))
 
 (defun emacsvox-aural-doctor-next-column ()
   "Move right and speak the next diagnostic column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-doctor-previous-column ()
   "Move left and speak the previous diagnostic column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-doctor-repair-current ()
   "Run the deterministic repair offered by the finding at point."

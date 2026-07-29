@@ -16,7 +16,11 @@
 (require 'pp)
 (require 'subr-x)
 (require 'tabulated-list)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-inspection)
+(require 'emacsvox-aural-preview)
+(require 'emacsvox-aural-validation)
 (require 'emacsvox-aural-description)
 
 (declare-function emacsvox-edit-aural-feature-fragment
@@ -306,29 +310,29 @@
 (defun emacsvox-aural-feature-fragments-speak-current-cell ()
   "Speak the current feature-fragment column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-feature-fragments-next ()
   "Move to and speak the next presentation-option row."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row
+  (emacsvox-aural-ui-move-row
    1 "presentation option list"))
 
 (defun emacsvox-aural-feature-fragments-previous ()
   "Move to and speak the previous presentation-option row."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row
+  (emacsvox-aural-ui-move-row
    -1 "presentation option list"))
 
 (defun emacsvox-aural-feature-fragments-next-column ()
   "Move right and speak the next feature-fragment column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-feature-fragments-previous-column ()
   "Move left and speak the previous feature-fragment column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-feature-fragments-toggle-collection ()
   "Expand or collapse the presentation-option collection at point."
@@ -474,7 +478,7 @@
 The source facts and mode remain real.  When necessary, choose the occasion
 that lets the greatest number of fragment rules match those facts."
   (let ((source
-         (if (emacsvox-aural-tools--interface-buffer-p)
+         (if (emacsvox-aural-ui-interface-buffer-p)
              (emacsvox-aural-inspection-source-buffer)
            (emacsvox-aural-inspection-last-source-buffer))))
     (when source
@@ -924,29 +928,29 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
 (defun emacsvox-aural-feature-fragment-previews-speak-current-cell ()
   "Speak the current preview column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-feature-fragment-previews-next ()
   "Move to and speak the next preview example."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "preview example list")
+  (emacsvox-aural-ui-move-row 1 "preview example list")
   (emacsvox-aural-feature-fragment-previews--remember-current))
 
 (defun emacsvox-aural-feature-fragment-previews-previous ()
   "Move to and speak the previous preview example."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "preview example list")
+  (emacsvox-aural-ui-move-row -1 "preview example list")
   (emacsvox-aural-feature-fragment-previews--remember-current))
 
 (defun emacsvox-aural-feature-fragment-previews-next-column ()
   "Move right and speak the next preview column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-feature-fragment-previews-previous-column ()
   "Move left and speak the previous preview column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-feature-fragment-previews-play ()
   "Play the complete preview example at point."
@@ -1269,7 +1273,7 @@ announce the selected example after displaying the buffer."
       (if (not
            (< -1 destination
               (length emacsvox-aural-enabled-feature-fragments)))
-          (emacsvox-aural-tools--tabulated-boundary
+          (emacsvox-aural-ui--announce-boundary
            (if (< offset 0)
                "First enabled presentation option."
              "Last enabled presentation option."))

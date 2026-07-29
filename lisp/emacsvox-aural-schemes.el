@@ -1938,9 +1938,6 @@ value of MUTATION."
     (emacsvox-aural-configuration-changed reason)
     result))
 
-(defalias 'emacsvox-aural-tools--persist-scheme-mutation
-  #'emacsvox-aural-persist-scheme-mutation)
-
 (emacsvox-aural--register-default-scheme)
 
 (provide 'emacsvox-aural-schemes)

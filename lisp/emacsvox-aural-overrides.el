@@ -15,7 +15,11 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'tabulated-list)
-(require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-inspection)
+(require 'emacsvox-aural-preview)
+(require 'emacsvox-aural-validation)
 (require 'emacsvox-aural-description)
 
 (declare-function emacsvox-aural-editor-open-rule
@@ -386,29 +390,29 @@
 (defun emacsvox-aural-overrides-speak-current-cell ()
   "Speak the current override column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-overrides-next ()
   "Move to and speak the next presentation override."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row
+  (emacsvox-aural-ui-move-row
    1 "presentation overrides"))
 
 (defun emacsvox-aural-overrides-previous ()
   "Move to and speak the previous presentation override."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row
+  (emacsvox-aural-ui-move-row
    -1 "presentation overrides"))
 
 (defun emacsvox-aural-overrides-next-column ()
   "Move right and speak the next override column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-overrides-previous-column ()
   "Move left and speak the previous override column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-overrides-describe ()
   "Display and speak complete details for the override at point."
@@ -612,7 +616,7 @@
      source
      'override-toggled)
     (emacsvox-aural-overrides-refresh (list scope id))
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     (emacsvox-aural-overrides-speak-current)
     enabled))
 
@@ -638,7 +642,7 @@
      source
      'override-removed)
     (emacsvox-aural-overrides-refresh)
-    (emacsvox-aural-home-refresh-if-live)
+    (emacsvox-aural-ui-refresh-home-if-live)
     (if (tabulated-list-get-id)
         (emacsvox-aural-overrides-speak-current)
       (if (fboundp 'tts-speak)

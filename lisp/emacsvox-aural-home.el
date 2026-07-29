@@ -262,27 +262,27 @@
 (defun emacsvox-aural-home-speak-current-cell ()
   "Speak the current aural home column title and value."
   (interactive)
-  (emacsvox-aural-tools--speak-tabulated-cell))
+  (emacsvox-aural-ui-speak-current-cell))
 
 (defun emacsvox-aural-home-next ()
   "Move to and speak the next aural home row."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row 1 "aural home"))
+  (emacsvox-aural-ui-move-row 1 "aural home"))
 
 (defun emacsvox-aural-home-previous ()
   "Move to and speak the previous aural home row."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-row -1 "aural home"))
+  (emacsvox-aural-ui-move-row -1 "aural home"))
 
 (defun emacsvox-aural-home-next-column ()
   "Move right and speak the next aural home column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column 1))
+  (emacsvox-aural-ui-move-column 1))
 
 (defun emacsvox-aural-home-previous-column ()
   "Move left and speak the previous aural home column."
   (interactive)
-  (emacsvox-aural-tools--move-tabulated-column -1))
+  (emacsvox-aural-ui-move-column -1))
 
 (defun emacsvox-aural-home--call-in-source (command)
   "Call interactive COMMAND in the remembered source buffer."
@@ -474,16 +474,16 @@
 
 (add-hook
  'emacsvox-aural-active-scheme-changed-hook
- #'emacsvox-aural-home-refresh-if-live)
+ #'emacsvox-aural-ui-refresh-home-if-live)
 (add-hook
  'emacsvox-aural-feature-fragments-changed-hook
- #'emacsvox-aural-home-refresh-if-live)
+ #'emacsvox-aural-ui-refresh-home-if-live)
 (add-hook
  'emacsvox-aural-face-presentation-changed-hook
- #'emacsvox-aural-home-refresh-if-live)
+ #'emacsvox-aural-ui-refresh-home-if-live)
 (add-hook
  'emacsvox-aural-voice-palette-changed-hook
- #'emacsvox-aural-home-refresh-if-live)
+ #'emacsvox-aural-ui-refresh-home-if-live)
 
 (provide 'emacsvox-aural-home)
 ;;; emacsvox-aural-home.el ends here

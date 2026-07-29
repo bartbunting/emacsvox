@@ -51,7 +51,7 @@
          (emacsvox-aural-presentation-history-limit 20)
          (emacsvox-aural--presentation-sequence 0)
          (emacsvox-aural-history-record-interface-presentations nil)
-         (emacsvox-aural-tools--last-source-buffer nil)
+         (emacsvox-aural-inspection-last-source-buffer nil)
          (emacsvox-aural-tools--fragment-preview-last-examples
           (make-hash-table :test #'eq))
          (emacsvox-aural-active-scheme 'default)
@@ -1235,7 +1235,7 @@
                :render (:content (:voice bolden)))
              'user))
            (selector (emacsvox-aural-rule-selector rule))
-           (input (emacsvox-aural-tools--representative-input rule)))
+           (input (emacsvox-aural-inspection-representative-input rule)))
       (should
        (equal
         (emacsvox-aural-describe-selector selector)
@@ -1821,7 +1821,7 @@
               (emacsvox-aural))
             (with-current-buffer "*Emacsvox Aural*"
               (should (derived-mode-p 'emacsvox-aural-home-mode))
-              (should (eq emacsvox-aural-home-source-buffer source))
+              (should (eq emacsvox-aural-ui-source-buffer source))
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
@@ -2536,7 +2536,7 @@
         (((symbol-function 'message)
           (lambda (&rest _)
             (setq observed emacsvox-speak-messages))))
-      (emacsvox-aural-tools--preview-message "Preview status"))
+      (emacsvox-aural-preview-message "Preview status"))
     (should-not observed)))
 
 (ert-deftest emacsvox-aural-fragment-preview-prefers-live-source-context ()
@@ -2570,7 +2570,7 @@
               (setq major-mode 'org-mode)
               (setq-local emacsvox-aural-module 'org)
               (goto-char (point-min)))
-            (setq emacsvox-aural-tools--last-source-buffer source)
+            (setq emacsvox-aural-inspection-last-source-buffer source)
             (cl-letf
                 (((symbol-function 'process-live-p) (lambda (_) t))
                  ((symbol-function 'emacsvox-aural-preview-stop) #'ignore)
@@ -2752,10 +2752,10 @@
                 (should (equal spoken "First column."))
                 (emacsvox-aural-schemes-next-column)
                 (should (equal spoken "Status, active"))
-                (emacsvox-aural-tools--goto-tabulated-column 3)
+                (emacsvox-aural-ui-goto-tabulated-column 3)
                 (emacsvox-aural-schemes-speak-current-cell)
                 (should (equal spoken "Based on, blank"))
-                (emacsvox-aural-tools--goto-tabulated-column
+                (emacsvox-aural-ui-goto-tabulated-column
                  (1- (length tabulated-list-format)))
                 (emacsvox-aural-schemes-next-column)
                 (should (equal spoken "Last column."))))))

@@ -232,7 +232,7 @@
    (not emacsvox-aural-history-record-interface-presentations))
   (when (derived-mode-p 'emacsvox-aural-recent-feedback-mode)
     (emacsvox-aural-recent-feedback-refresh))
-  (emacsvox-aural-home-refresh-if-live)
+  (emacsvox-aural-ui-refresh-home-if-live)
   (emacsvox-aural-tools--speak-history-setting
    (format
     "Aural interface history recording %s"
@@ -265,7 +265,7 @@ the value across sessions."
      nil)))
   (when (derived-mode-p 'emacsvox-aural-recent-feedback-mode)
     (emacsvox-aural-recent-feedback-refresh))
-  (emacsvox-aural-home-refresh-if-live)
+  (emacsvox-aural-ui-refresh-home-if-live)
   (emacsvox-aural-tools--speak-history-setting
    (if (zerop limit)
        "Aural presentation history disabled"
