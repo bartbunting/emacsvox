@@ -406,7 +406,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (should
        (equal
         (nreverse events)
-        '(ensure (tone 130.8 150 t) (pause 40) dispatch)))
+        '(ensure (tone 130.8 150 nil) (pause 40) dispatch)))
       (should (emacsvox-aural-submission-p submission))
       (should (= (emacsvox-aural-submission-id submission) 1))
       (should (equal (emacsvox-aural-submission-facts submission) facts))
@@ -805,7 +805,7 @@ is the default inherited by a newly created TTS scratch buffer."
             (lambda (pitch duration &optional force)
               (push (list pitch duration force) events))))
         (emacsvox-aural-queue-concrete-action action context))
-      (should (equal events '((130.8 150 t))))
+      (should (equal events '((130.8 150 nil))))
       (should
        (string-match-p
         "tone line-empty at 130.8 Hz for 150 ms"

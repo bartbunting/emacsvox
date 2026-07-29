@@ -1009,12 +1009,14 @@ below a presentation boundary."
    "* Tone Author Reference\n\n"
    "A tone action names a registered tone with =:tone=.  The rule remains "
    "backend-independent; concrete compilation freezes the registered pitch, "
-   "duration, and dispatch behavior before queueing.  Tones use the speech "
+   "duration, and legacy immediate-dispatch request before queueing.  Ordered "
+   "plans defer that request to their one safe final dispatch boundary, so a "
+   "tone cannot split itself from following actions.  Tones use the speech "
    "server protocol and are independent of auditory-icon enablement.  Register "
    "new stable tone names with =emacsvox-aural-register-tone= rather than "
    "putting raw frequencies in scheme rules.\n\n")
   (emacsvox-aural-audit--insert-table
-   '("Identifier" "Pitch (Hz)" "Duration (ms)" "Force" "Owner" "Intent")
+   '("Identifier" "Pitch (Hz)" "Duration (ms)" "Legacy Force" "Owner" "Intent")
    (mapcar
     (lambda (tone)
       (list

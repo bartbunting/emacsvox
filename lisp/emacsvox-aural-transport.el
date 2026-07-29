@@ -59,10 +59,12 @@
      (tts--protocol-silence
       (emacsvox-aural-concrete-action-duration action)))
     ('tone
+     ;; Retain the old standalone force request as concrete metadata, but
+     ;; never dispatch in the middle of an ordered plan.  The containing
+     ;; presentation owns the safe dispatch boundary.
      (tts--protocol-tone
       (emacsvox-aural-concrete-action-pitch action)
-      (emacsvox-aural-concrete-action-duration action)
-      (emacsvox-aural-concrete-action-force action)))
+      (emacsvox-aural-concrete-action-duration action)))
     ('speech
      (let ((command
             (emacsvox-aural-concrete-action-voice-command action))
