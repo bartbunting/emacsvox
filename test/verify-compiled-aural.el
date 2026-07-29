@@ -36,6 +36,7 @@
          "emacsvox-aural-inspection"
          "emacsvox-aural-tools"
          "emacsvox-aural-editor"
+         "emacsvox-aural-overrides"
          "emacsvox-aural-simple-editor"
          "emacsvox-aural-doctor"
          "emacsvox-aural-profiles"
@@ -69,6 +70,7 @@
          emacsvox-aural-inspection-source-buffer
          emacsvox-aural-tools--training-presented
          emacsvox-aural-editor--scope-label
+         emacsvox-aural-overrides--collect
          emacsvox-aural-simple-editor--humanize
          emacsvox-aural-doctor--finding
          emacsvox-aural-profiles--ids

@@ -74,6 +74,7 @@ emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc \
 emacsvox-aural-tools.elc \
 emacsvox-aural-editor.elc \
+emacsvox-aural-overrides.elc \
 emacsvox-aural-simple-editor.elc \
 emacsvox-aural-doctor.elc \
 emacsvox-aural-profiles.elc \
@@ -334,6 +335,8 @@ emacsvox-aural-tools.elc: \
 emacsvox-aural-inspection.elc emacsvox-aural-preview.elc \
 emacsvox-aural-validation.elc
 emacsvox-aural-editor.elc: emacsvox-aural-tools.elc
+emacsvox-aural-overrides.elc: \
+emacsvox-aural-tools.elc emacsvox-aural-editor.elc
 emacsvox-aural-simple-editor.elc: emacsvox-aural-editor.elc
 emacsvox-aural-doctor.elc: emacsvox-aural-tools.elc
 emacsvox-aural-profiles.elc: emacsvox-aural-tools.elc

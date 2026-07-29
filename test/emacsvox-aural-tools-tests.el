@@ -15,6 +15,7 @@
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-editor)
+(require 'emacsvox-aural-overrides)
 (require 'emacsvox-aural-simple-editor)
 (require 'emacsvox-aural-voice-palettes)
 
@@ -274,6 +275,308 @@
         :module dired
         :events (state-changed)
         :occasion state-change)))))
+
+(ert-deftest emacsvox-aural-overrides-manager-unifies-scopes-and-live-matches ()
+  "The manager explains all override scopes against its remembered source."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-overrides-source*")))
+      (unwind-protect
+          (progn
+            (setq
+             emacsvox-aural-user-rules
+             '((:id personal-directory-voice
+                :match
+                (:role filesystem-entry
+                 :entry-kind directory
+                 :module dired)
+                :render (:content (:voice animate)))))
+            (setq
+             emacsvox-aural-session-rules
+             '((:id session-directory-cue
+                :enabled nil
+                :match
+                (:role filesystem-entry
+                 :entry-kind directory
+                 :module dired)
+                :render
+                (:before
+                 ((:id directory-cue
+                   :kind cue
+                   :cue open-object))))))
+            (with-current-buffer source
+              (insert
+               (emacsvox-aural-prepare-text
+                "src"
+                '(:role filesystem-entry
+                  :entry-kind directory
+                  :content "src")
+                (emacsvox-aural-capture-context
+                 'dired 'navigation)))
+              (goto-char (point-min))
+              (setq-local
+               emacsvox-aural-buffer-rules
+               '((:id buffer-message-voice
+                  :match (:role message :module notmuch)
+                  :render (:content (:voice smoothen))))))
+            (should
+             (equal
+              (emacsvox-aural-overrides-status source)
+              "1 personal, 1 session, 1 this buffer"))
+            (save-window-excursion
+              (emacsvox-aural-list-overrides source)
+              (with-current-buffer "*Aural Presentation Overrides*"
+                (should
+                 (derived-mode-p 'emacsvox-aural-overrides-mode))
+                (should
+                 (equal
+                  (mapcar #'car tabulated-list-entries)
+                  '((personal personal-directory-voice)
+                    (session session-directory-cue)
+                    (buffer buffer-message-voice))))
+                (let ((personal
+                       (cadr
+                        (assoc
+                         '(personal personal-directory-voice)
+                         tabulated-list-entries)))
+                      (session
+                       (cadr
+                        (assoc
+                         '(session session-directory-cue)
+                         tabulated-list-entries)))
+                      (buffer
+                       (cadr
+                        (assoc
+                         '(buffer buffer-message-voice)
+                         tabulated-list-entries))))
+                  (should (equal (aref personal 0) "personal"))
+                  (should
+                   (string-match-p "voice animate" (aref personal 3)))
+                  (should (equal (aref personal 4) "enabled"))
+                  (should (equal (aref personal 5) "matches here"))
+                  (should (equal (aref session 4) "disabled"))
+                  (should (equal (aref session 5) "would match"))
+                  (should (equal (aref buffer 5) "not here")))
+                (dolist
+                    (binding
+                     '(("RET" . emacsvox-aural-overrides-edit)
+                       ("P" . emacsvox-aural-overrides-preview)
+                       ("t" . emacsvox-aural-overrides-toggle)
+                       ("d" . emacsvox-aural-overrides-delete)
+                       ("f" . emacsvox-aural-overrides-filter)
+                       ("a" . emacsvox-aural-overrides-clear-filter)))
+                  (should
+                   (eq
+                    (lookup-key
+                     emacsvox-aural-overrides-mode-map
+                     (kbd (car binding)))
+                    (cdr binding)))))))
+        (when (get-buffer "*Aural Presentation Overrides*")
+          (kill-buffer "*Aural Presentation Overrides*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-overrides-toggle-applies-session-rule ()
+  "Toggling in the manager immediately changes the existing session layer."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-override-toggle*")))
+      (unwind-protect
+          (progn
+            (setq
+             emacsvox-aural-session-rules
+             '((:id temporary-heading
+                :match (:role heading)
+                :render (:content (:voice bolden)))))
+            (save-window-excursion
+              (emacsvox-aural-list-overrides source)
+              (with-current-buffer "*Aural Presentation Overrides*"
+                (emacsvox-aural-ui-goto-row
+                 '(session temporary-heading))
+                (cl-letf
+                    (((symbol-function 'tts-speak) #'ignore))
+                  (should-not (emacsvox-aural-overrides-toggle))
+                  (should-not
+                   (plist-get
+                    (car emacsvox-aural-session-rules)
+                    :enabled))
+                  (should (emacsvox-aural-overrides-toggle))
+                  (should
+                   (plist-get
+                    (car emacsvox-aural-session-rules)
+                    :enabled))))))
+        (when (get-buffer "*Aural Presentation Overrides*")
+          (kill-buffer "*Aural Presentation Overrides*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-overrides-filter-and-clear-preserve-layers ()
+  "Scope filtering narrows the unified view without changing rule data."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-override-filter*")))
+      (unwind-protect
+          (progn
+            (setq
+             emacsvox-aural-user-rules
+             '((:id personal-org
+                :match (:role heading :module org)
+                :render (:content (:voice bolden)))))
+            (setq
+             emacsvox-aural-session-rules
+             '((:id session-mail
+                :match (:role message :module notmuch)
+                :render (:content (:voice smoothen)))))
+            (save-window-excursion
+              (emacsvox-aural-list-overrides source)
+              (with-current-buffer "*Aural Presentation Overrides*"
+                (let ((answers '("session" "all" "all")))
+                  (cl-letf
+                      (((symbol-function 'completing-read)
+                        (lambda (&rest _) (pop answers)))
+                       ((symbol-function 'tts-speak) #'ignore))
+                    (emacsvox-aural-overrides-filter)))
+                (should
+                 (equal
+                  (mapcar #'car tabulated-list-entries)
+                  '((session session-mail))))
+                (cl-letf
+                    (((symbol-function 'tts-speak) #'ignore))
+                  (emacsvox-aural-overrides-clear-filter))
+                (should
+                 (equal
+                  (mapcar #'car tabulated-list-entries)
+                  '((personal personal-org)
+                    (session session-mail))))
+                (should (= (length emacsvox-aural-user-rules) 1))
+                (should (= (length emacsvox-aural-session-rules) 1)))))
+        (when (get-buffer "*Aural Presentation Overrides*")
+          (kill-buffer "*Aural Presentation Overrides*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-overrides-preview-resolves-complete-cascade ()
+  "Override preview includes matching base-scheme and override behavior."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-override-preview*"))
+          played)
+      (unwind-protect
+          (progn
+            (emacsvox-aural-register-scheme
+             '(:schema-version 1
+               :id preview-base
+               :summary "Preview base"
+               :parent default
+               :rules
+               ((:id base-heading-label
+                 :match (:role heading)
+                 :render
+                 (:before
+                  ((:id base-label
+                    :kind speech
+                    :text "Base heading"))))))
+             :source "test")
+            (emacsvox-aural-select-scheme 'preview-base)
+            (setq
+             emacsvox-aural-user-rules
+             '((:id personal-heading-voice
+                :match (:role heading)
+                :render (:content (:voice bolden)))))
+            (with-current-buffer source
+              (insert
+               (emacsvox-aural-prepare-text
+                "Title"
+                '(:role heading :content "Title")
+                (emacsvox-aural-capture-context
+                 'org 'navigation)))
+              (goto-char (point-min)))
+            (save-window-excursion
+              (emacsvox-aural-list-overrides source)
+              (with-current-buffer "*Aural Presentation Overrides*"
+                (cl-letf
+                    (((symbol-function 'emacsvox-aural-preview-play-plan)
+                      (lambda (plan) (setq played plan))))
+                  (let ((plan (emacsvox-aural-overrides-preview)))
+                    (should (eq plan played))
+                    (should
+                     (equal
+                      (emacsvox-aural-concrete-action-text
+                       (car
+                        (emacsvox-aural-concrete-plan-before plan)))
+                      "Base heading"))
+                    (should
+                     (eq
+                      (emacsvox-aural-concrete-content-voice-request
+                       (emacsvox-aural-concrete-plan-content plan))
+                      'bolden)))))))
+        (when (get-buffer "*Aural Presentation Overrides*")
+          (kill-buffer "*Aural Presentation Overrides*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-overrides-personal-delete-is-atomic ()
+  "Personal removal persists, and a persistence failure restores the rule."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-override-delete*"))
+          saved)
+      (unwind-protect
+          (progn
+            (setq
+             emacsvox-aural-user-rules
+             '((:id persistent-heading
+                :match (:role heading)
+                :render (:content (:voice bolden)))))
+            (save-window-excursion
+              (emacsvox-aural-list-overrides source)
+              (with-current-buffer "*Aural Presentation Overrides*"
+                (emacsvox-aural-ui-goto-row
+                 '(personal persistent-heading))
+                (cl-letf
+                    (((symbol-function 'yes-or-no-p)
+                      (lambda (&rest _) t))
+                     ((symbol-function 'emacsvox-aural-save-user-data)
+                      (lambda (&rest _)
+                        (error "simulated save failure"))))
+                  (should-error
+                   (emacsvox-aural-overrides-delete)
+                   :type 'error))
+                (should
+                 (eq
+                  (plist-get (car emacsvox-aural-user-rules) :id)
+                  'persistent-heading))
+                (cl-letf
+                    (((symbol-function 'yes-or-no-p)
+                      (lambda (&rest _) t))
+                     ((symbol-function 'emacsvox-aural-save-user-data)
+                      (lambda (&rest _) (setq saved t)))
+                     ((symbol-function 'tts-speak) #'ignore))
+                  (emacsvox-aural-overrides-delete))
+                (should saved)
+                (should-not emacsvox-aural-user-rules))))
+        (when (get-buffer "*Aural Presentation Overrides*")
+          (kill-buffer "*Aural Presentation Overrides*"))
+        (kill-buffer source)))))
+
+(ert-deftest emacsvox-aural-editor-opens-the-selected-override-rule ()
+  "The manager-facing editor entry point preserves the selected rule."
+  (emacsvox-test--with-aural-tools
+    (let ((source (generate-new-buffer " *aural-override-editor*")))
+      (unwind-protect
+          (progn
+            (setq
+             emacsvox-aural-session-rules
+             '((:id first
+                :match (:role heading)
+                :render (:content (:voice bolden)))
+               (:id second
+                :match (:role paragraph)
+                :render (:content (:voice smoothen)))))
+            (save-window-excursion
+              (let ((buffer
+                     (emacsvox-aural-editor-open-rule
+                      'session 'second source)))
+                (with-current-buffer buffer
+                  (should
+                   (= 1
+                      (get-text-property
+                       (point)
+                       emacsvox-aural-editor--rule-index-property)))))))
+        (when (get-buffer "*Aural Editor: session*")
+          (kill-buffer "*Aural Editor: session*"))
+        (kill-buffer source)))))
 
 (ert-deftest emacsvox-aural-tools-earcon-remap-selects-one-exact-phase ()
   "Multiple earcons are distinguished by phase, action, and source."
@@ -1518,7 +1821,7 @@
               (should
                (equal
                 (mapcar #'car tabulated-list-entries)
-                '(explain remap remap-earcon recent-feedback profiles
+                '(explain remap remap-earcon overrides recent-feedback profiles
                   schemes voices features face-presentation buffer-rules
                   semantics sounds spatial spatial-settings training
                   diagnostics)))
@@ -1528,6 +1831,7 @@
                      ("x" . emacsvox-aural-home-explain)
                      ("r" . emacsvox-aural-home-remap-voice)
                      ("R" . emacsvox-aural-home-remap-earcon)
+                     ("O" . emacsvox-aural-home-overrides)
                      ("H" . emacsvox-aural-home-recent-feedback)
                      ("V" . emacsvox-aural-home-voice-palettes)
                      ("v" . emacsvox-aural-home-toggle-face-presentation)
@@ -1611,6 +1915,8 @@
                 (emacsvox-aural-home-next)
                 (should (equal spoken "Remap earcon at point, Area"))
                 (emacsvox-aural-home-next)
+                (should (equal spoken "Presentation overrides, Area"))
+                (emacsvox-aural-home-next)
                 (should (equal spoken "Recent aural feedback, Area"))
                 (emacsvox-aural-home-next)
                 (should (equal spoken "Presentation profiles, Area"))
@@ -1631,6 +1937,7 @@
         emacsvox-aural-semantics-mode-map
         emacsvox-aural-schemes-mode-map
         emacsvox-aural-feature-fragments-mode-map
+        emacsvox-aural-overrides-mode-map
         emacsvox-aural-recent-feedback-mode-map
         emacsvox-aural-voice-palettes-mode-map
         emacsvox-aural-voice-palette-previews-mode-map
@@ -1648,6 +1955,7 @@
          emacsvox-aural-semantics-mode
          emacsvox-aural-schemes-mode
          emacsvox-aural-feature-fragments-mode
+         emacsvox-aural-overrides-mode
          emacsvox-aural-recent-feedback-mode
          emacsvox-aural-voice-palettes-mode
          emacsvox-aural-voice-palette-previews-mode))
@@ -1774,7 +2082,8 @@
           (should (equal (aref row 1) "active"))
           (should (equal (aref row 2) "personal"))
           (should (equal (aref row 3) "default"))
-          (should (equal (aref row 5) "1 direct, 1 total")))
+          (should (equal (aref row 5) "1 direct, 1 total"))
+          (should (equal (aref row 7) "you (personal)")))
         (should
          (eq
           (lookup-key emacsvox-aural-schemes-mode-map (kbd "RET"))
@@ -2395,10 +2704,30 @@
             'spoken-personal)))
       (should (string-match-p "spoken personal" summary))
       (should (string-match-p "Active personal scheme" summary))
+      (should (string-match-p "Provided by you (personal)" summary))
       (should (string-match-p "Based on default" summary))
       (should (string-match-p "Sound pack chimes" summary))
       (should (string-match-p "1 effective presentation" summary))
       (should (string-match-p "Valid" summary)))))
+
+(ert-deftest emacsvox-aural-scheme-manager-identifies-integration-provider ()
+  "Built-in schemes identify the integration that registered them."
+  (emacsvox-test--with-aural-tools
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id org-example
+       :summary "Org example"
+       :parent default
+       :rules ())
+     :built-in t
+     :source "emacsvox-aural-provider-org")
+    (let* ((entry (emacsvox-aural-scheme-entry 'org-example))
+           (row (cadr (emacsvox-aural-tools--scheme-row "org-example"))))
+      (should
+       (equal
+        (emacsvox-aural-tools--scheme-provider entry)
+        "Org integration"))
+      (should (equal (aref row 7) "Org integration")))))
 
 (ert-deftest emacsvox-aural-scheme-manager-column-navigation-speaks-title ()
   "Horizontal movement speaks titles, blank values, and column boundaries."

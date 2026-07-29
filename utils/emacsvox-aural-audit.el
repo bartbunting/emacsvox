@@ -367,11 +367,20 @@ below a presentation boundary."
    "whether that fact is conveyed by speech, voice, a cue, a pause, spatial "
    "placement, or a composition of those modalities.  Modules therefore do "
    "not need to agree on one preferred presentation.\n\n"
+   "Exactly one scheme is active globally.  It is the base recipe: named "
+   "presentation rules plus optional default sound-pack and voice-palette "
+   "providers.  Core and integration libraries may register read-only "
+   "built-in schemes; users provide editable personal schemes.  Entering a "
+   "mode never silently selects a scheme.  Every presentation consults the "
+   "active scheme, but only matching selectors contribute.  Applying a saved "
+   "profile may explicitly select its scheme.  Automatic module compatibility, "
+   "optional presentation fragments, and overrides are separate layers.\n\n"
    "The built-in =default= scheme preserves existing Emacsvox voices and "
    "auditory icons.  The Org example schemes are opt-in demonstrations.  "
    "Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  "
    "It reports current status and routes to explanation, recent exact "
-   "feedback, schemes, presentation options, presentation profiles, "
+   "feedback, schemes, presentation options, presentation overrides, "
+   "presentation profiles, "
    "source-buffer rules, semantic "
    "vocabulary, sound packs, spatial controls, training, and the Aural "
    "Doctor.  Press =h= in any routed manager or editor to return home.  From "
@@ -403,9 +412,17 @@ below a presentation boundary."
    "The =r= command runs the explicitly offered safe repair for one row.\n\n"
    "Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  "
    "It views direct and inherited presentations and provides edit, copy, "
-   "delete, rename, activate, preview, and validation actions.  Use "
+   "delete, rename, activate, preview, and validation actions.  Its table, "
+   "spoken row, and detail view identify who provided each scheme.  Use "
    "=M-x emacsvox-aural-reset-scheme= to return to the default.  Established "
    "verb-first command names remain compatible.\n\n"
+   "Use =M-x emacsvox-aural-list-overrides=, or press =O= in Aural Home, to "
+   "manage persistent personal, temporary session, and remembered "
+   "source-buffer rules in one spoken table.  It reports each rule's target, "
+   "change, state, and live match.  Editing opens the exact selected rule; "
+   "preview resolves the complete cascade; disabling or removing a rule "
+   "restores the next weaker behavior.  This is a unified view over existing "
+   "layers, not another scheme or cascade layer.\n\n"
    "Use =M-x emacsvox-aural-list-feature-fragments= to manage independent "
    "presentation additions over the active base scheme.  The user interface "
    "calls these presentation options and groups them into expandable "
@@ -759,12 +776,14 @@ below a presentation boundary."
   "Insert generated scheme and fragment tables at point."
   (insert "* Built-in Schemes\n\n")
   (emacsvox-aural-audit--insert-table
-   '("Identifier" "Parent" "Sound Pack" "Voice Palette" "Rules" "Intent")
+   '("Identifier" "Provided By" "Parent" "Sound Pack" "Voice Palette"
+     "Rules" "Intent")
    (mapcar
     (lambda (entry)
       (let ((scheme (emacsvox-aural-scheme-entry-compiled entry)))
         (list
          (emacsvox-aural-scheme-entry-id entry)
+         (emacsvox-aural-tools--scheme-provider entry)
          (emacsvox-aural-scheme-parent scheme)
          (emacsvox-aural-effective-scheme-provider
           'resource-pack (emacsvox-aural-scheme-entry-id entry))

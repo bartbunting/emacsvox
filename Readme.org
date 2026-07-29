@@ -42,6 +42,18 @@ pauses, and stereo placement.  The default scheme preserves existing output,
 while users can override presentation globally or for a module, major mode,
 derived mode, session, or individual buffer.
 
+Exactly one scheme is active globally.  Think of it as the base recipe: a
+named set of presentation rules with optional default sound-pack and
+voice-palette choices.  Emacsvox core and integration providers such as Org
+may register read-only built-in schemes; users create personal schemes or copy
+a built-in one before editing it.  Entering Org, Notmuch, or another mode does
+not silently switch schemes.  Every presentation consults the active scheme,
+but only rules whose selectors match the current facts and context contribute.
+Choosing a saved presentation profile may explicitly activate that profile's
+scheme.  Mode compatibility is supplied separately and automatically,
+optional presentation fragments compose above the scheme, and personal,
+session, and buffer overrides are the strongest layers.
+
 Use =M-x emacsvox-aural=, or =C-e H=, to open the spoken aural home.  It
 reports current status and routes to saved profiles, schemes, feature
 fragments, recent exact feedback, buffer-local rules, semantic vocabulary,
@@ -58,6 +70,14 @@ default; press =i= in the recent-feedback browser to include it temporarily
 for diagnosis.  Press =L= there to set any nonnegative history limit for the
 current session, or customize
 =emacsvox-aural-presentation-history-limit= to persist it.
+
+Press =O= in Aural Home, or run
+=M-x emacsvox-aural-list-overrides=, to manage persistent personal,
+temporary session, and current-buffer rules in one spoken table.  It reports
+what each rule targets, what it changes, whether it is enabled, and whether it
+matches the remembered source item.  Editing preserves the selected rule;
+preview resolves the complete current cascade; disabling or removing a rule
+restores the next weaker behavior.
 
 Use =M-x emacsvox-aural-list-profiles= to save and switch complete named
 configurations.  A profile references one base scheme and ordered feature

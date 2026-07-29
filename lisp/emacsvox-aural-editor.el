@@ -1324,6 +1324,39 @@ the ordinary source associated with the current buffer for buffer scope."
       (emacsvox-aural-editor-refresh))
     (emacsvox-aural-ui-pop-to-buffer buffer)))
 
+(defun emacsvox-aural-editor-open-rule
+    (scope rule-id &optional source-buffer)
+  "Open RULE-ID in the advanced editor for override SCOPE.
+
+SCOPE must be `personal', `session', or `buffer'.  SOURCE-BUFFER identifies
+the ordinary source whose buffer-local rules should be edited."
+  (unless (memq scope '(personal session buffer))
+    (user-error "Not an override scope: %S" scope))
+  (emacsvox-edit-aural-rules scope nil source-buffer)
+  (let* ((name (format "*Aural Editor: %s*" scope))
+         (buffer
+          (or
+           (get-buffer name)
+           (error "Aural editor did not create %s" name))))
+    (with-current-buffer buffer
+      (let ((index
+             (cl-position
+              rule-id emacsvox-aural-editor-rules
+              :key (lambda (rule) (plist-get rule :id)))))
+        (unless index
+          (user-error
+           "No %s override named %S is available"
+           scope rule-id))
+        (when-let* ((position
+                     (text-property-any
+                      (point-min) (point-max)
+                      emacsvox-aural-editor--rule-index-property
+                      index)))
+          (goto-char position)
+          (when-let* ((window (get-buffer-window buffer t)))
+            (set-window-point window position)))))
+    buffer))
+
 (defun emacsvox-edit-aural-scheme-advanced (&optional scheme)
   "Open the advanced declarative editor for personal SCHEME."
   (interactive)

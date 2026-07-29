@@ -532,6 +532,19 @@ This lets one fragment append a cue while another appends speech, preserving
 the base scheme's inherited presentation.  Persistent personal rules remain
 stronger than every fragment.
 
+A scheme is therefore a global base recipe, not a mode hook or a complete
+snapshot of all current presentation settings.  It contains named rules and
+may choose default resource-pack and voice-palette providers.  Core,
+integration, and third-party provider libraries may register read-only
+built-in schemes; personal data may register editable personal schemes.
+Activating a scheme is always explicit.  Entering a mode does not select a
+scheme bearing that mode's name.  Every presentation resolution consults the
+active scheme, but only matching selectors contribute.  Applying a saved
+profile may explicitly select the scheme recorded by that profile.  The
+integration's automatic compatibility fragment continues to supply its
+defaults, and module selectors decide which scheme, option, or override rules
+apply there.
+
 There are two deliberately different fragment concepts:
 
 - a module compatibility fragment is an automatic, read-only default that
@@ -1158,6 +1171,7 @@ lead to:
 | Explain at point     | Spoken and detailed presentation provenance           |
 | Remap voice at point | Prepare a scoped named-voice override for the item     |
 | Remap earcon at point | Replace, suppress, or restore one exact cue action    |
+| Presentation overrides | Unified personal, session, and buffer rule manager  |
 | Recent aural feedback | Exact heard-output browser and replay                 |
 | Schemes              | Base-scheme manager                                    |
 | Presentation options | Grouped, independently enabled presentation layers    |
@@ -1173,7 +1187,8 @@ lead to:
 the column title and value.  =.= repeats the titled cell, =SPC= speaks the
 complete row, =RET= performs its primary operation, =x= always explains the
 remembered source, =r= prepares a point voice remap, =R= prepares a precise
-earcon remap, =H= opens recent feedback, and =?= displays and speaks help.
+earcon remap, =O= opens presentation overrides, =H= opens recent feedback,
+and =?= displays and speaks help.
 Top, bottom, first
 column, and last column boundaries are announced instead of silently
 repeating a value.  Every routed aural manager and editor binds =h= to return
@@ -1184,6 +1199,36 @@ unsaved-change confirmation before that dismissal feedback.
 Every Aural manager, browser, preview, doctor, and editor also presents the
 scheme-resolved =open-object= cue with semantic event
 =aural-interface-opened= after it becomes current.
+
+** Accessible presentation-override manager contract
+
+=emacsvox-aural-list-overrides= presents the three strongest rule layers in
+one table without introducing another layer.  It lists persistent personal,
+temporary session, and remembered source-buffer rules in cascade order.  Each
+row reports scope, stable rule identifier, natural selector summary, natural
+change summary, enabled state, and whether the selector matches the remembered
+source item.  A disabled matching rule reports that it *would match* rather
+than appearing unrelated.
+
+The manager exposes these operations:
+
+| Key         | Operation                                                        |
+|-------------+------------------------------------------------------------------|
+| =n= / =p=   | Move by override, speaking the row                               |
+| =Arrows=    | Move by row or column with the shared spoken-table contract      |
+| =RET= / =e= | Open the exact rule in its scoped advanced editor                |
+| =x=         | Describe rule data, source, match, and cascade position          |
+| =P=         | Preview the complete cascade using live or representative input  |
+| =t=         | Enable or disable the rule immediately                           |
+| =d=         | Remove the rule and restore the next weaker behavior             |
+| =f= / =a=   | Filter by scope, module, and role, or clear every filter          |
+| =h= / =q=   | Return to Aural Home, or dismiss with shared close feedback       |
+
+Personal changes use the data-only atomic persistence path and roll back when
+saving fails.  Session changes last until Emacs exits.  Buffer changes require
+the remembered source to remain live.  Preview resolves all automatic module
+defaults, the active scheme, enabled options, and overrides rather than
+auditioning an isolated rule contribution.
 
 ** Accessible semantic-list contract
 
@@ -1199,9 +1244,12 @@ current cell.  =h= returns to the aural home.
 
 =emacsvox-aural-list-schemes= is the normal entry point for scheme
 management.  Each row reports the active state, built-in or personal
-ownership, parent, effective sound pack, direct and effective presentation
-counts, validation state, and summary.  Opening the manager speaks a concise
-description of the active row.
+ownership, human-readable provider, parent, effective sound pack, direct and
+effective presentation counts, validation state, and summary.  Opening the
+manager speaks a concise description of the active row.  Help states that
+exactly one scheme supplies the global base recipe, that activation is
+explicit rather than mode-driven, and that automatic module presentation,
+options, and overrides are separate layers.
 
 All user-facing operations also have discoverable =emacsvox-aural-...=
 command names.  Existing verb-first names such as
@@ -2995,6 +3043,32 @@ The complete Emacs 31 source suite has 1,665 tests: 1,664 pass and the
 optional Mu4e test is skipped.  Changed Lisp compiles with warnings treated as
 errors, compiled Aural parity and normal build-tree startup pass, and the
 generated reference and Aural audit are clean.
+
+** DONE Slice 40: Unified Presentation Overrides and Scheme Clarity
+CLOSED: [2026-07-29 Wed]
+
+- Add one spoken manager over persistent personal, temporary session, and
+  remembered source-buffer rules without adding a new cascade layer.
+- Report natural selector and change summaries, enabled state, and live
+  current-item matching; support exact editing, complete-cascade preview,
+  atomic enablement, removal, and scope/module/role filters.
+- Route the manager from Aural Home and keep the selected rule focused when
+  the advanced editor opens.
+- Identify core, integration, and personal scheme providers in the scheme
+  table, spoken row, and detail view.
+- Explain consistently that exactly one scheme is the explicitly selected
+  global base recipe, while automatic module compatibility, optional
+  presentation fragments, and overrides are independent higher layers.
+
+Deliverable: users can find and manage the strongest presentation changes in
+one place and can tell who supplied a scheme, when it becomes active, and how
+it participates in the cascade.
+
+Checks: all 89 focused Aural tools and editor tests pass.  The complete Emacs
+31 source suite has 1,672 tests: 1,671 pass and the optional Mu4e test is
+skipped.  Changed Lisp compiles with warnings treated as errors, compiled
+Aural parity and normal build-tree startup pass, Org lint is clean, and the
+generated reference and Aural audit are current.
 
 * Test Gates
 

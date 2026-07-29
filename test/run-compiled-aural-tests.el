@@ -30,6 +30,7 @@
           "emacsvox-aural-inspection.el"
           "emacsvox-aural-tools.el"
           "emacsvox-aural-editor.el"
+          "emacsvox-aural-overrides.el"
           "emacsvox-aural-simple-editor.el"
           "emacsvox-aural-doctor.el"
           "emacsvox-aural-profiles.el"

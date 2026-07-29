@@ -69,6 +69,10 @@
                   "emacsvox-aural-profiles" (&optional profile))
 (declare-function emacsvox-aural-profiles-status
                   "emacsvox-aural-profiles" ())
+(declare-function emacsvox-aural-list-overrides
+                  "emacsvox-aural-overrides" (&optional source))
+(declare-function emacsvox-aural-overrides-status
+                  "emacsvox-aural-overrides" (&optional source))
 (declare-function emacsvox-aural-list-voice-palettes
                   "emacsvox-aural-voice-palettes" (&optional palette))
 (declare-function emacsvox-aural-voice-palettes-status
@@ -529,6 +533,23 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       "built-in"
     "personal"))
 
+(defun emacsvox-aural-tools--scheme-provider (entry)
+  "Return a user-facing provider name for scheme ENTRY."
+  (let ((source
+         (format "%s" (or (emacsvox-aural-scheme-entry-source entry) ""))))
+    (cond
+     ((not (emacsvox-aural-scheme-entry-built-in entry))
+      "you (personal)")
+     ((string= source "built-in") "Emacsvox core")
+     ((string-match
+       "\\`emacsvox-aural-provider-\\(.+\\)\\'" source)
+      (format
+       "%s integration"
+       (capitalize
+        (replace-regexp-in-string "-" " " (match-string 1 source)))))
+     ((string-empty-p source) "Emacsvox")
+     (t source))))
+
 (defun emacsvox-aural-tools--scheme-row (candidate)
   "Return a tabulated manager row for scheme CANDIDATE."
   (let* ((id (intern candidate))
@@ -556,6 +577,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
       (if (emacsvox-aural-validation-report-valid report)
           "valid"
         "invalid")
+      (emacsvox-aural-tools--scheme-provider entry)
       (emacsvox-aural-scheme-summary compiled)))))
 
 (defun emacsvox-aural-schemes--set-entries ()
@@ -664,6 +686,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
            'resource-pack scheme))
          (count
           (length (emacsvox-aural-effective-scheme-rules scheme t)))
+         (provider (emacsvox-aural-tools--scheme-provider entry))
          (report (emacsvox-aural-validate-scheme scheme)))
     (string-join
      (delq
@@ -674,6 +697,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
         "%s%s scheme."
         (if (eq scheme emacsvox-aural-active-scheme) "Active " "")
         (emacsvox-aural-tools--scheme-kind entry))
+       (format "Provided by %s." provider)
        (when parent
          (format
           "Based on %s."
@@ -764,6 +788,10 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
        (format
         "Kind: %s\n"
         (emacsvox-aural-tools--scheme-kind entry)))
+      (princ
+       (format
+        "Provided by: %s\n"
+        (emacsvox-aural-tools--scheme-provider entry)))
       (princ (format "Summary: %s\n"
                      (emacsvox-aural-scheme-summary compiled)))
       (princ
@@ -897,8 +925,16 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
     (princ
      (concat
       "Aural Scheme Manager\n\n"
-      "Each row identifies whether a scheme is active, built-in or personal,\n"
-      "what it inherits, its effective sound pack and presentation count.\n"
+      "Exactly one scheme is active globally. It is the base presentation\n"
+      "recipe: named rules plus optional default sound and voice providers.\n"
+      "Emacsvox and mode integrations may provide read-only built-in schemes;\n"
+      "you provide personal schemes by creating or copying one. Entering a\n"
+      "mode does not select its scheme. Every presentation consults the active\n"
+      "scheme, but only matching rules contribute. Activating a saved profile\n"
+      "may explicitly select its scheme. Automatic module compatibility is a\n"
+      "separate layer, followed by presentation options and then overrides.\n\n"
+      "Each row identifies whether a scheme is active, who provided it, what\n"
+      "it inherits, its effective sound pack and presentation count.\n"
       "Row movement speaks value then title; column movement title then value.\n"
       "past the first or last row announces the list boundary.\n\n"
       "n or down next       p or up previous\n"
@@ -931,6 +967,7 @@ With prefix argument FLATTENED, copy effective rules instead of inheriting."
     ("Sound pack" 18 t)
     ("Presentations" 22 t)
     ("Validation" 12 t)
+    ("Provided by" 22 t)
     ("Summary" 0 t)])
   (setq tabulated-list-padding 2)
   (add-hook
@@ -4540,6 +4577,12 @@ announce the selected example after displaying the buffer."
   (require 'emacsvox-aural-profiles)
   (emacsvox-aural-profiles-status))
 
+(defun emacsvox-aural-home--overrides-status ()
+  "Return concise status for the strongest presentation rule layers."
+  (require 'emacsvox-aural-overrides)
+  (emacsvox-aural-overrides-status
+   (emacsvox-aural-home--source-buffer)))
+
 (defun emacsvox-aural-home--voice-palette-status ()
   "Return concise status for voice palettes."
   (require 'emacsvox-aural-voice-palettes)
@@ -4593,6 +4636,12 @@ announce the selected example after displaying the buffer."
        "Remap earcon at point" source-name
        "Audition and replace, suppress, or restore one exact before or after earcon"))
      (list
+      'overrides
+      (vector
+       "Presentation overrides"
+       (emacsvox-aural-home--overrides-status)
+       "Browse and manage personal, session, and current-buffer rule layers together"))
+     (list
       'recent-feedback
       (vector
        "Recent aural feedback"
@@ -4608,7 +4657,7 @@ announce the selected example after displaying the buffer."
       'schemes
       (vector
        "Schemes" (symbol-name emacsvox-aural-active-scheme)
-       "View, activate, copy, edit, preview, and validate base schemes"))
+       "Choose the one global base recipe and see who provided each scheme"))
      (list
       'voices
       (vector
@@ -4753,6 +4802,13 @@ announce the selected example after displaying the buffer."
   (emacsvox-aural-list-recent-feedback
    (emacsvox-aural-home--source-buffer)))
 
+(defun emacsvox-aural-home-overrides ()
+  "Open unified presentation overrides from Aural Home."
+  (interactive)
+  (require 'emacsvox-aural-overrides)
+  (emacsvox-aural-list-overrides
+   (emacsvox-aural-home--source-buffer)))
+
 (defun emacsvox-aural-home-profiles ()
   "Open the complete presentation-profile manager."
   (interactive)
@@ -4783,6 +4839,8 @@ announce the selected example after displaying the buffer."
      (emacsvox-aural-home-remap-voice))
     ('remap-earcon
      (emacsvox-aural-home-remap-earcon))
+    ('overrides
+     (emacsvox-aural-home-overrides))
     ('recent-feedback
      (emacsvox-aural-home-recent-feedback))
     ('profiles (emacsvox-aural-home-profiles))
@@ -4821,11 +4879,16 @@ announce the selected example after displaying the buffer."
       "Emacsvox Aural Home\n\n"
       "This is the main entry point for presentation discovery, editing,\n"
       "inspection, sound packs, spatial settings, and diagnostics.\n\n"
+      "One active scheme supplies the global base recipe. Automatic mode\n"
+      "presentation, enabled options, and finally personal, session, and\n"
+      "buffer overrides compose on top. Open Schemes to choose the base;\n"
+      "open Presentation overrides to inspect the strongest rule layers.\n\n"
       "n or down next       p or up previous\n"
       "left/right column    . speak titled cell\n"
       "RET open or perform  SPC speak complete row\n"
       "x explain at point   r remap voice at point\n"
       "R remap one exact earcon at point\n"
+      "O presentation overrides\n"
       "H recent feedback\n"
       "P presentation profiles\n"
       "V voice palettes     v face rules toggle\n"
@@ -4866,6 +4929,7 @@ announce the selected example after displaying the buffer."
        ("x" . emacsvox-aural-home-explain)
        ("r" . emacsvox-aural-home-remap-voice)
        ("R" . emacsvox-aural-home-remap-earcon)
+       ("O" . emacsvox-aural-home-overrides)
        ("H" . emacsvox-aural-home-recent-feedback)
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)

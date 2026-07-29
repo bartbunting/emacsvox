@@ -9,7 +9,9 @@
 
 A semantic fact says what an object or event means.  A scheme decides whether that fact is conveyed by speech, voice, a cue, a pause, spatial placement, or a composition of those modalities.  Modules therefore do not need to agree on one preferred presentation.
 
-The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, recent exact feedback, schemes, presentation options, presentation profiles, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and the Aural Doctor.  Press =h= in any routed manager or editor to return home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
+Exactly one scheme is active globally.  It is the base recipe: named presentation rules plus optional default sound-pack and voice-palette providers.  Core and integration libraries may register read-only built-in schemes; users provide editable personal schemes.  Entering a mode never silently selects a scheme.  Every presentation consults the active scheme, but only matching selectors contribute.  Applying a saved profile may explicitly select its scheme.  Automatic module compatibility, optional presentation fragments, and overrides are separate layers.
+
+The built-in =default= scheme preserves existing Emacsvox voices and auditory icons.  The Org example schemes are opt-in demonstrations.  Use =M-x emacsvox-aural= or =C-e H= to open the spoken aural home.  It reports current status and routes to explanation, recent exact feedback, schemes, presentation options, presentation overrides, presentation profiles, source-buffer rules, semantic vocabulary, sound packs, spatial controls, training, and the Aural Doctor.  Press =h= in any routed manager or editor to return home.  From an ordinary buffer, =C-e E= always invokes =emacsvox-aural-explain-presentation= at point.
 
 Visual face presentation is a separate default-on control.  Use the =Visual face presentation= row, press =v= in the aural home, or run =M-x emacsvox-aural-toggle-face-presentation= to toggle rules with a =:legacy-face= selector.  Turning it off does not disable semantic role, event, state, or attribute rules.  Voice Lock remains a per-buffer compatibility control: it gates only historical face/personality-to-voice mapping and =:legacy-personality= matching.  The source state of both controls is frozen into each presentation and reported by explanation and the Aural Doctor.
 
@@ -17,7 +19,9 @@ Use =M-x emacsvox-aural-list-profiles= to save and switch complete named configu
 
 Use =M-x emacsvox-aural-doctor= to inspect the live bindings, loaded source or byte-code, active scheme and fragments, saved profiles, sound resources, personal data, spatial fallback, speech server, and training state, including the independent face and Voice Lock controls.  It does not start the server or repair anything automatically.  The =r= command runs the explicitly offered safe repair for one row.
 
-Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
+Use =M-x emacsvox-aural-list-schemes= to open the spoken scheme manager.  It views direct and inherited presentations and provides edit, copy, delete, rename, activate, preview, and validation actions.  Its table, spoken row, and detail view identify who provided each scheme.  Use =M-x emacsvox-aural-reset-scheme= to return to the default.  Established verb-first command names remain compatible.
+
+Use =M-x emacsvox-aural-list-overrides=, or press =O= in Aural Home, to manage persistent personal, temporary session, and remembered source-buffer rules in one spoken table.  It reports each rule's target, change, state, and live match.  Editing opens the exact selected rule; preview resolves the complete cascade; disabling or removing a rule restores the next weaker behavior.  This is a unified view over existing layers, not another scheme or cascade layer.
 
 Use =M-x emacsvox-aural-list-feature-fragments= to manage independent presentation additions over the active base scheme.  The user interface calls these presentation options and groups them into expandable integration collections.  Core, integration modules, third-party extensions, and personal data may provide options; collection membership affects discovery only.  Press =a= to show enabled options in exact weakest-to-strongest cascade order.  Enabling or disabling an option preserves that stable order.  Press =P= to preview an option composed with the active configuration without enabling it, or =C-u P= to hear the option alone.  Preview uses matching facts from the remembered source buffer when possible and announces that as live source context; otherwise it announces and uses a simulated example.  Create, copy, edit, delete, validate, toggle, and reorder changes use the same atomic personal-data store.  Built-in Org options can add a dynamic heading-level label, section cue, or visibility-change wording without replacing the active scheme.
 
@@ -273,15 +277,15 @@ Operational semantic contract version: =1=.
 
 * Built-in Schemes
 
-| Identifier | Parent | Sound Pack | Voice Palette | Rules | Intent |
-|------------+--------+------------+---------------+-------+--------|
-| =default= | - | =chimes= | =acss-default= | =0= | Compatibility-preserving Emacsvox presentation |
-| =org-before-after= | =default= | =chimes= | =acss-default= | =1= | Org headings use explicit speech before and after contents |
-| =org-combined= | =default= | =chimes= | =acss-default= | =1= | Org headings combine a label, cue, and content voice |
-| =org-cue-only= | =default= | =chimes= | =acss-default= | =1= | Org headings introduced by one semantic section cue |
-| =org-folded-state= | =default= | =chimes= | =acss-default= | =1= | Folded Org headings announce their state after contents |
-| =org-spoken-label= | =default= | =chimes= | =acss-default= | =8= | Org heading levels spoken before heading contents |
-| =org-voice-only= | =default= | =chimes= | =acss-default= | =9= | Org heading levels presented only through distinct voices |
+| Identifier | Provided By | Parent | Sound Pack | Voice Palette | Rules | Intent |
+|------------+-------------+--------+------------+---------------+-------+--------|
+| =default= | Emacsvox core | - | =chimes= | =acss-default= | =0= | Compatibility-preserving Emacsvox presentation |
+| =org-before-after= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings use explicit speech before and after contents |
+| =org-combined= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings combine a label, cue, and content voice |
+| =org-cue-only= | Org integration | =default= | =chimes= | =acss-default= | =1= | Org headings introduced by one semantic section cue |
+| =org-folded-state= | Org integration | =default= | =chimes= | =acss-default= | =1= | Folded Org headings announce their state after contents |
+| =org-spoken-label= | Org integration | =default= | =chimes= | =acss-default= | =8= | Org heading levels spoken before heading contents |
+| =org-voice-only= | Org integration | =default= | =chimes= | =acss-default= | =9= | Org heading levels presented only through distinct voices |
 
 ** Built-in Feature Fragments
 
