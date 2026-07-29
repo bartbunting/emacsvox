@@ -70,6 +70,7 @@
     "emacsvox-aural-ui.el"
     "emacsvox-aural-inspection.el"
     "emacsvox-aural-tools.el"
+    "emacsvox-aural-feature-fragments.el"
     "emacsvox-aural-editor.el"
     "emacsvox-aural-overrides.el"
     "emacsvox-aural-simple-editor.el"

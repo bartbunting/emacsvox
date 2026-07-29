@@ -35,6 +35,7 @@
          "emacsvox-aural-ui"
          "emacsvox-aural-inspection"
          "emacsvox-aural-tools"
+         "emacsvox-aural-feature-fragments"
          "emacsvox-aural-editor"
          "emacsvox-aural-overrides"
          "emacsvox-aural-simple-editor"
@@ -69,6 +70,7 @@
          emacsvox-aural-validation--report
          emacsvox-aural-inspection-source-buffer
          emacsvox-aural-tools--training-presented
+         emacsvox-aural-feature-fragments--set-entries
          emacsvox-aural-editor--scope-label
          emacsvox-aural-overrides--collect
          emacsvox-aural-simple-editor--humanize

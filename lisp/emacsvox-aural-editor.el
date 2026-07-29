@@ -15,6 +15,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-tools)
+(require 'emacsvox-aural-feature-fragments)
 (require 'emacsvox-aural-preview)
 
 (declare-function emacsvox-aural-simple-editor-open
