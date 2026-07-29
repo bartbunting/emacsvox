@@ -16,6 +16,47 @@
 (defvar emacsvox-pronounce-personality)
 (defvar emacsvox-pronounce-table)
 
+(defmacro emacsvox-test--with-preserved-voice-lock-state (&rest body)
+  "Run BODY and restore global and per-buffer Voice Lock state."
+  (declare (indent 0) (debug t))
+  `(let ((global-state global-voice-lock-mode)
+         (default-state (default-value 'voice-lock-mode))
+         (buffer-states
+          (mapcar
+           (lambda (buffer)
+             (with-current-buffer buffer
+               (list
+                buffer
+                (local-variable-p 'voice-lock-mode)
+                voice-lock-mode
+                (local-variable-p 'voice-lock-mode--set-explicitly)
+                voice-lock-mode--set-explicitly)))
+           (buffer-list))))
+     (unwind-protect
+         (progn ,@body)
+       (global-voice-lock-mode (if global-state 1 -1))
+       (set-default 'voice-lock-mode default-state)
+       (dolist (state buffer-states)
+         (pcase-let
+             ((`(,buffer ,local ,value ,explicit-local ,explicit-value)
+               state))
+           (when (buffer-live-p buffer)
+             (with-current-buffer buffer
+               (if local
+                   (set (make-local-variable 'voice-lock-mode) value)
+                 (kill-local-variable 'voice-lock-mode))
+               (if explicit-local
+                   (set
+                    (make-local-variable
+                     'voice-lock-mode--set-explicitly)
+                    explicit-value)
+                 (kill-local-variable
+                  'voice-lock-mode--set-explicitly)))))))))
+
+(define-derived-mode emacsvox-test-voice-derived-mode fundamental-mode
+  "Voice-Test"
+  "Major mode used to characterize global Voice Lock inheritance.")
+
 (ert-deftest emacsvox-voice-personality-precedes-face-mapping ()
   "An explicit personality currently takes precedence over the visual face."
   (with-temp-buffer
@@ -213,60 +254,73 @@
 
 (ert-deftest emacsvox-voice-global-mode-governs-new-buffers ()
   "New buffers follow the disabled or enabled global Voice Lock state."
-  (let ((global-state global-voice-lock-mode)
-        (default-state (default-value 'voice-lock-mode))
-        (buffer-states
-         (mapcar
-          (lambda (buffer)
-            (with-current-buffer buffer
-              (list
-               buffer
-               (local-variable-p 'voice-lock-mode)
-               voice-lock-mode
-               (local-variable-p 'voice-lock-mode--set-explicitly)
-               voice-lock-mode--set-explicitly)))
-          (buffer-list)))
-        disabled-buffer
-        enabled-buffer)
-    (unwind-protect
-        (progn
-          (global-voice-lock-mode -1)
-          (setq
-           disabled-buffer
-           (generate-new-buffer " *voice-lock-disabled*"))
-          (with-current-buffer disabled-buffer
-            (fundamental-mode)
-            (should-not global-voice-lock-mode)
-            (should-not voice-lock-mode))
-          (global-voice-lock-mode 1)
-          (setq
-           enabled-buffer
-           (generate-new-buffer " *voice-lock-enabled*"))
-          (with-current-buffer enabled-buffer
-            (fundamental-mode)
-            (should global-voice-lock-mode)
-            (should voice-lock-mode)))
-      (dolist (buffer (list disabled-buffer enabled-buffer))
-        (when (buffer-live-p buffer)
-          (kill-buffer buffer)))
-      (global-voice-lock-mode (if global-state 1 -1))
-      (set-default 'voice-lock-mode default-state)
-      (dolist (state buffer-states)
-        (pcase-let
-            ((`(,buffer ,local ,value ,explicit-local ,explicit-value)
-              state))
+  (emacsvox-test--with-preserved-voice-lock-state
+    (let (disabled-buffer enabled-buffer)
+      (unwind-protect
+          (progn
+            (global-voice-lock-mode -1)
+            (setq
+             disabled-buffer
+             (generate-new-buffer " *voice-lock-disabled*"))
+            (with-current-buffer disabled-buffer
+              (fundamental-mode)
+              (should-not global-voice-lock-mode)
+              (should-not voice-lock-mode))
+            (global-voice-lock-mode 1)
+            (setq
+             enabled-buffer
+             (generate-new-buffer " *voice-lock-enabled*"))
+            (with-current-buffer enabled-buffer
+              (fundamental-mode)
+              (should global-voice-lock-mode)
+              (should voice-lock-mode)))
+        (dolist (buffer (list disabled-buffer enabled-buffer))
           (when (buffer-live-p buffer)
-            (with-current-buffer buffer
-              (if local
-                  (set (make-local-variable 'voice-lock-mode) value)
-                (kill-local-variable 'voice-lock-mode))
-              (if explicit-local
-                  (set
-                   (make-local-variable
-                    'voice-lock-mode--set-explicitly)
-                   explicit-value)
-                (kill-local-variable
-                 'voice-lock-mode--set-explicitly)))))))))
+            (kill-buffer buffer)))))))
+
+(ert-deftest emacsvox-voice-global-mode-governs-existing-buffers ()
+  "Global Voice Lock updates buffers that already exist."
+  (emacsvox-test--with-preserved-voice-lock-state
+    (with-temp-buffer
+      (fundamental-mode)
+      (global-voice-lock-mode 1)
+      (should voice-lock-mode)
+      (global-voice-lock-mode -1)
+      (should-not voice-lock-mode)
+      (global-voice-lock-mode 1)
+      (should voice-lock-mode))))
+
+(ert-deftest emacsvox-voice-local-mode-remains-independent ()
+  "A buffer may explicitly enable Voice Lock while its global mode is off."
+  (emacsvox-test--with-preserved-voice-lock-state
+    (global-voice-lock-mode -1)
+    (with-temp-buffer
+      (fundamental-mode)
+      (should-not voice-lock-mode)
+      (voice-lock-mode 1)
+      (should voice-lock-mode))
+    (with-temp-buffer
+      (fundamental-mode)
+      (should-not voice-lock-mode))))
+
+(ert-deftest emacsvox-voice-global-mode-follows-derived-modes ()
+  "Derived modes inherit global Voice Lock after their hooks run."
+  (emacsvox-test--with-preserved-voice-lock-state
+    (global-voice-lock-mode 1)
+    (with-temp-buffer
+      (emacsvox-test-voice-derived-mode)
+      (should voice-lock-mode))))
+
+(ert-deftest emacsvox-voice-major-mode-hook-can-opt-out ()
+  "A major-mode hook may explicitly disable global Voice Lock locally."
+  (emacsvox-test--with-preserved-voice-lock-state
+    (global-voice-lock-mode 1)
+    (let ((emacsvox-test-voice-derived-mode-hook
+           (list (lambda () (voice-lock-mode -1)))))
+      (with-temp-buffer
+        (emacsvox-test-voice-derived-mode)
+        (should voice-lock-mode--set-explicitly)
+        (should-not voice-lock-mode)))))
 
 (ert-deftest emacsvox-voice-speak-line-snapshots-overlay-faces ()
   "Normal line speech captures overlay faces before copying source text."
