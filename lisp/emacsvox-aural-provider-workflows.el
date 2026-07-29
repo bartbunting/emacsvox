@@ -7,9 +7,9 @@
 ;;; Commentary:
 
 ;; Register the lightweight semantic vocabulary shared by the Notmuch, Gnus,
-;; Dired, Magit, Agent Shell, Python, and Vertico integrations.  This file has no
-;; dependency on those packages, so personal schemes can validate at startup
-;; before any integration is loaded.
+;; Dired, Magit, Agent Shell, Python, Vertico, and BS integrations.  This file
+;; has no dependency on those packages, so personal schemes can validate at
+;; startup before any integration is loaded.
 
 ;;; Code:
 
@@ -53,6 +53,26 @@
      :summary "An Emacsvox aural interface was dismissed"
      :owner core
      :occasions (state-change)
+     :phases (before content after))
+    (buffer-entry
+     :kind role
+     :summary "A buffer represented in a buffer list or selector"
+     :owner core
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (modified
+     :kind state
+     :summary "A buffer has unsaved modifications"
+     :owner core
+     :roles (buffer-entry)
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (read-only
+     :kind state
+     :summary "A buffer does not permit ordinary editing"
+     :owner core
+     :roles (buffer-entry)
+     :occasions (navigation state-change inspection)
      :phases (before content after))
     (unread
      :kind state
@@ -641,6 +661,32 @@
      :phases (before content after)))
   "Semantic definitions used by representative integration slices.")
 
+(defconst emacsvox-aural-workflow-module-fragments
+  '((bs
+     :schema-version 1
+     :id bs-buffer-state-tones
+     :summary "Compatibility tones for buffer state in BS"
+     :rules
+     ((:id bs-buffer-modified-tone
+       :match
+       (:role buffer-entry :module bs :state modified
+        :occasion navigation)
+       :render
+       (:before
+        (:append
+         ((:id bs-buffer-modified-tone-action
+           :kind tone :tone buffer-modified)))))
+      (:id bs-buffer-read-only-tone
+       :match
+       (:role buffer-entry :module bs :state read-only
+        :occasion navigation)
+       :render
+       (:before
+        (:append
+         ((:id bs-buffer-read-only-tone-action
+           :kind tone :tone buffer-read-only))))))))
+  "Automatic compatibility policy for shared workflow integrations.")
+
 (defconst emacsvox-aural-workflow-feature-fragments
   '((:schema-version 1
      :id mail-message-status-cues
@@ -888,6 +934,13 @@
       (unless (emacsvox-aural-semantic id)
         (apply #'emacsvox-aural-register-semantic id metadata))))
   (emacsvox-aural-validate-registry)
+  (dolist (definition emacsvox-aural-workflow-module-fragments)
+    (let* ((module (car definition))
+           (data (cdr definition))
+           (id (plist-get data :id)))
+      (unless (gethash id emacsvox-aural-module-fragment-registry)
+        (emacsvox-aural-register-module-fragment
+         module data :source "emacsvox-aural-provider-workflows"))))
   (dolist (data emacsvox-aural-workflow-feature-fragments)
     (unless (emacsvox-aural-feature-fragment-entry (plist-get data :id))
       (emacsvox-aural-register-feature-fragment

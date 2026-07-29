@@ -57,6 +57,71 @@
     (emacsvox--advice-bs-mode-after)
     (should voice-lock-mode)))
 
+(ert-deftest emacsvox-bs-buffer-facts-describe-persistent-state ()
+  "BS facts distinguish modified and read-only buffer state."
+  (should
+   (equal
+    (emacsvox-bs--buffer-facts t t)
+    '(:role buffer-entry :states (modified read-only))))
+  (should
+   (equal
+    (emacsvox-bs--buffer-facts nil nil)
+    '(:role buffer-entry))))
+
+(ert-deftest emacsvox-bs-state-policy-resolves-ordered-named-tones ()
+  "BS compatibility policy retains modified then read-only tone order."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural--current-rules-cache
+         (make-hash-table :test #'equal)))
+    (let* ((plan
+            (emacsvox-aural-resolve-active
+             '(:role buffer-entry :states (modified read-only))
+             '(:module bs :mode bs-mode :occasion navigation)))
+           (actions (emacsvox-aural-render-plan-before plan)))
+      (should
+       (equal
+        (emacsvox-aural-render-plan-matched-rules plan)
+        '(bs-buffer-modified-tone bs-buffer-read-only-tone)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-action-tone actions)
+        '(buffer-modified buffer-read-only))))))
+
+(ert-deftest emacsvox-bs-buffer-line-submits-one-semantic-object ()
+  "BS submits state tones and buffer speech through one aural transaction."
+  (let ((target (generate-new-buffer " *emacsvox-bs-target*"))
+        submitted)
+    (unwind-protect
+        (progn
+          (with-current-buffer target
+            (setq buffer-read-only t)
+            (set-buffer-modified-p t))
+          (with-temp-buffer
+            (setq major-mode 'bs-mode)
+            (cl-letf
+                (((symbol-function 'bs--current-buffer)
+                  (lambda () target))
+                 ((symbol-function 'emacsvox-aural-submit)
+                  (lambda (content &rest arguments)
+                    (setq submitted (cons content arguments)))))
+              (emacsvox-bs-speak-buffer-line)))
+          (should
+           (equal
+            (plist-get (cdr submitted) :facts)
+            '(:role buffer-entry :states (modified read-only))))
+          (should (eq (plist-get (cdr submitted) :module) 'bs))
+          (should
+           (eq (plist-get (cdr submitted) :occasion) 'navigation))
+          (should
+           (string-match-p
+            (regexp-quote (buffer-name target))
+            (substring-no-properties (car submitted)))))
+      (kill-buffer target))))
+
 (ert-deftest emacsvox-bs-selection-feedback-is-target-aware ()
   "Only the matching BS selection command produces feedback."
   (let ((ems--interactive-fn-name 'bs-select-other-window)

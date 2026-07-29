@@ -40,6 +40,8 @@
 ;;  required modules
 
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-submission)
 (require 'bs)
 
 ;;; Commentary:
@@ -49,6 +51,18 @@
 ;;; Code:
 
 ;;;  helpers 
+
+(defun emacsvox-bs--buffer-facts (modified read-only)
+  "Return semantic facts for a buffer with MODIFIED and READ-ONLY state."
+  (let ((states
+         (delq
+          nil
+          (list
+           (and modified 'modified)
+           (and read-only 'read-only)))))
+    (append
+     '(:role buffer-entry)
+     (when states (list :states states)))))
 
 (defun emacsvox-bs-speak-buffer-line ()
   "Speak information about this buffer"
@@ -78,9 +92,7 @@
                        list-buffers-directory)
                   (setq this-buffer-directory list-buffers-directory))))
                                         ;format and speak the line
-        (when this-buffer-modified-p (tts-tone 700 100))
-        (when this-buffer-read-only (tts-tone 250 100))
-        (tts-speak
+        (emacsvox-aural-submit
          (concat 
           name " "
           (format-mode-line mode-name)
@@ -89,7 +101,12 @@
                       (or file this-buffer-directory))
             "")
           with
-          (format " %s "this-buffer-size)))))
+          (format " %s "this-buffer-size))
+         :facts
+         (emacsvox-bs--buffer-facts
+          this-buffer-modified-p this-buffer-read-only)
+         :module 'bs
+         :occasion 'navigation)))
      (t(emacsvox-icon 'warn-user)
        (emacsvox-speak-line)))))
 
@@ -261,4 +278,3 @@
 
 (provide 'emacsvox-bs)
 ;;;  end of file
-

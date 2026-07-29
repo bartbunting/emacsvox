@@ -343,7 +343,13 @@ themed overrides below an active sound pack."
   "The 55 cues shared by the bundled chimes and 3d resource packs.")
 
 (defconst emacsvox-aural-default-tone-definitions
-  '((edit-deletion
+  '((buffer-modified
+     "A buffer has unsaved modifications"
+     700 100 nil)
+    (buffer-read-only
+     "A buffer is read-only"
+     250 100 nil)
+    (edit-deletion
      "Text was deleted"
      500 75 t)
     (edit-line-created

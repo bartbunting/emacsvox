@@ -160,6 +160,7 @@ Operational semantic contract version: =1=.
 | =aural-interface-closed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Emacsvox aural interface was dismissed |
 | =aural-interface-opened= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | An Emacsvox aural interface was displayed |
 | =boundary-entered= | =event= | =core= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation arrived at a source-code boundary |
+| =buffer-entry= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer represented in a buffer list or selector |
 | =candidate= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | One available completion candidate |
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
 | =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
@@ -220,6 +221,7 @@ Operational semantic contract version: =1=.
 | =message-part= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A body, attachment, link, button, or other part of a message |
 | =message-part-kind= | =attribute= | =core= | =body=, =page=, =attachment=, =link=, =button=, =mime-part=, =header=, =other= | =message-part= | - | - | - | - | - | - | The kind of content part within a message |
 | =message-thread= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A conversation thread containing related messages |
+| =modified= | =state= | =core= | - | =buffer-entry= | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer has unsaved modifications |
 | =object-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered object was created or modified |
 | =operation-completed= | =event= | =core= | - | - | - | - | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation completed successfully |
 | =operation-failed= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation failed |
@@ -238,6 +240,7 @@ Operational semantic contract version: =1=.
 | =processing-failed= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent request ended exceptionally |
 | =processing-started= | =event= | =agent-shell= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An agent began initialization or request processing |
 | =product-identity= | =event= | =core= | - | - | - | - | - | - | - | - | Emacsvox identity or readiness was presented |
+| =read-only= | =state= | =core= | - | =buffer-entry= | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer does not permit ordinary editing |
 | =refresh-completed= | =event= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A displayed collection finished refreshing |
 | =refresh-failed= | =event= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A displayed collection failed to refresh |
 | =section-kind= | =attribute= | =magit= | =symbol= | =vcs-section= | - | - | - | - | - | - | The integration-defined kind of a structural section |
@@ -310,6 +313,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Module | Rules | Source | Intent |
 |------------+--------+-------+--------+--------|
+| =bs-buffer-state-tones= | =bs= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for buffer state in BS |
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
 | =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |
@@ -419,6 +423,8 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 
 | Identifier | Pitch (Hz) | Duration (ms) | Legacy Force | Owner | Intent |
 |------------+------------+---------------+--------------+-------+--------|
+| =buffer-modified= | =700= | =100= | - | =core= | A buffer has unsaved modifications |
+| =buffer-read-only= | =250= | =100= | - | =core= | A buffer is read-only |
 | =edit-deletion= | =500= | =75= | =t= | =core= | Text was deleted |
 | =edit-line-created= | =225= | =75= | =t= | =core= | A new line was created |
 | =edit-lowercase= | =600= | =100= | =t= | =core= | Text was changed to lowercase |
