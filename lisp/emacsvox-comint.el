@@ -54,6 +54,8 @@
 (require 'comint)
 (require 'shell)
 
+(define-key comint-mode-map (kbd "C-o") #'switch-to-completions)
+
 ;;;  comint
 ;;;###autoload
 (defcustom emacsvox-comint-autospeak nil
@@ -368,20 +370,23 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox-comint-speech-setup ()
   "Speech setup."
   (emacsvox-comint-enable-aural-context)
-  (setq buffer-undo-list  t)
-  (define-key comint-mode-map "\C-o" 'switch-to-completions)
   (when emacsvox-use-header-line
     (setq
      header-line-format
      '((:eval
-        (concat
-         (format-time-string emacsvox-speak-time-brief-format)
-         (propertize (buffer-name) 'personality voice-annotate)
-         (abbreviate-file-name default-directory)
-         (when (ems--comint-autospeak)
-           (propertize "Autospeak" 'personality voice-lighten))
-         (when (> (length (window-list)) 1)
-           (format "%s" (length (window-list)))))))))
+        (mapconcat
+         #'identity
+         (delq
+          nil
+          (list
+           (format-time-string emacsvox-speak-time-brief-format)
+           (propertize (buffer-name) 'personality voice-annotate)
+           (abbreviate-file-name default-directory)
+           (when (ems--comint-autospeak)
+             (propertize "Autospeak" 'personality voice-lighten))
+           (when (> (length (window-list)) 1)
+             (format "%s windows" (length (window-list))))))
+         " ")))))
   (tts-set-punctuations 'all)
   (emacsvox-pronounce-add-dictionary-entry
    'comint-mode
@@ -553,7 +558,12 @@ events.  Carriage-return chunks replace pending progress output."
     (original &optional argument)
   "Give deletion or EOF feedback, then call ORIGINAL once with ARGUMENT."
   (when (ems-interactive-p 'comint-delchar-or-maybe-eof)
-    (if (= (point) (point-max))
+    (if
+        (when-let* ((process (get-buffer-process (current-buffer)))
+                    (process-mark (process-mark process)))
+          (and
+           (eobp)
+           (= (point) (marker-position process-mark))))
         (emacsvox-comint--call-with-aural-presentation
          (emacsvox-comint-facts
           'command-interaction 'command-process-signalled 'send-eof)
@@ -726,21 +736,59 @@ events.  Carriage-return chunks replace pending progress output."
  #'emacsvox--advice-comint-output-filter-around
  '((name . emacsvox)))
 
+(defun emacsvox-comint--select-visible-completion (buffer)
+  "Select and return the first visible completion candidate in BUFFER."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (let* ((window (get-buffer-window buffer))
+             (position
+              (if (window-live-p window)
+                  (window-start window)
+                (point-min)))
+             (limit (point-max)))
+        (goto-char position)
+        (unless (get-text-property (point) 'completion--string)
+          (while
+              (and
+               (< (point) limit)
+               (not (get-text-property (point) 'completion--string)))
+            (goto-char
+             (or
+              (next-single-property-change
+               (point) 'completion--string nil limit)
+              limit))))
+        (when-let* ((candidate (completion-list-candidate-at-point)))
+          (car candidate))))))
+
 (defun emacsvox--advice-comint-dynamic-list-completions-around
-    (_original completions &optional _common-substring)
-  "Replace the stock display with a sorted, keyboard-friendly COMPLETIONS list."
-  (let ((completions (sort completions #'string-lessp)))
-    (with-output-to-temp-buffer "*Completions*"
-      (display-completion-list completions))
-    (with-current-buffer (get-buffer "*Completions*")
-      (setq-local comint-displayed-dynamic-completions completions)
-      (goto-char (point-min))
-      (next-completion 1))
-    (emacsvox-comint--submit
-     (car completions)
-     (emacsvox-comint-facts
-      'command-interaction 'focus-entered 'completion)
-     'navigation)))
+    (original completions &optional common-substring)
+  "Call ORIGINAL once without its blocking key read, then speak a candidate.
+The stock implementation continues to own sorting, highlighting, repeated
+scrolling, completion metadata, and window configuration."
+  (let ((sorted (sort (copy-sequence completions) #'string-lessp))
+        result)
+    (ems-with-messages-silenced
+     (let ((completion-setup-hook
+            (remq
+             #'emacsvox-completion-setup-hook completion-setup-hook))
+           unread-command-events)
+       (cl-letf (((symbol-function 'read-key-sequence)
+                  (lambda (&rest _) [emacsvox-comint-nonblocking])))
+         (setq result
+               (funcall original completions common-substring)))))
+    (when-let* ((buffer (get-buffer "*Completions*"))
+                (completion
+                 (or
+                  (emacsvox-comint--select-visible-completion buffer)
+                  (car sorted))))
+      (with-current-buffer buffer
+        (setq-local comint-displayed-dynamic-completions sorted))
+      (emacsvox-comint--submit
+       completion
+       (emacsvox-comint-facts
+        'command-interaction 'focus-entered 'completion)
+       'navigation 'help))
+    result))
 
 (advice-add
  'comint-dynamic-list-completions :around
@@ -824,34 +872,35 @@ events.  Carriage-return chunks replace pending progress output."
  '((name . emacsvox)))
 
 (defun emacsvox--advice-comint-dynamic-list-input-ring-around (original)
-  "Use an accessible history display interactively, otherwise call ORIGINAL."
+  "Call ORIGINAL with an accessible nonblocking history presentation."
   (if (not (ems-interactive-p 'comint-dynamic-list-input-ring))
       (funcall original)
     (if
         (or (not (ring-p comint-input-ring))
             (ring-empty-p comint-input-ring))
         (message "No history")
-      (let
-          ((history nil)
-           (history-buffer " *Input History*")
-           (index (1- (ring-length comint-input-ring))))
-        (while (>= index 0)
-          (setq history
-                (cons (ring-ref comint-input-ring index) history)
-                index (1- index)))
-        (with-output-to-temp-buffer history-buffer
-          (display-completion-list history)
-          (switch-to-buffer history-buffer)
-          (forward-line 3)
-          (while (search-backward "completion" nil 'move)
-            (replace-match "history reference")))
-        (next-completion 1)
-        (emacsvox-comint--submit
-         (emacsvox-get-current-completion)
-         (emacsvox-comint-facts
-          'command-input 'focus-entered 'history-navigation
-          '(:command-input-origin history))
-         'navigation 'help)))))
+      (let ((source-buffer (current-buffer))
+            (first-history (ring-ref comint-input-ring 0))
+            result)
+        (ems-with-messages-silenced
+         (let ((completion-setup-hook
+                (remq
+                 #'emacsvox-completion-setup-hook completion-setup-hook))
+               unread-command-events)
+           (cl-letf (((symbol-function 'read-event)
+                      (lambda (&rest _) 'emacsvox-comint-nonblocking)))
+             (setq result
+                   (save-current-buffer (funcall original))))))
+        (when-let* ((history-buffer (get-buffer " *Input History*")))
+          (emacsvox-comint--select-visible-completion history-buffer))
+        (with-current-buffer source-buffer
+          (emacsvox-comint--submit
+           first-history
+           (emacsvox-comint-facts
+            'command-input 'focus-entered 'history-navigation
+            '(:command-input-origin history))
+           'navigation 'help))
+        result))))
 
 (advice-add
  'comint-dynamic-list-input-ring :around

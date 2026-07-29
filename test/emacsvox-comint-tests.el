@@ -517,46 +517,92 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
     (pcase-let ((`(,target ,where ,function) entry))
       (should (advice-member-p function target)))))
 
-(ert-deftest emacsvox-comint-completion-list-replaces-stock-display ()
-  "The accessible completion list sorts entries without calling the original."
+(ert-deftest emacsvox-comint-completion-list-layers-on-stock-display ()
+  "The accessible list preserves the stock UI without blocking for a key."
   (let ((calls 0)
         events)
     (unwind-protect
         (with-temp-buffer
-          (insert "spoken completion")
           (cl-letf (((symbol-function 'display-completion-list)
                      (lambda (completions)
                        (push (list 'display completions) events)))
-                    ((symbol-function 'next-completion)
-                     (lambda (count)
-                       (push (list 'next count) events)))
                     ((symbol-function 'emacsvox-comint--submit)
-                     (lambda (text facts occasion &rest _)
-                       (push (list 'submit text facts occasion) events)
+                     (lambda (text facts occasion &optional icon &rest _)
+                       (push
+                        (list 'submit text facts occasion icon)
+                        events)
                        'completion-result)))
             (should
              (eq
               (emacsvox--advice-comint-dynamic-list-completions-around
-               (lambda (&rest _)
+               (lambda (completions common-substring)
                  (cl-incf calls)
+                 (should (equal common-substring "a"))
+                 (with-output-to-temp-buffer "*Completions*"
+                   (display-completion-list
+                    (sort completions #'string-lessp)))
                  'stock-result)
-               (list "zeta" "alpha"))
-              'completion-result))))
+               (list "zeta" "alpha") "a")
+              'stock-result))))
       (when-let* ((buffer (get-buffer "*Completions*")))
         (kill-buffer buffer)))
-    (should (= calls 0))
+    (should (= calls 1))
     (should
      (equal
       (nreverse events)
       '((display ("alpha" "zeta"))
-        (next 1)
         (submit
          "alpha"
          (:role command-interaction
           :command-interaction-kind repl
           :events (focus-entered)
-          :command-operation completion)
-         navigation))))))
+         :command-operation completion)
+         navigation help))))))
+
+(ert-deftest emacsvox-comint-input-ring-layers-on-stock-history-ui ()
+  "Interactive history uses the stock completion buffer and speaks one entry."
+  (let ((comint-input-ring (make-ring 3))
+        (ems--interactive-fn-name 'comint-dynamic-list-input-ring)
+        (origin (current-buffer))
+        (calls 0)
+        events)
+    (ring-insert comint-input-ring "older")
+    (ring-insert comint-input-ring "newer\ncontinued")
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'emacsvox-comint--submit)
+              (lambda (content facts occasion &optional icon &rest _)
+                (push (list content facts occasion icon) events))))
+          (should
+           (eq
+            (emacsvox--advice-comint-dynamic-list-input-ring-around
+             (lambda ()
+               (cl-incf calls)
+               (with-output-to-temp-buffer " *Input History*"
+                 (display-completion-list
+                  (list "newer\ncontinued" "older")))
+               ;; The Emacs 31 implementation changes the Lisp current buffer
+               ;; while constructing its history UI.
+               (set-buffer " *Input History*")
+               ;; The advice supplies this event without waiting for input.
+               (should
+                (eq (read-event) 'emacsvox-comint-nonblocking))
+               'stock-history))
+            'stock-history)))
+      (when-let* ((buffer (get-buffer " *Input History*")))
+        (kill-buffer buffer)))
+    (should (= calls 1))
+    (should (eq (current-buffer) origin))
+    (should
+     (equal
+      events
+      '(("newer\ncontinued"
+         (:role command-input
+          :command-interaction-kind repl
+          :events (focus-entered)
+          :command-operation history-navigation
+          :command-input-origin history)
+         navigation help))))))
 
 (ert-deftest emacsvox-comint-input-ring-selects-one-display-path ()
   "Input history replaces the stock UI only for interactive calls."
@@ -815,11 +861,18 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
   (with-temp-buffer
     (insert "xy")
     (goto-char (point-max))
-    (let ((ems--interactive-fn-name 'comint-delchar-or-maybe-eof)
+    (let ((process-marker (copy-marker (point-max)))
+          (ems--interactive-fn-name 'comint-delchar-or-maybe-eof)
           (calls 0)
           events)
       (cl-letf
-          (((symbol-function 'message)
+          (((symbol-function 'get-buffer-process)
+            (lambda (&rest _) 'test-process))
+           ((symbol-function 'process-mark)
+            (lambda (process)
+              (should (eq process 'test-process))
+              process-marker))
+           ((symbol-function 'message)
             (lambda (format-string &rest arguments)
               (push
                (list 'message
@@ -845,6 +898,61 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
         (nreverse events)
         '((message "Sending EOF to comint process")
           (original nil)))))))
+
+(ert-deftest emacsvox-comint-delete-at-eob-with-input-is-not-misreported-as-eof ()
+  "End of buffer is deletion when unsent input follows the process mark."
+  (with-temp-buffer
+    (insert "xy")
+    (goto-char (point-max))
+    (let ((process-marker (copy-marker (point-min)))
+          (ems--interactive-fn-name 'comint-delchar-or-maybe-eof)
+          events)
+      (cl-letf
+          (((symbol-function 'get-buffer-process)
+            (lambda (&rest _) 'test-process))
+           ((symbol-function 'process-mark)
+            (lambda (_process) process-marker))
+           ((symbol-function 'emacsvox-speak-edit-operation)
+            (lambda (operation) (push (list 'edit operation) events)))
+           ((symbol-function 'emacsvox-speak-char)
+            (lambda (&rest _) (push 'character events)))
+           ((symbol-function 'message)
+            (lambda (&rest _) (push 'message events))))
+        (emacsvox--advice-comint-delchar-or-maybe-eof-around
+         (lambda (&rest _) 'delete-result)
+         nil))
+      (should (equal (nreverse events) '((edit deletion) character))))))
+
+(ert-deftest emacsvox-comint-setup-leaves-undo-policy-to-comint ()
+  "Speech setup does not override a derived mode's undo policy."
+  (with-temp-buffer
+    (comint-mode)
+    (setq buffer-undo-list nil)
+    (emacsvox-comint-speech-setup)
+    (should-not buffer-undo-list)
+    (should
+     (eq
+      (lookup-key comint-mode-map (kbd "C-o"))
+      #'switch-to-completions))))
+
+(ert-deftest emacsvox-comint-header-line-separates-spoken-fields ()
+  "The Shell header does not concatenate time, buffer, directory, and state."
+  (with-temp-buffer
+    (comint-mode)
+    (rename-buffer "shell-header-test" t)
+    (let ((emacsvox-use-header-line t)
+          (emacsvox-comint-autospeak t)
+          (default-directory "/tmp/"))
+      (cl-letf (((symbol-function 'format-time-string)
+                 (lambda (&rest _) "12 34"))
+                ((symbol-function 'window-list)
+                 (lambda (&rest _) '(window-one))))
+        (emacsvox-comint-speech-setup)
+        (let ((rendered (eval (cadr (car header-line-format)))))
+          (should
+           (equal
+            (substring-no-properties rendered)
+            "12 34 shell-header-test /tmp/ Autospeak")))))))
 
 (provide 'emacsvox-comint-tests)
 ;;; emacsvox-comint-tests.el ends here
