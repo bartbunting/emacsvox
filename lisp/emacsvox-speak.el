@@ -716,6 +716,30 @@ with a long string of gibberish.")
    ((string-match-p emacsvox-decoration-rule line) 'decorative)
    ((string-match-p emacsvox-unspeakable-rule line) 'unspeakable)))
 
+(defun emacsvox-speak--visual-line-condition ()
+  "Return the blank condition at the current visual line, or nil.
+
+An empty visual segment counts only when its containing physical line is
+empty or whitespace-only.  This avoids treating the empty segment at a wrap
+boundary as a blank line."
+  (save-excursion
+    (beginning-of-visual-line)
+    (let ((start (point)))
+      (end-of-visual-line)
+      (let ((line (buffer-substring-no-properties start (point))))
+        (cond
+         ((string-empty-p line)
+          (let ((physical-line
+                 (buffer-substring-no-properties
+                  (line-beginning-position) (line-end-position))))
+            (cond
+             ((string-empty-p physical-line) 'empty)
+             ((string-match-p
+               emacsvox-speak-blank-line-regexp physical-line)
+              'whitespace-only))))
+         ((string-match-p emacsvox-speak-blank-line-regexp line)
+          'whitespace-only))))))
+
 (defun emacsvox-speak--line-condition-facts (condition)
   "Return current semantic facts extended with line CONDITION.
 

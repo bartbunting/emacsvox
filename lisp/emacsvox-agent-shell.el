@@ -79,6 +79,10 @@
                   "agent-shell-markdown" (&optional pos))
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
+(declare-function emacsvox-speak--present-line-condition
+                  "emacsvox-speak" (condition))
+(declare-function emacsvox-speak--visual-line-condition
+                  "emacsvox-speak" ())
 
 (defvar emacsvox-comint-autospeak)
 (defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
@@ -1840,41 +1844,23 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
 
 ;;;  Advice Agent-Shell Functions
 
-(defun emacsvox-agent-shell--blank-visual-line-pitch ()
-  "Return the Emacsvox blank-line pitch at the current visual line.
-Return nil outside agent-shell buffers or when the visual line contains
-non-whitespace text."
-  (when (derived-mode-p 'agent-shell-mode
-                        'agent-shell-viewport-view-mode
-                        'agent-shell-viewport-edit-mode)
-    (save-excursion
-      (beginning-of-visual-line)
-      (let ((start (point)))
-        (end-of-visual-line)
-        (let ((line (buffer-substring-no-properties start (point))))
-          (cond
-           ((string-empty-p line)
-            (let ((physical-line
-                   (buffer-substring-no-properties
-                    (line-beginning-position) (line-end-position))))
-              (cond
-               ((string-empty-p physical-line) 130.8)
-               ((string-match-p
-                 "\\`[[:space:]]+\\'" physical-line)
-                261.6))))
-           ((string-match-p "\\`[[:space:]]+\\'" line) 261.6)))))))
-
 (defun emacsvox-agent-shell--speak-visual-line-around
     (original-function &rest arguments)
-  "Add standard blank-line tones to visual-line speech in agent-shell."
-  (let ((pitch (emacsvox-agent-shell--blank-visual-line-pitch)))
-    (when pitch
+  "Add semantic blank-line presentation to visual speech in agent-shell."
+  (let ((condition
+         (and
+          (derived-mode-p
+           'agent-shell-mode
+           'agent-shell-viewport-view-mode
+           'agent-shell-viewport-edit-mode)
+          (emacsvox-speak--visual-line-condition))))
+    (when condition
       (tts-stop 'all))
     (prog1
         (emacsvox-agent-shell--call-with-vertical-block-entry
          original-function arguments)
-      (when pitch
-        (tts-tone pitch 150 'force)))))
+      (when condition
+        (emacsvox-speak--present-line-condition condition)))))
 
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)

@@ -1757,11 +1757,11 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should-not same-block-facts))))
 
 (ert-deftest emacsvox-agent-shell-visual-lines-cue-blank-content ()
-  "Visual-line speech should preserve Emacsvox's two blank-line pitches."
-  (dolist (case '((agent-shell-mode "" 130.8)
-                  (agent-shell-mode "  " 261.6)
-                  (agent-shell-viewport-view-mode "" 130.8)
-                  (agent-shell-viewport-edit-mode "\t" 261.6)
+  "Visual-line speech should submit Emacsvox's semantic blank conditions."
+  (dolist (case '((agent-shell-mode "" empty)
+                  (agent-shell-mode "  " whitespace-only)
+                  (agent-shell-viewport-view-mode "" empty)
+                  (agent-shell-viewport-edit-mode "\t" whitespace-only)
                   (agent-shell-mode "content" nil)
                   (fundamental-mode "" nil)))
     (let ((buffer (generate-new-buffer " *agent-shell-visual-line-test*"))
@@ -1779,9 +1779,16 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                       ((symbol-function 'tts-stop)
                        (lambda (&optional all)
                          (push (list 'stop all) events)))
+                      ((symbol-function
+                        'emacsvox-speak--present-line-condition)
+                       (lambda (condition)
+                         (push
+                          (list 'line-condition condition)
+                          events)))
                       ((symbol-function 'tts-tone)
-                       (lambda (pitch duration &optional force)
-                         (push (list 'tone pitch duration force) events)))
+                       (lambda (&rest _)
+                         (ert-fail
+                          "Visual line used a raw legacy tone")))
                       ((symbol-function 'emacsvox-icon) #'ignore))
               (emacsvox-speak-visual-line))
             (should
@@ -1790,7 +1797,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (if (nth 2 case)
                   `((stop all)
                     (speak)
-                    (tone ,(nth 2 case) 150 force))
+                    (line-condition ,(nth 2 case)))
                 '((speak))))))
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))

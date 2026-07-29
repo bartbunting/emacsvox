@@ -549,6 +549,29 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (dolist (line '("---" "!@#" "☃"))
       (should-not (emacsvox-speak--line-condition line)))))
 
+(ert-deftest emacsvox-speak-visual-line-detects-blank-conditions ()
+  "Visual-line classification distinguishes blank segments from wrap edges."
+  (dolist
+      (case
+       '(("" empty)
+         (" \t" whitespace-only)
+         ("content" nil)))
+    (with-temp-buffer
+      (insert (car case))
+      (goto-char (point-min))
+      (visual-line-mode 1)
+      (should
+       (eq
+        (emacsvox-speak--visual-line-condition)
+        (cadr case)))))
+  (with-temp-buffer
+    (insert "content")
+    (cl-letf
+        (((symbol-function 'beginning-of-visual-line)
+          (lambda (&rest _) (goto-char (point-max))))
+         ((symbol-function 'end-of-visual-line) #'ignore))
+      (should-not (emacsvox-speak--visual-line-condition)))))
+
 (ert-deftest emacsvox-speak-line-submits-first-class-condition-tones ()
   "Core line conditions compose with object facts and resolve to named tones."
   (emacsvox-test--with-transport-scheme

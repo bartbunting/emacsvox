@@ -62,6 +62,10 @@
 (declare-function notmuch-show-move-to-message-top "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
+(declare-function emacsvox-speak--present-line-condition
+                  "emacsvox-speak" (condition))
+(declare-function emacsvox-speak--visual-line-condition
+                  "emacsvox-speak" ())
 
 (defvar notmuch-archive-tags)
 (defvar notmuch-search-mode-map)
@@ -1047,37 +1051,19 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
      facts 'state-change 'open-object
      #'emacsvox-notmuch--speak-landed-message message)))
 
-(defun emacsvox-notmuch--blank-visual-line-pitch ()
-  "Return the Emacsvox blank-line pitch in Notmuch Show.
-Return nil outside `notmuch-show-mode' or when the current visual
-line contains non-whitespace text."
-  (when (eq major-mode 'notmuch-show-mode)
-    (save-excursion
-      (beginning-of-visual-line)
-      (let ((start (point)))
-        (end-of-visual-line)
-        (let ((line (buffer-substring-no-properties start (point))))
-          (cond
-           ((string-empty-p line)
-            (let ((physical-line
-                   (buffer-substring-no-properties
-                    (line-beginning-position) (line-end-position))))
-              (cond
-               ((string-empty-p physical-line) 130.8)
-               ((string-match-p "\\`[[:space:]]+\\'" physical-line)
-                261.6))))
-           ((string-match-p "\\`[[:space:]]+\\'" line) 261.6)))))))
-
 (defun emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
     (original &rest arguments)
-  "Add standard blank-line tones to visual-line speech in Notmuch Show."
-  (let ((pitch (emacsvox-notmuch--blank-visual-line-pitch)))
-    (when pitch
+  "Add semantic blank-line presentation to visual speech in Notmuch Show."
+  (let ((condition
+         (and
+          (eq major-mode 'notmuch-show-mode)
+          (emacsvox-speak--visual-line-condition))))
+    (when condition
       (tts-stop 'all))
     (prog1
         (apply original arguments)
-      (when pitch
-        (tts-tone pitch 150 'force)))))
+      (when condition
+        (emacsvox-speak--present-line-condition condition)))))
 
 (push
  '(emacsvox-speak-visual-line

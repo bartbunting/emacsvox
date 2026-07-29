@@ -104,9 +104,9 @@
         '((icon item) (speak "inbox, 42 messages")))))))
 
 (ert-deftest emacsvox-notmuch-show-visual-lines-cue-blank-content ()
-  "Visual-line speech should retain Emacsvox's blank-line tones."
-  (dolist (case '((notmuch-show-mode "" 130.8)
-                  (notmuch-show-mode "  " 261.6)
+  "Visual-line speech should submit Emacsvox's semantic blank conditions."
+  (dolist (case '((notmuch-show-mode "" empty)
+                  (notmuch-show-mode "  " whitespace-only)
                   (notmuch-show-mode "content" nil)
                   (fundamental-mode "" nil)))
     (with-temp-buffer
@@ -118,9 +118,12 @@
         (cl-letf (((symbol-function 'tts-stop)
                    (lambda (&optional all)
                      (push (list 'stop all) events)))
+                  ((symbol-function 'emacsvox-speak--present-line-condition)
+                   (lambda (condition)
+                     (push (list 'line-condition condition) events)))
                   ((symbol-function 'tts-tone)
-                   (lambda (pitch duration &optional force)
-                     (push (list 'tone pitch duration force) events))))
+                   (lambda (&rest _)
+                     (ert-fail "Visual line used a raw legacy tone"))))
           (emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
            (lambda (&rest _)
              (push '(original) events))))
@@ -130,7 +133,7 @@
           (if (nth 2 case)
               `((stop all)
                 (original)
-                (tone ,(nth 2 case) 150 force))
+                (line-condition ,(nth 2 case)))
             '((original)))))))))
 
 (defconst emacsvox-notmuch-test--search-result
