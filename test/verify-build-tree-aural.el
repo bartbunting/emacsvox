@@ -34,6 +34,7 @@
           emacsvox-aural-rules
           emacsvox-aural-resources
           emacsvox-aural-schemes
+          emacsvox-aural-profile-service
           emacsvox-aural-providers
           emacsvox-aural-compiler
           emacsvox-aural-source
@@ -73,8 +74,10 @@
           emacsvox-aural-record-presentation
           emacsvox-aural-spatial-clamp
           emacsvox-aural--rule-error
+          emacsvox-aural-rule-actions
           emacsvox-aural--resource-error
           emacsvox-aural--migrate-user-data-v1-to-v2
+          emacsvox-aural-current-profile-id
           emacsvox-aural-effective-resource-pack
           emacsvox-aural-compile-plan
           emacsvox-aural-capture-source-faces
@@ -87,6 +90,7 @@
           emacsvox-aural-semantics--set-entries
           emacsvox-aural-explanation--training-presented
           emacsvox-aural-editor--scope-label
+          emacsvox-aural-editor-open-prefilled-rule
           emacsvox-aural-simple-editor--humanize
           emacsvox-aural-doctor--finding
           emacsvox-aural-profiles--ids

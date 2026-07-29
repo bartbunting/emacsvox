@@ -141,7 +141,7 @@
     (should (eq emacsvox-aural-active-profile 'work))
     (should (eq (emacsvox-aural-profile-status 'work) 'modified))
     (should-not (emacsvox-aural-profile-current-p 'work))
-    (should (eq (emacsvox-aural-profiles--current-id) 'work))
+    (should (eq (emacsvox-aural-current-profile-id) 'work))
     (should
      (equal
       (aref (cadr (emacsvox-aural-profiles--row 'work)) 1)

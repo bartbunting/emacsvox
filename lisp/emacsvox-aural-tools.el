@@ -21,9 +21,9 @@
 (require 'emacsvox-aural-semantics)
 (require 'emacsvox-aural-explanation)
 
-(declare-function emacsvox-aural-editor--open-prefilled-rule
+(declare-function emacsvox-aural-editor-open-prefilled-rule
                   "emacsvox-aural-editor" (scope rule source-buffer))
-(declare-function emacsvox-aural-editor--open-without-rule
+(declare-function emacsvox-aural-editor-open-without-rule
                   "emacsvox-aural-editor" (scope rule-id source-buffer))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 
@@ -295,7 +295,7 @@ unsaved in the advanced rule editor so the selector can be reviewed or
            :match selector
            :render (list :content (list :voice voice)))))
     (require 'emacsvox-aural-editor)
-    (emacsvox-aural-editor--open-prefilled-rule scope rule source)
+    (emacsvox-aural-editor-open-prefilled-rule scope rule source)
     (message
      "Prepared %s voice override for %s; review it and press s to save"
      scope description)))
@@ -515,7 +515,7 @@ generated change opens unsaved in the advanced editor for review."
       (require 'emacsvox-aural-editor)
       (if (eq operation 'restore)
           (progn
-            (emacsvox-aural-editor--open-without-rule
+            (emacsvox-aural-editor-open-without-rule
              scope rule-id source)
             (message
              "Prepared removal of %s earcon override; press s to restore inherited behavior"
@@ -551,7 +551,7 @@ generated change opens unsaved in the advanced editor for review."
                   :id rule-id
                   :match selector
                   :render (list phase-key phase-data))))
-            (emacsvox-aural-editor--open-prefilled-rule
+            (emacsvox-aural-editor-open-prefilled-rule
              scope rule source)
             (message
              "Prepared %s %s-earcon override for %s; review it and press s to save"

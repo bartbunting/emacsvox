@@ -238,7 +238,7 @@
                       "animate"
                     "always (personal)")))
                ((symbol-function
-                 'emacsvox-aural-editor--open-prefilled-rule)
+                 'emacsvox-aural-editor-open-prefilled-rule)
                 (lambda (scope rule source-buffer)
                   (setq prepared
                         (list scope rule source-buffer)))))
@@ -702,7 +702,7 @@
                 (lambda (data facts context)
                   (setq previewed (list data facts context))))
                ((symbol-function
-                 'emacsvox-aural-editor--open-prefilled-rule)
+                 'emacsvox-aural-editor-open-prefilled-rule)
                 (lambda (scope rule source-buffer)
                   (setq prepared (list scope rule source-buffer)))))
             (emacsvox-aural-remap-earcon-at-point)
@@ -823,7 +823,7 @@
                ((symbol-function 'emacsvox-aural-preview-play-cues)
                 #'ignore)
                ((symbol-function
-                 'emacsvox-aural-editor--open-prefilled-rule)
+                 'emacsvox-aural-editor-open-prefilled-rule)
                 (lambda (scope rule source-buffer)
                   (setq prepared (list scope rule source-buffer)))))
             (emacsvox-aural-remap-earcon-at-point)
@@ -881,7 +881,7 @@
            ((symbol-function 'emacsvox-aural-preview-play-cues)
             #'ignore)
            ((symbol-function
-             'emacsvox-aural-editor--open-without-rule)
+             'emacsvox-aural-editor-open-without-rule)
             (lambda (scope rule-id source)
               (setq removed (list scope rule-id source)))))
         (emacsvox-aural-remap-earcon-at-point))
@@ -919,7 +919,7 @@
                   (lambda (&rest _) buffer)))
               (should
                (eq
-                (emacsvox-aural-editor--open-prefilled-rule
+                (emacsvox-aural-editor-open-prefilled-rule
                  'session new source)
                 buffer)))
             (with-current-buffer buffer
@@ -958,7 +958,7 @@
                   (lambda (&rest _) buffer)))
               (should
                (eq
-                (emacsvox-aural-editor--open-without-rule
+                (emacsvox-aural-editor-open-without-rule
                  'session
                  'session-remap-dired-item-earcon-before-item-cue
                  source)

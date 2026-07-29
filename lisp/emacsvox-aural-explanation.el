@@ -55,10 +55,6 @@
   "Training explanations waiting for the current command to finish.")
 
 (declare-function emacsvox-icon "emacsvox-sounds" (icon))
-(declare-function emacsvox-aural-editor--open-prefilled-rule
-                  "emacsvox-aural-editor" (scope rule source-buffer))
-(declare-function emacsvox-aural-editor--open-without-rule
-                  "emacsvox-aural-editor" (scope rule-id source-buffer))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
 (declare-function emacsvox-speak-mode-line "emacsvox-speak" ())
@@ -170,7 +166,7 @@ plan at point always supplies its actual occasion as the initial default."
           #'emacsvox-aural-action-id
           (cl-mapcan
            (lambda (rule)
-             (copy-sequence (emacsvox-aural-validation--rule-actions rule)))
+             (copy-sequence (emacsvox-aural-rule-actions rule)))
            rules)))
         (retained
          (mapcar

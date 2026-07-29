@@ -1154,7 +1154,7 @@ LABEL identifies the speech or cue being edited."
     (emacsvox-edit-aural-rules scope nil source-buffer)
     (get-buffer name)))
 
-(defun emacsvox-aural-editor--open-prefilled-rule
+(defun emacsvox-aural-editor-open-prefilled-rule
     (scope rule source-buffer)
   "Open SCOPE with unsaved RULE for SOURCE-BUFFER selected.
 
@@ -1192,7 +1192,11 @@ discard changes from an already open dirty editor."
           (goto-char position))))
     buffer))
 
-(defun emacsvox-aural-editor--open-without-rule
+(defalias
+  'emacsvox-aural-editor--open-prefilled-rule
+  #'emacsvox-aural-editor-open-prefilled-rule)
+
+(defun emacsvox-aural-editor-open-without-rule
     (scope rule-id source-buffer)
   "Open SCOPE with RULE-ID removed but unsaved for SOURCE-BUFFER.
 
@@ -1230,6 +1234,10 @@ This restores inherited behavior after the edited scope is saved."
             (when position
               (goto-char position))))))
     buffer))
+
+(defalias
+  'emacsvox-aural-editor--open-without-rule
+  #'emacsvox-aural-editor-open-without-rule)
 
 (defun emacsvox-edit-aural-rules (scope &optional scheme source-buffer)
   "Open an accessible rule editor for SCOPE.

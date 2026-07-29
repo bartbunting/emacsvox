@@ -17,13 +17,11 @@
 (require 'tabulated-list)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-explanation)
+(require 'emacsvox-aural-profile-service)
 
 (defvar emacsvox-keymap)
 (defvar emacsvox-prefix)
 (defvar tts-speaker-process)
-
-(declare-function
- emacsvox-aural-profiles--current-id "emacsvox-aural-profiles")
 
 (cl-defstruct
     (emacsvox-aural-doctor-finding
@@ -134,9 +132,8 @@
 
 (defun emacsvox-aural-doctor--profile-finding ()
   "Report saved profiles and selected-profile status."
-  (require 'emacsvox-aural-profiles)
   (let ((count (hash-table-count emacsvox-aural-profile-registry))
-        (current (emacsvox-aural-profiles--current-id)))
+        (current (emacsvox-aural-current-profile-id)))
     (emacsvox-aural-doctor--finding
      'presentation-profile 'info "Presentation profile"
      (cond

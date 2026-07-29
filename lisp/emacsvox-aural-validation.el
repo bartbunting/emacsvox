@@ -24,22 +24,6 @@
   scheme valid errors warnings missing-assets unavailable-voices
   unreachable-rules ambiguous-ties disabled-rules semantic-diagnostics)
 
-(defun emacsvox-aural-validation--all-phase-actions (operations)
-  "Return every action introduced by phase OPERATIONS."
-  (append
-   (emacsvox-aural-phase-operations-replace operations)
-   (emacsvox-aural-phase-operations-prepend operations)
-   (emacsvox-aural-phase-operations-append operations)))
-
-(defun emacsvox-aural-validation--rule-actions (rule)
-  "Return every ordered action introduced by RULE."
-  (let ((contribution (emacsvox-aural-rule-contribution rule)))
-    (append
-     (emacsvox-aural-validation--all-phase-actions
-      (emacsvox-aural-contribution-before contribution))
-     (emacsvox-aural-validation--all-phase-actions
-      (emacsvox-aural-contribution-after contribution)))))
-
 (defun emacsvox-aural-validation--content-patch-empty-p (patch)
   "Return non-nil when content PATCH cannot change presentation."
   (not
@@ -139,7 +123,7 @@
          voices)
     (when (emacsvox-aural-content-patch-voice-set-p content)
       (push (emacsvox-aural-content-patch-voice content) voices))
-    (dolist (action (emacsvox-aural-validation--rule-actions rule))
+    (dolist (action (emacsvox-aural-rule-actions rule))
       (when (emacsvox-aural-action-voice action)
         (push (emacsvox-aural-action-voice action) voices)))
     voices))
@@ -164,7 +148,7 @@
   "Return unique cue names referenced by RULES."
   (let (cues)
     (dolist (rule rules)
-      (dolist (action (emacsvox-aural-validation--rule-actions rule))
+      (dolist (action (emacsvox-aural-rule-actions rule))
         (when (eq (emacsvox-aural-action-kind action) 'cue)
           (push (emacsvox-aural-action-cue action) cues))))
     (delete-dups cues)))

@@ -15,6 +15,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-profile-service)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-description)
@@ -23,16 +24,14 @@
   "Return registered profile identifiers in display order."
   (mapcar #'intern (emacsvox-aural-profile-candidates)))
 
-(defun emacsvox-aural-profiles--current-id ()
-  "Return the selected presentation-profile identifier, or nil."
-  (and
-   (emacsvox-aural-profile-entry emacsvox-aural-active-profile)
-   emacsvox-aural-active-profile))
+(defalias
+  'emacsvox-aural-profiles--current-id
+  #'emacsvox-aural-current-profile-id)
 
 (defun emacsvox-aural-profiles-status ()
   "Return concise status for presentation profiles."
   (let ((count (hash-table-count emacsvox-aural-profile-registry))
-        (current (emacsvox-aural-profiles--current-id)))
+        (current (emacsvox-aural-current-profile-id)))
     (cond
      (current
       (format
@@ -98,7 +97,7 @@
   (emacsvox-aural-ui-refresh-tabulated
    #'emacsvox-aural-profiles--set-entries
    id
-   (emacsvox-aural-profiles--current-id)))
+   (emacsvox-aural-current-profile-id)))
 
 (defun emacsvox-aural-profiles--at-point-or-read ()
   "Return the profile at point or prompt for one."
@@ -432,7 +431,7 @@ MUTATION."
       (emacsvox-aural-profiles-mode)
       (emacsvox-aural-inspection-attach-source source)
       (emacsvox-aural-profiles-refresh
-       (or profile (emacsvox-aural-profiles--current-id))))
+       (or profile (emacsvox-aural-current-profile-id))))
     (emacsvox-aural-ui-pop-to-buffer buffer)
     (if (tabulated-list-get-id)
         (when (called-interactively-p 'interactive)

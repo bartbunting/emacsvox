@@ -82,6 +82,7 @@ emacsvox-aural-spatial.elc \
 emacsvox-aural-rules.elc \
 emacsvox-aural-resources.elc \
 emacsvox-aural-schemes.elc \
+emacsvox-aural-profile-service.elc \
 emacsvox-aural-providers.elc \
 emacsvox-aural-compiler.elc \
 emacsvox-aural-source.elc \
@@ -349,6 +350,7 @@ emacsvox-aural-spatial.elc: emacsvox-aural.elc
 emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
 emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
+emacsvox-aural-profile-service.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-history.elc: \
 emacsvox-aural.elc emacsvox-aural-concrete.elc
 emacsvox-aural-providers.elc: emacsvox-aural-schemes.elc
@@ -415,10 +417,12 @@ emacsvox-aural-editor.elc
 emacsvox-aural-simple-editor.elc: \
 emacsvox-aural-editor.elc emacsvox-aural-scheme-manager.elc
 emacsvox-aural-doctor.elc: \
-emacsvox-aural-ui.elc emacsvox-aural-explanation.elc
+emacsvox-aural-ui.elc emacsvox-aural-explanation.elc \
+emacsvox-aural-profile-service.elc
 emacsvox-aural-profiles.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
-emacsvox-aural-inspection.elc emacsvox-aural-description.elc
+emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
+emacsvox-aural-profile-service.elc
 emacsvox-aural-voice-palettes.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \

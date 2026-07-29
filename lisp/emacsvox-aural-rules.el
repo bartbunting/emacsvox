@@ -890,12 +890,21 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
      :anchor anchor
      :source rule-id)))
 
-(defun emacsvox-aural--phase-actions (operations)
+(defun emacsvox-aural-phase-actions (operations)
   "Return every action introduced by phase OPERATIONS."
   (append
    (emacsvox-aural-phase-operations-replace operations)
    (emacsvox-aural-phase-operations-prepend operations)
    (emacsvox-aural-phase-operations-append operations)))
+
+(defun emacsvox-aural-rule-actions (rule)
+  "Return every ordered action introduced by compiled RULE."
+  (let ((contribution (emacsvox-aural-rule-contribution rule)))
+    (append
+     (emacsvox-aural-phase-actions
+      (emacsvox-aural-contribution-before contribution))
+     (emacsvox-aural-phase-actions
+      (emacsvox-aural-contribution-after contribution)))))
 
 (defun emacsvox-aural--validate-template-guarantees
     (selector contribution rule-id)
@@ -906,9 +915,9 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
     (dolist
         (action
          (append
-          (emacsvox-aural--phase-actions
+          (emacsvox-aural-phase-actions
            (emacsvox-aural-contribution-before contribution))
-          (emacsvox-aural--phase-actions
+          (emacsvox-aural-phase-actions
            (emacsvox-aural-contribution-after contribution))))
       (dolist (field (emacsvox-aural-action-template-fields action))
         (unless

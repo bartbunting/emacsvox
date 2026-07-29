@@ -107,7 +107,7 @@ When ALLOW-EMPTY is non-nil, return nil for an empty answer."
    (cl-some
     (lambda (action)
       (memq semantic (emacsvox-aural-action-template-fields action)))
-    (emacsvox-aural-validation--rule-actions rule))))
+    (emacsvox-aural-rule-actions rule))))
 
 (defun emacsvox-aural-semantics--rules-for (semantic)
   "Return registered presentation and rule identifiers using SEMANTIC."
