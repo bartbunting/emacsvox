@@ -350,7 +350,8 @@ emacsvox-aural-spatial.elc: emacsvox-aural.elc
 emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
 emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
-emacsvox-aural-profile-service.elc: emacsvox-aural-schemes.elc
+emacsvox-aural-profile-service.elc: \
+emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 emacsvox-aural-history.elc: \
 emacsvox-aural.elc emacsvox-aural-concrete.elc
 emacsvox-aural-providers.elc: emacsvox-aural-schemes.elc

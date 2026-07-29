@@ -58,6 +58,18 @@
       (error
        "Aural history boundary loaded higher layer %S"
        feature)))
+  (load
+   (expand-file-name "emacsvox-aural-schemes.elc" build-directory)
+   nil nil)
+  (when (featurep 'emacsvox-aural-profile-service)
+    (error "Aural scheme storage loaded profile coordination"))
+  (dolist
+      (function
+       '(emacsvox-aural-capture-profile-data
+         emacsvox-aural-apply-profile
+         emacsvox-aural-profile-status))
+    (unless (autoloadp (symbol-function function))
+      (error "Aural scheme compatibility entry is not autoloaded: %S" function)))
   (dolist
       (library
        '("emacsvox-aural-profile-service"
