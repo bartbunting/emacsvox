@@ -325,7 +325,12 @@ plan at point always supplies its actual occasion as the initial default."
      ('pause
       (format
        "pause for %s seconds"
-       (emacsvox-aural-concrete-action-duration action))))
+       (emacsvox-aural-concrete-action-duration action)))
+     ('tone
+      (format
+       "play the %s tone"
+       (emacsvox-aural-humanize
+        (emacsvox-aural-concrete-action-tone action)))))
    (pcase (emacsvox-aural-concrete-action-anchor action)
      ('object " once for the object")
      ('run " for this formatting run")

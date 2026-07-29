@@ -80,6 +80,23 @@
        '(:role heading)
        '(:mode org-mode :occasion navigation))))))
 
+(ert-deftest emacsvox-aural-rules-compile-named-tone-actions ()
+  "Tone actions retain a backend-independent resource name."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'blank-line
+           '(:role heading :state folded)
+           '(:before
+             ((:id blank-tone :kind tone :tone line-empty)))))
+         (action
+          (car
+           (emacsvox-aural-phase-operations-append
+            (emacsvox-aural-contribution-before
+             (emacsvox-aural-rule-contribution rule))))))
+    (should (eq (emacsvox-aural-action-kind action) 'tone))
+    (should (eq (emacsvox-aural-action-tone action) 'line-empty))
+    (should-not (emacsvox-aural-action-duration action))))
+
 (ert-deftest emacsvox-aural-rules-reject-unsafe-or-unguaranteed-templates ()
   "Templates accept only registered, selector-guaranteed semantic fields."
   (dolist
@@ -106,6 +123,11 @@
          (:before
           ((:id pause-with-volume :kind pause :duration 10
             :volume 1)))
+         (:before
+          ((:id tone-with-duration :kind tone :tone line-empty
+            :duration 10)))
+         (:before
+          ((:id unnamed-tone :kind tone)))
          (:before
           ((:id ambiguous-cue :kind cue
             :cue item :name button)))))

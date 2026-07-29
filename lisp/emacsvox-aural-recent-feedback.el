@@ -53,6 +53,13 @@
      (eq (emacsvox-aural-concrete-action-kind action) 'cue))
    (emacsvox-aural-recent-feedback--actions record)))
 
+(defun emacsvox-aural-recent-feedback--tones (record)
+  "Return the concrete tone actions from RECORD."
+  (cl-remove-if-not
+   (lambda (action)
+     (eq (emacsvox-aural-concrete-action-kind action) 'tone))
+   (emacsvox-aural-recent-feedback--actions record)))
+
 (defun emacsvox-aural-recent-feedback--clean-text (text &optional width)
   "Return single-line TEXT, optionally truncated to WIDTH."
   (let ((text
@@ -98,6 +105,15 @@
            (emacsvox-aural-concrete-action-text action)))
         speech ", ")))
      ((emacsvox-aural-recent-feedback--cues record) "Earcon only")
+     ((emacsvox-aural-recent-feedback--tones record)
+      (format
+       "Tone: %s"
+       (mapconcat
+        (lambda (action)
+          (emacsvox-aural-humanize
+           (emacsvox-aural-concrete-action-tone action)))
+        (emacsvox-aural-recent-feedback--tones record)
+        ", ")))
      ((cl-some
        (lambda (action)
          (eq (emacsvox-aural-concrete-action-kind action) 'pause))

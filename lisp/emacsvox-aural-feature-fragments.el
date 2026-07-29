@@ -765,6 +765,11 @@ with the active configuration.  EXAMPLE-ID selects a simulation directly."
      (format
       "%s second pause"
       (emacsvox-aural-action-duration action)))
+    ('tone
+     (format
+      "%s tone"
+      (emacsvox-aural-humanize
+       (emacsvox-aural-action-tone action))))
     (_
      (emacsvox-aural-humanize
       (emacsvox-aural-action-kind action)))))

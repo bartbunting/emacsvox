@@ -7,7 +7,7 @@
 
 * Using Aural Presentation Schemes
 
-A semantic fact says what an object or event means.  A scheme decides whether that fact is conveyed by speech, voice, a cue, a pause, spatial placement, or a composition of those modalities.  Modules therefore do not need to agree on one preferred presentation.
+A semantic fact says what an object or event means.  A scheme decides whether that fact is conveyed by speech, voice, a cue, a tone, a pause, spatial placement, or a composition of those modalities.  Modules therefore do not need to agree on one preferred presentation.
 
 Exactly one scheme is active globally.  It is the base recipe: named presentation rules plus optional default sound-pack and voice-palette providers.  Core and integration libraries may register read-only built-in schemes; users provide editable personal schemes.  Entering a mode never silently selects a scheme.  Every presentation consults the active scheme, but only matching selectors contribute.  Applying a saved profile may explicitly select its scheme.  Automatic module compatibility, optional presentation fragments, and overrides are separate layers.
 
@@ -75,7 +75,7 @@ A scheme contains =:schema-version=, =:id=, nonempty =:summary=, optional =:pare
 
 Selectors use =:role=, =:event= or =:events=, =:state= or =:states=, registered attribute keywords, =:requires= for registered attributes that must exist without fixing their value, =:module=, =:mode=, =:occasion=, =:legacy-cue=, =:legacy-face=, and =:legacy-personality=.  Unknown semantics, attributes, cues, voices, providers, fields, or schema versions fail validation.  Singular and plural state and event forms are canonicalized, range-local scalar facts override base facts, and local state and event sets compose with base sets.  Explanation displays this same authoritative fact plist.  Declared role, occasion, and phase contracts reject impossible selectors.  Validation warns about deprecated semantic aliases and rules whose fallback selectors overlap more-specific rules.
 
-Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A pause supplies a nonnegative =:duration=.  Optional =:anchor= is =object=, =run=, or =transition=.  Semantic rules default to one action per object; compatibility face and personality rules default to one per formatting run.  A before transition action occurs when entering matching presentation and an after transition action when leaving it.  Action IDs are the handles used by later =:remove= operations.
+Ordered actions require an =:id= and =:kind=.  A speech action supplies either literal =:text= or a safe =:text-template= such as ="Heading {level}"=, and may supply =:voice=, =:volume=, and =:space=.  A template can name only =role= or registered attributes, and its selector must guarantee every field by exact match or =:requires=.  Templates perform substitution only; they cannot evaluate Lisp.  A cue action supplies a registered =:cue= and may supply =:volume= and =:space=.  A tone action supplies a registered =:tone=; its pitch, duration, and dispatch behavior are frozen from that named resource.  A pause supplies a nonnegative =:duration=.  Optional =:anchor= is =object=, =run=, or =transition=.  Semantic rules default to one action per object; compatibility face and personality rules default to one per formatting run.  A before transition action occurs when entering matching presentation and an after transition action when leaving it.  Action IDs are the handles used by later =:remove= operations.
 
 * Module Author Reference
 
@@ -410,6 +410,18 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 | =y-answer= | =cue= | =core= | - | The letter Y answer was selected |
 | =yank-object= | =cue= | =core= | - | Content was inserted from saved text |
 | =yes-answer= | =cue= | =core= | - | An affirmative answer was selected |
+
+* Tone Author Reference
+
+A tone action names a registered tone with =:tone=.  The rule remains backend-independent; concrete compilation freezes the registered pitch, duration, and dispatch behavior before queueing.  Tones use the speech server protocol and are independent of auditory-icon enablement.  Register new stable tone names with =emacsvox-aural-register-tone= rather than putting raw frequencies in scheme rules.
+
+| Identifier | Pitch (Hz) | Duration (ms) | Force | Owner | Intent |
+|------------+------------+---------------+-------+-------+--------|
+| =line-decoration= | =1047= | =150= | =t= | =core= | A decorative punctuation line was reached |
+| =line-empty= | =130.8= | =150= | =t= | =core= | An empty display line was reached |
+| =line-separator= | =523.3= | =150= | =t= | =core= | A horizontal separator line was reached |
+| =line-unspeakable= | =2093= | =150= | =t= | =core= | A nonempty line with no speakable content was reached |
+| =line-whitespace= | =261.6= | =150= | =t= | =core= | A display line containing only whitespace was reached |
 
 * Voice Palette Author Reference
 

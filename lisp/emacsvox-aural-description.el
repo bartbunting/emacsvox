@@ -135,6 +135,13 @@
         (format
          "%s: pause %s"
          (emacsvox-aural-concrete-action-id action)
+         (emacsvox-aural-concrete-action-duration action)))
+       ('tone
+        (format
+         "%s: tone %s at %s Hz for %s ms"
+         (emacsvox-aural-concrete-action-id action)
+         (emacsvox-aural-concrete-action-tone action)
+         (emacsvox-aural-concrete-action-pitch action)
          (emacsvox-aural-concrete-action-duration action))))
      spatial
      volume

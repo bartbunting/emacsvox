@@ -6,9 +6,10 @@
 
 ;;; Commentary:
 
-;; Register semantic cue names, sound resource packs, module resource overlays,
-;; requirement profiles, and device-independent voice palettes.  Resource
-;; resolution remains independent of local-player and speech-server protocols.
+;; Register semantic cue and tone names, sound resource packs, module resource
+;; overlays, requirement profiles, and device-independent voice palettes.
+;; Resource resolution remains independent of local-player and speech-server
+;; protocols.
 
 ;;; Code:
 
@@ -34,6 +35,12 @@
      (:constructor emacsvox-aural--make-cue))
   "A named non-speech presentation cue."
   id summary kind fallback owner)
+
+(cl-defstruct
+    (emacsvox-aural-tone
+     (:constructor emacsvox-aural--make-tone))
+  "A named speech-server tone."
+  id summary pitch duration force owner)
 
 (cl-defstruct
     (emacsvox-aural-requirement-profile
@@ -69,6 +76,9 @@
 
 (defvar emacsvox-aural-cue-registry (make-hash-table :test #'eq)
   "Map cue identifiers to `emacsvox-aural-cue' records.")
+
+(defvar emacsvox-aural-tone-registry (make-hash-table :test #'eq)
+  "Map tone identifiers to `emacsvox-aural-tone' records.")
 
 (defvar emacsvox-aural-requirement-profile-registry
   (make-hash-table :test #'eq)
@@ -332,6 +342,24 @@ themed overrides below an active sound pack."
     voice-mail warn-user window-resize y-answer yank-object yes-answer)
   "The 55 cues shared by the bundled chimes and 3d resource packs.")
 
+(defconst emacsvox-aural-default-tone-definitions
+  '((line-empty
+     "An empty display line was reached"
+     130.8 150 t)
+    (line-whitespace
+     "A display line containing only whitespace was reached"
+     261.6 150 t)
+    (line-separator
+     "A horizontal separator line was reached"
+     523.3 150 t)
+    (line-decoration
+     "A decorative punctuation line was reached"
+     1047 150 t)
+    (line-unspeakable
+     "A nonempty line with no speakable content was reached"
+     2093 150 t))
+  "Built-in tones matching the established line-presentation signals.")
+
 (defconst emacsvox-aural-default-voice-entries
   '((animate . voice-animate)
     (animate-extra . voice-animate-extra)
@@ -376,6 +404,37 @@ themed overrides below an active sound pack."
          (emacsvox-aural--make-cue
           :id id :summary summary :kind kind :fallback fallback :owner owner)))
     (puthash id record emacsvox-aural-cue-registry)
+    record))
+
+(cl-defun emacsvox-aural-register-tone
+    (id &key summary pitch duration force (owner 'core))
+  "Register tone ID with SUMMARY, PITCH, DURATION, FORCE, and OWNER.
+
+PITCH is measured in hertz and DURATION in milliseconds.  Non-nil FORCE
+requests immediate protocol dispatch after the tone."
+  (emacsvox-aural--validate-id id "Tone identifier")
+  (emacsvox-aural--validate-summary summary (format "Tone %S" id))
+  (unless (and (numberp pitch) (> pitch 0))
+    (emacsvox-aural--resource-error
+     "Tone %S pitch must be a positive number: %S" id pitch))
+  (unless (and (numberp duration) (>= duration 0))
+    (emacsvox-aural--resource-error
+     "Tone %S duration must be nonnegative: %S" id duration))
+  (unless (booleanp force)
+    (emacsvox-aural--resource-error
+     "Tone %S force must be boolean: %S" id force))
+  (emacsvox-aural--validate-id owner (format "Tone owner for %S" id))
+  (when (gethash id emacsvox-aural-tone-registry)
+    (emacsvox-aural--resource-error "Tone is already registered: %S" id))
+  (let ((record
+         (emacsvox-aural--make-tone
+          :id id
+          :summary summary
+          :pitch pitch
+          :duration duration
+          :force force
+          :owner owner)))
+    (puthash id record emacsvox-aural-tone-registry)
     record))
 
 (cl-defun emacsvox-aural-register-requirement-profile
@@ -813,6 +872,18 @@ BUILT-IN and SOURCE become immutable management metadata on the result."
 (defun emacsvox-aural-cue (id)
   "Return registered cue ID, or nil."
   (gethash id emacsvox-aural-cue-registry))
+
+(defun emacsvox-aural-tone (id)
+  "Return registered tone ID, or nil."
+  (gethash id emacsvox-aural-tone-registry))
+
+(defun emacsvox-aural-tone-candidates ()
+  "Return registered tone identifiers as sorted strings."
+  (let (ids)
+    (maphash
+     (lambda (id _) (push (symbol-name id) ids))
+     emacsvox-aural-tone-registry)
+    (sort ids #'string-lessp)))
 
 (defun emacsvox-aural-requirement-profile (id)
   "Return registered requirement profile ID, or nil."
@@ -1536,7 +1607,7 @@ PATH protects this helper from invalid inheritance cycles."
        (string-lessp (symbol-name left) (symbol-name right))))))
 
 (defun emacsvox-aural-validate-resource-registry ()
-  "Validate cue, profile, pack, and voice-palette cross-references."
+  "Validate cue, tone, profile, pack, and voice-palette cross-references."
   (maphash
    (lambda (id _cue)
      (let ((current id)
@@ -1620,7 +1691,7 @@ PATH protects this helper from invalid inheritance cycles."
   t)
 
 (defun emacsvox-aural--register-resource-vocabulary ()
-  "Register bundled cue vocabulary, profiles, and default voice palette."
+  "Register bundled cue and tone vocabularies, profiles, and voice palette."
   (dolist (definition emacsvox-aural--legacy-cue-definitions)
     (unless (emacsvox-aural-cue (car definition))
       (emacsvox-aural-register-cue
@@ -1629,6 +1700,14 @@ PATH protects this helper from invalid inheritance cycles."
     (unless (emacsvox-aural-cue (car definition))
       (emacsvox-aural-register-cue
        (car definition) :summary (cadr definition) :kind 'prompt)))
+  (dolist (definition emacsvox-aural-default-tone-definitions)
+    (unless (emacsvox-aural-tone (car definition))
+      (emacsvox-aural-register-tone
+       (car definition)
+       :summary (nth 1 definition)
+       :pitch (nth 2 definition)
+       :duration (nth 3 definition)
+       :force (nth 4 definition))))
   (dolist
       (definition
        '((emacsvox "Legacy Emacsvox identity cue" startup)

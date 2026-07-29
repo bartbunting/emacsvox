@@ -434,7 +434,7 @@ LABEL identifies the speech or cue being edited."
   (let* ((kind
           (intern
            (completing-read
-            "Action kind: " '("speech" "cue" "pause")
+            "Action kind: " '("speech" "cue" "pause" "tone")
             nil 'must-match)))
          (id
           (intern
@@ -481,7 +481,17 @@ LABEL identifies the speech or cue being edited."
         action
         (plist-put
          action :duration
-         (read-number "Pause duration in milliseconds: " 50)))))
+         (read-number "Pause duration in milliseconds: " 50))))
+      ('tone
+       (setq
+        action
+        (plist-put
+         action :tone
+         (intern
+          (completing-read
+           "Named tone: "
+           (emacsvox-aural-tone-candidates)
+           nil 'must-match))))))
     (when (memq kind '(speech cue))
       (when-let* ((space
                    (emacsvox-aural-editor--read-space
@@ -1068,7 +1078,8 @@ LABEL identifies the speech or cue being edited."
      (concat
       "Aural Presentation Editor\n\n"
       "Each rule has guided semantic/context selectors and explicit before,\n"
-      "content, and after phases.  Ordered actions are speech, cues, or pauses.\n"
+      "content, and after phases.  Ordered actions are speech, cues, pauses,\n"
+      "or named tones.\n"
       "Open a different editor buffer to choose another persistence scope.\n\n"
       "n add rule          RET or e edit rule\n"
       "c copy rule         d delete rule\n"

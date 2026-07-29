@@ -315,6 +315,11 @@ RULE-INDEX associates the line with a working declarative rule."
           (plist-get action :cue))))
        ('pause
         (format "pause %s milliseconds" (plist-get action :duration)))
+       ('tone
+        (format
+         "play the %s tone"
+         (emacsvox-aural-simple-editor--humanize
+          (plist-get action :tone))))
        (_ "advanced action"))
      placement
      lifetime)))
@@ -398,7 +403,7 @@ RULE-INDEX associates the line with a working declarative rule."
 (defun emacsvox-aural-simple-editor--advanced-action-p (action)
   "Return non-nil when ACTION needs advanced editing."
   (or
-   (eq (plist-get action :kind) 'pause)
+   (not (memq (plist-get action :kind) '(speech cue)))
    (plist-member action :text-template)
    (plist-member action :voice)
    (plist-member action :volume)))

@@ -498,6 +498,13 @@ or a command string understood by the selected speech server."
      (emacsvox-aural-sample-id pack resolved-cue resource)
      resolved-cue)))
 
+(defun emacsvox-aural--resolve-tone (name)
+  "Return the registered concrete tone named NAME."
+  (or
+   (emacsvox-aural-tone name)
+   (emacsvox-aural--transport-error
+    "Unknown concrete tone: %S" name)))
+
 (defun emacsvox-aural--spatial-degradation
     (reason requested balance capability &optional extra)
   "Return one spatial degradation record.
@@ -716,7 +723,20 @@ according to `emacsvox-aural-unsupported-volume-policy'."
       :kind 'pause
       :duration (emacsvox-aural-action-duration action)
       :source (emacsvox-aural-action-source action)
-      :anchor (emacsvox-aural-action-anchor action))))))
+      :anchor (emacsvox-aural-action-anchor action)))
+    ('tone
+     (let ((tone
+            (emacsvox-aural--resolve-tone
+             (emacsvox-aural-action-tone action))))
+       (emacsvox-aural--make-concrete-action
+        :id (emacsvox-aural-action-id action)
+        :kind 'tone
+        :tone (emacsvox-aural-tone-id tone)
+        :pitch (emacsvox-aural-tone-pitch tone)
+        :duration (emacsvox-aural-tone-duration tone)
+        :force (emacsvox-aural-tone-force tone)
+        :source (emacsvox-aural-action-source action)
+        :anchor (emacsvox-aural-action-anchor action)))))))
 
 (defun emacsvox-aural--compile-concrete-actions
     (actions facts pack palette cue-target)

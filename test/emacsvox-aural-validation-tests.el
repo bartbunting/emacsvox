@@ -113,6 +113,32 @@
       (should-not (emacsvox-aural-validation-report-valid report))
       (should (emacsvox-aural-validation-report-errors report)))))
 
+(ert-deftest emacsvox-aural-validation-reports-unavailable-tones ()
+  "Validation rejects declarative actions naming unregistered tones."
+  (emacsvox-test--with-aural-validation
+    (emacsvox-aural-register-scheme
+     '(:schema-version 1
+       :id missing-tone
+       :summary "Missing tone"
+       :parent default
+       :rules
+       ((:id line
+         :match (:role heading)
+         :render
+         (:before
+          ((:id signal :kind tone :tone not-registered))))))
+     :source "test")
+    (let ((report (emacsvox-aural-validate-scheme 'missing-tone)))
+      (should-not (emacsvox-aural-validation-report-valid report))
+      (should
+       (equal
+        (emacsvox-aural-validation-report-unavailable-tones report)
+        '(not-registered)))
+      (should
+       (member
+        "Unavailable tones: (not-registered)"
+        (emacsvox-aural-validation-report-errors report))))))
+
 (provide 'emacsvox-aural-validation-tests)
 
 ;;; emacsvox-aural-validation-tests.el ends here

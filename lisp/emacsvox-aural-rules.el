@@ -36,8 +36,8 @@
   "Resolver origin layers ordered from weakest to strongest.")
 
 (defconst emacsvox-aural-action-kinds
-  '(speech cue pause)
-  "Action kinds supported by the initial pure render-plan engine.")
+  '(speech cue pause tone)
+  "Action kinds supported by the pure render-plan engine.")
 
 (defconst emacsvox-aural-action-anchors
   '(object run transition)
@@ -81,7 +81,7 @@
      (:constructor emacsvox-aural--make-action))
   "A validated backend-independent action."
   id kind text text-template template-fields cue duration voice volume space
-  anchor source)
+  anchor source tone)
 
 (cl-defstruct
     (emacsvox-aural-phase-operations
@@ -791,13 +791,14 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
          (text (plist-get data :text))
          (text-template (plist-get data :text-template))
          (cue (or (plist-get data :cue) (plist-get data :name)))
+         (tone (plist-get data :tone))
          (duration (plist-get data :duration))
          (voice (plist-get data :voice))
          (volume (plist-get data :volume))
          (space (plist-get data :space))
          (anchor (or (plist-get data :anchor) default-anchor))
          (allowed
-          '(:id :kind :text :text-template :cue :name :duration
+          '(:id :kind :text :text-template :cue :name :tone :duration
             :voice :volume :space :anchor))
          (unknown
           (cl-loop
@@ -819,6 +820,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
                  :anchor))
               ('cue '(:id :kind :cue :name :volume :space :anchor))
               ('pause '(:id :kind :duration :anchor))
+              ('tone '(:id :kind :tone :anchor))
               (_ allowed)))
            (incompatible
             (cl-loop
@@ -856,7 +858,10 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
       ('pause
        (unless (and (numberp duration) (>= duration 0))
          (emacsvox-aural--rule-error
-          "Pause action %S requires nonnegative :duration" id))))
+          "Pause action %S requires nonnegative :duration" id)))
+      ('tone
+       (emacsvox-aural--require-symbol
+        tone (format "Tone for action %S" id))))
     (when (and volume (not (numberp volume)))
       (emacsvox-aural--rule-error
        "Action volume must be numeric for %S" id))
@@ -883,6 +888,7 @@ DEFAULT-ANCHOR is inferred from the rule selector when DATA omits `:anchor'."
      :text-template text-template
      :template-fields template-fields
      :cue cue
+     :tone tone
      :duration duration
      :voice voice
      :volume volume

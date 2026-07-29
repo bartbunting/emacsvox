@@ -150,6 +150,11 @@
        "template")))
     ('pause
      (format "pause %s" (plist-get action :duration)))
+    ('tone
+     (format
+      "tone %s"
+      (emacsvox-aural-humanize
+       (plist-get action :tone))))
     (_ "action")))
 
 (defun emacsvox-aural-overrides--actions-summary (actions)

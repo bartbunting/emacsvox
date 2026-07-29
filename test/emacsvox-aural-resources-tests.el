@@ -158,6 +158,44 @@
         (cadr definition)))))
   (should-not (memq 'shutdown emacsvox-aural-legacy-complete-cues)))
 
+(ert-deftest emacsvox-aural-resources-register-default-line-tones ()
+  "Built-in line tones retain the existing pitches and durations by name."
+  (should
+   (equal
+    (emacsvox-aural-tone-candidates)
+    '("line-decoration" "line-empty" "line-separator"
+      "line-unspeakable" "line-whitespace")))
+  (dolist
+      (expected
+       '((line-empty 130.8 150 t)
+         (line-whitespace 261.6 150 t)
+         (line-separator 523.3 150 t)
+         (line-decoration 1047 150 t)
+         (line-unspeakable 2093 150 t)))
+    (let ((tone (emacsvox-aural-tone (car expected))))
+      (should tone)
+      (should (= (emacsvox-aural-tone-pitch tone) (nth 1 expected)))
+      (should (= (emacsvox-aural-tone-duration tone) (nth 2 expected)))
+      (should (eq (emacsvox-aural-tone-force tone) (nth 3 expected))))))
+
+(ert-deftest emacsvox-aural-resources-reject-invalid-tone-definitions ()
+  "The tone registry accepts only safe, complete concrete definitions."
+  (let ((emacsvox-aural-tone-registry (make-hash-table :test #'eq)))
+    (emacsvox-aural-register-tone
+     'valid :summary "Valid" :pitch 440 :duration 100 :force nil)
+    (should-error
+     (emacsvox-aural-register-tone
+      'valid :summary "Duplicate" :pitch 220 :duration 50)
+     :type 'emacsvox-aural-resource-error)
+    (dolist
+        (definition
+         '((bad-pitch :summary "Bad" :pitch 0 :duration 50)
+           (bad-duration :summary "Bad" :pitch 220 :duration -1)
+           (bad-force :summary "Bad" :pitch 220 :duration 50 :force force)))
+      (should-error
+       (apply #'emacsvox-aural-register-tone definition)
+       :type 'emacsvox-aural-resource-error))))
+
 (ert-deftest emacsvox-aural-resources-bundled-packs-satisfy-profile ()
   "Chimes and 3d satisfy the shared legacy-complete requirements."
   (emacsvox-test--with-empty-resource-packs

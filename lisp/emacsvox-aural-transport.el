@@ -28,6 +28,7 @@
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
+(declare-function tts--protocol-tone "tts-speak" (pitch duration &optional force))
 (declare-function tts-initialize "tts-speak" ())
 (declare-function tts-voice-reset-code "tts-speak" ())
 
@@ -57,6 +58,11 @@
     ('pause
      (tts--protocol-silence
       (emacsvox-aural-concrete-action-duration action)))
+    ('tone
+     (tts--protocol-tone
+      (emacsvox-aural-concrete-action-pitch action)
+      (emacsvox-aural-concrete-action-duration action)
+      (emacsvox-aural-concrete-action-force action)))
     ('speech
      (let ((command
             (emacsvox-aural-concrete-action-voice-command action))

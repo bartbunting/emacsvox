@@ -43,10 +43,10 @@ matching scheme rules
       |
       v
 backend-independent aural render plan
-  +-- object before: speech, cue, pause
-  +-- run presentation: speech, cue, pause, voice, and spatial style
+  +-- object before: speech, cue, pause, tone
+  +-- run presentation: speech, cue, pause, tone, voice, and spatial style
   +-- object content: one or more styled speech runs
-  `-- object after: speech, cue, pause
+  `-- object after: speech, cue, pause, tone
       |
       v
 backend compilation and queueing
@@ -1068,7 +1068,7 @@ than requiring users to edit raw data.  Its workflow should be:
 1. choose the semantic object, event, state, or current item;
 2. narrow its context and attributes;
 3. add and order before, content, and after actions;
-4. select voice, speech, cue, pause, and spatial settings;
+4. select voice, speech, cue, pause, tone, and spatial settings;
 5. preview;
 6. inspect conflicts and effective fallback;
 7. save to the desired scope.
@@ -1421,13 +1421,13 @@ The advanced buffer exposes these stable operations:
 Selectors are assembled from registered semantic, module, major-mode,
 occasion, and compatibility fields.  Before and after phases explicitly
 choose append, prepend, replace, remove, suppress, or unchanged behavior and
-then build ordered speech, cue, and pause actions.  Content prompts distinguish
-unchanged, spoken, silenced, default voice, named voice, and inaudible
-presentation.  Guided spatial prompts offer unchanged, centred, normalized
-balance, or listener-relative azimuth values and validate them against the
-portable contract.  Registered attribute prompts can choose an exact value or
-require its presence, and speech prompts can choose literal text or a safe
-semantic template.
+then build ordered speech, cue, pause, and named-tone actions.  Content prompts
+distinguish unchanged, spoken, silenced, default voice, named voice, and
+inaudible presentation.  Guided spatial prompts offer unchanged, centred,
+normalized balance, or listener-relative azimuth values and validate them
+against the portable contract.  Registered attribute prompts can choose an
+exact value or require its presence, and speech prompts can choose literal
+text or a safe semantic template.
 
 * Compatibility Policy
 
@@ -3352,7 +3352,7 @@ The migration is complete when:
 
 - registered semantic facts are the documented source of truth;
 - modules describe meaning without choosing a modality or file;
-- schemes can compose speech, voice, cues, pauses, and spatial style in
+- schemes can compose speech, voice, cues, pauses, tones, and spatial style in
   explicit before, content, and after phases;
 - users can inspect and override presentation globally and by module, major
   mode, combined context, derived mode, or buffer;

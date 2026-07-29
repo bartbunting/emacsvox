@@ -22,7 +22,8 @@
      (:constructor emacsvox-aural--make-validation-report))
   "Validation result for an aural scheme or presentation option."
   scheme valid errors warnings missing-assets unavailable-voices
-  unreachable-rules ambiguous-ties disabled-rules semantic-diagnostics)
+  unreachable-rules ambiguous-ties disabled-rules semantic-diagnostics
+  unavailable-tones)
 
 (defun emacsvox-aural-validation--content-patch-empty-p (patch)
   "Return non-nil when content PATCH cannot change presentation."
@@ -153,6 +154,15 @@
           (push (emacsvox-aural-action-cue action) cues))))
     (delete-dups cues)))
 
+(defun emacsvox-aural-validation--scheme-tones (rules)
+  "Return unique tone names referenced by RULES."
+  (let (tones)
+    (dolist (rule rules)
+      (dolist (action (emacsvox-aural-rule-actions rule))
+        (when (eq (emacsvox-aural-action-kind action) 'tone)
+          (push (emacsvox-aural-action-tone action) tones))))
+    (delete-dups tones)))
+
 (defun emacsvox-aural-validation--prepare-scheme (scheme)
   "Return validation inputs for registered SCHEME."
   (let ((chain (emacsvox-aural--scheme-chain scheme)))
@@ -198,6 +208,7 @@
   "Validate OBJECT using the input-producing function PREPARE."
   (let
       (errors warnings rules all-rules missing-assets unavailable
+              unavailable-tones
               unreachable ties disabled semantic-diagnostics)
     (condition-case error
         (let* ((input (funcall prepare object))
@@ -237,6 +248,9 @@
             (setq
              unavailable
              (emacsvox-aural-validate-voice-palette palette)))
+          (dolist (tone (emacsvox-aural-validation--scheme-tones rules))
+            (unless (emacsvox-aural-tone tone)
+              (push tone unavailable-tones)))
           (dolist (rule rules)
             (when (emacsvox-aural-validation--rule-ineffective-p rule)
               (push (emacsvox-aural-rule-id rule) unreachable))
@@ -258,6 +272,12 @@
       (push
        (format "Unavailable voices: %S" (delete-dups unavailable))
        errors))
+    (when unavailable-tones
+      (push
+       (format
+        "Unavailable tones: %S"
+        (delete-dups unavailable-tones))
+       errors))
     (when unreachable
       (push
        "Rules listed as unreachable contain no presentation operation"
@@ -275,6 +295,7 @@
      :warnings (nreverse warnings)
      :missing-assets (copy-sequence missing-assets)
      :unavailable-voices (delete-dups (nreverse unavailable))
+     :unavailable-tones (delete-dups (nreverse unavailable-tones))
      :unreachable-rules (nreverse unreachable)
      :ambiguous-ties ties
      :disabled-rules disabled
@@ -324,7 +345,11 @@
     (when-let* ((voices
                  (emacsvox-aural-validation-report-unavailable-voices
                   report)))
-      (princ (format "Unavailable voices: %S\n" voices)))))
+      (princ (format "Unavailable voices: %S\n" voices)))
+    (when-let* ((tones
+                 (emacsvox-aural-validation-report-unavailable-tones
+                  report)))
+      (princ (format "Unavailable tones: %S\n" tones)))))
 
 (provide 'emacsvox-aural-validation)
 

@@ -1203,6 +1203,32 @@
      (emacsvox-aural-list-recent-feedback)
      :type 'user-error)))
 
+(ert-deftest emacsvox-aural-tools-recent-feedback-describes-tone-only-output ()
+  "Recent feedback recognizes a tone as audible action-only output."
+  (let* ((tone
+          (emacsvox-aural--make-concrete-action
+           :id 'empty
+           :kind 'tone
+           :tone 'line-empty
+           :pitch 130.8
+           :duration 150
+           :force t))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :before (list tone)
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text nil :speak nil)))
+         (record
+          (emacsvox-aural--make-presentation-record
+           :id 1
+           :queued-at (current-time)
+           :plan plan)))
+    (should
+     (equal
+      (emacsvox-aural-recent-feedback--content record)
+      "Tone: line empty"))))
+
 (ert-deftest emacsvox-aural-tools-recent-feedback-preserves-transaction-runs ()
   "Recent feedback summarizes and replays every frozen transaction run."
   (emacsvox-test--with-aural-tools

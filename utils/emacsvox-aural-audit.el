@@ -453,9 +453,9 @@ below a presentation boundary."
   (insert
    "* Using Aural Presentation Schemes\n\n"
    "A semantic fact says what an object or event means.  A scheme decides "
-   "whether that fact is conveyed by speech, voice, a cue, a pause, spatial "
-   "placement, or a composition of those modalities.  Modules therefore do "
-   "not need to agree on one preferred presentation.\n\n"
+   "whether that fact is conveyed by speech, voice, a cue, a tone, a pause, "
+   "spatial placement, or a composition of those modalities.  Modules "
+   "therefore do not need to agree on one preferred presentation.\n\n"
    "Exactly one scheme is active globally.  It is the base recipe: named "
    "presentation rules plus optional default sound-pack and voice-palette "
    "providers.  Core and integration libraries may register read-only "
@@ -686,7 +686,9 @@ below a presentation boundary."
    "selector must guarantee every field by exact match or =:requires=.  "
    "Templates perform substitution only; they cannot evaluate Lisp.  A cue "
    "action supplies a registered =:cue= and may supply =:volume= and "
-   "=:space=.  A pause supplies a nonnegative =:duration=.  Optional "
+   "=:space=.  A tone action supplies a registered =:tone=; its pitch, "
+   "duration, and dispatch behavior are frozen from that named resource.  "
+   "A pause supplies a nonnegative =:duration=.  Optional "
    "=:anchor= is =object=, =run=, or =transition=.  Semantic rules default "
    "to one action per object; compatibility face and personality rules "
    "default to one per formatting run.  A before transition action occurs "
@@ -992,6 +994,31 @@ below a presentation boundary."
      emacsvox-aural-cue-registry
      #'emacsvox-aural-cue-id))))
 
+(defun emacsvox-aural-audit--insert-tones ()
+  "Insert tone author guidance and the registered tone table at point."
+  (insert
+   "* Tone Author Reference\n\n"
+   "A tone action names a registered tone with =:tone=.  The rule remains "
+   "backend-independent; concrete compilation freezes the registered pitch, "
+   "duration, and dispatch behavior before queueing.  Tones use the speech "
+   "server protocol and are independent of auditory-icon enablement.  Register "
+   "new stable tone names with =emacsvox-aural-register-tone= rather than "
+   "putting raw frequencies in scheme rules.\n\n")
+  (emacsvox-aural-audit--insert-table
+   '("Identifier" "Pitch (Hz)" "Duration (ms)" "Force" "Owner" "Intent")
+   (mapcar
+    (lambda (tone)
+      (list
+       (emacsvox-aural-tone-id tone)
+       (emacsvox-aural-tone-pitch tone)
+       (emacsvox-aural-tone-duration tone)
+       (emacsvox-aural-tone-force tone)
+       (emacsvox-aural-tone-owner tone)
+       (emacsvox-aural-tone-summary tone)))
+    (emacsvox-aural-audit--hash-records
+     emacsvox-aural-tone-registry
+     #'emacsvox-aural-tone-id))))
+
 (defun emacsvox-aural-audit--insert-voice-palettes ()
   "Insert voice-palette author guidance and generated tables at point."
   (insert
@@ -1138,6 +1165,7 @@ below a presentation boundary."
       (emacsvox-aural-audit--insert-semantics)
       (emacsvox-aural-audit--insert-schemes)
       (emacsvox-aural-audit--insert-sound-packs root)
+      (emacsvox-aural-audit--insert-tones)
       (emacsvox-aural-audit--insert-voice-palettes)
       (emacsvox-aural-audit--insert-migration)
       (buffer-string))))

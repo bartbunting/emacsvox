@@ -12,6 +12,7 @@
 (require 'ert)
 (require 'seq)
 (require 'emacsvox-sounds)
+(require 'emacsvox-aural-description)
 (require 'emacsvox-aural-submission)
 (require 'tts-speak)
 (require 'voice-setup)
@@ -614,6 +615,56 @@ is the default inherited by a newly created TTS scratch buffer."
            (emacsvox-aural-concrete-plan-content plan))
           (emacsvox-test--transport-adapter-command
            'voice-bolden)))))))
+
+(ert-deftest emacsvox-aural-transport-compiles-and-queues-named-tones ()
+  "Named tones freeze protocol parameters and do not follow icon policy."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id empty-line
+        :match (:role heading :state folded)
+        :render
+        (:before
+         ((:id empty-tone :kind tone :tone line-empty))))))
+    (let* ((facts '(:role heading :state folded :content ""))
+           (context
+            (plist-put
+             (emacsvox-test--transport-context)
+             :icons-enabled nil))
+           (render (emacsvox-aural-resolve-active facts context))
+           (plan (emacsvox-aural-compile-plan render facts context))
+           (action (car (emacsvox-aural-concrete-plan-before plan)))
+           events)
+      (should (eq (emacsvox-aural-concrete-action-kind action) 'tone))
+      (should (eq (emacsvox-aural-concrete-action-tone action) 'line-empty))
+      (should (= (emacsvox-aural-concrete-action-pitch action) 130.8))
+      (should (= (emacsvox-aural-concrete-action-duration action) 150))
+      (should (emacsvox-aural-concrete-action-force action))
+      (cl-letf
+          (((symbol-function 'tts--protocol-tone)
+            (lambda (pitch duration &optional force)
+              (push (list pitch duration force) events))))
+        (emacsvox-aural-queue-concrete-action action context))
+      (should (equal events '((130.8 150 t))))
+      (should
+       (string-match-p
+        "tone line-empty at 130.8 Hz for 150 ms"
+        (emacsvox-aural-describe-concrete-action action))))))
+
+(ert-deftest emacsvox-aural-transport-rejects-unregistered-tones ()
+  "An unknown tone cannot cross the concrete source boundary."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id unknown-tone
+        :match (:role heading)
+        :render
+        (:before
+         ((:id unknown :kind tone :tone not-registered))))))
+    (let* ((facts '(:role heading :content "line"))
+           (context (emacsvox-test--transport-context))
+           (render (emacsvox-aural-resolve-active facts context)))
+      (should-error
+       (emacsvox-aural-compile-plan render facts context)
+       :type 'emacsvox-aural-transport-error))))
 
 (ert-deftest emacsvox-aural-transport-compiles-raw-acss ()
   "A raw ACSS style is named before the selected adapter compiles it."
