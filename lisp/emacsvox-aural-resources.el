@@ -278,7 +278,7 @@ themed overrides below an active sound pack."
     (n-answer "The letter N answer was selected")
     (network-down "Network connectivity became unavailable")
     (network-up "Network connectivity became available")
-    (new-mail "New mail arrived or an unread message was reached")
+    (new-mail "New mail arrived")
     (news "News or release information became available")
     (no-answer "A negative answer was selected")
     (off "A setting or state was turned off")
@@ -330,6 +330,10 @@ themed overrides below an active sound pack."
     (unlocked "The desktop session was unlocked")
     (waking-up "Emacsvox speech is becoming ready"))
   "Intent descriptions for theme-independent prompt cues.")
+
+(defconst emacsvox-aural--mail-cue-definitions
+  '((mail-unread "An unread mail message was reached" new-mail))
+  "Mail-state cues and their generic compatibility fallbacks.")
 
 (defconst emacsvox-aural-legacy-complete-cues
   '(alarm alert-user ask-question ask-short-question button center char
@@ -1730,6 +1734,13 @@ PATH protects this helper from invalid inheritance cycles."
     (unless (emacsvox-aural-cue (car definition))
       (emacsvox-aural-register-cue
        (car definition) :summary (cadr definition) :kind 'prompt)))
+  (dolist (definition emacsvox-aural--mail-cue-definitions)
+    (unless (emacsvox-aural-cue (car definition))
+      (emacsvox-aural-register-cue
+       (car definition)
+       :summary (nth 1 definition)
+       :fallback (nth 2 definition)
+       :owner 'mail)))
   (dolist (definition emacsvox-aural-default-tone-definitions)
     (unless (emacsvox-aural-tone (car definition))
       (emacsvox-aural-register-tone
@@ -1814,6 +1825,16 @@ compatibility source."
            :directory (expand-file-name (nth 3 definition) sounds-directory)
            :profiles (nth 4 definition)
            :default-spatialization (nth 5 definition)))))
+    (let ((mail-directory (expand-file-name "modules/mail" root)))
+      (when
+          (and
+           (file-directory-p mail-directory)
+           (not (emacsvox-aural-resource-overlay 'mail-earcons)))
+        (emacsvox-aural-register-resource-overlay
+         'mail-earcons
+         :summary "Mail-state earcons"
+         :owner 'mail
+         :directory mail-directory)))
     (dolist (discovery-root discovery-roots)
       (emacsvox-aural-discover-resource-packs discovery-root))
     (emacsvox-aural-validate-resource-registry)))

@@ -258,7 +258,7 @@
         (mapcar
          #'emacsvox-aural-compatibility-action-value
          (plist-get arguments :compatibility-actions))
-        '(new-mail mark-object))))))
+        '(mail-unread mark-object))))))
 
 (ert-deftest emacsvox-notmuch-boundary-feedback-uses-one-native-submission ()
   "A search boundary carries its cue and semantics in one submission."
@@ -381,7 +381,9 @@
 (ert-deftest emacsvox-notmuch-status-fragment-resolves-once-per-message ()
   "One message transaction emits each status action once."
   (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
-         (emacsvox-notmuch-show-status-icons '(("unread" . new-mail)))
+         (emacsvox-notmuch-show-status-icons
+          '(("unread" . mail-unread)
+            ("flagged" . mark-object)))
          (emacsvox-aural-enabled-feature-fragments
           '(mail-message-status-cues))
          (emacsvox-aural-feature-fragment-order nil)
@@ -397,7 +399,7 @@
          (emacsvox-sounds-current-pack 'chimes)
          (emacsvox-use-icons t)
          traces)
-    (setf (plist-get message :tags) '("inbox" "unread"))
+    (setf (plist-get message :tags) '("inbox" "unread" "flagged"))
     (cl-labels
         ((record-plan
           (kind text plan)
@@ -445,8 +447,8 @@
       (should
        (equal
         (caddr (car traces))
-        '(compatibility-new-mail-1-legacy-cue
-          workflow-mail-unread-cue)))
+        '(workflow-mail-unread-cue
+          workflow-mail-flagged-cue)))
       (should
        (equal
         (cadddr (car (last traces)))
@@ -455,8 +457,9 @@
       (dolist (separator separators)
         (should (equal (cddr separator) '(nil nil))))
       (should
-       (= (cl-count 'compatibility-new-mail-1-legacy-cue before) 1))
+       (= (cl-count 'compatibility-mail-unread-1-legacy-cue before) 0))
       (should (= (cl-count 'workflow-mail-unread-cue before) 1))
+      (should (= (cl-count 'workflow-mail-flagged-cue before) 1))
       (should (= (cl-count 'workflow-mail-attachments-label after) 1)))))
 
 (ert-deftest emacsvox-notmuch-search-result-fields-are-configurable ()
@@ -497,7 +500,7 @@
     (should
      (equal
       (nreverse events)
-      '((icon new-mail)
+      '((icon mail-unread)
         (icon mark-object)
         (speak
          "Alice Smith, Bob Jones, Project update, yesterday, 2 of 5, inbox work"))))))

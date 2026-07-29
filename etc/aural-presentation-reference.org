@@ -375,13 +375,14 @@ Default spatialization is =neutral=, =stereo=, or =pre-spatialized=.  Mark HRTF 
 | =launch-wm= | =prompt= | =core= | - | A window manager is starting |
 | =left= | =cue= | =core= | - | Movement or placement is toward the left |
 | =locking-up= | =prompt= | =core= | - | The desktop session is being locked |
+| =mail-unread= | =cue= | =mail= | =new-mail= | An unread mail message was reached |
 | =mark-object= | =cue= | =core= | - | An object was marked or selected |
 | =modified-object= | =cue= | =core= | - | An object has unsaved modifications |
 | =more= | =cue= | =core= | - | Additional content is available |
 | =n-answer= | =cue= | =core= | - | The letter N answer was selected |
 | =network-down= | =cue= | =core= | - | Network connectivity became unavailable |
 | =network-up= | =cue= | =core= | - | Network connectivity became available |
-| =new-mail= | =cue= | =core= | - | New mail arrived or an unread message was reached |
+| =new-mail= | =cue= | =core= | - | New mail arrived |
 | =news= | =cue= | =core= | - | News or release information became available |
 | =no-answer= | =cue= | =core= | - | A negative answer was selected |
 | =off= | =cue= | =core= | - | A setting or state was turned off |

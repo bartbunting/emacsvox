@@ -773,7 +773,7 @@
        :render
        (:before
         (:append
-         ((:id workflow-mail-unread-cue :kind cue :cue new-mail)))))
+         ((:id workflow-mail-unread-cue :kind cue :cue mail-unread)))))
       (:id workflow-mail-flagged
        :match (:role message :state flagged :occasion navigation)
        :render

@@ -158,6 +158,27 @@
         (cadr definition)))))
   (should-not (memq 'shutdown emacsvox-aural-legacy-complete-cues)))
 
+(ert-deftest emacsvox-aural-resources-register-mail-state-earcon ()
+  "Unread mail has a module-owned default with a generic fallback."
+  (emacsvox-test--with-empty-resource-packs
+    (emacsvox-aural-register-bundled-resources
+     emacsvox-test--sounds-directory)
+    (let* ((cue (emacsvox-aural-cue 'mail-unread))
+           (overlay (emacsvox-aural-resource-overlay 'mail-earcons))
+           (resource
+            (emacsvox-aural-resolve-cue 'mail-unread 'chimes)))
+      (should cue)
+      (should (eq (emacsvox-aural-cue-owner cue) 'mail))
+      (should (eq (emacsvox-aural-cue-fallback cue) 'new-mail))
+      (should overlay)
+      (should (eq (emacsvox-aural-resource-overlay-owner overlay) 'mail))
+      (should
+       (equal
+        resource
+        (expand-file-name
+         "modules/mail/mail-unread.ogg"
+         emacsvox-test--sounds-directory))))))
+
 (ert-deftest emacsvox-aural-resources-register-default-tones ()
   "Built-in tones retain the existing pitches and durations by name."
   (should

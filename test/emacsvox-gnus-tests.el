@@ -286,7 +286,7 @@
           (mapcar
            #'emacsvox-aural-concrete-action-cue
            (emacsvox-aural-concrete-plan-before plan))
-          (and icons-enabled '(select-object new-mail))))
+          (and icons-enabled '(select-object mail-unread))))
         (should
          (eq
           (emacsvox-aural-concrete-content-voice-request content)

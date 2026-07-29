@@ -115,14 +115,16 @@ it is spoken."
   :group 'emacsvox-notmuch)
 
 (defcustom emacsvox-notmuch-search-status-icons
-  '(("unread" . new-mail)
+  '(("unread" . mail-unread)
     ("flagged" . mark-object))
   "Map Notmuch status tags to auditory icons.
 
 Entries are checked in order and every matching non-nil icon is
 played.  Tags present in this alist are omitted from the spoken
 `tags' field.  Remove an entry to speak that status as an ordinary
-tag, or give it a nil icon to keep the status silent."
+tag, or give it a nil icon to keep the status silent.  When the
+`mail-message-status-cues' presentation option is enabled, its semantic
+rules own unread and flagged cues while these entries still suppress words."
   :type '(alist
           :key-type (string :tag "Status tag")
           :value-type
@@ -158,14 +160,16 @@ list to change when it is spoken."
   :group 'emacsvox-notmuch)
 
 (defcustom emacsvox-notmuch-show-status-icons
-  '(("unread" . new-mail)
+  '(("unread" . mail-unread)
     ("flagged" . mark-object))
   "Map Notmuch message status tags to auditory icons.
 
 Entries are checked in order and every matching non-nil icon is
 played.  Tags present in this alist are omitted from the spoken
 `tags' field.  Remove an entry to speak that status as an ordinary
-tag, or give it a nil icon to keep the status silent."
+tag, or give it a nil icon to keep the status silent.  When the
+`mail-message-status-cues' presentation option is enabled, its semantic
+rules own unread and flagged cues while these entries still suppress words."
   :type '(alist
           :key-type (string :tag "Status tag")
           :value-type
@@ -422,7 +426,15 @@ FACTS describe the object or event, and OCCASION describes the interaction."
   (let ((tags (plist-get result :tags)))
     (cl-loop
      for (tag . icon) in status-icons
-     when (and icon (member tag tags))
+     when
+     (and
+      icon
+      (member tag tags)
+      (not
+       (and
+        (member tag '("unread" "flagged"))
+        (emacsvox-aural-feature-fragment-enabled-p
+         'mail-message-status-cues))))
      collect (emacsvox-aural-compatibility-icon icon))))
 
 (defun emacsvox-notmuch-speak-search-result (&optional result)
