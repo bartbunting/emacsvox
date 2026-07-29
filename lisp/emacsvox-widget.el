@@ -537,8 +537,9 @@ Returns a string with appropriate personality."
 (defun emacsvox--advice-widget-kill-line-after (&rest _)
   "speak"
   (when (ems-interactive-p 'widget-kill-line)
-    (emacsvox-icon 'delete-object) (emacsvox-speak-current-kill 0)
-    (tts-tone-deletion)))
+    (emacsvox-icon 'delete-object)
+    (emacsvox-speak-current-kill 0)
+    (emacsvox-speak-edit-operation 'deletion)))
 
 (advice-add
  'widget-kill-line :after #'emacsvox--advice-widget-kill-line-after

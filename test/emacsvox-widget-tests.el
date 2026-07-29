@@ -115,6 +115,38 @@
       (nreverse events)
       '((icon item) (summary next-widget))))))
 
+(ert-deftest emacsvox-widget-kill-line-preserves-feedback-order ()
+  "Widget line killing presents its existing feedback in order."
+  (let ((ems--interactive-fn-name 'widget-kill-line)
+        events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon) (push (list 'icon icon) events)))
+         ((symbol-function 'emacsvox-speak-current-kill)
+          (lambda (index) (push (list 'kill index) events)))
+         ((symbol-function 'emacsvox-speak-edit-operation)
+          (lambda (operation)
+            (push (list 'edit operation) events))))
+      (emacsvox--advice-widget-kill-line-after))
+    (should
+     (equal
+      (nreverse events)
+      '((icon delete-object) (kill 0) (edit deletion))))))
+
+(ert-deftest emacsvox-widget-kill-line-is-quiet-programmatically ()
+  "Programmatic Widget line killing does not present feedback."
+  (let ((ems--interactive-fn-name nil)
+        feedback)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (setq feedback t)))
+         ((symbol-function 'emacsvox-speak-current-kill)
+          (lambda (&rest _) (setq feedback t)))
+         ((symbol-function 'emacsvox-speak-edit-operation)
+          (lambda (&rest _) (setq feedback t))))
+      (emacsvox--advice-widget-kill-line-after))
+    (should-not feedback)))
+
 (ert-deftest emacsvox-widget-setup-preserves-emacsvox-bindings ()
   "Widget setup restores Emacsvox bindings in both field keymaps."
   (let ((field-map (make-sparse-keymap))
