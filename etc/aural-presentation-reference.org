@@ -332,6 +332,7 @@ Operational semantic contract version: =1=.
 
 | Identifier | Module | Rules | Source | Intent |
 |------------+--------+-------+--------+--------|
+| =agent-shell-tool-status-cues= | =agent-shell= | =4= | emacsvox-aural-provider-workflows | Default cues for Agent Shell tool lifecycle updates |
 | =bs-buffer-state-tones= | =bs= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for buffer state in BS |
 | =corfu-completion-edit-tones= | =corfu= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for Corfu completion edits |
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |

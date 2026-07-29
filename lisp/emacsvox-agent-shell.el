@@ -4403,15 +4403,6 @@ DISMISS means the compose window is dismissed."
 
 ;;;  Tool Call Feedback
 
-(defun emacsvox-agent-shell--tool-call-status-icon (status)
-  "Return appropriate auditory icon for tool call STATUS."
-  (pcase status
-    ("completed" 'task-done)
-    ("failed" 'warn-user)
-    ("in_progress" 'progress)
-    ("pending" 'item)
-    (_ 'item)))
-
 (defun emacsvox-agent-shell--meaningful-tool-text (text)
   "Return a concise speech version of meaningful tool TEXT, or nil."
   (when (and (stringp text) (string-match-p "[[:alnum:]]" text))
@@ -4483,6 +4474,25 @@ DISMISS means the compose window is dismissed."
            blocks)))
     (when texts (string-join texts "\n"))))
 
+(defun emacsvox-agent-shell--tool-call-feedback-text
+    (status description content)
+  "Return one spoken object for tool STATUS, DESCRIPTION, and CONTENT.
+
+Return nil when the configured verbosity requests status cues only."
+  (unless (eq emacsvox-agent-shell-tool-output-verbosity 'status)
+    (let ((announcement
+           (emacsvox-agent-shell--tool-call-announcement
+            status description)))
+      (if
+          (and
+           (eq emacsvox-agent-shell-tool-output-verbosity 'full)
+           (member status '("completed" "failed")))
+          (if-let* ((output
+                     (emacsvox-agent-shell--tool-output-text content)))
+              (format "%s Output: %s" announcement output)
+            announcement)
+        announcement))))
+
 (defun emacsvox-agent-shell--handle-tool-call-update (event)
   "Announce a new semantic status from public tool update EVENT."
   (let* ((data (map-elt event :data))
@@ -4503,32 +4513,30 @@ DISMISS means the compose window is dismissed."
                    (member status
                            '("pending" "in_progress" "completed" "failed"))
                    (not (equal status previous)))
-          (emacsvox-agent-shell--call-with-aural-presentation
-           (emacsvox-agent-shell--presentation-facts
-            'agent-tool 'agent-tool-status-changed nil
-            (list
-             :agent-tool-status
-             (if (equal status "in_progress")
-                 'in-progress
-               (intern status))))
-           'notification
-           (lambda ()
-             (emacsvox-icon
-              (emacsvox-agent-shell--tool-call-status-icon status))
-             (unless (eq emacsvox-agent-shell-tool-output-verbosity 'status)
-               (tts-speak
-                (emacsvox-agent-shell--tool-call-announcement
-                 status
-                 (emacsvox-agent-shell--tool-call-description
-                  tool-call tool-call-id)))
-               (when
-                   (and
-                    (eq emacsvox-agent-shell-tool-output-verbosity 'full)
-                    (member status '("completed" "failed")))
-                 (when-let* ((output
-                              (emacsvox-agent-shell--tool-output-text
-                               (map-elt tool-call :content))))
-                   (tts-speak (format "Output: %s" output))))))))))))
+          (let* ((facts
+                  (emacsvox-agent-shell--presentation-facts
+                   'agent-tool 'agent-tool-status-changed nil
+                   (list
+                    :agent-tool-status
+                    (if (equal status "in_progress")
+                        'in-progress
+                      (intern status)))))
+                 (text
+                  (emacsvox-agent-shell--tool-call-feedback-text
+                   status
+                   (emacsvox-agent-shell--tool-call-description
+                    tool-call tool-call-id)
+                   (map-elt tool-call :content))))
+            (if text
+                (emacsvox-aural-submit
+                 text
+                 :facts facts
+                 :module 'agent-shell
+                 :occasion 'notification)
+              (emacsvox-aural-submit-actions
+               :facts facts
+               :module 'agent-shell
+               :occasion 'notification))))))))
 
 (defun emacsvox-agent-shell--tool-call-event-setup ()
   "Subscribe the current agent-shell buffer to tool call updates."

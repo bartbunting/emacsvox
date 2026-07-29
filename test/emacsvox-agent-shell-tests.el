@@ -294,19 +294,49 @@
                     (push (list 'icon icon) ,event-log)))
                  ((symbol-function 'emacsvox-aural-submit)
                   (lambda (text &rest arguments)
-                    (dolist
-                        (action
-                         (plist-get arguments :compatibility-actions))
-                      (when
-                          (eq
-                           (emacsvox-aural-compatibility-action-kind action)
-                           'legacy-icon)
+                    (let ((facts
+                           (or
+                            (plist-get arguments :facts)
+                            emacsvox-aural-submission-facts)))
+                      (dolist
+                          (action
+                           (plist-get arguments :compatibility-actions))
+                        (when
+                            (eq
+                             (emacsvox-aural-compatibility-action-kind action)
+                             'legacy-icon)
+                          (push
+                           (list
+                            'icon
+                            (emacsvox-aural-compatibility-action-value action))
+                           ,event-log)))
+                      (when (eq (plist-get facts :role) 'agent-tool)
                         (push
                          (list
                           'icon
-                          (emacsvox-aural-compatibility-action-value action))
+                          (pcase (plist-get facts :agent-tool-status)
+                            ('completed 'task-done)
+                            ('failed 'warn-user)
+                            ('in-progress 'progress)
+                            (_ 'item)))
                          ,event-log)))
                     (push (list 'speak text) ,event-log)))
+                 ((symbol-function 'emacsvox-aural-submit-actions)
+                  (lambda (&rest arguments)
+                    (let ((facts
+                           (or
+                            (plist-get arguments :facts)
+                            emacsvox-aural-submission-facts)))
+                      (when (eq (plist-get facts :role) 'agent-tool)
+                        (push
+                         (list
+                          'icon
+                          (pcase (plist-get facts :agent-tool-status)
+                            ('completed 'task-done)
+                            ('failed 'warn-user)
+                            ('in-progress 'progress)
+                            (_ 'item)))
+                         ,event-log)))))
                  ((symbol-function 'message)
                   (lambda (format-string &rest arguments)
                     (push (list 'message
@@ -333,7 +363,31 @@
                emacsvox-aural-submission-module
                emacsvox-aural-submission-occasion
                (copy-tree emacsvox-aural-submission-context))
-              ,presentations)))
+              ,presentations))
+            (capture-native
+             (kind value arguments)
+             (let* ((facts
+                     (or
+                      (plist-get arguments :facts)
+                      emacsvox-aural-submission-facts))
+                    (module
+                     (or
+                      emacsvox-aural-submission-module
+                      (plist-get arguments :module)))
+                    (occasion
+                     (or
+                      emacsvox-aural-submission-occasion
+                      (plist-get arguments :occasion)))
+                    (context
+                     (or
+                      emacsvox-aural-submission-context
+                      (plist-get arguments :context)
+                      (emacsvox-aural-capture-context module occasion))))
+               (push
+                (list
+                 kind value (copy-tree facts) module occasion
+                 (copy-tree context))
+                ,presentations))))
          (cl-letf
              (((symbol-function 'emacsvox-icon)
                (lambda (icon) (capture 'icon icon)))
@@ -341,6 +395,12 @@
                (lambda (icon) (capture 'notify-icon icon)))
               ((symbol-function 'tts-speak)
                (lambda (text) (capture 'speak text)))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (text &rest arguments)
+                 (capture-native 'submit text arguments)))
+              ((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (capture-native 'submit-actions nil arguments)))
               ((symbol-function 'tts-notify)
                (lambda (text &optional _) (capture 'notify text)))
               ((symbol-function 'message)
@@ -2679,6 +2739,37 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (icon task-done)
           (speak "Tool completed: acp.el.")))))))
 
+(ert-deftest emacsvox-agent-shell-tool-status-policy-uses-semantic-cues ()
+  "Tool lifecycle states resolve their default cues through aural policy."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural--current-rules-cache
+         (make-hash-table :test #'equal)))
+    (dolist
+        (entry '((pending . item)
+                 (in-progress . progress)
+                 (completed . task-done)
+                 (failed . warn-user)))
+      (let* ((status (car entry))
+             (plan
+              (emacsvox-aural-resolve-active
+               (emacsvox-agent-shell--presentation-facts
+                'agent-tool 'agent-tool-status-changed nil
+                (list :agent-tool-status status))
+               '(:module agent-shell :mode agent-shell-mode
+                 :occasion notification)))
+             (cue
+              (seq-find
+               (lambda (action)
+                 (eq (emacsvox-aural-action-kind action) 'cue))
+               (emacsvox-aural-render-plan-before plan))))
+        (should cue)
+        (should
+         (eq (emacsvox-aural-action-cue cue) (cdr entry)))))))
+
 (ert-deftest emacsvox-agent-shell-tool-status-verbosity-is-icon-only ()
   "Status verbosity should cue each real status without speaking titles."
   (let ((emacsvox-agent-shell-speak-tool-calls t)
@@ -2728,11 +2819,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         '((icon progress)
           (speak "Tool started: Calculate total.")
           (icon task-done)
-          (speak "Tool completed: Calculate total.")
-          (speak "Output: Total: 42")
+          (speak "Tool completed: Calculate total. Output: Total: 42")
           (icon warn-user)
-          (speak "Tool failed: Compile project.")
-          (speak "Output: Undefined function")))))))
+          (speak
+           "Tool failed: Compile project. Output: Undefined function")))))))
 
 (ert-deftest emacsvox-agent-shell-tool-updates-speak-once-per-status ()
   "Repeated streaming updates should not repeat an unchanged tool status."

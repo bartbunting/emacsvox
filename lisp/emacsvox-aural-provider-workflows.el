@@ -829,6 +829,51 @@
         (:append
          ((:id corfu-separator-inserted-tone-action
            :kind tone :tone completion-separator)))))))
+    (agent-shell
+     :schema-version 1
+     :id agent-shell-tool-status-cues
+     :summary "Default cues for Agent Shell tool lifecycle updates"
+     :rules
+     ((:id agent-shell-tool-pending-cue
+       :match
+       (:role agent-tool :module agent-shell
+        :event agent-tool-status-changed
+        :agent-tool-status pending :occasion notification)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-tool-pending-cue-action
+           :kind cue :cue item)))))
+      (:id agent-shell-tool-in-progress-cue
+       :match
+       (:role agent-tool :module agent-shell
+        :event agent-tool-status-changed
+        :agent-tool-status in-progress :occasion notification)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-tool-in-progress-cue-action
+           :kind cue :cue progress)))))
+      (:id agent-shell-tool-completed-cue
+       :match
+       (:role agent-tool :module agent-shell
+        :event agent-tool-status-changed
+        :agent-tool-status completed :occasion notification)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-tool-completed-cue-action
+           :kind cue :cue task-done)))))
+      (:id agent-shell-tool-failed-cue
+       :match
+       (:role agent-tool :module agent-shell
+        :event agent-tool-status-changed
+        :agent-tool-status failed :occasion notification)
+       :render
+       (:before
+        (:append
+         ((:id agent-shell-tool-failed-cue-action
+           :kind cue :cue warn-user)))))))
     (solitaire
      :schema-version 1
      :id solitaire-cell-tones
