@@ -327,6 +327,18 @@
                            (or
                             (plist-get arguments :facts)
                             emacsvox-aural-submission-facts)))
+                      (dolist
+                          (action
+                           (plist-get arguments :compatibility-actions))
+                        (when
+                            (eq
+                             (emacsvox-aural-compatibility-action-kind action)
+                             'legacy-icon)
+                          (push
+                           (list
+                            'icon
+                            (emacsvox-aural-compatibility-action-value action))
+                           ,event-log)))
                       (when (eq (plist-get facts :role) 'agent-tool)
                         (push
                          (list
@@ -2169,7 +2181,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let ((emacsvox-agent-shell-signal-processing t)
         (emacsvox-agent-shell-processing-start-icon 'progress)
         (emacsvox-agent-shell-processing-end-icon 'task-done)
-        captured)
+        captured
+        direct-output)
     (cl-letf
         (((symbol-function 'emacsvox-agent-shell--begin-response-turn)
           #'ignore)
@@ -2179,19 +2192,27 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (lambda (&rest _) t))
          ((symbol-function 'emacsvox-agent-shell--session-focused-p)
           (lambda (&rest _) t))
+         ((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
+            (let* ((actions
+                    (plist-get arguments :compatibility-actions))
+                   (icon
+                    (emacsvox-aural-compatibility-action-value
+                     (car actions))))
+              (push
+               (list
+                icon
+                (copy-tree emacsvox-aural-submission-facts)
+                (copy-tree emacsvox-aural-submission-context))
+               captured))))
          ((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list
-              icon
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             captured))))
+          (lambda (&rest _) (push 'icon direct-output))))
       (emacsvox-agent-shell--handle-lifecycle-event
        '((:event . input-submitted)))
       (emacsvox-agent-shell--handle-lifecycle-event
        '((:event . turn-complete)
          (:data (:stop-reason . "end_turn")))))
+    (should-not direct-output)
     (setq captured (nreverse captured))
     (should (equal (mapcar #'car captured) '(progress task-done)))
     (should

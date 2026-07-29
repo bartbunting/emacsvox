@@ -378,15 +378,20 @@ Use CONTEXT when supplied, otherwise capture the submission context."
          facts context)))
     (emacsvox-aural-queue-concrete-plan plan)))
 
-(defun emacsvox-aural-present (facts &optional context)
-  "Resolve, compile, queue, and dispatch semantic FACTS in CONTEXT."
+(defun emacsvox-aural-present (facts &optional context compatibility-actions)
+  "Resolve, compile, queue, and dispatch semantic FACTS in CONTEXT.
+
+COMPATIBILITY-ACTIONS are normalized source adapter records merged around the
+semantic plan without resolving the semantic object more than once."
   (let* ((context
           (or
            context
            (emacsvox-aural-capture-context nil 'notification)))
          (plan
           (emacsvox-aural-compile-plan
-           (emacsvox-aural-resolve-active facts context)
+           (emacsvox-aural--merge-object-compatibility
+            (emacsvox-aural-resolve-active facts context)
+            compatibility-actions facts context)
            facts context)))
     (when (emacsvox-aural--concrete-plan-output-p plan)
       (emacsvox-aural--ensure-speaker)

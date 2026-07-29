@@ -435,6 +435,79 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural-presentation-record-effective-plans record)
           (list plan)))))))
 
+(ert-deftest emacsvox-aural-action-submission-merges-compatibility-cue ()
+  "Action-only compatibility cues share semantic ordering and transaction."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id folded-heading
+        :match (:role heading :state folded)
+        :render
+        (:before
+         ((:id empty :kind tone :tone line-empty))
+         :after
+         ((:id trailing-gap :kind pause :duration 40))))))
+    (let* ((emacsvox-aural--submission-sequence 0)
+           (facts '(:role heading :state folded))
+           (context
+            (append
+             (emacsvox-test--transport-context)
+             '(:icons-enabled t)))
+           events
+           submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural--ensure-speaker)
+            (lambda () (push 'ensure events)))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_resource) (push 'cue events)))
+           ((symbol-function 'tts--protocol-tone)
+            (lambda (pitch duration &optional force)
+              (push (list 'tone pitch duration force) events)))
+           ((symbol-function 'tts--protocol-silence)
+            (lambda (duration &optional _force)
+              (push (list 'pause duration) events)))
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text)
+              (ert-fail
+               (format "Action-only submission queued content: %S" text))))
+           ((symbol-function 'tts--protocol-dispatch)
+            (lambda () (push 'dispatch events))))
+        (setq
+         submission
+         (emacsvox-aural-submit-actions
+          :facts facts
+          :context context
+          :compatibility-actions
+          (list (emacsvox-aural-compatibility-icon 'item)))))
+      (should
+       (equal
+        (nreverse events)
+        '(ensure cue (tone 130.8 150 nil) (pause 40) dispatch)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (emacsvox-aural-submission-compatibility-actions submission))
+        '(item)))
+      (let* ((plan (car (emacsvox-aural-submission-plans submission)))
+             (record (emacsvox-aural-last-presentation)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-kind
+           (emacsvox-aural-concrete-plan-before plan))
+          '(cue tone)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-kind
+           (emacsvox-aural-concrete-plan-after plan))
+          '(pause)))
+        (should (= (length emacsvox-aural-presentation-history) 1))
+        (should
+         (= (emacsvox-aural-presentation-record-effective-transaction-id
+             record)
+            1))))))
+
 (ert-deftest emacsvox-aural-action-submission-presents-enabled-cue ()
   "An enabled semantic cue uses the ordered transport and enters history."
   (emacsvox-test--with-transport-scheme

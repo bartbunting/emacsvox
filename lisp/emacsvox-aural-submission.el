@@ -183,10 +183,15 @@ PHASE is `before' by default and may alternatively be `after'."
        id #'tts-speak prepared)
       submission)))
 
-(defun emacsvox-aural--submit-actions ()
-  "Submit the dynamically frozen semantic facts without object content."
+(defun emacsvox-aural--submit-actions (compatibility-actions)
+  "Submit frozen semantic facts and COMPATIBILITY-ACTIONS without content."
   (let* ((id (cl-incf emacsvox-aural--submission-sequence))
-         (facts (copy-tree emacsvox-aural-submission-facts))
+         (actions
+          (emacsvox-aural--normalized-compatibility-actions
+           compatibility-actions))
+         (facts
+          (emacsvox-aural--submission-facts-with-compatibility
+           emacsvox-aural-submission-facts actions))
          (context (copy-tree emacsvox-aural-submission-context))
          (plan-context
           (plist-put
@@ -194,25 +199,30 @@ PHASE is `before' by default and may alternatively be `after'."
            :presentation-transaction-id id))
          (plan
           (emacsvox-aural-call-with-presentation-transaction
-           id #'emacsvox-aural-present facts plan-context)))
+           id #'emacsvox-aural-present facts plan-context
+           (emacsvox-aural--source-compatibility-actions actions))))
     (emacsvox-aural--make-submission
      :id id
      :facts facts
      :context context
      :content nil
-     :compatibility-actions nil
+     :compatibility-actions
+     (mapcar #'copy-emacsvox-aural-compatibility-action actions)
      :prepared-content nil
      :plans (list plan))))
 
 (cl-defun emacsvox-aural-submit-actions
-    (&key facts context module occasion)
+    (&key facts context module occasion compatibility-actions)
   "Present semantic FACTS as one action-only native transaction.
 
 FACTS describe one user-visible event or object but supply no spoken object
 content.  Matching rules may still produce ordered speech, cue, pause, or tone
 actions.  Frozen CONTEXT controls policy; MODULE and OCCASION are used when it
-must be captured.  A resolution with no enabled output does not start the
-speech server, dispatch, or create a presentation-history record."
+must be captured.  COMPATIBILITY-ACTIONS is an ordered list produced by
+`emacsvox-aural-compatibility-icon'.  Before actions precede semantic
+before-actions; after actions follow semantic after-actions.  A resolution
+with no enabled output does not start the speech server, dispatch, or create a
+presentation-history record."
   (when (plist-member facts :content)
     (emacsvox-aural--submission-error
      "Action-only aural facts cannot contain spoken content: %S"
@@ -223,7 +233,8 @@ speech server, dispatch, or create a presentation-history record."
    :context context
    :module (or module (plist-get context :module))
    :occasion
-   (or occasion (plist-get context :occasion) 'notification)))
+   (or occasion (plist-get context :occasion) 'notification)
+   :arguments (list compatibility-actions)))
 
 (cl-defun emacsvox-aural-submit
     (content &key facts context module occasion compatibility-actions)

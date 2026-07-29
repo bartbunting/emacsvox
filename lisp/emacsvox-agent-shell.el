@@ -1588,6 +1588,12 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
          (format "Agent error: %s" detail)
        "Agent error."))))
 
+(defun emacsvox-agent-shell--submit-lifecycle-icon (icon)
+  "Submit configurable lifecycle ICON within the current semantic boundary."
+  (emacsvox-aural-submit-actions
+   :compatibility-actions
+   (list (emacsvox-aural-compatibility-icon icon))))
+
 (defun emacsvox-agent-shell--speak-turn-completion (event)
   "Announce the outcome described by turn completion EVENT."
   (emacsvox-agent-shell--call-with-aural-presentation
@@ -1598,7 +1604,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
        (if (equal stop-reason "end_turn")
            (when (emacsvox-agent-shell--speech-level-at-least-p 'notify)
              (if (emacsvox-agent-shell--session-focused-p)
-                 (emacsvox-icon emacsvox-agent-shell-processing-end-icon)
+                 (emacsvox-agent-shell--submit-lifecycle-icon
+                  emacsvox-agent-shell-processing-end-icon)
                (tts-notify-icon emacsvox-agent-shell-processing-end-icon)
                (tts-notify
                 (format "%s finished."
@@ -1667,10 +1674,12 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
       (pcase event-type
         ((or 'init-started 'input-submitted)
          (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-           (emacsvox-icon emacsvox-agent-shell-processing-start-icon)))
+           (emacsvox-agent-shell--submit-lifecycle-icon
+            emacsvox-agent-shell-processing-start-icon)))
         ('init-finished
          (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-           (emacsvox-icon emacsvox-agent-shell-processing-end-icon)))
+           (emacsvox-agent-shell--submit-lifecycle-icon
+            emacsvox-agent-shell-processing-end-icon)))
         ('turn-complete
          (emacsvox-agent-shell--speak-turn-completion event))
         ('error
