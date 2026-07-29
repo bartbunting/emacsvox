@@ -939,6 +939,58 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (mapcar #'emacsvox-aural-compatibility-action-value actions)
           (and icon (list icon))))))))
 
+(ert-deftest emacsvox-agent-shell-thought-methods-use-native-submissions ()
+  "Thought speech and cue modes should use one native transaction each."
+  (let ((emacsvox-agent-shell-speech-level 'full)
+        captured
+        direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              'content content arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
+            (push
+             (list
+              'actions arguments
+              (copy-tree emacsvox-aural-submission-facts)
+              (copy-tree emacsvox-aural-submission-context))
+             captured)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon direct-output)))
+         ((symbol-function 'tts-speak)
+          (lambda (&rest _) (push 'speech direct-output))))
+      (let ((emacsvox-agent-shell-speak-thought-process 'speak))
+        (emacsvox-agent-shell--speak-content "Reasoning" 'thought))
+      (let ((emacsvox-agent-shell-speak-thought-process 'icon))
+        (emacsvox-agent-shell--speak-content "Reasoning" 'thought))
+      (let ((emacsvox-agent-shell-speak-thought-process nil))
+        (emacsvox-agent-shell--speak-content "Reasoning" 'thought)))
+    (should-not direct-output)
+    (setq captured (nreverse captured))
+    (should (= (length captured) 2))
+    (pcase-let*
+        ((`(content ,text ,_arguments ,facts ,context) (car captured)))
+      (should (equal text "Thinking: Reasoning"))
+      (should (eq (plist-get facts :role) 'agent-thought))
+      (should (eq (plist-get context :module) 'agent-shell))
+      (should (eq (plist-get context :occasion) 'continuous)))
+    (pcase-let*
+        ((`(actions ,arguments ,facts ,context) (cadr captured))
+         (actions (plist-get arguments :compatibility-actions)))
+      (should
+       (equal
+        (mapcar #'emacsvox-aural-compatibility-action-value actions)
+        '(progress)))
+      (should (eq (plist-get facts :role) 'agent-thought))
+      (should (eq (plist-get context :module) 'agent-shell))
+      (should (eq (plist-get context :occasion) 'continuous)))))
+
 (ert-deftest emacsvox-agent-shell-speech-setup-preserves-package-header ()
   "Speech setup should not replace agent-shell's semantic header."
   (with-temp-buffer

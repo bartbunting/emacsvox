@@ -1786,6 +1786,12 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
 
+(defun emacsvox-agent-shell--submit-content-icon (icon)
+  "Submit Agent Shell content compatibility ICON without spoken text."
+  (emacsvox-aural-submit-actions
+   :compatibility-actions
+   (list (emacsvox-aural-compatibility-icon icon))))
+
 (defun emacsvox-agent-shell--speak-content-compatibility (content block-type)
   "Speak CONTENT based on BLOCK-TYPE with appropriate feedback."
   (let ((trimmed-content (string-trim content)))
@@ -1800,8 +1806,11 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
       ('thought
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (pcase emacsvox-agent-shell-speak-thought-process
-           ('speak (tts-speak (concat "Thinking: " trimmed-content)))
-           ('icon (emacsvox-icon 'progress))
+           ('speak
+            (emacsvox-agent-shell--submit-content-text
+             (concat "Thinking: " trimmed-content)))
+           ('icon
+            (emacsvox-agent-shell--submit-content-icon 'progress))
            (_ nil))))
       ('permission
        (when emacsvox-agent-shell-speak-permissions
