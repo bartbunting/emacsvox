@@ -43,6 +43,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 (require 'vertico nil 'noerror)
@@ -78,6 +79,26 @@ When ACCEPTED-P is non-nil, record candidate acceptance instead of navigation."
    (when (>= vertico--index 0)
      '(:states (selected)))))
 
+(defun emacsvox-vertico--submit-candidate-feedback (facts icon text)
+  "Submit candidate TEXT with FACTS and optional leading ICON."
+  (if (and (stringp text) (> (length text) 0))
+      (emacsvox-aural-submit
+       text
+       :facts facts
+       :module 'vertico
+       :occasion 'navigation
+       :compatibility-actions
+       (when icon
+         (list (emacsvox-aural-compatibility-icon icon))))
+    (let* ((context
+            (emacsvox-aural-capture-context 'vertico 'navigation))
+           (emacsvox-aural-submission-facts facts)
+           (emacsvox-aural-submission-context context)
+           (emacsvox-aural-submission-module 'vertico)
+           (emacsvox-aural-submission-occasion 'navigation))
+      (when icon (emacsvox-icon icon))
+      (when text (tts-speak text)))))
+
 ;;;  Advice interactive commands
 
 (defun emacsvox--advice-vertico-insert-around (orig-fun &rest args)
@@ -104,23 +125,16 @@ When ACCEPTED-P is non-nil, record candidate acceptance instead of navigation."
                        (if (stringp vertico--base)
                            (length vertico--base)
                          vertico--base)
-                     0)))
-       (to-speak nil))
+                     0))))
     (unless (equal emacsvox-vertico--prev-candidate new-cand)
-      (setq to-speak new-cand)
-      (let* ((facts (emacsvox-vertico-candidate-facts))
-             (context
-              (emacsvox-aural-capture-context 'vertico 'navigation))
-             (emacsvox-aural-submission-facts facts)
-             (emacsvox-aural-submission-context context)
-             (emacsvox-aural-submission-module 'vertico)
-             (emacsvox-aural-submission-occasion 'navigation))
-        (when
-            (or (equal vertico--index emacsvox-vertico--prev-index)
-                (and (not (equal vertico--index -1))
-                     (equal emacsvox-vertico--prev-index -1)))
-          (emacsvox-icon 'select-object))
-        (when to-speak (tts-speak to-speak))))
+      (emacsvox-vertico--submit-candidate-feedback
+       (emacsvox-vertico-candidate-facts)
+       (when
+           (or (equal vertico--index emacsvox-vertico--prev-index)
+               (and (not (equal vertico--index -1))
+                    (equal emacsvox-vertico--prev-index -1)))
+         'select-object)
+       new-cand))
     (setq-local emacsvox-vertico--prev-candidate new-cand
                 emacsvox-vertico--prev-index vertico--index)))
 
