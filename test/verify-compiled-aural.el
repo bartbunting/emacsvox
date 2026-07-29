@@ -24,6 +24,16 @@
   (dolist
       (library
        '("tts-speak"
+         "voice-setup"
+         "voice-defs"
+         "dectalk-voices"
+         "plain-voices"
+         "espeak-voices"
+         "outloud-voices"
+         "mac-voices"
+         "swiftmac-voices"
+         "emacsvox-pronounce"
+         "emacsvox-speak"
          "emacsvox-aural"
          "emacsvox-aural-spatial"
          "emacsvox-aural-rules"
@@ -66,6 +76,15 @@
   (dolist
       (function
        '(tts--protocol-queue-text
+         voice-from-acss
+         dectalk-voice-capabilities
+         plain-voice-capabilities
+         espeak-voice-capabilities
+         outloud-voice-capabilities
+         mac-voice-capabilities
+         swiftmac-voice-capabilities
+         emacsvox-pronounce-refresh-pronunciations
+         emacsvox-speak-line
          emacsvox-aural-voice-lock-enabled-p
          emacsvox-aural-spatial-clamp
          emacsvox-aural--rule-error
@@ -100,6 +119,11 @@
          ".elc" (or (symbol-file function 'defun) ""))
       (error "%S was not loaded from byte-code: %S"
              function (symbol-file function 'defun))))
+  (unless
+      (string-suffix-p
+       ".elc" (or (symbol-file 'voice-animate 'defvar) ""))
+    (error "voice-animate was not loaded from byte-code: %S"
+           (symbol-file 'voice-animate 'defvar)))
   (unless (eq (lookup-key emacsvox-keymap (kbd "H")) 'emacsvox-aural)
     (error "Compiled keymap does not bind C-e H to the aural home"))
   (unless

@@ -16,7 +16,18 @@
        (lisp-directory (expand-file-name "lisp/" root-directory))
        (setup (expand-file-name "emacsvox-setup.elc" lisp-directory))
        (features
-        '(emacsvox-aural
+        '(tts-speak
+          voice-setup
+          voice-defs
+          dectalk-voices
+          plain-voices
+          espeak-voices
+          outloud-voices
+          mac-voices
+          swiftmac-voices
+          emacsvox-pronounce
+          emacsvox-speak
+          emacsvox-aural
           emacsvox-aural-spatial
           emacsvox-aural-rules
           emacsvox-aural-resources
@@ -41,7 +52,17 @@
           emacsvox-sounds
           emacsvox-aural-sound-packs))
        (functions
-        '(emacsvox-aural-voice-lock-enabled-p
+        '(tts--protocol-queue-text
+          voice-from-acss
+          dectalk-voice-capabilities
+          plain-voice-capabilities
+          espeak-voice-capabilities
+          outloud-voice-capabilities
+          mac-voice-capabilities
+          swiftmac-voice-capabilities
+          emacsvox-pronounce-refresh-pronunciations
+          emacsvox-speak-line
+          emacsvox-aural-voice-lock-enabled-p
           emacsvox-aural-spatial-clamp
           emacsvox-aural--rule-error
           emacsvox-aural--resource-error
@@ -79,6 +100,11 @@
     (let ((file (symbol-file function 'defun)))
       (unless (and file (string-suffix-p ".elc" file))
         (error "%S was not loaded from normal byte-code: %S" function file))))
+  (unless
+      (string-suffix-p
+       ".elc" (or (symbol-file 'voice-animate 'defvar) ""))
+    (error "voice-animate was not loaded from normal byte-code: %S"
+           (symbol-file 'voice-animate 'defvar)))
   (when-let* ((stale (emacsvox-setup--stale-byte-code lisp-directory)))
     (error "Normal aural build left stale byte-code: %S" stale)))
 

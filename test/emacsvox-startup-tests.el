@@ -38,6 +38,23 @@
             (list source))))
       (delete-directory directory t))))
 
+(ert-deftest emacsvox-setup-tracks-aural-runtime-sources ()
+  "The stale guard covers the TTS and voice dependencies of aural startup."
+  (dolist
+      (source
+       '("tts-speak.el"
+         "voice-setup.el"
+         "voice-defs.el"
+         "dectalk-voices.el"
+         "plain-voices.el"
+         "espeak-voices.el"
+         "outloud-voices.el"
+         "mac-voices.el"
+         "swiftmac-voices.el"
+         "emacsvox-pronounce.el"
+         "emacsvox-speak.el"))
+    (should (member source emacsvox-setup--startup-sources))))
+
 (ert-deftest emacsvox-setup-prefers-source-while-loading-stale-tree ()
   "Stale startup byte-code enables `load-prefer-newer' for dependencies."
   (let ((load-path (copy-sequence load-path))

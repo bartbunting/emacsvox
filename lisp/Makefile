@@ -53,13 +53,26 @@ COMPILE =  -f batch-byte-compile
 ###   grouping files into dependent modules
 
 #The various modules:
-TTS_OBJECTS =  \
+VOICE_OBJECTS = \
+voice-setup.elc \
+voice-defs.elc \
+dectalk-voices.elc \
+plain-voices.elc \
+espeak-voices.elc \
+outloud-voices.elc \
+mac-voices.elc \
+swiftmac-voices.elc
+
+TTS_OBJECTS = \
 emacsvox-preamble.elc \
 emacsvox-loaddefs.elc \
-tts-speak.elc		dectalk-voices.elc\
-plain-voices.elc espeak-voices.elc \
-outloud-voices.elc  mac-voices.elc \
-swiftmac-voices.elc
+tts-speak.elc \
+$(VOICE_OBJECTS)
+
+AURAL_RUNTIME_OBJECTS = \
+$(TTS_OBJECTS) \
+emacsvox-pronounce.elc \
+emacsvox-speak.elc
 
 AURAL_OBJECTS = \
 emacsvox-aural.elc \
@@ -94,8 +107,6 @@ emacsvox-sounds.elc \
 emacsvox-aural-sound-packs.elc
 
 SPEAK_OBJECTS =   \
-voice-setup.elc \
-voice-defs.elc \
 emacsvox-pronounce.elc \
 emacsvox-speak.elc  \
 emacsvox-advice.elc\
@@ -325,7 +336,7 @@ OBJECTS = $(TTS_OBJECTS) $(SPEAK_OBJECTS) $(CORE_OBJECTS)  $(ADDON_OBJECTS)
 .PHONY: all aural
 all: $(OBJECTS)
 
-aural: emacsvox-preamble.elc emacsvox-loaddefs.elc emacsvox-keymap.elc \
+aural: $(AURAL_RUNTIME_OBJECTS) emacsvox-keymap.elc \
 $(AURAL_OBJECTS) emacsvox.elc emacsvox-setup.elc
 
 emacsvox-aural-spatial.elc: emacsvox-aural.elc
@@ -334,6 +345,13 @@ emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
 emacsvox-aural-transport.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
+tts-speak.elc: emacsvox-aural-transport.elc
+voice-setup.elc: tts-speak.elc
+voice-defs.elc: voice-setup.elc
+dectalk-voices.elc plain-voices.elc espeak-voices.elc \
+outloud-voices.elc mac-voices.elc swiftmac-voices.elc: voice-defs.elc
+emacsvox-speak.elc: \
+tts-speak.elc voice-setup.elc voice-defs.elc emacsvox-pronounce.elc
 emacsvox-aural-description.elc: emacsvox-aural-transport.elc
 emacsvox-aural-preview.elc: emacsvox-aural-transport.elc
 emacsvox-aural-validation.elc: emacsvox-aural-transport.elc
