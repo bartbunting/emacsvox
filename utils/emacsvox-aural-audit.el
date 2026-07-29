@@ -7,8 +7,9 @@
 ;;; Commentary:
 
 ;; Validate the semantic, scheme, cue, sound-pack, and voice-palette
-;; registries.  Parse literal auditory-icon calls without evaluating source,
-;; and generate the maintained author reference from the live registries.
+;; registries.  Parse literal auditory-icon and legacy tone calls without
+;; evaluating source, and generate the maintained author reference from the
+;; live registries.
 
 ;;; Code:
 
@@ -44,6 +45,10 @@
 (defconst emacsvox-aural-audit-icon-functions
   '(emacsvox-icon emacsvox-queue-icon)
   "Functions whose literal cue arguments are included in the source audit.")
+
+(defconst emacsvox-aural-audit-tone-functions
+  '(tts-tone tts-tone-deletion tts-tone-upcase tts-tone-downcase)
+  "Legacy tone entry points included in the migration inventory.")
 
 (defconst emacsvox-aural-audit-complete-resolution-functions
   '(emacsvox-aural-submit
@@ -112,11 +117,11 @@ listed calls, or in an internal function whose name ends in
     (expand-file-name "lisp" root) "\\.el\\'")
    #'string-lessp))
 
-(defun emacsvox-aural-audit--record-cue (cue relative usage)
-  "Record literal CUE from RELATIVE in USAGE."
-  (let ((entry (gethash cue usage)))
+(defun emacsvox-aural-audit--record-source-usage (key relative usage)
+  "Record KEY from RELATIVE in source USAGE."
+  (let ((entry (gethash key usage)))
     (puthash
-     cue
+     key
      (list
       :count (1+ (or (plist-get entry :count) 0))
       :files (sort
@@ -124,6 +129,51 @@ listed calls, or in an internal function whose name ends in
                (cons relative (copy-sequence (plist-get entry :files))))
               #'string-lessp))
      usage)))
+
+(defun emacsvox-aural-audit--walk-source-form (form visitor)
+  "Call VISITOR for each executable list in source FORM."
+  (cond
+   ((atom form) nil)
+   ((eq (car form) 'quote) nil)
+   (t
+    (funcall visitor form)
+    (let ((tail form))
+      (while (consp tail)
+        (emacsvox-aural-audit--walk-source-form (car tail) visitor)
+        (setq tail (cdr tail)))
+      (when tail
+        (emacsvox-aural-audit--walk-source-form tail visitor))))))
+
+(defun emacsvox-aural-audit--scan-source-forms (root visitor)
+  "Call VISITOR with each executable form and relative file below ROOT.
+
+Return source parse errors without evaluating reader forms."
+  (let (parse-errors)
+    (dolist (file (emacsvox-aural-audit--source-files root))
+      (let ((relative (file-relative-name file root)))
+        (with-temp-buffer
+          (insert-file-contents file)
+          (emacs-lisp-mode)
+          (goto-char (point-min))
+          (let ((read-eval nil))
+            (condition-case error
+                (while
+                    (progn
+                      (forward-comment (point-max))
+                      (not (eobp)))
+                  (emacsvox-aural-audit--walk-source-form
+                   (read (current-buffer))
+                   (lambda (form)
+                     (funcall visitor form relative))))
+              (error
+               (push
+                (format
+                 "%s:%d: %s"
+                 relative
+                 (line-number-at-pos)
+                 (error-message-string error))
+                parse-errors)))))))
+    (nreverse parse-errors)))
 
 (defun emacsvox-aural-audit-source-cues (&optional root)
   "Return literal and dynamic auditory-icon usage below repository ROOT.
@@ -134,49 +184,23 @@ dynamic-call count, and source parse errors."
   (let* ((root (emacsvox-aural-audit--root root))
          (usage (make-hash-table :test #'eq))
          (dynamic-count 0)
-         parse-errors)
-    (dolist (file (emacsvox-aural-audit--source-files root))
-      (let ((relative (file-relative-name file root)))
-        (with-temp-buffer
-          (insert-file-contents file)
-          (emacs-lisp-mode)
-          (goto-char (point-min))
-          (let ((read-eval nil))
-            (cl-labels
-                ((walk
-                  (form)
-                  (cond
-                   ((atom form) nil)
-                   ((eq (car form) 'quote) nil)
-                   (t
-                    (when (memq
-                           (car form)
-                           emacsvox-aural-audit-icon-functions)
-                      (let ((argument (cadr form)))
-                        (if
-                            (and
-                             (consp argument)
-                             (eq (car argument) 'quote)
-                             (symbolp (cadr argument)))
-                            (emacsvox-aural-audit--record-cue
-                             (cadr argument) relative usage)
-                          (cl-incf dynamic-count))))
-                    (walk (car form))
-                    (walk (cdr form))))))
-              (condition-case error
-                  (while
-                      (progn
-                        (forward-comment (point-max))
-                        (not (eobp)))
-                    (walk (read (current-buffer))))
-                (error
-                 (push
-                  (format
-                   "%s:%d: %s"
-                   relative
-                   (line-number-at-pos)
-                   (error-message-string error))
-                  parse-errors))))))))
+         (parse-errors
+          (emacsvox-aural-audit--scan-source-forms
+           root
+           (lambda (form relative)
+             (when
+                 (memq
+                  (car form)
+                  emacsvox-aural-audit-icon-functions)
+               (let ((argument (cadr form)))
+                 (if
+                     (and
+                      (consp argument)
+                      (eq (car argument) 'quote)
+                      (symbolp (cadr argument)))
+                     (emacsvox-aural-audit--record-source-usage
+                      (cadr argument) relative usage)
+                   (cl-incf dynamic-count))))))))
     (let (entries)
       (maphash
        (lambda (cue data) (push (cons cue data) entries))
@@ -193,7 +217,89 @@ dynamic-call count, and source parse errors."
         for (_ . data) in entries
         sum (plist-get data :count))
        :dynamic-count dynamic-count
-       :parse-errors (nreverse parse-errors)))))
+       :parse-errors parse-errors))))
+
+(defun emacsvox-aural-audit--literal-tone-signature (form)
+  "Return the literal raw tone signature in FORM, or nil when dynamic."
+  (let ((pitch (nth 1 form))
+        (duration (nth 2 form))
+        (force-form (nth 3 form)))
+    (when
+        (and
+         (numberp pitch)
+         (numberp duration)
+         (or
+          (< (length form) 4)
+          (null force-form)
+          (eq force-form t)
+          (and
+           (consp force-form)
+           (eq (car force-form) 'quote)
+           (= (length force-form) 2))))
+      (list
+       pitch
+       duration
+       (if
+           (and (consp force-form) (eq (car force-form) 'quote))
+           (cadr force-form)
+         force-form)))))
+
+(defun emacsvox-aural-audit-source-tones (&optional root)
+  "Return a deterministic legacy tone-call inventory below repository ROOT.
+
+Raw `tts-tone' calls with literal pitch, duration, and force arguments are
+grouped by signature.  Calls with computed arguments are counted as dynamic.
+The three historical named helpers are counted separately.  Source is read
+with `read-eval' disabled and never evaluated."
+  (let* ((root (emacsvox-aural-audit--root root))
+         (usage (make-hash-table :test #'eq))
+         (signatures (make-hash-table :test #'equal))
+         (raw-literal-count 0)
+         (raw-dynamic-count 0)
+         (parse-errors
+          (emacsvox-aural-audit--scan-source-forms
+           root
+           (lambda (form relative)
+             (when
+                 (memq
+                  (car form)
+                  emacsvox-aural-audit-tone-functions)
+               (emacsvox-aural-audit--record-source-usage
+                (car form) relative usage)
+               (when (eq (car form) 'tts-tone)
+                 (if-let* ((signature
+                            (emacsvox-aural-audit--literal-tone-signature
+                             form)))
+                     (progn
+                       (cl-incf raw-literal-count)
+                       (emacsvox-aural-audit--record-source-usage
+                        signature relative signatures))
+                   (cl-incf raw-dynamic-count))))))))
+    (let (usage-entries signature-entries)
+      (maphash
+       (lambda (function data)
+         (push (cons function data) usage-entries))
+       usage)
+      (maphash
+       (lambda (signature data)
+         (push (cons signature data) signature-entries))
+       signatures)
+      (list
+       :usage
+       (sort
+        usage-entries
+        (lambda (left right)
+          (emacsvox-aural-audit--symbol-less-p
+           (car left) (car right))))
+       :signatures
+       (sort
+        signature-entries
+        (lambda (left right)
+          (string-lessp (format "%S" (car left))
+                        (format "%S" (car right)))))
+       :raw-literal-count raw-literal-count
+       :raw-dynamic-count raw-dynamic-count
+       :parse-errors parse-errors))))
 
 (defun emacsvox-aural-audit--compatibility-function-p (function)
   "Return non-nil when FUNCTION explicitly names a compatibility adapter."
@@ -1157,8 +1263,9 @@ below a presentation boundary."
    "* Maintenance\n\n"
    "Run =make aural-reference= after changing a registry or this generator.  "
    "Run =make aural-audit= to validate registry cross-references, every "
-   "registered pack and built-in scheme, literal cue calls, voice palettes, "
-   "semantic icon boundaries in migrated modules, and this generated file.  "
+   "registered pack and built-in scheme, literal cue calls, legacy tone-call "
+   "inventory, voice palettes, semantic icon boundaries in migrated modules, "
+   "and this generated file.  "
    "=utils/count-icons.pl= remains a historical text counter; the "
    "registry-aware audit is authoritative.\n"))
 
@@ -1224,6 +1331,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
   "Audit aural registries, source cues, and generated docs below ROOT."
   (let* ((root (emacsvox-aural-audit--root root))
          (source (emacsvox-aural-audit-source-cues root))
+         (tones (emacsvox-aural-audit-source-tones root))
          (usage (plist-get source :usage))
          (context-free-icons
           (emacsvox-aural-audit-context-free-icons root))
@@ -1286,10 +1394,18 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
      :usage usage
      :literal-count (plist-get source :literal-count)
      :dynamic-count (plist-get source :dynamic-count)
+     :tone-usage (plist-get tones :usage)
+     :tone-signatures (plist-get tones :signatures)
+     :raw-literal-tone-count (plist-get tones :raw-literal-count)
+     :raw-dynamic-tone-count (plist-get tones :raw-dynamic-count)
      :unknown-cues (nreverse unknown)
      :context-free-icons context-free-icons
      :nested-submission-resolutions nested-resolutions
-     :parse-errors (plist-get source :parse-errors)
+     :parse-errors
+     (delete-dups
+      (append
+       (plist-get source :parse-errors)
+       (plist-get tones :parse-errors)))
      :errors (nreverse errors)
      :reference-current (emacsvox-aural-reference-current-p root)))))
 
@@ -1306,6 +1422,7 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
 (defun emacsvox-aural-audit-format (audit)
   "Return deterministic human-readable output for AUDIT."
   (let* ((usage (plist-get audit :usage))
+         (tone-usage (plist-get audit :tone-usage))
          (used (length usage))
          (registered (hash-table-count emacsvox-aural-cue-registry)))
     (concat
@@ -1330,6 +1447,32 @@ FILE defaults to `emacsvox-aural-audit-reference-file' below ROOT."
                (emacsvox-aural-audit--symbol-less-p
                 (car left) (car right))
              (< left-count right-count)))))
+      "")
+     (format
+      "Tone inventory: %d raw literal calls, %d raw dynamic calls"
+      (plist-get audit :raw-literal-tone-count)
+      (plist-get audit :raw-dynamic-tone-count))
+     (mapconcat
+      (lambda (function)
+        (format
+         ", %d %s calls"
+         (or
+          (plist-get (alist-get function tone-usage) :count)
+          0)
+         function))
+      '(tts-tone-deletion tts-tone-upcase tts-tone-downcase)
+      "")
+     "\n"
+     (mapconcat
+      (lambda (entry)
+        (pcase-let ((`(,pitch ,duration ,force) (car entry)))
+          (format
+           "  %s Hz/%s ms%s: %d\n"
+           pitch
+           duration
+           (if force (format "/%s" force) "")
+           (plist-get (cdr entry) :count))))
+      (plist-get audit :tone-signatures)
       "")
      (mapconcat
       (lambda (entry)

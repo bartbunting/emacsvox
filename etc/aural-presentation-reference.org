@@ -497,4 +497,4 @@ Rollout is deliberately staged.  The default scheme is compatibility preserving,
 
 * Maintenance
 
-Run =make aural-reference= after changing a registry or this generator.  Run =make aural-audit= to validate registry cross-references, every registered pack and built-in scheme, literal cue calls, voice palettes, semantic icon boundaries in migrated modules, and this generated file.  =utils/count-icons.pl= remains a historical text counter; the registry-aware audit is authoritative.
+Run =make aural-reference= after changing a registry or this generator.  Run =make aural-audit= to validate registry cross-references, every registered pack and built-in scheme, literal cue calls, legacy tone-call inventory, voice palettes, semantic icon boundaries in migrated modules, and this generated file.  =utils/count-icons.pl= remains a historical text counter; the registry-aware audit is authoritative.

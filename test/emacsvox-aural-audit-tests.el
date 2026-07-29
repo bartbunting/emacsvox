@@ -2,8 +2,8 @@
 
 ;;; Commentary:
 
-;; Verify safe source scanning, generated-reference determinism, and the
-;; repository-wide registry/documentation contract.
+;; Verify safe cue and tone source scanning, generated-reference determinism,
+;; and the repository-wide registry/documentation contract.
 
 ;;; Code:
 
@@ -59,6 +59,58 @@
       (should (= (plist-get report :dynamic-count) 1))
       (should-not (plist-get report :parse-errors))
       (should (equal (mapcar #'car usage) '(item warn-user))))))
+
+(ert-deftest emacsvox-aural-audit-inventories-legacy-tone-calls ()
+  "Tone inventory separates literal raw tones from dynamic and helper calls."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     (concat
+      "(tts-tone 440 100 'force)\n"
+      "(tts-tone pitch 75)\n"
+      "(tts-tone-deletion)\n"
+      "(tts-tone-upcase)\n"
+      "(tts-tone-downcase)\n"
+      ";; (tts-tone 220 50)\n"
+      "\"(tts-tone 220 50)\"\n"
+      "'(tts-tone 220 50)\n"))
+    (let* ((report (emacsvox-aural-audit-source-tones root))
+           (usage (plist-get report :usage))
+           (signature (car (plist-get report :signatures))))
+      (should (= (plist-get report :raw-literal-count) 1))
+      (should (= (plist-get report :raw-dynamic-count) 1))
+      (should-not (plist-get report :parse-errors))
+      (should
+       (equal
+        (mapcar #'car usage)
+        '(tts-tone tts-tone-deletion tts-tone-downcase tts-tone-upcase)))
+      (should (equal (car signature) '(440 100 force)))
+      (should (= (plist-get (cdr signature) :count) 1))
+      (should
+       (equal
+        (plist-get (cdr signature) :files)
+        '("lisp/example.el"))))))
+
+(ert-deftest emacsvox-aural-audit-does-not-count-definition-names-as-calls ()
+  "Function names in definitions are not executable cue or tone calls."
+  (emacsvox-test--with-aural-audit-root (root)
+    (emacsvox-test--write-aural-audit-source
+     root
+     (concat
+      "(defun emacsvox-icon (icon) icon)\n"
+      "(defun emacsvox-queue-icon (icon) icon)\n"
+      "(defsubst tts-tone-upcase () nil)\n"
+      "(defsubst tts-tone-downcase () nil)\n"
+      "(defsubst tts-tone-deletion () nil)\n"
+      "(defun tts-tone (pitch duration &optional force)\n"
+      "  (list pitch duration force))\n"))
+    (let ((cues (emacsvox-aural-audit-source-cues root))
+          (tones (emacsvox-aural-audit-source-tones root)))
+      (should-not (plist-get cues :usage))
+      (should (zerop (plist-get cues :dynamic-count)))
+      (should-not (plist-get tones :usage))
+      (should (zerop (plist-get tones :raw-literal-count)))
+      (should (zerop (plist-get tones :raw-dynamic-count))))))
 
 (ert-deftest emacsvox-aural-audit-rejects-context-free-migrated-icons ()
   "Migrated modules may emit icons only below their semantic boundary."
@@ -131,9 +183,11 @@
       "    (setq emacsvox-test--aural-read-evaluated t)\n"
       "    '(emacsvox-icon 'alarm))\n"))
     (setq emacsvox-test--aural-read-evaluated nil)
-    (let ((report (emacsvox-aural-audit-source-cues root)))
+    (let ((report (emacsvox-aural-audit-source-cues root))
+          (tones (emacsvox-aural-audit-source-tones root)))
       (should-not emacsvox-test--aural-read-evaluated)
-      (should (plist-get report :parse-errors)))))
+      (should (plist-get report :parse-errors))
+      (should (plist-get tones :parse-errors)))))
 
 (ert-deftest emacsvox-aural-audit-reports-unregistered-literal-cues ()
   "An unregistered cue in executable source should fail the audit."
