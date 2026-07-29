@@ -37,6 +37,7 @@
           emacsvox-aural-providers
           emacsvox-aural-compiler
           emacsvox-aural-source
+          emacsvox-aural-planner
           emacsvox-aural-transport
           emacsvox-aural-preview
           emacsvox-aural-validation
@@ -77,6 +78,7 @@
           emacsvox-aural-effective-resource-pack
           emacsvox-aural-compile-plan
           emacsvox-aural-capture-source-faces
+          emacsvox-aural-prepare-text
           emacsvox-aural--transport-error
           emacsvox-aural-preview-play-plan
           emacsvox-aural-validation--report

@@ -85,6 +85,7 @@ emacsvox-aural-schemes.elc \
 emacsvox-aural-providers.elc \
 emacsvox-aural-compiler.elc \
 emacsvox-aural-source.elc \
+emacsvox-aural-planner.elc \
 emacsvox-aural-transport.elc \
 emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc \
@@ -356,10 +357,13 @@ emacsvox-aural-concrete.elc emacsvox-aural-providers.elc \
 emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 emacsvox-aural-source.elc: \
 emacsvox-aural-history.elc emacsvox-aural-schemes.elc
+emacsvox-aural-planner.elc: \
+emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc \
+emacsvox-aural-schemes.elc emacsvox-aural-source.elc
 emacsvox-aural-transport.elc: \
 emacsvox-aural-compiler.elc emacsvox-aural-concrete.elc \
-emacsvox-aural-history.elc emacsvox-aural-schemes.elc \
-emacsvox-aural-source.elc
+emacsvox-aural-history.elc emacsvox-aural-planner.elc \
+emacsvox-aural-schemes.elc emacsvox-aural-source.elc
 tts-speak.elc: emacsvox-aural-transport.elc
 voice-setup.elc: tts-speak.elc
 voice-defs.elc: voice-setup.elc

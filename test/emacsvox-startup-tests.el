@@ -63,7 +63,8 @@
          "emacsvox-aural-history.el"
          "emacsvox-aural-providers.el"
          "emacsvox-aural-compiler.el"
-         "emacsvox-aural-source.el"))
+         "emacsvox-aural-source.el"
+         "emacsvox-aural-planner.el"))
     (should (member source emacsvox-setup--startup-sources))))
 
 (ert-deftest emacsvox-setup-prefers-source-while-loading-stale-tree ()
