@@ -75,7 +75,7 @@
 (defun emacsvox--advice-*table--cell-delete-char-around (orig-fun &rest args)
   "Speak character you're deleting."
   (when (ems-interactive-p '*table--cell-delete-char)
-    (tts-tone 500 100 'force)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-char t))
   (apply orig-fun args))
 
@@ -88,7 +88,7 @@
     (orig-fun &rest args)
   "Speak character you're deleting."
   (when (ems-interactive-p '*table--cell-delete-backward-char)
-    (tts-tone 500 100 'force)
+    (emacsvox-speak-edit-operation 'deletion)
     (emacsvox-speak-this-char (preceding-char)))
   (apply orig-fun args))
 

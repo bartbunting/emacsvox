@@ -48,8 +48,9 @@
   "Interactive forward deletion cues once before one original call."
   (let ((ems--interactive-fn-name '*table--cell-delete-char)
         events)
-    (cl-letf (((symbol-function 'tts-tone)
-               (lambda (&rest _) (push 'tone events)))
+    (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+               (lambda (operation)
+                 (push (list 'edit operation) events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (push 'speak-char events))))
       (should
@@ -61,14 +62,16 @@
            'original-result)
          1)))
       (should
-       (equal (nreverse events) '(tone speak-char original))))))
+       (equal
+        (nreverse events)
+        '((edit deletion) speak-char original))))))
 
 (ert-deftest emacsvox-etable-delete-char-is-quiet-programmatically ()
   "Programmatic forward deletion calls the original exactly once."
   (let ((calls 0)
         events)
-    (cl-letf (((symbol-function 'tts-tone)
-               (lambda (&rest _) (push 'tone events)))
+    (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+               (lambda (&rest _) (push 'edit events)))
               ((symbol-function 'emacsvox-speak-char)
                (lambda (&rest _) (push 'speak-char events))))
       (should
@@ -89,8 +92,9 @@
         events)
     (with-temp-buffer
       (insert "x")
-      (cl-letf (((symbol-function 'tts-tone)
-                 (lambda (&rest _) (push 'tone events)))
+      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
+                 (lambda (operation)
+                   (push (list 'edit operation) events)))
                 ((symbol-function 'emacsvox-speak-this-char)
                  (lambda (character)
                    (push (list 'speak-char character) events))))
@@ -105,7 +109,7 @@
         (should
          (equal
           (nreverse events)
-          '(tone (speak-char 120) original)))))))
+          '((edit deletion) (speak-char 120) original)))))))
 
 (ert-deftest emacsvox-etable-newline-and-indent-calls-original-once-last ()
   "Indent feedback precedes one original call and preserves its result."
