@@ -399,6 +399,75 @@ PROCESS-MARKER is advanced past INSERTED-OUTPUT, which defaults to RAW-OUTPUT."
               'filter-result))))
       (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
+(ert-deftest emacsvox-comint-split-prompt-drives-procfs-tracking-once ()
+  "Directory tracking follows the logical prompt, even with autospeak off."
+  (with-temp-buffer
+    (shell-mode)
+    (let ((emacsvox-comint-autospeak nil)
+          (comint-prompt-regexp "[$] ")
+          (dirtrack-procfs-mode t)
+          (calls 0))
+      (cl-letf (((symbol-function 'emacsvox-shell-dirtrack-procfs)
+                 (lambda (&optional output)
+                   (cl-incf calls)
+                   output)))
+        (emacsvox-comint--present-process-output "$" "$")
+        (should (= calls 1))
+        (emacsvox-comint--present-process-output " " " "))
+      (should (= calls 1))
+      (should (equal emacsvox-comint--last-prompt "$ "))
+      (should (equal emacsvox-comint--pending-output "")))))
+
+(ert-deftest emacsvox-shell-procfs-tracking-updates-only-at-a-new-directory ()
+  "Procfs tracking changes directory once and preserves its filter argument."
+  (with-temp-buffer
+    (shell-mode)
+    (let ((default-directory "/old/")
+          changed-to)
+      (cl-letf
+          (((symbol-function 'emacsvox-shell--procfs-directory)
+            (lambda () "/new/"))
+           ((symbol-function 'file-equal-p)
+            (lambda (left right)
+              (equal left right)))
+           ((symbol-function 'cd)
+            (lambda (directory)
+              (setq changed-to directory
+                    default-directory directory))))
+        (should
+         (equal
+          (emacsvox-shell-dirtrack-procfs "unchanged output")
+          "unchanged output"))
+        (should (equal changed-to "/new/"))
+        (setq changed-to nil)
+        (emacsvox-shell-dirtrack-procfs)
+        (should-not changed-to)))))
+
+(ert-deftest emacsvox-shell-remote-buffers-retain-stock-directory-tracking ()
+  "A remote Shell buffer does not replace Shell's own directory tracker."
+  (with-temp-buffer
+    (cl-letf (((symbol-function 'file-remote-p)
+               (lambda (&rest _) "/mock:")))
+      (shell-mode))
+    (should shell-dirtrack-mode)
+    (should-not dirtrack-procfs-mode)
+    (should-not
+     (memq
+      #'emacsvox-shell-dirtrack-procfs
+      comint-preoutput-filter-functions))))
+
+(ert-deftest emacsvox-shell-procfs-mode-refuses-an-ineligible-shell ()
+  "Manually enabling procfs tracking cannot disable a safe fallback."
+  (with-temp-buffer
+    (shell-mode)
+    (shell-dirtrack-mode 1)
+    (cl-letf (((symbol-function
+                'emacsvox-shell--procfs-dirtrack-available-p)
+               (lambda () nil)))
+      (dirtrack-procfs-mode 1))
+    (should-not dirtrack-procfs-mode)
+    (should shell-dirtrack-mode)))
+
 (ert-deftest emacsvox-comint-completion-history-advice-is-directly-registered ()
   "Comint completion and history-display advice uses native advice directly."
   (dolist

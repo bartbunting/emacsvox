@@ -114,6 +114,9 @@ buffer is not current or its window live.")
 (defvar-local emacsvox-comint--last-prompt nil
   "Most recently recognized command prompt, without text properties.")
 
+(defvar-local emacsvox-comint--prompt-awaiting-padding nil
+  "Non-nil when a just-recognized prompt may receive trailing whitespace.")
+
 ;;;###autoload
 (ems-generate-switcher 'emacsvox-toggle-comint-output-monitor
                        'emacsvox-comint-output-monitor
@@ -229,28 +232,43 @@ previously observed prompt can delimit output that did not end in a newline."
 (defun emacsvox-comint--partition-output (text replace-p)
   "Partition normalized inserted TEXT into output, prompt, and pending text.
 When REPLACE-P is non-nil, TEXT replaces pending carriage-motion output."
-  (let* ((combined
-          (if replace-p
-              text
-            (concat emacsvox-comint--pending-output text)))
-         (prompt-split (emacsvox-comint--split-final-prompt combined))
-         output prompt)
-    (if prompt-split
-        (setq output (car prompt-split)
-              prompt (cdr prompt-split)
-              emacsvox-comint--pending-output ""
-              emacsvox-comint--last-prompt
-              (substring-no-properties prompt))
-      (let* ((plain (substring-no-properties combined))
-             (pending-start
-              (if-let* ((newline (string-match "[^\n]*\\'" plain)))
-                  newline
-                0)))
-        (setq output (substring combined 0 pending-start)
-              emacsvox-comint--pending-output
-              (substring combined pending-start))))
-    (list :output output :prompt prompt
-          :pending emacsvox-comint--pending-output)))
+  (let ((plain-text (substring-no-properties text)))
+    (if
+        (and
+         (not replace-p)
+         emacsvox-comint--prompt-awaiting-padding
+         (string-match-p "\\`[ \t]+\\'" plain-text))
+        (progn
+          (setq emacsvox-comint--last-prompt
+                (concat emacsvox-comint--last-prompt plain-text)
+                emacsvox-comint--prompt-awaiting-padding nil)
+          (list :output nil :prompt nil :pending ""))
+      (setq emacsvox-comint--prompt-awaiting-padding nil)
+      (let* ((combined
+              (if replace-p
+                  text
+                (concat emacsvox-comint--pending-output text)))
+             (prompt-split (emacsvox-comint--split-final-prompt combined))
+             output prompt)
+        (if prompt-split
+            (setq output (car prompt-split)
+                  prompt (cdr prompt-split)
+                  emacsvox-comint--pending-output ""
+                  emacsvox-comint--last-prompt
+                  (substring-no-properties prompt)
+                  emacsvox-comint--prompt-awaiting-padding
+                  (string-match-p
+                   "[$#%>]\\'" emacsvox-comint--last-prompt))
+          (let* ((plain (substring-no-properties combined))
+                 (pending-start
+                  (if-let* ((newline (string-match "[^\n]*\\'" plain)))
+                      newline
+                    0)))
+            (setq output (substring combined 0 pending-start)
+                  emacsvox-comint--pending-output
+                  (substring combined pending-start))))
+        (list :output output :prompt prompt
+              :pending emacsvox-comint--pending-output)))))
 
 (defun emacsvox-comint--automatic-feedback-p ()
   "Return non-nil when process output should be presented in this buffer."
@@ -270,6 +288,12 @@ events.  Carriage-return chunks replace pending progress output."
          (output (plist-get partition :output))
          (prompt (plist-get partition :prompt))
          (present-p (emacsvox-comint--automatic-feedback-p)))
+    (when
+        (and
+         prompt
+         (derived-mode-p 'shell-mode)
+         (bound-and-true-p dirtrack-procfs-mode))
+      (emacsvox-shell-dirtrack-procfs))
     (if (not present-p)
         ;; Never announce output later merely because autospeak or monitoring
         ;; was enabled after it arrived.
@@ -657,6 +681,7 @@ events.  Carriage-return chunks replace pending progress output."
 
 (defun emacsvox--advice-comint-send-input-after (&rest _)
   "Flush speech and cue an interactively submitted Comint input."
+  (setq emacsvox-comint--prompt-awaiting-padding nil)
   (when (ems-interactive-p 'comint-send-input)
     (tts-stop 'all)
     (emacsvox-icon 'more)))
@@ -772,19 +797,42 @@ events.  Carriage-return chunks replace pending progress output."
 (declare-function shell-dirtrack-mode "shell" (&optional arg))
 ;; Directory tracking for shell buffers on  systems that have  /proc
 ;; Adapted from Emacs Wiki:
-(defun emacsvox-shell-dirtrack-procfs (str)
-  "Directory tracking using /proc.
-/proc/pid/cwd is a symlink to working directory."
-  
-  (prog1
-      str
-    (when (string-match comint-prompt-regexp str)
+(defun emacsvox-shell--procfs-directory ()
+  "Return the local shell process directory reported by procfs, or nil."
+  (when
+      (and
+       (derived-mode-p 'shell-mode)
+       (not (file-remote-p default-directory)))
+    (when-let* ((process (get-buffer-process (current-buffer)))
+                ((process-live-p process))
+                (pid (process-id process))
+                ((integerp pid))
+                (path (format "/proc/%d/cwd" pid))
+                ((file-symlink-p path))
+                (directory (ignore-errors (file-truename path)))
+                ((file-directory-p directory)))
+      (file-name-as-directory directory))))
+
+(defun emacsvox-shell-dirtrack-procfs (&optional output)
+  "Update `default-directory' from procfs and return OUTPUT unchanged.
+This is called when the logical output assembler recognizes a complete prompt,
+so prompts split across process chunks still update the directory."
+  (prog1 output
+    (when-let* ((directory (emacsvox-shell--procfs-directory))
+                ((not
+                  (file-equal-p
+                   directory (expand-file-name default-directory)))))
       (condition-case nil
-          (cd
-           (file-symlink-p
-            (format "/proc/%s/cwd"
-                    (process-id (get-buffer-process (current-buffer))))))
-        (error)))))
+          (cd directory)
+        (file-error nil)))))
+
+(defun emacsvox-shell--procfs-dirtrack-available-p ()
+  "Return non-nil when procfs tracking can serve the current shell."
+  (and
+   (derived-mode-p 'shell-mode)
+   (not (file-remote-p default-directory))
+   (file-directory-p "/proc")
+   (emacsvox-shell--procfs-directory)))
 
 (define-minor-mode dirtrack-procfs-mode
   "Toggle procfs-based directory tracking (Dirtrack-Procfs mode).
@@ -799,19 +847,23 @@ like Linux's; specifically, /proc/PID/cwd should be a symlink to
 process PID's current working directory.
 
 Turning on Dirtrack-Procfs mode automatically turns off
-Shell-Dirtrack mode; turning it off does not re-enable it."
+Shell-Dirtrack mode; turning it off does not re-enable it.  Remote shells and
+shells without a live local procfs entry retain Shell-Dirtrack mode."
   :init-value nil
   :lighter ""
   :keymap nil
-  (if (not dirtrack-procfs-mode)
-      (remove-hook 'comint-preoutput-filter-functions
-                   #'emacsvox-shell-dirtrack-procfs t)
-    (add-hook
-     'comint-preoutput-filter-functions
-     #'emacsvox-shell-dirtrack-procfs nil t)
-    (shell-dirtrack-mode 0)))
+  (when dirtrack-procfs-mode
+    (if (emacsvox-shell--procfs-dirtrack-available-p)
+        (shell-dirtrack-mode 0)
+      (setq dirtrack-procfs-mode nil))))
+
+(defun emacsvox-shell-maybe-enable-dirtrack-procfs ()
+  "Enable procfs tracking when it is safe for the current local shell."
+  (when (emacsvox-shell--procfs-dirtrack-available-p)
+    (dirtrack-procfs-mode 1)))
+
 (when (file-exists-p "/proc")
-  (add-hook 'shell-mode-hook 'dirtrack-procfs-mode))
+  (add-hook 'shell-mode-hook #'emacsvox-shell-maybe-enable-dirtrack-procfs))
 
 ;;; zoxide:
 ;;; Inspired by zoxide.el
