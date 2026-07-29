@@ -989,6 +989,27 @@ Optional ANCHOR limits ordered actions to one object/run lifecycle."
       (list :id 'legacy-cue :kind 'cue :cue icon))))
    'core 0 "legacy icon adapter"))
 
+(defun emacsvox-aural--legacy-icon-source-input
+    (icon facts context)
+  "Return FACTS and CONTEXT augmented for legacy ICON."
+  (let* ((semantic (alist-get icon emacsvox-aural-legacy-icon-semantics))
+         (facts (copy-tree facts))
+         (events
+          (append
+           (when-let* ((event (plist-get facts :event))) (list event))
+           (copy-sequence (plist-get facts :events))
+           (when semantic (list semantic)))))
+    (list
+     (if events
+         (plist-put facts :events (delete-dups events))
+       facts)
+     (plist-put
+      (copy-sequence
+       (or
+        context
+        (emacsvox-aural-current-context nil 'notification)))
+      :legacy-cue icon))))
+
 (defun emacsvox-aural-resolve-legacy-icon
     (icon &optional context facts anchor)
   "Resolve legacy ICON through the active scheme in CONTEXT.
@@ -998,24 +1019,9 @@ rules can remove that action or replace its cue without changing callers.
 Optional FACTS are composed with any known semantic event for ICON.  Optional
 ANCHOR limits ordered actions to one object/run lifecycle."
   (emacsvox-aural--require-symbol icon "Legacy cue")
-  (let* ((semantic (alist-get icon emacsvox-aural-legacy-icon-semantics))
-         (facts (copy-tree facts))
-         (events
-          (append
-           (when-let* ((event (plist-get facts :event))) (list event))
-           (copy-sequence (plist-get facts :events))
-           (when semantic (list semantic))))
-         (facts
-          (if events
-              (plist-put facts :events (delete-dups events))
-            facts))
-         (context
-          (plist-put
-           (copy-sequence
-            (or
-             context
-             (emacsvox-aural-current-context nil 'notification)))
-           :legacy-cue icon))
+  (pcase-let* ((`(,facts ,context)
+                (emacsvox-aural--legacy-icon-source-input
+                 icon facts context))
          (compatibility-rule (emacsvox-aural--legacy-icon-rule icon)))
     (emacsvox-aural--apply-legacy-content-style
      (emacsvox-aural-resolve
@@ -1025,6 +1031,36 @@ ANCHOR limits ordered actions to one object/run lifecycle."
        (cons
         compatibility-rule
         (emacsvox-aural-current-rules context)))
+      anchor)
+     context)))
+
+(defun emacsvox-aural-resolve-legacy-icon-adapter
+    (icon &optional context facts anchor)
+  "Resolve only compatibility policy for legacy ICON.
+
+Unlike `emacsvox-aural-resolve-legacy-icon', this adapter excludes active
+rules that do not explicitly select ICON through `:legacy-cue'.  It is for a
+combined submission whose semantic rules have already been resolved once.
+CONTEXT, FACTS, and ANCHOR retain their meanings from the full legacy
+resolver."
+  (emacsvox-aural--require-symbol icon "Legacy cue")
+  (pcase-let* ((`(,facts ,context)
+                (emacsvox-aural--legacy-icon-source-input
+                 icon facts context))
+               (compatibility-rule
+                (emacsvox-aural--legacy-icon-rule icon))
+               (rules
+                (cl-remove-if-not
+                 (lambda (rule)
+                   (emacsvox-aural-selector-legacy-cue
+                    (emacsvox-aural-rule-selector rule)))
+                 (emacsvox-aural-current-rules context))))
+    (emacsvox-aural--apply-legacy-content-style
+     (emacsvox-aural-resolve
+      facts
+      context
+      (emacsvox-aural--require-unique-rule-ids
+       (cons compatibility-rule rules))
       anchor)
      context)))
 

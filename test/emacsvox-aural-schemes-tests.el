@@ -652,6 +652,44 @@
        'item
        '(:mode text-mode :occasion notification))))))
 
+(ert-deftest emacsvox-aural-schemes-legacy-adapter-excludes-semantic-rules ()
+  "Compatibility-only icon resolution retains remaps without a second cascade."
+  (emacsvox-test--with-isolated-schemes
+    (setq
+     emacsvox-aural-user-rules
+     (list
+      '(:id semantic-message
+        :match (:role heading)
+        :render
+        (:before ((:id semantic-cue :kind cue :cue new-mail))))
+      (emacsvox-aural-make-legacy-cue-rule
+       'remap-item 'item 'open-object
+       '(:role heading :mode text-mode))))
+    (let* ((facts '(:role heading))
+           (context '(:mode text-mode :occasion navigation))
+           (full
+            (emacsvox-aural-resolve-legacy-icon
+             'item context facts))
+           (adapter
+            (emacsvox-aural-resolve-legacy-icon-adapter
+             'item context facts)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-cue
+         (emacsvox-aural-render-plan-before full))
+        '(new-mail open-object)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-cue
+         (emacsvox-aural-render-plan-before adapter))
+        '(open-object)))
+      (should
+       (equal
+        (emacsvox-aural-render-plan-matched-rules adapter)
+        '(legacy-cue-default remap-item))))))
+
 (ert-deftest emacsvox-aural-schemes-build-legacy-personality-rule ()
   "Compatibility helper creates scoped voice replacement and suppression."
   (emacsvox-test--with-isolated-schemes

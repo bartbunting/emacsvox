@@ -75,6 +75,7 @@
           emacsvox-aural-spatial-clamp
           emacsvox-aural--rule-error
           emacsvox-aural-rule-actions
+          emacsvox-aural-resolve-legacy-icon-adapter
           emacsvox-aural--resource-error
           emacsvox-aural--migrate-user-data-v1-to-v2
           emacsvox-aural-current-profile-id
