@@ -14,6 +14,10 @@
 
 (require 'cl-lib)
 
+(define-error
+  'emacsvox-aural-transport-error
+  "Cannot compile or queue an Emacsvox aural presentation")
+
 (cl-defstruct
     (emacsvox-aural-concrete-action
      (:constructor emacsvox-aural--make-concrete-action))

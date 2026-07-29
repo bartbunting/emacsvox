@@ -13,6 +13,7 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-history)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-description)
 (require 'emacsvox-aural-preview)

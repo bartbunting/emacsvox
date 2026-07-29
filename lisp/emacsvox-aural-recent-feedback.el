@@ -15,6 +15,7 @@
 (require 'help-mode)
 (require 'subr-x)
 (require 'tabulated-list)
+(require 'emacsvox-aural-history)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-description)

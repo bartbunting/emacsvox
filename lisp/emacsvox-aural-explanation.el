@@ -16,6 +16,7 @@
 (require 'pp)
 (require 'subr-x)
 (require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-history)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-description)
 (require 'emacsvox-aural-validation)

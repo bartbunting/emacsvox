@@ -40,6 +40,18 @@
       (error
        "Pure aural description boundary loaded higher layer %S"
        feature)))
+  (load
+   (expand-file-name "emacsvox-aural-history.elc" build-directory)
+   nil nil)
+  (dolist
+      (feature
+       '(emacsvox-aural-resources
+         emacsvox-aural-schemes
+         emacsvox-aural-transport))
+    (when (featurep feature)
+      (error
+       "Aural history boundary loaded higher layer %S"
+       feature)))
   (dolist
       (library
        '("tts-speak"
@@ -102,6 +114,7 @@
          emacsvox-speak-line
          emacsvox-aural-voice-lock-enabled-p
          emacsvox-aural--make-concrete-plan
+         emacsvox-aural-record-presentation
          emacsvox-aural-spatial-clamp
          emacsvox-aural--rule-error
          emacsvox-aural--resource-error

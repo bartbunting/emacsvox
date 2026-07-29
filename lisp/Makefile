@@ -77,6 +77,7 @@ emacsvox-speak.elc
 AURAL_OBJECTS = \
 emacsvox-aural.elc \
 emacsvox-aural-concrete.elc \
+emacsvox-aural-history.elc \
 emacsvox-aural-spatial.elc \
 emacsvox-aural-rules.elc \
 emacsvox-aural-resources.elc \
@@ -344,9 +345,11 @@ emacsvox-aural-spatial.elc: emacsvox-aural.elc
 emacsvox-aural-rules.elc: emacsvox-aural.elc emacsvox-aural-spatial.elc
 emacsvox-aural-resources.elc: emacsvox-aural.elc emacsvox-aural-rules.elc
 emacsvox-aural-schemes.elc: emacsvox-aural-resources.elc
+emacsvox-aural-history.elc: \
+emacsvox-aural.elc emacsvox-aural-concrete.elc
 emacsvox-aural-transport.elc: \
-emacsvox-aural-concrete.elc emacsvox-aural-schemes.elc \
-emacsvox-aural-spatial.elc
+emacsvox-aural-concrete.elc emacsvox-aural-history.elc \
+emacsvox-aural-schemes.elc emacsvox-aural-spatial.elc
 tts-speak.elc: emacsvox-aural-transport.elc
 voice-setup.elc: tts-speak.elc
 voice-defs.elc: voice-setup.elc

@@ -29,6 +29,7 @@
           emacsvox-speak
           emacsvox-aural
           emacsvox-aural-concrete
+          emacsvox-aural-history
           emacsvox-aural-spatial
           emacsvox-aural-rules
           emacsvox-aural-resources
@@ -65,6 +66,7 @@
           emacsvox-speak-line
           emacsvox-aural-voice-lock-enabled-p
           emacsvox-aural--make-concrete-plan
+          emacsvox-aural-record-presentation
           emacsvox-aural-spatial-clamp
           emacsvox-aural--rule-error
           emacsvox-aural--resource-error
