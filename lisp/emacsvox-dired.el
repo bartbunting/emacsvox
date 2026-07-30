@@ -60,9 +60,8 @@
 
 ;;;  Define personalities
 
-(voice-setup-add-map
- '(
-   (dired-broken-symlink 'voice-monotone-extra)
+(defconst emacsvox-dired--face-voice-map
+  '((dired-broken-symlink voice-monotone-extra)
    (dired-set-id  voice-animate)
    (dired-special voice-lighten)
    (dired-header voice-smoothen)
@@ -73,7 +72,10 @@
    (dired-directory voice-bolden)
    (dired-symlink voice-animate)
    (dired-ignored voice-lighten-extra)
-   (dired-flagged voice-animate-extra)))
+    (dired-flagged voice-animate-extra))
+  "Voice personalities for the current Dired interface faces.")
+
+(voice-setup-add-map emacsvox-dired--face-voice-map)
 
 (defconst emacsvox-dired-aural-fragment
   '(:schema-version 1

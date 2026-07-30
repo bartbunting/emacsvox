@@ -290,6 +290,19 @@
     (goto-char (point-min))
     (should (eq (tts-get-style) 'voice-lighten))))
 
+(ert-deftest emacsvox-dired-face-presentation-covers-current-dired ()
+  "Every face provided by the current Dired interface has one voice mapping."
+  (let* ((mapped (mapcar #'car emacsvox-dired--face-voice-map))
+         (current
+          (seq-filter
+           (lambda (face)
+             (string-prefix-p "dired-" (symbol-name face)))
+           (face-list))))
+    (should (= (length mapped) (length (delete-dups (copy-sequence mapped)))))
+    (should (= (length current) 12))
+    (dolist (face current)
+      (should (assq face emacsvox-dired--face-voice-map)))))
+
 (ert-deftest emacsvox-dired-marked-navigation-uses-mark-earcon ()
   "Entering a marked row replaces the generic selection cue."
   (let ((emacsvox-aural-active-scheme 'default)
