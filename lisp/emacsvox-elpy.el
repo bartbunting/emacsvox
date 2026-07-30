@@ -47,62 +47,138 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-python)
 
 ;;;  Advice Interactive Commands:
 
-(defconst emacsvox-elpy--task-targets
-  '(elpy-autopep8-fix-code elpy-config elpy-check
-    elpy-occur-definitions elpy-rgrep-symbol
-    elpy-set-project-root elpy-set-project-variable
-    elpy-set-test-runner
+(defconst emacsvox-elpy--started-targets
+  '(elpy-check elpy-occur-definitions elpy-rgrep-symbol
     elpy-shell-send-statement-and-step elpy-shell-send-region-or-buffer
-    elpy-shell-switch-to-buffer elpy-shell-switch-to-shell
+    )
+  "Elpy commands that start checking, searching, or code execution.")
+
+(defconst emacsvox-elpy--completed-targets
+  '(elpy-autopep8-fix-code
+    elpy-set-project-root elpy-set-project-variable elpy-set-test-runner
     elpy-use-cpython elpy-use-ipython
     elpy-importmagic-add-import elpy-importmagic-fixup)
-  "Elpy commands that report task completion.")
+  "Elpy commands whose synchronous operation has completed.")
+
+(defconst emacsvox-elpy--destination-targets
+  '(elpy-config elpy-shell-switch-to-buffer elpy-shell-switch-to-shell
+    elpy-find-file)
+  "Elpy commands that select a different buffer or interface.")
+
+(defconst emacsvox-elpy--task-targets
+  (append emacsvox-elpy--started-targets emacsvox-elpy--completed-targets)
+  "Elpy operation commands, retained for compatibility with integrations.")
+
+(defun emacsvox-elpy--submit-text
+    (text facts occasion &optional icon)
+  "Submit Elpy TEXT under FACTS and OCCASION with optional ICON."
+  (emacsvox-aural-submit
+   text
+   :facts facts
+   :module 'python
+   :occasion occasion
+   :compatibility-actions
+   (when icon
+     (list (emacsvox-aural-compatibility-icon icon)))))
+
+(defun emacsvox-elpy--submit-message
+    (text facts occasion &optional icon)
+  "Display and natively present Elpy TEXT."
+  (let ((emacsvox-speak-messages nil))
+    (message "%s" text))
+  (emacsvox-elpy--submit-text text facts occasion icon))
+
+(defun emacsvox-elpy--present-operation (target outcome)
+  "Present Elpy operation TARGET with OUTCOME and current buffer context."
+  (emacsvox-elpy--submit-text
+   (emacsvox-python--buffer-summary)
+   (emacsvox-python--operation-facts target outcome)
+   'state-change))
 
 (cl-loop
- for target in emacsvox-elpy--task-targets
+ for target in (append
+                emacsvox-elpy--started-targets
+                emacsvox-elpy--completed-targets)
  for advice-function =
  (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
   `(defun ,advice-function (&rest _)
-     ,(format "Speak after `%s' completes." target)
+     ,(format "Present the result of `%s'." target)
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'task-done)
-       (emacsvox-speak-mode-line)))))
+       (emacsvox-elpy--present-operation
+        ',target
+        ,(if (memq target emacsvox-elpy--started-targets)
+             ''started
+           ''completed))))))
+
+(cl-loop
+ for target in emacsvox-elpy--destination-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     ,(format "Present the destination selected by `%s'." target)
+     (when (ems-interactive-p ',target)
+       (emacsvox-elpy--submit-text
+        (emacsvox-python--buffer-summary)
+        '(:role code-construct
+          :events (focus-entered)
+          :syntax-role destination)
+        'navigation 'open-object)))))
 
 (defun emacsvox--advice-elpy-enable-after (&rest _)
   "Report enabling Elpy."
   (when (ems-interactive-p 'elpy-enable)
-    (emacsvox-icon 'on) (message "Enabled elpy")))
+    (emacsvox-elpy--submit-message
+     "Enabled Elpy"
+     '(:role code-operation
+       :events (state-changed)
+       :code-operation-kind elpy-enable)
+     'state-change 'on)))
 
 (defun emacsvox--advice-elpy-disable-after (&rest _)
   "Report disabling Elpy."
   (when (ems-interactive-p 'elpy-disable)
-    (emacsvox-icon 'off) (message "Disabled elpy")))
+    (emacsvox-elpy--submit-message
+     "Disabled Elpy"
+     '(:role code-operation
+       :events (state-changed)
+       :code-operation-kind elpy-disable)
+     'state-change 'off)))
 
 (defun emacsvox--advice-elpy-doc-after (&rest _)
   "Report displaying Elpy documentation."
   (when (ems-interactive-p 'elpy-doc)
-    (emacsvox-icon 'help) (message "Displayed help in other window.")))
+    (emacsvox-elpy--submit-message
+     "Displayed help in other window"
+     '(:role code-construct
+       :events (focus-entered)
+       :syntax-role documentation)
+     'navigation 'help)))
 
-(defun emacsvox--advice-elpy-find-file-after (&rest _)
-  "Speak after visiting a file with Elpy."
-  (when (ems-interactive-p 'elpy-find-file)
-    (emacsvox-icon 'open-object) (emacsvox-speak-mode-line)))
-
-(defconst emacsvox-elpy--movement-targets
+(defconst emacsvox-elpy--navigation-targets
   '(elpy-flymake-next-error elpy-flymake-previous-error
     elpy-goto-definition
     elpy-nav-backward-block elpy-nav-backward-indent
     elpy-nav-expand-to-indentation elpy-nav-forward-block
-    elpy-nav-forward-indent
-    elpy-nav-indent-shift-left elpy-nav-indent-shift-right
+    elpy-nav-forward-indent)
+  "Elpy commands that navigate among source constructs.")
+
+(defconst emacsvox-elpy--edit-targets
+  '(elpy-nav-indent-shift-left elpy-nav-indent-shift-right
     elpy-open-and-indent-line-below elpy-open-and-indent-line-above
     elpy-nav-move-line-or-region-down elpy-nav-move-line-or-region-up)
-  "Elpy movement and navigation commands.")
+  "Elpy commands that edit indentation or source structure.")
+
+(defconst emacsvox-elpy--movement-targets
+  (append emacsvox-elpy--navigation-targets emacsvox-elpy--edit-targets)
+  "Elpy movement and edit targets retained for compatibility.")
 
 (cl-loop
  for target in emacsvox-elpy--movement-targets
@@ -111,10 +187,23 @@
  do
  (eval
   `(defun ,advice-function (&rest _)
-     ,(format "Speak after `%s' moves point." target)
+     ,(format "Present the source result of `%s'." target)
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line)))))
+       (if (memq ',target emacsvox-elpy--navigation-targets)
+           (emacsvox-python--present-current-line
+            '(:role code-construct
+              :events (focus-entered)
+              :syntax-role construct
+              :code-navigation-kind elpy)
+            'navigation)
+         (emacsvox-python--present-current-line
+          (emacsvox-python--edit-facts
+           (cond
+            ((eq ',target 'elpy-nav-indent-shift-left) 'shift-left)
+            ((eq ',target 'elpy-nav-indent-shift-right) 'shift-right)
+            (t 'elpy-structural))
+           'block)
+          'edit))))))
 
 (defconst emacsvox-elpy--removed-targets
   '(elpy-shell-send-current-statement)
@@ -122,7 +211,8 @@
 
 (defconst emacsvox-elpy--advice-targets
   (append emacsvox-elpy--task-targets
-          '(elpy-enable elpy-disable elpy-doc elpy-find-file)
+          emacsvox-elpy--destination-targets
+          '(elpy-enable elpy-disable elpy-doc)
           emacsvox-elpy--movement-targets)
   "Current Elpy targets that receive native after advice.")
 

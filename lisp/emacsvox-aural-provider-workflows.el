@@ -495,6 +495,12 @@
      :owner core
      :roles (code-construct)
      :value-type symbol)
+    (code-navigation-kind
+     :kind attribute
+     :summary "The language integration's kind of source navigation"
+     :owner core
+     :roles (code-construct)
+     :value-type symbol)
     (code-operation-kind
      :kind attribute
      :summary "The programming operation being presented"
@@ -1036,6 +1042,22 @@
        (:before
         ((:id python-fill-paragraph-cue-action
           :kind cue :cue fill-object))))
+      (:id python-elpy-navigation-cue
+       :match
+       (:role code-construct :module python :event focus-entered
+        :code-navigation-kind elpy :occasion navigation)
+       :render
+       (:before
+        ((:id python-elpy-navigation-cue-action
+          :kind cue :cue large-movement))))
+      (:id python-elpy-structural-edit-cue
+       :match
+       (:role code-construct :module python :event object-changed
+        :code-edit-kind elpy-structural :occasion edit)
+       :render
+       (:before
+        ((:id python-elpy-structural-edit-cue-action
+          :kind cue :cue large-movement))))
       (:id python-code-selection-cue
        :match
        (:role code-construct :module python :event code-selection-created
@@ -1052,6 +1074,14 @@
        (:before
         ((:id python-operation-started-cue-action
           :kind cue :cue progress))))
+      (:id python-operation-completed-cue
+       :match
+       (:role code-operation :module python :event operation-completed
+        :occasion state-change)
+       :render
+       (:before
+        ((:id python-operation-completed-cue-action
+          :kind cue :cue task-done))))
       (:id python-operation-failed-cue
        :match
        (:role code-operation :module python :event operation-failed
