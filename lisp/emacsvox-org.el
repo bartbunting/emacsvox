@@ -737,7 +737,9 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
   (when (ems-interactive-p 'org-return)
     (cond
      ((org-at-table-p 'any)
-      (funcall emacsvox-org-table-after-movement-function))
+      ;; `org-return' delegates table movement to `org-table-next-row',
+      ;; whose adapter owns the resulting cell announcement.
+      nil)
      (t
       (emacsvox-org--present-feedback-after
        (emacsvox-org--feedback-facts

@@ -934,7 +934,7 @@
     (should (equal events '(table-cell)))))
 
 (ert-deftest emacsvox-org-return-selects-table-or-line-feedback ()
-  "Interactive Org return reports a table cell or the destination line."
+  "Org return defers table feedback and owns its non-table destination."
   (let* ((ems--interactive-fn-name 'org-return)
          events
          at-table
@@ -954,7 +954,22 @@
     (should
      (equal
       (nreverse events)
-      '(table-cell speak-line (icon select-object))))))
+      '(speak-line (icon select-object))))))
+
+(ert-deftest emacsvox-org-return-reports-a-real-table-move-once ()
+  "The table command called by `org-return' owns its one cell announcement."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "| A | B |\n| 1 | 2 |\n")
+    (goto-char (point-min))
+    (search-forward "A")
+    (let* ((ems--interactive-fn-name 'org-return)
+           events
+           (emacsvox-org-table-after-movement-function
+            (lambda () (push 'cell events))))
+      (org-return)
+      (should (equal events '(cell)))
+      (should (= (line-number-at-pos) 2)))))
 
 (ert-deftest emacsvox-org-editing-advice-is-directly-registered ()
   "Org editing advice uses native advice directly."
