@@ -65,7 +65,9 @@
                       line-inserted checkbox-toggled item-boundary line-start
                       line-end capture-target capture-saved capture-cancelled
                       edit-opened edit-closed paragraph-filled todo-changed
-                      list-item-created export-completed publish-completed))
+                      list-item-created calendar-evaluated overview-shown
+                      contents-shown indirect-buffer-opened export-menu-opened
+                      export-completed publish-completed))
     (org-table-row
      :kind attribute
      :summary "The one-based logical row of an Org table cell"

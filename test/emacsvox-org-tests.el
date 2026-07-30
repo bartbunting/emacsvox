@@ -971,14 +971,55 @@
            :presentation-transaction-id)))))))
 
 (ert-deftest emacsvox-org-calendar-feedback-remains-unconditional ()
-  "Calendar expression results speak even outside an interactive call."
+  "Calendar expression results submit even outside an interactive call."
   (let ((ems--interactive-fn-name nil)
         (org-ans2 "Thursday")
-        spoken)
-    (cl-letf (((symbol-function 'tts-speak)
-               (lambda (text) (setq spoken text))))
-      (emacsvox--advice-org-eval-in-calendar-after))
-    (should (equal spoken "Thursday"))))
+        submissions)
+    (setq submissions
+          (emacsvox-test--capture-org-submissions
+            (emacsvox--advice-org-eval-in-calendar-after)))
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "Thursday"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role org-content :events (focus-entered)
+        :org-action calendar-evaluated)))
+    (should (eq (plist-get (cdar submissions) :occasion) 'inspection))))
+
+(ert-deftest emacsvox-org-visibility-and-indirect-feedback-is-native ()
+  "Overview, contents, and indirect-buffer results have semantic ownership."
+  (let ((indirect-buffer (generate-new-buffer " *Org indirect test*"))
+        submissions)
+    (unwind-protect
+        (progn
+          (with-current-buffer indirect-buffer
+            (insert "* Cloned heading\nBody"))
+          (let ((org-last-indirect-buffer indirect-buffer))
+            (cl-letf
+                (((symbol-function 'emacsvox-org--submit-message-feedback)
+                  (lambda (facts occasion icon text)
+                    (push (list facts occasion icon text) submissions))))
+              (let ((ems--interactive-fn-name 'org-overview))
+                (emacsvox--advice-org-overview-after))
+              (let ((ems--interactive-fn-name 'org-content))
+                (emacsvox--advice-org-content-after))
+              (let ((ems--interactive-fn-name
+                     'org-tree-to-indirect-buffer))
+                (emacsvox--advice-org-tree-to-indirect-buffer-after)))))
+      (kill-buffer indirect-buffer))
+    (should
+     (equal
+      (nreverse submissions)
+      '(((:role org-content :events (state-changed)
+          :org-action overview-shown)
+         state-change nil "Showing top-level overview.")
+        ((:role org-content :events (state-changed)
+          :org-action contents-shown)
+         state-change nil "Showing table of contents.")
+        ((:role org-content :events (focus-entered)
+          :org-action indirect-buffer-opened)
+         navigation nil "Cloned * Cloned heading"))))))
 
 (ert-deftest emacsvox-org-agenda-navigation-is-one-native-submission ()
   "Agenda navigation submits the destination and leading cue together."
@@ -1474,18 +1515,21 @@
     (should-not (fboundp 'org-complete))))
 
 (ert-deftest emacsvox-org-export-dispatch-uses-explicit-arguments ()
-  "Export menu feedback selects choices from native advice arguments."
+  "Export choices are one native submission without a forced delay."
   (let ((entries '((?a "Alpha") (?b "Beta")))
-        notified
-        waited)
-    (cl-letf (((symbol-function 'tts-notify)
-               (lambda (text) (setq notified text)))
-              ((symbol-function 'sit-for)
-               (lambda (seconds) (setq waited seconds))))
-      (emacsvox--advice-org-export--dispatch-action-before
-       "Export" '(?a ?b) entries nil nil nil))
-    (should (equal notified "a: Alpha\n\nb: Beta\n"))
-    (should (= waited 5))))
+        submissions)
+    (setq submissions
+          (emacsvox-test--capture-org-submissions
+            (emacsvox--advice-org-export--dispatch-action-before
+             "Export" '(?a ?b) entries nil nil nil)))
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "a: Alpha\nb: Beta"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role org-export :events (focus-entered)
+        :org-action export-menu-opened)))
+    (should (eq (plist-get (cdar submissions) :occasion) 'inspection))))
 
 (ert-deftest emacsvox-org-export-to-file-uses-explicit-file ()
   "Export completion reports the FILE argument directly."

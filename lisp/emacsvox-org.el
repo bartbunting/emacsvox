@@ -504,7 +504,10 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-overview-after (&rest _)
   "Announce an interactively requested Org overview."
   (when (ems-interactive-p 'org-overview)
-    (message "Showing top-level overview.")))
+    (emacsvox-org--submit-message-feedback
+     (emacsvox-org--feedback-facts
+      'org-content 'state-changed 'overview-shown)
+     'state-change nil "Showing top-level overview.")))
 
 (advice-add
  'org-overview :after #'emacsvox--advice-org-overview-after
@@ -513,7 +516,10 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-content-after (&rest _)
   "Announce interactively requested Org contents."
   (when (ems-interactive-p 'org-content)
-    (message "Showing table of contents.")))
+    (emacsvox-org--submit-message-feedback
+     (emacsvox-org--feedback-facts
+      'org-content 'state-changed 'contents-shown)
+     'state-change nil "Showing table of contents.")))
 
 (advice-add
  'org-content :after #'emacsvox--advice-org-content-after
@@ -522,11 +528,17 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-tree-to-indirect-buffer-after (&rest _)
   "Announce a subtree cloned interactively into an indirect buffer."
   (when (ems-interactive-p 'org-tree-to-indirect-buffer)
-    (message "Cloned %s"
-             (with-current-buffer org-last-indirect-buffer
-               (goto-char (point-min))
-               (buffer-substring (line-beginning-position)
-                                 (line-end-position))))))
+    (emacsvox-org--submit-message-feedback
+     (emacsvox-org--feedback-facts
+      'org-content 'focus-entered 'indirect-buffer-opened)
+     'navigation nil
+     (format
+      "Cloned %s"
+      (with-current-buffer org-last-indirect-buffer
+        (save-excursion
+          (goto-char (point-min))
+          (buffer-substring
+           (line-beginning-position) (line-end-position))))))))
 
 (advice-add
  'org-tree-to-indirect-buffer :after
@@ -682,8 +694,12 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-org-eval-in-calendar-after (&rest _)
-  "Speak the result of evaluating an Org calendar expression."
-  (tts-speak org-ans2))
+  "Submit the result of evaluating an Org calendar expression."
+  (emacsvox-org--submit-text
+   (format "%s" org-ans2)
+   (emacsvox-org--feedback-facts
+    'org-content 'focus-entered 'calendar-evaluated)
+   'inspection))
 
 (advice-add
  'org-eval-in-calendar :after
@@ -1136,16 +1152,19 @@ arg just opens the file"
 
 (defun emacsvox--advice-org-export--dispatch-action-before
     (_prompt _allowed-keys entries _options first-key _expertp)
-  "Speak prompt intelligently."
-  (let (choices)
-    (setq choices
-          (cond ((null first-key) entries)
-                (t (cl-caddr (assoc first-key entries)))))
-    (tts-notify
+  "Present the export choices selected by FIRST-KEY from ENTRIES."
+  (let ((choices
+         (if first-key
+             (cl-caddr (assoc first-key entries))
+           entries)))
+    (emacsvox-org--submit-text
      (mapconcat
-      #'(lambda (e) (format "%c: %s\n" (cl-first e) (cl-second e)))
-      choices "\n"))
-    (sit-for 5)))
+      (lambda (entry)
+        (format "%c: %s" (cl-first entry) (cl-second entry)))
+      choices "\n")
+     (emacsvox-org--feedback-facts
+      'org-export 'focus-entered 'export-menu-opened)
+     'inspection)))
 
 (advice-add
  'org-export--dispatch-action :before
