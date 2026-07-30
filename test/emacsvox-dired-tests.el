@@ -38,6 +38,8 @@
      :around emacsvox--advice-dired-hide-details-mode-around)
     (dired-hide-subdir :around emacsvox--advice-dired-hide-subdir-around)
     (dired-hide-all :around emacsvox--advice-dired-hide-all-around)
+    (dired-do-async-shell-command
+     :around emacsvox--advice-dired-do-async-shell-command-around)
     (revert-buffer :around emacsvox--advice-dired-revert-buffer-around)
     (quit-window :around emacsvox--advice-dired-quit-window-around))
   "Remaining hand-written Dired advice migrated to final native form.")
@@ -60,7 +62,11 @@
     dired-flag-auto-save-files dired-flag-backup-files
     dired-flag-files-regexp dired-flag-garbage-files dired-clean-directory
     dired-copy-filename-as-kill dired-do-kill-lines dired-do-redisplay
-    dired-undo)
+    dired-undo
+    dired-diff dired-do-find-regexp dired-do-find-regexp-and-replace
+    dired-do-info dired-do-man dired-do-open dired-do-print
+    dired-do-byte-compile dired-do-load dired-do-shell-command
+    dired-vc-next-action browse-url-of-dired-file)
   "Dired filesystem operations with semantic result advice.")
 
 (defconst emacsvox-test--dired-open-advice-targets
@@ -401,6 +407,40 @@
          :events (operation-failed))
         state-change warn-user)))))
 
+(ert-deftest emacsvox-dired-async-operation-is-started-not-completed ()
+  "An asynchronous Dired command reports start without claiming completion."
+  (let ((ems--interactive-fn-name 'dired-do-async-shell-command)
+        (visible-message "Earlier message")
+        (calls 0)
+        submission)
+    (cl-letf
+        (((symbol-function 'current-message)
+          (lambda () visible-message))
+         ((symbol-function 'emacsvox-dired--submit-message)
+          (lambda (&rest arguments)
+            (setq submission arguments))))
+      (should
+       (eq
+        'process
+        (emacsvox--advice-dired-do-async-shell-command-around
+         (lambda (&rest arguments)
+           (should-not emacsvox-speak-messages)
+           (should (equal arguments '("echo ?" nil ("one"))))
+           (setq
+            calls (1+ calls)
+            visible-message "Started asynchronous command")
+           'process)
+         "echo ?" nil '("one")))))
+    (should (= calls 1))
+    (should
+     (equal
+      submission
+      '("Started asynchronous command"
+        (:role filesystem-operation
+         :filesystem-operation-kind async-shell-command
+         :events (operation-started))
+        state-change progress)))))
+
 (ert-deftest emacsvox-dired-operation-advice-ignores-programmatic-calls ()
   "Programmatic filesystem operations receive no interactive feedback."
   (let ((calls 0)
@@ -512,7 +552,8 @@
   (should (emacsvox-aural-semantic 'filesystem-operation))
   (should (emacsvox-aural-semantic 'filesystem-operation-kind))
   (should (emacsvox-aural-semantic 'filesystem-listing-opened))
-  (should (emacsvox-aural-semantic 'filesystem-listing-aspect)))
+  (should (emacsvox-aural-semantic 'filesystem-listing-aspect))
+  (should (emacsvox-aural-semantic 'operation-started)))
 
 (ert-deftest emacsvox-dired-sort-calls-original-once ()
   "Interactive sorting runs once with messages silenced before feedback."

@@ -451,6 +451,12 @@
      :owner core
      :occasions (state-change inspection notification)
      :phases (before content after))
+    (operation-started
+     :kind event
+     :summary "A requested module operation started and may still be running"
+     :owner core
+     :occasions (state-change notification)
+     :phases (before content after))
     (operation-failed
      :kind event
      :summary "A requested module operation failed"

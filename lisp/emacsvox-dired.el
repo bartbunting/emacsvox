@@ -366,13 +366,19 @@ cue on single-stream speech servers."
      (not (equal current prior-message))
      current)))
 
-(defun emacsvox-dired-operation-facts (operation &optional failed)
+(defun emacsvox-dired-operation-facts (operation &optional outcome)
   "Return facts for filesystem OPERATION.
-When FAILED is non-nil, describe an unsuccessful operation."
+OUTCOME may be `started' or `failed'; nil means successful completion.
+For compatibility, any other non-nil value also means failure."
   (list
    :role 'filesystem-operation
    :filesystem-operation-kind operation
-   :events (list (if failed 'operation-failed 'operation-completed))))
+   :events
+   (list
+    (pcase outcome
+      ('started 'operation-started)
+      ('nil 'operation-completed)
+      (_ 'operation-failed)))))
 
 (defun emacsvox-dired--failed-result-message-p (text)
   "Return non-nil when Dired result TEXT describes failure or cancellation."
@@ -494,6 +500,47 @@ Each specification has the form (TARGET OPERATION ICON FALLBACK)."
   (dired-do-kill-lines hide-entries close-object "Entries hidden")
   (dired-do-redisplay redisplay task-done "Entries redisplayed")
   (dired-undo undo task-done "Dired change undone"))
+
+(emacsvox-dired--define-operation-advice
+  (dired-diff compare open-object "Comparison opened")
+  (dired-do-find-regexp find-regexp open-object "Search results opened")
+  (dired-do-find-regexp-and-replace replace-regexp task-done
+                                    "Regexp replacement completed")
+  (dired-do-info show-info open-object "Info documentation opened")
+  (dired-do-man show-manual open-object "Manual pages opened")
+  (dired-do-open system-open open-object "Files opened")
+  (dired-do-print print task-done "Printing completed")
+  (dired-do-byte-compile byte-compile task-done "Byte compilation completed")
+  (dired-do-load load task-done "Files loaded")
+  (dired-do-shell-command shell-command task-done "Shell command completed")
+  (dired-vc-next-action vc-next-action task-done
+                        "Version-control action completed")
+  (browse-url-of-dired-file browse-url open-object "URL opened"))
+
+(defun emacsvox--advice-dired-do-async-shell-command-around
+    (orig-fun &rest arguments)
+  "Present an interactively started asynchronous Dired shell command."
+  (if (ems-interactive-p 'dired-do-async-shell-command)
+      (let* ((prior-message (current-message))
+             (context
+              (emacsvox-aural-capture-context 'dired 'state-change))
+             result)
+        (let ((emacsvox-speak-messages nil))
+          (setq result (apply orig-fun arguments)))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--submit-message
+           (or
+            (emacsvox-dired--new-current-message prior-message)
+            "Asynchronous shell command started")
+           (emacsvox-dired-operation-facts 'async-shell-command 'started)
+           'state-change 'progress))
+        result)
+    (apply orig-fun arguments)))
+
+(advice-add
+ 'dired-do-async-shell-command :around
+ #'emacsvox--advice-dired-do-async-shell-command-around
+ '((name . emacsvox)))
 
 (defun emacsvox-dired--marked-files-summary ()
   "Return Dired's count and total-size summary for marked files."
