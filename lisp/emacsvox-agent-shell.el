@@ -4408,26 +4408,29 @@ the corresponding buffer boundary."
 (defun emacsvox-agent-shell--viewport-show-buffer-after (&rest _)
   "Announce viewport display."
   (when (ems-interactive-p 'agent-shell-viewport--show-buffer)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--brief-session-speech)
      (emacsvox-agent-shell--presentation-facts
       'agent-viewport 'agent-viewport-opened)
-     'navigation 'open-object #'emacsvox-speak-mode-line)))
+     'navigation 'open-object)))
 
 (defun emacsvox-agent-shell--prompt-compose-after (&rest _)
   "Announce prompt composition."
   (when (ems-interactive-p 'agent-shell-prompt-compose)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "Compose prompt"
      (emacsvox-agent-shell--presentation-facts
       'agent-prompt-editor 'agent-prompt-opened)
-     'edit 'open-object #'message "Compose prompt")))
+     'edit 'open-object)))
 
 (defun emacsvox-agent-shell--viewport-refresh-after (&rest _)
   "Announce viewport refresh."
   (when (ems-interactive-p 'agent-shell-viewport-refresh)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "Viewport refreshed"
      (emacsvox-agent-shell--presentation-facts
       'agent-viewport 'agent-viewport-refreshed)
-     'state-change 'task-done #'message "Viewport refreshed")))
+     'state-change 'task-done)))
 
 (defun emacsvox-agent-shell--viewport-submit-disposition ()
   "Return how a viewport prompt will be handled, or nil when unknown.
@@ -4473,15 +4476,14 @@ DISMISS means the compose window is dismissed."
     (prog1
         (apply original-function arguments)
       (when interactive-p
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         (emacsvox-agent-shell--viewport-submit-announcement
+          disposition keep-composing dismiss)
          (emacsvox-agent-shell--presentation-facts
           'agent-prompt-editor 'agent-prompt-submitted nil
           (list :agent-prompt-disposition (or disposition 'sent)))
          'state-change
-         (if keep-composing 'task-done 'close-object)
-         #'tts-speak
-         (emacsvox-agent-shell--viewport-submit-announcement
-          disposition keep-composing dismiss))))))
+         (if keep-composing 'task-done 'close-object))))))
 
 (defun emacsvox-agent-shell--viewport-compose-cancel-around
     (original-function &rest arguments)
@@ -4499,31 +4501,33 @@ DISMISS means the compose window is dismissed."
                       (eq
                        (buffer-local-value 'major-mode viewport-buffer)
                        original-mode))))
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         "Prompt composition cancelled."
          (emacsvox-agent-shell--presentation-facts
           'agent-prompt-editor 'agent-prompt-cancelled)
-         'state-change 'close-object #'tts-speak
-         "Prompt composition cancelled.")))))
+         'state-change 'close-object)))))
 
 ;;;  Interactive Commands for Viewport
 
 (defun emacsvox-agent-shell--viewport-view-mode-after (&rest _)
   "Announce a switch to the viewport view mode."
   (when (ems-interactive-p 'agent-shell-viewport-view-mode)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--brief-session-speech)
      (emacsvox-agent-shell--presentation-facts
       'agent-viewport 'agent-setting-changed nil
       '(:agent-viewport-mode view))
-     'state-change 'select-object #'emacsvox-speak-mode-line)))
+     'state-change 'select-object)))
 
 (defun emacsvox-agent-shell--viewport-edit-mode-after (&rest _)
   "Announce a switch to the viewport edit mode."
   (when (ems-interactive-p 'agent-shell-viewport-edit-mode)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--brief-session-speech)
      (emacsvox-agent-shell--presentation-facts
       'agent-viewport 'agent-setting-changed nil
       '(:agent-viewport-mode edit))
-     'state-change 'select-object #'emacsvox-speak-mode-line)))
+     'state-change 'select-object)))
 
 ;;;  Tool Call Feedback
 

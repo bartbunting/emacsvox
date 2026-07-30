@@ -5663,7 +5663,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (eq (nth 4 presentation) 'notification))))))
 
 (ert-deftest emacsvox-agent-shell-viewport-submit-presentation-is-complete ()
-  "Viewport submission exposes prompt disposition before compatibility output."
+  "Viewport submission exposes prompt disposition in one native transaction."
   (let ((agent-shell-prefer-viewport-interaction t)
         (agent-shell-session-strategy 'new-deferred))
     (with-temp-buffer
@@ -5681,6 +5681,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                    #'agent-shell-viewport-compose-send)))
                (presentation (car presentations))
                (facts (nth 2 presentation)))
+          (should (= 1 (length presentations)))
+          (should (eq (car presentation) 'submit))
           (should (eq (plist-get facts :role) 'agent-prompt-editor))
           (should
            (equal
@@ -5688,6 +5690,34 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should
            (eq (plist-get facts :agent-prompt-disposition) 'submitted))
           (should (eq (nth 4 presentation) 'state-change)))))))
+
+(ert-deftest emacsvox-agent-shell-viewport-controls-are-native ()
+  "Viewport display, editing, refresh, and mode feedback submit atomically."
+  (cl-letf (((symbol-function 'ems-interactive-p)
+             (lambda (&rest _) t))
+            ((symbol-function 'emacsvox-agent-shell--brief-session-speech)
+             (lambda (&optional _) "Codex agent, viewport 2 of 3, view.")))
+    (dolist
+        (case
+         '((emacsvox-agent-shell--viewport-show-buffer-after
+            "Codex agent, viewport 2 of 3, view." navigation)
+           (emacsvox-agent-shell--prompt-compose-after
+            "Compose prompt" edit)
+           (emacsvox-agent-shell--viewport-refresh-after
+            "Viewport refreshed" state-change)
+           (emacsvox-agent-shell--viewport-view-mode-after
+            "Codex agent, viewport 2 of 3, view." state-change)
+           (emacsvox-agent-shell--viewport-edit-mode-after
+            "Codex agent, viewport 2 of 3, view." state-change)))
+      (let* ((presentations
+              (emacsvox-agent-shell-test--capture-presentations
+                (funcall (car case))))
+             (presentation (car presentations)))
+        (should (= 1 (length presentations)))
+        (should (eq (car presentation) 'submit))
+        (should (equal (nth 1 presentation) (cadr case)))
+        (should (eq (nth 3 presentation) 'agent-shell))
+        (should (eq (nth 4 presentation) (nth 2 case)))))))
 
 (provide 'emacsvox-agent-shell-tests)
 ;;; emacsvox-agent-shell-tests.el ends here
