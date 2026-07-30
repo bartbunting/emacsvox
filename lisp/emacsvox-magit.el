@@ -850,7 +850,10 @@ ARGUMENTS are passed to ORIGINAL unchanged."
       original ',target arguments))))
 
 (defconst emacsvox-magit--quit-targets
-  '(magit-mode-quit-window magit-mode-bury-buffer magit-log-bury-buffer)
+  '(magit-mode-quit-window
+    magit-mode-bury-buffer
+    magit-log-bury-buffer
+    magit-bury-or-kill-buffer)
   "Magit commands that close or bury their buffers.")
 
 (defconst emacsvox-magit--blob-targets
@@ -863,6 +866,114 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     magit-blame-next-chunk
     magit-blame-next-chunk-same-commit)
   "Magit blame navigation commands.")
+
+(defconst emacsvox-magit--copy-targets
+  '(magit-copy-section-value
+    magit-copy-buffer-revision
+    magit-blame-copy-hash)
+  "Magit commands that copy repository data to the kill ring.")
+
+(defun emacsvox-magit--copied-content ()
+  "Return concise feedback for the latest kill-ring entry."
+  (let ((text (ignore-errors (current-kill 0 t))))
+    (cond
+     ((not (stringp text)) "Copied repository data")
+     ((string-match-p "\n" text)
+      (format "Copied %d lines" (1+ (cl-count ?\n text))))
+     ((> (length text) 200)
+      (format "Copied %d characters" (length text)))
+     (t
+      (concat
+       (propertize "Copied. " 'personality voice-annotate)
+       text)))))
+
+(defun emacsvox-magit--call-copy-command
+    (original target arguments)
+  "Call copy command ORIGINAL for TARGET with ARGUMENTS."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let ((result (apply original arguments)))
+      (when (ems-interactive-p target)
+        (emacsvox-magit--submit-text
+         (emacsvox-magit--copied-content)
+         (append
+          (emacsvox-magit-view-facts
+           (emacsvox-magit-current-view-kind)
+           'operation-completed)
+          (list :vcs-operation target))
+         'state-change 'mark-object))
+      result)))
+
+(cl-loop
+ for target in emacsvox-magit--copy-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(defun ,advice-function (original &rest arguments)
+     "Present repository data copied to the kill ring."
+     (emacsvox-magit--call-copy-command
+      original ',target arguments))))
+
+(defconst emacsvox-magit--describe-targets
+  '(magit-describe-section magit-describe-section-briefly)
+  "Magit commands that inspect the section at point.")
+
+(cl-loop
+ for target in emacsvox-magit--describe-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (section &rest _)
+     "Present the identity of an inspected Magit section."
+     (when (ems-interactive-p ',target)
+       (emacsvox-magit--submit-text
+        (or
+         (ignore-errors
+           (magit-describe-section-briefly section))
+         "Magit section")
+        (append
+         (emacsvox-magit-section-facts
+          ',target section 'operation-completed)
+         '(:vcs-operation ,target))
+        'inspection 'help)))))
+
+(defun emacsvox-magit--call-process-kill (original arguments)
+  "Call `magit-process-kill' through ORIGINAL with ARGUMENTS."
+  (if (not (eq ems--interactive-fn-name 'magit-process-kill))
+      (apply original arguments)
+    (let* ((process
+            (and
+             (fboundp 'magit-section-value-if)
+             (ignore-errors (magit-section-value-if 'process))))
+           (running
+            (and process (eq (process-status process) 'run)))
+           (force
+            (and
+             running
+             (eq (process-get process 'sigint) t)))
+           (result (apply original arguments)))
+      (when (ems-interactive-p 'magit-process-kill)
+        (let* ((failed (not running))
+               (operation (if force 'kill 'interrupt))
+               (text
+                (cond
+                 ((not process) "No process at point")
+                 ((not running) "Process no longer running")
+                 (force "Killed process")
+                 (t "Interrupted process"))))
+          (emacsvox-magit--submit-text
+           text
+           (emacsvox-magit-process-facts failed operation)
+           'notification
+           (if failed 'warn-user 'close-object))))
+      result)))
+
+(defun emacsvox--advice-magit-process-kill-around
+    (original &rest arguments)
+  "Present the result of interrupting or killing a Magit process."
+  (emacsvox-magit--call-process-kill original arguments))
 
 (defconst emacsvox-magit--simple-advice-targets
   (append
@@ -881,6 +992,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
    emacsvox-magit--quit-targets
    '(magit-refresh-all
      magit-process-finish)
+   emacsvox-magit--describe-targets
    emacsvox-magit--blame-navigation-targets
    '(magit-blame-quit magit-blame))
   "Current Magit targets that receive native after advice.")
@@ -1109,6 +1221,14 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
            (fboundp target)
            (not (advice-member-p function target)))
         (advice-add target :around function '((name . emacsvox))))))
+  (dolist (target emacsvox-magit--copy-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox))))))
   (dolist
       (entry
        '((magit-setup-buffer-internal
@@ -1122,7 +1242,9 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
          (magit-run-git-with-input
           emacsvox--advice-magit-run-git-with-input-around)
          (magit-start-process
-          emacsvox--advice-magit-start-process-around)))
+          emacsvox--advice-magit-start-process-around)
+         (magit-process-kill
+          emacsvox--advice-magit-process-kill-around)))
     (pcase-let ((`(,target ,function) entry))
       (when
           (and

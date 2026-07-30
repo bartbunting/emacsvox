@@ -709,6 +709,11 @@
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
       (should (advice-member-p function target))))
+  (dolist (target emacsvox-magit--copy-targets)
+    (should
+     (advice-member-p
+      (intern (format "emacsvox--advice-%s-around" target))
+      target)))
   (should
    (advice-member-p
     #'emacsvox--advice-magit-diff-show-or-scroll-up-around
@@ -737,7 +742,9 @@
          (magit-run-git-with-input
           emacsvox--advice-magit-run-git-with-input-around)
          (magit-start-process
-          emacsvox--advice-magit-start-process-around)))
+          emacsvox--advice-magit-start-process-around)
+         (magit-process-kill
+          emacsvox--advice-magit-process-kill-around)))
     (pcase-let ((`(,target ,function) entry))
       (should (advice-member-p function target))))
   (dolist
@@ -906,6 +913,142 @@
      (equal
       (substring-no-properties (emacsvox-magit--blob-summary))
       "abc123, lisp/example.el. source line"))))
+
+(ert-deftest emacsvox-magit-copy-feedback-reports-the-value ()
+  "Copying a concise Magit value speaks it in one native transaction."
+  (let ((ems--interactive-fn-name 'magit-copy-section-value)
+        (kill-ring '("abc123"))
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (should
+       (eq
+        (emacsvox-magit--call-copy-command
+         (lambda (&rest _) 'copied)
+         'magit-copy-section-value nil)
+        'copied))
+      (should
+       (equal
+        (mapcar
+         (lambda (call)
+           (cons (substring-no-properties (car call)) (cdr call)))
+         calls)
+        '(("Copied. abc123"
+           (:role vcs-view :vcs-view-kind other
+            :events (operation-completed)
+            :vcs-operation magit-copy-section-value)
+           (mark-object))))))))
+
+(ert-deftest emacsvox-magit-copy-feedback-summarizes-large-content ()
+  "Copy feedback does not unexpectedly speak a large patch."
+  (let ((kill-ring '("one\ntwo\nthree")))
+    (should (equal (emacsvox-magit--copied-content) "Copied 3 lines")))
+  (let ((kill-ring (list (make-string 201 ?x))))
+    (should
+     (equal
+      (emacsvox-magit--copied-content)
+      "Copied 201 characters"))))
+
+(ert-deftest emacsvox-magit-process-kill-reports-interrupt ()
+  "The first process-kill request is identified as an interrupt."
+  (let ((ems--interactive-fn-name 'magit-process-kill)
+        calls)
+    (cl-letf
+        (((symbol-function 'magit-section-value-if)
+          (lambda (_) 'fake-process))
+         ((symbol-function 'process-status)
+          (lambda (_) 'run))
+         ((symbol-function 'process-get)
+          (lambda (&rest _) nil))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (should
+       (eq
+        (emacsvox-magit--call-process-kill
+         (lambda (&rest _) 'interrupted)
+         nil)
+        'interrupted))
+      (should
+       (equal
+        calls
+        '(("Interrupted process"
+           (:role vcs-process :events (operation-completed)
+            :vcs-operation interrupt)
+           (close-object))))))))
+
+(ert-deftest emacsvox-magit-process-kill-reports-no-target ()
+  "Process kill reports the absence of a running process as failure."
+  (let ((ems--interactive-fn-name 'magit-process-kill)
+        calls)
+    (cl-letf
+        (((symbol-function 'magit-section-value-if)
+          (lambda (_) nil))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (emacsvox-magit--call-process-kill
+       (lambda (&rest _) 'no-process)
+       nil)
+      (should
+       (equal
+        calls
+        '(("No process at point"
+           (:role vcs-process :events (operation-failed)
+            :vcs-operation interrupt)
+           (warn-user))))))))
+
+(ert-deftest emacsvox-magit-section-description-is-native ()
+  "Section inspection submits concise identity and semantic context."
+  (let ((ems--interactive-fn-name 'magit-describe-section)
+        calls)
+    (cl-letf
+        (((symbol-function 'magit-describe-section-briefly)
+          (lambda (&rest _) "#<magit-file-section README>"))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (emacsvox--advice-magit-describe-section-after
+       '(:type file))
+      (should
+       (equal
+        calls
+        '(("#<magit-file-section README>"
+           (:role vcs-section :section-kind file
+            :events (operation-completed)
+            :visibility expanded
+            :vcs-operation magit-describe-section)
+           (help))))))))
 
 (ert-deftest emacsvox-magit-stage-facts-express-intent ()
   "Staging and section visibility have explicit semantic facts."
