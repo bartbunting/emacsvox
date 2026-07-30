@@ -144,6 +144,39 @@ presentation."
    :compatibility-actions
    (and icon (list (emacsvox-aural-compatibility-icon icon)))))
 
+(defun emacsvox-org--submit-actions (facts occasion &rest icons)
+  "Submit FACTS and compatibility ICONS as one action-only transaction."
+  (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'org
+   :occasion occasion
+   :compatibility-actions
+   (mapcar #'emacsvox-aural-compatibility-icon icons)))
+
+(defun emacsvox-org--submit-text
+    (content facts occasion &optional icon icon-phase)
+  "Submit CONTENT under FACTS and OCCASION with optional compatibility ICON.
+ICON-PHASE defaults to `before'."
+  (if (and (stringp content) (> (length content) 0))
+      (emacsvox-aural-submit
+       content
+       :facts facts
+       :module 'org
+       :occasion occasion
+       :compatibility-actions
+       (when icon
+         (list
+          (emacsvox-aural-compatibility-icon icon icon-phase))))
+    (when icon
+      (emacsvox-org--submit-actions facts occasion icon))))
+
+(defun emacsvox-org--line-content ()
+  "Return the current Org line with speech-relevant properties intact."
+  (concat
+   (emacsvox-aural-source-substring
+    (line-beginning-position) (line-end-position))
+   (ems--display-props-get)))
+
 (defun emacsvox-org-refresh-aural-heading ()
   "Refresh semantic text properties on the Org heading at point."
   (when-let* ((facts (emacsvox-org-heading-facts)))
@@ -197,22 +230,18 @@ Return the heading facts when point is on a heading, or nil after using the
 ordinary compatibility path for any other Org line.  FALLBACK-ACTION describes
 that non-heading operation, and FALLBACK-ICON follows its spoken line."
   (let ((facts (emacsvox-org-heading-facts event)))
-    (if (not facts)
-        (progn
-          (emacsvox-org--present-feedback-after
-           (emacsvox-org--feedback-facts
-            'org-content event fallback-action)
-           occasion fallback-icon #'emacsvox-speak-line)
-          nil)
-      (emacsvox-org-refresh-aural-heading)
-      (let* ((context
-              (emacsvox-aural-capture-context 'org occasion))
-             (emacsvox-aural-submission-facts facts)
-             (emacsvox-aural-submission-context context)
-             (emacsvox-aural-submission-module 'org)
-             (emacsvox-aural-submission-occasion occasion))
-        (emacsvox-speak-line))
-      facts)))
+    (when facts
+      (emacsvox-org-refresh-aural-heading))
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
+     (or
+      facts
+      (emacsvox-org--feedback-facts
+       'org-content event fallback-action))
+     occasion
+     (unless facts fallback-icon)
+     'after)
+    facts))
 
 (add-hook 'org-mode-hook #'emacsvox-org-enable-aural-annotations)
 

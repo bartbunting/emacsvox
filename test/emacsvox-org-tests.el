@@ -219,19 +219,31 @@
        (emacsvox-org--feedback-facts
         'org-item 'focus-entered 'item-navigation))))))
 
-(ert-deftest emacsvox-org-structure-feedback-preserves-order ()
-  "Org structure movement speaks before its large-movement cue."
-  (let ((ems--interactive-fn-name 'org-next-visible-heading)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
-      (emacsvox--advice-org-next-visible-heading-after))
-    (should
-     (equal
-      (nreverse events)
-      '(speak-line (icon large-movement))))))
+(ert-deftest emacsvox-org-structure-feedback-uses-one-native-submission ()
+  "Org structure movement submits its source line and semantic intent once."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "* Heading\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-next-visible-heading)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-next-visible-heading-after))
+      (should (= (length submissions) 1))
+      (let ((submission (car submissions)))
+        (should (equal (substring-no-properties (car submission))
+                       "* Heading"))
+        (should
+         (equal
+          (plist-get (cdr submission) :facts)
+          '(:role heading :level 1 :visibility expanded
+            :events (focus-entered))))
+        (should (eq (plist-get (cdr submission) :module) 'org))
+        (should
+         (eq (plist-get (cdr submission) :occasion) 'navigation))))))
 
 (ert-deftest emacsvox-org-headings-carry-live-semantic-facts ()
   "Fontified Org headings expose level and refreshed folded-state facts."
@@ -262,26 +274,20 @@
     (insert "** Heading\n")
     (goto-char (point-min))
     (let ((ems--interactive-fn-name 'org-next-visible-heading)
-          facts context events)
+          submission)
       (cl-letf
-          (((symbol-function 'emacsvox-speak-line)
-            (lambda ()
-              (setq
-               facts (copy-tree emacsvox-aural-submission-facts)
-               context (copy-tree emacsvox-aural-submission-context))
-              (push 'speak-line events)))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events))))
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
         (emacsvox--advice-org-next-visible-heading-after))
-      (should (equal events '(speak-line)))
       (should
        (equal
-        facts
+        (plist-get (cdr submission) :facts)
         '(:role heading :level 2 :visibility expanded
           :events (focus-entered))))
-      (should (eq (plist-get context :module) 'org))
-      (should (eq (plist-get context :mode) 'org-mode))
-      (should (eq (plist-get context :occasion) 'navigation)))))
+      (should (eq (plist-get (cdr submission) :module) 'org))
+      (should
+       (eq (plist-get (cdr submission) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-default-plan-preserves-navigation-output-order ()
   "Default semantic heading output remains line then movement cue."
@@ -533,12 +539,13 @@
             (visual-line-mode nil)
             plans)
         (cl-letf
-            (((symbol-function 'emacsvox-speak-line)
-              (lambda ()
-                (let* ((text
-                        (buffer-substring
-                         (line-beginning-position) (line-end-position)))
-                       (prepared (emacsvox-aural-prepare-text text)))
+            (((symbol-function 'tts-speak)
+              (lambda (text)
+                (let ((prepared
+                       (if
+                           (emacsvox-aural-concrete-plan-at 0 text)
+                           text
+                         (emacsvox-aural-prepare-text text))))
                   (push
                    (emacsvox-aural-concrete-plan-at 0 prepared)
                    plans)))))
@@ -786,16 +793,24 @@
     (should (equal events '(table-cell)))))
 
 (ert-deftest emacsvox-org-cycle-nontable-feedback-is-target-aware ()
-  "Only matching interactive non-table cycling speaks the line."
-  (let ((ems--interactive-fn-name 'org-shifttab)
-        events)
-    (cl-letf (((symbol-function 'org-at-table-p)
-               (lambda (&rest _) nil))
-              ((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events))))
-      (emacsvox--advice-org-cycle-after)
-      (emacsvox--advice-org-shifttab-after))
-    (should (equal events '(speak-line)))))
+  "Only matching interactive non-table cycling submits the line."
+  (with-temp-buffer
+    (insert "Body")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-shifttab)
+          submissions)
+      (cl-letf (((symbol-function 'org-at-table-p)
+                 (lambda (&rest _) nil))
+                ((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-cycle-after)
+        (emacsvox--advice-org-shifttab-after))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-content :events (state-changed)))))))
 
 (ert-deftest emacsvox-org-cycle-submits-explicit-visibility-change ()
   "Org cycling submits heading level, new visibility, event, and occasion."
@@ -805,21 +820,20 @@
     (goto-char (point-min))
     (org-fold-hide-subtree)
     (let ((ems--interactive-fn-name 'org-cycle)
-          facts context)
+          submission)
       (cl-letf
-          (((symbol-function 'emacsvox-speak-line)
-            (lambda ()
-              (setq
-               facts (copy-tree emacsvox-aural-submission-facts)
-               context (copy-tree emacsvox-aural-submission-context)))))
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
         (emacsvox--advice-org-cycle-after))
       (should
        (equal
-        facts
+        (plist-get (cdr submission) :facts)
         '(:role heading :level 1 :visibility folded
           :states (folded) :events (state-changed))))
-      (should (eq (plist-get context :module) 'org))
-      (should (eq (plist-get context :occasion) 'state-change)))))
+      (should (eq (plist-get (cdr submission) :module) 'org))
+      (should
+       (eq (plist-get (cdr submission) :occasion) 'state-change)))))
 
 (ert-deftest emacsvox-org-agenda-table-advice-is-directly-registered ()
   "Org agenda and table advice uses native advice directly."
@@ -980,20 +994,27 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
-(ert-deftest emacsvox-org-heading-edit-feedback-preserves-order ()
-  "Org heading edits speak the line before the open cue."
-  (let ((ems--interactive-fn-name 'org-insert-heading)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
-      (emacsvox--advice-org-insert-todo-heading-after)
-      (emacsvox--advice-org-insert-heading-after))
-    (should
-     (equal
-      (nreverse events)
-      '(speak-line (icon open-object))))))
+(ert-deftest emacsvox-org-heading-edit-feedback-is-native-and-target-aware ()
+  "Only the matching heading edit submits its resulting heading."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "* Heading\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-insert-heading)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-insert-todo-heading-after)
+        (emacsvox--advice-org-insert-heading-after))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role heading :level 1 :visibility expanded
+          :events (object-changed))))
+      (should (eq (plist-get (cdar submissions) :occasion) 'edit)))))
 
 (ert-deftest emacsvox-org-subtree-feedback-is-target-aware ()
   "Only the matching subtree command speaks and cues its result."
