@@ -265,7 +265,7 @@
      :value-type symbol
      :allowed-values
      (size modification-time access-time symbolic-link-target permissions
-           file-type header duration))
+           file-type header duration marked-summary))
     (marked
      :kind state
      :summary "An item is marked for a later operation"

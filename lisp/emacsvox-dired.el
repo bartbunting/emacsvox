@@ -443,6 +443,82 @@ Each specification has the form (TARGET OPERATION ICON FALLBACK)."
   (dired-downcase downcase-name task-done "File names downcased")
   (dired-upcase upcase-name task-done "File names upcased"))
 
+(emacsvox-dired--define-operation-advice
+  (dired-toggle-marks toggle-marks mark-object "Marks toggled")
+  (dired-unmark-all-files clear-marks deselect-object "Marks cleared")
+  (dired-unmark-all-marks clear-marks deselect-object "Marks cleared")
+  (dired-change-marks change-marks mark-object "Marks changed")
+  (dired-mark-directories mark-directories mark-object
+                          "Directories marked")
+  (dired-mark-executables mark-executables mark-object
+                          "Executable files marked")
+  (dired-mark-files-containing-regexp mark-containing mark-object
+                                      "Matching files marked")
+  (dired-mark-files-regexp mark-regexp mark-object "Matching files marked")
+  (dired-mark-subdir-files mark-subdirectory mark-object
+                           "Subdirectory files marked")
+  (dired-mark-symlinks mark-symbolic-links mark-object
+                       "Symbolic links marked")
+  (dired-flag-auto-save-files flag-auto-save-files delete-object
+                              "Auto-save files flagged")
+  (dired-flag-backup-files flag-backup-files delete-object
+                           "Backup files flagged")
+  (dired-flag-files-regexp flag-regexp delete-object
+                           "Matching files flagged")
+  (dired-flag-garbage-files flag-garbage-files delete-object
+                            "Garbage files flagged")
+  (dired-clean-directory clean-directory delete-object
+                         "Old versions flagged")
+  (dired-copy-filename-as-kill copy-filenames mark-object
+                               "File names copied")
+  (dired-do-kill-lines hide-entries close-object "Entries hidden")
+  (dired-undo undo task-done "Dired change undone"))
+
+(defun emacsvox-dired--marked-files-summary ()
+  "Return Dired's count and total-size summary for marked files."
+  (let* ((files (dired-get-marked-files nil nil nil t))
+         (count
+          (cond
+           ((null (cdr files)) 0)
+           ((and (= (length files) 2) (eq (car files) t)) 1)
+           (t (length files))))
+         (size
+          (cl-loop
+           for file in files
+           when (stringp file)
+           sum (file-attribute-size (file-attributes file)))))
+    (if (zerop count)
+        "No marked files"
+      (format
+       "%d marked file%s (%s total size)"
+       count
+       (if (= count 1) "" "s")
+       (funcall byte-count-to-string-function size)))))
+
+(defun emacsvox--advice-dired-number-of-marked-files-around
+    (orig-fun &rest arguments)
+  "Present an interactive summary of marked Dired files."
+  (if (ems-interactive-p 'dired-number-of-marked-files)
+      (let ((context
+             (emacsvox-aural-capture-context 'dired 'inspection))
+            result)
+        (let ((emacsvox-speak-messages nil))
+          (setq result (apply orig-fun arguments)))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--submit-message
+           (emacsvox-dired--marked-files-summary)
+           '(:role filesystem-listing
+             :events (entry-inspected)
+             :entry-inspection-kind marked-summary)
+           'inspection 'select-object))
+        result)
+    (apply orig-fun arguments)))
+
+(advice-add
+ 'dired-number-of-marked-files :around
+ #'emacsvox--advice-dired-number-of-marked-files-around
+ '((name . emacsvox)))
+
 (defun emacsvox--advice-dired-query-before (&rest _)
   "Present a Dired confirmation request."
   (emacsvox-dired--present-feedback

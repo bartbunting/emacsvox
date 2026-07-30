@@ -31,6 +31,8 @@
     (dired-flag-file-deletion
      :around emacsvox--advice-dired-flag-file-deletion-around)
     (dired-unmark :around emacsvox--advice-dired-unmark-around)
+    (dired-number-of-marked-files
+     :around emacsvox--advice-dired-number-of-marked-files-around)
     (quit-window :around emacsvox--advice-dired-quit-window-around))
   "Remaining hand-written Dired advice migrated to final native form.")
 
@@ -44,7 +46,14 @@
     dired-do-hardlink dired-do-hardlink-regexp
     dired-do-compress dired-do-compress-to
     dired-do-chmod dired-do-chown dired-do-chgrp dired-do-touch
-    dired-downcase dired-upcase)
+    dired-downcase dired-upcase
+    dired-toggle-marks dired-unmark-all-files dired-unmark-all-marks
+    dired-change-marks dired-mark-directories dired-mark-executables
+    dired-mark-files-containing-regexp dired-mark-files-regexp
+    dired-mark-subdir-files dired-mark-symlinks
+    dired-flag-auto-save-files dired-flag-backup-files
+    dired-flag-files-regexp dired-flag-garbage-files dired-clean-directory
+    dired-copy-filename-as-kill dired-do-kill-lines dired-undo)
   "Dired filesystem operations with semantic result advice.")
 
 (let ((module
@@ -295,6 +304,68 @@
             '(:role filesystem-operation
               :filesystem-operation-kind create-directory
               :events (operation-completed)))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-toggle-marks-has-real-operation-feedback ()
+  "Bulk mark changes update the listing and submit their semantic result."
+  (let* ((directory (make-temp-file "emacsvox-dired-toggle-" t))
+         (first (expand-file-name "first.txt" directory))
+         (second (expand-file-name "second.txt" directory))
+         buffer
+         submission)
+    (unwind-protect
+        (progn
+          (write-region "first" nil first nil 'silent)
+          (write-region "second" nil second nil 'silent)
+          (setq buffer (dired-noselect directory))
+          (with-current-buffer buffer
+            (cl-letf
+                (((symbol-function 'emacsvox-dired--submit-message)
+                  (lambda (&rest arguments)
+                    (setq submission arguments))))
+              (funcall-interactively #'dired-toggle-marks))
+            (should
+             (= (length (dired-get-marked-files nil nil nil t)) 2)))
+          (should
+           (equal
+            submission
+            '("Marks toggled"
+              (:role filesystem-operation
+               :filesystem-operation-kind toggle-marks
+               :events (operation-completed))
+              state-change mark-object))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-marked-summary-is-native-inspection ()
+  "Marked-file count and size are submitted with listing inspection facts."
+  (let* ((directory (make-temp-file "emacsvox-dired-marked-" t))
+         (file (expand-file-name "marked.txt" directory))
+         buffer
+         submission)
+    (unwind-protect
+        (progn
+          (write-region "contents" nil file nil 'silent)
+          (setq buffer (dired-noselect directory))
+          (with-current-buffer buffer
+            (dired-goto-file file)
+            (dired-mark 1)
+            (cl-letf
+                (((symbol-function 'emacsvox-dired--submit-message)
+                  (lambda (&rest arguments)
+                    (setq submission arguments))))
+              (funcall-interactively #'dired-number-of-marked-files)))
+          (should (string-match-p "\\`1 marked file" (car submission)))
+          (should
+           (equal
+            (cdr submission)
+            '((:role filesystem-listing
+               :events (entry-inspected)
+               :entry-inspection-kind marked-summary)
+              inspection select-object))))
       (when (buffer-live-p buffer)
         (kill-buffer buffer))
       (delete-directory directory t))))
