@@ -91,29 +91,33 @@
 
 ;;; Map Faces:
 
-(voice-setup-add-map
- '(
-   (transient-active-infix voice-animate)
-   (transient-amaranth voice-animate)
-   (transient-argument voice-animate)
-   (transient-blue voice-lighten)
-   (transient-disabled-suffix inaudible)
-   (transient-enabled-suffix voice-brighten)
-   (transient-heading voice-lighten)
-   (transient-higher-level voice-brighten)
-   (transient-inactive-argument inaudible)
-   (transient-inactive-value inaudible)
-   (transient-key voice-animate)
-   (transient-mismatched-key voice-monotone-extra)
-   (transient-nonstandard-key voice-monotone-extra)
-   (transient-pink voice-bolden-medium)
-   (transient-red voice-bolden)
-   (transient-separator  'inaudible)
-   (transient-teal voice-lighten-medium)
-   (transient-unreachable voice-monotone-extra)
-   (transient-unreachable-key voice-monotone-extra)
-   (transient-value voice-brighten)
-   ))
+(defconst emacsvox-transient--face-voice-map
+  '((transient-active-infix voice-animate)
+    (transient-argument voice-animate)
+    (transient-delimiter inaudible)
+    (transient-disabled-suffix inaudible)
+    (transient-enabled-suffix voice-brighten)
+    (transient-heading voice-lighten)
+    (transient-higher-level voice-brighten)
+    (transient-inactive-argument inaudible)
+    (transient-inactive-value inaudible)
+    (transient-inapt-argument voice-monotone-extra)
+    (transient-inapt-suffix voice-smoothen)
+    (transient-key voice-animate)
+    (transient-key-exit voice-bolden)
+    (transient-key-noop inaudible)
+    (transient-key-recurse voice-lighten)
+    (transient-key-return voice-lighten-medium)
+    (transient-key-stack voice-bolden-medium)
+    (transient-key-stay voice-animate)
+    (transient-mismatched-key voice-monotone-extra)
+    (transient-nonstandard-key voice-monotone-extra)
+    (transient-unreachable voice-monotone-extra)
+    (transient-unreachable-key voice-monotone-extra)
+    (transient-value voice-brighten))
+  "Voice personalities for the current Transient faces.")
+
+(voice-setup-add-map emacsvox-transient--face-voice-map)
 
 ;;;  Advice Interactive Commands:
 

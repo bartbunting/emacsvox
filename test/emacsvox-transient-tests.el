@@ -174,5 +174,32 @@
   (should transient-enable-menu-navigation)
   (should (= transient-show-menu 1)))
 
+(ert-deftest emacsvox-transient-face-inventory-is-current ()
+  "Every current Transient face should have an explicit voice."
+  (let ((configured
+         (sort
+          (mapcar #'car emacsvox-transient--face-voice-map)
+          (lambda (a b) (string< (symbol-name a) (symbol-name b)))))
+        (current
+         (sort
+          (seq-filter
+           (lambda (face)
+             (string-prefix-p "transient-" (symbol-name face)))
+           (face-list))
+          (lambda (a b) (string< (symbol-name a) (symbol-name b))))))
+    (should (equal configured current))
+    (should (= (length configured) 23))
+    (should
+     (= (length configured)
+        (length (delete-dups (copy-sequence configured)))))))
+
+(ert-deftest emacsvox-transient-face-voices-are-explicit ()
+  "Current Transient faces should resolve to their declared personalities."
+  (dolist (entry emacsvox-transient--face-voice-map)
+    (should
+     (eq
+      (voice-setup-get-voice-for-face (car entry))
+      (cadr entry)))))
+
 (provide 'emacsvox-transient-tests)
 ;;; emacsvox-transient-tests.el ends here
