@@ -183,6 +183,24 @@
     (emacsvox-aural-semantic 'org-action))
     'attribute)))
 
+(ert-deftest emacsvox-org-face-presentation-covers-current-org ()
+  "Every face provided by the current Org interface has one voice mapping."
+  (dolist
+      (feature
+       '(org-agenda org-clock org-colview org-habit org-indent
+                    org-inlinetask org-src org-table ox-beamer))
+    (require feature))
+  (let* ((mapped (mapcar #'car emacsvox-org--face-voice-map))
+         (current
+          (seq-filter
+           (lambda (face)
+             (string-prefix-p "org-" (symbol-name face)))
+           (face-list))))
+    (should (= (length mapped) (length (delete-dups (copy-sequence mapped)))))
+    (should-not (assq 'org-coverlay emacsvox-org--face-voice-map))
+    (dolist (face current)
+      (should (assq face emacsvox-org--face-voice-map)))))
+
 (ert-deftest emacsvox-org-action-allows-specific-cue-overrides ()
   "A user rule can alter one Org operation without changing other modules."
   (let ((emacsvox-aural-active-scheme 'default)
