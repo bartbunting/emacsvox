@@ -28,11 +28,30 @@
     (transient-quit-seq :after
                         emacsvox--advice-transient-quit-seq-after)
     (transient-save :after emacsvox--advice-transient-save-after)
+    (transient-save-and-exit :after
+                             emacsvox--advice-transient-save-and-exit-after)
     (transient-set :after emacsvox--advice-transient-set-after)
+    (transient-set-and-exit :after
+                            emacsvox--advice-transient-set-and-exit-after)
+    (transient-reset :after emacsvox--advice-transient-reset-after)
     (transient-history-next :after
                             emacsvox--advice-transient-history-next-after)
     (transient-history-prev :after
                             emacsvox--advice-transient-history-prev-after)
+    (transient-toggle-docstrings :after
+                                 emacsvox--advice-transient-toggle-docstrings-after)
+    (transient-toggle-level-limit :after
+                                  emacsvox--advice-transient-toggle-level-limit-after)
+    (transient-toggle-debug :after
+                            emacsvox--advice-transient-toggle-debug-after)
+    (transient-set-level :after
+                         emacsvox--advice-transient-set-level-after)
+    (transient-copy-menu-text :after
+                              emacsvox--advice-transient-copy-menu-text-after)
+    (transient-scroll-up :after
+                         emacsvox--advice-transient-scroll-up-after)
+    (transient-scroll-down :after
+                           emacsvox--advice-transient-scroll-down-after)
     (transient--show :after emacsvox--advice-transient--show-after)
     (transient-suspend :around
                        emacsvox--advice-transient-suspend-around)
@@ -53,17 +72,164 @@
 (ert-deftest emacsvox-transient-feedback-is-target-aware ()
   "Only feedback for the matching Transient command is emitted."
   (let ((ems--interactive-fn-name 'transient-set)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
+        submissions
+        stops)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions)))
               ((symbol-function 'tts-stop)
-               (lambda (scope) (push (list 'stop scope) events))))
+               (lambda (scope) (push scope stops))))
       (emacsvox--advice-transient-save-after)
       (emacsvox--advice-transient-set-after))
+    (should (equal stops '(all)))
+    (should (= (length submissions) 1))
     (should
      (equal
-      (nreverse events)
-      '((icon save-object) (stop all))))))
+      (plist-get (car submissions) :facts)
+      '(:role command-menu :command-menu-action transient-set
+        :events (command-menu-value-changed))))))
+
+(ert-deftest emacsvox-transient-value-commands-have-distinct-semantics ()
+  "Set, save, and reset values expose their exact operation and cue."
+  (dolist
+      (entry
+       '((transient-set
+          emacsvox--advice-transient-set-after save-object)
+         (transient-set-and-exit
+          emacsvox--advice-transient-set-and-exit-after save-object)
+         (transient-save
+          emacsvox--advice-transient-save-after save-object)
+         (transient-save-and-exit
+          emacsvox--advice-transient-save-and-exit-after save-object)
+         (transient-reset
+          emacsvox--advice-transient-reset-after delete-object)))
+    (pcase-let ((`(,target ,function ,icon) entry))
+      (let ((ems--interactive-fn-name target)
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                   (lambda (&rest arguments)
+                     (push arguments submissions)))
+                  ((symbol-function 'tts-stop) #'ignore))
+          (funcall function))
+        (should (= (length submissions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value
+           (car
+            (plist-get
+             (car submissions) :compatibility-actions)))
+          icon))))))
+
+(ert-deftest emacsvox-transient-history-uses-prefix-value-not-minibuffer ()
+  "History movement presents the active prefix value outside a minibuffer."
+  (let ((ems--interactive-fn-name 'transient-history-next)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-transient--value-text)
+               (lambda () "--verbose, main"))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (push (cons content arguments) submissions)))
+              ((symbol-function 'minibuffer-contents)
+               (lambda () (ert-fail "History consulted the minibuffer"))))
+      (emacsvox--advice-transient-history-next-after))
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "--verbose, main"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role command-menu-item
+        :command-menu-item-kind history
+        :command-menu-action transient-history-next
+        :events (command-menu-value-changed)
+        :states (selected))))))
+
+(ert-deftest emacsvox-transient-toggle-feedback-reports-resulting-state ()
+  "Transient presentation toggles expose their resulting on/off state."
+  (dolist
+      (entry
+       '((transient-toggle-common
+          emacsvox--advice-transient-toggle-common-after
+          transient-show-common-commands)
+         (transient-toggle-docstrings
+          emacsvox--advice-transient-toggle-docstrings-after
+          transient--docsp)
+         (transient-toggle-level-limit
+          emacsvox--advice-transient-toggle-level-limit-after
+          transient--all-levels-p)
+         (transient-toggle-debug
+          emacsvox--advice-transient-toggle-debug-after
+          transient--debug)))
+    (pcase-let ((`(,target ,function ,variable) entry))
+      (dolist (enabled '(nil t))
+        (let ((ems--interactive-fn-name target)
+              submissions)
+          (cl-progv (list variable) (list enabled)
+            (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                       (lambda (&rest arguments)
+                         (push arguments submissions)))
+                      ((symbol-function 'tts-stop) #'ignore))
+              (funcall function)))
+          (should (= (length submissions) 1))
+          (should
+           (eq
+            (emacsvox-aural-compatibility-action-value
+             (car
+              (plist-get
+               (car submissions) :compatibility-actions)))
+            (if enabled 'on 'off))))))))
+
+(ert-deftest emacsvox-transient-level-editing-distinguishes-entry-and-save ()
+  "Level editing reports entering the editor separately from saving a level."
+  (let ((ems--interactive-fn-name 'transient-set-level)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
+      (emacsvox--advice-transient-set-level-after nil nil))
+    (should
+     (equal
+      (plist-get (car submissions) :facts)
+      '(:role command-menu :command-menu-action edit-levels))))
+  (let ((ems--interactive-fn-name 'transient-set-level)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
+      (emacsvox--advice-transient-set-level-after 'sample-command 5))
+    (should
+     (equal
+      (plist-get (car submissions) :facts)
+      '(:role command-menu :command-menu-action set-level
+        :events (command-menu-value-changed))))))
+
+(ert-deftest emacsvox-transient-copy-menu-text-is-presented ()
+  "Copying menu text reports completion through one native transaction."
+  (let ((ems--interactive-fn-name 'transient-copy-menu-text)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (push (cons content arguments) submissions))))
+      (emacsvox--advice-transient-copy-menu-text-after))
+    (should (equal (caar submissions) "Transient menu copied"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role command-menu :command-menu-action copy-menu-text
+        :events (operation-completed))))))
+
+(ert-deftest emacsvox-transient-scroll-presents-visible-line ()
+  "Menu scrolling presents its destination through the shared menu helper."
+  (let ((ems--interactive-fn-name 'transient-scroll-up)
+        calls)
+    (cl-letf (((symbol-function 'emacsvox-transient--present-visible-menu)
+               (lambda (&rest arguments)
+                 (push arguments calls))))
+      (emacsvox--advice-transient-scroll-down-after)
+      (emacsvox--advice-transient-scroll-up-after))
+    (should
+     (equal
+      calls
+      '((transient-scroll-up nil navigation scroll))))))
 
 (ert-deftest emacsvox-transient-show-caches-and-speaks-menu ()
   "Showing a new Transient menu caches and semantically presents its line."

@@ -124,10 +124,14 @@
 ;;;  Advice Interactive Commands:
 
 (defun emacsvox--advice-transient-toggle-common-after (&rest _)
-  "speak." 
+  "Present the new common-command visibility setting."
   (when (ems-interactive-p 'transient-toggle-common)
     (tts-stop 'all)
-    (emacsvox-icon (if transient-show-common-commands 'on 'off))))
+    (emacsvox-transient--submit-actions
+     (emacsvox-transient--menu-facts
+      'toggle-common 'command-menu-value-changed)
+     'state-change
+     (if transient-show-common-commands 'on 'off))))
 
 (advice-add 'transient-toggle-common :after
             #'emacsvox--advice-transient-toggle-common-after)
@@ -179,31 +183,79 @@
 (advice-add 'transient-quit-seq :after
             #'emacsvox--advice-transient-quit-seq-after)
 
-(defun emacsvox-transient--save-feedback (target)
-  "Provide save feedback when TARGET is the interactive command."
+(defun emacsvox-transient--value-feedback (target icon)
+  "Present a value change for interactive TARGET with compatibility ICON."
   (when (ems-interactive-p target)
-    (emacsvox-icon 'save-object)
-    (tts-stop 'all)))
+    (tts-stop 'all)
+    (emacsvox-transient--submit-actions
+     (emacsvox-transient--menu-facts
+      target 'command-menu-value-changed)
+     'state-change
+     icon)))
 
 (defun emacsvox--advice-transient-save-after (&rest _)
   "Provide feedback after saving a transient value."
-  (emacsvox-transient--save-feedback 'transient-save))
+  (emacsvox-transient--value-feedback 'transient-save 'save-object))
 
 (advice-add 'transient-save :after
             #'emacsvox--advice-transient-save-after)
 
+(defun emacsvox--advice-transient-save-and-exit-after (&rest _)
+  "Provide feedback after saving a transient value and exiting."
+  (emacsvox-transient--value-feedback
+   'transient-save-and-exit 'save-object))
+
+(advice-add 'transient-save-and-exit :after
+            #'emacsvox--advice-transient-save-and-exit-after)
+
 (defun emacsvox--advice-transient-set-after (&rest _)
   "Provide feedback after setting a transient value."
-  (emacsvox-transient--save-feedback 'transient-set))
+  (emacsvox-transient--value-feedback 'transient-set 'save-object))
 
 (advice-add 'transient-set :after
             #'emacsvox--advice-transient-set-after)
 
+(defun emacsvox--advice-transient-set-and-exit-after (&rest _)
+  "Provide feedback after setting a transient value and exiting."
+  (emacsvox-transient--value-feedback
+   'transient-set-and-exit 'save-object))
+
+(advice-add 'transient-set-and-exit :after
+            #'emacsvox--advice-transient-set-and-exit-after)
+
+(defun emacsvox--advice-transient-reset-after (&rest _)
+  "Provide feedback after clearing saved and session values."
+  (emacsvox-transient--value-feedback 'transient-reset 'delete-object))
+
+(advice-add 'transient-reset :after
+            #'emacsvox--advice-transient-reset-after)
+
+(defun emacsvox-transient--value-text ()
+  "Return a concise textual rendering of the active Transient value."
+  (let ((value
+         (and
+          transient--prefix
+          (ignore-errors (oref transient--prefix value)))))
+    (cond
+     ((null value) "No arguments")
+     ((stringp value) value)
+     ((listp value)
+      (mapconcat
+       (lambda (element)
+         (if (stringp element) element (format "%s" element)))
+       value
+       ", "))
+     (t (format "%s" value)))))
+
 (defun emacsvox-transient--history-feedback (target)
-  "Speak history when TARGET is the interactive command."
+  "Present the active history value when TARGET is interactive."
   (when (ems-interactive-p target)
-    (tts-speak-list (minibuffer-contents))
-    (emacsvox-icon 'select-object)))
+    (emacsvox-transient--submit-text
+     (emacsvox-transient--value-text)
+     (emacsvox-transient--item-facts
+      'history target 'command-menu-value-changed '(selected))
+     'state-change
+     'select-object)))
 
 (defun emacsvox--advice-transient-history-next-after (&rest _)
   "Speak the next transient history value."
@@ -218,6 +270,92 @@
 
 (advice-add 'transient-history-prev :after
             #'emacsvox--advice-transient-history-prev-after)
+
+(defun emacsvox-transient--toggle-feedback (target enabled)
+  "Present interactive TARGET as ENABLED or disabled."
+  (when (ems-interactive-p target)
+    (emacsvox-transient--submit-actions
+     (emacsvox-transient--menu-facts
+      target 'command-menu-value-changed)
+     'state-change
+     (if enabled 'on 'off))))
+
+(defun emacsvox--advice-transient-toggle-docstrings-after (&rest _)
+  "Present the new Transient docstring visibility."
+  (emacsvox-transient--toggle-feedback
+   'transient-toggle-docstrings transient--docsp))
+
+(advice-add 'transient-toggle-docstrings :after
+            #'emacsvox--advice-transient-toggle-docstrings-after)
+
+(defun emacsvox--advice-transient-toggle-level-limit-after (&rest _)
+  "Present the new Transient suffix-level visibility."
+  (emacsvox-transient--toggle-feedback
+   'transient-toggle-level-limit transient--all-levels-p))
+
+(advice-add 'transient-toggle-level-limit :after
+            #'emacsvox--advice-transient-toggle-level-limit-after)
+
+(defun emacsvox--advice-transient-toggle-debug-after (&rest _)
+  "Present the new Transient debugging state."
+  (emacsvox-transient--toggle-feedback
+   'transient-toggle-debug transient--debug))
+
+(advice-add 'transient-toggle-debug :after
+            #'emacsvox--advice-transient-toggle-debug-after)
+
+(defun emacsvox--advice-transient-set-level-after
+    (&optional command level)
+  "Present entry to level editing or a saved COMMAND LEVEL."
+  (when (ems-interactive-p 'transient-set-level)
+    (cond
+     ((null command)
+      (emacsvox-transient--submit-actions
+       (emacsvox-transient--menu-facts 'edit-levels)
+       'state-change
+       'open-object))
+     (level
+      (emacsvox-transient--submit-actions
+       (emacsvox-transient--menu-facts
+        'set-level 'command-menu-value-changed)
+       'state-change
+       'save-object)))))
+
+(advice-add 'transient-set-level :after
+            #'emacsvox--advice-transient-set-level-after)
+
+(defun emacsvox--advice-transient-copy-menu-text-after (&rest _)
+  "Present successful copying of the active menu text."
+  (when (ems-interactive-p 'transient-copy-menu-text)
+    (emacsvox-transient--submit-text
+     "Transient menu copied"
+     (emacsvox-transient--menu-facts
+      'copy-menu-text 'operation-completed)
+     'state-change
+     'yank-object)))
+
+(advice-add 'transient-copy-menu-text :after
+            #'emacsvox--advice-transient-copy-menu-text-after)
+
+(defun emacsvox-transient--scroll-feedback (target)
+  "Present the visible menu line after interactive scroll TARGET."
+  (when (ems-interactive-p target)
+    (emacsvox-transient--present-visible-menu
+     target nil 'navigation 'scroll)))
+
+(defun emacsvox--advice-transient-scroll-up-after (&rest _)
+  "Present the line reached after scrolling the menu up."
+  (emacsvox-transient--scroll-feedback 'transient-scroll-up))
+
+(advice-add 'transient-scroll-up :after
+            #'emacsvox--advice-transient-scroll-up-after)
+
+(defun emacsvox--advice-transient-scroll-down-after (&rest _)
+  "Present the line reached after scrolling the menu down."
+  (emacsvox-transient--scroll-feedback 'transient-scroll-down))
+
+(advice-add 'transient-scroll-down :after
+            #'emacsvox--advice-transient-scroll-down-after)
 
 (define-derived-mode emacsvox-transient-mode special-mode
   "Browse current transient choices"
