@@ -47,6 +47,7 @@
         seen-contents
         seen-options
         seen-play-list
+        seen-presentation
         seen-resource)
     (unwind-protect
         (with-temp-buffer
@@ -59,7 +60,9 @@
                     ((symbol-function 'find-file-noselect)
                      (lambda (&rest _) playlist-buffer))
                     ((symbol-function 'save-buffer) #'ignore)
-                    ((symbol-function 'message) #'ignore)
+                    ((symbol-function 'emacsvox-dired--submit-message)
+                     (lambda (&rest arguments)
+                       (setq seen-presentation arguments)))
                     ((symbol-function 'emacsvox-m-player)
                      (lambda (resource &optional play-list)
                        (setq seen-contents
@@ -74,7 +77,15 @@
     (should (equal seen-resource "/tmp/emacsvox-playlist.m3u"))
     (should (eq seen-play-list 'play-list))
     (should (equal seen-options '("--base" "-shuffle")))
-    (should (equal seen-contents "/tmp/one.mp3\n/tmp/two.mp3\n"))))
+    (should (equal seen-contents "/tmp/one.mp3\n/tmp/two.mp3\n"))
+    (should
+     (equal
+      seen-presentation
+      '("2 tracks matching"
+        (:role filesystem-operation
+         :filesystem-operation-kind playlist
+         :events (operation-started))
+        state-change progress)))))
 
 (provide 'emacsvox-media-options-tests)
 ;;; emacsvox-media-options-tests.el ends here
