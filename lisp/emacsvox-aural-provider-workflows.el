@@ -720,6 +720,13 @@
      :owner core
      :occasions (state-change)
      :phases (before content after))
+    (completion-input-updated
+     :kind event
+     :summary "Completion input was updated without accepting it"
+     :owner core
+     :roles (candidate)
+     :occasions (edit state-change)
+     :phases (before content after))
     (completion-separator-inserted
      :kind event
      :summary "A completion separator was inserted without accepting a candidate"

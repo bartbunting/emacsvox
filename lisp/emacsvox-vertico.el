@@ -43,6 +43,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-source)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
@@ -50,9 +51,12 @@
 
 ;;;  Map faces to voices:
 
-(voice-setup-add-map
- '((vertico-group-title voice-smoothen)
-   (vertico-group-separator voice-overlay-0)))
+(defconst emacsvox-vertico--face-map
+  '((vertico-group-title voice-smoothen)
+    (vertico-group-separator voice-overlay-0))
+  "Voice mappings for current Vertico faces.")
+
+(voice-setup-add-map emacsvox-vertico--face-map)
 
 ;;;  Define bookkeeping variables for UI state
 
@@ -62,136 +66,158 @@
 (defvar-local emacsvox-vertico--prev-index nil
   "Index of previously spoken candidate")
 
+(defvar-local emacsvox-vertico--suppress-next-exhibit-p nil
+  "Non-nil when a command already presented the next display update.")
+
 ;;; 
 (declare-function 'vertico--candidate "vertico.el" (&optional hl))
+(declare-function 'vertico--match-p "vertico.el" (input))
 
 ;;;  Semantic aural presentation:
 
-(defun emacsvox-vertico-candidate-facts (&optional accepted-p)
+(defun emacsvox-vertico-candidate-facts (&optional event unselected-p)
   "Return facts for the current candidate.
 
-When ACCEPTED-P is non-nil, record candidate acceptance instead of navigation."
+EVENT defaults to `focus-entered'.  For compatibility, t means `accepted'.
+When UNSELECTED-P is non-nil, describe raw completion input instead of the
+currently highlighted candidate."
   (append
    (list
     :role 'candidate
-    :events (list (if accepted-p 'accepted 'focus-entered))
-    :completion-index vertico--index)
-   (when (>= vertico--index 0)
+    :events
+    (list
+     (cond
+      ((eq event t) 'accepted)
+      (event event)
+      (t 'focus-entered)))
+    :completion-index (if unselected-p -1 vertico--index))
+   (when (and (not unselected-p) (>= vertico--index 0))
      '(:states (selected)))))
 
 (defun emacsvox-vertico--submit-candidate-feedback (facts icon text)
   "Submit candidate TEXT with FACTS and optional leading ICON."
-  (if (and (stringp text) (> (length text) 0))
-      (emacsvox-aural-submit
-       text
-       :facts facts
-       :module 'vertico
-       :occasion 'navigation
-       :compatibility-actions
-       (when icon
-         (list (emacsvox-aural-compatibility-icon icon))))
-    (let* ((context
-            (emacsvox-aural-capture-context 'vertico 'navigation))
-           (emacsvox-aural-submission-facts facts)
-           (emacsvox-aural-submission-context context)
-           (emacsvox-aural-submission-module 'vertico)
-           (emacsvox-aural-submission-occasion 'navigation))
-      (when icon (emacsvox-icon icon))
-      (when text (tts-speak text)))))
+  (let ((arguments
+         (list
+          :facts facts
+          :module 'vertico
+          :occasion
+          (if (memq 'focus-entered (plist-get facts :events))
+              'navigation
+            'state-change)
+          :compatibility-actions
+          (when icon
+            (list (emacsvox-aural-compatibility-icon icon))))))
+    (if (and (stringp text) (not (string-empty-p text)))
+        (apply #'emacsvox-aural-submit text arguments)
+      (apply #'emacsvox-aural-submit-actions arguments))))
 
-(defun emacsvox-vertico--speak-accepted-region-legacy (facts start end)
-  "Present accepted region START to END with legacy FACTS bindings."
-  (let* ((context
-          (emacsvox-aural-capture-context 'vertico 'state-change))
-         (emacsvox-aural-submission-facts facts)
-         (emacsvox-aural-submission-context context)
-         (emacsvox-aural-submission-module 'vertico)
-         (emacsvox-aural-submission-occasion 'state-change))
-    (emacsvox-icon 'complete)
-    (emacsvox-speak-region start end)))
+(defun emacsvox-vertico--inserted-content (start end)
+  "Return inserted completion content between START and END, if any."
+  (unless (= start end)
+    (emacsvox-aural-source-substring start end)))
 
-(defun emacsvox-vertico--submit-accepted-region (facts start end)
-  "Submit accepted region START to END with FACTS.
+(defun emacsvox-vertico--interactive-exit-p ()
+  "Return non-nil for either interactive Vertico exit command."
+  (or (ems-interactive-p 'vertico-exit)
+      (ems-interactive-p 'vertico-exit-input)))
 
-Keep empty and oversized regions on their characterized legacy paths."
-  (let ((content
-         (unless (= start end)
-           (emacsvox-speak-region-content start end))))
-    (if content
-        (emacsvox-aural-submit
-         content
-         :facts facts
-         :module 'vertico
-         :occasion 'state-change
-         :compatibility-actions
-         (list (emacsvox-aural-compatibility-icon 'complete)))
-      (emacsvox-vertico--speak-accepted-region-legacy
-       facts start end))))
+(defun emacsvox-vertico--exit-content (raw-input-p)
+  "Return the content that a Vertico exit will accept.
+
+When RAW-INPUT-P is non-nil, use minibuffer input even when a candidate is
+selected."
+  (if (and (not raw-input-p) (>= vertico--index 0))
+      (vertico--candidate)
+    (minibuffer-contents)))
 
 ;;;  Advice interactive commands
 
 (defun emacsvox--advice-vertico-insert-around (orig-fun &rest args)
-  "Call ORIG-FUN once and speak the inserted completion."
-  (let ((orig-point (point))
-        (result (apply orig-fun args)))
-    (emacsvox-vertico--submit-accepted-region
-     (emacsvox-vertico-candidate-facts t)
-     orig-point
-     (point))
+  "Call ORIG-FUN once and present the updated completion input."
+  (let ((interactive-p (ems-interactive-p 'vertico-insert))
+        (orig-point (point))
+        result)
+    (setq result (apply orig-fun args))
+    (when interactive-p
+      (emacsvox-vertico--submit-candidate-feedback
+       (emacsvox-vertico-candidate-facts 'completion-input-updated)
+       'item
+       (emacsvox-vertico--inserted-content orig-point (point)))
+      (setq-local emacsvox-vertico--suppress-next-exhibit-p t))
     result))
 
+(defun emacsvox--advice-vertico-exit-around (orig-fun &rest args)
+  "Present one accepted completion before calling exiting ORIG-FUN.
+
+Vertico exits its recursive edit nonlocally, so acceptance must be presented
+before calling ORIG-FUN.  The same match predicate used by Vertico prevents
+feedback when an attempted exit is refused."
+  (let* ((interactive-p (emacsvox-vertico--interactive-exit-p))
+         (raw-input-p (car args))
+         (content
+          (and interactive-p
+               (emacsvox-vertico--exit-content raw-input-p))))
+    (when (and content
+               (vertico--match-p (substring-no-properties content)))
+      (emacsvox-vertico--submit-candidate-feedback
+       (emacsvox-vertico-candidate-facts 'accepted raw-input-p)
+       'complete
+       content))
+    (apply orig-fun args)))
+
+(defconst emacsvox-vertico--navigation-icons
+  '((vertico-next . select-object)
+    (vertico-previous . select-object)
+    (vertico-first . large-movement)
+    (vertico-last . large-movement)
+    (vertico-scroll-up . scroll)
+    (vertico-scroll-down . scroll)
+    (vertico-next-group . large-movement)
+    (vertico-previous-group . large-movement))
+  "Cues folded into native Vertico candidate transactions.")
+
+(defun emacsvox-vertico--interactive-navigation-icon ()
+  "Consume and return the cue for an interactive Vertico navigation command."
+  (catch 'icon
+    (dolist (entry emacsvox-vertico--navigation-icons)
+      (when (ems-interactive-p (car entry))
+        (throw 'icon (cdr entry))))))
+
 (defun emacsvox--advice-vertico--exhibit-after (&rest _)
-  "speak."
-  (let
-      ((new-cand
-        (substring (vertico--candidate)
-                   (if (>= vertico--index 0)
-                       (if (stringp vertico--base)
-                           (length vertico--base)
-                         vertico--base)
-                     0))))
-    (unless (equal emacsvox-vertico--prev-candidate new-cand)
+  "Present the current candidate after Vertico updates its display."
+  (let* ((navigation-icon
+          (emacsvox-vertico--interactive-navigation-icon))
+         (new-cand
+          (substring
+           (vertico--candidate)
+           (if (>= vertico--index 0)
+               (if (stringp vertico--base)
+                   (length vertico--base)
+                 vertico--base)
+             0)))
+         (changed-p
+          (not (equal emacsvox-vertico--prev-candidate new-cand)))
+         (suppress-p emacsvox-vertico--suppress-next-exhibit-p)
+         (icon
+          (or navigation-icon
+              (when
+                  (or (equal vertico--index emacsvox-vertico--prev-index)
+                      (and (not (equal vertico--index -1))
+                           (equal emacsvox-vertico--prev-index -1)))
+                'select-object))))
+    (setq-local emacsvox-vertico--suppress-next-exhibit-p nil)
+    (when (and (not suppress-p) (or changed-p navigation-icon))
       (emacsvox-vertico--submit-candidate-feedback
        (emacsvox-vertico-candidate-facts)
-       (when
-           (or (equal vertico--index emacsvox-vertico--prev-index)
-               (and (not (equal vertico--index -1))
-                    (equal emacsvox-vertico--prev-index -1)))
-         'select-object)
-       new-cand))
+       icon
+       (and changed-p new-cand)))
     (setq-local emacsvox-vertico--prev-candidate new-cand
                 emacsvox-vertico--prev-index vertico--index)))
 
-(defconst emacsvox-vertico--icon-targets
- '((vertico-scroll-up scroll)
-   (vertico-scroll-down scroll)
-   (vertico-first large-movement)
-   (vertico-last large-movement)
-   (vertico-next select-object)
-   (vertico-previous select-object)
-   (vertico-exit close-object))
- "Current Vertico commands and their auditory icons.")
-
-(dolist (entry emacsvox-vertico--icon-targets)
-  (pcase-let ((`(,target ,icon) entry))
-    (let ((advice-function
-           (intern (format "emacsvox--advice-%s-after" target))))
-      (eval
-       `(defun ,advice-function (&rest _)
-          ,(format "Play an auditory icon after `%s'." target)
-          (when (ems-interactive-p ',target)
-            (emacsvox-icon ',icon)))))))
-
 (defconst emacsvox-vertico--advice
-  (append
-   '((vertico-insert :around emacsvox--advice-vertico-insert-around)
-     (vertico--exhibit :after emacsvox--advice-vertico--exhibit-after))
-   (mapcar
-    (lambda (entry)
-      (let ((target (car entry)))
-        (list target :after
-              (intern (format "emacsvox--advice-%s-after" target)))))
-    emacsvox-vertico--icon-targets))
+  '((vertico-insert :around emacsvox--advice-vertico-insert-around)
+    (vertico-exit :around emacsvox--advice-vertico-exit-around)
+    (vertico--exhibit :after emacsvox--advice-vertico--exhibit-after))
   "Current Vertico targets and their native advice functions.")
 
 (defun emacsvox-vertico--install-advice ()

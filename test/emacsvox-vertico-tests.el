@@ -16,189 +16,220 @@
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
-(ert-deftest emacsvox-vertico-insert-calls-original-once ()
-  "Vertico insertion advice preserves the result and calls once."
-  (with-temp-buffer
-    (let ((calls 0))
-      (cl-letf
-          (((symbol-function 'emacsvox-speak-region-content)
-            (lambda (&rest _) "candidate"))
-           ((symbol-function 'emacsvox-aural-submit) #'ignore))
-        (should
-         (eq 'inserted
-             (emacsvox--advice-vertico-insert-around
-              (lambda ()
-                (cl-incf calls)
-                (insert "candidate")
-                'inserted))))
-        (should (= calls 1))))))
+(ert-deftest emacsvox-vertico-face-map-covers-current-interface ()
+  "Every mapped Vertico face exists in the installed package."
+  (dolist (entry emacsvox-vertico--face-map)
+    (should (facep (car entry)))))
 
-(ert-deftest emacsvox-vertico-acceptance-carries-candidate-semantics ()
-  "Accepted-candidate content and cue share one semantic submission."
+(ert-deftest emacsvox-vertico-insert-updates-input-once ()
+  "Direct insertion is an input edit, not completion acceptance."
   (with-temp-buffer
     (let ((vertico--index 2)
-          bounds
+          (ems--interactive-fn-name 'vertico-insert)
+          (calls 0)
           captured)
       (cl-letf
-          (((symbol-function 'emacsvox-speak-region-content)
-            (lambda (start end)
-              (setq bounds (list start end))
-              (buffer-substring start end)))
-           ((symbol-function 'emacsvox-aural-submit)
+          (((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
-              (setq captured (cons content arguments))))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (&rest _)
-              (ert-fail "Normal acceptance used the legacy icon path")))
-           ((symbol-function 'emacsvox-speak-region)
-            (lambda (&rest _)
-              (ert-fail "Normal acceptance used legacy region speech"))))
-        (emacsvox--advice-vertico-insert-around
-         (lambda () (insert "candidate"))))
-      (should (equal bounds '(1 10)))
+              (setq captured (cons content arguments)))))
+        (should
+         (eq
+          'inserted
+          (emacsvox--advice-vertico-insert-around
+           (lambda ()
+             (cl-incf calls)
+             (insert
+              (propertize "candidate" 'personality 'voice-lighten))
+             'inserted)))))
+      (should (= calls 1))
       (pcase-let* ((`(,content . ,arguments) captured)
                    (facts (plist-get arguments :facts))
                    (actions
                     (plist-get arguments :compatibility-actions)))
         (should (equal content "candidate"))
-        (should (eq (plist-get facts :role) 'candidate))
-        (should (equal (plist-get facts :events) '(accepted)))
+        (should
+         (eq (get-text-property 0 'personality content) 'voice-lighten))
+        (should
+         (equal (plist-get facts :events)
+                '(completion-input-updated)))
         (should (equal (plist-get facts :states) '(selected)))
         (should (= (plist-get facts :completion-index) 2))
-        (should (eq (plist-get arguments :module) 'vertico))
         (should (eq (plist-get arguments :occasion) 'state-change))
         (should
          (equal
           (mapcar
            #'emacsvox-aural-compatibility-action-value
            actions)
-          '(complete)))))))
+          '(item)))))))
 
-(ert-deftest emacsvox-vertico-acceptance-preserves-region-content ()
-  "Accepted-candidate speech preserves bounds, properties, and return value."
+(ert-deftest emacsvox-vertico-insert-is-quiet-when-nested ()
+  "Nested insertion during `vertico-exit' does not duplicate feedback."
   (with-temp-buffer
-    (insert "prefix ")
+    (let ((ems--interactive-fn-name 'vertico-exit)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _) (push 'content events)))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest _) (push 'actions events))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () (insert "candidate"))))
+      (should-not events)
+      (should (eq ems--interactive-fn-name 'vertico-exit)))))
+
+(ert-deftest emacsvox-vertico-insert-suppresses-follow-up-exhibit ()
+  "Direct insertion and its post-command display update speak only once."
+  (with-temp-buffer
     (let ((vertico--index 2)
-          (emacsvox-speak-voice-annotated-paragraphs t)
-          captured)
+          (vertico--base "")
+          (ems--interactive-fn-name 'vertico-insert)
+          events)
+      (setq-local
+       emacsvox-vertico--prev-candidate "old"
+       emacsvox-vertico--prev-index 1)
+      (cl-letf
+          (((symbol-function 'vertico--candidate)
+            (lambda (&optional _) "candidate"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _) (push 'submission events))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () (insert "candidate")))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should (equal events '(submission)))
+      (should-not emacsvox-vertico--suppress-next-exhibit-p)
       (should
-       (eq
-        'inserted
-        (cl-letf
-            (((symbol-function 'emacsvox-aural-submit)
-              (lambda (content &rest arguments)
-                (setq captured (cons content arguments))))
-             ((symbol-function 'emacsvox-icon)
-              (lambda (&rest _)
-                (ert-fail "Normal acceptance used the legacy icon path")))
-             ((symbol-function 'tts-speak)
-              (lambda (&rest _)
-                (ert-fail "Normal acceptance used direct speech"))))
-          (emacsvox--advice-vertico-insert-around
-           (lambda ()
-             (insert (propertize "candidate" 'personality 'voice-lighten))
-             'inserted)))))
-      (pcase-let* ((`(,spoken . ,arguments) captured)
-                   (actions
-                    (plist-get arguments :compatibility-actions)))
-        (should (equal spoken "candidate"))
+       (equal emacsvox-vertico--prev-candidate "candidate")))))
+
+(ert-deftest emacsvox-vertico-empty-insert-is-action-only ()
+  "An unchanged direct insertion creates one native action transaction."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          (ems--interactive-fn-name 'vertico-insert)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (ert-fail "Empty insertion submitted spoken content")))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments) (setq captured arguments))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () 'unchanged)))
+      (should
+       (equal
+        (plist-get (plist-get captured :facts) :events)
+        '(completion-input-updated)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get captured :compatibility-actions))
+        '(item))))))
+
+(ert-deftest emacsvox-vertico-large-insert-remains-native ()
+  "Inserted content is not diverted to the legacy windowful reader."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          (ems--interactive-fn-name 'vertico-insert)
+          (ems--large-text-size 3)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _) (setq captured content)))
+           ((symbol-function 'emacsvox-speak-windowful)
+            (lambda () (ert-fail "Used legacy windowful fallback"))))
+        (emacsvox--advice-vertico-insert-around
+         (lambda () (insert "large"))))
+      (should (equal captured "large")))))
+
+(ert-deftest emacsvox-vertico-exit-accepts-one-selected-candidate ()
+  "Exiting with a selection presents acceptance once before exit."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          (ems--interactive-fn-name 'vertico-exit)
+          calls
+          captured)
+      (cl-letf
+          (((symbol-function 'vertico--candidate)
+            (lambda (&optional _) "candidate"))
+           ((symbol-function 'vertico--match-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push 'feedback calls)
+              (setq captured (cons content arguments)))))
         (should
-         (eq (get-text-property 0 'personality spoken) 'voice-lighten))
+         (eq
+          'exited
+          (emacsvox--advice-vertico-exit-around
+           (lambda (&rest _)
+             (push 'original calls)
+             'exited)))))
+      (should (equal (nreverse calls) '(feedback original)))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts)))
+        (should (equal content "candidate"))
+        (should (equal (plist-get facts :events) '(accepted)))
+        (should (equal (plist-get facts :states) '(selected)))
+        (should (= (plist-get facts :completion-index) 2))
         (should
          (equal
           (mapcar
            #'emacsvox-aural-compatibility-action-value
-           actions)
-          '(complete))))
-      (should (equal (buffer-string) "prefix candidate"))
-      (should
-       (eq
-        (get-text-property 7 'personality (buffer-string))
-        'voice-lighten)))))
+           (plist-get arguments :compatibility-actions))
+          '(complete)))))))
 
-(ert-deftest emacsvox-vertico-acceptance-annotates-paragraphs-before-speech ()
-  "Accepted multiline text retains region-reader paragraph annotation."
+(ert-deftest emacsvox-vertico-exit-input-accepts-raw-input ()
+  "Raw-input exit does not claim that the highlighted candidate was selected."
   (with-temp-buffer
+    (insert "typed input")
     (let ((vertico--index 2)
-          (emacsvox-speak-paragraph-personality 'voice-animate)
+          (ems--interactive-fn-name 'vertico-exit-input)
           captured)
-      (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-submit)
-            (lambda (content &rest _) (setq captured content)))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (&rest _)
-              (ert-fail "Normal acceptance used the legacy icon path")))
-           ((symbol-function 'tts-speak)
-            (lambda (&rest _)
-              (ert-fail "Normal acceptance used direct speech"))))
-        (emacsvox--advice-vertico-insert-around
-         (lambda () (insert "first\n\nsecond"))))
-      (should emacsvox-speak-voice-annotated-paragraphs)
-      (should (equal captured "first\n\nsecond"))
-      (should
-       (eq (get-text-property 7 'personality captured) 'voice-animate))
-      (should
-       (eq (get-text-property 8 'personality (buffer-string))
-           'voice-animate)))))
+          (((symbol-function 'minibuffer-contents)
+            (lambda () "typed input"))
+           ((symbol-function 'vertico--match-p) (lambda (_) t))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-vertico-exit-around #'ignore t))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts)))
+        (should (equal content "typed input"))
+        (should (equal (plist-get facts :events) '(accepted)))
+        (should-not (plist-member facts :states))
+        (should (= (plist-get facts :completion-index) -1))))))
 
-(ert-deftest emacsvox-vertico-empty-acceptance-keeps-region-reader-behavior ()
-  "An empty insertion still cues and sends an empty speech request."
+(ert-deftest emacsvox-vertico-refused-exit-is-quiet ()
+  "An input rejected by Vertico's match predicate is not announced."
   (with-temp-buffer
     (let ((vertico--index 2)
+          (ems--interactive-fn-name 'vertico-exit)
           events)
-      (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
       (cl-letf
-          (((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'tts-speak)
-            (lambda (text) (push (list 'speak text) events))))
-        (emacsvox--advice-vertico-insert-around (lambda () 'unchanged)))
-      (should
-       (equal
-        (nreverse events)
-        '((icon complete) (speak ""))))
-      (should emacsvox-speak-voice-annotated-paragraphs))))
-
-(ert-deftest emacsvox-vertico-large-acceptance-keeps-windowful-fallback ()
-  "An oversized insertion retains cue order and the windowful fallback."
-  (with-temp-buffer
-    (let ((vertico--index 2)
-          (ems--large-text-size 3)
-          events)
-      (setq-local emacsvox-speak-voice-annotated-paragraphs nil)
-      (cl-letf
-          (((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'tts-speak)
-            (lambda (&rest _)
-              (ert-fail "Oversized insertion reached direct speech")))
-           ((symbol-function 'emacsvox-speak-windowful)
-            (lambda ()
-              (interactive)
-              (push '(windowful) events))))
-        (emacsvox--advice-vertico-insert-around
-         (lambda () (insert "large"))))
-      (should
-       (equal
-        (nreverse events)
-        '((icon complete) (windowful))))
-      (should-not emacsvox-speak-voice-annotated-paragraphs))))
+          (((symbol-function 'vertico--candidate)
+            (lambda (&optional _) "candidate"))
+           ((symbol-function 'vertico--match-p) (lambda (_) nil))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _) (push 'feedback events))))
+        (emacsvox--advice-vertico-exit-around
+         (lambda (&rest _) (push 'original events))))
+      (should (equal events '(original))))))
 
 (ert-deftest emacsvox-vertico-candidate-navigation-submits-once ()
-  "Candidate navigation submits trimmed text and its conditional cue once."
+  "Candidate navigation folds its cue and trimmed text into one submission."
   (dolist
       (case
-       '((-1 select-object)
-         (2 select-object)
-         (1 nil)))
+       '((vertico-next -1 select-object)
+         (vertico-first 2 large-movement)
+         (nil 1 nil)))
     (with-temp-buffer
       (let ((vertico--index 2)
             (vertico--base "pre")
+            (ems--interactive-fn-name (nth 0 case))
             captured)
         (setq-local
          emacsvox-vertico--prev-candidate "old"
-         emacsvox-vertico--prev-index (car case))
+         emacsvox-vertico--prev-index (nth 1 case))
         (cl-letf
             (((symbol-function 'vertico--candidate)
               (lambda (&optional _highlight) "precandidate"))
@@ -223,17 +254,50 @@
             (mapcar
              #'emacsvox-aural-compatibility-action-value
              actions)
-            (when (cadr case) (list (cadr case))))))
+            (when (nth 2 case) (list (nth 2 case))))))
         (should
          (equal emacsvox-vertico--prev-candidate "candidate"))
         (should (= emacsvox-vertico--prev-index 2))))))
 
-(ert-deftest emacsvox-vertico-empty-candidate-keeps-legacy-fallback ()
-  "An empty trimmed candidate still cues and calls legacy speech."
+(ert-deftest emacsvox-vertico-repeated-boundary-is-action-only ()
+  "Repeated boundary navigation cues without repeating candidate content."
   (with-temp-buffer
     (let ((vertico--index 2)
           (vertico--base "pre")
-          events)
+          (ems--interactive-fn-name 'vertico-next)
+          captured)
+      (setq-local
+       emacsvox-vertico--prev-candidate "candidate"
+       emacsvox-vertico--prev-index 2)
+      (cl-letf
+          (((symbol-function 'vertico--candidate)
+            (lambda (&optional _highlight) "precandidate"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (ert-fail "Boundary navigation repeated content")))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments) (setq captured arguments))))
+        (emacsvox--advice-vertico--exhibit-after))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get captured :compatibility-actions))
+        '(select-object)))
+      (should
+       (equal
+        (plist-get (plist-get captured :facts) :events)
+        '(focus-entered)))
+      (should
+       (equal emacsvox-vertico--prev-candidate "candidate"))
+      (should (= emacsvox-vertico--prev-index 2)))))
+
+(ert-deftest emacsvox-vertico-empty-candidate-is-action-only ()
+  "An empty trimmed candidate uses the native action-only path."
+  (with-temp-buffer
+    (let ((vertico--index 2)
+          (vertico--base "pre")
+          captured)
       (setq-local
        emacsvox-vertico--prev-candidate "old"
        emacsvox-vertico--prev-index -1)
@@ -242,16 +306,16 @@
             (lambda (&optional _highlight) "pre"))
            ((symbol-function 'emacsvox-aural-submit)
             (lambda (&rest _)
-              (ert-fail "Empty candidate entered native submission")))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'tts-speak)
-            (lambda (text) (push (list 'speak text) events))))
+              (ert-fail "Empty candidate submitted spoken content")))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments) (setq captured arguments))))
         (emacsvox--advice-vertico--exhibit-after))
       (should
        (equal
-        (nreverse events)
-        '((icon select-object) (speak ""))))
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get captured :compatibility-actions))
+        '(select-object)))
       (should (equal emacsvox-vertico--prev-candidate ""))
       (should (= emacsvox-vertico--prev-index 2)))))
 
@@ -335,6 +399,7 @@
   (dolist (icons-enabled '(t nil))
     (with-temp-buffer
       (let ((vertico--index 2)
+            (ems--interactive-fn-name 'vertico-exit)
             (emacsvox-aural-active-scheme 'default)
             (emacsvox-aural-enabled-feature-fragments nil)
             (emacsvox-aural-user-rules nil)
@@ -368,16 +433,17 @@
              ((symbol-function 'tts--protocol-queue-code) #'ignore)
              ((symbol-function 'tts--protocol-queue-text)
               (lambda (text) (push (list 'text text) events)))
-             ((symbol-function 'tts--protocol-silence) #'ignore))
+             ((symbol-function 'tts--protocol-silence) #'ignore)
+             ((symbol-function 'vertico--candidate)
+              (lambda (&optional _)
+                (propertize
+                 "candidate" 'personality 'voice-lighten)))
+             ((symbol-function 'vertico--match-p) (lambda (_) t)))
           (should
            (eq
-            'inserted
-            (emacsvox--advice-vertico-insert-around
-             (lambda ()
-               (insert
-                (propertize
-                 "candidate" 'personality 'voice-lighten))
-               'inserted)))))
+            'exited
+            (emacsvox--advice-vertico-exit-around
+             (lambda (&rest _) 'exited)))))
         (should (emacsvox-aural-submission-p submission))
         (should
          (equal
