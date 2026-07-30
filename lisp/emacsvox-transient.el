@@ -410,6 +410,7 @@
   "Browse current transient choices"
   "emacsvox integration with Transient."
 
+  (setq-local emacsvox-aural-module 'transient)
   (let ((map (copy-keymap transient-sticky-map)))
     (define-key map (kbd "M-n") #'emacsvox-transient-next-section)
     (define-key map (kbd "M-p") #'emacsvox-transient-previous-section)

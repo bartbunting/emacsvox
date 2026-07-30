@@ -601,6 +601,7 @@
          (lookup-key transient-sticky-map (kbd "M-n"))))
     (with-temp-buffer
       (emacsvox-transient-mode)
+      (should (eq emacsvox-aural-module 'transient))
       (should-not (eq (current-local-map) transient-sticky-map))
       (should
        (eq
@@ -610,6 +611,89 @@
      (equal
       (lookup-key transient-sticky-map (kbd "M-n"))
       sticky-next))))
+
+(ert-deftest emacsvox-transient-native-submission-honors-presentation-controls ()
+  "Menu content independently honors cue, face-policy, and Voice Lock controls."
+  (dolist (icons-enabled '(t nil))
+    (dolist (face-presentation '(t nil))
+      (dolist (voice-lock-enabled '(t nil))
+        (with-temp-buffer
+          (let ((emacsvox-aural-active-scheme 'default)
+                (emacsvox-aural-enabled-feature-fragments nil)
+                (emacsvox-aural-user-rules nil)
+                (emacsvox-aural-session-rules nil)
+                (emacsvox-aural-buffer-rules nil)
+                (emacsvox-aural-presentation-history nil)
+                (emacsvox-aural-presentation-history-limit 20)
+                (emacsvox-aural--presentation-sequence 0)
+                (emacsvox-aural--submission-sequence 0)
+                (emacsvox-aural-plan-presented-hook nil)
+                (emacsvox-use-icons icons-enabled)
+                (emacsvox-aural-face-presentation-enabled
+                 face-presentation)
+                (voice-lock-mode voice-lock-enabled)
+                events
+                submission)
+            (cl-letf
+                (((symbol-function 'tts-speak)
+                  (lambda (prepared)
+                    (with-temp-buffer
+                      (insert prepared)
+                      (tts-audio-format (point-min) (point-max)))))
+                 ((symbol-function 'emacsvox-queue-resource)
+                  (lambda (_resource) (push 'cue events)))
+                 ((symbol-function 'tts-voice-reset-code)
+                  (lambda () "RESET"))
+                 ((symbol-function 'tts--protocol-queue-code) #'ignore)
+                 ((symbol-function 'tts--protocol-queue-text)
+                  (lambda (text) (push (list 'text text) events)))
+                 ((symbol-function 'tts--protocol-silence) #'ignore))
+              (setq
+               submission
+               (emacsvox-transient--submit-text
+                (propertize "Options" 'face 'transient-heading)
+                (emacsvox-transient--menu-facts
+                 'show 'command-menu-opened)
+                'navigation
+                'open-object)))
+            (should (emacsvox-aural-submission-p submission))
+            (should
+             (equal
+              (nreverse events)
+              (if icons-enabled
+                  '(cue (text "Options"))
+                '((text "Options")))))
+            (should (= (length emacsvox-aural-presentation-history) 1))
+            (let* ((plan
+                    (car
+                     (emacsvox-aural-submission-plans submission)))
+                   (context
+                    (emacsvox-aural-concrete-plan-context plan))
+                   (content
+                    (emacsvox-aural-concrete-plan-content plan)))
+              (should (eq (plist-get context :module) 'transient))
+              (should
+               (eq
+                (plist-get context :icons-enabled)
+                icons-enabled))
+              (should
+               (eq
+                (plist-get context :face-presentation-enabled)
+                face-presentation))
+              (should
+               (eq
+                (plist-get context :voice-lock-enabled)
+                voice-lock-enabled))
+              (should
+               (equal
+                (mapcar
+                 #'emacsvox-aural-concrete-action-cue
+                 (emacsvox-aural-concrete-plan-before plan))
+                (and icons-enabled '(open-object))))
+              (should
+               (eq
+                (emacsvox-aural-concrete-content-voice-request content)
+                (and voice-lock-enabled 'voice-lighten))))))))))
 
 (ert-deftest emacsvox-transient-browse-section-navigation-stays-in-browser ()
   "Browse-buffer section movement must not jump into a live menu window."
