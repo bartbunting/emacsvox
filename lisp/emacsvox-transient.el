@@ -236,16 +236,65 @@
          (and
           transient--prefix
           (ignore-errors (oref transient--prefix value)))))
-    (cond
-     ((null value) "No arguments")
-     ((stringp value) value)
-     ((listp value)
-      (mapconcat
-       (lambda (element)
-         (if (stringp element) element (format "%s" element)))
-       value
-       ", "))
-     (t (format "%s" value)))))
+    (emacsvox-transient--format-value value "No arguments")))
+
+(defun emacsvox-transient--format-value (value &optional empty)
+  "Return a concise textual rendering of VALUE, using EMPTY for nil."
+  (cond
+   ((null value) (or empty "off"))
+   ((stringp value) value)
+   ((listp value)
+    (mapconcat
+     (lambda (element)
+       (if (stringp element) element (format "%s" element)))
+     value
+     ", "))
+   (t (format "%s" value))))
+
+(defun emacsvox-transient--infix-text (object target)
+  "Return a concise description of changed infix OBJECT named TARGET."
+  (let ((description
+         (or
+          (ignore-errors (transient-get-summary object))
+          (replace-regexp-in-string
+           "\\`[^-]+-" "" (symbol-name target)))))
+    (format
+     "%s, %s"
+     description
+     (emacsvox-transient--format-value
+      (ignore-errors (oref object value))))))
+
+(defun emacsvox--advice-transient-infix-set-after (object _value)
+  "Present an interactively changed Transient infix OBJECT."
+  (let ((target ems--interactive-fn-name))
+    (when
+        (and
+         target
+         (eq target (ignore-errors (oref object command)))
+         (ems-interactive-p target))
+      (emacsvox-transient--submit-text
+       (emacsvox-transient--infix-text object target)
+       (emacsvox-transient--item-facts
+        'value target 'command-menu-value-changed '(selected))
+       'state-change
+       'select-object))))
+
+(advice-add 'transient-infix-set :after
+            #'emacsvox--advice-transient-infix-set-after)
+
+(defun emacsvox--advice-transient-prefix-set-after (value)
+  "Present VALUE set by an interactive Transient value preset."
+  (let ((target ems--interactive-fn-name))
+    (when (and target (ems-interactive-p target))
+      (emacsvox-transient--submit-text
+       (emacsvox-transient--format-value value "No arguments")
+       (emacsvox-transient--item-facts
+        'value target 'command-menu-value-changed '(selected))
+       'state-change
+       'select-object))))
+
+(advice-add 'transient-prefix-set :after
+            #'emacsvox--advice-transient-prefix-set-after)
 
 (defun emacsvox-transient--history-feedback (target)
   "Present the active history value when TARGET is interactive."

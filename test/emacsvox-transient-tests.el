@@ -52,6 +52,10 @@
                          emacsvox--advice-transient-scroll-up-after)
     (transient-scroll-down :after
                            emacsvox--advice-transient-scroll-down-after)
+    (transient-infix-set :after
+                         emacsvox--advice-transient-infix-set-after)
+    (transient-prefix-set :after
+                          emacsvox--advice-transient-prefix-set-after)
     (transient--show :after emacsvox--advice-transient--show-after)
     (transient-suspend :around
                        emacsvox--advice-transient-suspend-around)
@@ -140,6 +144,71 @@
       '(:role command-menu-item
         :command-menu-item-kind history
         :command-menu-action transient-history-next
+        :events (command-menu-value-changed)
+        :states (selected))))))
+
+(ert-deftest emacsvox-transient-package-infix-change-is-presented ()
+  "The shared infix adapter presents a matching package-defined infix once."
+  (let ((object
+         (make-instance
+          'transient-switch
+          :command 'sample-toggle
+          :description "Verbose"
+          :argument "--verbose"))
+        (ems--interactive-fn-name 'sample-toggle)
+        submissions)
+    (oset object value "--verbose")
+    (cl-letf (((symbol-function 'transient-get-summary)
+               (lambda (_) "Verbose"))
+              ((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (push (cons content arguments) submissions))))
+      (emacsvox--advice-transient-infix-set-after
+       object "--verbose"))
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "Verbose, --verbose"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role command-menu-item
+        :command-menu-item-kind value
+        :command-menu-action sample-toggle
+        :events (command-menu-value-changed)
+        :states (selected))))))
+
+(ert-deftest emacsvox-transient-infix-adapter-ignores-setup-and-cleanup ()
+  "Infix initialization and incompatible-option cleanup remain silent."
+  (let ((object
+         (make-instance
+          'transient-switch
+          :command 'other-toggle
+          :description "Other"
+          :argument "--other"))
+        (ems--interactive-fn-name 'sample-toggle)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
+      (emacsvox--advice-transient-infix-set-after object nil))
+    (should-not submissions)
+    (should (eq ems--interactive-fn-name 'sample-toggle))))
+
+(ert-deftest emacsvox-transient-prefix-preset-is-presented ()
+  "Package-defined prefix presets expose their resulting value."
+  (let ((ems--interactive-fn-name 'sample-preset)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (content &rest arguments)
+                 (push (cons content arguments) submissions))))
+      (emacsvox--advice-transient-prefix-set-after
+       '("--verbose" "main")))
+    (should (equal (caar submissions) "--verbose, main"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role command-menu-item
+        :command-menu-item-kind value
+        :command-menu-action sample-preset
         :events (command-menu-value-changed)
         :states (selected))))))
 
