@@ -60,6 +60,7 @@
 (eval-when-compile (require 'cl-lib))
 (eval-when-compile (require 'advice))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
 
 (defvar read-passwd--password-hidden)
 (defvar emacsvox-aural-submission-facts nil
@@ -1003,10 +1004,33 @@ ARGUMENTS are passed to ORIGINAL unchanged."
 (defvar ems--lazy-error-time (current-time)
   "Time error was spoken")
 
+(defun emacsvox--present-command-error (data)
+  "Display and present command error DATA as one urgent transaction."
+  (let* ((text (error-message-string data))
+         (content (propertize text 'face 'error))
+         (facts
+          (unless (eq (car-safe data) 'quit)
+            '(:events (operation-failed)))))
+    (setq emacsvox-last-message text)
+    (let ((emacsvox-speak-messages nil))
+      (message content))
+    (condition-case nil
+        (let ((tts-speaker-process (tts-notify-process)))
+          (emacsvox-aural-submit
+           content
+           :facts facts
+           :module 'core
+           :occasion 'notification
+           :delivery-policy 'urgent
+           :compatibility-actions
+           (list (emacsvox-aural-compatibility-icon 'warn-user))))
+      (error
+       ;; Error reporting must remain usable if native presentation fails.
+       (ignore-errors (tts-notify content 'dont-log))))))
+
 (defun emacsvox-error-handler (data _ _)
-  "Custom error handler"
-  (emacsvox-icon 'warn-user)
-  (message (propertize (error-message-string data) 'face 'error)))
+  "Display and present command error DATA."
+  (emacsvox--present-command-error data))
 (defconst ems--error-limit 1.0
   "Seconds used to rate-limit error messages.")
 
