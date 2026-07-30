@@ -164,14 +164,14 @@ FACTS describe the object or event, and OCCASION describes the interaction."
    (mapcar #'emacsvox-aural-compatibility-icon icons)))
 
 (defun emacsvox-dired--submit-text
-    (content facts occasion &optional icon icon-phase)
+    (content facts occasion &optional icon icon-phase module)
   "Submit CONTENT under FACTS and OCCASION with optional compatibility ICON.
-ICON-PHASE defaults to `before'."
+ICON-PHASE defaults to `before'.  MODULE defaults to `dired'."
   (if (and (stringp content) (> (length content) 0))
       (emacsvox-aural-submit
        content
        :facts facts
-       :module 'dired
+       :module (or module 'dired)
        :occasion occasion
        :compatibility-actions
        (when icon
@@ -583,28 +583,79 @@ DOCSTRING and BODY define the feedback function for each command."
      :events (filesystem-listing-opened))
    'state-change 'open-object))
 
-(defun emacsvox--advice-dired-find-file-around (orig-fun &rest args)
-  "Produce an auditory icon."
-  (if (ems-interactive-p 'dired-find-file)
-      (let* ((directory-p (file-directory-p (dired-get-filename t t)))
-             (facts (emacsvox-dired-entry-facts 'entry-opened))
-             (context
-              (emacsvox-aural-capture-context 'dired 'state-change))
-            result)
-        (setq result (apply orig-fun args))
-        (when directory-p
-          (emacsvox-dired-label-fields))
-        (let ((emacsvox-aural-submission-context context))
-          (emacsvox-dired--call-with-aural-presentation
-           facts 'state-change
-           (lambda ()
-             (emacsvox-speak-mode-line)
-             (emacsvox-icon 'open-object))))
-        result)
-    (apply orig-fun args)))
+(defun emacsvox-dired--opened-destination-buffer (result filename)
+  "Return the destination buffer represented by RESULT and FILENAME."
+  (cond
+   ((bufferp result) result)
+   ((windowp result) (window-buffer result))
+   ((and filename (get-file-buffer filename)))
+   ((buffer-live-p (current-buffer)) (current-buffer))))
 
-(advice-add 'dired-find-file :around
-            #'emacsvox--advice-dired-find-file-around)
+(defun emacsvox-dired--present-opened-destination
+    (destination source-buffer directory-p source-facts)
+  "Present DESTINATION after opening an entry from SOURCE-BUFFER.
+DIRECTORY-P distinguishes directory listings from ordinary files, and
+SOURCE-FACTS preserve the selected Dired entry."
+  (if
+      (and
+       directory-p
+       (buffer-live-p source-buffer)
+       (eq destination source-buffer))
+      (with-current-buffer source-buffer
+        (emacsvox-dired-present-current
+         'large-movement 'navigation 'focus-entered))
+    (when (buffer-live-p destination)
+      (with-current-buffer destination
+        (when (derived-mode-p 'dired-mode)
+          (emacsvox-dired-label-fields))
+        (emacsvox-dired--submit-text
+         (emacsvox-dired--buffer-summary)
+         (if directory-p
+             '(:role filesystem-listing
+               :events (filesystem-listing-opened))
+           source-facts)
+         'state-change 'open-object nil
+         (or emacsvox-aural-module 'dired))))))
+
+(defun emacsvox-dired--open-around
+    (orig-fun arguments target)
+  "Call ORIG-FUN with ARGUMENTS and present TARGET's opened destination."
+  (if (ems-interactive-p target)
+      (let* ((source-buffer (current-buffer))
+             (filename (dired-get-file-for-visit))
+             (directory-p (file-directory-p filename))
+             (facts (emacsvox-dired-entry-facts 'entry-opened))
+             (result (apply orig-fun arguments))
+             (destination
+              (emacsvox-dired--opened-destination-buffer result filename)))
+        (emacsvox-dired--present-opened-destination
+         destination source-buffer directory-p facts)
+        result)
+    (apply orig-fun arguments)))
+
+(defmacro emacsvox-dired--define-open-advice (&rest targets)
+  "Define destination-aware Dired opening advice for TARGETS."
+  (declare (indent 0) (debug (&rest symbolp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (orig-fun &rest arguments)
+                 ,(format "Present the destination opened by `%s'." target)
+                 (emacsvox-dired--open-around
+                  orig-fun arguments ',target))
+               (advice-add
+                ',target :around #',function '((name . emacsvox))))))
+        targets)))
+
+(emacsvox-dired--define-open-advice
+  dired-find-file
+  dired-find-alternate-file
+  dired-find-file-other-window
+  dired-display-file
+  dired-view-file)
 
 (emacsvox-dired--define-after-advice
     (dired-next-subdir dired-prev-subdir

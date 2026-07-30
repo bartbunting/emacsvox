@@ -56,6 +56,11 @@
     dired-copy-filename-as-kill dired-do-kill-lines dired-undo)
   "Dired filesystem operations with semantic result advice.")
 
+(defconst emacsvox-test--dired-open-advice-targets
+  '(dired-find-file dired-find-alternate-file
+    dired-find-file-other-window dired-display-file dired-view-file)
+  "Dired commands whose opened destination is presented.")
+
 (let ((module
        (expand-file-name
         "../lisp/emacsvox-dired.el"
@@ -228,6 +233,14 @@
   "Every core filesystem operation has its semantic result advice."
   (dolist (target emacsvox-test--dired-operation-advice-targets)
     (let ((function (intern (format "emacsvox--dired-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-dired-open-advice-is-directly-registered ()
+  "Every core Dired opener has destination-aware advice."
+  (dolist (target emacsvox-test--dired-open-advice-targets)
+    (let ((function (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp target))
       (should (fboundp function))
       (should (advice-member-p function target)))))
@@ -458,39 +471,152 @@
 (ert-deftest emacsvox-dired-find-file-inspects-before-one-call ()
   "File opening detects a directory before calling the original once."
   (let ((ems--interactive-fn-name 'dired-find-file)
+        (source (current-buffer))
+        (destination (generate-new-buffer " *dired-destination*"))
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'dired-get-filename)
-               (lambda (&rest arguments)
-                 (push (list 'filename arguments) events)
-                 "/tmp/directory"))
-              ((symbol-function 'file-directory-p)
-               (lambda (filename)
-                 (push (list 'directory filename) events)
-                 t))
-              ((symbol-function 'emacsvox-dired-label-fields)
-               (lambda () (push 'label events)))
-              ((symbol-function 'emacsvox-speak-mode-line)
-               (lambda () (push 'mode-line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
-      (should
-       (eq
-        'result
-        (emacsvox--advice-dired-find-file-around
-         (lambda ()
-           (setq calls (1+ calls))
-           (push 'original events)
-           'result)))))
-    (should (= calls 1))
-    (should
-     (equal
-      (nreverse events)
-      '((filename (t t))
-        (directory "/tmp/directory")
-        (filename (nil t))
-        (directory "/tmp/directory")
-        original label mode-line (icon open-object))))))
+    (unwind-protect
+        (progn
+          (cl-letf
+              (((symbol-function 'dired-get-file-for-visit)
+                (lambda ()
+                  (push 'filename events)
+                  "/tmp/directory"))
+               ((symbol-function 'file-directory-p)
+                (lambda (filename)
+                  (push (list 'directory filename) events)
+                  t))
+               ((symbol-function 'emacsvox-dired-entry-facts)
+                (lambda (event)
+                  (push (list 'facts event) events)
+                  '(:role filesystem-entry :entry-kind directory
+                    :events (entry-opened))))
+               ((symbol-function 'emacsvox-dired--present-opened-destination)
+                (lambda (&rest arguments)
+                  (push (cons 'present arguments) events))))
+            (should
+             (eq
+              destination
+              (emacsvox--advice-dired-find-file-around
+               (lambda ()
+                 (setq calls (1+ calls))
+                 (push 'original events)
+                 destination)))))
+          (should (= calls 1))
+          (should
+           (equal
+            (nreverse events)
+            `(filename
+              (directory "/tmp/directory")
+              (facts entry-opened)
+              original
+              (present
+               ,destination ,source t
+               (:role filesystem-entry :entry-kind directory
+                :events (entry-opened)))))))
+      (kill-buffer destination))))
+
+(ert-deftest emacsvox-dired-file-open-uses-destination-module-context ()
+  "A file opened from Dired is summarized under its destination module."
+  (let ((source (generate-new-buffer " *dired-source*"))
+        (destination (generate-new-buffer " *dired-file*"))
+        submission)
+    (unwind-protect
+        (progn
+          (with-current-buffer destination
+            (setq-local emacsvox-aural-module 'org)
+            (setq mode-name "Org"))
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (setq submission (cons content arguments)))))
+            (emacsvox-dired--present-opened-destination
+             destination source nil
+             '(:role filesystem-entry :entry-kind file
+               :events (entry-opened))))
+          (should
+           (equal
+            (substring-no-properties (car submission))
+            " *dired-file*, org"))
+          (should
+           (equal
+            (plist-get (cdr submission) :facts)
+            '(:role filesystem-entry :entry-kind file
+              :events (entry-opened))))
+          (should (eq (plist-get (cdr submission) :module) 'org))
+          (should
+           (eq
+            (emacsvox-aural-compatibility-action-value
+             (car
+              (plist-get
+               (cdr submission) :compatibility-actions)))
+            'open-object)))
+      (kill-buffer source)
+      (kill-buffer destination))))
+
+(ert-deftest emacsvox-dired-inserted-directory-remains-navigation ()
+  "Opening an inserted subdirectory speaks its row instead of a new buffer."
+  (let ((source (generate-new-buffer " *dired-source*"))
+        presentation
+        submitted)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'emacsvox-dired-present-current)
+              (lambda (&rest arguments)
+                (setq presentation arguments)))
+             ((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest _)
+                (setq submitted t))))
+          (emacsvox-dired--present-opened-destination
+           source source t
+           '(:role filesystem-entry :entry-kind directory
+             :events (entry-opened)))
+          (should
+           (equal
+            presentation
+            '(large-movement navigation focus-entered)))
+          (should-not submitted))
+      (kill-buffer source))))
+
+(ert-deftest emacsvox-dired-real-file-open-submits-one-destination-summary ()
+  "A real Dired file visit selects the file and submits one open transaction."
+  (let* ((directory (make-temp-file "emacsvox-dired-open-" t))
+         (file (expand-file-name "opened.txt" directory))
+         dired-buffer
+         destination
+         submissions)
+    (unwind-protect
+        (progn
+          (write-region "contents" nil file nil 'silent)
+          (setq dired-buffer (dired-noselect directory))
+          (switch-to-buffer dired-buffer)
+          (dired-goto-file file)
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push (cons content arguments) submissions))))
+            (funcall-interactively #'dired-find-file))
+          (setq destination (current-buffer))
+          (should (equal (buffer-file-name destination) file))
+          (should (= (length submissions) 1))
+          (should
+           (equal
+            (plist-get (cdar submissions) :facts)
+            '(:role filesystem-entry :entry-kind file
+              :events (entry-opened))))
+          (should (eq (plist-get (cdar submissions) :occasion) 'state-change))
+          (should
+           (eq
+            (emacsvox-aural-compatibility-action-value
+             (car
+              (plist-get
+               (cdar submissions) :compatibility-actions)))
+            'open-object)))
+      (when (buffer-live-p destination)
+        (kill-buffer destination))
+      (when (buffer-live-p dired-buffer)
+        (kill-buffer dired-buffer))
+      (delete-directory directory t))))
 
 (ert-deftest emacsvox-dired-entry-facts-describe-kind-and-marker ()
   "Dired exposes filesystem kind, mark state, and operation event."
