@@ -25,7 +25,13 @@
   (dolist (target emacsvox-magit--section-movement-targets)
     (should (fboundp target)))
   (should (fboundp 'magit-diff-show-or-scroll-up))
-  (should (fboundp 'git-rebase-squash)))
+  (dolist
+      (target
+       (append
+        (mapcar #'car emacsvox-magit--rebase-action-targets)
+        (mapcar #'car emacsvox-magit--rebase-view-targets)
+        '(git-rebase-backward-line forward-line)))
+    (should (fboundp target))))
 
 (ert-deftest emacsvox-magit-end-to-end-vocabulary-is-registered ()
   "Every top-level Magit presentation category has registered intent."
@@ -139,6 +145,160 @@
     (setq git-commit-mode t)
     (should (eq (emacsvox-magit-current-view-kind) 'commit))))
 
+(ert-deftest emacsvox-magit-rebase-command-surface-is-covered ()
+  "Every current Git Rebase command family should have dedicated feedback."
+  (should (= (length emacsvox-magit--rebase-action-targets) 21))
+  (should (= (length emacsvox-magit--rebase-view-targets) 3))
+  (dolist
+      (target
+       (append
+        (mapcar #'car emacsvox-magit--rebase-action-targets)
+        (mapcar #'car emacsvox-magit--rebase-view-targets)
+        '(git-rebase-backward-line forward-line)))
+    (should (where-is-internal target git-rebase-mode-map)))
+  (with-temp-buffer
+    (emacsvox-magit-enable-rebase-feedback)
+    (should
+     (memq
+      #'emacsvox-magit--rebase-finish-feedback
+      with-editor-post-finish-hook))
+    (should
+     (memq
+      #'emacsvox-magit--rebase-cancel-feedback
+      with-editor-post-cancel-hook))))
+
+(ert-deftest emacsvox-magit-rebase-facts-preserve-action-variants ()
+  "Rebase facts distinguish fixup and merge message policies."
+  (dolist
+      (entry
+       '(("pick abc # subject" . pick)
+         ("fixup -c abc # subject" . fixup-edit-message)
+         ("fixup -C abc # subject" . fixup-use-message)
+         ("merge -c abc label # subject" . merge-edit-message)
+         ("merge -C abc label # subject" . merge-use-message)))
+    (with-temp-buffer
+      (setq comment-start "#")
+      (setq git-rebase-comment-re "^#")
+      (insert (car entry))
+      (should
+       (equal
+        (emacsvox-magit-rebase-facts 'inspect 'focus-entered)
+        (list
+         :role 'vcs-rebase-entry
+         :vcs-operation 'inspect
+         :vcs-rebase-action (cdr entry)
+         :events '(focus-entered)))))))
+
+(ert-deftest emacsvox-magit-rebase-edit-announces-operation-and-focus ()
+  "A rebase edit reports both the operation and current focused entry."
+  (with-temp-buffer
+    (setq comment-start "#")
+    (setq git-rebase-comment-re "^#")
+    (insert
+     (propertize "pick" 'face 'git-rebase-action)
+     (propertize " abc # subject" 'face 'git-rebase-description))
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'git-rebase-squash)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) calls))))
+        (should
+         (eq
+          (emacsvox--advice-git-rebase-squash-around
+           (lambda ()
+             (delete-region (point-min) (+ (point-min) 4))
+             (goto-char (point-min))
+             (insert (propertize "squash" 'face 'git-rebase-action))
+             'changed))
+          'changed)))
+      (pcase-let* ((`((,content . ,arguments)) calls)
+                   (facts (plist-get arguments :facts))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "Squash. squash abc # subject"))
+        (should
+         (eq (get-text-property 0 'personality content) voice-annotate))
+        (should
+         (eq
+          (get-text-property (length "Squash. ") 'face content)
+          'git-rebase-action))
+        (should
+         (equal
+          facts
+          '(:role vcs-rebase-entry
+            :vcs-operation squash
+            :vcs-rebase-action squash
+            :events (operation-completed))))
+        (should (eq (plist-get arguments :occasion) 'state-change))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(select-object)))))))
+
+(ert-deftest emacsvox-magit-rebase-no-op-is-not-reported-as-success ()
+  "A rebase command that makes no edit reports failure and preserves its result."
+  (with-temp-buffer
+    (setq comment-start "#")
+    (setq git-rebase-comment-re "^#")
+    (insert "pick abc # subject")
+    (let ((ems--interactive-fn-name 'git-rebase-drop)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-magit--present-rebase-line)
+            (lambda (&rest arguments) (push arguments calls))))
+        (should
+         (eq
+          (emacsvox--advice-git-rebase-drop-around
+           (lambda () 'unchanged))
+          'unchanged)))
+      (should
+       (equal
+        calls
+        '((drop operation-failed state-change warn-user
+           "No drop change")))))))
+
+(ert-deftest emacsvox-magit-rebase-forward-line-is-scoped-and-native ()
+  "Generic forward-line feedback is added only inside Git Rebase."
+  (let (calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-magit--present-rebase-line)
+          (lambda (&rest arguments) (push arguments calls))))
+      (with-temp-buffer
+        (setq major-mode 'git-rebase-mode)
+        (let ((ems--interactive-fn-name 'forward-line))
+          (emacsvox--advice-git-rebase-forward-line-after)))
+      (with-temp-buffer
+        (setq major-mode 'text-mode)
+        (let ((ems--interactive-fn-name 'forward-line))
+          (emacsvox--advice-git-rebase-forward-line-after))))
+    (should
+     (equal
+      calls
+      '((move-forward focus-entered navigation select-object))))))
+
+(ert-deftest emacsvox-magit-rebase-completion-feedback-is-user-driven ()
+  "Rebase finish and cancel hooks are silent unless invoked interactively."
+  (let (calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-magit--submit-text)
+          (lambda (&rest arguments) (push arguments calls))))
+      (let ((ems--interactive-fn-name nil))
+        (emacsvox-magit--rebase-finish-feedback)
+        (emacsvox-magit--rebase-cancel-feedback))
+      (let ((ems--interactive-fn-name 'with-editor-finish))
+        (emacsvox-magit--rebase-finish-feedback))
+      (let ((ems--interactive-fn-name 'with-editor-cancel))
+        (emacsvox-magit--rebase-cancel-feedback)))
+    (should (= (length calls) 2))
+    (should
+     (equal
+      (mapcar #'car (nreverse calls))
+      '("Submitted interactive rebase"
+        "Canceled interactive rebase")))))
+
 (ert-deftest emacsvox-magit-face-inventory-is-current ()
   "Every current Magit and Git editing face should be classified."
   (let ((configured
@@ -203,10 +363,25 @@
    (advice-member-p
     #'emacsvox--advice-magit-diff-show-or-scroll-up-around
     'magit-diff-show-or-scroll-up))
+  (dolist
+      (target (mapcar #'car emacsvox-magit--rebase-action-targets))
+    (should
+     (advice-member-p
+      (intern (format "emacsvox--advice-%s-around" target))
+      target)))
+  (dolist
+      (target
+       (append
+        '(git-rebase-backward-line)
+        (mapcar #'car emacsvox-magit--rebase-view-targets)))
+    (should
+     (advice-member-p
+      (intern (format "emacsvox--advice-%s-after" target))
+      target)))
   (should
    (advice-member-p
-    #'emacsvox--advice-git-rebase-squash-after
-    'git-rebase-squash)))
+    #'emacsvox--advice-git-rebase-forward-line-after
+    'forward-line)))
 
 (ert-deftest emacsvox-magit-diff-scroll-calls-original-once ()
   "Diff scrolling calls once, preserves its result, and announces motion."
