@@ -718,6 +718,7 @@ operation, and FALLBACK-ICON follows a non-heading line."
  '(
    org-agenda-next-date-line org-agenda-previous-date-line
    org-agenda-next-line org-agenda-previous-line
+   org-agenda-next-item org-agenda-previous-item
    org-agenda-goto-today
    )
  for function = (intern (format "emacsvox--advice-%s-after" target))
@@ -755,7 +756,8 @@ operation, and FALLBACK-ICON follows a non-heading line."
 
 (cl-loop
  for target in
- '(org-agenda-goto org-agenda-show org-agenda-switch-to)
+ '(org-agenda-goto org-agenda-show org-agenda-switch-to
+                   org-agenda-open-link)
  for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
@@ -783,6 +785,172 @@ operation, and FALLBACK-ICON follows a non-heading line."
 (advice-add
  'org-agenda :after #'emacsvox--advice-org-agenda-after
  '((name . emacsvox)))
+
+(defun emacsvox-org--present-agenda-result
+    (action icon prior-message prefer-message &optional fallback)
+  "Present one agenda ACTION with ICON after an interactive command.
+
+PRIOR-MESSAGE is the message visible before the command.  When PREFER-MESSAGE
+is non-nil, a new message produced by Org is preferred over the current line.
+FALLBACK is used when neither provides useful content."
+  (let* ((current (current-message))
+         (new-message
+          (and
+           prefer-message
+           (stringp current)
+           (not (string-empty-p current))
+           (not (equal current prior-message))
+           current))
+         (line
+          (and
+           (not prefer-message)
+           (not (eobp))
+           (emacsvox-org--line-content)))
+         (content (or new-message line fallback "Agenda changed")))
+    (emacsvox-org--submit-text
+     content
+     (emacsvox-org--feedback-facts
+      'org-agenda-entry 'state-changed action)
+     'state-change icon)))
+
+(cl-loop
+ for (target action icon) in
+ '((org-agenda-todo todo-changed button)
+   (org-agenda-todo-nextset todo-changed button)
+   (org-agenda-todo-previousset todo-changed button)
+   (org-agenda-priority priority-changed button)
+   (org-agenda-priority-up priority-changed button)
+   (org-agenda-priority-down priority-changed button)
+   (org-agenda-do-date-earlier planning-changed button)
+   (org-agenda-do-date-later planning-changed button)
+   (org-agenda-schedule planning-changed button)
+   (org-agenda-deadline planning-changed button)
+   (org-agenda-set-tags tags-changed button)
+   (org-agenda-set-effort effort-changed button)
+   (org-agenda-set-property property-changed button)
+   (org-agenda-toggle-archive-tag option-toggled button)
+   (org-agenda-drag-line-forward agenda-entry-reordered button)
+   (org-agenda-drag-line-backward agenda-entry-reordered button)
+   (org-agenda-clock-in agenda-clock-changed button)
+   (org-agenda-clock-out agenda-clock-changed button)
+   (org-agenda-clock-cancel agenda-clock-changed button)
+   (org-agenda-bulk-mark agenda-mark-changed mark-object)
+   (org-agenda-bulk-mark-all agenda-mark-changed mark-object)
+   (org-agenda-bulk-mark-regexp agenda-mark-changed mark-object)
+   (org-agenda-bulk-unmark agenda-mark-changed mark-object)
+   (org-agenda-bulk-unmark-all agenda-mark-changed mark-object)
+   (org-agenda-bulk-toggle agenda-mark-changed mark-object)
+   (org-agenda-bulk-toggle-all agenda-mark-changed mark-object)
+   (org-agenda-bulk-action agenda-bulk-action button))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive agenda command quietly and present its entry."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-agenda-result
+              ',action ',icon prior-message nil)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target action icon fallback) in
+ '((org-agenda-archive agenda-entry-archived save-object
+                       "Agenda entry archived")
+   (org-agenda-archive-default-with-confirmation
+    agenda-entry-archived save-object "Agenda entry archived")
+   (org-agenda-archive-default agenda-entry-archived save-object
+                               "Agenda entry archived")
+   (org-agenda-archive-to-archive-sibling
+    agenda-entry-archived save-object "Agenda entry archived")
+   (org-agenda-kill agenda-entry-deleted delete-object
+                    "Agenda entry deleted")
+   (org-agenda-refile agenda-entry-refiled yank-object
+                      "Agenda entry refiled")
+   (org-agenda-filter agenda-filter-changed button
+                      "Agenda filter changed")
+   (org-agenda-filter-by-category agenda-filter-changed button
+                                  "Agenda category filter changed")
+   (org-agenda-filter-by-effort agenda-filter-changed button
+                                "Agenda effort filter changed")
+   (org-agenda-filter-by-regexp agenda-filter-changed button
+                                "Agenda regular expression filter changed")
+   (org-agenda-filter-by-tag agenda-filter-changed button
+                             "Agenda tag filter changed")
+   (org-agenda-filter-by-top-headline agenda-filter-changed button
+                                      "Agenda headline filter changed")
+   (org-agenda-filter-remove-all agenda-filter-changed button
+                                 "Agenda filters removed")
+   (org-agenda-limit-interactively agenda-filter-changed button
+                                   "Agenda limit changed")
+   (org-agenda-manipulate-query-add agenda-filter-changed button
+                                    "Agenda query changed")
+   (org-agenda-manipulate-query-add-re agenda-filter-changed button
+                                       "Agenda query changed")
+   (org-agenda-manipulate-query-subtract agenda-filter-changed button
+                                         "Agenda query changed")
+   (org-agenda-manipulate-query-subtract-re agenda-filter-changed button
+                                            "Agenda query changed")
+   (org-agenda-earlier agenda-view-changed large-movement
+                       "Earlier agenda view")
+   (org-agenda-later agenda-view-changed large-movement
+                     "Later agenda view")
+   (org-agenda-goto-date agenda-view-changed large-movement
+                         "Agenda date changed")
+   (org-agenda-date-prompt agenda-view-changed large-movement
+                           "Agenda date changed")
+   (org-agenda-day-view agenda-view-changed large-movement
+                        "Agenda day view")
+   (org-agenda-week-view agenda-view-changed large-movement
+                         "Agenda week view")
+   (org-agenda-year-view agenda-view-changed large-movement
+                         "Agenda year view")
+   (org-agenda-view-mode-dispatch agenda-view-changed large-movement
+                                  "Agenda view changed")
+   (org-agenda-toggle-deadlines agenda-display-changed button
+                                "Agenda deadline display changed")
+   (org-agenda-toggle-diary agenda-display-changed button
+                            "Agenda diary display changed")
+   (org-agenda-toggle-time-grid agenda-display-changed button
+                                "Agenda time grid display changed")
+   (org-agenda-dim-blocked-tasks agenda-display-changed button
+                                 "Agenda blocked task display changed")
+   (org-agenda-entry-text-mode agenda-display-changed button
+                               "Agenda entry text display changed")
+   (org-agenda-follow-mode agenda-display-changed button
+                           "Agenda follow mode changed")
+   (org-agenda-log-mode agenda-display-changed button
+                        "Agenda log mode changed")
+   (org-agenda-clockreport-mode agenda-display-changed button
+                                "Agenda clock report changed")
+   (org-agenda-append-agenda agenda-view-changed large-movement
+                             "Agenda view appended")
+   (org-agenda-redo agenda-refreshed select-object
+                    "Agenda refreshed")
+   (org-agenda-redo-all agenda-refreshed select-object
+                        "All agenda views refreshed"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive agenda command quietly and present its result."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-agenda-result
+              ',action ',icon prior-message t ,fallback)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
 ;;;  tables:
 

@@ -95,9 +95,11 @@
     org-timestamp-down org-timestamp-up
     org-eval-in-calendar
     org-agenda-next-date-line org-agenda-previous-date-line
-    org-agenda-next-line org-agenda-previous-line org-agenda-goto-today
+    org-agenda-next-line org-agenda-previous-line
+    org-agenda-next-item org-agenda-previous-item org-agenda-goto-today
     org-agenda-quit org-agenda-exit
-    org-agenda-goto org-agenda-show org-agenda-switch-to org-agenda
+    org-agenda-goto org-agenda-show org-agenda-switch-to
+    org-agenda-open-link org-agenda
     orgtbl-mode org-return
     org-table-next-field org-table-previous-field
     org-table-next-row org-table-previous-row)
@@ -134,6 +136,42 @@
     org-toggle-fixed-width org-toggle-pretty-entities
     org-toggle-timestamp-overlays org-ctrl-c-ctrl-c)
   "Quiet native around-advice targets for Org document state changes.")
+
+(defconst emacsvox-test--org-agenda-line-around-targets
+  '(org-agenda-todo org-agenda-todo-nextset org-agenda-todo-previousset
+    org-agenda-priority org-agenda-priority-up org-agenda-priority-down
+    org-agenda-do-date-earlier org-agenda-do-date-later
+    org-agenda-schedule org-agenda-deadline
+    org-agenda-set-tags org-agenda-set-effort org-agenda-set-property
+    org-agenda-toggle-archive-tag
+    org-agenda-drag-line-forward org-agenda-drag-line-backward
+    org-agenda-clock-in org-agenda-clock-out org-agenda-clock-cancel
+    org-agenda-bulk-mark org-agenda-bulk-mark-all
+    org-agenda-bulk-mark-regexp org-agenda-bulk-unmark
+    org-agenda-bulk-unmark-all org-agenda-bulk-toggle
+    org-agenda-bulk-toggle-all org-agenda-bulk-action)
+  "Agenda commands whose native result is the resulting entry line.")
+
+(defconst emacsvox-test--org-agenda-message-around-targets
+  '(org-agenda-archive org-agenda-archive-default-with-confirmation
+    org-agenda-archive-default org-agenda-archive-to-archive-sibling
+    org-agenda-kill org-agenda-refile
+    org-agenda-filter org-agenda-filter-by-category
+    org-agenda-filter-by-effort org-agenda-filter-by-regexp
+    org-agenda-filter-by-tag org-agenda-filter-by-top-headline
+    org-agenda-filter-remove-all org-agenda-limit-interactively
+    org-agenda-manipulate-query-add org-agenda-manipulate-query-add-re
+    org-agenda-manipulate-query-subtract
+    org-agenda-manipulate-query-subtract-re
+    org-agenda-earlier org-agenda-later org-agenda-goto-date
+    org-agenda-date-prompt org-agenda-day-view org-agenda-week-view
+    org-agenda-year-view org-agenda-view-mode-dispatch
+    org-agenda-toggle-deadlines org-agenda-toggle-diary
+    org-agenda-toggle-time-grid org-agenda-dim-blocked-tasks
+    org-agenda-entry-text-mode org-agenda-follow-mode
+    org-agenda-log-mode org-agenda-clockreport-mode
+    org-agenda-append-agenda org-agenda-redo org-agenda-redo-all)
+  "Agenda commands whose native result prefers Org's final message.")
 
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
@@ -1059,6 +1097,71 @@
        (eq
         (emacsvox-aural-compatibility-action-phase action)
         'before)))))
+
+(ert-deftest emacsvox-org-agenda-state-advice-is-directly-registered ()
+  "Agenda state, filter, and view commands have named quiet adapters."
+  (dolist
+      (target
+       (append emacsvox-test--org-agenda-line-around-targets
+               emacsvox-test--org-agenda-message-around-targets))
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-agenda-line-change-owns-result ()
+  "An agenda entry mutation speaks its resulting line, not Org's message."
+  (with-temp-buffer
+    (insert "  TODO Ship release")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-agenda-priority)
+          (emacsvox-speak-messages t)
+          message-state
+          submissions)
+      (cl-letf
+          (((symbol-function 'current-message)
+            (lambda () "Priority changed"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-agenda-priority-around
+         (lambda (&rest _)
+           (setq message-state emacsvox-speak-messages))))
+      (should-not message-state)
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (substring-no-properties (caar submissions))
+        "  TODO Ship release"))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-agenda-entry :events (state-changed)
+          :org-action priority-changed))))))
+
+(ert-deftest emacsvox-org-agenda-filter-preserves-informative-message ()
+  "An agenda filter submits Org's final message once through native policy."
+  (let ((ems--interactive-fn-name 'org-agenda-filter)
+        (emacsvox-speak-messages t)
+        (messages '("Before" "Filtered by tag work"))
+        submissions)
+    (cl-letf
+        (((symbol-function 'current-message)
+          (lambda () (pop messages)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) submissions))))
+      (emacsvox--advice-org-agenda-filter-around
+       (lambda (&rest _)
+         (should-not emacsvox-speak-messages))))
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "Filtered by tag work"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role org-agenda-entry :events (state-changed)
+        :org-action agenda-filter-changed)))))
 
 (ert-deftest emacsvox-org-table-movement-feedback-remains-unconditional ()
   "Table movement always reports the current cell."

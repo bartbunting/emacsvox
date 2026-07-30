@@ -70,6 +70,12 @@
                       priority-changed tags-changed planning-changed
                       effort-changed property-changed statistics-updated
                       radio-button-toggled display-changed context-action
+                      agenda-entry-reordered agenda-entry-archived
+                      agenda-entry-deleted agenda-entry-refiled
+                      agenda-clock-changed agenda-mark-changed
+                      agenda-bulk-action agenda-filter-changed
+                      agenda-view-changed agenda-display-changed
+                      agenda-refreshed
                       export-completed publish-completed))
     (org-table-row
      :kind attribute
