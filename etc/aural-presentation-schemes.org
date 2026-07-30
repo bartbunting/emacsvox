@@ -3275,6 +3275,57 @@ Compiled aural parity, normal build-tree startup, all 27 semantic traces,
 warning-as-error Agent Shell compilation, the generated reference, and the
 Aural, advice, and TTS audits pass.
 
+** DONE Slice 48: Magit End-to-End Native Presentation
+CLOSED: [2026-07-30 Thu]
+
+- Inventory the live Magit, Magit Section, Git Commit, and Git Rebase command
+  surfaces and classify feedback by its actual owner: section navigation,
+  central view setup/display, synchronous or asynchronous Git lifecycle,
+  Transient menus, Ediff sessions, destination buffers, or a specialized
+  local action.
+- Route Magit line, section, view, process, repository-list, commit-message,
+  rebase, blame, blob, copy, destination, setting, patch, conflict, link, and
+  shell-handoff feedback through explicit =emacsvox-aural-submit= or
+  =emacsvox-aural-submit-actions= transactions.
+- Register semantic context for every distinct Magit interface mode and
+  preserve source =face=, =font-lock-face=, =personality=, display, and
+  after-string information when copying content into a submission.
+- Classify all 126 current Magit and Git editing faces: 125 content-bearing
+  faces have explicit compatibility voices and the graphical
+  =magit-left-margin= face is intentionally unvoiced.
+- Present operation identity and true completion status at the common Git
+  boundaries.  Asynchronous processes retain their initiating command until
+  their sentinel reports success, failure, or a signal; specialized commands
+  suppress the generic lifecycle when they own more precise feedback.
+- Cover all current section movement and generated jump commands, both diff
+  scroll directions, reference boundaries, view history, nested view entry,
+  repository lists, all Git Rebase edits, and the complete Git Commit history,
+  trailer, insertion, save, inspection, finish, and cancel interfaces.
+- Correct three runtime defects found during the audit: diff scrolling now
+  observes the window Magit actually scrolls; =magit-bury-or-kill-buffer= has
+  a real generated advice function; and semantic occasions now satisfy their
+  registered role and event contracts.
+- Silence Magit's generic reference-boundary message when the native
+  transaction owns that result.  The optional
+  =magit-section-visibility-cues= layer explicitly removes the compatibility
+  fallback, so enabling it produces one open or close cue rather than two.
+- Characterize all eight combinations of auditory icons, explicit visual-face
+  rules, and Voice Lock compatibility voices through a real Magit submission.
+  These controls retain their documented independence and are frozen into the
+  concrete plan at the source boundary.
+
+Deliverable: core Magit presentation is resolved once per user-visible event
+and contains no direct legacy speech, notification, or auditory-icon call.
+Transient, Ediff, Message composition, and Forge retain ownership of their
+own interfaces; Magit contributes operation and destination context at the
+boundaries between them.
+
+Checks: all 71 focused Magit tests pass.  The complete Emacs 31 source suite
+has 1,916 tests: 1,915 pass and the optional Mu4e test is skipped.  Compiled
+aural parity, normal build-tree startup, all 27 semantic traces,
+warning-as-error compilation of the changed runtime, the generated reference,
+and the Aural audit pass.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:
