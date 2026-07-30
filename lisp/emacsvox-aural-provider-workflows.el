@@ -207,7 +207,7 @@
      :kind role
      :summary "A file, directory, symbolic link, or other directory entry"
      :owner dired
-     :occasions (navigation state-change inspection)
+     :occasions (navigation edit state-change inspection)
      :phases (before content after))
     (filesystem-listing
      :kind role
@@ -271,6 +271,15 @@
      :roles (filesystem-listing)
      :value-type symbol
      :allowed-values (details subdirectory all-subdirectories))
+    (filesystem-edit-kind
+     :kind attribute
+     :summary "The pending Wdired edit made to a filesystem entry"
+     :owner dired
+     :roles (filesystem-entry)
+     :value-type symbol
+     :allowed-values
+     (filename-upcase filename-capitalize filename-downcase
+                      permission-set permission-toggled))
     (entry-inspection-kind
      :kind attribute
      :summary "The requested property of a filesystem entry"

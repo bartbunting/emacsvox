@@ -46,95 +46,135 @@
 ;;  required modules
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-dired)
 
 ;;;  Advice interactive commands.
 
-(cl-loop
- for target in '(wdired-next-line wdired-previous-line)
- for function = (intern (format "emacsvox--advice-%s-after" target))
- do
- (eval
+(defmacro emacsvox-wdired--define-navigation-advice (&rest targets)
+  "Define semantic Wdired navigation advice for TARGETS."
+  (declare (indent 0) (debug (&rest symbolp)))
   `(progn
-     (defun ,function (&rest _)
-       "Cue and speak after an interactive Wdired line movement."
-       (when (ems-interactive-p ',target)
-         (emacsvox-icon 'select-object)
-         (emacsvox-dired-speak-line)))
-     (advice-add
-      ',target :after #',function '((name . emacsvox))))))
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,(format "Present the entry selected by `%s'." target)
+                 (when (ems-interactive-p ',target)
+                   (emacsvox-dired-present-current
+                    'select-object 'navigation 'focus-entered)))
+               (advice-add
+                ',target :after #',function '((name . emacsvox))))))
+        targets)))
 
-(defun emacsvox--advice-wdired-upcase-word-after (&rest _)
-  "Confirm interactively upper-casing a file name."
-  (when (ems-interactive-p 'wdired-upcase-word)
-    (tts-with-punctuations 'some (tts-speak "upper cased file name. "))))
+(emacsvox-wdired--define-navigation-advice
+  wdired-next-line wdired-previous-line)
+
+(defun emacsvox-wdired--edit-facts (kind)
+  "Return current-entry facts for pending Wdired edit KIND."
+  (append
+   (emacsvox-dired-entry-facts 'object-changed)
+   (list :filesystem-edit-kind kind)))
+
+(defun emacsvox-wdired--present-edit (kind text &optional icon)
+  "Present pending Wdired edit KIND with TEXT and optional ICON."
+  (emacsvox-dired--submit-text
+   text (emacsvox-wdired--edit-facts kind) 'edit icon))
+
+(defmacro emacsvox-wdired--define-edit-advice (&rest specifications)
+  "Define Wdired edit advice from SPECIFICATIONS.
+Each specification is (TARGET KIND TEXT ICON)."
+  (declare
+   (indent 0)
+   (debug (&rest (symbolp symbolp stringp &optional symbolp))))
+  `(progn
+     ,@(mapcar
+        (lambda (specification)
+          (pcase-let*
+              ((`(,target ,kind ,text ,icon) specification)
+               (function
+                (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,(format "Present the edit made by `%s'." target)
+                 (when (ems-interactive-p ',target)
+                   (emacsvox-wdired--present-edit
+                    ',kind ,text ',icon)))
+               (advice-add
+                ',target :after #',function '((name . emacsvox))))))
+        specifications)))
+
+(emacsvox-wdired--define-edit-advice
+  (wdired-upcase-word filename-upcase "Uppercased file name" nil)
+  (wdired-capitalize-word filename-capitalize "Capitalized file name" nil)
+  (wdired-downcase-word filename-downcase "Downcased file name" nil)
+  (wdired-set-bit permission-set "Set permission bit" button)
+  (wdired-toggle-bit permission-toggled "Toggled permission bit" button)
+  (wdired-mouse-toggle-bit permission-toggled "Toggled permission bit" button))
+
+(defmacro emacsvox-wdired--define-operation-advice (&rest specifications)
+  "Define Wdired operation advice from SPECIFICATIONS.
+Each specification is (TARGET OPERATION ICON FALLBACK)."
+  (declare (indent 0) (debug (&rest (symbolp symbolp symbolp stringp))))
+  `(progn
+     ,@(mapcar
+        (lambda (specification)
+          (pcase-let*
+              ((`(,target ,operation ,icon ,fallback) specification)
+               (function
+                (intern (format "emacsvox--advice-%s-around" target))))
+            `(progn
+               (defun ,function (orig-fun &rest arguments)
+                 ,(format "Present the result of `%s'." target)
+                 (emacsvox-dired--operation-around
+                  orig-fun arguments ',target ',operation ',icon ,fallback))
+               (advice-add
+                ',target :around #',function '((name . emacsvox))))))
+        specifications)))
+
+(emacsvox-wdired--define-operation-advice
+  (wdired-abort-changes wdired-abort close-object "Canceled Wdired changes")
+  (wdired-finish-edit wdired-commit save-object "Committed Wdired changes")
+  (wdired-exit wdired-exit close-object "Exited writable Dired"))
+
+(defun emacsvox-wdired--enter-around (orig-fun arguments target)
+  "Call ORIG-FUN with ARGUMENTS and present TARGET entering Wdired."
+  (if (ems-interactive-p target)
+      (let ((context
+             (emacsvox-aural-capture-context 'dired 'state-change))
+            result)
+        (let ((emacsvox-speak-messages nil))
+          (setq result (apply orig-fun arguments)))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--submit-message
+           "Entering writable Dired mode"
+           (emacsvox-dired-operation-facts 'wdired-edit 'started)
+           'state-change 'open-object))
+        result)
+    (apply orig-fun arguments)))
+
+(defun emacsvox--advice-wdired-change-to-wdired-mode-around
+    (orig-fun &rest arguments)
+  "Present direct entry into writable Dired."
+  (emacsvox-wdired--enter-around
+   orig-fun arguments 'wdired-change-to-wdired-mode))
 
 (advice-add
- 'wdired-upcase-word :after #'emacsvox--advice-wdired-upcase-word-after
+ 'wdired-change-to-wdired-mode :around
+ #'emacsvox--advice-wdired-change-to-wdired-mode-around
  '((name . emacsvox)))
 
-(defun emacsvox--advice-wdired-capitalize-word-after (&rest _)
-  "Confirm interactively capitalizing a file name."
-  (when (ems-interactive-p 'wdired-capitalize-word)
-    (tts-with-punctuations 'some (tts-speak "Capitalized file name. "))))
+(defun emacsvox--advice-dired-toggle-read-only-around
+    (orig-fun &rest arguments)
+  "Present entry into writable Dired through the Dired toggle."
+  (emacsvox-wdired--enter-around
+   orig-fun arguments 'dired-toggle-read-only))
 
 (advice-add
- 'wdired-capitalize-word :after
- #'emacsvox--advice-wdired-capitalize-word-after
- '((name . emacsvox)))
-
-(defun emacsvox--advice-wdired-downcase-word-after (&rest _)
-  "Confirm interactively lower-casing a file name."
-  (when (ems-interactive-p 'wdired-downcase-word)
-    (tts-with-punctuations 'some
-                           (tts-speak "Down cased file\n  name. "))))
-
-(advice-add
- 'wdired-downcase-word :after
- #'emacsvox--advice-wdired-downcase-word-after
- '((name . emacsvox)))
-
-(defun emacsvox--advice-wdired-toggle-bit-after (&rest _)
-  "Confirm interactively toggling a permission bit."
-  (when (ems-interactive-p 'wdired-toggle-bit)
-    (emacsvox-icon 'button) (tts-speak "Toggled permission bit.")))
-
-(advice-add
- 'wdired-toggle-bit :after #'emacsvox--advice-wdired-toggle-bit-after
- '((name . emacsvox)))
-
-(defun emacsvox--advice-wdired-abort-changes-after (&rest _)
-  "Confirm interactively cancelling Wdired changes."
-  (when (ems-interactive-p 'wdired-abort-changes)
-    (emacsvox-icon 'close-object)
-    (tts-with-punctuations 'some (tts-speak "Cancelling  changes. "))))
-
-(advice-add
- 'wdired-abort-changes :after
- #'emacsvox--advice-wdired-abort-changes-after
- '((name . emacsvox)))
-
-(defun emacsvox--advice-wdired-finish-edit-after (&rest _)
-  "Confirm interactively committing Wdired changes."
-  (when (ems-interactive-p 'wdired-finish-edit)
-    (emacsvox-icon 'save-object)
-    (tts-with-punctuations 'some (tts-speak "Committed changes. "))))
-
-(advice-add
- 'wdired-finish-edit :after #'emacsvox--advice-wdired-finish-edit-after
- '((name . emacsvox)))
-
-(defun emacsvox--advice-wdired-change-to-wdired-mode-after (&rest _)
-  "Confirm interactively entering Wdired mode."
-  (when (ems-interactive-p 'wdired-change-to-wdired-mode)
-    (emacsvox-icon 'open-object)
-    (tts-with-punctuations 'some
-                           (tts-speak
-                            "Entering writeable dir ed mode. "))))
-
-(advice-add
- 'wdired-change-to-wdired-mode :after
- #'emacsvox--advice-wdired-change-to-wdired-mode-after
- '((name . emacsvox)))
+ 'dired-toggle-read-only :around
+ #'emacsvox--advice-dired-toggle-read-only-around
+ '((name . emacsvox-wdired)))
 
 (provide 'emacsvox-wdired)
 ;;;  end of file
