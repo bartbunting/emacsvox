@@ -715,6 +715,15 @@
     'magit-diff-show-or-scroll-up))
   (should
    (advice-member-p
+    #'emacsvox--advice-magit-diff-show-or-scroll-down-around
+    'magit-diff-show-or-scroll-down))
+  (dolist (target emacsvox-magit--reference-navigation-targets)
+    (should
+     (advice-member-p
+      (intern (format "emacsvox--advice-%s-around" target))
+      target)))
+  (should
+   (advice-member-p
     #'emacsvox--advice-magit-setup-buffer-internal-around
     'magit-setup-buffer-internal))
   (should
@@ -760,7 +769,10 @@
           (calls 0)
           events)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-submit)
+          (((symbol-function 'scroll-up)
+            (lambda (&rest _)
+              (forward-line 1)))
+           ((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
               (push
                (list
@@ -776,7 +788,7 @@
           (emacsvox--advice-magit-diff-show-or-scroll-up-around
            (lambda ()
              (cl-incf calls)
-             (forward-line 1)
+             (scroll-up)
              'scrolled)))))
       (should (= calls 1))
       (should
@@ -797,6 +809,103 @@
       (emacsvox--advice-magit-diff-show-or-scroll-up-around
        (lambda () (cl-incf calls) 'result))))
     (should (= calls 1))))
+
+(ert-deftest emacsvox-magit-diff-display-is-not-misreported-as-scroll ()
+  "Showing a commit without calling the scroll function is a view event."
+  (let ((ems--interactive-fn-name 'magit-diff-show-or-scroll-down)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (should
+       (eq
+        (emacsvox--advice-magit-diff-show-or-scroll-down-around
+         (lambda () 'displayed))
+        'displayed))
+      (should
+       (equal
+        calls
+        '(("Displayed commit in other window"
+           (:role vcs-view :vcs-view-kind commit
+            :events (vcs-commit-displayed))
+           (open-object))))))))
+
+(ert-deftest emacsvox-magit-reference-navigation-is-accurate ()
+  "Reference navigation distinguishes movement from an exhausted search."
+  (with-temp-buffer
+    (insert "first\nsecond")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'magit-next-reference)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                content
+                (plist-get arguments :facts)
+                (mapcar
+                 #'emacsvox-aural-compatibility-action-value
+                 (plist-get arguments :compatibility-actions)))
+               calls))))
+        (emacsvox-magit--call-reference-navigation
+         (lambda (&rest _) (forward-line 1))
+         'magit-next-reference nil)
+        (should
+         (equal
+          calls
+          '(("second"
+             (:role vcs-view :vcs-view-kind other
+              :events (focus-entered)
+              :vcs-operation magit-next-reference)
+             (select-object)))))))))
+
+(ert-deftest emacsvox-magit-reference-boundary-is-not-selection ()
+  "An exhausted reference search reports a boundary, not movement."
+  (with-temp-buffer
+    (let ((ems--interactive-fn-name 'magit-previous-reference)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                content
+                (plist-get arguments :facts)
+                (mapcar
+                 #'emacsvox-aural-compatibility-action-value
+                 (plist-get arguments :compatibility-actions)))
+               calls))))
+        (emacsvox-magit--call-reference-navigation
+         (lambda (&rest _) 'boundary)
+         'magit-previous-reference nil)
+        (should
+         (equal
+          calls
+          '(("No more references"
+             (:role vcs-view :vcs-view-kind other
+              :events (operation-failed)
+              :vcs-operation magit-previous-reference)
+             (warn-user)))))))))
+
+(ert-deftest emacsvox-magit-blob-navigation-identifies-revision ()
+  "Changing blobs speaks the selected revision, file, and source line."
+  (with-temp-buffer
+    (insert "source line")
+    (setq-local magit-buffer-revision "abc123")
+    (setq-local magit-buffer-file-name "lisp/example.el")
+    (should
+     (equal
+      (substring-no-properties (emacsvox-magit--blob-summary))
+      "abc123, lisp/example.el. source line"))))
 
 (ert-deftest emacsvox-magit-stage-facts-express-intent ()
   "Staging and section visibility have explicit semantic facts."
@@ -1287,7 +1396,10 @@
     (let ((ems--interactive-fn-name 'magit-diff-show-or-scroll-up)
           events)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-submit)
+          (((symbol-function 'scroll-up)
+            (lambda (&rest _)
+              (forward-line 1)))
+           ((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
               (push
                (list
@@ -1299,7 +1411,7 @@
                  (plist-get arguments :compatibility-actions)))
                events))))
         (emacsvox--advice-magit-diff-show-or-scroll-up-around
-         (lambda () (forward-line 1))))
+         (lambda () (scroll-up))))
       (should
        (equal
         (nreverse events)

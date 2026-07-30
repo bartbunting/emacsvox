@@ -55,6 +55,8 @@
 
 (defvar git-commit-mode)
 (defvar magit-blame-mode)
+(defvar magit-buffer-file-name)
+(defvar magit-buffer-revision)
 (defvar magit-blob-mode)
 (defvar magit-display-buffer-noselect)
 (defvar with-editor-post-cancel-hook)
@@ -294,6 +296,7 @@ The left-margin face is purely graphical and contains no spoken content.")
    ((derived-mode-p 'magit-status-mode) 'status)
    ((derived-mode-p 'magit-revision-mode) 'commit)
    ((derived-mode-p 'magit-refs-mode) 'refs)
+   ((derived-mode-p 'magit-cherry-mode) 'log)
    ((derived-mode-p 'magit-log-mode 'magit-reflog-mode) 'log)
    ((derived-mode-p 'magit-diff-mode) 'diff)
    (t 'other)))
@@ -470,6 +473,12 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   (append
    '(magit-next-line
     magit-previous-line
+    magit-back-to-indentation
+    magit-log-move-to-parent
+    magit-log-move-to-revision
+    magit-jump-to-revision-diffstat
+    magit-jump-to-revision-diff
+    magit-jump-to-diffstat-or-diff
     magit-unstage
     magit-unstage-all
     magit-file-unstage
@@ -600,9 +609,27 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   `(defun ,advice-function (&rest _)
      "Speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-magit--submit-actions
-        (emacsvox-magit-view-facts 'blob 'focus-entered)
+       (emacsvox-magit--submit-text
+        (emacsvox-magit--blob-summary)
+        (append
+         (emacsvox-magit-view-facts 'blob 'focus-entered)
+         '(:vcs-operation ,target))
         'navigation 'large-movement)))))
+
+(defun emacsvox-magit--blob-summary ()
+  "Return the selected blob revision, file, and current source line."
+  (concat
+   (propertize
+    (format
+     "%s, %s. "
+     (or
+      (and (boundp 'magit-buffer-revision) magit-buffer-revision)
+      "worktree")
+     (or
+      (and (boundp 'magit-buffer-file-name) magit-buffer-file-name)
+      (buffer-name)))
+    'personality voice-annotate)
+   (emacsvox-magit--line-content)))
 
 ;;;  Additional commands to advice:
 
@@ -728,24 +755,99 @@ Present optional MOVEMENT-ICON after the chunk."
      (emacsvox-magit-view-facts 'blame 'vcs-view-opened)
      'state-change 'open-object)))
 
+(defun emacsvox-magit--call-diff-show-or-scroll
+    (original target scroll-function arguments)
+  "Call ORIGINAL for TARGET while observing SCROLL-FUNCTION.
+ARGUMENTS are passed to ORIGINAL unchanged."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let ((original-scroll (symbol-function scroll-function))
+          scrolled-buffer
+          scrolled-window
+          result)
+      (cl-letf
+          (((symbol-function scroll-function)
+            (lambda (&rest scroll-arguments)
+              (setq scrolled-buffer (current-buffer))
+              (setq scrolled-window (selected-window))
+              (apply original-scroll scroll-arguments))))
+        (setq result (apply original arguments)))
+      (when (ems-interactive-p target)
+        (if scrolled-buffer
+            (let ((content
+                   (if
+                       (and
+                        (window-live-p scrolled-window)
+                        (eq
+                         (window-buffer scrolled-window)
+                         scrolled-buffer))
+                       (with-selected-window scrolled-window
+                         (emacsvox-magit--line-content))
+                     (with-current-buffer scrolled-buffer
+                       (emacsvox-magit--line-content)))))
+              (emacsvox-magit--submit-text
+               content
+               (emacsvox-magit-view-facts 'diff 'vcs-diff-scrolled)
+               'navigation 'scroll))
+          (emacsvox-magit--submit-text
+           "Displayed commit in other window"
+           (emacsvox-magit-view-facts 'commit 'vcs-commit-displayed)
+           'state-change 'open-object)))
+      result)))
+
 (defun emacsvox--advice-magit-diff-show-or-scroll-up-around
-    (orig-fun &rest args)
-  "speak."
-  (let ((origin (point))
-        (result (apply orig-fun args)))
-    (when (ems-interactive-p 'magit-diff-show-or-scroll-up)
-      (cond
-       ((= origin (point))
-        (emacsvox-magit--submit-text
-         "Displayed commit in other window"
-         (emacsvox-magit-view-facts 'commit 'vcs-commit-displayed)
-         'state-change 'open-object))
-       (t
-        (emacsvox-magit--submit-text
-         (emacsvox-magit--line-content)
-         (emacsvox-magit-view-facts 'diff 'vcs-diff-scrolled)
-         'navigation 'scroll))))
-    result))
+    (original &rest arguments)
+  "Present upward scrolling or a newly displayed commit accurately."
+  (emacsvox-magit--call-diff-show-or-scroll
+   original 'magit-diff-show-or-scroll-up 'scroll-up arguments))
+
+(defun emacsvox--advice-magit-diff-show-or-scroll-down-around
+    (original &rest arguments)
+  "Present downward scrolling or a newly displayed commit accurately."
+  (emacsvox-magit--call-diff-show-or-scroll
+   original 'magit-diff-show-or-scroll-down 'scroll-down arguments))
+
+(defconst emacsvox-magit--reference-navigation-targets
+  '(magit-next-reference magit-previous-reference)
+  "Commands that navigate between visible Git references.")
+
+(defun emacsvox-magit--call-reference-navigation
+    (original target arguments)
+  "Call reference-navigation ORIGINAL for TARGET with ARGUMENTS."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let ((origin (point))
+          (result (apply original arguments)))
+      (when (ems-interactive-p target)
+        (if (/= origin (point))
+            (emacsvox-magit--submit-text
+             (emacsvox-magit--line-content)
+             (append
+              (emacsvox-magit-view-facts
+               (emacsvox-magit-current-view-kind)
+               'focus-entered)
+              (list :vcs-operation target))
+             'navigation 'select-object)
+          (emacsvox-magit--submit-text
+           "No more references"
+           (append
+            (emacsvox-magit-view-facts
+             (emacsvox-magit-current-view-kind)
+             'operation-failed)
+            (list :vcs-operation target))
+           'navigation 'warn-user)))
+      result)))
+
+(cl-loop
+ for target in emacsvox-magit--reference-navigation-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(defun ,advice-function (original &rest arguments)
+     "Present movement to another visible Git reference."
+     (emacsvox-magit--call-reference-navigation
+      original ',target arguments))))
 
 (defconst emacsvox-magit--quit-targets
   '(magit-mode-quit-window magit-mode-bury-buffer magit-log-bury-buffer)
@@ -794,6 +896,7 @@ Present optional MOVEMENT-ICON after the chunk."
     magit-blob-visit-file
     magit-blame
     magit-diff-show-or-scroll-up
+    magit-diff-show-or-scroll-down
     magit-diff-while-committing
     git-rebase-show-commit
     git-rebase-show-or-scroll-up
@@ -987,16 +1090,25 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
                  (not (advice-member-p function target)))
         (advice-add target :after function '((name . emacsvox))))))
   (when
-      (and
-       (fboundp 'magit-diff-show-or-scroll-up)
-       (not
-        (advice-member-p
-         #'emacsvox--advice-magit-diff-show-or-scroll-up-around
-         'magit-diff-show-or-scroll-up)))
-    (advice-add
-     'magit-diff-show-or-scroll-up :around
-     #'emacsvox--advice-magit-diff-show-or-scroll-up-around
-     '((name . emacsvox))))
+      (fboundp 'magit-diff-show-or-scroll-up)
+    (dolist
+        (entry
+         '((magit-diff-show-or-scroll-up
+            emacsvox--advice-magit-diff-show-or-scroll-up-around)
+           (magit-diff-show-or-scroll-down
+            emacsvox--advice-magit-diff-show-or-scroll-down-around)))
+      (pcase-let ((`(,target ,function) entry))
+        (unless (advice-member-p function target)
+          (advice-add
+           target :around function '((name . emacsvox)))))))
+  (dolist (target emacsvox-magit--reference-navigation-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox))))))
   (dolist
       (entry
        '((magit-setup-buffer-internal
@@ -1024,6 +1136,7 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
        magit-apply
        magit-blame
        magit-diff
+       magit-extras
        magit-files
        magit-log
        magit-process
