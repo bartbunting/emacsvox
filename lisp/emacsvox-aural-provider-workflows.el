@@ -245,12 +245,24 @@
      :owner core
      :occasions (navigation continuous state-change inspection)
      :phases (before content after))
+    (game-status
+     :kind role
+     :summary "Overall state or progress of an interactive game"
+     :owner core
+     :occasions (state-change inspection notification)
+     :phases (before content after))
     (game-cell-kind
      :kind attribute
      :summary "The module-defined contents of a game-board cell"
      :owner core
      :roles (game-cell)
      :value-type symbol)
+    (game-piece-count
+     :kind attribute
+     :summary "Number of relevant pieces remaining in a game"
+     :owner core
+     :roles (game-status)
+     :value-type integer)
     (entry-kind
      :kind attribute
      :summary "The filesystem kind of a directory entry"
@@ -1314,8 +1326,7 @@
      :rules
      ((:id solitaire-stone-tone
        :match
-       (:role game-cell :module solitaire :game-cell-kind stone
-        :occasion inspection)
+       (:role game-cell :module solitaire :game-cell-kind stone)
        :render
        (:before
         (:append
@@ -1323,8 +1334,7 @@
            :kind tone :tone solitaire-stone)))))
       (:id solitaire-hole-tone
        :match
-       (:role game-cell :module solitaire :game-cell-kind hole
-        :occasion inspection)
+       (:role game-cell :module solitaire :game-cell-kind hole)
        :render
        (:before
         (:append

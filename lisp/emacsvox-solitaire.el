@@ -52,111 +52,155 @@
 ;;;   Communicate state
 
 (defun emacsvox-solitaire-current-row ()
-  
-  (+ 1 (/ 
+  "Return the one-based row of the current Solitaire cell."
+  (+ 1 (/
         (- (solitaire-current-line)
            solitaire-start-y)
         2)))
 
-(defun emacsvox-solitaire-current-column()
-  
+(defun emacsvox-solitaire-current-column ()
+  "Return the one-based column of the current Solitaire cell."
   (let ((c (current-column)))
     (+ 1
        (/ (- c solitaire-start-x)
           4))))
 
-(defun emacsvox-solitaire-speak-coordinates ()
-  "Speak coordinates of current position"
+(defun emacsvox-solitaire--cell-kind (&optional character)
+  "Return the semantic kind represented by CHARACTER or the cell at point."
+  (pcase (or character (char-after (point)))
+    (?o 'stone)
+    (?. 'hole)
+    (_ 'other)))
+
+(defun emacsvox-solitaire--cell-facts (kind &optional event)
+  "Return facts for a Solitaire cell of KIND and optional EVENT."
+  (append
+   (list :role 'game-cell :game-cell-kind kind)
+   (when event (list :events (list event)))))
+
+(defun emacsvox-solitaire--submit
+    (content facts occasion &optional icon)
+  "Submit Solitaire CONTENT and FACTS with OCCASION and optional ICON."
+  (let ((actions
+         (when icon
+           (list (emacsvox-aural-compatibility-icon icon)))))
+    (if (and (stringp content) (> (length content) 0))
+        (emacsvox-aural-submit
+         content
+         :facts facts
+         :module 'solitaire
+         :occasion occasion
+         :compatibility-actions actions)
+      (emacsvox-aural-submit-actions
+       :facts facts
+       :module 'solitaire
+       :occasion occasion
+       :compatibility-actions actions))))
+
+(defun emacsvox-solitaire-speak-coordinates
+    (&optional icon occasion event)
+  "Present the current cell coordinates in one native transaction.
+Optional ICON precedes the content.  OCCASION defaults to `inspection', and
+EVENT records an optional semantic event."
   (interactive)
-  (tts-speak
-   (format "%s at %s %s "
-           (cl-case(char-after (point))
-             (?o "stone")
-             (?. "hole"))
-           (emacsvox-solitaire-current-row)
-           (emacsvox-solitaire-current-column)))
-  (emacsvox-icon
-   (emacsvox-solitaire-cell-to-icon (format "%c" (following-char)))))
+  (let ((kind (emacsvox-solitaire--cell-kind)))
+    (emacsvox-solitaire--submit
+     (format
+      "%s at %s %s"
+      (pcase kind
+        ('stone "stone")
+        ('hole "hole")
+        (_ "cell"))
+      (emacsvox-solitaire-current-row)
+      (emacsvox-solitaire-current-column))
+     (emacsvox-solitaire--cell-facts kind event)
+     (or occasion 'inspection)
+     icon)))
 
 (defun emacsvox-solitaire-speak-stones ()
   "Speak number of stones remaining."
   (interactive)
-  
-  (tts-speak (format "%d stones" solitaire-stones)))
+  (emacsvox-solitaire--submit
+   (format "%d stones" solitaire-stones)
+   (list :role 'game-status :game-piece-count solitaire-stones)
+   'inspection))
 
 (defun emacsvox-solitaire--present-cell-tone (kind)
   "Present the tone for a Solitaire cell containing KIND."
-  (emacsvox-aural-submit-actions
-   :facts (list :role 'game-cell :game-cell-kind kind)
-   :module 'solitaire
-   :occasion 'inspection))
+  (emacsvox-solitaire--submit
+   nil (emacsvox-solitaire--cell-facts kind) 'inspection))
 
 (defun emacsvox-solitaire-stone ()
-  "Present the compatibility tone for a Solitaire stone."
+  "Present the first-class tone for a Solitaire stone."
   (emacsvox-solitaire--present-cell-tone 'stone))
 
 (defun emacsvox-solitaire-hole ()
-  "Present the compatibility tone for a Solitaire hole."
+  "Present the first-class tone for a Solitaire hole."
   (emacsvox-solitaire--present-cell-tone 'hole))
 
 (defun emacsvox-solitaire-speak-row ()
   "Speak current row."
   (interactive)
-  (emacsvox-speak-line))
+  (emacsvox-solitaire--submit
+   (buffer-substring
+    (line-beginning-position) (line-end-position))
+   '(:role game-status)
+   'inspection))
 
 (defun emacsvox-solitaire-cell-to-icon (cell)
-  "Map Solitaire cell to auditory icon."
+  "Return the legacy auditory icon corresponding to Solitaire CELL.
+This compatibility mapper remains available to external callers; native
+Solitaire presentation uses semantic cell tones."
   (cond
    ((string= cell ".") 'close-object)
    ((string= cell "o") 'item)))
 
 (defun emacsvox-solitaire-show-row ()
-  "Audio format current row."
+  "Present first-class tones for each cell in the current row."
   (interactive)
   (let ((cells
          (split-string
           (buffer-substring (line-beginning-position) (line-end-position)))))
-    (mapcar #'emacsvox-icon
-            (mapcar #'emacsvox-solitaire-cell-to-icon cells))))
+    (mapcar
+     (lambda (cell)
+       (emacsvox-solitaire--present-cell-tone
+        (if (string= cell "o") 'stone 'hole)))
+     cells)))
 
 (defun emacsvox-solitaire-show-column ()
-  "Audio format current column."
+  "Present first-class tones for each cell in the current column."
   (interactive)
   (save-excursion
     (let ((row (emacsvox-solitaire-current-row))
           (column (emacsvox-solitaire-current-column))
           (cells nil))
-      ;; move to top row 
-      (cl-loop for i  from 1 to(- row 1) do (solitaire-up))
+      ;; Move to the top row.
+      (cl-loop repeat (1- row) do (solitaire-up))
       (cl-case (char-after (point))
-        (?o (push "o" cells))
-        (?. (push "." cells)))
+        (?o (push 'stone cells))
+        (?. (push 'hole cells)))
       (cond
        ((and (>= column 3) (<= column 5))
         (cl-loop
          for count from 2 to 7 do
          (solitaire-down)
          (cl-case (char-after (point))
-           (?o (push "o" cells))
-           (?. (push "." cells)))))
+           (?o (push 'stone cells))
+           (?. (push 'hole cells)))))
        (t
         (cl-loop
          for count from 2 to 3 do
          (solitaire-down)
          (cl-case (char-after (point))
-           (?o (push "o" cells))
-           (?. (push "." cells))))))
+           (?o (push 'stone cells))
+           (?. (push 'hole cells))))))
       (setq cells (nreverse cells))
-      (mapcar
-       #'emacsvox-icon
-       (mapcar #'emacsvox-solitaire-cell-to-icon cells)))))
+      (mapcar #'emacsvox-solitaire--present-cell-tone cells))))
 
-;;;  advice commands
-
-;;;  advice commands
+;;;  Advice commands:
 
 (defvar emacsvox-solitaire-autoshow nil
-  "T means rows and columns are toned as we move")
+  "Non-nil means rows and columns are toned as point moves.")
 
 (defmacro emacsvox-solitaire--define-navigation-advice
     (targets show-function)
@@ -172,10 +216,10 @@
                  "Announce an interactive move around the Solitaire board."
                  (when (ems-interactive-p ',target)
                    (let ((tts-stop-immediately nil))
-                     (emacsvox-icon 'select-object)
                      (when emacsvox-solitaire-autoshow
                        (,show-function))
-                     (emacsvox-solitaire-speak-coordinates))))
+                     (emacsvox-solitaire-speak-coordinates
+                      'select-object 'navigation))))
                (advice-add ',target :after #',function))))
         targets)))
 
@@ -190,24 +234,40 @@
 (defun emacsvox--advice-solitaire-center-point-after (&rest _)
   "Announce an interactive move to the center of the board."
   (when (ems-interactive-p 'solitaire-center-point)
-    (emacsvox-icon 'large-movement)
-    (emacsvox-solitaire-speak-coordinates)))
+    (emacsvox-solitaire-speak-coordinates
+     'large-movement 'navigation)))
 
 (advice-add 'solitaire-center-point :after
             #'emacsvox--advice-solitaire-center-point-after)
 
-(defun emacsvox--advice-solitaire-move-after (&rest _)
-  "Announce a completed stone move."
-  (emacsvox-icon 'item)
-  (emacsvox-solitaire-speak-coordinates))
+(defmacro emacsvox-solitaire--define-move-advice (targets)
+  "Define target-aware native move feedback for Solitaire TARGETS."
+  (declare (indent 0) (debug (sexp)))
+  `(progn
+     ,@(mapcar
+        (lambda (target)
+          (let ((function
+                 (intern (format "emacsvox--advice-%s-after" target))))
+            `(progn
+               (defun ,function (&rest _)
+                 ,(format "Announce a completed `%s' move." target)
+                 (when (ems-interactive-p ',target)
+                   (emacsvox-solitaire-speak-coordinates
+                    'item 'state-change 'operation-completed)))
+               (advice-add ',target :after #',function))))
+        targets)))
 
-(advice-add 'solitaire-move :after
-            #'emacsvox--advice-solitaire-move-after)
+(emacsvox-solitaire--define-move-advice
+  (solitaire-move
+   solitaire-move-right
+   solitaire-move-left
+   solitaire-move-up
+   solitaire-move-down))
 
-(defun emacsvox-solitaire-setup()
+(defun emacsvox-solitaire-setup ()
   "Emacsvox provides an auditory interface to the solitaire game.
 As you move you hear the coordinates and state of the current
-cell.  Moving a stone produces an auditory icon.  You can examine
+cell.  Moving a stone produces a completion cue and cell tone.  You can examine
 the state of the board by using `r' and `c' to listen to the row
 and column respectively.  Emacsvox produces tones to indicate
 the state --a higher pitched beep indicates a hole.  Rows and
@@ -219,9 +279,15 @@ emacsvox-solitaire-show-row
 \\[emacsvox-solitaire-speak-coordinates]
 emacsvox-solitaire-speak-coordinates"
   (delete-other-windows)
-  (emacsvox-icon 'open-object)
+  (setq-local emacsvox-aural-module 'solitaire)
   (emacsvox-solitaire-setup-keymap)
-  (message "Welcome to Solitaire"))
+  (let ((emacsvox-speak-messages nil))
+    (message "Welcome to Solitaire"))
+  (emacsvox-solitaire--submit
+   "Welcome to Solitaire"
+   '(:role game-status)
+   'state-change
+   'open-object))
 
 (add-hook
  'solitaire-mode-hook
@@ -230,8 +296,7 @@ emacsvox-solitaire-speak-coordinates"
 ;;;   add keybindings
 
 (defun emacsvox-solitaire-setup-keymap ()
-  "Setup emacsvox keybindings for solitaire"
-  
+  "Set up Emacsvox key bindings for Solitaire."
   (define-key solitaire-mode-map "/" 'emacsvox-solitaire-speak-stones)
   (define-key solitaire-mode-map "." 'emacsvox-solitaire-speak-coordinates)
   (define-key solitaire-mode-map "R" 'emacsvox-solitaire-speak-row)
