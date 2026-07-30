@@ -2203,6 +2203,38 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             agent-shell-viewport-view-mode-hook saved-viewport-view-hook)
       (emacsvox-agent-shell-test--restore-advice-state saved-advice))))
 
+(ert-deftest emacsvox-agent-shell-enable-disable-feedback-is-native ()
+  "Interactive integration lifecycle feedback submits atomically."
+  (let ((agent-shell-mode-hook nil)
+        (agent-shell-viewport-edit-mode-hook nil)
+        (agent-shell-viewport-view-mode-hook nil))
+    (cl-letf (((symbol-function 'called-interactively-p)
+               (lambda (&rest _) t))
+              ((symbol-function
+                'emacsvox-agent-shell--upgrade-response-monitoring)
+               #'ignore)
+              ((symbol-function 'emacsvox-agent-shell--install-advice)
+               #'ignore)
+              ((symbol-function 'emacsvox-agent-shell--remove-advice)
+               #'ignore)
+              ((symbol-function 'buffer-list) (lambda () nil)))
+      (dolist
+          (case
+           '((emacsvox-agent-shell-enable
+              "Enabled Emacsvox agent-shell support")
+             (emacsvox-agent-shell-disable
+              "Disabled Emacsvox agent-shell support")))
+        (let* ((presentations
+                (emacsvox-agent-shell-test--capture-presentations
+                  (funcall (car case))))
+               (presentation (car presentations)))
+          (should (= 1 (length presentations)))
+          (should (eq (car presentation) 'submit))
+          (should (equal (nth 1 presentation) (cadr case)))
+          (should
+           (eq (plist-get (nth 2 presentation) :role) 'agent-session))
+          (should (eq (nth 4 presentation) 'state-change)))))))
+
 (ert-deftest emacsvox-agent-shell-vertical-motion-silences-toggle-hint ()
   "Arrowing should filter the toggle hint until cursor sensors have run."
   (dolist (command '(next-line previous-line))

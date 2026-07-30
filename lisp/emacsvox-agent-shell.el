@@ -4826,11 +4826,11 @@ Return nil when the configured verbosity requests status cues only."
                         'agent-shell-viewport-edit-mode)
         (emacsvox-agent-shell--table-navigation-setup)))))
   (when (called-interactively-p 'interactive)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "Enabled Emacsvox agent-shell support"
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed)
-     'state-change nil #'message
-     "Enabled Emacsvox agent-shell support")))
+     'state-change)))
 
 (defun emacsvox-agent-shell-disable ()
   "Disable Emacsvox support for agent-shell."
@@ -4858,11 +4858,11 @@ Return nil when the configured verbosity requests status cues only."
                         'agent-shell-viewport-edit-mode)
         (emacsvox-agent-shell--table-navigation-cleanup)))))
   (when (called-interactively-p 'interactive)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "Disabled Emacsvox agent-shell support"
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed)
-     'state-change nil #'message
-     "Disabled Emacsvox agent-shell support")))
+     'state-change)))
 
 (with-eval-after-load 'agent-shell
   (emacsvox-agent-shell-enable))
