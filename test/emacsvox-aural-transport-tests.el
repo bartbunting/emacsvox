@@ -279,6 +279,49 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         (nreverse writes)
         '((speech "a latest.ogg\nq {latest }\nd\n")))))))
 
+(ert-deftest emacsvox-aural-delivery-frames-windows-replaceable-payload ()
+  "Framing carries one UTF-8-safe generation and complete protocol packet."
+  (let ((emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0)
+        writes)
+    (cl-letf
+        (((symbol-function 'processp)
+          (lambda (process) (eq process 'speech)))
+         ((symbol-function 'process-live-p)
+          (lambda (process) (eq process 'speech)))
+         ((symbol-function 'process-get)
+          (lambda (process property)
+            (and
+             (eq process 'speech)
+             (eq
+              property
+              emacsvox-aural--framed-delivery-process-property))))
+         ((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes)))
+         ((symbol-function 'run-with-idle-timer)
+          (lambda (&rest _arguments) 'timer))
+         ((symbol-function 'cancel-timer) #'ignore))
+      (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+            (emacsvox-aural-submission-replacement-key 'speaker)
+            (tts-speaker-process 'speech))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (tts--protocol-queue-text "café 日本")
+           (tts--protocol-dispatch))))
+      (emacsvox-aural-flush-pending-deliveries 'speech))
+    (let ((wire (cadar writes)))
+      (should
+       (string-match
+        "\\`emacsvox_tx 1 {\\([^}]+\\)}\n\\'" wire))
+      (should
+       (equal
+        (decode-coding-string
+         (base64-decode-string (match-string 1 wire)) 'utf-8)
+        "q {café 日本 }\nd\n")))))
+
 (ert-deftest emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable ()
   "Stops bypass collection and prevent pending speech from returning later."
   (let ((emacsvox-aural--pending-deliveries

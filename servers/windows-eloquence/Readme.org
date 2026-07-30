@@ -119,6 +119,12 @@ evaluate the following form, or use the same path as =tts-program=:
 Because the server name contains =outloud=, Emacsvox automatically uses the
 existing Eloquence personality and ACSS voice mappings.
 
+Replaceable aural submissions use one =emacsvox_tx= line containing a
+generation and a Base64-encoded UTF-8 server packet.  If a newer command is
+already buffered, the Tcl front-end discards the obsolete packet before any
+of its speech, voice, tone, or auditory-icon commands reach Eloquence.
+Ordered protocol commands retain their existing line format.
+
 ** Internal bridge protocol
 
 The bridge accepts one ASCII request per line and returns exactly one =OK= or

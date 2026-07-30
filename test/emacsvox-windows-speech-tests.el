@@ -179,6 +179,25 @@
              emacsvox-windows-speech--pan-environment-variable)))
          (car entry)))))))
 
+(ert-deftest emacsvox-windows-speech-enables-framing-on-native-processes ()
+  "Windows process creation marks both streams for transaction framing."
+  (let ((tts-program "/tmp/servers/windows-outloud")
+        marked)
+    (cl-letf
+        (((symbol-function 'processp)
+          (lambda (process) (eq process 'native-process)))
+         ((symbol-function 'emacsvox-aural-enable-framed-delivery)
+          (lambda (process)
+            (setq marked process)
+            process)))
+      (should
+       (eq
+        (emacsvox-windows-speech--with-stereo-position
+         (lambda (&rest _arguments) 'native-process)
+         "Speaker")
+        'native-process))
+      (should (eq marked 'native-process)))))
+
 (ert-deftest emacsvox-windows-speech-exports-pan-across-wsl ()
   "The Tcl launcher should export Emacsvox pan to its Windows child."
   (let ((common
@@ -231,6 +250,45 @@
          "| /init /tmp/Bridge.exe /tmp/Bridge.exe --stdio\n"
          "| /tmp/Bridge.exe --stdio\n")
         (buffer-string))))))
+
+(ert-deftest emacsvox-windows-speech-skips-obsolete-framed-transaction ()
+  "The shared Tcl server layer evaluates only the latest buffered packet."
+  (let* ((directory (make-temp-file "emacsvox-windows-transaction-" t))
+         (log (expand-file-name "transactions.log" directory))
+         (common
+          (expand-file-name
+           "windows-speech-common.tcl"
+           emacsvox-servers-directory))
+         (first
+          (base64-encode-string
+           (encode-coding-string "record {obsolete}\n" 'utf-8 t) t))
+         (latest
+          (base64-encode-string
+           (encode-coding-string "record {latest 日本}\n" 'utf-8 t) t)))
+    (unwind-protect
+        (progn
+          (with-temp-buffer
+            (insert
+             (format
+              (concat
+               "source {%s}\n"
+               "proc record {value} {\n"
+               "  set channel [open {%s} a]\n"
+               "  fconfigure $channel -encoding utf-8\n"
+               "  puts $channel $value\n"
+               "  close $channel\n"
+               "}\n"
+               "emacsvox_tx 1 {%s}\n"
+               "emacsvox_tx 2 {%s}\n")
+              common log first latest))
+            (should
+             (zerop
+              (call-process-region
+               (point-min) (point-max) "tclsh" t t nil))))
+          (with-temp-buffer
+            (insert-file-contents log)
+            (should (equal (buffer-string) "latest 日本\n"))))
+      (delete-directory directory t))))
 
 (ert-deftest emacsvox-windows-speech-orders-and-cancels-native-cues ()
   "The shared server helper should accept a cue before cancelling its queue."

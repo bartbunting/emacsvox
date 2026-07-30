@@ -134,12 +134,7 @@ proc native_stop_speech {} {
 }
 
 proc native_character_obsolete {} {
-    if {[chan pending input stdin] > 0} {
-        return 1
-    }
-    return [expr {
-        [lsearch [select [list stdin] {} {} 0] stdin] >= 0
-    }]
+    windows_speech_input_pending
 }
 
 proc speakingP {} {

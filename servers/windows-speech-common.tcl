@@ -105,6 +105,40 @@ proc windows_speech_text_rpc {state_name command text} {
     return [windows_speech_rpc $state_name "$command $payload"]
 }
 
+proc windows_speech_input_pending {} {
+    if {[chan pending input stdin] > 0} {
+        return 1
+    }
+    if {[llength [info commands select]] > 0} {
+        return [expr {
+            [lsearch [select [list stdin] {} {} 0] stdin] >= 0
+        }]
+    }
+    return 0
+}
+
+proc emacsvox_tx {generation payload} {
+    global windows_speech_transaction
+    if {![string is integer -strict $generation]} {
+        error "invalid Emacsvox transaction generation: $generation"
+    }
+    if {[info exists windows_speech_transaction(latest)] &&
+        $generation <= $windows_speech_transaction(latest)} {
+        return ""
+    }
+    set windows_speech_transaction(latest) $generation
+    if {[windows_speech_input_pending]} {
+        return ""
+    }
+    set script [encoding convertfrom utf-8 [binary decode base64 $payload]]
+    foreach command [split $script "\n"] {
+        if {$command ne ""} {
+            uplevel #0 $command
+        }
+    }
+    return ""
+}
+
 proc windows_speech_native_audio_player_p {program} {
     expr {[file tail $program] eq "windows-play"}
 }

@@ -70,6 +70,16 @@ delay.  Ordered and urgent transactions are never delayed."
 (defvar emacsvox-aural--delivery-sequence 0
   "Sequence preserving order across independent replacement keys.")
 
+(defconst emacsvox-aural--framed-delivery-process-property
+  'emacsvox-aural-framed-delivery
+  "Process property enabling complete replaceable transaction framing.")
+
+(defun emacsvox-aural-enable-framed-delivery (process)
+  "Enable complete replaceable transaction framing for PROCESS."
+  (process-put
+   process emacsvox-aural--framed-delivery-process-property t)
+  process)
+
 (defun emacsvox-aural-delivery-send (process command &optional kind)
   "Send COMMAND to PROCESS through the current delivery transaction.
 
@@ -85,8 +95,41 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
        emacsvox-aural--delivery-transaction-entries)
     (process-send-string process command)))
 
-(defun emacsvox-aural--send-delivery-entries (entries)
+(defun emacsvox-aural--framed-delivery-entries
+    (owner generation entries)
+  "Frame replaceable ENTRIES for OWNER at GENERATION when supported."
+  (if
+      (and
+       generation
+       (processp owner)
+       (process-get
+        owner emacsvox-aural--framed-delivery-process-property)
+       (cl-every
+        (lambda (entry)
+          (eq owner (emacsvox-aural--delivery-entry-process entry)))
+        entries))
+      (let* ((payload
+              (apply
+               #'concat
+               (mapcar
+                #'emacsvox-aural--delivery-entry-command entries)))
+             (encoded
+              (base64-encode-string
+               (encode-coding-string payload 'utf-8 t) t)))
+        (list
+         (emacsvox-aural--make-delivery-entry
+          :process owner
+          :command
+          (format "emacsvox_tx %d {%s}\n" generation encoded))))
+    entries))
+
+(defun emacsvox-aural--send-delivery-entries
+    (entries &optional owner generation)
   "Send ordered delivery ENTRIES, combining adjacent writes per process."
+  (setq
+   entries
+   (emacsvox-aural--framed-delivery-entries
+    owner generation entries))
   (let (current-process commands)
     (cl-labels
         ((flush
@@ -120,7 +163,9 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
     (remhash table-key emacsvox-aural--pending-deliveries)
     (setf (emacsvox-aural--pending-delivery-timer pending) nil)
     (emacsvox-aural--send-delivery-entries
-     (emacsvox-aural--pending-delivery-entries pending))))
+     (emacsvox-aural--pending-delivery-entries pending)
+     (emacsvox-aural--pending-delivery-owner pending)
+     (emacsvox-aural--pending-delivery-sequence pending))))
 
 (defun emacsvox-aural--pending-delivery-keys
     (owner &optional replacement-key)

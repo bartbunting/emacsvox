@@ -153,7 +153,10 @@ ARGUMENTS are any remaining arguments to `tts-make-process'."
        emacsvox-windows-speech--pan-environment-variable
        (number-to-string
         (emacsvox-windows-speech--clamp-pan pan)))
-      (apply original name arguments))))
+      (let ((process (apply original name arguments)))
+        (when (processp process)
+          (emacsvox-aural-enable-framed-delivery process))
+        process))))
 
 (defun emacsvox-windows-speech--register-server-names ()
   "Add available friendly Windows server names to completion."
