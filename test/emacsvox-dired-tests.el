@@ -85,6 +85,8 @@
                (lambda () (push 'speak-mode-line events)))
               ((symbol-function 'emacsvox-dired--current-entry-content)
                (lambda () "entry"))
+              ((symbol-function 'emacsvox-dired--line-content)
+               (lambda () "results"))
               ((symbol-function 'emacsvox-aural-submit)
                (lambda (_content &rest arguments)
                  (dolist
@@ -108,7 +110,7 @@
   (should
    (equal
     (emacsvox-test--dired-feedback 'dired)
-    '(initialize (icon open-object) speak-mode-line)))
+    '(initialize (icon open-object) speak-dired-line)))
   (should
    (equal
     (emacsvox-test--dired-feedback 'dired-prev-subdir)
@@ -120,7 +122,30 @@
   (should
    (equal
     (emacsvox-test--dired-feedback 'locate)
-    '(speak-line (icon open-object)))))
+    '((icon open-object) speak-dired-line))))
+
+(ert-deftest emacsvox-dired-listing-open-is-one-native-submission ()
+  "Opening Dired submits its summary, listing facts, and cue together."
+  (let ((ems--interactive-fn-name 'dired)
+        initialized
+        submission)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-initialize)
+          (lambda () (setq initialized t)))
+         ((symbol-function 'emacsvox-dired--buffer-summary)
+          (lambda () "tmp, dired by name"))
+         ((symbol-function 'emacsvox-dired--submit-text)
+          (lambda (&rest arguments)
+            (setq submission arguments))))
+      (emacsvox--dired-dired-after))
+    (should initialized)
+    (should
+     (equal
+      submission
+      '("tmp, dired by name"
+        (:role filesystem-listing
+         :events (filesystem-listing-opened))
+        state-change open-object)))))
 
 (ert-deftest emacsvox-dired-training-follows-earcon-and-filename ()
   "Training identifies the movement cue after normal Dired feedback."
@@ -380,10 +405,12 @@
   (let ((ems--interactive-fn-name 'dired-sort-toggle-or-edit)
         (calls 0)
         events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-mode-line)
-               (lambda () (push 'mode-line events))))
+    (cl-letf
+        (((symbol-function 'emacsvox-dired--buffer-summary)
+          (lambda () "tmp, dired by date"))
+         ((symbol-function 'emacsvox-dired--submit-text)
+          (lambda (&rest arguments)
+            (push (cons 'submission arguments) events))))
       (should
        (eq
         'result
@@ -400,7 +427,13 @@
     (should
      (equal
       (nreverse events)
-      '((original (3) nil t) (icon task-done) mode-line)))))
+      '((original (3) nil t)
+        (submission
+         "tmp, dired by date"
+         (:role filesystem-operation
+          :filesystem-operation-kind sort
+          :events (operation-completed))
+         state-change task-done))))))
 
 (ert-deftest emacsvox-dired-programmatic-sort-runs-once-quietly ()
   "Programmatic sorting runs once without Dired-specific feedback."

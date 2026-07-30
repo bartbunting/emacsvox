@@ -189,6 +189,25 @@ suppressed because the aural submission owns audible presentation."
     (message "%s" content))
   (emacsvox-dired--submit-text content facts occasion icon))
 
+(defun emacsvox-dired--buffer-summary ()
+  "Return a concise voice-preserving summary of the selected Dired buffer."
+  (concat
+   (propertize (buffer-name) 'personality voice-lighten-medium)
+   ", "
+   (propertize
+    (downcase
+     (or
+      (and (stringp mode-name) mode-name)
+      (and (listp mode-name) (cl-find-if #'stringp mode-name))
+      "Dired"))
+    'personality voice-animate)))
+
+(defun emacsvox-dired--line-content ()
+  "Return the current line with speech-relevant properties intact."
+  (concat
+   (buffer-substring (line-beginning-position) (line-end-position))
+   (ems--display-props-get)))
+
 (defun emacsvox-dired-entry-facts (&optional event extra-states)
   "Return semantic facts for the Dired entry at point.
 
@@ -323,14 +342,15 @@ cue on single-stream speech servers."
 
 (defun emacsvox--advice-dired-sort-toggle-or-edit-around
     (orig-fun &rest args)
-  "speak."
+  "Present the updated Dired sort state."
   (if (ems-interactive-p 'dired-sort-toggle-or-edit)
       (let (result)
         (ems-with-messages-silenced
           (setq result (apply orig-fun args)))
-        (emacsvox-dired--present-feedback
-         (emacsvox-dired-entry-facts 'operation-completed)
-         'state-change 'task-done #'emacsvox-speak-mode-line)
+        (emacsvox-dired--submit-text
+         (emacsvox-dired--buffer-summary)
+         (emacsvox-dired-operation-facts 'sort)
+         'state-change 'task-done)
         result)
     (apply orig-fun args)))
 
@@ -557,9 +577,11 @@ DOCSTRING and BODY define the feedback function for each command."
     (dired ido-dired dired-jump dired-other-window dired-other-frame)
     "Set up Emacsvox."
   (emacsvox-dired-initialize)
-  (emacsvox-dired--present-feedback
-   (emacsvox-dired-entry-facts 'entry-opened)
-   'state-change 'open-object #'emacsvox-speak-mode-line))
+  (emacsvox-dired--submit-text
+   (emacsvox-dired--buffer-summary)
+   '(:role filesystem-listing
+     :events (filesystem-listing-opened))
+   'state-change 'open-object))
 
 (defun emacsvox--advice-dired-find-file-around (orig-fun &rest args)
   "Produce an auditory icon."
@@ -855,12 +877,11 @@ On a directory line, run du -s on the directory to speak its size."
 (emacsvox-dired--define-after-advice
     (locate locate-with-filter)
     "Speak the Locate results."
-  (emacsvox-dired--call-with-aural-presentation
-   '(:role filesystem-listing :events (entry-opened))
-   'state-change
-   (lambda ()
-     (emacsvox-speak-line)
-     (emacsvox-icon 'open-object))))
+  (emacsvox-dired--submit-text
+   (emacsvox-dired--line-content)
+   '(:role filesystem-listing
+     :events (filesystem-listing-opened))
+   'state-change 'open-object 'after))
 (load "locate" t t)
 
 (cl-declaim (special locate-mode-map))

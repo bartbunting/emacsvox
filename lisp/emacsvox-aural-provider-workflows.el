@@ -227,6 +227,12 @@
      :owner dired
      :occasions (state-change)
      :phases (before content after))
+    (filesystem-listing-opened
+     :kind event
+     :summary "A filesystem listing was opened or selected"
+     :owner dired
+     :occasions (navigation state-change)
+     :phases (before content after))
     (confirmation-request
      :kind role
      :summary "A prompt asking the user to confirm an action"
