@@ -520,6 +520,36 @@
      :owner core
      :occasions (navigation)
      :phases (before content after))
+    (notebook
+     :kind role
+     :summary "An interactive computational notebook"
+     :owner ein
+     :occasions (navigation state-change inspection notification)
+     :phases (before content after))
+    (notebook-cell
+     :kind role
+     :summary "One executable, rendered, or uninterpreted notebook cell"
+     :owner ein
+     :occasions (navigation continuous edit state-change inspection)
+     :phases (before content after))
+    (notebook-cell-kind
+     :kind attribute
+     :summary "The content type of a notebook cell"
+     :owner ein
+     :roles (notebook-cell)
+     :value-type symbol)
+    (notebook-cell-action
+     :kind attribute
+     :summary "The structural operation applied to a notebook cell"
+     :owner ein
+     :roles (notebook-cell)
+     :value-type symbol)
+    (notebook-action
+     :kind attribute
+     :summary "The lifecycle operation applied to a notebook"
+     :owner ein
+     :roles (notebook)
+     :value-type symbol)
     (candidate
      :kind role
      :summary "One available completion candidate"
@@ -1090,6 +1120,128 @@
        (:before
         ((:id python-operation-failed-cue-action
           :kind cue :cue warn-user))))))
+    (ein
+     :schema-version 1
+     :id ein-notebook-feedback
+     :summary "Present notebook cell identity, structure, and lifecycle"
+     :rules
+     ((:id ein-code-cell-tone
+       :match
+       (:role notebook-cell :module ein :notebook-cell-kind code)
+       :render
+       (:before
+        ((:id ein-code-cell-tone-action
+          :kind tone :tone notebook-cell-code))))
+      (:id ein-markdown-cell-tone
+       :match
+       (:role notebook-cell :module ein :notebook-cell-kind markdown)
+       :render
+       (:before
+        ((:id ein-markdown-cell-tone-action
+          :kind tone :tone notebook-cell-markdown))))
+      (:id ein-raw-cell-tone
+       :match
+       (:role notebook-cell :module ein :notebook-cell-kind raw)
+       :render
+       (:before
+        ((:id ein-raw-cell-tone-action
+          :kind tone :tone notebook-cell-raw))))
+      (:id ein-cell-navigation-cue
+       :match
+       (:role notebook-cell :module ein :event focus-entered
+        :occasion navigation)
+       :render
+       (:before
+        ((:id ein-cell-navigation-cue-action
+          :kind cue :cue large-movement))))
+      (:id ein-cell-removed-cue
+       :match
+       (:role notebook-cell :module ein :event object-changed
+        :notebook-cell-action removed :occasion state-change)
+       :render
+       (:before
+        ((:id ein-cell-removed-cue-action
+          :kind cue :cue delete-object))))
+      (:id ein-cell-inserted-cue
+       :match
+       (:role notebook-cell :module ein :event object-changed
+        :notebook-cell-action inserted :occasion edit)
+       :render
+       (:before
+        ((:id ein-cell-inserted-cue-action
+          :kind cue :cue yank-object))))
+      (:id ein-cell-yanked-cue
+       :match
+       (:role notebook-cell :module ein :event object-changed
+        :notebook-cell-action yanked :occasion edit)
+       :render
+       (:before
+        ((:id ein-cell-yanked-cue-action
+          :kind cue :cue yank-object))))
+      (:id ein-cell-split-cue
+       :match
+       (:role notebook-cell :module ein :event object-changed
+        :notebook-cell-action split :occasion edit)
+       :render
+       (:before
+        ((:id ein-cell-split-cue-action
+          :kind cue :cue open-object))))
+      (:id ein-cell-merged-cue
+       :match
+       (:role notebook-cell :module ein :event object-changed
+        :notebook-cell-action merged :occasion edit)
+       :render
+       (:before
+        ((:id ein-cell-merged-cue-action
+          :kind cue :cue close-object))))
+      (:id ein-cell-moved-cue
+       :match
+       (:role notebook-cell :module ein :event object-changed
+        :notebook-cell-action moved :occasion state-change)
+       :render
+       (:before
+        ((:id ein-cell-moved-cue-action
+          :kind cue :cue large-movement))))
+      (:id ein-output-hidden-cue
+       :match
+       (:role notebook-cell :module ein :event visibility-changed
+        :visibility folded :occasion state-change)
+       :render
+       (:before
+        ((:id ein-output-hidden-cue-action
+          :kind cue :cue close-object))))
+      (:id ein-output-shown-cue
+       :match
+       (:role notebook-cell :module ein :event visibility-changed
+        :visibility expanded :occasion state-change)
+       :render
+       (:before
+        ((:id ein-output-shown-cue-action
+          :kind cue :cue open-object))))
+      (:id ein-operation-started-cue
+       :match
+       (:role code-operation :module ein :event operation-started
+        :occasion state-change)
+       :render
+       (:before
+        ((:id ein-operation-started-cue-action
+          :kind cue :cue progress))))
+      (:id ein-notebook-opened-cue
+       :match
+       (:role notebook :module ein :event object-changed
+        :notebook-action opened :occasion state-change)
+       :render
+       (:before
+        ((:id ein-notebook-opened-cue-action
+          :kind cue :cue open-object))))
+      (:id ein-notebook-closed-cue
+       :match
+       (:role notebook :module ein :event object-changed
+        :notebook-action closed :occasion state-change)
+       :render
+       (:before
+        ((:id ein-notebook-closed-cue-action
+          :kind cue :cue close-object))))))
     (agent-shell
      :schema-version 1
      :id agent-shell-tool-status-cues

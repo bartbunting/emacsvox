@@ -389,6 +389,15 @@ themed overrides below an active sound pack."
     (line-unspeakable
      "A nonempty line with no speakable content was reached"
      2093 150 t)
+    (notebook-cell-code
+     "The current notebook cell contains executable code"
+     440 150 nil ein)
+    (notebook-cell-markdown
+     "The current notebook cell contains Markdown"
+     659.3 150 nil ein)
+    (notebook-cell-raw
+     "The current notebook cell contains uninterpreted text"
+     220 150 nil ein)
     (solitaire-hole
      "A hole occupies a Solitaire board cell"
      800 100 nil)
@@ -1751,7 +1760,8 @@ PATH protects this helper from invalid inheritance cycles."
        :summary (nth 1 definition)
        :pitch (nth 2 definition)
        :duration (nth 3 definition)
-       :force (nth 4 definition))))
+       :force (nth 4 definition)
+       :owner (or (nth 5 definition) 'core))))
   (dolist
       (definition
        '((emacsvox "Legacy Emacsvox identity cue" startup)

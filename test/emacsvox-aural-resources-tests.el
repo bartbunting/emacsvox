@@ -195,7 +195,8 @@
     '("buffer-modified" "buffer-read-only" "completion-separator"
       "edit-deletion" "edit-line-created" "edit-lowercase" "edit-uppercase"
       "field-empty" "line-decoration" "line-empty" "line-separator"
-      "line-unspeakable" "line-whitespace" "solitaire-hole"
+      "line-unspeakable" "line-whitespace" "notebook-cell-code"
+      "notebook-cell-markdown" "notebook-cell-raw" "solitaire-hole"
       "solitaire-stone")))
   (dolist
       (expected
@@ -212,13 +213,18 @@
          (line-separator 523.3 150 t)
          (line-decoration 1047 150 t)
          (line-unspeakable 2093 150 t)
+         (notebook-cell-code 440 150 nil)
+         (notebook-cell-markdown 659.3 150 nil)
+         (notebook-cell-raw 220 150 nil)
          (solitaire-hole 800 100 nil)
          (solitaire-stone 400 150 nil)))
     (let ((tone (emacsvox-aural-tone (car expected))))
       (should tone)
       (should (= (emacsvox-aural-tone-pitch tone) (nth 1 expected)))
       (should (= (emacsvox-aural-tone-duration tone) (nth 2 expected)))
-      (should (eq (emacsvox-aural-tone-force tone) (nth 3 expected))))))
+      (should (eq (emacsvox-aural-tone-force tone) (nth 3 expected)))))
+  (dolist (id '(notebook-cell-code notebook-cell-markdown notebook-cell-raw))
+    (should (eq (emacsvox-aural-tone-owner (emacsvox-aural-tone id)) 'ein))))
 
 (ert-deftest emacsvox-aural-resources-reject-invalid-tone-definitions ()
   "The tone registry accepts only safe, complete concrete definitions."
