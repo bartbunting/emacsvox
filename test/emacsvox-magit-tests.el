@@ -412,6 +412,89 @@
     (setq git-commit-mode t)
     (should (eq (emacsvox-magit-current-view-kind) 'commit))))
 
+(ert-deftest emacsvox-magit-central-setup-presents-refreshed-view ()
+  "Nested Magit view commands present content after setup and refresh finish."
+  (let ((buffer (generate-new-buffer " *emacsvox-magit-log*"))
+        (ems--interactive-fn-name 'magit-log-current)
+        calls)
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (setq major-mode 'magit-log-mode)
+            (insert
+             (propertize
+              "abc Subject" 'face 'magit-log-author)))
+          (cl-letf
+              (((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push (cons content arguments) calls))))
+            (should
+             (eq
+              (emacsvox--advice-magit-setup-buffer-internal-around
+               (lambda (&rest _) buffer)
+               'magit-log-mode nil nil)
+              buffer)))
+          (pcase-let* ((`((,content . ,arguments)) calls)
+                       (actions
+                        (plist-get arguments :compatibility-actions)))
+            (should (equal content "Log view. abc Subject"))
+            (should
+             (eq
+              (get-text-property (length "Log view. ") 'face content)
+              'magit-log-author))
+            (should
+             (equal
+              (plist-get arguments :facts)
+              '(:role vcs-view :vcs-view-kind log
+                :events (vcs-view-opened)
+                :vcs-operation magit-log-current)))
+            (should
+             (equal
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value actions)
+              '(open-object)))))
+      (kill-buffer buffer))))
+
+(ert-deftest emacsvox-magit-central-display-respects-suppression ()
+  "Direct displays announce once, while internal and noselect displays do not."
+  (let ((buffer (generate-new-buffer " *emacsvox-magit-diff*"))
+        calls)
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (setq major-mode 'magit-diff-mode)
+            (insert "diff content"))
+          (cl-letf
+              (((symbol-function 'emacsvox-magit--present-opened-buffer)
+                (lambda (&rest arguments) (push arguments calls))))
+            (let ((ems--interactive-fn-name 'magit-diff-range)
+                  (magit-display-buffer-noselect nil)
+                  (emacsvox-magit--setting-up-buffer nil))
+              (should
+               (eq
+                (emacsvox--advice-magit-display-buffer-around
+                 (lambda (&rest _) 'displayed)
+                 buffer)
+                'displayed)))
+            (let ((ems--interactive-fn-name 'magit-diff-range)
+                  (magit-display-buffer-noselect t)
+                  (emacsvox-magit--setting-up-buffer nil))
+              (emacsvox--advice-magit-display-buffer-around
+               #'ignore buffer))
+            (let ((ems--interactive-fn-name 'magit-diff-range)
+                  (magit-display-buffer-noselect nil)
+                  (emacsvox-magit--setting-up-buffer t))
+              (emacsvox--advice-magit-display-buffer-around
+               #'ignore buffer))
+            (let ((ems--interactive-fn-name 'magit-show-commit)
+                  (magit-display-buffer-noselect nil)
+                  (emacsvox-magit--setting-up-buffer nil))
+              (emacsvox--advice-magit-display-buffer-around
+               #'ignore buffer)))
+          (should
+           (equal calls `((,buffer magit-diff-range)))))
+      (kill-buffer buffer))))
+
 (ert-deftest emacsvox-magit-rebase-command-surface-is-covered ()
   "Every current Git Rebase command family should have dedicated feedback."
   (should (= (length emacsvox-magit--rebase-action-targets) 21))
@@ -630,6 +713,14 @@
    (advice-member-p
     #'emacsvox--advice-magit-diff-show-or-scroll-up-around
     'magit-diff-show-or-scroll-up))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-magit-setup-buffer-internal-around
+    'magit-setup-buffer-internal))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-magit-display-buffer-around
+    'magit-display-buffer))
   (dolist
       (target (mapcar #'car emacsvox-magit--rebase-action-targets))
     (should

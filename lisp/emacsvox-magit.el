@@ -56,6 +56,7 @@
 (defvar git-commit-mode)
 (defvar magit-blame-mode)
 (defvar magit-blob-mode)
+(defvar magit-display-buffer-noselect)
 (defvar with-editor-post-cancel-hook)
 (defvar with-editor-post-finish-hook)
 
@@ -639,14 +640,6 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      'task-done 'notification 'magit-refresh-all nil
      'refresh-completed)))
 
-(defun emacsvox--advice-magit-display-buffer-after (&rest _)
-  "Present a Magit buffer displayed directly by the user."
-  (when (ems-interactive-p 'magit-display-buffer)
-    (emacsvox-magit--submit-text
-     (emacsvox-magit--line-content)
-     (emacsvox-magit-view-facts 'other 'vcs-view-opened)
-     'navigation 'open-object)))
-
 ;;;  Advise process-sentinel:
 
 (defun emacsvox--advice-magit-process-finish-after (argument &rest _)
@@ -770,11 +763,82 @@ Present optional MOVEMENT-ICON after the chunk."
    '(magit-refresh magit-status)
    emacsvox-magit--quit-targets
    '(magit-refresh-all
-     magit-display-buffer
      magit-process-finish)
    emacsvox-magit--blame-navigation-targets
    '(magit-blame-quit magit-blame))
   "Current Magit targets that receive native after advice.")
+
+(defvar emacsvox-magit--setting-up-buffer nil
+  "Non-nil while `magit-setup-buffer-internal' is preparing a view.")
+
+(defconst emacsvox-magit--dedicated-view-targets
+  '(magit-status
+    magit-show-commit
+    magit-list-repositories
+    magit-repolist-status
+    magit-blob-visit-file
+    magit-blame
+    magit-diff-show-or-scroll-up
+    magit-diff-while-committing
+    git-rebase-show-commit
+    git-rebase-show-or-scroll-up
+    git-rebase-show-or-scroll-down)
+  "Commands whose more specific advice presents their opened view.")
+
+(defun emacsvox-magit--view-kind-label (kind)
+  "Return a concise spoken label for Magit view KIND."
+  (capitalize
+   (replace-regexp-in-string "-" " " (symbol-name kind))))
+
+(defun emacsvox-magit--present-opened-buffer (buffer target)
+  "Present BUFFER opened by interactive TARGET."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (let ((kind (emacsvox-magit-current-view-kind)))
+        (emacsvox-magit--submit-text
+         (concat
+          (propertize
+           (format
+            "%s view. "
+            (emacsvox-magit--view-kind-label kind))
+           'personality voice-annotate)
+          (let ((line (emacsvox-magit--line-content)))
+            (if (> (length line) 0)
+                line
+              (emacsvox-magit--buffer-summary))))
+         (append
+          (emacsvox-magit-view-facts kind 'vcs-view-opened)
+          (list :vcs-operation target))
+         'navigation 'open-object)))))
+
+(defun emacsvox--advice-magit-setup-buffer-internal-around
+    (original &rest arguments)
+  "Present a fully refreshed Magit view created through the setup boundary."
+  (let* ((target ems--interactive-fn-name)
+         (emacsvox-magit--setting-up-buffer t)
+         (buffer (apply original arguments)))
+    (when
+        (and
+         target
+         (not (memq target emacsvox-magit--dedicated-view-targets))
+         (ems-interactive-p target))
+      (emacsvox-magit--present-opened-buffer buffer target))
+    buffer))
+
+(defun emacsvox--advice-magit-display-buffer-around
+    (original buffer &rest arguments)
+  "Present BUFFER when it is displayed outside the setup boundary."
+  (let ((target ems--interactive-fn-name)
+        (result (apply original buffer arguments)))
+    (when
+        (and
+         target
+         (not emacsvox-magit--setting-up-buffer)
+         (not magit-display-buffer-noselect)
+         (not (memq target emacsvox-magit--dedicated-view-targets))
+         (ems-interactive-p target))
+      (emacsvox-magit--present-opened-buffer buffer target))
+    result))
 
 (defun emacsvox-magit--install-advice ()
   "Install advice for the Magit functions that are currently loaded."
@@ -794,7 +858,19 @@ Present optional MOVEMENT-ICON after the chunk."
     (advice-add
      'magit-diff-show-or-scroll-up :around
      #'emacsvox--advice-magit-diff-show-or-scroll-up-around
-     '((name . emacsvox)))))
+     '((name . emacsvox))))
+  (dolist
+      (entry
+       '((magit-setup-buffer-internal
+          emacsvox--advice-magit-setup-buffer-internal-around)
+         (magit-display-buffer
+          emacsvox--advice-magit-display-buffer-around)))
+    (pcase-let ((`(,target ,function) entry))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox)))))))
 
 (dolist
     (feature
