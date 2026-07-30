@@ -191,7 +191,7 @@
     (should-not events)))
 
 (ert-deftest emacsvox-transient-button-navigation-runs-once ()
-  "Transient button movement speaks after exactly one original call."
+  "Transient button movement presents one item after one original call."
   (save-window-excursion
     (with-temp-buffer
       (insert-text-button "Choice" 'action #'ignore)
@@ -201,25 +201,123 @@
       (let ((transient--window (selected-window))
             (ems--interactive-fn-name 'transient-forward-button)
             (calls 0)
-            events)
-        (cl-letf (((symbol-function 'tts-speak)
-                   (lambda (text) (push (list 'speak text) events)))
-                  ((symbol-function 'emacsvox-icon)
-                   (lambda (icon) (push (list 'icon icon) events))))
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (content &rest arguments)
+                     (push (cons content arguments) submissions))))
           (should
            (eq
             'result
             (emacsvox--advice-transient-forward-button-around
              (lambda (n)
                (setq calls (1+ calls))
-               (push (list 'original n) events)
                'result)
              2))))
         (should (= calls 1))
+        (should (= (length submissions) 1))
         (should
          (equal
-          (nreverse events)
-          '((original 2) (speak "Choice") (icon button))))))))
+          (caar submissions)
+          "Choice"))
+        (should
+         (equal
+          (plist-get (cdar submissions) :facts)
+          '(:role command-menu-item
+            :command-menu-item-kind command
+            :command-menu-action focus-button
+            :events (focus-entered)
+            :states (selected))))))))
+
+(ert-deftest emacsvox-transient-section-navigation-is-native ()
+  "Section navigation presents the reached heading and its semantic identity."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert
+       "Menu\n"
+       (propertize "Options" 'face 'transient-heading)
+       "\nChoice")
+      (goto-char (point-min))
+      (set-window-buffer (selected-window) (current-buffer))
+      (let ((transient--window (selected-window))
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (content &rest arguments)
+                     (push (cons content arguments) submissions))))
+          (emacsvox-transient-next-section))
+        (should (= (length submissions) 1))
+        (should (equal (caar submissions) "Options"))
+        (should
+         (equal
+          (plist-get (cdar submissions) :facts)
+          '(:role command-menu-item
+            :command-menu-item-kind section
+            :command-menu-action next-section
+            :events (focus-entered)
+            :states (selected))))))))
+
+(ert-deftest emacsvox-transient-section-boundary-is-presented ()
+  "Section navigation provides semantic failure feedback at a boundary."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert "No headings")
+      (goto-char (point-max))
+      (set-window-buffer (selected-window) (current-buffer))
+      (let ((transient--window (selected-window))
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+                   (lambda (&rest arguments)
+                     (push arguments submissions))))
+          (emacsvox-transient-next-section))
+        (should (= (length submissions) 1))
+        (should
+         (equal
+          (plist-get (car submissions) :facts)
+          '(:role command-menu-item
+            :command-menu-item-kind section
+            :command-menu-action next-section
+            :events (operation-failed))))))))
+
+(ert-deftest emacsvox-transient-browse-mode-has-an-isolated-keymap ()
+  "The browse mode must not mutate Transient's shared sticky keymap."
+  (let ((sticky-next
+         (lookup-key transient-sticky-map (kbd "M-n"))))
+    (with-temp-buffer
+      (emacsvox-transient-mode)
+      (should-not (eq (current-local-map) transient-sticky-map))
+      (should
+       (eq
+        (lookup-key (current-local-map) (kbd "M-n"))
+        'emacsvox-transient-next-section)))
+    (should
+     (equal
+      (lookup-key transient-sticky-map (kbd "M-n"))
+      sticky-next))))
+
+(ert-deftest emacsvox-transient-browse-section-navigation-stays-in-browser ()
+  "Browse-buffer section movement must not jump into a live menu window."
+  (save-window-excursion
+    (let ((menu-buffer (generate-new-buffer " *Transient menu test*")))
+      (unwind-protect
+          (with-temp-buffer
+            (insert
+             "Menu\n"
+             (propertize "Browse section" 'face 'transient-heading))
+            (goto-char (point-min))
+            (emacsvox-transient-mode)
+            (set-window-buffer (selected-window) (current-buffer))
+            (let ((transient--window
+                   (display-buffer
+                    menu-buffer
+                    '((display-buffer-pop-up-window))))
+                  submissions)
+              (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                         (lambda (content &rest _)
+                           (push content submissions))))
+                (emacsvox-transient-next-section))
+              (should (equal submissions '("Browse section")))
+              (should (eq (window-buffer (selected-window))
+                          (current-buffer)))))
+        (kill-buffer menu-buffer)))))
 
 (ert-deftest emacsvox-transient-setup-uses-emacs-31-settings ()
   "Transient setup uses the current Emacs 31 menu setting names."

@@ -213,12 +213,13 @@
 (define-derived-mode emacsvox-transient-mode special-mode
   "Browse current transient choices"
   "emacsvox integration with Transient."
-  
-  (use-local-map transient-sticky-map)
-  (local-set-key (kbd "M-n") 'emacsvox-transient-next-section)
-  (local-set-key (kbd "M-p") 'emacsvox-transient-previous-section)
-  (local-set-key "q" 'bury-buffer)
-  (local-set-key "r" 'transient-resume))
+
+  (let ((map (copy-keymap transient-sticky-map)))
+    (define-key map (kbd "M-n") #'emacsvox-transient-next-section)
+    (define-key map (kbd "M-p") #'emacsvox-transient-previous-section)
+    (define-key map "q" #'bury-buffer)
+    (define-key map "r" #'transient-resume)
+    (use-local-map map)))
 
 (defvar emacsvox-transient-cache nil
   "Cache of the last Transient buffer contents.")
@@ -239,14 +240,16 @@
    (list :role 'command-menu :command-menu-action action)
    (when event (list :events (list event)))))
 
-(defun emacsvox-transient--item-facts (kind action &optional event)
-  "Return semantic item facts for KIND, ACTION, and optional EVENT."
+(defun emacsvox-transient--item-facts
+    (kind action &optional event states)
+  "Return semantic item facts for KIND, ACTION, optional EVENT and STATES."
   (append
    (list
     :role 'command-menu-item
     :command-menu-item-kind kind
     :command-menu-action action)
-   (when event (list :events (list event)))))
+   (when event (list :events (list event)))
+   (when states (list :states states))))
 
 (defun emacsvox-transient--submit-actions (facts occasion &rest icons)
   "Submit FACTS and compatibility ICONS as one action-only transaction."
@@ -341,30 +344,54 @@ ICON-PHASE defaults to `before'."
 
 ;;; section nav:
 
+(defun emacsvox-transient--navigation-window ()
+  "Return the window whose Transient menu content should be navigated."
+  (if (derived-mode-p 'emacsvox-transient-mode)
+      (selected-window)
+    (if (window-live-p transient--window)
+        transient--window
+      (selected-window))))
+
+(defun emacsvox-transient--present-range (start end kind action &optional icon)
+  "Present START through END as a selected menu item of KIND and ACTION.
+When non-nil, preserve compatibility ICON."
+  (emacsvox-transient--submit-text
+   (emacsvox-aural-source-substring start end)
+   (emacsvox-transient--item-facts
+    kind action 'focus-entered '(selected))
+   'navigation
+   icon))
+
+(defun emacsvox-transient--move-section (backward)
+  "Move to and present the next section, or previous when BACKWARD."
+  (with-selected-window (emacsvox-transient--navigation-window)
+    (let* ((action (if backward 'previous-section 'next-section))
+           (match
+            (if backward
+                (text-property-search-backward
+                 'face 'transient-heading t t)
+              (text-property-search-forward
+               'face 'transient-heading t t))))
+      (if match
+          (progn
+            (goto-char (prop-match-beginning match))
+            (emacsvox-transient--present-range
+             (point) (prop-match-end match) 'section action))
+        (emacsvox-transient--submit-actions
+         (emacsvox-transient--item-facts
+          'section action 'operation-failed)
+         'navigation
+         'warn-user)))))
+
 (defun emacsvox-transient-next-section ()
   "Next transient section."
   (interactive)
-  (with-selected-window
-      (if (window-live-p transient--window)
-          transient--window (selected-window))
-    (when-let*
-        ((match
-          (text-property-search-forward 'face 'transient-heading t t)))
-      (goto-char (prop-match-beginning match))
-      (emacsvox-speak-region (point) (prop-match-end match)))))
+  (emacsvox-transient--move-section nil))
 
 (defun emacsvox-transient-previous-section ()
   "Previous transient section."
   (interactive)
-  (with-selected-window
-      (if (window-live-p transient--window)
-          transient--window (selected-window))
-    (when-let*
-        ((match
-          (text-property-search-backward
-           'face 'transient-heading t t)))
-      (goto-char (prop-match-beginning match))
-      (emacsvox-speak-region (point) (prop-match-end match)))))
+  (emacsvox-transient--move-section t))
 
 ;;; Hooks:
 
@@ -381,13 +408,13 @@ ICON-PHASE defaults to `before'."
 ;;; Advice transient navigation:
 
 (defun emacsvox-transient--speak-button ()
-  "Speak the current button in the Transient menu window."
+  "Present the current button in the Transient menu window."
   (with-current-buffer (window-buffer transient--window)
     (when-let* ((button (button-at (point)))
                 (start (button-start button))
                 (end (button-end button)))
-      (tts-speak (buffer-substring start end))
-      (emacsvox-icon 'button))))
+      (emacsvox-transient--present-range
+       start end 'command 'focus-button 'button))))
 
 (defun emacsvox--advice-transient-backward-button-around
     (orig-fun n)
@@ -419,7 +446,6 @@ ICON-PHASE defaults to `before'."
   (define-key transient-predicate-map
               [emacsvox-transient-next-section] 'transient--do-move)
 
-  (define-key transient-popup-navigation-map "C-j" 'transient-push-button)
   (define-key transient-popup-navigation-map
               [left] 'emacsvox-transient-previous-section)
   (define-key transient-popup-navigation-map
