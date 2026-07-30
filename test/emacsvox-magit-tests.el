@@ -724,6 +724,11 @@
      (advice-member-p
       (intern (format "emacsvox--advice-%s-around" target))
       target)))
+  (dolist (target emacsvox-magit--browse-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target))))
   (dolist (entry emacsvox-magit--log-select-advice)
     (pcase-let ((`(,target ,function) entry))
       (should (advice-member-p function target))))
@@ -1172,6 +1177,30 @@
                   :vcs-operation magit-diff-visit-file)
                  (open-object)))))))
       (kill-buffer destination))))
+
+(ert-deftest emacsvox-magit-browse-command-identifies-opened-url ()
+  "Opening a URL from Magit receives explicit native feedback."
+  (let ((ems--interactive-fn-name 'magit-browse-thing)
+        calls)
+    (cl-letf
+        (((symbol-function 'thing-at-point)
+          (lambda (&rest _) "https://example.com/change/1"))
+         ((symbol-function 'emacsvox-magit--submit-text)
+          (lambda (&rest arguments) (push arguments calls))))
+      (should
+       (eq
+        (emacsvox-magit--call-browse-command
+         (lambda (&rest _) 'opened)
+         'magit-browse-thing nil)
+        'opened)))
+    (should
+     (equal
+      calls
+      '(("Opened link in browser. https://example.com/change/1"
+         (:role vcs-view :vcs-view-kind other
+          :events (operation-completed)
+          :vcs-operation magit-browse-thing)
+         state-change open-object))))))
 
 (ert-deftest emacsvox-magit-log-selection-identifies-commit ()
   "A log selection without a downstream operation reports its commit."

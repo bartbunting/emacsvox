@@ -973,7 +973,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     magit-diff-visit-worktree-file-other-window
     magit-diff-visit-worktree-file-other-frame
     magit-blame-visit-file
-    magit-blame-visit-other-file)
+    magit-blame-visit-other-file
+    magit-add-change-log-entry
+    magit-add-change-log-entry-other-window)
   "Magit commands that select a non-Magit destination buffer.")
 
 (defun emacsvox-magit--selected-destination-content ()
@@ -1010,6 +1012,39 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   `(defun ,advice-function (original &rest arguments)
      "Present the buffer selected by a Magit destination command."
      (emacsvox-magit--call-destination-command
+      original ',target arguments))))
+
+(defconst emacsvox-magit--browse-targets
+  '(magit-visit-thing magit-browse-thing)
+  "Magit commands that can open a URL from the current view.")
+
+(defun emacsvox-magit--call-browse-command
+    (original target arguments)
+  "Call browse command ORIGINAL for TARGET with ARGUMENTS."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let* ((url (thing-at-point 'url t))
+           (result (apply original arguments)))
+      (when (and url (ems-interactive-p target))
+        (emacsvox-magit--submit-text
+         (format "Opened link in browser. %s" url)
+         (append
+          (emacsvox-magit-view-facts
+           (emacsvox-magit-current-view-kind)
+           'operation-completed)
+          (list :vcs-operation target))
+         'state-change 'open-object))
+      result)))
+
+(cl-loop
+ for target in emacsvox-magit--browse-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(defun ,advice-function (original &rest arguments)
+     "Present a URL opened from a Magit view."
+     (emacsvox-magit--call-browse-command
       original ',target arguments))))
 
 (defun emacsvox-magit--copied-content ()
@@ -1618,6 +1653,14 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
            (not (advice-member-p function target)))
         (advice-add target :around function '((name . emacsvox))))))
   (dolist (target emacsvox-magit--destination-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox))))))
+  (dolist (target emacsvox-magit--browse-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-around" target))))
       (when
