@@ -1033,7 +1033,21 @@
        (:after
         (:append
          ((:id workflow-magit-section-expanded-cue
-           :kind cue :cue open-object))))))))
+           :kind cue :cue open-object)))))
+      (:id workflow-magit-section-folded-replaces-compatibility
+       :match
+       (:role vcs-section :module magit :event visibility-changed
+        :visibility folded :occasion state-change
+        :legacy-cue close-object)
+       :render
+       (:before (:remove (legacy-cue))))
+      (:id workflow-magit-section-expanded-replaces-compatibility
+       :match
+       (:role vcs-section :module magit :event visibility-changed
+        :visibility expanded :occasion state-change
+        :legacy-cue open-object)
+       :render
+       (:before (:remove (legacy-cue)))))))
   "Disabled built-in feature layers for migrated user workflows.")
 
 (defconst emacsvox-aural-agent-shell-feature-fragments

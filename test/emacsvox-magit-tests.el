@@ -1137,6 +1137,41 @@
          facts
          (list :module 'magit :occasion occasion)))))))
 
+(ert-deftest emacsvox-magit-visibility-fragment-replaces-fallback-cue ()
+  "The visibility fragment and compatibility fallback produce one cue."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments
+         '(magit-section-visibility-cues))
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        submission)
+    (cl-letf (((symbol-function 'tts-speak) #'ignore))
+      (setq
+       submission
+       (emacsvox-magit--submit-text
+        "expanded section"
+        '(:role vcs-section :section-kind file
+          :events (visibility-changed)
+          :visibility expanded)
+        'state-change 'open-object 'after)))
+    (let* ((plans (emacsvox-aural-submission-plans submission))
+           (plan (car plans)))
+      (should (= (length plans) 1))
+      (should-not (emacsvox-aural-concrete-plan-before plan))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-id
+         (emacsvox-aural-concrete-plan-after plan))
+        '(workflow-magit-section-expanded-cue)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-concrete-action-cue
+         (emacsvox-aural-concrete-plan-after plan))
+        '(open-object))))))
+
 (ert-deftest emacsvox-magit-destination-command-presents-selected-buffer ()
   "A file destination outside Magit receives explicit view feedback."
   (let ((destination (generate-new-buffer "destination.el"))
