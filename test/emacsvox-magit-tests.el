@@ -752,7 +752,11 @@
          (magit-start-process
           emacsvox--advice-magit-start-process-around)
          (magit-process-kill
-          emacsvox--advice-magit-process-kill-around)))
+          emacsvox--advice-magit-process-kill-around)
+         (magit-diff-refresh
+          emacsvox--advice-magit-diff-refresh-around)
+         (magit-log-refresh
+          emacsvox--advice-magit-log-refresh-around)))
     (pcase-let ((`(,target ,function) entry))
       (should (advice-member-p function target))))
   (dolist
@@ -1162,6 +1166,102 @@
             :events (vcs-view-opened)
             :vcs-operation magit-blame-removal)
            (open-object))))))))
+
+(ert-deftest emacsvox-magit-diff-context-reports-effective-value ()
+  "Changing diff context reports the effective count and current line."
+  (with-temp-buffer
+    (insert "current diff line")
+    (let ((ems--interactive-fn-name 'magit-diff-more-context)
+          calls)
+      (cl-letf
+          (((symbol-function 'magit-diff-get-context)
+            (lambda () 7))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                (substring-no-properties content)
+                (plist-get arguments :facts)
+                (mapcar
+                 #'emacsvox-aural-compatibility-action-value
+                 (plist-get arguments :compatibility-actions)))
+               calls))))
+        (emacsvox--advice-magit-diff-more-context-after)
+        (should
+         (equal
+          calls
+          '(("Diff context is 7 lines. current diff line"
+             (:role vcs-view :vcs-view-kind other
+              :events (operation-completed)
+              :vcs-operation magit-diff-more-context)
+             (task-done)))))))))
+
+(ert-deftest emacsvox-magit-log-limit-reports-all-or-count ()
+  "Log-limit descriptions reflect the effective argument."
+  (cl-letf
+      (((symbol-function 'magit-log-get-commit-limit)
+        (lambda () nil)))
+    (should
+     (equal
+      (emacsvox-magit--view-setting-description
+       'magit-log-toggle-commit-limit)
+      "Showing all commits")))
+  (cl-letf
+      (((symbol-function 'magit-log-get-commit-limit)
+        (lambda () 128)))
+    (should
+     (equal
+      (emacsvox-magit--view-setting-description
+       'magit-log-half-commit-limit)
+      "Showing up to 128 commits"))))
+
+(ert-deftest emacsvox-magit-refresh-distinguishes-menu-from-application ()
+  "Opening a refresh transient is silent here; applying it is presented."
+  (with-temp-buffer
+    (insert "selected commit")
+    (let ((ems--interactive-fn-name 'magit-log-refresh)
+          (transient-current-command nil)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (push 'submitted calls))))
+        (should
+         (eq
+          (emacsvox-magit--call-transient-refresh
+           (lambda (&rest _) 'menu)
+           'magit-log-refresh nil)
+          'menu))
+        (should-not calls)
+        (should (eq ems--interactive-fn-name 'magit-log-refresh))))
+    (let ((ems--interactive-fn-name 'magit-log-refresh)
+          (transient-current-command 'magit-log-refresh)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                (substring-no-properties content)
+                (plist-get arguments :facts)
+                (mapcar
+                 #'emacsvox-aural-compatibility-action-value
+                 (plist-get arguments :compatibility-actions)))
+               calls))))
+        (should
+         (eq
+          (emacsvox-magit--call-transient-refresh
+           (lambda (&rest _) 'refreshed)
+           'magit-log-refresh nil)
+          'refreshed))
+        (should
+         (equal
+          calls
+          '(("Refreshed Other view. selected commit"
+             (:role vcs-view :vcs-view-kind other
+              :events (refresh-completed)
+              :vcs-operation magit-log-refresh)
+             (task-done)))))))))
 
 (ert-deftest emacsvox-magit-stage-facts-express-intent ()
   "Staging and section visibility have explicit semantic facts."

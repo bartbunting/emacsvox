@@ -56,9 +56,17 @@
 (defvar git-commit-mode)
 (defvar magit-blame-mode)
 (defvar magit-buffer-file-name)
+(defvar magit-buffer-diff-range)
+(defvar magit-buffer-locked-p)
 (defvar magit-buffer-revision)
 (defvar magit-blob-mode)
+(defvar magit-diff-fontify-hunk)
+(defvar magit-diff-refine-hunk)
 (defvar magit-display-buffer-noselect)
+(defvar magit-log-margin-show-shortstat)
+(defvar magit-refs-show-commit-count)
+(defvar magit--right-margin-config)
+(defvar transient-current-command)
 (defvar with-editor-post-cancel-hook)
 (defvar with-editor-post-finish-hook)
 
@@ -1064,6 +1072,176 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   "Present the result of interrupting or killing a Magit process."
   (emacsvox-magit--call-process-kill original arguments))
 
+(defconst emacsvox-magit--view-setting-targets
+  '(magit-diff-less-context
+    magit-diff-more-context
+    magit-diff-default-context
+    magit-log-toggle-commit-limit
+    magit-log-double-commit-limit
+    magit-log-half-commit-limit
+    magit-refs-set-show-commit-count
+    magit-diff-toggle-refine-hunk
+    magit-diff-toggle-fontify-hunk
+    magit-diff-toggle-file-filter
+    magit-diff-switch-range-type
+    magit-diff-flip-revs
+    magit-toggle-buffer-lock
+    magit-toggle-margin
+    magit-cycle-margin-style
+    magit-toggle-margin-details
+    magit-toggle-log-margin-style)
+  "Commands that change the presentation or extent of a Magit view.")
+
+(defun emacsvox-magit--setting-value-label (value)
+  "Return a concise spoken label for setting VALUE."
+  (cond
+   ((stringp value) "absolute date and time")
+   ((symbolp value)
+    (replace-regexp-in-string "-" " " (symbol-name value)))
+   (t (format "%s" value))))
+
+(defun emacsvox-magit--view-setting-description (target)
+  "Return the current view-setting description for TARGET."
+  (pcase target
+    ((or
+      'magit-diff-less-context
+      'magit-diff-more-context
+      'magit-diff-default-context)
+     (format
+      "Diff context is %d lines"
+      (if (fboundp 'magit-diff-get-context)
+          (magit-diff-get-context)
+        0)))
+    ((or
+      'magit-log-toggle-commit-limit
+      'magit-log-double-commit-limit
+      'magit-log-half-commit-limit)
+     (let ((limit
+            (and
+             (fboundp 'magit-log-get-commit-limit)
+             (magit-log-get-commit-limit))))
+       (if limit
+           (format "Showing up to %d commits" limit)
+         "Showing all commits")))
+    ('magit-refs-set-show-commit-count
+     (format
+      "Commit counts shown for %s"
+      (pcase magit-refs-show-commit-count
+        ('all "all references")
+        ('t "branches")
+        (_ "no references"))))
+    ('magit-diff-toggle-refine-hunk
+     (format
+      "Hunk refinement %s"
+      (pcase magit-diff-refine-hunk
+        ('all "enabled immediately")
+        ('t "enabled on selection")
+        (_ "disabled"))))
+    ('magit-diff-toggle-fontify-hunk
+     (format
+      "Hunk fontification %s"
+      (pcase magit-diff-fontify-hunk
+        ('all "enabled immediately")
+        ('t "enabled on selection")
+        (_ "disabled"))))
+    ('magit-diff-toggle-file-filter "Toggled diff file filter")
+    ('magit-diff-switch-range-type
+     (format "Diff range is %s" (or magit-buffer-diff-range "unchanged")))
+    ('magit-diff-flip-revs
+     (format "Flipped diff range to %s"
+             (or magit-buffer-diff-range "unchanged")))
+    ('magit-toggle-buffer-lock
+     (if magit-buffer-locked-p "Buffer locked" "Buffer unlocked"))
+    ('magit-toggle-margin
+     (if
+         (and
+          (fboundp 'magit--right-margin-active)
+          (magit--right-margin-active))
+         "Right margin shown"
+       "Right margin hidden"))
+    ('magit-cycle-margin-style
+     (format
+      "Right margin style is %s"
+      (emacsvox-magit--setting-value-label
+       (cadr magit--right-margin-config))))
+    ('magit-toggle-margin-details
+     (if
+         (nth 3 magit--right-margin-config)
+         "Right margin details shown"
+       "Right margin details hidden"))
+    ('magit-toggle-log-margin-style
+     (if
+         magit-log-margin-show-shortstat
+         "Log margin shows short statistics"
+       "Log margin shows author and date"))
+    (_
+     (format
+      "Changed %s"
+      (emacsvox-magit--operation-label target)))))
+
+(defun emacsvox-magit--present-view-setting (target)
+  "Present the view setting changed by TARGET."
+  (emacsvox-magit--submit-text
+   (concat
+    (propertize
+     (concat (emacsvox-magit--view-setting-description target) ". ")
+     'personality voice-annotate)
+    (emacsvox-magit--line-content))
+   (append
+    (emacsvox-magit-view-facts
+     (emacsvox-magit-current-view-kind)
+     'operation-completed)
+    (list :vcs-operation target))
+   'state-change 'task-done))
+
+(cl-loop
+ for target in emacsvox-magit--view-setting-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     "Present a changed Magit view setting."
+     (when (ems-interactive-p ',target)
+       (emacsvox-magit--present-view-setting ',target)))))
+
+(defun emacsvox-magit--call-transient-refresh
+    (original target arguments)
+  "Call refresh prefix ORIGINAL for TARGET with ARGUMENTS.
+Only present the invocation that applies the transient's selected values."
+  (let ((refreshing (eq transient-current-command target))
+        (result (apply original arguments)))
+    (when
+        (and refreshing (ems-interactive-p target))
+      (emacsvox-magit--submit-text
+       (concat
+        (propertize
+         (format
+          "Refreshed %s view. "
+          (emacsvox-magit--view-kind-label
+           (emacsvox-magit-current-view-kind)))
+         'personality voice-annotate)
+        (emacsvox-magit--line-content))
+       (append
+        (emacsvox-magit-view-facts
+         (emacsvox-magit-current-view-kind)
+         'refresh-completed)
+        (list :vcs-operation target))
+       'notification 'task-done))
+    result))
+
+(defun emacsvox--advice-magit-diff-refresh-around
+    (original &rest arguments)
+  "Present a diff refresh, but not initial transient entry."
+  (emacsvox-magit--call-transient-refresh
+   original 'magit-diff-refresh arguments))
+
+(defun emacsvox--advice-magit-log-refresh-around
+    (original &rest arguments)
+  "Present a log refresh, but not initial transient entry."
+  (emacsvox-magit--call-transient-refresh
+   original 'magit-log-refresh arguments))
+
 (defconst emacsvox-magit--simple-advice-targets
   (append
    emacsvox-magit--navigation-targets
@@ -1082,6 +1260,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
    '(magit-refresh-all
      magit-process-finish)
    emacsvox-magit--describe-targets
+   emacsvox-magit--view-setting-targets
    emacsvox-magit--blame-navigation-targets
    '(magit-blame-quit
      magit-blame
@@ -1350,7 +1529,11 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
          (magit-start-process
           emacsvox--advice-magit-start-process-around)
          (magit-process-kill
-          emacsvox--advice-magit-process-kill-around)))
+          emacsvox--advice-magit-process-kill-around)
+         (magit-diff-refresh
+          emacsvox--advice-magit-diff-refresh-around)
+         (magit-log-refresh
+          emacsvox--advice-magit-log-refresh-around)))
     (pcase-let ((`(,target ,function) entry))
       (when
           (and
@@ -1368,7 +1551,9 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
        magit-extras
        magit-files
        magit-log
+       magit-margin
        magit-process
+       magit-refs
        magit-repos
        magit-section
        magit-stash
