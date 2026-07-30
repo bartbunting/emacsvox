@@ -44,6 +44,17 @@
           (copy-sequence org-mode-hook))))
     (funcall mode)))
 
+(defmacro emacsvox-test--capture-org-submissions (&rest body)
+  "Evaluate BODY and return native Org text submissions in call order."
+  (declare (indent 0) (debug t))
+  `(let (captured)
+     (cl-letf
+         (((symbol-function 'emacsvox-aural-submit)
+           (lambda (content &rest arguments)
+             (push (cons content arguments) captured))))
+       ,@body)
+     (nreverse captured)))
+
 (defun emacsvox-test--org-resolved-voice
     (mode user-rules &optional buffer-rules)
   "Resolve a heading voice in MODE with USER-RULES and BUFFER-RULES."
@@ -967,20 +978,33 @@
       (emacsvox--advice-org-eval-in-calendar-after))
     (should (equal spoken "Thursday"))))
 
-(ert-deftest emacsvox-org-agenda-navigation-preserves-feedback-order ()
-  "Agenda navigation cues before speaking the destination line."
-  (let ((ems--interactive-fn-name 'org-agenda-next-line)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events))))
-      (emacsvox--advice-org-agenda-previous-line-after)
-      (emacsvox--advice-org-agenda-next-line-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon select-object) speak-line)))))
+(ert-deftest emacsvox-org-agenda-navigation-is-one-native-submission ()
+  "Agenda navigation submits the destination and leading cue together."
+  (with-temp-buffer
+    (insert "Agenda entry")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'org-agenda-next-line)
+           (submissions
+            (emacsvox-test--capture-org-submissions
+              (emacsvox--advice-org-agenda-previous-line-after)
+              (emacsvox--advice-org-agenda-next-line-after)))
+           (arguments (cdar submissions))
+           (action
+            (car (plist-get arguments :compatibility-actions))))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role org-agenda-entry :events (focus-entered)
+          :org-action agenda-navigation)))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'select-object))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'before)))))
 
 (ert-deftest emacsvox-org-table-movement-feedback-remains-unconditional ()
   "Table movement always reports the current cell."
@@ -993,26 +1017,33 @@
 
 (ert-deftest emacsvox-org-return-selects-table-or-line-feedback ()
   "Org return defers table feedback and owns its non-table destination."
-  (let* ((ems--interactive-fn-name 'org-return)
-         events
-         at-table
-         (emacsvox-org-table-after-movement-function
-          (lambda () (push 'table-cell events))))
-    (cl-letf (((symbol-function 'org-at-table-p)
-               (lambda (&rest _) at-table))
-              ((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
-      (setq at-table t)
-      (emacsvox--advice-org-return-after)
-      (setq at-table nil
-            ems--interactive-fn-name 'org-return)
-      (emacsvox--advice-org-return-after))
-    (should
-     (equal
-      (nreverse events)
-      '(speak-line (icon select-object))))))
+  (with-temp-buffer
+    (insert "Destination")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'org-return)
+           at-table
+           (submissions
+            (cl-letf (((symbol-function 'org-at-table-p)
+                       (lambda (&rest _) at-table)))
+              (emacsvox-test--capture-org-submissions
+                (setq at-table t)
+                (emacsvox--advice-org-return-after)
+                (setq at-table nil
+                      ems--interactive-fn-name 'org-return)
+                (emacsvox--advice-org-return-after))))
+           (action
+            (car
+             (plist-get
+              (cdar submissions) :compatibility-actions))))
+      (should (= (length submissions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'select-object))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'after)))))
 
 (ert-deftest emacsvox-org-return-reports-a-real-table-move-once ()
   "The table command called by `org-return' owns its one cell announcement."
@@ -1061,19 +1092,32 @@
       (should (eq (plist-get (cdar submissions) :occasion) 'edit)))))
 
 (ert-deftest emacsvox-org-subtree-feedback-is-target-aware ()
-  "Only the matching subtree command speaks and cues its result."
-  (let ((ems--interactive-fn-name 'org-paste-subtree)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
-      (emacsvox--advice-org-copy-subtree-after)
-      (emacsvox--advice-org-paste-subtree-after))
-    (should
-     (equal
-      (nreverse events)
-      '(speak-line (icon yank-object))))))
+  "Only the matching subtree command submits its resulting line."
+  (with-temp-buffer
+    (insert "* Pasted subtree")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'org-paste-subtree)
+           (submissions
+            (emacsvox-test--capture-org-submissions
+              (emacsvox--advice-org-copy-subtree-after)
+              (emacsvox--advice-org-paste-subtree-after)))
+           (arguments (cdar submissions))
+           (action
+            (car (plist-get arguments :compatibility-actions))))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role org-content :events (object-changed)
+          :org-action subtree-changed)))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'yank-object))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'after)))))
 
 (ert-deftest emacsvox-org-generic-end-of-line-delegates-in-org-mode ()
   "Interactive generic line movement invokes Org's line endpoint logic."
@@ -1085,34 +1129,50 @@
       (emacsvox--advice-end-of-line-after))
     (should delegated)))
 
-(ert-deftest emacsvox-org-item-navigation-preserves-feedback-order ()
-  "Org item navigation speaks the line before its selection cue."
-  (let ((ems--interactive-fn-name 'org-end-of-item)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
-      (emacsvox--advice-org-end-of-item-after))
-    (should
-     (equal
-      (nreverse events)
-      '(speak-line (icon select-object))))))
+(ert-deftest emacsvox-org-item-boundary-navigation-is-native ()
+  "Org item-boundary navigation submits the line before its selection cue."
+  (with-temp-buffer
+    (insert "- Item")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'org-end-of-item)
+           (submissions
+            (emacsvox-test--capture-org-submissions
+              (emacsvox--advice-org-end-of-item-after)))
+           (arguments (cdar submissions))
+           (action
+            (car (plist-get arguments :compatibility-actions))))
+      (should (= (length submissions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'select-object))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'after)))))
 
 (ert-deftest emacsvox-org-source-edit-feedback-is-target-aware ()
   "Only the matching source edit command reports its window transition."
-  (let ((ems--interactive-fn-name 'org-edit-src-exit)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events))))
-      (emacsvox--advice-org-edit-src-abort-after)
-      (emacsvox--advice-org-edit-src-exit-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon close-object) speak-line)))))
+  (with-temp-buffer
+    (insert "Source block")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'org-edit-src-exit)
+           (submissions
+            (emacsvox-test--capture-org-submissions
+              (emacsvox--advice-org-edit-src-abort-after)
+              (emacsvox--advice-org-edit-src-exit-after)))
+           (arguments (cdar submissions))
+           (action
+            (car (plist-get arguments :compatibility-actions))))
+      (should (= (length submissions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'close-object))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-phase action)
+        'before)))))
 
 (ert-deftest emacsvox-org-todo-feedback-reports-current-state ()
   "Interactive TODO changes submit the resulting state once."
@@ -1206,31 +1266,45 @@
 
 (ert-deftest emacsvox-org-last-capture-feedback-is-target-aware ()
   "Visiting the last capture only reports an interactive invocation."
-  (let ((ems--interactive-fn-name 'org-capture-goto-last-stored)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events))))
-      (emacsvox--advice-org-capture-goto-last-stored-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon large-movement) speak-line)))))
+  (with-temp-buffer
+    (insert "Captured item")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name 'org-capture-goto-last-stored)
+           (submissions
+            (emacsvox-test--capture-org-submissions
+              (emacsvox--advice-org-capture-goto-last-stored-after)))
+           (action
+            (car
+             (plist-get
+              (cdar submissions) :compatibility-actions))))
+      (should (= (length submissions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value action)
+        'large-movement)))))
 
 (ert-deftest emacsvox-org-capture-target-feedback-remains-unconditional ()
   "Internally selected capture targets still cue and speak."
-  (let ((ems--interactive-fn-name nil)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-line)
-               (lambda () (push 'speak-line events))))
-      (emacsvox--advice-org-capture-goto-target-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon large-movement) speak-line)))))
+  (with-temp-buffer
+    (insert "Capture target")
+    (goto-char (point-min))
+    (let* ((ems--interactive-fn-name nil)
+           (submissions
+            (emacsvox-test--capture-org-submissions
+              (emacsvox--advice-org-capture-goto-target-after)))
+           (arguments (cdar submissions)))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role org-capture :events (focus-entered)
+          :org-action capture-target)))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value
+         (car
+          (plist-get arguments :compatibility-actions)))
+        'large-movement)))))
 
 (ert-deftest emacsvox-org-capture-lifecycle-cues-remain-unconditional ()
   "Finalizing and cancelling captures always emit their lifecycle cues."

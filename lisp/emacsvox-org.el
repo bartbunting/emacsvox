@@ -574,10 +574,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Speak after an interactive Org subtree operation."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback-after
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-content 'object-changed 'subtree-changed)
-          'edit 'yank-object #'emacsvox-speak-line)))
+          'edit 'yank-object 'after)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -617,10 +618,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after an interactive Org toggle."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-content 'state-changed 'option-toggled)
-          'state-change 'button #'emacsvox-speak-line)))
+          'state-change 'button)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -638,10 +640,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after an interactive Org day adjustment."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-content 'object-changed 'timestamp-changed)
-          'edit 'select-object #'emacsvox-speak-line)))
+          'edit 'select-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -695,10 +698,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after interactive Org agenda navigation."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-agenda-entry 'focus-entered 'agenda-navigation)
-          'navigation 'select-object #'emacsvox-speak-line)))
+          'navigation 'select-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -729,20 +733,22 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after interactively opening an Org agenda item."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-agenda-entry 'focus-entered 'agenda-opened)
-          'navigation 'open-object #'emacsvox-speak-line)))
+          'navigation 'open-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-org-agenda-after (&rest _)
   "Cue and speak after interactively opening the Org agenda."
   (when (ems-interactive-p 'org-agenda)
-    (emacsvox-org--present-feedback
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-agenda-entry 'focus-entered 'agenda-opened)
-     'navigation 'open-object #'emacsvox-speak-line)))
+     'navigation 'open-object)))
 
 (advice-add
  'org-agenda :after #'emacsvox--advice-org-agenda-after
@@ -777,10 +783,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
       ;; whose adapter owns the resulting cell announcement.
       nil)
      (t
-      (emacsvox-org--present-feedback-after
+      (emacsvox-org--submit-text
+       (emacsvox-org--line-content)
        (emacsvox-org--feedback-facts
         'org-content 'object-changed 'line-inserted)
-       'edit 'select-object #'emacsvox-speak-line)))))
+       'edit 'select-object 'after)))))
 
 (advice-add
  'org-return :after #'emacsvox--advice-org-return-after
@@ -866,10 +873,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-toggle-checkbox-after (&rest _)
   "Cue and speak after interactively toggling an Org checkbox."
   (when (ems-interactive-p 'org-toggle-checkbox)
-    (emacsvox-org--present-feedback
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-item 'state-changed 'checkbox-toggled)
-     'state-change 'button #'emacsvox-speak-line)))
+     'state-change 'button)))
 
 (advice-add
  'org-toggle-checkbox :after
@@ -891,20 +899,22 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Speak after interactive Org item navigation."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback-after
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-item 'focus-entered 'item-boundary)
-          'navigation 'select-object #'emacsvox-speak-line)))
+          'navigation 'select-object 'after)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-org-beginning-of-line-after (&rest _)
   "Speak after interactive movement to the beginning of an Org line."
   (when (ems-interactive-p 'org-beginning-of-line)
-    (emacsvox-org--present-feedback-after
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-content 'focus-entered 'line-start)
-     'navigation 'left #'emacsvox-speak-line)))
+     'navigation 'left 'after)))
 
 (advice-add
  'org-beginning-of-line :after
@@ -914,10 +924,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-end-of-line-after (&rest _)
   "Speak after interactive movement to the end of an Org line."
   (when (ems-interactive-p 'org-end-of-line)
-    (emacsvox-org--present-feedback-after
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-content 'focus-entered 'line-end)
-     'navigation 'right #'emacsvox-speak-line)))
+     'navigation 'right 'after)))
 
 (advice-add
  'org-end-of-line :after #'emacsvox--advice-org-end-of-line-after
@@ -935,10 +946,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 (defun emacsvox--advice-org-capture-goto-last-stored-after (&rest _)
   "Cue and speak after interactively visiting the last capture."
   (when (ems-interactive-p 'org-capture-goto-last-stored)
-    (emacsvox-org--present-feedback
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-capture 'focus-entered 'capture-target)
-     'navigation 'large-movement #'emacsvox-speak-line)))
+     'navigation 'large-movement)))
 
 (advice-add
  'org-capture-goto-last-stored :after
@@ -947,10 +959,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 
 (defun emacsvox--advice-org-capture-goto-target-after (&rest _)
   "Cue and speak after visiting an Org capture target."
-  (emacsvox-org--present-feedback
+  (emacsvox-org--submit-text
+   (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-capture 'focus-entered 'capture-target)
-   'navigation 'large-movement #'emacsvox-speak-line))
+   'navigation 'large-movement))
 
 (advice-add
  'org-capture-goto-target :after
@@ -1140,10 +1153,11 @@ arg just opens the file"
      (defun ,function (&rest _)
        "Cue and speak after interactively closing an Org edit buffer."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--line-content)
           (emacsvox-org--feedback-facts
            'org-edit-buffer 'state-changed 'edit-closed)
-          'state-change 'close-object #'emacsvox-speak-line)))
+          'state-change 'close-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -1200,30 +1214,33 @@ arg just opens the file"
   (interactive)
   (forward-line 0)
   (insert "  -  ")
-  (emacsvox-org--present-feedback-after
+  (emacsvox-org--submit-text
+   (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-item 'object-changed 'list-item-created)
-   'edit 'item #'emacsvox-speak-line))
+   'edit 'item 'after))
 
 (defun tvr-org-enumerate ()
   "Start a numbered  list."
   (interactive)
   (forward-line 0)
   (insert "  1.  ")
-  (emacsvox-org--present-feedback-after
+  (emacsvox-org--submit-text
+   (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-item 'object-changed 'list-item-created)
-   'edit 'item #'emacsvox-speak-line))
+   'edit 'item 'after))
 
 (defun tvr-org-alphabetize ()
   "Start an alphabetized   list."
   (interactive)
   (forward-line 0)
   (insert "  A.  ")
-  (emacsvox-org--present-feedback-after
+  (emacsvox-org--submit-text
+   (emacsvox-org--line-content)
    (emacsvox-org--feedback-facts
     'org-item 'object-changed 'list-item-created)
-   'edit 'item #'emacsvox-speak-line))
+   'edit 'item 'after))
 
 ;;;  specialized input buffers:
 
