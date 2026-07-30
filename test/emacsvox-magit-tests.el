@@ -317,6 +317,75 @@
     (emacsvox-magit-process-facts t)
     '(:role vcs-process :events (operation-failed)))))
 
+(ert-deftest emacsvox-magit-programmatic-section-visibility-is-silent ()
+  "Internal Magit section rendering must not produce user feedback."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon events)))
+         ((symbol-function 'emacsvox-speak-line)
+          (lambda () (push 'line events))))
+      (let ((ems--interactive-fn-name nil))
+        (emacsvox--advice-magit-section-show-children-after)
+        (emacsvox--advice-magit-section-hide-after))
+      (should-not events)
+      (let ((ems--interactive-fn-name 'magit-section-show-children))
+        (emacsvox--advice-magit-section-show-children-after))
+      (should (equal (nreverse events) '(line icon))))))
+
+(ert-deftest emacsvox-magit-process-feedback-is-asynchronous-and-accurate ()
+  "Only asynchronous Magit completion gets feedback, using its true result."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'processp)
+          (lambda (value) (eq value 'failed-process)))
+         ((symbol-function 'process-status)
+          (lambda (_) 'exit))
+         ((symbol-function 'process-exit-status)
+          (lambda (_) 1))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list icon emacsvox-aural-submission-facts)
+             events))))
+      (emacsvox--advice-magit-process-finish-after 0)
+      (should-not events)
+      (emacsvox--advice-magit-process-finish-after 'failed-process)
+      (should
+       (equal
+        events
+        '((warn-user
+           (:role vcs-process :events (operation-failed)))))))))
+
+(ert-deftest emacsvox-magit-special-feedback-has-accurate-semantics ()
+  "Commit display and diff cycling are not reported as section expansion."
+  (let (events)
+    (cl-letf
+        (((symbol-function 'emacsvox-icon)
+          (lambda (icon)
+            (push
+             (list
+              icon
+              emacsvox-aural-submission-facts
+              emacsvox-aural-submission-occasion)
+             events)))
+         ((symbol-function 'emacsvox-speak-line) #'ignore))
+      (let ((ems--interactive-fn-name 'magit-show-commit))
+        (emacsvox--advice-magit-show-commit-after))
+      (let ((ems--interactive-fn-name 'magit-section-cycle-diffs))
+        (emacsvox--advice-magit-section-cycle-diffs-after)))
+    (should
+     (equal
+      (nreverse events)
+      '((open-object
+         (:role vcs-view :vcs-view-kind commit
+          :events (vcs-view-opened))
+         navigation)
+        (large-movement
+         (:role vcs-view :vcs-view-kind diff
+          :events (visibility-changed))
+         state-change))))))
+
 (ert-deftest emacsvox-magit-diff-feedback-has-view-context ()
   "Diff scrolling keeps its compatibility output inside one view submission."
   (with-temp-buffer

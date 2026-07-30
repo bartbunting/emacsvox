@@ -46,7 +46,7 @@
 ;;   Required modules:
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
@@ -278,7 +278,6 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     magit-previous-line
     magit-section-forward-sibling
     magit-section-backward-sibling
-    magit-stash
     magit-unstage
     magit-unstage-all
     magit-file-unstage
@@ -312,7 +311,6 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 (defconst emacsvox-magit--show-targets
   '(magit-section-show-children
     magit-section-show-headings
-    magit-show-commit
     magit-section-show-level-1
     magit-section-show-level-2
     magit-section-show-level-3
@@ -320,8 +318,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     magit-section-show-level-1-all
     magit-section-show-level-2-all
     magit-section-show-level-3-all
-    magit-section-show-level-4-all
-    magit-section-cycle-diffs)
+    magit-section-show-level-4-all)
   "Magit commands that reveal sections.")
 
 (cl-loop
@@ -331,16 +328,32 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
  (eval
   `(defun ,advice-function (&rest _)
      "speak."
-     (emacsvox-magit-present-line
-      'open-object 'state-change ',target nil
-      'visibility-changed 'expanded t))))
+     (when (ems-interactive-p ',target)
+       (emacsvox-magit-present-line
+        'open-object 'state-change ',target nil
+        'visibility-changed 'expanded t)))))
 
 (defun emacsvox--advice-magit-section-hide-after (&rest _)
   "Present a hidden Magit section."
-  (emacsvox-magit--present-feedback
-   (emacsvox-magit-section-facts
-    'magit-section-hide nil 'visibility-changed 'folded)
-   'state-change 'close-object #'ignore))
+  (when (ems-interactive-p 'magit-section-hide)
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-section-facts
+      'magit-section-hide nil 'visibility-changed 'folded)
+     'state-change 'close-object #'ignore)))
+
+(defun emacsvox--advice-magit-show-commit-after (&rest _)
+  "Present a commit view opened by an interactive Magit command."
+  (when (ems-interactive-p 'magit-show-commit)
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'commit 'vcs-view-opened)
+     'navigation 'open-object #'emacsvox-speak-line)))
+
+(defun emacsvox--advice-magit-section-cycle-diffs-after (&rest _)
+  "Present an interactive aggregate diff-visibility change."
+  (when (ems-interactive-p 'magit-section-cycle-diffs)
+    (emacsvox-magit--present-feedback
+     (emacsvox-magit-view-facts 'diff 'visibility-changed)
+     'state-change 'large-movement #'emacsvox-speak-line)))
 
 (defun emacsvox--advice-magit-section-cycle-global-after (&rest _)
   "speak."
@@ -440,18 +453,17 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 
 ;;;  Advise process-sentinel:
 
-(defun emacsvox--advice-magit-process-finish-after
-    (&optional process &rest _)
-  "Present semantic completion or failure for Magit PROCESS."
-  (let* ((failed
-          (and
-           (processp process)
-           (memq (process-status process) '(exit signal))
-           (not (zerop (process-exit-status process)))))
-         (icon (if failed 'warn-user 'task-done)))
-    (emacsvox-magit--present-feedback
-     (emacsvox-magit-process-facts failed)
-     'notification icon #'ignore)))
+(defun emacsvox--advice-magit-process-finish-after (argument &rest _)
+  "Present completion or failure when ARGUMENT is an asynchronous process."
+  (when (processp argument)
+    (let* ((failed
+            (or
+             (eq (process-status argument) 'signal)
+             (not (zerop (process-exit-status argument)))))
+           (icon (if failed 'warn-user 'task-done)))
+      (emacsvox-magit--present-feedback
+       (emacsvox-magit-process-facts failed)
+       'notification icon #'ignore))))
 
 ;;;  Magit Blame:
 
@@ -559,6 +571,8 @@ Present optional MOVEMENT-ICON after the chunk."
      magit-section-cycle-global
      magit-section-toggle
      magit-section-cycle
+     magit-show-commit
+     magit-section-cycle-diffs
      magit-kill-this-buffer
      magit-blob-visit-file)
    emacsvox-magit--blob-targets
