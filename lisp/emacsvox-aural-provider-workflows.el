@@ -727,6 +727,13 @@
      :roles (candidate)
      :occasions (edit state-change)
      :phases (before content after))
+    (completion-session-closed
+     :kind event
+     :summary "An interactive completion session was dismissed"
+     :owner core
+     :roles (candidate)
+     :occasions (state-change)
+     :phases (before content after))
     (completion-separator-inserted
      :kind event
      :summary "A completion separator was inserted without accepting a candidate"

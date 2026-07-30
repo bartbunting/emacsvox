@@ -44,6 +44,14 @@
 
 ;;; Code:
 
+;;; Forward variable declarations:
+
+(defvar corfu--candidates)
+(defvar corfu--index)
+(defvar corfu--metadata)
+(defvar corfu--preselect)
+(defvar corfu--total)
+
 ;;   Required modules:
 
 (eval-when-compile (require 'cl-lib))
@@ -54,14 +62,16 @@
 
 ;;;  Map Faces:
 
-(voice-setup-add-map
- '(
-   (corfu-default voice-smoothen)
-   (corfu-current voice-bolden)
-   (corfu-bar voice-monotone)
-   (corfu-border voice-smoothen)
-   (corfu-annotations voice-annotate)
-   (corfu-deprecated voice-monotone-extra)))
+(defconst emacsvox-corfu--face-map
+  '((corfu-default voice-smoothen)
+    (corfu-current voice-bolden)
+    (corfu-bar voice-monotone)
+    (corfu-border voice-smoothen)
+    (corfu-annotations voice-annotate)
+    (corfu-deprecated voice-monotone-extra))
+  "Voice mappings for current Corfu faces.")
+
+(voice-setup-add-map emacsvox-corfu--face-map)
 
 ;;;  State tracking:
 
@@ -92,14 +102,6 @@
            (integerp corfu--total))
       corfu--total
     (length (and (boundp 'corfu--candidates) corfu--candidates))))
-
-(defun emacsvox-corfu--current-candidate ()
-  "Return current corfu candidate or nil."
-  (when (and (bound-and-true-p corfu--candidates)
-             (bound-and-true-p corfu--index)
-             (>= corfu--index 0)
-             (< corfu--index (length corfu--candidates)))
-    (nth corfu--index corfu--candidates)))
 
 (defun emacsvox-corfu--voice (text personality)
   "Return a copy of TEXT spoken with PERSONALITY."
@@ -177,28 +179,44 @@ follow the candidate with the total count instead of its ordinal position."
              (if (= total 1) "" "s"))
      voice-annotate)))
 
-(defun emacsvox-corfu--candidate-facts (&optional accepted-p)
+(defun emacsvox-corfu--candidate-facts (&optional event index)
   "Return semantic facts for the current candidate.
 
-When ACCEPTED-P is non-nil, describe acceptance instead of navigation."
-  (append
-   (list
-    :role 'candidate
-    :events (list (if accepted-p 'accepted 'focus-entered)))
-   (when (and (boundp 'corfu--index) (>= corfu--index 0))
-     (list :states '(selected) :completion-index corfu--index))))
+EVENT defaults to `focus-entered'.  For compatibility, t means `accepted'.
+INDEX snapshots a selection that Corfu may clear while completing."
+  (let ((index
+         (if (integerp index)
+             index
+           (and (boundp 'corfu--index) corfu--index))))
+    (append
+     (list
+      :role 'candidate
+      :events
+      (list
+       (cond
+        ((eq event t) 'accepted)
+        (event event)
+        (t 'focus-entered))))
+     (when (and (integerp index) (>= index 0))
+       (list :states '(selected) :completion-index index)))))
 
 (defun emacsvox-corfu--submit (text facts occasion icon)
   "Submit voiced TEXT with FACTS, OCCASION, and compatibility ICON."
-  (when (and (stringp text) (not (string-empty-p text)))
-    (emacsvox-aural-submit
-     text
-     :facts facts
-     :module 'corfu
-     :occasion occasion
-     :compatibility-actions
-     (when icon
-       (list (emacsvox-aural-compatibility-icon icon))))))
+  (let ((arguments
+         (list
+          :facts facts
+          :module 'corfu
+          :occasion occasion
+          :compatibility-actions
+          (when icon
+            (list (emacsvox-aural-compatibility-icon icon))))))
+    (if (and (stringp text) (not (string-empty-p text)))
+        (apply #'emacsvox-aural-submit text arguments)
+      (apply #'emacsvox-aural-submit-actions arguments))))
+
+(defun emacsvox-corfu--closed-facts ()
+  "Return facts for a dismissed Corfu completion session."
+  '(:role candidate :events (completion-session-closed)))
 
 (defun emacsvox-corfu--navigation-icon ()
   "Return the auditory icon for the current Corfu position."
@@ -280,38 +298,60 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
         result)
     (setq result (apply orig-fun args))
     (when interactive-p
-      (if text
-          (emacsvox-corfu--submit
-           text facts 'state-change 'complete)
-        (emacsvox-icon 'close-object)))
+      (emacsvox-corfu--submit
+       text
+       (if text facts (emacsvox-corfu--closed-facts))
+       'state-change
+       (if text 'complete 'close-object)))
     result))
 
 (defun emacsvox--advice-corfu-quit-after (&rest _)
   "Reset spoken candidate state after quitting Corfu."
   (when (ems-interactive-p 'corfu-quit)
-    (emacsvox-icon 'close-object))
+    (emacsvox-corfu--submit
+     nil (emacsvox-corfu--closed-facts)
+     'state-change 'close-object))
   (emacsvox-corfu--reset-state))
 
-(defun emacsvox--advice-corfu-reset-after (&rest _)
-  "Reset spoken candidate state after resetting Corfu."
-  (when (ems-interactive-p 'corfu-reset)
-    (emacsvox-icon 'close-object))
-  (emacsvox-corfu--reset-state))
+(defun emacsvox--advice-corfu-reset-around (orig-fun &rest args)
+  "Call resetting ORIG-FUN once and present its actual lifecycle result."
+  (let ((interactive-p (ems-interactive-p 'corfu-reset))
+        (unselecting-p
+         (and (boundp 'corfu--index)
+              (boundp 'corfu--preselect)
+              (/= corfu--index corfu--preselect)))
+        result)
+    (setq result (apply orig-fun args))
+    (when interactive-p
+      (if (bound-and-true-p completion-in-region-mode)
+          (if unselecting-p
+              (emacsvox-corfu--speak-candidate 'large-movement t)
+            ;; Input was restored.  Candidate state is stale until Corfu's
+            ;; post-command update, so force that update to present its result.
+            (setq emacsvox-corfu--prev-candidate nil
+                  emacsvox-corfu--prev-index -1
+                  emacsvox-corfu--prev-total 0))
+        (emacsvox-corfu--submit
+         nil (emacsvox-corfu--closed-facts)
+         'state-change 'close-object)
+        (emacsvox-corfu--reset-state)))
+    result))
 
 (defun emacsvox--advice-corfu-insert-separator-after (&rest _)
   "Confirm insertion of a Corfu separator."
   (when (ems-interactive-p 'corfu-insert-separator)
-    (emacsvox-icon 'select-object)
     (emacsvox-aural-submit-actions
      :facts '(:events (completion-separator-inserted))
      :module 'corfu
-     :occasion 'edit)))
+     :occasion 'edit
+     :compatibility-actions
+     (list (emacsvox-aural-compatibility-icon 'select-object)))))
 
-(defun emacsvox--advice-corfu-complete-around (orig-fun &rest args)
-  "Call ORIG-FUN once with ARGS and distinguish expansion from acceptance."
-  (let* ((interactive-p (ems-interactive-p 'corfu-complete))
+(defun emacsvox-corfu--complete-around (target orig-fun args)
+  "Call ORIG-FUN with ARGS for TARGET and present its completion result."
+  (let* ((interactive-p (ems-interactive-p target))
          (selected (emacsvox-corfu--candidate-with-annotation))
-         (selected-facts (emacsvox-corfu--candidate-facts t))
+         (selected-index (and selected corfu--index))
          (markers (and interactive-p (emacsvox-corfu--completion-markers)))
          (before (and markers (emacsvox-corfu--marker-text markers)))
          result)
@@ -319,13 +359,18 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
         (progn
           (setq result (apply orig-fun args))
           (when interactive-p
-            (if selected
+            (let* ((after (emacsvox-corfu--marker-text markers))
+                   (changed-p (and after (not (equal before after))))
+                   (finished-p
+                    (not (bound-and-true-p completion-in-region-mode))))
+              (if selected
                 (emacsvox-corfu--submit
-                 selected selected-facts 'state-change 'complete)
-              (let* ((after (emacsvox-corfu--marker-text markers))
-                     (changed-p (and after (not (equal before after))))
-                     (finished-p (not (bound-and-true-p
-                                       completion-in-region-mode))))
+                 selected
+                 (emacsvox-corfu--candidate-facts
+                  (if finished-p 'accepted 'completion-input-updated)
+                  selected-index)
+                 'state-change
+                 (if finished-p 'complete 'item))
                 (emacsvox-corfu--submit
                  (if finished-p
                      (emacsvox-corfu--voice
@@ -336,12 +381,24 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
                  (list
                   :role 'candidate
                   :events
-                  (list (if finished-p 'accepted 'operation-completed)))
+                  (list
+                   (cond
+                    (finished-p 'accepted)
+                    (changed-p 'completion-input-updated)
+                    (t 'operation-completed))))
                  'state-change
                  (if finished-p 'complete 'item)))))
           (setq emacsvox-corfu--prev-total (emacsvox-corfu--total))
           result)
       (emacsvox-corfu--clear-markers markers))))
+
+(defun emacsvox--advice-corfu-complete-around (orig-fun &rest args)
+  "Call ORIG-FUN once and present direct `corfu-complete' feedback."
+  (emacsvox-corfu--complete-around 'corfu-complete orig-fun args))
+
+(defun emacsvox--advice-corfu-expand-around (orig-fun &rest args)
+  "Call ORIG-FUN once and present direct `corfu-expand' feedback."
+  (emacsvox-corfu--complete-around 'corfu-expand orig-fun args))
 
 ;;;  Navigation advice:
 
@@ -403,10 +460,11 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
   (append
    '((corfu-insert :around emacsvox--advice-corfu-insert-around)
      (corfu-quit :after emacsvox--advice-corfu-quit-after)
-     (corfu-reset :after emacsvox--advice-corfu-reset-after)
+     (corfu-reset :around emacsvox--advice-corfu-reset-around)
      (corfu-insert-separator :after
       emacsvox--advice-corfu-insert-separator-after)
      (corfu-complete :around emacsvox--advice-corfu-complete-around)
+     (corfu-expand :around emacsvox--advice-corfu-expand-around)
      (corfu--update :after emacsvox--advice-corfu--update-after))
    (mapcar
     (lambda (target)

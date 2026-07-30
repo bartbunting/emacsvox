@@ -17,6 +17,11 @@
       (should (fboundp target))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-corfu-face-map-covers-current-interface ()
+  "Every mapped Corfu face exists in the installed package."
+  (dolist (entry emacsvox-corfu--face-map)
+    (should (facep (car entry)))))
+
 (ert-deftest emacsvox-corfu-navigation-is-target-aware ()
   "Only the matching interactive Corfu navigation command speaks."
   (let ((ems--interactive-fn-name 'corfu-next)
@@ -131,7 +136,9 @@
         (should (equal content
                        "Expanded to ~/src/emacs, 2 completions"))
         (should
-         (equal (plist-get facts :events) '(operation-completed)))
+         (equal
+          (plist-get facts :events)
+          '(completion-input-updated)))
         (should
          (equal
           (mapcar
@@ -175,6 +182,225 @@
            #'emacsvox-aural-compatibility-action-value
            actions)
           '(complete)))))))
+
+(ert-deftest emacsvox-corfu-complete-selected-candidate-can-continue ()
+  "TAB insertion is not called accepted while completion remains active."
+  (with-temp-buffer
+    (insert "em")
+    (let ((completion-in-region--data
+           (list (point-min) (point-max) nil nil))
+          (completion-in-region-mode t)
+          (corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index 1)
+          (corfu--total 2)
+          (corfu--metadata nil)
+          (ems--interactive-fn-name 'corfu-complete)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-corfu-complete-around
+         (lambda ()
+           (delete-region (point-min) (point-max))
+           (insert "emacsvox/")
+           (setq corfu--index -1)
+           'continued)))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts)))
+        (should (equal content "emacsvox/, 2 of 2"))
+        (should
+         (equal
+          (plist-get facts :events)
+          '(completion-input-updated)))
+        (should (equal (plist-get facts :states) '(selected)))
+        (should (= (plist-get facts :completion-index) 1))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           (plist-get arguments :compatibility-actions))
+          '(item)))))))
+
+(ert-deftest emacsvox-corfu-complete-selected-candidate-can-finish ()
+  "TAB reports acceptance only when it actually closes completion."
+  (with-temp-buffer
+    (insert "em")
+    (let ((completion-in-region--data
+           (list (point-min) (point-max) nil nil))
+          (completion-in-region-mode t)
+          (corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index 1)
+          (corfu--total 2)
+          (corfu--metadata nil)
+          (ems--interactive-fn-name 'corfu-complete)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-corfu-complete-around
+         (lambda ()
+           (setq corfu--index -1)
+           (setq completion-in-region-mode nil)
+           'finished)))
+      (pcase-let* ((`(,content . ,arguments) captured)
+                   (facts (plist-get arguments :facts)))
+        (should (equal content "emacsvox/, 2 of 2"))
+        (should (equal (plist-get facts :events) '(accepted)))
+        (should (equal (plist-get facts :states) '(selected)))
+        (should (= (plist-get facts :completion-index) 1))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value
+           (plist-get arguments :compatibility-actions))
+          '(complete)))))))
+
+(ert-deftest emacsvox-corfu-expand-is-target-aware ()
+  "Direct `corfu-expand' owns feedback from its nested completion path."
+  (with-temp-buffer
+    (insert "em")
+    (let ((completion-in-region--data
+           (list (point-min) (point-max) nil nil))
+          (completion-in-region-mode t)
+          (corfu--candidates '("emacs/" "emacsvox/"))
+          (corfu--index -1)
+          (corfu--total 2)
+          (corfu--metadata nil)
+          (ems--interactive-fn-name 'corfu-expand)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest arguments) (push arguments submissions))))
+        (emacsvox--advice-corfu-complete-around #'ignore)
+        (should (eq ems--interactive-fn-name 'corfu-expand))
+        (emacsvox--advice-corfu-expand-around
+         (lambda ()
+           (delete-region (point-min) (point-max))
+           (insert "emacs/"))))
+      (should (= (length submissions) 1))
+      (should-not ems--interactive-fn-name))))
+
+(ert-deftest emacsvox-corfu-empty-insert-closes-natively ()
+  "RET without a selected candidate submits one native close action."
+  (with-temp-buffer
+    (let ((corfu--candidates '("emacs/"))
+          (corfu--index -1)
+          (corfu--total 1)
+          (corfu--metadata nil)
+          (ems--interactive-fn-name 'corfu-insert)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest _)
+              (ert-fail "Empty insertion submitted spoken content")))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments) (setq captured arguments))))
+        (emacsvox--advice-corfu-insert-around #'ignore))
+      (should
+       (equal
+        (plist-get (plist-get captured :facts) :events)
+        '(completion-session-closed)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get captured :compatibility-actions))
+        '(close-object))))))
+
+(ert-deftest emacsvox-corfu-quit-closes-natively-and-resets-state ()
+  "Direct quit uses one native action and clears session bookkeeping."
+  (with-temp-buffer
+    (setq-local
+     emacsvox-corfu--prev-candidate "candidate"
+     emacsvox-corfu--prev-index 2
+     emacsvox-corfu--prev-total 3
+     emacsvox-corfu--session-active-p t)
+    (let ((ems--interactive-fn-name 'corfu-quit)
+          captured)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments) (setq captured arguments))))
+        (emacsvox--advice-corfu-quit-after))
+      (should
+       (equal
+        (plist-get (plist-get captured :facts) :events)
+        '(completion-session-closed)))
+      (should-not emacsvox-corfu--prev-candidate)
+      (should (= emacsvox-corfu--prev-index -1))
+      (should (= emacsvox-corfu--prev-total 0))
+      (should-not emacsvox-corfu--session-active-p))))
+
+(ert-deftest emacsvox-corfu-nested-quit-is-quiet ()
+  "A quit nested under another Corfu command only resets state."
+  (with-temp-buffer
+    (let ((ems--interactive-fn-name 'corfu-insert)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest _) (push 'submission events))))
+        (emacsvox--advice-corfu-quit-after))
+      (should-not events)
+      (should (eq ems--interactive-fn-name 'corfu-insert)))))
+
+(ert-deftest emacsvox-corfu-reset-distinguishes-prompt-from-close ()
+  "Reset speaks the prompt while active and cues closure only when finished."
+  (dolist (active-p '(t nil))
+    (with-temp-buffer
+      (let ((completion-in-region-mode t)
+            (corfu--index 1)
+            (corfu--preselect -1)
+            (ems--interactive-fn-name 'corfu-reset)
+            events)
+        (cl-letf
+            (((symbol-function 'emacsvox-corfu--speak-candidate)
+              (lambda (&rest arguments)
+                (push (cons 'candidate arguments) events)))
+             ((symbol-function 'emacsvox-aural-submit-actions)
+              (lambda (&rest arguments)
+                (push (cons 'actions arguments) events))))
+          (emacsvox--advice-corfu-reset-around
+           (lambda ()
+             (setq completion-in-region-mode active-p)
+             'reset)))
+        (if active-p
+            (should
+             (equal events '((candidate large-movement t))))
+          (pcase-let ((`((actions . ,arguments)) events))
+            (should
+             (equal
+              (plist-get (plist-get arguments :facts) :events)
+              '(completion-session-closed)))
+            (should
+             (equal
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions))
+              '(close-object)))))))))
+
+(ert-deftest emacsvox-corfu-reset-defers-stale-input-feedback ()
+  "Input restoration waits for Corfu to recompute candidate state."
+  (with-temp-buffer
+    (setq-local
+     emacsvox-corfu--prev-candidate "stale"
+     emacsvox-corfu--prev-index 0
+     emacsvox-corfu--prev-total 2)
+    (let ((completion-in-region-mode t)
+          (corfu--index -1)
+          (corfu--preselect -1)
+          (ems--interactive-fn-name 'corfu-reset)
+          events)
+      (cl-letf
+          (((symbol-function 'emacsvox-corfu--speak-candidate)
+            (lambda (&rest _) (push 'candidate events)))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest _) (push 'actions events))))
+        (emacsvox--advice-corfu-reset-around #'ignore))
+      (should-not events)
+      (should-not emacsvox-corfu--prev-candidate)
+      (should (= emacsvox-corfu--prev-index -1))
+      (should (= emacsvox-corfu--prev-total 0)))))
 
 (ert-deftest emacsvox-corfu-shell-directory-completion-preserves-input ()
   "Corfu completes a sole Shell directory without selecting a candidate."
@@ -232,33 +458,84 @@
         'completion-separator)))))
 
 (ert-deftest emacsvox-corfu-separator-preserves-cue-then-tone-order ()
-  "Interactive separator insertion retains its cue before semantic tone."
+  "Interactive separator insertion submits cue and tone together."
   (let ((ems--interactive-fn-name 'corfu-insert-separator)
-        events)
+        captured)
     (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (icon) (push (list 'icon icon) events)))
-         ((symbol-function 'emacsvox-aural-submit-actions)
+        (((symbol-function 'emacsvox-aural-submit-actions)
           (lambda (&rest arguments)
-            (push (cons 'submit-actions arguments) events))))
+            (setq captured arguments))))
       (emacsvox--advice-corfu-insert-separator-after))
     (should
      (equal
-      (nreverse events)
-      '((icon select-object)
-        (submit-actions
-         :facts (:events (completion-separator-inserted))
-         :module corfu
-         :occasion edit))))))
+      (plist-get captured :facts)
+      '(:events (completion-separator-inserted))))
+    (should (eq (plist-get captured :module) 'corfu))
+    (should (eq (plist-get captured :occasion) 'edit))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+      (plist-get captured :compatibility-actions))
+      '(select-object)))))
+
+(ert-deftest emacsvox-corfu-separator-presents-one-native-transaction ()
+  "Separator cue and first-class tone share one ordered presentation."
+  (dolist (icons-enabled '(t nil))
+    (let ((ems--interactive-fn-name 'corfu-insert-separator)
+          (emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments nil)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          (emacsvox-aural-presentation-history nil)
+          (emacsvox-aural-presentation-history-limit 20)
+          (emacsvox-aural--presentation-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (emacsvox-aural-plan-presented-hook nil)
+          (emacsvox-use-icons icons-enabled)
+          events
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural--ensure-speaker)
+            (lambda () (push 'ensure events)))
+           ((symbol-function 'emacsvox-queue-resource)
+            (lambda (_) (push 'cue events)))
+           ((symbol-function 'tts--protocol-tone)
+            (lambda (pitch duration &optional force)
+              (push (list 'tone pitch duration force) events)))
+           ((symbol-function 'tts--protocol-queue-text)
+            (lambda (text)
+              (ert-fail
+               (format "Separator queued spoken content: %S" text))))
+           ((symbol-function 'tts--protocol-dispatch)
+            (lambda () (push 'dispatch events))))
+        (setq
+         submission
+         (emacsvox--advice-corfu-insert-separator-after)))
+      (should (emacsvox-aural-submission-p submission))
+      (should
+       (equal
+        (nreverse events)
+        (append
+         '(ensure)
+         (when icons-enabled '(cue))
+         '((tone 500 50 nil) dispatch))))
+      (should (= (length emacsvox-aural-presentation-history) 1))
+      (let ((plan (car (emacsvox-aural-submission-plans submission))))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-kind
+           (emacsvox-aural-concrete-plan-before plan))
+          (append (when icons-enabled '(cue)) '(tone))))))))
 
 (ert-deftest emacsvox-corfu-separator-is-quiet-programmatically ()
   "Programmatic separator insertion produces no feedback."
   (let ((ems--interactive-fn-name nil)
         events)
     (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (&rest _) (push 'icon events)))
-         ((symbol-function 'emacsvox-aural-submit-actions)
+        (((symbol-function 'emacsvox-aural-submit-actions)
           (lambda (&rest _) (push 'submit-actions events))))
       (emacsvox--advice-corfu-insert-separator-after))
     (should-not events)))
