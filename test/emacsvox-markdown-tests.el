@@ -31,11 +31,13 @@
      (emacsvox-aural-render-plan-before plan))))
 
 (ert-deftest emacsvox-markdown-current-advice-is-direct ()
-  "Every available Markdown target uses native advice directly."
+  "Every registered Markdown target exists and uses direct advice."
   (dolist (entry emacsvox-markdown--advice)
     (pcase-let ((`(,target ,where ,function) entry))
-      (when (fboundp target)
-        (should (advice-member-p function target))))))
+      (should (fboundp target))
+      (should (advice-member-p function target))))
+  (dolist (target emacsvox-markdown--removed-targets)
+    (should-not (fboundp target))))
 
 (ert-deftest emacsvox-markdown-speak-line-calls-original-once ()
   "Ordinary buffers delegate to the original speaker exactly once."
@@ -110,7 +112,7 @@
          markdown-reading-mode-state checked unchecked
          markdown-heading-navigated markdown-link-navigated
          markdown-structure-navigated markdown-operation-completed
-         markdown-completion-completed))
+         markdown-completion-completed markdown-code-edit-opened))
     (should (emacsvox-aural-semantic id)))
   (should
    (gethash
@@ -225,7 +227,13 @@
     (emacsvox-markdown-test--compatibility-cues
      '(:role markdown-content :events (markdown-operation-completed))
      'notification)
-    '(task-done))))
+    '(task-done)))
+  (should
+   (equal
+    (emacsvox-markdown-test--compatibility-cues
+     '(:role markdown-code-block :events (markdown-code-edit-opened))
+     'state-change)
+    '(open-object))))
 
 (ert-deftest emacsvox-markdown-reading-mode-carries-task-state ()
   "Clean task speech retains task identity and checked state."
@@ -280,6 +288,26 @@
         (should (eq (plist-get arguments :module) 'markdown))
         (should (eq (plist-get arguments :occasion) 'navigation))))))
 
+(ert-deftest emacsvox-markdown-empty-line-keeps-first-class-condition ()
+  "A blank Markdown line submits its semantic object and line condition once."
+  (with-temp-buffer
+    (let (submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox-markdown--present-current-line
+         '(:role markdown-content :events (focus-entered)
+           :markdown-navigation-kind line)
+         'navigation))
+      (should
+       (equal
+        (plist-get submission :facts)
+        '(:role markdown-content :events (focus-entered)
+          :markdown-navigation-kind line :line-condition empty)))
+      (should (eq (plist-get submission :module) 'markdown))
+      (should (eq (plist-get submission :occasion) 'navigation)))))
+
 (ert-deftest emacsvox-markdown-reading-mode-toggle-is-native ()
   "The user-facing reading-mode state is displayed and submitted once."
   (with-temp-buffer
@@ -304,7 +332,7 @@
     (should (facep (car entry)))))
 
 (ert-deftest emacsvox-markdown-command-classification-is-semantic ()
-  "Navigation, editing, visibility, and completion have distinct events."
+  "Navigation, editing, visibility, and code editing have distinct events."
   (should
    (equal
     (emacsvox-markdown--command-presentation 'markdown-forward-block)
@@ -315,8 +343,73 @@
     '(object-changed . edit)))
   (should
    (equal
-    (emacsvox-markdown--command-presentation 'markdown-hide-subtree)
-    '(visibility-changed . state-change))))
+    (emacsvox-markdown--command-presentation 'markdown-indent-region)
+    '(object-changed . edit)))
+  (should
+   (equal
+    (emacsvox-markdown--command-presentation 'markdown-blockquote-region)
+    '(object-changed . edit)))
+  (should
+   (equal
+    (emacsvox-markdown--command-presentation 'markdown-edit-code-block)
+    '(markdown-code-edit-opened . state-change))))
+
+(ert-deftest emacsvox-markdown-cycle-classification-follows-context ()
+  "Cycling reports table motion, heading visibility, or indentation accurately."
+  (dolist
+      (case
+       '(("| a | b |" markdown-structure-navigated navigation)
+         ("# heading" visibility-changed state-change)
+         ("ordinary text" object-changed edit)))
+    (with-temp-buffer
+      (insert (car case))
+      (should
+       (equal
+        (emacsvox-markdown--command-presentation 'markdown-cycle)
+        (cons (cadr case) (caddr case))))))
+  (with-temp-buffer
+    (insert "ordinary text")
+    (let ((current-prefix-arg '(4)))
+      (should
+       (equal
+        (emacsvox-markdown--command-presentation 'markdown-cycle)
+        '(visibility-changed . state-change))))))
+
+(ert-deftest emacsvox-markdown-operation-feedback-names-the-result ()
+  "Completed operations use a specific native message and lifecycle event."
+  (with-temp-buffer
+    (insert "content")
+    (let ((ems--interactive-fn-name 'markdown-check-refs)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-markdown--submit-message)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox--advice-markdown-check-refs-after))
+      (should
+       (equal
+        submission
+        '("Markdown reference check complete"
+          (:role markdown-content
+           :events (markdown-operation-completed))
+          notification))))))
+
+(ert-deftest emacsvox-markdown-region-edits-are-not-task-completions ()
+  "Indenting or blockquoting a region uses edit presentation."
+  (dolist (target '(markdown-indent-region markdown-blockquote-region))
+    (let ((ems--interactive-fn-name target)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-markdown--present-current-line)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (funcall
+         (intern (format "emacsvox--advice-%s-after" target))))
+      (should
+       (equal
+        (plist-get (car submission) :events)
+        '(object-changed)))
+      (should (eq (cadr submission) 'edit)))))
 
 (provide 'emacsvox-markdown-tests)
 ;;; emacsvox-markdown-tests.el ends here

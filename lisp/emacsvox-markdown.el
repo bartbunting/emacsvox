@@ -258,6 +258,12 @@ as the optional argument to `emacsvox-speak-line'."
         (emacsvox-speak-line-with-speaker
          (lambda (text) (setq content text))
          arg)))
+    (unless (or content line-facts)
+      (when-let* ((condition
+                   (emacsvox-speak--line-condition
+                    (emacsvox-aural-source-substring
+                     source-start source-end))))
+        (setq line-facts (list :line-condition condition))))
     (setq facts (emacsvox-markdown--merge-facts facts line-facts))
     (if content
         (emacsvox-aural-submit
@@ -589,7 +595,7 @@ When reading mode is active, strip markup from speech."
 
 (cl-loop
  for target in
- '(markdown-outdent-or-delete markdown-exdent-or-delete)
+ '(markdown-outdent-or-delete)
  for advice-function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -622,10 +628,22 @@ When reading mode is active, strip markup from speech."
 (defun emacsvox-markdown--command-presentation (command)
   "Return the event and occasion for Markdown COMMAND."
   (cond
-   ((memq command
-          '(markdown-cycle markdown-hide-subtree markdown-hide-body
-            markdown-hide-sublevels))
-    '(visibility-changed . state-change))
+   ((eq command 'markdown-edit-code-block)
+    '(markdown-code-edit-opened . state-change))
+   ((eq command 'markdown-cycle)
+    (cond
+     (current-prefix-arg '(visibility-changed . state-change))
+     ((emacsvox-markdown--at-table-row-p)
+      '(markdown-structure-navigated . navigation))
+     ((emacsvox-markdown--heading-data)
+      '(visibility-changed . state-change))
+     (t '(object-changed . edit))))
+   ((eq command 'markdown-shifttab)
+    (if (emacsvox-markdown--at-table-row-p)
+        '(markdown-structure-navigated . navigation)
+      '(visibility-changed . state-change)))
+   ((memq command '(markdown-indent-region markdown-blockquote-region))
+    '(object-changed . edit))
    ((string-match-p
      "\\`markdown-\\(?:edit\\|enter\\|indent\\|insert\\|move\\|promote\\|demote\\)"
      (symbol-name command))
@@ -639,8 +657,7 @@ When reading mode is active, strip markup from speech."
    markdown-beginning-of-list markdown-beginning-of-text-block
    markdown-edit-code-block markdown-end-of-list
    markdown-end-of-text-block markdown-forward-block markdown-forward-page
-   markdown-insert-inline-link-dwim markdown-insert-kbd
-   markdown-insert-strike-through
+   markdown-insert-kbd markdown-insert-strike-through
    markdown-outline-next-same-level
    markdown-outline-previous-same-level markdown-outline-up
    markdown-reference-goto-link
@@ -648,9 +665,7 @@ When reading mode is active, strip markup from speech."
    markdown-demote-subtree markdown-demote markdown-demote-list-item
    markdown-promote-subtree markdown-move-subtree-up markdown-move-subtree-down
    markdown-backward-paragraph markdown-cycle
-   markdown-enter-key
-   markdown-beginning-of-block markdown-beginning-of-defun
-   markdown-end-of-block markdown-end-of-block-element
+   markdown-enter-key markdown-beginning-of-defun
    markdown-insert-footnote markdown-insert-code
    markdown-insert-bold markdown-insert-blockquote
    markdown-forward-paragraph markdown-footnote-goto-text
@@ -664,16 +679,14 @@ When reading mode is active, strip markup from speech."
    markdown-insert-hr markdown-insert-image
    markdown-insert-italic markdown-insert-link
    markdown-insert-list-item markdown-insert-pre
-   markdown-insert-reference-image markdown-insert-reference-link-dwim
+   markdown-insert-reference-image
    markdown-insert-uri markdown-insert-wiki-link
-   markdown-jump
    markdown-move-down markdown-move-list-item-down
    markdown-move-list-item-up markdown-move-up
    markdown-forward-same-level markdown-backward-same-level
-   markdown-hide-subtree markdown-hide-body markdown-hide-sublevels
-   markdown-indent-line
+   markdown-indent-line markdown-indent-region markdown-blockquote-region
    markdown-promote markdown-promote-list-item
-   markdown-reference-goto-definition)
+   markdown-reference-goto-definition markdown-shifttab)
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
@@ -688,17 +701,26 @@ When reading mode is active, strip markup from speech."
           occasion)))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
 
+(defun emacsvox-markdown--operation-message (target)
+  "Return the completion message for Markdown operation TARGET."
+  (pcase target
+    ('markdown-check-refs "Markdown reference check complete")
+    ('markdown-preview "Markdown preview opened")
+    ('markdown-export-and-preview "Markdown export and preview complete")
+    (_ "Markdown export complete")))
+
 (cl-loop
  for target in
  '(markdown-check-refs markdown-export markdown-export-and-preview
-   markdown-indent-region markdown-blockquote-region)
+   markdown-preview)
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
  `(defun ,advice-function (&rest _)
      "Present a completed Markdown operation."
      (when (ems-interactive-p ',target)
-       (emacsvox-markdown--present-current-line
+       (emacsvox-markdown--submit-message
+        (emacsvox-markdown--operation-message ',target)
         (emacsvox-markdown-facts-at-point
          'markdown-operation-completed)
         'notification))))
@@ -719,6 +741,19 @@ When reading mode is active, strip markup from speech."
          'markdown-completion-completed)
         'edit))))
  (push (list target :after advice-function) emacsvox-markdown--advice))
+
+(defconst emacsvox-markdown--removed-targets
+  '(markdown-beginning-of-block
+    markdown-end-of-block
+    markdown-end-of-block-element
+    markdown-exdent-or-delete
+    markdown-hide-body
+    markdown-hide-sublevels
+    markdown-hide-subtree
+    markdown-insert-inline-link-dwim
+    markdown-insert-reference-link-dwim
+    markdown-jump)
+  "Obsolete Markdown Mode commands no longer advised by Emacsvox.")
 
 (defun emacsvox-markdown--install-advice ()
   "Install advice for commands present in the current Markdown Mode."

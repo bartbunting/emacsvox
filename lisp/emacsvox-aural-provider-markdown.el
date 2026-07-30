@@ -151,6 +151,12 @@
      :summary "A Markdown completion command updated document content"
      :owner markdown
      :occasions (edit)
+     :phases (before content after))
+    (markdown-code-edit-opened
+     :kind event
+     :summary "A dedicated editor for a Markdown code block was opened"
+     :owner markdown
+     :occasions (state-change)
      :phases (before content after)))
   "Semantic definitions owned by the Markdown integration.")
 
@@ -234,7 +240,15 @@
        :occasion edit)
       :render
       (:before
-       ((:id markdown-completion-cue :kind cue :cue complete))))))
+       ((:id markdown-completion-cue :kind cue :cue complete))))
+     (:id markdown-code-edit-opened-compatibility
+      :match
+      (:module markdown :event markdown-code-edit-opened
+       :occasion state-change)
+      :render
+      (:before
+       ((:id markdown-code-edit-opened-cue
+         :kind cue :cue open-object))))))
   "Default Markdown presentation that preserves established feedback.")
 
 (defconst emacsvox-markdown-aural-feature-fragments
