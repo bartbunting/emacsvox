@@ -1618,39 +1618,69 @@ the selected message changes; otherwise speak the visible window."
    tag-changes))
 
 (defun emacsvox-notmuch--tag-operation-feedback
-    (tag-changes status-icons speaker)
-  "Confirm TAG-CHANGES and call SPEAKER for the updated item.
-Statuses represented by STATUS-ICONS remain nonverbal."
+    (tag-changes status-icons item &optional show-message-p)
+  "Submit TAG-CHANGES and updated Notmuch ITEM as one transaction.
+
+STATUS-ICONS keeps represented statuses nonverbal.  When SHOW-MESSAGE-P is
+non-nil, ITEM is a Show message with attachment state; otherwise it is a
+search result."
   (when tag-changes
-    (emacsvox-notmuch--call-with-aural-presentation
-     '(:role message :mail-action-kind tag :events (message-marked))
-     'state-change
-     (lambda ()
-       (let ((ordinary
-              (emacsvox-notmuch--ordinary-tag-changes
-               tag-changes status-icons)))
-         (when ordinary
-           (emacsvox-icon 'task-done)
-           (tts-speak (emacsvox-notmuch--tag-change-summary ordinary)))
-         (when
-             (emacsvox-notmuch--removed-status-p
-              tag-changes status-icons)
-           (emacsvox-icon 'deselect-object))
-         (funcall speaker))))))
+    (let* ((ordinary
+            (emacsvox-notmuch--ordinary-tag-changes
+             tag-changes status-icons))
+           (change-summary
+            (and ordinary
+                 (emacsvox-notmuch--tag-change-summary ordinary)))
+           (item-summary
+            (and item
+                 (if show-message-p
+                     (emacsvox-notmuch-format-show-message item)
+                   (emacsvox-notmuch-format-search-result item))))
+           (content
+            (string-join
+             (delq nil (list change-summary item-summary))
+             "\n"))
+           (facts
+            (append
+             (if item
+                 (emacsvox-notmuch-message-facts
+                  item 'message-marked)
+               '(:role message :events (message-marked)))
+             '(:mail-action-kind tag)))
+           (actions
+            (append
+             (when ordinary
+               (list
+                (emacsvox-aural-compatibility-icon 'task-done)))
+             (when
+                 (emacsvox-notmuch--removed-status-p
+                  tag-changes status-icons)
+               (list
+                (emacsvox-aural-compatibility-icon
+                 'deselect-object)))
+             (and
+              item
+              (emacsvox-notmuch--status-compatibility-actions
+               item status-icons 'state-change show-message-p)))))
+      (emacsvox-notmuch--submit-content
+       content facts 'state-change actions))))
 
 (defun emacsvox-notmuch--tag-feedback (tag-changes)
   "Confirm TAG-CHANGES and speak the updated Notmuch result."
   (emacsvox-notmuch--tag-operation-feedback
    tag-changes
    emacsvox-notmuch-search-status-icons
-   #'emacsvox-notmuch-speak-search-result))
+   (notmuch-search-get-result)))
 
 (defun emacsvox-notmuch--show-tag-feedback (tag-changes)
   "Confirm TAG-CHANGES and speak the updated Notmuch message."
   (emacsvox-notmuch--tag-operation-feedback
    tag-changes
    emacsvox-notmuch-show-status-icons
-   #'emacsvox-notmuch-speak-show-message))
+   (and
+    (eq major-mode 'notmuch-show-mode)
+    (notmuch-show-get-message-properties))
+   t))
 
 (defun emacsvox-notmuch--register-tag-group (targets feedback)
   "Register tag-operation FEEDBACK for TARGETS."

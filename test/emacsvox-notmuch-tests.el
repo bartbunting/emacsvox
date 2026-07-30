@@ -1697,61 +1697,90 @@
 
 (ert-deftest emacsvox-notmuch-tag-feedback-runs-once ()
   "An interactive tag wrapper confirms once and speaks the updated row."
-  (let ((ems--interactive-fn-name 'notmuch-search-add-tag)
+  (let* ((result (copy-tree emacsvox-notmuch-test--search-result))
+         (ems--interactive-fn-name 'notmuch-search-add-tag)
         events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'emacsvox-notmuch-speak-search-result)
-               (lambda (&optional _result) (push '(result) events))))
+    (setf (plist-get result :tags) '("inbox" "work")
+          (plist-get result :orig-tags) '("inbox" "work"))
+    (cl-letf
+        (((symbol-function 'notmuch-search-get-result)
+          (lambda (&optional _) result))
+         ((symbol-function 'emacsvox-aural-submit)
+          (emacsvox-test--notmuch-submission-recorder
+           (lambda (event) (push event events)))))
       ;; `notmuch-search-add-tag' delegates to this command internally.
       (emacsvox--advice-notmuch-search-tag-after
        '("+work" "-inbox"))
       (emacsvox--advice-notmuch-search-add-tag-after
        '("+work" "-inbox")))
+    (setq events (nreverse events))
+    (should (equal (car events) '(icon task-done)))
+    (should (= (length events) 2))
     (should
-     (equal
-      (nreverse events)
-      '((icon task-done)
-        (speak "Added work; Removed inbox")
-        (result))))))
+     (string-prefix-p
+      "Added work; Removed inbox\nAlice Smith"
+      (cadr (cadr events))))))
 
 (ert-deftest emacsvox-notmuch-show-tag-feedback-runs-once ()
   "An interactive Show tag wrapper confirms once and speaks the message."
-  (let ((ems--interactive-fn-name 'notmuch-show-add-tag)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'emacsvox-notmuch-speak-show-message)
-               (lambda (&optional _message) (push '(message) events))))
+  (let* ((message (copy-tree emacsvox-notmuch-test--show-message))
+         (major-mode 'notmuch-show-mode)
+         (ems--interactive-fn-name 'notmuch-show-add-tag)
+         events)
+    (setf (plist-get message :tags) '("inbox" "work")
+          (plist-get message :orig-tags) '("inbox" "work"))
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () message))
+         ((symbol-function 'emacsvox-aural-submit)
+          (emacsvox-test--notmuch-submission-recorder
+           (lambda (event) (push event events)))))
       (emacsvox--advice-notmuch-show-tag-after '("+work"))
       (emacsvox--advice-notmuch-show-add-tag-after '("+work")))
+    (setq events (nreverse events))
+    (should (equal (car events) '(icon task-done)))
+    (should (= (length events) 3))
+    (should (equal (cadr events) '(icon mail-has-attachment)))
     (should
-     (equal
-      (nreverse events)
-      '((icon task-done)
-        (speak "Added work")
-        (message))))))
+     (string-prefix-p
+      "Added work\nAlice Smith"
+      (cadr (nth 2 events))))))
 
 (ert-deftest emacsvox-notmuch-status-tag-changes-remain-nonverbal ()
   "Status changes use cues without speaking status names."
-  (let (events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events))))
+  (let ((message (copy-tree emacsvox-notmuch-test--show-message))
+        captured)
+    (setf (plist-get message :tags) '("inbox" "flagged")
+          (plist-get message :orig-tags) '("inbox" "flagged"))
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq captured (cons content arguments)))))
       (emacsvox-notmuch--tag-operation-feedback
        '("+flagged" "-unread")
        emacsvox-notmuch-show-status-icons
-       (lambda () (push '(message) events))))
-    (should
+       message t))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (facts (plist-get arguments :facts))
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should-not (string-match-p "flagged\\|unread" content))
+      (should (string-match-p "2 attachments" content))
+      (should
+       (equal
+        (plist-get facts :states)
+        '(flagged has-attachments)))
+      (should
      (equal
-      (nreverse events)
-      '((icon deselect-object)
-        (message))))))
+        (mapcar
+         (lambda (action)
+           (list
+            (emacsvox-aural-compatibility-action-value action)
+            (emacsvox-aural-compatibility-action-phase action)))
+         actions)
+        '((deselect-object before)
+          (mark-object before)
+          (mail-has-attachment after)))))))
 
 (ert-deftest emacsvox-notmuch-tag-menu-reports-structured-difference ()
   "The common tag menu reports changes made by its nested tag command."
