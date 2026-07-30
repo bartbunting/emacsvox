@@ -893,6 +893,9 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
    org-agenda-next-date-line org-agenda-previous-date-line
    org-agenda-next-line org-agenda-previous-line
    org-agenda-next-item org-agenda-previous-item
+   org-agenda-end-of-line org-agenda-recenter
+   org-agenda-show-and-scroll-up org-agenda-show-scroll-down
+   org-agenda-goto-mouse org-agenda-show-mouse
    org-agenda-goto-today
    )
  for function = (intern (format "emacsvox--advice-%s-after" target))
@@ -912,7 +915,7 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
 
 (cl-loop
  for target in
- '(org-agenda-quit org-agenda-exit)
+ '(org-agenda-quit org-agenda-exit org-agenda-Quit)
  for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
@@ -931,7 +934,10 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
 (cl-loop
  for target in
  '(org-agenda-goto org-agenda-show org-agenda-switch-to
-                   org-agenda-open-link)
+   org-agenda-open-link org-agenda-clock-goto
+   org-agenda-tree-to-indirect-buffer org-agenda-goto-calendar
+   org-agenda-holidays org-agenda-phases-of-moon
+   org-agenda-sunrise-sunset)
  for function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
@@ -1011,7 +1017,12 @@ FALLBACK is used when neither provides useful content."
    (org-agenda-bulk-unmark-all agenda-mark-changed mark-object)
    (org-agenda-bulk-toggle agenda-mark-changed mark-object)
    (org-agenda-bulk-toggle-all agenda-mark-changed mark-object)
-   (org-agenda-bulk-action agenda-bulk-action button))
+   (org-agenda-bulk-action agenda-bulk-action button)
+   (org-agenda-ctrl-c-ctrl-c agenda-context-action button)
+   (org-agenda-add-note note-changed button)
+   (org-agenda-diary-entry note-changed button)
+   (org-agenda-columns column-view-changed open-object)
+   (org-agenda-undo agenda-undo button))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -1104,7 +1115,22 @@ FALLBACK is used when neither provides useful content."
    (org-agenda-redo agenda-refreshed select-object
                     "Agenda refreshed")
    (org-agenda-redo-all agenda-refreshed select-object
-                        "All agenda views refreshed"))
+                        "All agenda views refreshed")
+   (org-agenda-set-restriction-lock-from-agenda
+    agenda-restriction-changed button "Agenda restriction set")
+   (org-agenda-remove-restriction-lock
+    agenda-restriction-changed button "Agenda restriction removed")
+   (org-agenda-convert-date agenda-inspected button
+                            "Agenda date converted")
+   (org-agenda-show-tags agenda-inspected button
+                         "Agenda tags displayed")
+   (org-agenda-show-the-flagging-note agenda-inspected button
+                                      "Agenda flagging note displayed")
+   (org-agenda-write agenda-saved save-object "Agenda written")
+   (org-save-all-org-buffers agenda-saved save-object
+                             "Org buffers saved")
+   (org-mobile-pull sync-completed task-done "Org Mobile pull complete")
+   (org-mobile-push sync-completed task-done "Org Mobile push complete"))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -1840,7 +1866,16 @@ execution."
    (org-comment-dwim option-toggled button)
    (org-kill-note-or-show-branches context-action button)
    (org-return-and-maybe-indent line-inserted select-object)
-   (org-open-line line-inserted select-object))
+   (org-open-line line-inserted select-object)
+   (org-add-note note-changed button)
+   (org-paste-special special-edit yank-object)
+   (org-increase-number-at-point special-edit button)
+   (org-decrease-number-at-point special-edit button)
+   (org-footnote-action special-edit button)
+   (org-latex-preview preview-changed button)
+   (org-narrow-to-block narrowed button)
+   (org-narrow-to-element narrowed button)
+   (org-ctrl-c-tab visibility-changed button))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -1855,6 +1890,60 @@ execution."
              (emacsvox-org--present-document-state ',action ',icon)))))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target role action icon fallback) in
+ '((org-agenda-file-to-front org-content agenda-file-changed button
+                             "Agenda file moved to the front")
+   (org-agenda-set-restriction-lock org-content
+                                    agenda-restriction-changed button
+                                    "Agenda restriction set")
+   (org-columns org-content column-view-changed open-object
+                "Org column view changed")
+   (org-copy-visible org-content special-edit mark-object
+                     "Visible Org text copied")
+   (org-evaluate-time-range org-content time-range-evaluated button
+                            "Org time range evaluated")
+   (org-remove-file org-content agenda-file-changed delete-object
+                    "File removed from the agenda")
+   (org-babel-lob-ingest org-source-block source-block-changed save-object
+                         "Babel library ingested"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive miscellaneous Org command with owned feedback."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-message-result
+              ',role 'state-changed ',action prior-message ,fallback
+              'state-change ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(defun emacsvox--advice-org-cycle-agenda-files-around
+    (original &rest arguments)
+  "Cycle Org agenda files and present the selected buffer once."
+  (if (not (eq ems--interactive-fn-name 'org-cycle-agenda-files))
+      (apply original arguments)
+    (let ((emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (emacsvox-org--submit-text
+         (emacsvox-org--buffer-summary)
+         (emacsvox-org--feedback-facts
+          'org-content 'focus-entered 'agenda-file-navigation)
+         'navigation 'large-movement)))))
+
+(advice-add
+ 'org-cycle-agenda-files :around
+ #'emacsvox--advice-org-cycle-agenda-files-around
+ '((name . emacsvox)))
 
 (defun emacsvox--advice-org-ctrl-c-ctrl-c-around
     (original &rest arguments)
@@ -2039,7 +2128,8 @@ execution."
    (org-table-recalculate table-recalculated button)
    (org-table-sort-lines table-sorted button)
    (org-table-rotate-recalc-marks table-changed button)
-   (org-table-create-or-convert-from-region table-created open-object))
+   (org-table-create-or-convert-from-region table-created open-object)
+   (org-table-create-with-table.el table-created open-object))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -2062,7 +2152,8 @@ execution."
    (org-table-toggle-coordinate-overlays
     "Table coordinate display changed")
    (org-table-toggle-formula-debugger
-    "Table formula debugger changed"))
+    "Table formula debugger changed")
+   (orgtbl-ascii-plot "ASCII table plot created"))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval

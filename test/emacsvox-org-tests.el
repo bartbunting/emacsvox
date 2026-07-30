@@ -98,10 +98,16 @@
     org-eval-in-calendar
     org-agenda-next-date-line org-agenda-previous-date-line
     org-agenda-next-line org-agenda-previous-line
-    org-agenda-next-item org-agenda-previous-item org-agenda-goto-today
-    org-agenda-quit org-agenda-exit
+    org-agenda-next-item org-agenda-previous-item
+    org-agenda-end-of-line org-agenda-recenter
+    org-agenda-show-and-scroll-up org-agenda-show-scroll-down
+    org-agenda-goto-mouse org-agenda-show-mouse org-agenda-goto-today
+    org-agenda-quit org-agenda-exit org-agenda-Quit
     org-agenda-goto org-agenda-show org-agenda-switch-to
-    org-agenda-open-link org-agenda
+    org-agenda-open-link org-agenda-clock-goto
+    org-agenda-tree-to-indirect-buffer org-agenda-goto-calendar
+    org-agenda-holidays org-agenda-phases-of-moon
+    org-agenda-sunrise-sunset org-agenda
     orgtbl-mode org-return
     org-table-next-field org-table-previous-field
     org-table-next-row org-table-previous-row)
@@ -149,7 +155,11 @@
     org-toggle-tags-groups org-dblock-update
     org-dynamic-block-insert-dblock org-insert-drawer
     org-emphasize org-comment-dwim org-kill-note-or-show-branches
-    org-return-and-maybe-indent org-open-line org-ctrl-c-ctrl-c)
+    org-return-and-maybe-indent org-open-line org-add-note
+    org-paste-special org-increase-number-at-point
+    org-decrease-number-at-point org-footnote-action
+    org-latex-preview org-narrow-to-block org-narrow-to-element
+    org-ctrl-c-tab org-ctrl-c-ctrl-c)
   "Quiet native around-advice targets for Org document state changes.")
 
 (defconst emacsvox-test--org-agenda-line-around-targets
@@ -164,7 +174,9 @@
     org-agenda-bulk-mark org-agenda-bulk-mark-all
     org-agenda-bulk-mark-regexp org-agenda-bulk-unmark
     org-agenda-bulk-unmark-all org-agenda-bulk-toggle
-    org-agenda-bulk-toggle-all org-agenda-bulk-action)
+    org-agenda-bulk-toggle-all org-agenda-bulk-action
+    org-agenda-ctrl-c-ctrl-c org-agenda-add-note
+    org-agenda-diary-entry org-agenda-columns org-agenda-undo)
   "Agenda commands whose native result is the resulting entry line.")
 
 (defconst emacsvox-test--org-agenda-message-around-targets
@@ -185,7 +197,12 @@
     org-agenda-toggle-time-grid org-agenda-dim-blocked-tasks
     org-agenda-entry-text-mode org-agenda-follow-mode
     org-agenda-log-mode org-agenda-clockreport-mode
-    org-agenda-append-agenda org-agenda-redo org-agenda-redo-all)
+    org-agenda-append-agenda org-agenda-redo org-agenda-redo-all
+    org-agenda-set-restriction-lock-from-agenda
+    org-agenda-remove-restriction-lock org-agenda-convert-date
+    org-agenda-show-tags org-agenda-show-the-flagging-note
+    org-agenda-write org-save-all-org-buffers
+    org-mobile-pull org-mobile-push)
   "Agenda commands whose native result prefers Org's final message.")
 
 (defconst emacsvox-test--org-table-change-around-targets
@@ -197,13 +214,14 @@
     org-table-insert-hline org-table-copy-down org-table-blank-field
     org-table-eval-formula org-table-recalculate org-table-sort-lines
     org-table-rotate-recalc-marks
-    org-table-create-or-convert-from-region)
+    org-table-create-or-convert-from-region
+    org-table-create-with-table.el)
   "Org table commands whose native result is the resulting cell.")
 
 (defconst emacsvox-test--org-table-message-around-targets
   '(org-table-sum org-table-field-info
     org-table-toggle-coordinate-overlays
-    org-table-toggle-formula-debugger)
+    org-table-toggle-formula-debugger orgtbl-ascii-plot)
   "Org table commands whose native result prefers Org's message.")
 
 (defconst emacsvox-test--org-table-editor-around-targets
@@ -254,6 +272,12 @@
     org-cycle-force-archived org-occur org-sparse-tree
     org-match-sparse-tree)
   "Org visibility and outline-search commands with native feedback.")
+
+(defconst emacsvox-test--org-misc-around-targets
+  '(org-agenda-file-to-front org-agenda-set-restriction-lock
+    org-columns org-copy-visible org-evaluate-time-range
+    org-remove-file org-babel-lob-ingest org-cycle-agenda-files)
+  "Miscellaneous Org commands with message or buffer result ownership.")
 
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
@@ -1698,6 +1722,38 @@
            (intern (format "emacsvox--advice-%s-around" target))))
       (should (fboundp function))
       (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-misc-advice-is-directly-registered ()
+  "Miscellaneous Org result commands have named quiet adapters."
+  (dolist (target emacsvox-test--org-misc-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-agenda-file-cycle-presents-buffer ()
+  "Cycling agenda files presents the destination buffer once."
+  (with-temp-buffer
+    (rename-buffer "Org project")
+    (let ((ems--interactive-fn-name 'org-cycle-agenda-files)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-cycle-agenda-files-around
+         (lambda (&rest _))))
+      (should (= (length submissions) 1))
+      (should
+       (string-match-p "Org project"
+                       (substring-no-properties (caar submissions))))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-content :events (focus-entered)
+          :org-action agenda-file-navigation)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-document-state-owns-message-and-result ()
   "An interactive metadata command is quiet and submits its changed heading."

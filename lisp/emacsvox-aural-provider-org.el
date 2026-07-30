@@ -112,6 +112,12 @@
                       link-opened link-inserted link-stored link-previewed
                       refile-completed subtree-archived
                       visibility-changed sparse-tree-opened
+                      note-changed agenda-file-changed
+                      agenda-file-navigation
+                      agenda-restriction-changed column-view-changed
+                      special-edit time-range-evaluated preview-changed
+                      narrowed agenda-context-action agenda-undo
+                      agenda-saved sync-completed agenda-inspected
                       export-completed publish-completed))
     (org-table-row
      :kind attribute
