@@ -46,31 +46,52 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
+(require 'emacsvox-aural-provider-workflows)
 
 ;;;  Map Faces->Voices
 
-(voice-setup-add-map
- '(
-   (pydoc-source-file-link-face voice-monotone-extra)
-   (pydoc-package-link-face  voice-animate)
-   (pydoc-class-name-link-face voice-bolden)
-   (pydoc-superclass-name-link-face voice-bolden-extra)
-   (pydoc-callable-name-face voice-animate)
-   (pydoc-callable-param-face voice-annotate)
-   (pydoc-envvars-face voice-monotone-extra)
-   (pydoc-data-face voice-lighten-extra)
-   (pydoc-string-face voice-lighten)
-   (pydoc-button-face voice-bolden)
-   (pydoc-sphinx-directive-face voice-monotone-extra)
-   (pydoc-sphinx-param-name-face voice-monotone-extra)
-   (pydoc-sphinx-param-type-face voice-monotone-extra)))
+(defconst emacsvox-pydoc--face-voice-map
+  '((pydoc-example-leader-face voice-annotate))
+  "Voice personalities for the current Pydoc interface faces.")
+
+(voice-setup-add-map emacsvox-pydoc--face-voice-map)
+
+(defun emacsvox-pydoc-enable-aural-context ()
+  "Identify the current Pydoc buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'python))
+
+(add-hook 'pydoc-mode-hook #'emacsvox-pydoc-enable-aural-context)
+
+(defun emacsvox-pydoc--present-buffer ()
+  "Present the current Pydoc buffer as one native transaction."
+  (let ((content
+         (emacsvox-aural-source-substring (point-min) (point-max)))
+        (facts
+         '(:role code-construct
+           :events (focus-entered)
+           :syntax-role documentation)))
+    (if (> (length content) 0)
+        (emacsvox-aural-submit
+         content
+         :facts facts
+         :module 'python
+         :occasion 'navigation
+         :compatibility-actions
+         (list (emacsvox-aural-compatibility-icon 'help)))
+      (emacsvox-aural-submit-actions
+       :facts facts
+       :module 'python
+       :occasion 'navigation
+       :compatibility-actions
+       (list (emacsvox-aural-compatibility-icon 'help))))))
 
 ;;;  Advice Interactive Commands:
 
 (defun emacsvox--advice-pydoc-after (&rest _)
-  "speak."
+  "Present documentation displayed by an interactive Pydoc command."
   (when (ems-interactive-p 'pydoc)
-    (emacsvox-icon 'help) (emacsvox-speak-buffer)))
+    (emacsvox-pydoc--present-buffer)))
 
 (defun emacsvox-pydoc--install-advice ()
   "Install advice after the optional Pydoc package loads."
