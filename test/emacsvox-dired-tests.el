@@ -15,6 +15,7 @@
   '(dired ido-dired dired-jump dired-other-window dired-other-frame
     dired-next-subdir dired-prev-subdir
     dired-tree-up dired-tree-down dired-up-directory
+    dired-goto-file dired-goto-subdir
     dired-next-marked-file dired-prev-marked-file
     dired-next-dirline dired-prev-dirline
     dired-next-line dired-previous-line
@@ -33,6 +34,11 @@
     (dired-unmark :around emacsvox--advice-dired-unmark-around)
     (dired-number-of-marked-files
      :around emacsvox--advice-dired-number-of-marked-files-around)
+    (dired-hide-details-mode
+     :around emacsvox--advice-dired-hide-details-mode-around)
+    (dired-hide-subdir :around emacsvox--advice-dired-hide-subdir-around)
+    (dired-hide-all :around emacsvox--advice-dired-hide-all-around)
+    (revert-buffer :around emacsvox--advice-dired-revert-buffer-around)
     (quit-window :around emacsvox--advice-dired-quit-window-around))
   "Remaining hand-written Dired advice migrated to final native form.")
 
@@ -53,7 +59,8 @@
     dired-mark-subdir-files dired-mark-symlinks
     dired-flag-auto-save-files dired-flag-backup-files
     dired-flag-files-regexp dired-flag-garbage-files dired-clean-directory
-    dired-copy-filename-as-kill dired-do-kill-lines dired-undo)
+    dired-copy-filename-as-kill dired-do-kill-lines dired-do-redisplay
+    dired-undo)
   "Dired filesystem operations with semantic result advice.")
 
 (defconst emacsvox-test--dired-open-advice-targets
@@ -151,6 +158,98 @@
         (:role filesystem-listing
          :events (filesystem-listing-opened))
         state-change open-object)))))
+
+(ert-deftest emacsvox-dired-listing-visibility-is-semantic ()
+  "A listing visibility change carries aspect, state, text, and cue."
+  (let (submission)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired--submit-text)
+          (lambda (&rest arguments)
+            (setq submission arguments))))
+      (emacsvox-dired--present-listing-visibility
+       'details 'folded "File details hidden"))
+    (should
+     (equal
+      submission
+      '("File details hidden"
+        (:role filesystem-listing
+         :events (visibility-changed)
+         :visibility folded
+         :filesystem-listing-aspect details)
+        state-change close-object)))))
+
+(ert-deftest emacsvox-dired-hide-details-has-real-feedback ()
+  "A real detail toggle changes Dired state and submits one transaction."
+  (let* ((directory (make-temp-file "emacsvox-dired-details-" t))
+         buffer
+         submissions)
+    (unwind-protect
+        (progn
+          (setq buffer (dired-noselect directory))
+          (with-current-buffer buffer
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (content &rest arguments)
+                    (push (cons content arguments) submissions))))
+              (funcall-interactively #'dired-hide-details-mode 1))
+            (should dired-hide-details-mode))
+          (should (= (length submissions) 1))
+          (should
+           (equal
+            (substring-no-properties (caar submissions))
+            "File details hidden"))
+          (should
+           (equal
+            (plist-get (cdar submissions) :facts)
+            '(:role filesystem-listing
+              :events (visibility-changed)
+              :visibility folded
+              :filesystem-listing-aspect details))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-revert-is-mode-scoped-and-native ()
+  "Only an interactive Dired revert submits a refreshed listing summary."
+  (let ((ems--interactive-fn-name 'revert-buffer)
+        (calls 0)
+        submission)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-label-fields) #'ignore)
+         ((symbol-function 'emacsvox-dired--buffer-summary)
+          (lambda () "tmp, dired by name"))
+         ((symbol-function 'emacsvox-dired--submit-text)
+          (lambda (&rest arguments)
+            (setq submission arguments))))
+      (with-temp-buffer
+        (setq major-mode 'dired-mode)
+        (should
+         (eq
+          'refreshed
+          (emacsvox--advice-dired-revert-buffer-around
+           (lambda ()
+             (should-not emacsvox-speak-messages)
+             (setq calls (1+ calls))
+             'refreshed)))))
+      (should
+       (equal
+        submission
+        '("tmp, dired by name"
+          (:role filesystem-operation
+           :filesystem-operation-kind refresh
+           :events (operation-completed))
+          state-change task-done)))
+      (setq submission nil)
+      (with-temp-buffer
+        (should
+         (eq
+          'ordinary
+          (emacsvox--advice-dired-revert-buffer-around
+           (lambda ()
+             (setq calls (1+ calls))
+             'ordinary))))))
+    (should (= calls 2))
+    (should-not submission)))
 
 (ert-deftest emacsvox-dired-training-follows-earcon-and-filename ()
   "Training identifies the movement cue after normal Dired feedback."
@@ -411,7 +510,9 @@
 (ert-deftest emacsvox-dired-operation-semantics-are-registered ()
   "The Dired operation role and discriminator are public semantics."
   (should (emacsvox-aural-semantic 'filesystem-operation))
-  (should (emacsvox-aural-semantic 'filesystem-operation-kind)))
+  (should (emacsvox-aural-semantic 'filesystem-operation-kind))
+  (should (emacsvox-aural-semantic 'filesystem-listing-opened))
+  (should (emacsvox-aural-semantic 'filesystem-listing-aspect)))
 
 (ert-deftest emacsvox-dired-sort-calls-original-once ()
   "Interactive sorting runs once with messages silenced before feedback."

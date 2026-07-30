@@ -492,6 +492,7 @@ Each specification has the form (TARGET OPERATION ICON FALLBACK)."
   (dired-copy-filename-as-kill copy-filenames mark-object
                                "File names copied")
   (dired-do-kill-lines hide-entries close-object "Entries hidden")
+  (dired-do-redisplay redisplay task-done "Entries redisplayed")
   (dired-undo undo task-done "Dired change undone"))
 
 (defun emacsvox-dired--marked-files-summary ()
@@ -657,9 +658,112 @@ SOURCE-FACTS preserve the selected Dired entry."
   dired-display-file
   dired-view-file)
 
+(defun emacsvox-dired--present-listing-visibility
+    (aspect visibility text)
+  "Present TEXT after listing ASPECT changes to VISIBILITY."
+  (emacsvox-dired--submit-text
+   text
+   (list
+    :role 'filesystem-listing
+    :events '(visibility-changed)
+    :visibility visibility
+    :filesystem-listing-aspect aspect)
+   'state-change
+   (if (eq visibility 'folded) 'close-object 'open-object)))
+
+(defun emacsvox--advice-dired-hide-details-mode-around
+    (orig-fun &rest arguments)
+  "Present interactive changes to Dired detail visibility."
+  (if (ems-interactive-p 'dired-hide-details-mode)
+      (let ((result (apply orig-fun arguments)))
+        (emacsvox-dired--present-listing-visibility
+         'details
+         (if dired-hide-details-mode 'folded 'expanded)
+         (if dired-hide-details-mode
+             "File details hidden"
+           "File details shown"))
+        result)
+    (apply orig-fun arguments)))
+
+(advice-add
+ 'dired-hide-details-mode :around
+ #'emacsvox--advice-dired-hide-details-mode-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-dired-hide-subdir-around
+    (orig-fun &rest arguments)
+  "Present interactive changes to one Dired subdirectory's visibility."
+  (if (ems-interactive-p 'dired-hide-subdir)
+      (let* ((directory (dired-current-directory))
+             (hidden-before (dired-subdir-hidden-p directory))
+             (context
+              (emacsvox-aural-capture-context 'dired 'state-change))
+             (result (apply orig-fun arguments))
+             (visibility (if hidden-before 'expanded 'folded)))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--present-listing-visibility
+           'subdirectory visibility
+           (format
+            "Subdirectory %s %s"
+            (file-name-nondirectory (directory-file-name directory))
+            (if (eq visibility 'folded) "hidden" "shown"))))
+        result)
+    (apply orig-fun arguments)))
+
+(advice-add
+ 'dired-hide-subdir :around
+ #'emacsvox--advice-dired-hide-subdir-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-dired-hide-all-around
+    (orig-fun &rest arguments)
+  "Present interactive changes to all Dired subdirectory visibility."
+  (if (ems-interactive-p 'dired-hide-all)
+      (let* ((hidden-before
+              (text-property-any
+               (point-min) (point-max) 'invisible 'dired))
+             (result (apply orig-fun arguments))
+             (visibility (if hidden-before 'expanded 'folded)))
+        (emacsvox-dired--present-listing-visibility
+         'all-subdirectories visibility
+         (if (eq visibility 'folded)
+             "All subdirectories hidden"
+           "All subdirectories shown"))
+        result)
+    (apply orig-fun arguments)))
+
+(advice-add
+ 'dired-hide-all :around
+ #'emacsvox--advice-dired-hide-all-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-dired-revert-buffer-around
+    (orig-fun &rest arguments)
+  "Present an interactive Dired listing refresh."
+  (if
+      (and
+       (derived-mode-p 'dired-mode)
+       (ems-interactive-p 'revert-buffer))
+      (let ((result
+             (let ((emacsvox-speak-messages nil))
+               (apply orig-fun arguments))))
+        (emacsvox-dired-label-fields)
+        (emacsvox-dired--submit-text
+         (emacsvox-dired--buffer-summary)
+         (emacsvox-dired-operation-facts 'refresh)
+         'state-change 'task-done)
+        result)
+    (apply orig-fun arguments)))
+
+(advice-add
+ 'revert-buffer :around
+ #'emacsvox--advice-dired-revert-buffer-around
+ '((name . emacsvox-dired)))
+
 (emacsvox-dired--define-after-advice
     (dired-next-subdir dired-prev-subdir
      dired-tree-up dired-tree-down dired-up-directory
+     dired-goto-file dired-goto-subdir
      dired-next-marked-file dired-prev-marked-file
      dired-next-dirline dired-prev-dirline)
     "Speak the filename."

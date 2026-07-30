@@ -264,6 +264,13 @@
      :owner dired
      :roles (filesystem-operation)
      :value-type symbol)
+    (filesystem-listing-aspect
+     :kind attribute
+     :summary "The part of a filesystem listing whose visibility changed"
+     :owner dired
+     :roles (filesystem-listing)
+     :value-type symbol
+     :allowed-values (details subdirectory all-subdirectories))
     (entry-inspection-kind
      :kind attribute
      :summary "The requested property of a filesystem entry"
