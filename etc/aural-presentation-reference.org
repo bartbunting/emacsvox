@@ -273,12 +273,17 @@ Operational semantic contract version: =1=.
 | =unstaged= | =state= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control change is not staged for commit |
 | =vcs-blame-chunk= | =role= | =magit= | - | - | - | - | - | =navigation=, =inspection= | =before=, =content=, =after= | - | One annotated source chunk in a version-control blame view |
 | =vcs-commit-displayed= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control commit was displayed |
+| =vcs-commit-message= | =role= | =magit= | - | - | - | - | - | =navigation=, =edit=, =state-change=, =inspection= | =before=, =content=, =after= | - | A version-control commit message being edited |
 | =vcs-diff-scrolled= | =event= | =magit= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | Navigation moved within a version-control diff |
+| =vcs-operation= | =attribute= | =magit= | =symbol= | =vcs-section=, =vcs-view=, =vcs-blame-chunk=, =vcs-process=, =vcs-rebase-entry=, =vcs-commit-message=, =vcs-repository= | - | - | - | - | - | - | The version-control operation being performed |
 | =vcs-process= | =role= | =magit= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | An asynchronous version-control operation |
+| =vcs-rebase-action= | =attribute= | =magit= | =symbol= | =vcs-rebase-entry= | - | - | - | - | - | - | The action assigned to an interactive rebase entry |
+| =vcs-rebase-entry= | =role= | =magit= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | One editable instruction in an interactive version-control rebase |
+| =vcs-repository= | =role= | =magit= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | One repository in a version-control repository list |
 | =vcs-section= | =role= | =magit= | - | - | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | A structural section in a version-control view |
 | =vcs-view= | =role= | =magit= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A version-control status, log, blob, blame, or diff view |
 | =vcs-view-closed= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control view was closed or buried |
-| =vcs-view-kind= | =attribute= | =magit= | =status=, =log=, =blob=, =blame=, =diff=, =commit=, =other= | =vcs-view= | - | - | - | - | - | - | The kind of version-control view being presented |
+| =vcs-view-kind= | =attribute= | =magit= | =status=, =log=, =blob=, =blame=, =diff=, =commit=, =process=, =repositories=, =rebase=, =refs=, =other= | =vcs-view= | - | - | - | - | - | - | The kind of version-control view being presented |
 | =vcs-view-opened= | =event= | =magit= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A version-control view was opened or selected |
 | =visibility= | =attribute= | =core= | =folded=, =expanded= | - | - | - | - | - | - | - | Whether structural descendants are visible |
 | =visibility-changed= | =event= | =core= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | The visible descendants of a structural object changed |

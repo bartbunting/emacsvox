@@ -25,6 +25,78 @@
   (should (fboundp 'magit-diff-show-or-scroll-up))
   (should (fboundp 'git-rebase-squash)))
 
+(ert-deftest emacsvox-magit-end-to-end-vocabulary-is-registered ()
+  "Every top-level Magit presentation category has registered intent."
+  (dolist
+      (id
+       '(vcs-section vcs-view vcs-blame-chunk vcs-process
+         vcs-rebase-entry vcs-commit-message vcs-repository
+         section-kind vcs-view-kind vcs-operation vcs-rebase-action
+         staged unstaged entry-staged entry-unstaged
+         vcs-view-opened vcs-view-closed vcs-commit-displayed
+         vcs-diff-scrolled))
+    (should (emacsvox-aural-semantic id))))
+
+(ert-deftest emacsvox-magit-all-interface-modes-own-semantic-context ()
+  "Magit major and auxiliary modes should identify their aural module."
+  (dolist
+      (mode
+       '(magit-status-mode magit-process-mode magit-refs-mode
+         magit-repolist-mode git-rebase-mode))
+    (with-temp-buffer
+      (setq major-mode mode)
+      (emacsvox-magit-enable-aural-context)
+      (should (eq emacsvox-aural-module 'magit))))
+  (with-temp-buffer
+    (setq-local emacsvox-aural-module 'python)
+    (setq magit-blame-mode t)
+    (emacsvox-magit--update-blame-context)
+    (should (eq emacsvox-aural-module 'magit))
+    (setq magit-blob-mode t)
+    (emacsvox-magit--update-blob-context)
+    (setq magit-blame-mode nil)
+    (emacsvox-magit--update-blame-context)
+    (should (eq emacsvox-aural-module 'magit))
+    (setq magit-blob-mode nil)
+    (emacsvox-magit--update-blob-context)
+    (should (eq emacsvox-aural-module 'python)))
+  (with-temp-buffer
+    (should-not (local-variable-p 'emacsvox-aural-module))
+    (setq git-commit-mode t)
+    (emacsvox-magit--update-commit-context)
+    (should (eq emacsvox-aural-module 'magit))
+    (setq git-commit-mode nil)
+    (emacsvox-magit--update-commit-context)
+    (should-not (local-variable-p 'emacsvox-aural-module))))
+
+(ert-deftest emacsvox-magit-view-kinds-cover-the-interface ()
+  "Every distinct Magit interface family should expose a view kind."
+  (dolist
+      (entry
+       '((magit-status-mode . status)
+         (magit-process-mode . process)
+         (magit-revision-mode . commit)
+         (magit-refs-mode . refs)
+         (magit-log-mode . log)
+         (magit-diff-mode . diff)
+         (magit-repolist-mode . repositories)
+         (git-rebase-mode . rebase)))
+    (with-temp-buffer
+      (setq major-mode (car entry))
+      (should
+       (eq
+        (emacsvox-magit-current-view-kind)
+        (cdr entry)))))
+  (with-temp-buffer
+    (setq magit-blame-mode t)
+    (should (eq (emacsvox-magit-current-view-kind) 'blame)))
+  (with-temp-buffer
+    (setq magit-blob-mode t)
+    (should (eq (emacsvox-magit-current-view-kind) 'blob)))
+  (with-temp-buffer
+    (setq git-commit-mode t)
+    (should (eq (emacsvox-magit-current-view-kind) 'commit))))
+
 (ert-deftest emacsvox-magit-face-inventory-is-current ()
   "Every current Magit and Git editing face should be classified."
   (let ((configured

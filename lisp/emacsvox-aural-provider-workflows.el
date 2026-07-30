@@ -320,6 +320,24 @@
      :owner magit
      :occasions (notification)
      :phases (before content after))
+    (vcs-rebase-entry
+     :kind role
+     :summary "One editable instruction in an interactive version-control rebase"
+     :owner magit
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (vcs-commit-message
+     :kind role
+     :summary "A version-control commit message being edited"
+     :owner magit
+     :occasions (navigation edit state-change inspection)
+     :phases (before content after))
+    (vcs-repository
+     :kind role
+     :summary "One repository in a version-control repository list"
+     :owner magit
+     :occasions (navigation state-change notification)
+     :phases (before content after))
     (section-kind
      :kind attribute
      :summary "The integration-defined kind of a structural section"
@@ -332,7 +350,22 @@
      :owner magit
      :roles (vcs-view)
      :value-type symbol
-     :allowed-values (status log blob blame diff commit other))
+     :allowed-values
+     (status log blob blame diff commit process repositories rebase refs other))
+    (vcs-operation
+     :kind attribute
+     :summary "The version-control operation being performed"
+     :owner magit
+     :roles
+     (vcs-section vcs-view vcs-blame-chunk vcs-process vcs-rebase-entry
+                  vcs-commit-message vcs-repository)
+     :value-type symbol)
+    (vcs-rebase-action
+     :kind attribute
+     :summary "The action assigned to an interactive rebase entry"
+     :owner magit
+     :roles (vcs-rebase-entry)
+     :value-type symbol)
     (staged
      :kind state
      :summary "A version-control change is staged for commit"

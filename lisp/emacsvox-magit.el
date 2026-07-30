@@ -52,6 +52,12 @@
 (require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 
+;;; Forward declarations:
+
+(defvar git-commit-mode)
+(defvar magit-blame-mode)
+(defvar magit-blob-mode)
+
 ;;;  Map voices to faces:
 
 (defconst emacsvox-magit--face-voice-map
@@ -205,11 +211,87 @@ The left-margin face is purely graphical and contains no spoken content.")
 
 ;;; Semantic aural presentation:
 
+(defconst emacsvox-magit--no-local-aural-module
+  (make-symbol "no-local-aural-module")
+  "Sentinel recording that a minor Magit view inherited its aural module.")
+
+(defvar-local emacsvox-magit--saved-aural-module
+    emacsvox-magit--no-local-aural-module
+  "Aural module that preceded a Magit minor view in the current buffer.")
+
+(defvar-local emacsvox-magit--aural-context-owners nil
+  "Active Magit minor views currently owning the buffer's aural context.")
+
 (defun emacsvox-magit-enable-aural-context ()
   "Identify the current Magit buffer to aural presentation schemes."
   (setq-local emacsvox-aural-module 'magit))
 
 (add-hook 'magit-mode-hook #'emacsvox-magit-enable-aural-context)
+(add-hook 'magit-repolist-mode-hook #'emacsvox-magit-enable-aural-context)
+(add-hook 'git-rebase-mode-hook #'emacsvox-magit-enable-aural-context)
+
+(defun emacsvox-magit--update-minor-mode-context (owner enabled)
+  "Add or remove OWNER according to ENABLED and preserve prior context."
+  (if enabled
+      (progn
+        (unless emacsvox-magit--aural-context-owners
+          (setq
+           emacsvox-magit--saved-aural-module
+           (if (local-variable-p 'emacsvox-aural-module)
+               emacsvox-aural-module
+             emacsvox-magit--no-local-aural-module)))
+        (cl-pushnew owner emacsvox-magit--aural-context-owners)
+        (setq-local emacsvox-aural-module 'magit))
+    (when (memq owner emacsvox-magit--aural-context-owners)
+      (setq emacsvox-magit--aural-context-owners
+            (delq owner emacsvox-magit--aural-context-owners))
+      (unless emacsvox-magit--aural-context-owners
+        (if
+            (eq
+             emacsvox-magit--saved-aural-module
+             emacsvox-magit--no-local-aural-module)
+            (kill-local-variable 'emacsvox-aural-module)
+          (setq-local
+           emacsvox-aural-module
+           emacsvox-magit--saved-aural-module))
+        (setq
+         emacsvox-magit--saved-aural-module
+         emacsvox-magit--no-local-aural-module)))))
+
+(defun emacsvox-magit--update-blame-context ()
+  "Update semantic ownership for the current Magit Blame minor view."
+  (emacsvox-magit--update-minor-mode-context
+   'blame (bound-and-true-p magit-blame-mode)))
+
+(defun emacsvox-magit--update-blob-context ()
+  "Update semantic ownership for the current Magit Blob minor view."
+  (emacsvox-magit--update-minor-mode-context
+   'blob (bound-and-true-p magit-blob-mode)))
+
+(defun emacsvox-magit--update-commit-context ()
+  "Update semantic ownership for the current Git Commit editor."
+  (emacsvox-magit--update-minor-mode-context
+   'commit (bound-and-true-p git-commit-mode)))
+
+(add-hook 'magit-blame-mode-hook #'emacsvox-magit--update-blame-context)
+(add-hook 'magit-blob-mode-hook #'emacsvox-magit--update-blob-context)
+(add-hook 'git-commit-mode-hook #'emacsvox-magit--update-commit-context)
+
+(defun emacsvox-magit-current-view-kind ()
+  "Return the semantic kind of the current Magit-related view."
+  (cond
+   ((bound-and-true-p magit-blame-mode) 'blame)
+   ((bound-and-true-p magit-blob-mode) 'blob)
+   ((bound-and-true-p git-commit-mode) 'commit)
+   ((derived-mode-p 'git-rebase-mode) 'rebase)
+   ((derived-mode-p 'magit-repolist-mode) 'repositories)
+   ((derived-mode-p 'magit-process-mode) 'process)
+   ((derived-mode-p 'magit-status-mode) 'status)
+   ((derived-mode-p 'magit-revision-mode) 'commit)
+   ((derived-mode-p 'magit-refs-mode) 'refs)
+   ((derived-mode-p 'magit-log-mode 'magit-reflog-mode) 'log)
+   ((derived-mode-p 'magit-diff-mode) 'diff)
+   (t 'other)))
 
 (defun emacsvox-magit--call-with-aural-presentation
     (facts occasion function &rest arguments)
