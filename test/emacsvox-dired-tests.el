@@ -34,6 +34,19 @@
     (quit-window :around emacsvox--advice-dired-quit-window-around))
   "Remaining hand-written Dired advice migrated to final native form.")
 
+(defconst emacsvox-test--dired-operation-advice-targets
+  '(dired-create-directory dired-create-empty-file
+    dired-do-copy dired-do-copy-regexp
+    dired-do-rename dired-do-rename-regexp
+    dired-do-delete dired-do-flagged-delete
+    dired-do-symlink dired-do-symlink-regexp
+    dired-do-relsymlink dired-do-relsymlink-regexp
+    dired-do-hardlink dired-do-hardlink-regexp
+    dired-do-compress dired-do-compress-to
+    dired-do-chmod dired-do-chown dired-do-chgrp dired-do-touch
+    dired-downcase dired-upcase)
+  "Dired filesystem operations with semantic result advice.")
+
 (let ((module
        (expand-file-name
         "../lisp/emacsvox-dired.el"
@@ -176,6 +189,120 @@
       (should (advice-member-p function target))))
   (should-not (fboundp 'dired-quit))
   (should (eq (lookup-key dired-mode-map "q") 'quit-window)))
+
+(ert-deftest emacsvox-dired-operation-advice-is-directly-registered ()
+  "Every core filesystem operation has its semantic result advice."
+  (dolist (target emacsvox-test--dired-operation-advice-targets)
+    (let ((function (intern (format "emacsvox--dired-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-dired-operation-result-runs-once-and-owns-message ()
+  "An interactive filesystem operation submits one result without duplication."
+  (let ((ems--interactive-fn-name 'dired-do-copy)
+        (visible-message "Earlier message")
+        (calls 0)
+        submission)
+    (cl-letf
+        (((symbol-function 'current-message)
+          (lambda () visible-message))
+         ((symbol-function 'emacsvox-dired--submit-message)
+          (lambda (&rest arguments)
+            (setq submission arguments))))
+      (should
+       (eq
+        'copied
+        (emacsvox--dired-dired-do-copy-around
+         (lambda (&rest arguments)
+           (should-not emacsvox-speak-messages)
+           (should (equal arguments '(3)))
+           (setq
+            calls (1+ calls)
+            visible-message "Copy: 2 files done")
+           'copied)
+         3))))
+    (should (= calls 1))
+    (should
+     (equal
+      submission
+      '("Copy: 2 files done"
+        (:role filesystem-operation
+         :filesystem-operation-kind copy
+         :events (operation-completed))
+        state-change save-object)))))
+
+(ert-deftest emacsvox-dired-operation-cancellation-is-not-success ()
+  "A Dired cancellation gets failed facts and a warning cue."
+  (let ((ems--interactive-fn-name 'dired-do-delete)
+        visible-message
+        submission)
+    (cl-letf
+        (((symbol-function 'current-message)
+          (lambda () visible-message))
+         ((symbol-function 'emacsvox-dired--submit-message)
+          (lambda (&rest arguments)
+            (setq submission arguments))))
+      (emacsvox--dired-dired-do-delete-around
+       (lambda ()
+         (setq visible-message "OK, canceled"))))
+    (should
+     (equal
+      submission
+      '("OK, canceled"
+        (:role filesystem-operation
+         :filesystem-operation-kind delete
+         :events (operation-failed))
+        state-change warn-user)))))
+
+(ert-deftest emacsvox-dired-operation-advice-ignores-programmatic-calls ()
+  "Programmatic filesystem operations receive no interactive feedback."
+  (let ((calls 0)
+        submitted)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired--submit-message)
+          (lambda (&rest _)
+            (setq submitted t))))
+      (should
+       (eq
+        'copied
+        (emacsvox--dired-dired-do-copy-around
+         (lambda ()
+           (setq calls (1+ calls))
+           'copied)))))
+    (should (= calls 1))
+    (should-not submitted)))
+
+(ert-deftest emacsvox-dired-create-directory-has-real-operation-feedback ()
+  "A real directory creation is performed once and reported semantically."
+  (let* ((directory (make-temp-file "emacsvox-dired-create-" t))
+         (created (expand-file-name "created" directory))
+         buffer
+         submission)
+    (unwind-protect
+        (progn
+          (setq buffer (dired-noselect directory))
+          (with-current-buffer buffer
+            (cl-letf
+                (((symbol-function 'emacsvox-dired--submit-message)
+                  (lambda (&rest arguments)
+                    (setq submission arguments))))
+              (funcall-interactively #'dired-create-directory created)))
+          (should (file-directory-p created))
+          (should
+           (equal
+            (cadr submission)
+            '(:role filesystem-operation
+              :filesystem-operation-kind create-directory
+              :events (operation-completed)))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-operation-semantics-are-registered ()
+  "The Dired operation role and discriminator are public semantics."
+  (should (emacsvox-aural-semantic 'filesystem-operation))
+  (should (emacsvox-aural-semantic 'filesystem-operation-kind)))
 
 (ert-deftest emacsvox-dired-sort-calls-original-once ()
   "Interactive sorting runs once with messages silenced before feedback."

@@ -215,6 +215,12 @@
      :owner dired
      :occasions (navigation state-change inspection)
      :phases (before content after))
+    (filesystem-operation
+     :kind role
+     :summary "The result of a filesystem operation requested from Dired"
+     :owner dired
+     :occasions (state-change notification)
+     :phases (before content after))
     (filesystem-listing-closed
      :kind event
      :summary "A filesystem listing was dismissed"
@@ -246,6 +252,12 @@
      :roles (filesystem-entry)
      :value-type symbol
      :allowed-values (file directory symbolic-link other))
+    (filesystem-operation-kind
+     :kind attribute
+     :summary "The filesystem operation whose result is being presented"
+     :owner dired
+     :roles (filesystem-operation)
+     :value-type symbol)
     (entry-inspection-kind
      :kind attribute
      :summary "The requested property of a filesystem entry"

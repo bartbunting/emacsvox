@@ -337,6 +337,112 @@ cue on single-stream speech servers."
 (advice-add 'dired-sort-toggle-or-edit :around
             #'emacsvox--advice-dired-sort-toggle-or-edit-around)
 
+(defun emacsvox-dired--new-current-message (prior-message)
+  "Return a non-empty current message different from PRIOR-MESSAGE."
+  (let ((current (current-message)))
+    (and
+     (stringp current)
+     (not (string-empty-p current))
+     (not (equal current prior-message))
+     current)))
+
+(defun emacsvox-dired-operation-facts (operation &optional failed)
+  "Return facts for filesystem OPERATION.
+When FAILED is non-nil, describe an unsuccessful operation."
+  (list
+   :role 'filesystem-operation
+   :filesystem-operation-kind operation
+   :events (list (if failed 'operation-failed 'operation-completed))))
+
+(defun emacsvox-dired--failed-result-message-p (text)
+  "Return non-nil when Dired result TEXT describes failure or cancellation."
+  (and
+   (stringp text)
+   (string-match-p
+    (rx word-start
+        (or (seq "cancel" (* alpha)) "error" "failed" "failure"
+            (seq "no" (+ space) (*? anychar) "requested"))
+        word-end)
+    (downcase text))))
+
+(defun emacsvox-dired--operation-around
+    (orig-fun arguments target operation icon fallback)
+  "Call ORIG-FUN with ARGUMENTS and present a Dired operation result.
+TARGET restricts feedback to the matching interactive command.  OPERATION
+identifies the semantic operation, ICON indicates success, and FALLBACK is
+spoken when Dired did not produce a new result message."
+  (if (ems-interactive-p target)
+      (let* ((prior-message (current-message))
+             (context
+              (emacsvox-aural-capture-context 'dired 'state-change))
+             result text failed)
+        (let ((emacsvox-speak-messages nil))
+          (setq result (apply orig-fun arguments)))
+        (setq
+         text (or (emacsvox-dired--new-current-message prior-message)
+                  fallback)
+         failed (emacsvox-dired--failed-result-message-p text))
+        (let ((emacsvox-aural-submission-context context))
+          (emacsvox-dired--submit-message
+           text
+           (emacsvox-dired-operation-facts operation failed)
+           'state-change
+           (if failed 'warn-user icon)))
+        result)
+    (apply orig-fun arguments)))
+
+(defmacro emacsvox-dired--define-operation-advice (&rest specifications)
+  "Define Dired operation advice from SPECIFICATIONS.
+Each specification has the form (TARGET OPERATION ICON FALLBACK)."
+  (declare (indent 0) (debug (&rest (symbolp symbolp symbolp stringp))))
+  `(progn
+     ,@(mapcar
+        (lambda (specification)
+          (pcase-let*
+              ((`(,target ,operation ,icon ,fallback) specification)
+               (function
+                (intern (format "emacsvox--dired-%s-around" target))))
+            `(progn
+               (defun ,function (orig-fun &rest arguments)
+                 ,(format "Present interactive `%s' feedback." target)
+                 (emacsvox-dired--operation-around
+                  orig-fun arguments ',target ',operation ',icon ,fallback))
+               (advice-add
+                ',target :around #',function '((name . emacsvox))))))
+        specifications)))
+
+(emacsvox-dired--define-operation-advice
+  (dired-create-directory create-directory save-object "Directory created")
+  (dired-create-empty-file create-file save-object "File created")
+  (dired-do-copy copy save-object "Copy completed")
+  (dired-do-copy-regexp copy-regexp save-object "Regexp copy completed")
+  (dired-do-rename rename task-done "Rename completed")
+  (dired-do-rename-regexp rename-regexp task-done
+                          "Regexp rename completed")
+  (dired-do-delete delete delete-object "Deletion completed")
+  (dired-do-flagged-delete delete-flagged delete-object
+                           "Flagged deletion completed")
+  (dired-do-symlink create-symbolic-link save-object
+                    "Symbolic link created")
+  (dired-do-symlink-regexp create-symbolic-link-regexp save-object
+                           "Regexp symbolic links created")
+  (dired-do-relsymlink create-relative-symbolic-link save-object
+                       "Relative symbolic link created")
+  (dired-do-relsymlink-regexp create-relative-symbolic-link-regexp
+                              save-object
+                              "Regexp relative symbolic links created")
+  (dired-do-hardlink create-hard-link save-object "Hard link created")
+  (dired-do-hardlink-regexp create-hard-link-regexp save-object
+                            "Regexp hard links created")
+  (dired-do-compress compress save-object "Compression completed")
+  (dired-do-compress-to compress-to save-object "Compression completed")
+  (dired-do-chmod change-mode task-done "File mode changed")
+  (dired-do-chown change-owner task-done "File owner changed")
+  (dired-do-chgrp change-group task-done "File group changed")
+  (dired-do-touch change-time task-done "File timestamp changed")
+  (dired-downcase downcase-name task-done "File names downcased")
+  (dired-upcase upcase-name task-done "File names upcased"))
+
 (defun emacsvox--advice-dired-query-before (&rest _)
   "Present a Dired confirmation request."
   (emacsvox-dired--present-feedback
