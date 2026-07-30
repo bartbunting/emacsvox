@@ -3571,12 +3571,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (goto-char (plist-get activity :position))
       (let* ((presentations
               (emacsvox-agent-shell-test--capture-presentations
-                (cl-letf
-                    (((symbol-function 'emacsvox-speak-line)
-                      (lambda () (tts-speak "Activity group"))))
-                  (call-interactively
-                   #'agent-shell-ui-toggle-fragment)))))
-        (should (= (length presentations) 2))
+                (call-interactively
+                 #'agent-shell-ui-toggle-fragment))))
+        (should (= (length presentations) 1))
         (dolist (presentation presentations)
           (let ((facts (nth 2 presentation)))
             (should (eq (plist-get facts :role) 'agent-block))
@@ -3588,10 +3585,11 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (eq (nth 3 presentation) 'agent-shell))
             (should (eq (nth 4 presentation) 'state-change))))
         (should
+         (eq (caar presentations) 'submit))
+        (should
          (equal
-          (mapcar (lambda (presentation) (car presentation))
-                  presentations)
-          '(icon speak)))
+          (cadar presentations)
+          "Thinking. Reasoning\ncompleted Read file. Tool output\nsecond line"))
         (should
          (eq
           (plist-get
@@ -3615,15 +3613,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (equal
           (emacsvox-agent-shell-test--capture-events
-            (cl-letf
-                (((symbol-function 'emacsvox-speak-line)
-                  (lambda () (tts-speak "Activity group"))))
-              (call-interactively action)
-              (call-interactively (key-binding (kbd "RET")))))
+            (call-interactively action)
+            (call-interactively (key-binding (kbd "RET"))))
           '((icon open-object)
-            (speak "Activity group")
+            (speak
+             "Thinking. Reasoning\ncompleted Read file. Tool output\nsecond line")
             (icon close-object)
-            (speak "Activity group")))))
+            (speak
+             "Activity group, Thought, read a file, collapsed.")))))
       (should
        (eq
         (plist-get
@@ -3657,12 +3654,12 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (let* ((ems--interactive-fn-name
             'agent-shell-ui-toggle-all-fragments)
            (presentations
-            (emacsvox-agent-shell-test--capture-presentations
+           (emacsvox-agent-shell-test--capture-presentations
               (emacsvox-agent-shell--toggle-all-fragments-around
                (lambda ()
                  (setq agent-shell-ui--fold-toggle-state 'collapsed)
                  'toggled)))))
-      (should (= (length presentations) 2))
+      (should (= (length presentations) 1))
       (dolist (presentation presentations)
         (let ((facts (nth 2 presentation)))
           (should (eq (plist-get facts :role) 'agent-session))
@@ -3673,7 +3670,10 @@ Return speech events plus the target character.  DIRECTION is `forward' or
        (equal
         (mapcar (lambda (presentation) (car presentation))
                 presentations)
-        '(icon message))))))
+        '(submit)))
+      (should
+       (equal (cadar presentations)
+              "All Agent Shell blocks collapsed")))))
 
 (ert-deftest emacsvox-agent-shell-block-navigation-expands-activity-members ()
   "Selecting a hidden thought or tool should expand its activity group."
@@ -4104,8 +4104,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell-test--capture-events
           (call-interactively
            #'emacsvox-agent-shell-copy-source-block))
-        '((icon yank-object)
-          (message "Copied code block"))))
+        '((message "Copied code block")
+          (icon yank-object)
+          (speak "Copied source block"))))
       (should (equal (current-kill 0) "(message \"hello\")\n(+ 1 2)")))))
 
 (ert-deftest emacsvox-agent-shell-source-navigation-expands-parent ()

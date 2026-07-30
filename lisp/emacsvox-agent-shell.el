@@ -3242,6 +3242,28 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
      (plist-get location :type))
     :visibility (plist-get location :visibility))))
 
+(defun emacsvox-agent-shell--expanded-block-speech (location)
+  "Return useful content speech for expanded block LOCATION."
+  (let ((type (plist-get location :type)))
+    (or
+     (when (eq type 'activity-group)
+       (when-let* ((state (plist-get location :state))
+                   (qualified-id (map-elt state :qualified-id))
+                   (members
+                    (seq-filter
+                     (lambda (candidate)
+                       (equal
+                        (map-elt
+                         (plist-get candidate :state) :group-id)
+                        qualified-id))
+                     (emacsvox-agent-shell--fragment-locations))))
+         (string-join
+          (mapcar #'emacsvox-agent-shell--block-location-speech members)
+          "\n")))
+     (and (plist-get location :body)
+          (emacsvox-agent-shell--block-location-speech location))
+     (emacsvox-agent-shell--block-location-speech location))))
+
 (defun emacsvox-agent-shell--call-toggle-fragment
     (original-function arguments interactive-p)
   "Call fragment toggle ORIGINAL-FUNCTION with ARGUMENTS.
@@ -3259,11 +3281,13 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
                   (visibility (plist-get after :visibility))
                   ((not (eq visibility
                             (plist-get before :visibility)))))
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         (if (eq visibility 'expanded)
+             (emacsvox-agent-shell--expanded-block-speech after)
+           (emacsvox-agent-shell--block-location-speech after))
          (emacsvox-agent-shell--block-visibility-facts after)
          'state-change
-         (if (eq visibility 'folded) 'close-object 'open-object)
-         #'emacsvox-speak-line)))
+         (if (eq visibility 'folded) 'close-object 'open-object))))
     result))
 
 (defun emacsvox-agent-shell--toggle-fragment-around
@@ -3293,15 +3317,14 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
                    (pcase agent-shell-ui--fold-toggle-state
                      ('collapsed 'folded)
                      ('expanded 'expanded))))
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         (format "All Agent Shell blocks %s"
+                 (if (eq visibility 'folded) "collapsed" "expanded"))
          (emacsvox-agent-shell--presentation-facts
           'agent-session 'visibility-changed nil
           (list :visibility visibility))
          'state-change
-         (if (eq visibility 'folded) 'close-object 'open-object)
-         #'message
-         "All Agent Shell blocks %s"
-         (if (eq visibility 'folded) "collapsed" "expanded"))))
+         (if (eq visibility 'folded) 'close-object 'open-object))))
     result))
 
 (defun emacsvox-agent-shell--source-block-at-point ()
@@ -3316,26 +3339,29 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
   (interactive)
   (let ((location (emacsvox-agent-shell--source-block-at-point)))
     (tts-stop)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--source-block-speech location)
      (emacsvox-agent-shell--block-facts
       'source-block 'agent-content-inspected
       (when-let* ((language (plist-get location :language)))
         (list :agent-source-language language)))
-     'inspection 'item #'tts-speak
-     (emacsvox-agent-shell--source-block-speech location))))
+     'inspection 'item)))
 
 (defun emacsvox-agent-shell-copy-source-block ()
   "Copy the rendered Markdown source block at point using agent-shell."
   (interactive)
   (let ((location (emacsvox-agent-shell--source-block-at-point)))
-    (emacsvox-agent-shell--present-feedback
-     (emacsvox-agent-shell--block-facts
-      'source-block 'agent-content-copied
-      (when-let* ((language (plist-get location :language)))
-        (list :agent-source-language language)))
-     'state-change 'yank-object
-     #'agent-shell-copy-source-block-at-point
-     (plist-get location :position))))
+    (prog1
+        (let ((inhibit-message t))
+          (agent-shell-copy-source-block-at-point
+           (plist-get location :position)))
+      (emacsvox-agent-shell--submit-text-feedback
+       "Copied source block"
+       (emacsvox-agent-shell--block-facts
+        'source-block 'agent-content-copied
+        (when-let* ((language (plist-get location :language)))
+          (list :agent-source-language language)))
+       'state-change 'yank-object))))
 
 (defun emacsvox-agent-shell--literal-character-input-p ()
   "Return non-nil when this command key should insert at an editable prompt."
