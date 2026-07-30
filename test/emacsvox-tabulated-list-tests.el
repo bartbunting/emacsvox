@@ -54,7 +54,7 @@
       (should (eq (emacsvox-aural-action-tone action) 'field-empty)))))
 
 (ert-deftest emacsvox-tabulated-list-empty-cell-preserves-edge-order ()
-  "Edge cues precede the action-only presentation for an empty cell."
+  "Edge cues share the action-only presentation for an empty cell."
   (with-temp-buffer
     (insert "xy")
     (goto-char 2)
@@ -65,8 +65,6 @@
             (lambda (&rest _) "Only"))
            ((symbol-function 'tabulated-list-get-entry)
             (lambda () [""]))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
            ((symbol-function 'emacsvox-aural-submit)
             (lambda (&rest _)
               (ert-fail "An empty programmatic cell submitted text")))
@@ -74,15 +72,25 @@
             (lambda (&rest arguments)
               (push (cons 'submit-actions arguments) events))))
         (emacsvox-tabulated-list-speak-cell))
-      (should
-       (equal
-        (nreverse events)
-        '((icon left)
-          (icon right)
-          (submit-actions
-           :facts (:role field :states (empty))
-           :module tabulated-list
-           :occasion navigation)))))))
+      (pcase-let* ((`((submit-actions . ,arguments)) events)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role field :states (empty))))
+        (should (eq (plist-get arguments :module) 'tabulated-list))
+        (should (eq (plist-get arguments :occasion) 'navigation))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(left right)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-phase actions)
+          '(before before)))))))
 
 (ert-deftest emacsvox-tabulated-list-nonempty-cell-submits-content ()
   "A nonempty cell is submitted once with field semantics."
@@ -111,20 +119,38 @@
       (should
        (eq (plist-get (cdr submitted) :occasion) 'navigation)))))
 
+(ert-deftest emacsvox-tabulated-list-preserves-owning-module ()
+  "Embedded tables submit under their integration's semantic module."
+  (with-temp-buffer
+    (setq-local emacsvox-aural-module 'magit)
+    (let (arguments)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (_content &rest rest) (setq arguments rest))))
+        (emacsvox-tabulated-list--submit-cell
+         "repo" '(:role field) 'select-object))
+      (should (eq (plist-get arguments :module) 'magit))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get arguments :compatibility-actions))
+        '(select-object))))))
+
 (ert-deftest emacsvox-tabulated-list-feedback-is-target-aware ()
   "Only the matching column movement cues and speaks the selected cell."
   (let ((ems--interactive-fn-name 'tabulated-list-next-column)
         events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-tabulated-list-speak-cell)
-               (lambda () (push 'speak-cell events))))
+    (cl-letf
+        (((symbol-function 'emacsvox-tabulated-list-speak-cell)
+          (lambda (&optional icon)
+            (push (list 'speak-cell icon) events))))
       (emacsvox--advice-tabulated-list-previous-column-after)
       (emacsvox--advice-tabulated-list-next-column-after))
     (should
      (equal
       (nreverse events)
-      '((icon select-object) speak-cell)))))
+      '((speak-cell select-object))))))
 
 (provide 'emacsvox-tabulated-list-tests)
 ;;; emacsvox-tabulated-list-tests.el ends here

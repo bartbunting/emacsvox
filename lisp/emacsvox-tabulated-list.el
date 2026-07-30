@@ -50,7 +50,7 @@
 
 ;;   Required modules:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-provider-workflows)
 (require 'emacsvox-aural-submission)
@@ -70,16 +70,25 @@
    '(:role field)
    (when empty '(:states (empty)))))
 
-(defun emacsvox-tabulated-list--submit-cell (content facts)
-  "Submit cell CONTENT and FACTS through aural presentation policy."
-  (if (zerop (length content))
-      (emacsvox-aural-submit-actions
-       :facts facts :module 'tabulated-list :occasion 'navigation)
-    (emacsvox-aural-submit
-     content :facts facts :module 'tabulated-list :occasion 'navigation)))
+(defun emacsvox-tabulated-list--module ()
+  "Return the owning integration module for the current table."
+  (or (bound-and-true-p emacsvox-aural-module) 'tabulated-list))
 
-(defun emacsvox-tabulated-list-speak-cell ()
-  "Speak current cell. "
+(defun emacsvox-tabulated-list--submit-cell (content facts &rest icons)
+  "Submit cell CONTENT, FACTS, and compatibility ICONS through aural policy."
+  (let ((arguments
+         (list
+          :facts facts
+          :module (emacsvox-tabulated-list--module)
+          :occasion 'navigation
+          :compatibility-actions
+          (mapcar #'emacsvox-aural-compatibility-icon icons))))
+  (if (zerop (length content))
+        (apply #'emacsvox-aural-submit-actions arguments)
+      (apply #'emacsvox-aural-submit content arguments))))
+
+(defun emacsvox-tabulated-list-speak-cell (&optional movement-icon)
+  "Speak the current cell with optional MOVEMENT-ICON."
   (interactive)
   (when (bobp) (error "Beginning  of buffer"))
   (when (eobp) (error "End of buffer"))
@@ -89,19 +98,24 @@
          (col
           (cl-position name tabulated-list-format
                        :test #'string= :key #'car))
-         (value (elt (tabulated-list-get-entry)  col)))
-      (when (= 0 col) (emacsvox-icon 'left))
-      (when (= (1- (length tabulated-list-format)) col)
-        (emacsvox-icon 'right))
-      (when (listp value) (setq value (car value)))
-      (let* ((empty (zerop (length (string-trim value))))
-             (content
-              (if (called-interactively-p 'interactive)
-                  (concat name " " value)
-                value)))
-        (emacsvox-tabulated-list--submit-cell
-         content
-         (emacsvox-tabulated-list--cell-facts empty))))))
+         (value (elt (tabulated-list-get-entry) col)))
+      (let ((edge-icons
+             (append
+              (when (= 0 col) '(left))
+              (when (= (1- (length tabulated-list-format)) col) '(right)))))
+        (when (listp value) (setq value (car value)))
+        (let* ((empty (zerop (length (string-trim value))))
+               (content
+                (if (called-interactively-p 'interactive)
+                    (concat name " " value)
+                  value)))
+          (apply
+           #'emacsvox-tabulated-list--submit-cell
+           content
+           (emacsvox-tabulated-list--cell-facts empty)
+           (append
+            (when movement-icon (list movement-icon))
+            edge-icons)))))))
 
 (cl-loop
  for target in
@@ -113,8 +127,7 @@
      (defun ,function (&rest _)
        "Cue and speak after an interactive Tabulated List column movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-icon 'select-object)
-         (emacsvox-tabulated-list-speak-cell)))
+         (emacsvox-tabulated-list-speak-cell 'select-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -131,7 +144,7 @@
     (when-let* ((goal (next-single-property-change (point)
                                                   'tabulated-list-column-name)))
       (goto-char goal))
-    (emacsvox-tabulated-list-speak-cell)))
+    (emacsvox-tabulated-list-speak-cell 'select-object)))
 
 (defun emacsvox-tabulated-list-previous-row ()
   "Move to previous row and speak that cell."
@@ -146,7 +159,7 @@
     (when-let* ((goal (next-single-property-change
                       (point) 'tabulated-list-column-name)))
       (goto-char goal))
-    (emacsvox-tabulated-list-speak-cell)))
+    (emacsvox-tabulated-list-speak-cell 'select-object)))
 
 (defun emacsvox-tabulated-list-setup ()
   "Setup Emacsvox"
