@@ -303,6 +303,116 @@
     (dolist (face current)
       (should (assq face emacsvox-dired--face-voice-map)))))
 
+(ert-deftest emacsvox-dired-inspection-message-is-one-native-submission ()
+  "An inspection result is displayed silently and submitted exactly once."
+  (let (messages submissions)
+    (cl-letf
+        (((symbol-function 'message)
+          (lambda (format-string &rest arguments)
+            (push
+             (list
+              emacsvox-speak-messages
+              (apply #'format format-string arguments))
+             messages)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) submissions))))
+      (emacsvox-dired--present-inspection
+       'permissions "Permissions -rw-r--r--"))
+    (should (equal messages '((nil "Permissions -rw-r--r--"))))
+    (should (= (length submissions) 1))
+    (pcase-let ((`(,content . ,arguments) (car submissions)))
+      (should (equal content "Permissions -rw-r--r--"))
+      (should
+       (equal
+        (plist-get arguments :facts)
+        '(:role filesystem-entry :entry-kind other
+          :events (entry-inspected)
+          :entry-inspection-kind permissions)))
+      (should (eq (plist-get arguments :module) 'dired))
+      (should (eq (plist-get arguments :occasion) 'inspection))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value
+         (car (plist-get arguments :compatibility-actions)))
+        'select-object)))))
+
+(ert-deftest emacsvox-dired-file-type-dereference-uses-file-capital-l ()
+  "Prefix inspection asks `file' to dereference rather than list its magic."
+  (let ((emacsvox-dired-file-cmd-options "-b --mime-type")
+        process-call
+        submission)
+    (with-temp-buffer
+      (let ((source (current-buffer)))
+        (cl-letf
+            (((symbol-function 'call-process)
+              (lambda (program infile destination display &rest arguments)
+                (setq
+                 process-call
+                 (list program infile destination display arguments))
+                (insert "text/plain\n")
+                0))
+             ((symbol-function 'dired-get-filename)
+              (lambda (&rest _)
+                (and (eq (current-buffer) source) "/tmp/example.txt")))
+             ((symbol-function 'file-symlink-p) (lambda (_) nil))
+             ((symbol-function 'file-directory-p) (lambda (_) nil))
+             ((symbol-function 'file-regular-p) (lambda (_) t))
+             ((symbol-function 'emacsvox-dired--submit-message)
+              (lambda (&rest arguments)
+                (setq submission arguments))))
+          (emacsvox-dired-show-file-type "/tmp/example.txt" t))))
+    (should
+     (equal
+      process-call
+      '("file" nil t nil
+        ("-L" "-b" "--mime-type" "--" "/tmp/example.txt"))))
+    (should
+     (equal
+      submission
+      '("text/plain"
+        (:role filesystem-entry :entry-kind file
+         :events (entry-inspected)
+         :entry-inspection-kind file-type)
+        inspection select-object)))))
+
+(ert-deftest emacsvox-dired-missing-inspection-is-semantic-failure ()
+  "Inspecting a non-entry row submits the failure and warning cue."
+  (let (presentation)
+    (cl-letf
+        (((symbol-function 'dired-get-filename) (lambda (&rest _) nil))
+         ((symbol-function 'emacsvox-dired--submit-message)
+          (lambda (&rest arguments)
+            (setq presentation arguments))))
+      (emacsvox-dired-speak-file-permissions))
+    (should
+     (equal
+      presentation
+      '("No file on current line"
+        (:role filesystem-entry :entry-kind other
+         :events (entry-inspected operation-failed)
+         :entry-inspection-kind permissions)
+        inspection warn-user)))))
+
+(ert-deftest emacsvox-dired-header-is-submitted-as-listing-content ()
+  "The Dired header is submitted natively with listing-level facts."
+  (let (submission)
+    (with-temp-buffer
+      (insert "header one\nheader two\nentry\n")
+      (cl-letf
+          (((symbol-function 'emacsvox-dired--submit-text)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox-dired-speak-header-line)))
+    (should
+     (equal
+      submission
+      '("header one\nheader two"
+        (:role filesystem-listing
+         :events (entry-inspected)
+         :entry-inspection-kind header)
+        inspection section)))))
+
 (ert-deftest emacsvox-dired-marked-navigation-uses-mark-earcon ()
   "Entering a marked row replaces the generic selection cue."
   (let ((emacsvox-aural-active-scheme 'default)

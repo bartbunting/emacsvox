@@ -154,6 +154,41 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      (when icon (emacsvox-icon icon))
      (apply function arguments))))
 
+(defun emacsvox-dired--submit-actions (facts occasion &rest icons)
+  "Submit FACTS and compatibility ICONS as one action-only transaction."
+  (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'dired
+   :occasion occasion
+   :compatibility-actions
+   (mapcar #'emacsvox-aural-compatibility-icon icons)))
+
+(defun emacsvox-dired--submit-text
+    (content facts occasion &optional icon icon-phase)
+  "Submit CONTENT under FACTS and OCCASION with optional compatibility ICON.
+ICON-PHASE defaults to `before'."
+  (if (and (stringp content) (> (length content) 0))
+      (emacsvox-aural-submit
+       content
+       :facts facts
+       :module 'dired
+       :occasion occasion
+       :compatibility-actions
+       (when icon
+         (list
+          (emacsvox-aural-compatibility-icon icon icon-phase))))
+    (when icon
+      (emacsvox-dired--submit-actions facts occasion icon))))
+
+(defun emacsvox-dired--submit-message
+    (content facts occasion &optional icon)
+  "Display and natively present CONTENT under FACTS and OCCASION.
+Optional ICON precedes the spoken result.  Ordinary message speech is
+suppressed because the aural submission owns audible presentation."
+  (let ((emacsvox-speak-messages nil))
+    (message "%s" content))
+  (emacsvox-dired--submit-text content facts occasion icon))
+
 (defun emacsvox-dired-entry-facts (&optional event extra-states)
   "Return semantic facts for the Dired entry at point.
 
@@ -203,11 +238,32 @@ The established icon-then-speech ordering is preserved."
         (emacsvox-dired--present-feedback
          facts occasion icon #'emacsvox-dired-speak-line)))))
 
-(defun emacsvox-dired-inspection-facts (kind)
-  "Return current-entry facts for inspection KIND."
+(defun emacsvox-dired-inspection-facts (kind &optional failed)
+  "Return current-entry facts for inspection KIND.
+When FAILED is non-nil, include a failed-operation event."
   (append
-   (emacsvox-dired-entry-facts 'entry-inspected)
+   (emacsvox-dired-entry-facts)
+   (list
+    :events
+    (if failed
+        '(entry-inspected operation-failed)
+      '(entry-inspected)))
    (list :entry-inspection-kind kind)))
+
+(defun emacsvox-dired--present-inspection
+    (kind content &optional icon failed)
+  "Present CONTENT as entry inspection KIND.
+ICON defaults to `select-object'.  FAILED marks unsuccessful inspection."
+  (emacsvox-dired--submit-message
+   content
+   (emacsvox-dired-inspection-facts kind failed)
+   'inspection
+   (or icon 'select-object)))
+
+(defun emacsvox-dired--present-missing-entry (kind)
+  "Present a failed entry inspection of KIND at a non-entry row."
+  (emacsvox-dired--present-inspection
+   kind "No file on current line" 'warn-user t))
 
 (defun emacsvox-dired-action-facts (event &optional state)
   "Return frozen current-entry facts for action EVENT and resulting STATE."
@@ -455,32 +511,38 @@ unless `dired-listing-switches' contains -l"
 Like Emacs' built-in dired-show-file-type but allows user to customize
 options passed to command `file'."
   (interactive (list (dired-get-filename t) current-prefix-arg))
-  (emacsvox-dired--call-with-aural-presentation
-   (append
-    (emacsvox-dired-entry-facts 'entry-inspected)
-    '(:entry-inspection-kind file-type))
-   'inspection
-   (lambda ()
-     (with-temp-buffer
-       (if deref-symlinks
-           (call-process "file" nil t t "-l"
-                         emacsvox-dired-file-cmd-options file)
-         (call-process "file" nil t t
-                       emacsvox-dired-file-cmd-options file))
-       (when (bolp)
-         (delete-char -1))
-       (message (buffer-string))))))
+  (let (status output)
+    (with-temp-buffer
+      (let ((arguments
+             (append
+              (and deref-symlinks '("-L"))
+              (split-string-and-unquote emacsvox-dired-file-cmd-options)
+              (list "--" file))))
+        (setq
+         status (apply #'call-process "file" nil t nil arguments)
+         output (string-trim-right (buffer-string)))))
+    (if (and (integerp status) (zerop status))
+        (emacsvox-dired--present-inspection 'file-type output)
+      (emacsvox-dired--present-inspection
+       'file-type
+       (if (string-empty-p output)
+           (format "Could not determine file type for %s" file)
+         output)
+       'warn-user t))))
 
 (defun emacsvox-dired-speak-header-line()
   "Speak the header line of the dired buffer. "
   (interactive)
-  (emacsvox-dired--present-feedback
-   '(:role filesystem-listing) 'inspection 'section
-   (lambda ()
-     (save-excursion
-       (goto-char (point-min))
-       (forward-line 2)
-       (emacsvox-speak-region (point-min) (point))))))
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line 2)
+    (emacsvox-dired--submit-text
+     (string-trim-right
+      (buffer-substring (point-min) (point)))
+     '(:role filesystem-listing
+       :events (entry-inspected)
+       :entry-inspection-kind header)
+     'inspection 'section)))
 
 (defun emacsvox-dired-speak-file-size ()
   "Speak the size of the current file.
@@ -491,10 +553,23 @@ On a directory line, run du -s on the directory to speak its size."
     (cond
      ((and filename
            (file-directory-p filename))
-      (emacsvox-dired--present-feedback
+      (emacsvox-dired--submit-actions
        (emacsvox-dired-inspection-facts 'size)
-       'inspection 'progress #'emacsvox-shell-command
-       (format "du -s \"%s\"" filename)))
+       'inspection 'progress)
+      (let (status output)
+        (with-temp-buffer
+          (setq
+           status (call-process "du" nil t nil "-s" "--" filename)
+           output (string-trim-right (buffer-string))))
+        (emacsvox-dired--present-inspection
+         'size
+         (if (and (integerp status) (zerop status))
+             output
+           (format "Could not determine directory size for %s" filename))
+         (if (and (integerp status) (zerop status))
+             'select-object
+           'warn-user)
+         (not (and (integerp status) (zerop status))))))
      (filename
       (setq size (nth 7 (file-attributes filename)))
                                         ; check for ange-ftp
@@ -502,11 +577,9 @@ On a directory line, run du -s on the directory to speak its size."
         (setq size
               (nth  4
                     (split-string (ems--this-line)))))
-      (emacsvox-dired--present-feedback
-       (emacsvox-dired-inspection-facts 'size)
-       'inspection 'select-object #'message
-       "File size %s" size))
-     (t (message "No file on current line")))))
+      (emacsvox-dired--present-inspection
+       'size (format "File size %s" size)))
+     (t (emacsvox-dired--present-missing-entry 'size)))))
 
 (defun emacsvox-dired-speak-file-modification-time ()
   "Speak modification time  of the current file."
@@ -514,14 +587,14 @@ On a directory line, run du -s on the directory to speak its size."
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-dired--present-feedback
-       (emacsvox-dired-inspection-facts 'modification-time)
-       'inspection 'select-object #'message
-       "Modified on : %s"
-       (format-time-string
-        emacsvox-speak-time-format
-        (nth 5 (file-attributes filename)))))
-     (t (message "No file on current line")))))
+      (emacsvox-dired--present-inspection
+       'modification-time
+       (format
+        "Modified on: %s"
+        (format-time-string
+         emacsvox-speak-time-format
+         (nth 5 (file-attributes filename))))))
+     (t (emacsvox-dired--present-missing-entry 'modification-time)))))
 
 (defun emacsvox-dired-speak-file-access-time ()
   "Speak access time  of the current file."
@@ -529,41 +602,42 @@ On a directory line, run du -s on the directory to speak its size."
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-dired--present-feedback
-       (emacsvox-dired-inspection-facts 'access-time)
-       'inspection 'select-object #'message
-       "Last accessed   on  %s"
-       (format-time-string
-        emacsvox-speak-time-format
-        (nth 4 (file-attributes filename)))))
-     (t (message "No file on current line")))))
+      (emacsvox-dired--present-inspection
+       'access-time
+       (format
+        "Last accessed on %s"
+        (format-time-string
+         emacsvox-speak-time-format
+         (nth 4 (file-attributes filename))))))
+     (t (emacsvox-dired--present-missing-entry 'access-time)))))
+
 (defun emacsvox-dired-speak-symlink-target ()
   "Speaks the target of the symlink on the current line."
   (interactive)
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-dired--present-feedback
-       (emacsvox-dired-inspection-facts 'symbolic-link-target)
-       'inspection 'select-object
-       (lambda ()
-         (cond
-          ((file-symlink-p filename)
-           (message "Target is %s"
-                    (file-chase-links filename)))
-          (t (message "%s is not a symbolic link" filename))))))
-     (t (message "No file on current line")))))
+      (if (file-symlink-p filename)
+          (emacsvox-dired--present-inspection
+           'symbolic-link-target
+           (format "Target is %s" (file-chase-links filename)))
+        (emacsvox-dired--present-inspection
+         'symbolic-link-target
+         (format "%s is not a symbolic link" filename)
+         'warn-user t)))
+     (t
+      (emacsvox-dired--present-missing-entry 'symbolic-link-target)))))
+
 (defun emacsvox-dired-speak-file-permissions ()
   "Speak the permissions of the current file."
   (interactive)
   (let ((filename (dired-get-filename nil t)))
     (cond
      (filename
-      (emacsvox-dired--present-feedback
-       (emacsvox-dired-inspection-facts 'permissions)
-       'inspection 'select-object #'message
-       "Permissions %s" (nth 8 (file-attributes filename))))
-     (t (message "No file on current line")))))
+      (emacsvox-dired--present-inspection
+       'permissions
+       (format "Permissions %s" (nth 8 (file-attributes filename)))))
+     (t (emacsvox-dired--present-missing-entry 'permissions)))))
 
 ;;;   keys
 (cl-eval-when (load))
