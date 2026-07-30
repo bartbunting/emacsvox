@@ -48,13 +48,22 @@
      :kind role
      :summary "An Org export or publishing operation"
      :owner org)
+    (org-source-block
+     :kind role
+     :summary "An Org Babel source block or source-editing operation"
+     :owner org)
+    (org-babel-result
+     :kind role
+     :summary "The result of executing an Org Babel source block"
+     :owner org)
     (org-action
      :kind attribute
      :summary "The user-visible Org operation being presented"
      :owner org
      :roles
      (heading org-content org-item org-paragraph org-agenda-entry org-table
-              org-capture org-edit-buffer org-export)
+              org-capture org-edit-buffer org-export org-source-block
+              org-babel-result)
      :value-type symbol
      :allowed-values
      (item-navigation structure-navigation paragraph-navigation
@@ -80,6 +89,10 @@
                       table-recalculated table-sorted table-inspected
                       table-editor-opened table-editor-closed
                       table-reference-changed
+                      source-block-navigation source-result-navigation
+                      source-block-executed source-results-removed
+                      source-block-changed source-block-marked
+                      source-tangled source-session-opened source-inspected
                       export-completed publish-completed))
     (org-table-row
      :kind attribute
@@ -107,8 +120,9 @@
 (defconst emacsvox-org-aural-semantics
   '(heading level visibility folded focus-entered state-changed object-changed
             org-content org-item org-paragraph org-agenda-entry org-table
-            org-capture org-edit-buffer org-export org-action org-table-row
-            org-table-column org-table-presentation)
+            org-capture org-edit-buffer org-export org-source-block
+            org-babel-result org-action org-table-row org-table-column
+            org-table-presentation)
   "Semantic identifiers interpreted by the Org integration.")
 
 (defconst emacsvox-org-aural-level-voices

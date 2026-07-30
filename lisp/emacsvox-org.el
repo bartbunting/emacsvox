@@ -163,6 +163,15 @@ ICON-PHASE defaults to `before'."
        "-mode\\'" "" (symbol-name major-mode))))
     'personality voice-animate)))
 
+(defun emacsvox-org--new-current-message (prior-message)
+  "Return a non-empty current message different from PRIOR-MESSAGE."
+  (let ((current (current-message)))
+    (and
+     (stringp current)
+     (not (string-empty-p current))
+     (not (equal current prior-message))
+     current)))
+
 (defun emacsvox-org-refresh-aural-heading ()
   "Refresh semantic text properties on the Org heading at point."
   (when-let* ((facts (emacsvox-org-heading-facts)))
@@ -505,15 +514,9 @@ occasion.  EVENT defaults to `focus-entered'."
   "Present an Org table inspection ACTION.
 
 Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
-  (let ((current (current-message)))
+  (let ((current (emacsvox-org--new-current-message prior-message)))
     (emacsvox-org--submit-text
-     (if
-         (and
-          (stringp current)
-          (not (string-empty-p current))
-          (not (equal current prior-message)))
-         current
-       fallback)
+     (or current fallback)
      (emacsvox-org--table-facts 'cell action 'focus-entered)
      'inspection)))
 
@@ -832,14 +835,10 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
 PRIOR-MESSAGE is the message visible before the command.  When PREFER-MESSAGE
 is non-nil, a new message produced by Org is preferred over the current line.
 FALLBACK is used when neither provides useful content."
-  (let* ((current (current-message))
-         (new-message
+  (let* ((new-message
           (and
            prefer-message
-           (stringp current)
-           (not (string-empty-p current))
-           (not (equal current prior-message))
-           current))
+           (emacsvox-org--new-current-message prior-message)))
          (line
           (and
            (not prefer-message)
@@ -1426,6 +1425,208 @@ arg just opens the file"
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
+;;;  Babel source blocks:
+
+(defun emacsvox-org--babel-result-summary ()
+  "Return a concise summary of the current Babel result, or nil."
+  (save-excursion
+    (when-let* ((position (org-babel-where-is-src-block-result)))
+      (goto-char position)
+      (forward-line)
+      (while
+          (and
+           (not (eobp))
+           (or
+            (looking-at-p "[[:space:]]*$")
+            (looking-at-p
+             "[[:space:]]*#\\+\\(?:begin_\\|end_\\)\\(?:example\\|results\\)")))
+        (forward-line))
+      (unless (eobp)
+        (let ((summary
+               (string-trim
+                (emacsvox-aural-source-substring
+                 (line-beginning-position) (line-end-position)))))
+          (if (string-match "\\`:[[:space:]]*\\(.*\\)\\'" summary)
+              (match-string 1 summary)
+            summary))))))
+
+(defun emacsvox-org--present-babel-result
+    (prior-message &optional aggregate)
+  "Present a Babel execution result produced after PRIOR-MESSAGE.
+
+When AGGREGATE is non-nil, prefer Org's summary message for a multi-block
+execution."
+  (emacsvox-org--submit-text
+   (or
+    (and aggregate (emacsvox-org--new-current-message prior-message))
+    (emacsvox-org--babel-result-summary)
+    (emacsvox-org--new-current-message prior-message)
+    (if aggregate "Source blocks executed" "Source block executed"))
+   (emacsvox-org--feedback-facts
+    'org-babel-result 'object-changed 'source-block-executed)
+   'notification 'task-done))
+
+(cl-loop
+ for (target aggregate) in
+ '((org-babel-execute-src-block nil)
+   (org-babel-execute-maybe nil)
+   (org-babel-execute-buffer t)
+   (org-babel-execute-subtree t))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Execute interactive Org Babel code quietly and present its result."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-babel-result
+              prior-message ,aggregate)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target role action icon) in
+ '((org-babel-next-src-block org-source-block
+                             source-block-navigation select-object)
+   (org-babel-previous-src-block org-source-block
+                                 source-block-navigation select-object)
+   (org-babel-goto-named-src-block org-source-block
+                                   source-block-navigation large-movement)
+   (org-babel-goto-src-block-head org-source-block
+                                  source-block-navigation select-object)
+   (org-babel-goto-named-result org-babel-result
+                                source-result-navigation large-movement)
+   (org-babel-open-src-block-result org-babel-result
+                                    source-result-navigation open-object))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Navigate interactively among Org Babel sources or results."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--submit-text
+              (if (eobp)
+                  (emacsvox-org--buffer-summary)
+                (emacsvox-org--line-content))
+              (emacsvox-org--feedback-facts
+               ',role 'focus-entered ',action)
+              'navigation ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for target in
+ '(org-babel-load-in-session org-babel-switch-to-session
+   org-babel-switch-to-session-with-code
+   org-babel-do-key-sequence-in-edit-buffer)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Open an interactive Org Babel edit or session buffer quietly."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--submit-text
+              (emacsvox-org--buffer-summary)
+              (emacsvox-org--feedback-facts
+               'org-source-block 'focus-entered 'source-session-opened)
+              'navigation 'open-object)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for target in
+ '(org-babel-tangle org-babel-tangle-file)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Tangle interactive Org Babel code quietly and present its output."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--submit-text
+              (or
+               (emacsvox-org--new-current-message prior-message)
+               "Source blocks tangled")
+              (emacsvox-org--feedback-facts
+               'org-source-block 'object-changed 'source-tangled)
+              'notification 'save-object)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target action icon) in
+ '((org-babel-remove-result-one-or-many
+    source-results-removed delete-object)
+   (org-babel-demarcate-block source-block-changed button)
+   (org-babel-insert-header-arg source-block-changed button)
+   (org-babel-mark-block source-block-marked mark-object))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Alter an interactive Org Babel block quietly and present its source."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--submit-text
+              (if (eobp) "Source block changed" (emacsvox-org--line-content))
+              (emacsvox-org--feedback-facts
+               'org-source-block 'state-changed ',action)
+              'state-change ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target fallback) in
+ '((org-babel-view-src-block-info "Source block information")
+   (org-babel-expand-src-block "Source block expanded")
+   (org-babel-check-src-block "Source block checked")
+   (org-babel-sha1-hash "Source block hash calculated"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Inspect an interactive Org Babel block with native feedback."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--submit-text
+              (or
+               (emacsvox-org--new-current-message prior-message)
+               ,fallback)
+              (emacsvox-org--feedback-facts
+               'org-source-block 'focus-entered 'source-inspected)
+              'inspection)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
 ;;;  Fillers:
 
 (defun emacsvox--advice-org-fill-paragraph-after (&rest _)
@@ -1686,15 +1887,10 @@ Use optional compatibility ICON before the line."
                (emacsvox-speak-messages nil))
            (prog1
                (apply original arguments)
-             (let ((current (current-message)))
+             (let ((current
+                    (emacsvox-org--new-current-message prior-message)))
                (emacsvox-org--submit-text
-                (if
-                    (and
-                     (stringp current)
-                     (not (string-empty-p current))
-                     (not (equal current prior-message)))
-                    current
-                  ,fallback)
+                (or current ,fallback)
                 (emacsvox-org--feedback-facts
                  'org-edit-buffer 'focus-entered 'table-inspected)
                 'inspection))))))

@@ -201,6 +201,22 @@
     org-table-fedit-toggle-coordinates org-table-show-reference)
   "Org table editor commands with native lifecycle and editing feedback.")
 
+(defconst emacsvox-test--org-babel-around-targets
+  '(org-babel-execute-src-block org-babel-execute-maybe
+    org-babel-execute-buffer org-babel-execute-subtree
+    org-babel-next-src-block org-babel-previous-src-block
+    org-babel-goto-named-src-block org-babel-goto-src-block-head
+    org-babel-goto-named-result org-babel-open-src-block-result
+    org-babel-load-in-session org-babel-switch-to-session
+    org-babel-switch-to-session-with-code
+    org-babel-do-key-sequence-in-edit-buffer
+    org-babel-tangle org-babel-tangle-file
+    org-babel-remove-result-one-or-many org-babel-demarcate-block
+    org-babel-insert-header-arg org-babel-mark-block
+    org-babel-view-src-block-info org-babel-expand-src-block
+    org-babel-check-src-block org-babel-sha1-hash)
+  "Org Babel commands with native result and lifecycle feedback.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -284,7 +300,8 @@
   (dolist
       (semantic
        '(org-content org-item org-paragraph org-agenda-entry org-table
-                     org-capture org-edit-buffer org-export org-action
+                     org-capture org-edit-buffer org-export
+                     org-source-block org-babel-result org-action
                      org-table-row org-table-column
                      org-table-presentation))
     (should (emacsvox-aural-semantic semantic)))
@@ -1593,6 +1610,70 @@
        (eq
         (emacsvox-aural-compatibility-action-phase action)
         'before)))))
+
+(ert-deftest emacsvox-org-babel-advice-is-directly-registered ()
+  "Every covered Org Babel command has its named quiet adapter."
+  (dolist (target emacsvox-test--org-babel-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-babel-execution-speaks-the-result ()
+  "A real Babel execution submits its result instead of the source line."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert
+     "#+begin_src emacs-lisp\n"
+     "(+ 20 22)\n"
+     "#+end_src\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-babel-execute-src-block)
+          (org-confirm-babel-evaluate nil)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (org-babel-execute-src-block))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "42"))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-babel-result :events (object-changed)
+          :org-action source-block-executed)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'notification))
+      (should (search-forward "#+RESULTS:" nil t))
+      (should (search-forward ": 42" nil t)))))
+
+(ert-deftest emacsvox-org-babel-navigation-identifies-source-block ()
+  "Babel block navigation submits the destination as source-block semantics."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert
+     "#+begin_src emacs-lisp\n1\n#+end_src\n\n"
+     "#+begin_src emacs-lisp\n2\n#+end_src\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-babel-next-src-block)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (org-babel-next-src-block))
+      (should (= (length submissions) 1))
+      (should
+       (string-match-p
+        "#\\+begin_src emacs-lisp"
+        (substring-no-properties (caar submissions))))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-source-block :events (focus-entered)
+          :org-action source-block-navigation)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-todo-feedback-reports-current-state ()
   "Interactive TODO changes submit the resulting state once."
