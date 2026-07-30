@@ -1851,38 +1851,69 @@
 
 (ert-deftest emacsvox-notmuch-show-archive-message-confirms-and-speaks ()
   "A direct message archive confirms completion and identifies the result."
-  (let ((ems--interactive-fn-name 'notmuch-show-archive-message)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'emacsvox-notmuch--speak-current-item)
-               (lambda () (push '(destination) events))))
+  (let ((major-mode 'notmuch-show-mode)
+        (message (copy-tree emacsvox-notmuch-test--show-message))
+        (ems--interactive-fn-name 'notmuch-show-archive-message)
+        (submissions 0)
+        captured)
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () message))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (cl-incf submissions)
+            (setq captured (cons content arguments)))))
       (emacsvox--advice-notmuch-show-archive-message-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon close-object)
-        (speak "Archived message")
-        (destination))))))
+    (should (= submissions 1))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (facts (plist-get arguments :facts))
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should
+       (string-prefix-p
+        "Archived message\nAlice Smith"
+        (substring-no-properties content)))
+      (should
+       (equal
+        facts
+        '(:role message :mail-action-kind archive
+          :events (operation-completed))))
+      (should
+       (equal
+        (mapcar
+         (lambda (action)
+           (list
+            (emacsvox-aural-compatibility-action-value action)
+            (emacsvox-aural-compatibility-action-phase action)))
+         actions)
+        '((close-object before)
+          (mail-unread before)
+          (mark-object before)
+          (mail-has-attachment after)))))))
 
 (ert-deftest emacsvox-notmuch-show-unarchive-thread-uses-opening-cue ()
   "Reversing a thread archive uses an opening cue and clear confirmation."
-  (let ((ems--interactive-fn-name 'notmuch-show-archive-thread)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'emacsvox-notmuch--speak-current-item)
-               #'ignore))
+  (let ((major-mode 'notmuch-show-mode)
+        (ems--interactive-fn-name 'notmuch-show-archive-thread)
+        (submissions 0)
+        captured)
+    (cl-letf
+        (((symbol-function 'notmuch-show-get-message-properties)
+          (lambda () nil))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (cl-incf submissions)
+            (setq captured (cons content arguments)))))
       (emacsvox--advice-notmuch-show-archive-thread-after t))
+    (should (= submissions 1))
+    (should (equal (substring-no-properties (car captured))
+                   "Unarchived thread"))
     (should
      (equal
-      (nreverse events)
-      '((icon open-object)
-        (speak "Unarchived thread"))))))
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+       (plist-get (cdr captured) :compatibility-actions))
+      '(open-object)))))
 
 (ert-deftest emacsvox-notmuch-show-archive-wrapper-reports-once ()
   "An archive-and-move wrapper owns feedback from its nested operations."
@@ -1900,21 +1931,33 @@
 
 (ert-deftest emacsvox-notmuch-archive-confirms-then-speaks-next-result ()
   "Archive feedback acknowledges completion before speaking the new row."
-  (let ((ems--interactive-fn-name 'notmuch-search-archive-thread)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-speak)
-               (lambda (text) (push (list 'speak text) events)))
-              ((symbol-function 'emacsvox-notmuch-speak-search-result)
-               (lambda (&optional _result) (push '(result) events))))
-      (emacsvox--advice-notmuch-search-archive-thread-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon close-object)
-        (speak "Archived")
-        (result))))))
+  (dolist (case '((nil close-object "Archived")
+                  (t open-object "Unarchived")))
+    (let ((major-mode 'notmuch-search-mode)
+          (result (copy-tree emacsvox-notmuch-test--search-result))
+          (ems--interactive-fn-name 'notmuch-search-archive-thread)
+          (submissions 0)
+          captured)
+      (cl-letf
+          (((symbol-function 'notmuch-search-get-result)
+            (lambda (&optional _) result))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (cl-incf submissions)
+              (setq captured (cons content arguments)))))
+        (emacsvox--advice-notmuch-search-archive-thread-after
+         (nth 0 case)))
+      (should (= submissions 1))
+      (should
+       (string-prefix-p
+        (format "%s thread\nAlice Smith" (nth 2 case))
+        (substring-no-properties (car captured))))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get (cdr captured) :compatibility-actions))
+        (list (nth 1 case) 'mail-unread 'mark-object))))))
 
 (ert-deftest emacsvox-notmuch-refresh-marks-its-search-process ()
   "Interactive single-buffer refresh requests completion feedback."

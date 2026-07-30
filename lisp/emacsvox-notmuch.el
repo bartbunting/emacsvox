@@ -246,17 +246,6 @@ still suppress words."
 
 ;;;  Semantic aural presentation:
 
-(defun emacsvox-notmuch--call-with-aural-presentation
-    (facts occasion function &rest arguments)
-  "Call FUNCTION with ARGUMENTS in a frozen Notmuch presentation.
-FACTS describe the object or event, and OCCASION describes the interaction."
-  (emacsvox-aural-call-with-submission
-   function
-   :facts (or facts '(:role mail-view :mail-view-kind other))
-   :module 'notmuch
-   :occasion (or occasion 'navigation)
-   :arguments arguments))
-
 (defun emacsvox-notmuch--submit-content
     (text facts occasion compatibility-actions)
   "Submit TEXT and COMPATIBILITY-ACTIONS under FACTS and OCCASION."
@@ -1783,22 +1772,51 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
     (object unarchive speak-destination)
   "Confirm archiving OBJECT and optionally SPEAK-DESTINATION.
 When UNARCHIVE is non-nil, confirm the reverse operation."
-  (emacsvox-notmuch--call-with-aural-presentation
-   (append
-    (if (eq object 'thread)
-        '(:role message-thread)
-      '(:role message))
-    '(:mail-action-kind archive :events (operation-completed)))
-   'state-change
-   (lambda ()
-     (emacsvox-icon (if unarchive 'open-object 'close-object))
-     (tts-speak
-      (format
-       "%s %s"
-       (if unarchive "Unarchived" "Archived")
-       (symbol-name object)))
-     (when speak-destination
-       (emacsvox-notmuch--speak-current-item)))))
+  (let* ((show-message-p (eq major-mode 'notmuch-show-mode))
+         (item
+          (and
+           speak-destination
+           (pcase major-mode
+             ('notmuch-show-mode
+              (notmuch-show-get-message-properties))
+             ('notmuch-search-mode
+              (notmuch-search-get-result)))))
+         (confirmation
+          (format
+           "%s %s"
+           (if unarchive "Unarchived" "Archived")
+           (symbol-name object)))
+         (item-summary
+          (and
+           item
+           (if show-message-p
+               (emacsvox-notmuch-format-show-message item)
+             (emacsvox-notmuch-format-search-result item))))
+         (facts
+          (append
+           (if (eq object 'thread)
+               '(:role message-thread)
+             '(:role message))
+           '(:mail-action-kind archive
+             :events (operation-completed))))
+         (actions
+          (append
+           (emacsvox-notmuch--leading-compatibility-actions
+            (if unarchive 'open-object 'close-object))
+           (and
+            item
+            (emacsvox-notmuch--status-compatibility-actions
+             item
+             (if show-message-p
+                 emacsvox-notmuch-show-status-icons
+               emacsvox-notmuch-search-status-icons)
+             'state-change
+             show-message-p)))))
+    (emacsvox-notmuch--submit-content
+     (string-join
+      (delq nil (list confirmation item-summary))
+      "\n")
+     facts 'state-change actions)))
 
 (defun emacsvox--advice-notmuch-show-archive-message-after
     (&optional unarchive &rest _)
@@ -1851,14 +1869,8 @@ When UNARCHIVE is non-nil, confirm the reverse operation."
     (&optional unarchive &rest _)
   "Confirm an archive operation and speak the current result."
   (when (ems-interactive-p 'notmuch-search-archive-thread)
-    (emacsvox-notmuch--call-with-aural-presentation
-     '(:role message-thread :mail-action-kind archive
-       :events (operation-completed))
-     'state-change
-     (lambda ()
-       (emacsvox-icon 'close-object)
-       (tts-speak (if unarchive "Unarchived" "Archived"))
-       (emacsvox-notmuch-speak-search-result)))))
+    (emacsvox-notmuch--show-archive-feedback
+     'thread unarchive t)))
 
 (push
  '(notmuch-search-archive-thread
