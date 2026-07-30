@@ -665,20 +665,6 @@ A selected viewport counts as focus for its associated shell buffer."
           0)
       (or (alist-get level emacsvox-agent-shell--speech-level-values) 0)))
 
-(defun emacsvox-agent-shell--call-with-aural-presentation
-    (facts occasion function &rest arguments)
-  "Call FUNCTION with ARGUMENTS inside one frozen Agent Shell presentation.
-
-FACTS and OCCASION describe this boundary.  An enclosing, more specific
-submission remains authoritative so compatibility helpers can safely use this
-function without replacing lifecycle, permission, tool, or content intent."
-  (emacsvox-aural-call-with-submission
-   function
-   :facts (or facts '(:role agent-session))
-   :module 'agent-shell
-   :occasion (or occasion 'continuous)
-   :arguments arguments))
-
 (defun emacsvox-agent-shell--presentation-facts
     (role &optional event states attributes)
   "Return Agent Shell facts for ROLE, EVENT, STATES, and ATTRIBUTES.
@@ -690,23 +676,30 @@ ATTRIBUTES is a property list of registered semantic attributes."
    (when states (list :states (copy-sequence states)))
    (copy-tree attributes)))
 
-(defun emacsvox-agent-shell--deliver-announcement (icon text)
-  "Deliver ICON and TEXT for the current session without background chatter."
-  (emacsvox-agent-shell--call-with-aural-presentation
-   '(:role agent-session) 'notification
+(defun emacsvox-agent-shell--notify-background
+    (facts occasion icon text &optional separator)
+  "Notify the background session with FACTS, OCCASION, ICON, and TEXT.
+SEPARATOR defaults to a sentence boundary between the session label and TEXT."
+  (emacsvox-aural-call-with-submission
    (lambda ()
-     (if (emacsvox-agent-shell--session-focused-p)
-         (emacsvox-aural-submit
-          text
-          :module 'agent-shell
-          :occasion 'notification
-          :compatibility-actions
-          (list (emacsvox-aural-compatibility-icon icon)))
-       (tts-notify-icon icon)
-       (tts-notify
-        (format "%s. %s"
-                (emacsvox-agent-shell--session-label)
-                text))))))
+     (tts-notify-icon icon)
+     (tts-notify
+      (format "%s%s%s"
+              (emacsvox-agent-shell--session-label)
+              (or separator ". ")
+              text)))
+   :facts facts
+   :module 'agent-shell
+   :occasion occasion))
+
+(defun emacsvox-agent-shell--deliver-announcement
+    (facts occasion icon text)
+  "Deliver ICON and TEXT under FACTS and OCCASION for the current session."
+  (if (emacsvox-agent-shell--session-focused-p)
+      (emacsvox-agent-shell--submit-text-feedback
+       text facts occasion icon)
+    (emacsvox-agent-shell--notify-background
+     facts occasion icon text)))
 
 (defconst emacsvox-agent-shell--speech-level-cycle
   '(full response notify quiet)
@@ -1221,25 +1214,18 @@ the body retains semantic faces and omits markup that is no longer displayed."
 (defun emacsvox-agent-shell--deliver-out-of-turn-body (body)
   "Deliver rendered out-of-turn agent message BODY according to focus policy."
   (when (bound-and-true-p emacsvox-comint-autospeak)
-    (emacsvox-agent-shell--call-with-aural-presentation
-     '(:role agent-response) 'notification
-     (lambda ()
-       (let ((focused (emacsvox-agent-shell--session-focused-p)))
-         (cond
-          ((and focused
-                (emacsvox-agent-shell--speech-level-at-least-p 'response))
-           (emacsvox-aural-submit
-            (concat "Agent update: " body)
-            :module 'agent-shell
-            :occasion 'notification
-            :compatibility-actions
-            (list (emacsvox-aural-compatibility-icon 'item))))
-          ((and (not focused)
-                (emacsvox-agent-shell--speech-level-at-least-p 'notify))
-           (tts-notify-icon 'item)
-           (tts-notify
-            (format "%s. Agent update available."
-                    (emacsvox-agent-shell--session-label))))))))))
+    (let ((facts '(:role agent-response))
+          (occasion 'notification)
+          (focused (emacsvox-agent-shell--session-focused-p)))
+      (cond
+       ((and focused
+             (emacsvox-agent-shell--speech-level-at-least-p 'response))
+        (emacsvox-agent-shell--submit-text-feedback
+         (concat "Agent update: " body) facts occasion 'item))
+       ((and (not focused)
+             (emacsvox-agent-shell--speech-level-at-least-p 'notify))
+        (emacsvox-agent-shell--notify-background
+         facts occasion 'item "Agent update available."))))))
 
 (defun emacsvox-agent-shell--deliver-out-of-turn-pending (buffer)
   "Deliver and clear coalesced out-of-turn messages for live BUFFER."
@@ -1482,12 +1468,10 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
   ;; so far.  A later section update refreshes the complete body snapshot.
   (when emacsvox-agent-shell-speak-permissions
     (tts-stop)
-    (emacsvox-agent-shell--call-with-aural-presentation
+    (emacsvox-agent-shell--deliver-announcement
      (emacsvox-agent-shell--presentation-facts
       'permission-request 'agent-permission-requested)
-     'notification
-     #'emacsvox-agent-shell--deliver-announcement
-     'warn-user
+     'notification 'warn-user
      (emacsvox-agent-shell--permission-announcement event))))
 
 (defun emacsvox-agent-shell--handle-permission-response (event)
@@ -1512,33 +1496,33 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
                (hash-table-p emacsvox-agent-shell--permission-action-cache))
       (remhash key emacsvox-agent-shell--permission-action-cache))
     (when emacsvox-agent-shell-speak-permissions
-      (let ((result
-             (cond
-              (cancelled 'cancelled)
-              ((equal kind "reject_once") 'denied)
-              ((member kind '("allow_once" "allow_always")) 'allowed)
-              (t 'sent))))
-        (emacsvox-agent-shell--call-with-aural-presentation
-         (emacsvox-agent-shell--presentation-facts
-          'permission-request 'agent-permission-resolved nil
-          (list :agent-permission-result result))
-         'state-change
-         (lambda ()
-           (pcase result
-             ('cancelled
-              (emacsvox-agent-shell--deliver-announcement
-               'close-object "Permission cancelled."))
-             ('denied
-              (emacsvox-agent-shell--deliver-announcement
-               'close-object
-               (format "Permission denied: %s." (or option "Reject"))))
-             ('allowed
-              (emacsvox-agent-shell--deliver-announcement
-               'select-object
-               (format "Permission granted: %s." (or option "Allow"))))
-             (_
-              (emacsvox-agent-shell--deliver-announcement
-               'select-object "Permission response sent.")))))))))
+      (let* ((result
+              (cond
+               (cancelled 'cancelled)
+               ((equal kind "reject_once") 'denied)
+               ((member kind '("allow_once" "allow_always")) 'allowed)
+               (t 'sent)))
+             (facts
+              (emacsvox-agent-shell--presentation-facts
+               'permission-request 'agent-permission-resolved nil
+               (list :agent-permission-result result))))
+        (pcase result
+          ('cancelled
+           (emacsvox-agent-shell--deliver-announcement
+            facts 'state-change
+            'close-object "Permission cancelled."))
+          ('denied
+           (emacsvox-agent-shell--deliver-announcement
+            facts 'state-change 'close-object
+            (format "Permission denied: %s." (or option "Reject"))))
+          ('allowed
+           (emacsvox-agent-shell--deliver-announcement
+            facts 'state-change 'select-object
+            (format "Permission granted: %s." (or option "Allow"))))
+          (_
+           (emacsvox-agent-shell--deliver-announcement
+            facts 'state-change
+            'select-object "Permission response sent.")))))))
 
 (defun emacsvox-agent-shell--permission-event-setup ()
   "Subscribe the current agent-shell buffer to permission events."
@@ -1584,59 +1568,59 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
             (string-trim (substring-no-properties message)))
            (code (format "code %s" code))
            (t nil))))
-    (emacsvox-agent-shell--call-with-aural-presentation
+    (emacsvox-agent-shell--deliver-announcement
      (emacsvox-agent-shell--presentation-facts
       'agent-error 'processing-failed)
-     'notification
-     #'emacsvox-agent-shell--deliver-announcement
-     'warn-user
+     'notification 'warn-user
      (if detail
          (format "Agent error: %s" detail)
        "Agent error."))))
 
-(defun emacsvox-agent-shell--submit-lifecycle-icon (icon)
-  "Submit configurable lifecycle ICON within the current semantic boundary."
+(defun emacsvox-agent-shell--submit-lifecycle-icon (facts icon)
+  "Submit configurable lifecycle ICON under explicit FACTS."
   (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'agent-shell
+   :occasion 'notification
    :compatibility-actions
    (list (emacsvox-aural-compatibility-icon icon))))
 
 (defun emacsvox-agent-shell--speak-turn-completion (event)
   "Announce the outcome described by turn completion EVENT."
-  (emacsvox-agent-shell--call-with-aural-presentation
-   (emacsvox-agent-shell-lifecycle-facts event)
-   'notification
-   (lambda ()
-     (let ((stop-reason (map-nested-elt event '(:data :stop-reason))))
-       (if (equal stop-reason "end_turn")
-           (when (emacsvox-agent-shell--speech-level-at-least-p 'notify)
-             (if (emacsvox-agent-shell--session-focused-p)
-                 (emacsvox-agent-shell--submit-lifecycle-icon
-                  emacsvox-agent-shell-processing-end-icon)
-               (tts-notify-icon emacsvox-agent-shell-processing-end-icon)
-               (tts-notify
-                (format "%s finished."
-                        (emacsvox-agent-shell--session-label)))))
-         (pcase stop-reason
-           ("cancelled"
-            (emacsvox-agent-shell--deliver-announcement
-             'close-object "Agent turn cancelled."))
-           ("max_tokens"
-            (emacsvox-agent-shell--deliver-announcement
-             'warn-user "Agent stopped: maximum token limit reached."))
-           ("max_turn_requests"
-            (emacsvox-agent-shell--deliver-announcement
-             'warn-user "Agent stopped: request limit reached."))
-           ("refusal"
-            (emacsvox-agent-shell--deliver-announcement
-             'warn-user "Agent refused the request."))
-           ((pred stringp)
-            (emacsvox-agent-shell--deliver-announcement
-             'warn-user
-             (format "Agent stopped: %s."
-                     (string-replace "_" " " stop-reason))))
-           (_
-            (emacsvox-agent-shell--deliver-announcement
-             'warn-user "Agent stopped for an unknown reason."))))))))
+  (let ((facts (emacsvox-agent-shell-lifecycle-facts event))
+        (stop-reason (map-nested-elt event '(:data :stop-reason))))
+    (if (equal stop-reason "end_turn")
+        (when (emacsvox-agent-shell--speech-level-at-least-p 'notify)
+          (if (emacsvox-agent-shell--session-focused-p)
+              (emacsvox-agent-shell--submit-lifecycle-icon
+               facts emacsvox-agent-shell-processing-end-icon)
+            (emacsvox-agent-shell--notify-background
+             facts 'notification
+             emacsvox-agent-shell-processing-end-icon "finished." " ")))
+      (pcase stop-reason
+        ("cancelled"
+         (emacsvox-agent-shell--deliver-announcement
+          facts 'notification 'close-object "Agent turn cancelled."))
+        ("max_tokens"
+         (emacsvox-agent-shell--deliver-announcement
+          facts 'notification 'warn-user
+          "Agent stopped: maximum token limit reached."))
+        ("max_turn_requests"
+         (emacsvox-agent-shell--deliver-announcement
+          facts 'notification 'warn-user
+          "Agent stopped: request limit reached."))
+        ("refusal"
+         (emacsvox-agent-shell--deliver-announcement
+          facts 'notification 'warn-user "Agent refused the request."))
+        ((pred stringp)
+         (emacsvox-agent-shell--deliver-announcement
+          facts 'notification 'warn-user
+          (format "Agent stopped: %s."
+                  (string-replace "_" " " stop-reason))))
+        (_
+         (emacsvox-agent-shell--deliver-announcement
+          facts 'notification 'warn-user
+          "Agent stopped for an unknown reason."))))))
 
 (defun emacsvox-agent-shell-lifecycle-facts (event)
   "Return semantic processing facts for Agent Shell lifecycle EVENT."
@@ -1658,9 +1642,10 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
      (when (eq semantic-event 'processing-started)
        '(:states (processing))))))
 
-(defun emacsvox-agent-shell--handle-lifecycle-event-compatibility (event)
-  "Provide semantic processing feedback for public agent-shell EVENT."
-  (let ((event-type (map-elt event :event)))
+(defun emacsvox-agent-shell--handle-lifecycle-event (event)
+  "Provide semantic processing feedback for public Agent Shell EVENT."
+  (let ((event-type (map-elt event :event))
+        (facts (emacsvox-agent-shell-lifecycle-facts event)))
     ;; Response collection is independent of lifecycle cue preferences.
     ;; `turn-complete' is the semantic boundary: no network-pause timer is
     ;; allowed to deliver a partial response.
@@ -1681,23 +1666,15 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
         ((or 'init-started 'input-submitted)
          (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
            (emacsvox-agent-shell--submit-lifecycle-icon
-            emacsvox-agent-shell-processing-start-icon)))
+            facts emacsvox-agent-shell-processing-start-icon)))
         ('init-finished
          (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
            (emacsvox-agent-shell--submit-lifecycle-icon
-            emacsvox-agent-shell-processing-end-icon)))
+            facts emacsvox-agent-shell-processing-end-icon)))
         ('turn-complete
          (emacsvox-agent-shell--speak-turn-completion event))
         ('error
          (emacsvox-agent-shell--speak-agent-error event))))))
-
-(defun emacsvox-agent-shell--handle-lifecycle-event (event)
-  "Present Agent Shell lifecycle EVENT with semantic submission context."
-  (emacsvox-agent-shell--call-with-aural-presentation
-   (emacsvox-agent-shell-lifecycle-facts event)
-   'notification
-   #'emacsvox-agent-shell--handle-lifecycle-event-compatibility
-   event))
 
 (defun emacsvox-agent-shell--lifecycle-event-setup ()
   "Subscribe the current agent-shell buffer to lifecycle events."
@@ -1841,10 +1818,8 @@ When ICON is non-nil, preserve it as a compatibility action."
            (_ nil))))
       ('permission
        (when emacsvox-agent-shell-speak-permissions
-         (emacsvox-agent-shell--call-with-aural-presentation
-          facts occasion
-          #'emacsvox-agent-shell--deliver-announcement
-          'warn-user trimmed-content)))
+         (emacsvox-agent-shell--deliver-announcement
+          facts occasion 'warn-user trimmed-content)))
       ('tool-call
        (when (and emacsvox-agent-shell-speak-tool-calls
                   (emacsvox-agent-shell--speech-level-at-least-p 'full))
@@ -1870,10 +1845,8 @@ When ICON is non-nil, preserve it as a compatibility action."
          (emacsvox-agent-shell--submit-content-text
           (concat "Plan: " trimmed-content) facts occasion 'item)))
       ('error
-       (emacsvox-agent-shell--call-with-aural-presentation
-        facts occasion
-        #'emacsvox-agent-shell--deliver-announcement
-        'warn-user trimmed-content))
+       (emacsvox-agent-shell--deliver-announcement
+        facts occasion 'warn-user trimmed-content))
       ('unknown
        (cond
         ((emacsvox-agent-shell--speech-level-at-least-p 'full)

@@ -66,7 +66,7 @@ The removed named helpers remain listed so calls cannot be reintroduced.")
 
 (defconst emacsvox-aural-audit-migrated-icon-boundaries
   '((emacsvox-agent-shell.el
-     emacsvox-agent-shell--call-with-aural-presentation)
+     emacsvox-agent-shell--notify-background)
     (emacsvox-markdown.el
      emacsvox-markdown--call-with-aural-presentation)
     (emacsvox-org.el

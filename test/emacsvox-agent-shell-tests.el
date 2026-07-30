@@ -1803,8 +1803,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
              (list
               content
               arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output)))
@@ -1813,14 +1814,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (emacsvox-agent-shell--deliver-out-of-turn-body "Rendered update"))
     (should-not direct-output)
     (should (= (length captured) 1))
-    (pcase-let* ((`(,content ,arguments ,facts ,context)
+    (pcase-let* ((`(,content ,arguments ,facts ,module ,occasion)
                    (car captured))
                  (actions
                   (plist-get arguments :compatibility-actions)))
       (should (equal content "Agent update: Rendered update"))
       (should (eq (plist-get facts :role) 'agent-response))
-      (should (eq (plist-get context :module) 'agent-shell))
-      (should (eq (plist-get context :occasion) 'notification))
+      (should (eq module 'agent-shell))
+      (should (eq occasion 'notification))
       (should
        (equal
         (mapcar #'emacsvox-aural-compatibility-action-value actions)
@@ -2561,31 +2562,30 @@ Return speech events plus the target character.  DIRECTION is `forward' or
              (list
               content
               arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output)))
          ((symbol-function 'tts-speak)
           (lambda (&rest _) (push 'speech direct-output))))
-      (emacsvox-agent-shell--call-with-aural-presentation
+      (emacsvox-agent-shell--deliver-announcement
        (emacsvox-agent-shell--presentation-facts
         'agent-error 'processing-failed)
-       'notification
-       #'emacsvox-agent-shell--deliver-announcement
-       'warn-user
+       'notification 'warn-user
        "Agent error: Connection lost."))
     (should-not direct-output)
     (should (= (length captured) 1))
-    (pcase-let* ((`(,content ,arguments ,facts ,context)
+    (pcase-let* ((`(,content ,arguments ,facts ,module ,occasion)
                    (car captured))
                  (actions
                   (plist-get arguments :compatibility-actions)))
       (should (equal content "Agent error: Connection lost."))
       (should (eq (plist-get facts :role) 'agent-error))
       (should (equal (plist-get facts :events) '(processing-failed)))
-      (should (eq (plist-get context :module) 'agent-shell))
-      (should (eq (plist-get context :occasion) 'notification))
+      (should (eq module 'agent-shell))
+      (should (eq occasion 'notification))
       (should
        (equal
         (mapcar #'emacsvox-aural-compatibility-action-value actions)
@@ -2617,8 +2617,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (push
                (list
                 icon
-                (copy-tree emacsvox-aural-submission-facts)
-                (copy-tree emacsvox-aural-submission-context))
+                (copy-tree (plist-get arguments :facts))
+                (plist-get arguments :module)
+                (plist-get arguments :occasion))
                captured))))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output))))
@@ -2644,10 +2645,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       '(processing-completed)))
     (dolist (entry captured)
       (should (eq (plist-get (cadr entry) :role) 'agent-session))
-      (should
-       (eq (plist-get (caddr entry) :module) 'agent-shell))
-      (should
-       (eq (plist-get (caddr entry) :occasion) 'notification)))))
+      (should (eq (caddr entry) 'agent-shell))
+      (should (eq (cadddr entry) 'notification)))))
 
 (ert-deftest emacsvox-agent-shell-focus-includes-associated-viewport ()
   "A selected shell or its viewport should be the focused session."
