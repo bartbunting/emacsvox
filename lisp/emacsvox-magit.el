@@ -49,7 +49,6 @@
 (require 'cl-lib)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
-(require 'emacsvox-aural-transport)
 (require 'emacsvox-aural-provider-workflows)
 
 ;;; Forward declarations:
@@ -296,26 +295,6 @@ The left-margin face is purely graphical and contains no spoken content.")
    ((derived-mode-p 'magit-diff-mode) 'diff)
    (t 'other)))
 
-(defun emacsvox-magit--call-with-aural-presentation
-    (facts occasion function &rest arguments)
-  "Call FUNCTION with ARGUMENTS in a frozen Magit presentation.
-FACTS describe the object or event, and OCCASION describes the interaction."
-  (emacsvox-aural-call-with-submission
-   function
-   :facts (or facts '(:role vcs-view :vcs-view-kind other))
-   :module 'magit
-   :occasion (or occasion 'navigation)
-   :arguments arguments))
-
-(defun emacsvox-magit--present-feedback
-    (facts occasion icon function &rest arguments)
-  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
-  (emacsvox-magit--call-with-aural-presentation
-   facts occasion
-   (lambda ()
-     (when icon (emacsvox-icon icon))
-     (apply function arguments))))
-
 (defun emacsvox-magit--submit-actions (facts occasion &rest icons)
   "Submit FACTS and compatibility ICONS as one action-only transaction."
   (emacsvox-aural-submit-actions
@@ -341,6 +320,15 @@ ICON-PHASE defaults to `before'."
           (emacsvox-aural-compatibility-icon icon icon-phase))))
     (when icon
       (emacsvox-magit--submit-actions facts occasion icon))))
+
+(defun emacsvox-magit--buffer-summary ()
+  "Return a concise voice-preserving summary of the selected buffer."
+  (concat
+   (propertize (buffer-name) 'personality voice-lighten-medium)
+   ", "
+   (propertize
+    (downcase (format-mode-line mode-name))
+    'personality voice-animate)))
 
 (defun emacsvox-magit--line-content ()
   "Return the current line with speech-relevant text properties intact.
@@ -527,33 +515,35 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 (defun emacsvox--advice-magit-section-hide-after (&rest _)
   "Present a hidden Magit section."
   (when (ems-interactive-p 'magit-section-hide)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-actions
      (emacsvox-magit-section-facts
       'magit-section-hide nil 'visibility-changed 'folded)
-     'state-change 'close-object #'ignore)))
+     'state-change 'close-object)))
 
 (defun emacsvox--advice-magit-show-commit-after (&rest _)
   "Present a commit view opened by an interactive Magit command."
   (when (ems-interactive-p 'magit-show-commit)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--line-content)
      (emacsvox-magit-view-facts 'commit 'vcs-view-opened)
-     'navigation 'open-object #'emacsvox-speak-line)))
+     'navigation 'open-object)))
 
 (defun emacsvox--advice-magit-section-cycle-diffs-after (&rest _)
   "Present an interactive aggregate diff-visibility change."
   (when (ems-interactive-p 'magit-section-cycle-diffs)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--line-content)
      (emacsvox-magit-view-facts 'diff 'visibility-changed)
-     'state-change 'large-movement #'emacsvox-speak-line)))
+     'state-change 'large-movement)))
 
 (defun emacsvox--advice-magit-section-cycle-global-after (&rest _)
-  "speak."
+  "Present an aggregate section-visibility change."
   (when (ems-interactive-p 'magit-section-cycle-global)
-    (emacsvox-magit--call-with-aural-presentation
+    (emacsvox-magit--submit-text
+     "Cycled global section visibility"
      (emacsvox-magit-section-facts
       'magit-section-cycle-global nil 'visibility-changed)
-     'state-change
-     #'tts-notify "Cycling global visibility of sections")))
+     'state-change)))
 
 (cl-loop
  for target in '(magit-section-toggle magit-section-cycle)
@@ -573,18 +563,20 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 ;;; blob mode:
 
 (defun emacsvox--advice-magit-kill-this-buffer-after (&rest _)
-  "Speak."
+  "Present the buffer selected after killing a Magit buffer."
   (when (ems-interactive-p 'magit-kill-this-buffer)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--buffer-summary)
      (emacsvox-magit-view-facts 'other 'vcs-view-closed)
-     'state-change 'close-object #'emacsvox-speak-mode-line)))
+     'state-change 'close-object)))
 
 (defun emacsvox--advice-magit-blob-visit-file-after (&rest _)
-  "Speak"
+  "Present the source file visited from a blob."
   (when (ems-interactive-p 'magit-blob-visit-file)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--buffer-summary)
      (emacsvox-magit-view-facts 'blob 'vcs-view-opened)
-     'navigation 'open-object #'emacsvox-speak-mode-line)))
+     'navigation 'open-object)))
 
 (cl-loop
  for target in '(magit-blob-previous magit-blob-next)
@@ -594,9 +586,9 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   `(defun ,advice-function (&rest _)
      "Speak."
      (when (ems-interactive-p ',target)
-       (emacsvox-magit--present-feedback
+       (emacsvox-magit--submit-actions
         (emacsvox-magit-view-facts 'blob 'focus-entered)
-        'navigation 'large-movement #'ignore)))))
+        'navigation 'large-movement)))))
 
 ;;;  Additional commands to advice:
 
@@ -608,11 +600,12 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      'refresh-completed)))
 
 (defun emacsvox--advice-magit-status-after (&rest _)
-  "speak."
+  "Present a newly selected status view."
   (when (ems-interactive-p 'magit-status)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--line-content)
      (emacsvox-magit-view-facts 'status 'vcs-view-opened)
-     'state-change 'open-object #'emacsvox-speak-line)))
+     'state-change 'open-object)))
 
 (cl-loop
  for target in
@@ -624,9 +617,10 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      "speak."
      (when (ems-interactive-p ',target)
        (with-current-buffer (window-buffer (selected-window))
-         (emacsvox-magit--present-feedback
+         (emacsvox-magit--submit-text
+          (emacsvox-magit--buffer-summary)
           (emacsvox-magit-view-facts 'other 'vcs-view-closed)
-          'state-change 'close-object #'emacsvox-speak-mode-line))))))
+          'state-change 'close-object))))))
 
 (defun emacsvox--advice-magit-refresh-all-after (&rest _)
   "speak."
@@ -636,11 +630,12 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      'refresh-completed)))
 
 (defun emacsvox--advice-magit-display-buffer-after (&rest _)
-  "speak."
+  "Present a Magit buffer displayed directly by the user."
   (when (ems-interactive-p 'magit-display-buffer)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--line-content)
      (emacsvox-magit-view-facts 'other 'vcs-view-opened)
-     'navigation 'open-object #'emacsvox-speak-line)))
+     'navigation 'open-object)))
 
 ;;;  Advise process-sentinel:
 
@@ -650,11 +645,11 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     (let* ((failed
             (or
              (eq (process-status argument) 'signal)
-             (not (zerop (process-exit-status argument)))))
+           (not (zerop (process-exit-status argument)))))
            (icon (if failed 'warn-user 'task-done)))
-      (emacsvox-magit--present-feedback
+      (emacsvox-magit--submit-actions
        (emacsvox-magit-process-facts failed)
-       'notification icon #'ignore))))
+       'notification icon))))
 
 ;;;  Magit Blame:
 
@@ -700,21 +695,20 @@ Present optional MOVEMENT-ICON after the chunk."
        (emacsvox-magit-blame-speak 'large-movement)))))
 
 (defun emacsvox--advice-magit-blame-quit-after (&rest _)
-  "speak."
+  "Present the buffer selected after leaving blame."
   (when (ems-interactive-p 'magit-blame-quit)
-    (emacsvox-magit--present-feedback
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--buffer-summary)
      (emacsvox-magit-view-facts 'blame 'vcs-view-closed)
-     'state-change 'close-object #'emacsvox-speak-mode-line)))
+     'state-change 'close-object)))
 
 (defun emacsvox--advice-magit-blame-after (&rest _)
-  "speak."
+  "Present entry into Magit Blame."
   (when (ems-interactive-p 'magit-blame)
-    (emacsvox-magit--call-with-aural-presentation
+    (emacsvox-magit--submit-text
+     "Entering Magit Blame"
      (emacsvox-magit-view-facts 'blame 'vcs-view-opened)
-     'state-change
-     (lambda ()
-       (message "Entering Magit Blame")
-       (emacsvox-icon 'open-object)))))
+     'state-change 'open-object)))
 
 (defun emacsvox--advice-magit-diff-show-or-scroll-up-around
     (orig-fun &rest args)
@@ -724,14 +718,15 @@ Present optional MOVEMENT-ICON after the chunk."
     (when (ems-interactive-p 'magit-diff-show-or-scroll-up)
       (cond
        ((= origin (point))
-        (message "Displayed commit in other window.")
-        (emacsvox-magit--present-feedback
+        (emacsvox-magit--submit-text
+         "Displayed commit in other window"
          (emacsvox-magit-view-facts 'commit 'vcs-commit-displayed)
-         'state-change 'open-object #'ignore))
+         'state-change 'open-object))
        (t
-        (emacsvox-magit--present-feedback
+        (emacsvox-magit--submit-text
+         (emacsvox-magit--line-content)
          (emacsvox-magit-view-facts 'diff 'vcs-diff-scrolled)
-         'navigation 'scroll #'emacsvox-speak-line))))
+         'navigation 'scroll))))
     result))
 
 (defconst emacsvox-magit--quit-targets

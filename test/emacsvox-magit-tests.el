@@ -216,10 +216,17 @@
     (let ((ems--interactive-fn-name 'magit-diff-show-or-scroll-up)
           (calls 0)
           events)
-      (cl-letf (((symbol-function 'emacsvox-icon)
-                 (lambda (icon) (push icon events)))
-                ((symbol-function 'emacsvox-speak-line)
-                 (lambda () (push 'line events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                content
+                (plist-get arguments :facts)
+                (mapcar
+                 #'emacsvox-aural-compatibility-action-value
+                 (plist-get arguments :compatibility-actions)))
+               events))))
         (should
          (eq
           'scrolled
@@ -229,7 +236,13 @@
              (forward-line 1)
              'scrolled)))))
       (should (= calls 1))
-      (should (equal (nreverse events) '(scroll line))))))
+      (should
+       (equal
+        events
+        '(("b"
+           (:role vcs-view :vcs-view-kind diff
+            :events (vcs-diff-scrolled))
+           (scroll))))))))
 
 (ert-deftest emacsvox-magit-diff-scroll-noninteractive-calls-once ()
   "A noninteractive diff call has no duplicate invocation."
@@ -500,10 +513,14 @@
           (lambda (_) 'exit))
          ((symbol-function 'process-exit-status)
           (lambda (_) 1))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (icon)
+         ((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
             (push
-             (list icon emacsvox-aural-submission-facts)
+             (list
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions))
+              (plist-get arguments :facts))
              events))))
       (emacsvox--advice-magit-process-finish-after 0)
       (should-not events)
@@ -511,22 +528,23 @@
       (should
        (equal
         events
-        '((warn-user
+        '(((warn-user)
            (:role vcs-process :events (operation-failed)))))))))
 
 (ert-deftest emacsvox-magit-special-feedback-has-accurate-semantics ()
   "Commit display and diff cycling are not reported as section expansion."
   (let (events)
     (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (icon)
+        (((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
             (push
              (list
-              icon
-              emacsvox-aural-submission-facts
-              emacsvox-aural-submission-occasion)
-             events)))
-         ((symbol-function 'emacsvox-speak-line) #'ignore))
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions))
+              (plist-get arguments :facts)
+              (plist-get arguments :occasion))
+             events))))
       (let ((ems--interactive-fn-name 'magit-show-commit))
         (emacsvox--advice-magit-show-commit-after))
       (let ((ems--interactive-fn-name 'magit-section-cycle-diffs))
@@ -534,11 +552,11 @@
     (should
      (equal
       (nreverse events)
-      '((open-object
+      '(((open-object)
          (:role vcs-view :vcs-view-kind commit
           :events (vcs-view-opened))
          navigation)
-        (large-movement
+        ((large-movement)
          (:role vcs-view :vcs-view-kind diff
           :events (visibility-changed))
          state-change))))))
@@ -551,29 +569,27 @@
     (let ((ems--interactive-fn-name 'magit-diff-show-or-scroll-up)
           events)
       (cl-letf
-          (((symbol-function 'emacsvox-icon)
-            (lambda (icon)
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
               (push
-               (list icon emacsvox-aural-submission-facts
-                     emacsvox-aural-submission-occasion)
-               events)))
-           ((symbol-function 'emacsvox-speak-line)
-            (lambda ()
-              (push
-               (list 'line emacsvox-aural-submission-facts)
+               (list
+                content
+                (plist-get arguments :facts)
+                (plist-get arguments :occasion)
+                (mapcar
+                 #'emacsvox-aural-compatibility-action-value
+                 (plist-get arguments :compatibility-actions)))
                events))))
         (emacsvox--advice-magit-diff-show-or-scroll-up-around
          (lambda () (forward-line 1))))
       (should
        (equal
         (nreverse events)
-        '((scroll
+        '(("b"
            (:role vcs-view :vcs-view-kind diff
             :events (vcs-diff-scrolled))
-           navigation)
-          (line
-           (:role vcs-view :vcs-view-kind diff
-            :events (vcs-diff-scrolled)))))))))
+           navigation
+           (scroll))))))))
 
 (provide 'emacsvox-magit-tests)
 ;;; emacsvox-magit-tests.el ends here
