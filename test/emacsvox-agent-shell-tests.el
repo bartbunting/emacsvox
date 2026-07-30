@@ -315,7 +315,9 @@
                             'icon
                             (emacsvox-aural-compatibility-action-value action))
                            ,event-log)))
-                      (when (eq (plist-get facts :role) 'agent-tool)
+                      (when (and
+                             (eq (plist-get facts :role) 'agent-tool)
+                             (plist-get facts :agent-tool-status))
                         (push
                          (list
                           'icon
@@ -344,7 +346,9 @@
                             'icon
                             (emacsvox-aural-compatibility-action-value action))
                            ,event-log)))
-                      (when (eq (plist-get facts :role) 'agent-tool)
+                      (when (and
+                             (eq (plist-get facts :role) 'agent-tool)
+                             (plist-get facts :agent-tool-status))
                         (push
                          (list
                           'icon
