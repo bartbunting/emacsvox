@@ -1075,7 +1075,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
          (emacsvox-magit-section-facts
           ',target section 'operation-completed)
          '(:vcs-operation ,target))
-        'inspection 'help)))))
+        'notification 'help)))))
 
 (defun emacsvox-magit--call-process-kill (original arguments)
   "Call `magit-process-kill' through ORIGINAL with ARGUMENTS."
@@ -1349,7 +1349,7 @@ Only present the invocation that applies the transient's selected values."
      "Added changelog entry to commit message"
      (emacsvox-magit-commit-facts
       'add-log 'operation-completed)
-     'edit 'open-object)))
+     'state-change 'open-object)))
 
 (defconst emacsvox-magit--simple-advice-targets
   (append
@@ -2043,7 +2043,7 @@ OPERATION and LABEL describe the trailer."
            (emacsvox-magit-commit-facts
             operation
             (if changed 'operation-completed 'operation-failed))
-           'edit
+           'state-change
            (if changed 'open-object 'warn-user))))
       result)))
 
@@ -2071,7 +2071,7 @@ OPERATION and LABEL describe the trailer."
            (emacsvox-magit-commit-facts
             operation
             (if changed 'operation-completed 'operation-failed))
-           'edit
+           'state-change
            (if changed 'open-object 'warn-user))))
       result)))
 
@@ -2122,7 +2122,7 @@ OPERATION and LABEL describe the trailer."
            (emacsvox-magit-commit-facts
             'insert-revision
             (if changed 'operation-completed 'operation-failed))
-           'edit
+           'state-change
            (if changed 'yank-object 'warn-user))))
       result)))
 
@@ -2134,14 +2134,14 @@ OPERATION and LABEL describe the trailer."
      (append
       (emacsvox-magit-view-facts 'diff 'vcs-view-opened)
       '(:vcs-operation inspect-commit))
-     'inspection 'open-object)))
+     'navigation 'open-object)))
 
 (defun emacsvox-magit--commit-start-feedback ()
   "Present entry into a Git commit-message editor."
   (emacsvox-magit--submit-text
    "Editing Git commit message"
    (emacsvox-magit-commit-facts 'edit 'vcs-view-opened)
-   'edit 'open-object))
+   'state-change 'open-object))
 
 (defun emacsvox-magit--commit-finish-feedback ()
   "Present creation of a Git commit after the repository confirms it."

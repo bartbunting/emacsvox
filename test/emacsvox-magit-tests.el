@@ -270,7 +270,7 @@
            (:role vcs-commit-message
             :vcs-operation signoff
             :events (operation-completed))
-           edit open-object)))))))
+           state-change open-object)))))))
 
 (ert-deftest emacsvox-magit-commit-lifecycle-hooks-are-distinct ()
   "Commit start, confirmed finish, and cancel have separate feedback."
@@ -1056,6 +1056,7 @@
              (list
               content
               (plist-get arguments :facts)
+              (plist-get arguments :occasion)
               (mapcar
                #'emacsvox-aural-compatibility-action-value
                (plist-get arguments :compatibility-actions)))
@@ -1070,7 +1071,59 @@
             :events (operation-completed)
             :visibility expanded
             :vcs-operation magit-describe-section)
+           notification
            (help))))))))
+
+(ert-deftest emacsvox-magit-semantic-occasions-pass-runtime-validation ()
+  "Every Magit semantic family accepts its runtime occasions."
+  (dolist
+      (entry
+       '(((:role vcs-section :section-kind file
+           :events (focus-entered))
+          navigation)
+         ((:role vcs-section :section-kind file
+           :events (visibility-changed))
+          state-change)
+         ((:role vcs-section :section-kind file
+           :events (operation-completed))
+          notification)
+         ((:role vcs-view :vcs-view-kind status
+           :events (vcs-view-opened))
+          navigation)
+         ((:role vcs-view :vcs-view-kind status
+           :events (vcs-view-opened))
+          state-change)
+         ((:role vcs-view :vcs-view-kind diff
+           :events (operation-completed))
+          state-change)
+         ((:role vcs-view :vcs-view-kind diff
+           :events (operation-completed))
+          notification)
+         ((:role vcs-blame-chunk :events (focus-entered))
+          navigation)
+         ((:role vcs-blame-chunk :events (operation-completed))
+          inspection)
+         ((:role vcs-process :events (operation-completed))
+          notification)
+         ((:role vcs-rebase-entry :vcs-rebase-action pick
+           :events (operation-completed))
+          state-change)
+         ((:role vcs-rebase-entry :events (focus-entered))
+          navigation)
+         ((:role vcs-commit-message :events (focus-entered))
+          navigation)
+         ((:role vcs-commit-message :events (operation-completed))
+          state-change)
+         ((:role vcs-repository :events (entry-marked))
+          state-change)
+         ((:role vcs-repository :events (operation-completed))
+          notification)))
+    (pcase-let ((`(,facts ,occasion) entry))
+      (should
+       (emacsvox-aural-input-p
+        (emacsvox-aural-normalize-input
+         facts
+         (list :module 'magit :occasion occasion)))))))
 
 (ert-deftest emacsvox-magit-destination-command-presents-selected-buffer ()
   "A file destination outside Magit receives explicit view feedback."
