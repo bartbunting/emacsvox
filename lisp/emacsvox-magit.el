@@ -352,11 +352,14 @@ Also include display, before-string, and after-string content at point."
    '(:role vcs-blame-chunk)
    (when event (list :events (list event)))))
 
-(defun emacsvox-magit-process-facts (failed)
-  "Return semantic facts for a Magit process according to FAILED."
-  (list
-   :role 'vcs-process
-   :events (list (if failed 'operation-failed 'operation-completed))))
+(defun emacsvox-magit-process-facts (failed &optional operation)
+  "Return semantic facts for a Magit process according to FAILED.
+Include optional OPERATION identity."
+  (append
+   (list
+    :role 'vcs-process
+    :events (list (if failed 'operation-failed 'operation-completed)))
+   (when operation (list :vcs-operation operation))))
 
 (defun emacsvox-magit-repository-facts (operation &optional event)
   "Return semantic facts for repository OPERATION and optional EVENT."
@@ -648,11 +651,23 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     (let* ((failed
             (or
              (eq (process-status argument) 'signal)
-           (not (zerop (process-exit-status argument)))))
-           (icon (if failed 'warn-user 'task-done)))
-      (emacsvox-magit--submit-actions
-       (emacsvox-magit-process-facts failed)
-       'notification icon))))
+             (not (zerop (process-exit-status argument)))))
+           (icon (if failed 'warn-user 'task-done))
+           (operation
+            (process-get argument 'emacsvox-magit-operation))
+           (label
+            (process-get argument 'emacsvox-magit-operation-label)))
+      (if label
+          (emacsvox-magit--submit-text
+           (format
+            "%s %s"
+            (if failed "Failed" "Completed")
+            label)
+           (emacsvox-magit-process-facts failed operation)
+           'notification icon)
+        (emacsvox-magit--submit-actions
+         (emacsvox-magit-process-facts failed)
+         'notification icon)))))
 
 ;;;  Magit Blame:
 
@@ -785,6 +800,129 @@ Present optional MOVEMENT-ICON after the chunk."
     git-rebase-show-or-scroll-down)
   "Commands whose more specific advice presents their opened view.")
 
+(defconst emacsvox-magit--dedicated-operation-targets
+  '(magit-stage
+    magit-stage-files
+    magit-stage-modified
+    magit-file-stage
+    magit-unstage
+    magit-unstage-files
+    magit-unstage-all
+    magit-file-unstage
+    magit-repolist-fetch
+    magit-repolist-find-file-other-frame)
+  "Operations whose specific feedback supersedes process-boundary feedback.")
+
+(defun emacsvox-magit--operation-label (operation)
+  "Return a concise spoken label for OPERATION."
+  (let* ((name (symbol-name operation))
+         (name
+          (replace-regexp-in-string
+           "\\`\\(?:magit\\|git\\)-" "" name)))
+    (replace-regexp-in-string "-" " " name)))
+
+(defun emacsvox-magit--operation-facts (operation &optional event)
+  "Return current-view facts for OPERATION and optional EVENT."
+  (append
+   (list
+    :role 'vcs-view
+    :vcs-view-kind (emacsvox-magit-current-view-kind)
+    :vcs-operation operation)
+   (when event (list :events (list event)))))
+
+(defun emacsvox-magit--present-operation
+    (operation state &optional asynchronous)
+  "Present OPERATION in lifecycle STATE.
+When ASYNCHRONOUS is non-nil, use process facts for terminal states."
+  (let* ((label (emacsvox-magit--operation-label operation))
+         (event
+          (pcase state
+            ('completed 'operation-completed)
+            ('failed 'operation-failed)))
+         (facts
+          (if (and asynchronous event)
+              (emacsvox-magit-process-facts
+               (eq state 'failed) operation)
+            (emacsvox-magit--operation-facts operation event)))
+         (text
+          (format
+           "%s %s"
+           (pcase state
+             ('started "Started")
+             ('completed "Completed")
+             ('failed "Failed"))
+           label))
+         (icon
+          (pcase state
+            ('started 'progress)
+            ('completed 'task-done)
+            ('failed 'warn-user))))
+    (emacsvox-magit--submit-text
+     text facts 'notification icon)))
+
+(defun emacsvox-magit--call-synchronous-operation (original arguments)
+  "Call a synchronous Git operation through ORIGINAL with ARGUMENTS."
+  (let ((operation ems--interactive-fn-name))
+    (if
+        (or
+         (null operation)
+         (memq operation emacsvox-magit--dedicated-view-targets)
+         (memq operation emacsvox-magit--dedicated-operation-targets)
+         (not (ems-interactive-p operation)))
+        (apply original arguments)
+      (emacsvox-magit--present-operation operation 'started)
+      (condition-case error-data
+          (let* ((result (apply original arguments))
+                 (failed (and (integerp result) (not (zerop result)))))
+            (emacsvox-magit--present-operation
+             operation (if failed 'failed 'completed))
+            result)
+        (error
+         (emacsvox-magit--present-operation operation 'failed)
+         (signal (car error-data) (cdr error-data)))))))
+
+(defun emacsvox--advice-magit-run-git-around
+    (original &rest arguments)
+  "Present a synchronous `magit-run-git' operation."
+  (emacsvox-magit--call-synchronous-operation original arguments))
+
+(defun emacsvox--advice-magit-git-around
+    (original &rest arguments)
+  "Present a synchronous `magit-git' operation."
+  (emacsvox-magit--call-synchronous-operation original arguments))
+
+(defun emacsvox--advice-magit-run-git-with-input-around
+    (original &rest arguments)
+  "Present a synchronous `magit-run-git-with-input' operation."
+  (if (file-remote-p default-directory)
+      ;; Magit implements the remote path asynchronously and waits for it.
+      ;; Leave the interactive marker for `magit-start-process' so that its
+      ;; actual process status owns the lifecycle feedback.
+      (apply original arguments)
+    (emacsvox-magit--call-synchronous-operation original arguments)))
+
+(defun emacsvox--advice-magit-start-process-around
+    (original program &optional input &rest arguments)
+  "Present an asynchronous process started by an interactive Magit command."
+  (let ((operation ems--interactive-fn-name))
+    (if
+        (or
+         (null operation)
+         (memq operation emacsvox-magit--dedicated-view-targets)
+         (memq operation emacsvox-magit--dedicated-operation-targets)
+         (not (ems-interactive-p operation)))
+        (apply original program input arguments)
+      (condition-case error-data
+          (let* ((process (apply original program input arguments))
+                 (label (emacsvox-magit--operation-label operation)))
+            (process-put process 'emacsvox-magit-operation operation)
+            (process-put process 'emacsvox-magit-operation-label label)
+            (emacsvox-magit--present-operation operation 'started t)
+            process)
+        (error
+         (emacsvox-magit--present-operation operation 'failed t)
+         (signal (car error-data) (cdr error-data)))))))
+
 (defun emacsvox-magit--view-kind-label (kind)
   "Return a concise spoken label for Magit view KIND."
   (capitalize
@@ -864,7 +1002,15 @@ Present optional MOVEMENT-ICON after the chunk."
        '((magit-setup-buffer-internal
           emacsvox--advice-magit-setup-buffer-internal-around)
          (magit-display-buffer
-          emacsvox--advice-magit-display-buffer-around)))
+          emacsvox--advice-magit-display-buffer-around)
+         (magit-run-git
+          emacsvox--advice-magit-run-git-around)
+         (magit-git
+          emacsvox--advice-magit-git-around)
+         (magit-run-git-with-input
+          emacsvox--advice-magit-run-git-with-input-around)
+         (magit-start-process
+          emacsvox--advice-magit-start-process-around)))
     (pcase-let ((`(,target ,function) entry))
       (when
           (and

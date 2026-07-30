@@ -722,6 +722,16 @@
     #'emacsvox--advice-magit-display-buffer-around
     'magit-display-buffer))
   (dolist
+      (entry
+       '((magit-run-git emacsvox--advice-magit-run-git-around)
+         (magit-git emacsvox--advice-magit-git-around)
+         (magit-run-git-with-input
+          emacsvox--advice-magit-run-git-with-input-around)
+         (magit-start-process
+          emacsvox--advice-magit-start-process-around)))
+    (pcase-let ((`(,target ,function) entry))
+      (should (advice-member-p function target))))
+  (dolist
       (target (mapcar #'car emacsvox-magit--rebase-action-targets))
     (should
      (advice-member-p
@@ -1042,6 +1052,8 @@
     (cl-letf
         (((symbol-function 'processp)
           (lambda (value) (eq value 'failed-process)))
+         ((symbol-function 'process-get)
+          (lambda (&rest _) nil))
          ((symbol-function 'process-status)
           (lambda (_) 'exit))
          ((symbol-function 'process-exit-status)
@@ -1063,6 +1075,179 @@
         events
         '(((warn-user)
            (:role vcs-process :events (operation-failed)))))))))
+
+(ert-deftest emacsvox-magit-synchronous-operation-has-one-lifecycle ()
+  "A synchronous Git boundary reports start and its actual exit status."
+  (let ((ems--interactive-fn-name 'magit-branch-delete)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (should
+       (zerop
+        (emacsvox-magit--call-synchronous-operation
+         (lambda (&rest _) 0)
+         '("branch" "--delete" "topic"))))
+      (should-not ems--interactive-fn-name)
+      (should
+       (equal
+        (nreverse calls)
+        '(("Started branch delete"
+           (:role vcs-view :vcs-view-kind other
+            :vcs-operation magit-branch-delete)
+           (progress))
+          ("Completed branch delete"
+           (:role vcs-view :vcs-view-kind other
+            :vcs-operation magit-branch-delete
+            :events (operation-completed))
+           (task-done))))))))
+
+(ert-deftest emacsvox-magit-synchronous-operation-reports-failure ()
+  "A nonzero exit and a signaled error are failures, never completions."
+  (dolist
+      (case
+       `((7 7)
+         (error
+          ,(lambda (&rest _)
+             (signal 'magit-git-error '("deliberate failure"))))))
+    (let ((ems--interactive-fn-name 'magit-reset-hard)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _)
+              (push content calls))))
+        (pcase-let ((`(,kind ,value) case))
+          (if (eq kind 'error)
+              (should-error
+               (emacsvox-magit--call-synchronous-operation value nil)
+               :type 'magit-git-error)
+            (should
+             (equal
+              (emacsvox-magit--call-synchronous-operation
+               (lambda (&rest _) value)
+               nil)
+              value))))
+        (should
+         (equal
+          (nreverse calls)
+          '("Started reset hard" "Failed reset hard")))))))
+
+(ert-deftest emacsvox-magit-dedicated-operation-retains-ownership ()
+  "A command with specific feedback bypasses the generic Git boundary."
+  (let ((ems--interactive-fn-name 'magit-stage)
+        (called 0))
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (&rest _)
+            (ert-fail "Generic operation feedback was submitted"))))
+      (should
+       (eq
+        (emacsvox-magit--call-synchronous-operation
+         (lambda (&rest _)
+           (cl-incf called)
+           'specific-result)
+         nil)
+        'specific-result))
+      (should (= called 1))
+      (should (eq ems--interactive-fn-name 'magit-stage)))))
+
+(ert-deftest emacsvox-magit-remote-input-defers-to-asynchronous-boundary ()
+  "Remote input operations leave lifecycle ownership to their process."
+  (let ((ems--interactive-fn-name 'magit-apply-patch)
+        marker-at-call)
+    (cl-letf
+        (((symbol-function 'file-remote-p)
+          (lambda (&rest _) "/ssh:example:"))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (&rest _)
+            (ert-fail "Synchronous operation feedback was submitted"))))
+      (should
+       (eq
+        (emacsvox--advice-magit-run-git-with-input-around
+         (lambda (&rest _)
+           (setq marker-at-call ems--interactive-fn-name)
+           'remote-result)
+         "apply")
+        'remote-result))
+      (should (eq marker-at-call 'magit-apply-patch))
+      (should (eq ems--interactive-fn-name 'magit-apply-patch)))))
+
+(ert-deftest emacsvox-magit-asynchronous-operation-carries-identity ()
+  "An asynchronous process retains its initiating command until completion."
+  (let ((ems--interactive-fn-name 'magit-push-current-to-pushremote)
+        properties
+        calls)
+    (cl-letf
+        (((symbol-function 'process-put)
+          (lambda (_process property value)
+            (push (cons property value) properties)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (list content (plist-get arguments :facts)) calls))))
+      (should
+       (eq
+        (emacsvox--advice-magit-start-process-around
+         (lambda (&rest _) 'fake-process)
+         "git" nil "push")
+        'fake-process))
+      (should-not ems--interactive-fn-name)
+      (should
+       (equal
+        properties
+        '((emacsvox-magit-operation-label
+           . "push current to pushremote")
+          (emacsvox-magit-operation
+           . magit-push-current-to-pushremote))))
+      (should
+       (equal
+        calls
+        '(("Started push current to pushremote"
+           (:role vcs-view :vcs-view-kind other
+            :vcs-operation magit-push-current-to-pushremote))))))))
+
+(ert-deftest emacsvox-magit-process-completion-uses-operation-identity ()
+  "Process completion reports the operation stored at dispatch time."
+  (let (calls)
+    (cl-letf
+        (((symbol-function 'processp)
+          (lambda (value) (eq value 'fake-process)))
+         ((symbol-function 'process-status)
+          (lambda (_) 'exit))
+         ((symbol-function 'process-exit-status)
+          (lambda (_) 0))
+         ((symbol-function 'process-get)
+          (lambda (_process property)
+            (pcase property
+              ('emacsvox-magit-operation
+               'magit-push-current-to-pushremote)
+              ('emacsvox-magit-operation-label
+               "push current to pushremote"))))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (emacsvox--advice-magit-process-finish-after 'fake-process)
+      (should
+       (equal
+        calls
+        '(("Completed push current to pushremote"
+           (:role vcs-process :events (operation-completed)
+            :vcs-operation magit-push-current-to-pushremote)
+           (task-done))))))))
 
 (ert-deftest emacsvox-magit-special-feedback-has-accurate-semantics ()
   "Commit display and diff cycling are not reported as section expansion."
