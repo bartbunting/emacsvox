@@ -173,6 +173,24 @@
     org-agenda-append-agenda org-agenda-redo org-agenda-redo-all)
   "Agenda commands whose native result prefers Org's final message.")
 
+(defconst emacsvox-test--org-table-change-around-targets
+  '(org-table-delete-column org-table-move-column-left
+    org-table-move-column-right org-table-insert-column
+    org-table-kill-row org-table-insert-row
+    org-table-move-row-up org-table-move-row-down
+    org-table-paste-rectangle org-table-wrap-region
+    org-table-insert-hline org-table-copy-down org-table-blank-field
+    org-table-eval-formula org-table-recalculate org-table-sort-lines
+    org-table-rotate-recalc-marks
+    org-table-create-or-convert-from-region)
+  "Org table commands whose native result is the resulting cell.")
+
+(defconst emacsvox-test--org-table-message-around-targets
+  '(org-table-sum org-table-field-info
+    org-table-toggle-coordinate-overlays
+    org-table-toggle-formula-debugger)
+  "Org table commands whose native result prefers Org's message.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -1207,6 +1225,76 @@
          (eq
           (plist-get facts :org-table-presentation)
           'cell-with-column-header))))))
+
+(ert-deftest emacsvox-org-table-command-advice-is-directly-registered ()
+  "Org table mutation and inspection commands have named quiet adapters."
+  (dolist
+      (target
+       (append emacsvox-test--org-table-change-around-targets
+               emacsvox-test--org-table-message-around-targets))
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-table-formula-reports-resulting-cell ()
+  "Formula evaluation submits the resulting cell and coordinates once."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "| Name | Value |\n| Row  | 1     |\n")
+    (goto-char (point-min))
+    (search-forward "1")
+    (let ((ems--interactive-fn-name 'org-table-eval-formula)
+          (emacsvox-speak-messages t)
+          message-state
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-table-eval-formula-around
+         (lambda (&rest _)
+           (setq message-state emacsvox-speak-messages)
+           (org-table-put 2 2 "42"))))
+      (should-not message-state)
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "42"))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-table :events (state-changed)
+          :org-action table-formula-evaluated
+          :org-table-row 2 :org-table-column 2
+          :org-table-presentation cell)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'state-change)))))
+
+(ert-deftest emacsvox-org-table-inspection-preserves-message ()
+  "Table inspection submits Org's informative message through native policy."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "| Value |\n| 12    |\n")
+    (goto-char (point-min))
+    (forward-line)
+    (search-forward "12")
+    (let ((ems--interactive-fn-name 'org-table-sum)
+          (messages '("Before" "Sum: 12"))
+          submissions)
+      (cl-letf
+          (((symbol-function 'current-message)
+            (lambda () (pop messages)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-table-sum-around
+         (lambda (&rest _))))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "Sum: 12"))
+      (should
+       (eq
+        (plist-get (plist-get (cdar submissions) :facts) :org-action)
+        'table-inspected))
+      (should (eq (plist-get (cdar submissions) :occasion) 'inspection)))))
 
 (ert-deftest emacsvox-org-return-selects-table-or-line-feedback ()
   "Org return defers table feedback and owns its non-table destination."

@@ -76,6 +76,8 @@
                       agenda-bulk-action agenda-filter-changed
                       agenda-view-changed agenda-display-changed
                       agenda-refreshed
+                      table-changed table-created table-formula-evaluated
+                      table-recalculated table-sorted table-inspected
                       export-completed publish-completed))
     (org-table-row
      :kind attribute

@@ -454,18 +454,25 @@ operation, and FALLBACK-ICON follows a non-heading line."
 (defvar emacsvox-org--table-presentation-occasion 'inspection
   "Occasion captured by an Org table presentation command.")
 
-(defun emacsvox-org--table-facts (presentation)
-  "Return semantic facts for Org table PRESENTATION at point."
+(defun emacsvox-org--table-facts
+    (presentation &optional action event)
+  "Return semantic facts for Org table PRESENTATION at point.
+
+ACTION defaults to navigation or inspection according to the captured
+occasion.  EVENT defaults to `focus-entered'."
   (append
    (emacsvox-org--feedback-facts
-    'org-table 'focus-entered
-    (if (eq emacsvox-org--table-presentation-occasion 'navigation)
-        'table-navigation
-      'table-inspection))
-   (list
-    :org-table-row (org-table-current-line)
-    :org-table-column (org-table-current-column)
-    :org-table-presentation presentation)))
+    'org-table (or event 'focus-entered)
+    (or
+     action
+     (if (eq emacsvox-org--table-presentation-occasion 'navigation)
+         'table-navigation
+       'table-inspection)))
+   (when (org-at-table-p 'any)
+     (list
+      :org-table-row (org-table-current-line)
+      :org-table-column (org-table-current-column)
+      :org-table-presentation presentation))))
 
 (defun emacsvox-org--submit-table-text (text presentation)
   "Display and submit Org table TEXT described by PRESENTATION."
@@ -477,6 +484,38 @@ operation, and FALLBACK-ICON follows a non-heading line."
   "Present the configured Org table information after navigation."
   (let ((emacsvox-org--table-presentation-occasion 'navigation))
     (funcall emacsvox-org-table-after-movement-function)))
+
+(defun emacsvox-org--table-cell-content ()
+  "Return the trimmed current table cell, or nil outside a table."
+  (when (org-at-table-p 'any)
+    (let ((field (string-trim (org-table-get-field))))
+      (if (string-empty-p field) "space" field))))
+
+(defun emacsvox-org--present-table-change (action icon)
+  "Present the current table cell after ACTION, with compatibility ICON."
+  (emacsvox-org--submit-text
+   (or (emacsvox-org--table-cell-content)
+       (and (not (eobp)) (emacsvox-org--line-content))
+       "Table changed")
+   (emacsvox-org--table-facts 'cell action 'state-changed)
+   'state-change icon))
+
+(defun emacsvox-org--present-table-message
+    (action prior-message fallback)
+  "Present an Org table inspection ACTION.
+
+Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
+  (let ((current (current-message)))
+    (emacsvox-org--submit-text
+     (if
+         (and
+          (stringp current)
+          (not (string-empty-p current))
+          (not (equal current prior-message)))
+         current
+       fallback)
+     (emacsvox-org--table-facts 'cell action 'focus-entered)
+     'inspection)))
 
 ;; orgalist-mode defines structured navigators that in turn call org-cycle.
 ;; Removing itneractive check in advice for org-cycle
@@ -1420,8 +1459,10 @@ arg just opens the file"
 
 (defun emacsvox-org--present-document-state (action icon)
   "Present the current Org line after ACTION, with compatibility ICON."
-  (emacsvox-org-speak-line-semantically
-   'state-change 'state-changed action icon))
+  (if (org-at-table-p 'any)
+      (emacsvox-org--present-table-change action icon)
+    (emacsvox-org-speak-line-semantically
+     'state-change 'state-changed action icon)))
 
 (cl-loop
  for (target action icon) in
@@ -1452,6 +1493,68 @@ arg just opens the file"
            (prog1
                (apply original arguments)
              (emacsvox-org--present-document-state ',action ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+;;;  Table editing and inspection:
+
+(cl-loop
+ for (target action icon) in
+ '((org-table-delete-column table-changed delete-object)
+   (org-table-move-column-left table-changed button)
+   (org-table-move-column-right table-changed button)
+   (org-table-insert-column table-changed open-object)
+   (org-table-kill-row table-changed delete-object)
+   (org-table-insert-row table-changed open-object)
+   (org-table-move-row-up table-changed button)
+   (org-table-move-row-down table-changed button)
+   (org-table-paste-rectangle table-changed yank-object)
+   (org-table-wrap-region table-changed fill-object)
+   (org-table-insert-hline table-changed open-object)
+   (org-table-copy-down table-changed yank-object)
+   (org-table-blank-field table-changed delete-object)
+   (org-table-eval-formula table-formula-evaluated button)
+   (org-table-recalculate table-recalculated button)
+   (org-table-sort-lines table-sorted button)
+   (org-table-rotate-recalc-marks table-changed button)
+   (org-table-create-or-convert-from-region table-created open-object))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org table command quietly and present its cell."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-table-change ',action ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target fallback) in
+ '((org-table-sum "Table sum calculated")
+   (org-table-field-info "Table field information")
+   (org-table-toggle-coordinate-overlays
+    "Table coordinate display changed")
+   (org-table-toggle-formula-debugger
+    "Table formula debugger changed"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org table inspector quietly and present its result."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-table-message
+              'table-inspected prior-message ,fallback)))))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
 
