@@ -2168,16 +2168,16 @@
     (should-not feedback)))
 
 (ert-deftest emacsvox-org-legacy-completion-calls-original-once ()
-  "The optional legacy Org completion wrapper preserves one-call semantics."
+  "The optional legacy Org completion wrapper submits one native result."
   (with-temp-buffer
     (let ((calls 0)
-          events)
-      (cl-letf (((symbol-function 'emacsvox-get-minibuffer-contents)
-                 (lambda () ""))
-                ((symbol-function 'emacsvox-speak-line)
-                 (lambda () (push 'speak-line events)))
-                ((symbol-function 'emacsvox-speak-completions-if-available)
-                 (lambda () (push 'completions events))))
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-get-minibuffer-contents)
+            (lambda () ""))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
         (should
          (eq
           'result
@@ -2187,7 +2187,39 @@
              (insert "completed")
              'result))))
       (should (= calls 1))
-      (should (equal events '(speak-line)))))))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "completed"))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-content :events (object-changed))))
+      (should (eq (plist-get (cdar submissions) :occasion) 'edit))))))
+
+(ert-deftest emacsvox-org-legacy-completion-presents-visible-candidate ()
+  "An unchanged legacy completion presents the visible candidate natively."
+  (with-temp-buffer
+    (insert "prefix")
+    (goto-char (point-min))
+    (let (submitted)
+      (cl-letf
+          (((symbol-function 'emacsvox-org--visible-completion-content)
+            (lambda () "candidate"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submitted (cons content arguments)))))
+        (emacsvox--advice-org-complete-around
+         (lambda () 'unchanged)))
+      (should (equal (car submitted) "candidate"))
+      (should
+       (equal
+        (plist-get (cdr submitted) :facts)
+        '(:role candidate :events (focus-entered))))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get (cdr submitted) :compatibility-actions))
+        '(help))))))
 
 (ert-deftest emacsvox-org-legacy-completion-does-not-create-a-command ()
   "Absent legacy Org completion remains absent on current Org."
@@ -2210,6 +2242,43 @@
       '(:role org-export :events (focus-entered)
         :org-action export-menu-opened)))
     (should (eq (plist-get (cdar submissions) :occasion) 'inspection))))
+
+(ert-deftest emacsvox-org-eww-preview-is-native-and-one-shot ()
+  "An exported HTML preview submits once and removes its global callback."
+  (with-temp-buffer
+    (insert "Rendered preview")
+    (let ((emacsvox-eww-post-hook nil)
+          opened
+          submitted)
+      (cl-letf
+          (((symbol-function 'funcall-interactively)
+            (lambda (function &rest arguments)
+              (setq opened (cons function arguments))
+              (run-hooks 'emacsvox-eww-post-hook)))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submitted (cons content arguments)))))
+        (emacsvox-org-eww-file "/tmp/preview.html" nil))
+      (should (equal opened '(eww-open-file "/tmp/preview.html")))
+      (should-not emacsvox-eww-post-hook)
+      (should (equal (car submitted) "Rendered preview"))
+      (should
+       (equal
+        (plist-get (cdr submitted) :facts)
+        '(:role org-export :events (focus-entered)
+          :org-action preview-changed)))
+      (should (eq (plist-get (cdr submitted) :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-org-eww-preview-cleans-up-after-open-error ()
+  "A failed EWW open does not leave the preview callback installed."
+  (let ((emacsvox-eww-post-hook nil))
+    (cl-letf
+        (((symbol-function 'funcall-interactively)
+          (lambda (&rest _) (error "open failed"))))
+      (should-error
+       (emacsvox-org-eww-file "/tmp/missing.html" nil)
+       :type 'error))
+    (should-not emacsvox-eww-post-hook)))
 
 (ert-deftest emacsvox-org-export-to-file-uses-explicit-file ()
   "Export completion reports the FILE argument directly."

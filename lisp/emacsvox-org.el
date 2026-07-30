@@ -61,6 +61,7 @@
 (defvar org-ans2 nil)
 (defvar org-multi-keymap)
 (defvar emacsvox-speak-messages)
+(defvar emacsvox-eww-post-hook)
 
 ;;;  Semantic aural presentation:
 
@@ -705,18 +706,44 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
 
 ;;;  completion:
 
+(defun emacsvox-org--visible-completion-content ()
+  "Return the next visible completion candidate, or nil.
+When a Completions window is visible, move to its next candidate just as the
+legacy Org completion feedback did."
+  (when-let* ((buffer (get-buffer "*Completions*"))
+              (window (get-buffer-window buffer)))
+    (with-selected-window window
+      (next-completion 1)
+      (emacsvox-aural-source-substring
+       (line-beginning-position) (line-end-position)))))
+
 (defun emacsvox--advice-org-complete-around (original &rest arguments)
-  "Call legacy Org completion once, then speak its result."
+  "Call legacy Org completion once, then natively present its result."
   (let ((prior (save-excursion (skip-syntax-backward "^ >") (point)))
         (tts-stop-immediately t))
     (let ((result (apply original arguments)))
       (if (> (point) prior)
-          (tts-with-punctuations
-           'all
-           (if (> (length (emacsvox-get-minibuffer-contents)) 0)
-               (tts-speak (emacsvox-get-minibuffer-contents))
-             (emacsvox-speak-line)))
-        (emacsvox-speak-completions-if-available))
+          (let ((minibuffer-content
+                 (emacsvox-get-minibuffer-contents)))
+            (emacsvox-org--submit-text
+             (if (> (length minibuffer-content) 0)
+                 minibuffer-content
+               (emacsvox-org--line-content))
+             (emacsvox-org--feedback-facts
+              'org-content 'object-changed nil)
+             'edit))
+        (if-let* ((candidate
+                   (emacsvox-org--visible-completion-content)))
+            (emacsvox-org--submit-text
+             candidate
+             '(:role candidate :events (focus-entered))
+             'navigation
+             'help)
+          (emacsvox-org--submit-text
+           (emacsvox-org--line-content)
+           (emacsvox-org--feedback-facts
+            'org-content 'focus-entered nil)
+           'navigation)))
       result)))
 
 ;; Current Org uses `completion-at-point', which Emacsvox advises centrally.
@@ -1539,10 +1566,29 @@ arg just opens the file"
 
 ;;;  Preview HTML With EWW:
 
+(defun emacsvox-org--present-eww-preview ()
+  "Present the current Org HTML preview and remove this one-shot callback."
+  (remove-hook
+   'emacsvox-eww-post-hook
+   #'emacsvox-org--present-eww-preview)
+  (emacsvox-org--submit-text
+   (emacsvox-aural-source-substring (point-min) (point-max))
+   (emacsvox-org--feedback-facts
+    'org-export 'focus-entered 'preview-changed)
+   'navigation))
+
 (defun emacsvox-org-eww-file (file _link)
-  "Preview HTML files with EWW from exporter."
-  (add-hook 'emacsvox-eww-post-hook  #'emacsvox-speak-buffer)
-  (funcall-interactively #'eww-open-file file))
+  "Preview exported HTML FILE in EWW with one native presentation."
+  (add-hook
+   'emacsvox-eww-post-hook
+   #'emacsvox-org--present-eww-preview)
+  (condition-case error-data
+      (funcall-interactively #'eww-open-file file)
+    (error
+     (remove-hook
+      'emacsvox-eww-post-hook
+      #'emacsvox-org--present-eww-preview)
+     (signal (car error-data) (cdr error-data)))))
 
 ;;;  Edit Special Advice:
 
