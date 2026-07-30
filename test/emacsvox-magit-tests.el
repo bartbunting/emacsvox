@@ -222,36 +222,42 @@
       :events (visibility-changed)
       :visibility folded))))
 
-(ert-deftest emacsvox-magit-feedback-shares-semantic-context ()
-  "The compatibility cue and line speech share one Magit submission."
-  (let (events)
-    (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (icon)
-            (push
-             (list icon emacsvox-aural-submission-facts
-                   emacsvox-aural-submission-occasion)
-             events)))
-         ((symbol-function 'emacsvox-speak-line)
-          (lambda ()
-            (push
-             (list 'line emacsvox-aural-submission-facts)
-             events))))
-      (emacsvox-magit-present-line
-       'select-object 'state-change
-       'magit-file-unstage '(:type file :hidden nil)))
-    (should
-     (equal
-      (nreverse events)
-      '((select-object
-         (:role vcs-section :section-kind file
-          :events (entry-unstaged) :states (unstaged)
-          :visibility expanded)
-         state-change)
-        (line
-         (:role vcs-section :section-kind file
-          :events (entry-unstaged) :states (unstaged)
-          :visibility expanded)))))))
+(ert-deftest emacsvox-magit-line-feedback-is-one-native-submission ()
+  "Magit line text, source voice, and cue share one native submission."
+  (with-temp-buffer
+    (insert (propertize "modified file" 'face 'magit-filename))
+    (goto-char (point-min))
+    (let (calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) calls)
+              'submission)))
+        (should
+         (eq
+          (emacsvox-magit-present-line
+           'select-object 'state-change
+           'magit-file-unstage '(:type file :hidden nil))
+          'submission)))
+      (pcase-let* ((`((,content . ,arguments)) calls)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "modified file"))
+        (should
+         (eq (get-text-property 0 'face content) 'magit-filename))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role vcs-section :section-kind file
+            :events (entry-unstaged) :states (unstaged)
+            :visibility expanded)))
+        (should (eq (plist-get arguments :module) 'magit))
+        (should (eq (plist-get arguments :occasion) 'state-change))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(select-object)))))))
 
 (ert-deftest emacsvox-magit-blame-navigation-uses-one-native-submission ()
   "Blame content and its before/after cues are submitted together."
@@ -309,23 +315,33 @@
       (emacsvox--advice-magit-blame-next-chunk-same-commit-after))
     (should (equal calls '(large-movement)))))
 
-(ert-deftest emacsvox-magit-empty-blame-keeps-legacy-fallback ()
-  "An empty blame line retains its cue and speech ordering."
+(ert-deftest emacsvox-magit-empty-blame-is-an-action-only-submission ()
+  "An empty blame line still presents its cues through native policy."
   (with-temp-buffer
-    (let (events)
+    (let (calls)
       (cl-letf
           (((symbol-function 'emacsvox-aural-submit)
             (lambda (&rest _)
               (ert-fail "Empty blame content used native submission")))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'tts-speak)
-            (lambda (content) (push (list 'text content) events))))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments)
+              (push arguments calls)
+              'submission)))
         (emacsvox-magit-blame-speak 'large-movement))
-      (should
-       (equal
-        (nreverse events)
-        '((icon left) (text "") (icon large-movement)))))))
+      (pcase-let* ((`(,arguments) calls)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role vcs-blame-chunk :events (focus-entered))))
+        (should (eq (plist-get arguments :module) 'magit))
+        (should (eq (plist-get arguments :occasion) 'navigation))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(left large-movement)))))))
 
 (ert-deftest emacsvox-magit-native-blame-presents-one-transaction ()
   "Blame navigation preserves voice, order, and icon policy."
@@ -415,17 +431,22 @@
   "Internal Magit section rendering must not produce user feedback."
   (let (events)
     (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (&rest _) (push 'icon events)))
-         ((symbol-function 'emacsvox-speak-line)
-          (lambda () (push 'line events))))
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (&rest _) (push 'text events)))
+         ((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
+            (push
+             (mapcar
+              #'emacsvox-aural-compatibility-action-value
+              (plist-get arguments :compatibility-actions))
+             events))))
       (let ((ems--interactive-fn-name nil))
         (emacsvox--advice-magit-section-show-children-after)
         (emacsvox--advice-magit-section-hide-after))
       (should-not events)
       (let ((ems--interactive-fn-name 'magit-section-show-children))
         (emacsvox--advice-magit-section-show-children-after))
-      (should (equal (nreverse events) '(line icon))))))
+      (should (equal events '((open-object)))))))
 
 (ert-deftest emacsvox-magit-process-feedback-is-asynchronous-and-accurate ()
   "Only asynchronous Magit completion gets feedback, using its true result."

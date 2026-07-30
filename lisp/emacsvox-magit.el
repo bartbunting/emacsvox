@@ -313,6 +313,39 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      (when icon (emacsvox-icon icon))
      (apply function arguments))))
 
+(defun emacsvox-magit--submit-actions (facts occasion &rest icons)
+  "Submit FACTS and compatibility ICONS as one action-only transaction."
+  (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'magit
+   :occasion occasion
+   :compatibility-actions
+   (mapcar #'emacsvox-aural-compatibility-icon icons)))
+
+(defun emacsvox-magit--submit-text
+    (content facts occasion &optional icon icon-phase)
+  "Submit CONTENT under FACTS and OCCASION with optional compatibility ICON.
+ICON-PHASE defaults to `before'."
+  (if (and (stringp content) (> (length content) 0))
+      (emacsvox-aural-submit
+       content
+       :facts facts
+       :module 'magit
+       :occasion occasion
+       :compatibility-actions
+       (when icon
+         (list
+          (emacsvox-aural-compatibility-icon icon icon-phase))))
+    (when icon
+      (emacsvox-magit--submit-actions facts occasion icon))))
+
+(defun emacsvox-magit--line-content ()
+  "Return the current line with speech-relevant text properties intact.
+Also include display, before-string, and after-string content at point."
+  (concat
+   (buffer-substring (line-beginning-position) (line-end-position))
+   (ems--display-props-get)))
+
 (defun emacsvox-magit-view-facts (kind event)
   "Return semantic facts for a Magit view of KIND undergoing EVENT."
   (list :role 'vcs-view :vcs-view-kind kind :events (list event)))
@@ -385,14 +418,10 @@ EVENT and VISIBILITY override values inferred from the command and section."
 
 ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   feedback.  When ICON-AFTER is non-nil, retain speech-before-icon ordering."
-  (emacsvox-magit--call-with-aural-presentation
+  (emacsvox-magit--submit-text
+   (emacsvox-magit--line-content)
    (emacsvox-magit-section-facts target section event visibility)
-   occasion
-   (lambda ()
-     (if icon-after
-         (progn (emacsvox-speak-line) (emacsvox-icon icon))
-       (emacsvox-icon icon)
-       (emacsvox-speak-line)))))
+   occasion icon (and icon-after 'after)))
 
 ;;;  Advice navigation commands:
 
@@ -595,9 +624,7 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 
 (defun emacsvox-magit--blame-content ()
   "Return the voice-preserving summary of the current blame chunk."
-  (concat
-   (buffer-substring (line-beginning-position) (line-end-position))
-   (ems--display-props-get)))
+  (emacsvox-magit--line-content))
 
 (defun emacsvox-magit-blame-speak (&optional movement-icon)
   "Summarize the current blame chunk.
@@ -617,13 +644,10 @@ Present optional MOVEMENT-ICON after the chunk."
             (list
              (emacsvox-aural-compatibility-icon
               movement-icon 'after)))))
-      (emacsvox-magit--call-with-aural-presentation
+      (apply
+       #'emacsvox-magit--submit-actions
        facts 'navigation
-       (lambda ()
-         (emacsvox-icon 'left)
-         (tts-speak content)
-         (when movement-icon
-           (emacsvox-icon movement-icon)))))))
+       (append '(left) (when movement-icon (list movement-icon)))))))
 
 (cl-loop
  for target in
