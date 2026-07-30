@@ -86,6 +86,8 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
+(require 'emacsvox-aural-provider-workflows)
 (require 'derived)
 (require 'transient)
 
@@ -221,13 +223,97 @@
 (defvar emacsvox-transient-cache nil
   "Cache of the last Transient buffer contents.")
 
+(defvar emacsvox-transient--announced-prefix nil
+  "Transient prefix object whose initial display was last announced.")
+
+(defvar emacsvox-transient--announced-stack nil
+  "Command identity of the stack paired with the announced prefix.")
+
+(defun emacsvox-transient--stack-commands ()
+  "Return the command identities in the current Transient stack."
+  (mapcar #'car transient--stack))
+
+(defun emacsvox-transient--menu-facts (action &optional event)
+  "Return semantic command-menu facts for ACTION and optional EVENT."
+  (append
+   (list :role 'command-menu :command-menu-action action)
+   (when event (list :events (list event)))))
+
+(defun emacsvox-transient--item-facts (kind action &optional event)
+  "Return semantic item facts for KIND, ACTION, and optional EVENT."
+  (append
+   (list
+    :role 'command-menu-item
+    :command-menu-item-kind kind
+    :command-menu-action action)
+   (when event (list :events (list event)))))
+
+(defun emacsvox-transient--submit-actions (facts occasion &rest icons)
+  "Submit FACTS and compatibility ICONS as one action-only transaction."
+  (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'transient
+   :occasion occasion
+   :compatibility-actions
+   (mapcar #'emacsvox-aural-compatibility-icon icons)))
+
+(defun emacsvox-transient--submit-text
+    (content facts occasion &optional icon icon-phase)
+  "Submit CONTENT under FACTS and OCCASION with an optional compatibility ICON.
+ICON-PHASE defaults to `before'."
+  (if (and (stringp content) (> (length content) 0))
+      (emacsvox-aural-submit
+       content
+       :facts facts
+       :module 'transient
+       :occasion occasion
+       :compatibility-actions
+       (when icon
+         (list
+          (emacsvox-aural-compatibility-icon icon icon-phase))))
+    (when icon
+      (emacsvox-transient--submit-actions facts occasion icon))))
+
+(defun emacsvox-transient--line-content ()
+  "Return the current menu line with source presentation metadata."
+  (emacsvox-aural-source-substring
+   (line-beginning-position) (line-end-position)))
+
+(defun emacsvox-transient--new-menu-p ()
+  "Return non-nil when the current Transient menu was not yet announced."
+  (or
+   (not (eq transient--prefix emacsvox-transient--announced-prefix))
+   (not
+    (equal
+     (emacsvox-transient--stack-commands)
+     emacsvox-transient--announced-stack))))
+
+(defun emacsvox-transient--record-announced-menu ()
+  "Record the current Transient prefix and stack as announced."
+  (setq
+   emacsvox-transient--announced-prefix transient--prefix
+   emacsvox-transient--announced-stack
+   (emacsvox-transient--stack-commands)))
+
 (defun emacsvox--advice-transient--show-after (&rest _)
-  "Speak and set up cache."
+  "Cache the menu and announce a new or explicitly requested display."
   (when (window-live-p transient--window)
     (with-current-buffer (window-buffer transient--window)
-      (setq emacsvox-transient-cache
-            (buffer-substring (point-min) (point-max)))
-      (emacsvox-speak-line) (emacsvox-icon 'open-object))))
+      (setq-local emacsvox-aural-module 'transient)
+      (setq
+       emacsvox-transient-cache
+       (emacsvox-aural-source-substring (point-min) (point-max)))
+      (when
+          (or
+           (emacsvox-transient--new-menu-p)
+           (eq ems--interactive-fn-name 'transient-show))
+        (emacsvox-transient--record-announced-menu)
+        (emacsvox-transient--submit-text
+         (emacsvox-transient--line-content)
+         (emacsvox-transient--menu-facts
+          'show 'command-menu-opened)
+         'navigation
+         'open-object)))))
 
 (advice-add 'transient--show :after
             #'emacsvox--advice-transient--show-after)

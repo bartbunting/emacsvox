@@ -65,23 +65,75 @@
       '((icon save-object) (stop all))))))
 
 (ert-deftest emacsvox-transient-show-caches-and-speaks-menu ()
-  "Showing a Transient menu caches its contents and provides feedback."
+  "Showing a new Transient menu caches and semantically presents its line."
   (save-window-excursion
     (with-temp-buffer
       (insert "Transient choices")
       (set-window-buffer (selected-window) (current-buffer))
       (let ((transient--window (selected-window))
-            events)
-        (cl-letf (((symbol-function 'emacsvox-speak-line)
-                   (lambda () (push 'line events)))
-                  ((symbol-function 'emacsvox-icon)
-                   (lambda (icon) (push (list 'icon icon) events))))
+            (emacsvox-transient--announced-prefix 'stale)
+            (emacsvox-transient--announced-stack nil)
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (content &rest arguments)
+                     (push (cons content arguments) submissions))))
           (emacsvox--advice-transient--show-after))
         (should (equal emacsvox-transient-cache "Transient choices"))
+        (should (eq emacsvox-aural-module 'transient))
+        (should (= (length submissions) 1))
         (should
          (equal
-          (nreverse events)
-          '(line (icon open-object))))))))
+          (plist-get (cdar submissions) :facts)
+          '(:role command-menu :command-menu-action show
+            :events (command-menu-opened))))
+        (should (eq (plist-get (cdar submissions) :module) 'transient))
+        (should (eq (plist-get (cdar submissions) :occasion) 'navigation))
+        (let ((action
+               (car
+                (plist-get
+                 (cdar submissions) :compatibility-actions))))
+          (should
+           (eq
+            (emacsvox-aural-compatibility-action-value action)
+            'open-object)))))))
+
+(ert-deftest emacsvox-transient-show-deduplicates-menu-redisplay ()
+  "Redrawing one live menu refreshes the cache without repeating feedback."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert "First menu")
+      (set-window-buffer (selected-window) (current-buffer))
+      (let ((transient--window (selected-window))
+            (emacsvox-transient--announced-prefix 'stale)
+            (emacsvox-transient--announced-stack nil)
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (&rest arguments)
+                     (push arguments submissions))))
+          (emacsvox--advice-transient--show-after)
+          (erase-buffer)
+          (insert "Updated menu")
+          (emacsvox--advice-transient--show-after))
+        (should (equal emacsvox-transient-cache "Updated menu"))
+        (should (= (length submissions) 1))))))
+
+(ert-deftest emacsvox-transient-explicit-show-repeats-menu-presentation ()
+  "An explicit request to show the menu speaks even when already announced."
+  (save-window-excursion
+    (with-temp-buffer
+      (insert "Transient choices")
+      (set-window-buffer (selected-window) (current-buffer))
+      (let ((transient--window (selected-window))
+            (emacsvox-transient--announced-prefix transient--prefix)
+            (emacsvox-transient--announced-stack
+             (emacsvox-transient--stack-commands))
+            (ems--interactive-fn-name 'transient-show)
+            submissions)
+        (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                   (lambda (&rest arguments)
+                     (push arguments submissions))))
+          (emacsvox--advice-transient--show-after))
+        (should (= (length submissions) 1))))))
 
 (ert-deftest emacsvox-transient-suspend-calls-original-once ()
   "Interactive suspension builds the browse buffer after one original call."
