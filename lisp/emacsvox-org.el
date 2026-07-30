@@ -395,6 +395,8 @@ operation, and FALLBACK-ICON follows a non-heading line."
    org-forward-heading-same-level org-backward-heading-same-level
    org-backward-sentence org-forward-sentence
    org-backward-element org-forward-element
+   org-next-block org-previous-block
+   org-up-element org-down-element org-up-heading
    org-next-link org-previous-link
    org-goto  org-goto-ret
    org-goto-left org-goto-right
@@ -602,6 +604,46 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
  #'emacsvox--advice-org-tree-to-indirect-buffer-after
  '((name . emacsvox)))
 
+(cl-loop
+ for target in
+ '(org-fold-reveal org-fold-show-children org-fold-show-subtree
+   org-cycle-force-archived)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org visibility command and present its new state."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org-speak-line-semantically
+              'state-change 'state-changed 'visibility-changed 'button)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for target in
+ '(org-occur org-sparse-tree org-match-sparse-tree)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org outline search and present its destination."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org-speak-line-semantically
+              'navigation 'focus-entered 'sparse-tree-opened
+              'large-movement)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
 ;;;  Header insertion and relocation
 
 (cl-loop
@@ -644,7 +686,7 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
  for target in
  '(
    org-cut-subtree org-copy-subtree
-   org-paste-subtree org-archive-subtree
+   org-paste-subtree
    org-narrow-to-subtree)
  for function = (intern (format "emacsvox--advice-%s-after" target))
  do
@@ -1215,7 +1257,6 @@ FALLBACK is used when neither provides useful content."
 (cl-loop
  for target in
  '(
-   org-occur
    org-beginning-of-item org-beginning-of-item-list
    org-end-of-item org-end-of-item-list)
  for function = (intern (format "emacsvox--advice-%s-after" target))
@@ -1770,7 +1811,36 @@ execution."
    (org-toggle-radio-button radio-button-toggled button)
    (org-toggle-fixed-width display-changed button)
    (org-toggle-pretty-entities display-changed button)
-   (org-toggle-timestamp-overlays display-changed button))
+   (org-toggle-timestamp-overlays display-changed button)
+   (org-insert-heading-respect-content heading-edited open-object)
+   (org-insert-todo-heading-respect-content heading-edited open-object)
+   (org-ctrl-c-ret heading-edited open-object)
+   (org-ctrl-c-star context-action button)
+   (org-ctrl-c-minus context-action button)
+   (org-list-make-subtree subtree-changed button)
+   (org-clone-subtree-with-time-shift subtree-changed yank-object)
+   (org-transpose-element subtree-changed button)
+   (org-sort subtree-changed button)
+   (org-date-from-calendar timestamp-changed select-object)
+   (org-timestamp timestamp-changed select-object)
+   (org-timestamp-inactive timestamp-changed select-object)
+   (org-shiftleft context-action button)
+   (org-shiftright context-action button)
+   (org-shiftup context-action button)
+   (org-shiftdown context-action button)
+   (org-shiftcontrolleft context-action button)
+   (org-shiftcontrolright context-action button)
+   (org-shiftcontrolup context-action button)
+   (org-shiftcontroldown context-action button)
+   (org-toggle-tags-groups tags-changed button)
+   (org-dblock-update context-action button)
+   (org-dynamic-block-insert-dblock context-action open-object)
+   (org-insert-drawer property-changed open-object)
+   (org-emphasize context-action button)
+   (org-comment-dwim option-toggled button)
+   (org-kill-note-or-show-branches context-action button)
+   (org-return-and-maybe-indent line-inserted select-object)
+   (org-open-line line-inserted select-object))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -1923,6 +1993,28 @@ execution."
              (emacsvox-org--present-message-result
               'org-content 'object-changed 'refile-completed prior-message
               "Org subtree refiled" 'state-change 'yank-object)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for target in
+ '(org-archive-subtree org-archive-subtree-default
+   org-archive-to-archive-sibling)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Archive an interactive Org subtree quietly and present completion."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-message-result
+              'org-content 'object-changed 'subtree-archived prior-message
+              "Org subtree archived" 'state-change 'save-object)))))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
 

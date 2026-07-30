@@ -79,6 +79,8 @@
     org-forward-heading-same-level org-backward-heading-same-level
     org-backward-sentence org-forward-sentence
     org-backward-element org-forward-element
+    org-next-block org-previous-block
+    org-up-element org-down-element org-up-heading
     org-next-link org-previous-link
     org-goto org-goto-ret org-goto-left org-goto-right org-goto-quit
     org-metaleft org-metaright org-metaup org-metadown org-meta-return
@@ -112,10 +114,10 @@
     org-move-subtree-up org-move-subtree-down
     org-convert-to-odd-levels org-convert-to-oddeven-levels
     org-cut-subtree org-copy-subtree org-paste-subtree
-    org-archive-subtree org-narrow-to-subtree
+    org-narrow-to-subtree
     org-toggle-archive-tag org-toggle-comment
     end-of-line org-toggle-checkbox
-    org-occur org-beginning-of-item org-beginning-of-item-list
+    org-beginning-of-item org-beginning-of-item-list
     org-end-of-item org-end-of-item-list
     org-beginning-of-line org-end-of-line
     org-edit-src-exit org-edit-src-abort
@@ -134,7 +136,20 @@
     org-set-property-and-value org-toggle-ordered-property
     org-update-statistics-cookies org-toggle-radio-button
     org-toggle-fixed-width org-toggle-pretty-entities
-    org-toggle-timestamp-overlays org-ctrl-c-ctrl-c)
+    org-toggle-timestamp-overlays
+    org-insert-heading-respect-content
+    org-insert-todo-heading-respect-content
+    org-ctrl-c-ret org-ctrl-c-star org-ctrl-c-minus
+    org-list-make-subtree org-clone-subtree-with-time-shift
+    org-transpose-element org-sort
+    org-date-from-calendar org-timestamp org-timestamp-inactive
+    org-shiftleft org-shiftright org-shiftup org-shiftdown
+    org-shiftcontrolleft org-shiftcontrolright
+    org-shiftcontrolup org-shiftcontroldown
+    org-toggle-tags-groups org-dblock-update
+    org-dynamic-block-insert-dblock org-insert-drawer
+    org-emphasize org-comment-dwim org-kill-note-or-show-branches
+    org-return-and-maybe-indent org-open-line org-ctrl-c-ctrl-c)
   "Quiet native around-advice targets for Org document state changes.")
 
 (defconst emacsvox-test--org-agenda-line-around-targets
@@ -229,8 +244,16 @@
   '(org-open-at-point org-insert-link org-insert-last-stored-link
     org-insert-all-links org-cite-insert org-store-link
     org-link-preview org-link-preview-refresh
-    org-refile org-refile-copy org-refile-reverse)
+    org-refile org-refile-copy org-refile-reverse
+    org-archive-subtree org-archive-subtree-default
+    org-archive-to-archive-sibling)
   "Org link and refile commands with native result ownership.")
+
+(defconst emacsvox-test--org-visibility-around-targets
+  '(org-fold-reveal org-fold-show-children org-fold-show-subtree
+    org-cycle-force-archived org-occur org-sparse-tree
+    org-match-sparse-tree)
+  "Org visibility and outline-search commands with native feedback.")
 
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
@@ -240,6 +263,37 @@
       (should (fboundp target))
       (should (fboundp function))
       (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-visibility-advice-is-directly-registered ()
+  "Org visibility and outline-search commands have named quiet adapters."
+  (dolist (target emacsvox-test--org-visibility-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-occur-is-outline-navigation-not-an-item ()
+  "Org occur results identify outline search rather than list-item movement."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "* Match")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-occur)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-occur-around
+         (lambda (&rest _))))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role heading :level 1 :visibility expanded
+          :events (focus-entered) :org-action sparse-tree-opened)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-item-feedback-is-target-aware ()
   "Only the matching Org item movement submits the item."

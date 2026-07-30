@@ -110,7 +110,8 @@
                       timer-started timer-paused timer-stopped timer-set
                       timer-item-created
                       link-opened link-inserted link-stored link-previewed
-                      refile-completed
+                      refile-completed subtree-archived
+                      visibility-changed sparse-tree-opened
                       export-completed publish-completed))
     (org-table-row
      :kind attribute
