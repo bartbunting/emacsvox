@@ -35,6 +35,16 @@
 (defvar emacsvox-aural-submission-occasion nil
   "Dynamically bound occasion for the current speech submission.")
 
+(defconst emacsvox-aural-delivery-policies
+  '(ordered replaceable urgent)
+  "Supported delivery policies for complete aural submissions.")
+
+(defvar emacsvox-aural-submission-delivery-policy nil
+  "Dynamically bound delivery policy for the current aural submission.")
+
+(defvar emacsvox-aural-submission-replacement-key nil
+  "Dynamically bound replacement key for the current aural submission.")
+
 (defvar emacsvox-aural-ui-interface-buffer)
 
 (defconst emacsvox-aural-facts-property
@@ -89,19 +99,53 @@ OBJECT defaults to the current buffer and may also be a string."
        (plist-put context :history-recording-inhibited t)))
     context))
 
+(defun emacsvox-aural-delivery-policy-for-occasion (occasion)
+  "Return the default complete-submission delivery policy for OCCASION.
+
+Navigation replaces an older pending presentation because only the current
+location remains useful.  All other occasions retain submission order unless a
+caller explicitly requests another policy."
+  (if (eq occasion 'navigation) 'replaceable 'ordered))
+
+(defun emacsvox-aural--validate-delivery (policy replacement-key)
+  "Validate delivery POLICY and REPLACEMENT-KEY."
+  (unless (memq policy emacsvox-aural-delivery-policies)
+    (error "Unsupported aural delivery policy: %S" policy))
+  (when (and (eq policy 'replaceable) (null replacement-key))
+    (error "Replaceable aural delivery requires a replacement key")))
+
 (cl-defun emacsvox-aural-call-with-submission
-    (function &key facts context module occasion arguments)
+    (function
+     &key facts context module occasion delivery-policy replacement-key
+     arguments)
   "Call FUNCTION with ARGUMENTS inside one frozen aural submission.
 
 FACTS, CONTEXT, MODULE, and OCCASION describe the source presentation.
-An enclosing submission remains authoritative so nested compatibility
-helpers cannot replace more specific presentation intent."
+DELIVERY-POLICY is `ordered', `replaceable', or `urgent'.  Replaceable
+submissions with the same REPLACEMENT-KEY supersede one another before
+delivery; the default key is `speaker'.  An enclosing submission remains
+authoritative so nested compatibility helpers cannot replace more specific
+presentation or delivery intent."
   (let* ((effective-facts
           (or emacsvox-aural-submission-facts facts))
          (effective-module
           (or emacsvox-aural-submission-module module))
          (effective-occasion
           (or emacsvox-aural-submission-occasion occasion 'continuous))
+         (effective-delivery-policy
+          (or
+           emacsvox-aural-submission-delivery-policy
+           delivery-policy
+           (emacsvox-aural-delivery-policy-for-occasion
+            effective-occasion)))
+         (effective-replacement-key
+          (when (eq effective-delivery-policy 'replaceable)
+            (or
+             (and
+              emacsvox-aural-submission-delivery-policy
+              emacsvox-aural-submission-replacement-key)
+             replacement-key
+             'speaker)))
          (effective-context
           (or
            emacsvox-aural-submission-context
@@ -111,7 +155,13 @@ helpers cannot replace more specific presentation intent."
          (emacsvox-aural-submission-facts effective-facts)
          (emacsvox-aural-submission-context effective-context)
          (emacsvox-aural-submission-module effective-module)
-         (emacsvox-aural-submission-occasion effective-occasion))
+         (emacsvox-aural-submission-occasion effective-occasion)
+         (emacsvox-aural-submission-delivery-policy
+          effective-delivery-policy)
+         (emacsvox-aural-submission-replacement-key
+          effective-replacement-key))
+    (emacsvox-aural--validate-delivery
+     effective-delivery-policy effective-replacement-key)
     (apply function arguments)))
 
 (defun emacsvox-aural-face-names (value)

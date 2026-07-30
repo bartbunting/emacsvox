@@ -36,7 +36,8 @@
     (emacsvox-aural-submission
      (:constructor emacsvox-aural--make-submission))
   "One frozen native aural presentation transaction."
-  id facts context content compatibility-actions prepared-content plans)
+  id delivery-policy replacement-key facts context content
+  compatibility-actions prepared-content plans)
 
 (defvar emacsvox-aural--submission-sequence 0
   "Sequence used to identify native aural submissions.")
@@ -166,6 +167,8 @@ PHASE is `before' by default and may alternatively be `after'."
            (submission
             (emacsvox-aural--make-submission
              :id id
+             :delivery-policy emacsvox-aural-submission-delivery-policy
+             :replacement-key emacsvox-aural-submission-replacement-key
              :facts (copy-tree facts)
              :context (copy-tree context)
              :content (copy-sequence content)
@@ -203,6 +206,8 @@ PHASE is `before' by default and may alternatively be `after'."
            (emacsvox-aural--source-compatibility-actions actions))))
     (emacsvox-aural--make-submission
      :id id
+     :delivery-policy emacsvox-aural-submission-delivery-policy
+     :replacement-key emacsvox-aural-submission-replacement-key
      :facts facts
      :context context
      :content nil
@@ -212,13 +217,16 @@ PHASE is `before' by default and may alternatively be `after'."
      :plans (list plan))))
 
 (cl-defun emacsvox-aural-submit-actions
-    (&key facts context module occasion compatibility-actions)
+    (&key
+     facts context module occasion delivery-policy replacement-key
+     compatibility-actions)
   "Present semantic FACTS as one action-only native transaction.
 
 FACTS describe one user-visible event or object but supply no spoken object
 content.  Matching rules may still produce ordered speech, cue, pause, or tone
 actions.  Frozen CONTEXT controls policy; MODULE and OCCASION are used when it
-must be captured.  COMPATIBILITY-ACTIONS is an ordered list produced by
+must be captured.  DELIVERY-POLICY and REPLACEMENT-KEY control whole-transaction
+delivery.  COMPATIBILITY-ACTIONS is an ordered list produced by
 `emacsvox-aural-compatibility-icon'.  Before actions precede semantic
 before-actions; after actions follow semantic after-actions.  A resolution
 with no enabled output does not start the speech server, dispatch, or create a
@@ -234,14 +242,19 @@ presentation-history record."
    :module (or module (plist-get context :module))
    :occasion
    (or occasion (plist-get context :occasion) 'notification)
+   :delivery-policy delivery-policy
+   :replacement-key replacement-key
    :arguments (list compatibility-actions)))
 
 (cl-defun emacsvox-aural-submit
-    (content &key facts context module occasion compatibility-actions)
+    (content
+     &key facts context module occasion delivery-policy replacement-key
+     compatibility-actions)
   "Present CONTENT as one native aural transaction.
 
 FACTS and frozen CONTEXT describe one user-visible object.  MODULE and
-OCCASION are used when CONTEXT must be captured.  COMPATIBILITY-ACTIONS is an
+OCCASION are used when CONTEXT must be captured.  DELIVERY-POLICY and
+REPLACEMENT-KEY control whole-transaction delivery.  COMPATIBILITY-ACTIONS is an
 ordered list produced by `emacsvox-aural-compatibility-icon'.  Before actions
 precede semantic before-actions; after actions follow semantic after-actions.
 Semantic rules are resolved once for the object, while legacy icons resolve
@@ -253,6 +266,8 @@ only their cue-specific adapter policy."
    :module (or module (plist-get context :module))
    :occasion
    (or occasion (plist-get context :occasion) 'continuous)
+   :delivery-policy delivery-policy
+   :replacement-key replacement-key
    :arguments (list content compatibility-actions)))
 
 (provide 'emacsvox-aural-submission)

@@ -183,6 +183,61 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           org state-change)))
       (should (equal captures '((notmuch navigation)))))))
 
+(ert-deftest emacsvox-aural-source-assigns-whole-submission-delivery ()
+  "Source occasions select delivery policy before transport is involved."
+  (dolist
+      (case
+       '((navigation replaceable speaker)
+         (continuous ordered nil)
+         (state-change ordered nil)
+         (notification ordered nil)))
+    (let (observed)
+      (emacsvox-aural-call-with-submission
+       (lambda ()
+         (setq
+          observed
+          (list
+           emacsvox-aural-submission-delivery-policy
+           emacsvox-aural-submission-replacement-key)))
+       :occasion (car case))
+      (should (equal observed (cdr case)))))
+  (let (observed)
+    (emacsvox-aural-call-with-submission
+     (lambda ()
+       (setq
+        observed
+        (list
+         emacsvox-aural-submission-delivery-policy
+         emacsvox-aural-submission-replacement-key)))
+     :occasion 'notification
+     :delivery-policy 'urgent
+     :replacement-key 'ignored)
+    (should (equal observed '(urgent nil)))))
+
+(ert-deftest emacsvox-aural-source-enclosing-delivery-is-authoritative ()
+  "Nested compatibility helpers cannot replace outer delivery intent."
+  (let (observed)
+    (emacsvox-aural-call-with-submission
+     (lambda ()
+       (emacsvox-aural-call-with-submission
+        (lambda ()
+          (setq
+           observed
+           (list
+            emacsvox-aural-submission-delivery-policy
+            emacsvox-aural-submission-replacement-key)))
+        :occasion 'state-change
+        :delivery-policy 'ordered
+        :replacement-key 'inner))
+     :occasion 'navigation
+     :delivery-policy 'replaceable
+     :replacement-key 'outer)
+    (should (equal observed '(replaceable outer))))
+  (should-error
+   (emacsvox-aural-call-with-submission
+    #'ignore :delivery-policy 'eventually)
+   :type 'error))
+
 (ert-deftest emacsvox-aural-submission-combines-one-object-and-legacy-actions ()
   "One native submission resolves object policy once around ordered adapters."
   (emacsvox-test--with-transport-scheme
@@ -229,6 +284,14 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
            (emacsvox-aural-compatibility-icon 'button)
            (emacsvox-aural-compatibility-icon 'repeat-stop 'after)))))
       (should (emacsvox-aural-submission-p submission))
+      (should
+       (eq
+        (emacsvox-aural-submission-delivery-policy submission)
+        'replaceable))
+      (should
+       (eq
+        (emacsvox-aural-submission-replacement-key submission)
+        'speaker))
       (should
        (eq spoken
            (emacsvox-aural-submission-prepared-content submission)))
@@ -409,6 +472,14 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         '(ensure (tone 130.8 150 nil) (pause 40) dispatch)))
       (should (emacsvox-aural-submission-p submission))
       (should (= (emacsvox-aural-submission-id submission) 1))
+      (should
+       (eq
+        (emacsvox-aural-submission-delivery-policy submission)
+        'replaceable))
+      (should
+       (eq
+        (emacsvox-aural-submission-replacement-key submission)
+        'speaker))
       (should (equal (emacsvox-aural-submission-facts submission) facts))
       (should (equal (emacsvox-aural-submission-context submission) context))
       (should-not (emacsvox-aural-submission-content submission))
