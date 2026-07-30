@@ -1007,8 +1007,7 @@
      :rules
      ((:id bs-buffer-modified-tone
        :match
-       (:role buffer-entry :module bs :state modified
-        :occasion navigation)
+       (:role buffer-entry :module bs :state modified)
        :render
        (:before
         (:append
@@ -1016,8 +1015,7 @@
            :kind tone :tone buffer-modified)))))
       (:id bs-buffer-read-only-tone
        :match
-       (:role buffer-entry :module bs :state read-only
-        :occasion navigation)
+       (:role buffer-entry :module bs :state read-only)
        :render
        (:before
         (:append
