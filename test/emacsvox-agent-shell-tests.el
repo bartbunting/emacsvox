@@ -3407,7 +3407,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (let ((presentations
            (emacsvox-agent-shell-test--capture-presentations
              (cl-letf (((symbol-function 'ems-interactive-p)
-                        (lambda (&rest _) t)))
+                        (lambda (function)
+                          (eq function 'agent-shell-next-item))))
                (emacsvox-agent-shell--next-item-around
                 (lambda (&rest _) (forward-line 1)))))))
       (should (= 1 (length presentations)))
