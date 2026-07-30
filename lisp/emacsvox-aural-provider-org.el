@@ -67,6 +67,9 @@
                       edit-opened edit-closed paragraph-filled todo-changed
                       list-item-created calendar-evaluated overview-shown
                       contents-shown indirect-buffer-opened export-menu-opened
+                      priority-changed tags-changed planning-changed
+                      effort-changed property-changed statistics-updated
+                      radio-button-toggled display-changed context-action
                       export-completed publish-completed))
     (org-table-row
      :kind attribute

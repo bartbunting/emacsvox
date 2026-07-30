@@ -73,10 +73,11 @@
    (org-at-heading-p)
    (org-fold-folded-p (line-end-position) 'outline)))
 
-(defun emacsvox-org-heading-facts (&optional event)
+(defun emacsvox-org-heading-facts (&optional event action)
   "Return semantic facts for the Org heading at point.
 
-Optional EVENT records the registered event that caused its presentation."
+Optional EVENT records the registered event that caused its presentation.
+Optional ACTION identifies the user-visible Org operation."
   (when (org-at-heading-p)
     (let* ((folded (emacsvox-org-heading-folded-p))
            (facts
@@ -88,6 +89,8 @@ Optional EVENT records the registered event that caused its presentation."
         (setq facts (plist-put facts :states '(folded))))
       (when event
         (setq facts (plist-put facts :events (list event))))
+      (when action
+        (setq facts (plist-put facts :org-action action)))
       facts)))
 
 (defun emacsvox-org--feedback-facts (role event action)
@@ -206,13 +209,13 @@ ICON-PHASE defaults to `before'."
     (font-lock-flush)))
 
 (defun emacsvox-org-speak-line-semantically
-    (occasion event &optional fallback-action fallback-icon)
+    (occasion event &optional action fallback-icon)
   "Speak the current line with Org facts for OCCASION and EVENT.
 
 Return the heading facts when point is on a heading, or nil after using the
-ordinary compatibility path for any other Org line.  FALLBACK-ACTION describes
-that non-heading operation, and FALLBACK-ICON follows its spoken line."
-  (let ((facts (emacsvox-org-heading-facts event)))
+ordinary compatibility path for any other Org line.  ACTION describes the
+operation, and FALLBACK-ICON follows a non-heading line."
+  (let ((facts (emacsvox-org-heading-facts event action)))
     (when facts
       (emacsvox-org-refresh-aural-heading))
     (emacsvox-org--submit-text
@@ -220,7 +223,7 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (or
       facts
       (emacsvox-org--feedback-facts
-       'org-content event fallback-action))
+       'org-content event action))
      occasion
      (unless facts fallback-icon)
      'after)
@@ -1244,6 +1247,45 @@ arg just opens the file"
 (advice-add
  'org-todo :after #'emacsvox--advice-org-todo-after
  '((name . emacsvox)))
+
+;;;  Metadata and context-sensitive state:
+
+(defun emacsvox-org--present-document-state (action icon)
+  "Present the current Org line after ACTION, with compatibility ICON."
+  (emacsvox-org-speak-line-semantically
+   'state-change 'state-changed action icon))
+
+(cl-loop
+ for (target action icon) in
+ '((org-priority priority-changed button)
+   (org-set-tags-command tags-changed button)
+   (org-schedule planning-changed button)
+   (org-deadline planning-changed button)
+   (org-set-effort effort-changed button)
+   (org-inc-effort effort-changed button)
+   (org-set-property property-changed button)
+   (org-set-property-and-value property-changed button)
+   (org-toggle-ordered-property property-changed button)
+   (org-update-statistics-cookies statistics-updated button)
+   (org-toggle-radio-button radio-button-toggled button)
+   (org-toggle-fixed-width display-changed button)
+   (org-toggle-pretty-entities display-changed button)
+   (org-toggle-timestamp-overlays display-changed button)
+   (org-ctrl-c-ctrl-c context-action button))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org state command quietly and present its result."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-document-state ',action ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
 ;;; TVR: Conveniences
 

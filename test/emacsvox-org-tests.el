@@ -126,6 +126,15 @@
     org-capture-finalize org-capture-kill org-md-export-as-markdown)
   "Native after-advice targets in the Org capture slice.")
 
+(defconst emacsvox-test--org-document-state-around-targets
+  '(org-priority org-set-tags-command org-schedule org-deadline
+    org-set-effort org-inc-effort org-set-property
+    org-set-property-and-value org-toggle-ordered-property
+    org-update-statistics-cookies org-toggle-radio-button
+    org-toggle-fixed-width org-toggle-pretty-entities
+    org-toggle-timestamp-overlays org-ctrl-c-ctrl-c)
+  "Quiet native around-advice targets for Org document state changes.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -276,7 +285,8 @@
          (equal
           (plist-get (cdr submission) :facts)
           '(:role heading :level 1 :visibility expanded
-            :events (focus-entered))))
+            :events (focus-entered)
+            :org-action structure-navigation)))
         (should (eq (plist-get (cdr submission) :module) 'org))
         (should
          (eq (plist-get (cdr submission) :occasion) 'navigation))))))
@@ -320,7 +330,8 @@
        (equal
         (plist-get (cdr submission) :facts)
         '(:role heading :level 2 :visibility expanded
-          :events (focus-entered))))
+          :events (focus-entered)
+          :org-action structure-navigation)))
       (should (eq (plist-get (cdr submission) :module) 'org))
       (should
        (eq (plist-get (cdr submission) :occasion) 'navigation)))))
@@ -1167,8 +1178,48 @@
        (equal
         (plist-get (cdar submissions) :facts)
         '(:role heading :level 1 :visibility expanded
-          :events (object-changed))))
+          :events (object-changed)
+          :org-action heading-edited)))
       (should (eq (plist-get (cdar submissions) :occasion) 'edit)))))
+
+(ert-deftest emacsvox-org-document-state-advice-is-directly-registered ()
+  "Every covered Org document state command has its named quiet adapter."
+  (dolist (target emacsvox-test--org-document-state-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-document-state-owns-message-and-result ()
+  "An interactive metadata command is quiet and submits its changed heading."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "* Task")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-priority)
+          (emacsvox-speak-messages t)
+          message-state
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (should
+         (eq
+          'changed
+          (emacsvox--advice-org-priority-around
+           (lambda (&rest _)
+             (setq message-state emacsvox-speak-messages)
+             'changed)))))
+      (should-not message-state)
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role heading :level 1 :visibility expanded
+          :events (state-changed) :org-action priority-changed)))
+      (should
+       (eq (plist-get (cdar submissions) :occasion) 'state-change)))))
 
 (ert-deftest emacsvox-org-subtree-feedback-is-target-aware ()
   "Only the matching subtree command submits its resulting line."
