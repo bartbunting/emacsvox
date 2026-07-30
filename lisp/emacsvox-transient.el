@@ -132,22 +132,31 @@
 (advice-add 'transient-toggle-common :after
             #'emacsvox--advice-transient-toggle-common-after)
 
-(defun emacsvox--advice-transient-resume-after (&rest _)
-  "speak."
-  (when (ems-interactive-p 'transient-resume)
-    (tts-stop 'all) (emacsvox-icon 'open-object)))
-
-(advice-add 'transient-resume :after
-            #'emacsvox--advice-transient-resume-after)
-
 (defun emacsvox-transient--quit-feedback (target)
   "Provide quit feedback when TARGET is the interactive command."
   (when (ems-interactive-p target)
-    (tts-stop 'all)
-    (emacsvox-icon 'close-object)
-    (when (eq major-mode 'emacsvox-transient-mode)
-      (bury-buffer))
-    (emacsvox-speak-mode-line)))
+    (cond
+     ((eq major-mode 'emacsvox-transient-mode)
+      (bury-buffer)
+      (emacsvox-transient--submit-text
+       (emacsvox-transient--buffer-summary)
+       (emacsvox-transient--menu-facts
+        'close-browser 'command-menu-closed)
+       'state-change
+       'close-object))
+     ((eq target 'transient-quit-seq)
+      (emacsvox-transient--submit-actions
+       (emacsvox-transient--menu-facts 'abort-key-sequence)
+       'navigation
+       'close-object))
+     ((null transient--prefix)
+      (tts-stop 'all)
+      (emacsvox-transient--submit-text
+       (emacsvox-transient--buffer-summary)
+       (emacsvox-transient--menu-facts
+        target 'command-menu-closed)
+       'state-change
+       'close-object)))))
 
 (defun emacsvox--advice-transient-quit-all-after (&rest _)
   "Provide feedback after quitting all transients."
@@ -219,6 +228,7 @@
     (define-key map (kbd "M-p") #'emacsvox-transient-previous-section)
     (define-key map "q" #'bury-buffer)
     (define-key map "r" #'transient-resume)
+    (define-key map (kbd "C-g") #'bury-buffer)
     (use-local-map map)))
 
 (defvar emacsvox-transient-cache nil
@@ -282,6 +292,31 @@ ICON-PHASE defaults to `before'."
   (emacsvox-aural-source-substring
    (line-beginning-position) (line-end-position)))
 
+(defun emacsvox-transient--buffer-summary ()
+  "Return a concise voice-preserving summary of the selected buffer."
+  (concat
+   (propertize (buffer-name) 'personality voice-lighten-medium)
+   ", "
+   (propertize
+    (downcase
+     (or
+      (and (stringp mode-name) mode-name)
+      (and (listp mode-name) (cl-find-if #'stringp mode-name))
+      (replace-regexp-in-string
+       "-mode\\'" "" (symbol-name major-mode))))
+    'personality voice-animate)))
+
+(defun emacsvox-transient--present-visible-menu
+    (action event occasion icon)
+  "Present the visible menu for ACTION, EVENT, OCCASION, and compatibility ICON."
+  (let ((facts (emacsvox-transient--menu-facts action event)))
+    (if (window-live-p transient--window)
+        (with-current-buffer (window-buffer transient--window)
+          (emacsvox-transient--submit-text
+           (emacsvox-transient--line-content)
+           facts occasion icon))
+      (emacsvox-transient--submit-actions facts occasion icon))))
+
 (defun emacsvox-transient--new-menu-p ()
   "Return non-nil when the current Transient menu was not yet announced."
   (or
@@ -311,36 +346,56 @@ ICON-PHASE defaults to `before'."
            (emacsvox-transient--new-menu-p)
            (eq ems--interactive-fn-name 'transient-show))
         (emacsvox-transient--record-announced-menu)
-        (emacsvox-transient--submit-text
-         (emacsvox-transient--line-content)
-         (emacsvox-transient--menu-facts
-          'show 'command-menu-opened)
-         'navigation
-         'open-object)))))
+        (unless (eq ems--interactive-fn-name 'transient-resume)
+          (emacsvox-transient--submit-text
+           (emacsvox-transient--line-content)
+           (emacsvox-transient--menu-facts
+            'show 'command-menu-opened)
+           'navigation
+           'open-object))))))
 
 (advice-add 'transient--show :after
             #'emacsvox--advice-transient--show-after)
 
 (defun emacsvox--advice-transient-suspend-around (orig-fun)
-  "Pop to *Transient-emacsvox* buffer where the message emitted by\nthe transient can be browsed.\nPress `r' to resume the suspended transient."
+  "Suspend once and display the cached menu in a browsable buffer."
   (if (ems-interactive-p 'transient-suspend)
       (let
           ((buff (get-buffer-create "*Transient-Emacsvox*"))
            (inhibit-read-only t))
         (prog1 (funcall orig-fun)
-          (emacsvox-icon 'close-object)
           (with-current-buffer buff
             (erase-buffer)
-            (insert "r to resume, C-g to quit.\n\n")
+            (insert "r to resume, q to close this browser.\n\n")
             (insert emacsvox-transient-cache)
             (goto-char (point-min))
             (emacsvox-transient-mode))
           (switch-to-buffer buff)
-          (emacsvox-speak-mode-line)))
+          (emacsvox-transient--submit-text
+           (emacsvox-transient--buffer-summary)
+           (emacsvox-transient--menu-facts
+            'suspend 'command-menu-suspended)
+           'state-change
+           'close-object)))
     (funcall orig-fun)))
 
 (advice-add 'transient-suspend :around
             #'emacsvox--advice-transient-suspend-around)
+
+(defun emacsvox--advice-transient-resume-around
+    (orig-fun &rest arguments)
+  "Resume once and present success only when a suspended menu existed."
+  (let ((resumable (or transient--stack transient-resume-mode)))
+    (prog1
+        (apply orig-fun arguments)
+      (when (ems-interactive-p 'transient-resume)
+        (when resumable
+          (tts-stop 'all)
+          (emacsvox-transient--present-visible-menu
+           'resume 'command-menu-resumed 'state-change 'open-object))))))
+
+(advice-add 'transient-resume :around
+            #'emacsvox--advice-transient-resume-around)
 
 ;;; section nav:
 
@@ -396,12 +451,10 @@ When non-nil, preserve compatibility ICON."
 ;;; Hooks:
 
 (defun emacsvox-transient-post-hook ()
-  "Actions to execute after transient is done."
-  
-  (unless transient--stack
-    (tts-stop 'all)
-    (emacsvox-icon 'task-done)
-    (emacsvox-speak-mode-line)))
+  "Forget the menu announcement when a Transient level exits."
+  (setq
+   emacsvox-transient--announced-prefix nil
+   emacsvox-transient--announced-stack nil))
 
 (add-hook 'transient-exit-hook 'emacsvox-transient-post-hook)
 

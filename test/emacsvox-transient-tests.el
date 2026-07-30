@@ -19,7 +19,8 @@
 (defconst emacsvox-test--transient-advice
   '((transient-toggle-common :after
                              emacsvox--advice-transient-toggle-common-after)
-    (transient-resume :after emacsvox--advice-transient-resume-after)
+    (transient-resume :around
+                      emacsvox--advice-transient-resume-around)
     (transient-quit-all :after
                         emacsvox--advice-transient-quit-all-after)
     (transient-quit-one :after
@@ -141,22 +142,20 @@
         (emacsvox-transient-cache "Transient choices")
         (ems--interactive-fn-name 'transient-suspend)
         (calls 0)
-        events)
+        submissions)
     (when (get-buffer buffer-name)
       (kill-buffer buffer-name))
     (unwind-protect
         (save-window-excursion
-          (cl-letf (((symbol-function 'emacsvox-icon)
-                     (lambda (icon) (push (list 'icon icon) events)))
-                    ((symbol-function 'emacsvox-speak-mode-line)
-                     (lambda () (push 'mode-line events))))
+          (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                     (lambda (content &rest arguments)
+                       (push (cons content arguments) submissions))))
             (should
              (eq
               'result
               (emacsvox--advice-transient-suspend-around
                (lambda ()
                  (setq calls (1+ calls))
-                 (push 'original events)
                  'result)))))
           (should (= calls 1))
           (with-current-buffer buffer-name
@@ -164,22 +163,23 @@
             (should
              (equal
               (buffer-string)
-              "r to resume, C-g to quit.\n\nTransient choices")))
+              "r to resume, q to close this browser.\n\nTransient choices")))
+          (should (= (length submissions) 1))
           (should
            (equal
-            (nreverse events)
-            '(original (icon close-object) mode-line))))
+            (plist-get (cdar submissions) :facts)
+            '(:role command-menu :command-menu-action suspend
+              :events (command-menu-suspended)))))
       (when (get-buffer buffer-name)
         (kill-buffer buffer-name)))))
 
 (ert-deftest emacsvox-transient-programmatic-suspend-runs-once ()
   "Programmatic suspension is quiet and invokes the original once."
   (let ((calls 0)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-mode-line)
-               (lambda () (push 'mode-line events))))
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
       (should
        (eq
         'result
@@ -188,7 +188,90 @@
            (setq calls (1+ calls))
            'result)))))
     (should (= calls 1))
-    (should-not events)))
+    (should-not submissions)))
+
+(ert-deftest emacsvox-transient-resume-reports-only-a-real-resumption ()
+  "Resume feedback distinguishes a suspended menu from the no-stack case."
+  (let ((ems--interactive-fn-name 'transient-resume)
+        (transient--stack '((sample-prefix nil nil)))
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions)))
+              ((symbol-function 'tts-stop) #'ignore))
+      (should
+       (eq
+        'result
+        (emacsvox--advice-transient-resume-around
+         (lambda () 'result)))))
+    (should (= (length submissions) 1))
+    (should
+     (equal
+      (plist-get (car submissions) :facts)
+      '(:role command-menu :command-menu-action resume
+        :events (command-menu-resumed)))))
+  (let ((ems--interactive-fn-name 'transient-resume)
+        (transient--stack nil)
+        (transient-resume-mode nil)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
+      (emacsvox--advice-transient-resume-around
+       (lambda () 'result)))
+    (should-not submissions)))
+
+(ert-deftest emacsvox-transient-quit-all-presents-menu-closure ()
+  "Quitting the active menu presents closure without claiming task success."
+  (with-temp-buffer
+    (let ((ems--interactive-fn-name 'transient-quit-all)
+          (transient--prefix nil)
+          submissions
+          stops)
+      (cl-letf (((symbol-function 'emacsvox-aural-submit)
+                 (lambda (content &rest arguments)
+                   (push (cons content arguments) submissions)))
+                ((symbol-function 'tts-stop)
+                 (lambda (scope) (push scope stops))))
+        (emacsvox--advice-transient-quit-all-after))
+      (should (equal stops '(all)))
+      (should (= (length submissions) 1))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role command-menu :command-menu-action transient-quit-all
+          :events (command-menu-closed)))))))
+
+(ert-deftest emacsvox-transient-quit-sequence-does-not-close-menu ()
+  "Aborting an incomplete key sequence must not report the menu as closed."
+  (let ((ems--interactive-fn-name 'transient-quit-seq)
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
+      (emacsvox--advice-transient-quit-seq-after))
+    (should (= (length submissions) 1))
+    (should
+     (equal
+      (plist-get (car submissions) :facts)
+      '(:role command-menu
+        :command-menu-action abort-key-sequence)))))
+
+(ert-deftest emacsvox-transient-exit-hook-only-resets-display-state ()
+  "Generic suffix exit must not claim success or duplicate package feedback."
+  (let ((emacsvox-transient--announced-prefix 'prefix)
+        (emacsvox-transient--announced-stack '(parent))
+        submissions)
+    (cl-letf (((symbol-function 'emacsvox-aural-submit)
+               (lambda (&rest arguments)
+                 (push arguments submissions)))
+              ((symbol-function 'emacsvox-aural-submit-actions)
+               (lambda (&rest arguments)
+                 (push arguments submissions))))
+      (emacsvox-transient-post-hook))
+    (should-not emacsvox-transient--announced-prefix)
+    (should-not emacsvox-transient--announced-stack)
+    (should-not submissions)))
 
 (ert-deftest emacsvox-transient-button-navigation-runs-once ()
   "Transient button movement presents one item after one original call."
