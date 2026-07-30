@@ -3401,6 +3401,52 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       '(user-prompt agent-response activity-group thought tool-call plan
                     permission error agent-response)))))
 
+(ert-deftest emacsvox-agent-shell-block-jumps-use-native-submissions ()
+  "Successful and failed non-table jumps should submit native feedback."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (insert "target")
+    (let ((target
+           '(:position 1 :end 7 :type thought :label "Thinking"
+             :body "Inspect constraints"))
+          captured
+          compatibility-output
+          direct-output)
+      (cl-letf
+          (((symbol-function
+             'emacsvox-agent-shell--block-location-in-direction)
+            (lambda (&rest _) target))
+           ((symbol-function 'emacsvox-agent-shell--expand-block-parent)
+            #'ignore)
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) captured)))
+           ((symbol-function 'emacsvox-agent-shell--present-feedback)
+            (lambda (&rest _) (push 'compatibility compatibility-output)))
+           ((symbol-function 'emacsvox-icon)
+            (lambda (&rest _) (push 'icon direct-output)))
+           ((symbol-function 'tts-speak)
+            (lambda (&rest _) (push 'speech direct-output))))
+        (emacsvox-agent-shell--jump-block-of-type 'thought 'forward)
+        (setq target nil)
+        (emacsvox-agent-shell--jump-block-of-type 'thought 'backward))
+      (should-not compatibility-output)
+      (should-not direct-output)
+      (setq captured (nreverse captured))
+      (should
+       (equal
+        (mapcar #'car captured)
+        '("Thinking. Inspect constraints"
+          "No earlier thought or reasoning block.")))
+      (dolist (entry captured)
+        (let ((arguments (cdr entry)))
+          (should (eq (plist-get arguments :module) 'agent-shell))
+          (should (eq (plist-get arguments :occasion) 'navigation))
+          (should
+           (= (length
+               (plist-get arguments :compatibility-actions))
+              1)))))))
+
 (ert-deftest emacsvox-agent-shell-foldable-locations-expose-visibility ()
   "Foldable transcript locations should expose canonical visibility facts."
   (emacsvox-agent-shell-test--with-semantic-blocks

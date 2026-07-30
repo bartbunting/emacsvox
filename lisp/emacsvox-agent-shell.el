@@ -3154,30 +3154,34 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (emacsvox-agent-shell--expand-block-parent target)
           (goto-char (plist-get target :position))
           (tts-stop)
-          (emacsvox-agent-shell--call-with-aural-presentation
-           (emacsvox-agent-shell--block-location-facts
-            target 'focus-entered)
-           'navigation
-           (lambda ()
-             (pcase type
-               ('table
-                (emacsvox-agent-shell--table-entry-feedback direction))
-               ('source-block
-                (emacsvox-icon 'open-object)
-                (tts-speak
-                 (emacsvox-agent-shell--source-block-summary target)))
-               (_
-                (emacsvox-icon 'large-movement)
-                (tts-speak
-                 (emacsvox-agent-shell--block-location-speech target))))))
+          (pcase type
+            ('table
+             (emacsvox-agent-shell--call-with-aural-presentation
+              (emacsvox-agent-shell--block-location-facts
+               target 'focus-entered)
+              'navigation
+              #'emacsvox-agent-shell--table-entry-feedback
+              direction))
+            ('source-block
+             (emacsvox-agent-shell--submit-text-feedback
+              (emacsvox-agent-shell--source-block-summary target)
+              (emacsvox-agent-shell--block-location-facts
+               target 'focus-entered)
+              'navigation 'open-object))
+            (_
+             (emacsvox-agent-shell--submit-text-feedback
+              (emacsvox-agent-shell--block-location-speech target)
+              (emacsvox-agent-shell--block-location-facts
+               target 'focus-entered)
+              'navigation 'large-movement)))
           target)
-      (emacsvox-agent-shell--present-feedback
-       (emacsvox-agent-shell--block-facts type 'operation-failed)
-       'navigation 'warn-user #'tts-speak
+      (emacsvox-agent-shell--submit-text-feedback
        (format "No %s %s%s."
                (if (eq direction 'forward) "later" "earlier")
                (downcase (emacsvox-agent-shell--block-type-label type))
-               (if (eq type 'source-block) "" " block")))
+               (if (eq type 'source-block) "" " block"))
+       (emacsvox-agent-shell--block-facts type 'operation-failed)
+       'navigation 'warn-user)
       nil)))
 
 (defun emacsvox-agent-shell--block-location-at-point (&optional position)
