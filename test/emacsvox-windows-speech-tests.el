@@ -10,6 +10,25 @@
 (require 'ert)
 (require 'emacsvox-windows-speech)
 
+(defun emacsvox-windows-speech-tests--run-server-library (server script)
+  "Source Windows speech SERVER and evaluate Tcl SCRIPT.
+Return the server's standard output."
+  (let ((path (expand-file-name server emacsvox-servers-directory)))
+    (with-temp-buffer
+      (insert
+       (format
+        (concat
+         "set argv0 {%s}\n"
+         "set emacsvox_windows_speech_library_mode 1\n"
+         "source $argv0\n"
+         "%s")
+        path script))
+      (should
+       (zerop
+        (call-process-region
+         (point-min) (point-max) "tclsh" t t nil)))
+      (buffer-string))))
+
 (ert-deftest emacsvox-windows-speech-resolves-friendly-server-name ()
   "Friendly server names resolve to launchers outside Emacsvox."
   (let ((emacsvox-windows-speech-servers-directory "/support/servers/"))
@@ -320,6 +339,81 @@
             (insert-file-contents log)
             (should (equal (buffer-string) "latest 日本\n"))))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-windows-eloquence-batches-native-synthesis ()
+  "Eloquence should synthesize once per cue-delimited speech segment."
+  (should
+   (equal
+    (emacsvox-windows-speech-tests--run-server-library
+     "windows-outloud"
+     (concat
+      "tts_initialize\n"
+      "set tts(speech_rate) 75\n"
+      "set log {}\n"
+      "proc windows_speech_text_rpc {state command text} {\n"
+      "  lappend ::log [list $command $text]\n"
+      "}\n"
+      "proc windows_eci_rpc {request} {\n"
+      "  lappend ::log [list RPC $request]\n"
+      "  if {$request eq \"SPEAKING\"} {return 0}\n"
+      "  return \"\"\n"
+      "}\n"
+      "proc windows_speech_queue_sound {program sound} {\n"
+      "  lappend ::log [list CUE $sound]\n"
+      "}\n"
+      "q {first}\n"
+      "c {control}\n"
+      "t 440 100\n"
+      "a {/sounds/cue.ogg}\n"
+      "q {second}\n"
+      "d\n"
+      "puts [join $log \\n]\n"))
+    (concat
+     "RPC SPEAKING\n"
+     "ADD first\n"
+     "ADD { control }\n"
+     "ADD {`vs75 }\n"
+     "RPC {INDEX_TONE 440 100}\n"
+     "RPC SYNTH\n"
+     "CUE /sounds/cue.ogg\n"
+     "ADD second\n"
+     "RPC SYNTH\n"
+     "RPC SPEAKING\n"))))
+
+(ert-deftest emacsvox-windows-dectalk-batches-native-speech ()
+  "DECtalk should submit one string per cue-delimited speech segment."
+  (should
+   (equal
+    (emacsvox-windows-speech-tests--run-server-library
+     "windows-dtk"
+     (concat
+      "tts_initialize\n"
+      "set tts(speech_rate) 225\n"
+      "set tts(old_rate) 225\n"
+      "set log {}\n"
+      "proc windows_speech_text_rpc {state command text} {\n"
+      "  lappend ::log [list $command $text]\n"
+      "}\n"
+      "proc windows_dtk_rpc {request} {\n"
+      "  lappend ::log [list RPC $request]\n"
+      "  return \"\"\n"
+      "}\n"
+      "proc windows_speech_queue_sound {program sound} {\n"
+      "  lappend ::log [list CUE $sound]\n"
+      "}\n"
+      "q {first}\n"
+      "c {control}\n"
+      "t 440 100\n"
+      "a {/sounds/cue.ogg}\n"
+      "q {second}\n"
+      "d\n"
+      "puts [join $log \\n]\n"))
+    (concat
+     "SPEAK {[:sa c][:np][:pu some]"
+     "[:i r 1]first [:i r 1]control "
+     "[:i r 1][:tone 440,100] }\n"
+     "CUE /sounds/cue.ogg\n"
+     "SPEAK {[:i r 1]second }\n"))))
 
 (ert-deftest emacsvox-windows-audio-requests-carry-client-scope ()
   "The Tcl player attaches the same explicit scope to play and cancel."

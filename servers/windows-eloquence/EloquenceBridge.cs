@@ -310,6 +310,11 @@ internal sealed class EloquenceEngine : IDisposable
 
     internal void PlayTone(int frequency, int durationMilliseconds)
     {
+        if (durationMilliseconds <= 0 ||
+            durationMilliseconds > MaximumToneMilliseconds)
+        {
+            throw new ArgumentOutOfRangeException("durationMilliseconds");
+        }
         tonePlayer.Stop();
         tonePlayer.PlayTone(frequency, durationMilliseconds);
     }
@@ -320,9 +325,8 @@ internal sealed class EloquenceEngine : IDisposable
         {
             throw new ArgumentOutOfRangeException("frequency");
         }
-        int sampleCount = checked(
-            (SpeechSampleRate * durationMilliseconds + 999) / 1000);
-        if (durationMilliseconds <= 0 || sampleCount > OutputBufferSamples)
+        if (durationMilliseconds <= 0 ||
+            durationMilliseconds > MaximumToneMilliseconds)
         {
             throw new ArgumentOutOfRangeException("durationMilliseconds");
         }

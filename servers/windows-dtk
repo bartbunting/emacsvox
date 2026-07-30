@@ -20,18 +20,24 @@ set tts(old_rate) 0
 set tts(startup) 1
 set bridge_dir [file join $wd windows-dectalk bin]
 set bridge_program [file join $bridge_dir DectalkBridge.exe]
+# Tests source the server as a procedure library with native startup disabled.
+set emacsvox_windows_speech_library_mode_p [expr {
+    [info exists emacsvox_windows_speech_library_mode] &&
+    $emacsvox_windows_speech_library_mode
+}]
 
-if {![file executable $bridge_program]} {
-    error "Windows DECtalk bridge not found: $bridge_program; run 'make windows-dtk' from the repository root"
+if {!$emacsvox_windows_speech_library_mode_p} {
+    if {![file executable $bridge_program]} {
+        error "Windows DECtalk bridge not found: $bridge_program; run 'make windows-dtk' from the repository root"
+    }
+    set bridge_arguments {}
+    if {[info exists env(EMACSVOX_DECTALK_DLL)] &&
+        $env(EMACSVOX_DECTALK_DLL) ne ""} {
+        lappend bridge_arguments $env(EMACSVOX_DECTALK_DLL)
+    }
+    windows_speech_start windows_dtk "Windows DECtalk bridge" \
+        $bridge_program $bridge_arguments
 }
-
-set bridge_arguments {}
-if {[info exists env(EMACSVOX_DECTALK_DLL)] &&
-    $env(EMACSVOX_DECTALK_DLL) ne ""} {
-    lappend bridge_arguments $env(EMACSVOX_DECTALK_DLL)
-}
-windows_speech_start windows_dtk "Windows DECtalk bridge" \
-    $bridge_program $bridge_arguments
 
 proc windows_dtk_rpc {request} {
     windows_speech_rpc windows_dtk $request
@@ -42,12 +48,20 @@ proc native_character_obsolete {} {
 }
 
 proc windows_dtk_text_command {arguments} {
+    set text ""
     foreach argument $arguments {
         if {$argument eq "-reset"} {
+            if {$text ne ""} {
+                windows_speech_text_rpc windows_dtk SPEAK $text
+                set text ""
+            }
             windows_dtk_rpc RESET
         } else {
-            windows_speech_text_rpc windows_dtk SPEAK $argument
+            append text $argument
         }
+    }
+    if {$text ne ""} {
+        windows_speech_text_rpc windows_dtk SPEAK $text
     }
     return ""
 }
@@ -207,9 +221,9 @@ proc speech_task {}  {
     set mode  $tts(punctuations)
     set r $tts(speech_rate)
     set length [queue_length]
-	say "\[:sa c]\[:np]\[:pu $mode]"
+    set batch "\[:sa c]\[:np]\[:pu $mode]"
     if {$tts(old_rate) != $r } {
-        say "\[:ra $r]"
+        append batch "\[:ra $r]"
         set tts(old_rate) $r
     }
 
@@ -219,13 +233,15 @@ proc speech_task {}  {
         switch  -exact -- $event_type {
             s {
                 set text [clean [lindex $event 1]]
-                say  "\[:i r 1]$text "
+                append batch "\[:i r 1]$text "
             }
             c {
                 set text  [lindex $event 1]
-                say  "\[:i r 1]$text "
+                append batch "\[:i r 1]$text "
             }
             a {
+                say $batch
+                set batch ""
                 set sound [lindex $event 1]
                 catch {
                     windows_speech_queue_sound $tts(play) $sound
@@ -234,11 +250,11 @@ proc speech_task {}  {
             b {
                 lvarpop event
                 lassign $event pitch duration
-                say "\[:tone $pitch,$duration\]"
+                append batch "\[:tone $pitch,$duration\]"
             }
         }
     }
-    synth " "
+    say $batch
     return ""
 }
 
@@ -294,16 +310,18 @@ proc clean {element} {
 #}}}
 #{{{ Initialize and set state.
 
-#do not die if you see a control-c
-signal ignore {sigint}
+if {!$emacsvox_windows_speech_library_mode_p} {
+    #do not die if you see a control-c
+    signal ignore {sigint}
 
-#initialize Dectalk
-tts_initialize
-set tts(speech_rate)  225
-set tts(say_rate) [round \
+    #initialize Dectalk
+    tts_initialize
+    set tts(speech_rate)  225
+    set tts(say_rate) [round \
                            [expr $tts(speech_rate) * $tts(char_factor)]]
-#Start the main command loop:
-commandloop
+    #Start the main command loop:
+    commandloop
+}
 
 #}}}
 #{{{ Emacs local variables

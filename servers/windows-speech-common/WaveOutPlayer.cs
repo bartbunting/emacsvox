@@ -177,11 +177,6 @@ internal sealed class WaveOutPlayer : IDisposable
 
         int sampleCount = checked(
             (sampleRate * durationMilliseconds + 999) / 1000);
-        if (checked(sampleCount * 2) > sourceBufferCapacity)
-        {
-            throw new ArgumentOutOfRangeException("durationMilliseconds",
-                "Tone duration exceeds the native playback buffer");
-        }
 
         const double amplitude = 0.40 * Int16.MaxValue;
         int fadeSamples = Math.Min(sampleCount / 2, sampleRate / 200);
@@ -207,7 +202,16 @@ internal sealed class WaveOutPlayer : IDisposable
         try
         {
             StartStream();
-            Feed(pinned.AddrOfPinnedObject(), sampleCount);
+            int maximumChunkSamples = sourceBufferCapacity / 2;
+            for (int offset = 0; offset < sampleCount;
+                offset += maximumChunkSamples)
+            {
+                int chunkSamples = Math.Min(
+                    maximumChunkSamples, sampleCount - offset);
+                Feed(
+                    IntPtr.Add(pinned.AddrOfPinnedObject(), offset * 2),
+                    chunkSamples);
+            }
         }
         finally
         {

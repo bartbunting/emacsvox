@@ -24,6 +24,10 @@ Select a server with ~M-x tts-select-server~, configure native auditory icons
 with ~emacsvox-windows-speech-configure-audio~, and inspect dependencies with
 ~emacsvox-windows-speech-diagnose~.  Proprietary Eloquence files and the
 separately licensed DECtalk runtime are not stored in the repository.
+Replaceable navigation transactions are discarded when newer input is
+waiting, and adjacent formatting runs are now batched into one native
+utterance per auditory-icon-delimited segment.  This prevents rapid movement
+from leaving obsolete synthesis work queued after the user stops.
 
 ** TTS Prefix Map Rename
 

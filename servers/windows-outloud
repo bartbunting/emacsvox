@@ -21,24 +21,34 @@ set bridge_dir [file join $wd windows-eloquence bin]
 set bridge_program [file join $bridge_dir EloquenceBridge.exe]
 set windows_eci(cap_marker) "\ue000"
 set windows_eci(allcaps_marker) "\ue001"
+set windows_eci(pending_input) 0
+# Tests source the server as a procedure library with native startup disabled.
+set emacsvox_windows_speech_library_mode_p [expr {
+    [info exists emacsvox_windows_speech_library_mode] &&
+    $emacsvox_windows_speech_library_mode
+}]
 
-if {![file executable $bridge_program]} {
-    error "Windows Eloquence bridge not found: $bridge_program; run 'make windows-outloud' from the repository root"
+if {!$emacsvox_windows_speech_library_mode_p} {
+    if {![file executable $bridge_program]} {
+        error "Windows Eloquence bridge not found: $bridge_program; run 'make windows-outloud' from the repository root"
+    }
+    set bridge_arguments {}
+    if {[info exists env(EMACSVOX_ECI_DLL)] &&
+        $env(EMACSVOX_ECI_DLL) ne ""} {
+        lappend bridge_arguments $env(EMACSVOX_ECI_DLL)
+    }
+    windows_speech_start windows_eci "Windows Eloquence bridge" \
+        $bridge_program $bridge_arguments
 }
-
-set bridge_arguments {}
-if {[info exists env(EMACSVOX_ECI_DLL)] && $env(EMACSVOX_ECI_DLL) ne ""} {
-    lappend bridge_arguments $env(EMACSVOX_ECI_DLL)
-}
-windows_speech_start windows_eci "Windows Eloquence bridge" \
-    $bridge_program $bridge_arguments
 
 proc windows_eci_rpc {request} {
     windows_speech_rpc windows_eci $request
 }
 
 proc windows_eci_add_raw_text {text} {
+    global windows_eci
     windows_speech_text_rpc windows_eci ADD $text
+    set windows_eci(pending_input) 1
 }
 
 proc windows_eci_add_text {text} {
@@ -70,6 +80,7 @@ proc windows_eci_add_text {text} {
         } else {
             windows_eci_rpc "INDEX_TONE 440 20"
         }
+        set windows_eci(pending_input) 1
         set text [string range $text [expr {$marker_at + 1}] end]
     }
 }
@@ -91,13 +102,24 @@ proc native_capitalize_text {text} {
     return $text
 }
 
+proc windows_eci_flush {} {
+    global windows_eci
+    if {$windows_eci(pending_input)} {
+        windows_eci_rpc SYNTH
+        set windows_eci(pending_input) 0
+    }
+    return ""
+}
+
 proc windows_eci_text_command {synthesize arguments} {
+    global windows_eci
     set count [llength $arguments]
     for {set index 0} {$index < $count} {incr index} {
         set argument [lindex $arguments $index]
         switch -exact -- $argument {
             -reset {
                 windows_eci_rpc RESET
+                set windows_eci(pending_input) 0
             }
             -index {
                 incr index
@@ -105,6 +127,7 @@ proc windows_eci_text_command {synthesize arguments} {
                     error "missing index parameter"
                 }
                 windows_eci_rpc "INDEX [lindex $arguments $index]"
+                set windows_eci(pending_input) 1
             }
             default {
                 windows_eci_add_text $argument
@@ -112,7 +135,7 @@ proc windows_eci_text_command {synthesize arguments} {
         }
     }
     if {$synthesize} {
-        windows_eci_rpc SYNTH
+        windows_eci_flush
     }
     return ""
 }
@@ -126,11 +149,15 @@ proc synth {args} {
 }
 
 proc stop {} {
+    global windows_eci
     windows_eci_rpc STOP
+    set windows_eci(pending_input) 0
 }
 
 proc native_stop_speech {} {
+    global windows_eci
     windows_eci_rpc STOP_SPEECH
+    set windows_eci(pending_input) 0
 }
 
 proc native_character_obsolete {} {
@@ -143,6 +170,12 @@ proc speakingP {} {
 
 proc native_tone {pitch duration} {
     windows_eci_rpc "TONE $pitch $duration"
+}
+
+proc native_queue_tone {pitch duration} {
+    global windows_eci
+    windows_eci_rpc "INDEX_TONE $pitch $duration"
+    set windows_eci(pending_input) 1
 }
 
 proc synchronize {} {
@@ -185,7 +218,9 @@ proc setLanguage {language} {
     return ""
 }
 
-windows_eci_rpc PING
+if {!$emacsvox_windows_speech_library_mode_p} {
+    windows_eci_rpc PING
+}
 
 #{{{ procedures
 
@@ -198,9 +233,9 @@ proc tts_set_punctuations {mode} {
     global tts
     set tts(punctuations) $mode
     if {[string match all $tts(punctuations)] } {
-        synth "`da0"
+        say "`da0"
     } else {
-        synth "`da1"
+        say "`da1"
     }
     service
     return ""
@@ -492,14 +527,15 @@ proc speech_task {} {
         switch  -exact -- $event_type {
             s {
                 set text [clean [lindex $event 1]]
-                synth "$text"
+                say "$text"
             }
             c {
                 set text  [lindex $event 1]
-                synth " $text "
-synth "`vs$rate "
+                say " $text "
+                say "`vs$rate "
             }
             a {
+                windows_eci_flush
                 set sound [lindex $event 1]
                 catch {
                     windows_speech_queue_sound $tts(play) $sound
@@ -507,11 +543,12 @@ synth "`vs$rate "
             }
             b {
                 lvarpop event
-                eval native_tone $event
+                eval native_queue_tone $event
             }
         }
         if {$tts(talking?) == 0} {break;}
     }
+    windows_eci_flush
     set tts(talking?) 0
     service
     return ""
@@ -567,27 +604,28 @@ proc clean {element} {
 #}}}
 #{{{ Initialize and set state.
 
-#do not die if you see a control-c
-signal ignore {sigint}
+if {!$emacsvox_windows_speech_library_mode_p} {
+    #do not die if you see a control-c
+    signal ignore {sigint}
 
-# Set input encoding to utf-8
-fconfigure stdin -encoding utf-8
+    # Set input encoding to utf-8
+    fconfigure stdin -encoding utf-8
 
-#initialize outloud
-tts_initialize
-set tts(speech_rate)  75
-set tts(say_rate)  90
+    #initialize outloud
+    tts_initialize
+    set tts(speech_rate)  75
+    set tts(say_rate)  90
 
-set tts(input) stdin
-if {[info exists server_p]} {
-    set tts(input) sock0
+    set tts(input) stdin
+    if {[info exists server_p]} {
+        set tts(input) sock0
+    }
+    synth {`v1 Eloquence using native Windows audio.}
+    service
+
+    #Start the main command loop:
+    commandloop
 }
-synth {`v1 Eloquence using native Windows audio.}
-service
-
-#Start the main command loop:
-
-commandloop
 
 
 #}}}

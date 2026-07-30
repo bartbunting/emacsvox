@@ -41,6 +41,11 @@ segments receive the standard 440 Hz cue.  Entirely uppercase words receive
 the higher 1300 Hz cue.  ECI indexes place these cues inside a continuous
 utterance; single-character echo retains Eloquence's normal pitch change.
 
+The Tcl front-end accumulates adjacent text, voice codes, pauses, and indexed
+tones before issuing one ECI synthesis request.  An external auditory icon
+flushes the preceding speech first and starts a new batch, preserving command
+order without synthesizing every formatting run as a separate utterance.
+
 ** Build
 
 From the =emacsvox= repository root in WSL:

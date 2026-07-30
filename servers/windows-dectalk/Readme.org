@@ -40,6 +40,11 @@ synthesis.  Normal queued utterances are submitted in command order and use
 Emacsvox's standard stop command for interruption; a following command such
 as an auditory icon does not discard queued speech.
 
+Adjacent text, voice codes, pauses, and inline tones are submitted to DECtalk
+as one forced utterance.  An external auditory icon ends the current batch and
+the following speech starts another, so formatting runs do not create a
+backlog of native synthesis calls.
+
 ** Build
 
 From the =emacsvox= repository root in WSL:
