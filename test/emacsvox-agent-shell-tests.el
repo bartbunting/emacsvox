@@ -3368,6 +3368,37 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       '((icon item)
         (speak "Reject, choice 2 of 3. Press Return or n."))))))
 
+(ert-deftest emacsvox-agent-shell-permission-and-item-feedback-is-native ()
+  "Permission choices and ordinary item moves use native submissions."
+  (with-temp-buffer
+    (emacsvox-agent-shell-test--insert-permission-buttons)
+    (goto-char (point-min))
+    (should (agent-shell-next-permission-button))
+    (let ((presentations
+           (emacsvox-agent-shell-test--capture-presentations
+             (emacsvox-agent-shell--permission-button-feedback))))
+      (should (= 1 (length presentations)))
+      (should (eq (caar presentations) 'submit))
+      (should
+       (eq (plist-get (nth 2 (car presentations)) :role)
+           'permission-request))
+      (should (eq (nth 3 (car presentations)) 'agent-shell))
+      (should (eq (nth 4 (car presentations)) 'navigation))))
+  (with-temp-buffer
+    (insert "first item\nsecond item\n")
+    (goto-char (point-min))
+    (let ((presentations
+           (emacsvox-agent-shell-test--capture-presentations
+             (cl-letf (((symbol-function 'ems-interactive-p)
+                        (lambda (&rest _) t)))
+               (emacsvox-agent-shell--next-item-around
+                (lambda (&rest _) (forward-line 1)))))))
+      (should (= 1 (length presentations)))
+      (should (eq (caar presentations) 'submit))
+      (should (equal (nth 1 (car presentations)) "second item"))
+      (should (eq (nth 3 (car presentations)) 'agent-shell))
+      (should (eq (nth 4 (car presentations)) 'navigation)))))
+
 (ert-deftest emacsvox-agent-shell-permission-button-advice-observes-boundary ()
   "Interactive choice navigation should speak moves but not failed moves."
   (with-temp-buffer

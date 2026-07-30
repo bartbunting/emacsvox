@@ -4159,16 +4159,16 @@ resulting configuration after the change."
       (when (string-match "\\`\\(.*\\) (\\([^()]+\\))\\'" text)
         (setq label (string-trim (match-string 1 text))
               key (match-string 2 text)))
-      (emacsvox-agent-shell--present-feedback
-       (emacsvox-agent-shell--presentation-facts
-        'permission-request 'focus-entered '(selected)
-        (list :completion-index offset))
-       'navigation 'item #'tts-speak
+      (emacsvox-agent-shell--submit-text-feedback
        (format "%s, choice %d of %d. Press Return%s."
                label
                (1+ offset)
                (length positions)
-               (if key (format " or %s" key) "")))
+               (if key (format " or %s" key) ""))
+       (emacsvox-agent-shell--presentation-facts
+        'permission-request 'focus-entered '(selected)
+        (list :completion-index offset))
+       'navigation 'item)
       t)))
 
 (defun emacsvox-agent-shell--table-sequential-edge-p (direction)
@@ -4255,11 +4255,12 @@ the corresponding buffer boundary."
                         origin 'forward))
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback))
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         (ems--this-line)
          (emacsvox-agent-shell--block-location-facts
           (emacsvox-agent-shell--block-location-at-point)
           'focus-entered)
-         'navigation 'item #'emacsvox-speak-line)))))
+         'navigation 'item)))))
 
 (defun emacsvox-agent-shell--previous-item-around
     (original-function &rest arguments)
@@ -4285,11 +4286,12 @@ the corresponding buffer boundary."
                         origin 'backward))
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback))
-        (emacsvox-agent-shell--present-feedback
+        (emacsvox-agent-shell--submit-text-feedback
+         (ems--this-line)
          (emacsvox-agent-shell--block-location-facts
           (emacsvox-agent-shell--block-location-at-point)
           'focus-entered)
-         'navigation 'item #'emacsvox-speak-line)))))
+         'navigation 'item)))))
 
 (defun emacsvox-agent-shell--jump-to-permission-after
     (result &rest _)
