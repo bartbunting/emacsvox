@@ -125,50 +125,73 @@
       (should (advice-member-p function target)))))
 
 (ert-deftest emacsvox-org-item-feedback-is-target-aware ()
-  "Only the matching Org item movement cues and speaks the item."
+  "Only the matching Org item movement submits the item."
   (let ((ems--interactive-fn-name 'org-previous-item)
         events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-org-speak-item)
+    (cl-letf (((symbol-function 'emacsvox-org-speak-item)
                (lambda () (push 'speak-item events))))
       (emacsvox--advice-org-next-item-after)
       (emacsvox--advice-org-previous-item-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon item) speak-item)))))
+    (should (equal events '(speak-item)))))
 
 (ert-deftest emacsvox-org-item-feedback-captures-semantic-boundary ()
-  "Item movement exposes stable intent to both its cue and speech."
-  (let ((ems--interactive-fn-name 'org-next-item)
-        presentations)
-    (cl-letf
-        (((symbol-function 'emacsvox-icon)
-          (lambda (_)
-            (push
-             (list
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             presentations)))
-         ((symbol-function 'emacsvox-org-speak-item)
-          (lambda ()
-            (push
-             (list
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
-             presentations))))
-      (emacsvox--advice-org-next-item-after))
-    (should (= (length presentations) 2))
-    (dolist (presentation presentations)
+  "Item movement submits source, stable intent, and its cue atomically."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "- first\n- second\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-next-item)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox--advice-org-next-item-after))
+      (should (equal (substring-no-properties (car submission))
+                     "- first\n"))
       (should
        (equal
-        (car presentation)
+        (plist-get (cdr submission) :facts)
         '(:role org-item :events (focus-entered)
           :org-action item-navigation)))
-      (should (eq (plist-get (cadr presentation) :module) 'org))
+      (should (eq (plist-get (cdr submission) :module) 'org))
       (should
-       (eq (plist-get (cadr presentation) :occasion) 'navigation)))))
+       (eq (plist-get (cdr submission) :occasion) 'navigation))
+      (let ((action
+             (car
+              (plist-get
+               (cdr submission) :compatibility-actions))))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value action)
+          'item))))))
+
+(ert-deftest emacsvox-org-list-style-feedback-is-one-native-submission ()
+  "Cycling a list bullet submits the changed line and cue together."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "- item\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-cycle-list-bullet)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox--advice-org-cycle-list-bullet-after))
+      (should (equal (substring-no-properties (car submission)) "- item"))
+      (should
+       (equal
+        (plist-get (cdr submission) :facts)
+        '(:role org-item :events (state-changed)
+          :org-action list-style-changed)))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value
+         (car
+          (plist-get
+           (cdr submission) :compatibility-actions)))
+        'item)))))
 
 (ert-deftest emacsvox-org-owned-semantics-are-registered ()
   "Org roles and operation intent are part of the inspectable contract."
@@ -765,19 +788,40 @@
         :render (:content (:voice monotone)))))
     'monotone)))
 
-(ert-deftest emacsvox-org-paragraph-feedback-preserves-order ()
-  "Org paragraph movement cues before speaking the paragraph."
-  (let ((ems--interactive-fn-name 'org-forward-paragraph)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-paragraph)
-               (lambda () (push 'speak-paragraph events))))
-      (emacsvox--advice-org-forward-paragraph-after))
-    (should
-     (equal
-      (nreverse events)
-      '((icon paragraph) speak-paragraph)))))
+(ert-deftest emacsvox-org-paragraph-feedback-is-one-native-submission ()
+  "Org paragraph movement submits the paragraph with one leading cue."
+  (with-temp-buffer
+    (insert "First paragraph.\n\nSecond paragraph.\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-forward-paragraph)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox--advice-org-forward-paragraph-after))
+      (should
+       (equal
+        (string-trim-right
+         (substring-no-properties (car submission)))
+        "First paragraph."))
+      (should
+       (equal
+        (plist-get (cdr submission) :facts)
+        '(:role org-paragraph :events (focus-entered)
+          :org-action paragraph-navigation)))
+      (let ((action
+             (car
+              (plist-get
+               (cdr submission) :compatibility-actions))))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value action)
+          'paragraph))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-phase action)
+          'before))))))
 
 (ert-deftest emacsvox-org-cycle-keeps-table-feedback-unconditional ()
   "Org visibility cycling always reports the current table cell."

@@ -353,14 +353,18 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 ;;;  Structure Navigation:
 
 (defun emacsvox-org-speak-item  ()
-  "Speak item"
-  (interactive )
+  "Speak the current Org item through one semantic presentation."
+  (interactive)
   (unless (eq major-mode 'org-mode) (error "Not in an org buffer"))
   (unless (org-at-item-p) (error "Not at an item"))
   (save-excursion
     (let ((start (org-beginning-of-item))
           (end (org-end-of-item)))
-      (emacsvox-speak-region start end))))
+      (emacsvox-org--submit-text
+       (emacsvox-aural-source-substring start end)
+       (emacsvox-org--feedback-facts
+        'org-item 'focus-entered 'item-navigation)
+       'navigation 'item))))
 
 (cl-loop
  for target in
@@ -372,10 +376,7 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after interactive Org item movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
-          (emacsvox-org--feedback-facts
-           'org-item 'focus-entered 'item-navigation)
-          'navigation 'item #'emacsvox-org-speak-item)))
+         (emacsvox-org-speak-item)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -421,20 +422,26 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after interactive Org paragraph movement."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
-          (emacsvox-org--feedback-facts
-           'org-paragraph 'focus-entered 'paragraph-navigation)
-          'navigation 'paragraph #'emacsvox-speak-paragraph)))
+         (save-excursion
+           (forward-paragraph 1)
+           (let ((end (point)))
+             (backward-paragraph 1)
+             (emacsvox-org--submit-text
+              (emacsvox-aural-source-substring (point) end)
+              (emacsvox-org--feedback-facts
+               'org-paragraph 'focus-entered 'paragraph-navigation)
+              'navigation 'paragraph)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
 (defun emacsvox--advice-org-cycle-list-bullet-after (&rest _)
   "Cue and speak after interactively cycling an Org list bullet."
   (when (ems-interactive-p 'org-cycle-list-bullet)
-    (emacsvox-org--present-feedback
+    (emacsvox-org--submit-text
+     (emacsvox-org--line-content)
      (emacsvox-org--feedback-facts
       'org-item 'state-changed 'list-style-changed)
-     'state-change 'item #'emacsvox-speak-line)))
+     'state-change 'item)))
 
 (advice-add
  'org-cycle-list-bullet :after
