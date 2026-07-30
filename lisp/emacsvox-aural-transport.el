@@ -49,7 +49,7 @@
   "One replaceable delivery waiting for an input-idle boundary."
   sequence owner replacement-key entries timer)
 
-(defcustom emacsvox-aural-replacement-idle-delay 0.05
+(defcustom emacsvox-aural-replacement-idle-delay 0.025
   "Seconds of input idle before sending a replaceable presentation.
 
 Each newer transaction with the same speaker and replacement key restarts this
