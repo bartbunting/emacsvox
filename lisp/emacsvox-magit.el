@@ -224,7 +224,10 @@ The left-margin face is purely graphical and contains no spoken content.")
 
 (defun emacsvox-magit-enable-aural-context ()
   "Identify the current Magit buffer to aural presentation schemes."
-  (setq-local emacsvox-aural-module 'magit))
+  (setq-local emacsvox-aural-module 'magit)
+  (add-hook
+   'magit-section-movement-hook
+   #'emacsvox-magit--section-moved nil t))
 
 (add-hook 'magit-mode-hook #'emacsvox-magit-enable-aural-context)
 (add-hook 'magit-repolist-mode-hook #'emacsvox-magit-enable-aural-context)
@@ -425,20 +428,53 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
 
 ;;;  Advice navigation commands:
 
-(defconst emacsvox-magit--navigation-targets
+(defconst emacsvox-magit--section-movement-targets
   '(magit-section-forward
     magit-section-backward
     magit-section-up
-    magit-next-line
-    magit-previous-line
     magit-section-forward-sibling
-    magit-section-backward-sibling
+    magit-section-backward-sibling)
+  "Commands presented centrally by `magit-section-movement-hook'.")
+
+(defconst emacsvox-magit--section-jump-targets
+  '(magit-jump-to-unpulled-from-upstream
+    magit-jump-to-unpulled-from-pushremote
+    magit-jump-to-unpushed-to-upstream
+    magit-jump-to-unpushed-to-pushremote
+    magit-jump-to-revision-headers
+    magit-jump-to-revision-message
+    magit-jump-to-revision-notes
+    magit-jump-to-unstaged
+    magit-jump-to-staged
+    magit-jump-to-stashes
+    magit-jump-to-untracked
+    magit-jump-to-tracked
+    magit-jump-to-ignored
+    magit-jump-to-skip-worktree
+    magit-jump-to-assume-unchanged)
+  "Current Magit section jumpers that bypass the movement hook.")
+
+(defun emacsvox-magit--section-moved (section)
+  "Present SECTION after an interactive central section movement."
+  (let ((target ems--interactive-fn-name))
+    (when
+        (and
+         (memq target emacsvox-magit--section-movement-targets)
+         (ems-interactive-p target))
+      (emacsvox-magit-present-line
+       'select-object 'navigation target section))))
+
+(defconst emacsvox-magit--navigation-targets
+  (append
+   '(magit-next-line
+    magit-previous-line
     magit-unstage
     magit-unstage-all
     magit-file-unstage
     magit-stage
     magit-file-stage
-    magit-stage-modified)
+     magit-stage-modified)
+   emacsvox-magit--section-jump-targets)
   "Current Magit navigation and staging commands.")
 
 (cl-loop
@@ -764,7 +800,9 @@ Present optional MOVEMENT-ICON after the chunk."
        magit-files
        magit-log
        magit-process
-       magit-section))
+       magit-section
+       magit-stash
+       magit-status))
   (eval-after-load feature #'emacsvox-magit--install-advice))
 
 ;;; Keys:

@@ -22,6 +22,8 @@
   "Every retained Magit advice target exists."
   (dolist (target emacsvox-magit--simple-advice-targets)
     (should (fboundp target)))
+  (dolist (target emacsvox-magit--section-movement-targets)
+    (should (fboundp target)))
   (should (fboundp 'magit-diff-show-or-scroll-up))
   (should (fboundp 'git-rebase-squash)))
 
@@ -68,6 +70,46 @@
     (setq git-commit-mode nil)
     (emacsvox-magit--update-commit-context)
     (should-not (local-variable-p 'emacsvox-aural-module))))
+
+(ert-deftest emacsvox-magit-section-movement-uses-central-hook ()
+  "All central section movements produce exactly one native line submission."
+  (with-temp-buffer
+    (insert "Unstaged changes")
+    (goto-char (point-min))
+    (emacsvox-magit-enable-aural-context)
+    (should
+     (memq
+      #'emacsvox-magit--section-moved
+      magit-section-movement-hook))
+    (let (calls)
+      (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) calls))))
+        (let ((ems--interactive-fn-name 'magit-section-forward))
+          (emacsvox-magit--section-moved
+           '(:type unstaged :hidden nil)))
+        (should (= (length calls) 1))
+        (should
+         (equal
+          (plist-get (cdar calls) :facts)
+          '(:role vcs-section :section-kind unstaged
+            :events (focus-entered) :visibility expanded)))
+        (let ((ems--interactive-fn-name 'magit-stage))
+          (emacsvox-magit--section-moved
+           '(:type staged :hidden nil)))
+        (let ((ems--interactive-fn-name nil))
+          (emacsvox-magit--section-moved
+           '(:type staged :hidden nil))))
+      (should (= (length calls) 1)))))
+
+(ert-deftest emacsvox-magit-section-jumpers-are-covered ()
+  "Every current generated Magit section jumper has navigation feedback."
+  (should (= (length emacsvox-magit--section-jump-targets) 15))
+  (dolist (target emacsvox-magit--section-jump-targets)
+    (should (fboundp target))
+    (should
+     (memq target emacsvox-magit--navigation-targets))))
 
 (ert-deftest emacsvox-magit-view-kinds-cover-the-interface ()
   "Every distinct Magit interface family should expose a view kind."
