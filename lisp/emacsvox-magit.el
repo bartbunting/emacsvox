@@ -705,9 +705,15 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      (emacsvox-magit-view-facts 'status 'vcs-view-opened)
      'state-change 'open-object)))
 
+(defconst emacsvox-magit--quit-targets
+  '(magit-mode-quit-window
+    magit-mode-bury-buffer
+    magit-log-bury-buffer
+    magit-bury-or-kill-buffer)
+  "Magit commands that close or bury their buffers.")
+
 (cl-loop
- for target in
- '(magit-mode-quit-window magit-mode-bury-buffer magit-log-bury-buffer)
+ for target in emacsvox-magit--quit-targets
  for advice-function = (intern (format "emacsvox--advice-%s-after" target))
  do
  (eval
@@ -937,14 +943,7 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   `(defun ,advice-function (original &rest arguments)
      "Present movement to another visible Git reference."
      (emacsvox-magit--call-reference-navigation
-      original ',target arguments))))
-
-(defconst emacsvox-magit--quit-targets
-  '(magit-mode-quit-window
-    magit-mode-bury-buffer
-    magit-log-bury-buffer
-    magit-bury-or-kill-buffer)
-  "Magit commands that close or bury their buffers.")
+     original ',target arguments))))
 
 (defconst emacsvox-magit--blob-targets
   '(magit-blob-previous magit-blob-next)

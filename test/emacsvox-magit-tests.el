@@ -712,6 +712,7 @@
   (dolist (target emacsvox-magit--simple-advice-targets)
     (let ((function
            (intern (format "emacsvox--advice-%s-after" target))))
+      (should (fboundp function))
       (should (advice-member-p function target))))
   (dolist (target emacsvox-magit--copy-targets)
     (should
