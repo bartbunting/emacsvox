@@ -96,38 +96,6 @@ Optional EVENT records the registered event that caused its presentation."
    (when event (list :events (list event)))
    (when action (list :org-action action))))
 
-(defun emacsvox-org--call-with-aural-presentation
-    (facts occasion function &rest arguments)
-  "Call FUNCTION with ARGUMENTS in one frozen Org presentation.
-
-FACTS and OCCASION apply unless an enclosing submission already supplies more
-specific values."
-  (emacsvox-aural-call-with-submission
-   function
-   :facts (or facts '(:role org-content))
-   :module 'org
-   :occasion (or occasion 'navigation)
-   :arguments arguments))
-
-(defun emacsvox-org--present-feedback
-    (facts occasion icon function &rest arguments)
-  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
-  (emacsvox-org--call-with-aural-presentation
-   facts occasion
-   (lambda ()
-     (when icon (emacsvox-icon icon))
-     (apply function arguments))))
-
-(defun emacsvox-org--present-feedback-after
-    (facts occasion icon function &rest arguments)
-  "Under FACTS and OCCASION, call FUNCTION then present ICON.
-ARGUMENTS are passed to FUNCTION."
-  (emacsvox-org--call-with-aural-presentation
-   facts occasion
-   (lambda ()
-     (apply function arguments)
-     (when icon (emacsvox-icon icon)))))
-
 (defun emacsvox-org--submit-message-feedback
     (facts occasion icon text)
   "Display TEXT and submit it with FACTS, OCCASION, and leading ICON.
@@ -176,6 +144,20 @@ ICON-PHASE defaults to `before'."
    (emacsvox-aural-source-substring
     (line-beginning-position) (line-end-position))
    (ems--display-props-get)))
+
+(defun emacsvox-org--buffer-summary ()
+  "Return a concise voice-preserving summary of the selected buffer."
+  (concat
+   (propertize (buffer-name) 'personality voice-lighten-medium)
+   ", "
+   (propertize
+    (downcase
+     (or
+      (and (stringp mode-name) mode-name)
+      (and (listp mode-name) (cl-find-if #'stringp mode-name))
+      (replace-regexp-in-string
+       "-mode\\'" "" (symbol-name major-mode))))
+    'personality voice-animate)))
 
 (defun emacsvox-org-refresh-aural-heading ()
   "Refresh semantic text properties on the Org heading at point."
@@ -716,10 +698,11 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
      (defun ,function (&rest _)
        "Cue and speak after interactively closing an Org agenda."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--buffer-summary)
           (emacsvox-org--feedback-facts
            'org-agenda-entry 'state-changed 'agenda-closed)
-          'state-change 'close-object #'emacsvox-speak-mode-line)))
+          'state-change 'close-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -972,10 +955,10 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 
 (defun emacsvox--advice-org-capture-finalize-after (&rest _)
   "Cue after finalizing an Org capture."
-  (emacsvox-org--present-feedback
+  (emacsvox-org--submit-actions
    (emacsvox-org--feedback-facts
     'org-capture 'object-changed 'capture-saved)
-   'notification 'save-object #'ignore))
+   'notification 'save-object))
 
 (advice-add
  'org-capture-finalize :after
@@ -984,10 +967,10 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
 
 (defun emacsvox--advice-org-capture-kill-after (&rest _)
   "Cue after cancelling an Org capture."
-  (emacsvox-org--present-feedback
+  (emacsvox-org--submit-actions
    (emacsvox-org--feedback-facts
     'org-capture 'state-changed 'capture-cancelled)
-   'notification 'close-object #'ignore))
+   'notification 'close-object))
 
 (advice-add
  'org-capture-kill :after
@@ -1171,10 +1154,11 @@ arg just opens the file"
      (defun ,function (&rest _)
        "Cue and speak after interactively opening an Org edit buffer."
        (when (ems-interactive-p ',target)
-         (emacsvox-org--present-feedback
+         (emacsvox-org--submit-text
+          (emacsvox-org--buffer-summary)
           (emacsvox-org--feedback-facts
            'org-edit-buffer 'state-changed 'edit-opened)
-          'state-change 'open-object #'emacsvox-speak-mode-line)))
+          'state-change 'open-object)))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -1276,10 +1260,11 @@ arg just opens the file"
 (defun emacsvox--advice-org-md-export-as-markdown-after (&rest _)
   "Cue and speak after an interactive Org Markdown export."
   (when (ems-interactive-p 'org-md-export-as-markdown)
-    (emacsvox-org--present-feedback
+    (emacsvox-org--submit-text
+     (emacsvox-org--buffer-summary)
      (emacsvox-org--feedback-facts
       'org-export 'object-changed 'export-completed)
-     'notification 'task-done #'emacsvox-speak-mode-line)))
+     'notification 'task-done)))
 
 (advice-add
  'org-md-export-as-markdown :after
@@ -1391,20 +1376,25 @@ Press `y' to play to next amark."
    (t (emacsvox-eww-play-media-at-point url))))
 ;;; org publish
 
+(defun emacsvox-org--publish-finished (_source output)
+  "Report that Org produced published file OUTPUT."
+  (emacsvox-org--submit-message-feedback
+   (emacsvox-org--feedback-facts
+    'org-export 'object-changed 'publish-completed)
+   'notification 'save-object
+   (format "Published %s" (abbreviate-file-name output))))
+
 (add-hook
  'org-publish-after-publishing-hook
- #'(lambda (_s _t)
-     (emacsvox-org--present-feedback
-      (emacsvox-org--feedback-facts
-       'org-export 'object-changed 'publish-completed)
-      'notification 'save-object #'emacsvox-speak-message-again)))
+ #'emacsvox-org--publish-finished)
 
 (defun emacsvox--advice-org-export-to-file-after (_backend file &rest _)
   "Cue and report the Org export output FILE."
-  (emacsvox-org--present-feedback
+  (emacsvox-org--submit-message-feedback
    (emacsvox-org--feedback-facts
     'org-export 'object-changed 'export-completed)
-   'notification 'save-object #'tts-notify (format "Wrote %s" file)))
+   'notification 'save-object
+   (format "Wrote %s" (abbreviate-file-name file))))
 
 (advice-add
  'org-export-to-file :after #'emacsvox--advice-org-export-to-file-after

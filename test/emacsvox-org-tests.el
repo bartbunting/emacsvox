@@ -1307,28 +1307,53 @@
         'large-movement)))))
 
 (ert-deftest emacsvox-org-capture-lifecycle-cues-remain-unconditional ()
-  "Finalizing and cancelling captures always emit their lifecycle cues."
+  "Finalizing and cancelling captures submit their lifecycle cues natively."
   (let ((ems--interactive-fn-name nil)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push icon events))))
+        submissions)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments)
+            (push arguments submissions))))
       (emacsvox--advice-org-capture-finalize-after)
       (emacsvox--advice-org-capture-kill-after))
-    (should (equal (nreverse events) '(save-object close-object)))))
-
-(ert-deftest emacsvox-org-markdown-export-feedback-is-target-aware ()
-  "Interactive Markdown export cues completion and speaks the mode line."
-  (let ((ems--interactive-fn-name 'org-md-export-as-markdown)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'emacsvox-speak-mode-line)
-               (lambda () (push 'mode-line events))))
-      (emacsvox--advice-org-md-export-as-markdown-after))
+    (setq submissions (nreverse submissions))
+    (should (= (length submissions) 2))
     (should
      (equal
-      (nreverse events)
-      '((icon task-done) mode-line)))))
+      (mapcar
+       (lambda (arguments)
+         (emacsvox-aural-compatibility-action-value
+          (car
+           (plist-get arguments :compatibility-actions))))
+       submissions)
+      '(save-object close-object)))
+    (should
+     (equal
+      (mapcar
+       (lambda (arguments)
+         (plist-get (plist-get arguments :facts) :org-action))
+       submissions)
+      '(capture-saved capture-cancelled)))))
+
+(ert-deftest emacsvox-org-markdown-export-feedback-is-target-aware ()
+  "Interactive Markdown export submits completion and buffer context once."
+  (let* ((ems--interactive-fn-name 'org-md-export-as-markdown)
+         (submissions
+          (emacsvox-test--capture-org-submissions
+            (emacsvox--advice-org-md-export-as-markdown-after)))
+         (arguments (cdar submissions))
+         (action
+          (car (plist-get arguments :compatibility-actions))))
+    (should (= (length submissions) 1))
+    (should
+     (equal
+      (plist-get arguments :facts)
+      '(:role org-export :events (object-changed)
+        :org-action export-completed)))
+    (should
+     (eq
+      (emacsvox-aural-compatibility-action-value action)
+      'task-done))))
 
 (ert-deftest emacsvox-org-risky-advice-is-directly-registered ()
   "Org deletion and export advice uses native advice directly."
@@ -1426,17 +1451,40 @@
 
 (ert-deftest emacsvox-org-export-to-file-uses-explicit-file ()
   "Export completion reports the FILE argument directly."
-  (let (events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events)))
-              ((symbol-function 'tts-notify)
-               (lambda (text) (push (list 'notify text) events))))
+  (let (submitted)
+    (cl-letf
+        (((symbol-function 'emacsvox-org--submit-message-feedback)
+          (lambda (facts occasion icon text)
+            (setq submitted (list facts occasion icon text)))))
       (emacsvox--advice-org-export-to-file-after
        'html "/tmp/report.html" nil nil nil nil nil nil))
     (should
      (equal
-      (nreverse events)
-      '((icon save-object) (notify "Wrote /tmp/report.html"))))))
+      submitted
+      '((:role org-export :events (object-changed)
+         :org-action export-completed)
+        notification save-object "Wrote /tmp/report.html")))))
+
+(ert-deftest emacsvox-org-publish-hook-is-reload-safe-and-explicit ()
+  "Publishing uses one named hook and reports the produced file."
+  (should
+   (= 1
+      (cl-count
+       #'emacsvox-org--publish-finished
+       org-publish-after-publishing-hook)))
+  (let (submitted)
+    (cl-letf
+        (((symbol-function 'emacsvox-org--submit-message-feedback)
+          (lambda (facts occasion icon text)
+            (setq submitted (list facts occasion icon text)))))
+      (emacsvox-org--publish-finished
+       "/tmp/source.org" "/tmp/site/index.html"))
+    (should
+     (equal
+      submitted
+      '((:role org-export :events (object-changed)
+         :org-action publish-completed)
+        notification save-object "Published /tmp/site/index.html")))))
 
 (provide 'emacsvox-org-tests)
 ;;; emacsvox-org-tests.el ends here
