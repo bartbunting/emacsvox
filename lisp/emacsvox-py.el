@@ -47,39 +47,282 @@
 ;;   Required modules:
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'emacsvox-aural-submission)
+(require 'emacsvox-aural-transport)
+(require 'emacsvox-aural-provider-workflows)
 
 (with-no-warnings (require 'python-mode "python-mode" 'no-error))
+
+;;;  Semantic aural presentation:
+
+(defun emacsvox-py-enable-aural-context ()
+  "Identify the current Python Mode buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'python))
+
+(add-hook 'python-mode-hook #'emacsvox-py-enable-aural-context)
+
+(defun emacsvox-py--edit-facts (kind &optional syntax-role)
+  "Return facts for Python Mode edit KIND and optional SYNTAX-ROLE."
+  (list
+   :role 'code-construct
+   :events '(object-changed)
+   :syntax-role (or syntax-role 'construct)
+   :code-edit-kind kind))
+
+(defun emacsvox-py--operation-facts (target outcome)
+  "Return facts for Python Mode operation TARGET with OUTCOME."
+  (list
+   :role 'code-operation
+   :events
+   (list
+    (pcase outcome
+      ('started 'operation-started)
+      ('completed 'operation-completed)
+      (_ 'operation-failed)))
+   :code-operation-kind target))
+
+(defun emacsvox-py--submit-actions
+    (facts occasion &optional icons)
+  "Submit Python Mode FACTS under OCCASION with compatibility ICONS."
+  (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'python
+   :occasion occasion
+   :compatibility-actions
+   (mapcar #'emacsvox-aural-compatibility-icon icons)))
+
+(defun emacsvox-py--submit-text
+    (text facts occasion &optional before-icons after-icons)
+  "Submit Python Mode TEXT under FACTS and OCCASION.
+BEFORE-ICONS and AFTER-ICONS preserve package feedback inside the transaction."
+  (emacsvox-aural-submit
+   text
+   :facts facts
+   :module 'python
+   :occasion occasion
+   :compatibility-actions
+   (append
+    (mapcar #'emacsvox-aural-compatibility-icon before-icons)
+    (mapcar
+     (lambda (icon)
+       (emacsvox-aural-compatibility-icon icon 'after))
+     after-icons))))
+
+(defun emacsvox-py--submit-message
+    (text facts occasion &optional before-icons after-icons)
+  "Display and natively present Python Mode TEXT."
+  (let ((emacsvox-speak-messages nil))
+    (message "%s" text))
+  (emacsvox-py--submit-text
+   text facts occasion before-icons after-icons))
+
+(defun emacsvox-py--buffer-summary ()
+  "Return a concise voice-preserving summary of the selected buffer."
+  (concat
+   (propertize (buffer-name) 'personality voice-lighten-medium)
+   ", "
+   (propertize
+    (downcase (format-mode-line mode-name))
+    'personality voice-animate)))
+
+(defun emacsvox-py--remove-captured-source-icon
+    (content icon source-offset source-length)
+  "Return CONTENT without ICON already captured at SOURCE-OFFSET.
+SOURCE-LENGTH is the length of the source line before spoken prefixes."
+  (if (null icon)
+      content
+    (let* ((result (copy-sequence content))
+           (prefix-length (max 0 (- (length result) source-length)))
+           (expected
+            (min
+             (max 0 (+ prefix-length source-offset))
+             (max 0 (1- (length result)))))
+           (position
+            (if (eq (get-text-property expected 'auditory-icon result) icon)
+                expected
+              (let ((cursor 0)
+                    found)
+                (while (and (< cursor (length result)) (null found))
+                  (when
+                      (eq
+                       (get-text-property cursor 'auditory-icon result)
+                       icon)
+                    (setq found cursor))
+                  (setq
+                   cursor
+                   (next-single-property-change
+                    cursor 'auditory-icon result (length result))))
+                found))))
+      (when position
+        (let ((start
+               (or
+                (previous-single-property-change
+                 (1+ position) 'auditory-icon result)
+                0))
+              (end
+               (or
+                (next-single-property-change
+                 position 'auditory-icon result)
+                (length result))))
+          (remove-text-properties
+           start end '(auditory-icon nil) result)))
+      result)))
+
+(defun emacsvox-py--present-current-line
+    (facts occasion &optional before-icons after-icons)
+  "Present the current line as one Python Mode transaction.
+FACTS and OCCASION describe the line.  BEFORE-ICONS and AFTER-ICONS add
+package-specific feedback around speech."
+  (let* ((source-icon (get-char-property (point) 'auditory-icon))
+         (source-offset (- (point) (line-beginning-position)))
+         (source-length
+          (- (line-end-position) (line-beginning-position)))
+         (context (emacsvox-aural-capture-context 'python occasion))
+         (submit-actions
+          (symbol-function 'emacsvox-aural-submit-actions))
+         (icons (copy-sequence before-icons))
+         submitted)
+    (let ((emacsvox-aural-submission-facts facts)
+          (emacsvox-aural-submission-context context)
+          (emacsvox-aural-submission-module 'python)
+          (emacsvox-aural-submission-occasion occasion))
+      (cl-letf
+          (((symbol-function 'emacsvox-icon)
+            (lambda (icon)
+              (setq icons (append icons (list icon)))))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments)
+              (setq submitted t)
+              (apply
+               submit-actions
+               (plist-put
+                arguments :compatibility-actions
+                (append
+                 (mapcar #'emacsvox-aural-compatibility-icon icons)
+                 (plist-get arguments :compatibility-actions)
+                 (mapcar
+                  (lambda (icon)
+                    (emacsvox-aural-compatibility-icon icon 'after))
+                  after-icons)))))))
+        (emacsvox-speak-line-with-speaker
+         (lambda (content)
+           (setq submitted t)
+           (emacsvox-aural-submit
+            (emacsvox-py--remove-captured-source-icon
+             content source-icon source-offset source-length)
+            :facts facts
+            :context context
+            :module 'python
+            :occasion occasion
+            :compatibility-actions
+            (append
+             (mapcar #'emacsvox-aural-compatibility-icon icons)
+             (mapcar
+              (lambda (icon)
+                (emacsvox-aural-compatibility-icon icon 'after))
+              after-icons)))))))
+    (unless submitted
+      (emacsvox-aural-submit-actions
+       :facts facts
+       :context context
+       :module 'python
+       :occasion occasion
+       :compatibility-actions
+       (append
+        (mapcar #'emacsvox-aural-compatibility-icon icons)
+        (mapcar
+         (lambda (icon)
+           (emacsvox-aural-compatibility-icon icon 'after))
+         after-icons))))))
+
+(defun emacsvox-py--navigation-facts (target)
+  "Return source navigation facts for Python Mode command TARGET."
+  (let ((name (symbol-name target)))
+    (list
+     :role 'code-construct
+     :events '(boundary-entered focus-entered)
+     :syntax-role
+     (cond
+      ((string-match-p "class\\|def\\|function" name) 'function)
+      ((string-match-p "block\\|clause" name) 'block)
+      ((string-match-p "statement" name) 'statement)
+      ((string-match-p "expression\\|paren\\|list" name) 'expression)
+      ((string-match-p "comment" name) 'comment)
+      ((string-match-p "section" name) 'section)
+      (t 'construct)))))
 
 ;;;   electric editing
 
 (defvar emacsvox-py--advice nil
   "Python Mode targets and their native advice functions.")
 
+(defun emacsvox-py--deletion-input (&optional forward)
+  "Return (SELECTION-P CHARACTER WHITESPACE-P) before deletion.
+When FORWARD is non-nil, capture the character at point instead of before it."
+  (let* ((selection-p (use-region-p))
+         (character
+          (and
+           (not selection-p)
+           (if forward
+               (and (< (point) (point-max)) (following-char))
+             (and (> (point) (point-min)) (preceding-char))))))
+    (list
+     selection-p character
+     (and character (= 32 (char-syntax character))))))
+
+(defun emacsvox-py--present-deletion (input &optional count indent)
+  "Present deletion described by INPUT, COUNT, and resulting INDENT."
+  (pcase-let ((`(,selection-p ,character ,whitespace-p) input))
+    (emacsvox-py--submit-text
+     (cond
+      (selection-p "Deleted selection")
+      (whitespace-p (format "Indent %s" (or indent (current-column))))
+      ((and count (> count 1))
+       (format "Deleted %d characters" count))
+      (character
+       (or (tts-char-to-speech character)
+           (char-to-string character)))
+      (t "Deleted character"))
+     (append
+      (emacsvox-py--edit-facts
+       (if selection-p 'delete-selection 'delete-character)
+       'character)
+      '(:edit-operation deletion))
+     'edit)))
+
 (defun emacsvox--advice-py-electric-backspace-around (orig-fun &rest args)
-  "Speak character you're deleting.\nProvide contextual feedback when closing blocks"
-  (let ((result (apply orig-fun args)))
-    (when (ems-interactive-p 'py-electric-backspace)
-      (let ((ws (= (char-syntax (preceding-char)) 32)))
-        (emacsvox-speak-edit-operation 'deletion)
-        (unless ws (emacsvox-speak-this-char (preceding-char)))
-        (when ws
-          (tts-notify (format "Indent %s " result))
-          (emacsvox-icon 'close-object) (sit-for 0.2)
+  "Present deletion and block context after an interactive backspace."
+  (if (ems-interactive-p 'py-electric-backspace)
+      (let* ((input (emacsvox-py--deletion-input))
+             (result (apply orig-fun args)))
+        (emacsvox-py--present-deletion
+         input
+         (and (numberp (car args)) (abs (car args)))
+         (and (numberp result) result))
+        (when (nth 2 input)
           (save-excursion
-            (py-beginning-of-block) (emacsvox-speak-line)))))
-    result))
+            (when (ignore-errors (py-beginning-of-block) t)
+              (emacsvox-py--present-current-line
+               '(:role code-construct
+                 :events (focus-entered)
+                 :syntax-role block)
+               'edit '(close-object)))))
+        result)
+    (apply orig-fun args)))
 
 (push '(py-electric-backspace :around
         emacsvox--advice-py-electric-backspace-around)
       emacsvox-py--advice)
 
 (defun emacsvox--advice-py-electric-delete-around (orig-fun &rest args)
-  "Speak character you're deleting."
-  (let ((result (apply orig-fun args)))
-    (when (ems-interactive-p 'py-electric-delete)
-      (emacsvox-speak-edit-operation 'deletion)
-      (emacsvox-speak-this-char (preceding-char)))
-    result))
+  "Present an interactive Python Mode deletion."
+  (if (ems-interactive-p 'py-electric-delete)
+      (let* ((input (emacsvox-py--deletion-input t))
+             (result (apply orig-fun args)))
+        (emacsvox-py--present-deletion
+         input (and (numberp (car args)) (abs (car args))))
+        result)
+    (apply orig-fun args)))
 
 (push '(py-electric-delete :around
         emacsvox--advice-py-electric-delete-around)
@@ -88,9 +331,14 @@
 ;;;  interactive programming
 
 (defun emacsvox--advice-py-shell-after (&rest _)
-  "speak"
+  "Present the destination of an interactive Python Mode shell command."
   (when (ems-interactive-p 'py-shell)
-    (emacsvox-icon 'select-object) (emacsvox-speak-mode-line)))
+    (emacsvox-py--submit-text
+     (emacsvox-py--buffer-summary)
+     '(:role command-interaction
+       :events (focus-entered)
+       :command-interaction-kind repl)
+     'state-change '(open-object))))
 
 (cl-loop
  for target in '(py-clear-queue py-execute-region py-execute-buffer)
@@ -98,9 +346,11 @@
  do
  (eval
   `(defun ,advice-function (&rest _)
-     "Cue successful Python execution."
+     "Present an interactive Python operation as started."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'task-done))))
+       (emacsvox-py--submit-actions
+        (emacsvox-py--operation-facts ',target 'started)
+        'state-change))))
  (push (list target :after advice-function) emacsvox-py--advice))
 
 (cl-loop
@@ -111,8 +361,11 @@
   `(defun ,advice-function (&rest _)
      "Speak the exception destination."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'large-movement)
-       (emacsvox-speak-line))))
+       (emacsvox-py--present-current-line
+        '(:role code-construct
+          :events (focus-entered)
+          :syntax-role exception)
+        'navigation '(large-movement)))))
  (push (list target :after advice-function) emacsvox-py--advice))
 
 (push '(py-shell :after emacsvox--advice-py-shell-after)
@@ -127,47 +380,64 @@
  do
  (eval
   `(defun ,advice-function (&rest _)
-     "speak."
+     "Present an interactive Python Mode fill operation."
      (when (ems-interactive-p ',target)
-       (emacsvox-icon 'fill-object))))
+       (emacsvox-py--submit-actions
+        (emacsvox-py--edit-facts 'fill-paragraph 'paragraph)
+        'edit))))
  (push (list target :after advice-function) emacsvox-py--advice))
 
 (defun emacsvox--advice-py-newline-and-indent-after (&rest _)
-  "Speak line so we know current indentation"
+  "Present the indentation of a newly inserted line."
   (when (ems-interactive-p 'py-newline-and-indent)
-    (tts-speak-using-voice voice-annotate
-                           (format "indent %s" (current-column)))
-    (tts--protocol-dispatch)))
+    (emacsvox-py--submit-text
+     (propertize
+      (format "indent %s" (current-column))
+      'personality voice-annotate)
+     (emacsvox-py--edit-facts 'newline-and-indent 'indentation)
+     'edit)))
+
+(defun emacsvox-py--region-line-count ()
+  "Return the active region line count, or one for the current line."
+  (if (use-region-p)
+      (count-lines (region-beginning) (region-end))
+    1))
 
 (defun emacsvox--advice-py-shift-region-left-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-shift-region-left)
-    (emacsvox-icon 'left)
-    (tts-speak
+    (emacsvox-py--submit-text
      (format "Left shifted block  containing %s lines"
-             (count-lines (region-beginning) (region-end))))))
+             (emacsvox-py--region-line-count))
+     (emacsvox-py--edit-facts 'shift-left 'block)
+     'edit)))
 
 (defun emacsvox--advice-py-shift-region-right-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-shift-region-right)
-    (tts-speak
+    (emacsvox-py--submit-text
      (format "Right shifted block  containing %s lines"
-             (count-lines (region-beginning) (region-end))))))
+             (emacsvox-py--region-line-count))
+     (emacsvox-py--edit-facts 'shift-right 'block)
+     'edit)))
 
 (defun emacsvox--advice-py-indent-region-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-indent-region)
-    (emacsvox-icon 'right)
-    (tts-speak
+    (emacsvox-py--submit-text
      (format "Indented region   containing %s lines"
-             (count-lines (region-beginning) (region-end))))))
+             (emacsvox-py--region-line-count))
+     (emacsvox-py--edit-facts 'indent-region 'block)
+     'edit)))
 
 (defun emacsvox--advice-py-comment-region-after (&rest _)
   "Speak number of lines that were shifted"
   (when (ems-interactive-p 'py-comment-region)
-    (tts-speak
+    (emacsvox-py--submit-text
      (format "Commented  block  containing %s lines"
-             (count-lines (region-beginning) (region-end))))))
+             (emacsvox-py--region-line-count))
+     (emacsvox-py--edit-facts 'comment-region 'block)
+     'edit)))
 
 (dolist
     (entry
