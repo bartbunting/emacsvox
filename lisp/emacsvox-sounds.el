@@ -488,7 +488,7 @@ None: For systems that rely on the speech server playing the icon."
 
 (defun emacsvox-queue-resource (resource)
   "Queue concrete auditory RESOURCE on the ordered speech stream."
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "a %s\n" resource)))
 
@@ -524,7 +524,7 @@ Apply normalized stereo BALANCE when the selected local player supports it."
   (let ((process-connection-type nil))
     (cond
      ((null emacsvox-play-program)
-      (process-send-string
+      (emacsvox-aural-delivery-send
        tts-speaker-process
        (format "p %s\n" resource)))
      ((and
@@ -559,7 +559,7 @@ This is a private function and  might go away."
 (defun emacsvox-serve-icon (icon)
   "Serve auditory icon ICON."
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "p %s\n" (emacsvox-sounds-cache-get icon))))
 

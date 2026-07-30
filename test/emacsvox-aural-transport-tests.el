@@ -235,8 +235,166 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (should (equal observed '(replaceable outer))))
   (should-error
    (emacsvox-aural-call-with-submission
-    #'ignore :delivery-policy 'eventually)
+   #'ignore :delivery-policy 'eventually)
    :type 'error))
+
+(ert-deftest emacsvox-aural-delivery-replaces-complete-navigation-payloads ()
+  "A burst sends only its newest complete speech and cue transaction."
+  (let ((emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0)
+        timers
+        writes)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes)))
+         ((symbol-function 'run-with-idle-timer)
+          (lambda (_delay _repeat function &rest arguments)
+            (let ((timer (list function arguments)))
+              (push timer timers)
+              timer)))
+         ((symbol-function 'cancel-timer) #'ignore))
+      (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+            (emacsvox-aural-submission-replacement-key 'speaker)
+            (tts-speaker-process 'speech))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (emacsvox-aural-delivery-send 'speech "a first.ogg\n")
+           (tts--protocol-queue-text "first")
+           (tts--protocol-dispatch)))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (emacsvox-aural-delivery-send 'speech "a latest.ogg\n")
+           (tts--protocol-queue-text "latest")
+           (tts--protocol-dispatch))))
+      (should-not writes)
+      (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+      (should (= (length timers) 2))
+      (emacsvox-aural-flush-pending-deliveries 'speech)
+      (should
+       (equal
+        (nreverse writes)
+        '((speech "a latest.ogg\nq {latest }\nd\n")))))))
+
+(ert-deftest emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable ()
+  "Stops bypass collection and prevent pending speech from returning later."
+  (let ((emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0)
+        writes)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes)))
+         ((symbol-function 'process-live-p)
+          (lambda (process) (eq process 'speech)))
+         ((symbol-function 'run-with-idle-timer)
+          (lambda (&rest _arguments) 'timer))
+         ((symbol-function 'cancel-timer) #'ignore))
+      (let ((tts-speaker-process 'speech)
+            (emacsvox-aural-submission-delivery-policy 'replaceable)
+            (emacsvox-aural-submission-replacement-key 'speaker))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (tts--protocol-stop)
+           (tts--protocol-queue-text "obsolete")
+           (tts--protocol-dispatch)))
+        (should (equal writes '((speech "s\n"))))
+        (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+        (tts-stop)
+        (should
+         (= (hash-table-count emacsvox-aural--pending-deliveries) 0))
+        (emacsvox-aural-flush-pending-deliveries 'speech)
+        (should
+         (equal
+          (nreverse writes)
+          '((speech "s\n") (speech "s\n"))))))))
+
+(ert-deftest emacsvox-aural-delivery-orders-pending-before-fifo-output ()
+  "Ordered output flushes older replaceable work before its own packet."
+  (let ((emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0)
+        writes)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes)))
+         ((symbol-function 'run-with-idle-timer)
+          (lambda (&rest _arguments) 'timer))
+         ((symbol-function 'cancel-timer) #'ignore))
+      (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+            (emacsvox-aural-submission-replacement-key 'speaker)
+            (tts-speaker-process 'speech))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (tts--protocol-queue-text "navigation")
+           (tts--protocol-dispatch))))
+      (let ((emacsvox-aural-submission-delivery-policy 'ordered)
+            (tts-speaker-process 'speech))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (tts--protocol-queue-text "state change")
+           (tts--protocol-dispatch))))
+      (should
+       (equal
+        (nreverse writes)
+        '((speech "q {navigation }\nd\n")
+          (speech "q {state change }\nd\n")))))))
+
+(ert-deftest emacsvox-aural-delivery-coalesces-native-navigation-burst ()
+  "Real native submissions retain only the final speech protocol packet."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural--pending-deliveries
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--delivery-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (tts-speaker-process 'speech)
+          (tts-notify-process nil)
+          (tts-stop-immediately t)
+          (tts-quiet nil)
+          (voice-lock-mode nil)
+          (emacsvox-use-icons nil)
+          (emacsvox-pronounce-table nil)
+          (emacsvox-pronounce-personality nil)
+          (context
+           '(:module notmuch
+             :mode notmuch-search-mode
+             :mode-lineage (notmuch-search-mode special-mode)
+             :occasion navigation
+             :face-presentation-enabled t
+             :voice-lock-enabled nil
+             :icons-enabled nil))
+          writes)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-send-string)
+            (lambda (process command)
+              (push (list process command) writes)))
+           ((symbol-function 'run-with-idle-timer)
+            (lambda (&rest _arguments) 'timer))
+           ((symbol-function 'cancel-timer) #'ignore)
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET")))
+        (dolist (text '("obsolete first" "obsolete second" "latest message"))
+          (emacsvox-aural-submit
+           text :facts '(:role heading) :context context))
+        (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+        (emacsvox-aural-flush-pending-deliveries 'speech))
+      (let* ((writes (nreverse writes))
+             (wire (mapconcat #'cadr writes "")))
+        (should (= (cl-count "s\n" writes :key #'cadr :test #'equal) 3))
+        (should (string-match-p "latest message" wire))
+        (should-not (string-match-p "obsolete first" wire))
+        (should-not (string-match-p "obsolete second" wire))
+        (should (= (cl-count ?d wire) 1))))))
 
 (ert-deftest emacsvox-aural-submission-combines-one-object-and-legacy-actions ()
   "One native submission resolves object policy once around ordered adapters."

@@ -37,6 +37,197 @@
 (defvar emacsvox-aural--queued-run-leading-pause nil
   "Leading pause retained while queueing one concrete formatting run.")
 
+(cl-defstruct
+    (emacsvox-aural--delivery-entry
+     (:constructor emacsvox-aural--make-delivery-entry))
+  "One server command captured inside a complete delivery transaction."
+  process command)
+
+(cl-defstruct
+    (emacsvox-aural--pending-delivery
+     (:constructor emacsvox-aural--make-pending-delivery))
+  "One replaceable delivery waiting for an input-idle boundary."
+  sequence owner replacement-key entries timer)
+
+(defcustom emacsvox-aural-replacement-idle-delay 0.05
+  "Seconds of input idle before sending a replaceable presentation.
+
+Each newer transaction with the same speaker and replacement key restarts this
+delay.  Ordered and urgent transactions are never delayed."
+  :type 'number
+  :group 'emacsvox-aural)
+
+(defvar emacsvox-aural--delivery-transaction-active-p nil
+  "Non-nil while complete server commands are being collected.")
+
+(defvar emacsvox-aural--delivery-transaction-entries nil
+  "Reverse-ordered server commands in the current delivery transaction.")
+
+(defvar emacsvox-aural--pending-deliveries
+  (make-hash-table :test #'equal)
+  "Replaceable server transactions indexed by owner and replacement key.")
+
+(defvar emacsvox-aural--delivery-sequence 0
+  "Sequence preserving order across independent replacement keys.")
+
+(defun emacsvox-aural-delivery-send (process command &optional kind)
+  "Send COMMAND to PROCESS through the current delivery transaction.
+
+KIND may be `stop'.  Stops are delivery control rather than presentation
+payload, so they remain immediate and cannot accumulate behind idle delivery."
+  (if
+      (and
+       emacsvox-aural--delivery-transaction-active-p
+       (not (eq kind 'stop)))
+      (push
+       (emacsvox-aural--make-delivery-entry
+        :process process :command command)
+       emacsvox-aural--delivery-transaction-entries)
+    (process-send-string process command)))
+
+(defun emacsvox-aural--send-delivery-entries (entries)
+  "Send ordered delivery ENTRIES, combining adjacent writes per process."
+  (let (current-process commands)
+    (cl-labels
+        ((flush
+          ()
+          (when current-process
+            (unless
+                (and
+                 (processp current-process)
+                 (not (process-live-p current-process)))
+              (process-send-string
+               current-process (apply #'concat (nreverse commands)))))
+          (setq current-process nil commands nil)))
+      (dolist (entry entries)
+        (let ((process (emacsvox-aural--delivery-entry-process entry))
+              (command (emacsvox-aural--delivery-entry-command entry)))
+          (unless (eq process current-process)
+            (flush)
+            (setq current-process process))
+          (push command commands)))
+      (flush))))
+
+(defun emacsvox-aural--pending-delivery-table-key
+    (owner replacement-key)
+  "Return the scheduler table key for OWNER and REPLACEMENT-KEY."
+  (list owner replacement-key))
+
+(defun emacsvox-aural--deliver-pending (table-key)
+  "Deliver and remove the pending transaction at TABLE-KEY."
+  (when-let* ((pending
+               (gethash table-key emacsvox-aural--pending-deliveries)))
+    (remhash table-key emacsvox-aural--pending-deliveries)
+    (setf (emacsvox-aural--pending-delivery-timer pending) nil)
+    (emacsvox-aural--send-delivery-entries
+     (emacsvox-aural--pending-delivery-entries pending))))
+
+(defun emacsvox-aural--pending-delivery-keys
+    (owner &optional replacement-key)
+  "Return pending scheduler keys for OWNER and optional REPLACEMENT-KEY."
+  (let (keys)
+    (maphash
+     (lambda (table-key pending)
+       (when
+           (and
+            (eq
+             owner
+             (emacsvox-aural--pending-delivery-owner pending))
+            (or
+             (null replacement-key)
+             (equal
+              replacement-key
+              (emacsvox-aural--pending-delivery-replacement-key
+               pending))))
+         (push table-key keys)))
+     emacsvox-aural--pending-deliveries)
+    (sort
+     keys
+     :key
+     (lambda (table-key)
+       (emacsvox-aural--pending-delivery-sequence
+        (gethash table-key emacsvox-aural--pending-deliveries))))))
+
+(defun emacsvox-aural-cancel-pending-deliveries
+    (owner &optional replacement-key)
+  "Discard pending deliveries for OWNER and optional REPLACEMENT-KEY."
+  (dolist
+      (table-key
+       (emacsvox-aural--pending-delivery-keys owner replacement-key))
+    (when-let* ((pending
+                 (gethash table-key emacsvox-aural--pending-deliveries))
+                (timer (emacsvox-aural--pending-delivery-timer pending)))
+      (cancel-timer timer))
+    (remhash table-key emacsvox-aural--pending-deliveries)))
+
+(defun emacsvox-aural-flush-pending-deliveries
+    (owner &optional replacement-key)
+  "Send pending deliveries for OWNER and optional REPLACEMENT-KEY now."
+  (dolist
+      (table-key
+       (emacsvox-aural--pending-delivery-keys owner replacement-key))
+    (when-let* ((pending
+                 (gethash table-key emacsvox-aural--pending-deliveries))
+                (timer (emacsvox-aural--pending-delivery-timer pending)))
+      (cancel-timer timer))
+    (emacsvox-aural--deliver-pending table-key)))
+
+(defun emacsvox-aural--schedule-replaceable-delivery
+    (owner replacement-key entries)
+  "Schedule ENTRIES for OWNER under REPLACEMENT-KEY, replacing older work."
+  (let* ((table-key
+          (emacsvox-aural--pending-delivery-table-key
+           owner replacement-key))
+         (pending
+          (emacsvox-aural--make-pending-delivery
+           :sequence (cl-incf emacsvox-aural--delivery-sequence)
+           :owner owner
+           :replacement-key replacement-key
+           :entries entries)))
+    (emacsvox-aural-cancel-pending-deliveries owner replacement-key)
+    (puthash table-key pending emacsvox-aural--pending-deliveries)
+    (setf
+     (emacsvox-aural--pending-delivery-timer pending)
+     (run-with-idle-timer
+      emacsvox-aural-replacement-idle-delay nil
+      #'emacsvox-aural--deliver-pending table-key))))
+
+(defun emacsvox-aural--submit-delivery-entries (owner entries)
+  "Submit complete protocol ENTRIES for OWNER under current source policy."
+  (when entries
+    (pcase (or emacsvox-aural-submission-delivery-policy 'ordered)
+      ('replaceable
+       (emacsvox-aural--schedule-replaceable-delivery
+        owner emacsvox-aural-submission-replacement-key entries))
+      ('urgent
+       (emacsvox-aural-cancel-pending-deliveries owner)
+       (emacsvox-aural--send-delivery-entries entries))
+      (_
+       (emacsvox-aural-flush-pending-deliveries owner)
+       (emacsvox-aural--send-delivery-entries entries)))))
+
+(defun emacsvox-aural-call-with-delivery-transaction
+    (owner function &rest arguments)
+  "Call FUNCTION with ARGUMENTS and deliver its server writes for OWNER.
+
+Nested calls join the enclosing transaction.  The outer source submission's
+delivery policy determines whether the complete captured payload is sent now
+or supersedes an older pending payload."
+  (if emacsvox-aural--delivery-transaction-active-p
+      (apply function arguments)
+    (let ((emacsvox-aural--delivery-transaction-active-p t)
+          (emacsvox-aural--delivery-transaction-entries nil)
+          result)
+      (when (eq emacsvox-aural-submission-delivery-policy 'replaceable)
+        (emacsvox-aural-cancel-pending-deliveries
+         owner emacsvox-aural-submission-replacement-key))
+      (when (eq emacsvox-aural-submission-delivery-policy 'urgent)
+        (emacsvox-aural-cancel-pending-deliveries owner))
+      (setq result (apply function arguments))
+      (emacsvox-aural--submit-delivery-entries
+       owner (nreverse emacsvox-aural--delivery-transaction-entries))
+      result)))
+
 (defun emacsvox-aural-queue-concrete-action (action &optional context)
   "Queue concrete ACTION under frozen CONTEXT without resolving again."
   (pcase (emacsvox-aural-concrete-action-kind action)
@@ -395,8 +586,11 @@ semantic plan without resolving the semantic object more than once."
            facts context)))
     (when (emacsvox-aural--concrete-plan-output-p plan)
       (emacsvox-aural--ensure-speaker)
-      (emacsvox-aural-queue-concrete-plan plan)
-      (tts--protocol-dispatch))
+      (emacsvox-aural-call-with-delivery-transaction
+       tts-speaker-process
+       (lambda ()
+         (emacsvox-aural-queue-concrete-plan plan)
+         (tts--protocol-dispatch))))
     plan))
 
 (provide 'emacsvox-aural-transport)

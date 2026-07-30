@@ -105,16 +105,17 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-silence (duration &optional force)
   
-  (process-send-string tts-speaker-process
-                       (format "sh %d%s\n"
-                               duration
-                               (if force "\nd" ""))))
+  (emacsvox-aural-delivery-send
+   tts-speaker-process
+   (format "sh %d%s\n"
+           duration
+           (if force "\nd" ""))))
 
 ;;;;   tone
 
 (defun tts--protocol-tone (pitch duration &optional force)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "t %d %d%s\n"
            pitch duration
@@ -125,23 +126,25 @@ mac for MAC TTS (default on Mac)")
 (defun tts--protocol-queue-text (text)
   
   (unless (string-match "^[[:space:]]+$" text)
-    (process-send-string tts-speaker-process (format "q {%s }\n" text))))
+    (emacsvox-aural-delivery-send
+     tts-speaker-process (format "q {%s }\n" text))))
 
 (defun tts--protocol-queue-code (code)
   
-  (process-send-string tts-speaker-process (format "c {%s }\n" code)))
+  (emacsvox-aural-delivery-send
+   tts-speaker-process (format "c {%s }\n" code)))
 
 ;;;;   speak
 
 (defun tts--protocol-dispatch ()
   
-  (process-send-string tts-speaker-process "d\n"))
+  (emacsvox-aural-delivery-send tts-speaker-process "d\n"))
 
 ;;;;  say
 
 (defun tts--protocol-say (string)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "tts_say { %s}\n" string)))
 
@@ -149,13 +152,13 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-stop ()
   
-  (process-send-string tts-speaker-process "s\n"))
+  (emacsvox-aural-delivery-send tts-speaker-process "s\n" 'stop))
 
 ;;;;  sync
 
 (defun tts--protocol-sync ()
   "Synchronize speech state with running server"
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "tts_sync_state %s %s %s %s\n"
            tts-punctuation-mode
@@ -167,7 +170,7 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-letter (letter)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "l {%s}\n" letter)))
 
@@ -175,25 +178,25 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-next-language (&optional say_it)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_next_lang %s\n" say_it)))
 
 (defun tts--protocol-previous-language (&optional say_it)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_previous_lang %s\n" say_it)))
 
 (defun tts--protocol-set-language (language say_it)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_lang %s %s \n" language say_it)))
 
 (defun tts--protocol-set-preferred-language (alias language)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "set_preferred_lang %s %s \n" alias language)))
 
@@ -201,11 +204,11 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-version ()
   
-  (process-send-string tts-speaker-process "version\n"))
+  (emacsvox-aural-delivery-send tts-speaker-process "version\n"))
 
 (defun tts--protocol-set-rate (rate)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "tts_set_speech_rate %s\n" rate)))
 
@@ -213,15 +216,16 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-set-character-scale (factor)
   
-  (process-send-string tts-speaker-process
-                       (format "tts_set_character_scale %s\n"
-                               factor)))
+  (emacsvox-aural-delivery-send
+   tts-speaker-process
+   (format "tts_set_character_scale %s\n"
+           factor)))
 
 ;;;;   split caps
 
 (defun tts--protocol-set-split-caps (flag)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "tts_split_caps %s\n" (if flag 1 0))))
 
@@ -229,7 +233,7 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-set-punctuations (mode)
   
-  (process-send-string
+  (emacsvox-aural-delivery-send
    tts-speaker-process
    (format "tts_set_punctuations %s\nd\n" mode)))
 
@@ -237,7 +241,7 @@ mac for MAC TTS (default on Mac)")
 
 (defun tts--protocol-reset ()
   
-  (process-send-string tts-speaker-process "tts_reset \n"))
+  (emacsvox-aural-delivery-send tts-speaker-process "tts_reset \n"))
 
 ;;;   user customizations:
 
@@ -855,8 +859,9 @@ Argument COMPLEMENT  is the complement of separator."
 
 (defun tts-stop (&optional all)
   "Stop speech.  Optional arg `all' or interactive call silences
-notification stream as well."
+  notification stream as well."
   (interactive "P")
+  (emacsvox-aural-cancel-pending-deliveries tts-speaker-process)
   (when (process-live-p tts-speaker-process) (tts--protocol-stop))
   (when
       (and (tts-notify-process)
@@ -1724,11 +1729,20 @@ This is so text marked invisible is silenced.")
 (defun tts-speak (text)
   "Speak the TEXT string
 unless   `tts-quiet' is set to t. "
-  (let ((emacsvox-aural-submission-context
-         (or
-          emacsvox-aural-submission-context
-          (emacsvox-aural-capture-context))))
-    (tts--speak text)))
+  (let* ((context
+          (or
+           emacsvox-aural-submission-context
+           (emacsvox-aural-capture-context)))
+         (occasion
+          (or
+           emacsvox-aural-submission-occasion
+           (plist-get context :occasion)
+           'continuous)))
+    (emacsvox-aural-call-with-submission
+     #'tts--speak
+     :context context
+     :occasion occasion
+     :arguments (list text))))
 
 (defun tts--speak (text)
   "Implement `tts-speak' for TEXT with source context already captured."
@@ -1742,105 +1756,110 @@ unless   `tts-quiet' is set to t. "
   (unless
       (or tts-quiet (not (process-live-p tts-speaker-process))
           (null text) (zerop (length text)))
-    (unless (emacsvox-aural-prepared-text-p text)
-      (setq
-       text
-       (emacsvox-aural-prepare-text
-        text emacsvox-aural-submission-facts
-        emacsvox-aural-submission-context)))
-    ;; flush previous speech if asked to
-    (when tts-stop-immediately
-      (when (process-live-p tts-notify-process) (tts-notify-stop))
-      (tts-stop))
-    (when selective-display
-      (let ((ctrl-m (string-match "\015" text)))
-        (and ctrl-m (setq text (substring text 0 ctrl-m))
-             (emacsvox-icon 'ellipses))))
-    (let (                              ;snapshot relevant state
-          (orig-mode major-mode)
-          (char-alias  char-property-alias-alist)
-          (links-desc (and (eq major-mode 'org-mode) org-link-descriptive  ))
-          (inhibit-read-only t)
-          (inhibit-modification-hooks t)
-          (invisibility-spec buffer-invisibility-spec)
-          (syntax-table (syntax-table))
-          (pron-table emacsvox-pronounce-table)
-          (pron-personality emacsvox-pronounce-personality)
-          (chunk-sep tts-chunk-separator-syntax)
-          (inherit-speak-nonprinting-chars tts-speak-nonprinting-chars)
-          (inherit-strip-octals tts-strip-octals)
-          (complement-sep (tts-complement-chunk-separator-syntax))
-          (speech-rate tts-speech-rate)
-          (caps tts-caps)
-          (split-caps tts-split-caps)
-          (tts-caps-prefix
-           (if tts-caps
-               (emacsvox-aural-prepare-text
-                tts-caps-prefix
-                (list :content
-                      (substring-no-properties tts-caps-prefix))
-                emacsvox-aural-submission-context)
-             tts-caps-prefix))
-          (tts-allcaps-prefix
-           (if tts-caps
-               (emacsvox-aural-prepare-text
-                tts-allcaps-prefix
-                (list :content
-                      (substring-no-properties tts-allcaps-prefix))
-                emacsvox-aural-submission-context)
-             tts-allcaps-prefix))
-          (tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
-          (start 1)
-          (end nil)
-          (mode tts-punctuation-mode)
-          (voice-lock voice-lock-mode)) ; done snapshotting
-      (with-current-buffer tts-scratch-buffer
-        (setq buffer-undo-list  t)
-        (erase-buffer)
-        (when (eq orig-mode 'org-mode)
-          (setq org-link-descriptive links-desc)
-          (tts-org-fold))
-        ;; inherit environment
-        (setq                           ; mirror snapshot
-         yank-excluded-properties tts-yank-excluded-properties
-         char-property-alias-alist  char-alias
-         emacsvox-pronounce-table pron-table
-         emacsvox-pronounce-personality pron-personality
-         buffer-invisibility-spec invisibility-spec
-         tts-chunk-separator-syntax chunk-sep
-         tts-speech-rate speech-rate
-         tts-punctuation-mode mode
-         tts-split-caps split-caps
-         tts-caps caps
-         tts-speak-nonprinting-chars inherit-speak-nonprinting-chars
-         tts-strip-octals inherit-strip-octals
-         voice-lock-mode voice-lock)
-        (set-syntax-table syntax-table)
-        (tts--protocol-sync)
-        (insert-for-yank text)          ; insert and pre-process text
-        (tts--delete-invisible-text)
-        (tts-handle-repeating-patterns mode)
-        (when pron-table (tts-apply-pronunciations pron-table))
-        (when tts-handle-unicode (tts-unicode-replace-chars mode))
-        (tts-quote mode)
-        (goto-char (point-min))         ; text is ready to be spoken
-        (skip-syntax-forward "-")       ;skip leading whitespace
-        (setq start (point))
-        (while (and (not (eobp))
-                    (tts-move-across-a-chunk chunk-sep complement-sep))
-          (unless ;;;If  embedded punctuations, continue
-              (and (char-after (point))
-                   (= ?. (char-syntax (preceding-char)))
-                   (not (= 32 (char-syntax (following-char)))))
-            (skip-syntax-forward "-") ;skip  trailing whitespace
-            (setq end (point))
-            (tts-audio-format start end)
-            (setq start end)))     ; end while
-        ;; process trailing text
-        (unless (= start (point-max))
-          (skip-syntax-forward " ")     ;skip leading whitespace
-          (unless (eobp) (tts-audio-format (point) (point-max))))))
-    (tts--protocol-dispatch)))
+    (emacsvox-aural-call-with-delivery-transaction
+     tts-speaker-process #'tts--speak-transaction text)))
+
+(defun tts--speak-transaction (text)
+  "Prepare and queue one complete speech transaction for TEXT."
+  (unless (emacsvox-aural-prepared-text-p text)
+    (setq
+     text
+     (emacsvox-aural-prepare-text
+      text emacsvox-aural-submission-facts
+      emacsvox-aural-submission-context)))
+  ;; flush previous speech if asked to
+  (when tts-stop-immediately
+    (when (process-live-p tts-notify-process) (tts-notify-stop))
+    (tts-stop))
+  (when selective-display
+    (let ((ctrl-m (string-match "\015" text)))
+      (and ctrl-m (setq text (substring text 0 ctrl-m))
+           (emacsvox-icon 'ellipses))))
+  (let (                                ;snapshot relevant state
+        (orig-mode major-mode)
+        (char-alias  char-property-alias-alist)
+        (links-desc (and (eq major-mode 'org-mode) org-link-descriptive  ))
+        (inhibit-read-only t)
+        (inhibit-modification-hooks t)
+        (invisibility-spec buffer-invisibility-spec)
+        (syntax-table (syntax-table))
+        (pron-table emacsvox-pronounce-table)
+        (pron-personality emacsvox-pronounce-personality)
+        (chunk-sep tts-chunk-separator-syntax)
+        (inherit-speak-nonprinting-chars tts-speak-nonprinting-chars)
+        (inherit-strip-octals tts-strip-octals)
+        (complement-sep (tts-complement-chunk-separator-syntax))
+        (speech-rate tts-speech-rate)
+        (caps tts-caps)
+        (split-caps tts-split-caps)
+        (tts-caps-prefix
+         (if tts-caps
+             (emacsvox-aural-prepare-text
+              tts-caps-prefix
+              (list :content
+                    (substring-no-properties tts-caps-prefix))
+              emacsvox-aural-submission-context)
+           tts-caps-prefix))
+        (tts-allcaps-prefix
+         (if tts-caps
+             (emacsvox-aural-prepare-text
+              tts-allcaps-prefix
+              (list :content
+                    (substring-no-properties tts-allcaps-prefix))
+              emacsvox-aural-submission-context)
+           tts-allcaps-prefix))
+        (tts-scratch-buffer (get-buffer-create " *tts-scratch-buffer* "))
+        (start 1)
+        (end nil)
+        (mode tts-punctuation-mode)
+        (voice-lock voice-lock-mode)) ; done snapshotting
+    (with-current-buffer tts-scratch-buffer
+      (setq buffer-undo-list  t)
+      (erase-buffer)
+      (when (eq orig-mode 'org-mode)
+        (setq org-link-descriptive links-desc)
+        (tts-org-fold))
+      ;; inherit environment
+      (setq                           ; mirror snapshot
+       yank-excluded-properties tts-yank-excluded-properties
+       char-property-alias-alist  char-alias
+       emacsvox-pronounce-table pron-table
+       emacsvox-pronounce-personality pron-personality
+       buffer-invisibility-spec invisibility-spec
+       tts-chunk-separator-syntax chunk-sep
+       tts-speech-rate speech-rate
+       tts-punctuation-mode mode
+       tts-split-caps split-caps
+       tts-caps caps
+       tts-speak-nonprinting-chars inherit-speak-nonprinting-chars
+       tts-strip-octals inherit-strip-octals
+       voice-lock-mode voice-lock)
+      (set-syntax-table syntax-table)
+      (tts--protocol-sync)
+      (insert-for-yank text)          ; insert and pre-process text
+      (tts--delete-invisible-text)
+      (tts-handle-repeating-patterns mode)
+      (when pron-table (tts-apply-pronunciations pron-table))
+      (when tts-handle-unicode (tts-unicode-replace-chars mode))
+      (tts-quote mode)
+      (goto-char (point-min))         ; text is ready to be spoken
+      (skip-syntax-forward "-")       ;skip leading whitespace
+      (setq start (point))
+      (while (and (not (eobp))
+                  (tts-move-across-a-chunk chunk-sep complement-sep))
+        (unless ;;;If  embedded punctuations, continue
+            (and (char-after (point))
+                 (= ?. (char-syntax (preceding-char)))
+                 (not (= 32 (char-syntax (following-char)))))
+          (skip-syntax-forward "-") ;skip  trailing whitespace
+          (setq end (point))
+          (tts-audio-format start end)
+          (setq start end)))     ; end while
+      ;; process trailing text
+      (unless (= start (point-max))
+        (skip-syntax-forward " ")       ;skip leading whitespace
+        (unless (eobp) (tts-audio-format (point) (point-max))))))
+  (tts--protocol-dispatch))
 
 (defmacro ems-with-messages-silenced (&rest body)
   "Evaluate body  after temporarily silencing messages."
