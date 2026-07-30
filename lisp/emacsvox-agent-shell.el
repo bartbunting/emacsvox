@@ -683,17 +683,6 @@ ATTRIBUTES is a property list of registered semantic attributes."
    (when states (list :states (copy-sequence states)))
    (copy-tree attributes)))
 
-(defun emacsvox-agent-shell--present-feedback
-    (facts occasion icon function &rest arguments)
-  "Present compatibility ICON then call FUNCTION with ARGUMENTS.
-
-FACTS and OCCASION are frozen before either modality is delivered."
-  (emacsvox-agent-shell--call-with-aural-presentation
-   facts occasion
-   (lambda ()
-     (when icon (emacsvox-icon icon))
-     (apply function arguments))))
-
 (defun emacsvox-agent-shell--deliver-announcement (icon text)
   "Deliver ICON and TEXT for the current session without background chatter."
   (emacsvox-agent-shell--call-with-aural-presentation
@@ -3156,12 +3145,7 @@ Use ORIGIN instead of point as the navigation boundary when non-nil."
           (tts-stop)
           (pcase type
             ('table
-             (emacsvox-agent-shell--call-with-aural-presentation
-              (emacsvox-agent-shell--block-location-facts
-               target 'focus-entered)
-              'navigation
-              #'emacsvox-agent-shell--table-entry-feedback
-              direction))
+             (emacsvox-agent-shell--table-entry-feedback direction))
             ('source-block
              (emacsvox-agent-shell--submit-text-feedback
               (emacsvox-agent-shell--source-block-summary target)

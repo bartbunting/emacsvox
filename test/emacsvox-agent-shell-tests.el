@@ -1088,8 +1088,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 (ert-deftest emacsvox-agent-shell-response-inspection-is-native ()
   "Response inspection outcomes should use explicit native transactions."
   (let ((answer "Complete answer")
-        captured
-        compatibility-output)
+        captured)
     (cl-letf
         (((symbol-function 'emacsvox-agent-shell--latest-agent-answer)
           (lambda () answer))
@@ -1097,15 +1096,12 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (lambda (_text) "Response overview"))
          ((symbol-function 'emacsvox-aural-submit)
           (lambda (content &rest arguments)
-            (push (cons content arguments) captured)))
-         ((symbol-function 'emacsvox-agent-shell--present-feedback)
-          (lambda (&rest _) (push 'compatibility compatibility-output))))
+            (push (cons content arguments) captured))))
       (emacsvox-agent-shell-speak-last-response)
       (emacsvox-agent-shell-speak-response-overview)
       (setq answer nil)
       (emacsvox-agent-shell-speak-last-response)
       (emacsvox-agent-shell-speak-response-overview))
-    (should-not compatibility-output)
     (setq captured (nreverse captured))
     (should
      (equal
@@ -1308,7 +1304,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 
 (ert-deftest emacsvox-agent-shell-header-feedback-is-native ()
   "Brief and explicit headers should use native inspection transactions."
-  (let (captured compatibility-output)
+  (let (captured)
     (cl-letf
         (((symbol-function 'emacsvox-agent-shell--unspoken-graphical-header-p)
           (lambda () t))
@@ -1317,12 +1313,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             '(:agent "Codex agent" :project "emacsvox")))
          ((symbol-function 'emacsvox-aural-submit)
           (lambda (content &rest arguments)
-            (push (cons content arguments) captured)))
-         ((symbol-function 'emacsvox-agent-shell--present-feedback)
-          (lambda (&rest _) (push 'compatibility compatibility-output))))
+            (push (cons content arguments) captured))))
       (emacsvox-agent-shell--speak-focus-header-if-needed)
       (emacsvox-agent-shell-speak-header))
-    (should-not compatibility-output)
     (setq captured (nreverse captured))
     (should
      (equal
@@ -1347,8 +1340,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   "Session and background speech controls should submit selected levels."
   (let ((shell (generate-new-buffer "Codex Agent @ native-level"))
         (emacsvox-agent-shell-background-speech-level 'full)
-        captured
-        compatibility-output)
+        captured)
     (unwind-protect
         (progn
           (with-current-buffer shell
@@ -1360,13 +1352,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (lambda (&rest _) 'quiet))
                ((symbol-function 'emacsvox-aural-submit)
                 (lambda (content &rest arguments)
-                  (push (cons content arguments) captured)))
-               ((symbol-function 'emacsvox-agent-shell--present-feedback)
-                (lambda (&rest _)
-                  (push 'compatibility compatibility-output))))
+                  (push (cons content arguments) captured))))
             (emacsvox-agent-shell--set-session-speech-level shell 'response)
             (emacsvox-agent-shell-select-background-speech-level))
-          (should-not compatibility-output)
           (setq captured (nreverse captured))
           (should
            (equal
@@ -1474,7 +1462,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
 
 (ert-deftest emacsvox-agent-shell-interactive-shell-commands-are-native ()
   "Interactive shell entry and interruption should use native transactions."
-  (let (captured compatibility-output direct-output)
+  (let (captured direct-output)
     (cl-letf
         (((symbol-function 'emacsvox-agent-shell--header-state)
           (lambda (&optional _buffer)
@@ -1482,8 +1470,6 @@ Return speech events plus the target character.  DIRECTION is `forward' or
          ((symbol-function 'emacsvox-aural-submit)
           (lambda (content &rest arguments)
             (push (cons content arguments) captured)))
-         ((symbol-function 'emacsvox-agent-shell--present-feedback)
-          (lambda (&rest _) (push 'compatibility compatibility-output)))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output)))
          ((symbol-function 'emacsvox-speak-mode-line)
@@ -1510,7 +1496,6 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               . emacsvox-agent-shell--agent-shell-interrupt-after)))
         (let ((ems--interactive-fn-name (car entry)))
           (funcall (cdr entry)))))
-    (should-not compatibility-output)
     (should-not direct-output)
     (setq captured (nreverse captured))
     (should
@@ -3499,10 +3484,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (setq major-mode 'agent-shell-mode)
     (insert "target")
     (let ((target
-           '(:position 1 :end 7 :type thought :label "Thinking"
+          '(:position 1 :end 7 :type thought :label "Thinking"
              :body "Inspect constraints"))
           captured
-          compatibility-output
           direct-output)
       (cl-letf
           (((symbol-function
@@ -3513,8 +3497,6 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            ((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
               (push (cons content arguments) captured)))
-           ((symbol-function 'emacsvox-agent-shell--present-feedback)
-            (lambda (&rest _) (push 'compatibility compatibility-output)))
            ((symbol-function 'emacsvox-icon)
             (lambda (&rest _) (push 'icon direct-output)))
            ((symbol-function 'tts-speak)
@@ -3522,7 +3504,6 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell--jump-block-of-type 'thought 'forward)
         (setq target nil)
         (emacsvox-agent-shell--jump-block-of-type 'thought 'backward))
-      (should-not compatibility-output)
       (should-not direct-output)
       (setq captured (nreverse captured))
       (should
