@@ -151,6 +151,155 @@
       '(:role vcs-view :vcs-view-kind repositories
         :vcs-operation fetch :events (operation-failed))))))
 
+(ert-deftest emacsvox-magit-commit-command-surface-is-covered ()
+  "Every commit-specific command family has dedicated feedback."
+  (should (= (length emacsvox-magit--commit-history-targets) 4))
+  (should (= (length emacsvox-magit--commit-trailer-targets) 10))
+  (should (= (length emacsvox-magit--commit-insertion-targets) 2))
+  (should (= (length emacsvox-magit--commit-around-advice) 18))
+  (should (= (length emacsvox-magit--commit-after-advice) 1))
+  (dolist
+      (entry
+       (append
+        emacsvox-magit--commit-around-advice
+        emacsvox-magit--commit-after-advice))
+    (pcase-let ((`(,target ,function) entry))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-magit-commit-content-preserves-faces-and-hides-comments ()
+  "Commit feedback retains source faces but excludes Git instructions."
+  (with-temp-buffer
+    (setq comment-start "#")
+    (insert
+     (propertize "Summary" 'face 'git-commit-summary)
+     "\n\nBody\n"
+     "# Changes to be committed:\n# file")
+    (let ((content (emacsvox-magit--commit-message-content)))
+      (should (equal content "Summary\n\nBody"))
+      (should
+       (eq
+        (get-text-property 0 'face content)
+        'git-commit-summary)))))
+
+(ert-deftest emacsvox-magit-commit-history-reports-restored-message ()
+  "History navigation reports the operation and restored commit message."
+  (with-temp-buffer
+    (setq comment-start "#")
+    (insert "old")
+    (let ((ems--interactive-fn-name 'git-commit-prev-message)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) calls))))
+        (should
+         (eq
+          (emacsvox--advice-git-commit-prev-message-around
+           (lambda (_count)
+             (erase-buffer)
+             (insert
+              (propertize "restored" 'face 'git-commit-summary))
+             'restored)
+           1)
+          'restored)))
+      (pcase-let* ((`((,content . ,arguments)) calls)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "Previous message. restored"))
+        (should
+         (eq
+          (get-text-property (length "Previous message. ") 'face content)
+          'git-commit-summary))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role vcs-commit-message
+            :vcs-operation previous-message
+            :events (focus-entered))))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(select-object)))))))
+
+(ert-deftest emacsvox-magit-commit-history-no-op-is-accurate ()
+  "Unavailable commit history is not announced as restored content."
+  (with-temp-buffer
+    (insert "unchanged")
+    (let ((ems--interactive-fn-name 'git-commit-next-message)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-magit--submit-text)
+            (lambda (&rest arguments) (push arguments calls))))
+        (emacsvox--advice-git-commit-next-message-around
+         (lambda (_count) 'empty)
+         1))
+      (should
+       (equal
+        calls
+        '(("No next message available."
+           (:role vcs-commit-message
+            :vcs-operation next-message
+            :events (operation-failed))
+           navigation warn-user)))))))
+
+(ert-deftest emacsvox-magit-commit-trailer-reports-inserted-identity ()
+  "Trailer insertion reports its exact token and identity."
+  (with-temp-buffer
+    (insert "Summary")
+    (let ((ems--interactive-fn-name 'git-commit-signoff)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-magit--submit-text)
+            (lambda (&rest arguments) (push arguments calls))))
+        (should
+         (eq
+          (emacsvox--advice-git-commit-signoff-around
+           (lambda (_name _mail)
+             (goto-char (point-max))
+             (insert "\n\nSigned-off-by: Bart <bart@example.com>")
+             'inserted)
+           "Bart" "bart@example.com")
+          'inserted)))
+      (should
+       (equal
+        calls
+        '(("Signed-off-by: Bart <bart@example.com>"
+           (:role vcs-commit-message
+            :vcs-operation signoff
+            :events (operation-completed))
+           edit open-object)))))))
+
+(ert-deftest emacsvox-magit-commit-lifecycle-hooks-are-distinct ()
+  "Commit start, confirmed finish, and cancel have separate feedback."
+  (with-temp-buffer
+    (setq git-commit-mode t)
+    (let (calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-magit--submit-text)
+            (lambda (&rest arguments) (push arguments calls))))
+        (emacsvox-magit-enable-commit-feedback)
+        (should
+         (memq
+          #'emacsvox-magit--commit-finish-feedback
+          git-commit-post-finish-hook))
+        (should
+         (memq
+          #'emacsvox-magit--commit-cancel-feedback
+          with-editor-post-cancel-hook))
+        (let ((ems--interactive-fn-name 'with-editor-finish))
+          (emacsvox-magit--commit-finish-feedback))
+        (let ((ems--interactive-fn-name 'with-editor-cancel))
+          (emacsvox-magit--commit-cancel-feedback)))
+      (should
+       (equal
+        (mapcar #'car (nreverse calls))
+        '("Editing Git commit message"
+          "Created Git commit"
+          "Canceled Git commit"))))))
+
 (ert-deftest emacsvox-magit-end-to-end-vocabulary-is-registered ()
   "Every top-level Magit presentation category has registered intent."
   (dolist
