@@ -3236,6 +3236,45 @@ Compiled aural parity, normal build-tree startup, all 27 semantic traces,
 warning-as-error compilation of the changed runtime, the generated reference,
 and the Aural, advice, and TTS audits pass.
 
+** DONE Slice 47: Corfu and Agent Shell Native Presentation Consolidation
+CLOSED: [2026-07-30 Thu]
+
+- Route Corfu popup opening, candidate navigation, completion, insertion, and
+  separator feedback through atomic semantic submissions while preserving its
+  candidate voices, position speech, shell-directory behavior, and named
+  completion-separator tone.
+- Route focused Agent Shell announcements, permissions, out-of-turn updates,
+  lifecycle events, rendered content, thoughts, tool updates, headers,
+  inspections, block and table navigation, item actions, session settings,
+  viewport controls, and command feedback through explicit
+  =emacsvox-aural-submit= or =emacsvox-aural-submit-actions= transactions.
+- Extend action-only submissions to merge ordered compatibility cues into the
+  same concrete plan and presentation-history transaction.  Configurable
+  Agent Shell icon variables therefore remain supported without a parallel
+  direct-icon dispatch.
+- Move default Agent Shell tool-status cues into workflow policy selected by
+  registered tool lifecycle facts rather than choosing them in the package
+  integration.
+- Pass facts, module, and occasion explicitly at presentation call sites;
+  remove the general dynamically scoped presentation wrapper, its obsolete
+  compatibility presenter, and redundant text and icon submission helpers.
+- Retain one named background-notification adapter.  It freezes Agent Shell
+  facts before calling =tts-notify-icon= and =tts-notify= because that
+  low-level path owns off-screen notification-process routing and session-name
+  announcements.  The migrated-module audit permits direct notification calls
+  only inside that adapter.
+
+Deliverable: Corfu and Agent Shell presentation is resolved once per
+user-visible event.  Agent Shell has no general legacy presentation path:
+focused feedback is native and explicit, while the isolated background
+adapter supplies notification transport rather than semantic policy.
+
+Checks: all 162 focused Agent Shell tests pass.  The complete Emacs 31 source
+suite has 1,858 tests: 1,857 pass and the optional Mu4e test is skipped.
+Compiled aural parity, normal build-tree startup, all 27 semantic traces,
+warning-as-error Agent Shell compilation, the generated reference, and the
+Aural, advice, and TTS audits pass.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:
