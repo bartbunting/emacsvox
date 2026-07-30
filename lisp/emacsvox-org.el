@@ -172,6 +172,18 @@ ICON-PHASE defaults to `before'."
      (not (equal current prior-message))
      current)))
 
+(defun emacsvox-org--present-message-result
+    (role event action prior-message fallback occasion &optional icon)
+  "Present a message-oriented Org result.
+
+ROLE, EVENT, and ACTION are semantic facts.  Prefer a new message produced
+after PRIOR-MESSAGE and otherwise speak FALLBACK under OCCASION, with optional
+compatibility ICON."
+  (emacsvox-org--submit-text
+   (or (emacsvox-org--new-current-message prior-message) fallback)
+   (emacsvox-org--feedback-facts role event action)
+   occasion icon))
+
 (defun emacsvox-org-refresh-aural-heading ()
   "Refresh semantic text properties on the Org heading at point."
   (when-let* ((facts (emacsvox-org-heading-facts)))
@@ -750,6 +762,84 @@ Prefer a message different from PRIOR-MESSAGE and otherwise use FALLBACK."
  'org-eval-in-calendar :after
  #'emacsvox--advice-org-eval-in-calendar-after
  '((name . emacsvox)))
+
+;;;  Clocks and timers:
+
+(cl-loop
+ for (target action icon fallback) in
+ '((org-clock-in clock-started on "Clock started")
+   (org-clock-in-last clock-started on "Clock started")
+   (org-clock-out clock-stopped off "Clock stopped")
+   (org-clock-cancel clock-cancelled close-object "Clock cancelled")
+   (org-clock-display clock-display-opened open-object
+                      "Clock display changed")
+   (org-resolve-clocks clock-resolved button "Clock conflict resolved")
+   (org-clock-modify-effort-estimate effort-changed button
+                                     "Clock effort estimate changed"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org clock command quietly and present its result."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-message-result
+              'org-clock 'state-changed ',action prior-message ,fallback
+              'state-change ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(defun emacsvox--advice-org-clock-goto-around
+    (original &rest arguments)
+  "Navigate to the active Org clock with one native presentation."
+  (if (not (eq ems--interactive-fn-name 'org-clock-goto))
+      (apply original arguments)
+    (let ((emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (emacsvox-org--submit-text
+         (if (eobp)
+             (emacsvox-org--buffer-summary)
+           (emacsvox-org--line-content))
+         (emacsvox-org--feedback-facts
+          'org-clock 'focus-entered 'clock-navigation)
+         'navigation 'large-movement)))))
+
+(advice-add
+ 'org-clock-goto :around #'emacsvox--advice-org-clock-goto-around
+ '((name . emacsvox)))
+
+(cl-loop
+ for (target action icon fallback) in
+ '((org-timer-start timer-started on "Timer started")
+   (org-timer-pause-or-continue timer-paused button
+                                "Timer pause state changed")
+   (org-timer-stop timer-stopped off "Timer stopped")
+   (org-timer-set-timer timer-set on "Countdown timer set")
+   (org-timer timer-set button "Timer value inserted")
+   (org-timer-item timer-item-created item "Timer item inserted"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Call an interactive Org timer command quietly and present its result."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-message-result
+              'org-timer 'state-changed ',action prior-message ,fallback
+              'state-change ',icon)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
 
 ;;;  Agenda:
 

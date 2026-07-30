@@ -56,6 +56,14 @@
      :kind role
      :summary "The result of executing an Org Babel source block"
      :owner org)
+    (org-clock
+     :kind role
+     :summary "An Org clock lifecycle or clock navigation operation"
+     :owner org)
+    (org-timer
+     :kind role
+     :summary "An Org relative timer or countdown operation"
+     :owner org)
     (org-action
      :kind attribute
      :summary "The user-visible Org operation being presented"
@@ -63,7 +71,7 @@
      :roles
      (heading org-content org-item org-paragraph org-agenda-entry org-table
               org-capture org-edit-buffer org-export org-source-block
-              org-babel-result)
+              org-babel-result org-clock org-timer)
      :value-type symbol
      :allowed-values
      (item-navigation structure-navigation paragraph-navigation
@@ -93,6 +101,10 @@
                       source-block-executed source-results-removed
                       source-block-changed source-block-marked
                       source-tangled source-session-opened source-inspected
+                      clock-started clock-stopped clock-cancelled
+                      clock-navigation clock-display-opened clock-resolved
+                      timer-started timer-paused timer-stopped timer-set
+                      timer-item-created
                       export-completed publish-completed))
     (org-table-row
      :kind attribute
@@ -121,8 +133,8 @@
   '(heading level visibility folded focus-entered state-changed object-changed
             org-content org-item org-paragraph org-agenda-entry org-table
             org-capture org-edit-buffer org-export org-source-block
-            org-babel-result org-action org-table-row org-table-column
-            org-table-presentation)
+            org-babel-result org-clock org-timer org-action org-table-row
+            org-table-column org-table-presentation)
   "Semantic identifiers interpreted by the Org integration.")
 
 (defconst emacsvox-org-aural-level-voices

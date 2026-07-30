@@ -217,6 +217,14 @@
     org-babel-check-src-block org-babel-sha1-hash)
   "Org Babel commands with native result and lifecycle feedback.")
 
+(defconst emacsvox-test--org-clock-timer-around-targets
+  '(org-clock-in org-clock-in-last org-clock-out org-clock-cancel
+    org-clock-display org-resolve-clocks
+    org-clock-modify-effort-estimate org-clock-goto
+    org-timer-start org-timer-pause-or-continue org-timer-stop
+    org-timer-set-timer org-timer org-timer-item)
+  "Org clock and timer commands with native lifecycle feedback.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -301,7 +309,8 @@
       (semantic
        '(org-content org-item org-paragraph org-agenda-entry org-table
                      org-capture org-edit-buffer org-export
-                     org-source-block org-babel-result org-action
+                     org-source-block org-babel-result org-clock org-timer
+                     org-action
                      org-table-row org-table-column
                      org-table-presentation))
     (should (emacsvox-aural-semantic semantic)))
@@ -1080,6 +1089,63 @@
       '(:role org-content :events (focus-entered)
         :org-action calendar-evaluated)))
     (should (eq (plist-get (cdar submissions) :occasion) 'inspection))))
+
+(ert-deftest emacsvox-org-clock-timer-advice-is-directly-registered ()
+  "Every covered Org clock and timer command has its named quiet adapter."
+  (dolist (target emacsvox-test--org-clock-timer-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-clock-lifecycle-preserves-message-once ()
+  "An interactive clock result keeps Org's message under semantic ownership."
+  (let ((ems--interactive-fn-name 'org-clock-in)
+        (emacsvox-speak-messages t)
+        (messages '("Before" "Clock starts at 09:30"))
+        message-state
+        submissions)
+    (cl-letf
+        (((symbol-function 'current-message)
+          (lambda () (pop messages)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) submissions))))
+      (emacsvox--advice-org-clock-in-around
+       (lambda (&rest _)
+         (setq message-state emacsvox-speak-messages))))
+    (should-not message-state)
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "Clock starts at 09:30"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role org-clock :events (state-changed)
+        :org-action clock-started)))
+    (should (eq (plist-get (cdar submissions) :occasion) 'state-change))))
+
+(ert-deftest emacsvox-org-clock-navigation-speaks-destination ()
+  "Clock navigation submits its destination instead of a generic message."
+  (with-temp-buffer
+    (insert "* Clocked task")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-clock-goto)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-clock-goto-around
+         (lambda (&rest _))))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "* Clocked task"))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-clock :events (focus-entered)
+          :org-action clock-navigation)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
 
 (ert-deftest emacsvox-org-visibility-and-indirect-feedback-is-native ()
   "Overview, contents, and indirect-buffer results have semantic ownership."
