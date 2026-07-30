@@ -1,0 +1,86 @@
+* Native Windows auditory-icon player
+
+This player lets Emacsvox under WSL send auditory icons to native Windows
+audio, independently of the selected speech server.  A small Tcl wrapper uses
+a WSL-loopback socket to share one persistent Windows process.  No Windows
+firewall rule or administrator access is required.
+
+Emacsvox's OGG files are converted lazily to 48 kHz, 16-bit stereo WAV files
+under =$XDG_CACHE_HOME/emacsvox/windows-play=, or =~/.cache= when
+=XDG_CACHE_HOME= is unset.  SoX is used only for the first conversion of each
+file.  Generated SoX effects such as Emacsvox's multi-window cues are also
+rendered once and cached.  Playback uses one ordered Windows =waveOut= queue.
+Stopping speech cancels its active auditory icon and any older pending icons,
+so rapid navigation cannot accumulate stale cues.  Multiple cues belonging to
+the current speech transaction retain their submission order.
+
+** Build
+
+From the =emacsvox= repository root in WSL:
+
+#+begin_src sh
+make windows-audio
+#+end_src
+
+Alternatively, build the component directly:
+
+#+begin_src sh
+cd servers/windows-audio
+make
+#+end_src
+
+The build uses the .NET Framework C# compiler included with Windows and adds
+no third-party dependency.  The build target stops its own running audio
+relay before replacing the executable.
+
+** Configure Emacsvox
+
+The recommended setup uses the repository integration.  After Emacsvox is
+loaded and this repository is on =load-path=:
+
+#+begin_src emacs-lisp
+(require 'emacsvox-windows-speech)
+(emacsvox-windows-speech-configure-audio)
+#+end_src
+
+Loading =emacsvox-windows-speech= alone does not change the audio route.  The
+configuration command saves the existing settings so that
+=M-x emacsvox-windows-speech-restore-audio= can restore them.  Invoke either
+command with a prefix argument to restart the active speech server, or run
+=M-x tts-restart= separately.
+
+The equivalent manual configuration is:
+
+#+begin_src emacs-lisp
+(let ((player
+       (expand-file-name
+        "servers/windows-play"
+        "/path/to/emacsvox/")))
+  (setenv "EMACSVOX_PLAY" player)
+  (setq emacsvox-play-program nil
+        sox-play player))
+#+end_src
+
+Restart the speech server after manual configuration with =M-x tts-restart=.
+Setting
+=emacsvox-play-program= to =nil= routes both immediate and queued icons
+through the speech server, while =EMACSVOX_PLAY= makes every Tcl speech
+server use this wrapper.  Setting =sox-play= routes direct generated cues,
+which are separate from auditory icons, through native Windows audio as well.
+
+Run =M-x emacsvox-windows-speech-diagnose= to check the WSL tools, SoX, Tclx,
+Emacsvox library, and built bridges.
+
+** Test and stop
+
+From the =emacsvox= root, provide the path to an Emacsvox sound:
+
+#+begin_src sh
+servers/windows-play /path/to/emacsvox/sounds/packs/chimes/button.ogg
+servers/windows-play --cancel
+servers/windows-play --stop
+#+end_src
+
+The first command starts the relay automatically.  The second cancels active
+and pending playback without stopping the relay.  The final command stops both
+the relay and its native Windows child.

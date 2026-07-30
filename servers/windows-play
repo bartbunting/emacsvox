@@ -1,0 +1,240 @@
+#!/usr/bin/tclsh
+# Keywords: Emacsvox, auditory icons, Windows, WSL
+
+# Copyright (C) 2026 Bart Bunting
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is not part of GNU Emacs, but the same permissions apply.
+# See the file COPYING in this distribution.
+
+set windows_play(port) 47694
+set windows_play(script) [file normalize $argv0]
+set windows_play(directory) [file dirname $windows_play(script)]
+set windows_play(program) [file join \
+    $windows_play(directory) windows-audio bin WindowsPlay.exe]
+source [file join $windows_play(directory) windows-speech-common.tcl]
+set windows_play(native) ""
+set windows_play(server) ""
+set windows_play(done) 0
+
+proc windows_play_relay {channel address client_port} {
+    global windows_play
+    fconfigure $channel -blocking 1 -buffering line -encoding utf-8
+    if {[gets $channel request] < 0} {
+        close $channel
+        return
+    }
+    set response "ERR native player exited"
+    if {![catch {
+        puts $windows_play(native) $request
+        flush $windows_play(native)
+        if {[gets $windows_play(native) native_response] >= 0} {
+            set response $native_response
+        }
+    } error]} {
+        # Response was set by the native player.
+    } else {
+        set response "ERR $error"
+    }
+    catch {
+        puts $channel $response
+        flush $channel
+    }
+    close $channel
+    if {$request eq "QUIT" || [string match "ERR native player*" $response]} {
+        set windows_play(done) 1
+    }
+}
+
+proc windows_play_serve {} {
+    global windows_play
+    if {![file executable $windows_play(program)]} {
+        error "Native Windows player not found: $windows_play(program); run 'make' in servers/windows-audio"
+    }
+    set windows_play(native) \
+        [open [windows_speech_pipe_command \
+                   $windows_play(program) [list --stdio]] r+]
+    fconfigure $windows_play(native) \
+        -blocking 1 -buffering line -encoding utf-8 -translation crlf
+    set windows_play(server) [socket -server windows_play_relay \
+        -myaddr 127.0.0.1 $windows_play(port)]
+    vwait windows_play(done)
+    catch {close $windows_play(server)}
+    catch {close $windows_play(native)}
+}
+
+proc windows_play_connect {} {
+    global windows_play
+    if {![catch {socket 127.0.0.1 $windows_play(port)} channel]} {
+        return $channel
+    }
+    exec [info nameofexecutable] $windows_play(script) --daemon \
+        > /dev/null 2>@1 &
+    for {set attempt 0} {$attempt < 40} {incr attempt} {
+        after 25
+        if {![catch {
+            socket 127.0.0.1 $windows_play(port)
+        } channel]} {
+            return $channel
+        }
+    }
+    error "Native Windows audio relay did not start"
+}
+
+proc windows_play_request {request {start 1}} {
+    global windows_play
+    if {!$start && [catch {
+        socket 127.0.0.1 $windows_play(port)
+    } channel]} {
+        return ""
+    }
+    if {![info exists channel]} {
+        set channel [windows_play_connect]
+    }
+    fconfigure $channel -blocking 1 -buffering line -encoding utf-8
+    puts $channel $request
+    flush $channel
+    if {[gets $channel response] < 0} {
+        close $channel
+        error "Native Windows audio relay closed unexpectedly"
+    }
+    close $channel
+    return $response
+}
+
+proc windows_play_cache_directory {} {
+    global env
+    if {[info exists env(XDG_CACHE_HOME)] && $env(XDG_CACHE_HOME) ne ""} {
+        set cache_root $env(XDG_CACHE_HOME)
+    } elseif {[info exists env(HOME)] && $env(HOME) ne ""} {
+        set cache_root [file join $env(HOME) .cache]
+    } else {
+        set cache_root /tmp
+    }
+    set cache [file join $cache_root emacsvox windows-play]
+    file mkdir $cache
+    return $cache
+}
+
+proc windows_play_windows_path {wav} {
+    return [string trim [exec wslpath -w $wav]]
+}
+
+proc windows_play_cache {input} {
+    set input [file normalize $input]
+    if {![file isfile $input]} {
+        error "Sound file not found: $input"
+    }
+    if {![file executable /usr/bin/sox]} {
+        error "SoX is required to cache auditory icons"
+    }
+
+    set cache [windows_play_cache_directory]
+    set identity "$input:[file mtime $input]:[file size $input]"
+    set key [format %08x \
+        [zlib crc32 [encoding convertto utf-8 $identity]]]
+    set wav [file join $cache "$key.wav"]
+    if {![file exists $wav]} {
+        set temporary "$wav.[pid].tmp.wav"
+        try {
+            exec /usr/bin/sox $input -r 48000 -c 2 -b 16 \
+                -e signed-integer $temporary
+            file rename -force $temporary $wav
+        } finally {
+            if {[file exists $temporary]} {
+                file delete -force $temporary
+            }
+        }
+    }
+    return [windows_play_windows_path $wav]
+}
+
+proc windows_play_cache_effect {arguments} {
+    set null_index [lsearch -exact $arguments -n]
+    if {$null_index < 0} {
+        error "Generated SoX effect is missing -n"
+    }
+    if {![file executable /usr/bin/sox]} {
+        error "SoX is required to render generated sounds"
+    }
+
+    set cache [windows_play_cache_directory]
+    set identity "sox-effect-v1\u0000[join $arguments \u0000]"
+    set key [format %08x \
+        [zlib crc32 [encoding convertto utf-8 $identity]]]
+    set wav [file join $cache "effect-$key.wav"]
+    if {![file exists $wav]} {
+        set temporary "$wav.[pid].tmp.wav"
+        try {
+            set command [concat \
+                [list /usr/bin/sox] \
+                [lrange $arguments 0 $null_index] \
+                [list -r 48000 -c 2 -b 16 -e signed-integer $temporary] \
+                [lrange $arguments [expr {$null_index + 1}] end]]
+            exec {*}$command
+            file rename -force $temporary $wav
+        } finally {
+            if {[file exists $temporary]} {
+                file delete -force $temporary
+            }
+        }
+    }
+    return [windows_play_windows_path $wav]
+}
+
+proc windows_play_path {path} {
+    set payload [binary encode base64 -maxlen 0 \
+        [encoding convertto utf-8 $path]]
+    set response [windows_play_request "PLAY $payload"]
+    if {$response ne "OK"} {
+        error "Native Windows audio player failed: $response"
+    }
+}
+
+proc windows_play_sound {input} {
+    windows_play_path [windows_play_cache $input]
+}
+
+proc windows_play_effect {arguments} {
+    windows_play_path [windows_play_cache_effect $arguments]
+}
+
+if {[llength $argv] == 1 && [lindex $argv 0] eq "--daemon"} {
+    if {[catch {windows_play_serve} error]} {
+        puts stderr $error
+        exit 1
+    }
+} elseif {[llength $argv] == 1 && [lindex $argv 0] eq "--stop"} {
+    set response [windows_play_request QUIT 0]
+    if {$response ne "" && $response ne "OK"} {
+        puts stderr $response
+        exit 1
+    }
+} elseif {[llength $argv] == 1 && [lindex $argv 0] eq "--cancel"} {
+    set response [windows_play_request CANCEL 0]
+    if {$response ne "" && $response ne "OK"} {
+        puts stderr $response
+        exit 1
+    }
+} elseif {[lsearch -exact $argv -n] >= 0} {
+    if {[catch {windows_play_effect $argv} error]} {
+        puts stderr $error
+        exit 1
+    }
+} else {
+    set input ""
+    foreach argument $argv {
+        if {![string match {-*} $argument]} {
+            set input $argument
+        }
+    }
+    if {$input eq ""} {
+        puts stderr \
+            "Usage: windows-play SOUND | windows-play -n EFFECT ... | --cancel"
+        exit 2
+    }
+    if {[catch {windows_play_sound $input} error]} {
+        puts stderr $error
+        exit 1
+    }
+}

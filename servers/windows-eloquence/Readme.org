@@ -1,0 +1,128 @@
+* Windows Eloquence speech server
+
+This backend lets Emacsvox running under WSL use a native Windows
+installation of Eloquence through its 32-bit ECI API.  It does not include or
+copy Eloquence.  By default it loads the ECI library installed at:
+
+#+begin_example
+C:\Program Files (x86)\Freedom Scientific\Shared\Eloquence\6.1\ECI.DLL
+#+end_example
+
+The standalone =windows-outloud= server contains its own Emacsvox queue,
+punctuation, voice, and command-loop code.  It does not source or modify the
+Unix =outloud= server.  The x64 =EloquenceBridge.exe= is launchable from WSL
+and relays commands to the x86 =EloquenceBridge32.exe= process that owns ECI.
+The bridge receives small PCM buffers from Eloquence and queues them to the
+default Windows output device.  Explicit end-of-utterance indexes keep rapid
+stop-and-speak cycles responsive even when ECI's generic speaking flag remains
+set.  Server tones also use native Windows playback, avoiding the SoX-to-WSLg
+path.
+
+The Base64 line protocol, x64-to-x86 launcher, and =waveOut= PCM player are
+shared with the native Windows DECtalk backend under
+=servers/windows-speech-common=.  ECI-specific synthesis and tone-index
+handling remain in this directory.
+
+The shared player converts the engine's mono PCM to stereo.  When launched by
+the repository integration, main speech is centered and notification speech
+is positioned to the right by default; both positions are customizable in
+Emacs before restarting the server.
+
+Character echo interrupts older character speech while leaving the current
+deletion tone intact.  This prevents rapid typing or held Backspace from
+building an uninterruptible queue of letters.  Each new standalone tone also
+replaces the previous one, so rapid deletion cues cannot fill the tone buffers
+and delay subsequent character commands.  If newer commands are already
+waiting, obsolete character echoes are discarded; the newest character still
+speaks once the input stream catches up.
+
+When Emacsvox's caps indication is enabled, capitalized and camel-case
+segments receive the standard 440 Hz cue.  Entirely uppercase words receive
+the higher 1300 Hz cue.  ECI indexes place these cues inside a continuous
+utterance; single-character echo retains Eloquence's normal pitch change.
+
+** Build
+
+From the =emacsvox= repository root in WSL:
+
+#+begin_src sh
+make windows-outloud
+#+end_src
+
+Alternatively, build it directly with its standalone Makefile:
+
+#+begin_src sh
+cd servers/windows-eloquence
+make
+#+end_src
+
+The build uses the 64-bit .NET Framework C# compiler included with Windows;
+it produces both executables under =servers/windows-eloquence/bin=.  No ECI
+headers, libraries, or additional .NET SDK are required at build time.
+
+Windows prevents replacement of a bridge executable while it is running.
+Before rebuilding, select a different speech server with
+=M-x tts-select-server=.  Build =windows-outloud=, then select it again.  Do
+not manually kill an Emacsvox bridge.
+
+To use a different installed ECI library, set =EMACSVOX_ECI_DLL= to its
+Windows path before starting the server.
+
+The server uses a sibling =tts-lib.tcl= when run from an Emacsvox source
+tree.  When installed elsewhere, it uses
+=$EMACSVOX_DIR/servers/tts-lib.tcl=.  Normal Emacsvox startup sets
+=EMACSVOX_DIR= automatically.  Set it explicitly when testing an external
+server without first starting Emacsvox.
+
+** Test outside Emacs
+
+Set the Emacsvox source location, run the server, and then type the test
+commands, pressing Return after each:
+
+#+begin_src sh
+EMACSVOX_DIR=/path/to/emacsvox ./servers/windows-outloud
+#+end_src
+
+#+begin_example
+q {This is native Windows Eloquence.}
+d
+s
+#+end_example
+
+The =s= command should interrupt a longer utterance immediately.  Type
+Control-D to close the server.
+
+** Select it in Emacsvox
+
+With this repository on =load-path=, load the integration after Emacsvox:
+
+#+begin_src emacs-lisp
+(require 'emacsvox-windows-speech)
+#+end_src
+
+Loading the integration does not change the active server.  It registers the
+short =windows-outloud= choice, which can be selected normally:
+
+#+begin_example
+M-x tts-select-server RET windows-outloud RET
+#+end_example
+
+Alternatively, run
+=M-x emacsvox-windows-speech-select-eloquence=.  Without the integration,
+evaluate the following form, or use the same path as =tts-program=:
+
+#+begin_src emacs-lisp
+(tts-select-server
+ "/path/to/emacsvox/servers/windows-outloud")
+#+end_src
+
+Because the server name contains =outloud=, Emacsvox automatically uses the
+existing Eloquence personality and ACSS voice mappings.
+
+** Internal bridge protocol
+
+The bridge accepts one ASCII request per line and returns exactly one =OK= or
+=ERR= response.  Text for =ADD= is UTF-8 encoded and then Base64 wrapped.
+Supported commands are =PING=, =VERSION=, =ADD=, =SYNTH=, =SPEAKING=,
+=STOP=, =STOP_SPEECH=, =PAUSE=, =SYNC=, =RESET=, =INDEX=, =TONE=, =INDEX_TONE=,
+=GET_RATE=, =SET_RATE=, and =QUIT=.

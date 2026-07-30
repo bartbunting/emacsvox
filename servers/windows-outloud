@@ -1,0 +1,607 @@
+#!/usr/bin/tclsh
+# Keywords: Emacsvox, Eloquence, Windows, WSL
+
+# Copyright (C) 1995 -- 2024 T. V. Raman
+# Windows adaptation Copyright (C) 2026 Bart Bunting
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is not part of GNU Emacs, but the same permissions apply.
+# See the file COPYING in this distribution.
+
+# This is a standalone Windows variant of the Outloud speech server.
+# It owns the Emacsvox queue, punctuation, voice, and command-loop code and
+# uses a native Windows bridge in place of atcleci.so and ALSA.
+
+package require Tclx
+set wd [file dirname [file normalize $argv0]]
+lappend auto_path $wd
+source [file join $wd windows-speech-common.tcl]
+windows_speech_source_tts_library $wd
+set bridge_dir [file join $wd windows-eloquence bin]
+set bridge_program [file join $bridge_dir EloquenceBridge.exe]
+set windows_eci(cap_marker) "\ue000"
+set windows_eci(allcaps_marker) "\ue001"
+
+if {![file executable $bridge_program]} {
+    error "Windows Eloquence bridge not found: $bridge_program; run 'make windows-outloud' from the repository root"
+}
+
+set bridge_arguments {}
+if {[info exists env(EMACSVOX_ECI_DLL)] && $env(EMACSVOX_ECI_DLL) ne ""} {
+    lappend bridge_arguments $env(EMACSVOX_ECI_DLL)
+}
+windows_speech_start windows_eci "Windows Eloquence bridge" \
+    $bridge_program $bridge_arguments
+
+proc windows_eci_rpc {request} {
+    windows_speech_rpc windows_eci $request
+}
+
+proc windows_eci_add_raw_text {text} {
+    windows_speech_text_rpc windows_eci ADD $text
+}
+
+proc windows_eci_add_text {text} {
+    global windows_eci
+    set cap_marker $windows_eci(cap_marker)
+    set allcaps_marker $windows_eci(allcaps_marker)
+    while {1} {
+        set cap_at [string first $cap_marker $text]
+        set allcaps_at [string first $allcaps_marker $text]
+        if {$cap_at < 0} {
+            set marker_at $allcaps_at
+        } elseif {$allcaps_at < 0} {
+            set marker_at $cap_at
+        } else {
+            set marker_at [expr {min($cap_at, $allcaps_at)}]
+        }
+        if {$marker_at < 0} {
+            if {$text ne ""} {
+                windows_eci_add_raw_text $text
+            }
+            return
+        }
+        if {$marker_at > 0} {
+            windows_eci_add_raw_text \
+                [string range $text 0 [expr {$marker_at - 1}]]
+        }
+        if {[string index $text $marker_at] eq $allcaps_marker} {
+            windows_eci_rpc "INDEX_TONE 1300 20"
+        } else {
+            windows_eci_rpc "INDEX_TONE 440 20"
+        }
+        set text [string range $text [expr {$marker_at + 1}] end]
+    }
+}
+
+proc native_capitalize_text {text} {
+    global windows_eci
+    set allcaps {\y[[:upper:]][[:upper:][:digit:]_-]+\y}
+    set offset 0
+    while {[regexp -indices -start $offset -- $allcaps $text range]} {
+        lassign $range first last
+        set word [string range $text $first $last]
+        set replacement \
+            "$windows_eci(allcaps_marker)[string tolower $word]"
+        set text [string replace $text $first $last $replacement]
+        set offset [expr {$first + [string length $replacement]}]
+    }
+    regsub -all {[[:upper:]]} $text \
+        "$windows_eci(cap_marker)\\0" text
+    return $text
+}
+
+proc windows_eci_text_command {synthesize arguments} {
+    set count [llength $arguments]
+    for {set index 0} {$index < $count} {incr index} {
+        set argument [lindex $arguments $index]
+        switch -exact -- $argument {
+            -reset {
+                windows_eci_rpc RESET
+            }
+            -index {
+                incr index
+                if {$index >= $count} {
+                    error "missing index parameter"
+                }
+                windows_eci_rpc "INDEX [lindex $arguments $index]"
+            }
+            default {
+                windows_eci_add_text $argument
+            }
+        }
+    }
+    if {$synthesize} {
+        windows_eci_rpc SYNTH
+    }
+    return ""
+}
+
+proc say {args} {
+    windows_eci_text_command 0 $args
+}
+
+proc synth {args} {
+    windows_eci_text_command 1 $args
+}
+
+proc stop {} {
+    windows_eci_rpc STOP
+}
+
+proc native_stop_speech {} {
+    windows_eci_rpc STOP_SPEECH
+}
+
+proc native_character_obsolete {} {
+    if {[chan pending input stdin] > 0} {
+        return 1
+    }
+    return [expr {
+        [lsearch [select [list stdin] {} {} 0] stdin] >= 0
+    }]
+}
+
+proc speakingP {} {
+    windows_eci_rpc SPEAKING
+}
+
+proc native_tone {pitch duration} {
+    windows_eci_rpc "TONE $pitch $duration"
+}
+
+proc synchronize {} {
+    windows_eci_rpc SYNC
+}
+
+proc pause {} {
+    windows_eci_rpc "PAUSE 1"
+}
+
+proc resume {} {
+    windows_eci_rpc "PAUSE 0"
+}
+
+proc setRate {voice rate} {
+    windows_eci_rpc "SET_RATE $voice $rate"
+    return ""
+}
+
+proc getRate {voice} {
+    windows_eci_rpc "GET_RATE $voice"
+}
+
+proc ttsVersion {} {
+    windows_eci_rpc VERSION
+}
+
+# The current Outloud front end exposes American English by default.
+# Keep the procedure compatible with atcleci; additional installed ECI
+# languages can be exposed here without changing the bridge protocol.
+proc setLanguage {language} {
+    array set annotation {
+        0 1.0
+        en_US 1.0
+        en_GB 1.1
+    }
+    if {[info exists annotation($language)]} {
+        windows_eci_add_text "`l$annotation($language)"
+    }
+    return ""
+}
+
+windows_eci_rpc PING
+
+#{{{ procedures
+
+proc version {} {
+    q " ViaVoice [ttsVersion]"
+    d
+}
+
+proc tts_set_punctuations {mode} {
+    global tts
+    set tts(punctuations) $mode
+    if {[string match all $tts(punctuations)] } {
+        synth "`da0"
+    } else {
+        synth "`da1"
+    }
+    service
+    return ""
+}
+
+proc tts_set_speech_rate {rate} {
+    global tts
+    set factor $tts(char_factor)
+    set tts(speech_rate) $rate
+    set tts(say_rate) [round \
+                           [expr $tts(speech_rate) * $factor ]]
+    say "`vs$rate "
+    service
+    return ""
+}
+
+proc tts_set_character_scale {factor} {
+    global tts
+    set tts(say_rate) [round \
+                           [expr $tts(speech_rate) * $factor ]]
+    set tts(char_factor) $factor
+    service
+    return ""
+}
+
+proc tts_say {text} {
+    global    tts
+    service
+    set r $tts(speech_rate)
+    set prefix "`v1 `vs$r "
+    regsub -all {\[\*\]} $text { `p1 } text
+    synth " $prefix $text"
+    service
+    return ""
+}
+
+#formerly called tts_letter
+# outloud: dont use say_rate for speaking letters (sounds bad )
+proc l {text} {
+    global tts
+    set r $tts(speech_rate)
+    set prefix "`v1 `vs$r "
+    if {[regexp  {[A-Z]} $text]} {
+        set prefix "$prefix `vb80"
+    }
+    native_stop_speech
+    if {[native_character_obsolete]} {
+        return ""
+    }
+    set tts(not_stopped) 1
+    synth "$prefix  `ts2 $text `ts0"
+    service
+    return ""
+}
+
+#formerly called tts_speak
+proc d {} {
+    service
+    speech_task
+}
+#formerly called tts_stop
+proc s {} {
+    global tts
+    if {$tts(not_stopped) == 1} {
+        queue_clear
+        catch {windows_speech_cancel_sounds $tts(play)}
+        set tts(not_stopped) 0
+        stop
+    } else {
+        puts stderr StopNoOp
+    }
+}
+
+#formerly called tts_tone
+
+proc t  {{pitch 440} {duration 50}} {
+    b $pitch $duration
+    return ""
+}
+
+proc sh  {{duration 50}} {
+    c " `p$duration "
+    service
+    return ""
+}
+
+
+proc tts_split_caps {flag} {
+    global tts
+    set tts(split_caps) $flag
+    service
+    return ""
+}
+
+proc tts_reset {} {
+    global tts
+    queue_clear
+    synth "Resetting engine to factory defaults."
+    service
+}
+
+proc r {rate} {
+    global queue  tts
+    set queue($tts(q_tail)) [list s  "`vs $rate "]
+    incr tts(q_tail)
+    return ""
+}
+
+# Language switching
+#
+# langsynth: available languages of the voice synthesis
+# This variable is set by atcleci
+# For example: langsynth(0)=3
+# 3 is the atcleci code for the finnish language
+
+# langsynth(current): current synthesis language,
+# Gives the code of the current synth language.
+# This variable is set by the application
+# For example: langsynth(current)=3
+# means finnish is the current language
+
+# langsynth(top): max available index.
+# For example, if there are three available languages:
+# langsynth(top)=2
+# langlabel: what will be announced
+# e.g. langlabel(0)="Finnish"
+# This variable ? doesn't work
+
+#set langlabel(0) "American"
+
+# langalias converts a code language ("en", "en_GB",...)
+#to its index in the langsynth array.
+# e.g. langalias(fi)=3 could mean "fi_FI" will be used if "fi" is required.
+
+set langsynth(0) "en_US"
+set langsynth(current) 0
+set langsynth(top) 0
+set langlabel(0) "American"
+
+# select the next synth language
+proc set_next_lang {say_it} {
+    global langsynth
+    global langalias
+    global langlabel
+
+    set langsynthkey 0
+    set index 0
+    while { $index <= $langsynth(top) } {
+	if { $langsynth($index) == $langsynth(current) } {
+	    set langsynthkey $index
+	    break
+	}
+	incr index
+    }
+
+    if { $langsynthkey >= $langsynth(top) } {
+	set langsynthkey 0
+    } else {
+	incr langsynthkey
+    }
+
+    set langsynth(current) $langsynth($langsynthkey)
+
+    setLanguage $langsynth(current)
+    if { [info exists say_it]} {
+	tts_say "$langlabel($langsynthkey) "
+    }
+}
+
+# select the previous synth language
+proc set_previous_lang {say_it} {
+    global langsynth
+    global langalias
+    global langlabel
+
+    set langsynthkey 0
+    set index 0
+    while { $index <= $langsynth(top) } {
+	if { $langsynth($index) == $langsynth(current) } {
+	    set langsynthkey $index
+	    break
+	}
+	incr index
+    }
+
+    if { $langsynthkey <= 0 } {
+	set langsynthkey $langsynth(top)
+    } else {
+	incr langsynthkey -1
+    }
+
+    set langsynth(current) $langsynth($langsynthkey)
+    setLanguage $langsynth(current)
+    if { [info exists say_it]} {
+	tts_say "$langlabel($langsynthkey) "
+    }
+}
+
+# select a new synth language
+# set_lang "en"
+proc set_lang {{name "en"} {say_it "nil"}} {
+    global langsynth
+    global langalias
+global langlabel
+     if { ![info exists langalias($name)]} {
+         puts stderr "Language $name not found."
+	return
+     }
+
+     if { $langalias($name) == $langsynth(current) } {
+         puts stderr "$name is already the current language."
+	return
+     }
+
+    set langsynth(current) $langalias($name)
+    setLanguage $langsynth(current)
+
+    set langsynthkey 0
+    set index 0
+    while { $index <= $langsynth(top) } {
+	if { $langsynth($index) == $langsynth(current) } {
+	    set langsynthkey $index
+	    break
+	}
+	incr index
+    }
+
+    if { $say_it == "t"} {
+        tts_say "$langlabel($langsynthkey) "
+    }
+}
+
+# set_preferred_lang "en" "en_GB"
+proc set_preferred_lang {alias lang} {
+    global langsynth
+    global langalias
+
+    if { ![info exists langalias($lang)]} {
+	return
+    }
+    set langalias($alias) $langalias($lang)
+}
+
+#debug
+proc list_lang {} {
+    global langsynth
+    echo [ array get langsynth ]
+}
+
+proc list_langalias {} {
+    global langalias
+    echo [ array get langalias ]
+}
+
+#}}}
+#{{{ speech task
+
+proc trackIndex {index} {
+    global tts
+    set tts(last_index) $index
+}
+
+proc service {} {
+    global tts
+    set talking [speakingP]
+    while {$talking == 1} {
+        set status   [lsearch [select [list  stdin]  {} {} 0.0025] stdin]
+        if { $status >= 0} {
+            set tts(talking?) 0
+            set talking 0
+            break
+        } else {
+            set talking [speakingP]
+        }
+    }
+    return $talking
+}
+
+proc speech_task {} {
+    global queue tts
+    global langsynth
+    set tts(talking?) 1
+    set tts(not_stopped) 1
+    set rate $tts(speech_rate)
+    set length [queue_length]
+    loop index 0 $length {
+        set event   [queue_remove]
+        set event_type [lindex $event 0]
+        switch  -exact -- $event_type {
+            s {
+                set text [clean [lindex $event 1]]
+                synth "$text"
+            }
+            c {
+                set text  [lindex $event 1]
+                synth " $text "
+synth "`vs$rate "
+            }
+            a {
+                set sound [lindex $event 1]
+                catch {
+                    windows_speech_queue_sound $tts(play) $sound
+                } errCode
+            }
+            b {
+                lvarpop event
+                eval native_tone $event
+            }
+        }
+        if {$tts(talking?) == 0} {break;}
+    }
+    set tts(talking?) 0
+    service
+    return ""
+}
+
+#}}}
+#{{{clean
+
+#preprocess element before sending it out:
+
+proc clean {element} {
+    global queue tts
+    if {$tts(caps_beep)} {
+        set element [native_capitalize_text $element]
+    }
+    if {[string match all $tts(punctuations)] } {
+        regsub -all --  {\*} $element { `00 star } element
+        regsub -all --  {-} $element { `00 dash } element
+        regsub -all --  {;} $element { `00 semicolen } element
+        regsub -all --  {\(} $element { `00 left `00 paren } element
+        regsub -all --  {\)} $element { `00 right `00 paren } element
+        regsub -all --  {@} $element { `00 at } element
+        regsub -all --  {'} $element { apostrophe } element
+        regsub -all -- {\$} $element { dollar } element; #
+        regsub -all {[[:punct:]]} $element { \0 } element
+    } else {
+        regsub -all  {\yI'm\y} $element { I `00 am } element
+        regsub -all  {[*&()\"]} $element  {}   element
+        regsub -all { ?\-([[:digit:],]+\.[[:digit:]]+)} $element \
+            { minus `p3 \1 } element
+        regsub -all {([[:alpha:]])([[:punct:]])+([[:alnum:]])} $element \
+            {\1 `p1 \3} element
+        regsub -all {``} $element { `ar } element
+        regsub -all {''} $element { `p3 } element
+        regsub -all {' }  $element { `p1  } element
+        regsub -all --  {--} $element { `p10  } element
+        regsub -all -- {-}  $element {dash    } element
+    }
+    regsub -all {\240} $element " " element
+    regsub -all {\y[A]\y} $element {[ey]} element
+    set abbrev {\y[-_[:upper:]]{3,}\y}
+    if {$tts(split_caps) } {
+        while {[regexp $abbrev  $element match    ]}  {
+            regsub $match $element "[string tolower $match]" element
+        }
+        regsub -all {[[:upper:]]} $element { &} element
+        regsub -all {([^ -_[:upper:]])([[:upper:]][[:alpha:]]* )} $element\
+            {\1 `p1 \2 } element
+    }
+    return $element
+}
+
+#}}}
+#{{{ Initialize and set state.
+
+#do not die if you see a control-c
+signal ignore {sigint}
+
+# Set input encoding to utf-8
+fconfigure stdin -encoding utf-8
+
+#initialize outloud
+tts_initialize
+set tts(speech_rate)  75
+set tts(say_rate)  90
+
+set tts(input) stdin
+if {[info exists server_p]} {
+    set tts(input) sock0
+}
+synth {`v1 Eloquence using native Windows audio.}
+service
+
+#Start the main command loop:
+
+commandloop
+
+
+#}}}
+#{{{ Emacs local variables
+
+### Local variables:
+### mode: tcl
+### voice-lock-mode: t
+### folded-file: t
+### End:
+
+#}}}

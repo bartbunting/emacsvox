@@ -1,0 +1,139 @@
+* Native Windows Software DECtalk speech server
+
+This backend lets Emacsvox running under WSL synthesize with Software
+DECtalk while keeping PCM playback in Windows.  DECtalk writes 11.025 kHz,
+16-bit mono samples into four small memory buffers; the bridge immediately
+queues those samples to the default Windows output device with =waveOut=.
+This avoids the PulseAudio/ALSA and WSLg output path used by the Linux
+=libtts_us.so=.
+
+The standalone =windows-dtk= server contains its own Emacsvox queue,
+punctuation, voice, and command-loop code.  It does not source or modify the
+Unix =dtk-soft= server.  Its native bridge has two persistent Windows
+processes: the x64 =DectalkBridge.exe= is directly launchable from WSL and
+relays the line protocol to =DectalkBridge32.exe=.  The worker is deliberately
+32-bit because DECtalk's callback ABI passes its memory-buffer pointer through
+a 32-bit =LONG=.  Keeping the callback and DLL in an x86 process avoids
+pointer truncation while Windows still performs all playback natively.
+
+The Windows DECtalk and Eloquence backends share their Base64 line protocol,
+x64-to-x86 launcher, and low-latency =waveOut= player under
+=servers/windows-speech-common=.  Their synthesizer APIs and Emacsvox
+front-ends remain separate.
+
+The shared player converts the engine's mono PCM to stereo.  When launched by
+the repository integration, main speech is centered and notification speech
+is positioned to the right by default; both positions are customizable in
+Emacs before restarting the server.
+
+Character echo uses a one-character forced utterance.  This is necessary
+because DECtalk's =TextToSpeechTyping= API loses the new character when it
+immediately follows Emacsvox's normal stop command.  Each character still
+resets any older Windows playback when needed, so rapid typing does not leave
+old letters queued after input stops.  DECtalk's existing inline tone commands
+continue to provide blank-line and capital cues in the same PCM stream as
+speech.
+
+The Tcl front-end also coalesces rapid character input.  If a newer Emacs
+command is already waiting, an obsolete character echo is discarded before
+synthesis.  Normal queued utterances are submitted in command order and use
+Emacsvox's standard stop command for interruption; a following command such
+as an auditory icon does not discard queued speech.
+
+** Build
+
+From the =emacsvox= repository root in WSL:
+
+#+begin_src sh
+make windows-dtk
+#+end_src
+
+Alternatively, use the standalone Makefile:
+
+#+begin_src sh
+cd servers/windows-dectalk
+make
+#+end_src
+
+The build downloads the IA32 runtime from the official
+[[https://github.com/dectalk/dectalk/releases/tag/2023-10-30][DECtalk 2023-10-30 release]], verifies the pinned SHA-256 digest, and extracts
+=DECtalk.dll= and =dtalk_us.dic= beneath the ignored =runtime= directory.
+Third-party binaries are not stored in the =emacsvox= repository.
+The bridge itself is compiled with the .NET Framework C# compiler included
+with Windows; Visual Studio and DECtalk headers are not required.
+
+Windows prevents replacement of a bridge executable while it is running.
+Before rebuilding, select a different speech server with
+=M-x tts-select-server=.  Build =windows-dtk=, then select it again.  Do not
+manually kill an Emacsvox bridge.
+
+To use a different compatible runtime, set =EMACSVOX_DECTALK_DLL= to the
+Windows path of =DECtalk.dll=.  Its =dtalk_us.dic= must be in the same
+directory.
+
+The server uses a sibling =tts-lib.tcl= when run from an Emacsvox source
+tree.  When installed elsewhere, it uses
+=$EMACSVOX_DIR/servers/tts-lib.tcl=.  Normal Emacsvox startup sets
+=EMACSVOX_DIR= automatically.  Set it explicitly when testing an external
+server without first starting Emacsvox.
+
+** Test outside Emacs
+
+Set the Emacsvox source location and run the server from the
+=emacsvox= repository root:
+
+#+begin_src sh
+EMACSVOX_DIR=/path/to/emacsvox ./servers/windows-dtk
+#+end_src
+
+Then enter:
+
+#+begin_example
+tts_sync_state some 1 1 500
+q {This is native Windows Software DECtalk.}
+d
+s
+#+end_example
+
+The first command applies punctuation, capital handling, and the requested
+rate before the normal startup message.  The =s= command should immediately
+interrupt a longer utterance.  Type Control-D to close the server.
+
+** Select it in Emacsvox
+
+With this repository on =load-path=, load the integration after Emacsvox:
+
+#+begin_src emacs-lisp
+(require 'emacsvox-windows-speech)
+#+end_src
+
+Loading the integration does not change the active server.  It registers the
+short =windows-dtk= choice, which can be selected normally:
+
+#+begin_example
+M-x tts-select-server RET windows-dtk RET
+#+end_example
+
+Alternatively, run =M-x emacsvox-windows-speech-select-dectalk=.  Without
+the integration, evaluate the following form, or use the same path as
+=tts-program=:
+
+#+begin_src emacs-lisp
+(tts-select-server
+ "/path/to/emacsvox/servers/windows-dtk")
+#+end_src
+
+The name contains =dtk=, so Emacsvox automatically selects the existing
+DECtalk personality mappings, rate range, and voice definitions.
+
+** Internal bridge protocol
+
+The bridge accepts one ASCII request per line and returns exactly one =OK= or
+=ERR= response.  Text for =SPEAK= and =TYPE= is UTF-8 encoded and Base64
+wrapped.  Supported commands are =PING=, =VERSION=, =SPEAK=, =TYPE=,
+=SPEAKING=, =STOP=, =RESET=, =PAUSE=, =SYNC=, =GET_RATE=, =SET_RATE=, and
+=QUIT=.
+
+The runtime source and build instructions are maintained at
+[[https://github.com/dectalk/dectalk][github.com/dectalk/dectalk]].  Review the runtime's licensing terms before
+redistributing it.

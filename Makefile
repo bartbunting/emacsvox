@@ -45,7 +45,8 @@ TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
 .PHONY: test unit-test compiled-aural-test build-aural-test trace trace-test reference-test advice-audit name-audit tts-audit
-.PHONY: aural-audit aural-reference
+.PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk
+.PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk
 test: unit-test compiled-aural-test build-aural-test trace-test
 
 unit-test:
@@ -123,6 +124,28 @@ espeak:
 
 dtk: 
 	@cd servers/software-dtk && $(MAKE) $(MAKEFLAGS)  || echo "Can't build DTK server!"
+
+windows-speech: windows-audio windows-outloud windows-dtk
+
+windows-audio:
+	$(MAKE) -C servers/windows-audio
+
+windows-outloud:
+	$(MAKE) -C servers/windows-eloquence
+
+windows-dtk:
+	$(MAKE) -C servers/windows-dectalk
+
+clean-windows-speech: clean-windows-audio clean-windows-outloud clean-windows-dtk
+
+clean-windows-audio:
+	$(MAKE) -C servers/windows-audio clean
+
+clean-windows-outloud:
+	$(MAKE) -C servers/windows-eloquence clean
+
+clean-windows-dtk:
+	$(MAKE) -C servers/windows-dectalk clean
 
 ###   Maintenance targets:   dist
 

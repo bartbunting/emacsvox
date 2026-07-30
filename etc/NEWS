@@ -10,6 +10,21 @@ Author: T. V. Raman <tv.raman.tv@gmail.com>
 
 This version requires Emacs-29.1 or later.
 
+** Native Windows Speech Under WSL
+
+Emacsvox now owns its native Windows speech stack.  The bundled
+~windows-outloud~ and ~windows-dtk~ servers provide Eloquence and Software
+DECtalk through native Windows bridges, while ~windows-play~ provides ordered,
+interruptible auditory icons.  Main and notification speech can use separate
+native streams with configurable stereo positions.
+
+Use ~make windows-speech~ to build the complete stack, or the
+~windows-audio~, ~windows-outloud~, and ~windows-dtk~ targets separately.
+Select a server with ~M-x tts-select-server~, configure native auditory icons
+with ~emacsvox-windows-speech-configure-audio~, and inspect dependencies with
+~emacsvox-windows-speech-diagnose~.  Proprietary Eloquence files and the
+separately licensed DECtalk runtime are not stored in the repository.
+
 ** TTS Prefix Map Rename
 
 The generic speech prefix map is now ~emacsvox-tts-submap~.  The former

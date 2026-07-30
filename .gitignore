@@ -32,4 +32,8 @@ servers/software-dtk/tcldtk.so
 aster-math
 /servers/linux-outloud/alsaparams
 /servers/swiftmac
+/servers/windows-audio/bin/
+/servers/windows-dectalk/bin/
+/servers/windows-dectalk/runtime/
+/servers/windows-eloquence/bin/
 sounds/pan-chimes
