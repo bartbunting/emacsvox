@@ -928,6 +928,13 @@ indicator; retain current agent-shell thresholds as a compatibility fallback."
     (when parts
       (concat (mapconcat #'identity parts ". ") "."))))
 
+(defun emacsvox-agent-shell--brief-session-speech (&optional buffer)
+  "Return concise semantic speech for Agent Shell BUFFER."
+  (or
+   (when-let* ((state (emacsvox-agent-shell--header-state buffer)))
+     (emacsvox-agent-shell--format-brief-header state))
+   (emacsvox-agent-shell--session-label buffer)))
+
 (defun emacsvox-agent-shell--unspoken-graphical-header-p ()
   "Return non-nil when the current agent header has no speakable text."
   (and header-line-format
@@ -1957,57 +1964,60 @@ does an interactive call with a prefix argument for buffer information."
   "Announce switching to agent-shell mode.
 Provide an auditory icon if possible."
   (when (ems-interactive-p 'agent-shell)
-    (emacsvox-agent-shell--call-with-aural-presentation
+    (tts-set-punctuations 'all)
+    (or tts-split-caps
+        (tts-toggle-split-caps))
+    (emacsvox-pronounce-refresh-pronunciations)
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--brief-session-speech)
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-session-opened)
-     'navigation
-     (lambda ()
-       (emacsvox-icon 'open-object)
-       (tts-set-punctuations 'all)
-       (or tts-split-caps
-           (tts-toggle-split-caps))
-       (emacsvox-pronounce-refresh-pronunciations)
-       (emacsvox-speak-mode-line)))))
+     'navigation 'open-object)))
 
 (defun emacsvox-agent-shell--agent-shell-start-after (&rest _)
   "Announce agent shell startup."
   (when (ems-interactive-p 'agent-shell-start)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "Agent shell started"
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-session-opened)
-     'state-change 'open-object #'message "Agent shell started")))
+     'state-change 'open-object)))
 
 (defun emacsvox-agent-shell--agent-shell-new-shell-after (&rest _)
   "Announce new agent shell."
   (when (ems-interactive-p 'agent-shell-new-shell)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "New agent shell"
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-session-opened)
-     'state-change 'open-object #'message "New agent shell")))
+     'state-change 'open-object)))
 
 (defun emacsvox-agent-shell--agent-shell-toggle-after (&rest _)
   "Provide auditory feedback when toggling agent shell."
   (when (ems-interactive-p 'agent-shell-toggle)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--brief-session-speech)
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-session-opened)
-     'navigation 'select-object #'emacsvox-speak-mode-line)))
+     'navigation 'select-object)))
 
 (defun emacsvox-agent-shell--agent-shell-other-buffer-after (&rest _)
   "Announce buffer switch."
   (when (ems-interactive-p 'agent-shell-other-buffer)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--brief-session-speech)
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-session-opened)
-     'navigation 'select-object #'emacsvox-speak-mode-line)))
+     'navigation 'select-object)))
 
 (defun emacsvox-agent-shell--agent-shell-interrupt-after (&rest _)
   "Confirm interruption."
   (when (ems-interactive-p 'agent-shell-interrupt)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     "Agent interrupted"
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-session-interrupted)
-     'state-change 'close-object #'message "Agent interrupted")))
+     'state-change 'close-object)))
 
 ;;;  Output Monitoring
 

@@ -1464,9 +1464,72 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                 (emacsvox-speak-mode-line))
               '((stop nil)
                 (icon item)
-                (notify "Codex agent, emacsvox-support, busy."))))))
+                (speak "Codex agent, emacsvox-support, busy."))))))
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-agent-shell-interactive-shell-commands-are-native ()
+  "Interactive shell entry and interruption should use native transactions."
+  (let (captured compatibility-output direct-output)
+    (cl-letf
+        (((symbol-function 'emacsvox-agent-shell--header-state)
+          (lambda (&optional _buffer)
+            '(:agent "Codex agent" :project "emacsvox")))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) captured)))
+         ((symbol-function 'emacsvox-agent-shell--present-feedback)
+          (lambda (&rest _) (push 'compatibility compatibility-output)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest _) (push 'icon direct-output)))
+         ((symbol-function 'emacsvox-speak-mode-line)
+          (lambda (&rest _) (push 'mode-line direct-output)))
+         ((symbol-function 'message)
+          (lambda (&rest _) (push 'message direct-output)))
+         ((symbol-function 'tts-set-punctuations) #'ignore)
+         ((symbol-function 'tts-toggle-split-caps) #'ignore)
+         ((symbol-function 'emacsvox-pronounce-refresh-pronunciations)
+          #'ignore))
+      (dolist
+          (entry
+           '((agent-shell
+              . emacsvox-agent-shell--agent-shell-after)
+             (agent-shell-start
+              . emacsvox-agent-shell--agent-shell-start-after)
+             (agent-shell-new-shell
+              . emacsvox-agent-shell--agent-shell-new-shell-after)
+             (agent-shell-toggle
+              . emacsvox-agent-shell--agent-shell-toggle-after)
+             (agent-shell-other-buffer
+              . emacsvox-agent-shell--agent-shell-other-buffer-after)
+             (agent-shell-interrupt
+              . emacsvox-agent-shell--agent-shell-interrupt-after)))
+        (let ((ems--interactive-fn-name (car entry)))
+          (funcall (cdr entry)))))
+    (should-not compatibility-output)
+    (should-not direct-output)
+    (setq captured (nreverse captured))
+    (should
+     (equal
+      (mapcar #'car captured)
+      '("Codex agent, emacsvox."
+        "Agent shell started"
+        "New agent shell"
+        "Codex agent, emacsvox."
+        "Codex agent, emacsvox."
+        "Agent interrupted")))
+    (should
+     (equal
+      (mapcar
+       (lambda (entry)
+         (plist-get (plist-get (cdr entry) :facts) :events))
+       captured)
+      '((agent-session-opened)
+        (agent-session-opened)
+        (agent-session-opened)
+        (agent-session-opened)
+        (agent-session-opened)
+        (agent-session-interrupted))))))
 
 (ert-deftest emacsvox-agent-shell-delayed-agent-message-speaks-once ()
   "The legacy pending-body delivery helper should remain compatible."
