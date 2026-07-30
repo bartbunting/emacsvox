@@ -913,7 +913,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   (if (not (eq ems--interactive-fn-name target))
       (apply original arguments)
     (let ((origin (point))
-          (result (apply original arguments)))
+          (result
+           (ems-with-messages-silenced
+             (apply original arguments))))
       (when (ems-interactive-p target)
         (if (/= origin (point))
             (emacsvox-magit--submit-text

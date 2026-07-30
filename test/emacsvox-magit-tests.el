@@ -902,6 +902,7 @@
   "An exhausted reference search reports a boundary, not movement."
   (with-temp-buffer
     (let ((ems--interactive-fn-name 'magit-previous-reference)
+          message-state
           calls)
       (cl-letf
           (((symbol-function 'emacsvox-aural-submit)
@@ -915,8 +916,13 @@
                  (plist-get arguments :compatibility-actions)))
                calls))))
         (emacsvox-magit--call-reference-navigation
-         (lambda (&rest _) 'boundary)
+         (lambda (&rest _)
+           (setq
+            message-state
+            (list emacsvox-speak-messages inhibit-message))
+           'boundary)
          'magit-previous-reference nil)
+        (should (equal message-state '(nil t)))
         (should
          (equal
           calls
