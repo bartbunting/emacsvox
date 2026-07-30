@@ -346,24 +346,30 @@
         (emacsvox-aural-compatibility-action-value (car actions))
         'warn-user)))))
 
-(ert-deftest emacsvox-notmuch-empty-text-feedback-keeps-legacy-fallback ()
-  "Empty feedback still preserves the legacy cue and speech call."
-  (let (events)
+(ert-deftest emacsvox-notmuch-empty-text-feedback-is-action-only ()
+  "Empty feedback uses one native action transaction without empty speech."
+  (let (captured)
     (cl-letf
         (((symbol-function 'emacsvox-aural-submit)
           (lambda (&rest _)
-            (ert-fail "Empty text entered native submission")))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (icon) (push (list 'icon icon) events)))
-         ((symbol-function 'tts-speak)
-          (lambda (text) (push (list 'speak text) events))))
+            (ert-fail "Empty text entered content submission")))
+         ((symbol-function 'emacsvox-aural-submit-actions)
+          (lambda (&rest arguments) (setq captured arguments))))
       (emacsvox-notmuch--submit-text-feedback
        '(:role mail-view :mail-view-kind search)
        'navigation 'warn-user ""))
     (should
      (equal
-      (nreverse events)
-      '((icon warn-user) (speak ""))))))
+      (plist-get captured :facts)
+      '(:role mail-view :mail-view-kind search)))
+    (should (eq (plist-get captured :module) 'notmuch))
+    (should (eq (plist-get captured :occasion) 'navigation))
+    (should
+     (equal
+      (mapcar
+       #'emacsvox-aural-compatibility-action-value
+       (plist-get captured :compatibility-actions))
+      '(warn-user)))))
 
 (ert-deftest emacsvox-notmuch-native-boundary-presents-one-transaction ()
   "A search boundary resolves once and obeys the auditory-icon setting."
@@ -1060,21 +1066,16 @@
         (let ((message (list :headers-overlay headers-overlay))
               (extent (cons (point-min) (point-max)))
               (ems--interactive-fn-name 'notmuch-search-show-thread)
-              events)
+              captured)
           (goto-char (point-min))
           (cl-letf (((symbol-function 'notmuch-show-get-message-properties)
                      (lambda () message))
                     ((symbol-function 'notmuch-show-message-extent)
                      (lambda () extent))
-                    ((symbol-function 'emacsvox-icon)
-                     (lambda (icon) (push (list 'icon icon) events)))
-                    ((symbol-function 'emacsvox-notmuch-speak-show-message)
-                     (lambda (&optional _message body-line)
-                       (push
-                        (list
-                         'message
-                         (substring-no-properties body-line))
-                        events))))
+                    ((symbol-function
+                      'emacsvox-notmuch--submit-show-message)
+                     (lambda (&rest arguments)
+                       (setq captured arguments))))
             (emacsvox--advice-notmuch-search-show-thread-after))
           (should
            (save-excursion
@@ -1083,9 +1084,60 @@
              (looking-at-p "Message body")))
           (should
            (equal
-            (nreverse events)
-            '((icon open-object)
-              (message "  Message body")))))))))
+            (substring-no-properties (nth 1 captured))
+            "  Message body"))
+          (should (eq (nth 0 captured) message))
+          (should
+           (equal
+            (plist-get (nth 2 captured) :events)
+            '(message-opened)))
+          (should (eq (nth 3 captured) 'state-change))
+          (should (eq (nth 4 captured) 'open-object)))))))
+
+(ert-deftest emacsvox-notmuch-opening-thread-is-one-native-submission ()
+  "View opening, message status, content, and attachment share one submission."
+  (let ((emacsvox-aural-enabled-feature-fragments
+         '(mail-message-status-cues))
+        (calls 0)
+        captured)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (cl-incf calls)
+            (setq captured (cons content arguments))
+            'submission)))
+      (emacsvox-notmuch--submit-show-message
+       emacsvox-notmuch-test--show-message
+       "Message body"
+       (emacsvox-notmuch-message-facts
+        emacsvox-notmuch-test--show-message 'message-opened)
+       'state-change
+       'open-object))
+    (should (= calls 1))
+    (pcase-let* ((`(,content . ,arguments) captured)
+                 (facts (plist-get arguments :facts))
+                 (actions
+                  (plist-get arguments :compatibility-actions)))
+      (should (string-suffix-p "\nMessage body" content))
+      (should (equal (plist-get facts :events) '(message-opened)))
+      (should
+       (equal
+        (plist-get facts :states)
+        '(unread flagged has-attachments)))
+      (should (eq (plist-get arguments :module) 'notmuch))
+      (should (eq (plist-get arguments :occasion) 'state-change))
+      (should
+       (equal
+        (mapcar
+         (lambda (action)
+           (list
+            (emacsvox-aural-compatibility-action-value action)
+            (emacsvox-aural-compatibility-action-phase action)))
+         actions)
+        '((open-object before)
+          (mail-unread before)
+          (mark-object before)
+          (mail-has-attachment after)))))))
 
 (ert-deftest emacsvox-notmuch-body-position-keeps-attachment-fallback ()
   "An attachment-only message selects its actionable leaf-part button."
@@ -1447,16 +1499,16 @@
     (setq major-mode 'notmuch-show-mode)
     (let ((ems--interactive-fn-name 'notmuch-show-advance)
           (calls 0)
-          events)
+          captured)
       (insert "message body")
       (goto-char (point-min))
       (cl-letf
           (((symbol-function 'emacsvox-notmuch--current-show-message-id)
             (lambda () "same"))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'emacsvox-speak-current-window)
-            (lambda () (push '(window) events))))
+           ((symbol-function 'emacsvox-get-window-contents)
+            (lambda () "visible window"))
+           ((symbol-function 'emacsvox-notmuch--submit-content)
+            (lambda (&rest arguments) (setq captured arguments))))
         (should
          (eq
           (emacsvox--advice-notmuch-show-advance-around
@@ -1467,9 +1519,15 @@
       (should (= calls 1))
       (should
        (equal
-        (nreverse events)
-        '((icon scroll)
-          (window)))))))
+        (car captured)
+        "visible window"))
+      (should (eq (nth 2 captured) 'navigation))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (nth 3 captured))
+        '(scroll))))))
 
 (ert-deftest emacsvox-notmuch-show-advance-announces-thread-end ()
   "Space submits one semantic boundary when it cannot advance."
@@ -1531,14 +1589,14 @@
     (goto-char (point-min))
     (let ((ems--interactive-fn-name 'notmuch-show-advance-and-archive)
           (calls 0)
-          events)
+          captured)
       (cl-letf
           (((symbol-function 'emacsvox-notmuch--current-show-message-id)
             (lambda () "same"))
-           ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events)))
-           ((symbol-function 'emacsvox-speak-current-window)
-            (lambda () (push '(window) events))))
+           ((symbol-function 'emacsvox-get-window-contents)
+            (lambda () "visible window"))
+           ((symbol-function 'emacsvox-notmuch--submit-content)
+            (lambda (&rest arguments) (setq captured arguments))))
         (should
          (eq
           (emacsvox--advice-notmuch-show-advance-and-archive-around
@@ -1547,11 +1605,14 @@
              'scrolled))
           'scrolled)))
       (should (= calls 1))
+      (should (equal (car captured) "visible window"))
+      (should (eq (nth 2 captured) 'navigation))
       (should
        (equal
-        (nreverse events)
-        '((icon scroll)
-          (window)))))))
+        (mapcar
+         #'emacsvox-aural-compatibility-action-value
+         (nth 3 captured))
+        '(scroll))))))
 
 (ert-deftest emacsvox-notmuch-space-confirms-end-of-thread-archive ()
   "Space confirms archiving when invoked at the end of a thread."
@@ -1579,52 +1640,52 @@
 (ert-deftest emacsvox-notmuch-show-opening-message-cues-and-speaks ()
   "Opening a message body plays an opening cue and identifies it."
   (let ((ems--interactive-fn-name 'notmuch-show-toggle-message)
-        events)
+        captured)
     (cl-letf
         (((symbol-function 'notmuch-show-get-message-properties)
           (lambda () '(:message-visible t)))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (icon) (push (list 'icon icon) events)))
-         ((symbol-function 'emacsvox-notmuch-speak-show-message)
-          (lambda (&optional _message) (push '(message) events))))
+         ((symbol-function 'emacsvox-notmuch--submit-show-message)
+          (lambda (&rest arguments) (setq captured arguments))))
       (emacsvox--advice-notmuch-show-toggle-message-after))
+    (should (equal (car captured) '(:message-visible t)))
     (should
      (equal
-      (nreverse events)
-      '((icon open-object)
-        (message))))))
+      (plist-get (nth 2 captured) :events)
+      '(visibility-changed)))
+    (should (eq (nth 3 captured) 'state-change))
+    (should (eq (nth 4 captured) 'open-object))))
 
 (ert-deftest emacsvox-notmuch-show-closing-message-uses-icon-only ()
   "Closing a message body uses a concise nonverbal cue."
   (let ((ems--interactive-fn-name 'notmuch-show-toggle-message)
-        events)
+        captured)
     (cl-letf
         (((symbol-function 'notmuch-show-get-message-properties)
           (lambda () '(:message-visible nil)))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (icon) (push (list 'icon icon) events)))
-         ((symbol-function 'emacsvox-notmuch-speak-show-message)
-          (lambda (&optional _message) (push '(message) events))))
+         ((symbol-function 'emacsvox-notmuch--submit-text-feedback)
+          (lambda (&rest arguments) (setq captured arguments))))
       (emacsvox--advice-notmuch-show-toggle-message-after))
     (should
      (equal
-      events
-      '((icon close-object))))))
+      (plist-get (car captured) :events)
+      '(visibility-changed)))
+    (should (eq (nth 1 captured) 'state-change))
+    (should (eq (nth 2 captured) 'close-object))
+    (should-not (nth 3 captured))))
 
 (ert-deftest emacsvox-notmuch-show-open-all-feedback-is-target-aware ()
   "Opening all message bodies produces one visibility announcement."
   (let ((ems--interactive-fn-name 'notmuch-show-open-or-close-all)
-        events)
+        submissions)
     (cl-letf
         (((symbol-function 'notmuch-show-get-message-properties)
           (lambda () '(:message-visible t)))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (icon) (push icon events)))
-         ((symbol-function 'emacsvox-notmuch-speak-show-message)
-          (lambda (&optional _message) (push 'message events))))
+         ((symbol-function 'emacsvox-notmuch--submit-show-message)
+          (lambda (&rest arguments) (push arguments submissions))))
       (emacsvox--advice-notmuch-show-toggle-message-after)
       (emacsvox--advice-notmuch-show-open-or-close-all-after))
-    (should (equal (nreverse events) '(open-object message)))))
+    (should (= (length submissions) 1))
+    (should (eq (nth 4 (car submissions)) 'open-object))))
 
 (ert-deftest emacsvox-notmuch-describes-tag-changes ()
   "Tag-change summaries distinguish additions and removals."

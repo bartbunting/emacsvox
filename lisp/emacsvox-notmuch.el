@@ -257,29 +257,27 @@ FACTS describe the object or event, and OCCASION describes the interaction."
    :occasion (or occasion 'navigation)
    :arguments arguments))
 
-(defun emacsvox-notmuch--present-feedback
-    (facts occasion icon function &rest arguments)
-  "Under FACTS and OCCASION, present ICON then call FUNCTION with ARGUMENTS."
-  (emacsvox-notmuch--call-with-aural-presentation
-   facts occasion
-   (lambda ()
-     (when icon (emacsvox-icon icon))
-     (apply function arguments))))
+(defun emacsvox-notmuch--submit-content
+    (text facts occasion compatibility-actions)
+  "Submit TEXT and COMPATIBILITY-ACTIONS under FACTS and OCCASION."
+  (let ((arguments
+         (list :facts facts :module 'notmuch :occasion occasion
+               :compatibility-actions compatibility-actions)))
+    (if (and (stringp text) (not (string-empty-p text)))
+        (apply #'emacsvox-aural-submit text arguments)
+      (apply #'emacsvox-aural-submit-actions arguments))))
 
 (defun emacsvox-notmuch--submit-text-feedback
     (facts occasion icon text)
   "Submit explicit TEXT with FACTS, OCCASION, and leading ICON."
-  (if (and (stringp text) (> (length text) 0))
-      (emacsvox-aural-submit
-       text
-       :facts facts
-       :module 'notmuch
-       :occasion occasion
-       :compatibility-actions
-       (when icon
-         (list (emacsvox-aural-compatibility-icon icon))))
-    (emacsvox-notmuch--present-feedback
-     facts occasion icon #'tts-speak text)))
+  (emacsvox-notmuch--submit-content
+   text facts occasion
+   (emacsvox-notmuch--leading-compatibility-actions icon)))
+
+(defun emacsvox-notmuch--leading-compatibility-actions (icon)
+  "Return a leading compatibility action for ICON, when non-nil."
+  (when icon
+    (list (emacsvox-aural-compatibility-icon icon))))
 
 (defun emacsvox-notmuch-view-facts (kind action event)
   "Return semantic facts for Notmuch view KIND, ACTION, and EVENT."
@@ -287,6 +285,25 @@ FACTS describe the object or event, and OCCASION describes the interaction."
    (list :role 'mail-view :mail-view-kind kind)
    (when action (list :mail-action-kind action))
    (when event (list :events (list event)))))
+
+(defun emacsvox-notmuch--view-summary ()
+  "Return a concise voiced summary of the current buffer and mode."
+  (let ((name
+         (propertize
+          (buffer-name) 'personality voice-lighten-medium))
+        (mode
+         (string-trim
+          (downcase (format-mode-line mode-name)))))
+    (if (string-empty-p mode)
+        name
+      (concat
+       name ", "
+       (propertize mode 'personality voice-animate)))))
+
+(defun emacsvox-notmuch--current-line-content ()
+  "Return the current source-aware line without its newline."
+  (emacsvox-aural-source-substring
+   (line-beginning-position) (line-end-position)))
 
 (defun emacsvox-notmuch-thread-facts (action event)
   "Return semantic facts for a Notmuch thread ACTION and EVENT."
@@ -428,6 +445,21 @@ FACTS describe the object or event, and OCCASION describes the interaction."
      emacsvox-notmuch-search-result-fields))
    emacsvox-notmuch-search-field-separator))
 
+(defun emacsvox-notmuch--submit-search-result
+    (result facts occasion &optional icon)
+  "Submit Notmuch search RESULT with FACTS, OCCASION, and leading ICON."
+  (if result
+      (let ((summary (emacsvox-notmuch-format-search-result result)))
+        (emacsvox-notmuch--submit-content
+         summary facts occasion
+         (append
+          (emacsvox-notmuch--leading-compatibility-actions icon)
+          (emacsvox-notmuch--status-compatibility-actions
+           result emacsvox-notmuch-search-status-icons occasion)))
+        summary)
+    (emacsvox-notmuch--submit-text-feedback
+     facts occasion icon nil)))
+
 (defun emacsvox-notmuch--status-compatibility-actions
     (result status-icons occasion &optional include-attachments)
   "Return ordered status adapters present in Notmuch RESULT.
@@ -472,17 +504,11 @@ after-content attachment cue when RESULT contains a named MIME attachment."
 (defun emacsvox-notmuch-speak-search-result (&optional result)
   "Speak Notmuch search RESULT, defaulting to the result at point."
   (interactive)
-  (when-let* ((result (or result (notmuch-search-get-result)))
-              (summary (emacsvox-notmuch-format-search-result result)))
-    (emacsvox-aural-submit
-     summary
-     :facts (emacsvox-notmuch-message-facts result 'focus-entered)
-     :module 'notmuch
-     :occasion 'navigation
-     :compatibility-actions
-     (emacsvox-notmuch--status-compatibility-actions
-      result emacsvox-notmuch-search-status-icons 'navigation))
-    summary))
+  (when-let* ((result (or result (notmuch-search-get-result))))
+    (emacsvox-notmuch--submit-search-result
+     result
+     (emacsvox-notmuch-message-facts result 'focus-entered)
+     'navigation)))
 
 ;;;  Show Messages:
 
@@ -567,6 +593,28 @@ after-content attachment cue when RESULT contains a named MIME attachment."
      emacsvox-notmuch-show-message-fields))
    emacsvox-notmuch-show-field-separator))
 
+(defun emacsvox-notmuch--submit-show-message
+    (message body-line facts occasion &optional icon)
+  "Submit Notmuch MESSAGE and BODY-LINE under FACTS and OCCASION.
+
+ICON is a leading compatibility cue.  Status and attachment cues join the
+same transaction instead of creating a nested message presentation."
+  (if message
+      (let* ((summary (emacsvox-notmuch-format-show-message message))
+             (speech
+              (if (and body-line (not (string-empty-p body-line)))
+                  (concat summary "\n" body-line)
+                summary)))
+        (emacsvox-notmuch--submit-content
+         speech facts occasion
+         (append
+          (emacsvox-notmuch--leading-compatibility-actions icon)
+          (emacsvox-notmuch--status-compatibility-actions
+           message emacsvox-notmuch-show-status-icons occasion t)))
+        speech)
+    (emacsvox-notmuch--submit-text-feedback
+     facts occasion icon nil)))
+
 (defun emacsvox-notmuch-speak-show-message (&optional message body-line)
   "Speak Notmuch MESSAGE, defaulting to the message at point.
 When BODY-LINE is non-nil, speak it after the semantic message summary."
@@ -576,21 +624,11 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
                 message
                 (and
                  (eq major-mode 'notmuch-show-mode)
-                 (notmuch-show-get-message-properties))))
-              (summary (emacsvox-notmuch-format-show-message message)))
-    (let ((speech
-           (if (and body-line (not (string-empty-p body-line)))
-               (concat summary "\n" body-line)
-             summary)))
-      (emacsvox-aural-submit
-       speech
-       :facts (emacsvox-notmuch-message-facts message 'focus-entered)
-       :module 'notmuch
-       :occasion 'navigation
-       :compatibility-actions
-       (emacsvox-notmuch--status-compatibility-actions
-        message emacsvox-notmuch-show-status-icons 'navigation t))
-      speech)))
+                 (notmuch-show-get-message-properties)))))
+    (emacsvox-notmuch--submit-show-message
+     message body-line
+     (emacsvox-notmuch-message-facts message 'focus-entered)
+     'navigation)))
 
 (defun emacsvox-notmuch--landed-body-line ()
   "Return the first visible body line after the current landing position."
@@ -975,7 +1013,7 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
 
 (defun emacsvox-notmuch--open-feedback ()
   "Speak a newly opened Notmuch view."
-  (emacsvox-notmuch--present-feedback
+  (emacsvox-notmuch--submit-text-feedback
    (emacsvox-notmuch-view-facts
     (pcase major-mode
       ('notmuch-hello-mode 'group)
@@ -983,7 +1021,8 @@ When BODY-LINE is non-nil, speak it after the semantic message summary."
       ('notmuch-show-mode 'thread)
       (_ 'other))
     'open 'mail-view-opened)
-   'state-change 'open-object #'emacsvox-speak-mode-line))
+   'state-change 'open-object
+   (emacsvox-notmuch--view-summary)))
 
 (defun emacsvox-notmuch--hello-widget-count (widget)
   "Return the displayed result count preceding saved-search WIDGET."
@@ -1062,9 +1101,10 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox-notmuch--close-feedback ()
   "Speak after closing a Notmuch view."
-  (emacsvox-notmuch--present-feedback
+  (emacsvox-notmuch--submit-text-feedback
    (emacsvox-notmuch-view-facts 'other 'close 'mail-view-closed)
-   'state-change 'close-object #'emacsvox-speak-mode-line))
+   'state-change 'close-object
+   (emacsvox-notmuch--view-summary)))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-bury-or-kill-this-buffer)
@@ -1072,9 +1112,15 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox-notmuch--search-feedback ()
   "Speak a Notmuch search result."
-  (emacsvox-notmuch--present-feedback
-   (emacsvox-notmuch-view-facts 'search 'search 'mail-view-opened)
-   'state-change 'open-object #'emacsvox-speak-line))
+  (let ((facts
+         (emacsvox-notmuch-view-facts
+          'search 'search 'mail-view-opened)))
+    (if-let* ((result (notmuch-search-get-result)))
+        (emacsvox-notmuch--submit-search-result
+         result facts 'state-change 'open-object)
+      (emacsvox-notmuch--submit-text-feedback
+       facts 'state-change 'open-object
+       (emacsvox-notmuch--current-line-content)))))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-search)
@@ -1088,12 +1134,13 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
            (eq major-mode 'notmuch-show-mode)
            (notmuch-show-get-message-properties)))
          (facts
-          (and
+         (and
            message
            (emacsvox-notmuch-message-facts message 'message-opened))))
-    (emacsvox-notmuch--present-feedback
-     facts 'state-change 'open-object
-     #'emacsvox-notmuch--speak-landed-message message)))
+    (emacsvox-notmuch--submit-show-message
+     message
+     (emacsvox-notmuch--landed-body-line)
+     facts 'state-change 'open-object)))
 
 (defun emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
     (original &rest arguments)
@@ -1450,10 +1497,13 @@ the selected message changes; otherwise speak the visible window."
              (emacsvox-notmuch-thread-facts 'select 'focus-entered)
              'navigation 'select-object "End of thread"))
            (t
-            (emacsvox-notmuch--present-feedback
+            (emacsvox-notmuch--submit-content
+             (emacsvox-get-window-contents)
              '(:role message-part :message-part-kind page
                :mail-action-kind scroll :events (focus-entered))
-             'navigation 'scroll #'emacsvox-speak-current-window))))))
+             'navigation
+             (emacsvox-notmuch--leading-compatibility-actions
+              'scroll)))))))
     result))
 
 (defun emacsvox--advice-notmuch-show-advance-around
@@ -1510,11 +1560,11 @@ the selected message changes; otherwise speak the visible window."
            (list
             :mail-action-kind (if visible 'show 'hide)
             :visibility (if visible 'expanded 'folded)))))
-    (emacsvox-notmuch--present-feedback
-     facts 'state-change
-     (if visible 'open-object 'close-object)
-     (if visible #'emacsvox-notmuch-speak-show-message #'ignore)
-     message)))
+    (if visible
+        (emacsvox-notmuch--submit-show-message
+         message nil facts 'state-change 'open-object)
+      (emacsvox-notmuch--submit-text-feedback
+       facts 'state-change 'close-object nil))))
 
 (emacsvox-notmuch--register-after-group
  '(notmuch-show-toggle-message
