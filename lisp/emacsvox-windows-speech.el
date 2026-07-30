@@ -82,6 +82,18 @@ Changes take effect when the speech server is selected or restarted."
   "EMACSVOX_WINDOWS_SPEECH_PAN"
   "Environment variable passed to a native Windows speech bridge.")
 
+(defconst emacsvox-windows-speech--audio-scope-environment-variable
+  "EMACSVOX_WINDOWS_AUDIO_SCOPE"
+  "Environment variable identifying one native auditory-icon queue owner.")
+
+(defvar emacsvox-windows-speech--client-id
+  (format "emacsvox-%d-%x" (emacs-pid) (random most-positive-fixnum))
+  "Stable native audio client identity for this Emacs process.")
+
+(defun emacsvox-windows-speech--audio-scope (stream)
+  "Return the native audio cancellation scope for STREAM."
+  (format "%s:%s" emacsvox-windows-speech--client-id stream))
+
 (defun emacsvox-windows-speech--server-path (name)
   "Return the configured native Windows server path for NAME."
   (when-let* ((directory emacsvox-windows-speech-servers-directory)
@@ -153,6 +165,10 @@ ARGUMENTS are any remaining arguments to `tts-make-process'."
        emacsvox-windows-speech--pan-environment-variable
        (number-to-string
         (emacsvox-windows-speech--clamp-pan pan)))
+      (setenv
+       emacsvox-windows-speech--audio-scope-environment-variable
+       (emacsvox-windows-speech--audio-scope
+        (if (string= name "Notify") "notification" "main")))
       (let ((process (apply original name arguments)))
         (when (processp process)
           (emacsvox-aural-enable-framed-delivery process))
@@ -274,10 +290,16 @@ With prefix argument RESTART, restart the active speech server afterward."
       (setq emacsvox-windows-speech--saved-audio-state
             (list
              :emacsvox-play (getenv "EMACSVOX_PLAY")
+             :audio-scope
+             (getenv
+              emacsvox-windows-speech--audio-scope-environment-variable)
              :emacsvox-play-program emacsvox-play-program
              :play-arguments ems--play-args
              :sox-play sox-play)))
     (setenv "EMACSVOX_PLAY" player)
+    (setenv
+     emacsvox-windows-speech--audio-scope-environment-variable
+     (emacsvox-windows-speech--audio-scope "direct"))
     (set 'emacsvox-play-program nil)
     (set 'ems--play-args nil)
     (set 'sox-play player)
@@ -298,6 +320,9 @@ With prefix argument RESTART, restart the active speech server afterward."
     (user-error "No previous audio configuration has been saved"))
   (let ((state emacsvox-windows-speech--saved-audio-state))
     (setenv "EMACSVOX_PLAY" (plist-get state :emacsvox-play))
+    (setenv
+     emacsvox-windows-speech--audio-scope-environment-variable
+     (plist-get state :audio-scope))
     (set 'emacsvox-play-program
          (plist-get state :emacsvox-play-program))
     (set 'ems--play-args (plist-get state :play-arguments))

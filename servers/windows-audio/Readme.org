@@ -10,9 +10,11 @@ under =$XDG_CACHE_HOME/emacsvox/windows-play=, or =~/.cache= when
 =XDG_CACHE_HOME= is unset.  SoX is used only for the first conversion of each
 file.  Generated SoX effects such as Emacsvox's multi-window cues are also
 rendered once and cached.  Playback uses one ordered Windows =waveOut= queue.
-Stopping speech cancels its active auditory icon and any older pending icons,
-so rapid navigation cannot accumulate stale cues.  Multiple cues belonging to
-the current speech transaction retain their submission order.
+Every request carries an Emacs client and stream scope.  Stopping main speech
+cancels only that stream's active auditory icon and older pending icons; it
+does not erase notification cues or cues from another Emacs session.  Multiple
+cues belonging to the current speech transaction retain their submission
+order.
 
 ** Build
 
@@ -57,6 +59,8 @@ The equivalent manual configuration is:
         "servers/windows-play"
         "/path/to/emacsvox/")))
   (setenv "EMACSVOX_PLAY" player)
+  (setenv "EMACSVOX_WINDOWS_AUDIO_SCOPE"
+          (format "emacs-%d:manual" (emacs-pid)))
   (setq emacsvox-play-program nil
         sox-play player))
 #+end_src
@@ -78,9 +82,11 @@ From the =emacsvox= root, provide the path to an Emacsvox sound:
 #+begin_src sh
 servers/windows-play /path/to/emacsvox/sounds/packs/chimes/button.ogg
 servers/windows-play --cancel
+servers/windows-play --cancel-all
 servers/windows-play --stop
 #+end_src
 
 The first command starts the relay automatically.  The second cancels active
-and pending playback without stopping the relay.  The final command stops both
-the relay and its native Windows child.
+and pending playback in the caller's
+=EMACSVOX_WINDOWS_AUDIO_SCOPE=.  The third is an administrative global cancel.
+The final command stops both the relay and its native Windows child.

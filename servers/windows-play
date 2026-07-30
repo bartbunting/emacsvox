@@ -8,7 +8,7 @@
 # See the file COPYING in this distribution.
 
 set windows_play(port) 47694
-set windows_play(script) [file normalize $argv0]
+set windows_play(script) [file normalize [info script]]
 set windows_play(directory) [file dirname $windows_play(script)]
 set windows_play(program) [file join \
     $windows_play(directory) windows-audio bin WindowsPlay.exe]
@@ -120,6 +120,30 @@ proc windows_play_windows_path {wav} {
     return [string trim [exec wslpath -w $wav]]
 }
 
+proc windows_play_encode {text} {
+    binary encode base64 -maxlen 0 [encoding convertto utf-8 $text]
+}
+
+proc windows_play_scope {} {
+    global env
+    if {[info exists env(EMACSVOX_WINDOWS_AUDIO_SCOPE)] &&
+        $env(EMACSVOX_WINDOWS_AUDIO_SCOPE) ne ""} {
+        return $env(EMACSVOX_WINDOWS_AUDIO_SCOPE)
+    }
+    return legacy
+}
+
+proc windows_play_play_request {path} {
+    set scope [windows_play_encode [windows_play_scope]]
+    set payload [windows_play_encode $path]
+    return "PLAY $scope $payload"
+}
+
+proc windows_play_cancel_request {} {
+    set scope [windows_play_encode [windows_play_scope]]
+    return "CANCEL $scope"
+}
+
 proc windows_play_cache {input} {
     set input [file normalize $input]
     if {![file isfile $input]} {
@@ -183,9 +207,7 @@ proc windows_play_cache_effect {arguments} {
 }
 
 proc windows_play_path {path} {
-    set payload [binary encode base64 -maxlen 0 \
-        [encoding convertto utf-8 $path]]
-    set response [windows_play_request "PLAY $payload"]
+    set response [windows_play_request [windows_play_play_request $path]]
     if {$response ne "OK"} {
         error "Native Windows audio player failed: $response"
     }
@@ -197,6 +219,10 @@ proc windows_play_sound {input} {
 
 proc windows_play_effect {arguments} {
     windows_play_path [windows_play_cache_effect $arguments]
+}
+
+if {[file normalize $argv0] ne [file normalize [info script]]} {
+    return
 }
 
 if {[llength $argv] == 1 && [lindex $argv 0] eq "--daemon"} {
@@ -211,6 +237,12 @@ if {[llength $argv] == 1 && [lindex $argv 0] eq "--daemon"} {
         exit 1
     }
 } elseif {[llength $argv] == 1 && [lindex $argv 0] eq "--cancel"} {
+    set response [windows_play_request [windows_play_cancel_request] 0]
+    if {$response ne "" && $response ne "OK"} {
+        puts stderr $response
+        exit 1
+    }
+} elseif {[llength $argv] == 1 && [lindex $argv 0] eq "--cancel-all"} {
     set response [windows_play_request CANCEL 0]
     if {$response ne "" && $response ne "OK"} {
         puts stderr $response
@@ -230,7 +262,7 @@ if {[llength $argv] == 1 && [lindex $argv 0] eq "--daemon"} {
     }
     if {$input eq ""} {
         puts stderr \
-            "Usage: windows-play SOUND | windows-play -n EFFECT ... | --cancel"
+            "Usage: windows-play SOUND | windows-play -n EFFECT ... | --cancel | --cancel-all"
         exit 2
     }
     if {[catch {windows_play_sound $input} error]} {

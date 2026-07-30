@@ -49,24 +49,44 @@ internal static class WindowsPlay
         }
         if (request == "CANCEL")
         {
-            playbackQueue.Cancel();
+            playbackQueue.CancelAll();
             return "OK";
         }
 
-        const string prefix = "PLAY ";
-        if (!request.StartsWith(prefix, StringComparison.Ordinal))
+        const string cancelPrefix = "CANCEL ";
+        if (request.StartsWith(cancelPrefix, StringComparison.Ordinal))
+        {
+            string cancelScope =
+                Decode(request.Substring(cancelPrefix.Length));
+            playbackQueue.Cancel(cancelScope);
+            return "OK";
+        }
+
+        const string playPrefix = "PLAY ";
+        if (!request.StartsWith(playPrefix, StringComparison.Ordinal))
         {
             return "ERR invalid request";
         }
 
-        string path = Encoding.UTF8.GetString(Convert.FromBase64String(
-            request.Substring(prefix.Length)));
+        string[] fields = request.Substring(playPrefix.Length).Split(
+            new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (fields.Length < 1 || fields.Length > 2)
+        {
+            return "ERR invalid request";
+        }
+        string scope = fields.Length == 2 ? Decode(fields[0]) : "legacy";
+        string path = Decode(fields[fields.Length - 1]);
         if (!File.Exists(path))
         {
             return "ERR file not found";
         }
-        playbackQueue.Enqueue(LoadSound(path));
+        playbackQueue.Enqueue(LoadSound(path), scope);
         return "OK";
+    }
+
+    private static string Decode(string payload)
+    {
+        return Encoding.UTF8.GetString(Convert.FromBase64String(payload));
     }
 
     internal static int Main(string[] args)

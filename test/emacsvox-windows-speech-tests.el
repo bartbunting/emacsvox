@@ -61,6 +61,8 @@
         (ems--play-args "-q")
         (sox-play "/usr/bin/play"))
     (setenv "EMACSVOX_PLAY" nil)
+    (setenv
+     emacsvox-windows-speech--audio-scope-environment-variable nil)
     (cl-letf (((symbol-function 'file-executable-p) (lambda (_file) t)))
       (should
        (equal
@@ -73,11 +75,19 @@
       (should
        (equal
         (getenv "EMACSVOX_PLAY") "/support/servers/windows-play"))
+      (should
+       (string-suffix-p
+        ":direct"
+        (getenv
+         emacsvox-windows-speech--audio-scope-environment-variable)))
       (emacsvox-windows-speech-restore-audio)
       (should (equal emacsvox-play-program "/usr/bin/play"))
       (should (equal ems--play-args "-q"))
       (should (equal sox-play "/usr/bin/play"))
-      (should-not (getenv "EMACSVOX_PLAY")))))
+      (should-not (getenv "EMACSVOX_PLAY"))
+      (should-not
+       (getenv
+        emacsvox-windows-speech--audio-scope-environment-variable)))))
 
 (ert-deftest emacsvox-windows-speech-can-restart-after-audio-change ()
   "A requested restart happens after audio routing is configured."
@@ -198,6 +208,27 @@
         'native-process))
       (should (eq marked 'native-process)))))
 
+(ert-deftest emacsvox-windows-speech-isolates-main-and-notification-cues ()
+  "Native speech streams receive distinct stable auditory-icon scopes."
+  (let ((tts-program "/tmp/servers/windows-outloud")
+        (process-environment (copy-sequence process-environment))
+        scopes)
+    (dolist (name '("Speaker" "Notify"))
+      (push
+       (emacsvox-windows-speech--with-stereo-position
+        (lambda (&rest _arguments)
+          (getenv
+           emacsvox-windows-speech--audio-scope-environment-variable))
+        name)
+       scopes))
+    (should (= (length (delete-dups (copy-sequence scopes))) 2))
+    (should (cl-some (lambda (scope)
+                       (string-suffix-p ":main" scope))
+                     scopes))
+    (should (cl-some (lambda (scope)
+                       (string-suffix-p ":notification" scope))
+                     scopes))))
+
 (ert-deftest emacsvox-windows-speech-exports-pan-across-wsl ()
   "The Tcl launcher should export Emacsvox pan to its Windows child."
   (let ((common
@@ -289,6 +320,38 @@
             (insert-file-contents log)
             (should (equal (buffer-string) "latest 日本\n"))))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-windows-audio-requests-carry-client-scope ()
+  "The Tcl player attaches the same explicit scope to play and cancel."
+  (let* ((player
+          (expand-file-name "windows-play" emacsvox-servers-directory))
+         (scope "client one:notification")
+         (path "C:\\sounds\\unread mail.wav")
+         (encoded-scope
+          (base64-encode-string
+           (encode-coding-string scope 'utf-8 t) t))
+         (encoded-path
+          (base64-encode-string
+           (encode-coding-string path 'utf-8 t) t)))
+    (with-temp-buffer
+      (insert
+       (format
+        (concat
+         "set env(EMACSVOX_WINDOWS_AUDIO_SCOPE) {%s}\n"
+         "source {%s}\n"
+         "puts [windows_play_play_request {%s}]\n"
+         "puts [windows_play_cancel_request]\n")
+        scope player path))
+      (should
+       (zerop
+        (call-process-region
+         (point-min) (point-max) "tclsh" t t nil)))
+      (should
+       (equal
+        (buffer-string)
+        (format
+         "PLAY %s %s\nCANCEL %s\n"
+         encoded-scope encoded-path encoded-scope))))))
 
 (ert-deftest emacsvox-windows-speech-orders-and-cancels-native-cues ()
   "The shared server helper should accept a cue before cancelling its queue."

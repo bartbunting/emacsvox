@@ -267,21 +267,28 @@ internal sealed class WaveOutQueue : IDisposable
     private sealed class Entry
     {
         internal readonly WaveOutClip Clip;
-        internal readonly int Generation;
+        internal readonly string Scope;
+        internal readonly int GlobalGeneration;
+        internal readonly int ScopeGeneration;
 
-        internal Entry(WaveOutClip clip, int generation)
+        internal Entry(WaveOutClip clip, string scope, int globalGeneration,
+            int scopeGeneration)
         {
             Clip = clip;
-            Generation = generation;
+            Scope = scope;
+            GlobalGeneration = globalGeneration;
+            ScopeGeneration = scopeGeneration;
         }
     }
 
     private readonly object queueLock = new object();
     private readonly Queue<Entry> pending = new Queue<Entry>();
+    private readonly Dictionary<string, int> scopeGenerations =
+        new Dictionary<string, int>(StringComparer.Ordinal);
     private readonly AutoResetEvent available = new AutoResetEvent(false);
     private readonly Thread worker;
-    private WaveOutClip current;
-    private int generation;
+    private Entry current;
+    private int globalGeneration;
     private bool disposed;
 
     internal WaveOutQueue()
@@ -292,28 +299,58 @@ internal sealed class WaveOutQueue : IDisposable
         worker.Start();
     }
 
-    internal void Enqueue(byte[] wave)
+    internal void Enqueue(byte[] wave, string scope)
     {
         WaveOutClip clip = new WaveOutClip(wave);
+        scope = NormalizeScope(scope);
         lock (queueLock)
         {
             if (disposed)
             {
                 throw new ObjectDisposedException("WaveOutQueue");
             }
-            pending.Enqueue(new Entry(clip, generation));
+            pending.Enqueue(new Entry(
+                clip, scope, globalGeneration, ScopeGeneration(scope)));
         }
         available.Set();
     }
 
-    internal void Cancel()
+    internal void Cancel(string scope)
+    {
+        WaveOutClip clip;
+        scope = NormalizeScope(scope);
+        lock (queueLock)
+        {
+            scopeGenerations[scope] = ScopeGeneration(scope) + 1;
+            int count = pending.Count;
+            for (int index = 0; index < count; ++index)
+            {
+                Entry entry = pending.Dequeue();
+                if (!String.Equals(entry.Scope, scope,
+                        StringComparison.Ordinal))
+                {
+                    pending.Enqueue(entry);
+                }
+            }
+            clip = current != null &&
+                String.Equals(current.Scope, scope, StringComparison.Ordinal) ?
+                current.Clip : null;
+        }
+        if (clip != null)
+        {
+            clip.Cancel();
+        }
+        available.Set();
+    }
+
+    internal void CancelAll()
     {
         WaveOutClip clip;
         lock (queueLock)
         {
-            generation++;
+            globalGeneration++;
             pending.Clear();
-            clip = current;
+            clip = current == null ? null : current.Clip;
         }
         if (clip != null)
         {
@@ -332,9 +369,9 @@ internal sealed class WaveOutQueue : IDisposable
                 return;
             }
             disposed = true;
-            generation++;
+            globalGeneration++;
             pending.Clear();
-            clip = current;
+            clip = current == null ? null : current.Clip;
         }
         if (clip != null)
         {
@@ -373,20 +410,33 @@ internal sealed class WaveOutQueue : IDisposable
                 {
                     return;
                 }
-                if (entry.Generation != generation)
+                if (entry.GlobalGeneration != globalGeneration ||
+                    entry.ScopeGeneration != ScopeGeneration(entry.Scope))
                 {
                     continue;
                 }
-                current = entry.Clip;
+                current = entry;
             }
             entry.Clip.Play();
             lock (queueLock)
             {
-                if (Object.ReferenceEquals(current, entry.Clip))
+                if (Object.ReferenceEquals(current, entry))
                 {
                     current = null;
                 }
             }
         }
+    }
+
+    private int ScopeGeneration(string scope)
+    {
+        int generation;
+        return scopeGenerations.TryGetValue(scope, out generation) ?
+            generation : 0;
+    }
+
+    private static string NormalizeScope(string scope)
+    {
+        return String.IsNullOrEmpty(scope) ? "legacy" : scope;
     }
 }
