@@ -43,6 +43,10 @@
          unread replied forwarded flagged has-attachments
          refresh-completed refresh-failed code-construct syntax-role
          boundary-entered candidate selected accepted completion-index
+         command-menu command-menu-item command-menu-item-kind
+         command-menu-action command-menu-opened command-menu-closed
+         command-menu-suspended command-menu-resumed
+         command-menu-value-changed
          agent-session agent-response agent-thought agent-tool
          permission-request processing processing-started
          processing-completed processing-failed))

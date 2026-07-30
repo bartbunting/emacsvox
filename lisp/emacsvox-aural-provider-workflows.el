@@ -455,6 +455,66 @@
      :owner core
      :occasions (navigation state-change)
      :phases (before content after))
+    (command-menu
+     :kind role
+     :summary "An interactive menu of commands and configurable values"
+     :owner core
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (command-menu-item
+     :kind role
+     :summary "A command, value, or section within an interactive command menu"
+     :owner core
+     :occasions (navigation state-change inspection)
+     :phases (before content after))
+    (command-menu-item-kind
+     :kind attribute
+     :summary "The structural kind of an interactive command-menu item"
+     :owner core
+     :roles (command-menu-item)
+     :value-type symbol
+     :allowed-values (command value section history other))
+    (command-menu-action
+     :kind attribute
+     :summary "The command-menu operation being presented"
+     :owner core
+     :roles (command-menu command-menu-item)
+     :value-type symbol)
+    (command-menu-opened
+     :kind event
+     :summary "An interactive command menu was displayed"
+     :owner core
+     :roles (command-menu)
+     :occasions (navigation state-change)
+     :phases (before content after))
+    (command-menu-closed
+     :kind event
+     :summary "An interactive command menu was dismissed"
+     :owner core
+     :roles (command-menu)
+     :occasions (state-change)
+     :phases (before content after))
+    (command-menu-suspended
+     :kind event
+     :summary "An interactive command menu was suspended for later resumption"
+     :owner core
+     :roles (command-menu)
+     :occasions (state-change)
+     :phases (before content after))
+    (command-menu-resumed
+     :kind event
+     :summary "A suspended interactive command menu was resumed"
+     :owner core
+     :roles (command-menu)
+     :occasions (state-change)
+     :phases (before content after))
+    (command-menu-value-changed
+     :kind event
+     :summary "A command-menu value or presentation setting changed"
+     :owner core
+     :roles (command-menu command-menu-item)
+     :occasions (state-change)
+     :phases (before content after))
     (command-interaction
      :kind role
      :summary "An interactive shell or command-interpreter session"
