@@ -101,6 +101,13 @@
               markdown-separator)
      :value-type symbol
      :allowed-values (line structural))
+    (markdown-reading-mode-state
+     :kind attribute
+     :summary "Whether markup-stripping speech is enabled in a Markdown buffer"
+     :owner markdown
+     :roles (markdown-content)
+     :value-type symbol
+     :allowed-values (enabled disabled))
     (checked
      :kind state
      :summary "A checkable item is complete"

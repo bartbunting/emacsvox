@@ -53,23 +53,16 @@
       (should (= calls 1)))))
 
 (ert-deftest emacsvox-markdown-delete-calls-original-once ()
-  "Markdown deletion gives feedback and invokes its command once."
+  "A successful Markdown deletion is one native edit transaction."
   (with-temp-buffer
     (insert "x")
     (let ((calls 0)
           (ems--interactive-fn-name 'markdown-outdent-or-delete)
-          (tts-quiet nil)
-          (tts-speaker-process 'speaker)
           events)
       (cl-letf
-          (((symbol-function 'process-live-p)
-            (lambda (process) (eq process 'speaker)))
-           ((symbol-function 'emacsvox-aural-submit-actions)
+          (((symbol-function 'emacsvox-markdown--submit-text)
             (lambda (&rest arguments)
-              (push (cons 'actions arguments) events)))
-           ((symbol-function 'emacsvox-speak-this-char)
-            (lambda (character)
-              (push (list 'character character) events))))
+              (push (cons 'submission arguments) events))))
         (should
          (eq
           'deleted
@@ -77,17 +70,34 @@
            (lambda ()
              (cl-incf calls)
              (push 'original events)
+             (delete-char -1)
              'deleted)))))
       (should (= calls 1))
       (should
        (equal
         (nreverse events)
-        '((actions
-           :facts (:edit-operation deletion)
-           :module markdown
-           :occasion edit)
-          (character 120)
-          original))))))
+        '(original
+          (submission
+           "x"
+           (:role markdown-content :events (object-changed)
+            :edit-operation deletion)
+           edit)))))))
+
+(ert-deftest emacsvox-markdown-delete-no-op-stays-silent ()
+  "A command that changes no text does not announce a deletion."
+  (with-temp-buffer
+    (let ((ems--interactive-fn-name 'markdown-outdent-or-delete)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-markdown--submit-text)
+            (lambda (&rest arguments)
+              (push arguments submissions))))
+        (should
+         (eq
+          'unchanged
+          (emacsvox--advice-markdown-outdent-or-delete-around
+           (lambda () 'unchanged)))))
+      (should-not submissions))))
 
 (ert-deftest emacsvox-markdown-aural-vocabulary-is-registered ()
   "Markdown roles, attributes, states, and events are available at startup."
@@ -96,7 +106,8 @@
        '(markdown-content markdown-list-item markdown-task markdown-link
          markdown-code-block markdown-table-row markdown-footnote
          markdown-separator markdown-language markdown-list-kind
-         markdown-task-state markdown-navigation-kind checked unchecked
+         markdown-task-state markdown-navigation-kind
+         markdown-reading-mode-state checked unchecked
          markdown-heading-navigated markdown-link-navigated
          markdown-structure-navigated markdown-operation-completed
          markdown-completion-completed))
@@ -235,6 +246,62 @@
        (equal (plist-get (car presentation) :states) '(checked)))
       (should (eq (cadr presentation) 'markdown))
       (should (eq (caddr presentation) 'navigation)))))
+
+(ert-deftest emacsvox-markdown-line-feedback-is-one-native-transaction ()
+  "Line cues and content are consolidated without repeating a source icon."
+  (with-temp-buffer
+    (insert (propertize "item" 'auditory-icon 'item))
+    (goto-char (point-min))
+    (let (submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-speak-line-with-speaker)
+            (lambda (speaker &optional _)
+              (emacsvox-icon 'item)
+              (funcall
+               speaker
+               (buffer-substring (point-min) (point-max)))))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox-markdown--present-current-line
+         '(:role markdown-list-item :events (focus-entered)
+           :markdown-navigation-kind line)
+         'navigation))
+      (pcase-let* ((`(,content . ,arguments) submission)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "item"))
+        (should-not (get-text-property 0 'auditory-icon content))
+        (should (= (length actions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value (car actions))
+          'item))
+        (should (eq (plist-get arguments :module) 'markdown))
+        (should (eq (plist-get arguments :occasion) 'navigation))))))
+
+(ert-deftest emacsvox-markdown-reading-mode-toggle-is-native ()
+  "The user-facing reading-mode state is displayed and submitted once."
+  (with-temp-buffer
+    (let (submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-markdown--submit-message)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox-markdown-reading-mode 1))
+      (should emacsvox-markdown-reading-mode)
+      (should
+       (equal
+        submission
+        '("Markdown reading mode enabled"
+          (:role markdown-content :events (state-changed)
+           :markdown-reading-mode-state enabled)
+          state-change))))))
+
+(ert-deftest emacsvox-markdown-face-map-covers-current-interface ()
+  "Every mapped Markdown face exists in the installed package."
+  (dolist (entry emacsvox-markdown--face-voice-map)
+    (should (facep (car entry)))))
 
 (ert-deftest emacsvox-markdown-command-classification-is-semantic ()
   "Navigation, editing, visibility, and completion have distinct events."
