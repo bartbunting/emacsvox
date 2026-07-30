@@ -3720,7 +3720,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should
          (equal
           (cadar presentations)
-          "Thinking. Reasoning\ncompleted Read file. Tool output\nsecond line"))
+          "Reasoning\nTool output\nsecond line"))
         (should
          (eq
           (plist-get
@@ -3729,8 +3729,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            :visibility)
           'expanded))))))
 
-(ert-deftest emacsvox-agent-shell-fold-action-ret-announces-both-states ()
-  "The inline RET action should announce expansion and collapse."
+(ert-deftest emacsvox-agent-shell-fold-action-ret-presents-only-new-content ()
+  "Inline RET should read revealed bodies and cue collapse without old text."
   (emacsvox-agent-shell-test--with-semantic-blocks
     (let* ((activity
             (seq-find
@@ -3748,16 +3748,40 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (call-interactively (key-binding (kbd "RET"))))
           '((icon open-object)
             (speak
-             "Thinking. Reasoning\ncompleted Read file. Tool output\nsecond line")
-            (icon close-object)
-            (speak
-             "Activity group, Thought, read a file, collapsed.")))))
+             "Reasoning\nTool output\nsecond line")
+            (icon close-object)))))
       (should
        (eq
         (plist-get
          (emacsvox-agent-shell--fragment-location-at-position (point))
          :visibility)
         'folded)))))
+
+(ert-deftest emacsvox-agent-shell-thought-toggle-does-not-repeat-heading ()
+  "A Thought toggle should read its body once and stay silent on collapse."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (let ((activity
+           (seq-find
+            (lambda (location)
+              (eq (plist-get location :type) 'activity-group))
+            (emacsvox-agent-shell--block-locations))))
+      (goto-char (plist-get activity :position))
+      (agent-shell-ui--toggle-fragment-at-point))
+    (let ((thought
+           (seq-find
+            (lambda (location)
+              (eq (plist-get location :type) 'thought))
+            (emacsvox-agent-shell--block-locations))))
+      (should (eq (plist-get thought :visibility) 'folded))
+      (goto-char (plist-get thought :position))
+      (should
+       (equal
+        (emacsvox-agent-shell-test--capture-events
+          (call-interactively #'agent-shell-ui-toggle-fragment)
+          (call-interactively #'agent-shell-ui-toggle-fragment))
+        '((icon open-object)
+          (speak "Reasoning")
+          (icon close-object)))))))
 
 (ert-deftest emacsvox-agent-shell-internal-fold-toggle-remains-silent ()
   "Programmatic use of the internal fold primitive should remain silent."

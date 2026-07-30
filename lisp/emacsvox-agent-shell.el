@@ -3206,26 +3206,30 @@ Rendered tables and source blocks win ties with enclosing transcript blocks."
     :visibility (plist-get location :visibility))))
 
 (defun emacsvox-agent-shell--expanded-block-speech (location)
-  "Return useful content speech for expanded block LOCATION."
+  "Return newly revealed body speech for expanded block LOCATION.
+
+Block headings were already spoken when focus reached the toggle.  Exclude
+them here so expansion reads only content that has just become visible."
   (let ((type (plist-get location :type)))
-    (or
-     (when (eq type 'activity-group)
-       (when-let* ((state (plist-get location :state))
-                   (qualified-id (map-elt state :qualified-id))
-                   (members
-                    (seq-filter
-                     (lambda (candidate)
-                       (equal
-                        (map-elt
-                         (plist-get candidate :state) :group-id)
-                        qualified-id))
-                     (emacsvox-agent-shell--fragment-locations))))
-         (string-join
-          (mapcar #'emacsvox-agent-shell--block-location-speech members)
-          "\n")))
-     (and (plist-get location :body)
-          (emacsvox-agent-shell--block-location-speech location))
-     (emacsvox-agent-shell--block-location-speech location))))
+    (if (eq type 'activity-group)
+        (when-let* ((state (plist-get location :state))
+                    (qualified-id (map-elt state :qualified-id))
+                    (members
+                     (seq-filter
+                      (lambda (candidate)
+                        (equal
+                         (map-elt
+                          (plist-get candidate :state) :group-id)
+                         qualified-id))
+                      (emacsvox-agent-shell--fragment-locations)))
+                    (bodies
+                     (delq
+                      nil
+                      (mapcar
+                       (lambda (member) (plist-get member :body))
+                       members))))
+          (string-join bodies "\n"))
+      (plist-get location :body))))
 
 (defun emacsvox-agent-shell--call-toggle-fragment
     (original-function arguments interactive-p)
@@ -3244,13 +3248,21 @@ When INTERACTIVE-P is non-nil, announce a resulting visibility change."
                   (visibility (plist-get after :visibility))
                   ((not (eq visibility
                             (plist-get before :visibility)))))
-        (emacsvox-agent-shell--submit-text-feedback
-         (if (eq visibility 'expanded)
-             (emacsvox-agent-shell--expanded-block-speech after)
-           (emacsvox-agent-shell--block-location-speech after))
-         (emacsvox-agent-shell--block-visibility-facts after)
-         'state-change
-         (if (eq visibility 'folded) 'close-object 'open-object))))
+        (let ((facts
+               (emacsvox-agent-shell--block-visibility-facts after))
+              (icon
+               (if (eq visibility 'folded)
+                   'close-object
+                 'open-object))
+              (content
+               (and
+                (eq visibility 'expanded)
+                (emacsvox-agent-shell--expanded-block-speech after))))
+          (if content
+              (emacsvox-agent-shell--submit-text-feedback
+               content facts 'state-change icon)
+            (emacsvox-agent-shell--submit-icon-feedback
+             facts 'state-change icon)))))
     result))
 
 (defun emacsvox-agent-shell--toggle-fragment-around
