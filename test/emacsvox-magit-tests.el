@@ -1636,74 +1636,92 @@
 (ert-deftest emacsvox-magit-native-blame-presents-one-transaction ()
   "Blame navigation preserves voice, order, and icon policy."
   (dolist (icons-enabled '(t nil))
-    (with-temp-buffer
-      (insert (propertize "deadbeef" 'personality 'voice-lighten))
-      (goto-char (point-min))
-      (let ((emacsvox-aural-active-scheme 'default)
-            (emacsvox-aural-enabled-feature-fragments nil)
-            (emacsvox-aural-user-rules nil)
-            (emacsvox-aural-session-rules nil)
-            (emacsvox-aural-buffer-rules nil)
-            (emacsvox-aural-presentation-history nil)
-            (emacsvox-aural-presentation-history-limit 20)
-            (emacsvox-aural--presentation-sequence 0)
-            (emacsvox-aural--submission-sequence 0)
-            (emacsvox-aural-plan-presented-hook nil)
-            (emacsvox-use-icons icons-enabled)
-            (emacsvox-aural-face-presentation-enabled t)
-            (voice-lock-mode t)
-            events
-            submission)
-        (cl-letf
-            (((symbol-function 'tts-speak)
-              (lambda (prepared)
-                (with-temp-buffer
-                  (insert prepared)
-                  (tts-audio-format (point-min) (point-max)))))
-             ((symbol-function 'emacsvox-queue-resource)
-              (lambda (_resource) (push 'cue events)))
-             ((symbol-function 'tts-voice-reset-code)
-              (lambda () "RESET"))
-             ((symbol-function 'tts--protocol-queue-code) #'ignore)
-             ((symbol-function 'tts--protocol-queue-text)
-              (lambda (text) (push (list 'text text) events)))
-             ((symbol-function 'tts--protocol-silence) #'ignore))
-          (setq
-           submission
-           (emacsvox-magit-blame-speak 'large-movement)))
-        (should (emacsvox-aural-submission-p submission))
-        (should
-         (equal
-          (nreverse events)
-          (if icons-enabled
-              '(cue (text "deadbeef") cue)
-            '((text "deadbeef")))))
-        (should (= (length emacsvox-aural-presentation-history) 1))
-        (should
-         (= (emacsvox-aural-presentation-record-transaction-id
-             (emacsvox-aural-last-presentation))
-            1))
-        (let* ((plans (emacsvox-aural-submission-plans submission))
-               (plan (car plans))
-               (content
-                (emacsvox-aural-concrete-plan-content plan)))
-          (should (= (length plans) 1))
-          (should
-           (equal
-            (mapcar
-             #'emacsvox-aural-concrete-action-cue
-             (emacsvox-aural-concrete-plan-before plan))
-            (and icons-enabled '(left))))
-          (should
-           (equal
-            (mapcar
-             #'emacsvox-aural-concrete-action-cue
-             (emacsvox-aural-concrete-plan-after plan))
-            (and icons-enabled '(large-movement))))
-          (should
-           (eq
-            (emacsvox-aural-concrete-content-voice-request content)
-            'voice-lighten)))))))
+    (dolist (face-presentation '(t nil))
+      (dolist (voice-lock-enabled '(t nil))
+        (with-temp-buffer
+          (insert (propertize "deadbeef" 'face 'magit-blame-hash))
+          (goto-char (point-min))
+          (let ((emacsvox-aural-active-scheme 'default)
+                (emacsvox-aural-enabled-feature-fragments nil)
+                (emacsvox-aural-user-rules nil)
+                (emacsvox-aural-session-rules nil)
+                (emacsvox-aural-buffer-rules nil)
+                (emacsvox-aural-presentation-history nil)
+                (emacsvox-aural-presentation-history-limit 20)
+                (emacsvox-aural--presentation-sequence 0)
+                (emacsvox-aural--submission-sequence 0)
+                (emacsvox-aural-plan-presented-hook nil)
+                (emacsvox-use-icons icons-enabled)
+                (emacsvox-aural-face-presentation-enabled
+                 face-presentation)
+                (voice-lock-mode voice-lock-enabled)
+                events
+                submission)
+            (cl-letf
+                (((symbol-function 'tts-speak)
+                  (lambda (prepared)
+                    (with-temp-buffer
+                      (insert prepared)
+                      (tts-audio-format (point-min) (point-max)))))
+                 ((symbol-function 'emacsvox-queue-resource)
+                  (lambda (_resource) (push 'cue events)))
+                 ((symbol-function 'tts-voice-reset-code)
+                  (lambda () "RESET"))
+                 ((symbol-function 'tts--protocol-queue-code) #'ignore)
+                 ((symbol-function 'tts--protocol-queue-text)
+                  (lambda (text) (push (list 'text text) events)))
+                 ((symbol-function 'tts--protocol-silence) #'ignore))
+              (setq
+               submission
+               (emacsvox-magit-blame-speak 'large-movement)))
+            (should (emacsvox-aural-submission-p submission))
+            (should
+             (equal
+              (nreverse events)
+              (if icons-enabled
+                  '(cue (text "deadbeef") cue)
+                '((text "deadbeef")))))
+            (should (= (length emacsvox-aural-presentation-history) 1))
+            (should
+             (= (emacsvox-aural-presentation-record-transaction-id
+                 (emacsvox-aural-last-presentation))
+                1))
+            (let* ((plans (emacsvox-aural-submission-plans submission))
+                   (plan (car plans))
+                   (context
+                    (emacsvox-aural-concrete-plan-context plan))
+                   (content
+                    (emacsvox-aural-concrete-plan-content plan)))
+              (should (= (length plans) 1))
+              (should
+               (eq
+                (plist-get context :icons-enabled)
+                icons-enabled))
+              (should
+               (eq
+                (plist-get context :face-presentation-enabled)
+                face-presentation))
+              (should
+               (eq
+                (plist-get context :voice-lock-enabled)
+                voice-lock-enabled))
+              (should
+               (equal
+                (mapcar
+                 #'emacsvox-aural-concrete-action-cue
+                 (emacsvox-aural-concrete-plan-before plan))
+                (and icons-enabled '(left))))
+              (should
+               (equal
+                (mapcar
+                 #'emacsvox-aural-concrete-action-cue
+                 (emacsvox-aural-concrete-plan-after plan))
+                (and icons-enabled '(large-movement))))
+              (should
+               (eq
+                (emacsvox-aural-concrete-content-voice-request content)
+                (and voice-lock-enabled
+                     'voice-monotone-extra))))))))))
 
 (ert-deftest emacsvox-magit-view-and-process-facts-express-intent ()
   "Magit view lifecycle and process completion use distinct semantics."
