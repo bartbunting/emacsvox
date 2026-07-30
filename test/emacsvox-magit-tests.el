@@ -33,6 +33,124 @@
         '(git-rebase-backward-line forward-line)))
     (should (fboundp target))))
 
+(ert-deftest emacsvox-magit-repository-list-command-surface-is-covered ()
+  "Every current repository-list command has dedicated feedback."
+  (should (= (length emacsvox-magit--repolist-around-advice) 4))
+  (should (= (length emacsvox-magit--repolist-after-advice) 3))
+  (dolist
+      (entry
+       (append
+        emacsvox-magit--repolist-around-advice
+        emacsvox-magit--repolist-after-advice))
+    (pcase-let ((`(,target ,function) entry))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-magit-repository-tag-reports-object-and-next-focus ()
+  "Marking a repository reports its identity and the newly focused row."
+  (with-temp-buffer
+    (insert "first repository\nsecond repository")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'magit-repolist-mark)
+          calls)
+      (cl-letf
+          (((symbol-function 'tabulated-list-get-id)
+            (lambda () "/src/first/"))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) calls))))
+        (should
+         (eq
+          (emacsvox--advice-magit-repolist-mark-around
+           (lambda ()
+             (forward-line 1)
+             'marked))
+          'marked)))
+      (pcase-let* ((`((,content . ,arguments)) calls)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should
+         (equal
+          content
+          "Marked first. second repository"))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:role vcs-repository :vcs-operation mark
+            :events (entry-marked))))
+        (should (eq (plist-get arguments :occasion) 'state-change))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(mark-object)))))))
+
+(ert-deftest emacsvox-magit-repository-tag-is-silent-programmatically ()
+  "Programmatic repository tagging preserves behavior without feedback."
+  (let ((calls 0)
+        (ems--interactive-fn-name nil))
+    (cl-letf
+        (((symbol-function 'emacsvox-magit--submit-text)
+          (lambda (&rest _) (ert-fail "Programmatic tag produced feedback"))))
+      (should
+       (eq
+        (emacsvox--advice-magit-repolist-unmark-around
+         (lambda () (cl-incf calls) 'unmarked))
+        'unmarked)))
+    (should (= calls 1))))
+
+(ert-deftest emacsvox-magit-repository-fetch-has-aggregate-lifecycle ()
+  "Repository fetch reports one aggregate start and completion."
+  (let ((ems--interactive-fn-name 'magit-repolist-fetch)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-magit--submit-text)
+          (lambda (&rest arguments) (push arguments calls))))
+      (should
+       (eq
+        (emacsvox--advice-magit-repolist-fetch-around
+         (lambda (repositories)
+           (should (equal repositories '("one" "two")))
+           'fetched)
+        '("one" "two"))
+        'fetched)))
+    (setq calls (nreverse calls))
+    (should
+     (equal
+      (mapcar #'car calls)
+      '("Fetching 2 repositories"
+        "Fetched 2 repositories")))
+    (should
+     (equal
+      (nth 1 (car calls))
+      '(:role vcs-view :vcs-view-kind repositories
+        :vcs-operation fetch)))))
+
+(ert-deftest emacsvox-magit-repository-fetch-reports-and-resignals-failure ()
+  "Repository fetch failure is announced and the original error is preserved."
+  (let ((ems--interactive-fn-name 'magit-repolist-fetch)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-magit--submit-text)
+          (lambda (&rest arguments) (push arguments calls))))
+      (should-error
+       (emacsvox--advice-magit-repolist-fetch-around
+        (lambda (_repositories) (error "network unavailable"))
+        'all)
+       :type 'error))
+    (setq calls (nreverse calls))
+    (should
+     (equal
+      (mapcar #'car calls)
+      '("Fetching all displayed repositories"
+        "Failed to fetch all displayed repositories")))
+    (should
+     (equal
+      (nth 1 (nth 1 calls))
+      '(:role vcs-view :vcs-view-kind repositories
+        :vcs-operation fetch :events (operation-failed))))))
+
 (ert-deftest emacsvox-magit-end-to-end-vocabulary-is-registered ()
   "Every top-level Magit presentation category has registered intent."
   (dolist

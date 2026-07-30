@@ -341,7 +341,9 @@ Also include display, before-string, and after-string content at point."
 
 (defun emacsvox-magit-view-facts (kind event)
   "Return semantic facts for a Magit view of KIND undergoing EVENT."
-  (list :role 'vcs-view :vcs-view-kind kind :events (list event)))
+  (append
+   (list :role 'vcs-view :vcs-view-kind kind)
+   (when event (list :events (list event)))))
 
 (defun emacsvox-magit-blame-facts (&optional event)
   "Return semantic facts for the current blame chunk and optional EVENT."
@@ -354,6 +356,12 @@ Also include display, before-string, and after-string content at point."
   (list
    :role 'vcs-process
    :events (list (if failed 'operation-failed 'operation-completed))))
+
+(defun emacsvox-magit-repository-facts (operation &optional event)
+  "Return semantic facts for repository OPERATION and optional EVENT."
+  (append
+   (list :role 'vcs-repository :vcs-operation operation)
+   (when event (list :events (list event)))))
 
 (defun emacsvox-magit--section-value (section property)
   "Return SECTION's PROPERTY without requiring Magit at startup."
@@ -797,10 +805,193 @@ Present optional MOVEMENT-ICON after the chunk."
        magit-files
        magit-log
        magit-process
+       magit-repos
        magit-section
        magit-stash
        magit-status))
   (eval-after-load feature #'emacsvox-magit--install-advice))
+
+;;; Repository list:
+
+(defun emacsvox-magit--repolist-id ()
+  "Return the repository identifier at point, if any."
+  (and
+   (fboundp 'tabulated-list-get-id)
+   (ignore-errors (tabulated-list-get-id))))
+
+(defun emacsvox-magit--repository-label (repository)
+  "Return a concise label for REPOSITORY."
+  (if (and (stringp repository) (> (length repository) 0))
+      (file-name-nondirectory (directory-file-name repository))
+    "repository"))
+
+(defun emacsvox-magit--repolist-result-content (label)
+  "Return LABEL followed by the newly focused repository row."
+  (let ((line (emacsvox-magit--line-content)))
+    (concat
+     (propertize (concat label ". ") 'personality voice-annotate)
+     line)))
+
+(defun emacsvox-magit--call-repolist-tag
+    (original target operation event icon arguments)
+  "Call ORIGINAL with ARGUMENTS and present a repository tag change.
+TARGET, OPERATION, EVENT, and ICON describe the interaction."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let* ((repository (emacsvox-magit--repolist-id))
+           (result (apply original arguments)))
+      (when (ems-interactive-p target)
+        (emacsvox-magit--submit-text
+         (emacsvox-magit--repolist-result-content
+          (format
+           "%s %s"
+           (if (eq operation 'mark) "Marked" "Unmarked")
+           (emacsvox-magit--repository-label repository)))
+         (emacsvox-magit-repository-facts operation event)
+         'state-change icon))
+      result)))
+
+(defun emacsvox--advice-magit-repolist-mark-around
+    (original &rest arguments)
+  "Present an interactively marked repository."
+  (emacsvox-magit--call-repolist-tag
+   original 'magit-repolist-mark 'mark 'entry-marked
+   'mark-object arguments))
+
+(defun emacsvox--advice-magit-repolist-unmark-around
+    (original &rest arguments)
+  "Present an interactively unmarked repository."
+  (emacsvox-magit--call-repolist-tag
+   original 'magit-repolist-unmark 'unmark 'entry-unmarked
+   'unmark-object arguments))
+
+(defun emacsvox--advice-magit-list-repositories-after (&rest _)
+  "Present a repository list opened by the user."
+  (when (ems-interactive-p 'magit-list-repositories)
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--repolist-result-content "Repository list")
+     (emacsvox-magit-view-facts 'repositories 'vcs-view-opened)
+     'navigation 'open-object)))
+
+(defun emacsvox--advice-magit-repolist-status-after (&rest _)
+  "Present a status buffer opened from a repository list."
+  (when (ems-interactive-p 'magit-repolist-status)
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--line-content)
+     (append
+      (emacsvox-magit-view-facts 'status 'vcs-view-opened)
+      '(:vcs-operation open-status))
+     'navigation 'open-object)))
+
+(defun emacsvox--advice-magit-repolist-refresh-after (&rest _)
+  "Present a repository-list refresh requested through `revert-buffer'."
+  (when
+      (and
+       (derived-mode-p 'magit-repolist-mode)
+       (ems-interactive-p 'revert-buffer))
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--repolist-result-content "Refreshed repositories")
+     (emacsvox-magit-repository-facts 'refresh 'refresh-completed)
+     'notification 'task-done)))
+
+(defun emacsvox-magit--repository-set-description (repositories)
+  "Return a concise description of REPOSITORIES."
+  (if (eq repositories 'all)
+      "all displayed repositories"
+    (format
+     "%d %s"
+     (length repositories)
+     (if (= (length repositories) 1) "repository" "repositories"))))
+
+(defun emacsvox--advice-magit-repolist-fetch-around
+    (original repositories &rest arguments)
+  "Present aggregate fetch lifecycle for REPOSITORIES."
+  (if (not (ems-interactive-p 'magit-repolist-fetch))
+      (apply original repositories arguments)
+    (let ((description
+           (emacsvox-magit--repository-set-description repositories))
+          (facts
+           (append
+            (emacsvox-magit-view-facts 'repositories nil)
+            '(:vcs-operation fetch))))
+      (emacsvox-magit--submit-text
+       (format "Fetching %s" description)
+       facts 'notification 'progress)
+      (condition-case error-data
+          (let ((result (apply original repositories arguments)))
+            (emacsvox-magit--submit-text
+             (format "Fetched %s" description)
+             (plist-put
+              (copy-sequence facts)
+              :events '(operation-completed))
+             'notification 'task-done)
+            result)
+        (error
+         (emacsvox-magit--submit-text
+          (format "Failed to fetch %s" description)
+          (plist-put
+           (copy-sequence facts)
+           :events '(operation-failed))
+          'notification 'warn-user)
+         (signal (car error-data) (cdr error-data)))))))
+
+(defun emacsvox--advice-magit-repolist-find-file-other-frame-around
+    (original repositories file &rest arguments)
+  "Present FILE opened across REPOSITORIES."
+  (if
+      (not
+       (ems-interactive-p 'magit-repolist-find-file-other-frame))
+      (apply original repositories file arguments)
+    (let* ((result (apply original repositories file arguments))
+           (description
+            (emacsvox-magit--repository-set-description repositories)))
+      (emacsvox-magit--submit-text
+       (format "Opened %s in %s" file description)
+       (append
+        (emacsvox-magit-view-facts 'repositories 'operation-completed)
+        '(:vcs-operation find-file))
+       'state-change 'open-object)
+      result)))
+
+(defconst emacsvox-magit--repolist-around-advice
+  '((magit-repolist-mark
+     emacsvox--advice-magit-repolist-mark-around)
+    (magit-repolist-unmark
+     emacsvox--advice-magit-repolist-unmark-around)
+    (magit-repolist-fetch
+     emacsvox--advice-magit-repolist-fetch-around)
+    (magit-repolist-find-file-other-frame
+     emacsvox--advice-magit-repolist-find-file-other-frame-around))
+  "Around advice for repository-list interactions.")
+
+(defconst emacsvox-magit--repolist-after-advice
+  '((magit-list-repositories
+     emacsvox--advice-magit-list-repositories-after)
+    (magit-repolist-status
+     emacsvox--advice-magit-repolist-status-after)
+    (magit-repolist-refresh
+     emacsvox--advice-magit-repolist-refresh-after))
+  "After advice for repository-list interactions.")
+
+(defun emacsvox-magit--install-repolist-advice ()
+  "Install current repository-list advice."
+  (dolist (entry emacsvox-magit--repolist-around-advice)
+    (pcase-let ((`(,target ,function) entry))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox))))))
+  (dolist (entry emacsvox-magit--repolist-after-advice)
+    (pcase-let ((`(,target ,function) entry))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :after function '((name . emacsvox)))))))
+
+(with-eval-after-load 'magit-repos
+  (emacsvox-magit--install-repolist-advice))
 
 ;;; Keys:
 (cl-declaim (special magit-file-mode-map))
