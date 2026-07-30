@@ -8,6 +8,8 @@
 (require 'magit)
 (require 'magit-blame)
 (require 'magit-files)
+(require 'magit-repos)
+(require 'git-commit)
 (require 'git-rebase)
 
 (load
@@ -23,26 +25,46 @@
   (should (fboundp 'magit-diff-show-or-scroll-up))
   (should (fboundp 'git-rebase-squash)))
 
-(ert-deftest emacsvox-magit-face-mapping-conflict-is-visible ()
-  "The duplicate Magit face declaration is reported with provenance."
-  (let* ((diagnostic
-          (voice-setup-face-mapping-diagnostic
-           'magit-diff-added-highlight))
-         (declarations (plist-get diagnostic :declarations)))
-    (should (plist-get diagnostic :conflict))
+(ert-deftest emacsvox-magit-face-inventory-is-current ()
+  "Every current Magit and Git editing face should be classified."
+  (let ((configured
+         (sort
+          (append
+           (mapcar #'car emacsvox-magit--face-voice-map)
+           emacsvox-magit--unvoiced-faces
+           nil)
+          (lambda (a b) (string< (symbol-name a) (symbol-name b)))))
+        (current
+         (sort
+          (seq-filter
+           (lambda (face)
+             (let ((name (symbol-name face)))
+               (or
+                (string-prefix-p "magit-" name)
+                (string-prefix-p "git-rebase-" name)
+                (string-prefix-p "git-commit-" name))))
+           (face-list))
+          (lambda (a b) (string< (symbol-name a) (symbol-name b))))))
+    (should (equal configured current))
+    (should (= (length configured) 126))
     (should
-     (equal
-      (mapcar
-       (lambda (record) (plist-get record :voice))
-       declarations)
-      '(voice-animate voice-animate-extra)))
+     (= (length configured)
+        (length (delete-dups (copy-sequence configured)))))))
+
+(ert-deftest emacsvox-magit-face-voices-are-explicit ()
+  "All content-bearing Magit faces resolve to their declared personalities."
+  (dolist (entry emacsvox-magit--face-voice-map)
     (should
-     (equal
-      (delete-dups
-       (mapcar
-        (lambda (record) (plist-get record :origin))
-        declarations))
-      '(emacsvox-magit)))))
+     (eq
+      (voice-setup-get-voice-for-face (car entry))
+      (cadr entry))))
+  (dolist (face emacsvox-magit--unvoiced-faces)
+    (should-not (voice-setup-get-voice-for-face face)))
+  (should-not
+   (plist-get
+    (voice-setup-face-mapping-diagnostic
+     'magit-diff-added-highlight)
+    :conflict)))
 
 (ert-deftest emacsvox-magit-removed-targets-are-not-recreated ()
   "Do not install phantom advice for removed Magit commands."
