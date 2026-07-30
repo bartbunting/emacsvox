@@ -702,8 +702,8 @@ opening a binary file and torturing the speech synthesizer
 with a long string of gibberish.")
 
 (defconst emacsvox-speak-blank-line-regexp
-  "^[[:space:]]+$"
-  "Pattern that matches white space.")
+  "\\`[[:space:]]+\\'"
+  "Pattern that matches a string containing only white space.")
 
 (defun emacsvox-speak--line-condition (line)
   "Return the semantic condition represented by LINE, or nil for speech."
@@ -723,22 +723,25 @@ An empty visual segment counts only when its containing physical line is
 empty or whitespace-only.  This avoids treating the empty segment at a wrap
 boundary as a blank line."
   (save-excursion
-    (beginning-of-visual-line)
-    (let ((start (point)))
-      (end-of-visual-line)
-      (let ((line (buffer-substring-no-properties start (point))))
-        (cond
-         ((string-empty-p line)
-          (let ((physical-line
-                 (buffer-substring-no-properties
-                  (line-beginning-position) (line-end-position))))
-            (cond
-             ((string-empty-p physical-line) 'empty)
-             ((string-match-p
-               emacsvox-speak-blank-line-regexp physical-line)
-              'whitespace-only))))
-         ((string-match-p emacsvox-speak-blank-line-regexp line)
-          'whitespace-only))))))
+    (let* ((inhibit-field-text-motion t)
+           (physical-start (line-beginning-position))
+           (physical-end (line-end-position)))
+      (beginning-of-visual-line)
+      (let ((start (point)))
+        (end-of-visual-line)
+        (let ((line (buffer-substring-no-properties start (point))))
+          (cond
+           ((string-empty-p line)
+            (let ((physical-line
+                   (buffer-substring-no-properties
+                    physical-start physical-end)))
+              (cond
+               ((string-empty-p physical-line) 'empty)
+               ((string-match-p
+                 emacsvox-speak-blank-line-regexp physical-line)
+                'whitespace-only))))
+           ((string-match-p emacsvox-speak-blank-line-regexp line)
+            'whitespace-only)))))))
 
 (defun emacsvox-speak--action-facts (key value)
   "Return current semantic facts extended with KEY and VALUE.

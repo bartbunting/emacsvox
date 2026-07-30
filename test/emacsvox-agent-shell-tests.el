@@ -2343,6 +2343,53 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))
 
+(ert-deftest emacsvox-agent-shell-visual-line-keeps-nonblank-eol-speech ()
+  "A prompt field boundary must not replace Agent Shell speech with a tone."
+  (let ((buffer
+         (generate-new-buffer " *agent-shell-visual-eol-test*"))
+        events)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer buffer)
+          (insert
+           (propertize
+            "Codex> " 'field 'output 'rear-nonsticky '(field))
+           "\n\n")
+          (goto-char (point-min))
+          (goto-char (line-end-position))
+          (setq major-mode 'agent-shell-mode)
+          (visual-line-mode 1)
+          (cl-letf
+              (((symbol-function 'tts-speak)
+                (lambda (_text) (push 'speak events)))
+               ((symbol-function 'tts-stop)
+                (lambda (&optional _all) (push 'stop events)))
+               ((symbol-function
+                 'emacsvox-speak--present-line-condition)
+                (lambda (condition)
+                  (push (list 'line-condition condition) events)))
+               ((symbol-function 'emacsvox-icon) #'ignore))
+            (emacsvox-speak-visual-line))
+          (should (equal (nreverse events) '(speak))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer)))))
+
+(ert-deftest emacsvox-agent-shell-folded-header-is-not-a-blank-line ()
+  "Invisible folded content must not turn its visible header into a blank."
+  (emacsvox-agent-shell-test--with-semantic-blocks
+    (visual-line-mode 1)
+    (let ((location
+           (seq-find
+            (lambda (item)
+              (and
+               (eq (plist-get item :visibility) 'folded)
+               (get-char-property
+                (plist-get item :position) 'invisible)))
+            (emacsvox-agent-shell--block-locations))))
+      (should location)
+      (goto-char (plist-get location :position))
+      (should-not (emacsvox-speak--visual-line-condition)))))
+
 (ert-deftest emacsvox-agent-shell-toggle-filter-restores-after-sensors ()
   "Restore the original filter after agent-shell's cursor sensors run."
   (with-temp-buffer

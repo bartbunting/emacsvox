@@ -915,6 +915,24 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         (((symbol-function 'beginning-of-visual-line)
           (lambda (&rest _) (goto-char (point-max))))
          ((symbol-function 'end-of-visual-line) #'ignore))
+      (should-not (emacsvox-speak--visual-line-condition))))
+  (with-temp-buffer
+    (insert
+     (propertize
+      "Codex> " 'field 'output 'rear-nonsticky '(field))
+     "\n\n")
+    (goto-char (point-min))
+    (goto-char (line-end-position))
+    (visual-line-mode 1)
+    (should-not (emacsvox-speak--visual-line-condition)))
+  (with-temp-buffer
+    (insert "visible\n \ncontent")
+    (goto-char (point-min))
+    (cl-letf
+        (((symbol-function 'beginning-of-visual-line)
+          (lambda (&rest _) (goto-char (point-min))))
+         ((symbol-function 'end-of-visual-line)
+          (lambda (&rest _) (goto-char (point-max)))))
       (should-not (emacsvox-speak--visual-line-condition)))))
 
 (ert-deftest emacsvox-speak-line-submits-first-class-condition-tones ()
