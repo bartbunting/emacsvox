@@ -226,6 +226,9 @@ The left-margin face is purely graphical and contains no spoken content.")
 (defvar-local emacsvox-magit--aural-context-owners nil
   "Active Magit minor views currently owning the buffer's aural context.")
 
+(defvar emacsvox-magit--operation-detail nil
+  "Dynamically bound detail for an operation dispatched through Magit.")
+
 (defun emacsvox-magit-enable-aural-context ()
   "Identify the current Magit buffer to aural presentation schemes."
   (setq-local emacsvox-aural-module 'magit)
@@ -333,7 +336,12 @@ ICON-PHASE defaults to `before'."
    (propertize (buffer-name) 'personality voice-lighten-medium)
    ", "
    (propertize
-    (downcase (format-mode-line mode-name))
+    (downcase
+     (or
+      (and (stringp mode-name) mode-name)
+      (and (listp mode-name) (cl-find-if #'stringp mode-name))
+      (replace-regexp-in-string
+       "-mode\\'" "" (symbol-name major-mode))))
     'personality voice-animate)))
 
 (defun emacsvox-magit--line-content ()
@@ -749,11 +757,44 @@ Present optional MOVEMENT-ICON after the chunk."
 
 (defun emacsvox--advice-magit-blame-after (&rest _)
   "Present entry into Magit Blame."
-  (when (ems-interactive-p 'magit-blame)
+  (emacsvox-magit--present-blame-entry
+   'magit-blame "Entering Magit Blame"))
+
+(defun emacsvox-magit--present-blame-entry (target text)
+  "Present entry into a blame view through TARGET using TEXT."
+  (when (ems-interactive-p target)
     (emacsvox-magit--submit-text
-     "Entering Magit Blame"
-     (emacsvox-magit-view-facts 'blame 'vcs-view-opened)
+     text
+     (append
+      (emacsvox-magit-view-facts 'blame 'vcs-view-opened)
+      (list :vcs-operation target))
      'state-change 'open-object)))
+
+(defconst emacsvox-magit--blame-entry-targets
+  '((magit-blame-addition "Blaming line additions")
+    (magit-blame-removal "Blaming line removals")
+    (magit-blame-reverse "Blaming line history in reverse"))
+  "Additional blame commands and their spoken entry labels.")
+
+(cl-loop
+ for (target label) in emacsvox-magit--blame-entry-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-after" target))
+ do
+ (eval
+  `(defun ,advice-function (&rest _)
+     "Present entry into a specialized Magit Blame view."
+     (emacsvox-magit--present-blame-entry ',target ,label))))
+
+(defun emacsvox--advice-magit-blame-cycle-style-after (&rest _)
+  "Present the blame chunk after changing its display style."
+  (when (ems-interactive-p 'magit-blame-cycle-style)
+    (emacsvox-magit--submit-text
+     (emacsvox-magit--blame-content)
+     '(:role vcs-blame-chunk
+       :vcs-operation magit-blame-cycle-style
+       :events (operation-completed))
+     'inspection 'task-done)))
 
 (defun emacsvox-magit--call-diff-show-or-scroll
     (original target scroll-function arguments)
@@ -872,6 +913,54 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     magit-copy-buffer-revision
     magit-blame-copy-hash)
   "Magit commands that copy repository data to the kill ring.")
+
+(defconst emacsvox-magit--destination-targets
+  '(magit-dired-jump
+    magit-diff-visit-file
+    magit-diff-visit-file-other-window
+    magit-diff-visit-file-other-frame
+    magit-diff-visit-worktree-file
+    magit-diff-visit-worktree-file-other-window
+    magit-diff-visit-worktree-file-other-frame
+    magit-blame-visit-file
+    magit-blame-visit-other-file)
+  "Magit commands that select a non-Magit destination buffer.")
+
+(defun emacsvox-magit--selected-destination-content ()
+  "Return a summary and current line for the selected destination."
+  (with-current-buffer (window-buffer (selected-window))
+    (concat
+     (emacsvox-magit--buffer-summary)
+     ". "
+     (emacsvox-magit--line-content))))
+
+(defun emacsvox-magit--call-destination-command
+    (original target arguments)
+  "Call destination command ORIGINAL for TARGET with ARGUMENTS."
+  (if (not (eq ems--interactive-fn-name target))
+      (apply original arguments)
+    (let ((result (apply original arguments)))
+      ;; A Magit view selected through `magit-display-buffer' consumes the
+      ;; marker and presents its more precise kind at that central boundary.
+      (when (ems-interactive-p target)
+        (emacsvox-magit--submit-text
+         (emacsvox-magit--selected-destination-content)
+         (append
+          (emacsvox-magit-view-facts 'other 'vcs-view-opened)
+          (list :vcs-operation target))
+         'navigation 'open-object))
+      result)))
+
+(cl-loop
+ for target in emacsvox-magit--destination-targets
+ for advice-function =
+ (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(defun ,advice-function (original &rest arguments)
+     "Present the buffer selected by a Magit destination command."
+     (emacsvox-magit--call-destination-command
+      original ',target arguments))))
 
 (defun emacsvox-magit--copied-content ()
   "Return concise feedback for the latest kill-ring entry."
@@ -994,7 +1083,10 @@ ARGUMENTS are passed to ORIGINAL unchanged."
      magit-process-finish)
    emacsvox-magit--describe-targets
    emacsvox-magit--blame-navigation-targets
-   '(magit-blame-quit magit-blame))
+   '(magit-blame-quit
+     magit-blame
+     magit-blame-cycle-style)
+   (mapcar #'car emacsvox-magit--blame-entry-targets))
   "Current Magit targets that receive native after advice.")
 
 (defvar emacsvox-magit--setting-up-buffer nil
@@ -1007,6 +1099,9 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     magit-repolist-status
     magit-blob-visit-file
     magit-blame
+    magit-blame-addition
+    magit-blame-removal
+    magit-blame-reverse
     magit-diff-show-or-scroll-up
     magit-diff-show-or-scroll-down
     magit-diff-while-committing
@@ -1034,7 +1129,10 @@ ARGUMENTS are passed to ORIGINAL unchanged."
          (name
           (replace-regexp-in-string
            "\\`\\(?:magit\\|git\\)-" "" name)))
-    (replace-regexp-in-string "-" " " name)))
+    (setq name (replace-regexp-in-string "-" " " name))
+    (if emacsvox-magit--operation-detail
+        (format "%s, %s" name emacsvox-magit--operation-detail)
+      name)))
 
 (defun emacsvox-magit--operation-facts (operation &optional event)
   "Return current-view facts for OPERATION and optional EVENT."
@@ -1229,6 +1327,14 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
            (fboundp target)
            (not (advice-member-p function target)))
         (advice-add target :around function '((name . emacsvox))))))
+  (dolist (target emacsvox-magit--destination-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox))))))
   (dolist
       (entry
        '((magit-setup-buffer-internal
@@ -1258,6 +1364,7 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
        magit-apply
        magit-blame
        magit-diff
+       magit-dired
        magit-extras
        magit-files
        magit-log
@@ -1449,6 +1556,69 @@ TARGET, OPERATION, EVENT, and ICON describe the interaction."
 
 (with-eval-after-load 'magit-repos
   (emacsvox-magit--install-repolist-advice))
+
+;;; Log selection:
+
+(defun emacsvox-magit--log-selection-revision ()
+  "Return the commit selected in a Magit log-selection buffer."
+  (and
+   (fboundp 'magit-commit-at-point)
+   (ignore-errors (magit-commit-at-point))))
+
+(defun emacsvox--advice-magit-log-select-pick-around
+    (original &rest arguments)
+  "Present a selected log commit unless its callback owns feedback."
+  (if (not (eq ems--interactive-fn-name 'magit-log-select-pick))
+      (apply original arguments)
+    (let* ((revision (emacsvox-magit--log-selection-revision))
+           (emacsvox-magit--operation-detail
+            (and revision (format "commit %s" revision)))
+           (result (apply original arguments)))
+      (when (ems-interactive-p 'magit-log-select-pick)
+        (emacsvox-magit--submit-text
+         (format "Selected commit %s" (or revision "at point"))
+         '(:role vcs-view
+           :vcs-view-kind log
+           :vcs-operation magit-log-select-pick
+           :events (operation-completed))
+         'state-change 'select-object))
+      result)))
+
+(defun emacsvox--advice-magit-log-select-quit-around
+    (original &rest arguments)
+  "Present return from a canceled Magit log selection."
+  (if (not (eq ems--interactive-fn-name 'magit-log-select-quit))
+      (apply original arguments)
+    (let ((result (apply original arguments)))
+      (when (ems-interactive-p 'magit-log-select-quit)
+        (emacsvox-magit--submit-text
+         (emacsvox-magit--selected-destination-content)
+         '(:role vcs-view
+           :vcs-view-kind log
+           :vcs-operation magit-log-select-quit
+           :events (vcs-view-closed))
+         'state-change 'close-object))
+      result)))
+
+(defconst emacsvox-magit--log-select-advice
+  '((magit-log-select-pick
+     emacsvox--advice-magit-log-select-pick-around)
+    (magit-log-select-quit
+     emacsvox--advice-magit-log-select-quit-around))
+  "Around advice for completing or canceling log selection.")
+
+(defun emacsvox-magit--install-log-select-advice ()
+  "Install Magit log-selection advice."
+  (dolist (entry emacsvox-magit--log-select-advice)
+    (pcase-let ((`(,target ,function) entry))
+      (when
+          (and
+           (fboundp target)
+           (not (advice-member-p function target)))
+        (advice-add target :around function '((name . emacsvox)))))))
+
+(with-eval-after-load 'magit-log
+  (emacsvox-magit--install-log-select-advice))
 
 ;;; Commit message editor:
 

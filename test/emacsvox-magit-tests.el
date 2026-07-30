@@ -714,6 +714,14 @@
      (advice-member-p
       (intern (format "emacsvox--advice-%s-around" target))
       target)))
+  (dolist (target emacsvox-magit--destination-targets)
+    (should
+     (advice-member-p
+      (intern (format "emacsvox--advice-%s-around" target))
+      target)))
+  (dolist (entry emacsvox-magit--log-select-advice)
+    (pcase-let ((`(,target ,function) entry))
+      (should (advice-member-p function target))))
   (should
    (advice-member-p
     #'emacsvox--advice-magit-diff-show-or-scroll-up-around
@@ -1049,6 +1057,111 @@
             :visibility expanded
             :vcs-operation magit-describe-section)
            (help))))))))
+
+(ert-deftest emacsvox-magit-destination-command-presents-selected-buffer ()
+  "A file destination outside Magit receives explicit view feedback."
+  (let ((destination (generate-new-buffer "destination.el"))
+        (ems--interactive-fn-name 'magit-diff-visit-file)
+        calls)
+    (unwind-protect
+        (progn
+          (with-current-buffer destination
+            (emacs-lisp-mode)
+            (insert "(message \"destination\")"))
+          (cl-letf
+              (((symbol-function 'selected-window)
+                (lambda () 'fake-window))
+               ((symbol-function 'window-buffer)
+                (lambda (_) destination))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (content &rest arguments)
+                  (push
+                   (list
+                    (substring-no-properties content)
+                    (plist-get arguments :facts)
+                    (mapcar
+                     #'emacsvox-aural-compatibility-action-value
+                     (plist-get arguments :compatibility-actions)))
+                   calls))))
+            (should
+             (eq
+              (emacsvox-magit--call-destination-command
+               (lambda (&rest _) 'visited)
+               'magit-diff-visit-file nil)
+              'visited))
+            (should
+             (equal
+              calls
+              '(("destination.el, elisp. (message \"destination\")"
+                 (:role vcs-view :vcs-view-kind other
+                  :events (vcs-view-opened)
+                  :vcs-operation magit-diff-visit-file)
+                 (open-object)))))))
+      (kill-buffer destination))))
+
+(ert-deftest emacsvox-magit-log-selection-identifies-commit ()
+  "A log selection without a downstream operation reports its commit."
+  (let ((ems--interactive-fn-name 'magit-log-select-pick)
+        calls)
+    (cl-letf
+        (((symbol-function 'magit-commit-at-point)
+          (lambda () "abc123"))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (should
+       (eq
+        (emacsvox--advice-magit-log-select-pick-around
+         (lambda (&rest _) 'selected))
+        'selected))
+      (should
+       (equal
+        calls
+        '(("Selected commit abc123"
+           (:role vcs-view :vcs-view-kind log
+            :vcs-operation magit-log-select-pick
+            :events (operation-completed))
+           (select-object))))))))
+
+(ert-deftest emacsvox-magit-log-selection-enriches-downstream-operation ()
+  "A log-selection callback supplies commit identity to process feedback."
+  (let ((emacsvox-magit--operation-detail "commit abc123"))
+    (should
+     (equal
+      (emacsvox-magit--operation-label 'magit-log-select-pick)
+      "log select pick, commit abc123"))))
+
+(ert-deftest emacsvox-magit-specialized-blame-entry-is-distinct ()
+  "A specialized blame command identifies the chosen blame direction."
+  (let ((ems--interactive-fn-name 'magit-blame-removal)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (emacsvox--advice-magit-blame-removal-after)
+      (should
+       (equal
+        calls
+        '(("Blaming line removals"
+           (:role vcs-view :vcs-view-kind blame
+            :events (vcs-view-opened)
+            :vcs-operation magit-blame-removal)
+           (open-object))))))))
 
 (ert-deftest emacsvox-magit-stage-facts-express-intent ()
   "Staging and section visibility have explicit semantic facts."
