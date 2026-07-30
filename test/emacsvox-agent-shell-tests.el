@@ -3425,6 +3425,31 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       '((icon item)
         (speak "Reject, choice 2 of 3. Press Return or n."))))))
 
+(ert-deftest emacsvox-agent-shell-session-controls-submit-current-state ()
+  "Model and mode controls atomically announce their resulting state."
+  (cl-letf (((symbol-function 'ems-interactive-p)
+             (lambda (&rest _) t))
+            ((symbol-function 'emacsvox-agent-shell--header-state)
+             (lambda (&optional _) '(:model "o4" :mode "Plan"))))
+    (dolist
+        (case
+         '((emacsvox-agent-shell--set-session-model-after "Model o4.")
+           (emacsvox-agent-shell--set-session-mode-after
+            "Session mode Plan.")
+           (emacsvox-agent-shell--cycle-session-mode-after
+            "Session mode Plan.")))
+      (let ((presentations
+             (emacsvox-agent-shell-test--capture-presentations
+               (funcall (car case)))))
+        (should (= 1 (length presentations)))
+        (should (eq (caar presentations) 'submit))
+        (should (equal (nth 1 (car presentations)) (cadr case)))
+        (should
+         (eq (plist-get (nth 2 (car presentations)) :role)
+             'agent-session))
+        (should (eq (nth 3 (car presentations)) 'agent-shell))
+        (should (eq (nth 4 (car presentations)) 'state-change))))))
+
 (ert-deftest emacsvox-agent-shell-block-locations-are-semantic ()
   "Transcript locations should expose semantic types in buffer order."
   (emacsvox-agent-shell-test--with-semantic-blocks

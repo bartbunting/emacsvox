@@ -4323,29 +4323,43 @@ the corresponding buffer boundary."
 
 ;;;  Session Management
 
+(defun emacsvox-agent-shell--session-setting-speech
+    (property label fallback)
+  "Describe session PROPERTY using LABEL, or return FALLBACK."
+  (if-let* ((state (emacsvox-agent-shell--header-state))
+            (value (plist-get state property)))
+      (format "%s %s." label value)
+    fallback))
+
 (defun emacsvox-agent-shell--set-session-model-after (&rest _)
   "Announce model change."
   (when (ems-interactive-p 'agent-shell-set-session-model)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--session-setting-speech
+      :model "Model" "Model changed.")
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed)
-     'state-change 'select-object #'message "Model changed")))
+     'state-change 'select-object)))
 
 (defun emacsvox-agent-shell--set-session-mode-after (&rest _)
   "Announce session mode change."
   (when (ems-interactive-p 'agent-shell-set-session-mode)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--session-setting-speech
+      :mode "Session mode" "Session mode changed.")
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed)
-     'state-change 'select-object #'message "Session mode changed")))
+     'state-change 'select-object)))
 
 (defun emacsvox-agent-shell--cycle-session-mode-after (&rest _)
   "Announce session mode cycle."
   (when (ems-interactive-p 'agent-shell-cycle-session-mode)
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--session-setting-speech
+      :mode "Session mode" "Session mode changed.")
      (emacsvox-agent-shell--presentation-facts
       'agent-session 'agent-setting-changed)
-     'state-change 'select-object #'emacsvox-speak-line)))
+     'state-change 'select-object)))
 
 ;;;  Viewport Mode Integration
 
