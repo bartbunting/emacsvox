@@ -688,10 +688,14 @@ command, while the still-callable browser API remains covered.
 
 The Dictionary conversion covers eight current registrations and relies on
 generic =forward-button= and =backward-button= feedback in place of removed
-Dictionary-specific link commands.  The Transient conversion covers 13 current
-registrations, uses the Emacs 31 =transient-show-menu= and
-=transient-enable-menu-navigation= settings, and corrects a suspend wrapper
-that previously called the original operation multiple times.
+Dictionary-specific link commands.  The Transient conversion covers 25 current
+registrations and all 23 current faces.  Menu display, navigation, value
+changes, and lifecycle feedback now use native =command-menu= semantics while
+preserving source-face metadata.  Redraws no longer repeat object-level
+presentation, package-defined infixes are covered through their shared setter,
+and the suspend wrapper calls the original operation exactly once.  The Emacs
+31 =transient-show-menu= and =transient-enable-menu-navigation= settings remain
+authoritative.
 
 The Archive Mode conversion covers all nine current targets.  The Tar Mode
 conversion covers eight current targets and removes advice for the absent
