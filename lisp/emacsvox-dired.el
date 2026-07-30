@@ -1105,19 +1105,35 @@ On a directory line, run du -s on the directory to speak its size."
 (defun emacsvox-dired-rpm-query-in-dired ()
   "Run rpm -qi on current dired entry."
   (interactive)
-  
   (unless (eq major-mode 'dired-mode)
     (error "This command should be used in dired mode."))
-  (let ((facts (emacsvox-dired-entry-facts 'entry-inspected)))
-    (emacsvox-dired--call-with-aural-presentation
-     facts 'inspection
-     (lambda ()
-       (shell-command
-        (format "rpm -qi ` rpm -qf %s`"
-                (dired-get-filename 'no-location)))
-       (other-window 1)
-       (search-forward "Summary" nil t)
-       (emacsvox-speak-line)))))
+  (let* ((filename (dired-get-filename))
+         (facts
+          (append
+           (emacsvox-dired-entry-facts 'entry-inspected)
+           '(:entry-inspection-kind package)))
+         package)
+    (with-temp-buffer
+      (let ((status (call-process "rpm" nil t nil "-qf" filename)))
+        (unless (and (integerp status) (zerop status))
+          (user-error
+           "Could not find the package owning %s: %s"
+           filename (string-trim (buffer-string)))))
+      (setq package (string-trim (buffer-string))))
+    (let ((buffer (get-buffer-create "*RPM Query*")))
+      (with-current-buffer buffer
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (let ((status (call-process "rpm" nil t nil "-qi" package)))
+            (unless (and (integerp status) (zerop status))
+              (user-error "Could not query package %s" package)))
+          (goto-char (point-min))
+          (search-forward "Summary" nil t)
+          (beginning-of-line)))
+      (pop-to-buffer buffer)
+      (emacsvox-dired--submit-text
+       (emacsvox-dired--line-content)
+       facts 'inspection 'open-object))))
 
 (defconst emacsvox-dired-opener-table
   `(("\\.am$"  emacsvox-amark-file-load)
@@ -1139,18 +1155,20 @@ On a directory line, run du -s on the directory to speak its size."
 current file in DirEd."
   (interactive)
   (let* ((f (dired-get-filename nil t))
-         (ext (file-name-extension f))
+         (ext (and f (file-name-extension f)))
          (case-fold-search t)
          (handler nil))
     (unless f (error "No file here."))
-    (unless ext (error "This entry has no extension."))
-    (setq handler
-          (cl-second
-           (cl-find
-            (format ".%s" ext)
-            emacsvox-dired-opener-table
-            :key #'car                  ; extract pattern from entry 
-            :test #'(lambda (e pattern) (string-match  pattern e)))))
+    (when ext
+      (setq handler
+            (cl-second
+             (cl-find
+              (format ".%s" ext)
+              emacsvox-dired-opener-table
+              :key #'car
+              :test
+              (lambda (extension pattern)
+                (string-match pattern extension))))))
     (cond
      ((and handler (fboundp handler))
       (funcall-interactively handler))
@@ -1185,13 +1203,9 @@ current file in DirEd."
 (defun emacsvox-dired-epub-eww ()
   "Open epub on current line  in EWW"
   (interactive)
-  (let ((filename (dired-get-filename))
-        (facts (emacsvox-dired-entry-facts 'entry-opened)))
-    (emacsvox-dired--call-with-aural-presentation
-     facts 'state-change
-     (lambda ()
-       (emacsvox-epub-eww (shell-quote-argument filename))
-       (emacsvox-icon 'open-object)))))
+  ;; `emacsvox-epub-eww' owns destination feedback and expects a Lisp
+  ;; filename, not shell-quoted text.
+  (emacsvox-epub-eww (dired-get-filename)))
 
 (defun emacsvox-dired-csv-open ()
   "Open CSV file on current dired line."
@@ -1218,12 +1232,15 @@ Optional interactive prefix arg shuffles playlist."
         (dired-next-line 1)
         (setq file  (dired-file-name-at-point)))
       (setq results (nreverse results))
-      (message "%s tracks matching " (length results))
       (with-current-buffer buff
         (cl-loop
          for f in results do
          (insert (format "%s\n" (expand-file-name f))))
         (save-buffer))
+      (emacsvox-dired--submit-message
+       (format "%s tracks matching" (length results))
+       (emacsvox-dired-operation-facts 'playlist 'started)
+       'state-change 'progress)
       (let ((emacsvox-m-player-options
              (if shuffle
                  (append emacsvox-m-player-options (list "-shuffle"))
@@ -1248,18 +1265,37 @@ If on a directory, speak the total duration of all sound files under
     (cond
      ((and (not (file-directory-p f))
            (string-match emacsvox-media-extensions f))
-      (message "%s %s"
-               (shell-command-to-string (format "soxi -d '%s'" f))
-               (file-name-base f)))
+      (let (status output)
+        (with-temp-buffer
+          (setq
+           status (call-process "soxi" nil t nil "-d" f)
+           output (string-trim (buffer-string))))
+        (emacsvox-dired--present-inspection
+         'duration
+         (if (and (integerp status) (zerop status))
+             (format "%s %s" output (file-name-base f))
+           (format "Could not determine duration for %s" f))
+         (if (and (integerp status) (zerop status))
+             'select-object
+           'warn-user)
+         (not (and (integerp status) (zerop status))))))
      ((file-directory-p f)
-      (message
-       "%s in %s"
-       (shell-command-to-string
-        (format
-         "find %s -name '*.mp3' -print0 | xargs -0 soxi -Td 2>/dev/null"
-         (shell-quote-argument f)))
-       (file-name-base f)))
-     (t (message "No mp3  on current line.")))))
+      (let ((output
+             (string-trim
+              (shell-command-to-string
+               (format
+                "find %s -name '*.mp3' -print0 | xargs -0 soxi -Td 2>/dev/null"
+                (shell-quote-argument f))))))
+        (emacsvox-dired--present-inspection
+         'duration
+         (if (string-empty-p output)
+             (format "No MP3 files under %s" (file-name-base f))
+           (format "%s in %s" output (file-name-base f)))
+         (if (string-empty-p output) 'warn-user 'select-object)
+         (string-empty-p output))))
+     (t
+      (emacsvox-dired--present-inspection
+       'duration "No media on current line" 'warn-user t)))))
 
 ;;;  Open Downloads:
 
@@ -1292,7 +1328,13 @@ If on a directory, speak the total duration of all sound files under
       (cl-pushnew (concat "-" arg) f-args :test #'string=)
       (cl-pushnew (read-string "Value:") f-args)
       (setq arg (completing-read "Switch:" ems--find-switches nil t)))
-    (find-dired directory (mapconcat #'identity (nreverse f-args) " "))))
+    (find-dired directory (mapconcat #'identity (nreverse f-args) " "))
+    (emacsvox-dired-initialize)
+    (emacsvox-dired--submit-text
+     (emacsvox-dired--buffer-summary)
+     '(:role filesystem-listing
+       :events (filesystem-listing-opened))
+     'state-change 'open-object)))
 
 (provide 'emacsvox-dired)
 ;;;  emacs local variables

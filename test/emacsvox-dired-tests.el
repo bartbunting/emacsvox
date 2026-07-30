@@ -875,6 +875,122 @@
          :entry-inspection-kind file-type)
         inspection select-object)))))
 
+(ert-deftest emacsvox-dired-smart-open-falls-back-for-extensionless-entry ()
+  "The smart opener delegates directories and extensionless files to Dired."
+  (let (opened)
+    (cl-letf
+        (((symbol-function 'dired-get-filename)
+          (lambda (&rest _) "/tmp/README"))
+         ((symbol-function 'call-interactively)
+          (lambda (command &rest _)
+            (setq opened command))))
+      (emacsvox-dired-open-this-file))
+    (should (eq opened 'dired-find-file))))
+
+(ert-deftest emacsvox-dired-epub-passes-raw-name-without-second-cue ()
+  "The Dired EPUB adapter leaves quoting and feedback to the destination."
+  (let (opened icon)
+    (cl-letf
+        (((symbol-function 'dired-get-filename)
+          (lambda (&rest _) "/tmp/A Book.epub"))
+         ((symbol-function 'emacsvox-epub-eww)
+          (lambda (filename &rest _)
+            (setq opened filename)))
+         ((symbol-function 'emacsvox-icon)
+          (lambda (&rest arguments)
+            (setq icon arguments))))
+      (emacsvox-dired-epub-eww))
+    (should (equal opened "/tmp/A Book.epub"))
+    (should-not icon)))
+
+(ert-deftest emacsvox-dired-duration-does-not-shell-parse-file-name ()
+  "Media duration passes an apostrophe-containing filename as one process arg."
+  (let* ((directory (make-temp-file "emacsvox-dired-duration-" t))
+         (file (expand-file-name "Bart's track.mp3" directory))
+         (sox-soxi t)
+         (emacsvox-media-extensions "\\.mp3\\'")
+         (major-mode 'dired-mode)
+         process-call
+         presentation)
+    (unwind-protect
+        (progn
+          (write-region "audio" nil file nil 'silent)
+          (cl-letf
+              (((symbol-function 'dired-get-filename)
+                (lambda (&rest _) file))
+               ((symbol-function 'call-process)
+                (lambda (program infile destination display &rest arguments)
+                  (setq
+                   process-call
+                   (list program infile destination display arguments))
+                  (insert "00:01:23.45\n")
+                  0))
+               ((symbol-function 'emacsvox-dired--present-inspection)
+                (lambda (&rest arguments)
+                  (setq presentation arguments))))
+            (emacsvox-dired-play-duration))
+          (should
+           (equal
+            process-call
+            `("soxi" nil t nil ("-d" ,file))))
+          (should
+           (equal
+            presentation
+            '(duration "00:01:23.45 Bart's track"
+              select-object nil))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-dired-rpm-query-does-not-use-a-shell ()
+  "RPM inspection passes the selected filename directly to each process."
+  (let (process-calls submission shell-used)
+    (unwind-protect
+        (with-temp-buffer
+          (setq major-mode 'dired-mode)
+          (cl-letf
+              (((symbol-function 'dired-get-filename)
+                (lambda (&rest _) "/tmp/package name's file"))
+               ((symbol-function 'emacsvox-dired-entry-facts)
+                (lambda (&rest _)
+                  '(:role filesystem-entry :entry-kind file
+                    :events (entry-inspected))))
+               ((symbol-function 'call-process)
+                (lambda (program infile destination display &rest arguments)
+                  (push
+                   (list program infile destination display arguments)
+                   process-calls)
+                  (insert
+                   (if (equal arguments
+                              '("-qf" "/tmp/package name's file"))
+                       "example-package\n"
+                     "Name: example-package\nSummary: Example package\n"))
+                  0))
+               ((symbol-function 'shell-command)
+                (lambda (&rest _)
+                  (setq shell-used t)))
+               ((symbol-function 'pop-to-buffer)
+                (lambda (buffer &rest _)
+                  (set-buffer buffer)))
+               ((symbol-function 'emacsvox-dired--submit-text)
+                (lambda (&rest arguments)
+                  (setq submission arguments))))
+            (emacsvox-dired-rpm-query-in-dired)))
+      (when-let* ((buffer (get-buffer "*RPM Query*")))
+        (kill-buffer buffer)))
+    (should-not shell-used)
+    (should
+     (equal
+      (nreverse process-calls)
+      '(("rpm" nil t nil ("-qf" "/tmp/package name's file"))
+        ("rpm" nil t nil ("-qi" "example-package")))))
+    (should
+     (equal
+      submission
+      '("Summary: Example package"
+        (:role filesystem-entry :entry-kind file
+         :events (entry-inspected)
+         :entry-inspection-kind package)
+        inspection open-object)))))
+
 (ert-deftest emacsvox-dired-missing-inspection-is-semantic-failure ()
   "Inspecting a non-entry row submits the failure and warning cue."
   (let (presentation)
