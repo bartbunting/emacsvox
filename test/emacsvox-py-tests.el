@@ -1,6 +1,7 @@
 ;;; emacsvox-py-tests.el --- Python Mode advice tests -*- lexical-binding: t; -*-
 
 ;;; Code:
+(require 'cl-lib)
 (require 'ert)
 (require 'package)
 (package-initialize)
@@ -146,6 +147,110 @@
          'process "output")))
       (should (= calls 1))
       (should (equal received '(process "output"))))))
+
+(ert-deftest emacsvox-py-navigation-is-one-semantic-line-presentation ()
+  "Python Mode navigation submits the inferred source construct once."
+  (let ((ems--interactive-fn-name 'py-forward-statement)
+        submissions)
+    (cl-letf
+        (((symbol-function 'emacsvox-py--present-current-line)
+          (lambda (&rest arguments)
+            (push arguments submissions))))
+      (emacsvox--advice-py-forward-block-after)
+      (emacsvox--advice-py-forward-statement-after))
+    (should
+     (equal
+      submissions
+      '(((:role code-construct
+          :events (boundary-entered focus-entered)
+          :syntax-role statement)
+         navigation))))))
+
+(ert-deftest emacsvox-py-mark-feedback-is-native-and-not-duplicated ()
+  "A generated mark command has one advice entry and one selection submission."
+  (should
+   (= 1
+      (cl-count
+       'py-mark-def-or-class emacsvox-py--advice
+       :key #'car)))
+  (with-temp-buffer
+    (insert "def one():\n    pass\n")
+    (goto-char (point-max))
+    (set-mark (point-min))
+    (activate-mark)
+    (let ((ems--interactive-fn-name 'py-mark-def-or-class)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-py--submit-message)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox--advice-py-mark-def-or-class-after))
+      (should
+       (equal
+        submission
+        '("Marked block containing 2 lines"
+          (:role code-construct :events (code-selection-created)
+           :syntax-role construct)
+          state-change))))))
+
+(ert-deftest emacsvox-py-visible-process-output-is-native ()
+  "Visible Python Mode process output is submitted from the process buffer."
+  (let* ((buffer (generate-new-buffer " *emacsvox-py-output*"))
+         (process
+          (make-pipe-process
+           :name "emacsvox-py-output"
+           :buffer buffer
+           :noquery t))
+         (emacsvox-comint-autospeak t)
+         submission)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'get-buffer-window)
+              (lambda (&rest _) (selected-window)))
+             ((symbol-function 'emacsvox-py--submit-text)
+              (lambda (&rest arguments)
+                (setq submission arguments))))
+          (should
+           (eq
+            'filtered
+            (emacsvox--advice-py-process-filter-around
+             (lambda (_process output)
+               (with-current-buffer buffer
+                 (goto-char (point-max))
+                 (insert output))
+               'filtered)
+             process "result\n"))))
+      (when (process-live-p process)
+        (delete-process process))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer)))
+    (should
+     (equal
+      submission
+      '("result\n"
+        (:role command-output
+         :events (command-output-received)
+         :command-interaction-kind repl)
+        continuous)))))
+
+(ert-deftest emacsvox-py-help-content-is-native ()
+  "Python Mode help submits displayed documentation and its cue together."
+  (with-temp-buffer
+    (insert "Python documentation")
+    (let ((ems--interactive-fn-name 'py-help-at-point)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-py--submit-text)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox--advice-py-help-at-point-after))
+      (should
+       (equal
+        submission
+        '("Python documentation"
+          (:role code-construct :events (focus-entered)
+           :syntax-role documentation)
+          navigation (help)))))))
 
 (provide 'emacsvox-py-tests)
 ;;; emacsvox-py-tests.el ends here

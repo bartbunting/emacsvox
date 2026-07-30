@@ -243,7 +243,8 @@ package-specific feedback around speech."
      :events '(boundary-entered focus-entered)
      :syntax-role
      (cond
-      ((string-match-p "class\\|def\\|function" name) 'function)
+      ((string-match-p "class" name) 'class)
+      ((string-match-p "def\\|function" name) 'function)
       ((string-match-p "block\\|clause" name) 'block)
       ((string-match-p "statement" name) 'statement)
       ((string-match-p "expression\\|paren\\|list" name) 'expression)
@@ -554,8 +555,9 @@ When FORWARD is non-nil, capture the character at point instead of before it."
   `(defun ,advice-function (&rest _)
      "Speak current statement after moving"
      (when (ems-interactive-p ',target)
-       (emacsvox-speak-line)
-       (emacsvox-icon 'paragraph))))
+       (emacsvox-py--present-current-line
+        (emacsvox-py--navigation-facts ',target)
+        'navigation))))
  (push (list target :after advice-function) emacsvox-py--advice))
 
 (cl-loop
@@ -577,11 +579,14 @@ When FORWARD is non-nil, capture the character at point instead of before it."
   `(defun ,advice-function (&rest _)
      "Speak number of lines marked"
      (when (ems-interactive-p ',target)
-       (tts-speak
+       (emacsvox-py--submit-message
         (format
          "Marked block containing %s lines"
-         (count-lines (region-beginning) (region-end))))
-       (emacsvox-icon 'mark-object))))
+         (emacsvox-py--region-line-count))
+        '(:role code-construct
+          :events (code-selection-created)
+          :syntax-role construct)
+        'state-change))))
  (push (list target :after advice-function) emacsvox-py--advice))
 
 (cl-loop
@@ -596,34 +601,52 @@ When FORWARD is non-nil, capture the character at point instead of before it."
  do
  (eval
   `(defun ,advice-function (&rest _)
-     "speak."
+     "Present the narrowed Python Mode region."
      (when (ems-interactive-p ',target)
-       (message "Narrowed  %s lines"
-                (count-lines (point-min) (point-max))))))
+       (emacsvox-py--submit-message
+        (format
+         "Narrowed %s lines"
+         (count-lines (point-min) (point-max)))
+        (emacsvox-py--operation-facts ',target 'completed)
+        'state-change))))
  (push (list target :after advice-function) emacsvox-py--advice))
 
-(defun emacsvox--advice-py-mark-def-or-class-after (&rest _)
-  "Speak number of lines marked"
-  (when (ems-interactive-p 'py-mark-def-or-class)
-    (tts-speak
-     (format "Marked block containing %s lines"
-             (count-lines (region-beginning) (region-end))))
-    (emacsvox-icon 'mark-object)))
+(defun emacsvox-py--word-tail ()
+  "Return the identifier text from point to its syntactic end."
+  (let ((start (point)))
+    (save-excursion
+      (skip-syntax-forward "w_")
+      (when (> (point) start)
+        (emacsvox-aural-source-substring start (point))))))
+
+(defun emacsvox-py--present-word-tail ()
+  "Present the current identifier tail as navigation."
+  (if-let* ((content (emacsvox-py--word-tail)))
+      (emacsvox-py--submit-text
+       content
+       '(:role code-construct
+         :events (focus-entered)
+         :syntax-role identifier)
+       'navigation)
+    (emacsvox-py--submit-actions
+     '(:role code-construct
+       :events (focus-entered)
+       :syntax-role identifier)
+     'navigation)))
 
 (defun emacsvox--advice-py-forward-into-nomenclature-after (&rest _)
   "Speak rest of current word"
   (when (ems-interactive-p 'py-forward-into-nomenclature)
-    (emacsvox-speak-word 1)))
+    (emacsvox-py--present-word-tail)))
 
 (defun emacsvox--advice-py-backward-into-nomenclature-after (&rest _)
   "Speak rest of current word"
   (when (ems-interactive-p 'py-backward-into-nomenclature)
-    (emacsvox-speak-word 1)))
+    (emacsvox-py--present-word-tail)))
 
 (dolist
     (entry
-     '((py-mark-def-or-class emacsvox--advice-py-mark-def-or-class-after)
-       (py-forward-into-nomenclature
+     '((py-forward-into-nomenclature
         emacsvox--advice-py-forward-into-nomenclature-after)
        (py-backward-into-nomenclature
         emacsvox--advice-py-backward-into-nomenclature-after)))
@@ -633,16 +656,32 @@ When FORWARD is non-nil, capture the character at point instead of before it."
 
 (defun emacsvox--advice-py-process-filter-around
     (orig-fun process output)
-  "Make comint in Python speak its output. "
-  (let ((prior (point))
-        (tts-stop-immediately nil)
-        (result (funcall orig-fun process output)))
-      (when
-          (and emacsvox-comint-autospeak
-               (window-live-p
-                (get-buffer-window (process-buffer process))))
-        (condition-case nil (emacsvox-speak-region prior (point))
-          (error (emacsvox-icon 'scroll) (tts-stop 'all))))
+  "Submit newly inserted visible Python process output for autospeech."
+  (let* ((buffer
+          (and
+           emacsvox-comint-autospeak
+           (processp process)
+           (process-buffer process)))
+         (prior
+          (and
+           (buffer-live-p buffer)
+           (with-current-buffer buffer (point-max))))
+         (tts-stop-immediately nil)
+         (result (funcall orig-fun process output)))
+    (when
+        (and
+         emacsvox-comint-autospeak
+         (buffer-live-p buffer)
+         (window-live-p (get-buffer-window buffer)))
+      (with-current-buffer buffer
+        (let ((end (point-max)))
+          (when (and prior (< prior end))
+            (emacsvox-py--submit-text
+             (emacsvox-aural-source-substring prior end)
+             '(:role command-output
+               :events (command-output-received)
+               :command-interaction-kind repl)
+             'continuous)))))
     result))
 
 (push '(py-process-filter :around emacsvox--advice-py-process-filter-around)
@@ -668,14 +707,40 @@ When FORWARD is non-nil, capture the character at point instead of before it."
 ;;;  pydoc advice:
 
 (defun emacsvox--advice-py-pydoc-after (&rest _)
-  "speak."
+  "Present documentation opened by an interactive Pydoc command."
   (when (ems-interactive-p 'pydoc)
-    (emacsvox-icon 'open-object) (emacsvox-speak-rest-of-buffer)))
+    (let ((content
+           (emacsvox-aural-source-substring (point) (point-max))))
+      (if (> (length content) 0)
+          (emacsvox-py--submit-text
+           content
+           '(:role code-construct
+             :events (focus-entered)
+             :syntax-role documentation)
+           'navigation '(open-object))
+        (emacsvox-py--submit-actions
+         '(:role code-construct
+           :events (focus-entered)
+           :syntax-role documentation)
+         'navigation '(open-object))))))
 
 (defun emacsvox--advice-py-help-at-point-after (&rest _)
-  "speak."
+  "Present the buffer displayed by interactive Python Mode help."
   (when (ems-interactive-p 'py-help-at-point)
-    (emacsvox-icon 'help) (tts-stop 'all) (emacsvox-speak-buffer)))
+    (let ((content
+           (emacsvox-aural-source-substring (point-min) (point-max))))
+      (if (> (length content) 0)
+          (emacsvox-py--submit-text
+           content
+           '(:role code-construct
+             :events (focus-entered)
+             :syntax-role documentation)
+           'navigation '(help))
+        (emacsvox-py--submit-actions
+         '(:role code-construct
+           :events (focus-entered)
+           :syntax-role documentation)
+         'navigation '(help))))))
 
 (push '(pydoc :after emacsvox--advice-py-pydoc-after)
       emacsvox-py--advice)
