@@ -1479,8 +1479,7 @@ arg just opens the file"
    (org-toggle-radio-button radio-button-toggled button)
    (org-toggle-fixed-width display-changed button)
    (org-toggle-pretty-entities display-changed button)
-   (org-toggle-timestamp-overlays display-changed button)
-   (org-ctrl-c-ctrl-c context-action button))
+   (org-toggle-timestamp-overlays display-changed button))
  for function = (intern (format "emacsvox--advice-%s-around" target))
  do
  (eval
@@ -1495,6 +1494,29 @@ arg just opens the file"
              (emacsvox-org--present-document-state ',action ',icon)))))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
+
+(defun emacsvox--advice-org-ctrl-c-ctrl-c-around
+    (original &rest arguments)
+  "Own interactive Org context-action feedback, including field-editor exit."
+  (if (not (eq ems--interactive-fn-name 'org-ctrl-c-ctrl-c))
+      (apply original arguments)
+    (let ((field-editor-p
+           (eq
+            (and (boundp 'org-finish-function) org-finish-function)
+            'org-table-finish-edit-field))
+          (emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (if field-editor-p
+            (emacsvox-org--present-table-change
+             'table-editor-closed 'close-object)
+          (emacsvox-org--present-document-state
+           'context-action 'button))))))
+
+(advice-add
+ 'org-ctrl-c-ctrl-c :around
+ #'emacsvox--advice-org-ctrl-c-ctrl-c-around
+ '((name . emacsvox)))
 
 ;;;  Table editing and inspection:
 
@@ -1555,6 +1577,127 @@ arg just opens the file"
                (apply original arguments)
              (emacsvox-org--present-table-message
               'table-inspected prior-message ,fallback)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(defun emacsvox-org--present-table-editor-line
+    (action occasion &optional icon)
+  "Present the current table editor line for ACTION and OCCASION.
+
+Use optional compatibility ICON before the line."
+  (emacsvox-org--submit-text
+   (if (eobp) (emacsvox-org--buffer-summary) (emacsvox-org--line-content))
+   (emacsvox-org--feedback-facts
+    'org-edit-buffer
+    (if (eq occasion 'state-change) 'state-changed 'focus-entered)
+    action)
+   occasion icon))
+
+(defun emacsvox--advice-org-table-edit-formulas-around
+    (original &rest arguments)
+  "Open the interactive Org formula editor quietly and present its formula."
+  (if (not (eq ems--interactive-fn-name 'org-table-edit-formulas))
+      (apply original arguments)
+    (let ((emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (emacsvox-org--present-table-editor-line
+         'table-editor-opened 'navigation 'open-object)))))
+
+(advice-add
+ 'org-table-edit-formulas :around
+ #'emacsvox--advice-org-table-edit-formulas-around
+ '((name . emacsvox)))
+
+(defun emacsvox--advice-org-table-edit-field-around
+    (original &rest arguments)
+  "Open or alter the interactive Org field editor with owned feedback."
+  (if (not (eq ems--interactive-fn-name 'org-table-edit-field))
+      (apply original arguments)
+    (let ((source (current-buffer))
+          (emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (if (eq source (current-buffer))
+            (emacsvox-org--present-table-change
+             'display-changed 'button)
+          (emacsvox-org--present-table-editor-line
+           'table-editor-opened 'navigation 'open-object))))))
+
+(advice-add
+ 'org-table-edit-field :around
+ #'emacsvox--advice-org-table-edit-field-around
+ '((name . emacsvox)))
+
+(cl-loop
+ for target in
+ '(org-table-fedit-finish org-table-fedit-abort)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Close the interactive Org formula editor and present the source cell."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-table-change
+              'table-editor-closed 'close-object)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for target in
+ '(org-table-fedit-ref-up org-table-fedit-ref-down
+   org-table-fedit-ref-left org-table-fedit-ref-right
+   org-table-fedit-line-up org-table-fedit-line-down)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Alter an Org formula editor reference quietly and present its line."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-table-editor-line
+              'table-reference-changed 'state-change 'button)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for (target fallback) in
+ '((org-table-fedit-toggle-ref-type "Formula reference type changed")
+   (org-table-fedit-toggle-coordinates "Table coordinate display changed")
+   (org-table-show-reference "Table reference highlighted"))
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Inspect or alter an Org formula editor setting with owned feedback."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (let ((current (current-message)))
+               (emacsvox-org--submit-text
+                (if
+                    (and
+                     (stringp current)
+                     (not (string-empty-p current))
+                     (not (equal current prior-message)))
+                    current
+                  ,fallback)
+                (emacsvox-org--feedback-facts
+                 'org-edit-buffer 'focus-entered 'table-inspected)
+                'inspection))))))
      (advice-add
       ',target :around #',function '((name . emacsvox))))))
 

@@ -191,6 +191,16 @@
     org-table-toggle-formula-debugger)
   "Org table commands whose native result prefers Org's message.")
 
+(defconst emacsvox-test--org-table-editor-around-targets
+  '(org-table-edit-formulas org-table-edit-field
+    org-table-fedit-finish org-table-fedit-abort
+    org-table-fedit-ref-up org-table-fedit-ref-down
+    org-table-fedit-ref-left org-table-fedit-ref-right
+    org-table-fedit-line-up org-table-fedit-line-down
+    org-table-fedit-toggle-ref-type
+    org-table-fedit-toggle-coordinates org-table-show-reference)
+  "Org table editor commands with native lifecycle and editing feedback.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -1238,6 +1248,15 @@
       (should (fboundp function))
       (should (advice-member-p function target)))))
 
+(ert-deftest emacsvox-org-table-editor-advice-is-directly-registered ()
+  "Org field and formula editor commands have named quiet adapters."
+  (dolist (target emacsvox-test--org-table-editor-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
 (ert-deftest emacsvox-org-table-formula-reports-resulting-cell ()
   "Formula evaluation submits the resulting cell and coordinates once."
   (with-temp-buffer
@@ -1295,6 +1314,86 @@
         (plist-get (plist-get (cdar submissions) :facts) :org-action)
         'table-inspected))
       (should (eq (plist-get (cdar submissions) :occasion) 'inspection)))))
+
+(ert-deftest emacsvox-org-table-editor-lifecycle-is-semantic ()
+  "Opening and closing a formula editor identifies both lifecycle states."
+  (let ((source (generate-new-buffer " *Org table source*"))
+        (editor (generate-new-buffer " *Org formula editor*"))
+        submissions)
+    (unwind-protect
+        (progn
+          (with-current-buffer source
+            (emacsvox-test--activate-org-mode #'org-mode)
+            (insert "| Name | Value |\n| Row  | 42    |\n")
+            (goto-char (point-min))
+            (forward-line)
+            (search-forward "42"))
+          (with-current-buffer editor
+            (insert "$2 = $1 * 2")
+            (goto-char (point-min)))
+          (with-current-buffer source
+            (let ((ems--interactive-fn-name 'org-table-edit-formulas))
+              (cl-letf
+                  (((symbol-function 'emacsvox-aural-submit)
+                    (lambda (content &rest arguments)
+                      (push (cons content arguments) submissions))))
+                (emacsvox--advice-org-table-edit-formulas-around
+                 (lambda (&rest _) (set-buffer editor))))))
+          (with-current-buffer editor
+            (let ((ems--interactive-fn-name 'org-table-fedit-finish))
+              (cl-letf
+                  (((symbol-function 'emacsvox-aural-submit)
+                    (lambda (content &rest arguments)
+                      (push (cons content arguments) submissions))))
+                (emacsvox--advice-org-table-fedit-finish-around
+                 (lambda (&rest _) (set-buffer source)))))))
+      (kill-buffer editor)
+      (kill-buffer source))
+    (setq submissions (nreverse submissions))
+    (should (= (length submissions) 2))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role org-edit-buffer :events (focus-entered)
+        :org-action table-editor-opened)))
+    (should
+     (eq (plist-get (cdar submissions) :occasion) 'navigation))
+    (should
+     (eq
+      (plist-get (plist-get (cdr (nth 1 submissions)) :facts) :org-action)
+      'table-editor-closed))
+    (should
+     (equal (car (nth 1 submissions)) "42"))))
+
+(ert-deftest emacsvox-org-field-editor-context-action-reports-close ()
+  "C-c C-c reports a field-editor close instead of a generic context action."
+  (let ((source (generate-new-buffer " *Org field source*"))
+        (editor (generate-new-buffer " *Org field editor*"))
+        submission)
+    (unwind-protect
+        (progn
+          (with-current-buffer source
+            (emacsvox-test--activate-org-mode #'org-mode)
+            (insert "| Value |\n| Cell  |\n")
+            (goto-char (point-min))
+            (forward-line)
+            (search-forward "Cell"))
+          (with-current-buffer editor
+            (setq-local org-finish-function 'org-table-finish-edit-field)
+            (let ((ems--interactive-fn-name 'org-ctrl-c-ctrl-c))
+              (cl-letf
+                  (((symbol-function 'emacsvox-aural-submit)
+                    (lambda (content &rest arguments)
+                      (setq submission (cons content arguments)))))
+                (emacsvox--advice-org-ctrl-c-ctrl-c-around
+                 (lambda (&rest _) (set-buffer source)))))))
+      (kill-buffer editor)
+      (kill-buffer source))
+    (should (equal (car submission) "Cell"))
+    (should
+     (eq
+      (plist-get (plist-get (cdr submission) :facts) :org-action)
+      'table-editor-closed))))
 
 (ert-deftest emacsvox-org-return-selects-table-or-line-feedback ()
   "Org return defers table feedback and owns its non-table destination."

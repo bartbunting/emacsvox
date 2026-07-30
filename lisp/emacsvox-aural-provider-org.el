@@ -78,6 +78,8 @@
                       agenda-refreshed
                       table-changed table-created table-formula-evaluated
                       table-recalculated table-sorted table-inspected
+                      table-editor-opened table-editor-closed
+                      table-reference-changed
                       export-completed publish-completed))
     (org-table-row
      :kind attribute
