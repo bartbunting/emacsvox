@@ -23,7 +23,6 @@
     python-shell-send-file
     python-shell-send-buffer
     python-shell-send-string
-    python-indent-dedent-line
     python-fill-paragraph
     python-indent-shift-left
     python-indent-shift-right
@@ -61,22 +60,26 @@
    (advice-member-p
     #'emacsvox--advice-python-indent-dedent-line-backspace-around
     'python-indent-dedent-line-backspace))
+  (should
+   (advice-member-p
+    #'emacsvox--advice-python-indent-dedent-line-around
+    'python-indent-dedent-line))
   (should-not (commandp 'python-shell-send-string-no-output)))
 
 (ert-deftest emacsvox-python-backspace-calls-original-once ()
-  "Python backspace speaks before exactly one original deletion."
+  "Python backspace performs one deletion and submits the deleted character."
   (with-temp-buffer
     (insert "x")
     (let ((ems--interactive-fn-name
            'python-indent-dedent-line-backspace)
           (calls 0)
+          submission
           events)
-      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
-                 (lambda (operation)
-                   (push (list 'edit operation) events)))
-                ((symbol-function 'emacsvox-speak-this-char)
-                 (lambda (character)
-                   (push (list 'character character) events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-python--submit-text)
+            (lambda (&rest arguments)
+              (setq submission arguments)
+              (push 'submission events))))
         (should
          (eq
           'result
@@ -93,21 +96,30 @@
       (should
        (equal
         (nreverse events)
-        '((edit deletion) (character 120) original))))))
+        '(original submission)))
+      (should
+       (equal
+        submission
+        '("x"
+          (:role code-construct :events (object-changed)
+           :syntax-role character :code-edit-kind delete-character
+           :edit-operation deletion)
+          edit))))))
 
 (ert-deftest emacsvox-python-whitespace-backspace-reports-indent ()
-  "Whitespace backspace reports indentation after one original call."
+  "Whitespace backspace reports resulting indentation in one submission."
   (with-temp-buffer
     (insert "    ")
     (let ((ems--interactive-fn-name
            'python-indent-dedent-line-backspace)
           (calls 0)
+          submission
           events)
-      (cl-letf (((symbol-function 'emacsvox-speak-edit-operation)
-                 (lambda (operation)
-                   (push (list 'edit operation) events)))
-                ((symbol-function 'tts-notify)
-                 (lambda (text) (push (list 'notify text) events))))
+      (cl-letf
+          (((symbol-function 'emacsvox-python--submit-text)
+            (lambda (&rest arguments)
+              (setq submission arguments)
+              (push 'submission events))))
         (should
          (eq
           'result
@@ -122,18 +134,30 @@
       (should
        (equal
         (nreverse events)
-        '((edit deletion) original (notify "Indent 3 ")))))))
+        '(original submission)))
+      (should (equal (car submission) "Indent 3"))
+      (should
+       (equal
+        (plist-get (cadr submission) :edit-operation)
+        'deletion)))))
 
 (ert-deftest emacsvox-python-shell-feedback-cues-only-outer-command ()
-  "Nested send operations produce one cue for the interactive command."
+  "Nested sends produce one semantic start event for the outer command."
   (let ((ems--interactive-fn-name 'python-shell-send-buffer)
-        events)
-    (cl-letf (((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
+        submissions)
+    (cl-letf
+        (((symbol-function 'emacsvox-python--submit-actions)
+          (lambda (&rest arguments)
+            (push arguments submissions))))
       (emacsvox--advice-python-shell-send-string-after "code")
       (emacsvox--advice-python-shell-send-region-after 1 2)
       (emacsvox--advice-python-shell-send-buffer-after))
-    (should (equal events '((icon task-done))))))
+    (should
+     (equal
+      submissions
+      '(((:role code-operation :events (operation-started)
+          :code-operation-kind python-shell-send-buffer)
+         state-change))))))
 
 (ert-deftest emacsvox-python-indentation-uses-native-bounds ()
   "Python indentation submits explicit bounds as one aural transaction."
@@ -148,23 +172,19 @@
         (emacsvox--advice-python-indent-region-after
          (point-min) (point-max)))
       (let* ((arguments (cdr submitted))
-             (action
-              (car (plist-get arguments :compatibility-actions))))
+             (facts (plist-get arguments :facts)))
         (should
          (equal
           (car submitted)
           "Indented region   containing 3 lines"))
         (should
          (equal
-          (plist-get arguments :facts)
+          facts
           '(:role code-construct :events (object-changed)
-            :syntax-role block)))
+            :syntax-role block :code-edit-kind indent-region)))
         (should (eq (plist-get arguments :module) 'python))
         (should (eq (plist-get arguments :occasion) 'edit))
-        (should
-         (eq
-          (emacsvox-aural-compatibility-action-value action)
-          'right))))))
+        (should-not (plist-get arguments :compatibility-actions))))))
 
 (ert-deftest emacsvox-python-shift-feedback-is-target-aware ()
   "Only the matching block shift submits its explicit result."
@@ -173,8 +193,9 @@
     (let ((ems--interactive-fn-name 'python-indent-shift-left)
           submitted)
       (cl-letf
-          (((symbol-function 'emacsvox-python--submit-edit-feedback)
-            (lambda (icon text) (push (list icon text) submitted))))
+          (((symbol-function 'emacsvox-python--submit-text)
+            (lambda (&rest arguments)
+              (push arguments submitted))))
         (emacsvox--advice-python-indent-shift-right-after
          (point-min) (point-max))
         (emacsvox--advice-python-indent-shift-left-after
@@ -182,7 +203,10 @@
       (should
        (equal
         submitted
-        '((left "Left shifted block  containing 2 lines")))))))
+        '(("Left shifted block  containing 2 lines"
+           (:role code-construct :events (object-changed)
+            :syntax-role block :code-edit-kind shift-left)
+           edit)))))))
 
 (ert-deftest emacsvox-python-indent-native-plan-resolves-cue-once ()
   "Python indent speech and compatibility cue share one resolved object."
@@ -214,7 +238,7 @@
          (equal
           (emacsvox-aural-concrete-plan-facts plan)
           '(:role code-construct :events (object-changed)
-            :syntax-role block)))
+            :code-edit-kind indent-region :syntax-role block)))
         (should
          (natnump
           (plist-get
@@ -244,72 +268,38 @@
 (ert-deftest emacsvox-python-navigation-feedback-is-target-aware ()
   "Only the matching Python navigation command produces feedback."
   (let ((ems--interactive-fn-name 'python-nav-backward-block)
-        events)
+        submissions)
     (cl-letf
-        (((symbol-function 'emacsvox-speak-line-with-speaker)
-          (lambda (speaker &optional _arg)
-            (push 'line events)
-            (funcall speaker "line")))
-         ((symbol-function 'emacsvox-aural-submit)
-          (lambda (content &rest arguments)
-            (let ((action
-                   (car
-                    (plist-get arguments :compatibility-actions))))
-              (push
-               (list
-                'submission content
-                (emacsvox-aural-compatibility-action-value action)
-                (emacsvox-aural-compatibility-action-phase action))
-               events))))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (&rest _)
-            (ert-fail "Speech-producing navigation used legacy fallback"))))
+        (((symbol-function 'emacsvox-python--present-current-line)
+          (lambda (&rest arguments)
+            (push arguments submissions))))
       (emacsvox--advice-python-nav-forward-block-after)
       (emacsvox--advice-python-nav-backward-block-after))
     (should
      (equal
-      (nreverse events)
-      '(line (submission "line" paragraph after))))))
+      submissions
+      '(((:role code-construct
+          :events (boundary-entered focus-entered)
+          :syntax-role block)
+         navigation))))))
 
 (ert-deftest emacsvox-python-navigation-carries-code-semantics ()
-  "Python navigation speech and its cue share one semantic submission."
+  "Python navigation passes code semantics to the line transaction."
   (let ((ems--interactive-fn-name 'python-nav-forward-defun)
         captured)
     (cl-letf
-        (((symbol-function 'emacsvox-speak-line-with-speaker)
-          (lambda (speaker &optional _arg)
-            (funcall speaker "line")))
-         ((symbol-function 'emacsvox-aural-submit)
-          (lambda (content &rest arguments)
-            (setq captured (cons content arguments))))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (&rest _)
-            (ert-fail "Speech-producing navigation used legacy fallback"))))
+        (((symbol-function 'emacsvox-python--present-current-line)
+          (lambda (&rest arguments)
+            (setq captured arguments))))
       (emacsvox--advice-python-nav-forward-defun-after))
-    (pcase-let* ((`(,content . ,arguments) captured)
-                 (facts (plist-get arguments :facts))
-                 (context (plist-get arguments :context))
-                 (action
-                  (car
-                   (plist-get arguments :compatibility-actions))))
-      (should (equal content "line"))
+    (pcase-let ((`(,facts ,occasion) captured))
       (should (eq (plist-get facts :role) 'code-construct))
       (should (eq (plist-get facts :syntax-role) 'function))
       (should
        (equal
         (plist-get facts :events)
         '(boundary-entered focus-entered)))
-      (should (eq (plist-get arguments :module) 'python))
-      (should (eq (plist-get arguments :occasion) 'navigation))
-      (should (eq (plist-get context :module) 'python))
-      (should
-       (eq
-        (emacsvox-aural-compatibility-action-value action)
-        'paragraph))
-      (should
-       (eq
-        (emacsvox-aural-compatibility-action-phase action)
-        'after)))))
+      (should (eq occasion 'navigation)))))
 
 (ert-deftest emacsvox-python-navigation-preserves-line-properties ()
   "Ordinary navigation preserves line voice and post-speech cue order."
@@ -332,10 +322,7 @@
         (emacsvox--advice-python-nav-forward-statement-after))
       (pcase-let* ((`(,speech . ,arguments) captured)
                    (facts (plist-get arguments :facts))
-                   (context (plist-get arguments :context))
-                   (action
-                    (car
-                     (plist-get arguments :compatibility-actions))))
+                   (context (plist-get arguments :context)))
         (should (equal speech "value = 1"))
         (should
          (eq
@@ -348,17 +335,10 @@
           '(boundary-entered focus-entered)))
         (should (eq (plist-get facts :syntax-role) 'statement))
         (should (eq (plist-get context :module) 'python))
-        (should
-         (eq
-          (emacsvox-aural-compatibility-action-value action)
-          'paragraph))
-        (should
-         (eq
-          (emacsvox-aural-compatibility-action-phase action)
-          'after))))))
+        (should-not (plist-get arguments :compatibility-actions))))))
 
-(ert-deftest emacsvox-python-navigation-preserves-line-and-point-cues ()
-  "Line-local and show-point cues precede speech and the paragraph cue."
+(ert-deftest emacsvox-python-navigation-captures-line-and-point-cues ()
+  "Line-local and show-point cues are inputs to the one line submission."
   (with-temp-buffer
     (insert (propertize "value" 'auditory-icon 'item))
     (goto-char (+ (point-min) 2))
@@ -366,48 +346,34 @@
           (emacsvox-show-point t)
           (emacsvox-audio-indentation nil)
           (tts-punctuation-mode 'all)
-          events)
+          submission)
       (cl-letf
           (((symbol-function 'tts-stop) #'ignore)
            ((symbol-function 'emacsvox-aural-submit)
             (lambda (content &rest arguments)
-              (push
-               (list
-                'submission content
-                (car
-                 (plist-get arguments :compatibility-actions)))
-               events)))
+              (setq submission (cons content arguments))))
            ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events))))
+            (lambda (&rest _)
+              (ert-fail "Python line cues escaped the native submission"))))
         (emacsvox--advice-python-nav-forward-statement-after))
-      (setq events (nreverse events))
-      (should
-       (equal
-        (mapcar
-         (lambda (event)
-           (if (eq (car event) 'icon) (cadr event) (car event)))
-         events)
-        '(item tick-tick submission)))
-      (let* ((submission (nth 2 events))
-             (spoken (cadr submission))
-             (action (nth 2 submission)))
+      (let* ((spoken (car submission))
+             (actions
+              (plist-get (cdr submission) :compatibility-actions)))
         (should (equal spoken "value"))
         (should
          (eq (get-text-property 2 'personality spoken) voice-animate))
         (should (= (get-text-property 2 'pause spoken) 5))
         (should
-         (eq
-          (emacsvox-aural-compatibility-action-value action)
-          'paragraph))
-        (should
-         (eq
-          (emacsvox-aural-compatibility-action-phase action)
-          'after)))
+         (equal
+          (mapcar
+           #'emacsvox-aural-compatibility-action-value actions)
+          '(item tick-tick)))
+        (should-not (get-text-property 2 'auditory-icon spoken)))
       (should-not (get-text-property 2 'personality (buffer-string)))
       (should-not (get-text-property 2 'pause (buffer-string))))))
 
-(ert-deftest emacsvox-python-navigation-preserves-structural-line-cues ()
-  "Hidden and displayed line structure cues precede speech."
+(ert-deftest emacsvox-python-navigation-captures-structural-line-cues ()
+  "Hidden and displayed line cues are captured in source order."
   (with-temp-buffer
     (insert "hidden")
     (put-text-property
@@ -419,22 +385,22 @@
           (emacsvox-show-point nil)
           (emacsvox-audio-indentation nil)
           (tts-punctuation-mode 'all)
-          events)
+          submission)
       (cl-letf
           (((symbol-function 'tts-stop) #'ignore)
            ((symbol-function 'emacsvox-aural-submit)
-            (lambda (content &rest _)
-              (push (list 'submission content) events)))
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments))))
            ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events))))
+            (lambda (&rest _)
+              (ert-fail "Structural line cue escaped native submission"))))
         (emacsvox--advice-python-nav-forward-block-after))
       (should
        (equal
         (mapcar
-         (lambda (event)
-           (if (eq (car event) 'icon) (cadr event) (car event)))
-         (nreverse events))
-        '(ellipses left submission))))))
+         #'emacsvox-aural-compatibility-action-value
+         (plist-get (cdr submission) :compatibility-actions))
+        '(ellipses left))))))
 
 (ert-deftest emacsvox-python-navigation-composes-semantic-line-conditions ()
   "Blank navigation composes line condition with Python facts and final cue."
@@ -466,13 +432,17 @@
                     (plist-get facts :role)
                     (plist-get facts :events)
                     emacsvox-aural-submission-module
-                    emacsvox-aural-submission-occasion)
+                    emacsvox-aural-submission-occasion
+                    (mapcar
+                     #'emacsvox-aural-compatibility-action-value
+                     (plist-get arguments :compatibility-actions)))
                    events))))
              ((symbol-function 'tts-tone)
               (lambda (&rest _)
                 (ert-fail "Blank line used a raw legacy tone")))
              ((symbol-function 'emacsvox-icon)
-              (lambda (icon) (push (list 'icon icon) events))))
+              (lambda (&rest _)
+                (ert-fail "Blank navigation used a separate icon"))))
           (emacsvox--advice-python-nav-forward-statement-after))
         (setq events (nreverse events))
         (should
@@ -481,8 +451,8 @@
           (list
            'actions (cadr case) 'code-construct
            '(boundary-entered focus-entered)
-           'python 'navigation)))
-        (should (equal (cadr events) '(icon paragraph)))))))
+           'python 'navigation nil)))
+        (should (= (length events) 1))))))
 
 (ert-deftest emacsvox-python-navigation-preserves-long-line-confirmation ()
   "Long navigation retains confirmation, source marking, speech, and cue order."
@@ -606,6 +576,202 @@
           (should (eq (plist-get context :occasion) 'navigation))
           (should
            (eq (plist-get context :icons-enabled) icons-enabled)))))))
+
+(ert-deftest emacsvox-python-structural-cues-resolve-in-one-line-transaction ()
+  "Source icons, point position, speech, and Python navigation resolve once."
+  (with-temp-buffer
+    (insert (propertize "value" 'auditory-icon 'item))
+    (goto-char (+ (point-min) 2))
+    (let ((ems--interactive-fn-name 'python-nav-forward-statement)
+          (emacsvox-show-point t)
+          (emacsvox-audio-indentation nil)
+          (tts-punctuation-mode 'all)
+          (emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments nil)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          (emacsvox-aural-presentation-history nil)
+          (emacsvox-aural--presentation-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (emacsvox-use-icons t)
+          (submit-function (symbol-function 'emacsvox-aural-submit))
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (&rest arguments)
+              (setq submission (apply submit-function arguments))))
+           ((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'tts-speak)
+            (lambda (prepared)
+              (with-temp-buffer
+                (insert prepared)
+                (tts-audio-format (point-min) (point-max)))))
+           ((symbol-function 'emacsvox-queue-resource) #'ignore)
+           ((symbol-function 'tts-voice-reset-code) (lambda () "RESET"))
+           ((symbol-function 'tts--protocol-queue-code) #'ignore)
+           ((symbol-function 'tts--protocol-queue-text) #'ignore)
+           ((symbol-function 'tts--protocol-silence) #'ignore))
+        (emacsvox--advice-python-nav-forward-statement-after))
+      (should (emacsvox-aural-submission-p submission))
+      (let ((plans (emacsvox-aural-submission-plans submission)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (apply
+            #'append
+            (mapcar #'emacsvox-aural-concrete-plan-before plans)))
+          '(item tick-tick)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (apply
+            #'append
+            (mapcar #'emacsvox-aural-concrete-plan-after plans)))
+          '(paragraph))))
+      (should (= (length emacsvox-aural-presentation-history) 1)))))
+
+(ert-deftest emacsvox-python-backspace-is-one-native-edit-transaction ()
+  "Deletion tone and deleted character share facts and one concrete plan."
+  (with-temp-buffer
+    (insert "x")
+    (let ((ems--interactive-fn-name
+           'python-indent-dedent-line-backspace)
+          (emacsvox-aural-active-scheme 'default)
+          (emacsvox-aural-enabled-feature-fragments nil)
+          (emacsvox-aural-user-rules nil)
+          (emacsvox-aural-session-rules nil)
+          (emacsvox-aural-buffer-rules nil)
+          prepared)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (setq prepared text))))
+        (emacsvox--advice-python-indent-dedent-line-backspace-around
+         (lambda (_arg)
+           (delete-char -1)
+           'deleted)
+         1))
+      (should (equal (buffer-string) ""))
+      (let* ((plan (emacsvox-aural-concrete-plan-at 0 prepared))
+             (facts (emacsvox-aural-concrete-plan-facts plan)))
+        (should (equal (substring-no-properties prepared) "x"))
+        (should (eq (plist-get facts :edit-operation) 'deletion))
+        (should (eq (plist-get facts :code-edit-kind) 'delete-character))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-tone
+           (emacsvox-aural-concrete-plan-before plan))
+          '(edit-deletion)))))))
+
+(ert-deftest emacsvox-python-dedent-reports-success-and-no-op-distinctly ()
+  "Dedent presents the changed line; a no-op is a failed operation."
+  (let ((ems--interactive-fn-name 'python-indent-dedent-line)
+        line-presentation
+        message-submission)
+    (cl-letf
+        (((symbol-function 'emacsvox-python--present-current-line)
+          (lambda (&rest arguments)
+            (setq line-presentation arguments)))
+         ((symbol-function 'emacsvox-python--submit-message)
+          (lambda (&rest arguments)
+            (setq message-submission arguments))))
+      (should
+       (emacsvox--advice-python-indent-dedent-line-around
+        (lambda () t))))
+    (should
+     (equal
+      line-presentation
+      '((:role code-construct :events (object-changed)
+         :syntax-role indentation :code-edit-kind dedent-line)
+        edit)))
+    (setq ems--interactive-fn-name 'python-indent-dedent-line)
+    (cl-letf
+        (((symbol-function 'emacsvox-python--present-current-line)
+          (lambda (&rest _)
+            (ert-fail "A no-op dedent presented a changed line")))
+         ((symbol-function 'emacsvox-python--submit-message)
+          (lambda (&rest arguments)
+            (setq message-submission arguments))))
+      (should-not
+       (emacsvox--advice-python-indent-dedent-line-around
+        (lambda () nil))))
+    (should
+     (equal
+      message-submission
+      '("Line indentation unchanged"
+        (:role code-operation :events (operation-failed)
+         :code-operation-kind dedent-line)
+        state-change)))))
+
+(ert-deftest emacsvox-python-mark-defun-is-native-selection-feedback ()
+  "Marking a function submits its size and selection event together."
+  (with-temp-buffer
+    (insert "def one():\n    pass\n")
+    (goto-char (point-min))
+    (set-mark (point-max))
+    (let ((ems--interactive-fn-name 'python-mark-defun)
+          submission)
+      (cl-letf
+          (((symbol-function 'emacsvox-python--submit-message)
+            (lambda (&rest arguments)
+              (setq submission arguments))))
+        (emacsvox--advice-python-mark-defun-after))
+      (should
+       (equal
+        submission
+        '("Marked function containing 2 lines"
+          (:role code-construct :events (code-selection-created)
+           :syntax-role function)
+          state-change))))))
+
+(ert-deftest emacsvox-python-code-semantics-are-registered ()
+  "Shared programming operations and selections have vocabulary records."
+  (dolist
+      (semantic
+       '(code-operation code-edit-kind code-operation-kind
+         code-selection-created))
+    (should (emacsvox-aural-semantic semantic))))
+
+(ert-deftest emacsvox-python-fragment-distinguishes-feedback-meanings ()
+  "Python rules distinguish submission, dedent, fill, and selection cues."
+  (dolist
+      (case
+       '(((:role code-operation :events (operation-started)
+           :code-operation-kind python-check)
+          state-change (progress) nil)
+         ((:role code-construct :events (object-changed)
+           :syntax-role indentation :code-edit-kind dedent-line)
+          edit nil (left))
+         ((:role code-construct :events (object-changed)
+           :syntax-role paragraph :code-edit-kind fill-paragraph)
+          edit (fill-object) nil)
+         ((:role code-construct :events (code-selection-created)
+           :syntax-role function)
+          state-change (mark-object) nil)))
+    (pcase-let* ((`(,facts ,occasion ,expected-before ,expected-after) case)
+                 (context
+                  (list
+                   :module 'python
+                   :mode 'python-mode
+                   :mode-lineage '(python-mode prog-mode)
+                   :occasion occasion
+                   :icons-enabled t))
+                 (plan (emacsvox-aural-resolve-active facts context)))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-cue
+         (emacsvox-aural-render-plan-before plan))
+        expected-before))
+      (should
+       (equal
+        (mapcar
+         #'emacsvox-aural-action-cue
+         (emacsvox-aural-render-plan-after plan))
+        expected-after)))))
 
 (provide 'emacsvox-python-tests)
 ;;; emacsvox-python-tests.el ends here

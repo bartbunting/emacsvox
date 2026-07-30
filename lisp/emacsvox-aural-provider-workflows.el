@@ -476,13 +476,38 @@
      :kind role
      :summary "A structural construct in source code"
      :owner core
-     :occasions (navigation continuous edit inspection)
+     :occasions (navigation continuous edit state-change inspection)
+     :phases (before content after))
+    (code-operation
+     :kind role
+     :summary "An operation requested from a programming-language interface"
+     :owner core
+     :occasions (edit state-change notification)
      :phases (before content after))
     (syntax-role
      :kind attribute
      :summary "The language-defined structural role of source code"
      :owner core
      :value-type symbol)
+    (code-edit-kind
+     :kind attribute
+     :summary "The editing operation applied to source code"
+     :owner core
+     :roles (code-construct)
+     :value-type symbol)
+    (code-operation-kind
+     :kind attribute
+     :summary "The programming operation being presented"
+     :owner core
+     :roles (code-operation)
+     :value-type symbol)
+    (code-selection-created
+     :kind event
+     :summary "A source-code construct was selected"
+     :owner core
+     :roles (code-construct)
+     :occasions (state-change)
+     :phases (before content after))
     (boundary-entered
      :kind event
      :summary "Navigation arrived at a source-code boundary"
