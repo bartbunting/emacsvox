@@ -48,81 +48,145 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
-(require 'sox-gen)
+(require 'emacsvox-aural-submission)
+(require 'emacsvox-aural-provider-workflows)
 
 ;;;   Face->Voice mappings
 
-(voice-setup-add-map
- '(
-   (ein:cell-input-area voice-lighten)
-   (ein:cell-input-prompt voice-animate)
+(defconst emacsvox-ein--face-voice-map
+  '((ein:basecell-input-area-face voice-lighten)
+   (ein:basecell-input-prompt-face voice-animate)
+   (ein:codecell-input-area-face voice-lighten)
+   (ein:codecell-input-prompt-face voice-animate)
+   (ein:htmlcell-input-area-face voice-smoothen)
+   (ein:htmlcell-input-prompt-face voice-animate)
+   (ein:markdowncell-input-area-face voice-smoothen)
+   (ein:markdowncell-input-prompt-face voice-animate)
+   (ein:rawcell-input-area-face voice-monotone)
+   (ein:rawcell-input-prompt-face voice-animate)
+   (ein:shared-output-cell-input-area-face voice-lighten)
+   (ein:shared-output-cell-input-prompt-face voice-animate)
+   (ein:textcell-input-area-face voice-smoothen)
+   (ein:textcell-input-prompt-face voice-animate)
    (ein:cell-output-area voice-bolden)
    (ein:cell-output-area-error voice-monotone-extra)
-   (ein:cell-output-prompt voice-monotone-extra )
+   (ein:cell-output-prompt voice-monotone-extra)
    (ein:cell-output-stderr voice-monotone-extra)
-   (ein:markdown-blockquote-face voice-monotone-extra)
-   (ein:markdown-bold-face voice-bolden)
-   (ein:markdown-code-face voice-monotone)
-   (ein:markdown-comment-face voice-monotone-extra)
-   (ein:markdown-footnote-marker-face voice-smoothen)
-   (ein:markdown-footnote-text-face voice-annotate)
-   (ein:markdown-header-delimiter-face voice-monotone-extra)
-   (ein:markdown-header-face voice-bolden)
-   (ein:markdown-header-face-1 voice-lighten)
-   (ein:markdown-header-face-2 voice-smoothen)
-   (ein:markdown-header-face-3 voice-annotate)
-   (ein:markdown-header-face-4 voice-monotone-extra)
-   (ein:markdown-header-face-5 voice-monotone-medium)
-   (ein:markdown-header-face-6 voice-monotone-extra)
-   (ein:markdown-header-rule-face voice-monotone-medium)
-   (ein:markdown-highlight-face voice-animate)
-   (ein:markdown-hr-face voice-monotone-medium)
-   (ein:markdown-html-attr-name-face voice-lighten)
-   (ein:markdown-html-attr-value-face voice-lighten-extra)
-   (ein:markdown-html-entity-face voice-smoothen)
-   (ein:markdown-html-tag-delimiter-face voice-monotone-extra)
-   (ein:markdown-html-tag-name-face voice-smoothen-extra)
-   (ein:markdown-inline-code-face voice-monotone-extra)
-   (ein:markdown-italic-face voice-animate)
-   (ein:markdown-language-info-face voice-monotone-extra)
-   (ein:markdown-language-keyword-face voice-annotate)
-   (ein:markdown-line-break-face voice-monotone-extra)
-   (ein:markdown-link-face voice-animate)
-   (ein:markdown-link-title-face voice-bolden)
-   (ein:markdown-list-face voice-indent)
-   (ein:markdown-markup-face voice-monotone-extra)
-   (ein:markdown-math-face voice-annotate)
-   (ein:markdown-metadata-key-face voice-smoothen)
-   (ein:markdown-metadata-value-face voice-animate)
-   (ein:markdown-missing-link-face voice-lighten)
-   (ein:markdown-plain-url-face voice-annotate)
-   (ein:markdown-pre-face voice-monotone-extra)
-   (ein:markdown-reference-face voice-animate)
-   (ein:markdown-strike-through-face voice-lighten)
-   (ein:markdown-table-face voice-lighten)
-   (ein:markdown-url-face voice-smoothen-extra)
    (ein:notification-tab-normal voice-smoothen-extra)
-   (ein:notification-tab-selected voice-animate)
-   (ein:pos-tip-face voice-annotate)))
+   (ein:pos-tip-face voice-annotate))
+  "Voice personalities for faces defined by the current EIN package.")
+
+(voice-setup-add-map emacsvox-ein--face-voice-map)
 
 ;;;  Additional Interactive Commands:
 
 (defsubst emacsvox-ein-sox-gen (type)
-  "Generate a tone  that indicates markdown, code, or raw."
-  (let ((fade "fade h .1 .5 .4 gain -8 "))
-    (cond
-     ((string= "raw" type) (sox-sin .5 "%-5:%3"fade))
-     ((string= "code" type) (sox-sin .5 "%-1:%5" fade))
-     ((string= "markdown" type) (sox-sin .5 "%4:%8"fade)))))
+  "Present the registered cell-type tone for TYPE.
+This compatibility entry point now routes through aural policy rather than
+starting an independent SoX process."
+  (let ((kind
+         (if (symbolp type)
+             type
+           (intern (downcase (format "%s" type))))))
+    (emacsvox-aural-submit-actions
+     :facts (list :role 'notebook-cell :notebook-cell-kind kind)
+     :module 'ein
+     :occasion 'inspection)))
 
 (declare-function ein:cell-type "ein-classes" (arg &rest args))
+(declare-function ein:cell-input-pos-min "ein-cell" (cell))
+(declare-function ein:cell-input-pos-max "ein-cell" (cell))
 (declare-function ein:worksheet-get-current-cell
                   "ein-worksheet" (&rest --cl-rest--))
 
+(defun emacsvox-ein-enable-aural-context ()
+  "Identify the current EIN buffer to aural presentation schemes."
+  (setq-local emacsvox-aural-module 'ein))
+
+(defun emacsvox-ein--update-notebook-aural-context ()
+  "Track EIN notebook minor-mode ownership in the current buffer."
+  (if (bound-and-true-p ein:notebook-mode)
+      (emacsvox-ein-enable-aural-context)
+    (if (derived-mode-p 'python-mode)
+        (setq-local emacsvox-aural-module 'python)
+      (kill-local-variable 'emacsvox-aural-module))))
+
+(add-hook 'ein:notebook-mode-hook
+          #'emacsvox-ein--update-notebook-aural-context)
+(add-hook 'ein:notebooklist-mode-hook #'emacsvox-ein-enable-aural-context)
+
+(defun emacsvox-ein--cell-kind (&optional cell)
+  "Return the normalized content kind of CELL or the current cell."
+  (when-let* ((cell
+               (or
+                cell
+                (ein:worksheet-get-current-cell :noerror t))))
+    (intern (downcase (format "%s" (ein:cell-type cell))))))
+
+(defun emacsvox-ein--cell-facts (&optional cell action events)
+  "Return semantic facts for CELL, optional ACTION, and EVENTS."
+  (let ((facts (list :role 'notebook-cell))
+        (kind (emacsvox-ein--cell-kind cell)))
+    (when events
+      (setq facts (plist-put facts :events events)))
+    (when kind
+      (setq facts (plist-put facts :notebook-cell-kind kind)))
+    (when action
+      (setq facts (plist-put facts :notebook-cell-action action)))
+    facts))
+
+(defun emacsvox-ein--submit-cell (&optional action occasion events)
+  "Present the current cell with optional ACTION, OCCASION, and EVENTS."
+  (when-let* ((cell
+               (ein:worksheet-get-current-cell :noerror t)))
+    (let* ((begin (ein:cell-input-pos-min cell))
+           (end (ein:cell-input-pos-max cell))
+           (kind (emacsvox-ein--cell-kind cell))
+           (facts (emacsvox-ein--cell-facts cell action events))
+           (content
+            (and
+             begin end (< begin end)
+             (emacsvox-aural-source-substring begin end))))
+      (emacsvox-aural-submit
+       (or content (format "empty %s cell" (or kind 'notebook)))
+       :facts facts
+       :module 'ein
+       :occasion (or occasion 'inspection)))))
+
 (defun emacsvox-ein-speak-current-cell ()
-  "Speak current cell."
+  "Speak the complete current cell as one native presentation."
   (interactive)
-  (emacsvox-speak-region (point) (next-overlay-change (point))))
+  (emacsvox-ein--submit-cell nil 'inspection))
+
+(defun emacsvox-ein--present-line (facts occasion)
+  "Present the current line under FACTS and OCCASION."
+  (let* ((begin (line-beginning-position))
+         (end (line-end-position))
+         (content
+          (and
+           (< begin end)
+           (emacsvox-aural-source-substring begin end))))
+    (if content
+        (emacsvox-aural-submit
+         content :facts facts :module 'ein :occasion occasion)
+      (emacsvox-aural-submit-actions
+       :facts (plist-put (copy-sequence facts) :line-condition 'empty)
+       :module 'ein
+       :occasion occasion))))
+
+(defun emacsvox-ein--buffer-summary ()
+  "Return a concise summary of the current EIN buffer."
+  (format
+   "%s, %s"
+   (buffer-name)
+   (downcase (format-mode-line mode-name))))
+
+(defun emacsvox-ein--submit-message (text facts)
+  "Display and natively present TEXT under FACTS."
+  (let ((emacsvox-speak-messages nil))
+    (message "%s" text))
+  (emacsvox-aural-submit
+   text :facts facts :module 'ein :occasion 'state-change))
 
 ;;;  Bind additional interactive commands
 (when (boundp 'ein:notebook-mode-map)
@@ -145,54 +209,80 @@
     (let ((advice-function
            (intern (format "emacsvox--advice-%s-after" target))))
       (eval
-       `(defun ,advice-function (&rest _)
+       `(defun ,advice-function (&rest arguments)
           ,(format "Provide speech feedback after `%s'." target)
           (when (ems-interactive-p ',target)
-            (,feedback))))
+            (apply #',feedback ',target arguments))))
       (push (list target :after advice-function) emacsvox-ein--advice))))
 
-(defun emacsvox-ein--line-movement-feedback ()
+(defun emacsvox-ein--line-movement-feedback (target &rest _)
   "Speak the current line after EIN navigation."
-  (emacsvox-speak-line)
-  (emacsvox-icon 'large-movement))
+  (emacsvox-ein--present-line
+   (list
+    :role 'notebook
+    :events '(focus-entered)
+    :notebook-action target)
+   'navigation))
 
 (emacsvox-ein--register-after-group
  '(ein:tb-jump-to-source-at-point-command ein:tb-next-item ein:tb-prev-item)
  #'emacsvox-ein--line-movement-feedback)
 
-(defun emacsvox-ein--open-line-feedback ()
+(defun emacsvox-ein--open-line-feedback (_target &rest _)
   "Speak the current line after opening an EIN view."
-  (emacsvox-icon 'open-object)
-  (emacsvox-speak-line))
+  (emacsvox-ein--present-line
+   '(:role notebook :events (object-changed) :notebook-action opened)
+   'state-change))
 
 (emacsvox-ein--register-after-group
- '(ein:tb-show-km ein:worksheet-split-cell-at-point)
+ '(ein:tb-show-km)
  #'emacsvox-ein--open-line-feedback)
 
-(defun emacsvox-ein--source-movement-feedback ()
+(defun emacsvox-ein--source-movement-feedback (target &rest _)
   "Speak after moving between EIN source locations."
-  (emacsvox-icon 'large-movement)
-  (emacsvox-speak-line))
+  (emacsvox-ein--line-movement-feedback target))
 
 (emacsvox-ein--register-after-group
  '(ein:pytools-jump-back-command ein:pytools-jump-to-source-command)
  #'emacsvox-ein--source-movement-feedback)
 
-(defun emacsvox-ein--delete-feedback ()
+(defun emacsvox-ein--delete-feedback (target &rest _)
   "Speak after deleting EIN cell content."
-  (emacsvox-speak-line)
-  (emacsvox-icon 'delete-object))
+  (let ((description
+         (pcase target
+           ('ein:worksheet-clear-all-output-km "Cleared all cell output")
+           ('ein:worksheet-clear-output-km "Cleared cell output")
+           (_ nil))))
+    (if description
+        (emacsvox-ein--submit-message
+         description
+         '(:role notebook-cell
+           :events (object-changed)
+           :notebook-cell-action removed))
+      (or
+       (emacsvox-ein--submit-cell
+        'removed 'state-change '(object-changed))
+       (emacsvox-ein--submit-message
+        "Cell removed"
+        '(:role notebook-cell
+          :events (object-changed)
+          :notebook-cell-action removed))))))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-clear-all-output-km ein:worksheet-delete-cell
    ein:worksheet-clear-output-km ein:worksheet-kill-cell-km)
  #'emacsvox-ein--delete-feedback)
 
-(defun emacsvox-ein--execute-feedback ()
-  "Confirm execution of an EIN cell."
-  (emacsvox-icon 'task-done)
-  (forward-line 1)
-  (message "Press C-c . to hear the results."))
+(defun emacsvox-ein--execute-feedback (target &rest _)
+  "Report that the asynchronous EIN execution requested by TARGET started."
+  (emacsvox-ein--submit-message
+   (if (eq target 'ein:worksheet-execute-all-cells)
+       "Notebook execution started. Press C-c . to hear results."
+     "Cell execution started. Press C-c . to hear results.")
+   (list
+    :role 'code-operation
+    :events '(operation-started)
+    :code-operation-kind target)))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-execute-all-cells
@@ -203,114 +293,133 @@
    ein:worksheet-execute-cell ein:worksheet-execute-cell-km)
  #'emacsvox-ein--execute-feedback)
 
-(defun emacsvox-ein--cell-movement-feedback ()
+(defun emacsvox-ein--cell-movement-feedback (_target &rest _)
   "Speak the current EIN cell after navigation."
-  (emacsvox-icon 'large-movement)
-  (emacsvox-ein-speak-current-cell))
+  (emacsvox-ein--submit-cell nil 'navigation '(focus-entered)))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-goto-next-input-km ein:worksheet-goto-prev-input-km
    ein:worksheet-goto-next-input ein:worksheet-goto-prev-input)
  #'emacsvox-ein--cell-movement-feedback)
 
-(defun emacsvox-ein--insert-feedback ()
+(defun emacsvox-ein--insert-feedback (_target &rest _)
   "Speak after inserting an EIN cell."
-  (emacsvox-icon 'yank-object)
-  (emacsvox-speak-line))
+  (emacsvox-ein--submit-cell 'inserted 'edit '(object-changed)))
 
 (emacsvox-ein--register-after-group
- '(ein:worksheet-insert-cell-above ein:worksheet-insert-cell-below)
+ '(ein:worksheet-insert-cell-above ein:worksheet-insert-cell-below
+   ein:worksheet-insert-cell-above-km ein:worksheet-insert-cell-below-km)
  #'emacsvox-ein--insert-feedback)
 
-(defun emacsvox-ein--insert-command-feedback ()
-  "Speak after an interactive EIN cell insertion command."
-  (emacsvox-icon 'yank-object)
-  (emacsvox-speak-line)
-  (emacsvox-icon 'open-object))
-
 (emacsvox-ein--register-after-group
- '(ein:worksheet-insert-cell-above-km ein:worksheet-insert-cell-below-km)
- #'emacsvox-ein--insert-command-feedback)
+ '(ein:worksheet-split-cell-at-point)
+ (lambda (_target &rest _)
+   (emacsvox-ein--submit-cell 'split 'edit '(object-changed))))
 
-(defun emacsvox-ein--yank-cell-feedback ()
+(defun emacsvox-ein--yank-cell-feedback (_target &rest _)
   "Speak the cell inserted by an EIN yank command."
-  (emacsvox-ein-speak-current-cell)
-  (emacsvox-icon 'yank-object))
+  (emacsvox-ein--submit-cell 'yanked 'edit '(object-changed)))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-yank-cell)
  #'emacsvox-ein--yank-cell-feedback)
 
-(defun emacsvox-ein--cell-type-feedback ()
+(defun emacsvox-ein--cell-type-feedback (_target &rest _)
   "Report the current EIN cell type."
-  (let ((type (ein:cell-type (ein:worksheet-get-current-cell))))
-    (emacsvox-ein-sox-gen type)
-    (tts-speak type)))
+  (when-let* ((cell
+               (ein:worksheet-get-current-cell :noerror t))
+              (kind (emacsvox-ein--cell-kind cell)))
+    (emacsvox-ein--submit-message
+     (format "%s cell" kind)
+     (list
+      :role 'notebook-cell
+      :events '(state-changed)
+      :notebook-cell-kind kind
+      :notebook-cell-action 'type-changed))))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-toggle-cell-type ein:worksheet-change-cell-type-km)
  #'emacsvox-ein--cell-type-feedback)
 
-(defun emacsvox-ein--move-cell-up-feedback ()
-  "Report moving an EIN cell up."
-  (tts-speak "Moved cell up")
-  (emacsvox-icon 'large-movement))
+(defun emacsvox-ein--move-cell-feedback (target &rest _)
+  "Report the direction of the cell movement requested by TARGET."
+  (emacsvox-ein--submit-message
+   (if (eq target 'ein:worksheet-move-cell-up-km)
+       "Moved cell up"
+     "Moved cell down")
+   '(:role notebook-cell
+     :events (object-changed)
+     :notebook-cell-action moved)))
 
 (emacsvox-ein--register-after-group
- '(ein:worksheet-move-cell-up-km)
- #'emacsvox-ein--move-cell-up-feedback)
+ '(ein:worksheet-move-cell-up-km ein:worksheet-move-cell-down-km)
+ #'emacsvox-ein--move-cell-feedback)
 
-(defun emacsvox-ein--move-cell-down-feedback ()
-  "Report moving an EIN cell down."
-  (tts-speak "Moved cell down")
-  (emacsvox-icon 'large-movement))
-
-(emacsvox-ein--register-after-group
- '(ein:worksheet-move-cell-down-km)
- #'emacsvox-ein--move-cell-down-feedback)
-
-(defun emacsvox-ein--toggle-output-feedback ()
+(defun emacsvox-ein--toggle-output-feedback (target &rest _)
   "Report the visibility of the current EIN cell output."
-  (let ((state (slot-value (ein:worksheet-get-current-cell) 'collapsed)))
-    (emacsvox-icon (if state 'close-object 'open-object))
-    (tts-speak (format "%s output" (if state "Hid" "Showing")))))
+  (let* ((all
+          (eq target 'ein:worksheet-set-output-visibility-all-km))
+         (collapsed
+          (if all
+              (and current-prefix-arg t)
+            (when-let* ((cell
+                         (ein:worksheet-get-current-cell :noerror t)))
+              (slot-value cell 'collapsed)))))
+    (emacsvox-ein--submit-message
+     (format
+      "%s%s output"
+      (if collapsed "Hid" "Showing")
+      (if all " all cell" " cell"))
+     (list
+      :role 'notebook-cell
+      :events '(visibility-changed)
+      :visibility (if collapsed 'folded 'expanded)))))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-toggle-output-km
    ein:worksheet-set-output-visibility-all-km)
  #'emacsvox-ein--toggle-output-feedback)
 
-(defun emacsvox-ein--merge-cell-feedback ()
+(defun emacsvox-ein--merge-cell-feedback (_target &rest _)
   "Speak after merging EIN cells."
-  (emacsvox-icon 'close-object)
-  (emacsvox-speak-line))
+  (emacsvox-ein--submit-cell 'merged 'edit '(object-changed)))
 
 (emacsvox-ein--register-after-group
  '(ein:worksheet-merge-cell)
  #'emacsvox-ein--merge-cell-feedback)
 
-(defun emacsvox-ein--save-feedback ()
-  "Confirm saving an EIN notebook."
-  (message "Saving notebook")
-  (emacsvox-icon 'save-object))
+(defun emacsvox-ein--save-feedback (target &rest _)
+  "Report that the asynchronous notebook save requested by TARGET started."
+  (emacsvox-ein--submit-message
+   "Saving notebook"
+   (list
+    :role 'code-operation
+    :events '(operation-started)
+    :code-operation-kind target)))
 
 (emacsvox-ein--register-after-group
  '(ein:notebook-save-to-command ein:notebook-save-notebook-command)
  #'emacsvox-ein--save-feedback)
 
-(defun emacsvox-ein--open-notebook-feedback ()
+(defun emacsvox-ein--open-notebook-feedback (_target &rest _)
   "Speak after opening an EIN notebook."
-  (emacsvox-icon 'open-object)
-  (emacsvox-speak-mode-line))
+  (emacsvox-aural-submit
+   (emacsvox-ein--buffer-summary)
+   :facts '(:role notebook :events (object-changed) :notebook-action opened)
+   :module 'ein
+   :occasion 'state-change))
 
 (emacsvox-ein--register-after-group
  '(ein:notebook-jump-to-opened-notebook)
  #'emacsvox-ein--open-notebook-feedback)
 
-(defun emacsvox-ein--close-notebook-feedback ()
+(defun emacsvox-ein--close-notebook-feedback (_target &rest _)
   "Speak after closing an EIN notebook."
-  (emacsvox-icon 'close-object)
-  (emacsvox-speak-mode-line))
+  (emacsvox-aural-submit
+   (format "Notebook closed. %s" (emacsvox-ein--buffer-summary))
+   :facts '(:role notebook :events (object-changed) :notebook-action closed)
+   :module 'ein
+   :occasion 'state-change))
 
 (emacsvox-ein--register-after-group
  '(ein:notebook-close-km)

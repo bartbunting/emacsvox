@@ -1154,6 +1154,14 @@
        (:before
         ((:id ein-cell-navigation-cue-action
           :kind cue :cue large-movement))))
+      (:id ein-notebook-navigation-cue
+       :match
+       (:role notebook :module ein :event focus-entered
+        :occasion navigation)
+       :render
+       (:before
+        ((:id ein-notebook-navigation-cue-action
+          :kind cue :cue large-movement))))
       (:id ein-cell-removed-cue
        :match
        (:role notebook-cell :module ein :event object-changed
