@@ -909,8 +909,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
              (list
               content
               arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output)))
@@ -931,13 +932,14 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (agent-user-prompt "User: Prompt" item)
             (agent-plan "Plan: One step" item))))
       (pcase-let* ((`(,submission (,role ,text ,icon)) entry)
-                   (`(,content ,arguments ,facts ,context) submission)
+                   (`(,content ,arguments ,facts ,module ,occasion)
+                    submission)
                    (actions
                     (plist-get arguments :compatibility-actions)))
         (should (equal content text))
         (should (eq (plist-get facts :role) role))
-        (should (eq (plist-get context :module) 'agent-shell))
-        (should (eq (plist-get context :occasion) 'continuous))
+        (should (eq module 'agent-shell))
+        (should (eq occasion 'continuous))
         (should
          (equal
           (mapcar #'emacsvox-aural-compatibility-action-value actions)
@@ -954,16 +956,18 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (push
              (list
               'content content arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-aural-submit-actions)
           (lambda (&rest arguments)
             (push
              (list
               'actions arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output)))
@@ -979,21 +983,22 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (setq captured (nreverse captured))
     (should (= (length captured) 2))
     (pcase-let*
-        ((`(content ,text ,_arguments ,facts ,context) (car captured)))
+        ((`(content ,text ,_arguments ,facts ,module ,occasion)
+          (car captured)))
       (should (equal text "Thinking: Reasoning"))
       (should (eq (plist-get facts :role) 'agent-thought))
-      (should (eq (plist-get context :module) 'agent-shell))
-      (should (eq (plist-get context :occasion) 'continuous)))
+      (should (eq module 'agent-shell))
+      (should (eq occasion 'continuous)))
     (pcase-let*
-        ((`(actions ,arguments ,facts ,context) (cadr captured))
+        ((`(actions ,arguments ,facts ,module ,occasion) (cadr captured))
          (actions (plist-get arguments :compatibility-actions)))
       (should
        (equal
         (mapcar #'emacsvox-aural-compatibility-action-value actions)
         '(progress)))
       (should (eq (plist-get facts :role) 'agent-thought))
-      (should (eq (plist-get context :module) 'agent-shell))
-      (should (eq (plist-get context :occasion) 'continuous)))))
+      (should (eq module 'agent-shell))
+      (should (eq occasion 'continuous)))))
 
 (ert-deftest emacsvox-agent-shell-rendered-tool-content-is-native ()
   "Rendered tool content modes should each use one native transaction."
@@ -1007,16 +1012,18 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (push
              (list
               'content content arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-aural-submit-actions)
           (lambda (&rest arguments)
             (push
              (list
               'actions arguments
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'emacsvox-icon)
           (lambda (&rest _) (push 'icon direct-output)))
@@ -1039,12 +1046,15 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (let ((facts (if (eq (car entry) 'content)
                        (nth 3 entry)
                      (nth 2 entry)))
-            (context (if (eq (car entry) 'content)
-                         (nth 4 entry)
-                       (nth 3 entry))))
+            (module (if (eq (car entry) 'content)
+                        (nth 4 entry)
+                      (nth 3 entry)))
+            (occasion (if (eq (car entry) 'content)
+                          (nth 5 entry)
+                        (nth 4 entry))))
         (should (eq (plist-get facts :role) 'agent-tool))
-        (should (eq (plist-get context :module) 'agent-shell))
-        (should (eq (plist-get context :occasion) 'continuous))))
+        (should (eq module 'agent-shell))
+        (should (eq occasion 'continuous))))
     (should
      (equal
       (mapcar
@@ -1057,12 +1067,13 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let (captured direct-output)
     (cl-letf
         (((symbol-function 'emacsvox-aural-submit)
-          (lambda (content &rest _arguments)
+          (lambda (content &rest arguments)
             (push
              (list
               content
-              (copy-tree emacsvox-aural-submission-facts)
-              (copy-tree emacsvox-aural-submission-context))
+              (copy-tree (plist-get arguments :facts))
+              (plist-get arguments :module)
+              (plist-get arguments :occasion))
              captured)))
          ((symbol-function 'tts-speak)
           (lambda (&rest _) (push 'speech direct-output))))
@@ -1082,8 +1093,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (dolist (entry captured)
       (should (eq (plist-get (nth 1 entry) :role) 'agent-block))
       (should (eq (plist-get (nth 1 entry) :agent-block-kind) 'other))
-      (should (eq (plist-get (nth 2 entry) :module) 'agent-shell))
-      (should (eq (plist-get (nth 2 entry) :occasion) 'continuous)))))
+      (should (eq (nth 2 entry) 'agent-shell))
+      (should (eq (nth 3 entry) 'continuous)))))
 
 (ert-deftest emacsvox-agent-shell-response-inspection-is-native ()
   "Response inspection outcomes should use explicit native transactions."

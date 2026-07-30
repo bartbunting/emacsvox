@@ -61,7 +61,7 @@
 
 ;;   Required modules:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (cl-declaim  (optimize  (safety 0) (speed 3)))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-transport)
@@ -78,10 +78,17 @@
 (declare-function agent-shell-interaction-at-point "agent-shell" ())
 (declare-function agent-shell-markdown-source-block-at-point
                   "agent-shell-markdown" (&optional pos))
+(declare-function agent-shell-status "agent-shell" (&rest arguments))
+(declare-function agent-shell-subscribe-to
+                  "agent-shell" (&rest arguments))
+(declare-function agent-shell-unsubscribe
+                  "agent-shell" (&rest arguments))
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
 (declare-function agent-shell-ui--toggle-fragment-at-point
                   "agent-shell-ui" ())
+(declare-function shell-maker-busy "shell-maker" ())
+(declare-function shell-maker-point-at-last-prompt-p "shell-maker" ())
 (declare-function emacsvox-speak--present-line-condition
                   "emacsvox-speak" (condition))
 (declare-function emacsvox-speak--visual-line-condition
@@ -1775,17 +1782,25 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
          (> (length block-id) 10)) 'tool-call)
    (t 'unknown)))
 
-(defun emacsvox-agent-shell--submit-content-text (text &optional icon)
-  "Submit Agent Shell content TEXT with optional compatibility ICON."
+(defun emacsvox-agent-shell--submit-content-text
+    (text facts occasion &optional icon)
+  "Submit Agent Shell content TEXT under FACTS and OCCASION.
+When ICON is non-nil, preserve it as a compatibility action."
   (emacsvox-aural-submit
    text
+   :facts facts
+   :module 'agent-shell
+   :occasion occasion
    :compatibility-actions
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
 
-(defun emacsvox-agent-shell--submit-content-icon (icon)
-  "Submit Agent Shell content compatibility ICON without spoken text."
+(defun emacsvox-agent-shell--submit-content-icon (facts occasion icon)
+  "Submit compatibility ICON without text under FACTS and OCCASION."
   (emacsvox-aural-submit-actions
+   :facts facts
+   :module 'agent-shell
+   :occasion occasion
    :compatibility-actions
    (list (emacsvox-aural-compatibility-icon icon))))
 
@@ -1801,65 +1816,78 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
 
-(defun emacsvox-agent-shell--speak-content-compatibility (content block-type)
-  "Speak CONTENT based on BLOCK-TYPE with appropriate feedback."
+(defun emacsvox-agent-shell--speak-content-compatibility
+    (content block-type facts occasion)
+  "Present CONTENT of BLOCK-TYPE under explicit FACTS and OCCASION."
   (let ((trimmed-content (string-trim content)))
     (pcase block-type
       ('agent-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (emacsvox-agent-shell--submit-content-text trimmed-content)))
+         (emacsvox-agent-shell--submit-content-text
+          trimmed-content facts occasion)))
       ('user-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (emacsvox-agent-shell--submit-content-text
-          (concat "User: " trimmed-content) 'item)))
+          (concat "User: " trimmed-content) facts occasion 'item)))
       ('thought
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (pcase emacsvox-agent-shell-speak-thought-process
            ('speak
             (emacsvox-agent-shell--submit-content-text
-             (concat "Thinking: " trimmed-content)))
+             (concat "Thinking: " trimmed-content) facts occasion))
            ('icon
-            (emacsvox-agent-shell--submit-content-icon 'progress))
+            (emacsvox-agent-shell--submit-content-icon
+             facts occasion 'progress))
            (_ nil))))
       ('permission
        (when emacsvox-agent-shell-speak-permissions
-         (emacsvox-agent-shell--deliver-announcement
+         (emacsvox-agent-shell--call-with-aural-presentation
+          facts occasion
+          #'emacsvox-agent-shell--deliver-announcement
           'warn-user trimmed-content)))
       ('tool-call
        (when (and emacsvox-agent-shell-speak-tool-calls
                   (emacsvox-agent-shell--speech-level-at-least-p 'full))
          (pcase emacsvox-agent-shell-tool-output-verbosity
            ('full
-            (emacsvox-agent-shell--submit-content-text trimmed-content))
+            (emacsvox-agent-shell--submit-content-text
+             trimmed-content facts occasion))
            ('summary
             ;; Extract just the first few lines or a summary
             (let ((lines (split-string trimmed-content "\n" t)))
               (if (<= (length lines) 3)
-                  (emacsvox-agent-shell--submit-content-text trimmed-content)
+                  (emacsvox-agent-shell--submit-content-text
+                   trimmed-content facts occasion)
                 (emacsvox-agent-shell--submit-content-text
-                 (string-join (seq-take lines 3) " ")))))
+                 (string-join (seq-take lines 3) " ")
+                 facts occasion))))
            ('status
             ;; Just play an icon for status-only mode
-            (emacsvox-agent-shell--submit-content-icon 'task-done)))))
+            (emacsvox-agent-shell--submit-content-icon
+             facts occasion 'task-done)))))
       ('plan
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (emacsvox-agent-shell--submit-content-text
-          (concat "Plan: " trimmed-content) 'item)))
+          (concat "Plan: " trimmed-content) facts occasion 'item)))
       ('error
-       (emacsvox-agent-shell--deliver-announcement
+       (emacsvox-agent-shell--call-with-aural-presentation
+        facts occasion
+        #'emacsvox-agent-shell--deliver-announcement
         'warn-user trimmed-content))
       ('unknown
        (cond
         ((emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-content-text trimmed-content))
+         (emacsvox-agent-shell--submit-content-text
+          trimmed-content facts occasion))
         ((emacsvox-agent-shell--speech-level-at-least-p 'response)
          (emacsvox-agent-shell--submit-content-text
-          "Additional agent content available."))))
+          "Additional agent content available." facts occasion))))
       (_
        ;; Fallback: speak if content is substantial
        (when (and (> (length trimmed-content) 0)
                   (emacsvox-agent-shell--speech-level-at-least-p 'response))
-         (emacsvox-agent-shell--submit-content-text trimmed-content))))))
+         (emacsvox-agent-shell--submit-content-text
+          trimmed-content facts occasion))))))
 
 (defun emacsvox-agent-shell-content-facts (block-type)
   "Return semantic facts for Agent Shell BLOCK-TYPE."
@@ -1885,10 +1913,8 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
           (if (memq block-type '(permission error))
               'notification
             'continuous)))
-    (emacsvox-agent-shell--call-with-aural-presentation
-     facts occasion
-     #'emacsvox-agent-shell--speak-content-compatibility
-     content block-type)))
+    (emacsvox-agent-shell--speak-content-compatibility
+     content block-type facts occasion)))
 
 ;;;  Advice Agent-Shell Functions
 
