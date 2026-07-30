@@ -5544,6 +5544,8 @@ Return speech events plus the target character.  DIRECTION is `forward' or
               (emacsvox-agent-shell--table-cell-feedback)))
            (presentation (car presentations))
            (facts (nth 2 presentation)))
+      (should (= (length presentations) 1))
+      (should (eq (car presentation) 'submit))
       (should (eq (plist-get facts :role) 'agent-table-cell))
       (should (equal (plist-get facts :events) '(focus-entered)))
       (should (= (plist-get facts :agent-table-row) 1))

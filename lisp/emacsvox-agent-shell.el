@@ -3611,10 +3611,10 @@ Markdown renderer."
 (defun emacsvox-agent-shell--table-cell-feedback ()
   "Speak the rendered Markdown table cell at point semantically."
   (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-    (emacsvox-agent-shell--present-feedback
+    (emacsvox-agent-shell--submit-text-feedback
+     (emacsvox-agent-shell--table-cell-speech cell)
      (emacsvox-agent-shell--table-cell-facts cell 'focus-entered)
-     'navigation 'item #'tts-speak
-     (emacsvox-agent-shell--table-cell-speech cell))
+     'navigation 'item)
     t))
 
 (defun emacsvox-agent-shell--table-context-speech (cell)
@@ -3659,13 +3659,13 @@ Markdown renderer."
     (when-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
       (setq emacsvox-agent-shell--table-navigation-active t
             emacsvox-agent-shell--table-navigation-table-start (car region))
-      (emacsvox-agent-shell--present-feedback
-       (emacsvox-agent-shell--presentation-facts
-        'agent-table 'agent-table-entered)
-       'navigation 'open-object #'tts-speak
+      (emacsvox-agent-shell--submit-text-feedback
        (concat (emacsvox-agent-shell--table-dimensions-speech cell)
                " "
-               (emacsvox-agent-shell--table-cell-speech cell)))
+               (emacsvox-agent-shell--table-cell-speech cell))
+       (emacsvox-agent-shell--presentation-facts
+        'agent-table 'agent-table-entered)
+       'navigation 'open-object)
       t)))
 
 (defun emacsvox-agent-shell-table-speak-context ()
@@ -3845,10 +3845,11 @@ Return nil when that logical cell does not exist."
 
 (defun emacsvox-agent-shell--table-boundary-feedback (message)
   "Play a boundary cue and speak MESSAGE."
-  (emacsvox-agent-shell--present-feedback
+  (emacsvox-agent-shell--submit-text-feedback
+   message
    (emacsvox-agent-shell--presentation-facts
     'agent-table 'boundary-entered)
-   'navigation 'warn-user #'tts-speak message))
+   'navigation 'warn-user))
 
 (defun emacsvox-agent-shell--table-exit-destination (region direction)
   "Return a useful point outside table REGION in DIRECTION."
@@ -3883,13 +3884,13 @@ Return nil when that logical cell does not exist."
                (string-trim
                 (buffer-substring-no-properties
                  (line-beginning-position) (line-end-position)))))
-          (emacsvox-agent-shell--present-feedback
-           (emacsvox-agent-shell--presentation-facts
-            'agent-table 'agent-table-exited)
-           'navigation 'close-object #'tts-speak
+          (emacsvox-agent-shell--submit-text-feedback
            (format "%s table.%s"
                    (if (eq direction 'backward) "Before" "After")
-                   (if (string-empty-p line) "" (concat " " line))))))
+                   (if (string-empty-p line) "" (concat " " line)))
+           (emacsvox-agent-shell--presentation-facts
+            'agent-table 'agent-table-exited)
+           'navigation 'close-object)))
     (emacsvox-agent-shell--table-boundary-feedback
      (format "No content %s table."
              (if (eq direction 'backward) "before" "after")))))
@@ -4003,13 +4004,13 @@ Return nil when that logical cell does not exist."
         (setq emacsvox-agent-shell--table-navigation-active t
               emacsvox-agent-shell--table-navigation-table-start
               (car region))
-        (emacsvox-agent-shell--present-feedback
-         (emacsvox-agent-shell--presentation-facts
-          'agent-table 'agent-table-entered)
-         'navigation 'open-object #'tts-speak
+        (emacsvox-agent-shell--submit-text-feedback
          (concat (emacsvox-agent-shell--table-dimensions-speech cell)
                  " "
-                 (emacsvox-agent-shell--table-cell-speech cell))))
+                 (emacsvox-agent-shell--table-cell-speech cell))
+         (emacsvox-agent-shell--presentation-facts
+          'agent-table 'agent-table-entered)
+         'navigation 'open-object))
     (emacsvox-agent-shell--table-entry-feedback direction)))
 
 (defun emacsvox-agent-shell--table-navigation-pre-command ()
