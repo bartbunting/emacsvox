@@ -1576,15 +1576,6 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
          (format "Agent error: %s" detail)
        "Agent error."))))
 
-(defun emacsvox-agent-shell--submit-lifecycle-icon (facts icon)
-  "Submit configurable lifecycle ICON under explicit FACTS."
-  (emacsvox-aural-submit-actions
-   :facts facts
-   :module 'agent-shell
-   :occasion 'notification
-   :compatibility-actions
-   (list (emacsvox-aural-compatibility-icon icon))))
-
 (defun emacsvox-agent-shell--speak-turn-completion (event)
   "Announce the outcome described by turn completion EVENT."
   (let ((facts (emacsvox-agent-shell-lifecycle-facts event))
@@ -1592,8 +1583,8 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
     (if (equal stop-reason "end_turn")
         (when (emacsvox-agent-shell--speech-level-at-least-p 'notify)
           (if (emacsvox-agent-shell--session-focused-p)
-              (emacsvox-agent-shell--submit-lifecycle-icon
-               facts emacsvox-agent-shell-processing-end-icon)
+              (emacsvox-agent-shell--submit-icon-feedback
+               facts 'notification emacsvox-agent-shell-processing-end-icon)
             (emacsvox-agent-shell--notify-background
              facts 'notification
              emacsvox-agent-shell-processing-end-icon "finished." " ")))
@@ -1665,12 +1656,14 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
       (pcase event-type
         ((or 'init-started 'input-submitted)
          (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-           (emacsvox-agent-shell--submit-lifecycle-icon
-            facts emacsvox-agent-shell-processing-start-icon)))
+           (emacsvox-agent-shell--submit-icon-feedback
+            facts 'notification
+            emacsvox-agent-shell-processing-start-icon)))
         ('init-finished
          (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-           (emacsvox-agent-shell--submit-lifecycle-icon
-            facts emacsvox-agent-shell-processing-end-icon)))
+           (emacsvox-agent-shell--submit-icon-feedback
+            facts 'notification
+            emacsvox-agent-shell-processing-end-icon)))
         ('turn-complete
          (emacsvox-agent-shell--speak-turn-completion event))
         ('error
@@ -1759,21 +1752,8 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
          (> (length block-id) 10)) 'tool-call)
    (t 'unknown)))
 
-(defun emacsvox-agent-shell--submit-content-text
-    (text facts occasion &optional icon)
-  "Submit Agent Shell content TEXT under FACTS and OCCASION.
-When ICON is non-nil, preserve it as a compatibility action."
-  (emacsvox-aural-submit
-   text
-   :facts facts
-   :module 'agent-shell
-   :occasion occasion
-   :compatibility-actions
-   (when icon
-     (list (emacsvox-aural-compatibility-icon icon)))))
-
-(defun emacsvox-agent-shell--submit-content-icon (facts occasion icon)
-  "Submit compatibility ICON without text under FACTS and OCCASION."
+(defun emacsvox-agent-shell--submit-icon-feedback (facts occasion icon)
+  "Submit compatibility ICON under FACTS and OCCASION without text."
   (emacsvox-aural-submit-actions
    :facts facts
    :module 'agent-shell
@@ -1793,27 +1773,27 @@ When ICON is non-nil, preserve it as a compatibility action."
    (when icon
      (list (emacsvox-aural-compatibility-icon icon)))))
 
-(defun emacsvox-agent-shell--speak-content-compatibility
+(defun emacsvox-agent-shell--present-content
     (content block-type facts occasion)
   "Present CONTENT of BLOCK-TYPE under explicit FACTS and OCCASION."
   (let ((trimmed-content (string-trim content)))
     (pcase block-type
       ('agent-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (emacsvox-agent-shell--submit-content-text
+         (emacsvox-agent-shell--submit-text-feedback
           trimmed-content facts occasion)))
       ('user-message
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-content-text
+         (emacsvox-agent-shell--submit-text-feedback
           (concat "User: " trimmed-content) facts occasion 'item)))
       ('thought
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
          (pcase emacsvox-agent-shell-speak-thought-process
            ('speak
-            (emacsvox-agent-shell--submit-content-text
+            (emacsvox-agent-shell--submit-text-feedback
              (concat "Thinking: " trimmed-content) facts occasion))
            ('icon
-            (emacsvox-agent-shell--submit-content-icon
+            (emacsvox-agent-shell--submit-icon-feedback
              facts occasion 'progress))
            (_ nil))))
       ('permission
@@ -1825,24 +1805,24 @@ When ICON is non-nil, preserve it as a compatibility action."
                   (emacsvox-agent-shell--speech-level-at-least-p 'full))
          (pcase emacsvox-agent-shell-tool-output-verbosity
            ('full
-            (emacsvox-agent-shell--submit-content-text
+            (emacsvox-agent-shell--submit-text-feedback
              trimmed-content facts occasion))
            ('summary
             ;; Extract just the first few lines or a summary
             (let ((lines (split-string trimmed-content "\n" t)))
               (if (<= (length lines) 3)
-                  (emacsvox-agent-shell--submit-content-text
+                  (emacsvox-agent-shell--submit-text-feedback
                    trimmed-content facts occasion)
-                (emacsvox-agent-shell--submit-content-text
+                (emacsvox-agent-shell--submit-text-feedback
                  (string-join (seq-take lines 3) " ")
                  facts occasion))))
            ('status
             ;; Just play an icon for status-only mode
-            (emacsvox-agent-shell--submit-content-icon
+            (emacsvox-agent-shell--submit-icon-feedback
              facts occasion 'task-done)))))
       ('plan
        (when (emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-content-text
+         (emacsvox-agent-shell--submit-text-feedback
           (concat "Plan: " trimmed-content) facts occasion 'item)))
       ('error
        (emacsvox-agent-shell--deliver-announcement
@@ -1850,16 +1830,16 @@ When ICON is non-nil, preserve it as a compatibility action."
       ('unknown
        (cond
         ((emacsvox-agent-shell--speech-level-at-least-p 'full)
-         (emacsvox-agent-shell--submit-content-text
+         (emacsvox-agent-shell--submit-text-feedback
           trimmed-content facts occasion))
         ((emacsvox-agent-shell--speech-level-at-least-p 'response)
-         (emacsvox-agent-shell--submit-content-text
+         (emacsvox-agent-shell--submit-text-feedback
           "Additional agent content available." facts occasion))))
       (_
        ;; Fallback: speak if content is substantial
        (when (and (> (length trimmed-content) 0)
                   (emacsvox-agent-shell--speech-level-at-least-p 'response))
-         (emacsvox-agent-shell--submit-content-text
+         (emacsvox-agent-shell--submit-text-feedback
           trimmed-content facts occasion))))))
 
 (defun emacsvox-agent-shell-content-facts (block-type)
@@ -1886,7 +1866,7 @@ When ICON is non-nil, preserve it as a compatibility action."
           (if (memq block-type '(permission error))
               'notification
             'continuous)))
-    (emacsvox-agent-shell--speak-content-compatibility
+    (emacsvox-agent-shell--present-content
      content block-type facts occasion)))
 
 ;;;  Advice Agent-Shell Functions
