@@ -61,16 +61,39 @@
                       list-style-changed heading-edited subtree-changed
                       option-toggled timestamp-changed agenda-navigation
                       agenda-opened agenda-closed table-mode-toggled
+                      table-navigation table-inspection
                       line-inserted checkbox-toggled item-boundary line-start
                       line-end capture-target capture-saved capture-cancelled
                       edit-opened edit-closed paragraph-filled todo-changed
-                      list-item-created export-completed publish-completed)))
+                      list-item-created export-completed publish-completed))
+    (org-table-row
+     :kind attribute
+     :summary "The one-based logical row of an Org table cell"
+     :owner org
+     :roles (org-table)
+     :value-type integer)
+    (org-table-column
+     :kind attribute
+     :summary "The one-based logical column of an Org table cell"
+     :owner org
+     :roles (org-table)
+     :value-type integer)
+    (org-table-presentation
+     :kind attribute
+     :summary "The cell and header information spoken for an Org table"
+     :owner org
+     :roles (org-table)
+     :value-type symbol
+     :allowed-values
+     (cell column-header row-header coordinates cell-with-column-header
+           cell-with-row-header cell-with-both-headers)))
   "Semantic definitions owned by the Org integration.")
 
 (defconst emacsvox-org-aural-semantics
   '(heading level visibility folded focus-entered state-changed object-changed
             org-content org-item org-paragraph org-agenda-entry org-table
-            org-capture org-edit-buffer org-export org-action)
+            org-capture org-edit-buffer org-export org-action org-table-row
+            org-table-column org-table-presentation)
   "Semantic identifiers interpreted by the Org integration.")
 
 (defconst emacsvox-org-aural-level-voices

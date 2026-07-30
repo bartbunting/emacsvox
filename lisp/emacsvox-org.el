@@ -49,6 +49,7 @@
 ;;  required modules
 
 (require 'cl-lib)
+(require 'subr-x)
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-submission)
 (require 'emacsvox-aural-transport)
@@ -447,6 +448,33 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
            emacsvox-org-table-speak-both-headers-and-element))
   :group 'emacsvox-org)
 
+(defvar emacsvox-org--table-presentation-occasion 'inspection
+  "Occasion captured by an Org table presentation command.")
+
+(defun emacsvox-org--table-facts (presentation)
+  "Return semantic facts for Org table PRESENTATION at point."
+  (append
+   (emacsvox-org--feedback-facts
+    'org-table 'focus-entered
+    (if (eq emacsvox-org--table-presentation-occasion 'navigation)
+        'table-navigation
+      'table-inspection))
+   (list
+    :org-table-row (org-table-current-line)
+    :org-table-column (org-table-current-column)
+    :org-table-presentation presentation)))
+
+(defun emacsvox-org--submit-table-text (text presentation)
+  "Display and submit Org table TEXT described by PRESENTATION."
+  (emacsvox-org--submit-message-feedback
+   (emacsvox-org--table-facts presentation)
+   emacsvox-org--table-presentation-occasion nil text))
+
+(defun emacsvox-org--present-table-after-movement ()
+  "Present the configured Org table information after navigation."
+  (let ((emacsvox-org--table-presentation-occasion 'navigation))
+    (funcall emacsvox-org-table-after-movement-function)))
+
 ;; orgalist-mode defines structured navigators that in turn call org-cycle.
 ;; Removing itneractive check in advice for org-cycle
 ;; to speech enable all such nav commands.
@@ -463,7 +491,7 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
        "Speak after Org visibility cycling or report the current table cell."
        (cond
         ((org-at-table-p 'any)
-         (funcall emacsvox-org-table-after-movement-function))
+         (emacsvox-org--present-table-after-movement))
         (t
          (let ((tts-stop-immediately nil))
            (when (ems-interactive-p ',target)
@@ -978,61 +1006,68 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
  '((name . emacsvox)))
 
 (defun emacsvox-org-table-speak-current-element ()
-  "echoes current table element"
+  "Speak the current Org table cell."
   (interactive)
-  (let ((field (org-table-get-field)))
-    (cond
-     ((string-match "^ *$" field) (tts-speak "space"))
-     (t (message field)))))
+  (let ((field (string-trim (org-table-get-field))))
+    (emacsvox-org--submit-table-text
+     (if (string-empty-p field) "space" field)
+     'cell)))
 
 (defun emacsvox-org-table-speak-column-header ()
-  "echoes column header"
+  "Speak the current Org table column header."
   (interactive)
-  (message
-   (propertize (org-table-get 1 nil) 'face 'bold)))
+  (emacsvox-org--submit-table-text
+   (propertize (string-trim (org-table-get 1 nil)) 'face 'bold)
+   'column-header))
 
 (defun emacsvox-org-table-speak-row-header ()
-  "echoes row header"
+  "Speak the current Org table row header."
   (interactive)
-  (message
-   (propertize (org-table-get nil 1) 'face 'italic)))
+  (emacsvox-org--submit-table-text
+   (propertize (string-trim (org-table-get nil 1)) 'face 'italic)
+   'row-header))
 
 (defun emacsvox-org-table-speak-coordinates ()
-  "echoes coordinates"
+  "Speak the current Org table coordinates."
   (interactive)
-  (message
-   (concat "row " (number-to-string (org-table-current-line))
-           ", column " (number-to-string (org-table-current-column)))))
+  (emacsvox-org--submit-table-text
+   (format "row %d, column %d"
+           (org-table-current-line)
+           (org-table-current-column))
+   'coordinates))
 
 (defun emacsvox-org-table-speak-both-headers-and-element ()
-  "echoes both row and col headers."
+  "Speak both headers and the current Org table cell."
   (interactive)
-  (message
+  (emacsvox-org--submit-table-text
    (concat
-    (propertize (org-table-get nil 1) 'face 'italic)
+    (propertize (string-trim (org-table-get nil 1)) 'face 'italic)
     " "
-    (propertize (org-table-get  1 nil) 'face 'bold) " "
-    (org-table-get-field))))
+    (propertize (string-trim (org-table-get 1 nil)) 'face 'bold) " "
+    (string-trim (org-table-get-field)))
+   'cell-with-both-headers))
 
 (defun emacsvox-org-table-speak-row-header-and-element ()
-  "echoes row header and element"
+  "Speak the row header and current Org table cell."
   (interactive)
-  (message
+  (emacsvox-org--submit-table-text
    (concat
-    (propertize (org-table-get nil 1) 'face 'italic)
+    (propertize (string-trim (org-table-get nil 1)) 'face 'italic)
     " "
-    (org-table-get-field))))
+    (string-trim (org-table-get-field)))
+   'cell-with-row-header))
 
 (defun emacsvox-org-table-speak-column-header-and-element ()
-  "echoes col header and element"
+  "Speak the column header and current Org table cell."
   (interactive)
-  (if (eq (org-table-current-line) 1) ;; we're on the header line, 
-      (message (org-table-get-field))
-    (message
+  (emacsvox-org--submit-table-text
+   (if (= (org-table-current-line) 1)
+       (string-trim (org-table-get-field))
      (concat
-      (propertize (org-table-get  1 nil) 'face 'bold)
+      (propertize (string-trim (org-table-get 1 nil)) 'face 'bold)
       " "
-      (org-table-get-field)))))
+      (string-trim (org-table-get-field))))
+   'cell-with-column-header))
 
 (cl-loop
  for target in
@@ -1044,7 +1079,7 @@ that non-heading operation, and FALLBACK-ICON follows its spoken line."
   `(progn
      (defun ,function (&rest _)
        "Speak the current Org table cell after movement."
-       (funcall emacsvox-org-table-after-movement-function))
+       (emacsvox-org--present-table-after-movement))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 

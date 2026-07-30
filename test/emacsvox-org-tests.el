@@ -209,7 +209,9 @@
   (dolist
       (semantic
        '(org-content org-item org-paragraph org-agenda-entry org-table
-                     org-capture org-edit-buffer org-export org-action))
+                     org-capture org-edit-buffer org-export org-action
+                     org-table-row org-table-column
+                     org-table-presentation))
     (should (emacsvox-aural-semantic semantic)))
   (should
    (eq
@@ -1014,6 +1016,42 @@
           (lambda () (push 'table-cell events))))
     (emacsvox--advice-org-table-next-field-after)
     (should (equal events '(table-cell)))))
+
+(ert-deftest emacsvox-org-table-presentation-is-semantic-and-contextual ()
+  "Table inspection and movement identify the cell, coordinates, and occasion."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "| Name | Value |\n| Row | Cell  |\n")
+    (goto-char (point-min))
+    (search-forward "Cell")
+    (let (submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-org--submit-message-feedback)
+            (lambda (facts occasion icon text)
+              (push (list facts occasion icon text) submissions))))
+        (emacsvox-org-table-speak-current-element)
+        (let ((emacsvox-org-table-after-movement-function
+               #'emacsvox-org-table-speak-column-header-and-element))
+          (emacsvox-org--present-table-after-movement)))
+      (setq submissions (nreverse submissions))
+      (should (= (length submissions) 2))
+      (pcase-let ((`(,facts ,occasion ,icon ,text) (nth 0 submissions)))
+        (should (eq occasion 'inspection))
+        (should-not icon)
+        (should (equal text "Cell"))
+        (should (eq (plist-get facts :org-action) 'table-inspection))
+        (should (= (plist-get facts :org-table-row) 2))
+        (should (= (plist-get facts :org-table-column) 2))
+        (should (eq (plist-get facts :org-table-presentation) 'cell)))
+      (pcase-let ((`(,facts ,occasion ,icon ,text) (nth 1 submissions)))
+        (should (eq occasion 'navigation))
+        (should-not icon)
+        (should (equal (substring-no-properties text) "Value Cell"))
+        (should (eq (plist-get facts :org-action) 'table-navigation))
+        (should
+         (eq
+          (plist-get facts :org-table-presentation)
+          'cell-with-column-header))))))
 
 (ert-deftest emacsvox-org-return-selects-table-or-line-feedback ()
   "Org return defers table feedback and owns its non-table destination."
