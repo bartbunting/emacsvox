@@ -1809,6 +1809,123 @@ execution."
  #'emacsvox--advice-org-ctrl-c-ctrl-c-around
  '((name . emacsvox)))
 
+;;;  Links and refiling:
+
+(defun emacsvox--advice-org-open-at-point-around
+    (original &rest arguments)
+  "Open an Org link with feedback owned by its actual destination."
+  (if (not (eq ems--interactive-fn-name 'org-open-at-point))
+      (apply original arguments)
+    (let ((source-buffer (current-buffer))
+          (source-point (point))
+          (prior-message (current-message))
+          (emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (when (eq source-buffer (current-buffer))
+          (let ((message
+                 (emacsvox-org--new-current-message prior-message)))
+            (cond
+             ((/= source-point (point))
+              (emacsvox-org--submit-text
+               (emacsvox-org--line-content)
+               (emacsvox-org--feedback-facts
+                'org-link 'focus-entered 'link-opened)
+               'navigation 'large-movement))
+             (message
+              (emacsvox-org--submit-text
+               message
+               (emacsvox-org--feedback-facts
+                'org-link 'focus-entered 'link-opened)
+               'notification 'open-object)))))))))
+
+(advice-add
+ 'org-open-at-point :around
+ #'emacsvox--advice-org-open-at-point-around
+ '((name . emacsvox)))
+
+(cl-loop
+ for target in
+ '(org-insert-link org-insert-last-stored-link
+   org-insert-all-links org-cite-insert)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Insert an interactive Org link quietly and present its containing line."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--submit-text
+              (emacsvox-org--line-content)
+              (emacsvox-org--feedback-facts
+               'org-link 'object-changed 'link-inserted)
+              'edit 'mark-object)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(defun emacsvox--advice-org-store-link-around
+    (original &rest arguments)
+  "Store an interactive Org link quietly and present its description."
+  (if (not (eq ems--interactive-fn-name 'org-store-link))
+      (apply original arguments)
+    (let ((prior-message (current-message))
+          (emacsvox-speak-messages nil))
+      (prog1
+          (apply original arguments)
+        (emacsvox-org--present-message-result
+         'org-link 'state-changed 'link-stored prior-message
+         "Org link stored" 'state-change 'mark-object)))))
+
+(advice-add
+ 'org-store-link :around #'emacsvox--advice-org-store-link-around
+ '((name . emacsvox)))
+
+(cl-loop
+ for target in
+ '(org-link-preview org-link-preview-refresh)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Preview an interactive Org link quietly and present its state."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-message-result
+              'org-link 'state-changed 'link-previewed prior-message
+              "Org link preview changed" 'state-change 'button)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
+(cl-loop
+ for target in
+ '(org-refile org-refile-copy org-refile-reverse)
+ for function = (intern (format "emacsvox--advice-%s-around" target))
+ do
+ (eval
+  `(progn
+     (defun ,function (original &rest arguments)
+       "Refile an interactive Org subtree quietly and present completion."
+       (if (not (eq ems--interactive-fn-name ',target))
+           (apply original arguments)
+         (let ((prior-message (current-message))
+               (emacsvox-speak-messages nil))
+           (prog1
+               (apply original arguments)
+             (emacsvox-org--present-message-result
+              'org-content 'object-changed 'refile-completed prior-message
+              "Org subtree refiled" 'state-change 'yank-object)))))
+     (advice-add
+      ',target :around #',function '((name . emacsvox))))))
+
 ;;;  Table editing and inspection:
 
 (cl-loop

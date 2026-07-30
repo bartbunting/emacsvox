@@ -225,6 +225,13 @@
     org-timer-set-timer org-timer org-timer-item)
   "Org clock and timer commands with native lifecycle feedback.")
 
+(defconst emacsvox-test--org-link-refile-around-targets
+  '(org-open-at-point org-insert-link org-insert-last-stored-link
+    org-insert-all-links org-cite-insert org-store-link
+    org-link-preview org-link-preview-refresh
+    org-refile org-refile-copy org-refile-reverse)
+  "Org link and refile commands with native result ownership.")
+
 (ert-deftest emacsvox-org-structure-advice-is-directly-registered ()
   "Org structure advice uses native advice directly."
   (dolist (target emacsvox-test--org-structure-after-targets)
@@ -310,7 +317,7 @@
        '(org-content org-item org-paragraph org-agenda-entry org-table
                      org-capture org-edit-buffer org-export
                      org-source-block org-babel-result org-clock org-timer
-                     org-action
+                     org-link org-action
                      org-table-row org-table-column
                      org-table-presentation))
     (should (emacsvox-aural-semantic semantic)))
@@ -1146,6 +1153,81 @@
         '(:role org-clock :events (focus-entered)
           :org-action clock-navigation)))
       (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-org-link-refile-advice-is-directly-registered ()
+  "Every covered Org link and refile command has its named quiet adapter."
+  (dolist (target emacsvox-test--org-link-refile-around-targets)
+    (let ((function
+           (intern (format "emacsvox--advice-%s-around" target))))
+      (should (fboundp target))
+      (should (fboundp function))
+      (should (advice-member-p function target)))))
+
+(ert-deftest emacsvox-org-internal-link-presents-destination ()
+  "An internal link submits its Org destination exactly once."
+  (with-temp-buffer
+    (emacsvox-test--activate-org-mode #'org-mode)
+    (insert "[[*Target]]\n* Target\nDestination\n")
+    (goto-char (point-min))
+    (let ((ems--interactive-fn-name 'org-open-at-point)
+          submissions)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push (cons content arguments) submissions))))
+        (emacsvox--advice-org-open-at-point-around
+         (lambda (&rest _)
+           (search-forward "* Target")
+           (beginning-of-line))))
+      (should (= (length submissions) 1))
+      (should (equal (caar submissions) "* Target"))
+      (should
+       (equal
+        (plist-get (cdar submissions) :facts)
+        '(:role org-link :events (focus-entered)
+          :org-action link-opened)))
+      (should (eq (plist-get (cdar submissions) :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-org-external-link-defers-to-destination ()
+  "A link that changes buffers leaves feedback to the destination module."
+  (let ((source (generate-new-buffer " *Org link source*"))
+        (destination (generate-new-buffer " *Org link destination*"))
+        submissions)
+    (unwind-protect
+        (with-current-buffer source
+          (insert "[[file:destination]]")
+          (goto-char (point-min))
+          (let ((ems--interactive-fn-name 'org-open-at-point))
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-submit)
+                  (lambda (content &rest arguments)
+                    (push (cons content arguments) submissions))))
+              (emacsvox--advice-org-open-at-point-around
+               (lambda (&rest _) (set-buffer destination))))))
+      (kill-buffer destination)
+      (kill-buffer source))
+    (should-not submissions)))
+
+(ert-deftest emacsvox-org-refile-preserves-completion-message ()
+  "Refiling submits Org's completion message once through native policy."
+  (let ((ems--interactive-fn-name 'org-refile)
+        (messages '("Before" "Refiled to Projects"))
+        submissions)
+    (cl-letf
+        (((symbol-function 'current-message)
+          (lambda () (pop messages)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push (cons content arguments) submissions))))
+      (emacsvox--advice-org-refile-around
+       (lambda (&rest _))))
+    (should (= (length submissions) 1))
+    (should (equal (caar submissions) "Refiled to Projects"))
+    (should
+     (equal
+      (plist-get (cdar submissions) :facts)
+      '(:role org-content :events (object-changed)
+        :org-action refile-completed)))))
 
 (ert-deftest emacsvox-org-visibility-and-indirect-feedback-is-native ()
   "Overview, contents, and indirect-buffer results have semantic ownership."
