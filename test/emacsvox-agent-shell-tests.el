@@ -5552,6 +5552,36 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (= (plist-get facts :agent-table-column) 1))
       (should (eq (nth 4 presentation) 'navigation)))))
 
+(ert-deftest emacsvox-agent-shell-table-commands-use-native-submissions ()
+  "Explicit table inspection, copy, and settings should submit natively."
+  (emacsvox-agent-shell-test--with-rendered-table
+      "| Name | Role |\n|---|---|\n| Alice | Engineer |\n"
+    (goto-char (point-min))
+    (search-forward "Engineer")
+    (backward-char (length "Engineer"))
+    (let ((emacsvox-agent-shell-table-data-position 'first)
+          (emacsvox-agent-shell-table-titles '(column row))
+          (kill-ring nil)
+          (kill-ring-yank-pointer nil))
+      (let ((presentations
+             (emacsvox-agent-shell-test--capture-presentations
+               (emacsvox-agent-shell-table-speak-context)
+               (emacsvox-agent-shell-table-speak-dimensions)
+               (emacsvox-agent-shell-table-speak-row)
+               (emacsvox-agent-shell-table-speak-column)
+               (emacsvox-agent-shell-table-copy-cell)
+               (cl-letf (((symbol-function 'read-char-choice)
+                          (lambda (&rest _) ?c)))
+                 (emacsvox-agent-shell-table-select-speaking-method)))))
+        (should (= (length presentations) 6))
+        (should
+         (equal (mapcar #'car presentations)
+                '(submit submit submit submit submit submit)))
+        (dolist (presentation presentations)
+          (should (eq (nth 3 presentation) 'agent-shell))
+          (should (memq (nth 4 presentation)
+                        '(inspection state-change))))))))
+
 (ert-deftest emacsvox-agent-shell-tool-presentation-is-complete ()
   "Tool transitions expose status intent before their compatibility cue."
   (let ((emacsvox-agent-shell-speak-tool-calls t)

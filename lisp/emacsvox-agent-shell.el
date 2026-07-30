@@ -3672,11 +3672,11 @@ Markdown renderer."
   "Speak current Markdown table position and dimensions."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--present-feedback
+      (emacsvox-agent-shell--submit-text-feedback
+       (emacsvox-agent-shell--table-context-speech cell)
        (emacsvox-agent-shell--table-cell-facts
         cell 'agent-content-inspected)
-       'inspection 'item #'tts-speak
-       (emacsvox-agent-shell--table-context-speech cell))
+       'inspection 'item)
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell-table-speak-cell ()
@@ -3689,11 +3689,11 @@ Markdown renderer."
   "Speak the dimensions of the Markdown table at point."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--present-feedback
+      (emacsvox-agent-shell--submit-text-feedback
+       (emacsvox-agent-shell--table-dimensions-speech cell)
        (emacsvox-agent-shell--presentation-facts
         'agent-table 'agent-content-inspected)
-       'inspection 'item #'tts-speak
-       (emacsvox-agent-shell--table-dimensions-speech cell))
+       'inspection 'item)
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell--table-leading-title-speech (title face)
@@ -3757,22 +3757,22 @@ Markdown renderer."
   "Speak the logical Markdown table row at point."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--present-feedback
+      (emacsvox-agent-shell--submit-text-feedback
+       (emacsvox-agent-shell--table-row-speech cell)
        (emacsvox-agent-shell--table-cell-facts
         cell 'agent-content-inspected)
-       'inspection 'item #'tts-speak
-       (emacsvox-agent-shell--table-row-speech cell))
+       'inspection 'item)
     (user-error "Not in a rendered Markdown table")))
 
 (defun emacsvox-agent-shell-table-speak-column ()
   "Speak the logical Markdown table column at point."
   (interactive)
   (if-let* ((cell (emacsvox-agent-shell--markdown-table-cell-at-point)))
-      (emacsvox-agent-shell--present-feedback
+      (emacsvox-agent-shell--submit-text-feedback
+       (emacsvox-agent-shell--table-column-speech cell)
        (emacsvox-agent-shell--table-cell-facts
         cell 'agent-content-inspected)
-       'inspection 'item #'tts-speak
-       (emacsvox-agent-shell--table-column-speech cell))
+       'inspection 'item)
     (user-error "Not in a rendered Markdown table")))
 
 ;; Agent-shell does not currently expose a current-cell value or copy command.
@@ -3784,12 +3784,12 @@ Markdown renderer."
 (defun emacsvox-agent-shell--table-copy (text object)
   "Copy plain TEXT to the kill ring and announce copied table OBJECT."
   (kill-new (substring-no-properties text))
-  (emacsvox-agent-shell--present-feedback
+  (emacsvox-agent-shell--submit-text-feedback
+   (format "Copied table %s." object)
    (emacsvox-agent-shell--presentation-facts
     (if (string= object "cell") 'agent-table-cell 'agent-table)
     'agent-content-copied)
-   'state-change 'save-object #'tts-speak
-   (format "Copied table %s." object)))
+   'state-change 'save-object))
 
 (defun emacsvox-agent-shell-table-copy-cell ()
   "Copy the logical Markdown table cell at point to the kill ring.
@@ -4108,11 +4108,11 @@ resulting configuration after the change."
               (if (eq emacsvox-agent-shell-table-data-position 'first)
                   'last
                 'first))))
-  (emacsvox-agent-shell--present-feedback
+  (emacsvox-agent-shell--submit-text-feedback
+   (emacsvox-agent-shell--table-settings-speech)
    (emacsvox-agent-shell--presentation-facts
     'agent-table 'agent-setting-changed)
-   'state-change 'button #'tts-speak
-   (emacsvox-agent-shell--table-settings-speech)))
+   'state-change 'button))
 
 (defun emacsvox-agent-shell--permission-button-text-at-point ()
   "Return the visible permission button text at point, without decoration."
