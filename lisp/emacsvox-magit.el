@@ -64,6 +64,7 @@
 (defvar magit-diff-refine-hunk)
 (defvar magit-display-buffer-noselect)
 (defvar magit-log-margin-show-shortstat)
+(defvar magit-mouse-set-point-hook)
 (defvar magit-refs-show-commit-count)
 (defvar magit--right-margin-config)
 (defvar transient-current-command)
@@ -242,6 +243,9 @@ The left-margin face is purely graphical and contains no spoken content.")
   (setq-local emacsvox-aural-module 'magit)
   (add-hook
    'magit-section-movement-hook
+   #'emacsvox-magit--section-moved nil t)
+  (add-hook
+   'magit-mouse-set-point-hook
    #'emacsvox-magit--section-moved nil t))
 
 (add-hook 'magit-mode-hook #'emacsvox-magit-enable-aural-context)
@@ -454,7 +458,8 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
     magit-section-backward
     magit-section-up
     magit-section-forward-sibling
-    magit-section-backward-sibling)
+    magit-section-backward-sibling
+    magit-mouse-set-point)
   "Commands presented centrally by `magit-section-movement-hook'.")
 
 (defconst emacsvox-magit--section-jump-targets
@@ -489,6 +494,8 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
   (append
    '(magit-next-line
     magit-previous-line
+    magit-go-backward
+    magit-go-forward
     magit-back-to-indentation
     magit-log-move-to-parent
     magit-log-move-to-revision
@@ -583,6 +590,40 @@ ICON, OCCASION, TARGET, SECTION, EVENT, and VISIBILITY describe the existing
      (emacsvox-magit-section-facts
       'magit-section-cycle-global nil 'visibility-changed)
      'state-change)))
+
+(defun emacsvox--advice-magit-mouse-toggle-section-around
+    (original event &rest arguments)
+  "Present a section whose visibility changed through EVENT."
+  (if
+      (not
+       (eq ems--interactive-fn-name 'magit-mouse-toggle-section))
+      (apply original event arguments)
+    (let* ((position
+            (ignore-errors (posn-point (event-start event))))
+           (section
+            (and
+             position
+             (fboundp 'magit-section-at)
+             (ignore-errors (magit-section-at position))))
+           (hidden-before
+            (emacsvox-magit--section-value section 'hidden))
+           (result (apply original event arguments))
+           (hidden-after
+            (emacsvox-magit--section-value section 'hidden)))
+      (when
+          (and
+           section
+           (not (eq hidden-before hidden-after))
+           (ems-interactive-p 'magit-mouse-toggle-section))
+        (emacsvox-magit-present-line
+         (if hidden-after 'close-object 'open-object)
+         'state-change
+         'magit-mouse-toggle-section
+         section
+         'visibility-changed
+         (if hidden-after 'folded 'expanded)
+         t))
+      result)))
 
 (cl-loop
  for target in '(magit-section-toggle magit-section-cycle)
@@ -1089,7 +1130,13 @@ ARGUMENTS are passed to ORIGINAL unchanged."
     magit-toggle-margin
     magit-cycle-margin-style
     magit-toggle-margin-details
-    magit-toggle-log-margin-style)
+    magit-toggle-log-margin-style
+    magit-blob-mode
+    magit-smerge-keep-current
+    magit-smerge-keep-upper
+    magit-smerge-keep-base
+    magit-smerge-keep-lower
+    magit-smerge-keep-all)
   "Commands that change the presentation or extent of a Magit view.")
 
 (defun emacsvox-magit--setting-value-label (value)
@@ -1174,6 +1221,24 @@ ARGUMENTS are passed to ORIGINAL unchanged."
          magit-log-margin-show-shortstat
          "Log margin shows short statistics"
        "Log margin shows author and date"))
+    ('magit-blob-mode
+     (if magit-blob-mode
+         "Blob navigation mode enabled"
+       "Blob navigation mode disabled"))
+    ((or
+      'magit-smerge-keep-current
+      'magit-smerge-keep-upper
+      'magit-smerge-keep-base
+      'magit-smerge-keep-lower
+      'magit-smerge-keep-all)
+     (format
+      "Kept %s conflict version"
+      (pcase target
+        ('magit-smerge-keep-current "current")
+        ('magit-smerge-keep-upper "upper")
+        ('magit-smerge-keep-base "base")
+        ('magit-smerge-keep-lower "lower")
+        (_ "all"))))
     (_
      (format
       "Changed %s"
@@ -1242,6 +1307,50 @@ Only present the invocation that applies the transient's selected values."
   (emacsvox-magit--call-transient-refresh
    original 'magit-log-refresh arguments))
 
+(defun emacsvox--advice-magit-patch-save-around
+    (original file &rest arguments)
+  "Present a patch exported to FILE."
+  (if (not (eq ems--interactive-fn-name 'magit-patch-save))
+      (apply original file arguments)
+    (let ((result (apply original file arguments)))
+      (when (ems-interactive-p 'magit-patch-save)
+        (emacsvox-magit--submit-text
+         (format "Saved patch to %s" (abbreviate-file-name file))
+         (append
+          (emacsvox-magit-view-facts 'diff 'operation-completed)
+          '(:vcs-operation magit-patch-save))
+         'state-change 'save-object))
+      result)))
+
+(defun emacsvox--advice-magit-do-async-shell-command-around
+    (original file &rest arguments)
+  "Present an asynchronous shell command started for FILE."
+  (if
+      (not
+       (eq ems--interactive-fn-name 'magit-do-async-shell-command))
+      (apply original file arguments)
+    (let ((result (apply original file arguments)))
+      (when (ems-interactive-p 'magit-do-async-shell-command)
+        (emacsvox-magit--submit-text
+         (format
+          "Started shell command for %s"
+          (file-name-nondirectory file))
+         (append
+          (emacsvox-magit-view-facts
+           (emacsvox-magit-current-view-kind) nil)
+          '(:vcs-operation magit-do-async-shell-command))
+         'notification 'progress))
+      result)))
+
+(defun emacsvox--advice-magit-commit-add-log-after (&rest _)
+  "Present insertion of a changelog stub into the commit message."
+  (when (ems-interactive-p 'magit-commit-add-log)
+    (emacsvox-magit--submit-text
+     "Added changelog entry to commit message"
+     (emacsvox-magit-commit-facts
+      'add-log 'operation-completed)
+     'edit 'open-object)))
+
 (defconst emacsvox-magit--simple-advice-targets
   (append
    emacsvox-magit--navigation-targets
@@ -1259,6 +1368,7 @@ Only present the invocation that applies the transient's selected values."
    emacsvox-magit--quit-targets
    '(magit-refresh-all
      magit-process-finish)
+   '(magit-commit-add-log)
    emacsvox-magit--describe-targets
    emacsvox-magit--view-setting-targets
    emacsvox-magit--blame-navigation-targets
@@ -1533,7 +1643,13 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
          (magit-diff-refresh
           emacsvox--advice-magit-diff-refresh-around)
          (magit-log-refresh
-          emacsvox--advice-magit-log-refresh-around)))
+          emacsvox--advice-magit-log-refresh-around)
+         (magit-mouse-toggle-section
+          emacsvox--advice-magit-mouse-toggle-section-around)
+         (magit-patch-save
+          emacsvox--advice-magit-patch-save-around)
+         (magit-do-async-shell-command
+          emacsvox--advice-magit-do-async-shell-command-around)))
     (pcase-let ((`(,target ,function) entry))
       (when
           (and
@@ -1546,6 +1662,7 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
      '(magit
        magit-apply
        magit-blame
+       magit-commit
        magit-diff
        magit-dired
        magit-extras
@@ -1553,6 +1670,7 @@ When ASYNCHRONOUS is non-nil, use process facts for terminal states."
        magit-log
        magit-margin
        magit-process
+       magit-patch
        magit-refs
        magit-repos
        magit-section

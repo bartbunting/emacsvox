@@ -354,6 +354,10 @@
      (memq
       #'emacsvox-magit--section-moved
       magit-section-movement-hook))
+    (should
+     (memq
+      #'emacsvox-magit--section-moved
+      magit-mouse-set-point-hook))
     (let (calls)
       (cl-letf
         (((symbol-function 'emacsvox-aural-submit)
@@ -756,7 +760,13 @@
          (magit-diff-refresh
           emacsvox--advice-magit-diff-refresh-around)
          (magit-log-refresh
-          emacsvox--advice-magit-log-refresh-around)))
+          emacsvox--advice-magit-log-refresh-around)
+         (magit-mouse-toggle-section
+          emacsvox--advice-magit-mouse-toggle-section-around)
+         (magit-patch-save
+          emacsvox--advice-magit-patch-save-around)
+         (magit-do-async-shell-command
+          emacsvox--advice-magit-do-async-shell-command-around)))
     (pcase-let ((`(,target ,function) entry))
       (should (advice-member-p function target))))
   (dolist
@@ -1262,6 +1272,99 @@
               :events (refresh-completed)
               :vcs-operation magit-log-refresh)
              (task-done)))))))))
+
+(ert-deftest emacsvox-magit-mouse-movement-uses-section-feedback ()
+  "Mouse point selection is owned by the central section movement hook."
+  (with-temp-buffer
+    (insert "clicked section")
+    (let ((ems--interactive-fn-name 'magit-mouse-set-point)
+          calls)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (push
+               (list
+                content
+                (plist-get arguments :facts))
+               calls))))
+        (emacsvox-magit--section-moved
+         '(:type commit :hidden nil))
+        (should
+         (equal
+          calls
+          '(("clicked section"
+             (:role vcs-section :section-kind commit
+              :events (focus-entered)
+              :visibility expanded)))))))))
+
+(ert-deftest emacsvox-magit-patch-export-identifies-file ()
+  "Saving a patch reports the actual destination."
+  (let ((ems--interactive-fn-name 'magit-patch-save)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (should
+       (eq
+        (emacsvox--advice-magit-patch-save-around
+         (lambda (&rest _) 'saved)
+         "/tmp/topic.patch")
+        'saved))
+      (should
+       (equal
+        calls
+        '(("Saved patch to /tmp/topic.patch"
+           (:role vcs-view :vcs-view-kind diff
+            :events (operation-completed)
+            :vcs-operation magit-patch-save)
+           (save-object))))))))
+
+(ert-deftest emacsvox-magit-shell-handoff-identifies-file ()
+  "A Dired shell handoff reports that it started and for which file."
+  (let ((ems--interactive-fn-name 'magit-do-async-shell-command)
+        calls)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (push
+             (list
+              content
+              (plist-get arguments :facts)
+              (mapcar
+               #'emacsvox-aural-compatibility-action-value
+               (plist-get arguments :compatibility-actions)))
+             calls))))
+      (emacsvox--advice-magit-do-async-shell-command-around
+       (lambda (&rest _) 'started)
+       "/src/README")
+      (should
+       (equal
+        calls
+        '(("Started shell command for README"
+           (:role vcs-view :vcs-view-kind other
+            :vcs-operation magit-do-async-shell-command)
+           (progress))))))))
+
+(ert-deftest emacsvox-magit-conflict-choice-is-explicit ()
+  "Conflict resolution descriptions identify the version kept."
+  (should
+   (equal
+    (emacsvox-magit--view-setting-description
+     'magit-smerge-keep-upper)
+    "Kept upper conflict version"))
+  (should
+   (equal
+    (emacsvox-magit--view-setting-description
+     'magit-smerge-keep-all)
+    "Kept all conflict version")))
 
 (ert-deftest emacsvox-magit-stage-facts-express-intent ()
   "Staging and section visibility have explicit semantic facts."
