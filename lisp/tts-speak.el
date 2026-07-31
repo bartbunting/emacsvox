@@ -140,6 +140,101 @@ mac for MAC TTS (default on Mac)")
   
   (emacsvox-aural-delivery-send tts-speaker-process "d\n"))
 
+(defconst tts--tracked-completion-prefix "__EMACSVOX_TRACKED_DONE__"
+  "Speech-server output prefix for tracked dispatch completion.")
+
+(defvar tts--tracked-dispatch-sequence 0
+  "Sequence used to identify tracked speech dispatches.")
+
+(defvar tts--tracked-dispatches (make-hash-table :test #'eql)
+  "Tracked speech callbacks indexed by dispatch identifier.")
+
+(defconst tts--tracked-filter-property 'tts--tracked-original-filter
+  "Process property retaining the filter replaced for tracked speech.")
+
+(defconst tts--tracked-fragment-property 'tts--tracked-output-fragment
+  "Process property retaining incomplete tracked server output.")
+
+(defun tts--forward-untracked-output (process output)
+  "Forward untracked OUTPUT from PROCESS to its original filter."
+  (when-let* ((filter (process-get process tts--tracked-filter-property)))
+    (unless (eq filter #'tts--speaker-process-filter)
+      (funcall filter process output))))
+
+(defun tts--complete-tracked-dispatch (process line)
+  "Handle tracked completion LINE from PROCESS.
+Return non-nil when LINE is a tracked completion record."
+  (when
+      (string-match
+       (format "\\`%s \\([[:digit:]]+\\)\\'"
+               (regexp-quote tts--tracked-completion-prefix))
+       line)
+    (let* ((identifier (string-to-number (match-string 1 line)))
+           (entry (gethash identifier tts--tracked-dispatches)))
+      (when (and entry (eq process (car entry)))
+        (remhash identifier tts--tracked-dispatches)
+        (condition-case error-data
+            (funcall (cdr entry) identifier)
+          (error
+           (message "Tracked speech callback failed: %s"
+                    (error-message-string error-data))))))
+    t))
+
+(defun tts--speaker-process-filter (process output)
+  "Recognize tracked completion records in PROCESS OUTPUT."
+  (let ((pending
+         (concat
+          (or (process-get process tts--tracked-fragment-property) "")
+          output))
+        line-end)
+    (while (setq line-end (string-search "\n" pending))
+      (let ((line (string-trim-right (substring pending 0 line-end) "\r")))
+        (unless (tts--complete-tracked-dispatch process line)
+          (tts--forward-untracked-output process (concat line "\n"))))
+      (setq pending (substring pending (1+ line-end))))
+    (process-put process tts--tracked-fragment-property pending)))
+
+(defun tts--ensure-tracked-process-filter (process)
+  "Install tracked completion filtering on PROCESS."
+  (unless (eq (process-filter process) #'tts--speaker-process-filter)
+    (process-put process tts--tracked-filter-property (process-filter process))
+    (process-put process tts--tracked-fragment-property "")
+    (set-process-filter process #'tts--speaker-process-filter)))
+
+(defun tts-cancel-tracked-dispatch (identifier)
+  "Forget tracked speech dispatch IDENTIFIER."
+  (remhash identifier tts--tracked-dispatches))
+
+(defun tts--cancel-process-tracked-dispatches (process)
+  "Forget every tracked dispatch owned by PROCESS."
+  (let (identifiers)
+    (maphash
+     (lambda (identifier entry)
+       (when (eq process (car entry))
+         (push identifier identifiers)))
+     tts--tracked-dispatches)
+    (dolist (identifier identifiers)
+      (remhash identifier tts--tracked-dispatches))))
+
+(defun tts--protocol-dispatch-tracked (callback)
+  "Dispatch queued speech and call CALLBACK after playback completes.
+Return the identifier allocated to this dispatch."
+  (unless (functionp callback)
+    (signal 'wrong-type-argument (list 'functionp callback)))
+  (tts--ensure-tracked-process-filter tts-speaker-process)
+  (let ((identifier (cl-incf tts--tracked-dispatch-sequence)))
+    (puthash
+     identifier (cons tts-speaker-process callback)
+     tts--tracked-dispatches)
+    ;; Keep dispatch and notification on one Tcl command line.  The server's
+    ;; `d' command waits for playback, but remains interruptible by new input.
+    (emacsvox-aural-delivery-send
+     tts-speaker-process
+     (format
+      "d; puts stdout {%s %d}; flush stdout\n"
+      tts--tracked-completion-prefix identifier))
+    identifier))
+
 ;;;;  say
 
 (defun tts--protocol-say (string)
@@ -862,7 +957,9 @@ Argument COMPLEMENT  is the complement of separator."
   notification stream as well."
   (interactive "P")
   (emacsvox-aural-cancel-pending-deliveries tts-speaker-process)
+  (tts--cancel-process-tracked-dispatches tts-speaker-process)
   (when (process-live-p tts-speaker-process) (tts--protocol-stop))
+  (run-hook-with-args 'tts-stopped-hook tts-speaker-process)
   (when
       (and (tts-notify-process)
            (or all (called-interactively-p 'interactive)))
@@ -1117,6 +1214,9 @@ Interactive PREFIX arg makes the new setting global."
   "If t, speech stopped immediately when new speech received.
 Emacsvox sets this to nil if the current message being spoken is too
 important to be interrupted.")
+
+(defvar tts-stopped-hook nil
+  "Functions called with the stopped speech process as their argument.")
 
 (defvar tts-speaker-process nil
   "Speaker process handle.")
@@ -1744,6 +1844,15 @@ unless   `tts-quiet' is set to t. "
      :occasion occasion
      :arguments (list text))))
 
+(defvar tts--tracked-completion-function nil
+  "Completion callback for the dynamically current speech submission.")
+
+(defun tts-speak-tracked (text callback)
+  "Speak TEXT and call CALLBACK after audible playback completes.
+CALLBACK receives the tracked dispatch identifier."
+  (let ((tts--tracked-completion-function callback))
+    (tts-speak text)))
+
 (defun tts--speak (text)
   "Implement `tts-speak' for TEXT with source context already captured."
   ;; ensure text is a  string
@@ -1859,7 +1968,9 @@ unless   `tts-quiet' is set to t. "
       (unless (= start (point-max))
         (skip-syntax-forward " ")       ;skip leading whitespace
         (unless (eobp) (tts-audio-format (point) (point-max))))))
-  (tts--protocol-dispatch))
+  (if tts--tracked-completion-function
+      (tts--protocol-dispatch-tracked tts--tracked-completion-function)
+    (tts--protocol-dispatch)))
 
 (defmacro ems-with-messages-silenced (&rest body)
   "Evaluate body  after temporarily silencing messages."

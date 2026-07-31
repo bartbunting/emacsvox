@@ -192,6 +192,64 @@
       (speaker "s\n")
       (speaker "version\n")))))
 
+(ert-deftest emacsvox-tts-protocol-dispatches-tracked-speech ()
+  "Tracked speech uses one interruptible Tcl command and returns its token."
+  (let ((tts--tracked-dispatch-sequence 40)
+        identifier
+        writes)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'tts--ensure-tracked-process-filter)
+              #'ignore))
+          (setq
+           writes
+           (emacsvox-test--tts-capture-protocol
+            (lambda ()
+              (setq
+               identifier
+               (tts--protocol-dispatch-tracked #'ignore)))))
+          (should (= identifier 41))
+          (should
+           (equal
+            writes
+            '((speaker
+               "d; puts stdout {__EMACSVOX_TRACKED_DONE__ 41}; flush stdout\n")))))
+      (tts-cancel-tracked-dispatch identifier))))
+
+(ert-deftest emacsvox-tts-tracked-filter-handles-fragments-and-forwards-output ()
+  "Tracked process output tolerates fragments and preserves other output."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-tracked-filter-test" :buffer nil :noquery t))
+         (identifier 73)
+         completed
+         forwarded)
+    (unwind-protect
+        (progn
+          (process-put
+           process tts--tracked-filter-property
+           (lambda (_process output)
+             (push output forwarded)))
+          (process-put process tts--tracked-fragment-property "")
+          (puthash
+           identifier
+           (cons
+            process
+            (lambda (value)
+              (setq completed value)))
+           tts--tracked-dispatches)
+          (tts--speaker-process-filter
+           process
+           "server notice\n__EMACSVOX_TRACKED_")
+          (should-not completed)
+          (tts--speaker-process-filter
+           process "DONE__ 73\r\n")
+          (should (= completed identifier))
+          (should-not (gethash identifier tts--tracked-dispatches))
+          (should (equal (nreverse forwarded) '("server notice\n"))))
+      (remhash identifier tts--tracked-dispatches)
+      (delete-process process))))
+
 (ert-deftest emacsvox-tts-protocol-dispatches-tone-and-silence ()
   "Tone and silence commands preserve optional forced dispatch."
   (should
