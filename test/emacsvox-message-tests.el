@@ -112,8 +112,8 @@
     (should (= calls 1))
     (should-not inspected)))
 
-(ert-deftest emacsvox-command-quit-submits-one-urgent-presentation ()
-  "A command quit displays quietly and presents one ordered cue and message."
+(ert-deftest emacsvox-command-quit-submits-one-replaceable-presentation ()
+  "A command quit displays quietly and presents one bounded cue and message."
   (let ((emacsvox-last-message nil)
         (emacsvox-speak-messages t)
         (tts-speaker-process 'main-speaker)
@@ -148,7 +148,8 @@
       (should-not (plist-get arguments :facts))
       (should (eq (plist-get arguments :module) 'core))
       (should (eq (plist-get arguments :occasion) 'notification))
-      (should (eq (plist-get arguments :delivery-policy) 'urgent))
+      (should (eq (plist-get arguments :delivery-policy) 'replaceable))
+      (should (eq (plist-get arguments :replacement-key) 'command-quit))
       (should (eq speaker 'notification-speaker))
       (let ((actions (plist-get arguments :compatibility-actions)))
         (should (= (length actions) 1))
@@ -188,6 +189,28 @@
         (plist-get arguments :facts)
         '(:events (operation-failed))))
       (should (eq speaker 'notification-speaker)))))
+
+(ert-deftest emacsvox-repeated-command-quits-share-replacement-boundary ()
+  "Repeated quits use one stable boundary that delivery can coalesce."
+  (let ((emacsvox-speak-messages t)
+        submissions)
+    (cl-letf
+        (((symbol-function 'message) #'ignore)
+         ((symbol-function 'tts-notify-process)
+          (lambda () 'notification-speaker))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (_content &rest arguments)
+            (push
+             (list
+              (plist-get arguments :delivery-policy)
+              (plist-get arguments :replacement-key))
+             submissions))))
+      (dotimes (_ 20)
+        (emacsvox-error-handler '(quit) nil nil)))
+    (should
+     (equal
+      submissions
+      (make-list 20 '(replaceable command-quit))))))
 
 (ert-deftest emacsvox-command-error-falls-back-to-plain-notification ()
   "A presentation failure retains spoken error feedback without another cue."

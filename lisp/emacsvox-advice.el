@@ -1005,11 +1005,12 @@ ARGUMENTS are passed to ORIGINAL unchanged."
   "Time error was spoken")
 
 (defun emacsvox--present-command-error (data)
-  "Display and present command error DATA as one urgent transaction."
-  (let* ((text (error-message-string data))
+  "Display and present command error DATA as one bounded transaction."
+  (let* ((quit-p (eq (car-safe data) 'quit))
+         (text (error-message-string data))
          (content (propertize text 'face 'error))
          (facts
-          (unless (eq (car-safe data) 'quit)
+          (unless quit-p
             '(:events (operation-failed)))))
     (setq emacsvox-last-message text)
     (let ((emacsvox-speak-messages nil))
@@ -1021,7 +1022,8 @@ ARGUMENTS are passed to ORIGINAL unchanged."
            :facts facts
            :module 'core
            :occasion 'notification
-           :delivery-policy 'urgent
+           :delivery-policy (if quit-p 'replaceable 'urgent)
+           :replacement-key (and quit-p 'command-quit)
            :compatibility-actions
            (list (emacsvox-aural-compatibility-icon 'warn-user))))
       (error
