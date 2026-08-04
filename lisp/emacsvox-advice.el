@@ -172,8 +172,16 @@ DOCSTRING and BODY define the feedback function for each command."
         (beg (or (nth 0 arguments) (point-min)))
         (end (or (nth 1 arguments) (point-max)))
         (name (nth 2 arguments)))
-    (when (zerop beg) (setq beg (point-min)))
-    (with-silent-modifications (put-text-property beg end name nil))
+    (when (and (integerp beg) (zerop beg))
+      (setq beg (point-min)))
+    ;; `remove-overlays' accepts bounds just outside the accessible portion
+    ;; of a narrowed buffer.  Text-property primitives do not, so clamp only
+    ;; the mirrored-property cleanup and leave ORIGINAL's arguments intact.
+    (let ((property-beg (max (point-min) (min beg (point-max))))
+          (property-end (max (point-min) (min end (point-max)))))
+      (when (< property-beg property-end)
+        (with-silent-modifications
+          (put-text-property property-beg property-end name nil))))
     (apply original arguments)))
 
 (advice-add

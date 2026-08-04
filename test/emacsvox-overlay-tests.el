@@ -52,6 +52,26 @@
                   'voice-smoothen))
       (should ems--voiceify-overlays))))
 
+(ert-deftest emacsvox-remove-overlays-clamps-mirrored-property-cleanup ()
+  "Overlay bounds outside a narrowing remain valid for the original call."
+  (with-temp-buffer
+    (insert "abcdef")
+    (put-text-property 2 7 'personality 'voice-bolden)
+    (narrow-to-region 2 6)
+    (let (observed)
+      (should
+       (eq
+        (emacsvox--advice-remove-overlays-around
+         (lambda (&rest arguments)
+           (setq observed arguments)
+           'remove-result)
+         2 7 'personality 'voice-bolden)
+        'remove-result))
+      (should (equal observed '(2 7 personality voice-bolden))))
+    (widen)
+    (should-not (get-text-property 2 'personality))
+    (should (eq (get-text-property 6 'personality) 'voice-bolden))))
+
 (ert-deftest emacsvox-overlay-put-mirrors-face-and-invisibility ()
   "Overlay face and invisibility properties are mirrored into buffer text."
   (with-temp-buffer
