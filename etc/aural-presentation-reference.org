@@ -163,7 +163,12 @@ Operational semantic contract version: =1=.
 | =buffer-entry= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer represented in a buffer list or selector |
 | =candidate= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | One available completion candidate |
 | =checked= | =state= | =markdown= | - | =markdown-task= | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A checkable item is complete |
-| =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
+| =code-construct= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =state-change=, =inspection= | =before=, =content=, =after= | - | A structural construct in source code |
+| =code-edit-kind= | =attribute= | =core= | =symbol= | =code-construct= | - | - | - | - | - | - | The editing operation applied to source code |
+| =code-navigation-kind= | =attribute= | =core= | =symbol= | =code-construct= | - | - | - | - | - | - | The language integration's kind of source navigation |
+| =code-operation= | =role= | =core= | - | - | - | - | - | =edit=, =state-change=, =notification= | =before=, =content=, =after= | - | An operation requested from a programming-language interface |
+| =code-operation-kind= | =attribute= | =core= | =symbol= | =code-operation= | - | - | - | - | - | - | The programming operation being presented |
+| =code-selection-created= | =event= | =core= | - | =code-construct= | - | - | - | =state-change= | =before=, =content=, =after= | - | A source-code construct was selected |
 | =command-exit-status= | =attribute= | =core= | =integer= | =command-interaction= | - | - | - | - | - | - | Numeric exit status of a completed command process |
 | =command-input= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =edit=, =inspection= | =before=, =content=, =after= | - | Input entered into an interactive command session |
 | =command-input-origin= | =attribute= | =core= | =current=, =history=, =copied=, =completion=, =accumulated=, =previous-argument= | =command-input= | - | - | - | - | - | - | Where presented command input came from |
@@ -187,14 +192,16 @@ Operational semantic contract version: =1=.
 | =command-prompt-ready= | =event= | =core= | - | =command-prompt= | - | - | - | =continuous=, =notification= | =before=, =content=, =after= | - | An interactive command process became ready for input |
 | =command-submitted= | =event= | =core= | - | =command-input= | - | - | - | =state-change= | =before=, =content=, =after= | - | Input was submitted to an interactive command process |
 | =completion-index= | =attribute= | =core= | =integer= | - | - | - | - | - | - | - | Zero-based position of a candidate in a completion list |
+| =completion-input-updated= | =event= | =core= | - | =candidate= | - | - | - | =edit=, =state-change= | =before=, =content=, =after= | - | Completion input was updated without accepting it |
 | =completion-separator-inserted= | =event= | =corfu= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A completion separator was inserted without accepting a candidate |
+| =completion-session-closed= | =event= | =core= | - | =candidate= | - | - | - | =state-change= | =before=, =content=, =after= | - | An interactive completion session was dismissed |
 | =confirmation-request= | =role= | =core= | - | - | - | - | - | =notification= | =before=, =content=, =after= | - | A prompt asking the user to confirm an action |
 | =deletion-flagged= | =state= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem entry is flagged for deletion |
 | =edit-operation= | =attribute= | =core= | =deletion=, =line-created=, =uppercase=, =lowercase=, =capitalize= | - | - | - | - | =edit= | - | - | The text-editing operation being presented |
 | =empty= | =state= | =core= | - | =field= | - | - | - | =navigation=, =continuous=, =inspection= | =before=, =content=, =after= | - | A structured field contains no text |
 | =entry-deletion-flagged= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry was flagged for deletion |
 | =entry-inspected= | =event= | =dired= | - | - | - | - | - | =inspection= | =before=, =content=, =after= | - | The user requested a property of a filesystem entry |
-| =entry-inspection-kind= | =attribute= | =dired= | =size=, =modification-time=, =access-time=, =symbolic-link-target=, =permissions=, =file-type= | - | - | - | - | - | - | - | The requested property of a filesystem entry |
+| =entry-inspection-kind= | =attribute= | =dired= | =size=, =modification-time=, =access-time=, =symbolic-link-target=, =permissions=, =file-type=, =header=, =duration=, =marked-summary=, =package= | - | - | - | - | - | - | - | The requested property of a filesystem entry |
 | =entry-kind= | =attribute= | =dired= | =file=, =directory=, =symbolic-link=, =other= | =filesystem-entry= | - | - | - | - | - | - | The filesystem kind of a directory entry |
 | =entry-marked= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry was marked |
 | =entry-opened= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem entry or directory was opened |
@@ -203,9 +210,14 @@ Operational semantic contract version: =1=.
 | =entry-unstaged= | =event= | =magit= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A version-control entry was unstaged |
 | =field= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A named field within a structured object |
 | =field-kind= | =attribute= | =core= | =symbol= | =field= | - | - | - | - | - | - | The module-defined purpose of a structured field |
-| =filesystem-entry= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A file, directory, symbolic link, or other directory entry |
+| =filesystem-edit-kind= | =attribute= | =dired= | =filename-upcase=, =filename-capitalize=, =filename-downcase=, =permission-set=, =permission-toggled= | =filesystem-entry= | - | - | - | - | - | - | The pending Wdired edit made to a filesystem entry |
+| =filesystem-entry= | =role= | =dired= | - | - | - | - | - | =navigation=, =edit=, =state-change=, =inspection= | =before=, =content=, =after= | - | A file, directory, symbolic link, or other directory entry |
 | =filesystem-listing= | =role= | =dired= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A directory or search-result listing of filesystem entries |
+| =filesystem-listing-aspect= | =attribute= | =dired= | =details=, =subdirectory=, =all-subdirectories= | =filesystem-listing= | - | - | - | - | - | - | The part of a filesystem listing whose visibility changed |
 | =filesystem-listing-closed= | =event= | =dired= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A filesystem listing was dismissed |
+| =filesystem-listing-opened= | =event= | =dired= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A filesystem listing was opened or selected |
+| =filesystem-operation= | =role= | =dired= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | The result of a filesystem operation requested from Dired |
+| =filesystem-operation-kind= | =attribute= | =dired= | =symbol= | =filesystem-operation= | - | - | - | - | - | - | The filesystem operation whose result is being presented |
 | =flagged= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An item has been explicitly flagged for attention |
 | =focus-entered= | =event= | =core= | - | - | - | - | - | - | - | - | Navigation arrived at an aural object |
 | =folded= | =state= | =core= | - | - | - | - | - | - | - | - | Descendants of an object are hidden |
@@ -213,8 +225,29 @@ Operational semantic contract version: =1=.
 | =game-cell= | =role= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | One position on a game board |
 | =game-cell-kind= | =attribute= | =core= | =symbol= | =game-cell= | - | - | - | - | - | - | The module-defined contents of a game-board cell |
 | =game-over= | =event= | =core= | - | - | - | - | - | - | - | - | A game ended without successful completion |
+| =game-piece-count= | =attribute= | =core= | =integer= | =game-status= | - | - | - | - | - | - | Number of relevant pieces remaining in a game |
+| =game-status= | =role= | =core= | - | - | - | - | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | Overall state or progress of an interactive game |
 | =has-attachments= | =state= | =core= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =inspection= | =before=, =content=, =after= | - | A message contains one or more attachments |
 | =heading= | =role= | =core= | - | - | - | - | - | - | - | - | A titled structural section |
+| =learning-answer-revealed= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item's answer was revealed |
+| =learning-cloze-updated= | =event= | =org-srs= | - | =learning-item= | - | - | - | =edit=, =state-change=, =notification= | =before=, =content=, =after= | - | The cloze items in an Org entry were updated |
+| =learning-item= | =role= | =org-srs= | - | - | - | - | - | =navigation=, =state-change=, =notification=, =inspection=, =edit= | =before=, =content=, =after= | - | A question and answer reviewed through spaced repetition |
+| =learning-item-created= | =event= | =org-srs= | - | =learning-item= | - | - | - | =edit=, =state-change=, =notification= | =before=, =content=, =after= | - | A spaced-repetition item was created |
+| =learning-item-kind= | =attribute= | =org-srs= | =card=, =cloze= | =learning-item= | - | - | - | - | - | - | The presentation form of a spaced-repetition item |
+| =learning-item-postponed= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item was postponed |
+| =learning-item-rated= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item was rated and rescheduled |
+| =learning-item-suspended= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A learning item was suspended |
+| =learning-next-interval= | =attribute= | =org-srs= | =integer= | =learning-session=, =learning-item= | - | - | - | - | - | - | Seconds until the learning item is next due |
+| =learning-pending-count= | =attribute= | =org-srs= | =integer= | =learning-session=, =learning-item= | - | - | - | - | - | - | Number of learning items remaining in the review session |
+| =learning-phase= | =attribute= | =org-srs= | =question=, =answer=, =result= | =learning-session=, =learning-item= | - | - | - | - | - | - | The current stage of a spaced-repetition review |
+| =learning-question-presented= | =event= | =org-srs= | - | =learning-item= | - | - | - | =navigation=, =state-change=, =notification= | =before=, =content=, =after= | - | A learning item's question was presented |
+| =learning-rating= | =attribute= | =org-srs= | =again=, =hard=, =good=, =easy= | =learning-session=, =learning-item= | - | - | - | - | - | - | The recalled difficulty assigned to a learning item |
+| =learning-rating-redone= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A previously undone learning-item rating was restored |
+| =learning-rating-undone= | =event= | =org-srs= | - | =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | The most recent learning-item rating was undone |
+| =learning-session= | =role= | =org-srs= | - | - | - | - | - | =state-change=, =notification=, =inspection= | =before=, =content=, =after= | - | A spaced-repetition review session |
+| =learning-session-finished= | =event= | =org-srs= | - | =learning-session= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A spaced-repetition review session finished |
+| =learning-session-started= | =event= | =org-srs= | - | =learning-session=, =learning-item= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A spaced-repetition review session started |
+| =learning-session-stopped= | =event= | =org-srs= | - | =learning-session= | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A spaced-repetition review session was stopped early |
 | =level= | =attribute= | =core= | =positive-integer= | - | - | - | - | - | - | - | One-based structural depth |
 | =line-condition= | =attribute= | =core= | =empty=, =whitespace-only=, =separator=, =decorative=, =unspeakable= | - | - | - | - | - | - | - | Why the selected line segment is represented without text |
 | =mail-action-kind= | =attribute= | =core= | =open=, =close=, =compose=, =select=, =unsubscribe=, =catch-up=, =restore=, =list=, =customize=, =toggle-topic=, =show=, =hide=, =scroll=, =activate=, =modify=, =save=, =archive=, =tag=, =search=, =refresh= | - | - | - | - | - | - | - | The mail-reader operation whose feedback is being presented |
@@ -224,6 +257,7 @@ Operational semantic contract version: =1=.
 | =mail-view-kind= | =attribute= | =core= | =group=, =summary=, =article=, =compose=, =server=, =search=, =thread=, =topic=, =other= | =mail-view= | - | - | - | - | - | - | The kind of mail-reader view being presented |
 | =mail-view-opened= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change= | =before=, =content=, =after= | - | A mail reader view was opened or selected |
 | =markdown-code-block= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A fenced Markdown source-code block |
+| =markdown-code-edit-opened= | =event= | =markdown= | - | - | - | - | - | =state-change= | =before=, =content=, =after= | - | A dedicated editor for a Markdown code block was opened |
 | =markdown-completion-completed= | =event= | =markdown= | - | - | - | - | - | =edit= | =before=, =content=, =after= | - | A Markdown completion command updated document content |
 | =markdown-content= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | Ordinary prose content in a Markdown document |
 | =markdown-footnote= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A Markdown footnote definition or reference |
@@ -235,6 +269,7 @@ Operational semantic contract version: =1=.
 | =markdown-list-kind= | =attribute= | =markdown= | =ordered=, =unordered= | =markdown-list-item=, =markdown-task= | - | - | - | - | - | - | Whether a Markdown list item is ordered or unordered |
 | =markdown-navigation-kind= | =attribute= | =markdown= | =line=, =structural= | =heading=, =markdown-content=, =markdown-list-item=, =markdown-task=, =markdown-link=, =markdown-code-block=, =markdown-table-row=, =markdown-footnote=, =markdown-separator= | - | - | - | - | - | - | Whether Markdown navigation was by line or structure |
 | =markdown-operation-completed= | =event= | =markdown= | - | - | - | - | - | =notification=, =state-change= | =before=, =content=, =after= | - | A Markdown validation or export operation completed |
+| =markdown-reading-mode-state= | =attribute= | =markdown= | =enabled=, =disabled= | =markdown-content= | - | - | - | - | - | - | Whether markup-stripping speech is enabled in a Markdown buffer |
 | =markdown-separator= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | A thematic or structural separator in Markdown |
 | =markdown-structure-navigated= | =event= | =markdown= | - | - | - | - | - | =navigation= | =before=, =content=, =after= | - | A Markdown structural navigation command moved point |
 | =markdown-table-row= | =role= | =markdown= | - | - | - | - | - | =navigation=, =continuous=, =state-change=, =edit=, =inspection=, =notification= | =before=, =content=, =after= | - | One logical row of a Markdown table |
@@ -249,9 +284,15 @@ Operational semantic contract version: =1=.
 | =message-part-kind= | =attribute= | =core= | =body=, =page=, =attachment=, =link=, =button=, =mime-part=, =header=, =other= | =message-part= | - | - | - | - | - | - | The kind of content part within a message |
 | =message-thread= | =role= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A conversation thread containing related messages |
 | =modified= | =state= | =core= | - | =buffer-entry= | - | - | - | =navigation=, =state-change=, =inspection= | =before=, =content=, =after= | - | A buffer has unsaved modifications |
+| =notebook= | =role= | =ein= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | An interactive computational notebook |
+| =notebook-action= | =attribute= | =ein= | =symbol= | =notebook= | - | - | - | - | - | - | The lifecycle operation applied to a notebook |
+| =notebook-cell= | =role= | =ein= | - | - | - | - | - | =navigation=, =continuous=, =edit=, =state-change=, =inspection= | =before=, =content=, =after= | - | One executable, rendered, or uninterpreted notebook cell |
+| =notebook-cell-action= | =attribute= | =ein= | =symbol= | =notebook-cell= | - | - | - | - | - | - | The structural operation applied to a notebook cell |
+| =notebook-cell-kind= | =attribute= | =ein= | =symbol= | =notebook-cell= | - | - | - | - | - | - | The content type of a notebook cell |
 | =object-changed= | =event= | =core= | - | - | - | - | - | - | - | - | A registered object was created or modified |
 | =operation-completed= | =event= | =core= | - | - | - | - | - | =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation completed successfully |
 | =operation-failed= | =event= | =core= | - | - | - | - | - | =navigation=, =state-change=, =inspection=, =notification= | =before=, =content=, =after= | - | A requested module operation failed |
+| =operation-started= | =event= | =core= | - | - | - | - | - | =state-change=, =notification= | =before=, =content=, =after= | - | A requested module operation started and may still be running |
 | =org-action= | =attribute= | =org= | =item-navigation=, =structure-navigation=, =paragraph-navigation=, =list-style-changed=, =heading-edited=, =subtree-changed=, =option-toggled=, =timestamp-changed=, =agenda-navigation=, =agenda-opened=, =agenda-closed=, =table-mode-toggled=, =table-navigation=, =table-inspection=, =line-inserted=, =checkbox-toggled=, =item-boundary=, =line-start=, =line-end=, =capture-target=, =capture-saved=, =capture-cancelled=, =edit-opened=, =edit-closed=, =paragraph-filled=, =todo-changed=, =list-item-created=, =calendar-evaluated=, =overview-shown=, =contents-shown=, =indirect-buffer-opened=, =export-menu-opened=, =priority-changed=, =tags-changed=, =planning-changed=, =effort-changed=, =property-changed=, =statistics-updated=, =radio-button-toggled=, =display-changed=, =context-action=, =agenda-entry-reordered=, =agenda-entry-archived=, =agenda-entry-deleted=, =agenda-entry-refiled=, =agenda-clock-changed=, =agenda-mark-changed=, =agenda-bulk-action=, =agenda-filter-changed=, =agenda-view-changed=, =agenda-display-changed=, =agenda-refreshed=, =table-changed=, =table-created=, =table-formula-evaluated=, =table-recalculated=, =table-sorted=, =table-inspected=, =table-editor-opened=, =table-editor-closed=, =table-reference-changed=, =source-block-navigation=, =source-result-navigation=, =source-block-executed=, =source-results-removed=, =source-block-changed=, =source-block-marked=, =source-tangled=, =source-session-opened=, =source-inspected=, =clock-started=, =clock-stopped=, =clock-cancelled=, =clock-navigation=, =clock-display-opened=, =clock-resolved=, =timer-started=, =timer-paused=, =timer-stopped=, =timer-set=, =timer-item-created=, =link-opened=, =link-inserted=, =link-stored=, =link-previewed=, =refile-completed=, =subtree-archived=, =visibility-changed=, =sparse-tree-opened=, =note-changed=, =agenda-file-changed=, =agenda-file-navigation=, =agenda-restriction-changed=, =column-view-changed=, =special-edit=, =time-range-evaluated=, =preview-changed=, =narrowed=, =agenda-context-action=, =agenda-undo=, =agenda-saved=, =sync-completed=, =agenda-inspected=, =export-completed=, =publish-completed= | =heading=, =org-content=, =org-item=, =org-paragraph=, =org-agenda-entry=, =org-table=, =org-capture=, =org-edit-buffer=, =org-export=, =org-source-block=, =org-babel-result=, =org-clock=, =org-timer=, =org-link= | - | - | - | - | - | - | The user-visible Org operation being presented |
 | =org-agenda-entry= | =role= | =org= | - | - | - | - | - | - | - | - | One entry in an Org agenda |
 | =org-babel-result= | =role= | =org= | - | - | - | - | - | - | - | - | The result of executing an Org Babel source block |
@@ -358,8 +399,11 @@ Operational semantic contract version: =1=.
 | =bs-buffer-state-tones= | =bs= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for buffer state in BS |
 | =corfu-completion-edit-tones= | =corfu= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for Corfu completion edits |
 | =dired-entry-navigation= | =dired= | =1= | emacsvox-dired | State-aware navigation feedback for Dired entries |
-| =markdown-compatibility= | =markdown= | =11= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
+| =ein-notebook-feedback= | =ein= | =16= | emacsvox-aural-provider-workflows | Present notebook cell identity, structure, and lifecycle |
+| =markdown-compatibility= | =markdown= | =12= | emacsvox-aural-provider-markdown | Compatibility cues for semantic Markdown presentation |
 | =org-compatibility= | =org= | =2= | emacsvox-aural-provider-org | Compatibility presentation for semantic Org headings |
+| =org-srs-review-feedback= | =org-srs= | =4= | emacsvox-aural-provider-org-srs | Present the question, reveal, and completion stages of Org-srs reviews |
+| =python-interaction-feedback= | =python= | =12= | emacsvox-aural-provider-workflows | Present Python navigation, editing, and operation outcomes |
 | =solitaire-cell-tones= | =solitaire= | =2= | emacsvox-aural-provider-workflows | Compatibility tones for Solitaire board cells |
 | =tabulated-list-field-state-tones= | =tabulated-list= | =1= | emacsvox-aural-provider-workflows | Compatibility tone for empty Tabulated List fields |
 
@@ -485,6 +529,9 @@ A tone action names a registered tone with =:tone=.  The rule remains backend-in
 | =line-separator= | =523.3= | =150= | =t= | =core= | A horizontal separator line was reached |
 | =line-unspeakable= | =2093= | =150= | =t= | =core= | A nonempty line with no speakable content was reached |
 | =line-whitespace= | =261.6= | =150= | =t= | =core= | A display line containing only whitespace was reached |
+| =notebook-cell-code= | =440= | =150= | - | =ein= | The current notebook cell contains executable code |
+| =notebook-cell-markdown= | =659.3= | =150= | - | =ein= | The current notebook cell contains Markdown |
+| =notebook-cell-raw= | =220= | =150= | - | =ein= | The current notebook cell contains uninterpreted text |
 | =solitaire-hole= | =800= | =100= | - | =core= | A hole occupies a Solitaire board cell |
 | =solitaire-stone= | =400= | =150= | - | =core= | A stone occupies a Solitaire board cell |
 
