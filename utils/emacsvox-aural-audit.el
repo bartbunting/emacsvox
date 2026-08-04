@@ -38,6 +38,7 @@
 (require 'emacsvox-aural-scheme-manager)
 (require 'emacsvox-aural-provider-org)
 (require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-provider-org-srs)
 (require 'emacsvox-aural-provider-markdown)
 (require 'emacsvox-aural-provider-notmuch)
 (require 'emacsvox-dired)

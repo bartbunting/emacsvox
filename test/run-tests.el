@@ -118,6 +118,7 @@
   (require 'emacsvox-forms-tests)
   (require 'emacsvox-xref-tests)
   (require 'emacsvox-org-tests)
+  (require 'emacsvox-org-srs-tests)
   (require 'emacsvox-outline-tests)
   (require 'emacsvox-eww-tests)
   (require 'emacsvox-reading-dom-tests)

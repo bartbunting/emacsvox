@@ -110,6 +110,7 @@ emacsvox-aural-profiles.elc \
 emacsvox-aural-voice-palettes.elc \
 emacsvox-aural-provider-org.elc \
 emacsvox-aural-provider-workflows.elc \
+emacsvox-aural-provider-org-srs.elc \
 emacsvox-aural-provider-markdown.elc \
 emacsvox-aural-provider-notmuch.elc \
 emacsvox-sounds.elc \
@@ -257,6 +258,7 @@ emacsvox-nov.elc \
 emacsvox-nxml.elc \
 emacsvox-ocr.elc \
 emacsvox-org.elc \
+emacsvox-org-srs.elc \
 emacsvox-orgalist.elc \
 emacsvox-outline.elc \
 emacsvox-package.elc \
@@ -439,8 +441,10 @@ emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc
 emacsvox-aural-provider-org.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-workflows.elc: emacsvox-aural-schemes.elc
+emacsvox-aural-provider-org-srs.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-markdown.elc: emacsvox-aural-provider-workflows.elc
 emacsvox-aural-provider-notmuch.elc: emacsvox-aural-provider-workflows.elc
+emacsvox-org-srs.elc: emacsvox-aural-provider-org-srs.elc
 emacsvox-sounds.elc: emacsvox-aural-resources.elc emacsvox-aural-transport.elc
 emacsvox-aural-sound-packs.elc: \
 emacsvox-aural-ui.elc emacsvox-aural-inspection.elc \

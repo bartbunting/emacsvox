@@ -103,6 +103,7 @@
     "emacsvox-aural-profiles.el"
     "emacsvox-aural-voice-palettes.el"
     "emacsvox-aural-provider-org.el"
+    "emacsvox-aural-provider-org-srs.el"
     "emacsvox-aural-provider-workflows.el"
     "emacsvox-aural-provider-markdown.el"
     "emacsvox-aural-provider-notmuch.el"

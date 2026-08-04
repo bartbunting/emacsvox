@@ -66,6 +66,7 @@
 (require 'emacsvox-aural-sound-packs)
 (require 'emacsvox-aural-provider-org)
 (require 'emacsvox-aural-provider-workflows)
+(require 'emacsvox-aural-provider-org-srs)
 (require 'emacsvox-aural-provider-markdown)
 (require 'emacsvox-aural-provider-notmuch)
 
@@ -218,6 +219,7 @@
     ("nov" emacsvox-nov)
     ("nxml-mode" emacsvox-nxml)
     ("org" emacsvox-org)
+    ("org-srs" emacsvox-org-srs)
     ("orgalist" emacsvox-orgalist)
     ("outline" emacsvox-outline)
     ("package"emacsvox-package)
