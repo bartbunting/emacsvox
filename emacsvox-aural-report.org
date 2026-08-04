@@ -1,0 +1,831 @@
+#+title: EmacsVox Aural Presentation System — Read-Only Architectural Review
+#+date: 2026-07-29
+#+options: toc:2 num:nil
+
+* 1. Executive verdict
+
+The new aural system has a sound conceptual core: semantic facts are separated from presentation rules, rules resolve into backend-independent plans, and plans are compiled to concrete speech, voice, cue, pause, and spatial actions before queueing. The source-buffer snapshot and object-versus-formatting-run model are particularly good architectural decisions.
+
+The implementation is not yet a cleanly bounded system. It has grown into a 27,179-line subsystem with blurred ownership among schemes, transport, resources, sounds, TTS, Voice Lock, and the user-interface modules. Compatibility is often implemented as a second route through the complete resolver rather than as an input to one presentation transaction. This creates confirmed duplicate-feedback and configuration-boundary defects.
+
+The recommended strategy is:
+
+- Make the aural system the sole user-facing presentation policy layer.
+- Retain ACSS, =defvoice= personalities, voice palettes, face-to-personality mappings, and backend voice compilers as low-level providers and compatibility adapters.
+- Gradually retire =voice-lock-mode= and =global-voice-lock-mode= as public policy controls once equivalent buffer-local behavior, silencing, compatibility declarations, and external-package migration exist.
+- Keep =emacsvox-icon= and the =auditory-icon= text property as supported declaration adapters during migration, but route them through one aural submission transaction and one resource authority.
+- Retire the old sound cache, direct serving functions, and the legacy branch of =tts-audio-format= only after caller and external-compatibility audits prove they are no longer needed.
+
+Deleting “Voice Lock” wholesale now would be wrong. ACSS and the backend voice machinery are essential to the new system; 1,237 unique face mappings and numerous explicit =personality= producers still depend on the compatibility layer. Conversely, keeping the current Voice Lock mode façade indefinitely would preserve a misleading second policy system that is already mostly interpreted by the aural resolver.
+
+Confidence is high for repository behavior and the confirmed defects. Confidence is medium for eventual deletion timing because external Emacs packages and user configurations cannot be inventoried from this repository alone.
+
+* 2. Current architecture
+
+** Repository baseline
+
+The review was performed at =1677de0cf=, “Extract aural explanation engine.” The tracked working tree was clean and =master= was 24 commits ahead of =origin/master=. No repository files, generated references, golden files, or test outputs were changed.
+
+Ignored byte-code was also inspected because it affects normal startup. Several important files currently have source newer than their =.elc=, including =tts-speak.el=, =voice-setup.el=, =voice-defs.el=, and all backend voice modules.
+
+** Module and responsibility map
+
+│ Layer                                     │ Modules                                                                                                               │ Actual responsibility │
+│ -------+---------+----------------------- │
+│ Domain vocabulary                         │ =emacsvox-aural.el=                                                                                                   │ Semantic, occasion,   │
+│                                           │                                                                                                                       │ and alias             │
+│                                           │                                                                                                                       │ registries;           │
+│                                           │                                                                                                                       │ face-presentation     │
+│                                           │                                                                                                                       │ control;              │
+│                                           │                                                                                                                       │ legacy-intent helpers │
+│ Spatial policy                            │ =emacsvox-aural-spatial.el=                                                                                           │ Portable spatial      │
+│                                           │                                                                                                                       │ requests, capability  │
+│                                           │                                                                                                                       │ normalization,        │
+│                                           │                                                                                                                       │ clamping, and         │
+│                                           │                                                                                                                       │ fallback              │
+│ Rule model                                │ =emacsvox-aural-rules.el=                                                                                             │ Rule schema,          │
+│                                           │                                                                                                                       │ selectors,            │
+│                                           │                                                                                                                       │ validation, cascade,  │
+│                                           │                                                                                                                       │ merge operations,     │
+│                                           │                                                                                                                       │ action lifetimes,     │
+│                                           │                                                                                                                       │ render plans          │
+│ Resources                                 │ =emacsvox-aural-resources.el=                                                                                         │ Cue, requirement,     │
+│                                           │                                                                                                                       │ resource-pack,        │
+│                                           │                                                                                                                       │ overlay, and          │
+│                                           │                                                                                                                       │ voice-palette         │
+│                                           │                                                                                                                       │ registries;           │
+│                                           │                                                                                                                       │ discovery and         │
+│                                           │                                                                                                                       │ validation            │
+│ Configuration                             │ =emacsvox-aural-schemes.el=                                                                                           │ Schemes,              │
+│                                           │                                                                                                                       │ inheritance, module   │
+│                                           │                                                                                                                       │ and feature           │
+│                                           │                                                                                                                       │ fragments,            │
+│                                           │                                                                                                                       │ user/session/buffer   │
+│                                           │                                                                                                                       │ rules, profiles,      │
+│                                           │                                                                                                                       │ persistence,          │
+│                                           │                                                                                                                       │ migrations,           │
+│                                           │                                                                                                                       │ rule/provider caches  │
+│ Runtime orchestration                     │ =emacsvox-aural-transport.el=                                                                                         │ Source capture,       │
+│                                           │                                                                                                                       │ object/run            │
+│                                           │                                                                                                                       │ splitting, legacy     │
+│                                           │                                                                                                                       │ adaptation,           │
+│                                           │                                                                                                                       │ resolution,           │
+│                                           │                                                                                                                       │ voice/cue             │
+│                                           │                                                                                                                       │ compilation,          │
+│                                           │                                                                                                                       │ concrete plans,       │
+│                                           │                                                                                                                       │ queueing, history     │
+│ Sound backend                             │ =emacsvox-sounds.el=                                                                                                  │ Legacy icon API,      │
+│                                           │                                                                                                                       │ sound themes and      │
+│                                           │                                                                                                                       │ cache, resource-pack  │
+│                                           │                                                                                                                       │ selection, Pulse      │
+│                                           │                                                                                                                       │ sample ownership,     │
+│                                           │                                                                                                                       │ local/server playback │
+│ TTS boundary                              │ =tts-speak.el=                                                                                                        │ Source-to-scratch     │
+│                                           │                                                                                                                       │ copying, cleanup,     │
+│                                           │                                                                                                                       │ pronunciation, run    │
+│                                           │                                                                                                                       │ dispatch,             │
+│                                           │                                                                                                                       │ concrete-plan and     │
+│                                           │                                                                                                                       │ legacy formatting     │
+│                                           │                                                                                                                       │ branches              │
+│ Voice implementation                      │ =voice-setup.el=, =voice-defs.el=, =*-voices.el=                                                                      │ ACSS, named voices,   │
+│                                           │                                                                                                                       │ face maps, Voice      │
+│                                           │                                                                                                                       │ Lock modes,           │
+│                                           │                                                                                                                       │ engine-specific       │
+│                                           │                                                                                                                       │ voice-command         │
+│                                           │                                                                                                                       │ compilation           │
+│ Built-in providers                        │ =emacsvox-aural-provider-{org,markdown,notmuch,workflows}.el=                                                         │ Data-only semantic    │
+│                                           │                                                                                                                       │ definitions,          │
+│                                           │                                                                                                                       │ schemes, fragments,   │
+│                                           │                                                                                                                       │ previews, and         │
+│                                           │                                                                                                                       │ workflow              │
+│                                           │                                                                                                                       │ presentation rules    │
+│ Shared inspection                         │ =emacsvox-aural-{description,inspection,validation,preview}.el=                                                       │ Descriptions,         │
+│                                           │                                                                                                                       │ representative        │
+│                                           │                                                                                                                       │ inputs, validation    │
+│                                           │                                                                                                                       │ reports, playback     │
+│                                           │                                                                                                                       │ previews              │
+│ Explanation and history                   │ =emacsvox-aural-{explanation,recent-feedback,tools}.el=                                                               │ Explanation,          │
+│                                           │                                                                                                                       │ exact-presentation    │
+│                                           │                                                                                                                       │ history, point        │
+│                                           │                                                                                                                       │ remapping, training   │
+│                                           │                                                                                                                       │ and compatibility     │
+│                                           │                                                                                                                       │ tooling               │
+│ Managers                                  │ =emacsvox-aural-{scheme-manager,feature-fragments,profiles,voice-palettes,sound-packs,overrides,semantics,doctor}.el= │ Accessible list UIs,  │
+│                                           │                                                                                                                       │ mutation workflows,   │
+│                                           │                                                                                                                       │ diagnostics, previews │
+│ Editors and entry point                   │ =emacsvox-aural-{editor,simple-editor,home,ui}.el=                                                                    │ Advanced and          │
+│                                           │                                                                                                                       │ natural-language      │
+│                                           │                                                                                                                       │ editors, shared       │
+│                                           │                                                                                                                       │ tabulated-list        │
+│                                           │                                                                                                                       │ navigation, spoken    │
+│                                           │                                                                                                                       │ home                  │
+
+** Intended data flow
+
+The design document correctly specifies this flow at =etc/aural-presentation-schemes.org:32-74=:
+
+#+begin_example
+source text or semantic event
+  -> semantic facts + source context + formatting runs
+  -> matching rules and cascade
+  -> backend-independent render plan
+  -> concrete voice/cue/spatial compilation
+  -> ordered speech-server or standalone-cue transport
+#+end_example
+
+The normal text path is:
+
+#+begin_example
+integration
+  -> dynamic emacsvox-aural-submission-* bindings
+  -> tts-speak
+  -> emacsvox-aural-capture-context
+  -> emacsvox-aural-prepare-text
+  -> object and run capture
+  -> emacsvox-aural-resolve-active[-inputs]
+  -> emacsvox-aural-compile-plan
+  -> concrete-plan text property
+  -> TTS scratch-buffer cleanup
+  -> tts-audio-format concrete branch
+  -> emacsvox-aural-queue-concrete-runs
+  -> protocol code/text/silence/resource calls
+#+end_example
+
+Evidence: =tts-speak.el:1735-1761=, =emacsvox-aural-transport.el:1340-1409=, =:1562-1673=, and =:1936-2009=.
+
+This means normal speech is no longer rendered independently by Voice Lock. Voice Lock is captured as a policy input and used by the aural resolver.
+
+** Intended boundaries versus actual boundaries
+
+The following boundaries are working well:
+
+- The semantic registry does not encode modality.
+- Rules are compiled and validated before use.
+- Object-level actions and formatting-run actions have distinct lifetimes.
+- Source faces, including overlays, are captured before scratch-buffer copying.
+- The concrete plan records rule, voice, resource, spatial, and degradation provenance.
+- Exact heard-output history is bounded and strips source-buffer references.
+- ACSS remains backend-independent while backend modules produce engine commands.
+
+The principal boundary failures are:
+
+- =emacsvox-aural-transport.el= owns source capture, rule orchestration, compilation, queueing, and history.
+- =emacsvox-aural-schemes.el= owns both rule policy and coordinated sound/spatial/profile transactions.
+- =emacsvox-sounds.el= is simultaneously an old cache, a new provider selector, a local playback backend, and the legacy public façade.
+- Transport calls sounds and TTS through declarations, while TTS requires transport and sounds requires transport. Lisp load cycles are avoided, but the conceptual dependency cycle remains. See =tts-speak.el:46-50=, =emacsvox-aural-transport.el:15-36=, =emacsvox-sounds.el:121-124=, and =emacsvox-aural-schemes.el:18-32=.
+- UI modules depend on private implementation functions in other UI modules. Examples include =emacsvox-aural-simple-editor.el:146,511-563,1185-1199=, =emacsvox-aural-explanation.el:57-60,165-180=, and =emacsvox-aural-doctor.el:25-26,135-140=.
+
+* 3. Legacy/new interaction matrix
+
+** Output ownership and gating
+
+│ Input/output                                                                        │ Policy owner   │ Gate                         │ Resolution and final output      │ Important risk  │
+│ --------------+--------------+------+-----------------------------+---------------- │
+│ Direct =emacsvox-icon=                                                              │ Aural          │ Source buffer’s              │ Legacy cue plus active semantic  │ Separate call   │
+│                                                                                     │ resolver via   │ =emacsvox-use-icons=         │ rules; concrete cue goes to      │ can duplicate   │
+│                                                                                     │ legacy adapter │                              │ local player or speech server    │ the following   │
+│                                                                                     │                │                              │                                  │ speech          │
+│                                                                                     │                │                              │                                  │ submission      │
+│ =auditory-icon= property                                                            │ Aural object   │ Intended source icon         │ Becomes object boundary and      │ Buffer-local    │
+│                                                                                     │ preparation    │ setting; actually scratch    │ concrete cue action              │ icon setting    │
+│                                                                                     │                │ setting at queue time        │                                  │ is lost         │
+│ Explicit =personality=                                                              │ Legacy voice   │ =voice-lock-mode= snapshot   │ Used as legacy fallback unless   │ Disappears      │
+│                                                                                     │ compatibility  │                              │ a stronger rule voice wins       │ when Voice      │
+│                                                                                     │ inside aural   │                              │                                  │ Lock is off     │
+│ =face= or =font-lock-face=                                                          │ Two mechanisms │ Face rules use face toggle;  │ Source face snapshot, explicit   │ Two controls    │
+│                                                                                     │                │ face-to-voice fallback uses  │ face rules, then compatibility   │ can affect the  │
+│                                                                                     │                │ Voice Lock                   │ voice mapping                    │ same visual     │
+│                                                                                     │                │                              │                                  │ face            │
+│                                                                                     │                │                              │                                  │ differently     │
+│ Semantic facts                                                                      │ Aural          │ Active scheme and            │ Concrete                         │ A direct icon   │
+│                                                                                     │ scheme/rule    │ contextual cascade           │ speech/cue/pause/voice/spatial   │ and speech can  │
+│                                                                                     │ engine         │                              │ plan                             │ independently   │
+│                                                                                     │                │                              │                                  │ resolve the     │
+│                                                                                     │                │                              │                                  │ same facts      │
+│ Pause text property                                                                 │ TTS/transport  │ No dedicated policy control  │ Kept as raw property and queued  │ Not actually    │
+│                                                                                     │ hybrid         │                              │ before the concrete run          │ frozen into     │
+│                                                                                     │                │                              │                                  │ the concrete    │
+│                                                                                     │                │                              │                                  │ plan            │
+│ Scheme cue                                                                          │ Aural          │ =emacsvox-use-icons= at      │ Registered pack/overlay asset,   │ Source-local    │
+│                                                                                     │ resource       │ queue time                   │ then server/local transport      │ setting is not  │
+│                                                                                     │ system         │                              │                                  │ authoritative   │
+│ ACSS voice                                                                          │ Voice palette  │ Rule or legacy voice         │ =voice-from-acss=, backend       │ Essential       │
+│                                                                                     │ and backend    │ selection                    │ definition, engine command       │ machinery; not  │
+│                                                                                     │ adapter        │                              │                                  │ a deletion      │
+│                                                                                     │                │                              │                                  │ candidate       │
+
+** Control combinations
+
+│ Voice Lock                                        │ Face presentation │ Icons │ Result                                                                                              │
+│ ------------+-------------------+-------+-------- │
+│ on                                                │ on                │ on    │ Semantic rules, explicit face rules, legacy personality/face voice, and cue actions all participate │
+│ on                                                │ off               │ on    │ Semantic rules and legacy personality/face voice remain; explicit =:legacy-face= rules do not       │
+│ off                                               │ on                │ on    │ Semantic and explicit face rules remain; explicit personality and face-map voice fallback do not    │
+│ off                                               │ off               │ on    │ Only semantic rules and non-legacy content styling remain                                           │
+│ on                                                │ on                │ off   │ Voice behavior is unchanged; cue actions are intended to be suppressed                              │
+│ on                                                │ off               │ off   │ Legacy voice remains; face-rule presentation and cues are suppressed                                │
+│ off                                               │ on                │ off   │ Semantic and non-cue face-rule presentation remain; legacy voice and cues are suppressed            │
+│ off                                               │ off               │ off   │ Semantic speech/voice/pause actions remain; legacy voice, face rules, and cues are suppressed       │
+
+This matrix describes intended source policy. The icon rows are unreliable for buffer-local settings because concrete cue queueing consults the scratch buffer.
+
+The controls also have inconsistent scopes:
+
+- Active scheme and face presentation are global.
+- =voice-lock-mode= and =emacsvox-use-icons= are buffer-local.
+- =global-voice-lock-mode= is meant to manage the local mode but currently fails for newly created buffers after being disabled.
+- Buffer rules are buffer-local and are collected at the source boundary.
+- The sound pack is global but acts as an implicit override of the scheme’s pack.
+- The voice-palette override is explicit and profile-owned.
+
+** Requested end-to-end traces
+
+*** 1. Direct =(emacsvox-icon 'item)=
+
+1. =emacsvox-icon= checks source-buffer =emacsvox-use-icons= at =emacsvox-sounds.el:148-152=.
+2. =emacsvox-aural-present-legacy-icon= captures notification context at =emacsvox-aural-transport.el:2035-2047=.
+3. =emacsvox-aural-resolve-legacy-icon= adds =:legacy-cue item=, the cue’s semantic alias if any, a =legacy-cue-default= rule, and every active rule at =emacsvox-aural-schemes.el:990-1040=.
+4. =emacsvox-aural-compile-plan= freezes the pack, palette, resource, voice commands, spatial fallback, and provenance at =emacsvox-aural-transport.el:996-1086=.
+5. A single standalone cue calls =emacsvox-sounds-play-concrete-cue=. It sends =p RESOURCE= to the speech server, invokes =pactl play-sample=, or starts the configured local player at =emacsvox-sounds.el:521-550=.
+6. A rule that adds speech or pause makes it a multi-action plan; it is queued through the TTS protocol and dispatched.
+
+Because the icon gate is outside the resolver, disabling icons suppresses the entire presentation generated by that call, including any spoken fallback a rule might have added.
+
+*** 2. Text carrying =auditory-icon=
+
+1. =emacsvox-aural--object-end= treats a later non-nil =auditory-icon= as a new object boundary at =emacsvox-aural-transport.el:1268-1290=.
+2. The object’s icon is copied into every captured run and converted to legacy facts/context at =:1396-1403=.
+3. Object, run, and transition plans are resolved and combined at =:1562-1637=.
+4. The concrete plan is attached as a text property before entering the scratch buffer.
+5. =tts-audio-format= sees the concrete plan and calls =emacsvox-aural-queue-concrete-runs= at =tts-speak.el:810-828=.
+6. Cue actions are filtered by =emacsvox-use-icons= in the scratch buffer at =emacsvox-aural-transport.el:1689-1709=.
+
+Confirmed probe:
+
+#+begin_example
+source=nil scratch-default=t queued=1
+source=t   scratch-default=nil queued=0
+#+end_example
+
+Thus a source buffer that disabled icons can still play the property, and one that explicitly enabled them can lose it.
+
+*** 3. Speech formatted by =personality=
+
+1. Source capture reads explicit =personality= before face mapping at =emacsvox-aural-transport.el:1238-1248=.
+2. If the captured Voice Lock state is on, it records =:legacy-personality= and =:legacy-source personality-property= at =:1340-1395=.
+3. =:legacy-personality= rules match only when Voice Lock is enabled at =emacsvox-aural-rules.el:1559-1565=.
+4. If no stronger rule supplied a voice, =emacsvox-aural--apply-legacy-content-style= installs it as fallback at =emacsvox-aural-schemes.el:936-962=.
+5. The voice is resolved through the active palette and ACSS/backend adapter. Backend modules install =tts-get-voice-command= and =tts-define-voice-from-acss=; examples are =dectalk-voices.el:480-513= and =outloud-voices.el:433-456=.
+6. The compiled engine command precedes the text and is followed by a reset.
+
+With Voice Lock off, the explicit personality remains as an inert text property but is not used by normal prepared speech.
+
+*** 4. Speech formatted from =face= or =font-lock-face=
+
+1. Source capture records named faces from text properties and overlays before copying to scratch; the relevant code is =emacsvox-aural-transport.el:1088-1212=.
+2. Explicit =personality= wins.
+3. Otherwise the ordered named faces are looked up in =voice-setup-face-voice-table= at =:1238-1248=.
+4. Explicit =:legacy-face= rules are controlled by =emacsvox-aural-face-presentation-enabled=.
+5. Face-to-personality voice fallback is controlled separately by Voice Lock.
+6. A semantic rule voice overrides the compatibility voice because legacy style is applied only when no voice provenance already exists.
+
+The old =tts-get-style= fallback at =tts-speak.el:330-334= reads =personality= and =face= but not =font-lock-face=, even though style-boundary functions include all three at =:783-808=. That discrepancy affects only unprepared/direct legacy formatting.
+
+*** 5. Native semantic submission
+
+The public =emacsvox-aural-present= function exists at =emacsvox-aural-transport.el:2108-2121=, but repository search found no production caller.
+
+Production integrations instead bind =emacsvox-aural-submission-facts=, =-context=, =-module=, and =-occasion= around existing =tts-speak= or icon calls. =tts-speak= then captures context and prepares text at =tts-speak.el:1735-1761=. This is semantic annotation, not a first-class presentation transaction.
+
+*** 6. Migrated module retaining legacy information
+
+Notmuch is the clearest confirmed example:
+
+- Semantic facts are captured by =emacsvox-notmuch--call-with-aural-presentation= at =emacsvox-notmuch.el:234-253=.
+- Search and message formatting retain visual faces, for example =:322-344=.
+- Status cues remain configurable legacy icons at =:112-127= and =:155-170=.
+- The same boundary calls legacy status icons and then =tts-speak= at =:409-428= and =:529-535=.
+- The optional =mail-message-status-cues= fragment matches the same unread, flagged, and attachment facts at =emacsvox-aural-provider-workflows.el:644-667=.
+
+A resolver probe with unread and attachment states produced:
+
+#+begin_example
+icon-before=(legacy-cue workflow-mail-unread-cue)
+icon-after=(workflow-mail-attachments-label)
+speech-before=(workflow-mail-unread-cue)
+speech-after=(workflow-mail-attachments-label)
+#+end_example
+
+One user action can therefore produce the legacy cue, the semantic cue twice, and the attachment label twice.
+
+*** 7. Continuous reading with several formatting runs
+
+One inferred object spans text until semantic facts, module, occasion, explicit object identifier, or auditory icon changes. =personality=, =face=, =font-lock-face=, pause, facts, module, occasion, or object property changes create formatting runs at =emacsvox-aural-transport.el:1268-1309=.
+
+For an object with =R= runs, current preparation performs:
+
+- one object resolution and compilation;
+- =R= run resolutions and compilations;
+- =R= transition resolutions and compilations.
+
+This is visible at =emacsvox-aural-transport.el:1562-1608=. Object actions are combined only on the first or last run, and adjacent equivalent speech runs can be coalesced at =:1925-1990=. The object/run model prevents object-level presentation from repeating merely because a face changes. It does not prevent repetition across separate direct-icon and speech submissions.
+
+*** 8. Voice Lock disabled
+
+The source context freezes =:voice-lock-enabled nil= at =emacsvox-aural-schemes.el:918-934=. Consequences:
+
+- Explicit personality and face-to-personality fallback are not installed.
+- =:legacy-personality= rules do not match.
+- Semantic rules continue.
+- Explicit =:legacy-face= rules continue if face presentation is enabled.
+
+The four intended combinations are tested at =test/emacsvox-aural-transport-tests.el:1136-1187=.
+
+*** 9. Aural face presentation disabled
+
+Rules with =:legacy-face= do not match, as enforced at =emacsvox-aural-rules.el:1554-1558=. Semantic rules remain. If Voice Lock is still on, the same visual face can still produce its old face-to-personality voice. This is deliberate but easy for users to misinterpret.
+
+*** 10. Auditory icons disabled
+
+- A direct =emacsvox-icon= call exits before resolution.
+- Concrete cue actions inside spoken text are suppressed during scratch-buffer queueing.
+- Speech, pause, and voice actions remain.
+- Exact history is also altered based on the queue-time icon setting at =emacsvox-aural-transport.el:1806-1824=.
+- Because the scratch buffer does not inherit the source-local value, actual and recorded results can both disagree with the source setting.
+
+* 4. Findings
+
+** Confirmed defects
+
+*** F1. Normal startup can mix current aural code with obsolete TTS and Voice Lock byte-code
+
+- Severity :: High
+- Confidence :: High
+- Evidence :: =lisp/Makefile:56-62= separates TTS objects, and =:96-99= separates Voice Lock objects, but the =aural= target at =:325-329= builds neither group. The stale guard’s source list at =lisp/emacsvox-setup.el:58-94= omits =tts-speak.el=, =voice-setup.el=, =voice-defs.el=, and backend voice modules. The compiled test includes =tts-speak.el= but not Voice Lock/backends at =test/run-compiled-aural-tests.el:19-51=.
+- Runtime observation :: Normal setup in the current checkout reported =load-prefer-newer=nil= and loaded =tts-speak= and =voice-lock-mode= from old =.elc= files.
+- Affected symbols :: =emacsvox-setup--stale-byte-code=, Make target =aural=, =tts-speak=, =voice-lock-mode=, backend adapters.
+- Consequence :: Source review, tests, and an interactive user may be exercising different implementations. Compatibility defects can appear or disappear depending on ignored build artifacts.
+- Direction :: Make the aural build include the complete TTS/voice dependency closure; extend the stale guard and build-tree verifier to the same explicit file set.
+- Migration risk :: Low. This changes build correctness, not intended behavior, but could expose previously hidden source behavior.
+
+*** F2. Buffer-local icon policy is lost at the TTS scratch boundary
+
+- Severity :: High
+- Confidence :: High
+- Evidence :: =emacsvox-use-icons= is buffer-local at =emacsvox-sounds.el:130-146=. Context capture at =emacsvox-aural-transport.el:189-207= does not include it. =tts--speak= copies Voice Lock but not icon policy at =tts-speak.el:1770-1828=. Cue queueing reads the scratch-buffer value at =emacsvox-aural-transport.el:1689-1709=.
+- Affected symbols :: =emacsvox-use-icons=, =emacsvox-aural-capture-context=, =tts--speak=, =emacsvox-aural-queue-concrete-action=.
+- Consequence :: Duplicate, missing, or incorrectly recorded cues; source buffer settings are ignored for =auditory-icon= and semantic cue actions.
+- Direction :: Capture an =:icons-enabled= policy at source and freeze it into the concrete plan. Queueing should obey the frozen policy rather than dynamically re-read a buffer variable.
+- Migration risk :: Medium because this will change behavior for users who have unknowingly depended on the current scratch default.
+
+*** F3. Migrated compatibility boundaries can resolve semantic actions more than once
+
+- Severity :: High
+- Confidence :: High
+- Evidence :: Notmuch calls direct compatibility icons and speech under the same facts at =emacsvox-notmuch.el:409-428,529-535=. Every legacy icon resolves all active rules at =emacsvox-aural-schemes.el:1003-1040=, and speech resolves them again through =tts-speak.el:1735-1761=. The workflow fragment duplicates the same statuses at =emacsvox-aural-provider-workflows.el:644-667=.
+- Affected symbols :: All =--call-with-aural-presentation= and =--present-feedback= wrappers, =emacsvox-aural-present-legacy-icon=, =tts-speak=.
+- Consequence :: Repeated cues, labels, pauses, and history entries. Ordering is split across separately dispatched plans.
+- Direction :: Introduce one submission API carrying content, facts, and explicitly ordered compatibility actions. A compatibility cue within that submission must not independently resolve the complete semantic rule set.
+- Migration risk :: High unless existing order and user-configurable legacy cue choices are characterized first.
+
+*** F4. Disabling global Voice Lock does not govern new buffers
+
+- Severity :: High
+- Confidence :: High
+- Evidence :: Both modes default to =t= at =voice-setup.el:237-258=. Runtime result after =(global-voice-lock-mode -1)= was =global=nil current=nil new-buffer=t=.
+- Affected symbols :: =voice-lock-mode=, =voice-lock-mode--turn-on=, =global-voice-lock-mode=.
+- Consequence :: A user can disable Voice Lock globally and have it silently reappear in buffers created later.
+- Direction :: Define one authoritative global/default relationship and characterize pre-existing and new-buffer behavior before changing it.
+- Migration risk :: Medium because some modes may have relied on the always-on local default.
+
+*** F5. “Compatibility directory” sound themes are not used by normal icon presentation
+
+- Severity :: High
+- Confidence :: High
+- Evidence :: =emacsvox-sounds-select-theme= accepts an arbitrary directory and populates =emacsvox-sounds-cache= at =emacsvox-sounds.el:398-443=, but sets =emacsvox-sounds-current-pack=nil=. The normal resolver then chooses the scheme pack or =chimes= at =emacsvox-aural-transport.el:209-218=. =emacsvox-icon= always uses that resolver at =emacsvox-sounds.el:148-152=.
+- Affected symbols :: =emacsvox-sounds-select-theme=, =emacsvox-sounds-current-pack=, =emacsvox-sounds-cache=, =emacsvox-aural--resource-pack=.
+- Consequence :: The command reports a selected directory and builds its cache, but actual icons can come from a different registered pack.
+- Direction :: Register an ephemeral compatibility pack for the directory, or reject/deprecate unregistered directories explicitly.
+- Migration risk :: Medium to high for users with private sound directories.
+
+*** F6. “Buffer local” personality silencing mutates a global face map
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: =voice-setup-local-map= is a plain global =defvar= despite its documentation at =voice-setup.el:270-278=. =voice-setup-toggle-silence-personality= reads a text =face= and updates the global =voice-setup-face-voice-table= at =:280-299=.
+- Affected symbols :: =voice-setup-local-map=, =voice-setup-toggle-silence-personality=, =voice-setup-face-voice-table=.
+- Consequence :: Silencing a face in one buffer changes it in every buffer; overlay and =font-lock-face= behavior is ignored.
+- Direction :: Implement per-buffer suppression as an aural compatibility rule or dedicated per-buffer face adapter.
+- Migration risk :: Medium; this capability has no exact new-system equivalent yet.
+
+*** F7. Face mappings contain load-order-dependent conflicts
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: The inventory found 1,278 entries for 1,237 unique faces, including 41 duplicates and two conflicting mappings. =magit-diff-added-highlight= is assigned different voices consecutively at =emacsvox-magit.el:76-77=. =Man-overstrike= differs between =emacsvox-man.el:61-65= and =emacsvox-woman.el:55-61=.
+- Affected symbols :: =voice-setup-add-map= and =voice-setup-face-voice-table=.
+- Consequence :: Last load wins; the effective voice can depend on package load order.
+- Direction :: Give face declarations module provenance and deterministic precedence, then convert conflicts deliberately.
+- Migration risk :: Medium because choosing a winner changes one existing load order’s behavior.
+
+** Architectural design concerns
+
+*** F8. Runtime dependency direction is conceptually circular
+
+- Severity :: High architectural impact
+- Confidence :: High
+- Evidence :: TTS requires transport; transport calls TTS and sounds by declaration; sounds requires resources, schemes, and transport; schemes calls sounds during profile application. See =tts-speak.el:46-50=, =emacsvox-aural-transport.el:15-36=, =emacsvox-sounds.el:121-124=, and =emacsvox-aural-schemes.el:1318-1397=.
+- Consequence :: Load order, free-variable declarations, partial library loading, and tests become fragile. Compile warnings expose several of these hidden dependencies.
+- Direction :: Split source planning from concrete backend adapters. TTS and audio transports should sit below the planner; schemes should not require or mutate sound playback.
+- Migration risk :: High if done as one refactor; low when extracted behind existing call contracts.
+
+*** F9. Sound provider selection has two authorities
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: Transport first prefers =emacsvox-sounds-current-pack= and only then the scheme provider at =emacsvox-aural-transport.el:209-218=. Scheme hooks attempt to make sounds follow the scheme at =emacsvox-sounds.el:452-463=. Profiles mutate both at =emacsvox-aural-schemes.el:1318-1397=.
+- Consequence :: Manual sound-theme selection acts as an undocumented persistent override of the scheme.
+- Direction :: Model an explicit sound-pack override alongside the existing voice-palette override. The resolver should have one documented provider-precedence function.
+- Migration risk :: Medium; current users may value manual theme selection overriding schemes.
+
+*** F10. Transport and configuration modules have too many responsibilities
+
+- Severity :: Medium to high
+- Confidence :: High
+- Evidence :: =emacsvox-aural-transport.el= is 2,124 lines and =emacsvox-aural-schemes.el= is 1,944 lines. Transport handles capture, object modelling, resolution, concrete compilation, queueing, history, and local standalone cues. Schemes handles rule collection, caches, profiles, persistence, migrations, sound coordination, and configuration transactions.
+- Consequence :: Changes to lifecycle, persistence, resource policy, or queueing require understanding unrelated state and private structures.
+- Direction :: Extract source capture/object planning, plan compilation, queue transport, and history into separate internal layers. Move profile coordination above pure schemes.
+- Migration risk :: Medium if interfaces are characterized first.
+
+*** F11. Common speech work performs repeated rule and resource computation
+
+- Severity :: Medium
+- Confidence :: High for repeated work; medium for user-visible cost
+- Evidence :: An object with =R= runs executes =1+2R= resolutions and compilations at =emacsvox-aural-transport.el:1562-1608=. Matching recomputes semantic details during matching, scoring, and provenance at =emacsvox-aural-rules.el:1530-1639,1995-2066=. Each cue builds an effective asset table at =emacsvox-aural-resources.el:1196-1237= and resource ownership/spatialization scans hash values at =:1239-1297=.
+- Consequence :: Continuous reading and heavily styled text pay costs proportional to formatting runs and rule count.
+- Direction :: Produce a matched-rule record once, compile all anchors in one pass, and cache effective assets plus ownership by resource/configuration generation.
+- Migration risk :: Low to medium if plan equality and explanation provenance are tested.
+
+*** F12. The concrete-plan invariant is incomplete
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: Raw =pause= remains outside the concrete plan; =tts-audio-format= reads it from scratch at =tts-speak.el:821-828=. Queueing applies it before the plan’s before actions at =emacsvox-aural-transport.el:1947-1950=. Icon policy and balance callback selection are also consulted at queue time.
+- Consequence :: Not every queue decision is reproducible from the supposedly frozen plan. Raw pause ordering differs from rule-defined pause ordering.
+- Direction :: Freeze compatibility pause, icon policy, and applicable output capability into the concrete plan.
+- Migration risk :: Medium because exact pause ordering is observable.
+
+*** F13. Compatibility is still a parallel implementation in =tts-audio-format=
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: Normal =tts-speak= prepares every nonempty string at =tts-speak.el:1756-1761=, so it takes the concrete branch at =:810-828=. The else branch at =:829-855= separately implements icons, reset, pause, Voice Lock, style runs, and text.
+- Consequence :: Tests of the old branch can pass while normal speech has different source/scratch behavior. It is another precedence and formatting implementation to maintain.
+- Direction :: Retain it as an explicitly named compatibility entry point until direct callers are audited; stop treating it as representative of normal =tts-speak= behavior.
+- Migration risk :: High if removed before external callers are known.
+
+*** F14. UI modules still use private cross-module APIs extensively
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: The simple editor directly uses advanced-editor private state and commit functions at =emacsvox-aural-simple-editor.el:146,511-563,1170-1201=. Explanation calls private editor and validation functions at =emacsvox-aural-explanation.el:57-60,165-180=. The Doctor calls a private profile function at =emacsvox-aural-doctor.el:25-26,135-140=. =emacsvox-aural-feature-fragments.el= defines a large family of functions named as private members of =emacsvox-aural-tools= beginning at =:29=.
+- Consequence :: Filename ownership and symbol ownership disagree. Internal refactors require coordinated edits across many nominal modules.
+- Direction :: Define small public internal services for rule editing, persistence, preview models, and profile state; make managers views over those services.
+- Migration risk :: Low for API extraction, medium for editor consolidation.
+
+*** F15. The audit enforces placement, not presentation cardinality
+
+- Severity :: Medium
+- Confidence :: High
+- Evidence :: =utils/emacsvox-aural-audit.el:48-74= defines approved migrated boundaries. Its scan at =:192-328= verifies that direct icon calls occur beneath a boundary or compatibility-named function.
+- Consequence :: The audit approves the Notmuch pattern even though it can resolve the same semantic actions twice.
+- Direction :: Extend the audit and runtime characterization to distinguish one submission, one compatibility sub-action, and multiple independent presentations.
+- Migration risk :: Low.
+
+** Hypothesis requiring characterization
+
+*** F16. Scratch cleanup may collapse or lose object/run lifecycle actions
+
+- Severity :: Medium if confirmed
+- Confidence :: Medium
+- Evidence :: Resolution occurs before invisible-text deletion, pronunciation replacement, Unicode cleanup, and quoting at =tts-speak.el:1756-1761,1831-1836=. Replacement copies the concrete plan from the beginning of the match at =:356-372=. Current tests verify one replacement retains one plan at =test/emacsvox-aural-transport-tests.el:1241-1269=.
+- Possible consequence :: A replacement or deletion spanning two runs or removing an object’s first character may collapse transition/object boundaries or move actions.
+- Direction :: Add cross-run and deleted-first-run characterization tests before altering cleanup.
+- Migration risk :: No implementation change should be made until confirmed.
+
+* 5. Redundant and questionable code
+
+** Quantitative inventory
+
+Counts are from the repository audit plus conservative source-form scanning.
+
+│ Category                                   │ Inventory                                                         │ Classification                                                         │
+│ ----------+-----------+----------------    │
+│ Literal =emacsvox-icon= calls              │ 1,519 in 205 files                                                │ Legacy declaration API; retain adapter during long migration           │
+│ Dynamic =emacsvox-icon= calls              │ 105                                                               │ Requires manual intent classification                                  │
+│ =emacsvox-queue-icon= calls                │ 3 dynamic, no literal                                             │ Private compatibility queue; deletion candidate after property path    │
+│                                            │                                                                   │ conversion                                                             │
+│ Registered cues used                       │ 58 of 76                                                          │ Current compatibility/resource vocabulary                              │
+│ =auditory-icon= producers                  │ At least 11 forms in 5 files                                      │ Legacy declaration property; adaptable                                 │
+│ Explicit =personality= producers           │ At least 97 forms in 32 files                                     │ Legacy voice hints; retain compatibility                               │
+│ =voice-setup-add-map=                      │ 104 calls in 102 files                                            │ 1,278 entries, 1,237 unique faces; large migration dependency          │
+│ Direct Voice Lock manipulation             │ One external disable call, =emacsvox-2048.el:308=                 │ User-facing policy migration candidate                                 │
+│ Dynamic semantic submission boundaries     │ 17 binding sites across 12 files                                  │ New annotation path, but not a transaction                             │
+│ Production =emacsvox-aural-present=        │ Zero                                                              │ Missing first-class native event submission adoption                   │
+│ callers                                    │                                                                   │                                                                        │
+│ Modules using old and new paths            │ Agent Shell, Dired, Gnus, Magit, Markdown, Notmuch, Org, Python,  │ Highest-risk migration group                                           │
+│                                            │ Vertico                                                           │                                                                        │
+
+** Genuinely redundant or bypassed implementations
+
+- =emacsvox-sounds-cache=, =emacsvox-sounds-resource=, and =emacsvox-serve-icon= form an old resource implementation at =emacsvox-sounds.el:165-192,561-566=. Normal =emacsvox-icon= playback bypasses them.
+- =emacsvox-play-icon= is now only another call to the aural legacy adapter at =emacsvox-sounds.el:573-578=.
+- The old =tts-audio-format= branch duplicates concrete transport behavior.
+- Seven migrated modules contain substantially identical =--call-with-aural-presentation= wrappers.
+- The advanced and simple editors share state through private functions while separately implementing selectors, content descriptions, mutation flows, and field navigation.
+- Manager modules repeat row construction, refresh, next/previous, persistence, preview, and transaction patterns despite the generic tabulated UI at =emacsvox-aural-ui.el:98-327=.
+- Rule matching and concrete compilation reconstruct diagnostic data already calculated earlier.
+- Effective resource tables are rebuilt per cue even though resource configuration changes are generation-like events.
+
+Safe simplifications include extracting a shared submission boundary, matched-rule records, cached effective resources, public internal editor services, and a generic manager controller.
+
+Changes requiring behavioral migration include removing the old cache, arbitrary-directory support, =tts-audio-format=’s legacy branch, direct icon calls, personality properties, face maps, or Voice Lock modes.
+
+* 6. Voice Lock decision
+
+** Strategic options
+
+│ Option                                             │ Benefits                                  │ Costs and problems                                       │ Verdict                      │
+│ --------+----------+--------------------+--------- │
+│ Retain as independent system                       │ Maximum source compatibility; familiar    │ Architecturally false: normal speech already passes      │ Reject as final architecture │
+│                                                    │ controls                                  │ through the aural resolver; keeps overlapping policy     │                              │
+│                                                    │                                           │ and confusing controls                                   │                              │
+│ Aural policy with retained Voice Lock/ACSS         │ Preserves voices, face maps, packages,    │ Requires adapters, deprecations, and staged UI changes   │ Recommend                    │
+│ internals                                          │ and backend compilers while establishing  │                                                          │                              │
+│                                                    │ one policy owner                          │                                                          │                              │
+│ Fully replace and remove all Voice Lock code       │ Simplest naming if complete               │ Would delete essential ACSS/backend machinery and break  │ Reject now; only selected    │
+│                                                    │                                           │ 1,237 face mappings, explicit personalities, local       │ components may eventually    │
+│                                                    │                                           │ silence, and package integrations                        │ disappear                    │
+
+** Component-level parity and recommendation
+
+│ Component                                        │ New-system parity                │ Recommendation                                                                                     │
+│ -----------+-------------------+---------------- │
+│ =voice-lock-mode= local policy                   │ Partly represented by frozen     │ Replace eventually with a clearly named aural compatibility-voice control                          │
+│                                                  │ context                          │                                                                                                    │
+│ =global-voice-lock-mode=                         │ No reliable equivalent; current  │ Fix/characterize first, then deprecate with migration                                              │
+│                                                  │ behavior is defective            │                                                                                                    │
+│ Explicit =personality=                           │ Supported as a legacy hint       │ Retain adapter for the foreseeable future                                                          │
+│ Face and =font-lock-face= interpretation         │ Aural capture is more complete,  │ Move ownership to aural source capture                                                             │
+│                                                  │ including overlays               │                                                                                                    │
+│ Face-to-personality table                        │ No migrated replacement for      │ Retain as a low-level compatibility provider                                                       │
+│                                                  │ 1,237 faces                      │                                                                                                    │
+│ =defvoice= and 25 standard personalities         │ Exposed through =acss-default=   │ Retain                                                                                             │
+│                                                  │ palette                          │                                                                                                    │
+│ ACSS structure and =voice-from-acss=             │ Core implementation dependency   │ Retain, preferably extract from “Voice Lock” naming │
+│ Backend ACSS compilers                           │ Required for DECtalk, Outloud,   │ Retain                                                                                             │
+│                                                  │ eSpeak, Mac, SwiftMac, plain     │                                                                                                    │
+│ =inaudible=                                      │ Supported as compatibility       │ Retain until represented explicitly everywhere                                                     │
+│                                                  │ content suppression              │                                                                                                    │
+│ Per-buffer personality silencing                 │ No correct equivalent            │ Implement in aural before removal                                                                  │
+│ Raw legacy formatting branch                     │ Compatibility only               │ Audit and deprecate; do not delete yet                                                             │
+│ Voice Lock key bindings and mode-line indicator  │ User-facing duplicate policy     │ Eventual deprecation candidate                                                                     │
+
+The useful architecture is not “aural versus Voice Lock.” It is:
+
+#+begin_example
+aural policy and semantic resolver
+  -> voice palette / compatibility personality provider
+  -> ACSS
+  -> backend voice compiler
+  -> TTS protocol
+#+end_example
+
+The term “Voice Lock” should ultimately refer, if retained at all, only to the compatibility input adapter—not to ACSS or backend voice generation.
+
+** Legacy auditory-icon decision
+
+- Keep =emacsvox-icon= as a stable compatibility declaration API.
+- Keep symbol-valued =auditory-icon= properties during migration.
+- Define whether disabling icons should suppress only cue actions or the entire legacy-icon-derived presentation. The current two paths disagree.
+- Replace arbitrary directory/cache selection with registered resource-pack adaptation.
+- Deprecate =emacsvox-sounds-cache-get=, =emacsvox-sounds-resource=, =emacsvox-serve-icon=, and =emacsvox-queue-icon= only after external-use and caller audits.
+- Prefer semantic facts for new code; use explicit compatibility cue actions when preserving historic output.
+- Do not mechanically replace 1,519 calls without first characterizing intent and order.
+
+* 7. Staged migration plan
+
+** Desired final ownership
+
+│ Responsibility                                  │ Final owner                                      │
+│ ----------------+-------------                  │
+│ Semantic identities and contracts               │ Aural domain registry                            │
+│ Rule policy, cascade, and inheritance           │ Pure aural rule/configuration layer              │
+│ Source facts, faces, and control snapshot       │ Source presentation planner                      │
+│ Voice, cue, volume, and spatial compilation     │ Concrete compiler using provider interfaces      │
+│ Speech/audio protocol and process control       │ Backend transport adapters                       │
+│ ACSS and synth compilation                      │ Low-level voice provider                         │
+│ Legacy icon, personality, and face declarations │ Compatibility adapters feeding the planner       │
+│ Profiles and coordinated setting changes        │ Application/service layer above pure schemes     │
+│ Managers and editors                            │ Views over stable model and transaction services │
+
+** Phase 0: Correctness freeze
+
+Actions:
+
+- Add characterization tests for the confirmed icon, duplicate-submission, global Voice Lock, arbitrary-theme, and stale-byte-code defects.
+- Add an exact Notmuch unread/attachment trace with the optional fragment enabled.
+- Define intended =emacsvox-use-icons= semantics for spoken fallback actions.
+- Extend build verification to TTS, Voice Lock, voice definitions, and all backend modules.
+
+Exit criteria:
+
+- Source and build-tree tests execute the same implementations.
+- All eight control combinations have source-to-scratch assertions.
+- Existing output changes require an explicit reviewed expectation.
+
+** Phase 1: Internal boundary extraction without behavior change
+
+Actions:
+
+- Extract source capture/object planning from transport.
+- Extract concrete compilation from queue transport.
+- Extract history/observability.
+- Introduce explicit sound and voice provider interfaces.
+- Move profile coordination out of pure scheme storage.
+- Cache effective assets and ownership by resource generation.
+- Replace private cross-module UI calls with stable internal services.
+
+Exit criteria:
+
+- No dependency from TTS backend policy upward into schemes.
+- Transport no longer owns rule collection or profile state.
+- Existing concrete plans and golden traces remain identical.
+
+** Phase 2: One submission transaction
+
+Actions:
+
+- Add an API accepting facts, context, content, and ordered compatibility actions.
+- Centralize the repeated module wrappers.
+- Ensure one semantic rule resolution per user-visible object/event.
+- Make legacy icon sub-actions contribute their cue without independently resolving the entire semantic plan.
+- Record one history transaction for the combined presentation.
+
+Exit criteria:
+
+- Notmuch, Org, Python, and equivalent migrated paths produce each semantic action once.
+- Before/content/after order remains compatible by default.
+- Audit detects more than one complete resolution beneath one submission boundary.
+
+** Phase 3: Unify voice policy
+
+Actions:
+
+- Separate ACSS/backend code from Voice Lock mode naming and ownership.
+- Implement correct per-buffer compatibility-voice enablement.
+- Implement true per-buffer face/personality suppression.
+- Give face mappings module provenance and deterministic conflicts.
+- Expose legacy compatibility voice as an aural setting in home, Doctor, profiles, and explanation.
+- Fix global/new-buffer behavior before deprecation.
+
+Exit criteria:
+
+- Existing personality, face, =font-lock-face=, overlay, =inaudible=, global/local mode, and silencing cases have parity tests.
+- =voice-lock-mode= can become a compatibility alias without changing output.
+
+** Phase 4: Convert integrations in audited batches
+
+Actions:
+
+- Start with the modules already using both paths.
+- For every user action, characterize old text, cues, order, voice, and settings.
+- Replace direct icon-plus-speech pairs with one submission.
+- Preserve public package settings by translating them into compatibility actions.
+- Add semantic facts only where intent is stable; do not turn arbitrary face names into semantics.
+
+Exit criteria:
+
+- A migrated module contains no direct presentation outside its central adapter.
+- Optional fragments cannot duplicate compatibility output.
+- Package-specific regression traces cover default and customized settings.
+
+** Phase 5: Consolidate auditory-icon resources
+
+Actions:
+
+- Convert arbitrary sound directories into registered compatibility packs.
+- Establish one explicit pack-override variable and precedence rule.
+- Route all old cache/resource calls through the registry.
+- Warn on deprecated direct cache APIs.
+- Audit external callers and user configuration documentation.
+
+Exit criteria:
+
+- One resource lookup implementation serves direct icons, text properties, semantic cues, previews, and replay.
+- Removing the old cache does not remove arbitrary-directory functionality.
+
+** Phase 6: Deprecate selected Voice Lock and sound façades
+
+Only after parity:
+
+- Make =voice-lock-mode= and =global-voice-lock-mode= compatibility aliases to aural policy.
+- Announce a deprecation period.
+- Provide automated diagnostics for old settings.
+- Remove the old =tts-audio-format= branch only after no supported direct caller remains.
+- Remove old sound cache/serve functions only after external compatibility policy permits it.
+
+Do not remove yet:
+
+- ACSS or =voice-from-acss=;
+- =defvoice= personalities;
+- backend voice modules;
+- face-to-personality mappings;
+- explicit =personality= support;
+- =inaudible=;
+- =emacsvox-icon=;
+- the =auditory-icon= property;
+- local silencing behavior;
+- arbitrary sound-directory support without a replacement.
+
+* 8. Test results and missing coverage
+
+** Commands and outcomes
+
+The required commands were run in an isolated archive of the current repository so ignored build artifacts could not be modified or influence results. The existing generated =emacsvox-loaddefs.el= was supplied to that archive. The original working tree remained untouched.
+
+#+begin_src sh
+make test EMACS=/home/bart/opt/emacs-31/bin/emacs
+#+end_src
+
+Outcome:
+
+- 1,672 ERT tests;
+- 1,671 passed;
+- one optional Mu4e test skipped;
+- zero unexpected results;
+- compiled aural parity passed;
+- normal build-tree aural startup passed;
+- all 27 EmacsVox semantic traces matched;
+- approximately 15.4 seconds for ERT.
+
+#+begin_src sh
+make aural-audit EMACS=/home/bart/opt/emacs-31/bin/emacs
+#+end_src
+
+Outcome:
+
+- passed;
+- 1,519 literal cue calls;
+- 108 dynamic icon/queue calls;
+- 58 of 76 registered cues used;
+- no migrated boundary violations;
+- generated reference current.
+
+The optional pinned comparison was also run without refreshing its golden:
+
+#+begin_src sh
+make reference-test \
+  EMACS=/home/bart/opt/emacs-31/bin/emacs \
+  EMACSPEAK_DIR=/home/bart/src/emacspeak-reference
+#+end_src
+
+Outcome: failed. The checkout was at the required =7482f8e2713b5b8ea87132d9d2fcea6664ff4037= revision, but Emacs 31 obsolescence warnings were captured as scenario messages and expected speech events were absent beginning at =next-line=. This is a pinned-reference harness/runtime incompatibility, not evidence that the current aural behavior changed. The golden should not be refreshed to hide it.
+
+** Highest-value missing tests
+
+1. Source =emacsvox-use-icons= versus scratch default in both directions.
+2. All eight Voice Lock, face-presentation, and icon combinations through real =tts-speak=.
+3. Global Voice Lock disabled followed by creation of new buffers.
+4. Notmuch direct status cue plus speech with =mail-message-status-cues= enabled.
+5. Equivalent dual-path traces for Org, Python, Dired, Gnus, Magit, and Agent Shell.
+6. Arbitrary directory selection followed by actual =emacsvox-icon= resolution.
+7. Normal =tts-speak= with =auditory-icon=, rather than direct unprepared =tts-audio-format=.
+8. =font-lock-face= in the old legacy formatting branch.
+9. Cleanup that replaces or deletes text across two run/object boundaries.
+10. Raw pause versus rule-defined pause ordering.
+11. Startup with stale TTS/Voice Lock/backend byte-code but current aural byte-code.
+12. Load-order permutations for conflicting face mappings.
+13. A performance benchmark over long continuous reading with many formatting runs.
+14. Audit rules for dual full-resolution paths inside one presentation boundary.
+15. Pinned-reference warning isolation under Emacs 31.
+
+* 9. Open questions
+
+1. Which external packages or user configurations directly call =emacsvox-sounds-cache-get=, =emacsvox-serve-icon=, =emacsvox-queue-icon=, =tts-audio-format=, or mutate Voice Lock variables?
+unknown although they would all be in this repo.
+mm
+2. How common are arbitrary private sound directories versus registered packs?
+not very
+
+3. Should “icons disabled” suppress only cue actions, or also spoken/pause fallback actions contributed by a legacy-icon rule?
+likely both
+
+4. Is global Voice Lock intended to control every future buffer, or only modes enabled by the globalized-mode predicate?
+not sure
+
+5. What compatibility and deprecation period is required for long-standing Emacspeak-derived APIs?
+none
+
+6. What latency budget is acceptable for continuous reading and heavily styled buffers?
+As low as possible.
