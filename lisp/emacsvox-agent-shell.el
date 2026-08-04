@@ -4359,12 +4359,14 @@ the corresponding buffer boundary."
                         origin 'forward))
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback))
-        (emacsvox-agent-shell--submit-text-feedback
-         (ems--this-line)
-         (emacsvox-agent-shell--block-location-facts
-          (emacsvox-agent-shell--block-location-at-point)
-          'focus-entered)
-         'navigation 'item)))))
+        (when-let* ((line (ems--this-line))
+                    ((emacsvox-agent-shell--nonempty-text line)))
+          (emacsvox-agent-shell--submit-text-feedback
+           line
+           (emacsvox-agent-shell--block-location-facts
+            (emacsvox-agent-shell--block-location-at-point)
+            'focus-entered)
+           'navigation 'item))))))
 
 (defun emacsvox-agent-shell--previous-item-around
     (original-function &rest arguments)
@@ -4390,12 +4392,14 @@ the corresponding buffer boundary."
                         origin 'backward))
                   (emacsvox-agent-shell--permission-button-feedback)
                   (emacsvox-agent-shell--table-cell-feedback))
-        (emacsvox-agent-shell--submit-text-feedback
-         (ems--this-line)
-         (emacsvox-agent-shell--block-location-facts
-          (emacsvox-agent-shell--block-location-at-point)
-          'focus-entered)
-         'navigation 'item)))))
+        (when-let* ((line (ems--this-line))
+                    ((emacsvox-agent-shell--nonempty-text line)))
+          (emacsvox-agent-shell--submit-text-feedback
+           line
+           (emacsvox-agent-shell--block-location-facts
+            (emacsvox-agent-shell--block-location-at-point)
+            'focus-entered)
+           'navigation 'item))))))
 
 (defun emacsvox-agent-shell--jump-to-permission-after
     (result &rest _)

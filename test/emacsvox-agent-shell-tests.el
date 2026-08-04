@@ -3501,6 +3501,19 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       '((icon item)
         (speak "Reject, choice 2 of 3. Press Return or n."))))))
 
+(ert-deftest emacsvox-agent-shell-item-navigation-skips-empty-lines ()
+  "Item navigation should not submit an empty terminal line."
+  (with-temp-buffer
+    (insert "last item\n")
+    (goto-char (point-min))
+    (should-not
+     (emacsvox-agent-shell-test--capture-presentations
+       (cl-letf (((symbol-function 'ems-interactive-p)
+                  (lambda (function)
+                    (eq function 'agent-shell-next-item))))
+         (emacsvox-agent-shell--next-item-around
+          (lambda (&rest _) (goto-char (point-max)))))))))
+
 (ert-deftest emacsvox-agent-shell-session-controls-submit-current-state ()
   "Model and mode controls atomically announce their resulting state."
   (cl-letf (((symbol-function 'ems-interactive-p)
