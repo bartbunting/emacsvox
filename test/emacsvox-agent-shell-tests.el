@@ -36,6 +36,7 @@
 (defvar emacsvox-agent-shell--tool-call-subscription)
 (defvar emacsvox-agent-shell--markdown-face-voice-map)
 (defvar emacsvox-agent-shell--markdown-unvoiced-faces)
+(defvar emacsvox-agent-shell--chat-face-voice-map)
 (defvar emacsvox-agent-shell--ui-face-voice-map)
 (defvar emacsvox-agent-shell--ui-unvoiced-faces)
 (defvar emacsvox-agent-shell-background-speech-level)
@@ -4837,7 +4838,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell-table-data-position 'first)
         (agent-shell-markdown-table-max-width-fraction 1.0))
     (cl-letf (((symbol-function 'agent-shell-markdown--display-width)
-               (lambda () 38)))
+               (lambda (&optional _window) 38)))
       (emacsvox-agent-shell-test--with-rendered-table
           (concat "| Name | Role | Notes |\n"
                   "|---|---|---|\n"
@@ -5006,7 +5007,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (emacsvox-agent-shell-table-data-position 'first)
         (agent-shell-markdown-table-max-width-fraction 1.0))
     (cl-letf (((symbol-function 'agent-shell-markdown--display-width)
-               (lambda () 35)))
+               (lambda (&optional _window) 35)))
       (emacsvox-agent-shell-test--with-rendered-table
           (concat "| Code | Notes |\n"
                   "|---|---|\n"
@@ -5284,6 +5285,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
   (let ((configured
          (sort
           (append (mapcar #'car emacsvox-agent-shell--ui-face-voice-map)
+                  (seq-filter
+                   #'facep
+                   (mapcar #'car emacsvox-agent-shell--chat-face-voice-map))
                   emacsvox-agent-shell--ui-unvoiced-faces
                   nil)
           (lambda (a b) (string< (symbol-name a) (symbol-name b)))))
@@ -5300,6 +5304,52 @@ Return speech events plus the target character.  DIRECTION is `forward' or
     (dolist (face configured)
       (should (facep face)))
     (should-not (memq 'agent-shell-mode-line configured))))
+
+(ert-deftest emacsvox-agent-shell-chat-labels-are-voiced-and-spoken ()
+  "Optional chat overlays should contribute their visible labels to speech."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (dolist (entry emacsvox-agent-shell--chat-face-voice-map)
+    (should (facep (car entry)))
+    (should
+     (eq (voice-setup-get-voice-for-face (car entry)) (cadr entry))))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell--state
+     '((:agent-config . ((:mode-line-name . "Claude"))))
+     agent-shell-chat--labeled t)
+    (insert
+     (propertize
+      "Claude> " 'font-lock-face
+      '(comint-highlight-prompt comint-highlight-prompt))
+     "hello\n"
+     (propertize "<shell-maker-end-of-prompt>" 'invisible t)
+     "hi there\n")
+    (agent-shell-chat--relabel)
+    (goto-char (point-min))
+    (search-forward "hello")
+    (let (spoken)
+      (emacsvox-agent-shell--speak-line-around
+       (lambda (&rest _)
+         (setq spoken
+               (emacsvox-agent-shell--prepare-speech-text
+                (buffer-substring
+                 (line-beginning-position) (line-end-position))))))
+      (should (equal (substring-no-properties spoken) "Me. hello"))
+      (should (eq (get-text-property 0 'face spoken)
+                  'agent-shell-chat-me-label)))
+    (search-forward "<shell-maker-end-of-prompt>")
+    (backward-char (length "<shell-maker-end-of-prompt>"))
+    (let (spoken)
+      (emacsvox-agent-shell--speak-line-around
+       (lambda (&rest _)
+         (setq spoken
+               (emacsvox-agent-shell--prepare-speech-text
+                (buffer-substring
+                 (line-beginning-position) (line-end-position))))))
+      (should (equal (substring-no-properties spoken) "Claude. hi there"))
+      (should (eq (get-text-property 0 'face spoken)
+                  'agent-shell-chat-agent-label)))))
 
 (ert-deftest emacsvox-agent-shell-ui-face-voices-are-explicit ()
   "Configured faces should resolve to their declared voice personalities."
@@ -5388,7 +5438,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            (face-list))
           (lambda (a b) (string< (symbol-name a) (symbol-name b))))))
     (should (equal configured current))
-    (should (= 17 (length configured)))
+    (should (= 19 (length configured)))
     (dolist (face configured)
       (should (facep face)))))
 

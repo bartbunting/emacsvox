@@ -78,11 +78,12 @@
 (declare-function agent-shell-interaction-at-point "agent-shell" ())
 (declare-function agent-shell-markdown-source-block-at-point
                   "agent-shell-markdown" (&optional pos))
-(declare-function agent-shell-status "agent-shell" (&rest arguments))
-(declare-function agent-shell-subscribe-to
-                  "agent-shell" (&rest arguments))
-(declare-function agent-shell-unsubscribe
-                  "agent-shell" (&rest arguments))
+;; These public entry points are `cl-defun' keyword APIs.  A value of t keeps
+;; `check-declare' checking their source without presenting `&key' as positional
+;; to the native byte compiler, whose declaration arglists follow `defun'.
+(declare-function agent-shell-status "agent-shell" t)
+(declare-function agent-shell-subscribe-to "agent-shell" t)
+(declare-function agent-shell-unsubscribe "agent-shell" t)
 (declare-function agent-shell-ui-toggle-fragment "agent-shell-ui" ())
 (declare-function agent-shell-ui-toggle-all-fragments "agent-shell-ui" ())
 (declare-function agent-shell-ui--toggle-fragment-at-point
@@ -314,6 +315,8 @@ The neutral viewport view face carries no state beyond its spoken text.")
     (agent-shell-markdown-header-4 voice-smoothen)
     (agent-shell-markdown-header-5 voice-monotone)
     (agent-shell-markdown-header-6 voice-monotone-extra)
+    (agent-shell-markdown-list-marker voice-annotate)
+    (agent-shell-markdown-list-done voice-monotone-extra)
     (agent-shell-markdown-table-header voice-bolden)
     (agent-shell-markdown-table-border inaudible)
     (agent-shell-markdown-source-block voice-monotone-extra)
@@ -325,8 +328,15 @@ The neutral viewport view face carries no state beyond its spoken text.")
   "Agent-shell Markdown faces intentionally left without a voice.
 Zebra striping is purely visual and should not alter table data speech.")
 
+(defconst emacsvox-agent-shell--chat-face-voice-map
+  '((agent-shell-chat-me-label voice-bolden)
+    (agent-shell-chat-agent-label voice-brighten))
+  "Voice personalities for optional agent-shell chat labels.")
+
 (voice-setup-add-map emacsvox-agent-shell--ui-face-voice-map)
 (voice-setup-add-map emacsvox-agent-shell--markdown-face-voice-map)
+(with-eval-after-load 'agent-shell-chat-mode
+  (voice-setup-add-map emacsvox-agent-shell--chat-face-voice-map))
 
 ;;;  Helper Functions
 
@@ -361,6 +371,120 @@ properties while copying TEXT into its private scratch buffer."
     (or (emacsvox-agent-shell--face-spec-includes-p (car spec) face)
         (emacsvox-agent-shell--face-spec-includes-p (cdr spec) face)))
    (t nil)))
+
+(defvar emacsvox-agent-shell--chat-label-context nil
+  "Dynamically bound visible chat label for the current line speech.")
+
+(defun emacsvox-agent-shell--chat-label-context-at-point ()
+  "Return the visible agent-shell chat label context on the current line.
+The optional chat mode renders labels as overlays, so this adapter captures
+their semantic text without changing the underlying shell buffer."
+  (let* ((line-start (line-beginning-position))
+         (source-end (line-end-position))
+         (line-end (min (point-max) (1+ source-end)))
+         (preferred-category
+          (cond
+           ((cl-loop
+             for position from line-start below source-end
+             thereis
+             (or
+              (emacsvox-agent-shell--face-spec-includes-p
+               (get-text-property position 'face) 'agent-shell-prompt)
+              (emacsvox-agent-shell--face-spec-includes-p
+               (get-text-property position 'face) 'comint-highlight-prompt)
+              (emacsvox-agent-shell--face-spec-includes-p
+               (get-text-property position 'font-lock-face)
+               'agent-shell-prompt)
+              (emacsvox-agent-shell--face-spec-includes-p
+               (get-text-property position 'font-lock-face)
+               'comint-highlight-prompt)))
+            'agent-shell-chat-me)
+           ((save-excursion
+              (goto-char line-start)
+              (search-forward "<shell-maker-end-of-prompt>" source-end t))
+            'agent-shell-chat-agent)))
+         (overlays
+          (delete-dups
+           (append
+            (overlays-at (point))
+            (and (< line-start line-end)
+                 (overlays-in line-start line-end)))))
+         (overlay
+          (or
+           (and preferred-category
+                (seq-find
+                 (lambda (candidate)
+                   (eq (overlay-get candidate 'category)
+                       preferred-category))
+                 overlays))
+           (seq-find
+            (lambda (candidate)
+              (memq (overlay-get candidate 'category)
+                    '(agent-shell-chat-me agent-shell-chat-agent)))
+            overlays))))
+    (when overlay
+      (let* ((category (overlay-get overlay 'category))
+             (rendered
+              (overlay-get
+               overlay
+               (if (eq category 'agent-shell-chat-me)
+                   'display
+                 'before-string)))
+             (label (and (stringp rendered) (string-trim rendered))))
+        (when (and label (not (string-empty-p label)))
+          (list :category category :text label))))))
+
+(defun emacsvox-agent-shell--prompt-face-at-p (text position)
+  "Return non-nil when TEXT at POSITION carries an agent-shell prompt face."
+  (or
+   (emacsvox-agent-shell--face-spec-includes-p
+    (get-text-property position 'face text) 'agent-shell-prompt)
+   (emacsvox-agent-shell--face-spec-includes-p
+    (get-text-property position 'face text) 'comint-highlight-prompt)
+   (emacsvox-agent-shell--face-spec-includes-p
+    (get-text-property position 'font-lock-face text) 'agent-shell-prompt)
+   (emacsvox-agent-shell--face-spec-includes-p
+    (get-text-property position 'font-lock-face text)
+    'comint-highlight-prompt)))
+
+(defun emacsvox-agent-shell--without-leading-chat-prompt (text)
+  "Return TEXT without a leading prompt replaced by a visible chat label."
+  (let ((position 0)
+        (length (length text)))
+    (while (and (< position length)
+                (memq (aref text position) '(?\s ?\t ?\n ?\r)))
+      (setq position (1+ position)))
+    (let ((prompt-start position))
+      (while (and (< position length)
+                  (emacsvox-agent-shell--prompt-face-at-p text position))
+        (setq position (next-property-change position text length)))
+      (if (= position prompt-start)
+          text
+        (while (and (< position length)
+                    (memq (aref text position) '(?\s ?\t ?\n ?\r)))
+          (setq position (1+ position)))
+        (substring text position)))))
+
+(defun emacsvox-agent-shell--add-chat-label-for-speech (text)
+  "Return TEXT prefixed by the visible chat label captured for speech."
+  (if-let* ((context emacsvox-agent-shell--chat-label-context)
+            (label (plist-get context :text)))
+      (let* ((category (plist-get context :category))
+             (content
+              (if (eq category 'agent-shell-chat-me)
+                  (emacsvox-agent-shell--without-leading-chat-prompt text)
+                text))
+             (plain (substring-no-properties content))
+             (marker "<shell-maker-end-of-prompt>"))
+        (when (and (eq category 'agent-shell-chat-agent)
+                   (string-match
+                    (concat "\\`[[:space:]]*" (regexp-quote marker)) plain))
+          (setq content (substring content (match-end 0))))
+        (setq content (string-trim-left content))
+        (if (string-empty-p (string-trim (substring-no-properties content)))
+            label
+          (concat label ". " content)))
+    text))
 
 (defun emacsvox-agent-shell--status-at (text position)
   "Return the semantic status represented at POSITION in TEXT."
@@ -412,8 +536,9 @@ icon's text properties so its status voice remains available to Emacsvox."
            (derived-mode-p 'agent-shell-mode
                            'agent-shell-viewport-view-mode
                            'agent-shell-viewport-edit-mode))
-      (emacsvox-agent-shell--replace-status-icons-for-speech
-       (emacsvox-agent-shell--speech-copy-without-yank-handler text))
+      (emacsvox-agent-shell--add-chat-label-for-speech
+       (emacsvox-agent-shell--replace-status-icons-for-speech
+        (emacsvox-agent-shell--speech-copy-without-yank-handler text)))
     text))
 
 (defconst emacsvox-agent-shell--vertical-toggle-hint-regexp
@@ -1874,7 +1999,9 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
 (defun emacsvox-agent-shell--speak-visual-line-around
     (original-function &rest arguments)
   "Add semantic blank-line presentation to visual speech in agent-shell."
-  (let ((condition
+  (let ((emacsvox-agent-shell--chat-label-context
+         (emacsvox-agent-shell--chat-label-context-at-point))
+        (condition
          (and
           (derived-mode-p
            'agent-shell-mode
@@ -1892,8 +2019,10 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)
   "Add semantic block-entry facts to vertical line speech."
-  (emacsvox-agent-shell--call-with-vertical-block-entry
-   original-function arguments))
+  (let ((emacsvox-agent-shell--chat-label-context
+         (emacsvox-agent-shell--chat-label-context-at-point)))
+    (emacsvox-agent-shell--call-with-vertical-block-entry
+     original-function arguments)))
 
 (defun emacsvox-agent-shell--tts-speak-around
     (original-function text &rest arguments)
