@@ -1,0 +1,379 @@
+#+title: Emacsvox Aural Presentation Study Deck
+#+author: Bart
+#+options: num:nil toc:nil
+#+startup: content
+#+filetags: :emacsvox:aural:org_srs:
+#+property: header-args:emacs-lisp :eval never
+This draft contains 20 question-and-answer cards about the Emacsvox Aural
+Presentation system.  Each top-level entry has the =Front= and =Back= sections
+expected by Org-srs.  After checking a card, put point on its question heading,
+run =M-x org-srs-item-create=, and choose the =card= item type to enroll it.
+
+The answers follow the generated Emacsvox Aural Presentation Reference and the
+current Emacsvox keymaps.  The source blocks are examples for study and are
+marked not to evaluate.
+
+* 01. What is the difference between an aural semantic fact and a presentation scheme?
+:PROPERTIES:
+:ID:       25a5e3b2-bc29-4051-a7a2-f1c9aa6134eb
+:END:
+:SRSITEMS:
+#+NAME: srsitem:25a5e3b2-bc29-4051-a7a2-f1c9aa6134eb::card::back
+| ! | timestamp            | rating |           stability | difficulty | state     |
+|---+----------------------+--------+---------------------+------------+-----------|
+|   | 2026-08-02T22:04:21Z |        |                 0.0 |        0.0 | :new      |
+|   | 2026-08-02T22:26:34Z | :again |               0.212 |     6.4133 | :learning |
+|   | 2026-08-02T22:27:02Z | :good  | 0.24668918777567272 |  6.4078867 | :learning |
+| * | 2026-08-02T22:37:34Z |        |                     |            |           |
+:END:
+
+** Front
+What is the difference between an aural semantic fact and a presentation
+scheme?
+
+** Back
+A semantic fact describes what an object or event /means/.  For example, an
+object may have the =heading= role and the =focus-entered= event.
+
+A presentation scheme decides /how/ matching facts are conveyed: speech,
+voice, an earcon, a tone, a pause, spatial placement, or a combination of
+these.  Integrations should emit meaning; schemes should choose presentation.
+
+* 02. In what order does the Aural rule cascade apply matching rules?
+** Front
+List the Aural rule layers from weakest to strongest.
+
+** Back
+The order is:
+
+1. Core rules.
+2. Automatic module fragments.
+3. The active inherited base scheme.
+4. Ordered, enabled presentation options.
+5. Persistent personal rules.
+6. Session rules.
+7. Buffer-local rules.
+
+Later, stronger rules can refine or override earlier ones.  A buffer rule is
+therefore the most local and strongest layer.
+
+* 03. Which global keys open Aural Home and explain presentation at point?
+** Front
+Which Emacsvox global keys open Aural Home and explain the aural presentation
+at point?
+
+** Back
+- =C-e H= opens Aural Home.  The command is also available as
+  =M-x emacsvox-aural=.
+- =C-e E= explains presentation at point with
+  =emacsvox-aural-explain-presentation=.
+- In an Aural manager or editor, =h= returns to Aural Home.
+
+* 04. How do you navigate and inspect Aural Home from the keyboard?
+** Front
+What are the main navigation and inspection keys in Aural Home?
+
+** Back
+- =n= or Down moves to the next row; =p= or Up moves to the previous row.
+- Left and Right move between columns.
+- =.= speaks the titled cell; =SPC= speaks the complete row.
+- =RET= opens or performs the selected item.
+- =x= explains the presentation at point.
+- =?= displays and speaks help; =g= refreshes; =q= quits.
+
+* 05. Which single-key routes are available from Aural Home?
+** Front
+Which Aural Home keys open overrides, recent feedback, profiles, voice
+palettes, and diagnostics, and which keys toggle compatibility controls?
+
+** Back
+- =O=: presentation overrides.
+- =H=: recent exact feedback.
+- =P=: presentation profiles.
+- =V=: voice palettes.
+- =D=: Aural Doctor.
+- =v=: toggle visual-face presentation rules.
+- =l=: toggle legacy compatibility voices.
+
+These keys apply in Aural Home; the same letters can mean something different
+inside another Aural manager.
+
+* 06. How do you inspect and reuse an item in Recent Aural Feedback?
+** Front
+In Recent Aural Feedback, which keys explain, replay, audition, and remap the
+selected exact presentation?
+
+** Back
+- =RET= explains the selected heard output.
+- =P= replays its complete ordered presentation.
+- =c= auditions only its earcons.
+- =r= prepares a voice remap.
+- =R= auditions one exact earcon and prepares a scoped earcon override.
+- =i= includes Aural-interface presentations temporarily.
+- =L= changes the current-session history limit.
+
+* 07. How do you inspect and preview presentation options without enabling them?
+** Front
+In the Presentation Options manager, what do =a=, =P=, and =C-u P= do?
+
+** Back
+- =a= shows enabled options in their exact weakest-to-strongest cascade order.
+- =P= previews the selected option composed with the active configuration,
+  without enabling it.
+- =C-u P= previews the selected option by itself.
+
+Presentation options are independent feature fragments layered over the one
+active base scheme.
+
+* 08. What does an Aural presentation profile contain?
+** Front
+What does an Aural presentation profile save, and what does it deliberately
+not copy?
+
+** Back
+A profile references one base scheme and an ordered set of feature fragments.
+It may also capture the sound pack, voice palette, and portable spatial
+settings.
+
+It does not copy presentation rules.  Rules remain owned by their schemes,
+fragments, and override layers, so editing those definitions affects profiles
+that reference them.
+
+* 09. What are the four kinds of registered Aural semantic?
+** Front
+Name the four semantic kinds in the Aural registry and describe what each
+represents.
+
+** Back
+- =role=: what an object is, such as a heading or diagnostic.
+- =event=: something that happened, such as focus entering or acceptance.
+- =state=: a condition currently true of an object, such as selected.
+- =attribute=: a named value that qualifies meaning, such as heading level.
+
+Semantic identifiers should describe intent, not a face, voice, cue, or file
+name.
+
+* 10. How do you define a new semantic role?
+** Front
+Write an Emacs Lisp registration for a module-owned =learning-item= role that
+can be presented during navigation or continuous reading.
+
+** Back
+Register the meaning before any facts or rules refer to it:
+
+#+begin_src emacs-lisp
+(emacsvox-aural-register-semantic
+ 'learning-item
+ :kind 'role
+ :summary "One item being learned or reviewed"
+ :owner 'study-tools
+ :occasions '(navigation continuous)
+ :phases '(before content after))
+#+end_src
+
+The identifier and owner are symbols.  The summary documents intent, while
+=:occasions= and =:phases= form an enforced contract.
+
+* 11. How do you submit a spoken semantic object to Aural?
+** Front
+How would a module submit the text =Capital of Australia: Canberra= as a
+=learning-item= during navigation?
+
+** Back
+Use one native Aural transaction containing the content, facts, module, and
+occasion:
+
+#+begin_src emacs-lisp
+(emacsvox-aural-submit
+ "Capital of Australia: Canberra"
+ :facts '(:role learning-item)
+ :module 'study-tools
+ :occasion 'navigation)
+#+end_src
+
+The module describes the object.  The active presentation cascade decides
+which voice, cues, pauses, or other modalities to use.
+
+* 12. How do you submit an event that has no spoken object text?
+** Front
+Which function submits a semantic event with no object text, and how could it
+submit the core =accepted= event?
+
+** Back
+Use =emacsvox-aural-submit-actions= when the event has no content of its own:
+
+#+begin_src emacs-lisp
+(emacsvox-aural-submit-actions
+ :facts '(:events (accepted))
+ :module 'study-tools
+ :occasion 'state-change)
+#+end_src
+
+Matching rules may still produce speech, cues, pauses, or named tones.  Do not
+invent an empty content string just to trigger those actions.
+
+* 13. How do you identify a buffer and persistent text as belonging to an Aural module?
+** Front
+How do you set a buffer's Aural module, and which text properties carry facts
+and module identity on persistent formatted text?
+
+** Back
+Set the buffer-local module identifier:
+
+#+begin_src emacs-lisp
+(setq-local emacsvox-aural-module 'study-tools)
+#+end_src
+
+For persistent text, attach =emacsvox-aural-facts= and
+=emacsvox-aural-module= properties:
+
+#+begin_src emacs-lisp
+(add-text-properties
+ start end
+ '(emacsvox-aural-facts (:role learning-item)
+   emacsvox-aural-module study-tools))
+#+end_src
+
+* 14. How do you define read-only compatibility defaults for a module?
+** Front
+How can =study-tools= register a read-only module fragment that voices
+=learning-item= content with =bolden=?
+
+** Back
+Register a data-only module fragment whose rules match semantic facts:
+
+#+begin_src emacs-lisp
+(emacsvox-aural-register-module-fragment
+ 'study-tools
+ '(:schema-version 1
+   :id study-tools-defaults
+   :summary "Default presentation for study tools"
+   :rules
+   ((:id study-tools-learning-item
+     :match (:role learning-item :module study-tools)
+     :render (:content (:voice bolden)))))
+ :source "emacsvox-study-tools")
+#+end_src
+
+The fragment supplies automatic compatibility presentation; it does not
+replace the active scheme or become a user-toggleable presentation option.
+
+* 15. Which fields define an Aural scheme and one of its rules?
+** Front
+What are the principal fields of a declarative Aural scheme and of each rule
+inside it?
+
+** Back
+A scheme contains:
+
+- =:schema-version=, =:id=, a nonempty =:summary=, and =:rules=.
+- Optionally, =:parent=, =:resource-pack=, and =:voice-palette=.
+
+Each rule contains:
+
+- A globally stable =:id=.
+- A =:match= plist describing when it applies.
+- A =:render= plist describing what it contributes.
+- Optionally, =:enabled= and integer =:order= values.
+
+Personal scheme data is declarative data; evaluation syntax is rejected.
+
+* 16. Which facts and context can an Aural rule match?
+** Front
+Name the main selectors available inside an Aural rule's =:match= plist.
+
+** Back
+Rules can select semantic meaning with =:role=, =:event= or =:events=,
+=:state= or =:states=, and registered attribute keywords.  =:requires= says
+that registered attributes must be present without fixing their values.
+
+Context selectors include =:module=, =:mode=, and =:occasion=.  Compatibility
+selectors include =:legacy-cue=, =:legacy-face=, and
+=:legacy-personality=.  Combining =:module= and =:mode= distinguishes the same
+mode when it is used by different integrations.
+
+* 17. How do you define a cue before content, a content voice, and a pause after it?
+** Front
+Write a =:render= plist that plays =open-object= before an object, speaks the
+content with =bolden=, and adds a 0.15-second pause after the object.
+
+** Back
+Use the =before=, =content=, and =after= phases:
+
+#+begin_src emacs-lisp
+(:render
+ (:before
+  (:append ((:id item-open
+             :kind cue
+             :cue open-object
+             :anchor object)))
+  :content (:voice bolden)
+  :after
+  (:append ((:id item-gap
+             :kind pause
+             :duration 0.15
+             :anchor object)))))
+#+end_src
+
+Ordered actions can be speech, cue, tone, or pause actions.  Action IDs let
+stronger rules remove or replace particular actions predictably.
+
+* 18. How do you define a dynamic spoken label from semantic attributes?
+** Front
+How can a rule speak a dynamic label such as =Heading 2= before content, and
+what makes its template safe?
+
+** Back
+Use a speech action with a substitution-only =:text-template=:
+
+#+begin_src emacs-lisp
+(:match (:role heading :module org :requires (level))
+ :render
+ (:before
+  (:append ((:id heading-label
+             :kind speech
+             :text-template "Heading {level}"
+             :anchor object)))))
+#+end_src
+
+A template may name only =role= or registered attributes.  Its selector must
+guarantee every field with an exact match or =:requires=.  Templates substitute
+values; they cannot evaluate Lisp.
+
+* 19. How should a migrating integration preserve an existing auditory icon?
+** Front
+When moving an existing text-bearing command to an Aural submission, how
+should its legacy auditory icon be preserved?
+
+** Back
+Represent it as a compatibility action in the same native transaction:
+
+#+begin_src emacs-lisp
+(emacsvox-aural-submit
+ text
+ :facts '(:role learning-item)
+ :module 'study-tools
+ :occasion 'navigation
+ :compatibility-actions
+ (list (emacsvox-aural-compatibility-icon 'open-object)))
+#+end_src
+
+Do not call =emacsvox-icon=, =tts-speak=, or another complete presentation
+resolver inside the submission.  One submission preserves ordering and creates
+one coherent history transaction.
+
+* 20. How do you validate and diagnose an Aural extension?
+** Front
+Which commands and checks should you use after defining Aural semantics,
+facts, or presentation rules?
+
+** Back
+- Run =M-x emacsvox-aural-doctor= to inspect the live setup and offered safe
+  repairs.  The Doctor does not repair or start services automatically.
+- Use =C-e E= at a source object to explain matching facts, rules, provenance,
+  resources, suppression, and backend degradation.
+- Call =emacsvox-aural-validate-registry= after registering semantic metadata.
+- In the Emacsvox source tree, run =make aural-audit= to check integration
+  boundaries and =make aural-reference= to regenerate the reference manual.
+- Test resolution, output ordering, history, settings, and a stronger user
+  override.
