@@ -5364,6 +5364,51 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (eq (get-text-property 0 'face spoken)
                   'agent-shell-chat-agent-label)))))
 
+(ert-deftest emacsvox-agent-shell-chat-labels-follow-separate-content-lines ()
+  "Chat labels should describe content after whitespace-swallowing overlays."
+  (skip-unless (require 'agent-shell-chat-mode nil t))
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     agent-shell--state
+     '((:agent-config . ((:mode-line-name . "Claude"))))
+     agent-shell-chat--labeled t)
+    ;; Match the live layout: chat label overlays consume the whitespace
+    ;; before each content line and therefore end at that line's beginning.
+    (insert
+     (propertize
+      "Claude> " 'font-lock-face
+      '(comint-highlight-prompt comint-highlight-prompt))
+     "\n\nhello\n"
+     (propertize "<shell-maker-end-of-prompt>" 'invisible t)
+     "\nhi there\n\n"
+     (propertize
+      "Claude> " 'font-lock-face
+      '(comint-highlight-prompt comint-highlight-prompt)))
+    (agent-shell-chat--relabel)
+    (cl-labels
+        ((speak-line-at
+          (text)
+          (goto-char (point-min))
+          (search-forward text)
+          (goto-char (match-beginning 0))
+          (let (spoken)
+            (emacsvox-agent-shell--speak-line-around
+             (lambda (&rest _)
+               (setq spoken
+                     (emacsvox-agent-shell--prepare-speech-text
+                      (buffer-substring
+                       (line-beginning-position) (line-end-position))))))
+            spoken)))
+      (let ((spoken (speak-line-at "hello")))
+        (should (equal (substring-no-properties spoken) "Me. hello"))
+        (should (eq (get-text-property 0 'face spoken)
+                    'agent-shell-chat-me-label)))
+      (let ((spoken (speak-line-at "hi there")))
+        (should (equal (substring-no-properties spoken) "Claude. hi there"))
+        (should (eq (get-text-property 0 'face spoken)
+                    'agent-shell-chat-agent-label))))))
+
 (ert-deftest emacsvox-agent-shell-ui-face-voices-are-explicit ()
   "Configured faces should resolve to their declared voice personalities."
   (dolist (entry emacsvox-agent-shell--ui-face-voice-map)

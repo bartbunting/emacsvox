@@ -381,7 +381,6 @@ The optional chat mode renders labels as overlays, so this adapter captures
 their semantic text without changing the underlying shell buffer."
   (let* ((line-start (line-beginning-position))
          (source-end (line-end-position))
-         (line-end (min (point-max) (1+ source-end)))
          (preferred-category
           (cond
            ((cl-loop
@@ -406,9 +405,17 @@ their semantic text without changing the underlying shell buffer."
          (overlays
           (delete-dups
            (append
-            (overlays-at (point))
-            (and (< line-start line-end)
-                 (overlays-in line-start line-end)))))
+            ;; Chat labels often consume the whitespace before their content,
+            ;; so the matching overlay ends exactly where the spoken line
+            ;; begins.  Do not include overlays that merely begin at the line
+            ;; end: those label the following turn.
+            (and (> line-start (point-min))
+                 (seq-filter
+                  (lambda (candidate)
+                    (= (overlay-end candidate) line-start))
+                  (overlays-in (1- line-start) line-start)))
+            (and (< line-start source-end)
+                 (overlays-in line-start source-end)))))
          (overlay
           (or
            (and preferred-category
