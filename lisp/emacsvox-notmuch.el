@@ -62,10 +62,6 @@
 (declare-function notmuch-show-move-to-message-top "notmuch-show" ())
 (declare-function notmuch-tag-format-tags "notmuch-tag"
                   (tags orig-tags &optional face))
-(declare-function emacsvox-speak--present-line-condition
-                  "emacsvox-speak" (condition))
-(declare-function emacsvox-speak--visual-line-condition
-                  "emacsvox-speak" ())
 
 (defvar notmuch-archive-tags)
 (defvar notmuch-search-mode-map)
@@ -1133,17 +1129,8 @@ Call ORIGINAL once with ARGUMENTS and preserve its result."
 
 (defun emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
     (original &rest arguments)
-  "Add semantic blank-line presentation to visual speech in Notmuch Show."
-  (let ((condition
-         (and
-          (eq major-mode 'notmuch-show-mode)
-          (emacsvox-speak--visual-line-condition))))
-    (when condition
-      (tts-stop 'all))
-    (prog1
-        (apply original arguments)
-      (when condition
-        (emacsvox-speak--present-line-condition condition)))))
+  "Delegate Notmuch visual-line presentation to the atomic core path."
+  (apply original arguments))
 
 (push
  '(emacsvox-speak-visual-line

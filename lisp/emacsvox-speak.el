@@ -761,11 +761,13 @@ excluded from this action-only presentation."
     (plist-put facts key value)))
 
 (defun emacsvox-speak--present-action-fact
-    (key value default-occasion &optional inherit-facts)
+    (key value default-occasion
+         &optional inherit-facts compatibility-actions)
   "Present KEY and VALUE under DEFAULT-OCCASION without text content.
 
 When INHERIT-FACTS is non-nil, compose with compatible outer submission facts.
-Preserve the silence and server-lifecycle behavior of legacy tone helpers."
+COMPATIBILITY-ACTIONS are delivered in the same native transaction.  Preserve
+the silence and server-lifecycle behavior of legacy tone helpers."
   (unless
       (or
        tts-quiet
@@ -779,12 +781,16 @@ Preserve the silence and server-lifecycle behavior of legacy tone helpers."
        :facts facts
        :module emacsvox-aural-submission-module
        :occasion
-       (or emacsvox-aural-submission-occasion default-occasion)))))
+       (or emacsvox-aural-submission-occasion default-occasion)
+       :compatibility-actions compatibility-actions))))
 
-(defun emacsvox-speak--present-line-condition (condition)
-  "Present semantic line CONDITION while preserving legacy silence policy."
+(defun emacsvox-speak--present-line-condition
+    (condition &optional compatibility-actions)
+  "Present semantic line CONDITION with COMPATIBILITY-ACTIONS.
+
+Preserve the legacy silence and server-lifecycle policy."
   (emacsvox-speak--present-action-fact
-   :line-condition condition 'navigation t))
+   :line-condition condition 'navigation t compatibility-actions))
 
 ;;;###autoload
 (defun emacsvox-speak-edit-operation (operation)
@@ -1078,17 +1084,34 @@ spoken using command \\[emacsvox-speak-overlay-properties]."
   "Speaks current visual line.
 Cues the start of a physical line with auditory icon `left'."
   (interactive)
-  
-  (let ((inhibit-field-text-motion t)
-        (inhibit-read-only t)
-        (start nil)
-        (end nil)
-        (inhibit-modification-hooks t)
-        (line nil)
-        (orig (point)))
-    (cond
-     ((looking-at "^ *") (emacsvox-icon 'left))
-     ((looking-at " *$") (emacsvox-icon 'right)))
+  (let* ((inhibit-field-text-motion t)
+         (inhibit-read-only t)
+         (inhibit-modification-hooks t)
+         (orig (point))
+         (condition (emacsvox-speak--visual-line-condition))
+         (icon
+          (cond
+           ((looking-at "^ *") 'left)
+           ((looking-at " *$") 'right)))
+         (context
+          (or
+           emacsvox-aural-submission-context
+           (emacsvox-aural-capture-context
+            emacsvox-aural-submission-module
+            (or emacsvox-aural-submission-occasion 'navigation))))
+         (module
+          (or
+           emacsvox-aural-submission-module
+           (plist-get context :module)))
+         (occasion
+          (or
+           emacsvox-aural-submission-occasion
+           (plist-get context :occasion)
+           'navigation))
+         (facts (copy-tree emacsvox-aural-submission-facts))
+         (compatibility-actions
+          (when icon (list (emacsvox-aural-compatibility-icon icon))))
+         start end line)
     (save-excursion
       (beginning-of-visual-line)
       (setq start (point))
@@ -1100,8 +1123,23 @@ Cues the start of a physical line with auditory icon `left'."
                  orig (1+ orig)
                  voice-animate
                  (emacsvox-aural-source-substring start end))
-              (emacsvox-aural-source-substring start end)))
-      (tts-speak line))))
+              (emacsvox-aural-source-substring start end))))
+    (let ((emacsvox-aural-submission-context context)
+          (emacsvox-aural-submission-module module)
+          (emacsvox-aural-submission-occasion occasion)
+          (emacsvox-aural-submission-facts facts))
+      (cond
+       (condition
+        (emacsvox-speak--present-line-condition
+         condition compatibility-actions))
+       ((not (string-empty-p line))
+        (emacsvox-aural-submit
+         line
+         :facts facts
+         :context context
+         :module module
+         :occasion occasion
+         :compatibility-actions compatibility-actions))))))
 
 (defvar-local emacsvox-speak-last-spoken-word-position nil
   "Records position of the last word spoken  .

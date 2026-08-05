@@ -90,10 +90,6 @@
                   "agent-shell-ui" ())
 (declare-function shell-maker-busy "shell-maker" ())
 (declare-function shell-maker-point-at-last-prompt-p "shell-maker" ())
-(declare-function emacsvox-speak--present-line-condition
-                  "emacsvox-speak" (condition))
-(declare-function emacsvox-speak--visual-line-condition
-                  "emacsvox-speak" ())
 
 (defvar emacsvox-comint-autospeak)
 (defvar emacsvox-pronounce-date-mm-dd-yyyy-pattern)
@@ -2005,23 +2001,13 @@ Returns one of: \\='agent-message, \\='user-message, \\='thought,
 
 (defun emacsvox-agent-shell--speak-visual-line-around
     (original-function &rest arguments)
-  "Add semantic blank-line presentation to visual speech in agent-shell."
+  "Add semantic block-entry context to Agent Shell visual-line speech.
+
+Core visual-line presentation owns blank-line semantics and interruption."
   (let ((emacsvox-agent-shell--chat-label-context
-         (emacsvox-agent-shell--chat-label-context-at-point))
-        (condition
-         (and
-          (derived-mode-p
-           'agent-shell-mode
-           'agent-shell-viewport-view-mode
-           'agent-shell-viewport-edit-mode)
-          (emacsvox-speak--visual-line-condition))))
-    (when condition
-      (tts-stop 'all))
-    (prog1
-        (emacsvox-agent-shell--call-with-vertical-block-entry
-         original-function arguments)
-      (when condition
-        (emacsvox-speak--present-line-condition condition)))))
+         (emacsvox-agent-shell--chat-label-context-at-point)))
+    (emacsvox-agent-shell--call-with-vertical-block-entry
+     original-function arguments)))
 
 (defun emacsvox-agent-shell--speak-line-around
     (original-function &rest arguments)

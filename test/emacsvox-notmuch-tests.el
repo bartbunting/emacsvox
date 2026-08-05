@@ -105,38 +105,27 @@
         (nreverse events)
         '((icon item) (speak "inbox, 42 messages")))))))
 
-(ert-deftest emacsvox-notmuch-show-visual-lines-cue-blank-content ()
-  "Visual-line speech should submit Emacsvox's semantic blank conditions."
-  (dolist (case '((notmuch-show-mode "" empty)
-                  (notmuch-show-mode "  " whitespace-only)
-                  (notmuch-show-mode "content" nil)
-                  (fundamental-mode "" nil)))
+(ert-deftest emacsvox-notmuch-show-visual-lines-leave-blank-policy-to-core ()
+  "Notmuch should not duplicate core visual-line blank presentation."
+  (dolist (case '((notmuch-show-mode "")
+                  (notmuch-show-mode "  ")
+                  (notmuch-show-mode "content")
+                  (fundamental-mode "")))
     (with-temp-buffer
       (insert (nth 1 case))
       (goto-char (point-min))
       (setq major-mode (nth 0 case))
-      (visual-line-mode 1)
       (let (events)
         (cl-letf (((symbol-function 'tts-stop)
-                   (lambda (&optional all)
-                     (push (list 'stop all) events)))
-                  ((symbol-function 'emacsvox-speak--present-line-condition)
-                   (lambda (condition)
-                     (push (list 'line-condition condition) events)))
-                  ((symbol-function 'tts-tone)
                    (lambda (&rest _)
-                     (ert-fail "Visual line used a raw legacy tone"))))
+                     (ert-fail "Notmuch stopped core visual speech")))
+                  ((symbol-function 'emacsvox-speak--present-line-condition)
+                   (lambda (&rest _)
+                     (ert-fail "Notmuch duplicated core blank feedback"))))
           (emacsvox--advice-emacsvox-speak-visual-line-notmuch-around
            (lambda (&rest _)
              (push '(original) events))))
-        (should
-         (equal
-          (nreverse events)
-          (if (nth 2 case)
-              `((stop all)
-                (original)
-                (line-condition ,(nth 2 case)))
-            '((original)))))))))
+        (should (equal (nreverse events) '((original))))))))
 
 (defconst emacsvox-notmuch-test--search-result
   '(:authors "Alice Smith|Bob Jones"

@@ -1237,6 +1237,155 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (lambda (&rest _) (goto-char (point-max)))))
       (should-not (emacsvox-speak--visual-line-condition)))))
 
+(ert-deftest emacsvox-speak-visual-line-uses-one-native-source-boundary ()
+  "Visual-line content and its boundary cue form one native submission."
+  (with-temp-buffer
+    (insert "line")
+    (goto-char (point-min))
+    (visual-line-mode 1)
+    (let ((emacsvox-show-point nil)
+          (emacsvox-aural-submission-facts '(:events (focus-entered)))
+          (emacsvox-aural-submission-context nil)
+          (emacsvox-aural-submission-module nil)
+          (emacsvox-aural-submission-occasion nil)
+          legacy-speech
+          (stops 0)
+          submission)
+      (cl-letf
+          (((symbol-function 'beginning-of-visual-line)
+            (lambda (&rest _) (goto-char (line-beginning-position))))
+           ((symbol-function 'end-of-visual-line)
+            (lambda (&rest _) (goto-char (line-end-position))))
+           ((symbol-function 'tts-stop)
+            (lambda (&optional _all) (cl-incf stops)))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq legacy-speech text)))
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox-speak-visual-line))
+      (should-not legacy-speech)
+      (should (zerop stops))
+      (pcase-let* ((`(,content . ,arguments) submission)
+                   (context (plist-get arguments :context))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "line"))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:events (focus-entered))))
+        (should (eq (plist-get arguments :occasion) 'navigation))
+        (should (eq (plist-get context :occasion) 'navigation))
+        (should (= (length actions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value (car actions))
+          'left))))))
+
+(ert-deftest emacsvox-speak-visual-line-submits-one-native-blank-boundary ()
+  "A blank visual line submits its cue and semantic tone together."
+  (with-temp-buffer
+    (visual-line-mode 1)
+    (let ((emacsvox-show-point nil)
+          (emacsvox-aural-submission-facts
+           '(:role paragraph :content "stale text"))
+          (emacsvox-aural-submission-context nil)
+          (emacsvox-aural-submission-module nil)
+          (emacsvox-aural-submission-occasion nil)
+          legacy-speech
+          (stops 0)
+          submission
+          submission-context)
+      (cl-letf
+          (((symbol-function 'beginning-of-visual-line)
+            (lambda (&rest _) (goto-char (line-beginning-position))))
+           ((symbol-function 'end-of-visual-line)
+            (lambda (&rest _) (goto-char (line-end-position))))
+           ((symbol-function 'process-live-p) (lambda (_process) t))
+           ((symbol-function 'tts-stop)
+            (lambda (&optional _all) (cl-incf stops)))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq legacy-speech text)))
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments)
+              (setq
+               submission arguments
+               submission-context
+               (copy-tree emacsvox-aural-submission-context)))))
+        (emacsvox-speak-visual-line))
+      (should-not legacy-speech)
+      (should (zerop stops))
+      (let ((facts (plist-get submission :facts))
+            (actions (plist-get submission :compatibility-actions)))
+        (should (eq (plist-get facts :role) 'paragraph))
+        (should (eq (plist-get facts :line-condition) 'empty))
+        (should-not (plist-member facts :content))
+        (should
+         (eq (plist-get submission-context :occasion) 'navigation))
+        (should (= (length actions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value (car actions))
+          'left))))))
+
+(ert-deftest emacsvox-speak-visual-line-replaces-one-complete-navigation-packet ()
+  "Rapid visual movement keeps only the newest complete line packet."
+  (emacsvox-test--with-transport-scheme
+   (with-temp-buffer
+     (insert "obsolete line\nlatest line")
+     (goto-char (point-min))
+     (visual-line-mode 1)
+     (let ((emacsvox-aural--pending-deliveries
+            (make-hash-table :test #'equal))
+           (emacsvox-aural--delivery-sequence 0)
+           (emacsvox-aural--submission-sequence 0)
+           (emacsvox-show-point nil)
+           (emacsvox-play-program nil)
+           (emacsvox-use-icons t)
+           (emacsvox-pronounce-table nil)
+           (emacsvox-pronounce-personality nil)
+           (tts-speaker-process 'speech)
+           (tts-notify-process nil)
+           (tts-stop-immediately t)
+           (tts-stopped-hook nil)
+           (tts-punctuation-mode 'all)
+           (tts-quiet nil)
+           (voice-lock-mode nil)
+           writes)
+       (cl-letf
+           (((symbol-function 'beginning-of-visual-line)
+             (lambda (&rest _) (goto-char (line-beginning-position))))
+            ((symbol-function 'end-of-visual-line)
+             (lambda (&rest _) (goto-char (line-end-position))))
+            ((symbol-function 'process-live-p)
+             (lambda (process) (eq process 'speech)))
+            ((symbol-function 'process-send-string)
+             (lambda (process command)
+               (push (list process command) writes)))
+            ((symbol-function 'run-with-idle-timer)
+             (lambda (&rest _arguments) 'timer))
+            ((symbol-function 'cancel-timer) #'ignore)
+            ((symbol-function 'tts-voice-reset-code)
+             (lambda () "RESET")))
+         (emacsvox-speak-visual-line)
+         (forward-line 1)
+         (emacsvox-speak-visual-line)
+         (should
+          (equal
+           (nreverse (copy-sequence writes))
+           '((speech "s\n") (speech "s\n"))))
+         (emacsvox-aural-flush-pending-deliveries 'speech))
+       (let ((wire
+              (mapconcat #'cadr (nreverse (copy-sequence writes)) "")))
+         (should (= (cl-count "s\n" writes :key #'cadr :test #'equal) 2))
+         (should (= (length writes) 3))
+         (should (string-match-p "latest line" wire))
+         (should-not (string-match-p "obsolete line" wire))
+         (should (string-match-p "\nd\n\\'" wire)))))))
+
 (ert-deftest emacsvox-speak-line-submits-first-class-condition-tones ()
   "Core line conditions compose with object facts and resolve to named tones."
   (emacsvox-test--with-transport-scheme
