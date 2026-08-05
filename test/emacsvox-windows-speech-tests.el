@@ -302,7 +302,7 @@ Return the server's standard output."
         (buffer-string))))))
 
 (ert-deftest emacsvox-windows-speech-skips-obsolete-framed-transaction ()
-  "The shared Tcl server layer evaluates only the latest buffered packet."
+  "The Tcl server evaluates only the latest consecutive buffered packet."
   (let* ((directory (make-temp-file "emacsvox-windows-transaction-" t))
          (log (expand-file-name "transactions.log" directory))
          (common
@@ -339,6 +339,39 @@ Return the server's standard output."
             (insert-file-contents log)
             (should (equal (buffer-string) "latest 日本\n"))))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-windows-speech-preserves-framed-transaction-before-barrier ()
+  "Buffered ordinary input cannot make the final framed packet disappear."
+  (let* ((common
+          (expand-file-name
+           "windows-speech-common.tcl"
+           emacsvox-servers-directory))
+         (first
+          (base64-encode-string
+           (encode-coding-string "record {obsolete}\n" 'utf-8 t) t))
+         (latest
+          (base64-encode-string
+           (encode-coding-string "record {latest 日本}\n" 'utf-8 t) t)))
+    (with-temp-buffer
+      (insert
+       (format
+        (concat
+         "source {%s}\n"
+         "set log {}\n"
+         "proc record {value} {lappend ::log $value}\n"
+         "emacsvox_tx 1 {%s}\n"
+         "emacsvox_tx 2 {%s}\n"
+         "record {ordinary barrier}\n"
+         "puts [join $log {|}]\n")
+        common first latest))
+      (should
+       (zerop
+        (call-process-region
+         (point-min) (point-max) "tclsh" t t nil)))
+      (should
+       (equal
+        (buffer-string)
+        "latest 日本|ordinary barrier\n")))))
 
 (ert-deftest emacsvox-windows-eloquence-batches-native-synthesis ()
   "Eloquence should synthesize once per cue-delimited speech segment."

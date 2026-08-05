@@ -125,10 +125,12 @@ Because the server name contains =outloud=, Emacsvox automatically uses the
 existing Eloquence personality and ACSS voice mappings.
 
 Replaceable aural submissions use one =emacsvox_tx= line containing a
-generation and a Base64-encoded UTF-8 server packet.  If a newer command is
-already buffered, the Tcl front-end discards the obsolete packet before any
-of its speech, voice, tone, or auditory-icon commands reach Eloquence.
-Ordered protocol commands retain their existing line format.
+generation and a Base64-encoded UTF-8 server packet.  The Tcl front-end
+coalesces consecutive buffered transactions to their newest generation before
+any speech, voice, tone, or auditory-icon commands reach Eloquence.  An
+ordinary protocol line is an ordering barrier: the selected transaction is
+delivered before that line.  Ordered protocol commands retain their existing
+line format.
 
 ** Internal bridge protocol
 

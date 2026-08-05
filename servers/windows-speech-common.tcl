@@ -105,16 +105,48 @@ proc windows_speech_text_rpc {state_name command text} {
     return [windows_speech_rpc $state_name "$command $payload"]
 }
 
-proc windows_speech_input_pending {} {
-    if {[chan pending input stdin] > 0} {
+proc windows_speech_input_channel {} {
+    global tts
+    if {[info exists tts(input)] && $tts(input) ne ""} {
+        return $tts(input)
+    }
+    return stdin
+}
+
+proc windows_speech_input_pending {{channel stdin}} {
+    if {[chan pending input $channel] > 0} {
         return 1
     }
     if {[llength [info commands select]] > 0} {
         return [expr {
-            [lsearch [select [list stdin] {} {} 0] stdin] >= 0
+            [lsearch [select [list $channel] {} {} 0] $channel] >= 0
         }]
     }
     return 0
+}
+
+proc windows_speech_transaction_fields {line} {
+    if {[catch {set fields [lrange $line 0 end]}]} {
+        return ""
+    }
+    if {[llength $fields] != 3 ||
+        [lindex $fields 0] ne "emacsvox_tx" ||
+        ![string is integer -strict [lindex $fields 1]]} {
+        return ""
+    }
+    return [lrange $fields 1 2]
+}
+
+proc windows_speech_evaluate_transaction {generation payload} {
+    global windows_speech_transaction
+    set windows_speech_transaction(latest) $generation
+    set script [encoding convertfrom utf-8 [binary decode base64 $payload]]
+    foreach command [split $script "\n"] {
+        if {$command ne ""} {
+            uplevel #0 $command
+        }
+    }
+    return ""
 }
 
 proc emacsvox_tx {generation payload} {
@@ -126,16 +158,32 @@ proc emacsvox_tx {generation payload} {
         $generation <= $windows_speech_transaction(latest)} {
         return ""
     }
-    set windows_speech_transaction(latest) $generation
-    if {[windows_speech_input_pending]} {
-        return ""
-    }
-    set script [encoding convertfrom utf-8 [binary decode base64 $payload]]
-    foreach command [split $script "\n"] {
-        if {$command ne ""} {
-            uplevel #0 $command
+
+    set selected_generation $generation
+    set selected_payload $payload
+    set input [windows_speech_input_channel]
+    # Look ahead only through consecutive framed transactions.  Since gets
+    # consumes the first ordinary line, deliver the selected packet and then
+    # evaluate that ordering barrier here before returning to commandloop.
+    while {[windows_speech_input_pending $input]} {
+        if {[gets $input line] < 0} {
+            break
+        }
+        set fields [windows_speech_transaction_fields $line]
+        if {$fields eq ""} {
+            windows_speech_evaluate_transaction \
+                $selected_generation $selected_payload
+            uplevel #0 $line
+            return ""
+        }
+        lassign $fields next_generation next_payload
+        if {$next_generation > $selected_generation} {
+            set selected_generation $next_generation
+            set selected_payload $next_payload
         }
     }
+    windows_speech_evaluate_transaction \
+        $selected_generation $selected_payload
     return ""
 }
 
