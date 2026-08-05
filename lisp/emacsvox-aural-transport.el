@@ -47,7 +47,7 @@
     (emacsvox-aural--pending-delivery
      (:constructor emacsvox-aural--make-pending-delivery))
   "One replaceable delivery waiting for an input-idle boundary."
-  sequence owner replacement-key entries timer)
+  sequence owner replacement-key entries effects timer)
 
 (defcustom emacsvox-aural-replacement-idle-delay 0.025
   "Seconds of input idle before sending a replaceable presentation.
@@ -62,6 +62,9 @@ delay.  Ordered and urgent transactions are never delayed."
 
 (defvar emacsvox-aural--delivery-transaction-entries nil
   "Reverse-ordered server commands in the current delivery transaction.")
+
+(defvar emacsvox-aural--delivery-transaction-effects nil
+  "Reverse-ordered effects committed after the current transaction is sent.")
 
 (defvar emacsvox-aural--pending-deliveries
   (make-hash-table :test #'equal)
@@ -134,12 +137,15 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
 
 (defun emacsvox-aural--send-delivery-entries
     (entries &optional owner generation)
-  "Send ordered delivery ENTRIES, combining adjacent writes per process."
+  "Send ordered delivery ENTRIES, combining adjacent writes per process.
+
+Return non-nil when every entry was sent to a live process."
   (setq
    entries
    (emacsvox-aural--framed-delivery-entries
     owner generation entries))
-  (let (current-process commands)
+  (let ((sent t)
+        current-process commands)
     (cl-labels
         ((flush
           ()
@@ -157,6 +163,7 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
                         (and (processp owner) (process-name owner))
                         :generation generation)))
                   (setq emacsvox-aural-last-delivery-failure failure)
+                  (setq sent nil)
                   (run-hook-with-args
                    'emacsvox-aural-delivery-failed-hook failure)
                   (message
@@ -172,7 +179,19 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
             (flush)
             (setq current-process process))
           (push command commands)))
-      (flush))))
+      (flush))
+    sent))
+
+(defun emacsvox-aural--commit-delivery-effects (effects)
+  "Run forward-ordered delivery EFFECTS."
+  (dolist (effect effects)
+    (funcall effect)))
+
+(defun emacsvox-aural--defer-delivery-effect (effect)
+  "Commit EFFECT after the current packet is sent, or immediately outside one."
+  (if emacsvox-aural--delivery-transaction-active-p
+      (push effect emacsvox-aural--delivery-transaction-effects)
+    (funcall effect)))
 
 (defun emacsvox-aural--pending-delivery-table-key
     (owner replacement-key)
@@ -185,10 +204,13 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
                (gethash table-key emacsvox-aural--pending-deliveries)))
     (remhash table-key emacsvox-aural--pending-deliveries)
     (setf (emacsvox-aural--pending-delivery-timer pending) nil)
-    (emacsvox-aural--send-delivery-entries
-     (emacsvox-aural--pending-delivery-entries pending)
-     (emacsvox-aural--pending-delivery-owner pending)
-     (emacsvox-aural--pending-delivery-sequence pending))))
+    (when
+        (emacsvox-aural--send-delivery-entries
+         (emacsvox-aural--pending-delivery-entries pending)
+         (emacsvox-aural--pending-delivery-owner pending)
+         (emacsvox-aural--pending-delivery-sequence pending))
+      (emacsvox-aural--commit-delivery-effects
+       (emacsvox-aural--pending-delivery-effects pending)))))
 
 (defun emacsvox-aural--pending-delivery-keys
     (owner &optional replacement-key)
@@ -241,8 +263,8 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
     (emacsvox-aural--deliver-pending table-key)))
 
 (defun emacsvox-aural--schedule-replaceable-delivery
-    (owner replacement-key entries)
-  "Schedule ENTRIES for OWNER under REPLACEMENT-KEY, replacing older work."
+    (owner replacement-key entries effects)
+  "Schedule ENTRIES and EFFECTS for OWNER, replacing older keyed work."
   (let* ((table-key
           (emacsvox-aural--pending-delivery-table-key
            owner replacement-key))
@@ -251,7 +273,8 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
            :sequence (cl-incf emacsvox-aural--delivery-sequence)
            :owner owner
            :replacement-key replacement-key
-           :entries entries)))
+           :entries entries
+           :effects effects)))
     (emacsvox-aural-cancel-pending-deliveries owner replacement-key)
     (puthash table-key pending emacsvox-aural--pending-deliveries)
     (setf
@@ -260,19 +283,21 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
       emacsvox-aural-replacement-idle-delay nil
       #'emacsvox-aural--deliver-pending table-key))))
 
-(defun emacsvox-aural--submit-delivery-entries (owner entries)
-  "Submit complete protocol ENTRIES for OWNER under current source policy."
+(defun emacsvox-aural--submit-delivery-entries (owner entries effects)
+  "Submit protocol ENTRIES and commit EFFECTS under current source policy."
   (when entries
     (pcase (or emacsvox-aural-submission-delivery-policy 'ordered)
       ('replaceable
        (emacsvox-aural--schedule-replaceable-delivery
-        owner emacsvox-aural-submission-replacement-key entries))
+        owner emacsvox-aural-submission-replacement-key entries effects))
       ('urgent
        (emacsvox-aural-cancel-pending-deliveries owner)
-       (emacsvox-aural--send-delivery-entries entries))
+       (when (emacsvox-aural--send-delivery-entries entries)
+         (emacsvox-aural--commit-delivery-effects effects)))
       (_
        (emacsvox-aural-flush-pending-deliveries owner)
-       (emacsvox-aural--send-delivery-entries entries)))))
+       (when (emacsvox-aural--send-delivery-entries entries)
+         (emacsvox-aural--commit-delivery-effects effects))))))
 
 (defun emacsvox-aural-call-with-delivery-transaction
     (owner function &rest arguments)
@@ -285,6 +310,7 @@ or supersedes an older pending payload."
       (apply function arguments)
     (let ((emacsvox-aural--delivery-transaction-active-p t)
           (emacsvox-aural--delivery-transaction-entries nil)
+          (emacsvox-aural--delivery-transaction-effects nil)
           result)
       (when (eq emacsvox-aural-submission-delivery-policy 'replaceable)
         (emacsvox-aural-cancel-pending-deliveries
@@ -292,8 +318,17 @@ or supersedes an older pending payload."
       (when (eq emacsvox-aural-submission-delivery-policy 'urgent)
         (emacsvox-aural-cancel-pending-deliveries owner))
       (setq result (apply function arguments))
-      (emacsvox-aural--submit-delivery-entries
-       owner (nreverse emacsvox-aural--delivery-transaction-entries))
+      (let ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
+            (effects (nreverse emacsvox-aural--delivery-transaction-effects)))
+        (when
+            (and
+             entries
+             (functionp emacsvox-aural--delivery-history-registrar))
+          (setq effects
+                (cons
+                 (funcall emacsvox-aural--delivery-history-registrar)
+                 effects)))
+        (emacsvox-aural--submit-delivery-entries owner entries effects))
       result)))
 
 (defun emacsvox-aural-queue-concrete-action (action &optional context)
@@ -392,7 +427,9 @@ run's leading transport pause."
       (or
        (null (emacsvox-aural-concrete-plan-object-id plan))
        (emacsvox-aural-concrete-plan-object-end-p plan))
-    (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))
+    (emacsvox-aural--defer-delivery-effect
+     (lambda ()
+       (run-hook-with-args 'emacsvox-aural-plan-presented-hook plan))))
   plan)
 
 (defun emacsvox-aural--concrete-content-transport-key (content)

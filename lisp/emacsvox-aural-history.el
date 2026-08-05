@@ -6,8 +6,8 @@
 
 ;;; Commentary:
 
-;; Bounded, data-only records of presentations that were actually played or
-;; queued.  History never retains source buffers and does not resolve rules,
+;; Bounded, data-only records of presentations actually submitted to a live
+;; transport.  History never retains source buffers and does not resolve rules,
 ;; resources, voices, or backend transport.
 
 ;;; Code:
@@ -16,10 +16,12 @@
 (require 'emacsvox-aural)
 (require 'emacsvox-aural-concrete)
 
+(defvar emacsvox-aural-submission-delivery-policy)
+
 (cl-defstruct
     (emacsvox-aural-presentation-record
      (:constructor emacsvox-aural--make-presentation-record))
-  "One bounded, data-only record of an actually queued presentation.
+  "One bounded, data-only record of a transport-submitted presentation.
 
 PLAN remains the representative first run for compatibility.  PLANS and
 PAUSES retain every exact formatting run in a native transaction."
@@ -29,12 +31,12 @@ PAUSES retain every exact formatting run in a native transaction."
 (defvar emacsvox-aural-plan-presented-hook nil
   "Abnormal hook run after presenting one concrete aural plan.
 
-Each function receives the `emacsvox-aural-concrete-plan' that was presented.
-Queue transport runs this after queueing; standalone local cues run it after
-playback has been requested.")
+Each function receives the `emacsvox-aural-concrete-plan' that was submitted.
+Queue transport runs this after writing the transaction; standalone local cues
+run it after playback has been requested.")
 
 (defcustom emacsvox-aural-presentation-history-limit 20
-  "Maximum number of actually queued presentations retained for inspection.
+  "Maximum number of transport-submitted presentations retained for inspection.
 
 History records contain frozen data and source names and positions, but never
 retain source buffers.  Set this to zero to disable history."
@@ -64,6 +66,13 @@ Enable it temporarily when diagnosing presentation inside the Aural UI."
 
 (defvar emacsvox-aural--history-transaction-runs nil
   "Reverse-ordered frozen runs in the active history transaction.")
+
+(defvar emacsvox-aural--delivery-history-registrar nil
+  "Dynamically bound function registering deferred history delivery.
+
+The delivery transport calls this function while capturing a replaceable
+packet.  It returns a no-argument effect that commits the transaction's frozen
+history record only if that packet is actually sent.")
 
 (defun emacsvox-aural--history-value (value)
   "Return a data-only copy of VALUE that cannot retain a source buffer."
@@ -172,7 +181,7 @@ Enable it temporarily when diagnosing presentation inside the Aural UI."
 
 (cl-defun emacsvox-aural-record-presentation
     (plan &optional (text nil text-supplied-p) pause)
-  "Retain a bounded data-only record of actually presented PLAN.
+  "Retain a bounded data-only record of transport-submitted PLAN.
 
 When TEXT is supplied, freeze that exact queue payload in the copied content
 rather than the source-plan content.  PAUSE is the run's leading transport
@@ -213,12 +222,24 @@ combined history record."
     (transaction-id function &rest arguments)
   "Call FUNCTION with ARGUMENTS and retain one history TRANSACTION-ID.
 
-Concrete runs actually queued beneath the call are retained together when
+Concrete runs submitted beneath the call are retained together when
 their plans carry the matching transaction identifier.  Unrelated legacy
 presentations keep independent history records."
-  (let ((emacsvox-aural--history-transaction-id transaction-id)
-        (emacsvox-aural--history-transaction-runs nil)
-        result)
+  (let* ((emacsvox-aural--history-transaction-id transaction-id)
+         (emacsvox-aural--history-transaction-runs nil)
+         (deferred-state (list :registered nil :delivered nil :record nil))
+         (emacsvox-aural--delivery-history-registrar
+          (and
+           (eq emacsvox-aural-submission-delivery-policy 'replaceable)
+           (lambda ()
+             (setq deferred-state
+                   (plist-put deferred-state :registered t))
+             (lambda ()
+               (if-let* ((record (plist-get deferred-state :record)))
+                   (emacsvox-aural--retain-presentation-record record)
+                 (setq deferred-state
+                       (plist-put deferred-state :delivered t)))))))
+         result)
     (unwind-protect
         (setq result (apply function arguments))
       (when emacsvox-aural--history-transaction-runs
@@ -229,7 +250,13 @@ presentations keep independent history records."
                  (mapcar #'car runs)
                  (mapcar #'cadr runs)
                  transaction-id)))
-          (emacsvox-aural--retain-presentation-record record))))
+          (if (plist-get deferred-state :registered)
+              (progn
+                (setq deferred-state
+                      (plist-put deferred-state :record record))
+                (when (plist-get deferred-state :delivered)
+                  (emacsvox-aural--retain-presentation-record record)))
+            (emacsvox-aural--retain-presentation-record record)))))
     result))
 
 (defun emacsvox-aural-presentation-record-effective-plans (record)

@@ -437,7 +437,17 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
              :face-presentation-enabled t
              :voice-lock-enabled nil
              :icons-enabled nil))
+          (emacsvox-aural-plan-presented-hook nil)
+          presented
           writes)
+      (setq
+       emacsvox-aural-plan-presented-hook
+       (list
+        (lambda (plan)
+          (push
+           (emacsvox-aural-concrete-content-text
+            (emacsvox-aural-concrete-plan-content plan))
+           presented))))
       (cl-letf
           (((symbol-function 'process-live-p)
             (lambda (process) (eq process 'speech)))
@@ -453,6 +463,8 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural-submit
            text :facts '(:role heading) :context context))
         (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+        (should-not emacsvox-aural-presentation-history)
+        (should-not presented)
         (emacsvox-aural-flush-pending-deliveries 'speech))
       (let* ((writes (nreverse writes))
              (wire (mapconcat #'cadr writes "")))
@@ -460,7 +472,16 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         (should (string-match-p "latest message" wire))
         (should-not (string-match-p "obsolete first" wire))
         (should-not (string-match-p "obsolete second" wire))
-        (should (= (cl-count ?d wire) 1))))))
+        (should (= (cl-count ?d wire) 1))
+        (should (= (length emacsvox-aural-presentation-history) 1))
+        (should
+         (equal
+          (emacsvox-aural-concrete-content-text
+           (emacsvox-aural-concrete-plan-content
+            (emacsvox-aural-presentation-record-plan
+             (emacsvox-aural-last-presentation))))
+          "latest message"))
+        (should (equal presented '("latest message")))))))
 
 (ert-deftest emacsvox-aural-submission-combines-one-object-and-legacy-actions ()
   "One native submission resolves object policy once around ordered adapters."

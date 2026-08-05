@@ -575,7 +575,7 @@ the raw diagnostic buffer.  OCCASION-COUNTS describes contexts with matches."
                  (emacsvox-aural-explanation-source-location explanation)))
             (princ
              (format
-              "Basis: exact queued presentation %s, heard at %s\n"
+              "Basis: exact queued presentation %s, submitted at %s\n"
               (emacsvox-aural-explanation-presentation-id explanation)
               (format-time-string
                "%Y-%m-%d %H:%M:%S"
@@ -767,7 +767,7 @@ Interactively, use the last queued presentation for the source buffer when
 available.  With a prefix argument, deliberately simulate an occasion chosen
 by the user.  When no queued record is available, infer the occasion that
 produces the most useful simulation.  The visual and spoken explanations
-always identify whether they describe heard output or a simulation."
+always identify whether they describe queued output or a simulation."
   (interactive
    (emacsvox-aural-explanation--interactive-explanation-input
     current-prefix-arg))
