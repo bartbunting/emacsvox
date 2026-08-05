@@ -50,6 +50,7 @@
   (require 'emacsvox-sounds-tests)
   (require 'emacsvox-voice-tests)
   (require 'emacsvox-windows-speech-tests)
+  (require 'emacsvox-launcher-tests)
   (require 'emacsvox-keymap-tests)
   (require 'emacsvox-startup-tests)
   (require 'emacsvox-converter-tests)

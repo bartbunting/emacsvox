@@ -1,0 +1,60 @@
+#!/bin/sh
+
+set -eu
+
+script_path=$(readlink -f "$0")
+script_directory=$(dirname "$script_path")
+default_emacsvox_root=$(
+  unset CDPATH
+  cd "$script_directory/.."
+  pwd
+)
+
+emacs_bin=${EMACS:-/home/bart/opt/emacs-31/bin/emacs}
+emacsvox_root=${EMACSVOX_DIR:-$default_emacsvox_root}
+emacsvox_root=${emacsvox_root%/}
+emacsvox_init=${EMACSVOX_INIT_DIRECTORY:-/home/bart/.emacsvox.d}
+default_tts=dtk-soft
+
+if [ -r /proc/version ] && grep -qi microsoft /proc/version; then
+  windows_support=$emacsvox_root/servers
+  windows_tts=$windows_support/windows-outloud
+  windows_play=$windows_support/windows-play
+  if [ -f "$windows_support/tts-lib.tcl" ] &&
+     [ -x "$windows_tts" ] && [ -x "$windows_play" ]; then
+    default_tts=$windows_tts
+    export EMACSVOX_PLAY="${EMACSVOX_PLAY:-$windows_play}"
+  fi
+fi
+
+if [ ! -x "$emacs_bin" ]; then
+  echo "evox: Emacs is not executable: $emacs_bin" >&2
+  exit 1
+fi
+
+if [ ! -f "$emacsvox_root/lisp/emacsvox-setup.el" ]; then
+  echo "evox: Emacsvox setup not found under: $emacsvox_root" >&2
+  exit 1
+fi
+
+export EMACSVOX_DIR="$emacsvox_root"
+export TTS_PROGRAM="${TTS_PROGRAM:-$default_tts}"
+
+xmodmap_file=/home/bart/.Xmodmap
+if [ -n "${DISPLAY:-}" ] &&
+   [ -r "$xmodmap_file" ] &&
+   command -v xmodmap >/dev/null 2>&1; then
+  if ! xmodmap "$xmodmap_file"; then
+    echo "evox: unable to load keyboard mapping from $xmodmap_file" >&2
+  fi
+fi
+
+exec "$emacs_bin" \
+  --init-directory="$emacsvox_init" \
+  -q \
+  --debug-init \
+  --no-splash \
+  --name evox \
+  -l "$emacsvox_init/early-init.el" \
+  -l "$emacsvox_init/init.el" \
+  "$@"
