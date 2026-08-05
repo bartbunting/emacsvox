@@ -23,7 +23,7 @@
 (defmacro emacsvox-test--with-transport-scheme (&rest body)
   "Run BODY with isolated scheme and contextual override state."
   (declare (indent 0) (debug t))
-  `(let ((emacsvox-aural-scheme-registry
+  `(let* ((emacsvox-aural-scheme-registry
           (make-hash-table :test #'eq))
          (emacsvox-aural-module-fragment-registry
           (make-hash-table :test #'eq))
@@ -54,6 +54,22 @@
          (emacsvox-aural-feature-fragment-order nil)
          (emacsvox-aural-active-scheme-changed-hook nil)
          (emacsvox-aural-effective-resource-pack-changed-hook nil)
+         (emacsvox-aural-resource-pack-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-resource-overlay-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural--resource-pack-discovery-registry
+          emacsvox-aural-resource-pack-registry)
+         (emacsvox-aural-resource-generation 0)
+         (emacsvox-aural--effective-assets-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural--resource-spatialization-cache
+          (make-hash-table :test #'equal))
+         (emacsvox-aural-resource-packs-changed-hook nil)
+         (emacsvox-aural-resource-overlays-changed-hook nil)
+         (emacsvox-aural--defer-resource-pack-notifications nil)
+         (emacsvox-aural--resource-pack-notification-pending nil)
+         (emacsvox-aural-disabled-resource-overlays nil)
          (emacsvox-aural-face-presentation-enabled t)
          (emacsvox-aural-face-presentation-changed-hook nil)
          (emacsvox-sounds-current-pack 'chimes)
@@ -66,6 +82,7 @@
          (emacsvox-aural-speech-balance-function nil)
          (emacsvox-aural-queued-cue-balance-function nil))
      (emacsvox-aural--register-default-scheme)
+     (emacsvox-aural-register-bundled-resources emacsvox-sounds-dir)
      ,@body))
 
 (defun emacsvox-test--transport-scheme (rules)
