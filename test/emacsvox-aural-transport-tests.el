@@ -1097,6 +1097,105 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
     (dolist (line '("---" "!@#" "☃"))
       (should-not (emacsvox-speak--line-condition line)))))
 
+(ert-deftest emacsvox-speak-line-uses-one-native-source-boundary ()
+  "Physical line content and its source cue form one native submission."
+  (with-temp-buffer
+    (insert (propertize "line" 'auditory-icon 'item))
+    (goto-char (point-min))
+    (let ((emacsvox-show-point nil)
+          (emacsvox-audio-indentation nil)
+          (emacsvox-aural-submission-facts '(:events (focus-entered)))
+          (emacsvox-aural-submission-context nil)
+          (emacsvox-aural-submission-module nil)
+          (emacsvox-aural-submission-occasion nil)
+          (tts-punctuation-mode 'all)
+          legacy-speech
+          (stops 0)
+          submission)
+      (cl-letf
+          (((symbol-function 'tts-stop)
+            (lambda (&optional _all) (cl-incf stops)))
+           ((symbol-function 'tts-speak)
+            (lambda (text) (setq legacy-speech text)))
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox-speak-line))
+      (should-not legacy-speech)
+      (should (zerop stops))
+      (pcase-let* ((`(,content . ,arguments) submission)
+                   (context (plist-get arguments :context))
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "line"))
+        (should-not (get-text-property 0 'auditory-icon content))
+        (should
+         (equal
+          (plist-get arguments :facts)
+          '(:events (focus-entered))))
+        (should (eq (plist-get arguments :occasion) 'navigation))
+        (should (eq (plist-get context :occasion) 'navigation))
+        (should (= (length actions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value (car actions))
+          'item))))))
+
+(ert-deftest emacsvox-speak-line-replaces-one-complete-navigation-packet ()
+  "Rapid physical movement keeps one stop and one complete packet per line."
+  (emacsvox-test--with-transport-scheme
+    (with-temp-buffer
+      (insert
+       (propertize "obsolete line" 'auditory-icon 'item)
+       "\n"
+       (propertize "latest line" 'auditory-icon 'item))
+      (goto-char (point-min))
+      (let ((emacsvox-aural--pending-deliveries
+             (make-hash-table :test #'equal))
+            (emacsvox-aural--delivery-sequence 0)
+            (emacsvox-aural--submission-sequence 0)
+            (emacsvox-show-point nil)
+            (emacsvox-audio-indentation nil)
+            (emacsvox-play-program nil)
+            (emacsvox-use-icons t)
+            (emacsvox-pronounce-table nil)
+            (emacsvox-pronounce-personality nil)
+            (tts-speaker-process 'speech)
+            (tts-notify-process nil)
+            (tts-stop-immediately t)
+            (tts-stopped-hook nil)
+            (tts-punctuation-mode 'all)
+            (tts-quiet nil)
+            (voice-lock-mode nil)
+            writes)
+        (cl-letf
+            (((symbol-function 'process-live-p)
+              (lambda (process) (eq process 'speech)))
+             ((symbol-function 'process-send-string)
+              (lambda (process command)
+                (push (list process command) writes)))
+             ((symbol-function 'run-with-idle-timer)
+              (lambda (&rest _arguments) 'timer))
+             ((symbol-function 'cancel-timer) #'ignore)
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET")))
+          (emacsvox-speak-line)
+          (forward-line 1)
+          (emacsvox-speak-line)
+          (should
+           (equal
+            (nreverse (copy-sequence writes))
+            '((speech "s\n") (speech "s\n"))))
+          (emacsvox-aural-flush-pending-deliveries 'speech))
+        (let ((wire
+               (mapconcat #'cadr (nreverse (copy-sequence writes)) "")))
+          (should (= (cl-count "s\n" writes :key #'cadr :test #'equal) 2))
+          (should (= (length writes) 3))
+          (should (string-match-p "latest line" wire))
+          (should-not (string-match-p "obsolete line" wire))
+          (should (string-match-p "\nd\n\\'" wire)))))))
+
 (ert-deftest emacsvox-speak-visual-line-detects-blank-conditions ()
   "Visual-line classification distinguishes blank segments from wrap edges."
   (dolist

@@ -245,8 +245,8 @@
            (emacsvox-aural-concrete-plan-context plan)
            :presentation-transaction-id)))))))
 
-(ert-deftest emacsvox-python-line-speaker-keeps-standard-transport ()
-  "The line callback boundary preserves normal and supplied speech delivery."
+(ert-deftest emacsvox-python-line-speaker-keeps-native-and-supplied-delivery ()
+  "The line callback boundary preserves native and supplied speech delivery."
   (with-temp-buffer
     (insert "line")
     (goto-char (point-min))
@@ -254,15 +254,20 @@
           (emacsvox-audio-indentation nil)
           (tts-punctuation-mode 'all)
           standard
+          standard-arguments
           supplied)
       (cl-letf
-          (((symbol-function 'tts-stop) #'ignore)
-           ((symbol-function 'tts-speak)
-            (lambda (text) (setq standard text))))
+          (((symbol-function 'emacsvox-aural-submit)
+            (lambda (text &rest arguments)
+              (setq
+               standard text
+               standard-arguments arguments))))
         (emacsvox-speak-line)
         (emacsvox-speak-line-with-speaker
          (lambda (text) (setq supplied text))))
       (should (equal standard "line"))
+      (should
+       (eq (plist-get standard-arguments :occasion) 'navigation))
       (should (equal supplied "line")))))
 
 (ert-deftest emacsvox-python-navigation-feedback-is-target-aware ()

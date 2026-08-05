@@ -806,14 +806,59 @@ results in the Dectalk producing a tone whose length is a function of the
 line's indentation.  Specifying `speak'
 results in the number of initial spaces being spoken.")
 
+(defun emacsvox-speak--remove-captured-line-icon
+    (content icon source-offset source-length)
+  "Return CONTENT without the ICON captured at SOURCE-OFFSET.
+
+SOURCE-LENGTH is the selected source-line length before indentation or line
+number prefixes are added.  Other text properties and auditory icons remain."
+  (if (null icon)
+      content
+    (let* ((result (copy-sequence content))
+           (prefix-length (max 0 (- (length result) source-length)))
+           (expected
+            (min
+             (max 0 (+ prefix-length source-offset))
+             (max 0 (1- (length result)))))
+           (position
+            (if (eq (get-text-property expected 'auditory-icon result) icon)
+                expected
+              (let ((cursor 0)
+                    found)
+                (while (and (< cursor (length result)) (null found))
+                  (when
+                      (eq
+                       (get-text-property cursor 'auditory-icon result)
+                       icon)
+                    (setq found cursor))
+                  (setq
+                   cursor
+                   (next-single-property-change
+                    cursor 'auditory-icon result (length result))))
+                found))))
+      (when position
+        (let ((start
+               (or
+                (previous-single-property-change
+                 (1+ position) 'auditory-icon result)
+                0))
+              (end
+               (or
+                (next-single-property-change
+                 position 'auditory-icon result)
+                (length result))))
+          (remove-text-properties
+           start end '(auditory-icon nil) result)))
+      result)))
+
 (defun emacsvox-speak-line-with-speaker (speaker &optional arg)
   "Present the current line, delivering speakable text to SPEAKER.
 
 ARG and all line-selection and presentation behavior match
 `emacsvox-speak-line'.  SPEAKER is called only when line policy selects
 speech; empty, whitespace, decorative, and otherwise unspeakable lines retain
-their established tone paths without calling SPEAKER."
-  (tts-stop 'all)
+their established tone paths without calling SPEAKER.  The caller owns
+interruption so native submissions can apply their complete delivery policy."
   (when (listp arg) (setq arg (car arg)))
   (let* ((inhibit-field-text-motion t)
          (inhibit-read-only t)
@@ -899,6 +944,81 @@ their established tone paths without calling SPEAKER."
             (setq line (concat linenum line)))
           (funcall speaker line))))))
 
+(defun emacsvox-speak--present-physical-line (&optional arg)
+  "Present the current physical line as one native transaction.
+
+ARG has the same selection meaning as in `emacsvox-speak-line'.  Cues emitted
+while extracting the line become ordered compatibility actions, and semantic
+line conditions remain action-only submissions."
+  (when (listp arg) (setq arg (car arg)))
+  (let* ((source-start
+          (if (and arg (> arg 0))
+              (point)
+            (line-beginning-position)))
+         (source-end
+          (if (and arg (< arg 0))
+              (point)
+            (line-end-position)))
+         (source-icon (get-char-property (point) 'auditory-icon))
+         (source-offset (- (point) source-start))
+         (source-length (- source-end source-start))
+         (context
+          (or
+           emacsvox-aural-submission-context
+           (emacsvox-aural-capture-context
+            emacsvox-aural-submission-module
+            (or emacsvox-aural-submission-occasion 'navigation))))
+         (module
+          (or
+           emacsvox-aural-submission-module
+           (plist-get context :module)))
+         (occasion
+          (or
+           emacsvox-aural-submission-occasion
+           (plist-get context :occasion)
+           'navigation))
+         (facts (copy-tree emacsvox-aural-submission-facts))
+         action-arguments
+         content
+         icons)
+    (let ((emacsvox-aural-submission-context context)
+          (emacsvox-aural-submission-module module)
+          (emacsvox-aural-submission-occasion occasion))
+      (cl-letf
+          (((symbol-function 'emacsvox-icon)
+            (lambda (icon)
+              (setq icons (append icons (list icon)))))
+           ((symbol-function 'emacsvox-aural-submit-actions)
+            (lambda (&rest arguments)
+              (setq action-arguments arguments))))
+        (emacsvox-speak-line-with-speaker
+         (lambda (text) (setq content text))
+         arg))
+      (let ((compatibility-actions
+             (mapcar #'emacsvox-aural-compatibility-icon icons)))
+        (cond
+         (content
+          (emacsvox-aural-submit
+           (emacsvox-speak--remove-captured-line-icon
+            content source-icon source-offset source-length)
+           :facts facts
+           :context context
+           :module module
+           :occasion occasion
+           :compatibility-actions compatibility-actions))
+         (action-arguments
+          (let ((emacsvox-aural-submission-facts
+                 (plist-get action-arguments :facts)))
+            (apply
+             #'emacsvox-aural-submit-actions
+             (plist-put
+              (plist-put
+               action-arguments :context context)
+              :compatibility-actions
+              (append
+               compatibility-actions
+               (plist-get action-arguments :compatibility-actions)))))))))))
+
 (defun emacsvox-speak-line (&optional arg)
   "Speaks current line.  With prefix ARG, speaks the rest of the
 line from point.  Negative prefix optional arg speaks from start
@@ -917,7 +1037,7 @@ before-string, or after-string) is indicated with auditory icon
 `left', `right', or `more' as appropriate.  These can then be
 spoken using command \\[emacsvox-speak-overlay-properties]."
   (interactive "P")
-  (emacsvox-speak-line-with-speaker #'tts-speak arg))
+  (emacsvox-speak--present-physical-line arg))
 
 (defun ems--display-props-get ()
   "Return  speakable display, before-string or after-string property if any."
