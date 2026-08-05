@@ -250,6 +250,64 @@
       (remhash identifier tts--tracked-dispatches)
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-retiring-process-cleans-owned-runtime-state ()
+  "Retiring a server cancels delivery, callbacks, clients, and the process."
+  (let ((process
+         (make-pipe-process
+          :name "emacsvox-retire-process-test" :buffer nil :noquery t))
+        (tts--tracked-dispatches (make-hash-table :test #'eql))
+        events)
+    (unwind-protect
+        (progn
+          (puthash 17 (cons process #'ignore) tts--tracked-dispatches)
+          (let ((tts-stopped-hook
+                 (list (lambda (stopped) (push (list 'hook stopped) events)))))
+            (cl-letf
+                (((symbol-function 'emacsvox-aural-cancel-pending-deliveries)
+                  (lambda (owner) (push (list 'cancel owner) events)))
+                 ((symbol-function 'emacsvox-aural-delivery-send)
+                  (lambda (owner command kind)
+                    (push (list 'send owner command kind) events)))
+                 ((symbol-function 'delete-process)
+                  (lambda (owner) (push (list 'delete owner) events))))
+              (tts--retire-process process)))
+          (should-not (gethash 17 tts--tracked-dispatches))
+          (should
+           (equal
+            (nreverse events)
+            `((cancel ,process)
+              (send ,process "s\n" stop)
+              (hook ,process)
+              (delete ,process)))))
+      (when (process-live-p process)
+        (delete-process process)))))
+
+(ert-deftest emacsvox-tts-initialize-retires-old-process-after-new-starts ()
+  "Successful initialization retires the old server before publishing new."
+  (let ((tts-speaker-process 'old)
+        (tts-program "test-server")
+        events)
+    (cl-letf
+        (((symbol-function 'tts-make-process)
+          (lambda (_name)
+            (push 'started events)
+            'new))
+         ((symbol-function 'tts--retire-process)
+          (lambda (process)
+            (push (list 'retired process) events)))
+         ((symbol-function 'processp)
+          (lambda (process) (memq process '(old new))))
+         ((symbol-function 'tts-multistream-p) (lambda (_) nil))
+         ((symbol-function 'require) (lambda (&rest _) t))
+         ((symbol-function 'voice-setup)
+          (lambda () (push (list 'configured tts-speaker-process) events))))
+      (tts-initialize))
+    (should (eq tts-speaker-process 'new))
+    (should
+     (equal
+      (nreverse events)
+      '(started (retired old) (configured new))))))
+
 (ert-deftest emacsvox-tts-protocol-dispatches-tone-and-silence ()
   "Tone and silence commands preserve optional forced dispatch."
   (should

@@ -70,6 +70,15 @@ delay.  Ordered and urgent transactions are never delayed."
 (defvar emacsvox-aural--delivery-sequence 0
   "Sequence preserving order across independent replacement keys.")
 
+(defvar emacsvox-aural-last-delivery-failure nil
+  "Data-only description of the most recent asynchronous delivery failure.")
+
+(defvar emacsvox-aural-delivery-failed-hook nil
+  "Abnormal hook run after an asynchronous delivery failure.
+
+Each function receives the failure plist stored in
+`emacsvox-aural-last-delivery-failure'.")
+
 (defconst emacsvox-aural--framed-delivery-process-property
   'emacsvox-aural-framed-delivery
   "Process property enabling complete replaceable transaction framing.")
@@ -135,10 +144,24 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
         ((flush
           ()
           (when current-process
-            (unless
+            (if
                 (and
                  (processp current-process)
                  (not (process-live-p current-process)))
+                (let ((failure
+                       (list
+                        :time (current-time)
+                        :reason 'process-not-live
+                        :process-name (process-name current-process)
+                        :owner-name
+                        (and (processp owner) (process-name owner))
+                        :generation generation)))
+                  (setq emacsvox-aural-last-delivery-failure failure)
+                  (run-hook-with-args
+                   'emacsvox-aural-delivery-failed-hook failure)
+                  (message
+                   "Emacsvox discarded speech delivery: process %s is not live"
+                   (process-name current-process)))
               (process-send-string
                current-process (apply #'concat (nreverse commands)))))
           (setq current-process nil commands nil)))

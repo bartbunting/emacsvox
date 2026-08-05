@@ -216,6 +216,20 @@ Return non-nil when LINE is a tracked completion record."
     (dolist (identifier identifiers)
       (remhash identifier tts--tracked-dispatches))))
 
+(defun tts--retire-process (process)
+  "Cancel state owned by PROCESS, stop it, and delete it.
+
+This is the primary speech-process lifecycle boundary.  Pending replaceable
+delivery, tracked completion callbacks, and clients of `tts-stopped-hook' are
+retired before PROCESS can become an unreachable dead owner."
+  (when (processp process)
+    (emacsvox-aural-cancel-pending-deliveries process)
+    (tts--cancel-process-tracked-dispatches process)
+    (when (process-live-p process)
+      (emacsvox-aural-delivery-send process "s\n" 'stop))
+    (run-hook-with-args 'tts-stopped-hook process)
+    (delete-process process)))
+
 (defun tts--protocol-dispatch-tracked (callback)
   "Dispatch queued speech and call CALLBACK after playback completes.
 Return the identifier allocated to this dispatch."
@@ -1752,8 +1766,9 @@ For swiftmac, set this to `left' or `right'."
   ;; fallback of fallbacks
   (unless tts-program (setq tts-program "espeak"))
   (let ((new (tts-make-process "Speaker")))
-    ;; success, so nuke old server
-    (when (processp tts-speaker-process) (delete-process tts-speaker-process))
+    ;; Retire the old server only after its replacement starts successfully.
+    (when (processp tts-speaker-process)
+      (tts--retire-process tts-speaker-process))
     (setq tts-speaker-process new)
     (when (tts-multistream-p tts-program) (tts-notify-initialize))
     (when (string-match "cloud" tts-program) ; we'll serve icons.

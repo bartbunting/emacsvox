@@ -357,6 +357,29 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (nreverse writes)
           '((speech "s\n") (speech "s\n"))))))))
 
+(ert-deftest emacsvox-aural-delivery-records-dead-process-failure ()
+  "Delivery to a retired process leaves actionable diagnostics."
+  (let ((process
+         (make-pipe-process
+          :name "emacsvox-dead-delivery-test" :buffer nil :noquery t))
+        (emacsvox-aural-last-delivery-failure nil)
+        observed)
+    (delete-process process)
+    (let ((emacsvox-aural-delivery-failed-hook
+           (list (lambda (failure) (setq observed failure)))))
+      (emacsvox-aural--send-delivery-entries
+       (list
+        (emacsvox-aural--make-delivery-entry
+         :process process :command "q {lost }\nd\n"))
+       process 23))
+    (should (eq observed emacsvox-aural-last-delivery-failure))
+    (should (eq (plist-get observed :reason) 'process-not-live))
+    (should (= (plist-get observed :generation) 23))
+    (should
+     (equal
+      (plist-get observed :process-name)
+      "emacsvox-dead-delivery-test"))))
+
 (ert-deftest emacsvox-aural-delivery-orders-pending-before-fifo-output ()
   "Ordered output flushes older replaceable work before its own packet."
   (let ((emacsvox-aural--pending-deliveries
