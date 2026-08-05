@@ -45,6 +45,14 @@
 (defvar emacsvox-aural-submission-replacement-key nil
   "Dynamically bound replacement key for the current aural submission.")
 
+(defvar emacsvox-aural-submission-controls-interruption nil
+  "Non-nil when the native delivery policy owns speech interruption.
+
+`emacsvox-aural-submit' and `emacsvox-aural-submit-actions' bind this while
+their complete transactions are delivered.  Compatibility callers and bare
+`tts-speak' calls leave it nil and retain legacy stop-before-speaking
+behaviour.")
+
 (defvar emacsvox-aural-ui-interface-buffer)
 
 (defconst emacsvox-aural-facts-property

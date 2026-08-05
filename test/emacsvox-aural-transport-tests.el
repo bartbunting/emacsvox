@@ -296,6 +296,29 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         (nreverse writes)
         '((speech "a latest.ogg\nq {latest }\nd\n")))))))
 
+(ert-deftest emacsvox-aural-empty-native-delivery-preserves-pending-work ()
+  "A native transaction with no output cannot cancel accepted feedback."
+  (let ((emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0))
+    (cl-letf
+        (((symbol-function 'run-with-idle-timer)
+          (lambda (&rest _arguments) 'timer))
+         ((symbol-function 'cancel-timer) #'ignore))
+      (let ((emacsvox-aural-submission-delivery-policy 'replaceable)
+            (emacsvox-aural-submission-replacement-key 'speaker)
+            (tts-speaker-process 'speech))
+        (emacsvox-aural-call-with-delivery-transaction
+         'speech
+         (lambda ()
+           (tts--protocol-queue-text "accepted navigation")
+           (tts--protocol-dispatch))))
+      (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+      (let ((emacsvox-aural-submission-controls-interruption t)
+            (emacsvox-aural-submission-delivery-policy 'urgent))
+        (emacsvox-aural-call-with-delivery-transaction 'speech #'ignore))
+      (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1)))))
+
 (ert-deftest emacsvox-aural-delivery-frames-windows-replaceable-payload ()
   "Framing carries one UTF-8-safe generation and complete protocol packet."
   (let ((emacsvox-aural--pending-deliveries
@@ -430,6 +453,124 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
         (nreverse writes)
         '((speech "q {navigation }\nd\n")
           (speech "q {state change }\nd\n")))))))
+
+(ert-deftest emacsvox-aural-native-ordered-delivery-does-not-stop-speech ()
+  "Native ordered speech queues without legacy stop-before-speaking policy."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural--pending-deliveries
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--submission-sequence 0)
+          (tts-speaker-process 'speech)
+          (tts-notify-process nil)
+          (tts-stop-immediately t)
+          (tts-stopped-hook nil)
+          (tts-quiet nil)
+          (voice-lock-mode nil)
+          (emacsvox-use-icons nil)
+          (emacsvox-pronounce-table nil)
+          (emacsvox-pronounce-personality nil)
+          (context
+           '(:module test
+             :mode text-mode
+             :mode-lineage (text-mode)
+             :occasion state-change
+             :face-presentation-enabled t
+             :voice-lock-enabled nil
+             :icons-enabled nil))
+          writes)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-send-string)
+            (lambda (process command)
+              (push (list process command) writes)))
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET")))
+        (emacsvox-aural-submit
+         "ordered native" :context context :delivery-policy 'ordered)
+        (should-not (member '(speech "s\n") writes))
+        (should
+         (string-match-p
+          "ordered native" (mapconcat #'cadr (nreverse writes) "")))
+        (setq writes nil)
+        (let ((emacsvox-aural-submission-context context))
+          (tts-speak "legacy speech"))
+        (should (= (cl-count "s\n" writes :key #'cadr :test #'equal) 1))))))
+
+(ert-deftest emacsvox-aural-native-urgent-content-interrupts-first ()
+  "Urgent native content stops playback before sending its complete packet."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural--pending-deliveries
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--submission-sequence 0)
+          (tts-speaker-process 'speech)
+          (tts-notify-process nil)
+          (tts-stop-immediately nil)
+          (tts-stopped-hook nil)
+          (tts-quiet nil)
+          (voice-lock-mode nil)
+          (emacsvox-use-icons nil)
+          (emacsvox-pronounce-table nil)
+          (emacsvox-pronounce-personality nil)
+          (context
+           '(:module test
+             :mode text-mode
+             :mode-lineage (text-mode)
+             :occasion notification
+             :face-presentation-enabled t
+             :voice-lock-enabled nil
+             :icons-enabled nil))
+          writes)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-send-string)
+            (lambda (process command)
+              (push (list process command) writes)))
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET")))
+        (emacsvox-aural-submit
+         "urgent content" :context context :delivery-policy 'urgent))
+      (setq writes (nreverse writes))
+      (should (equal (cadar writes) "s\n"))
+      (should
+       (string-match-p
+        "urgent content" (mapconcat #'cadr (cdr writes) ""))))))
+
+(ert-deftest emacsvox-aural-native-urgent-actions-interrupt-first ()
+  "Urgent action-only output has the same interruption contract as content."
+  (emacsvox-test--with-transport-scheme
+    (emacsvox-test--transport-scheme
+     '((:id urgent-tone
+        :match (:role heading :state folded)
+        :render
+        (:before ((:id alert :kind tone :tone line-empty))))))
+    (let ((emacsvox-aural--pending-deliveries
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--submission-sequence 0)
+          (tts-speaker-process 'speech)
+          (tts-notify-process nil)
+          (tts-stopped-hook nil)
+          writes)
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-send-string)
+            (lambda (process command)
+              (push (list process command) writes))))
+        (emacsvox-aural-submit-actions
+         :facts '(:role heading :state folded)
+         :context
+         '(:module test
+           :mode text-mode
+           :mode-lineage (text-mode)
+           :occasion notification
+           :icons-enabled nil)
+         :delivery-policy 'urgent))
+      (should
+       (equal
+        (nreverse writes)
+        '((speech "s\n") (speech "t 130 150\nd\n")))))))
 
 (ert-deftest emacsvox-aural-delivery-coalesces-native-navigation-burst ()
   "Real native submissions retain only the final speech protocol packet."
@@ -898,7 +1039,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (should-not emacsvox-aural-presentation-history))))
 
 (ert-deftest emacsvox-aural-action-submission-skips-empty-plan ()
-  "An unmatched action-only submission neither starts nor dispatches."
+  "An unmatched urgent action submission neither interrupts nor dispatches."
   (emacsvox-test--with-transport-scheme
     (emacsvox-test--transport-scheme nil)
     (let (events submission)
@@ -911,6 +1052,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
          submission
          (emacsvox-aural-submit-actions
           :facts '(:role heading)
+          :delivery-policy 'urgent
           :context
           (append
            (emacsvox-test--transport-context)

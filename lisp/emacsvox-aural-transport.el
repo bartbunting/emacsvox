@@ -25,6 +25,8 @@
 (declare-function emacsvox-queue-resource
                   "emacsvox-sounds" (resource))
 (declare-function tts--protocol-dispatch "tts-speak" ())
+(declare-function tts--interrupt-process "tts-speak"
+                  (process &optional notifications))
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
@@ -275,7 +277,6 @@ Return non-nil when every entry was sent to a live process."
            :replacement-key replacement-key
            :entries entries
            :effects effects)))
-    (emacsvox-aural-cancel-pending-deliveries owner replacement-key)
     (puthash table-key pending emacsvox-aural--pending-deliveries)
     (setf
      (emacsvox-aural--pending-delivery-timer pending)
@@ -288,10 +289,16 @@ Return non-nil when every entry was sent to a live process."
   (when entries
     (pcase (or emacsvox-aural-submission-delivery-policy 'ordered)
       ('replaceable
+       (emacsvox-aural-cancel-pending-deliveries
+        owner emacsvox-aural-submission-replacement-key)
+       (when emacsvox-aural-submission-controls-interruption
+         (tts--interrupt-process owner t))
        (emacsvox-aural--schedule-replaceable-delivery
         owner emacsvox-aural-submission-replacement-key entries effects))
       ('urgent
        (emacsvox-aural-cancel-pending-deliveries owner)
+       (when emacsvox-aural-submission-controls-interruption
+         (tts--interrupt-process owner t))
        (when (emacsvox-aural--send-delivery-entries entries)
          (emacsvox-aural--commit-delivery-effects effects)))
       (_
@@ -312,11 +319,6 @@ or supersedes an older pending payload."
           (emacsvox-aural--delivery-transaction-entries nil)
           (emacsvox-aural--delivery-transaction-effects nil)
           result)
-      (when (eq emacsvox-aural-submission-delivery-policy 'replaceable)
-        (emacsvox-aural-cancel-pending-deliveries
-         owner emacsvox-aural-submission-replacement-key))
-      (when (eq emacsvox-aural-submission-delivery-policy 'urgent)
-        (emacsvox-aural-cancel-pending-deliveries owner))
       (setq result (apply function arguments))
       (let ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
             (effects (nreverse emacsvox-aural--delivery-transaction-effects)))

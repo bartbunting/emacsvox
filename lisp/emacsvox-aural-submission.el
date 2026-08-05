@@ -235,16 +235,17 @@ presentation-history record."
     (emacsvox-aural--submission-error
      "Action-only aural facts cannot contain spoken content: %S"
      (plist-get facts :content)))
-  (emacsvox-aural-call-with-submission
-   #'emacsvox-aural--submit-actions
-   :facts facts
-   :context context
-   :module (or module (plist-get context :module))
-   :occasion
-   (or occasion (plist-get context :occasion) 'notification)
-   :delivery-policy delivery-policy
-   :replacement-key replacement-key
-   :arguments (list compatibility-actions)))
+  (let ((emacsvox-aural-submission-controls-interruption t))
+    (emacsvox-aural-call-with-submission
+     #'emacsvox-aural--submit-actions
+     :facts facts
+     :context context
+     :module (or module (plist-get context :module))
+     :occasion
+     (or occasion (plist-get context :occasion) 'notification)
+     :delivery-policy delivery-policy
+     :replacement-key replacement-key
+     :arguments (list compatibility-actions))))
 
 (cl-defun emacsvox-aural-submit
     (content
@@ -259,16 +260,17 @@ ordered list produced by `emacsvox-aural-compatibility-icon'.  Before actions
 precede semantic before-actions; after actions follow semantic after-actions.
 Semantic rules are resolved once for the object, while legacy icons resolve
 only their cue-specific adapter policy."
-  (emacsvox-aural-call-with-submission
-   #'emacsvox-aural--submit-content
-   :facts facts
-   :context context
-   :module (or module (plist-get context :module))
-   :occasion
-   (or occasion (plist-get context :occasion) 'continuous)
-   :delivery-policy delivery-policy
-   :replacement-key replacement-key
-   :arguments (list content compatibility-actions)))
+  (let ((emacsvox-aural-submission-controls-interruption t))
+    (emacsvox-aural-call-with-submission
+     #'emacsvox-aural--submit-content
+     :facts facts
+     :context context
+     :module (or module (plist-get context :module))
+     :occasion
+     (or occasion (plist-get context :occasion) 'continuous)
+     :delivery-policy delivery-policy
+     :replacement-key replacement-key
+     :arguments (list content compatibility-actions))))
 
 (provide 'emacsvox-aural-submission)
 ;;; emacsvox-aural-submission.el ends here

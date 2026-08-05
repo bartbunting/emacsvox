@@ -55,6 +55,7 @@
 (defvar org-fold-core-style)
 (defvar org-link-descriptive)
 (defvar tts-default-voice)
+(defvar tts-notify-process)
 (defvar tts-speaker-process)
 (defvar tts-punctuation-mode)
 (defvar tts-split-caps)
@@ -216,6 +217,21 @@ Return non-nil when LINE is a tracked completion record."
     (dolist (identifier identifiers)
       (remhash identifier tts--tracked-dispatches))))
 
+(defun tts--interrupt-process (process &optional notifications)
+  "Stop PROCESS and retire callbacks that can no longer complete.
+
+When NOTIFICATIONS is non-nil, also stop the notification speech stream.
+Pending aural deliveries are owned by the caller because replacement and
+urgent policies cancel different scopes."
+  (when
+      (and notifications
+           (process-live-p tts-notify-process))
+    (tts-notify-stop))
+  (tts--cancel-process-tracked-dispatches process)
+  (when (process-live-p process)
+    (emacsvox-aural-delivery-send process "s\n" 'stop))
+  (run-hook-with-args 'tts-stopped-hook process))
+
 (defun tts--retire-process (process)
   "Cancel state owned by PROCESS, stop it, and delete it.
 
@@ -224,10 +240,7 @@ delivery, tracked completion callbacks, and clients of `tts-stopped-hook' are
 retired before PROCESS can become an unreachable dead owner."
   (when (processp process)
     (emacsvox-aural-cancel-pending-deliveries process)
-    (tts--cancel-process-tracked-dispatches process)
-    (when (process-live-p process)
-      (emacsvox-aural-delivery-send process "s\n" 'stop))
-    (run-hook-with-args 'tts-stopped-hook process)
+    (tts--interrupt-process process)
     (delete-process process)))
 
 (defun tts--protocol-dispatch-tracked (callback)
@@ -971,9 +984,7 @@ Argument COMPLEMENT  is the complement of separator."
   notification stream as well."
   (interactive "P")
   (emacsvox-aural-cancel-pending-deliveries tts-speaker-process)
-  (tts--cancel-process-tracked-dispatches tts-speaker-process)
-  (when (process-live-p tts-speaker-process) (tts--protocol-stop))
-  (run-hook-with-args 'tts-stopped-hook tts-speaker-process)
+  (tts--interrupt-process tts-speaker-process)
   (when
       (and (tts-notify-process)
            (or all (called-interactively-p 'interactive)))
@@ -1892,7 +1903,10 @@ CALLBACK receives the tracked dispatch identifier."
       text emacsvox-aural-submission-facts
       emacsvox-aural-submission-context)))
   ;; flush previous speech if asked to
-  (when tts-stop-immediately
+  (when
+      (and
+       tts-stop-immediately
+       (not emacsvox-aural-submission-controls-interruption))
     (when (process-live-p tts-notify-process) (tts-notify-stop))
     (tts-stop))
   (when selective-display
