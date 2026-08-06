@@ -511,6 +511,44 @@
       (nreverse events)
       '(started (retired old) (configured new))))))
 
+(ert-deftest emacsvox-tts-initialize-retires-stale-notification-process ()
+  "Switching to a single-stream server retires the previous notifier."
+  (let ((tts-speaker-process 'old-speaker)
+        (tts-notify-process 'old-notifier)
+        (tts-program "single-stream-server")
+        events)
+    (cl-letf
+        (((symbol-function 'tts-make-process)
+          (lambda (_name)
+            (push 'started events)
+            'new-speaker))
+         ((symbol-function 'tts--retire-process)
+          (lambda (process)
+            (push
+             (list 'retired process
+                   :speaker tts-speaker-process
+                   :notifier tts-notify-process)
+             events)))
+         ((symbol-function 'processp)
+          (lambda (process)
+            (memq process '(old-speaker old-notifier new-speaker))))
+         ((symbol-function 'tts-multistream-p) (lambda (_) nil))
+         ((symbol-function 'require) (lambda (&rest _) t))
+         ((symbol-function 'voice-setup)
+          (lambda () (push (list 'configured tts-speaker-process) events))))
+      (tts-initialize))
+    (should (eq tts-speaker-process 'new-speaker))
+    (should-not tts-notify-process)
+    (should
+     (equal
+      (nreverse events)
+      '(started
+        (retired old-speaker
+                 :speaker old-speaker :notifier old-notifier)
+        (retired old-notifier
+                 :speaker new-speaker :notifier nil)
+        (configured new-speaker))))))
+
 (ert-deftest emacsvox-tts-notify-initialize-publishes-before-retirement ()
   "Notifier replacement uses common retirement after publishing its successor."
   (let ((tts-notify-process 'old)

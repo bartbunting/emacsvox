@@ -1924,12 +1924,23 @@ For swiftmac, set this to `left' or `right'."
   
   ;; fallback of fallbacks
   (unless tts-program (setq tts-program "espeak"))
-  (let ((new (tts-make-process "Speaker")))
+  (let ((new (tts-make-process "Speaker"))
+        (old-speaker tts-speaker-process))
     ;; Retire the old server only after its replacement starts successfully.
-    (when (processp tts-speaker-process)
-      (tts--retire-process tts-speaker-process))
+    (when (processp old-speaker)
+      (tts--retire-process old-speaker))
     (setq tts-speaker-process new)
-    (when (tts-multistream-p tts-program) (tts-notify-initialize))
+    (cond
+     ((tts-multistream-p tts-program)
+      (tts-notify-initialize))
+     (t
+      ;; Do not leave a notifier from the previously selected engine alive.
+      (let ((old-notifier tts-notify-process))
+        (setq tts-notify-process nil)
+        (when (and (processp old-notifier)
+                   (not (eq old-notifier old-speaker))
+                   (not (eq old-notifier new)))
+          (tts--retire-process old-notifier)))))
     (when (string-match "cloud" tts-program) ; we'll serve icons.
       (setq emacsvox-play-program nil))
     ;; `voice-setup' requires us, so we can't require it at top-level.
