@@ -145,15 +145,17 @@ record only if that packet is actually sent.")
 
 (defun emacsvox-aural--retain-presentation-record (record)
   "Retain bounded presentation RECORD and return it."
-  (push record emacsvox-aural-presentation-history)
-  (when
-      (> (length emacsvox-aural-presentation-history)
-         emacsvox-aural-presentation-history-limit)
-    (setcdr
-     (nthcdr
-      (1- emacsvox-aural-presentation-history-limit)
-      emacsvox-aural-presentation-history)
-     nil))
+  (if (zerop emacsvox-aural-presentation-history-limit)
+      (setq emacsvox-aural-presentation-history nil)
+    (push record emacsvox-aural-presentation-history)
+    (when
+        (> (length emacsvox-aural-presentation-history)
+           emacsvox-aural-presentation-history-limit)
+      (setcdr
+       (nthcdr
+        (1- emacsvox-aural-presentation-history-limit)
+        emacsvox-aural-presentation-history)
+       nil)))
   record)
 
 (defun emacsvox-aural--make-history-record

@@ -802,6 +802,43 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           "latest message"))
         (should (equal presented '("latest message")))))))
 
+(ert-deftest emacsvox-aural-history-stays-disabled-after-pending-delivery ()
+  "A replaceable delivery cannot repopulate history disabled while pending."
+  (emacsvox-test--with-transport-scheme
+    (let ((emacsvox-aural--pending-deliveries
+           (make-hash-table :test #'equal))
+          (emacsvox-aural--delivery-sequence 0)
+          (emacsvox-aural--submission-sequence 0)
+          (tts-speaker-process 'speech)
+          (tts-notify-process nil)
+          (tts-quiet nil)
+          (voice-lock-mode nil)
+          (emacsvox-use-icons nil)
+          (emacsvox-pronounce-table nil)
+          (emacsvox-pronounce-personality nil)
+          (context
+           '(:module test
+             :mode text-mode
+             :mode-lineage (text-mode)
+             :occasion navigation
+             :face-presentation-enabled t
+             :voice-lock-enabled nil
+             :icons-enabled nil)))
+      (cl-letf
+          (((symbol-function 'process-live-p)
+            (lambda (process) (eq process 'speech)))
+           ((symbol-function 'process-send-string) #'ignore)
+           ((symbol-function 'run-with-idle-timer)
+            (lambda (&rest _arguments) 'timer))
+           ((symbol-function 'cancel-timer) #'ignore)
+           ((symbol-function 'tts-voice-reset-code)
+            (lambda () "RESET")))
+        (emacsvox-aural-submit "pending" :context context)
+        (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+        (setq emacsvox-aural-presentation-history-limit 0)
+        (emacsvox-aural-flush-pending-deliveries 'speech))
+      (should-not emacsvox-aural-presentation-history))))
+
 (ert-deftest emacsvox-aural-submission-combines-one-object-and-legacy-actions ()
   "One native submission resolves object policy once around ordered adapters."
   (emacsvox-test--with-transport-scheme
