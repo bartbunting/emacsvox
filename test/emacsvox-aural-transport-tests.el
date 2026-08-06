@@ -2782,6 +2782,27 @@ is the default inherited by a newly created TTS scratch buffer."
         (should (= (length (emacsvox-test--concrete-plans-in prepared)) 3))
         (should (= compilations 3))))))
 
+(ert-deftest emacsvox-aural-transport-matches-each-source-run-once ()
+  "Run and transition lifetimes share one rule match per formatting run."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text (copy-sequence "abcdef"))
+           (context (emacsvox-test--transport-context))
+           (original
+            (symbol-function 'emacsvox-aural--matching-rules-for-inputs))
+           (matches 0))
+      (add-text-properties 0 2 '(face bold) text)
+      (add-text-properties 2 4 '(face italic) text)
+      (let ((prepared
+             (cl-letf
+                 (((symbol-function 'emacsvox-aural--matching-rules-for-inputs)
+                   (lambda (&rest arguments)
+                     (cl-incf matches)
+                     (apply original arguments))))
+               (emacsvox-aural-prepare-text text nil context))))
+        (should (= (length (emacsvox-test--concrete-plans-in prepared)) 3))
+        ;; One object-wide match plus one shared run/transition match per run.
+        (should (= matches 4))))))
+
 (ert-deftest emacsvox-aural-transport-queue-never-reresolves ()
   "Queueing a compiled plan performs no semantic, resource, or voice lookup."
   (emacsvox-test--with-transport-scheme

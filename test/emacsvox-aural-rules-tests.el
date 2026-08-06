@@ -976,6 +976,56 @@
            (emacsvox-aural-render-plan-before plan))
           (cdr case)))))))
 
+(ert-deftest emacsvox-aural-rules-share-matches-across-lifetimes ()
+  "Several lifecycle plans reuse normalization and matching results."
+  (let* ((rule
+          (emacsvox-test--compile-rule
+           'shared-lifetimes
+           '(:role heading)
+           '(:before
+             ((:id run-action :kind cue :cue item :anchor run)
+              (:id transition-action :kind cue :cue open-object
+               :anchor transition)))))
+         (input
+          (cons
+           '(:role heading)
+           '(:mode text-mode :occasion navigation)))
+         (normalize (symbol-function 'emacsvox-aural-normalize-input))
+         (matching
+          (symbol-function 'emacsvox-aural--matching-rules-for-inputs))
+         (normalizations 0)
+         (matches 0)
+         plans)
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-normalize-input)
+          (lambda (&rest arguments)
+            (cl-incf normalizations)
+            (apply normalize arguments)))
+         ((symbol-function 'emacsvox-aural--matching-rules-for-inputs)
+          (lambda (&rest arguments)
+            (cl-incf matches)
+            (apply matching arguments))))
+      (setq
+       plans
+       (emacsvox-aural--resolve-inputs-for-anchors
+        (list input) (list rule) '(run transition))))
+    (should (= normalizations 1))
+    (should (= matches 1))
+    (should
+     (equal
+      (emacsvox-test--action-ids
+       (emacsvox-aural-render-plan-before (alist-get 'run plans)))
+      '(run-action)))
+    (should
+     (equal
+      (emacsvox-test--action-ids
+       (emacsvox-aural-render-plan-before (alist-get 'transition plans)))
+      '(transition-action)))
+    (should-not
+     (eq
+      (emacsvox-aural-render-plan-content (alist-get 'run plans))
+      (emacsvox-aural-render-plan-content (alist-get 'transition plans))))))
+
 (ert-deftest emacsvox-aural-rules-object-face-actions-compose-once ()
   "An object action selected by several face runs contributes only once."
   (let* ((rule

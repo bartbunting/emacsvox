@@ -209,15 +209,16 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
      :context run-context
      :icon object-icon)))
 
-(defun emacsvox-aural--resolve-source-run (run anchor)
-  "Resolve source RUN's presentation for ANCHOR."
+(defun emacsvox-aural--resolve-source-run-anchors (run anchors)
+  "Resolve source RUN's presentation once for lifecycle ANCHORS."
   (let ((facts (emacsvox-aural-source-run-facts run))
         (context (emacsvox-aural-source-run-context run))
         (icon (emacsvox-aural-source-run-icon run)))
     (if icon
-        (emacsvox-aural-resolve-legacy-icon
-         icon context facts anchor)
-      (emacsvox-aural-resolve-active facts context anchor))))
+        (emacsvox-aural--resolve-legacy-icon-inputs-for-anchors
+         icon (list (cons facts context)) anchors)
+      (emacsvox-aural--resolve-active-inputs-for-anchors
+       (list (cons facts context)) anchors))))
 
 (defun emacsvox-aural--resolve-source-object (runs anchor)
   "Resolve RUNS as one aural object for ANCHOR."
@@ -420,16 +421,20 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
              compatibility-actions
              (emacsvox-aural-source-run-facts (car runs))
              (emacsvox-aural-source-run-context (car runs))))
+           (lifetime-renders
+            (mapcar
+             (lambda (run)
+               (emacsvox-aural--resolve-source-run-anchors
+                run '(run transition)))
+             runs))
            (run-renders
             (mapcar
-             (lambda (run)
-               (emacsvox-aural--resolve-source-run run 'run))
-             runs))
+             (lambda (renders) (alist-get 'run renders))
+             lifetime-renders))
            (transition-renders
             (mapcar
-             (lambda (run)
-               (emacsvox-aural--resolve-source-run run 'transition))
-             runs))
+             (lambda (renders) (alist-get 'transition renders))
+             lifetime-renders))
            (count (length runs)))
       (cl-loop
        for run in runs

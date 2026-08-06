@@ -966,20 +966,35 @@ context rather than capturing one at the source boundary."
         (emacsvox-aural-content-style-provenance content))))
     plan))
 
+(defun emacsvox-aural--apply-legacy-style-to-plans (plans context)
+  "Apply CONTEXT's legacy content style independently to resolved PLANS."
+  (mapcar
+   (lambda (entry)
+     (cons
+      (car entry)
+      (emacsvox-aural--apply-legacy-content-style (cdr entry) context)))
+   plans))
+
+(defun emacsvox-aural--resolve-active-inputs-for-anchors (inputs anchors)
+  "Resolve active semantic INPUTS once for each lifecycle in ANCHORS."
+  (unless (and (consp inputs) (cl-every #'consp inputs))
+    (emacsvox-aural--scheme-error
+     "Active aural resolution requires nonempty inputs: %S" inputs))
+  (let ((context (cdar inputs)))
+    (emacsvox-aural--apply-legacy-style-to-plans
+     (emacsvox-aural--resolve-inputs-for-anchors
+      inputs (emacsvox-aural-current-rules context) anchors)
+     context)))
+
 (defun emacsvox-aural-resolve-active-inputs (inputs &optional anchor)
   "Resolve one object's semantic INPUTS through active layers for ANCHOR.
 
 INPUTS is a nonempty list of (FACTS . CONTEXT) pairs.  Contextual rule
 collection uses the first pair because object boundaries guarantee stable
 module context."
-  (unless (and (consp inputs) (cl-every #'consp inputs))
-    (emacsvox-aural--scheme-error
-     "Active aural resolution requires nonempty inputs: %S" inputs))
-  (let* ((context (cdar inputs))
-         (plan
-          (emacsvox-aural-resolve-inputs
-           inputs (emacsvox-aural-current-rules context) anchor)))
-    (emacsvox-aural--apply-legacy-content-style plan context)))
+  (cdar
+   (emacsvox-aural--resolve-active-inputs-for-anchors
+    inputs (list anchor))))
 
 (defun emacsvox-aural-resolve-active (facts &optional context anchor)
   "Resolve FACTS through active scheme and contextual rule layers.
@@ -1080,25 +1095,32 @@ resolver."
       anchor)
      context)))
 
+(defun emacsvox-aural--resolve-legacy-icon-inputs-for-anchors
+    (icon inputs anchors)
+  "Resolve legacy ICON across INPUTS once for each lifecycle in ANCHORS."
+  (unless (and (consp inputs) (cl-every #'consp inputs))
+    (emacsvox-aural--scheme-error
+     "Legacy icon resolution requires nonempty inputs: %S" inputs))
+  (let ((context (cdar inputs)))
+    (emacsvox-aural--apply-legacy-style-to-plans
+     (emacsvox-aural--resolve-inputs-for-anchors
+      inputs
+      (emacsvox-aural--require-unique-rule-ids
+       (cons
+        (emacsvox-aural--legacy-icon-rule icon)
+        (emacsvox-aural-current-rules context)))
+      anchors)
+     context)))
+
 (defun emacsvox-aural-resolve-legacy-icon-inputs
     (icon inputs &optional anchor)
   "Resolve legacy ICON across one object's INPUTS for optional ANCHOR.
 
 INPUTS must already contain ICON's semantic events and `:legacy-cue' context,
 as produced by the transport source-boundary adapter."
-  (unless (and (consp inputs) (cl-every #'consp inputs))
-    (emacsvox-aural--scheme-error
-     "Legacy icon resolution requires nonempty inputs: %S" inputs))
-  (let ((context (cdar inputs)))
-    (emacsvox-aural--apply-legacy-content-style
-     (emacsvox-aural-resolve-inputs
-      inputs
-      (emacsvox-aural--require-unique-rule-ids
-       (cons
-        (emacsvox-aural--legacy-icon-rule icon)
-        (emacsvox-aural-current-rules context)))
-      anchor)
-     context)))
+  (cdar
+   (emacsvox-aural--resolve-legacy-icon-inputs-for-anchors
+    icon inputs (list anchor))))
 
 (defun emacsvox-aural-make-legacy-cue-rule
     (id cue replacement &optional selectors)

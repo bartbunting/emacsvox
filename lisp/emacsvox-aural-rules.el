@@ -1683,22 +1683,9 @@ When VALUE is supplied, an attribute must also have that value."
                (symbol-name (emacsvox-aural-rule-id (cdr right))))
             (emacsvox-aural--score-less-p left-score right-score))))))))
 
-(defun emacsvox-aural--best-rule-score (rule inputs)
-  "Return RULE's strongest matching score across normalized INPUTS."
-  (let (best)
-    (dolist (input inputs)
-      (when (emacsvox-aural-rule-matches-p rule input)
-        (let ((score (emacsvox-aural-rule-score rule input)))
-          (when
-              (or
-               (null best)
-               (emacsvox-aural--score-less-p best score))
-            (setq best score)))))
-    best))
-
-(defun emacsvox-aural--best-rule-input (rule inputs)
-  "Return RULE's strongest matching member of normalized INPUTS."
-  (let (best best-score)
+(defun emacsvox-aural--best-rule-match (rule inputs)
+  "Return RULE's strongest (SCORE . INPUT) match in normalized INPUTS."
+  (let (best-input best-score)
     (dolist (input inputs)
       (when (emacsvox-aural-rule-matches-p rule input)
         (let ((score (emacsvox-aural-rule-score rule input)))
@@ -1706,18 +1693,19 @@ When VALUE is supplied, an attribute must also have that value."
               (or
                (null best-score)
                (emacsvox-aural--score-less-p best-score score))
-            (setq best input
+            (setq best-input input
                   best-score score)))))
-    best))
+    (and best-score (cons best-score best-input))))
 
 (defun emacsvox-aural--matching-rules-for-inputs (rules inputs)
   "Return scored RULES matching any normalized member of INPUTS.
 
-Each rule occurs once with its strongest score across the complete object."
+Each result is (SCORE RULE INPUT), retaining the strongest matching input so
+several lifecycle plans can reuse the same matching work."
   (let (matches)
     (dolist (rule rules)
-      (when-let* ((score (emacsvox-aural--best-rule-score rule inputs)))
-        (push (cons score rule) matches)))
+      (when-let* ((best (emacsvox-aural--best-rule-match rule inputs)))
+        (push (list (car best) rule (cdr best)) matches)))
     (sort
      matches
      (lambda (left right)
@@ -1725,8 +1713,8 @@ Each rule occurs once with its strongest score across the complete object."
              (right-score (car right)))
          (if (equal left-score right-score)
              (string-lessp
-              (symbol-name (emacsvox-aural-rule-id (cdr left)))
-              (symbol-name (emacsvox-aural-rule-id (cdr right))))
+              (symbol-name (emacsvox-aural-rule-id (cadr left)))
+              (symbol-name (emacsvox-aural-rule-id (cadr right))))
            (emacsvox-aural--score-less-p left-score right-score)))))))
 
 (defun emacsvox-aural--fallback-list-distance (general specific)
@@ -2025,42 +2013,22 @@ which establishes a new complete base before applying those dimensions."
     (emacsvox-aural--set-content-provenance content 'space rule-id))
   content)
 
-(defun emacsvox-aural-resolve-inputs (inputs rules &optional anchor)
-  "Resolve semantic INPUTS through compiled RULES for optional ANCHOR.
-
-INPUTS is a nonempty list of (FACTS . CONTEXT) pairs belonging to one aural
-object.  Rules matching several formatting runs contribute once at their
-strongest score.  ANCHOR is nil for the compatibility undivided plan, or one
-of `object', `run', and `transition'."
-  (unless (and (consp inputs) (cl-every #'consp inputs))
-    (emacsvox-aural--rule-error
-     "Aural resolution requires nonempty (facts . context) inputs: %S"
-     inputs))
-  (when
-      (and anchor (not (memq anchor emacsvox-aural-action-anchors)))
-    (emacsvox-aural--rule-error "Invalid resolution anchor: %S" anchor))
-  (let* ((normalized
-          (mapcar
-           (lambda (input)
-             (emacsvox-aural-normalize-input (car input) (cdr input)))
-           inputs))
-         (matches
-          (emacsvox-aural--matching-rules-for-inputs rules normalized))
-         (plan
+(defun emacsvox-aural--resolve-matches (matches anchor)
+  "Build one render plan from prepared MATCHES for lifecycle ANCHOR."
+  (let ((plan
          (emacsvox-aural--make-render-plan
-           :before nil
-           :content (emacsvox-aural--make-content-style :speak t)
-           :after nil
-           :matched-rules nil
-           :rule-scores nil
-           :semantic-matches nil)))
+          :before nil
+          :content (emacsvox-aural--make-content-style :speak t)
+          :after nil
+          :matched-rules nil
+          :rule-scores nil
+          :semantic-matches nil)))
     (dolist (match matches)
       (let* ((score (car match))
-             (rule (cdr match))
+             (rule (cadr match))
              (contribution (emacsvox-aural-rule-contribution rule))
              (rule-id (emacsvox-aural-rule-id rule))
-             (best-input
-              (emacsvox-aural--best-rule-input rule normalized)))
+             (best-input (caddr match)))
         (setf
          (emacsvox-aural-render-plan-before plan)
          (emacsvox-aural--apply-phase
@@ -2098,6 +2066,45 @@ of `object', `run', and `transition'."
             (emacsvox-aural-rule-semantic-matches
              rule best-input)))))))
     plan))
+
+(defun emacsvox-aural--resolve-inputs-for-anchors (inputs rules anchors)
+  "Resolve INPUTS through RULES once for each lifecycle in ANCHORS.
+
+Return an alist whose keys retain ANCHORS' order and whose values are distinct
+render plans sharing only immutable normalized and matching work."
+  (unless (and (consp inputs) (cl-every #'consp inputs))
+    (emacsvox-aural--rule-error
+     "Aural resolution requires nonempty (facts . context) inputs: %S"
+     inputs))
+  (unless (consp anchors)
+    (emacsvox-aural--rule-error
+     "Aural resolution requires at least one lifecycle anchor"))
+  (dolist (anchor anchors)
+    (when
+        (and anchor (not (memq anchor emacsvox-aural-action-anchors)))
+      (emacsvox-aural--rule-error "Invalid resolution anchor: %S" anchor)))
+  (let* ((normalized
+          (mapcar
+           (lambda (input)
+             (emacsvox-aural-normalize-input (car input) (cdr input)))
+           inputs))
+         (matches
+          (emacsvox-aural--matching-rules-for-inputs rules normalized)))
+    (mapcar
+     (lambda (anchor)
+       (cons anchor (emacsvox-aural--resolve-matches matches anchor)))
+     anchors)))
+
+(defun emacsvox-aural-resolve-inputs (inputs rules &optional anchor)
+  "Resolve semantic INPUTS through compiled RULES for optional ANCHOR.
+
+INPUTS is a nonempty list of (FACTS . CONTEXT) pairs belonging to one aural
+object.  Rules matching several formatting runs contribute once at their
+strongest score.  ANCHOR is nil for the compatibility undivided plan, or one
+of `object', `run', and `transition'."
+  (cdar
+   (emacsvox-aural--resolve-inputs-for-anchors
+    inputs rules (list anchor))))
 
 (defun emacsvox-aural-resolve (facts context rules &optional anchor)
   "Resolve semantic FACTS and CONTEXT through compiled RULES.
