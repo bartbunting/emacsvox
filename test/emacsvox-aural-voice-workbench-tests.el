@@ -131,6 +131,59 @@
     (let ((entry (tabulated-list-get-entry)))
       (should (string-match-p "\\bvoice-bolden\\b" (aref entry 7))))))
 
+(ert-deftest emacsvox-aural-voice-workbench-previews-exact-row-transactionally ()
+  "Physical preview uses an exact session selector without staging edits."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'physical)
+    (emacsvox-aural-voice-workbench-refresh '("eloquence" "eci:Reed"))
+    (let ((before (copy-tree emacsvox-aural-voice-workbench-staged-profile))
+          entries)
+      (let ((tts-voice-preview-function
+             (lambda (value callback)
+               (setq entries value)
+               (funcall
+                callback
+                '(:status completed :completion-guarantee playback
+                  :results
+                  ((:status completed
+                    :realized
+                    (:engine-id "eloquence" :voice-id "eci:Reed"))))))))
+        (emacsvox-aural-voice-workbench-preview))
+      (let ((selector (plist-get (car entries) :selector)))
+        (should (eq (plist-get selector :kind) 'exact))
+        (should (eq (plist-get selector :scope) 'session))
+        (should (equal (plist-get selector :engine-id) "eloquence"))
+        (should (equal (plist-get selector :voice-id) "eci:Reed")))
+      (should
+       (equal (plist-get (car entries) :text)
+              emacsvox-aural-voice-workbench-preview-text))
+      (should (equal emacsvox-aural-voice-workbench-staged-profile before))
+      (should
+       (eq (plist-get emacsvox-aural-voice-workbench-last-preview :status)
+           'completed)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-preview-all-reuses-sample-text ()
+  "Preview-all submits every visible voice with identical comparison text."
+  (emacsvox-test--with-voice-workbench
+    (let (entries)
+      (let ((tts-voice-preview-function
+             (lambda (value callback)
+               (setq entries value)
+               (funcall callback '(:status queued :results nil)))))
+        (emacsvox-aural-voice-workbench-preview-all))
+      (should (= (length entries) 2))
+      (should
+       (equal (delete-dups (mapcar (lambda (entry) (plist-get entry :text))
+                                   entries))
+              (list emacsvox-aural-voice-workbench-preview-text)))
+      (should
+       (equal
+        (mapcar
+         (lambda (entry)
+           (plist-get (plist-get entry :selector) :kind))
+         entries)
+        '(exact exact))))))
+
 (ert-deftest emacsvox-aural-voice-workbench-bindings-are-complete ()
   "Workbench view, filter, detail, refresh, home, and help keys are present."
   (dolist
@@ -143,6 +196,11 @@
          ("F" . emacsvox-aural-voice-workbench-set-filter)
          ("C" . emacsvox-aural-voice-workbench-clear-filters)
          ("R" . emacsvox-aural-voice-workbench-refresh-inventory)
+         ("P" . emacsvox-aural-voice-workbench-preview)
+         ("A" . emacsvox-aural-voice-workbench-preview-all)
+         ("B" . emacsvox-aural-voice-workbench-compare)
+         ("T" . emacsvox-aural-voice-workbench-edit-preview-text)
+         ("S" . emacsvox-aural-voice-workbench-stop-preview)
          ("h" . emacsvox-aural)
          ("?" . emacsvox-aural-voice-workbench-help)))
     (should

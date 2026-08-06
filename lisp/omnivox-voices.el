@@ -19,6 +19,7 @@
                   "emacsvox-aural-transport" (process))
 (declare-function tts--dispatch-playback-marker-event
                   "tts-speak" (process event))
+(declare-function tts-stop "tts-speak" (&optional all))
 
 (defvar emacsvox-servers-directory)
 (defvar emacsvox-play-program)
@@ -438,6 +439,122 @@ Symbol and string keys with the same printed name are equivalent."
              (if (symbolp gender) (symbol-name gender) gender))
           :null))))
     (_ (error "Invalid Omnivox voice selector: %S" selector))))
+
+(defun omnivox--preview-selector-json (selector)
+  "Convert normalized generic preview SELECTOR to Omnivox JSON data."
+  (let ((kind (plist-get selector :kind)))
+    (when (stringp kind) (setq kind (intern kind)))
+    (pcase kind
+      ('exact
+       (omnivox--selector-json
+        (list 'exact
+              (plist-get selector :engine-id)
+              (plist-get selector :voice-id))))
+      ('engine-default
+       (omnivox--selector-json
+        (list 'engine-default (plist-get selector :engine-id))))
+      ('properties
+       (omnivox--selector-json
+        (list 'properties
+              :engine (plist-get selector :engine-id)
+              :language (plist-get selector :language)
+              :gender (plist-get selector :gender))))
+      (_ (error "Invalid generic Omnivox preview selector: %S" selector)))))
+
+(defun omnivox--preview-acss-json (acss)
+  "Convert normalized generic ACSS plist to Omnivox JSON fields."
+  (let (result)
+    (dolist
+        (mapping
+         '((:rate . :rate)
+           (:average-pitch . :average_pitch)
+           (:pitch-range . :pitch_range)
+           (:stress . :stress)
+           (:richness . :richness)
+           (:volume . :volume)))
+      (when (plist-member acss (car mapping))
+        (setq result
+              (plist-put result (cdr mapping)
+                         (plist-get acss (car mapping))))))
+    (or result (make-hash-table :test #'equal))))
+
+(defun omnivox--preview-dimension-symbol (value)
+  "Return generic dimension symbol for Omnivox wire VALUE."
+  (intern (replace-regexp-in-string "_" "-" (format "%s" value))))
+
+(defun omnivox--normalize-preview-response (entry response)
+  "Normalize Omnivox preview RESPONSE associated with ENTRY."
+  (if (not (equal (plist-get response :type) "preview_completed"))
+      (list
+       :status 'failed :completion-guarantee 'playback
+       :requested (copy-tree (plist-get entry :selector))
+       :realized nil :degraded-acss nil
+       :degraded-effects
+       (tts--voice-preview-dimensions (plist-get entry :effects))
+       :message (or (plist-get response :message)
+                    "Omnivox returned an invalid preview response"))
+    (let ((realized (plist-get response :realized)))
+      (list
+       :status (intern (or (plist-get response :status) "failed"))
+       :completion-guarantee 'playback
+       :requested (copy-tree (plist-get entry :selector))
+       :realized
+       (and realized
+            (list :engine-id (plist-get realized :engine_id)
+                  :voice-id (plist-get realized :voice_id)))
+       :degraded-acss
+       (mapcar #'omnivox--preview-dimension-symbol
+               (plist-get response :degraded_acss))
+       :degraded-effects
+       (tts--voice-preview-dimensions (plist-get entry :effects))
+       :message (plist-get response :message)))))
+
+(defun omnivox--preview-one (entry callback)
+  "Preview one normalized ENTRY and call CALLBACK after playback."
+  (unless (and
+           (process-live-p tts-speaker-process)
+           (omnivox--process-supports-p
+            tts-speaker-process "exact_voice_preview"))
+    (error "The live Omnivox server does not support transactional preview"))
+  (tts-stop)
+  (omnivox--send-control-request
+   tts-speaker-process
+   (list
+    :type "preview"
+    :text (plist-get entry :text)
+    :selector
+    (omnivox--preview-selector-json (plist-get entry :selector))
+    :language (or (plist-get entry :language) :null)
+    :acss (omnivox--preview-acss-json (plist-get entry :acss)))
+   (lambda (_process response)
+     (funcall callback
+              (omnivox--normalize-preview-response entry response)))))
+
+(defun omnivox-preview-voice-sequence (entries callback)
+  "Preview Omnivox ENTRIES in order and call CALLBACK after playback."
+  (let ((remaining (copy-tree entries))
+        results)
+    (cl-labels
+        ((next
+          ()
+          (if (null remaining)
+              (tts--voice-preview-callback
+               callback
+               (list :status 'completed :completion-guarantee 'playback
+                     :results (nreverse results)))
+            (let ((entry (pop remaining)))
+              (omnivox--preview-one
+               entry
+               (lambda (result)
+                 (push result results)
+                 (if (eq (plist-get result :status) 'cancelled)
+                     (tts--voice-preview-callback
+                      callback
+                      (list :status 'cancelled
+                            :completion-guarantee 'playback
+                            :results (nreverse results)))
+                   (next))))))))
+      (next))))
 
 (defun omnivox--logical-voice-ids ()
   "Return every defined or explicitly configured logical voice ID."
@@ -1065,6 +1182,8 @@ Return the number of distinct processes that received the command."
   (setq tts-voice-inventory-function #'omnivox-voice-inventory)
   (setq tts-voice-inventory-refresh-function
         #'omnivox-refresh-voice-inventory)
+  (setq tts-voice-preview-function #'omnivox-preview-voice-sequence)
+  (setq tts-voice-preview-code-function #'tts-default-voice-preview-code)
   (setq tts-default-speech-rate omnivox-default-speech-rate)
   (set-default 'tts-default-speech-rate omnivox-default-speech-rate)
   (setq tts-speech-rate omnivox-default-speech-rate)

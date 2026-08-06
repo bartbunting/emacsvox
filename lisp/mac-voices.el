@@ -324,6 +324,8 @@ and TABLE gives the values along that dimension."
   (setq tts-voice-inventory-function #'tts-default-voice-inventory)
   (setq tts-voice-inventory-refresh-function
         #'tts-default-refresh-voice-inventory)
+  (setq tts-voice-preview-function #'tts-default-voice-preview-sequence)
+  (setq tts-voice-preview-code-function #'tts-default-voice-preview-code)
   (setq tts-default-speech-rate mac-default-speech-rate)
   (set-default 'tts-default-speech-rate mac-default-speech-rate)
   (tts-unicode-update-untouched-charsets

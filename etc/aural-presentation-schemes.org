@@ -3416,7 +3416,7 @@ the optional Mu4e test is skipped.  Compiled Aural parity, normal build-tree
 startup, warning-checked compilation of the new UI, the TTS audit, and
 whitespace validation pass.
 
-** TODO Slice 52: Exact Transactional Voice Preview
+** DONE Slice 52: Exact Transactional Voice Preview
 
 - Add an adapter preview operation that accepts sample text, an exact or
   portable selector, unsaved ACSS/effect state, and a completion callback
@@ -3430,6 +3430,29 @@ whitespace validation pass.
 
 Deliverable: users can compare physical voices and unsaved styles without
 changing live configuration.
+
+Implemented: the adapter-neutral preview API validates an exact or portable
+selector against the active inventory and accepts unsaved ACSS, effects, and
+language.  Omnivox uses its negotiated =exact_voice_preview= operation, keeps
+the logical registry untouched, reports requested and realized identities and
+degradation, and invokes completion only after the preview's playback tickets
+complete, fail, or are cancelled.  Standalone adapters prepare the complete
+sequence before stopping, queue native voice changes and identical sample text
+in one dispatch, restore the configured default voice between samples, and
+truthfully report queued-only completion.  SwiftMac preserves enumerated native
+voice IDs for exact preview.
+
+The Voice Workbench now provides current-row preview, preview-all, A/B
+comparison, editable shared sample text, and immediate stop.  Physical rows use
+session-scoped exact selectors; logical and style rows use their staged route
+and unsaved ACSS.  Preview status is displayed without entering Aural history,
+notification state, training feedback, or the staged profile undo history.
+
+Checks: the dedicated generic, Omnivox, SwiftMac, and workbench preview tests
+pass.  The complete Emacs 31 source suite has 2,221 tests: 2,220 pass and the
+optional Mu4e test is skipped.  Compiled Aural parity, normal build-tree
+startup, warning-checked compilation, the TTS audit, and whitespace validation
+pass.
 
 ** TODO Slice 53: Quick Logical-Voice Assignment
 

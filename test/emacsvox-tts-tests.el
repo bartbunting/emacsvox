@@ -275,6 +275,116 @@
           (should-not (gethash 7 (omnivox--pending-requests process))))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-default-preview-restores-voice-in-one-dispatch ()
+  "Standalone previews queue native codes and restore default voice state."
+  (let ((tts-voice-preview-code-function
+         (lambda (selector)
+           (format "voice:%s" (plist-get selector :voice-id))))
+        operations
+        result)
+    (cl-letf
+        (((symbol-function 'tts--resolve-voice-preview-selector)
+          (lambda (selector &optional _inventory)
+            (list :engine-id (plist-get selector :engine-id)
+                  :voice-id (plist-get selector :voice-id))))
+         ((symbol-function 'tts-stop)
+          (lambda () (push '(stop) operations)))
+         ((symbol-function 'tts--protocol-queue-code)
+          (lambda (code) (push (list 'code code) operations)))
+         ((symbol-function 'tts--protocol-queue-text)
+          (lambda (text) (push (list 'text text) operations)))
+         ((symbol-function 'tts-voice-reset-code)
+          (lambda () "default-voice"))
+         ((symbol-function 'tts--protocol-dispatch)
+          (lambda () (push '(dispatch) operations))))
+      (tts-default-voice-preview-sequence
+       '((:text "same text"
+          :selector (:kind exact :engine-id "dectalk" :voice-id "paul")
+          :acss (:stress 0.7) :effects (:reverb 0.5))
+         (:text "same text"
+          :selector (:kind exact :engine-id "dectalk" :voice-id "betty")))
+       (lambda (value) (setq result value))))
+    (should
+     (equal
+      (nreverse operations)
+      '((stop)
+        (code "voice:paul") (text "same text") (code "default-voice")
+        (code "voice:betty") (text "same text") (code "default-voice")
+        (dispatch))))
+    (should (eq (plist-get result :status) 'queued))
+    (should (eq (plist-get result :completion-guarantee) 'queued-only))
+    (should
+     (equal (plist-get (car (plist-get result :results)) :degraded-acss)
+            '(:stress)))
+    (should
+     (equal (plist-get (car (plist-get result :results)) :degraded-effects)
+            '(:reverb)))))
+
+(ert-deftest emacsvox-tts-omnivox-preview-is-exact-and-non-mutating ()
+  "Omnivox preview waits for its owned playback response without registration."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-preview-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-notify-process nil)
+         (omnivox--control-request-sequence 300)
+         (omnivox--logical-registry-generation 17)
+         writes
+         result)
+    (unwind-protect
+        (progn
+          (process-put
+           process omnivox--control-capabilities-property
+           '(:features ("exact_voice_preview")))
+          (omnivox--install-control-filter process)
+          (cl-letf
+              (((symbol-function 'tts-stop) #'ignore)
+               ((symbol-function 'process-send-string)
+                (lambda (_process command) (push command writes))))
+            (omnivox-preview-voice-sequence
+             '((:text "same text"
+                :selector
+                (:kind exact :scope session
+                 :engine-id "eloquence" :voice-id "eci:Reed")
+                :language "en-AU"
+                :acss (:average-pitch 0.6 :richness 0.8)
+                :effects (:reverb 0.5)))
+             (lambda (value) (setq result value)))
+            (should-not result)
+            (let* ((request
+                    (emacsvox-test--omnivox-decode-command (car writes)))
+                   (identifier (plist-get request :request_id)))
+              (should (equal (plist-get request :type) "preview"))
+              (should (equal (plist-get (plist-get request :selector)
+                                        :engine_id)
+                             "eloquence"))
+              (should (equal (plist-get (plist-get request :selector)
+                                        :voice_id)
+                             "eci:Reed"))
+              (should (= (plist-get (plist-get request :acss)
+                                    :average_pitch)
+                         0.6))
+              (omnivox--control-process-filter
+               process
+               (emacsvox-test--omnivox-event
+                (list
+                 :protocol_version 1 :request_id identifier
+                 :type "preview_completed" :status "completed"
+                 :requested (plist-get request :selector)
+                 :realized '(:engine_id "eloquence" :voice_id "eci:Reed")
+                 :degraded_acss ["richness"] :message :null)))))
+          (should (eq (plist-get result :status) 'completed))
+          (let ((preview (car (plist-get result :results))))
+            (should (eq (plist-get preview :status) 'completed))
+            (should
+             (equal (plist-get preview :realized)
+                    '(:engine-id "eloquence" :voice-id "eci:Reed")))
+            (should (equal (plist-get preview :degraded-acss) '(richness)))
+            (should (equal (plist-get preview :degraded-effects) '(:reverb))))
+          (should (= omnivox--logical-registry-generation 17))
+          (should-not (gethash 301 (omnivox--pending-requests process))))
+      (when (process-live-p process) (delete-process process)))))
+
 (ert-deftest emacsvox-tts-omnivox-negotiates-capabilities-and-inventory ()
   "Registration waits for inventory and uses the preferred engine."
   (let* ((process
@@ -598,6 +708,22 @@
     (should
      (equal (plist-get voice :voice-id)
             "com.apple.voice.compact.en-AU.Karen"))))
+
+(ert-deftest emacsvox-tts-swiftmac-preview-preserves-native-voice-id ()
+  "SwiftMac exact preview emits the selected installed native identifier."
+  (let ((swiftmac-voice-inventory-cache
+         '((:engine-id "swiftmac"
+            :voice-id "com.apple.voice.compact.en-AU.Karen"
+            :display-name "Karen" :language "en-AU"
+            :availability "available")))
+        (swiftmac-voice-inventory-time (current-time))
+        (swiftmac-voice-inventory-error nil))
+    (should
+     (equal
+      (swiftmac-voice-preview-code
+       '(:kind exact :scope session :engine-id "swiftmac"
+         :voice-id "com.apple.voice.compact.en-AU.Karen"))
+      " [{voice com.apple.voice.compact.en-AU.Karen}] "))))
 
 (ert-deftest emacsvox-tts-omnivox-registers-both-processes-atomically ()
   "Both servers share a generation but use their own preferred engine."

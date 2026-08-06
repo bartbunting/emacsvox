@@ -7,8 +7,8 @@
 ;;; Commentary:
 
 ;; A single accessible workbench presents logical voices, physical inventory,
-;; engines, and portable style/effect information.  Editing and transactional
-;; preview are layered onto this shell by later implementation slices.
+;; engines, and portable style/effect information. Transactional previews use
+;; the same sample text without changing saved palettes or routing profiles.
 
 ;;; Code:
 
@@ -21,11 +21,18 @@
 (require 'emacsvox-aural-routing-profiles)
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-inspection)
+(require 'emacsvox-aural-preview)
 
 (declare-function emacsvox-aural "emacsvox-aural-home"
                   (&optional source-buffer))
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
+
+(defcustom emacsvox-aural-voice-workbench-preview-text
+  "The quick brown fox jumps over the lazy dog."
+  "Common text used for Voice Workbench preview and A/B comparison."
+  :group 'emacsvox-aural
+  :type 'string)
 
 (defconst emacsvox-aural-voice-workbench--views
   '((logical . "Logical voices")
@@ -51,6 +58,9 @@
 
 (defvar-local emacsvox-aural-voice-workbench-filter nil
   "Physical-voice filter plist for this workbench.")
+
+(defvar-local emacsvox-aural-voice-workbench-last-preview nil
+  "Most recent normalized preview result in this workbench.")
 
 (defun emacsvox-aural-voice-workbench--active-palette ()
   "Return the currently effective portable voice palette."
@@ -115,7 +125,7 @@
     (format
      (concat
       " %s | adapter %s | inventory %s%s, generation %s, age %s | "
-      "%d engines, %d voices | processes %s | routing %s, %s | filter %s ")
+      "%d engines, %d voices | processes %s | routing %s, %s | filter %s | preview %s ")
      (alist-get emacsvox-aural-voice-workbench-view
                 emacsvox-aural-voice-workbench--views)
      (or (plist-get inventory :adapter) "unknown")
@@ -127,7 +137,9 @@
      (or (plist-get inventory :process-agreement) "unknown")
      profile
      (if (emacsvox-aural-voice-workbench--dirty-p) "staged" "committed")
-     (emacsvox-aural-voice-workbench--filter-description))))
+     (emacsvox-aural-voice-workbench--filter-description)
+     (or (plist-get emacsvox-aural-voice-workbench-last-preview :status)
+         "not run"))))
 
 (defun emacsvox-aural-voice-workbench-status ()
   "Return concise Voice Workbench status for Aural Home."
@@ -498,6 +510,200 @@
                              (symbol-name (car right))))))
          nil)))))
 
+(defun emacsvox-aural-voice-workbench--physical-pair (id)
+  "Return the physical engine/voice pair identified by ID."
+  (cl-find-if
+   (lambda (pair)
+     (equal id
+            (list (plist-get (car pair) :engine-id)
+                  (plist-get (cadr pair) :voice-id))))
+   (emacsvox-aural-voice-workbench--all-engine-voices)))
+
+(defun emacsvox-aural-voice-workbench--normalized-acss-value (value)
+  "Normalize zero-to-nine ACSS VALUE for transactional preview."
+  (and (numberp value) (/ (float (max 0 (min 9 value))) 9.0)))
+
+(defun emacsvox-aural-voice-workbench--preview-acss (logical-voice)
+  "Return portable normalized ACSS for LOGICAL-VOICE, when available."
+  (when-let* ((entry
+               (emacsvox-aural-voice-workbench--palette-entry logical-voice)))
+    (let* ((definition (cdr entry))
+           (style
+            (if (and (symbolp definition) (boundp definition))
+                (symbol-value definition)
+              definition))
+           result)
+      (dolist
+          (dimension
+           '((:average-pitch . acss-average-pitch)
+             (:pitch-range . acss-pitch-range)
+             (:stress . acss-stress)
+             (:richness . acss-richness)))
+        (when-let* ((value
+                     (and (fboundp (cdr dimension))
+                          (ignore-errors (funcall (cdr dimension) style))))
+                    (normalized
+                     (emacsvox-aural-voice-workbench--normalized-acss-value
+                      value)))
+          (setq result (plist-put result (car dimension) normalized))))
+      result)))
+
+(defun emacsvox-aural-voice-workbench--physical-preview-entry (pair)
+  "Return one exact preview entry for physical engine/voice PAIR."
+  (let ((engine (car pair)) (voice (cadr pair)))
+    (list
+     :text emacsvox-aural-voice-workbench-preview-text
+     :selector
+     (list :kind 'exact
+           :engine-id (plist-get engine :engine-id)
+           :voice-id (plist-get voice :voice-id)
+           :scope 'session)
+     :language (plist-get voice :language)
+     :acss nil :effects nil)))
+
+(defun emacsvox-aural-voice-workbench--logical-preview-entry (logical-voice)
+  "Return one staged preview entry for LOGICAL-VOICE."
+  (let* ((binding
+          (emacsvox-aural-voice-workbench--profile-binding logical-voice))
+         (language (plist-get binding :language))
+         (selector
+          (or (car (emacsvox-aural-voice-workbench--selectors logical-voice))
+              (list :kind 'properties :language language :scope 'portable))))
+    (list
+     :text emacsvox-aural-voice-workbench-preview-text
+     :selector selector :language language
+     :acss (emacsvox-aural-voice-workbench--preview-acss logical-voice)
+     :effects nil)))
+
+(defun emacsvox-aural-voice-workbench--current-preview-entry ()
+  "Return a preview entry for the current Workbench row."
+  (let ((id (or (tabulated-list-get-id)
+                (user-error "Move to a Voice Workbench row first"))))
+    (pcase emacsvox-aural-voice-workbench-view
+      ('physical
+       (emacsvox-aural-voice-workbench--physical-preview-entry
+        (or (emacsvox-aural-voice-workbench--physical-pair id)
+            (user-error "The selected physical voice is no longer installed"))))
+      ((or 'logical 'styles)
+       (emacsvox-aural-voice-workbench--logical-preview-entry id))
+      ('engines
+       (list
+        :text emacsvox-aural-voice-workbench-preview-text
+        :selector (list :kind 'engine-default :engine-id id :scope 'session)
+        :language nil :acss nil :effects nil)))))
+
+(defun emacsvox-aural-voice-workbench--preview-description (result)
+  "Return concise non-speaking status text for preview RESULT."
+  (let* ((results (plist-get result :results))
+         (last (car (last results)))
+         (realized (plist-get last :realized))
+         (degraded
+          (append (plist-get last :degraded-acss)
+                  (plist-get last :degraded-effects))))
+    (format
+     "Preview %s%s%s"
+     (or (plist-get result :status) "unknown")
+     (if realized
+         (format ", realized %s/%s"
+                 (plist-get realized :engine-id)
+                 (plist-get realized :voice-id))
+       "")
+     (if degraded
+         (format ", degraded %s"
+                 (mapconcat (lambda (item) (format "%s" item))
+                            degraded ", "))
+       ""))))
+
+(defun emacsvox-aural-voice-workbench--preview-complete (buffer result)
+  "Record preview RESULT in live workbench BUFFER without speaking it."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq emacsvox-aural-voice-workbench-last-preview result)
+      (force-mode-line-update)))
+  (emacsvox-aural-preview-message
+   "%s" (emacsvox-aural-voice-workbench--preview-description result)))
+
+(defun emacsvox-aural-voice-workbench--preview-entries (entries)
+  "Preview ENTRIES with shared sample text and update workbench status."
+  (let ((buffer (current-buffer)))
+    (setq emacsvox-aural-voice-workbench-last-preview
+          (list :status (format "running %d" (length entries))))
+    (force-mode-line-update)
+    (tts-preview-voices
+     entries
+     (lambda (result)
+       (emacsvox-aural-voice-workbench--preview-complete buffer result)))))
+
+(defun emacsvox-aural-voice-workbench-preview ()
+  "Preview the current logical, physical, engine, or style row once."
+  (interactive)
+  (emacsvox-aural-voice-workbench--preview-entries
+   (list (emacsvox-aural-voice-workbench--current-preview-entry))))
+
+(defun emacsvox-aural-voice-workbench-edit-preview-text ()
+  "Edit the common Voice Workbench comparison text."
+  (interactive)
+  (let ((text
+         (read-string "Voice preview text: "
+                      emacsvox-aural-voice-workbench-preview-text)))
+    (when (string-empty-p text)
+      (user-error "Voice preview text must not be empty"))
+    (setq emacsvox-aural-voice-workbench-preview-text text))
+  (emacsvox-aural-preview-message "Voice preview text updated"))
+
+(defun emacsvox-aural-voice-workbench-preview-all ()
+  "Preview every currently visible physical voice using identical text."
+  (interactive)
+  (let ((entries
+         (mapcar
+          #'emacsvox-aural-voice-workbench--physical-preview-entry
+          (cl-remove-if-not
+           (lambda (pair)
+             (emacsvox-aural-voice-workbench--physical-visible-p
+              (car pair) (cadr pair)))
+           (emacsvox-aural-voice-workbench--all-engine-voices)))))
+    (unless entries (user-error "No physical voices match the current filter"))
+    (emacsvox-aural-voice-workbench--preview-entries entries)))
+
+(defun emacsvox-aural-voice-workbench--physical-candidates ()
+  "Return completion candidates for installed physical voices."
+  (mapcar
+   (lambda (pair)
+     (let ((engine (car pair)) (voice (cadr pair)))
+       (cons
+        (format "%s [%s/%s]"
+                (or (plist-get voice :display-name)
+                    (plist-get voice :voice-id))
+                (plist-get engine :engine-id)
+                (plist-get voice :voice-id))
+        pair)))
+   (emacsvox-aural-voice-workbench--all-engine-voices)))
+
+(defun emacsvox-aural-voice-workbench-compare ()
+  "A/B two installed physical voices with identical text and settings."
+  (interactive)
+  (let* ((candidates (emacsvox-aural-voice-workbench--physical-candidates))
+         (_ (when (< (length candidates) 2)
+              (user-error "A/B comparison requires two installed voices")))
+         (first-name
+          (completing-read "A voice: " candidates nil 'must-match))
+         (remaining (assoc-delete-all first-name (copy-tree candidates)))
+         (second-name
+          (completing-read "B voice: " remaining nil 'must-match))
+         (first (cdr (assoc-string first-name candidates)))
+         (second (cdr (assoc-string second-name remaining))))
+    (emacsvox-aural-voice-workbench--preview-entries
+     (mapcar #'emacsvox-aural-voice-workbench--physical-preview-entry
+             (list first second)))))
+
+(defun emacsvox-aural-voice-workbench-stop-preview ()
+  "Stop the active preview immediately."
+  (interactive)
+  (tts-stop)
+  (setq emacsvox-aural-voice-workbench-last-preview '(:status cancelled))
+  (force-mode-line-update)
+  (emacsvox-aural-preview-message "Voice preview stopped"))
+
 (defun emacsvox-aural-voice-workbench-refresh (&optional id)
   "Refresh the Workbench quietly, preserving row ID and column."
   (interactive)
@@ -668,6 +874,9 @@
       ". speak titled cell   SPC speak complete row\n"
       "RET describe row      F set physical filter\n"
       "C clear filters       R request fresh inventory\n"
+      "P preview row         A preview all visible voices\n"
+      "B compare two voices  T edit common preview text\n"
+      "S stop preview\n"
       "g redraw quietly      h aural home\n"
       "q quit                ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -687,6 +896,7 @@
   (setq-local emacsvox-aural-voice-workbench-selections
               (make-hash-table :test #'eq))
   (setq-local emacsvox-aural-voice-workbench-filter nil)
+  (setq-local emacsvox-aural-voice-workbench-last-preview nil)
   (emacsvox-aural-ui-configure-tabulated
    "voice workbench"
    #'emacsvox-aural-voice-workbench-speak-current
@@ -708,6 +918,11 @@
        ("F" . emacsvox-aural-voice-workbench-set-filter)
        ("C" . emacsvox-aural-voice-workbench-clear-filters)
        ("R" . emacsvox-aural-voice-workbench-refresh-inventory)
+       ("P" . emacsvox-aural-voice-workbench-preview)
+       ("A" . emacsvox-aural-voice-workbench-preview-all)
+       ("B" . emacsvox-aural-voice-workbench-compare)
+       ("T" . emacsvox-aural-voice-workbench-edit-preview-text)
+       ("S" . emacsvox-aural-voice-workbench-stop-preview)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-voice-workbench-help)))
   (define-key emacsvox-aural-voice-workbench-mode-map

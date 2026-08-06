@@ -186,6 +186,12 @@ enumerate them back to Emacs."
       (swiftmac-refresh-voice-inventory)
     (swiftmac--voice-inventory-snapshot)))
 
+(defun swiftmac-voice-preview-code (selector)
+  "Return an exact queued SwiftMac voice tag for preview SELECTOR."
+  (let* ((resolved (tts--resolve-voice-preview-selector selector))
+         (voice-id (plist-get resolved :voice-id)))
+    (format " [{voice %s}] " voice-id)))
+
 ;;; swiftmac:
 ;;;###autoload
 (defun swiftmac ()
@@ -439,6 +445,8 @@ and TABLE gives the values along that dimension."
   (setq tts-voice-inventory-function #'swiftmac-voice-inventory)
   (setq tts-voice-inventory-refresh-function
         #'swiftmac-refresh-voice-inventory)
+  (setq tts-voice-preview-function #'tts-default-voice-preview-sequence)
+  (setq tts-voice-preview-code-function #'swiftmac-voice-preview-code)
   (setq tts-default-speech-rate swiftmac-default-speech-rate)
   (set-default 'tts-default-speech-rate swiftmac-default-speech-rate)
   (tts-unicode-update-untouched-charsets
