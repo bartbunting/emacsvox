@@ -22,7 +22,11 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         };
 
     private static readonly OmnivoxHelperCapabilities EngineCapabilities =
-        new OmnivoxHelperCapabilities { Rate = true };
+        new OmnivoxHelperCapabilities
+        {
+            Rate = true,
+            WordMarkers = true
+        };
 
     private readonly OmnivoxEloquenceCapture capture;
 
@@ -54,9 +58,7 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         // speed. Preserve that midpoint while providing a bounded range.
         int nativeRate = (int)Math.Round(20.0 + rate * 110.0,
             MidpointRounding.AwayFromZero);
-        return new OmnivoxCaptureResult(
-            capture.Synthesize(text, voiceId, nativeRate),
-            new OmnivoxHelperMarker[0]);
+        return capture.Synthesize(text, voiceId, nativeRate);
     }
 
     public void Stop()

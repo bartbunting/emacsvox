@@ -5,7 +5,9 @@
 // See the file COPYING in this distribution.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -59,6 +61,11 @@ internal static class OmnivoxNativeEci
     internal static extern bool AddText(IntPtr handle, IntPtr text);
 
     [DllImport(EciLibrary, CallingConvention = CallingConvention.StdCall,
+        EntryPoint = "eciInsertIndex")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool InsertIndex(IntPtr handle, int index);
+
+    [DllImport(EciLibrary, CallingConvention = CallingConvention.StdCall,
         EntryPoint = "eciSetParam")]
     internal static extern int SetParam(IntPtr handle, int parameter, int value);
 
@@ -91,8 +98,12 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     private const int SampleRate = 5;
     private const int OutputBufferSamples = 512;
     private const int WaveformBufferMessage = 0;
+    private const int IndexReplyMessage = 2;
     private const int CallbackDataProcessed = 1;
     private const int CallbackAbort = 2;
+    private const int FirstMarkerIndex = 1;
+    private const int MaximumMarkers = 4096;
+    private const int MaximumMarkerValueBytes = 16 * 1024;
     internal const int SpeechSampleRate = 11025;
     internal const int MaximumAudioBytes = 128 * 1024 * 1024;
 
@@ -102,6 +113,8 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     private IntPtr outputBuffer;
     private OmnivoxNativeEci.Callback callback;
     private MemoryStream capture;
+    private Dictionary<int, OmnivoxHelperMarker> pendingMarkers;
+    private List<OmnivoxHelperMarker> reachedMarkers;
     private Exception callbackError;
 
     internal OmnivoxEloquenceCapture(string dllPath)
@@ -161,12 +174,15 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
         }
     }
 
-    internal byte[] Synthesize(string text, string voiceId, int rate)
+    internal OmnivoxCaptureResult Synthesize(string text, string voiceId,
+        int rate)
     {
         lock (synthesisLock)
         {
             callbackError = null;
             capture = new MemoryStream();
+            pendingMarkers = new Dictionary<int, OmnivoxHelperMarker>();
+            reachedMarkers = new List<OmnivoxHelperMarker>();
             try
             {
                 // A cancelled synthesis can leave queued input behind.  Start
@@ -174,16 +190,20 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 OmnivoxNativeEci.Stop(handle);
                 Check(OmnivoxNativeEci.ClearInput(handle), "eciClearInput");
                 Configure();
-                AddText(" `" + voiceId + " `vs" + rate + " " + text);
+                AddText(" `" + voiceId + " `vs" + rate + " ");
+                AddTextWithWordIndexes(text);
                 Check(OmnivoxNativeEci.Synthesize(handle), "eciSynthesize");
                 Check(OmnivoxNativeEci.Synchronize(handle), "eciSynchronize");
                 ThrowCallbackError();
-                return capture.ToArray();
+                return new OmnivoxCaptureResult(capture.ToArray(),
+                    reachedMarkers.ToArray());
             }
             finally
             {
                 capture.Dispose();
                 capture = null;
+                pendingMarkers = null;
+                reachedMarkers = null;
                 OmnivoxNativeEci.ClearInput(handle);
             }
         }
@@ -215,6 +235,110 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
         }
     }
 
+    private void AddTextWithWordIndexes(string text)
+    {
+        int cursor = 0;
+        uint cursorBytes = 0;
+        int position = 0;
+        int markerIndex = FirstMarkerIndex;
+        while (position < text.Length &&
+            markerIndex < FirstMarkerIndex + MaximumMarkers)
+        {
+            int scalarLength;
+            if (!IsWordCore(text, position, out scalarLength))
+            {
+                position += scalarLength;
+                continue;
+            }
+
+            int wordStart = position;
+            position += scalarLength;
+            while (position < text.Length)
+            {
+                if (IsWordCore(text, position, out scalarLength))
+                {
+                    position += scalarLength;
+                    continue;
+                }
+                if (IsInnerWordConnector(text, position, out scalarLength) &&
+                    position + scalarLength < text.Length)
+                {
+                    int nextLength;
+                    if (IsWordCore(text, position + scalarLength,
+                        out nextLength))
+                    {
+                        position += scalarLength + nextLength;
+                        continue;
+                    }
+                }
+                break;
+            }
+
+            AddTextSegment(text, cursor, wordStart - cursor);
+            int wordLength = position - wordStart;
+            uint textStart = checked(cursorBytes +
+                (uint)Encoding.UTF8.GetByteCount(
+                    text.Substring(cursor, wordStart - cursor)));
+            uint textLength = checked((uint)Encoding.UTF8.GetByteCount(
+                text.Substring(wordStart, wordLength)));
+            string value = text.Substring(wordStart, wordLength);
+            if (Encoding.UTF8.GetByteCount(value) > MaximumMarkerValueBytes)
+            {
+                value = null;
+            }
+            OmnivoxHelperMarker marker = new OmnivoxHelperMarker(
+                "word", 0, textStart, textLength, value);
+            Check(OmnivoxNativeEci.InsertIndex(handle, markerIndex),
+                "eciInsertIndex");
+            pendingMarkers.Add(markerIndex++, marker);
+            AddTextSegment(text, wordStart, wordLength);
+            cursor = position;
+            cursorBytes = checked(textStart + textLength);
+        }
+        AddTextSegment(text, cursor, text.Length - cursor);
+    }
+
+    private void AddTextSegment(string text, int start, int length)
+    {
+        if (length > 0)
+        {
+            AddText(text.Substring(start, length));
+        }
+    }
+
+    private static bool IsWordCore(string text, int position,
+        out int scalarLength)
+    {
+        scalarLength = Char.IsHighSurrogate(text[position]) &&
+            position + 1 < text.Length &&
+            Char.IsLowSurrogate(text[position + 1]) ? 2 : 1;
+        switch (CharUnicodeInfo.GetUnicodeCategory(text, position))
+        {
+            case UnicodeCategory.UppercaseLetter:
+            case UnicodeCategory.LowercaseLetter:
+            case UnicodeCategory.TitlecaseLetter:
+            case UnicodeCategory.ModifierLetter:
+            case UnicodeCategory.OtherLetter:
+            case UnicodeCategory.NonSpacingMark:
+            case UnicodeCategory.SpacingCombiningMark:
+            case UnicodeCategory.DecimalDigitNumber:
+            case UnicodeCategory.LetterNumber:
+            case UnicodeCategory.OtherNumber:
+            case UnicodeCategory.ConnectorPunctuation:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool IsInnerWordConnector(string text, int position,
+        out int scalarLength)
+    {
+        scalarLength = 1;
+        char value = text[position];
+        return value == '\'' || value == '\u2019' || value == '-';
+    }
+
     private void Configure()
     {
         CheckParameter(OmnivoxNativeEci.SetParam(handle, InputType, 1),
@@ -230,6 +354,18 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     private int OnEciCallback(IntPtr callbackHandle, int message,
         int parameter, IntPtr data)
     {
+        if (message == IndexReplyMessage)
+        {
+            OmnivoxHelperMarker marker;
+            if (capture != null && pendingMarkers != null &&
+                pendingMarkers.TryGetValue(parameter, out marker))
+            {
+                pendingMarkers.Remove(parameter);
+                marker.FrameOffset = (ulong)(capture.Length / 2);
+                reachedMarkers.Add(marker);
+            }
+            return CallbackDataProcessed;
+        }
         if (message != WaveformBufferMessage || parameter <= 0)
         {
             return CallbackDataProcessed;

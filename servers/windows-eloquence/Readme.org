@@ -149,15 +149,19 @@ protocol.  It does not play that audio itself and does not alter the existing
 =windows-outloud= playback bridge.  Its inventory keeps the engine ID
 =eloquence= separate from native voice IDs =v1= through =v8=, with =v1= as the
 default.  Version 1 applies normalized speech rate; pitch, range, stress,
-richness, volume, and marker support are reported as unavailable rather than
-silently claimed.  Omnivox remains responsible for fallback, effects, mixing,
-playback, and playback completion.
+richness, and volume are reported as unavailable rather than silently claimed.
+It advertises word markers, inserts bounded ECI indexes at Unicode word starts,
+and records each index reply at the current captured PCM frame.  Marker source
+ranges are UTF-8 byte ranges into the exact helper request; apostrophes and
+hyphens inside a word stay attached.  Sentence, phoneme, and caller-defined
+native indexes remain unavailable.  Omnivox remains responsible for fallback,
+effects, mixing, playback, and playback completion.
 
 The bounded JSON loop, negotiation, inventory framing, PCM chunking, request
-validation, and cancellation coordination live in the engine-neutral
+validation, marker framing, and cancellation coordination live in the engine-neutral
 =servers/windows-speech-common/OmnivoxHelperHost.cs=.  The Eloquence-specific
-adapter supplies ECI inventory, rate mapping, PCM capture, and stop behavior;
-the DECtalk capture helper uses the same host contract.
+adapter supplies ECI inventory, rate mapping, PCM/index capture, and stop
+behavior; the DECtalk capture helper uses the same host contract.
 
 The helper accepts the ECI DLL path as its first argument.  Otherwise it checks
 =OMNIVOX_ECI_DLL=, then =EMACSVOX_ECI_DLL=, then the normal Freedom Scientific
