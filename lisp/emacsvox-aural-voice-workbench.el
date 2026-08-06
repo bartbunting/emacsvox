@@ -22,6 +22,7 @@
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-inspection)
 (require 'emacsvox-aural-preview)
+(require 'emacsvox-aural-voice-palettes)
 
 (declare-function emacsvox-aural "emacsvox-aural-home"
                   (&optional source-buffer))
@@ -1347,6 +1348,43 @@
   (force-mode-line-update)
   (emacsvox-aural-preview-message "Voice preview stopped"))
 
+(defun emacsvox-aural-voice-workbench-tune ()
+  "Tune the current logical voice against its first staged physical route."
+  (interactive)
+  (unless (memq emacsvox-aural-voice-workbench-view '(logical styles))
+    (user-error "Tune a logical voice from the logical or styles view"))
+  (let* ((logical
+          (or (tabulated-list-get-id)
+              (user-error "Move to a logical voice first")))
+         (entry
+          (or (emacsvox-aural-voice-workbench--palette-entry logical)
+              (user-error "%s is not defined by the active palette" logical)))
+         (selector
+          (or (car (emacsvox-aural-voice-workbench--selectors logical))
+              (user-error "Assign a staged route to %s before tuning" logical)))
+         (pair
+          (emacsvox-aural-voice-workbench--selector-realization selector))
+         (engine
+          (or (car pair)
+              (cl-find
+               (plist-get selector :engine-id)
+               (plist-get emacsvox-aural-voice-workbench-inventory :engines)
+               :key (lambda (item) (plist-get item :engine-id))
+               :test #'equal)))
+         (binding
+          (emacsvox-aural-voice-workbench--profile-binding logical)))
+    (emacsvox-aural-voice-tuner-open
+     (emacsvox-aural-voice-workbench--active-palette)
+     (car entry) (current-buffer)
+     emacsvox-aural-voice-workbench-preview-text
+     :selector selector
+     :language (plist-get binding :language)
+     :engine engine
+     :realized
+     (and pair
+          (list :engine-id (plist-get (car pair) :engine-id)
+                :voice-id (plist-get (cadr pair) :voice-id))))))
+
 (defun emacsvox-aural-voice-workbench-refresh (&optional id)
   "Refresh the Workbench quietly, preserving row ID and column."
   (interactive)
@@ -1525,7 +1563,8 @@
       "C clear filters       R request fresh inventory\n"
       "P preview row         A preview all visible voices\n"
       "B compare two voices  T edit common preview text\n"
-      "S stop preview        a assign or choose physical voice\n"
+      "S stop preview        t tune logical voice on staged route\n"
+      "a assign or choose physical voice\n"
       "c cancel assignment   [/] move selector earlier/later\n"
       "d delete selector     y copy another logical route\n"
       "M map all unmapped    X replace engine in selected routes\n"
@@ -1583,6 +1622,7 @@
        ("B" . emacsvox-aural-voice-workbench-compare)
        ("T" . emacsvox-aural-voice-workbench-edit-preview-text)
        ("S" . emacsvox-aural-voice-workbench-stop-preview)
+       ("t" . emacsvox-aural-voice-workbench-tune)
        ("a" . emacsvox-aural-voice-workbench-assign)
        ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
        ("[" . emacsvox-aural-voice-workbench-move-selector-up)

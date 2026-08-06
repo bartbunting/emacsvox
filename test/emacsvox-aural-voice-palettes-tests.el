@@ -415,6 +415,67 @@
         (dolist (buffer buffers)
           (when (buffer-live-p buffer) (kill-buffer buffer)))))))
 
+(ert-deftest emacsvox-aural-voice-tuner-auditions-selected-engine-route ()
+  "Route-aware tuning uses normalized values and engine-specific support."
+  (with-temp-buffer
+    (emacsvox-aural-voice-tuner-mode)
+    (setq
+     emacsvox-aural-voice-tuner-palette 'reading
+     emacsvox-aural-voice-tuner-voice 'aside
+     emacsvox-aural-voice-tuner-working-style
+     '(:family paul :average-pitch 4 :pitch-range 3
+       :stress nil :richness 6)
+     emacsvox-aural-voice-tuner-preview-text "Shared sample."
+     emacsvox-aural-voice-tuner-route-selector
+     '(:kind exact :scope local :engine-id "eloquence"
+       :voice-id "eci:Reed")
+     emacsvox-aural-voice-tuner-route-language "en-AU"
+     emacsvox-aural-voice-tuner-route-engine
+     '(:engine-id "eloquence"
+       :acss-dimensions (average-pitch pitch-range richness)))
+    (emacsvox-aural-voice-tuner-refresh 'average-pitch)
+    (should
+     (equal
+      (aref (cadr (assq 'average-pitch tabulated-list-entries)) 3)
+      "engine-rendered by eloquence"))
+    (should
+     (equal
+      (aref (cadr (assq 'stress tabulated-list-entries)) 3)
+      "omitted by eloquence"))
+    (should
+     (string-match-p
+      "physical route owns"
+      (aref (cadr (assq 'family tabulated-list-entries)) 3)))
+    (let (request)
+      (cl-letf
+          (((symbol-function 'tts-preview-voice)
+            (lambda (text selector &rest arguments)
+              (setq request (list text selector arguments))
+              (funcall
+               (plist-get arguments :callback)
+               '(:status completed
+                 :realized
+                 (:engine-id "eloquence" :voice-id "eci:Reed")
+                 :degraded-acss (stress))))))
+        (emacsvox-aural-voice-tuner-audition "Average Pitch 4."))
+      (should (string-match-p "Average Pitch 4" (car request)))
+      (should
+       (equal (cadr request)
+              '(:kind exact :scope local :engine-id "eloquence"
+                :voice-id "eci:Reed")))
+      (let ((acss (plist-get (nth 2 request) :acss)))
+        (should (= (plist-get acss :average-pitch) (/ 4.0 9.0)))
+        (should (= (plist-get acss :pitch-range) (/ 3.0 9.0)))
+        (should (= (plist-get acss :richness) (/ 6.0 9.0)))
+        (should-not (plist-member acss :family)))
+      (should
+       (equal emacsvox-aural-voice-tuner-route-realized
+              '(:engine-id "eloquence" :voice-id "eci:Reed")))
+      (should
+       (equal
+        (emacsvox-aural-voice-tuner--support-description 'stress)
+        "omitted by eloquence")))))
+
 (ert-deftest emacsvox-aural-voice-tuner-adjusts-auditions-and-undoes ()
   "Adjustments remain temporary, audition immediately, and can be undone."
   (emacsvox-test--with-voice-palettes

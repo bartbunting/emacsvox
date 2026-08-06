@@ -24,6 +24,8 @@
 (declare-function tts-voice-reset-code "tts-speak" ())
 (declare-function tts--protocol-queue-code "tts-speak" (code))
 (declare-function tts--protocol-queue-text "tts-speak" (text))
+(declare-function tts-preview-voice "tts-speak"
+                  (text selector &rest arguments))
 (declare-function tts-voice-family-capability
                   "tts-speak" (family &optional capabilities))
 (declare-function tts-voice-family-id
@@ -82,6 +84,21 @@
 
 (defvar-local emacsvox-aural-voice-tuner-source-buffer nil
   "Voice-palette preview buffer that opened the current tuner.")
+
+(defvar-local emacsvox-aural-voice-tuner-route-selector nil
+  "Unsaved physical route selector used by this tuner.")
+
+(defvar-local emacsvox-aural-voice-tuner-route-language nil
+  "Language constraint used by the tuner route preview.")
+
+(defvar-local emacsvox-aural-voice-tuner-route-engine nil
+  "Discovered engine descriptor used by the tuner route preview.")
+
+(defvar-local emacsvox-aural-voice-tuner-route-realized nil
+  "Most recently realized engine and voice reported by preview.")
+
+(defvar-local emacsvox-aural-voice-tuner-preview-result nil
+  "Most recent normalized route-preview completion result.")
 
 (defun emacsvox-aural-voice-palettes--active-id ()
   "Return the currently effective voice palette."
@@ -1049,14 +1066,22 @@ Return the compiled voice without dispatching the speech queue."
 
 (defun emacsvox-aural-voice-tuner--adapter ()
   "Return the active tuner adapter identifier."
-  (plist-get (emacsvox-aural-active-voice-capabilities) :adapter))
+  (or (plist-get emacsvox-aural-voice-tuner-route-engine :engine-id)
+      (plist-get (emacsvox-aural-active-voice-capabilities) :adapter)))
+
+(defun emacsvox-aural-voice-tuner--capability-dimensions ()
+  "Return dimensions supported by the selected tuner route."
+  (if emacsvox-aural-voice-tuner-route-engine
+      (plist-get emacsvox-aural-voice-tuner-route-engine :acss-dimensions)
+    (plist-get (emacsvox-aural-active-voice-capabilities) :dimensions)))
 
 (defun emacsvox-aural-voice-tuner--supported-p (dimension)
-  "Return non-nil when the active adapter supports DIMENSION."
-  (memq
-   dimension
-   (plist-get
-    (emacsvox-aural-active-voice-capabilities) :dimensions)))
+  "Return non-nil when the selected route supports DIMENSION."
+  (and
+   (not (and emacsvox-aural-voice-tuner-route-selector
+             (eq dimension 'family)))
+   (memq dimension
+         (emacsvox-aural-voice-tuner--capability-dimensions))))
 
 (defun emacsvox-aural-voice-tuner--value (dimension)
   "Return the current requested value for DIMENSION."
@@ -1104,35 +1129,66 @@ Return the compiled voice without dispatching the speech queue."
 
 (defun emacsvox-aural-voice-tuner--support-description (dimension)
   "Describe active adapter support for DIMENSION."
-  (format
-   "%s by %s"
-   (if (emacsvox-aural-voice-tuner--supported-p dimension)
-       "supported"
-     "unsupported")
-   (emacsvox-aural-humanize
-    (emacsvox-aural-voice-tuner--adapter))))
+  (if (not emacsvox-aural-voice-tuner-route-selector)
+      (format
+       "%s by %s"
+       (if (emacsvox-aural-voice-tuner--supported-p dimension)
+           "supported"
+         "unsupported")
+       (emacsvox-aural-humanize
+        (emacsvox-aural-voice-tuner--adapter)))
+    (cond
+     ((and emacsvox-aural-voice-tuner-route-selector
+           (eq dimension 'family))
+      "portable fallback; physical route owns the base voice")
+     ((memq dimension
+            (plist-get emacsvox-aural-voice-tuner-preview-result
+                       :degraded-acss))
+      (format "omitted by %s" (emacsvox-aural-voice-tuner--adapter)))
+     ((emacsvox-aural-voice-tuner--supported-p dimension)
+      (format "engine-rendered by %s"
+              (emacsvox-aural-voice-tuner--adapter)))
+     (t
+      (format "omitted by %s" (emacsvox-aural-voice-tuner--adapter))))))
 
 (defun emacsvox-aural-voice-tuner--effective-value (dimension)
   "Describe the auditioned value for DIMENSION."
-  (if (emacsvox-aural-voice-tuner--supported-p dimension)
-      (if (eq dimension 'family)
-          (let* ((value (emacsvox-aural-voice-tuner--value dimension))
-                 (capability (emacsvox-aural-active-voice-capabilities))
-                 (selection (plist-get capability :family-selection))
-                 (resolved
-                  (and
-                   value
-                   (fboundp 'tts-voice-family-id)
-                   (tts-voice-family-id value capability))))
-            (cond
-             ((null value) "adapter default")
-             ((and (eq selection 'enumerated) (null resolved))
-              "adapter default; requested family unavailable")
-             (t
-              (emacsvox-aural-voice-tuner--family-description value t))))
-        (emacsvox-aural-voice-tuner--display-value
-         (emacsvox-aural-voice-tuner--value dimension)))
-    "not applied"))
+  (if (and emacsvox-aural-voice-tuner-route-selector
+           (eq dimension 'family))
+      "retained for fallback; not applied to the selected physical voice"
+    (if (emacsvox-aural-voice-tuner--supported-p dimension)
+        (if (eq dimension 'family)
+            (let* ((value (emacsvox-aural-voice-tuner--value dimension))
+                   (capability (emacsvox-aural-active-voice-capabilities))
+                   (selection (plist-get capability :family-selection))
+                   (resolved
+                    (and
+                     value
+                     (fboundp 'tts-voice-family-id)
+                     (tts-voice-family-id value capability))))
+              (cond
+               ((null value) "adapter default")
+               ((and (eq selection 'enumerated) (null resolved))
+                "adapter default; requested family unavailable")
+               (t
+                (emacsvox-aural-voice-tuner--family-description value t))))
+          (emacsvox-aural-voice-tuner--display-value
+           (emacsvox-aural-voice-tuner--value dimension)))
+      "not applied")))
+
+(defun emacsvox-aural-voice-tuner--route-description ()
+  "Return the currently requested and realized tuner route."
+  (if (not emacsvox-aural-voice-tuner-route-selector)
+      (format "adapter %s" (emacsvox-aural-voice-tuner--adapter))
+    (let ((realized emacsvox-aural-voice-tuner-route-realized))
+      (format
+       "route %S; realized %s"
+       emacsvox-aural-voice-tuner-route-selector
+       (if realized
+           (format "%s/%s"
+                   (plist-get realized :engine-id)
+                   (plist-get realized :voice-id))
+         "pending")))))
 
 (defun emacsvox-aural-voice-tuner--row (dimension)
   "Return one tabulated tuner row for DIMENSION."
@@ -1166,10 +1222,10 @@ Return the compiled voice without dispatching the speech queue."
   (setq
    header-line-format
    (format
-    " Voice: %s    Palette: %s    Adapter: %s    %s"
+    " Voice: %s    Palette: %s    %s    %s"
     emacsvox-aural-voice-tuner-voice
     emacsvox-aural-voice-tuner-palette
-    (emacsvox-aural-voice-tuner--adapter)
+    (emacsvox-aural-voice-tuner--route-description)
     (if emacsvox-aural-voice-tuner-dirty "modified" "unchanged")))
   (force-mode-line-update))
 
@@ -1250,22 +1306,55 @@ Return the compiled voice without dispatching the speech queue."
 (defun emacsvox-aural-voice-tuner-audition (&optional announcement)
   "Audition the unsaved working style after optional ANNOUNCEMENT."
   (interactive)
-  (let ((compiled
-         (emacsvox-aural-compile-voice-style
-          emacsvox-aural-voice-tuner-working-style
-          emacsvox-aural-voice-tuner-palette)))
-    (emacsvox-aural-preview-begin t)
-    (when announcement
-      (tts--protocol-queue-code (tts-voice-reset-code))
-      (tts--protocol-queue-text announcement))
-    (emacsvox-aural-voice-palettes--queue-compiled-preview
-     compiled
-     emacsvox-aural-voice-tuner-voice
-     emacsvox-aural-voice-tuner-preview-text)
-    (emacsvox-aural-preview-dispatch)
-    (when announcement
-      (emacsvox-aural-preview-message "%s" announcement))
-    compiled))
+  (if emacsvox-aural-voice-tuner-route-selector
+      (let ((buffer (current-buffer))
+            (text
+             (concat
+              (and announcement (concat announcement " "))
+              (emacsvox-aural-voice-palettes--preview-sample
+               emacsvox-aural-voice-tuner-voice
+               emacsvox-aural-voice-tuner-preview-text)))
+            acss)
+        (dolist (dimension '(average-pitch pitch-range stress richness))
+          (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+                 (value
+                  (plist-get emacsvox-aural-voice-tuner-working-style key)))
+            (when (numberp value)
+              (setq acss
+                    (plist-put
+                     acss key (/ (float (max 0 (min 9 value))) 9.0))))))
+        (setq emacsvox-aural-voice-tuner-preview-result '(:status running))
+        (tts-preview-voice
+         text emacsvox-aural-voice-tuner-route-selector
+         :acss acss :effects nil
+         :language emacsvox-aural-voice-tuner-route-language
+         :callback
+         (lambda (result)
+           (when (buffer-live-p buffer)
+             (with-current-buffer buffer
+               (setq emacsvox-aural-voice-tuner-preview-result result)
+               (when-let* ((realized (plist-get result :realized)))
+                 (setq emacsvox-aural-voice-tuner-route-realized realized))
+               (when (derived-mode-p 'emacsvox-aural-voice-tuner-mode)
+                 (emacsvox-aural-voice-tuner-refresh
+                  (tabulated-list-get-id)))))))
+        emacsvox-aural-voice-tuner-preview-result)
+    (let ((compiled
+           (emacsvox-aural-compile-voice-style
+            emacsvox-aural-voice-tuner-working-style
+            emacsvox-aural-voice-tuner-palette)))
+      (emacsvox-aural-preview-begin t)
+      (when announcement
+        (tts--protocol-queue-code (tts-voice-reset-code))
+        (tts--protocol-queue-text announcement))
+      (emacsvox-aural-voice-palettes--queue-compiled-preview
+       compiled
+       emacsvox-aural-voice-tuner-voice
+       emacsvox-aural-voice-tuner-preview-text)
+      (emacsvox-aural-preview-dispatch)
+      (when announcement
+        (emacsvox-aural-preview-message "%s" announcement))
+      compiled)))
 
 (defun emacsvox-aural-voice-tuner--update-dirty ()
   "Update and return the tuner dirty state."
@@ -1396,9 +1485,12 @@ ANNOUNCEMENT overrides the normal setting description."
                 choices nil t nil nil (car-safe initial-entry))))
          (cdr (assoc-string answer choices))))
       ('routed
-       (user-error
-        "The %s adapter selects physical voices through routing profiles"
-        (plist-get capability :adapter)))
+       (let ((answer
+              (string-trim
+               (read-string
+                "Portable fallback family; blank means adapter default: "
+                (and current (format "%s" current))))))
+         (unless (string-empty-p answer) answer)))
       (_
        (let ((answer
               (string-trim
@@ -1467,7 +1559,11 @@ ANNOUNCEMENT overrides the normal setting description."
         (emacsvox-aural-voice-palette-previews-refresh voice)
         (let ((position (point)))
           (dolist (window (get-buffer-window-list source nil t))
-            (set-window-point window position)))))))
+            (set-window-point window position))))
+      (when (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+        (when (fboundp 'emacsvox-aural-voice-workbench-refresh)
+          (funcall 'emacsvox-aural-voice-workbench-refresh
+                   (format "%s" voice)))))))
 
 (defun emacsvox-aural-voice-tuner-save ()
   "Atomically save the working style and return to the voice preview."
@@ -1577,13 +1673,16 @@ ANNOUNCEMENT overrides the normal setting description."
    (char-to-string (+ ?0 digit))
    #'emacsvox-aural-voice-tuner-set-digit))
 
-(defun emacsvox-aural-voice-palette-previews-tune ()
-  "Open a transactional tuner for the effective voice at point."
-  (interactive)
-  (let* ((palette-id emacsvox-aural-voice-palette-previews-palette)
-         (palette (emacsvox-aural-voice-palette palette-id))
-         (voice
-          (emacsvox-aural-voice-palette-previews--current-voice)))
+(cl-defun emacsvox-aural-voice-tuner-open
+    (palette-id voice source text
+                &key selector language engine realized)
+  "Open a transactional tuner for VOICE in PALETTE-ID.
+
+SOURCE is the manager to return to and TEXT is the comparison text.  When
+SELECTOR is non-nil, audition the unsaved style against that staged physical
+route using LANGUAGE, discovered ENGINE capabilities, and initial REALIZED
+identity."
+  (let ((palette (emacsvox-aural-voice-palette palette-id)))
     (when (emacsvox-aural-voice-palette-built-in palette)
       (user-error
        "Built-in palette; press o, then c to make an editable copy"))
@@ -1593,8 +1692,6 @@ ANNOUNCEMENT overrides the normal setting description."
            (style
             (emacsvox-aural-voice-tuner--complete-style
              definition palette-id))
-           (source (current-buffer))
-           (text emacsvox-aural-voice-palette-previews-text)
            (buffer (get-buffer-create "*Aural Voice Tuner*")))
       (when
           (with-current-buffer buffer
@@ -1618,11 +1715,25 @@ ANNOUNCEMENT overrides the normal setting description."
          emacsvox-aural-voice-tuner-history nil
          emacsvox-aural-voice-tuner-dirty nil
          emacsvox-aural-voice-tuner-preview-text text
-         emacsvox-aural-voice-tuner-source-buffer source)
+         emacsvox-aural-voice-tuner-source-buffer source
+         emacsvox-aural-voice-tuner-route-selector (copy-tree selector)
+         emacsvox-aural-voice-tuner-route-language language
+         emacsvox-aural-voice-tuner-route-engine (copy-tree engine)
+         emacsvox-aural-voice-tuner-route-realized (copy-tree realized)
+         emacsvox-aural-voice-tuner-preview-result nil)
         (emacsvox-aural-voice-tuner-refresh))
       (emacsvox-aural-ui-pop-to-buffer buffer)
       (emacsvox-aural-voice-tuner-speak-current)
       buffer)))
+
+(defun emacsvox-aural-voice-palette-previews-tune ()
+  "Open a transactional tuner for the effective voice at point."
+  (interactive)
+  (emacsvox-aural-voice-tuner-open
+   emacsvox-aural-voice-palette-previews-palette
+   (emacsvox-aural-voice-palette-previews--current-voice)
+   (current-buffer)
+   emacsvox-aural-voice-palette-previews-text))
 
 (defun emacsvox-aural-voice-palette-previews-help ()
   "Display and speak voice-palette preview help."

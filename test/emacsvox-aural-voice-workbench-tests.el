@@ -369,6 +369,27 @@
          entries)
         '(exact exact))))))
 
+(ert-deftest emacsvox-aural-voice-workbench-opens-route-aware-tuner ()
+  "Logical tuning passes the staged selector and realized engine unchanged."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-bolden"))
+    (let (arguments)
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-voice-tuner-open)
+            (lambda (&rest values) (setq arguments values))))
+        (emacsvox-aural-voice-workbench-tune))
+      (should (eq (nth 0 arguments) 'acss-default))
+      (should (eq (nth 1 arguments) 'bolden))
+      (let ((selector (plist-get (nthcdr 4 arguments) :selector))
+            (engine (plist-get (nthcdr 4 arguments) :engine))
+            (realized (plist-get (nthcdr 4 arguments) :realized)))
+        (should (eq (plist-get selector :kind) 'exact))
+        (should (equal (plist-get selector :voice-id) "eci:Reed"))
+        (should (equal (plist-get engine :engine-id) "eloquence"))
+        (should
+         (equal realized
+                '(:engine-id "eloquence" :voice-id "eci:Reed")))))))
+
 (ert-deftest emacsvox-aural-voice-workbench-bindings-are-complete ()
   "Workbench view, filter, detail, refresh, home, and help keys are present."
   (dolist
@@ -386,6 +407,7 @@
          ("B" . emacsvox-aural-voice-workbench-compare)
          ("T" . emacsvox-aural-voice-workbench-edit-preview-text)
          ("S" . emacsvox-aural-voice-workbench-stop-preview)
+         ("t" . emacsvox-aural-voice-workbench-tune)
          ("a" . emacsvox-aural-voice-workbench-assign)
          ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
          ("[" . emacsvox-aural-voice-workbench-move-selector-up)

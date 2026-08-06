@@ -3561,6 +3561,25 @@ validation pass.
 Deliverable: a user can tune one logical voice against its actual route and
 hear the same composed result that normal presentation will use.
 
+Route-aware tuner foundation:
+
+- =t= on a logical or style Workbench row opens the existing transactional
+  tuner using that row's first staged selector, language, predicted physical
+  voice, and discovered engine descriptor.  It does not mutate the staged
+  routing profile.
+- Average pitch, pitch range, stress, and richness previews are normalized and
+  sent through the adapter-neutral exact-route preview operation.  Completion
+  updates the displayed engine/voice from the server-reported realization.
+- Each setting distinguishes an engine-rendered value from one omitted by the
+  selected engine.  A family request remains visible and saved as a portable
+  fallback while an exact or engine route owns the physical base voice.
+- The older palette-preview entry point and every standalone adapter retain
+  their existing compiled ACSS audition path.  Unsupported data is retained;
+  changing routes does not rewrite the portable palette.
+
+Rate and post-synthesis effect controls remain part of this slice, after the
+corresponding rich-style schema and Omnivox timeline implementations exist.
+
 ** TODO Slice 56: Atomic Apply and Realized Diagnostics
 
 - Validate a staged profile against current inventory, atomically persist its
