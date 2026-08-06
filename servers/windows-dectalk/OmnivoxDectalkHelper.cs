@@ -42,6 +42,7 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
         new OmnivoxHelperCapabilities
         {
             Rate = true,
+            WordMarkers = true,
             PhonemeMarkers = true,
             NativeIndexMarkers = true
         };

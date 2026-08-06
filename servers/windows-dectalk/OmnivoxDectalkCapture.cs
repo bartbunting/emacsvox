@@ -124,6 +124,9 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private const int BufferCount = 4;
     private const int MarkerRecordsPerBuffer = 512;
     private const int MaximumMarkers = 4096;
+    private const int FirstPrivateWordIndex = 28672;
+    private const int LastPrivateWordIndex = 32767;
+    private const int MaximumMarkerValueBytes = 16 * 1024;
     private const int MaximumAudioBytes = 128 * 1024 * 1024;
     internal const int SpeechSampleRate = 11025;
 
@@ -136,6 +139,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private uint bufferMessage;
     private MemoryStream capture;
     private List<OmnivoxHelperMarker> markers;
+    private Dictionary<uint, OmnivoxHelperMarker> pendingWordMarkers;
     private Exception callbackError;
     private bool discardAudio;
     private bool shuttingDown;
@@ -226,7 +230,8 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             {
                 Check(OmnivoxNativeDectalk.TextToSpeechSetRate(handle,
                     (uint)rate), "TextToSpeechSetRate");
-                Speak("[" + voiceCode + "] " + text);
+                Speak("[" + voiceCode + "] " +
+                    BuildTextWithWordIndexes(text));
                 Check(OmnivoxNativeDectalk.TextToSpeechSync(handle),
                     "TextToSpeechSync");
                 ThrowCallbackError();
@@ -247,6 +252,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                         capture = null;
                     }
                     markers = null;
+                    pendingWordMarkers = null;
                 }
             }
         }
@@ -292,6 +298,8 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             }
             capture = new MemoryStream();
             markers = new List<OmnivoxHelperMarker>();
+            pendingWordMarkers =
+                new Dictionary<uint, OmnivoxHelperMarker>();
             discardAudio = false;
         }
     }
@@ -309,6 +317,271 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
         {
             pinned.Free();
         }
+    }
+
+    private string BuildTextWithWordIndexes(string text)
+    {
+        HashSet<uint> reservedIndexes = CollectNativeNumbers(text);
+        uint[] utf8Offsets = BuildUtf8Offsets(text);
+        StringBuilder result = new StringBuilder(text.Length + 256);
+        int copiedThrough = 0;
+        int position = 0;
+        int candidate = LastPrivateWordIndex;
+
+        while (position < text.Length &&
+            pendingWordMarkers.Count < MaximumMarkers)
+        {
+            int nativeEnd;
+            if (TryGetNativeSpanEnd(text, position, out nativeEnd))
+            {
+                position = nativeEnd;
+                continue;
+            }
+
+            int scalarLength;
+            if (!IsWordCore(text, position, out scalarLength))
+            {
+                position += scalarLength;
+                continue;
+            }
+
+            int wordStart = position;
+            bool crossesNativeSpan = false;
+            position += scalarLength;
+            while (position < text.Length)
+            {
+                if (IsWordCore(text, position, out scalarLength))
+                {
+                    position += scalarLength;
+                    continue;
+                }
+
+                if (TryGetNativeSpanEnd(text, position, out nativeEnd) &&
+                    StartsWordContinuation(text, nativeEnd))
+                {
+                    crossesNativeSpan = true;
+                    position = nativeEnd;
+                    continue;
+                }
+
+                if (IsInnerWordConnector(text, position,
+                    out scalarLength))
+                {
+                    int continuation = SkipNativeSpans(text,
+                        position + scalarLength);
+                    int nextLength;
+                    if (continuation < text.Length &&
+                        IsWordCore(text, continuation, out nextLength))
+                    {
+                        if (continuation != position + scalarLength)
+                        {
+                            crossesNativeSpan = true;
+                        }
+                        position = continuation + nextLength;
+                        continue;
+                    }
+                }
+                break;
+            }
+
+            if (crossesNativeSpan)
+            {
+                continue;
+            }
+
+            uint indexValue;
+            if (!TakePrivateWordIndex(reservedIndexes, ref candidate,
+                out indexValue))
+            {
+                break;
+            }
+
+            result.Append(text, copiedThrough, wordStart - copiedThrough);
+            result.Append("[:index mark ");
+            result.Append(indexValue.ToString(CultureInfo.InvariantCulture));
+            result.Append("]");
+
+            int wordLength = position - wordStart;
+            uint textStart = utf8Offsets[wordStart];
+            uint textLength = checked(utf8Offsets[position] - textStart);
+            string value = text.Substring(wordStart, wordLength);
+            if (Encoding.UTF8.GetByteCount(value) > MaximumMarkerValueBytes)
+            {
+                value = null;
+            }
+            pendingWordMarkers.Add(indexValue, new OmnivoxHelperMarker(
+                "word", 0, textStart, textLength, value));
+            reservedIndexes.Add(indexValue);
+            copiedThrough = wordStart;
+        }
+
+        result.Append(text, copiedThrough, text.Length - copiedThrough);
+        return result.ToString();
+    }
+
+    private static HashSet<uint> CollectNativeNumbers(string text)
+    {
+        HashSet<uint> values = new HashSet<uint>();
+        int position = 0;
+        while (position < text.Length)
+        {
+            int nativeEnd;
+            if (!TryGetNativeSpanEnd(text, position, out nativeEnd))
+            {
+                ++position;
+                continue;
+            }
+
+            int numberStart = position + 1;
+            while (numberStart < nativeEnd)
+            {
+                while (numberStart < nativeEnd &&
+                    !Char.IsDigit(text[numberStart]))
+                {
+                    ++numberStart;
+                }
+                int numberEnd = numberStart;
+                while (numberEnd < nativeEnd &&
+                    Char.IsDigit(text[numberEnd]))
+                {
+                    ++numberEnd;
+                }
+                if (numberEnd > numberStart)
+                {
+                    uint value;
+                    if (UInt32.TryParse(text.Substring(numberStart,
+                        numberEnd - numberStart), NumberStyles.None,
+                        CultureInfo.InvariantCulture, out value))
+                    {
+                        values.Add(value);
+                    }
+                }
+                numberStart = numberEnd + 1;
+            }
+            position = nativeEnd;
+        }
+        return values;
+    }
+
+    private static uint[] BuildUtf8Offsets(string text)
+    {
+        uint[] offsets = new uint[text.Length + 1];
+        uint byteOffset = 0;
+        int position = 0;
+        while (position < text.Length)
+        {
+            offsets[position] = byteOffset;
+            char value = text[position];
+            if (Char.IsHighSurrogate(value) && position + 1 < text.Length &&
+                Char.IsLowSurrogate(text[position + 1]))
+            {
+                offsets[position + 1] = byteOffset;
+                byteOffset = checked(byteOffset + 4);
+                position += 2;
+            }
+            else
+            {
+                byteOffset = checked(byteOffset +
+                    (value <= 0x7f ? 1u : value <= 0x7ff ? 2u : 3u));
+                ++position;
+            }
+            offsets[position] = byteOffset;
+        }
+        return offsets;
+    }
+
+    private static bool TakePrivateWordIndex(HashSet<uint> reserved,
+        ref int candidate, out uint value)
+    {
+        while (candidate >= FirstPrivateWordIndex)
+        {
+            value = (uint)candidate--;
+            if (!reserved.Contains(value))
+            {
+                return true;
+            }
+        }
+        value = 0;
+        return false;
+    }
+
+    private static bool TryGetNativeSpanEnd(string text, int position,
+        out int end)
+    {
+        end = position;
+        if (position >= text.Length || text[position] != '[')
+        {
+            return false;
+        }
+        int closing = text.IndexOf(']', position + 1);
+        end = closing < 0 ? text.Length : closing + 1;
+        return true;
+    }
+
+    private static int SkipNativeSpans(string text, int position)
+    {
+        int end;
+        while (TryGetNativeSpanEnd(text, position, out end) &&
+            end > position)
+        {
+            position = end;
+        }
+        return position;
+    }
+
+    private static bool StartsWordContinuation(string text, int position)
+    {
+        position = SkipNativeSpans(text, position);
+        if (position >= text.Length)
+        {
+            return false;
+        }
+        int scalarLength;
+        if (IsWordCore(text, position, out scalarLength))
+        {
+            return true;
+        }
+        if (!IsInnerWordConnector(text, position, out scalarLength))
+        {
+            return false;
+        }
+        position = SkipNativeSpans(text, position + scalarLength);
+        int nextLength;
+        return position < text.Length &&
+            IsWordCore(text, position, out nextLength);
+    }
+
+    private static bool IsWordCore(string text, int position,
+        out int scalarLength)
+    {
+        scalarLength = Char.IsHighSurrogate(text[position]) &&
+            position + 1 < text.Length &&
+            Char.IsLowSurrogate(text[position + 1]) ? 2 : 1;
+        switch (CharUnicodeInfo.GetUnicodeCategory(text, position))
+        {
+            case UnicodeCategory.UppercaseLetter:
+            case UnicodeCategory.LowercaseLetter:
+            case UnicodeCategory.TitlecaseLetter:
+            case UnicodeCategory.ModifierLetter:
+            case UnicodeCategory.OtherLetter:
+            case UnicodeCategory.NonSpacingMark:
+            case UnicodeCategory.SpacingCombiningMark:
+            case UnicodeCategory.DecimalDigitNumber:
+            case UnicodeCategory.LetterNumber:
+            case UnicodeCategory.OtherNumber:
+            case UnicodeCategory.ConnectorPunctuation:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool IsInnerWordConnector(string text, int position,
+        out int scalarLength)
+    {
+        scalarLength = 1;
+        char value = text[position];
+        return value == '\'' || value == '\u2019' || value == '-';
     }
 
     private void AllocateBuffers()
@@ -440,9 +713,20 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             OmnivoxDectalkIndex marker =
                 (OmnivoxDectalkIndex)Marshal.PtrToStructure(address,
                     typeof(OmnivoxDectalkIndex));
-            markers.Add(new OmnivoxHelperMarker("native_index",
-                marker.SampleNumber, null, null,
-                marker.Value.ToString(CultureInfo.InvariantCulture)));
+            OmnivoxHelperMarker wordMarker;
+            if (pendingWordMarkers != null &&
+                pendingWordMarkers.TryGetValue(marker.Value, out wordMarker))
+            {
+                pendingWordMarkers.Remove(marker.Value);
+                wordMarker.FrameOffset = marker.SampleNumber;
+                markers.Add(wordMarker);
+            }
+            else
+            {
+                markers.Add(new OmnivoxHelperMarker("native_index",
+                    marker.SampleNumber, null, null,
+                    marker.Value.ToString(CultureInfo.InvariantCulture)));
+            }
         }
     }
 
@@ -548,6 +832,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 capture = null;
             }
             markers = null;
+            pendingWordMarkers = null;
         }
     }
 }

@@ -181,9 +181,19 @@ native phoneme changes and explicitly inserted =[:index mark N]= records.  It
 reports their utterance-relative sample numbers as =phoneme= and =native_index=
 marker frames; the marker value is DECtalk's numeric phoneme or index value.
 Those native records do not identify a source-text span, so their optional UTF-8
-source ranges are left absent rather than guessed.  Marker storage is bounded
-to 4096 records per utterance.  Word and sentence markers, along with the other
-ACSS dimensions, remain advertised as unavailable.
+source ranges are left absent rather than guessed.
+
+The helper creates word markers by inserting private DECtalk indexes immediately
+before bounded Unicode words and translating only those callbacks back to the
+original UTF-8 source ranges.  Apostrophes, curly apostrophes, and hyphens remain
+inside a word when surrounded by word characters.  Balanced DECtalk command and
+phonetic spans are copied without internal indexes; a word crossing such a span
+is conservatively left unmarked.  Private values are selected from 28672 through
+32767 after excluding numbers already present in native spans, so caller-supplied
+indexes retain their =native_index= identity.  A real-helper regression produced
+identical PCM with and without the generated indexes.  Combined marker storage
+is bounded to 4096 records per utterance.  Sentence markers and the other ACSS
+dimensions remain advertised as unavailable.
 
 The helper accepts a DLL path as its first argument.  Otherwise it checks
 =OMNIVOX_DECTALK_DLL=, then =EMACSVOX_DECTALK_DLL=, then =DECtalk.dll= beside
