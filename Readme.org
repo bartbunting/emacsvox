@@ -45,6 +45,11 @@ runtime from this checkout with:
 make windows-omnivox
 #+END_SRC
 
+This builds the Windows executable and a native copy of the platform-neutral
+eSpeak voice data, then stages both with the required MinGW runtime DLLs under
+=servers/omnivox-bin=.  The voice data is required for the Windows eSpeak
+fallback to initialize.
+
 Select it with =M-x omnivox=.  On startup the adapter negotiates the versioned
 control protocol, discovers the live engine inventory, and atomically
 registers Emacsvox's logical voices with both the main and notification

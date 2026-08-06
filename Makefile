@@ -142,6 +142,7 @@ OMNIVOX_RUNTIME_DIR = $(CURDIR)/servers/omnivox-bin
 MINGW_CXX ?= x86_64-w64-mingw32-g++
 
 windows-omnivox:
+	cd "$(OMNIVOX_DIR)" && cargo build --locked --release -p omnivox-cli
 	cd "$(OMNIVOX_DIR)" && \
 		CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc \
 		CXX_x86_64_pc_windows_gnu=$(MINGW_CXX) \
@@ -153,8 +154,22 @@ windows-omnivox:
 		executable="$(OMNIVOX_DIR)/target/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
 		stdlib="$$($(MINGW_CXX) -print-file-name=libstdc++-6.dll)"; \
 		gcc_runtime="$$($(MINGW_CXX) -print-file-name=libgcc_s_seh-1.dll)"; \
-		build_id="$$(sha256sum "$$executable" "$$stdlib" "$$gcc_runtime" \
-			| cut -d ' ' -f1 | sha256sum | cut -c1-16)"; \
+		espeak_phontab="$$(find \
+			"$(OMNIVOX_DIR)/target/release/build" \
+			-path '*/espeak-rs-sys-*/out/share/espeak-ng-data/phontab' \
+			-print -quit)"; \
+		if [ -z "$$espeak_phontab" ]; then \
+			echo "Could not locate native espeak-ng-data build output" >&2; \
+			exit 1; \
+		fi; \
+		espeak_data="$${espeak_phontab%/phontab}"; \
+		data_digest="$$(cd "$$espeak_data" && \
+			find . -type f -print0 | LC_ALL=C sort -z | \
+			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
+		build_id="$$( { \
+			sha256sum "$$executable" "$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
+			printf '%s\n' "$$data_digest"; \
+		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
 		mkdir -p "$$version_dir"; \
 		if [ ! -x "$$version_dir/omnivox.exe" ]; then \
@@ -171,6 +186,12 @@ windows-omnivox:
 			cp "$$gcc_runtime" "$$version_dir/libgcc_s_seh-1.dll.new"; \
 			mv -f "$$version_dir/libgcc_s_seh-1.dll.new" \
 				"$$version_dir/libgcc_s_seh-1.dll"; \
+		fi; \
+		if [ ! -f "$$version_dir/espeak-ng-data/phontab" ]; then \
+			rm -rf "$$version_dir/espeak-ng-data.new"; \
+			cp -a "$$espeak_data" "$$version_dir/espeak-ng-data.new"; \
+			mv "$$version_dir/espeak-ng-data.new" \
+				"$$version_dir/espeak-ng-data"; \
 		fi; \
 		ln -sfn "versions/$$build_id" "$(OMNIVOX_RUNTIME_DIR)/current.new"; \
 		mv -Tf "$(OMNIVOX_RUNTIME_DIR)/current.new" \
