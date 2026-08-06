@@ -2278,11 +2278,10 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
   "Initialize notification TTS stream."
   (interactive)
   
-  (let ((new nil)
+  (let ((old tts-notify-process)
+        (new nil)
         (tts-program
          (if (string-match "cloud" tts-program) "cloud-notify" tts-program)))
-    (when (and tts-notify-process (process-live-p tts-notify-process))
-      (delete-process tts-notify-process))
     (unless
         (and (not (string-match "cloud" tts-program))
              (zerop (length tts-notification-device)))
@@ -2291,9 +2290,14 @@ Notification is logged in the notifications buffer unless `dont-log' is T. "
            ("SWIFTMAC_AUDIO_TARGET" tts-notification-device)
            ("SHARPWIN_AUDIO_TARGET" tts-notification-device)
            ("PULSE_SINK" tts-notification-device))
-        (setq  new (tts-make-process "Notify"))
-        (when (process-live-p new)
-          (setq tts-notify-process new))))))
+        (setq new (tts-make-process "Notify"))
+        (unless (process-live-p new)
+          (error "Fail: Notification Speech Server"))))
+    ;; Publish the replacement before retirement hooks observe global state.
+    (setq tts-notify-process new)
+    (when (and (processp old) (not (eq old new)))
+      (tts--retire-process old))
+    new))
 
 ;; Unicode character pronunciation support:
 ;;;  Header: Lukas

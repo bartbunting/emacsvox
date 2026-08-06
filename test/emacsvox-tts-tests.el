@@ -439,6 +439,65 @@
       (nreverse events)
       '(started (retired old) (configured new))))))
 
+(ert-deftest emacsvox-tts-notify-initialize-publishes-before-retirement ()
+  "Notifier replacement uses common retirement after publishing its successor."
+  (let ((tts-notify-process 'old)
+        (tts-program "test-server")
+        (tts-notification-device "test-device")
+        events)
+    (cl-letf
+        (((symbol-function 'tts-make-process)
+          (lambda (_name)
+            (push 'started events)
+            'new))
+         ((symbol-function 'process-live-p)
+          (lambda (process)
+            (push (list 'validated process) events)
+            (eq process 'new)))
+         ((symbol-function 'processp)
+          (lambda (process) (memq process '(old new))))
+         ((symbol-function 'tts--retire-process)
+          (lambda (process)
+            (push
+             (list 'retired process :current tts-notify-process)
+             events))))
+      (should (eq (tts-notify-initialize) 'new)))
+    (should (eq tts-notify-process 'new))
+    (should
+     (equal
+      (nreverse events)
+      '(started (validated new) (retired old :current new))))))
+
+(ert-deftest emacsvox-tts-notify-initialize-preserves-old-on-start-failure ()
+  "A notifier startup failure leaves the working old process current."
+  (let ((tts-notify-process 'old)
+        (tts-program "test-server")
+        (tts-notification-device "test-device")
+        retired)
+    (cl-letf
+        (((symbol-function 'tts-make-process)
+          (lambda (_name) (error "simulated notifier startup failure")))
+         ((symbol-function 'tts--retire-process)
+          (lambda (process) (push process retired))))
+      (should-error (tts-notify-initialize)))
+    (should (eq tts-notify-process 'old))
+    (should-not retired)))
+
+(ert-deftest emacsvox-tts-notify-initialize-clears-disabled-stream ()
+  "Disabling the separate notifier clears and retires its old owner."
+  (let ((tts-notify-process 'old)
+        (tts-program "test-server")
+        (tts-notification-device "")
+        observed)
+    (cl-letf
+        (((symbol-function 'processp) (lambda (process) (eq process 'old)))
+         ((symbol-function 'tts--retire-process)
+          (lambda (process)
+            (setq observed (list process tts-notify-process)))))
+      (should-not (tts-notify-initialize)))
+    (should-not tts-notify-process)
+    (should (equal observed '(old nil)))))
+
 (ert-deftest emacsvox-tts-protocol-dispatches-tone-and-silence ()
   "Tone and silence commands preserve optional forced dispatch."
   (should
