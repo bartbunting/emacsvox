@@ -207,6 +207,122 @@
       '((speaker "tts_set_voice winrt:HKEY\\Voice\n")
         (notifier "tts_set_voice winrt:HKEY\\Voice\n"))))))
 
+(defun emacsvox-test--omnivox-decode-command (command)
+  "Decode one Omnivox control COMMAND emitted by the adapter."
+  (unless
+      (string-match
+       "\\`omnivox_control {\\([^}\n]+\\)}\n\\'" command)
+    (error "Invalid Omnivox control command"))
+  (json-parse-string
+   (decode-coding-string
+    (base64-decode-string (match-string 1 command)) 'utf-8 t)
+   :object-type 'plist :array-type 'list
+   :null-object nil :false-object nil))
+
+(defun emacsvox-test--omnivox-event (response)
+  "Encode RESPONSE as one Omnivox control event."
+  (format "%s%s\n"
+          omnivox-control-event-prefix
+          (omnivox--encode-control-request response)))
+
+(ert-deftest emacsvox-tts-omnivox-encodes-versioned-control-requests ()
+  "Control requests are UTF-8 JSON in a newline-free Base64 field."
+  (let* ((encoded
+          (omnivox--encode-control-request
+           '(:protocol_version 1 :request_id 42 :type "capabilities")))
+         (decoded
+          (json-parse-string
+           (decode-coding-string (base64-decode-string encoded) 'utf-8 t)
+           :object-type 'plist)))
+    (should-not (string-match-p "\n" encoded))
+    (should (= (plist-get decoded :protocol_version) 1))
+    (should (= (plist-get decoded :request_id) 42))
+    (should (equal (plist-get decoded :type) "capabilities"))))
+
+(ert-deftest emacsvox-tts-omnivox-control-filter-handles-fragments ()
+  "Control responses tolerate fragments and do not hide ordinary output."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-filter-test" :buffer nil :noquery t))
+         (response
+          '(:protocol_version 1 :request_id 7 :type "capabilities"
+            :server_version "1.3.0" :supported_protocol_versions [1]
+            :features ["control_v1"]))
+         (event (emacsvox-test--omnivox-event response))
+         received
+         forwarded)
+    (unwind-protect
+        (progn
+          (set-process-filter
+           process
+           (lambda (_process output) (push output forwarded)))
+          (omnivox--install-control-filter process)
+          (puthash
+           7 (lambda (_process value) (setq received value))
+           (omnivox--pending-requests process))
+          (omnivox--control-process-filter
+           process (concat "server notice\n" (substring event 0 25)))
+          (should-not received)
+          (omnivox--control-process-filter process (substring event 25))
+          (should (equal (plist-get received :type) "capabilities"))
+          (should (equal (nreverse forwarded) '("server notice\n")))
+          (should-not (gethash 7 (omnivox--pending-requests process))))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-omnivox-negotiates-capabilities-and-inventory ()
+  "A new Omnivox process discovers supported features and engine inventory."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-negotiation-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (omnivox-control-capabilities nil)
+         (omnivox-engine-inventory nil)
+         (omnivox-control-last-error nil)
+         (omnivox--control-request-sequence 80)
+         writes)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'process-send-string)
+              (lambda (_process command) (push command writes))))
+          (omnivox--negotiate-process process)
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id)))
+            (should (equal (plist-get request :type) "capabilities"))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier
+               :type "capabilities" :server_version "1.3.0"
+               :supported_protocol_versions [1]
+               :features ["control_v1" "engine_inventory"]))))
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id)))
+            (should (equal (plist-get request :type) "inventory"))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier :type "inventory"
+               :inventory_generation 3 :engines []))))
+          (should (equal (plist-get omnivox-control-capabilities :type)
+                         "capabilities"))
+          (should (= (plist-get omnivox-engine-inventory
+                                :inventory_generation)
+                     3))
+          (should-not omnivox-control-last-error)
+          (should (= (hash-table-count
+                      (omnivox--pending-requests process))
+                     0)))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-omnivox-bounds-control-responses ()
+  "The adapter rejects oversized responses before Base64 decoding."
+  (should-error
+   (omnivox--decode-control-response
+    (make-string (1+ omnivox-control-max-encoded-bytes) ?A))
+   :type 'error))
+
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
   (let ((tts-speaker-process 'speaker)

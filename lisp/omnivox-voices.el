@@ -12,6 +12,7 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
+(require 'json)
 (require 'subr-x)
 
 (defvar emacsvox-servers-directory)
@@ -45,6 +46,216 @@ An empty string leaves voice selection to the engine.  Use
 (defvar omnivox-available-voices nil
   "Physical voices most recently discovered from Omnivox.
 Each entry has the form (ID NAME LANGUAGE QUALITY).")
+
+(defconst omnivox-control-protocol-version 1
+  "Control protocol version supported by this adapter.")
+
+(defconst omnivox-control-event-prefix "__OMNIVOX_CONTROL__ "
+  "Prefix of Base64-JSON control events emitted by Omnivox.")
+
+(defconst omnivox-control-max-payload-bytes (* 256 1024)
+  "Maximum decoded Omnivox control payload accepted by Emacsvox.")
+
+(defconst omnivox-control-max-encoded-bytes 349532
+  "Maximum encoded Omnivox control payload accepted by Emacsvox.")
+
+(defconst omnivox--control-filter-installed-property
+  'omnivox--control-filter-installed
+  "Process property recording installation of the control filter.")
+
+(defconst omnivox--control-original-filter-property
+  'omnivox--control-original-filter
+  "Process property retaining the filter wrapped by Omnivox.")
+
+(defconst omnivox--control-fragment-property 'omnivox--control-fragment
+  "Process property retaining an incomplete Omnivox output line.")
+
+(defconst omnivox--control-pending-property 'omnivox--control-pending
+  "Process property holding callbacks for outstanding control requests.")
+
+(defconst omnivox--control-capabilities-property
+  'omnivox--control-capabilities
+  "Process property holding negotiated Omnivox capabilities.")
+
+(defconst omnivox--control-inventory-property 'omnivox--control-inventory
+  "Process property holding the latest Omnivox engine inventory.")
+
+(defconst omnivox--control-negotiated-property 'omnivox--control-negotiated
+  "Process property preventing duplicate capability negotiation.")
+
+(defvar omnivox--control-request-sequence 0
+  "Sequence used to identify Omnivox control requests.")
+
+(defvar omnivox-control-capabilities nil
+  "Capabilities most recently reported by the main Omnivox process.")
+
+(defvar omnivox-engine-inventory nil
+  "Engine inventory most recently reported by the main Omnivox process.")
+
+(defvar omnivox-control-last-error nil
+  "Most recent Omnivox control error or malformed event.")
+
+(defun omnivox--encode-control-request (request)
+  "Encode control REQUEST as bounded, unwrapped Base64 JSON."
+  (let* ((json (json-serialize request))
+         (payload (encode-coding-string json 'utf-8 t)))
+    (when (> (string-bytes payload) omnivox-control-max-payload-bytes)
+      (error "Omnivox control request exceeds %d bytes"
+             omnivox-control-max-payload-bytes))
+    (base64-encode-string payload t)))
+
+(defun omnivox--decode-control-response (payload)
+  "Decode and validate one Base64-JSON control response PAYLOAD."
+  (when (> (string-bytes payload) omnivox-control-max-encoded-bytes)
+    (error "Encoded Omnivox control response exceeds its size limit"))
+  (let ((decoded (base64-decode-string payload)))
+    (when (> (string-bytes decoded) omnivox-control-max-payload-bytes)
+      (error "Decoded Omnivox control response exceeds its size limit"))
+    (json-parse-string
+     (decode-coding-string decoded 'utf-8 t)
+     :object-type 'plist :array-type 'list
+     :null-object nil :false-object nil)))
+
+(defun omnivox--pending-requests (process)
+  "Return the pending control request table for PROCESS."
+  (or (process-get process omnivox--control-pending-property)
+      (let ((pending (make-hash-table :test #'eql)))
+        (process-put process omnivox--control-pending-property pending)
+        pending)))
+
+(defun omnivox--send-control-request (process request callback)
+  "Send REQUEST to Omnivox PROCESS and register CALLBACK.
+CALLBACK receives PROCESS and the decoded response plist."
+  (unless (process-live-p process)
+    (error "Omnivox speech process is not live"))
+  (let* ((identifier (cl-incf omnivox--control-request-sequence))
+         (envelope
+          (append
+           (list :protocol_version omnivox-control-protocol-version
+                 :request_id identifier)
+           request))
+         (pending (omnivox--pending-requests process)))
+    (puthash identifier callback pending)
+    (condition-case error-data
+        (process-send-string
+         process
+         (format "omnivox_control {%s}\n"
+                 (omnivox--encode-control-request envelope)))
+      (error
+       (remhash identifier pending)
+       (signal (car error-data) (cdr error-data))))
+    identifier))
+
+(defun omnivox--record-control-error (process response)
+  "Record control error RESPONSE from PROCESS without speaking it."
+  (setq omnivox-control-last-error
+        (list :process process :response response :time (current-time)))
+  (message "Omnivox control error: %s"
+           (or (plist-get response :message) "malformed response")))
+
+(defun omnivox--dispatch-control-response (process response)
+  "Match decoded control RESPONSE to its request on PROCESS."
+  (unless (= (or (plist-get response :protocol_version) -1)
+             omnivox-control-protocol-version)
+    (error "Unsupported Omnivox control response version"))
+  (let* ((identifier (plist-get response :request_id))
+         (pending (omnivox--pending-requests process))
+         (callback (and (integerp identifier) (gethash identifier pending))))
+    (when (integerp identifier)
+      (remhash identifier pending))
+    (cond
+     (callback (funcall callback process response))
+     ((equal (plist-get response :type) "error")
+      (omnivox--record-control-error process response)))))
+
+(defun omnivox--handle-control-line (process line)
+  "Handle an Omnivox control event LINE from PROCESS.
+Return non-nil when LINE is a control event, including a malformed one."
+  (when (string-prefix-p omnivox-control-event-prefix line)
+    (condition-case error-data
+        (omnivox--dispatch-control-response
+         process
+         (omnivox--decode-control-response
+          (substring line (length omnivox-control-event-prefix))))
+      (error
+       (setq omnivox-control-last-error
+             (list :process process :error error-data :time (current-time)))
+       (message "Invalid Omnivox control event: %s"
+                (error-message-string error-data))))
+    t))
+
+(defun omnivox--forward-process-output (process output)
+  "Forward ordinary PROCESS OUTPUT to the filter wrapped by Omnivox."
+  (when-let* ((filter
+               (process-get
+                process omnivox--control-original-filter-property)))
+    (unless (eq filter #'omnivox--control-process-filter)
+      (funcall filter process output))))
+
+(defun omnivox--control-process-filter (process output)
+  "Extract Omnivox control events from PROCESS OUTPUT."
+  (let ((pending
+         (concat
+          (or (process-get process omnivox--control-fragment-property) "")
+          output))
+        line-end)
+    (while (setq line-end (string-search "\n" pending))
+      (let ((line (string-trim-right (substring pending 0 line-end) "\r")))
+        (unless (omnivox--handle-control-line process line)
+          (omnivox--forward-process-output process (concat line "\n"))))
+      (setq pending (substring pending (1+ line-end))))
+    (process-put process omnivox--control-fragment-property pending)))
+
+(defun omnivox--install-control-filter (process)
+  "Install bounded control-event filtering on Omnivox PROCESS once."
+  (unless (process-get process omnivox--control-filter-installed-property)
+    (process-put process omnivox--control-filter-installed-property t)
+    (process-put
+     process omnivox--control-original-filter-property (process-filter process))
+    (process-put process omnivox--control-fragment-property "")
+    (set-process-filter process #'omnivox--control-process-filter)))
+
+(defun omnivox--handle-inventory-response (process response)
+  "Store an inventory RESPONSE received from PROCESS."
+  (if (equal (plist-get response :type) "inventory")
+      (progn
+        (process-put process omnivox--control-inventory-property response)
+        (when (eq process tts-speaker-process)
+          (setq omnivox-engine-inventory response)))
+    (omnivox--record-control-error process response)))
+
+(defun omnivox--handle-capabilities-response (process response)
+  "Store capability RESPONSE from PROCESS and request its inventory."
+  (if (not (equal (plist-get response :type) "capabilities"))
+      (omnivox--record-control-error process response)
+    (process-put process omnivox--control-capabilities-property response)
+    (when (eq process tts-speaker-process)
+      (setq omnivox-control-capabilities response))
+    (when (member "engine_inventory" (plist-get response :features))
+      (omnivox--send-control-request
+       process '(:type "inventory") #'omnivox--handle-inventory-response))))
+
+(defun omnivox--negotiate-process (process)
+  "Start capability negotiation for one live Omnivox PROCESS."
+  (when (and (process-live-p process)
+             (not (process-get process omnivox--control-negotiated-property)))
+    (process-put process omnivox--control-negotiated-property t)
+    (omnivox--install-control-filter process)
+    (condition-case error-data
+        (omnivox--send-control-request
+         process '(:type "capabilities")
+         #'omnivox--handle-capabilities-response)
+      (error
+       (setq omnivox-control-last-error
+             (list :process process :error error-data :time (current-time)))
+       (message "Could not negotiate Omnivox control protocol: %s"
+                (error-message-string error-data))))))
+
+(defun omnivox--negotiate-processes ()
+  "Negotiate capabilities on all distinct live Omnivox processes."
+  (dolist (process (delete-dups (list tts-speaker-process tts-notify-process)))
+    (when (process-live-p process)
+      (omnivox--negotiate-process process))))
 
 (defun omnivox--server-program ()
   "Return the Omnivox server program used for discovery, or nil."
@@ -237,6 +448,7 @@ Return the number of distinct processes that received the command."
   (tts-unicode-update-untouched-charsets
    '(ascii latin-iso8859-1 latin-iso8859-15 latin-iso8859-9
            eight-bit-graphic))
+  (omnivox--negotiate-processes)
   (unless (string-empty-p omnivox-default-voice-id)
     (omnivox--send-state-command
      (format "tts_set_voice %s" omnivox-default-voice-id))))
