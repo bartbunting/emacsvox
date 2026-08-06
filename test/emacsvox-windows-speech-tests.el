@@ -546,6 +546,44 @@ Return the server's standard output."
         (buffer-string)
         "latest 日本|ordinary barrier\n")))))
 
+(ert-deftest emacsvox-windows-speech-retries-failed-frame-generation ()
+  "A failed framed payload does not make its generation unretryable."
+  (let* ((common
+          (expand-file-name
+           "windows-speech-common.tcl"
+           emacsvox-servers-directory))
+         (payload
+          (base64-encode-string
+           (encode-coding-string
+            "incr ::attempts\nmaybe_fail\nset ::completed 1\n"
+            'utf-8 t)
+           t)))
+    (with-temp-buffer
+      (insert
+       (format
+        (concat
+         "source {%s}\n"
+         "rename windows_speech_input_pending "
+         "windows_speech_input_pending_original\n"
+         "proc windows_speech_input_pending args {return 0}\n"
+         "set attempts 0\n"
+         "set completed 0\n"
+         "proc maybe_fail {} {\n"
+         "  if {$::attempts == 1} {error {first attempt failed}}\n"
+         "}\n"
+         "set first [catch {emacsvox_tx 7 {%s}}]\n"
+         "set committed_after_failure "
+         "[info exists windows_speech_transaction(latest)]\n"
+         "set second [catch {emacsvox_tx 7 {%s}}]\n"
+         "puts [list $first $committed_after_failure $second "
+         "$attempts $completed $windows_speech_transaction(latest)]\n")
+        common payload payload))
+      (should
+       (zerop
+        (call-process-region
+         (point-min) (point-max) "tclsh" t t nil)))
+      (should (equal (buffer-string) "1 0 0 2 1 7\n")))))
+
 (ert-deftest emacsvox-windows-eloquence-batches-native-synthesis ()
   "Eloquence should synthesize once per cue-delimited speech segment."
   (should

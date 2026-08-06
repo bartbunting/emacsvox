@@ -157,13 +157,13 @@ proc windows_speech_transaction_fields {line} {
 
 proc windows_speech_evaluate_transaction {generation payload} {
     global windows_speech_transaction
-    set windows_speech_transaction(latest) $generation
     set script [encoding convertfrom utf-8 [binary decode base64 $payload]]
     foreach command [split $script "\n"] {
         if {$command ne ""} {
             uplevel #0 $command
         }
     }
+    set windows_speech_transaction(latest) $generation
     return ""
 }
 
