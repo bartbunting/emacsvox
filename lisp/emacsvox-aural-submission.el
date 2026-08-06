@@ -155,10 +155,15 @@ PHASE is `before' by default and may alternatively be `after'."
          (context (copy-tree emacsvox-aural-submission-context))
          (source (copy-sequence content))
          (object-id (list 'submission id)))
-    (add-text-properties
-     0 (length source)
-     (list emacsvox-aural-object-property object-id)
-     source)
+    ;; Preserve an explicit object model supplied by a native caller.  In its
+    ;; absence, keep the established whole-submission object boundary.
+    (unless
+        (text-property-not-all
+         0 (length source) emacsvox-aural-object-property nil source)
+      (add-text-properties
+       0 (length source)
+       (list emacsvox-aural-object-property object-id)
+       source))
     (let* ((prepared
             (emacsvox-aural-prepare-text
              source facts context

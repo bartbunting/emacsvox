@@ -907,6 +907,75 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           '(compatibility-item-1-legacy-cue
             compatibility-button-2-legacy-cue)))))))
 
+(ert-deftest emacsvox-aural-submission-preserves-explicit-object-boundaries ()
+  "A native multi-object submission keeps caller-supplied object identity."
+  (emacsvox-test--with-transport-scheme
+    (let* ((emacsvox-aural--submission-sequence 0)
+           (context
+            '(:module dired
+              :mode dired-mode
+              :mode-lineage (dired-mode special-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled t
+              :icons-enabled t))
+           (content
+            (concat
+             (propertize
+              "A"
+              emacsvox-aural-object-property 'action
+              emacsvox-aural-facts-property
+              '(:level 1)
+              emacsvox-aural-occasion-property 'state-change)
+             (propertize
+              "B"
+              emacsvox-aural-object-property 'destination
+              emacsvox-aural-facts-property
+              '(:level 2)
+              emacsvox-aural-occasion-property 'navigation)))
+           submission)
+      (cl-letf (((symbol-function 'tts-speak) #'ignore))
+        (setq
+         submission
+         (emacsvox-aural-submit
+          content
+          :facts '(:role heading)
+          :context context
+          :compatibility-actions
+          (list (emacsvox-aural-compatibility-icon 'mark-object)))))
+      (let ((plans (emacsvox-aural-submission-plans submission)))
+        (should (= (length plans) 2))
+        (should
+         (equal
+          (mapcar #'emacsvox-aural-concrete-plan-object-id plans)
+          '(action destination)))
+        (should
+         (equal
+          (mapcar
+           (lambda (plan)
+             (plist-get
+              (emacsvox-aural-concrete-plan-context plan) :occasion))
+           plans)
+          '(state-change navigation)))
+        (should
+         (equal
+          (mapcar
+           (lambda (plan)
+             (plist-get (emacsvox-aural-concrete-plan-facts plan) :level))
+           plans)
+          '(1 2)))
+        (should
+         (equal
+          (mapcar
+           #'emacsvox-aural-concrete-action-cue
+           (emacsvox-aural-concrete-plan-before (car plans)))
+          '(mark-object)))
+        (should-not
+         (cl-find
+          'mark-object
+          (emacsvox-aural-concrete-plan-before (cadr plans))
+          :key #'emacsvox-aural-concrete-action-cue))))))
+
 (ert-deftest emacsvox-aural-submission-records-one-exact-history-transaction ()
   "Clause and formatting runs remain exact inside one history transaction."
   (emacsvox-test--with-transport-scheme
