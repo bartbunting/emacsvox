@@ -189,22 +189,13 @@ and auditory icons are preserved."
              (max 0 (1- (length result)))))
            (position
             (and
+             (<= 0 source-offset)
+             (< source-offset source-length)
              (> (length result) 0)
-             (if (eq (get-text-property expected 'auditory-icon result) icon)
-                 expected
-               (let ((cursor 0)
-                     found)
-                 (while (and (< cursor (length result)) (null found))
-                   (when
-                       (eq
-                        (get-text-property cursor 'auditory-icon result)
-                        icon)
-                     (setq found cursor))
-                   (setq
-                    cursor
-                    (next-single-property-change
-                     cursor 'auditory-icon result (length result))))
-                 found)))))
+             (eq
+              (get-text-property expected 'auditory-icon result)
+              icon)
+             expected)))
       (when position
         (let ((start
                (or

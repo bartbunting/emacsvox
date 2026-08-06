@@ -138,21 +138,14 @@ SOURCE-LENGTH is the length of the source line before spoken prefixes."
              (max 0 (+ prefix-length source-offset))
              (max 0 (1- (length result)))))
            (position
-            (if (eq (get-text-property expected 'auditory-icon result) icon)
-                expected
-              (let ((cursor 0)
-                    found)
-                (while (and (< cursor (length result)) (null found))
-                  (when
-                      (eq
-                       (get-text-property cursor 'auditory-icon result)
-                       icon)
-                    (setq found cursor))
-                  (setq
-                   cursor
-                   (next-single-property-change
-                    cursor 'auditory-icon result (length result))))
-                found))))
+            (and
+             (<= 0 source-offset)
+             (< source-offset source-length)
+             (< expected (length result))
+             (eq
+              (get-text-property expected 'auditory-icon result)
+              icon)
+             expected)))
       (when position
         (let ((start
                (or

@@ -1290,6 +1290,39 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural-compatibility-action-value (car actions))
           'item))))))
 
+(ert-deftest emacsvox-speak-line-preserves-distinct-same-valued-icon ()
+  "An excluded newline cue cannot remove a same-valued icon from line text."
+  (with-temp-buffer
+    (insert
+     (propertize "a" 'auditory-icon 'item)
+     "bc"
+     (propertize "\n" 'auditory-icon 'item))
+    (goto-char (point-min))
+    (goto-char (line-end-position))
+    (let ((emacsvox-show-point nil)
+          (emacsvox-audio-indentation nil)
+          (emacsvox-aural-submission-context nil)
+          (tts-punctuation-mode 'all)
+          submission)
+      (cl-letf
+          (((symbol-function 'tts-stop) #'ignore)
+           ((symbol-function 'emacsvox-icon) #'ignore)
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest arguments)
+              (setq submission (cons content arguments)))))
+        (emacsvox-speak-line))
+      (pcase-let* ((`(,content . ,arguments) submission)
+                   (actions
+                    (plist-get arguments :compatibility-actions)))
+        (should (equal content "abc"))
+        (should
+         (eq (get-text-property 0 'auditory-icon content) 'item))
+        (should (= (length actions) 1))
+        (should
+         (eq
+          (emacsvox-aural-compatibility-action-value (car actions))
+          'item))))))
+
 (ert-deftest emacsvox-speak-line-replaces-one-complete-navigation-packet ()
   "Rapid physical movement keeps one stop and one complete packet per line."
   (emacsvox-test--with-transport-scheme
