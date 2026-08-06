@@ -49,7 +49,7 @@
     (emacsvox-aural--pending-delivery
      (:constructor emacsvox-aural--make-pending-delivery))
   "One replaceable delivery waiting for an input-idle boundary."
-  sequence owner replacement-key entries effects timer)
+  sequence owner replacement-key entries effects timer transaction-id)
 
 (defcustom emacsvox-aural-replacement-idle-delay 0.025
   "Seconds of input idle before sending a replaceable presentation.
@@ -137,8 +137,51 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
           (format "emacsvox_tx %d {%s}\n" generation encoded))))
     entries))
 
+(defun emacsvox-aural--delivery-process-name (process)
+  "Return a diagnostic name for PROCESS without requiring a live process."
+  (if (processp process)
+      (process-name process)
+    (format "%s" process)))
+
+(defun emacsvox-aural--record-delivery-failure
+    (reason process owner generation transaction-id &optional error-data)
+  "Record one delivery failure for PROCESS and return nil.
+
+REASON identifies the failure category.  OWNER, GENERATION and TRANSACTION-ID
+identify the logical delivery.  ERROR-DATA is the caught Lisp condition, when
+one was signalled."
+  (let ((failure
+         (list
+          :time (current-time)
+          :reason reason
+          :process-name (emacsvox-aural--delivery-process-name process)
+          :owner-name
+          (and owner (emacsvox-aural--delivery-process-name owner))
+          :process-generation
+          (and
+           (processp process)
+           (process-get process 'tts--speech-process-generation))
+          :generation generation
+          :transaction-id transaction-id
+          :condition (car-safe error-data)
+          :error-message
+          (and error-data (error-message-string error-data)))))
+    (setq emacsvox-aural-last-delivery-failure failure)
+    (condition-case hook-error
+        (run-hook-with-args
+         'emacsvox-aural-delivery-failed-hook failure)
+      (error
+       (message
+        "Emacsvox delivery failure hook failed: %s"
+        (error-message-string hook-error))))
+    (message
+     "Emacsvox discarded speech delivery to %s: %s"
+     (plist-get failure :process-name)
+     (or (plist-get failure :error-message) reason))
+    nil))
+
 (defun emacsvox-aural--send-delivery-entries
-    (entries &optional owner generation)
+    (entries &optional owner generation transaction-id)
   "Send ordered delivery ENTRIES, combining adjacent writes per process.
 
 Return non-nil when every entry was sent to a live process."
@@ -151,28 +194,24 @@ Return non-nil when every entry was sent to a live process."
     (cl-labels
         ((flush
           ()
-          (when current-process
+          (when (and sent current-process)
             (if
                 (and
                  (processp current-process)
                  (not (process-live-p current-process)))
-                (let ((failure
-                       (list
-                        :time (current-time)
-                        :reason 'process-not-live
-                        :process-name (process-name current-process)
-                        :owner-name
-                        (and (processp owner) (process-name owner))
-                        :generation generation)))
-                  (setq emacsvox-aural-last-delivery-failure failure)
+                (progn
                   (setq sent nil)
-                  (run-hook-with-args
-                   'emacsvox-aural-delivery-failed-hook failure)
-                  (message
-                   "Emacsvox discarded speech delivery: process %s is not live"
-                   (process-name current-process)))
-              (process-send-string
-               current-process (apply #'concat (nreverse commands)))))
+                  (emacsvox-aural--record-delivery-failure
+                   'process-not-live current-process owner generation
+                   transaction-id))
+              (condition-case error-data
+                  (process-send-string
+                   current-process (apply #'concat (nreverse commands)))
+                (error
+                 (setq sent nil)
+                 (emacsvox-aural--record-delivery-failure
+                  'process-send-error current-process owner generation
+                  transaction-id error-data)))))
           (setq current-process nil commands nil)))
       (dolist (entry entries)
         (let ((process (emacsvox-aural--delivery-entry-process entry))
@@ -210,7 +249,8 @@ Return non-nil when every entry was sent to a live process."
         (emacsvox-aural--send-delivery-entries
          (emacsvox-aural--pending-delivery-entries pending)
          (emacsvox-aural--pending-delivery-owner pending)
-         (emacsvox-aural--pending-delivery-sequence pending))
+         (emacsvox-aural--pending-delivery-sequence pending)
+         (emacsvox-aural--pending-delivery-transaction-id pending))
       (emacsvox-aural--commit-delivery-effects
        (emacsvox-aural--pending-delivery-effects pending)))))
 
@@ -276,7 +316,8 @@ Return non-nil when every entry was sent to a live process."
            :owner owner
            :replacement-key replacement-key
            :entries entries
-           :effects effects)))
+           :effects effects
+           :transaction-id emacsvox-aural--history-transaction-id)))
     (puthash table-key pending emacsvox-aural--pending-deliveries)
     (setf
      (emacsvox-aural--pending-delivery-timer pending)
@@ -299,11 +340,15 @@ Return non-nil when every entry was sent to a live process."
        (emacsvox-aural-cancel-pending-deliveries owner)
        (when emacsvox-aural-submission-controls-interruption
          (tts--interrupt-process owner t))
-       (when (emacsvox-aural--send-delivery-entries entries)
+       (when
+           (emacsvox-aural--send-delivery-entries
+            entries owner nil emacsvox-aural--history-transaction-id)
          (emacsvox-aural--commit-delivery-effects effects)))
       (_
        (emacsvox-aural-flush-pending-deliveries owner)
-       (when (emacsvox-aural--send-delivery-entries entries)
+       (when
+           (emacsvox-aural--send-delivery-entries
+            entries owner nil emacsvox-aural--history-transaction-id)
          (emacsvox-aural--commit-delivery-effects effects))))))
 
 (defun emacsvox-aural-call-with-delivery-transaction

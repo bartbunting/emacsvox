@@ -420,6 +420,84 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (plist-get observed :process-name)
       "emacsvox-dead-delivery-test"))))
 
+(ert-deftest emacsvox-aural-delivery-contains-process-send-failure ()
+  "A write race fails one transaction once without committing its effects."
+  (let ((first
+         (make-pipe-process
+          :name "emacsvox-send-failure-owner" :buffer nil :noquery t))
+        (second
+         (make-pipe-process
+          :name "emacsvox-send-failure-second" :buffer nil :noquery t))
+        (emacsvox-aural-last-delivery-failure nil)
+        (emacsvox-aural-submission-delivery-policy 'replaceable)
+        (emacsvox-aural-submission-replacement-key 'navigation)
+        (emacsvox-aural-submission-controls-interruption nil)
+        (emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0)
+        failures
+        writes
+        effect-committed)
+    (unwind-protect
+        (progn
+          (process-put first 'tts--speech-process-generation 12)
+          (let ((emacsvox-aural-delivery-failed-hook
+                 (list (lambda (failure) (push failure failures)))))
+            (cl-letf
+                (((symbol-function 'run-with-idle-timer)
+                  (lambda (&rest _arguments) 'timer))
+                 ((symbol-function 'cancel-timer) #'ignore))
+              (let ((emacsvox-aural--history-transaction-id 81))
+                (emacsvox-aural-call-with-delivery-transaction
+                 first
+                 (lambda ()
+                   (emacsvox-aural-delivery-send first "first")
+                   (emacsvox-aural-delivery-send second "second")
+                   (emacsvox-aural--defer-delivery-effect
+                    (lambda () (setq effect-committed t))))))
+              (should
+               (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+              (cl-letf
+                  (((symbol-function 'process-send-string)
+                    (lambda (process _command)
+                      (push process writes)
+                      (error "simulated write failure"))))
+                ;; The source transaction's dynamic bindings are gone here.
+                (emacsvox-aural-flush-pending-deliveries first))))
+          (should (equal writes (list first)))
+          (should-not
+           (> (hash-table-count emacsvox-aural--pending-deliveries) 0))
+          (should-not effect-committed)
+          (should (= (length failures) 1))
+          (should
+           (eq
+            (car failures)
+            emacsvox-aural-last-delivery-failure))
+          (should
+           (eq
+            (plist-get emacsvox-aural-last-delivery-failure :reason)
+            'process-send-error))
+          (should
+           (eq
+            (plist-get emacsvox-aural-last-delivery-failure :condition)
+            'error))
+          (should
+           (=
+            (plist-get
+             emacsvox-aural-last-delivery-failure :process-generation)
+            12))
+          (should
+           (=
+            (plist-get
+             emacsvox-aural-last-delivery-failure :transaction-id)
+            81))
+          (should
+           (=
+            (plist-get emacsvox-aural-last-delivery-failure :generation)
+            1)))
+      (delete-process first)
+      (delete-process second))))
+
 (ert-deftest emacsvox-aural-history-rejects-failed-immediate-delivery ()
   "Ordered and urgent history is retained only after a successful write."
   (dolist (policy '(ordered urgent))
