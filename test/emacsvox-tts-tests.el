@@ -308,7 +308,8 @@
                :supported_protocol_versions [1]
                :features ["control_v1" "emacsvox_tx" "engine_inventory"
                           "logical_voice_registration"
-                          "preferred_engine"]))))
+                          "preferred_engine"
+                          "tracked_playback_completion"]))))
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
                  (identifier (plist-get request :request_id)))
             (should (equal (plist-get request :type) "inventory"))
@@ -341,6 +342,9 @@
           (should
            (process-get
             process emacsvox-aural--framed-delivery-process-property))
+          (should
+           (process-get
+            process tts--tracked-playback-completion-property))
           (should (= (plist-get omnivox-engine-inventory
                                 :inventory_generation)
                      3))
@@ -373,7 +377,10 @@
              :features ("legacy_commands")))
           (should-not
            (process-get
-            process emacsvox-aural--framed-delivery-process-property)))
+            process emacsvox-aural--framed-delivery-process-property))
+          (should-not
+           (process-get
+            process tts--tracked-playback-completion-property)))
       (delete-process process))))
 
 (ert-deftest emacsvox-tts-omnivox-preserves-structured-voice-selectors ()
@@ -645,6 +652,26 @@
    (tts-tracked-playback-completion-p
     "/tmp/emacsvox/servers/windows-outloud"))
   (should-not (tts-tracked-playback-completion-p "windows-dtk")))
+
+(ert-deftest emacsvox-tts-recognizes-negotiated-omnivox-tracking ()
+  "Omnivox tracking is enabled per process only after negotiation."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-tracking-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-program "/tmp/emacsvox/servers/omnivox"))
+    (unwind-protect
+        (progn
+          (should-not (tts-tracked-playback-completion-p))
+          (process-put
+           process tts--tracked-playback-completion-property t)
+          (should (tts-tracked-playback-completion-p))
+          (should
+           (tts-tracked-playback-completion-p
+            "/tmp/emacsvox/servers/omnivox"))
+          (should-not
+           (tts-tracked-playback-completion-p "windows-dtk")))
+      (delete-process process))))
 
 (ert-deftest emacsvox-tts-tracked-filter-handles-fragments-and-forwards-output ()
   "Tracked process output tolerates fragments and preserves other output."

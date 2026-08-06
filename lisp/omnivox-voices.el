@@ -527,6 +527,12 @@ Return the number of processes sent the atomic registry replacement."
   (if (not (equal (plist-get response :type) "capabilities"))
       (omnivox--record-control-error process response)
     (process-put process omnivox--control-capabilities-property response)
+    (process-put
+     process tts--tracked-playback-completion-property
+     (and
+      (member "tracked_playback_completion"
+              (plist-get response :features))
+      t))
     (when (member "emacsvox_tx" (plist-get response :features))
       (emacsvox-aural-enable-framed-delivery process))
     (when (eq process tts-speaker-process)

@@ -152,6 +152,10 @@ Entries are executable basenames.  A server belongs here only when it emits a
 tracked `completed' record after its synthesis and audio queues are empty, and
 a `cancelled' record when pending input interrupts that wait.")
 
+(defconst tts--tracked-playback-completion-property
+  'tts--tracked-playback-completion
+  "Process property recording negotiated tracked playback support.")
+
 (defvar tts--tracked-dispatch-sequence 0
   "Sequence used to identify tracked speech dispatches.")
 
@@ -193,9 +197,16 @@ a `cancelled' record when pending input interrupts that wait.")
   "Return non-nil when speech-server PROGRAM reports playback completion.
 PROGRAM defaults to `tts-program'.  The result describes the server protocol,
 not proof that audio reached a physical output device."
-  (member
-   (file-name-nondirectory (or program tts-program ""))
-   tts--tracked-playback-completion-programs))
+  (let ((basename (file-name-nondirectory (or program tts-program ""))))
+    (or
+     (member basename tts--tracked-playback-completion-programs)
+     (and
+      (process-live-p tts-speaker-process)
+      (process-get
+       tts-speaker-process tts--tracked-playback-completion-property)
+      (equal
+       basename
+       (file-name-nondirectory (or tts-program "")))))))
 
 (defun tts--require-tracked-playback-completion ()
   "Signal a clear error unless the active server supports tracked playback."
