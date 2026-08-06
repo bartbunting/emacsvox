@@ -62,6 +62,7 @@
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-tools)
 (require 'emacsvox-aural-home)
+(require 'emacsvox-aural-voice-workbench)
 (require 'emacsvox-aural-editor)
 (require 'emacsvox-aural-simple-editor)
 (require 'emacsvox-aural-sound-packs)

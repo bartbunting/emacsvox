@@ -42,6 +42,10 @@
                   "emacsvox-aural-voice-palettes" (&optional palette))
 (declare-function emacsvox-aural-voice-palettes-status
                   "emacsvox-aural-voice-palettes" ())
+(declare-function emacsvox-aural-voice-workbench
+                  "emacsvox-aural-voice-workbench" (&optional view))
+(declare-function emacsvox-aural-voice-workbench-status
+                  "emacsvox-aural-voice-workbench" ())
 (declare-function emacsvox-speak-help "emacsvox-speak" ())
 (declare-function tts-speak "tts-speak" (text))
 
@@ -122,6 +126,11 @@
   (require 'emacsvox-aural-voice-palettes)
   (emacsvox-aural-voice-palettes-status))
 
+(defun emacsvox-aural-home--voice-workbench-status ()
+  "Return concise cross-synth Voice Workbench status."
+  (require 'emacsvox-aural-voice-workbench)
+  (emacsvox-aural-voice-workbench-status))
+
 (defun emacsvox-aural-home--spatial-status ()
   "Return concise status for portable spatial presentation."
   (if emacsvox-aural-spatial-enabled
@@ -198,6 +207,12 @@
        "Voice palettes"
        (emacsvox-aural-home--voice-palette-status)
        "Browse, create, edit, preview, explain, validate, and activate named voices"))
+     (list
+      'voice-workbench
+      (vector
+       "Voice Workbench"
+       (emacsvox-aural-home--voice-workbench-status)
+       "Browse logical voices, installed physical voices, engines, routes, styles, and effects"))
      (list
       'features
       (vector
@@ -361,6 +376,12 @@
   (require 'emacsvox-aural-voice-palettes)
   (emacsvox-aural-list-voice-palettes))
 
+(defun emacsvox-aural-home-voice-workbench ()
+  "Open cross-synth voice routing and style management."
+  (interactive)
+  (require 'emacsvox-aural-voice-workbench)
+  (emacsvox-aural-voice-workbench))
+
 (defun emacsvox-aural-home-toggle-face-presentation ()
   "Toggle explicit face scheme rules and speak the refreshed home row."
   (interactive)
@@ -396,6 +417,7 @@
     ('profiles (emacsvox-aural-home-profiles))
     ('schemes (emacsvox-aural-list-schemes))
     ('voices (emacsvox-aural-home-voice-palettes))
+    ('voice-workbench (emacsvox-aural-home-voice-workbench))
     ('features (emacsvox-aural-list-feature-fragments))
     ('face-presentation
      (emacsvox-aural-home-toggle-face-presentation))
@@ -444,6 +466,7 @@
       "H recent feedback\n"
       "P presentation profiles\n"
       "V voice palettes     v face rules toggle\n"
+      "W voice workbench\n"
       "l legacy compatibility voices toggle\n"
       "D aural doctor\n"
       "g refresh\n"
@@ -486,6 +509,7 @@
        ("H" . emacsvox-aural-home-recent-feedback)
        ("P" . emacsvox-aural-home-profiles)
        ("V" . emacsvox-aural-home-voice-palettes)
+       ("W" . emacsvox-aural-home-voice-workbench)
        ("v" . emacsvox-aural-home-toggle-face-presentation)
        ("l" . emacsvox-aural-home-toggle-compatibility-voice)
        ("D" . emacsvox-aural-doctor)

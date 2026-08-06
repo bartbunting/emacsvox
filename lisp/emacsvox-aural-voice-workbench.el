@@ -1,0 +1,747 @@
+;;; emacsvox-aural-voice-workbench.el --- Spoken voice routing UI -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026 Emacsvox Contributors
+
+;; This file is not part of GNU Emacs, but the same permissions apply.
+
+;;; Commentary:
+
+;; A single accessible workbench presents logical voices, physical inventory,
+;; engines, and portable style/effect information.  Editing and transactional
+;; preview are layered onto this shell by later implementation slices.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'subr-x)
+(require 'tabulated-list)
+(require 'tts-speak)
+(require 'emacsvox-aural-resources)
+(require 'emacsvox-aural-schemes)
+(require 'emacsvox-aural-routing-profiles)
+(require 'emacsvox-aural-ui)
+(require 'emacsvox-aural-inspection)
+
+(declare-function emacsvox-aural "emacsvox-aural-home"
+                  (&optional source-buffer))
+(declare-function emacsvox-speak-help "emacsvox-speak" ())
+(declare-function tts-speak "tts-speak" (text))
+
+(defconst emacsvox-aural-voice-workbench--views
+  '((logical . "Logical voices")
+    (physical . "Physical voices")
+    (engines . "Engines")
+    (styles . "Styles and effects"))
+  "Workbench view identifiers and spoken titles.")
+
+(defvar-local emacsvox-aural-voice-workbench-view 'logical
+  "View displayed by the current Voice Workbench.")
+
+(defvar-local emacsvox-aural-voice-workbench-inventory nil
+  "Normalized speech-adapter inventory displayed by this workbench.")
+
+(defvar-local emacsvox-aural-voice-workbench-committed-profile nil
+  "Routing-profile snapshot committed when this workbench opened.")
+
+(defvar-local emacsvox-aural-voice-workbench-staged-profile nil
+  "Mutable routing-profile snapshot staged in this workbench.")
+
+(defvar-local emacsvox-aural-voice-workbench-selections nil
+  "Hash table retaining the selected row in each workbench view.")
+
+(defvar-local emacsvox-aural-voice-workbench-filter nil
+  "Physical-voice filter plist for this workbench.")
+
+(defun emacsvox-aural-voice-workbench--active-palette ()
+  "Return the currently effective portable voice palette."
+  (or
+   emacsvox-aural-voice-palette-override
+   (emacsvox-aural-effective-scheme-provider 'voice-palette)
+   'acss-default))
+
+(defun emacsvox-aural-voice-workbench--current-profile-data ()
+  "Return a safe routing snapshot for a newly opened workbench."
+  (if-let* ((entry
+             (emacsvox-aural-routing-profile
+              emacsvox-aural-active-routing-profile)))
+      (copy-tree (emacsvox-aural-routing-profile-entry-data entry))
+    (emacsvox-aural-routing-profile-from-omnivox
+     'current-runtime "Current unsaved adapter routing")))
+
+(defun emacsvox-aural-voice-workbench--dirty-p ()
+  "Return non-nil when staged routing differs from committed routing."
+  (not
+   (equal emacsvox-aural-voice-workbench-staged-profile
+          emacsvox-aural-voice-workbench-committed-profile)))
+
+(defun emacsvox-aural-voice-workbench--inventory-counts ()
+  "Return the engine and physical voice counts in the current inventory."
+  (let ((engines
+         (plist-get emacsvox-aural-voice-workbench-inventory :engines))
+        (voices 0))
+    (dolist (engine engines)
+      (cl-incf voices (length (plist-get engine :voices))))
+    (cons (length engines) voices)))
+
+(defun emacsvox-aural-voice-workbench--age-description ()
+  "Return concise inventory age text."
+  (if-let* ((age
+             (plist-get
+              emacsvox-aural-voice-workbench-inventory :age-seconds)))
+      (cond
+       ((< age 1) "now")
+       ((< age 60) (format "%d seconds" (floor age)))
+       ((< age 3600) (format "%d minutes" (floor (/ age 60))))
+       (t (format "%d hours" (floor (/ age 3600)))))
+    "not timed"))
+
+(defun emacsvox-aural-voice-workbench--filter-description ()
+  "Return concise physical filter text."
+  (let (parts)
+    (cl-loop
+     for (key value) on emacsvox-aural-voice-workbench-filter by #'cddr
+     when value
+     do (push (format "%s=%s" (substring (symbol-name key) 1) value) parts))
+    (if parts (mapconcat #'identity (nreverse parts) ",") "none")))
+
+(defun emacsvox-aural-voice-workbench--header ()
+  "Return the non-speaking status header for the current workbench."
+  (let* ((inventory emacsvox-aural-voice-workbench-inventory)
+         (counts (emacsvox-aural-voice-workbench--inventory-counts))
+         (generation (plist-get inventory :generation))
+         (profile (or (plist-get
+                       emacsvox-aural-voice-workbench-staged-profile :id)
+                      "none")))
+    (format
+     (concat
+      " %s | adapter %s | inventory %s%s, generation %s, age %s | "
+      "%d engines, %d voices | processes %s | routing %s, %s | filter %s ")
+     (alist-get emacsvox-aural-voice-workbench-view
+                emacsvox-aural-voice-workbench--views)
+     (or (plist-get inventory :adapter) "unknown")
+     (or (plist-get inventory :source) "unknown")
+     (if (plist-get inventory :stale) " stale" "")
+     (or generation "none")
+     (emacsvox-aural-voice-workbench--age-description)
+     (car counts) (cdr counts)
+     (or (plist-get inventory :process-agreement) "unknown")
+     profile
+     (if (emacsvox-aural-voice-workbench--dirty-p) "staged" "committed")
+     (emacsvox-aural-voice-workbench--filter-description))))
+
+(defun emacsvox-aural-voice-workbench-status ()
+  "Return concise Voice Workbench status for Aural Home."
+  (let* ((inventory (tts-voice-inventory))
+         (engines (plist-get inventory :engines))
+         (voices
+          (cl-loop for engine in engines
+                   sum (length (plist-get engine :voices)))))
+    (format
+     "%s; %s%s; %d engine%s, %d voice%s; routing %s"
+     (or (plist-get inventory :adapter) "unknown adapter")
+     (or (plist-get inventory :source) "unknown inventory")
+     (if (plist-get inventory :stale) " stale" "")
+     (length engines) (if (= (length engines) 1) "" "s")
+     voices (if (= voices 1) "" "s")
+     (or emacsvox-aural-active-routing-profile "runtime"))))
+
+(defun emacsvox-aural-voice-workbench--profile-binding (logical-voice)
+  "Return staged routing binding for LOGICAL-VOICE."
+  (let ((name (format "%s" logical-voice)))
+    (cl-find-if
+     (lambda (binding)
+       (equal name (format "%s" (plist-get binding :logical-voice))))
+     (plist-get emacsvox-aural-voice-workbench-staged-profile :bindings))))
+
+(defun emacsvox-aural-voice-workbench--selectors (logical-voice)
+  "Return staged effective selectors for LOGICAL-VOICE."
+  (emacsvox-aural-routing-selectors-from-data
+   logical-voice emacsvox-aural-voice-workbench-staged-profile t))
+
+(defun emacsvox-aural-voice-workbench--logical-voices ()
+  "Return stable logical voice names visible in the current workbench."
+  (let ((table (make-hash-table :test #'equal))
+        (palette (emacsvox-aural-voice-workbench--active-palette)))
+    (dolist
+        (binding
+         (plist-get emacsvox-aural-voice-workbench-staged-profile :bindings))
+      (puthash (format "%s" (plist-get binding :logical-voice)) t table))
+    (dolist (binding emacsvox-aural-session-routing-bindings)
+      (puthash (format "%s" (car binding)) t table))
+    (when (emacsvox-aural-voice-palette palette)
+      (dolist (entry (emacsvox-aural-effective-voice-entries palette))
+        (puthash
+         (format "%s" (if (symbolp (cdr entry)) (cdr entry) (car entry)))
+         t table)))
+    (let (names)
+      (maphash (lambda (name _) (push name names)) table)
+      (sort names #'string-lessp))))
+
+(defun emacsvox-aural-voice-workbench--selector-description (selector)
+  "Return concise display text for routing SELECTOR."
+  (pcase (plist-get selector :kind)
+    ('exact
+     (format "%s/%s [%s]"
+             (plist-get selector :engine-id)
+             (plist-get selector :voice-id)
+             (plist-get selector :scope)))
+    ('engine-default
+     (format "%s default [%s]"
+             (plist-get selector :engine-id)
+             (plist-get selector :scope)))
+    ('properties
+     (let (traits)
+       (dolist (property '(:engine-id :language :gender))
+         (when-let* ((value (plist-get selector property)))
+           (push (format "%s" value) traits)))
+       (format "%s properties [%s]"
+               (if traits (mapconcat #'identity (nreverse traits) "/") "any")
+               (plist-get selector :scope))))
+    (_ "invalid selector")))
+
+(defun emacsvox-aural-voice-workbench--route-description (logical-voice)
+  "Return concise staged route text for LOGICAL-VOICE."
+  (if-let* ((selectors
+             (emacsvox-aural-voice-workbench--selectors logical-voice)))
+      (mapconcat
+       #'emacsvox-aural-voice-workbench--selector-description selectors " then ")
+    "adapter default"))
+
+(defun emacsvox-aural-voice-workbench--scope-description (logical-voice)
+  "Return distinct selector scopes for LOGICAL-VOICE."
+  (let ((scopes
+         (delete-dups
+          (mapcar
+           (lambda (selector) (plist-get selector :scope))
+           (emacsvox-aural-voice-workbench--selectors logical-voice)))))
+    (if scopes (mapconcat #'symbol-name scopes ", ") "inherited")))
+
+(defun emacsvox-aural-voice-workbench--palette-entry (logical-voice)
+  "Return palette entry associated with LOGICAL-VOICE."
+  (let ((name (format "%s" logical-voice))
+        (palette (emacsvox-aural-voice-workbench--active-palette)))
+    (and
+     (emacsvox-aural-voice-palette palette)
+     (cl-find-if
+      (lambda (entry)
+        (or (equal name (format "%s" (car entry)))
+            (and (symbolp (cdr entry))
+                 (equal name (symbol-name (cdr entry))))))
+      (emacsvox-aural-effective-voice-entries palette)))))
+
+(defun emacsvox-aural-voice-workbench--style-description (logical-voice)
+  "Return concise portable style text for LOGICAL-VOICE."
+  (if-let* ((entry
+             (emacsvox-aural-voice-workbench--palette-entry logical-voice)))
+      (let* ((definition (cdr entry))
+             (realized
+              (if (and (symbolp definition) (boundp definition))
+                  (symbol-value definition)
+                definition)))
+        (string-trim
+         (replace-regexp-in-string
+          "[\n\t ]+" " " (format "%S" realized))))
+    "not in active palette"))
+
+(defun emacsvox-aural-voice-workbench--family-diagnostic (logical-voice)
+  "Return concise exact-route/family status for LOGICAL-VOICE."
+  (let* ((entry (emacsvox-aural-voice-workbench--palette-entry logical-voice))
+         (definition
+          (if entry
+              (let ((value (cdr entry)))
+                (if (and (symbolp value) (boundp value))
+                    (symbol-value value)
+                  value))
+            logical-voice))
+         (family
+          (emacsvox-aural-routing--style-family definition))
+         (exact
+          (cl-find-if
+           (lambda (selector) (eq (plist-get selector :kind) 'exact))
+           (emacsvox-aural-voice-workbench--selectors logical-voice))))
+    (if (and family exact)
+        (format "exact voice; %s family retained for fallback" family)
+      "none")))
+
+(defun emacsvox-aural-voice-workbench--logical-row (logical-voice)
+  "Return one logical voice row for LOGICAL-VOICE."
+  (let* ((binding
+          (emacsvox-aural-voice-workbench--profile-binding logical-voice))
+         (route
+          (emacsvox-aural-voice-workbench--route-description logical-voice)))
+    (list
+     logical-voice
+     (vector
+      logical-voice route
+      (or (plist-get binding :language) "")
+      (emacsvox-aural-voice-workbench--style-description logical-voice)
+      (emacsvox-aural-voice-workbench--scope-description logical-voice)
+      (if (equal route "adapter default") "unmapped" "routed")
+      (emacsvox-aural-voice-workbench--family-diagnostic logical-voice)))))
+
+(defun emacsvox-aural-voice-workbench--all-engine-voices ()
+  "Return (ENGINE VOICE) pairs from the current inventory."
+  (cl-loop
+   for engine in (plist-get emacsvox-aural-voice-workbench-inventory :engines)
+   append (mapcar (lambda (voice) (list engine voice))
+                  (plist-get engine :voices))))
+
+(defun emacsvox-aural-voice-workbench--same-value-p (left right)
+  "Return non-nil when optional inventory values LEFT and RIGHT match."
+  (and left right (string-equal (downcase (format "%s" left))
+                                (downcase (format "%s" right)))))
+
+(defun emacsvox-aural-voice-workbench--display (value &optional fallback)
+  "Return VALUE as display text, using FALLBACK when it is nil."
+  (if (null value) (or fallback "") (format "%s" value)))
+
+(defun emacsvox-aural-voice-workbench--selector-matches-p
+    (selector engine voice)
+  "Return non-nil when SELECTOR can select VOICE from ENGINE."
+  (let ((engine-id (plist-get engine :engine-id))
+        (voice-id (plist-get voice :voice-id)))
+    (pcase (plist-get selector :kind)
+      ('exact
+       (and (equal engine-id (plist-get selector :engine-id))
+            (equal voice-id (plist-get selector :voice-id))))
+      ('engine-default
+       (and (equal engine-id (plist-get selector :engine-id))
+            (equal voice-id (plist-get engine :default-voice-id))))
+      ('properties
+       (and
+        (or (null (plist-get selector :engine-id))
+            (equal engine-id (plist-get selector :engine-id)))
+        (or (null (plist-get selector :language))
+            (emacsvox-aural-voice-workbench--same-value-p
+             (plist-get selector :language) (plist-get voice :language)))
+        (or (null (plist-get selector :gender))
+            (emacsvox-aural-voice-workbench--same-value-p
+             (plist-get selector :gender) (plist-get voice :gender))))))))
+
+(defun emacsvox-aural-voice-workbench--voice-users (engine voice)
+  "Return logical voices whose staged selectors can match ENGINE and VOICE."
+  (let (users)
+    (dolist (logical (emacsvox-aural-voice-workbench--logical-voices))
+      (when
+          (cl-some
+           (lambda (selector)
+             (emacsvox-aural-voice-workbench--selector-matches-p
+              selector engine voice))
+           (emacsvox-aural-voice-workbench--selectors logical))
+        (push logical users)))
+    (sort users #'string-lessp)))
+
+(defun emacsvox-aural-voice-workbench--filter-match-p (key actual)
+  "Return non-nil when physical filter KEY accepts ACTUAL."
+  (let ((wanted (plist-get emacsvox-aural-voice-workbench-filter key)))
+    (or (null wanted)
+        (emacsvox-aural-voice-workbench--same-value-p wanted actual))))
+
+(defun emacsvox-aural-voice-workbench--physical-visible-p (engine voice)
+  "Return non-nil when ENGINE and VOICE pass the physical filter."
+  (and
+   (emacsvox-aural-voice-workbench--filter-match-p
+    :engine (plist-get engine :engine-id))
+   (emacsvox-aural-voice-workbench--filter-match-p
+    :language (plist-get voice :language))
+   (emacsvox-aural-voice-workbench--filter-match-p
+    :gender (plist-get voice :gender))
+   (emacsvox-aural-voice-workbench--filter-match-p
+    :quality (plist-get voice :quality))
+   (emacsvox-aural-voice-workbench--filter-match-p
+    :health (plist-get engine :health))
+   (emacsvox-aural-voice-workbench--filter-match-p
+    :availability (plist-get voice :availability))))
+
+(defun emacsvox-aural-voice-workbench--physical-row (pair)
+  "Return one physical voice row from engine/voice PAIR."
+  (let* ((engine (car pair))
+         (voice (cadr pair))
+         (users (emacsvox-aural-voice-workbench--voice-users engine voice)))
+    (list
+     (list (plist-get engine :engine-id) (plist-get voice :voice-id))
+     (vector
+      (emacsvox-aural-voice-workbench--display
+       (or (plist-get voice :display-name) (plist-get voice :voice-id)))
+      (emacsvox-aural-voice-workbench--display
+       (plist-get engine :engine-id))
+      (emacsvox-aural-voice-workbench--display
+       (plist-get voice :language))
+      (emacsvox-aural-voice-workbench--display
+       (plist-get voice :gender))
+      (emacsvox-aural-voice-workbench--display
+       (plist-get voice :quality))
+      (emacsvox-aural-voice-workbench--display
+       (plist-get voice :availability) "unknown")
+      (emacsvox-aural-voice-workbench--display
+       (plist-get engine :health) "unknown")
+      (if users (mapconcat #'identity users ", ") "none")
+      (emacsvox-aural-voice-workbench--display
+       (plist-get voice :voice-id))))))
+
+(defun emacsvox-aural-voice-workbench--join-symbols (values)
+  "Return printable comma-separated VALUES."
+  (if values (mapconcat (lambda (value) (format "%s" value)) values ", ") "none"))
+
+(defun emacsvox-aural-voice-workbench--engine-row (engine)
+  "Return one speech ENGINE row."
+  (let* ((id (plist-get engine :engine-id))
+         (order
+          (cl-position
+           id
+           (plist-get emacsvox-aural-voice-workbench-staged-profile
+                      :engine-order)
+           :test #'equal)))
+    (list
+     id
+     (vector
+      id
+      (or (plist-get engine :display-name) id)
+      (if order (number-to-string (1+ order))
+        (if (equal id
+                   (plist-get emacsvox-aural-voice-workbench-inventory
+                              :preferred-engine-id))
+            "preferred" ""))
+      (or (plist-get engine :availability) "unknown")
+      (or (plist-get engine :health) "unknown")
+      (number-to-string (length (plist-get engine :voices)))
+      (emacsvox-aural-voice-workbench--join-symbols
+       (plist-get engine :acss-dimensions))
+      (string-trim
+       (replace-regexp-in-string
+        "[\n\t ]+" " "
+        (format "%S" (plist-get (plist-get engine :capabilities) :markers))))
+      (or (plist-get engine :preview-support) "unknown")
+      (or (plist-get engine :routing-policy-support) "unknown")))))
+
+(defun emacsvox-aural-voice-workbench--post-effects ()
+  "Return union of advertised post-synthesis effect dimensions."
+  (let (effects)
+    (dolist
+        (engine
+         (plist-get emacsvox-aural-voice-workbench-inventory :engines))
+      (setq effects
+            (append (plist-get engine :post-synthesis-dimensions) effects)))
+    (delete-dups effects)))
+
+(defun emacsvox-aural-voice-workbench--style-row (entry)
+  "Return one active palette style/effect row for ENTRY."
+  (let* ((palette-voice (car entry))
+         (definition (cdr entry))
+         (logical
+          (format "%s" (if (symbolp definition) definition palette-voice)))
+         (effects (emacsvox-aural-voice-workbench--post-effects))
+         (dimensions
+          (plist-get (tts-voice-capabilities) :dimensions)))
+    (list
+     logical
+     (vector
+      (format "%s" palette-voice)
+      logical
+      (emacsvox-aural-voice-workbench--style-description logical)
+      (emacsvox-aural-voice-workbench--route-description logical)
+      (emacsvox-aural-voice-workbench--join-symbols dimensions)
+      (if effects
+          (emacsvox-aural-voice-workbench--join-symbols effects)
+        "not advertised")
+      (emacsvox-aural-voice-workbench--family-diagnostic logical)))))
+
+(defun emacsvox-aural-voice-workbench--format ()
+  "Return tabulated columns for the active workbench view."
+  (pcase emacsvox-aural-voice-workbench-view
+    ('logical
+     [("Logical voice" 28 t) ("Staged route" 48 t) ("Language" 12 t)
+      ("Portable style" 34 t) ("Scope" 16 t) ("Status" 12 t)
+      ("Diagnostic" 0 t)])
+    ('physical
+     [("Physical voice" 28 t) ("Engine" 14 t) ("Language" 12 t)
+      ("Gender" 10 t) ("Quality" 12 t) ("Availability" 14 t)
+      ("Health" 12 t) ("Selected by" 28 t) ("Native ID" 0 t)])
+    ('engines
+     [("Engine ID" 16 t) ("Engine" 20 t) ("Priority" 10 t)
+      ("Availability" 14 t) ("Health" 12 t) ("Voices" 8 t)
+      ("ACSS" 32 t) ("Markers" 24 t) ("Preview" 14 t)
+      ("Routing" 0 t)])
+    ('styles
+     [("Palette voice" 22 t) ("Logical voice" 26 t)
+      ("Portable definition" 38 t) ("Staged route" 42 t)
+      ("Adapter ACSS" 30 t) ("Post effects" 24 t)
+      ("Diagnostic" 0 t)])))
+
+(defun emacsvox-aural-voice-workbench--entries ()
+  "Return rows for the active workbench view."
+  (pcase emacsvox-aural-voice-workbench-view
+    ('logical
+     (mapcar #'emacsvox-aural-voice-workbench--logical-row
+             (emacsvox-aural-voice-workbench--logical-voices)))
+    ('physical
+     (mapcar
+      #'emacsvox-aural-voice-workbench--physical-row
+      (cl-remove-if-not
+       (lambda (pair)
+         (emacsvox-aural-voice-workbench--physical-visible-p
+          (car pair) (cadr pair)))
+       (emacsvox-aural-voice-workbench--all-engine-voices))))
+    ('engines
+     (mapcar
+      #'emacsvox-aural-voice-workbench--engine-row
+      (plist-get emacsvox-aural-voice-workbench-inventory :engines)))
+    ('styles
+     (let ((palette (emacsvox-aural-voice-workbench--active-palette)))
+       (if (emacsvox-aural-voice-palette palette)
+           (mapcar
+            #'emacsvox-aural-voice-workbench--style-row
+            (sort
+             (copy-sequence (emacsvox-aural-effective-voice-entries palette))
+             (lambda (left right)
+               (string-lessp (symbol-name (car left))
+                             (symbol-name (car right))))))
+         nil)))))
+
+(defun emacsvox-aural-voice-workbench-refresh (&optional id)
+  "Refresh the Workbench quietly, preserving row ID and column."
+  (interactive)
+  (when-let* ((current (tabulated-list-get-id)))
+    (puthash emacsvox-aural-voice-workbench-view current
+             emacsvox-aural-voice-workbench-selections))
+  (setq emacsvox-aural-voice-workbench-inventory (tts-voice-inventory)
+        tabulated-list-format (emacsvox-aural-voice-workbench--format)
+        header-line-format '(:eval (emacsvox-aural-voice-workbench--header)))
+  (tabulated-list-init-header)
+  (emacsvox-aural-ui-refresh-tabulated
+   (lambda ()
+     (setq tabulated-list-entries
+           (emacsvox-aural-voice-workbench--entries)))
+   (or id
+       (gethash emacsvox-aural-voice-workbench-view
+                emacsvox-aural-voice-workbench-selections))))
+
+(defun emacsvox-aural-voice-workbench-speak-current ()
+  "Speak the complete current Workbench row with titled values."
+  (interactive)
+  (let* ((entry
+          (or (tabulated-list-get-entry)
+              (user-error "Move to a Voice Workbench row first")))
+         parts)
+    (dotimes (index (length entry))
+      (let ((value (aref entry index)))
+        (push
+         (format "%s, %s"
+                 (car (aref tabulated-list-format index))
+                 (if (string-empty-p (format "%s" value)) "blank" value))
+         parts)))
+    (let ((text (mapconcat #'identity (nreverse parts) ". ")))
+      (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))
+      text)))
+
+(defun emacsvox-aural-voice-workbench--switch (view)
+  "Switch to Workbench VIEW and announce its selected row."
+  (when-let* ((current (tabulated-list-get-id)))
+    (puthash emacsvox-aural-voice-workbench-view current
+             emacsvox-aural-voice-workbench-selections))
+  (setq emacsvox-aural-voice-workbench-view view)
+  (emacsvox-aural-voice-workbench-refresh)
+  (let ((row
+         (and (tabulated-list-get-id)
+              (emacsvox-aural-voice-workbench-speak-current))))
+    (unless row
+      (let ((text
+             (format "%s view has no rows"
+                     (alist-get view
+                                emacsvox-aural-voice-workbench--views))))
+        (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))))))
+
+(defun emacsvox-aural-voice-workbench-logical-view ()
+  "Show logical voices."
+  (interactive)
+  (emacsvox-aural-voice-workbench--switch 'logical))
+
+(defun emacsvox-aural-voice-workbench-physical-view ()
+  "Show discovered physical voices."
+  (interactive)
+  (emacsvox-aural-voice-workbench--switch 'physical))
+
+(defun emacsvox-aural-voice-workbench-engine-view ()
+  "Show speech engines and their capabilities."
+  (interactive)
+  (emacsvox-aural-voice-workbench--switch 'engines))
+
+(defun emacsvox-aural-voice-workbench-style-view ()
+  "Show portable styles, routes, and advertised effects."
+  (interactive)
+  (emacsvox-aural-voice-workbench--switch 'styles))
+
+(defun emacsvox-aural-voice-workbench-refresh-inventory ()
+  "Request fresh adapter inventory and quietly rebuild the current view."
+  (interactive)
+  (setq emacsvox-aural-voice-workbench-inventory
+        (tts-refresh-voice-inventory))
+  (emacsvox-aural-voice-workbench-refresh)
+  (let ((text
+         (format "Inventory refresh requested. %s"
+                 (emacsvox-aural-voice-workbench--header))))
+    (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))
+    text))
+
+(defun emacsvox-aural-voice-workbench--filter-values (field)
+  "Return available physical inventory values for filter FIELD."
+  (let (values)
+    (dolist (pair (emacsvox-aural-voice-workbench--all-engine-voices))
+      (let ((engine (car pair)) (voice (cadr pair)))
+        (when-let* ((value
+                     (pcase field
+                       ('engine (plist-get engine :engine-id))
+                       ('health (plist-get engine :health))
+                       ('language (plist-get voice :language))
+                       ('gender (plist-get voice :gender))
+                       ('quality (plist-get voice :quality))
+                       ('availability (plist-get voice :availability)))))
+          (push (format "%s" value) values))))
+    (sort (delete-dups values) #'string-lessp)))
+
+(defun emacsvox-aural-voice-workbench-set-filter ()
+  "Set or clear one physical-voice inventory filter."
+  (interactive)
+  (let* ((field
+          (intern
+           (completing-read
+            "Filter field: "
+            '("engine" "language" "gender" "quality" "health"
+              "availability") nil 'must-match)))
+         (key (intern (concat ":" (symbol-name field))))
+         (current (plist-get emacsvox-aural-voice-workbench-filter key))
+         (value
+          (completing-read
+           (format "%s value (blank clears): " (capitalize (symbol-name field)))
+           (emacsvox-aural-voice-workbench--filter-values field)
+           nil nil nil nil current)))
+    (setq emacsvox-aural-voice-workbench-filter
+          (plist-put emacsvox-aural-voice-workbench-filter key
+                     (unless (string-empty-p value) value)))
+    (unless (eq emacsvox-aural-voice-workbench-view 'physical)
+      (setq emacsvox-aural-voice-workbench-view 'physical))
+    (emacsvox-aural-voice-workbench-refresh)
+    (let ((text
+           (format "Physical voice filter: %s"
+                   (emacsvox-aural-voice-workbench--filter-description))))
+      (if (fboundp 'tts-speak) (tts-speak text) (message "%s" text))
+      text)))
+
+(defun emacsvox-aural-voice-workbench-clear-filters ()
+  "Clear all physical-voice filters and refresh."
+  (interactive)
+  (setq emacsvox-aural-voice-workbench-filter nil)
+  (emacsvox-aural-voice-workbench-refresh)
+  (if (fboundp 'tts-speak)
+      (tts-speak "Physical voice filters cleared")
+    (message "Physical voice filters cleared")))
+
+(defun emacsvox-aural-voice-workbench-describe ()
+  "Display and speak exact Workbench row and configuration details."
+  (interactive)
+  (let ((summary (emacsvox-aural-voice-workbench-speak-current)))
+    (with-help-window (help-buffer)
+      (princ (format "%s\n\n" summary))
+      (princ (format "Status: %s\n\n"
+                     (emacsvox-aural-voice-workbench--header)))
+      (princ
+       (format "Inventory:\n%S\n\n"
+               emacsvox-aural-voice-workbench-inventory))
+      (princ
+       (format "Staged routing profile:\n%S\n"
+               emacsvox-aural-voice-workbench-staged-profile)))
+    summary))
+
+(defun emacsvox-aural-voice-workbench-help ()
+  "Display and speak Voice Workbench navigation help."
+  (interactive)
+  (with-help-window (help-buffer)
+    (princ
+     (concat
+      "Emacsvox Voice Workbench\n\n"
+      "The workbench presents portable voice style and machine-local routing\n"
+      "together while keeping their saved data separate. Exact native IDs are\n"
+      "local; property selectors can be portable; session routes are temporary.\n\n"
+      "l logical voices      v physical voices\n"
+      "e engines             s styles and effects\n"
+      "n/p or up/down rows   left/right columns\n"
+      ". speak titled cell   SPC speak complete row\n"
+      "RET describe row      F set physical filter\n"
+      "C clear filters       R request fresh inventory\n"
+      "g redraw quietly      h aural home\n"
+      "q quit                ? help\n")))
+  (when (fboundp 'emacsvox-speak-help)
+    (emacsvox-speak-help)))
+
+(define-derived-mode
+    emacsvox-aural-voice-workbench-mode
+    emacsvox-aural-tabulated-mode
+  "Aural-Voice-Workbench"
+  "Spoken workbench for logical styles and physical voice routing."
+  (setq-local emacsvox-aural-voice-workbench-view 'logical)
+  (setq-local emacsvox-aural-voice-workbench-inventory (tts-voice-inventory))
+  (setq-local emacsvox-aural-voice-workbench-committed-profile
+              (emacsvox-aural-voice-workbench--current-profile-data))
+  (setq-local emacsvox-aural-voice-workbench-staged-profile
+              (copy-tree emacsvox-aural-voice-workbench-committed-profile))
+  (setq-local emacsvox-aural-voice-workbench-selections
+              (make-hash-table :test #'eq))
+  (setq-local emacsvox-aural-voice-workbench-filter nil)
+  (emacsvox-aural-ui-configure-tabulated
+   "voice workbench"
+   #'emacsvox-aural-voice-workbench-speak-current
+   #'emacsvox-aural-voice-workbench-refresh)
+  (setq tabulated-list-format (emacsvox-aural-voice-workbench--format)
+        tabulated-list-padding 2
+        header-line-format '(:eval (emacsvox-aural-voice-workbench--header)))
+  (add-hook 'tabulated-list-revert-hook
+            #'emacsvox-aural-voice-workbench-refresh nil t)
+  (tabulated-list-init-header))
+
+(dolist
+    (binding
+     '(("RET" . emacsvox-aural-voice-workbench-describe)
+       ("l" . emacsvox-aural-voice-workbench-logical-view)
+       ("v" . emacsvox-aural-voice-workbench-physical-view)
+       ("e" . emacsvox-aural-voice-workbench-engine-view)
+       ("s" . emacsvox-aural-voice-workbench-style-view)
+       ("F" . emacsvox-aural-voice-workbench-set-filter)
+       ("C" . emacsvox-aural-voice-workbench-clear-filters)
+       ("R" . emacsvox-aural-voice-workbench-refresh-inventory)
+       ("h" . emacsvox-aural)
+       ("?" . emacsvox-aural-voice-workbench-help)))
+  (define-key emacsvox-aural-voice-workbench-mode-map
+              (kbd (car binding)) (cdr binding)))
+
+;;;###autoload
+(defun emacsvox-aural-voice-workbench (&optional view)
+  "Open the accessible Voice Workbench in VIEW."
+  (interactive)
+  (let ((source (emacsvox-aural-inspection-remember-source-buffer))
+        (buffer (get-buffer-create "*Aural Voice Workbench*")))
+    (with-current-buffer buffer
+      (emacsvox-aural-voice-workbench-mode)
+      (emacsvox-aural-inspection-attach-source source)
+      (setq emacsvox-aural-voice-workbench-view (or view 'logical))
+      (emacsvox-aural-voice-workbench-refresh))
+    (emacsvox-aural-ui-pop-to-buffer buffer)
+    (when (called-interactively-p 'interactive)
+      (if (tabulated-list-get-id)
+          (emacsvox-aural-voice-workbench-speak-current)
+        (tts-speak "Voice Workbench has no rows")))
+    buffer))
+
+(defun emacsvox-aural-voice-workbench-refresh-if-live (&rest _ignored)
+  "Quietly refresh a live Voice Workbench after configuration changes."
+  (when-let* ((buffer (get-buffer "*Aural Voice Workbench*")))
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+        (emacsvox-aural-voice-workbench-refresh)))))
+
+(add-hook 'emacsvox-aural-routing-profile-changed-hook
+          #'emacsvox-aural-voice-workbench-refresh-if-live)
+(add-hook 'emacsvox-aural-voice-palette-changed-hook
+          #'emacsvox-aural-voice-workbench-refresh-if-live)
+
+(provide 'emacsvox-aural-voice-workbench)
+;;; emacsvox-aural-voice-workbench.el ends here

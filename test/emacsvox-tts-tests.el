@@ -547,6 +547,38 @@
     (should (equal (plist-get voice :engine-id) "eloquence"))
     (should (equal (plist-get voice :voice-id) "eci:v1"))))
 
+(ert-deftest emacsvox-tts-omnivox-reports-process-inventory-agreement ()
+  "Normalized inventory diagnoses main and notification process divergence."
+  (let* ((speaker
+          (make-pipe-process
+           :name "emacsvox-omnivox-agreement-speaker"
+           :buffer nil :noquery t))
+         (notifier
+          (make-pipe-process
+           :name "emacsvox-omnivox-agreement-notifier"
+           :buffer nil :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notifier)
+         (inventory
+          '(:inventory_generation 4 :preferred_engine_id "eloquence")))
+    (unwind-protect
+        (progn
+          (process-put speaker omnivox--control-inventory-property inventory)
+          (process-put notifier omnivox--control-inventory-property
+                       (copy-tree inventory))
+          (should
+           (equal (omnivox--inventory-process-agreement) "agree"))
+          (process-put
+           notifier omnivox--control-inventory-property
+           '(:inventory_generation 4 :preferred_engine_id "dectalk"))
+          (should
+           (equal (omnivox--inventory-process-agreement) "differ"))
+          (delete-process notifier)
+          (should
+           (equal (omnivox--inventory-process-agreement) "single-process")))
+      (when (process-live-p speaker) (delete-process speaker))
+      (when (process-live-p notifier) (delete-process notifier)))))
+
 (ert-deftest emacsvox-tts-swiftmac-projects-enumerated-voice-cache ()
   "SwiftMac exposes installed native IDs without parsing them into engine IDs."
   (let* ((swiftmac-voice-inventory-cache

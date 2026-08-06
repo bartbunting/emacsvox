@@ -1897,6 +1897,7 @@ function."
      :received-at nil
      :stale nil
      :preferred-engine-id engine-id
+     :process-agreement "single-adapter"
      :preview-support
      (pcase selection
        ('enumerated "family")

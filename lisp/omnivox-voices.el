@@ -802,6 +802,35 @@ Return the number of distinct processes that received the command."
   (and omnivox-control-capabilities
        (member feature (plist-get omnivox-control-capabilities :features))))
 
+(defun omnivox--inventory-process-agreement ()
+  "Describe agreement between distinct live Omnivox speech processes."
+  (let ((processes
+         (cl-remove-if-not
+          #'process-live-p
+          (delete-dups (list tts-speaker-process tts-notify-process)))))
+    (cond
+     ((< (length processes) 2) "single-process")
+     ((cl-every
+       (lambda (process)
+         (process-get process omnivox--control-inventory-property))
+       processes)
+      (let ((signatures
+             (mapcar
+              (lambda (process)
+                (let ((inventory
+                       (process-get
+                        process omnivox--control-inventory-property)))
+                  (list
+                   (plist-get inventory :inventory_generation)
+                   (plist-get inventory :preferred_engine_id))))
+              processes)))
+        (if (cl-every (lambda (signature)
+                        (equal signature (car signatures)))
+                      (cdr signatures))
+            "agree"
+          "differ")))
+     (t "pending"))))
+
 (defun omnivox--inventory-voice (engine-id voice)
   "Normalize Omnivox VOICE belonging to ENGINE-ID."
   (let ((id (plist-get voice :id)))
@@ -865,6 +894,7 @@ Return the number of distinct processes that received the command."
        :adapter "omnivox" :source "live" :status "pending"
        :generation nil :received-at nil :stale nil
        :preferred-engine-id nil
+       :process-agreement (omnivox--inventory-process-agreement)
        :preview-support "pending"
        :routing-policy-support "pending"
        :engines nil)
@@ -882,6 +912,7 @@ Return the number of distinct processes that received the command."
        :stale (not live)
        :preferred-engine-id
        (plist-get omnivox-engine-inventory :preferred_engine_id)
+       :process-agreement (omnivox--inventory-process-agreement)
        :preview-support
        (if (omnivox--control-feature-p "exact_voice_preview")
            "exact"

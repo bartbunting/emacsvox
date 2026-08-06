@@ -1,0 +1,154 @@
+;;; emacsvox-aural-voice-workbench-tests.el --- Workbench UI tests -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+;; Verify spoken cross-synth inventory and routing views.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'ert)
+(require 'emacsvox-aural-voice-workbench)
+
+(defconst emacsvox-test--workbench-inventory
+  '(:adapter "omnivox" :source "live" :status "available"
+    :generation 12 :received-at nil :stale nil
+    :preferred-engine-id "eloquence" :process-agreement "agree"
+    :preview-support "logical-route" :routing-policy-support "logical-voice"
+    :engines
+    ((:engine-id "eloquence" :display-name "Eloquence"
+      :availability "available" :health "healthy"
+      :default-voice-id "eci:Reed" :inventory-kind "live"
+      :acss-dimensions (rate average-pitch pitch-range stress richness volume)
+      :post-synthesis-dimensions (reverb echo)
+      :preview-support "logical-route" :routing-policy-support "logical-voice"
+      :capabilities (:markers (:word t :native_index t))
+      :voices
+      ((:engine-id "eloquence" :voice-id "eci:Reed"
+        :display-name "Reed" :language "en-AU" :gender "male"
+        :quality "standard" :availability "available")))
+     (:engine-id "winrt" :display-name "Windows Speech"
+      :availability "available" :health "degraded"
+      :default-voice-id "David" :inventory-kind "live"
+      :acss-dimensions (rate average-pitch volume)
+      :post-synthesis-dimensions nil
+      :preview-support "logical-route" :routing-policy-support "logical-voice"
+      :capabilities (:markers (:word t :sentence t))
+      :voices
+      ((:engine-id "winrt" :voice-id "David" :display-name "David"
+        :language "en-US" :gender "male" :quality "standard"
+        :availability "available")))))
+  "Representative normalized Workbench inventory.")
+
+(defconst emacsvox-test--workbench-routing-profile
+  '(:schema-version 1 :id workstation :summary "Workbench profile"
+    :engine-order ("eloquence" "winrt")
+    :fallback
+    (:allow-same-language t :global-default nil :engines nil)
+    :bindings
+    ((:logical-voice voice-bolden :language "en-AU"
+      :selectors
+      ((:kind exact :scope local :engine-id "eloquence"
+        :voice-id "eci:Reed")))))
+  "Representative staged Workbench route.")
+
+(defmacro emacsvox-test--with-voice-workbench (&rest body)
+  "Run BODY in an isolated Voice Workbench buffer."
+  (declare (indent 0) (debug t))
+  `(let ((emacsvox-aural-routing-profile-registry
+          (make-hash-table :test #'eq))
+         (emacsvox-aural-active-routing-profile 'workstation)
+         (emacsvox-aural-session-routing-bindings nil)
+         (emacsvox-aural-routing-profile-changed-hook nil)
+         (tts-voice-inventory-function
+          (lambda () (copy-tree emacsvox-test--workbench-inventory)))
+         (tts-voice-capabilities-function
+          (lambda ()
+            '(:adapter omnivox :source discovered
+              :family-selection routed
+              :dimensions (average-pitch pitch-range stress richness volume))))
+         (emacsvox-aural-ui-source-buffer nil))
+     (emacsvox-aural-register-routing-profile-data
+      emacsvox-test--workbench-routing-profile "test")
+     (with-temp-buffer
+       (cl-letf (((symbol-function 'tts-speak) #'ignore))
+         (emacsvox-aural-voice-workbench-mode)
+         (emacsvox-aural-voice-workbench-refresh)
+         ,@body))))
+
+(ert-deftest emacsvox-aural-voice-workbench-provides-four-spoken-views ()
+  "One shared UI exposes logical, physical, engine, and style/effect rows."
+  (emacsvox-test--with-voice-workbench
+    (should (eq emacsvox-aural-voice-workbench-view 'logical))
+    (should (emacsvox-aural-ui-goto-row "voice-bolden"))
+    (should
+     (string-match-p "eci:Reed"
+                     (emacsvox-aural-voice-workbench-speak-current)))
+    (emacsvox-aural-voice-workbench-physical-view)
+    (should (= (length tabulated-list-entries) 2))
+    (emacsvox-aural-voice-workbench-engine-view)
+    (should (= (length tabulated-list-entries) 2))
+    (emacsvox-aural-voice-workbench-style-view)
+    (should tabulated-list-entries)))
+
+(ert-deftest emacsvox-aural-voice-workbench-reports-status-without-speaking ()
+  "Quiet refresh updates inventory, process, and staged-state header status."
+  (emacsvox-test--with-voice-workbench
+    (let (spoken)
+      (cl-letf (((symbol-function 'tts-speak)
+                 (lambda (text) (setq spoken text))))
+        (emacsvox-aural-voice-workbench-refresh)
+        (should-not spoken)))
+    (let ((header (emacsvox-aural-voice-workbench--header)))
+      (should (string-match-p "generation 12" header))
+      (should (string-match-p "processes agree" header))
+      (should (string-match-p "routing workstation, committed" header)))
+    (setf (plist-get emacsvox-aural-voice-workbench-staged-profile :summary)
+          "changed")
+    (should
+     (string-match-p "routing workstation, staged"
+                     (emacsvox-aural-voice-workbench--header)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-filters-physical-inventory ()
+  "Physical rows filter by voice traits and engine health."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'physical
+          emacsvox-aural-voice-workbench-filter
+          '(:language "en-US" :health "degraded"))
+    (emacsvox-aural-voice-workbench-refresh)
+    (should (= (length tabulated-list-entries) 1))
+    (should
+     (equal (car (car tabulated-list-entries)) '("winrt" "David")))
+    (setq emacsvox-aural-voice-workbench-filter '(:gender "female"))
+    (emacsvox-aural-voice-workbench-refresh)
+    (should-not tabulated-list-entries)))
+
+(ert-deftest emacsvox-aural-voice-workbench-shows-physical-voice-users ()
+  "Physical inventory identifies matching staged logical routes."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'physical)
+    (emacsvox-aural-voice-workbench-refresh '("eloquence" "eci:Reed"))
+    (let ((entry (tabulated-list-get-entry)))
+      (should (string-match-p "\\bvoice-bolden\\b" (aref entry 7))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-bindings-are-complete ()
+  "Workbench view, filter, detail, refresh, home, and help keys are present."
+  (dolist
+      (binding
+       '(("RET" . emacsvox-aural-voice-workbench-describe)
+         ("l" . emacsvox-aural-voice-workbench-logical-view)
+         ("v" . emacsvox-aural-voice-workbench-physical-view)
+         ("e" . emacsvox-aural-voice-workbench-engine-view)
+         ("s" . emacsvox-aural-voice-workbench-style-view)
+         ("F" . emacsvox-aural-voice-workbench-set-filter)
+         ("C" . emacsvox-aural-voice-workbench-clear-filters)
+         ("R" . emacsvox-aural-voice-workbench-refresh-inventory)
+         ("h" . emacsvox-aural)
+         ("?" . emacsvox-aural-voice-workbench-help)))
+    (should
+     (eq (lookup-key emacsvox-aural-voice-workbench-mode-map
+                     (kbd (car binding)))
+         (cdr binding)))))
+
+(provide 'emacsvox-aural-voice-workbench-tests)
+;;; emacsvox-aural-voice-workbench-tests.el ends here

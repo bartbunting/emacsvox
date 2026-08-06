@@ -129,6 +129,7 @@ enumerate them back to Emacs."
           (float-time (time-subtract nil swiftmac-voice-inventory-time)))
      :stale stale
      :preferred-engine-id "swiftmac"
+     :process-agreement "single-adapter"
      :preview-support (if cached "exact" "free-form")
      :routing-policy-support "unsupported"
      :error (and swiftmac-voice-inventory-error

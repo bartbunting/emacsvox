@@ -55,6 +55,7 @@
           emacsvox-aural-doctor
           emacsvox-aural-profiles
           emacsvox-aural-voice-palettes
+          emacsvox-aural-voice-workbench
           emacsvox-aural-provider-org
           emacsvox-aural-provider-org-srs
           emacsvox-aural-provider-workflows

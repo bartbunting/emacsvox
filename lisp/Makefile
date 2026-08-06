@@ -109,6 +109,7 @@ emacsvox-aural-simple-editor.elc \
 emacsvox-aural-doctor.elc \
 emacsvox-aural-profiles.elc \
 emacsvox-aural-voice-palettes.elc \
+emacsvox-aural-voice-workbench.elc \
 emacsvox-aural-provider-org.elc \
 emacsvox-aural-provider-workflows.elc \
 emacsvox-aural-provider-org-srs.elc \
@@ -441,6 +442,9 @@ emacsvox-aural-voice-palettes.elc: \
 emacsvox-aural-schemes.elc emacsvox-aural-ui.elc \
 emacsvox-aural-inspection.elc emacsvox-aural-description.elc \
 emacsvox-aural-preview.elc
+emacsvox-aural-voice-workbench.elc: \
+emacsvox-aural-resources.elc emacsvox-aural-schemes.elc \
+emacsvox-aural-routing-profiles.elc emacsvox-aural-ui.elc
 emacsvox-aural-provider-org.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-workflows.elc: emacsvox-aural-schemes.elc
 emacsvox-aural-provider-org-srs.elc: emacsvox-aural-provider-workflows.elc

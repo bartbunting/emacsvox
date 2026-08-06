@@ -307,24 +307,24 @@ When REPLACE is nil, reject an existing profile with the same identifier."
          (plist-get binding :logical-voice))))
      bindings)))
 
-(defun emacsvox-aural-routing-selectors (logical-voice &optional profile-id)
-  "Return effective ordered selectors for LOGICAL-VOICE and PROFILE-ID.
+(defun emacsvox-aural-routing-selectors-from-data
+    (logical-voice data &optional include-session)
+  "Return effective ordered selectors for LOGICAL-VOICE in profile DATA.
 
-A session binding replaces saved selectors.  Otherwise saved selectors are
-followed by distinct engine defaults from the profile's global engine order."
+A session binding replaces saved selectors when INCLUDE-SESSION is non-nil.
+Otherwise saved selectors are followed by distinct engine defaults from the
+profile's global engine order."
   (let* ((logical-name
           (emacsvox-aural-routing--logical-name logical-voice))
          (session
-          (cl-find-if
-           (lambda (entry)
-             (equal
-              logical-name
-              (emacsvox-aural-routing--logical-name (car entry))))
-           emacsvox-aural-session-routing-bindings))
-         (entry
-          (emacsvox-aural-routing-profile
-           (or profile-id emacsvox-aural-active-routing-profile)))
-         (data (and entry (emacsvox-aural-routing-profile-entry-data entry)))
+          (and
+           include-session
+           (cl-find-if
+            (lambda (entry)
+              (equal
+               logical-name
+               (emacsvox-aural-routing--logical-name (car entry))))
+            emacsvox-aural-session-routing-bindings)))
          (binding
           (and data
                (emacsvox-aural-routing--binding
@@ -347,6 +347,14 @@ followed by distinct engine defaults from the profile's global engine order."
                   (list :kind 'engine-default :scope 'portable
                         :engine-id engine))))))
       selectors)))
+
+(defun emacsvox-aural-routing-selectors (logical-voice &optional profile-id)
+  "Return effective ordered selectors for LOGICAL-VOICE and PROFILE-ID."
+  (let* ((entry
+          (emacsvox-aural-routing-profile
+           (or profile-id emacsvox-aural-active-routing-profile)))
+         (data (and entry (emacsvox-aural-routing-profile-entry-data entry))))
+    (emacsvox-aural-routing-selectors-from-data logical-voice data t)))
 
 (defun emacsvox-aural-set-session-routing-binding
     (logical-voice selectors)

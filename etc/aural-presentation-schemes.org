@@ -3385,7 +3385,8 @@ source suite has 2,210 tests: 2,209 pass and the optional Mu4e test is skipped.
 Compiled Aural parity, normal build-tree startup, warning-checked compilation
 of the new module, the TTS audit, and whitespace validation pass.
 
-** TODO Slice 51: Accessible Voice Workbench Shell
+** DONE Slice 51: Accessible Voice Workbench Shell
+CLOSED: [2026-08-07 Fri]
 
 - Add a Voice Workbench entry to Aural Home with logical-voice, physical-voice,
   engine, and style/effect views built on the shared spoken tabulated UI.
@@ -3398,6 +3399,22 @@ of the new module, the TTS audit, and whitespace validation pass.
 
 Deliverable: the complete inventory and logical configuration are efficiently
 navigable with speech and the keyboard.
+
+The =W= command in Aural Home opens four single-key views: =l= logical voices,
+=v= physical voices, =e= engines, and =s= styles/effects.  Each view uses the
+shared spoken row, titled-cell, boundary, quiet refresh, selection-preserving,
+source-buffer, Home, and dismissal behavior.  The status line reports adapter,
+live/cached inventory state, generation, age, counts, main/notification process
+agreement, active routing profile, staged state, and filters without being
+spoken on every refresh.  Physical inventory can be filtered by engine,
+language, gender, quality, health, and availability and identifies every
+logical route that can select each voice.
+
+Checks: all five focused Voice Workbench tests and the Omnivox process-agreement
+test pass.  The complete Emacs 31 source suite has 2,216 tests: 2,215 pass and
+the optional Mu4e test is skipped.  Compiled Aural parity, normal build-tree
+startup, warning-checked compilation of the new UI, the TTS audit, and
+whitespace validation pass.
 
 ** TODO Slice 52: Exact Transactional Voice Preview
 
