@@ -534,11 +534,11 @@ events.  Carriage-return chunks replace pending progress output."
        (when (ems-interactive-p ',target)
          (save-excursion
            (comint-bol-or-process-mark)
-           (emacsvox-comint--present-feedback
+           (emacsvox-comint--present-line-feedback
             (emacsvox-comint-facts
              'command-input 'focus-entered 'history-navigation
              '(:command-input-origin history))
-            'navigation 'select-object #'emacsvox-speak-line 1))))
+            'navigation 'select-object 'before 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -713,11 +713,11 @@ events.  Carriage-return chunks replace pending progress output."
        (when (ems-interactive-p ',target)
          (save-excursion
            (goto-char (comint-line-beginning-position))
-           (emacsvox-comint--present-feedback-after
+           (emacsvox-comint--present-line-feedback
             (emacsvox-comint-facts
              'command-input 'focus-entered 'history-navigation
              '(:command-input-origin history))
-            'navigation 'select-object #'emacsvox-speak-line 1))))
+            'navigation 'select-object 'after 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -901,11 +901,11 @@ scrolling, completion metadata, and window configuration."
           'all
           (save-excursion
             (goto-char (comint-line-beginning-position))
-            (emacsvox-comint--present-feedback-after
+            (emacsvox-comint--present-line-feedback
              (emacsvox-comint-facts
               'command-input 'focus-entered 'history-navigation
               '(:command-input-origin history))
-             'navigation 'item #'emacsvox-speak-line 1)))))
+             'navigation 'item 'after 1)))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 
@@ -948,11 +948,11 @@ scrolling, completion metadata, and window configuration."
   (when (ems-interactive-p 'comint-get-next-from-history)
     (save-excursion
       (comint-bol)
-      (emacsvox-comint--present-feedback
+      (emacsvox-comint--present-line-feedback
        (emacsvox-comint-facts
         'command-input 'focus-entered 'history-navigation
         '(:command-input-origin history))
-       'navigation 'item #'emacsvox-speak-line 1))))
+       'navigation 'item 'before 1))))
 
 (advice-add
  'comint-get-next-from-history :after

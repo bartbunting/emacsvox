@@ -179,6 +179,38 @@
         (nreverse events)
         '((line nil ((item after)))))))))
 
+(ert-deftest emacsvox-comint-history-navigation-keeps-line-cue-phases ()
+  "History line cues enter the same physical-line submission in order."
+  (dolist
+      (case
+       '((comint-history-isearch-backward select-object before)
+         (comint-next-matching-input-from-input select-object after)
+         (comint-next-input item after)
+         (comint-get-next-from-history item before)))
+    (pcase-let ((`(,target ,icon ,phase) case))
+      (let ((ems--interactive-fn-name target)
+            observed)
+        (cl-letf
+            (((symbol-function 'comint-bol-or-process-mark) #'ignore)
+             ((symbol-function 'comint-line-beginning-position)
+              (lambda () (point)))
+             ((symbol-function 'comint-bol) #'ignore)
+             ((symbol-function 'emacsvox-comint--present-line-feedback)
+              (lambda (facts occasion value action-phase &optional argument)
+                (setq
+                 observed
+                 (list facts occasion value action-phase argument)))))
+          (funcall
+           (intern (format "emacsvox--advice-%s-after" target))))
+        (should (eq (nth 1 observed) 'navigation))
+        (should (eq (nth 2 observed) icon))
+        (should (eq (nth 3 observed) phase))
+        (should (= (nth 4 observed) 1))
+        (should
+         (eq
+          (plist-get (car observed) :command-operation)
+          'history-navigation))))))
+
 (ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
   "Comint output and subprocess advice uses native advice directly."
   (dolist
