@@ -322,6 +322,97 @@
       (when (process-live-p process)
         (delete-process process)))))
 
+(ert-deftest emacsvox-tts-unexpected-process-exit-retires-owned-state ()
+  "An unexpected server exit fails callbacks and clears its runtime state."
+  (let* ((process
+          (make-process
+           :name "emacsvox-unexpected-exit-test"
+           :command '("sh" "-c" "exit 7")
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-notify-process nil)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (emacsvox-aural-last-delivery-failure nil)
+         callbacks
+         cancellations
+         stopped)
+    (process-put process tts--speech-process-generation-property 19)
+    (process-put process tts--speech-process-role-property 'speaker)
+    (puthash
+     31
+     (cons
+      process
+      (lambda (identifier status)
+        (push (list identifier status) callbacks)))
+     tts--tracked-dispatches)
+    (let ((tts-stopped-hook
+           (list (lambda (owner) (push owner stopped)))))
+      (cl-letf
+          (((symbol-function 'emacsvox-aural-cancel-pending-deliveries)
+            (lambda (owner) (push owner cancellations)))
+           ((symbol-function 'message) #'ignore))
+        (set-process-sentinel process #'tts--speech-process-sentinel)
+        (while (process-live-p process)
+          (accept-process-output process 0.1))
+        (accept-process-output process 0.01)))
+    (should-not tts-speaker-process)
+    (should (equal callbacks '((31 failed))))
+    (should-not (gethash 31 tts--tracked-dispatches))
+    (should (equal cancellations (list process)))
+    (should (equal stopped (list process)))
+    (should
+     (eq
+      (plist-get emacsvox-aural-last-delivery-failure :reason)
+      'speech-process-exited))
+    (should
+     (=
+      (plist-get emacsvox-aural-last-delivery-failure :process-generation)
+      19))
+    (should
+     (=
+      (plist-get emacsvox-aural-last-delivery-failure :exit-status)
+      7))))
+
+(ert-deftest emacsvox-tts-old-process-exit-cannot-clear-replacement ()
+  "A terminal event from an old process leaves the replacement current."
+  (let ((old
+         (make-pipe-process
+          :name "emacsvox-old-speaker-test" :buffer nil :noquery t))
+        (replacement
+         (make-pipe-process
+          :name "emacsvox-new-speaker-test" :buffer nil :noquery t))
+        (tts--tracked-dispatches (make-hash-table :test #'eql))
+        (emacsvox-aural-last-delivery-failure nil))
+    (unwind-protect
+        (let ((tts-speaker-process replacement)
+              (tts-notify-process nil))
+          (delete-process old)
+          (cl-letf
+              (((symbol-function 'message) #'ignore)
+               ((symbol-function
+                 'emacsvox-aural-cancel-pending-deliveries)
+                #'ignore))
+            (tts--speech-process-sentinel old "exited\n"))
+          (should (eq tts-speaker-process replacement)))
+      (when (process-live-p old) (delete-process old))
+      (when (process-live-p replacement) (delete-process replacement)))))
+
+(ert-deftest emacsvox-tts-intentional-retirement-suppresses-exit-failure ()
+  "The sentinel does not report an intentionally retired server as failed."
+  (let ((process
+         (make-pipe-process
+          :name "emacsvox-intentional-retire-test" :buffer nil :noquery t))
+        (tts--tracked-dispatches (make-hash-table :test #'eql))
+        (emacsvox-aural-last-delivery-failure nil)
+        failures)
+    (let ((emacsvox-aural-delivery-failed-hook
+           (list (lambda (failure) (push failure failures)))))
+      (process-put process tts--speech-process-retiring-property t)
+      (delete-process process)
+      (tts--speech-process-sentinel process "killed\n"))
+    (should-not failures)
+    (should-not emacsvox-aural-last-delivery-failure)))
+
 (ert-deftest emacsvox-tts-initialize-retires-old-process-after-new-starts ()
   "Successful initialization retires the old server before publishing new."
   (let ((tts-speaker-process 'old)

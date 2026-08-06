@@ -158,6 +158,25 @@ a `cancelled' record when pending input interrupts that wait.")
 (defvar tts--tracked-dispatches (make-hash-table :test #'eql)
   "Tracked speech callbacks indexed by dispatch identifier.")
 
+(defvar tts--speech-process-generation 0
+  "Sequence distinguishing speech-server process instances.")
+
+(defconst tts--speech-process-generation-property
+  'tts--speech-process-generation
+  "Process property holding one speech-server generation.")
+
+(defconst tts--speech-process-role-property
+  'tts--speech-process-role
+  "Process property identifying the main or notification speech stream.")
+
+(defconst tts--speech-process-retiring-property
+  'tts--speech-process-retiring
+  "Process property set before intentional speech-server retirement.")
+
+(defconst tts--speech-process-exit-handled-property
+  'tts--speech-process-exit-handled
+  "Process property preventing duplicate terminal sentinel handling.")
+
 (defconst tts--tracked-filter-property 'tts--tracked-original-filter
   "Process property retaining the filter replaced for tracked speech.")
 
@@ -199,12 +218,17 @@ Return non-nil when LINE is a tracked status record."
            (entry (gethash identifier tts--tracked-dispatches)))
       (when (and entry (eq process (car entry)))
         (remhash identifier tts--tracked-dispatches)
-        (condition-case error-data
-            (funcall (cdr entry) identifier status)
-          (error
-           (message "Tracked speech callback failed: %s"
-                    (error-message-string error-data))))))
+        (tts--call-tracked-dispatch-callback
+         (cdr entry) identifier status)))
     t))
+
+(defun tts--call-tracked-dispatch-callback (callback identifier status)
+  "Call tracked CALLBACK for IDENTIFIER with terminal STATUS safely."
+  (condition-case error-data
+      (funcall callback identifier status)
+    (error
+     (message "Tracked speech callback failed: %s"
+              (error-message-string error-data)))))
 
 (defun tts--speaker-process-filter (process output)
   "Recognize tracked completion records in PROCESS OUTPUT."
@@ -231,16 +255,86 @@ Return non-nil when LINE is a tracked status record."
   "Forget tracked speech dispatch IDENTIFIER."
   (remhash identifier tts--tracked-dispatches))
 
-(defun tts--cancel-process-tracked-dispatches (process)
-  "Forget every tracked dispatch owned by PROCESS."
-  (let (identifiers)
+(defun tts--cancel-process-tracked-dispatches (process &optional status)
+  "Forget every tracked dispatch owned by PROCESS.
+When STATUS is non-nil, notify each callback after removing its entry."
+  (let (entries)
     (maphash
      (lambda (identifier entry)
        (when (eq process (car entry))
-         (push identifier identifiers)))
+         (push (cons identifier (cdr entry)) entries)))
      tts--tracked-dispatches)
-    (dolist (identifier identifiers)
-      (remhash identifier tts--tracked-dispatches))))
+    (dolist (entry entries)
+      (remhash (car entry) tts--tracked-dispatches))
+    (when status
+      (dolist (entry (nreverse entries))
+        (tts--call-tracked-dispatch-callback
+         (cdr entry) (car entry) status)))))
+
+(defun tts--speech-process-terminal-p (process)
+  "Return non-nil when PROCESS has reached a terminal status."
+  (memq (process-status process) '(exit signal closed failed)))
+
+(defun tts--speech-process-failure (process event)
+  "Return a data-only failure record for PROCESS and sentinel EVENT."
+  (list
+   :time (current-time)
+   :reason 'speech-process-exited
+   :process-name (process-name process)
+   :process-role
+   (process-get process tts--speech-process-role-property)
+   :process-generation
+   (process-get process tts--speech-process-generation-property)
+   :process-status (process-status process)
+   :exit-status (process-exit-status process)
+   :event (string-trim event)))
+
+(defun tts--speech-process-sentinel (process event)
+  "Retire runtime state when speech PROCESS exits with EVENT."
+  (when
+      (and
+       (tts--speech-process-terminal-p process)
+       (not
+        (process-get process tts--speech-process-exit-handled-property)))
+    (process-put process tts--speech-process-exit-handled-property t)
+    (unless
+        (process-get process tts--speech-process-retiring-property)
+      (let ((current
+             (or
+              (eq process tts-speaker-process)
+              (eq process tts-notify-process)))
+            (failure (tts--speech-process-failure process event)))
+        (emacsvox-aural-cancel-pending-deliveries process)
+        (when-let* ((fragment
+                     (process-get process tts--tracked-fragment-property)))
+          (unless (string-empty-p fragment)
+            (tts--forward-untracked-output process fragment)))
+        (process-put process tts--tracked-fragment-property nil)
+        (tts--cancel-process-tracked-dispatches process 'failed)
+        (when (eq process tts-speaker-process)
+          (setq tts-speaker-process nil))
+        (when (eq process tts-notify-process)
+          (setq tts-notify-process nil))
+        (when current
+          (condition-case error-data
+              (run-hook-with-args 'tts-stopped-hook process)
+            (error
+             (message "Speech stopped hook failed: %s"
+                      (error-message-string error-data)))))
+        (setq emacsvox-aural-last-delivery-failure failure)
+        (condition-case error-data
+            (run-hook-with-args
+             'emacsvox-aural-delivery-failed-hook failure)
+          (error
+           (message "Speech failure hook failed: %s"
+                    (error-message-string error-data))))
+        (message
+         "Emacsvox speech server %s exited: %s"
+         (process-name process)
+         (let ((description (plist-get failure :event)))
+           (if (string-empty-p description)
+               (plist-get failure :process-status)
+             description)))))))
 
 (defun tts--interrupt-process (process &optional notifications)
   "Stop PROCESS and retire callbacks that can no longer complete.
@@ -264,6 +358,7 @@ This is the primary speech-process lifecycle boundary.  Pending replaceable
 delivery, tracked completion callbacks, and clients of `tts-stopped-hook' are
 retired before PROCESS can become an unreachable dead owner."
   (when (processp process)
+    (process-put process tts--speech-process-retiring-property t)
     (emacsvox-aural-cancel-pending-deliveries process)
     (tts--interrupt-process process)
     (delete-process process)))
@@ -1813,6 +1908,13 @@ For swiftmac, set this to `left' or `right'."
           (start-process name nil program))
     (unless (process-live-p process) (error "Fail: Speech Server"))
     (set-process-coding-system process 'utf-8 'utf-8)
+    (process-put
+     process tts--speech-process-generation-property
+     (cl-incf tts--speech-process-generation))
+    (process-put
+     process tts--speech-process-role-property
+     (if (string= name "Notify") 'notification 'speaker))
+    (set-process-sentinel process #'tts--speech-process-sentinel)
     process))
 
 (declare-function voice-setup "voice-setup" ())
