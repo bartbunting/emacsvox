@@ -362,6 +362,203 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
          (base64-decode-string (match-string 1 wire)) 'utf-8)
         "q {café 日本 }\nd\n")))))
 
+(ert-deftest emacsvox-aural-builds-rich-structured-timeline ()
+  "Structured plans retain voices, effects, overlays, pauses, and semantics."
+  (let* ((cue
+          (emacsvox-aural--make-concrete-action
+           :id 'opening :kind 'cue :resource "/tmp/opening.ogg"
+           :anchor 'object :source 'scheme :cue 'open-object :balance -0.5))
+         (tone
+          (emacsvox-aural--make-concrete-action
+           :id 'capital :kind 'tone :pitch 880 :duration 35
+           :anchor 'transition :source 'capitalization))
+         (content
+          (emacsvox-aural--make-concrete-content
+           :text "Hello" :speak t :voice-request 'heading
+           :voice-command "[[logical_voice heading]]"
+           :voice-style '(:rate 9 :average-pitch 3 :reverb 4 :echo 2)
+           :balance 0.5))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :before (list cue) :content content :after (list tone)
+           :context '(:icons-enabled t)))
+         (built
+          (emacsvox-aural--build-structured-timeline
+           7 19 (list (list plan "Hello" 20))))
+         (envelope (car built))
+         (span (aref (plist-get envelope :spans) 0))
+         (actions (append (plist-get envelope :actions) nil))
+         (audio
+          (seq-find
+           (lambda (action) (equal (plist-get action :type) "audio"))
+           actions))
+         (silence
+          (seq-find
+           (lambda (action) (equal (plist-get action :type) "silence"))
+           actions))
+         (wire-tone
+          (seq-find
+           (lambda (action) (equal (plist-get action :type) "tone"))
+           actions)))
+    (should (= (plist-get envelope :protocol_version) 1))
+    (should (= (plist-get envelope :generation) 7))
+    (should (= (plist-get envelope :dispatch_id) 19))
+    (should (equal (plist-get span :text) "Hello"))
+    (should (equal (plist-get span :logical_voice_id) "heading"))
+    (should (= (plist-get (plist-get span :acss) :rate) 1.0))
+    (should
+     (= (plist-get (plist-get span :acss) :average_pitch) (/ 3.0 9.0)))
+    (should (equal (plist-get (plist-get span :effects) :mode) "replace"))
+    (should
+     (=
+      (plist-get
+       (plist-get (plist-get span :effects) :style) :reverb)
+      (/ 4.0 9.0)))
+    (should
+     (=
+      (plist-get (plist-get (plist-get span :effects) :style) :pan)
+      0.75))
+    (should (equal (plist-get audio :mode) "overlay"))
+    (should (equal (plist-get audio :effect_bus) "dry"))
+    (should (= (plist-get audio :pan) 0.25))
+    (should (equal (plist-get audio :path) "/tmp/opening.ogg"))
+    (should (= (plist-get silence :duration_ms) 20))
+    (should (= (plist-get wire-tone :frequency_hz) 880.0))
+    (should (equal (plist-get wire-tone :mode) "overlay"))
+    (should
+     (=
+      (length
+       (seq-filter
+        (lambda (action)
+          (equal (plist-get action :type) "semantic_event"))
+        actions))
+      2))
+    (should (= (length (cadr built)) 4))))
+
+(ert-deftest emacsvox-aural-structured-timeline-honors-disabled-icons ()
+  "Structured lowering retains the frozen auditory-icon policy."
+  (let* ((cue
+          (emacsvox-aural--make-concrete-action
+           :id 'opening :kind 'cue :resource "/tmp/opening.ogg"))
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :before (list cue)
+           :content
+           (emacsvox-aural--make-concrete-content :text "Quiet" :speak t)
+           :context '(:icons-enabled nil)))
+         (actions
+          (append
+           (plist-get
+            (car
+             (emacsvox-aural--build-structured-timeline
+              1 1 (list (list plan "Quiet" nil))))
+            :actions)
+           nil)))
+    (should-not
+     (seq-find
+      (lambda (action) (equal (plist-get action :type) "audio"))
+      actions))
+    (should-not actions)))
+
+(ert-deftest emacsvox-aural-delivers-one-negotiated-structured-timeline ()
+  "A complete direct Aural presentation replaces its legacy wire packet."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-structured-delivery-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts--tracked-dispatch-sequence 40)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (tts--marker-event-function #'ignore)
+         (tts--tracked-completion-function #'ignore)
+         (emacsvox-aural--delivery-sequence 0)
+         (emacsvox-aural-presentation-history nil)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "structured" :speak t :voice-request 'comment
+            :voice-command "[[logical_voice comment]]")
+           :context '(:occasion navigation)))
+         writes identifier)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property t)
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process tts--marker-playback-events-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (owner command)
+                  (push (list owner command) writes)))
+               ((symbol-function 'tts-voice-reset-code)
+                (lambda () "")))
+            (setq
+             identifier
+             (emacsvox-aural-call-with-delivery-transaction
+              process
+              (lambda ()
+                (emacsvox-aural-queue-concrete-plan plan "structured")
+                (tts--protocol-dispatch)))))
+          (should (= identifier 41))
+          (should (= (length writes) 1))
+          (let ((wire (cadar writes)))
+            (should
+             (string-match
+              "\\`emacsvox_timeline {\\([^}]+\\)}\n\\'" wire))
+            (let* ((decoded
+                    (decode-coding-string
+                     (base64-decode-string (match-string 1 wire)) 'utf-8))
+                   (envelope
+                    (json-parse-string
+                     decoded :object-type 'plist :array-type 'list)))
+              (should (= (plist-get envelope :protocol_version) 1))
+              (should (= (plist-get envelope :generation) 1))
+              (should (= (plist-get envelope :dispatch_id) identifier))
+              (should
+               (equal
+                (plist-get (car (plist-get envelope :spans)) :text)
+                "structured"))))
+          (should (gethash identifier tts--tracked-dispatches))
+          (should (gethash identifier tts--marker-dispatches)))
+      (tts-cancel-tracked-dispatch identifier)
+      (delete-process process))))
+
+(ert-deftest emacsvox-aural-keeps-whole-legacy-packet-on-raw-write ()
+  "An unmodelled command prevents partial structured conversion."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-structured-fallback-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (emacsvox-aural--delivery-sequence 0)
+         (plan
+          (emacsvox-aural--make-concrete-plan
+           :content
+           (emacsvox-aural--make-concrete-content
+            :text "legacy" :speak t)))
+         writes)
+    (unwind-protect
+        (progn
+          (process-put
+           process emacsvox-aural--structured-timeline-process-property t)
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (_owner command) (push command writes)))
+               ((symbol-function 'tts-voice-reset-code)
+                (lambda () "")))
+            (emacsvox-aural-call-with-delivery-transaction
+             process
+             (lambda ()
+               (emacsvox-aural-delivery-send process "unmodelled\n")
+               (emacsvox-aural-queue-concrete-plan plan "legacy")
+               (tts--protocol-dispatch))))
+          (let ((wire (apply #'concat (nreverse writes))))
+            (should (string-prefix-p "unmodelled\n" wire))
+            (should (string-match-p "q {legacy }" wire))
+            (should (string-suffix-p "d\n" wire))
+            (should-not (string-match-p "emacsvox_timeline" wire))))
+      (delete-process process))))
+
 (ert-deftest emacsvox-aural-delivery-keeps-stops-immediate-and-cancellable ()
   "Stops bypass collection and prevent pending speech from returning later."
   (let ((emacsvox-aural--pending-deliveries

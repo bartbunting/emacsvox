@@ -121,8 +121,8 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defconst omnivox-control-max-encoded-bytes 349532
   "Maximum encoded Omnivox control payload accepted by Emacsvox.")
 
-(defconst omnivox-marker-event-protocol-version 1
-  "Marker event protocol version supported by this adapter.")
+(defconst omnivox-marker-event-protocol-versions '(1 2)
+  "Marker event protocol versions supported by this adapter.")
 
 (defconst omnivox-marker-event-prefix "__EMACSVOX_MARKER__ "
   "Prefix of Base64-JSON playback marker events emitted by Omnivox.")
@@ -193,6 +193,12 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 
 (defvar omnivox-marker-last-error nil
   "Most recent malformed Omnivox playback marker event.")
+
+(defvar omnivox-timeline-last-event nil
+  "Most recent validated version 2 timeline event from Omnivox.")
+
+(defvar omnivox-timeline-event-hook nil
+  "Hook run with one validated version 2 timeline event argument.")
 
 (defvar omnivox--logical-acss-table (make-hash-table :test #'equal)
   "Normalized ACSS styles indexed by logical voice ID.")
@@ -321,12 +327,28 @@ Return non-nil for every marker-prefixed line, including malformed records."
                (type (plist-get event :type)))
           (unless
               (and
-               (= (or version -1) omnivox-marker-event-protocol-version)
+               (memq version omnivox-marker-event-protocol-versions)
                (integerp identifier) (> identifier 0)
                (integerp sequence) (> sequence 0)
                (stringp type))
             (error "Invalid Omnivox marker event envelope"))
-          (when (member type '("utterance_started" "marker_reached"))
+          (when
+              (member
+               type
+               '("semantic_event_reached"
+                 "timeline_action_resolved"
+                 "timeline_style_degraded"))
+            (setq omnivox-timeline-last-event
+                  (list :process process :event (copy-tree event)
+                        :time (current-time)))
+            (run-hook-with-args 'omnivox-timeline-event-hook event))
+          (when
+              (member
+               type
+               '("utterance_started" "marker_reached"
+                 "semantic_event_reached"
+                 "timeline_action_resolved"
+                 "timeline_style_degraded"))
             (tts--dispatch-playback-marker-event process event)))
       (error
        (setq omnivox-marker-last-error
@@ -982,11 +1004,16 @@ Return the number of processes sent the atomic registry replacement."
     (process-put
      process tts--marker-playback-events-property
      (and
-      (member "playback_marker_events_v1"
-              (plist-get response :features))
+      (or
+       (member "playback_marker_events_v1"
+               (plist-get response :features))
+       (member "playback_marker_events_v2"
+               (plist-get response :features)))
       t))
     (when (member "emacsvox_tx" (plist-get response :features))
       (emacsvox-aural-enable-framed-delivery process))
+    (when (member "presentation_timeline_v1" (plist-get response :features))
+      (emacsvox-aural-enable-structured-timeline process))
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
     (if (member "engine_inventory" (plist-get response :features))

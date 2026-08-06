@@ -139,8 +139,9 @@ mac for MAC TTS (default on Mac)")
 ;;;;   speak
 
 (defun tts--protocol-dispatch ()
-  
-  (emacsvox-aural-delivery-send tts-speaker-process "d\n"))
+
+  (unless (emacsvox-aural-structured-delivery-pending-p)
+    (emacsvox-aural-delivery-send tts-speaker-process "d\n")))
 
 (defconst tts--tracked-status-prefix "__EMACSVOX_TRACKED__"
   "Speech-server output prefix for tracked dispatch status records.")
@@ -168,7 +169,7 @@ a `cancelled' record when pending input interrupts that wait.")
 
 (cl-defstruct (tts--marker-dispatch
                (:constructor tts--marker-dispatch-create))
-  process callback (last-sequence 0))
+  process callback semantic-actions (last-sequence 0))
 
 (defvar tts--marker-dispatches (make-hash-table :test #'eql)
   "Marker callback state indexed by tracked dispatch identifier.")
@@ -292,8 +293,21 @@ Return non-nil when EVENT belongs to a live marker dispatch."
          sequence))
       (setf (tts--marker-dispatch-last-sequence entry) sequence)
       (condition-case error-data
-          (funcall
-           (tts--marker-dispatch-callback entry) identifier event)
+          (let* ((action-id (plist-get event :action_id))
+                 (semantic-value
+                  (and
+                   (stringp action-id)
+                   (alist-get
+                    action-id
+                    (tts--marker-dispatch-semantic-actions entry)
+                    nil nil #'equal)))
+                 (delivered
+                  (if semantic-value
+                      (plist-put
+                       (copy-sequence event) :semantic_value semantic-value)
+                    event)))
+            (funcall
+             (tts--marker-dispatch-callback entry) identifier delivered))
         (error
          (message "Marker speech callback failed: %s"
                   (error-message-string error-data))))
@@ -487,6 +501,37 @@ COMPLETION-CALLBACK receives the identifier and terminal status."
        (tts-cancel-tracked-dispatch identifier)
        (signal (car error-data) (cdr error-data))))
     identifier))
+
+(defun tts--prepare-structured-dispatch
+    (marker-callback completion-callback semantic-actions)
+  "Allocate a structured dispatch and return its ID plus registration effect.
+
+SEMANTIC-ACTIONS maps opaque wire IDs to richer client values.  The returned
+effect must run only after the complete timeline command has been sent."
+  (when (and marker-callback (not (functionp marker-callback)))
+    (signal 'wrong-type-argument (list 'functionp marker-callback)))
+  (when (and completion-callback (not (functionp completion-callback)))
+    (signal 'wrong-type-argument (list 'functionp completion-callback)))
+  (tts--require-tracked-playback-completion)
+  (when marker-callback (tts--require-marker-playback-events))
+  (tts--ensure-tracked-process-filter tts-speaker-process)
+  (let ((identifier (cl-incf tts--tracked-dispatch-sequence))
+        (process tts-speaker-process))
+    (cons
+     identifier
+     (lambda ()
+       (when completion-callback
+         (puthash
+          identifier (cons process completion-callback)
+          tts--tracked-dispatches))
+       (when marker-callback
+         (puthash
+          identifier
+          (tts--marker-dispatch-create
+           :process process
+           :callback marker-callback
+           :semantic-actions (copy-tree semantic-actions))
+          tts--marker-dispatches))))))
 
 ;;;;  say
 
@@ -2641,6 +2686,7 @@ by the audio device's buffering latency."
                 (skip-syntax-forward " ")       ;skip leading whitespace
                 (unless (eobp) (tts-audio-format (point) (point-max)))))
             (cond
+             ((emacsvox-aural-structured-delivery-pending-p) nil)
              (tts--marker-event-function
               (tts--protocol-dispatch-marked
                tts--marker-event-function

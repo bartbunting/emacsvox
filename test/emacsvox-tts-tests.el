@@ -1204,6 +1204,47 @@
           (should-not forwarded))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-omnivox-enriches-timeline-semantic-events ()
+  "Version 2 semantic markers recover the richer client-side action value."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-timeline-marker-test" :buffer nil :noquery t))
+         (identifier 74)
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         (semantic-value '(:id opening :kind cue :source scheme))
+         (omnivox-timeline-last-event nil)
+         observed hook-event)
+    (unwind-protect
+        (progn
+          (puthash
+           identifier
+           (tts--marker-dispatch-create
+            :process process
+            :callback
+            (lambda (_value event) (setq observed event))
+            :semantic-actions
+            (list (cons "semantic.1" semantic-value)))
+           tts--marker-dispatches)
+          (let ((omnivox-timeline-event-hook
+                 (list (lambda (event) (setq hook-event event)))))
+            (should
+             (omnivox--handle-marker-line
+              process
+              (string-trim-right
+               (emacsvox-test--omnivox-marker-event
+                (list
+                 :protocol_version 2 :dispatch_id identifier :sequence 1
+                 :type "semantic_event_reached" :action_id "semantic.1"
+                 :utterance_id 1 :engine_id "eloquence"))))))
+          (should (equal (plist-get observed :semantic_value) semantic-value))
+          (should (equal (plist-get hook-event :action_id) "semantic.1"))
+          (should
+           (equal
+            (plist-get
+             (plist-get omnivox-timeline-last-event :event) :type)
+            "semantic_event_reached")))
+      (delete-process process))))
+
 (ert-deftest emacsvox-tts-marker-speech-rejects-unsupported-server ()
   "Marker-aware speech fails before submitting text to an older server."
   (let ((tts-program "espeak") called)

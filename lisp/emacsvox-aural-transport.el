@@ -12,6 +12,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'json)
 (require 'subr-x)
 (require 'emacsvox-aural-concrete)
 (require 'emacsvox-aural-compiler)
@@ -31,10 +32,15 @@
 (declare-function tts--protocol-queue-text "tts-speak" (text))
 (declare-function tts--protocol-silence "tts-speak" (duration &optional force))
 (declare-function tts--protocol-tone "tts-speak" (pitch duration &optional force))
+(declare-function tts--prepare-structured-dispatch
+                  "tts-speak"
+                  (marker-callback completion-callback semantic-actions))
 (declare-function tts-initialize "tts-speak" ())
 (declare-function tts-voice-reset-code "tts-speak" ())
 
 (defvar tts-speaker-process)
+(defvar tts--marker-event-function)
+(defvar tts--tracked-completion-function)
 
 (defvar emacsvox-aural--queued-run-leading-pause nil
   "Leading pause retained while queueing one concrete formatting run.")
@@ -43,7 +49,7 @@
     (emacsvox-aural--delivery-entry
      (:constructor emacsvox-aural--make-delivery-entry))
   "One server command captured inside a complete delivery transaction."
-  process command)
+  process command kind)
 
 (cl-defstruct
     (emacsvox-aural--pending-delivery
@@ -68,6 +74,15 @@ delay.  Ordered and urgent transactions are never delayed."
 (defvar emacsvox-aural--delivery-transaction-effects nil
   "Reverse-ordered effects committed after the current transaction is sent.")
 
+(defvar emacsvox-aural--delivery-timeline-runs nil
+  "Reverse-ordered concrete runs captured for structured delivery.")
+
+(defvar emacsvox-aural--delivery-entry-kind nil
+  "Dynamic origin tag applied to captured delivery entries.")
+
+(defvar emacsvox-aural--structured-runs-recorded-p nil
+  "Non-nil when the enclosing run queue already captured structured runs.")
+
 (defvar emacsvox-aural--pending-deliveries
   (make-hash-table :test #'equal)
   "Replaceable server transactions indexed by owner and replacement key.")
@@ -88,10 +103,19 @@ Each function receives the failure plist stored in
   'emacsvox-aural-framed-delivery
   "Process property enabling complete replaceable transaction framing.")
 
+(defconst emacsvox-aural--structured-timeline-process-property
+  'emacsvox-aural-structured-timeline
+  "Process property enabling version 1 structured presentation delivery.")
+
 (defun emacsvox-aural-enable-framed-delivery (process)
   "Enable complete replaceable transaction framing for PROCESS."
   (process-put
    process emacsvox-aural--framed-delivery-process-property t)
+  process)
+
+(defun emacsvox-aural-enable-structured-timeline (process)
+  "Enable structured aural presentation timelines for PROCESS."
+  (process-put process emacsvox-aural--structured-timeline-process-property t)
   process)
 
 (defun emacsvox-aural-delivery-send (process command &optional kind)
@@ -105,7 +129,8 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
        (not (eq kind 'stop)))
       (push
        (emacsvox-aural--make-delivery-entry
-        :process process :command command)
+        :process process :command command
+        :kind (or kind emacsvox-aural--delivery-entry-kind))
        emacsvox-aural--delivery-transaction-entries)
     (process-send-string process command)))
 
@@ -115,6 +140,12 @@ payload, so they remain immediate and cannot accumulate behind idle delivery."
   (if
       (and
        generation
+       (not
+        (cl-some
+         (lambda (entry)
+           (eq 'structured
+               (emacsvox-aural--delivery-entry-kind entry)))
+         entries))
        (processp owner)
        (process-get
         owner emacsvox-aural--framed-delivery-process-property)
@@ -305,14 +336,14 @@ Return non-nil when every entry was sent to a live process."
     (emacsvox-aural--deliver-pending table-key)))
 
 (defun emacsvox-aural--schedule-replaceable-delivery
-    (owner replacement-key entries effects)
+    (owner replacement-key entries effects generation)
   "Schedule ENTRIES and EFFECTS for OWNER, replacing older keyed work."
   (let* ((table-key
           (emacsvox-aural--pending-delivery-table-key
            owner replacement-key))
          (pending
           (emacsvox-aural--make-pending-delivery
-           :sequence (cl-incf emacsvox-aural--delivery-sequence)
+           :sequence generation
            :owner owner
            :replacement-key replacement-key
            :entries entries
@@ -325,7 +356,8 @@ Return non-nil when every entry was sent to a live process."
       emacsvox-aural-replacement-idle-delay nil
       #'emacsvox-aural--deliver-pending table-key))))
 
-(defun emacsvox-aural--submit-delivery-entries (owner entries effects)
+(defun emacsvox-aural--submit-delivery-entries
+    (owner entries effects generation)
   "Submit protocol ENTRIES and commit EFFECTS under current source policy."
   (when entries
     (when-let* ((foreign
@@ -348,7 +380,8 @@ Return non-nil when every entry was sent to a live process."
        (when emacsvox-aural-submission-controls-interruption
          (tts--interrupt-process owner t))
        (emacsvox-aural--schedule-replaceable-delivery
-        owner emacsvox-aural-submission-replacement-key entries effects))
+        owner emacsvox-aural-submission-replacement-key
+        entries effects generation))
       ('urgent
        (emacsvox-aural-cancel-pending-deliveries owner)
        (when emacsvox-aural-submission-controls-interruption
@@ -377,10 +410,20 @@ OWNER so a logical transaction cannot be partially delivered across streams."
     (let ((emacsvox-aural--delivery-transaction-active-p t)
           (emacsvox-aural--delivery-transaction-entries nil)
           (emacsvox-aural--delivery-transaction-effects nil)
+          (emacsvox-aural--delivery-timeline-runs nil)
           result)
       (setq result (apply function arguments))
-      (let ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
-            (effects (nreverse emacsvox-aural--delivery-transaction-effects)))
+      (let* ((entries (nreverse emacsvox-aural--delivery-transaction-entries))
+             (effects (nreverse emacsvox-aural--delivery-transaction-effects))
+             (generation (cl-incf emacsvox-aural--delivery-sequence))
+             (structured
+              (emacsvox-aural--finalize-structured-delivery
+               owner generation entries effects
+               (nreverse emacsvox-aural--delivery-timeline-runs))))
+        (setq entries (car structured)
+              effects (cadr structured))
+        (when (integerp (caddr structured))
+          (setq result (caddr structured)))
         (when
             (and
              entries
@@ -389,8 +432,411 @@ OWNER so a logical transaction cannot be partially delivered across streams."
                 (cons
                  (funcall emacsvox-aural--delivery-history-registrar)
                  effects)))
-        (emacsvox-aural--submit-delivery-entries owner entries effects))
+        (emacsvox-aural--submit-delivery-entries
+         owner entries effects generation))
       result)))
+
+(defun emacsvox-aural--structured-capture-p ()
+  "Return non-nil when the current transaction can carry a timeline."
+  (and
+   emacsvox-aural--delivery-transaction-active-p
+   (processp tts-speaker-process)
+   (process-get
+    tts-speaker-process emacsvox-aural--structured-timeline-process-property)))
+
+(defun emacsvox-aural--capture-structured-run (plan text pause)
+  "Capture concrete PLAN, final TEXT, and leading PAUSE for the timeline."
+  (push
+   (list plan text pause)
+   emacsvox-aural--delivery-timeline-runs))
+
+(defun emacsvox-aural-structured-delivery-pending-p ()
+  "Return non-nil when the current transaction can replace its legacy queue."
+  (and
+   emacsvox-aural--delivery-timeline-runs
+   (cl-every
+    #'emacsvox-aural--timeline-run-has-speech-p
+    emacsvox-aural--delivery-timeline-runs)
+   (cl-every
+    (lambda (entry)
+      (or
+       (eq 'structured-fallback
+           (emacsvox-aural--delivery-entry-kind entry))
+       (string-prefix-p
+        "tts_sync_state "
+        (emacsvox-aural--delivery-entry-command entry))))
+    emacsvox-aural--delivery-transaction-entries)))
+
+(defun emacsvox-aural--timeline-run-has-speech-p (run)
+  "Return non-nil when concrete RUN contains a nonempty speech span."
+  (pcase-let* ((`(,plan ,text ,_) run)
+               (content (emacsvox-aural-concrete-plan-content plan)))
+    (or
+     (and
+      (emacsvox-aural-concrete-content-speak content)
+      (stringp text) (not (string-empty-p text)))
+     (cl-some
+      (lambda (action)
+        (and
+         (eq 'speech (emacsvox-aural-concrete-action-kind action))
+         (stringp (emacsvox-aural-concrete-action-text action))
+         (not
+          (string-empty-p
+           (emacsvox-aural-concrete-action-text action)))))
+      (append
+       (emacsvox-aural-concrete-plan-before plan)
+       (emacsvox-aural-concrete-plan-after plan))))))
+
+(defun emacsvox-aural--timeline-normalize-value (value)
+  "Normalize portable zero-to-nine VALUE for the timeline wire."
+  (when (numberp value)
+    (/ (float (max 0 (min 9 value))) 9.0)))
+
+(defun emacsvox-aural--timeline-style-acss (style)
+  "Return JSON ACSS fields carried by concrete voice STYLE."
+  (let (result)
+    (dolist
+        (mapping
+         '((:rate . :rate)
+           (:average-pitch . :average_pitch)
+           (:pitch-range . :pitch_range)
+           (:stress . :stress)
+           (:richness . :richness)))
+      (when-let* ((value
+                   (emacsvox-aural--timeline-normalize-value
+                    (plist-get style (car mapping)))))
+        (setq result (plist-put result (cdr mapping) value))))
+    (or result (make-hash-table :test #'equal))))
+
+(defun emacsvox-aural--timeline-style-effects (style &optional balance)
+  "Return JSON post-synthesis effects carried by STYLE and stereo BALANCE."
+  (let (result)
+    (dolist
+        (mapping
+         '((:gain . :gain)
+           (:low-pass . :low_pass)
+           (:high-pass . :high_pass)
+           (:pan . :pan)
+           (:reverb . :reverb)
+           (:echo . :echo)))
+      (when-let* ((value
+                   (emacsvox-aural--timeline-normalize-value
+                    (plist-get style (car mapping)))))
+        (setq result (plist-put result (cdr mapping) value))))
+    (when (numberp balance)
+      (setq
+       result
+       (plist-put
+        result :pan
+        (/ (1+ (float (max -1.0 (min 1.0 balance)))) 2.0))))
+    result))
+
+(defun emacsvox-aural--timeline-action-pan (action)
+  "Return ACTION's normalized concrete stereo position, defaulting to center."
+  (let ((balance (emacsvox-aural-concrete-action-balance action)))
+    (if (numberp balance)
+        (/ (1+ (float (max -1.0 (min 1.0 balance)))) 2.0)
+      0.5)))
+
+(defun emacsvox-aural--timeline-logical-voice (command request)
+  "Return the logical voice ID frozen in COMMAND or portable REQUEST."
+  (cond
+   ((and
+     (stringp command)
+     (string-match
+      "\\[\\[logical_voice \\([A-Za-z0-9_.-]+\\)\\]\\]" command))
+    (match-string 1 command))
+   ((symbolp request) (symbol-name request))
+   ((stringp request) request)
+   ((and (listp request) (symbolp (plist-get request :preset)))
+    (symbol-name (plist-get request :preset)))
+   ((and (listp request) (stringp (plist-get request :preset)))
+    (plist-get request :preset))))
+
+(defun emacsvox-aural--timeline-position (span-id affinity)
+  "Return one span-boundary JSON position for SPAN-ID and AFFINITY."
+  (list
+   :position "span_boundary"
+   :span_id span-id
+   :affinity (symbol-name affinity)))
+
+(defun emacsvox-aural--timeline-lifecycle (action)
+  "Return ACTION's valid lifecycle anchor as a JSON string."
+  (symbol-name
+   (or (emacsvox-aural-concrete-action-anchor action) 'object)))
+
+(defun emacsvox-aural--timeline-semantic-value (action)
+  "Return the richer client value associated with concrete ACTION."
+  (list
+   :id (emacsvox-aural-concrete-action-id action)
+   :kind (emacsvox-aural-concrete-action-kind action)
+   :anchor (emacsvox-aural-concrete-action-anchor action)
+   :source (emacsvox-aural-concrete-action-source action)
+   :cue (emacsvox-aural-concrete-action-cue action)
+   :tone (emacsvox-aural-concrete-action-tone action)))
+
+(defun emacsvox-aural--build-structured-timeline
+    (generation dispatch-id runs)
+  "Build a structured timeline for GENERATION, DISPATCH-ID, and RUNS.
+
+Return a list of envelope and opaque semantic bindings, or nil when the
+recorded plans contain no speech span and therefore require legacy lowering."
+  (let ((span-sequence 0)
+        (action-sequence 0)
+        active-effects spans actions bindings unsupported)
+    (cl-labels
+        ((wire-id
+          (prefix)
+          (format "%s.%d" prefix (cl-incf action-sequence)))
+         (effect-directive
+          (style balance)
+          (let ((effects
+                 (emacsvox-aural--timeline-style-effects style balance)))
+            (cond
+             ((equal effects active-effects) '(:mode "retain"))
+             (effects
+              (setq active-effects (copy-tree effects))
+              (list
+               :mode "replace"
+               :state_id (format "emacsvox.effects.%d" span-sequence)
+               :style effects))
+             (active-effects
+              (setq active-effects nil)
+              '(:mode "end"))
+             (t '(:mode "retain")))))
+         (add-wire-action
+          (wire-id position lifecycle fields semantic-value)
+          (push
+           (append
+            (list
+             :id wire-id
+             :position position
+             :lifecycle_anchor lifecycle)
+            fields)
+           actions)
+          (when semantic-value
+            (push (cons wire-id (copy-tree semantic-value)) bindings)))
+         (add-action
+          (action span-id affinity context)
+          (let* ((position
+                  (emacsvox-aural--timeline-position span-id affinity))
+                 (lifecycle
+                  (emacsvox-aural--timeline-lifecycle action))
+                 (semantic-value
+                  (emacsvox-aural--timeline-semantic-value action))
+                 (kind (emacsvox-aural-concrete-action-kind action))
+                 (wire-action-id (wire-id "action"))
+                 (modelled t))
+            (pcase kind
+              ('cue
+               (if (emacsvox-aural-icons-enabled-p context)
+                   (add-wire-action
+                    wire-action-id position lifecycle
+                    (list
+                     :type "audio"
+                     :path
+                     (expand-file-name
+                      (emacsvox-aural-concrete-action-resource action))
+                     :mode "overlay" :volume 1.0
+                     :pan (emacsvox-aural--timeline-action-pan action)
+                     :effect_bus "dry")
+                    semantic-value)
+                 (setq modelled nil)))
+              ('pause
+               (add-wire-action
+                wire-action-id position lifecycle
+                (list
+                 :type "silence"
+                 :duration_ms
+                 (emacsvox-aural-concrete-action-duration action))
+                semantic-value))
+              ('tone
+               (add-wire-action
+                wire-action-id position lifecycle
+                (list
+                 :type "tone"
+                 :frequency_hz
+                 (float (emacsvox-aural-concrete-action-pitch action))
+                 :duration_ms
+                 (emacsvox-aural-concrete-action-duration action)
+                 :mode "overlay" :volume 1.0
+                 :pan (emacsvox-aural--timeline-action-pan action)
+                 :effect_bus "dry")
+                semantic-value))
+              (_ (setq modelled nil)))
+            (when modelled
+              (let ((semantic-id (wire-id "semantic")))
+                (add-wire-action
+                 semantic-id position lifecycle
+                 '(:type "semantic_event") semantic-value)))))
+         (add-silence
+          (duration span-id affinity)
+          (add-wire-action
+           (wire-id "pause")
+           (emacsvox-aural--timeline-position span-id affinity)
+           "run"
+           (list :type "silence" :duration_ms duration)
+           nil))
+         (add-span
+          (text request style command balance lifecycle pending context)
+          (let* ((span-id (cl-incf span-sequence))
+                 (logical
+                  (emacsvox-aural--timeline-logical-voice command request)))
+            (push
+             (append
+              (list
+               :id span-id :text text
+               :logical_voice_id (or logical :null)
+               :acss (emacsvox-aural--timeline-style-acss style)
+               :effects (effect-directive style balance)))
+             spans)
+            (dolist (action pending)
+              (if (numberp action)
+                  (add-silence action span-id 'before)
+                (add-action action span-id 'before context)))
+            (when lifecycle
+              (let ((semantic-id (wire-id "semantic")))
+                (add-wire-action
+                 semantic-id
+                 (emacsvox-aural--timeline-position span-id 'before)
+                 (emacsvox-aural--timeline-lifecycle lifecycle)
+                 '(:type "semantic_event")
+                 (emacsvox-aural--timeline-semantic-value lifecycle))))
+            span-id))
+         (speech-action-p
+          (action)
+          (and
+           (eq 'speech (emacsvox-aural-concrete-action-kind action))
+           (stringp (emacsvox-aural-concrete-action-text action))
+           (not
+            (string-empty-p
+             (emacsvox-aural-concrete-action-text action))))))
+      (dolist (run runs)
+        (pcase-let* ((`(,plan ,text ,pause) run)
+                     (content (emacsvox-aural-concrete-plan-content plan))
+                     (context (emacsvox-aural-concrete-plan-context plan))
+                     (pending (and pause (list pause)))
+                     (last-span nil))
+          (dolist (action (emacsvox-aural-concrete-plan-before plan))
+            (if (speech-action-p action)
+                (progn
+                  (setq
+                   last-span
+                   (add-span
+                    (emacsvox-aural-concrete-action-text action)
+                    (emacsvox-aural-concrete-action-voice-request action)
+                    (emacsvox-aural-concrete-action-voice-style action)
+                    (emacsvox-aural-concrete-action-voice-command action)
+                    (emacsvox-aural-concrete-action-balance action)
+                    action pending context)
+                   pending nil))
+              (setq pending (append pending (list action)))))
+          (when
+              (and
+               (emacsvox-aural-concrete-content-speak content)
+               (stringp text) (not (string-empty-p text)))
+            (setq
+             last-span
+             (add-span
+              text
+              (emacsvox-aural-concrete-content-voice-request content)
+              (emacsvox-aural-concrete-content-voice-style content)
+              (emacsvox-aural-concrete-content-voice-command content)
+              (emacsvox-aural-concrete-content-balance content)
+              nil pending context)
+             pending nil))
+          (dolist (action (emacsvox-aural-concrete-plan-after plan))
+            (if (speech-action-p action)
+                (progn
+                  (setq
+                   last-span
+                   (add-span
+                    (emacsvox-aural-concrete-action-text action)
+                    (emacsvox-aural-concrete-action-voice-request action)
+                    (emacsvox-aural-concrete-action-voice-style action)
+                    (emacsvox-aural-concrete-action-voice-command action)
+                    (emacsvox-aural-concrete-action-balance action)
+                    action pending context)
+                   pending nil))
+              (setq pending (append pending (list action)))))
+          (if (not last-span)
+              (setq unsupported t)
+            (dolist (action pending)
+              (if (numberp action)
+                  (add-silence action last-span 'after)
+                (add-action action last-span 'after context)))))))
+    (unless unsupported
+      (list
+       (list
+        :protocol_version 1
+        :generation generation
+        :dispatch_id dispatch-id
+        :spans (vconcat (nreverse spans))
+        :actions (vconcat (nreverse actions)))
+       (nreverse bindings)))))
+
+(defun emacsvox-aural--encode-structured-timeline (envelope)
+  "Encode structured timeline ENVELOPE as bounded Base64 JSON."
+  (let* ((json (json-serialize envelope))
+         (payload (encode-coding-string json 'utf-8 t)))
+    (when (> (string-bytes payload) (* 256 1024))
+      (error "Structured aural presentation exceeds 262144 bytes"))
+    (base64-encode-string payload t)))
+
+(defun emacsvox-aural--finalize-structured-delivery
+    (owner generation entries effects runs)
+  "Replace eligible legacy ENTRIES with one structured timeline for OWNER."
+  (if
+      (not
+       (and
+        runs
+        (eq owner tts-speaker-process)
+        (cl-every #'emacsvox-aural--timeline-run-has-speech-p runs)
+        (cl-every
+         (lambda (entry)
+           (or
+            (eq 'structured-fallback
+                (emacsvox-aural--delivery-entry-kind entry))
+            (string-prefix-p
+             "tts_sync_state "
+             (emacsvox-aural--delivery-entry-command entry))))
+         entries)))
+      (list entries effects)
+    (let* ((built
+            (emacsvox-aural--build-structured-timeline
+             generation 1 runs)))
+      (if (not built)
+          (list entries effects)
+        (let* ((envelope (car built))
+               (bindings (cadr built))
+               (registration
+                (tts--prepare-structured-dispatch
+                 tts--marker-event-function
+                 tts--tracked-completion-function
+                 bindings))
+               (actual-id (car registration)))
+          (unless (= actual-id 1)
+            (setq
+             envelope
+             (car
+              (emacsvox-aural--build-structured-timeline
+               generation actual-id runs))))
+          (list
+           (append
+            (cl-remove-if
+             (lambda (entry)
+               (eq 'structured-fallback
+                   (emacsvox-aural--delivery-entry-kind entry)))
+             entries)
+            (list
+             (emacsvox-aural--make-delivery-entry
+              :process owner :kind 'structured
+              :command
+              (format
+               "emacsvox_timeline {%s}\n"
+               (emacsvox-aural--encode-structured-timeline envelope)))))
+           (append effects (list (cdr registration)))
+           actual-id))))))
 
 (defun emacsvox-aural-queue-concrete-action (action &optional context)
   "Queue concrete ACTION under frozen CONTEXT without resolving again."
@@ -563,7 +1009,16 @@ Each entry in RUNS is a list of PLAN, final text, and an optional leading
 pause.  Adjacent runs are coalesced only within one aural object when their
 effective speech transport settings match and no action or pause separates
 them."
-  (let (group previous)
+  (let* ((structured (emacsvox-aural--structured-capture-p))
+         (emacsvox-aural--delivery-entry-kind
+          (if structured 'structured-fallback
+            emacsvox-aural--delivery-entry-kind))
+         (emacsvox-aural--structured-runs-recorded-p structured)
+         group previous)
+    (when structured
+      (dolist (run runs)
+        (emacsvox-aural--capture-structured-run
+         (car run) (nth 1 run) (nth 2 run))))
     (cl-labels
         ((flush
           ()
@@ -594,14 +1049,21 @@ them."
 
 When TEXT is supplied it replaces the plan's source text after normal TTS
 cleanup, without rerunning semantic or contextual resolution."
-  (let ((context (emacsvox-aural-concrete-plan-context plan)))
-    (dolist (action (emacsvox-aural-concrete-plan-before plan))
-      (emacsvox-aural-queue-concrete-action action context)))
-  (let* ((content (emacsvox-aural-concrete-plan-content plan))
+  (let* ((structured (emacsvox-aural--structured-capture-p))
+         (emacsvox-aural--delivery-entry-kind
+          (if structured 'structured-fallback
+            emacsvox-aural--delivery-entry-kind))
+         (content (emacsvox-aural-concrete-plan-content plan))
          (payload
-         (if text-supplied-p
+          (if text-supplied-p
               text
             (emacsvox-aural-concrete-content-text content))))
+    (when (and structured (not emacsvox-aural--structured-runs-recorded-p))
+      (emacsvox-aural--capture-structured-run
+       plan payload emacsvox-aural--queued-run-leading-pause))
+    (let ((context (emacsvox-aural-concrete-plan-context plan)))
+      (dolist (action (emacsvox-aural-concrete-plan-before plan))
+        (emacsvox-aural-queue-concrete-action action context)))
     (emacsvox-aural--queue-concrete-content content payload)
     (dolist (action (emacsvox-aural-concrete-plan-after plan))
       (emacsvox-aural-queue-concrete-action
