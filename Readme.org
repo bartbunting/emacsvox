@@ -114,9 +114,12 @@ frames to the newest generation, rejects stale frames, and keeps stop outside
 the frame as a barrier.  Emacsvox automatically retains ordinary legacy
 delivery when the capability is absent.
 
-The current routing slice does not retry a different engine after a backend
-fails during synthesis, and immediate =tts_say= and letter commands still use
-the preferred legacy engine.  Bounded runtime-failure retry remains planned.
+For queued logical voices, current Omnivox servers re-resolve a missing voice
+or failed engine against the dispatched registry snapshot and retry the same
+text chunk on the selected fallback.  Retries are limited to four total
+attempts and check stop generations before and after each engine call.  The
+failure exclusion is local to that batch; persistent health/recovery and
+immediate =tts_say= or letter routing remain planned.
 
 ** Aural Presentation Schemes
 

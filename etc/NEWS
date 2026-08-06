@@ -64,7 +64,14 @@ When a server advertises ~emacsvox_tx~, replaceable aural output is sent as one
 bounded, generation-numbered frame.  The server validates it atomically,
 coalesces consecutive frames to the newest generation, rejects stale frames,
 and treats stop as an external barrier.  Older Omnivox servers retain ordinary
-legacy delivery.  Runtime engine-failure retry remains future work.
+legacy delivery.
+
+Queued logical voices now re-resolve after a runtime missing-voice,
+unavailable-engine, or synthesis failure and retry the identical chunk on the
+configured fallback.  Each chunk is limited to four attempts, and stop
+generation checks prevent cancelled speech from starting a fallback attempt.
+Failure exclusions are local to the dispatched batch; persistent engine
+health and recovery remain future work.
 
 ** TTS Prefix Map Rename
 
