@@ -3326,6 +3326,170 @@ aural parity, normal build-tree startup, all 27 semantic traces,
 warning-as-error compilation of the changed runtime, the generated reference,
 and the Aural audit pass.
 
+** TODO Slice 49: Generic Speech-Adapter Inventory
+
+- Extend the adapter capability interface with a normalized inventory provider
+  that reports engines, physical voices, languages, gender, quality,
+  availability, health, ACSS and post-synthesis dimensions, preview support,
+  and routing-policy support.
+- Distinguish live, static, free-form, cached, and unavailable inventory.  Keep
+  the last valid generation available for offline editing while clearly
+  labelling it stale.
+- Populate Omnivox from the live control channel, standalone Eloquence and
+  DECtalk from their static family tables, SwiftMac from its installed-voice
+  enumerator, and unsupported adapters from a truthful reduced descriptor.
+- Make Omnivox's active capability descriptor use its discovered inventory
+  instead of continuing to report static unsupported base-voice selection.
+
+Deliverable: every voice-management UI consumes one adapter-neutral inventory
+without knowing the Omnivox control protocol or an individual synth's tables.
+
+** TODO Slice 50: Separate Routing Profiles
+
+- Add a versioned data-only routing-profile schema separate from portable voice
+  palettes.  Store global engine order, global fallback policy, and ordered
+  selectors per logical voice.
+- Support portable property selectors, deliberately exact local bindings, and
+  temporary session bindings.  Do not copy machine-specific native IDs into a
+  portable palette implicitly.
+- Preserve palette styles and effects across machines while re-resolving their
+  routing profile against each environment's current inventory.
+- Define conflicts between ACSS family and an exact route: the exact route
+  selects the physical voice, while family remains a portable fallback or
+  compatibility request and conflicting realized traits are diagnosed.
+- Migrate existing =omnivox-logical-voice-preferences=, global default, and
+  fallback settings without changing their effective order.
+
+Deliverable: style and routing have independent persistence and provenance but
+can be edited and previewed as one logical voice.
+
+** TODO Slice 51: Accessible Voice Workbench Shell
+
+- Add a Voice Workbench entry to Aural Home with logical-voice, physical-voice,
+  engine, and style/effect views built on the shared spoken tabulated UI.
+- Retain the established row, titled-cell, help, refresh, source-buffer,
+  manager-speech inhibition, and exact selection-preservation behavior.
+- Display active adapter, inventory generation and age, staged/committed state,
+  and main/notification process agreement without speaking on every refresh.
+- Filter physical voices by engine, language, gender, quality, health, and
+  availability, and show which logical voices currently select each one.
+
+Deliverable: the complete inventory and logical configuration are efficiently
+navigable with speech and the keyboard.
+
+** TODO Slice 52: Exact Transactional Voice Preview
+
+- Add an adapter preview operation that accepts sample text, an exact or
+  portable selector, unsaved ACSS/effect state, and a completion callback
+  without mutating persistent mappings.
+- For Omnivox use its negotiated one-shot exact-route preview.  For standalone
+  adapters queue the native voice code and reliably restore prior state.
+- Support immediate stop, editable common sample text, preview-all, and A/B
+  comparison using identical text and settings.
+- Keep previews out of Aural history, training feedback, notification state,
+  and the user's staged undo history.
+
+Deliverable: users can compare physical voices and unsaved styles without
+changing live configuration.
+
+** TODO Slice 53: Quick Logical-Voice Assignment
+
+- From a logical-voice row, open the filtered physical-voice browser, audition
+  candidates, and add an exact voice, engine default, or portable property
+  selector with one confirmation.
+- Reorder and delete fallbacks, copy a route from another logical voice, bind
+  all currently unmapped voices to an engine default, and replace one engine
+  across selected mappings.
+- Show the palette name, compatibility personality aliases, effective logical
+  ID, requested style, selector order, and current realization together.
+- Keep every edit staged until explicit save; cancel and undo restore the exact
+  prior working copy.
+
+Deliverable: mapping an existing Emacsvox voice to installed synth voices no
+longer requires editing Lisp or raw selector lists.
+
+** TODO Slice 54: Omnivox Engine-Priority Policy
+
+- Distinguish Omnivox's global preferred engine order, global fallback order,
+  and per-logical-voice selector order in both the model and spoken UI.
+- Negotiate a generation-safe runtime routing-policy request so Eloquence,
+  DECtalk, WinRT, eSpeak, or a later engine can be globally preferred without
+  restarting the server or duplicating a selector on every logical voice.
+- Show PCM/external playback mode, voice count, marker/anchor/effect support,
+  health, last failure, cooldown, and whether an engine is temporarily
+  disabled.  Permit refresh, reorder, disable/restore, and an explicit recovery
+  probe when supported.
+- Skip unavailable engines predictably and preserve their configured position
+  for later environments or recovery.
+
+Deliverable: engine priority is visible, editable, persistent, and distinct
+from a single voice's fallback list.
+
+** TODO Slice 55: Route-Aware Style and Effect Tuning
+
+- Extend the existing transactional voice tuner with the selected physical
+  route, rate, and discovered engine capabilities while retaining average
+  pitch, pitch range, stress, richness, and family.
+- Add Omnivox-rendered reverb, echo, filtering, gain-envelope, and spatial
+  dimensions as their timeline implementations become available.
+- Announce requested, realized, engine-rendered, Omnivox-rendered, approximated,
+  and omitted values separately.  Retain unsupported portable settings rather
+  than deleting them.
+- Add later optional engine/voice calibration profiles because the same
+  normalized value will not sound identical across Eloquence, DECtalk, WinRT,
+  and eSpeak.
+
+Deliverable: a user can tune one logical voice against its actual route and
+hear the same composed result that normal presentation will use.
+
+** TODO Slice 56: Atomic Apply and Realized Diagnostics
+
+- Validate a staged profile against current inventory, atomically persist its
+  data, register the complete logical set, and retain the previous known-good
+  state for undo.
+- Apply to speaker and notification processes, report partial process failure
+  without concealing it, and retry idempotently after negotiation or inventory
+  refresh.
+- Show registration resolution, capability degradation, current health, and
+  the last engine/voice actually reported at playback rather than only the
+  route predicted when configuration was saved.
+- Re-resolve after inventory generation or health changes without rewriting
+  the portable profile.
+
+Deliverable: save, cancel, undo, fallback, and multi-process behavior are
+observable and do not leave silent half-applied configuration.
+
+** TODO Slice 57: Migration, Suggestions, and Static Adapters
+
+- Import existing personalities, palettes, Omnivox Customize values, and
+  standalone Eloquence/DECtalk family mappings into staged profiles.
+- Offer review-before-save suggestions by exact alias, language, gender, and
+  engine default.  Never persist an inferred mapping automatically.
+- Supply presets such as Eloquence then DECtalk then WinRT then eSpeak, the
+  reverse proprietary order, native-language preference, and a fully portable
+  no-exact-ID profile.
+- Add export/import and clear provenance so a user can tell which parts are
+  portable, local, inherited, suggested, or currently degraded.
+
+Deliverable: existing installations gain the workbench without losing their
+voice behavior, and new environments can be configured quickly.
+
+** TODO Slice 58: Voice Workbench Hardening and Documentation
+
+- Test live, stale, missing, and changing inventories; exact and portable
+  routes; non-mutating preview; engine/fallback ordering; disappearing voices;
+  divergent speech processes; staged save/cancel/undo; migration; and static,
+  free-form, and unsupported adapters.
+- Run the complete Emacs 31 source and compiled suites, Aural and TTS audits,
+  startup checks, semantic traces, and real Omnivox integration tests.
+- Document keyboard workflows, selector scope, fallback, engine health,
+  inventory refresh, preview, migration, diagnostics, and recovery.
+
+Deliverable: from Aural Home a user can select an existing logical voice,
+audition installed physical voices, assign ordered portable or exact routes,
+tune supported style/effects, choose engine priority, inspect the realized
+result, and atomically save or cancel without editing Lisp.
+
 * Test Gates
 
 Every behavior-changing slice must run checks proportional to its scope:
@@ -3368,6 +3532,12 @@ The dedicated tests must cover:
   directories;
 - explanation provenance sufficient to reproduce every winning decision.
 - exact frozen-plan explanation distinguished from current-state simulation.
+- live, cached, static, free-form, and unavailable speech-adapter inventories;
+- portable, local-exact, and session routing-profile scope;
+- non-mutating exact-route preview and A/B comparison;
+- engine, global fallback, and per-logical-voice priority ordering;
+- staged voice-workbench save, cancel, undo, migration, and realized-route
+  diagnostics.
 
 * Resolved Decisions
 
@@ -3414,6 +3584,11 @@ default-on =emacsvox-aural-face-presentation-enabled= control gates explicit
 For Slice 29, a named voice is a complete preset that resets inherited ACSS
 dimensions.  Explicit ACSS style data remains partial and composes
 dimension-by-dimension over a weaker preset or partial style.
+
+For Slice 50, keep routing profiles separate from portable voice palettes while
+presenting them together in the Voice Workbench.  Exact machine-local voice IDs
+require explicit local scope; portable styles and property selectors continue
+to re-resolve on each environment.
 
 * Open Decisions
 
@@ -3510,3 +3685,5 @@ The migration is complete when:
   required test gates;
 - public documentation explains authoring, customization, migration, and
   backend capability behavior.
+- routing profiles remain distinct from voice palettes while the Voice
+  Workbench can audition, assign, reorder, diagnose, and save them together.
