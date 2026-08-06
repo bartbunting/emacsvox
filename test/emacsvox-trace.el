@@ -14,6 +14,9 @@
 (defvar emacsvox-trace--events nil
   "Events accumulated by the active trace capture.")
 
+(defvar emacsvox-trace--native-interruption-recorded-p nil
+  "Non-nil after recording interruption for one native submission.")
+
 (defvar tts-speaker-process)
 
 (defun emacsvox-trace--record (kind &rest values)
@@ -48,14 +51,96 @@
             (append description (list :personalities personalities))))
     description))
 
+(defun emacsvox-trace--concrete-action (action)
+  "Record one first-class concrete aural ACTION."
+  (pcase (emacsvox-aural-concrete-action-kind action)
+    ('cue
+     (emacsvox-trace--record
+      'icon
+      (or
+       (emacsvox-aural-concrete-action-cue action)
+       (emacsvox-aural-concrete-action-sample-id action))))
+    ('pause
+     (emacsvox-trace--record
+      'silence (emacsvox-aural-concrete-action-duration action) nil))
+    ('tone
+     (emacsvox-trace--record
+      'tone
+      (emacsvox-aural-concrete-action-pitch action)
+      (emacsvox-aural-concrete-action-duration action)
+      (and (emacsvox-aural-concrete-action-force action) 'force)))
+    ('speech
+     (emacsvox-trace--record
+      'speak
+      (emacsvox-trace--speech-description
+       (emacsvox-aural-concrete-action-text action))))))
+
+(defun emacsvox-trace--native-interruption ()
+  "Record native submission interruption once when it owns that policy."
+  (when
+      (and
+       (boundp 'emacsvox-aural-submission-controls-interruption)
+       emacsvox-aural-submission-controls-interruption
+       (boundp 'emacsvox-aural-submission-delivery-policy)
+       (memq
+        emacsvox-aural-submission-delivery-policy
+        '(replaceable urgent))
+       (not emacsvox-trace--native-interruption-recorded-p))
+    (setq emacsvox-trace--native-interruption-recorded-p t)
+    (emacsvox-trace--record 'stop 'all)))
+
 (defun emacsvox-trace--speak (text)
   "Record a semantic speech event for TEXT."
   (when text
     (unless (stringp text)
       (setq text (format "%s" text)))
     (unless (string-empty-p text)
-      (emacsvox-trace--record
-       'speak (emacsvox-trace--speech-description text)))))
+      (let ((first-plan
+             (and
+              (boundp 'emacsvox-aural-concrete-plan-property)
+              (get-text-property
+               0 emacsvox-aural-concrete-plan-property text))))
+        (if (not first-plan)
+            (emacsvox-trace--record
+             'speak (emacsvox-trace--speech-description text))
+          (emacsvox-trace--native-interruption)
+          (let ((position 0)
+                pending-speech)
+            (cl-labels
+                ((flush-speech
+                  ()
+                  (when pending-speech
+                    (emacsvox-trace--record
+                     'speak
+                     (emacsvox-trace--speech-description pending-speech))
+                    (setq pending-speech nil))))
+              (while (< position (length text))
+                (let* ((plan
+                        (get-text-property
+                         position emacsvox-aural-concrete-plan-property text))
+                       (next
+                        (next-single-property-change
+                         position emacsvox-aural-concrete-plan-property
+                         text (length text)))
+                       (before (emacsvox-aural-concrete-plan-before plan))
+                       (after (emacsvox-aural-concrete-plan-after plan))
+                       (speak
+                        (emacsvox-aural-concrete-content-speak
+                         (emacsvox-aural-concrete-plan-content plan))))
+                  (when before (flush-speech))
+                  (dolist (action before)
+                    (emacsvox-trace--concrete-action action))
+                  (if speak
+                      (setq
+                       pending-speech
+                       (concat
+                        pending-speech (substring text position next)))
+                    (flush-speech))
+                  (when after (flush-speech))
+                  (dolist (action after)
+                    (emacsvox-trace--concrete-action action))
+                  (setq position next)))
+              (flush-speech))))))))
 
 (defun emacsvox-trace--message (original format-string &rest arguments)
   "Record a message, then call ORIGINAL with FORMAT-STRING and ARGUMENTS."
@@ -83,20 +168,17 @@ Legacy implementations without concrete aural actions call THUNK directly."
                   t
                 (funcall original-process-live-p process))))
            ((symbol-function 'tts--protocol-dispatch) #'ignore)
+           ((symbol-function 'tts--interrupt-process)
+            (lambda (_process &optional notifications)
+              (emacsvox-trace--record
+               'stop (and notifications 'all))))
            ((symbol-function 'emacsvox-aural-queue-concrete-action)
             (lambda (action &optional context)
-              (if
-                  (eq
-                   (emacsvox-aural-concrete-action-kind action)
-                   'tone)
-                  (emacsvox-trace--record
-                   'tone
-                   (emacsvox-aural-concrete-action-pitch action)
-                   (emacsvox-aural-concrete-action-duration action)
-                   (and
-                    (emacsvox-aural-concrete-action-force action)
-                    'force))
-                (funcall queue-action action context)))))
+              (pcase (emacsvox-aural-concrete-action-kind action)
+                ((or 'cue 'pause 'tone 'speech)
+                 (emacsvox-trace--native-interruption)
+                 (emacsvox-trace--concrete-action action))
+                (_ (funcall queue-action action context))))))
         (funcall thunk)))))
 
 (defun emacsvox-trace-capture (thunk)
@@ -108,6 +190,7 @@ used."
   (let ((original-message (symbol-function 'message))
         (original-process-live-p (symbol-function 'process-live-p))
         emacsvox-trace--events
+        emacsvox-trace--native-interruption-recorded-p
         value)
     (cl-letf (((symbol-function 'tts-speak) #'emacsvox-trace--speak)
               ((symbol-function 'tts-letter)

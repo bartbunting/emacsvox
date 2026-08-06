@@ -82,7 +82,30 @@ each engine's standard runtime location need no configuration.
 Portable preferences do not copy a machine's discovered voice list into user
 configuration.  Instead, each logical voice has ordered exact, engine-default,
 or property selectors that are resolved against the inventory of the machine
-where Omnivox is running.  For example:
+where Omnivox is running.
+
+Use =M-x emacsvox-aural-voice-workbench=, or press =W= in Aural Home, to
+configure these preferences without editing Lisp.  Its logical, physical,
+engine, and style views use =l=, =v=, =e=, and =s=.  Use =F= to filter voice
+traits or engine health, =C= to clear filters, and =R= to refresh inventory.
+=P= previews one row, =A= previews all visible voices, =B= compares selected
+voices, =T= changes the common sample text, =S= stops preview, and =t= opens
+the route-aware tuner.  None of these saves configuration.  Use =a= to assign
+an installed voice and =j= to review a portable route suggestion.  Exact
+native IDs are machine-local; language, gender, and engine default selectors
+re-resolve on each machine.  Use =m= to stage migration from existing Omnivox
+settings or the current palette, =N= for routing presets, and =E= or =I= to
+exchange one data-only profile.  No inferred route is saved without review.
+
+Use =w= to atomically save and apply the complete profile to every live speech
+stream.  A partial apply remains visible and can be retried with =r=; =U=
+restores the previous saved revision.  Rows distinguish predicted, registered,
+and last actually played routes and report fallback or omitted dimensions.
+Standalone Eloquence/Outloud and DECtalk adapters consume the same profile
+through their static voice-family descriptions.
+
+The following variables remain an advanced compatibility and migration input.
+For example:
 
 #+BEGIN_SRC elisp
 (setq omnivox-logical-voice-preferences
@@ -108,8 +131,10 @@ single-step voice binding when it builds the Omnivox registry, so a preference
 for =voice-bolden= applies to the generated voice that actually appears in
 speech output.
 
-After changing these variables interactively, run
-=M-x omnivox-register-logical-voices=.  The latest structured results are in
+After changing these variables directly, open the Voice Workbench and use =m=
+to import, review, and then =w= to save and apply them.  The low-level
+=M-x omnivox-register-logical-voices= command remains available for diagnostic
+experiments.  The latest structured results are in
 =omnivox-control-capabilities=, =omnivox-engine-inventory=,
 =omnivox-logical-voice-registration=, and =omnivox-control-last-error=.
 

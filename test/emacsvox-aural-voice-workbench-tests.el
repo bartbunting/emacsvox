@@ -382,6 +382,62 @@
        :engine-id)
       "eloquence"))))
 
+(ert-deftest emacsvox-aural-voice-workbench-diagnoses-disappearing-inventory ()
+  "A stale or vanished exact voice is reported without rewriting its route."
+  (emacsvox-test--with-voice-workbench
+    (let ((before
+           (copy-tree emacsvox-aural-voice-workbench-staged-profile)))
+      (setq emacsvox-aural-voice-workbench-inventory
+            (copy-tree emacsvox-test--workbench-inventory))
+      (setf (plist-get emacsvox-aural-voice-workbench-inventory :stale) t)
+      (setf
+       (plist-get
+        (car
+         (plist-get emacsvox-aural-voice-workbench-inventory :engines))
+        :voices)
+       nil)
+      (let* ((diagnostics
+              (emacsvox-aural-voice-workbench--profile-diagnostics
+               emacsvox-aural-voice-workbench-staged-profile))
+             (kinds (mapcar (lambda (entry) (plist-get entry :kind))
+                            diagnostics)))
+        (should (memq 'stale-inventory kinds))
+        (should (memq 'voice-missing kinds)))
+      (should
+       (equal
+        (emacsvox-aural-voice-workbench--realization-description
+         "voice-bolden")
+        "winrt/David"))
+      (should
+       (equal before emacsvox-aural-voice-workbench-staged-profile)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-keeps-reduced-adapters-navigable ()
+  "Free-form and unsupported adapters retain logical editing without fake voices."
+  (emacsvox-test--with-voice-workbench
+    (dolist
+        (inventory
+         '((:adapter "mac" :source "free-form" :status "available"
+            :generation 0 :stale nil :process-agreement "single-adapter"
+            :engines
+            ((:engine-id "mac" :display-name "Mac"
+              :availability "available" :health "healthy" :voices nil)))
+           (:adapter "plain" :source "unavailable" :status "unavailable"
+            :generation 0 :stale nil :process-agreement "single-adapter"
+            :engines
+            ((:engine-id "plain" :display-name "Plain"
+              :availability "unavailable" :health "unavailable"
+              :voices nil)))))
+      (let ((tts-voice-inventory-function
+             (lambda () (copy-tree inventory))))
+        (setq emacsvox-aural-voice-workbench-view 'logical)
+        (emacsvox-aural-voice-workbench-refresh "voice-bolden")
+        (should tabulated-list-entries)
+        (should-not
+         (emacsvox-aural-voice-workbench--suggestions "voice-annotate"))
+        (setq emacsvox-aural-voice-workbench-view 'physical)
+        (emacsvox-aural-voice-workbench-refresh)
+        (should-not tabulated-list-entries)))))
+
 (ert-deftest emacsvox-aural-voice-workbench-cancel-restores-opening-copy ()
   "Cancelling staged work restores the exact committed profile and clears undo."
   (emacsvox-test--with-voice-workbench

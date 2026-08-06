@@ -3606,7 +3606,8 @@ pass.  The complete Emacs 31 source suite has 2,239 passing tests.  Omnivox's
 timeline protocol, normalized action-pan test, and production clippy checks
 also pass.
 
-** TODO Slice 56: Atomic Apply and Realized Diagnostics
+** DONE Slice 56: Atomic Apply and Realized Diagnostics
+CLOSED: [2026-08-07 Fri]
 
 - Validate a staged profile against current inventory, atomically persist its
   data, register the complete logical set, and retain the previous known-good
@@ -3623,7 +3624,25 @@ also pass.
 Deliverable: save, cancel, undo, fallback, and multi-process behavior are
 observable and do not leave silent half-applied configuration.
 
-** TODO Slice 57: Migration, Suggestions, and Static Adapters
+Implemented: =w= validates and atomically persists the complete desired
+profile, retains one previous saved revision for =U=, then applies one logical
+registry generation to every distinct live speaker and notification process.
+Each process reports policy, registration, negotiation, inventory, submission,
+timeout, or successful acknowledgement independently; an unsupported live
+stream cannot be omitted from a supposedly successful result.  Partial
+runtime failure leaves the saved desired configuration intact for idempotent
+=r= retry after negotiation, inventory refresh, or engine recovery.
+
+The logical and style views distinguish predicted routing, per-process
+registration, and the last engine and physical voice actually observed at
+playback.  Marker-reported omitted ACSS and post-synthesis dimensions remain
+visible.  Stale inventory, missing or unhealthy engines, and vanished exact
+voices are warnings rather than destructive validation: refresh and health
+changes re-resolve the saved selectors without rewriting either the routing
+profile or portable palette.
+
+** DONE Slice 57: Migration, Suggestions, and Static Adapters
+CLOSED: [2026-08-07 Fri]
 
 - Import existing personalities, palettes, Omnivox Customize values, and
   standalone Eloquence/DECtalk family mappings into staged profiles.
@@ -3638,7 +3657,32 @@ observable and do not leave silent half-applied configuration.
 Deliverable: existing installations gain the workbench without losing their
 voice behavior, and new environments can be configured quickly.
 
-** TODO Slice 58: Voice Workbench Hardening and Documentation
+Implemented: =j= offers one reviewable current-row suggestion ordered by exact
+family alias, combined language/gender, language, gender, then engine default.
+=m= stages either existing Omnivox Customize values or best current-adapter
+mappings for every unmapped active-palette personality.  Suggestions and
+migration alter only the private working copy; they cannot persist until the
+user explicitly invokes =w=.  Staged provenance identifies suggested,
+imported, preset, session, saved local/portable, and inherited engine-order
+data and is restored with staged undo.
+
+=N= stages proprietary-order, native-language, or fully portable presets.
+The portable transformation converts exact IDs to advertised language/gender
+traits or an engine default and guarantees that native IDs are absent.  =E=
+exports either that portable form or the deliberately complete local form,
+and =I= reads exactly one non-evaluated, validated profile into the staged
+copy.  Exchange never registers or activates data implicitly.
+
+Standalone Eloquence/Outloud and DECtalk now consume the same saved profile.
+Applying a profile synchronously recompiles every =defvoice= personality;
+explicit portable palette styles receive the same family projection.  Native
+family aliases and static language/gender descriptors select the physical
+base voice while all other ACSS dimensions remain unchanged.  A missing
+engine, family, voice, or trait retains the original ACSS family.  Routed,
+free-form, and unsupported adapters keep their truthful native behavior.
+
+** DONE Slice 58: Voice Workbench Hardening and Documentation
+CLOSED: [2026-08-07 Fri]
 
 - Test live, stale, missing, and changing inventories; exact and portable
   routes; non-mutating preview; engine/fallback ordering; disappearing voices;
@@ -3653,6 +3697,36 @@ Deliverable: from Aural Home a user can select an existing logical voice,
 audition installed physical voices, assign ordered portable or exact routes,
 tune supported style/effects, choose engine priority, inspect the realized
 result, and atomically save or cancel without editing Lisp.
+
+Implemented: the focused Workbench matrix covers live and stale inventory,
+vanished exact voices, portable suggestions, preview isolation, independent
+preferred/fallback/disabled ordering, realized-route diagnostics, assignment,
+reorder, copy, delete, bulk routing, migration, save/apply, cancel, staged undo,
+and static, free-form, and unavailable adapters.  The semantic trace recorder
+now observes first-class native interruption, cues, pauses, tones, and speech
+from frozen concrete plans instead of depending on bypassed legacy protocol
+hooks.  Headless visual-line tracing no longer invents an orphan cue when
+Emacs cannot calculate display-line content; normal visual-line cue and speech
+atomicity remains covered by transport tests.
+
+Documented: the README and generated Aural reference describe the four views,
+preview and comparison, exact versus portable scope, suggestions, migration,
+presets, import/export, engine ordering and recovery, save/apply/retry/restore,
+realized degradation, inventory refresh behavior, and static adapters.  The
+portable palette and machine routing profile remain separate persistence
+objects presented together by the Workbench.
+
+Checks: all 22 focused Workbench tests and all 2,258 Emacs 31 source tests
+pass.  Compiled Aural parity, normal build-tree startup, all 27 semantic
+traces, the TTS namespace/text audit, the Aural cue/tone audit, and generated
+reference freshness pass.  Omnivox passes 345 Rust tests and production
+Clippy with warnings denied.  The =x86_64-pc-windows-gnu= release build passes;
+its real Windows diagnostic found three WinRT voices, synthesized stereo
+audio, and completed tone and speech playback, and the stdin server completed
+a start/EOF smoke test.  That direct cross-target tree does not stage
+=espeak-ng-data=, so its server smoke truthfully warned that eSpeak was
+unavailable and retained WinRT; installed Emacsvox runtime staging remains the
+source of optional eSpeak and proprietary helper assets.
 
 ** Deferred Cross-Repository Work Retained by the Plan
 

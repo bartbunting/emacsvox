@@ -49,7 +49,7 @@
  (:name newline :events ((tone 225 75 force)) :value nil :state
 	(:text "alpha\n beta" :point 7 :mark nil :mark-active nil
 	       :modified t :kill-ring nil))
- (:name beginning-of-visual-line :events ((icon left)) :value 1 :state
+ (:name beginning-of-visual-line :events nil :value 1 :state
 	(:text "alpha beta\n" :point 1 :mark nil :mark-active nil
 	       :modified nil :kill-ring nil))
  (:name next-logical-line :events
