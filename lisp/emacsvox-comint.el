@@ -760,10 +760,10 @@ events.  Carriage-return chunks replace pending progress output."
   "Cue and speak after showing maximum Comint output."
   (when (ems-interactive-p 'comint-show-maximum-output)
     (let ((emacsvox-show-point t))
-      (emacsvox-comint--present-feedback-after
+      (emacsvox-comint--present-line-feedback
        (emacsvox-comint-facts
         'command-output 'focus-entered 'output-navigation)
-       'navigation 'scroll #'emacsvox-speak-line))))
+       'navigation 'scroll 'after))))
 
 (advice-add
  'comint-show-maximum-output :after
@@ -774,11 +774,11 @@ events.  Carriage-return chunks replace pending progress output."
   "Cue and speak after moving to the Comint input boundary."
   (when (ems-interactive-p 'comint-bol-or-process-mark)
     (let ((emacsvox-show-point t))
-      (emacsvox-comint--present-feedback-after
+      (emacsvox-comint--present-line-feedback
        (emacsvox-comint-facts
         'command-input 'focus-entered 'input-boundary
         '(:command-input-origin current))
-       'navigation 'select-object #'emacsvox-speak-line))))
+       'navigation 'select-object 'after))))
 
 (advice-add
  'comint-bol-or-process-mark :after
@@ -935,10 +935,10 @@ scrolling, completion metadata, and window configuration."
      (defun ,function (&rest _)
        "Cue and speak after interactive movement between Comint prompts."
        (when (ems-interactive-p ',target)
-         (emacsvox-comint--present-feedback
+         (emacsvox-comint--present-line-feedback
           (emacsvox-comint-facts
            'command-prompt 'focus-entered 'prompt-navigation)
-          'navigation 'item #'emacsvox-speak-line
+          'navigation 'item 'before
           (unless (eolp) 1))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))

@@ -211,6 +211,37 @@
           (plist-get (car observed) :command-operation)
           'history-navigation))))))
 
+(ert-deftest emacsvox-comint-navigation-keeps-line-cue-phases ()
+  "Navigation cues enter the same physical-line submission in order."
+  (dolist
+      (case
+       '((comint-show-maximum-output scroll after nil output-navigation)
+         (comint-bol-or-process-mark select-object after nil input-boundary)
+         (comint-previous-prompt item before 1 prompt-navigation)
+         (comint-next-prompt item before 1 prompt-navigation)))
+    (pcase-let ((`(,target ,icon ,phase ,argument ,operation) case))
+      (with-temp-buffer
+        (insert "prompt text")
+        (goto-char (point-min))
+        (let ((ems--interactive-fn-name target)
+              observed)
+          (cl-letf
+              (((symbol-function 'emacsvox-comint--present-line-feedback)
+                (lambda (facts occasion value action-phase &optional line-arg)
+                  (setq
+                   observed
+                   (list facts occasion value action-phase line-arg)))))
+            (funcall
+             (intern (format "emacsvox--advice-%s-after" target))))
+          (should (eq (nth 1 observed) 'navigation))
+          (should (eq (nth 2 observed) icon))
+          (should (eq (nth 3 observed) phase))
+          (should (equal (nth 4 observed) argument))
+          (should
+           (eq
+            (plist-get (car observed) :command-operation)
+            operation)))))))
+
 (ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
   "Comint output and subprocess advice uses native advice directly."
   (dolist
