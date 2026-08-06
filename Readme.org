@@ -93,10 +93,18 @@ After changing these variables interactively, run
 =omnivox-control-capabilities=, =omnivox-engine-inventory=,
 =omnivox-logical-voice-registration=, and =omnivox-control-last-error=.
 
-This is currently a configuration and diagnostics foundation.  The legacy
-speech queue still supplies the spoken voice; per-span engine routing will make
-the registered engine-and-voice assignments control synthesis in the next
-Omnivox phase.
+Each Omnivox voice code now includes its stable logical voice ID.  Servers that
+advertise =logical_voice_routing= use the registered binding to select the
+engine and physical voice for following queued speech spans.  Bindings are
+snapshotted at dispatch, so later registration changes affect later batches.
+Missing or unresolved routes fall back to the process's preferred legacy
+engine; older servers ignore the routing directive and continue to honor the
+existing pitch code.
+
+The current routing slice does not retry a different engine after a backend
+fails during synthesis, and immediate =tts_say= and letter commands still use
+the preferred legacy engine.  Bounded runtime-failure retry and framed
+=emacsvox_tx= delivery remain planned.
 
 ** Aural Presentation Schemes
 

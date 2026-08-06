@@ -51,9 +51,12 @@ alternatives, and unresolved definitions remain visible in
 ~omnivox-logical-voice-registration~.  Run
 ~omnivox-register-logical-voices~ after changing preferences at runtime.
 
-Registration does not yet route speech between engines.  The existing speech
-path remains compatible while Omnivox's engine registry and per-span routing
-are implemented.
+Omnivox voice changes now carry their logical voice ID into the legacy queue.
+Servers advertising ~logical_voice_routing~ use the registered engine and
+physical voice for following queued spans, while missing bindings fall back to
+the preferred engine.  Older servers ignore the additive directive and retain
+their existing pitch behavior.  Runtime engine-failure retry and framed
+transaction delivery remain future work.
 
 ** TTS Prefix Map Rename
 
