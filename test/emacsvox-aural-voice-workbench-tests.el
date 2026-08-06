@@ -564,6 +564,32 @@
          (equal realized
                 '(:engine-id "eloquence" :voice-id "eci:Reed")))))))
 
+(ert-deftest emacsvox-aural-voice-workbench-tunes-unrouted-voice-on-default ()
+  "An unrouted logical voice auditions without persisting a route."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-annotate"))
+    (setf (plist-get emacsvox-aural-voice-workbench-staged-profile
+                     :engine-order)
+          nil)
+    (let ((before
+           (copy-tree emacsvox-aural-voice-workbench-staged-profile))
+          arguments)
+      (cl-letf
+          (((symbol-function
+             'emacsvox-aural-voice-workbench--editable-palette)
+            (lambda (palette _logical) palette))
+           ((symbol-function 'emacsvox-aural-voice-tuner-open)
+            (lambda (&rest values) (setq arguments values))))
+        (emacsvox-aural-voice-workbench-tune))
+      (let ((selector (plist-get (nthcdr 4 arguments) :selector))
+            (engine (plist-get (nthcdr 4 arguments) :engine)))
+        (should (eq (plist-get selector :kind) 'engine-default))
+        (should (eq (plist-get selector :scope) 'session))
+        (should (equal (plist-get selector :engine-id) "eloquence"))
+        (should (equal (plist-get engine :engine-id) "eloquence")))
+      (should
+       (equal emacsvox-aural-voice-workbench-staged-profile before)))))
+
 (ert-deftest emacsvox-aural-voice-workbench-copies-built-in-before-tuning ()
   "Logical tuning can create and activate an editable palette in place."
   (emacsvox-test--with-voice-workbench

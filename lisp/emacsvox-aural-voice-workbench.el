@@ -466,6 +466,44 @@
          selector engine voice))))
    (emacsvox-aural-voice-workbench--all-engine-voices)))
 
+(defun emacsvox-aural-voice-workbench--default-tuning-selector ()
+  "Return a session selector for the first usable preferred engine.
+
+This selector auditions an otherwise unrouted logical voice without staging
+or persisting a routing choice."
+  (let* ((inventory emacsvox-aural-voice-workbench-inventory)
+         (disabled
+          (plist-get emacsvox-aural-voice-workbench-staged-profile
+                     :disabled-engines))
+         (candidates
+          (delete-dups
+           (append
+            (copy-sequence
+             (plist-get emacsvox-aural-voice-workbench-staged-profile
+                        :engine-order))
+            (copy-sequence (plist-get inventory :preferred-engine-order))
+            (list (plist-get inventory :preferred-engine-id))
+            (mapcar
+             (lambda (engine) (plist-get engine :engine-id))
+             (plist-get inventory :engines)))))
+         engine-id)
+    (while (and candidates (not engine-id))
+      (let* ((candidate (pop candidates))
+             (engine
+              (and
+               candidate
+               (cl-find candidate (plist-get inventory :engines)
+                        :key (lambda (item) (plist-get item :engine-id))
+                        :test #'equal))))
+        (when
+            (and engine
+                 (equal (plist-get engine :availability) "available")
+                 (not (member candidate disabled)))
+          (setq engine-id candidate))))
+    (and engine-id
+         (list :kind 'engine-default :scope 'session
+               :engine-id engine-id))))
+
 (defun emacsvox-aural-voice-workbench--realization-description
     (logical-voice)
   "Return the currently predicted installed route for LOGICAL-VOICE."
@@ -2065,7 +2103,7 @@ refreshing the Workbench at LOGICAL-VOICE."
       copy)))
 
 (defun emacsvox-aural-voice-workbench-tune ()
-  "Tune the current logical voice against its first staged physical route."
+  "Tune the current logical voice against its effective preview route."
   (interactive)
   (unless (memq emacsvox-aural-voice-workbench-view '(logical styles))
     (user-error "Tune a logical voice from the logical or styles view"))
@@ -2076,8 +2114,10 @@ refreshing the Workbench at LOGICAL-VOICE."
           (or (emacsvox-aural-voice-workbench--palette-entry logical)
               (user-error "%s is not defined by the active palette" logical)))
          (selector
-          (or (car (emacsvox-aural-voice-workbench--selectors logical))
-              (user-error "Assign a staged route to %s before tuning" logical)))
+          (or
+           (car (emacsvox-aural-voice-workbench--selectors logical))
+           (emacsvox-aural-voice-workbench--default-tuning-selector)
+           (user-error "No available speech engine can tune %s" logical)))
          (pair
           (emacsvox-aural-voice-workbench--selector-realization selector))
          (engine
@@ -2291,7 +2331,7 @@ refreshing the Workbench at LOGICAL-VOICE."
       "C clear filters       R request fresh inventory\n"
       "P preview row         A preview all visible voices\n"
       "B compare two voices  T edit common preview text\n"
-      "S stop preview        t tune logical voice on staged route\n"
+      "S stop preview        t tune logical voice on effective route\n"
       "a assign or choose physical voice\n"
       "j review one route suggestion\n"
       "c cancel assignment   [/] move selector earlier/later\n"
