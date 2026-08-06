@@ -270,16 +270,27 @@
       (delete-process process))))
 
 (ert-deftest emacsvox-tts-omnivox-negotiates-capabilities-and-inventory ()
-  "A new Omnivox process discovers supported features and engine inventory."
+  "Registration waits for inventory and uses the preferred engine."
   (let* ((process
           (make-pipe-process
            :name "emacsvox-omnivox-negotiation-test" :buffer nil :noquery t))
          (tts-speaker-process process)
+         (tts-notify-process nil)
          (omnivox-control-capabilities nil)
          (omnivox-engine-inventory nil)
+         (omnivox-logical-voice-preferences nil)
+         (omnivox-logical-voice-languages nil)
+         (omnivox-fallback-engine-ids '("espeak"))
+         (omnivox-global-default-selector nil)
+         (omnivox-allow-same-language-fallback t)
+         (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (omnivox--logical-registry-generation 0)
+         (omnivox--logical-registry-signature nil)
          (omnivox-control-last-error nil)
          (omnivox--control-request-sequence 80)
          writes)
+    (puthash "voice-bolden" '(:average_pitch 0.4)
+             omnivox--logical-acss-table)
     (unwind-protect
         (cl-letf
             (((symbol-function 'process-send-string)
@@ -295,7 +306,9 @@
                :protocol_version 1 :request_id identifier
                :type "capabilities" :server_version "1.3.0"
                :supported_protocol_versions [1]
-               :features ["control_v1" "engine_inventory"]))))
+               :features ["control_v1" "engine_inventory"
+                          "logical_voice_registration"
+                          "preferred_engine"]))))
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
                  (identifier (plist-get request :request_id)))
             (should (equal (plist-get request :type) "inventory"))
@@ -304,7 +317,25 @@
              (emacsvox-test--omnivox-event
               (list
                :protocol_version 1 :request_id identifier :type "inventory"
-               :inventory_generation 3 :engines []))))
+               :inventory_generation 3 :preferred_engine_id "winrt"
+               :engines []))))
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id))
+                 (definition (car (plist-get request :definitions)))
+                 (selector (car (plist-get definition :preferences))))
+            (should (equal (plist-get request :type)
+                           "register_logical_voices"))
+            (should (equal (plist-get selector :kind) "engine_default"))
+            (should (equal (plist-get selector :engine_id) "winrt"))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier
+               :type "logical_voices_registered"
+               :inventory_generation 3
+               :registration
+               '(:registry_generation 1 :bindings [])))))
           (should (equal (plist-get omnivox-control-capabilities :type)
                          "capabilities"))
           (should (= (plist-get omnivox-engine-inventory
@@ -374,7 +405,7 @@
         :stress 0.5555555555555556)))))
 
 (ert-deftest emacsvox-tts-omnivox-registers-both-processes-atomically ()
-  "Main and notification servers receive one identical registry generation."
+  "Both servers share a generation but use their own preferred engine."
   (let* ((speaker
           (make-pipe-process
            :name "emacsvox-omnivox-registration-speaker"
@@ -385,8 +416,7 @@
            :buffer nil :noquery t))
          (tts-speaker-process speaker)
          (tts-notify-process notifier)
-         (omnivox-logical-voice-preferences
-          '((voice-annotate (exact "dectalk" "paul"))))
+         (omnivox-logical-voice-preferences nil)
          (omnivox-logical-voice-languages nil)
          (omnivox-fallback-engine-ids '("espeak"))
          (omnivox-global-default-selector nil)
@@ -396,33 +426,42 @@
          (omnivox--logical-registry-signature nil)
          (omnivox--control-request-sequence 200)
          writes)
+    (puthash "voice-annotate" '(:stress 0.0)
+             omnivox--logical-acss-table)
     (unwind-protect
         (progn
-          (dolist (process (list speaker notifier))
-            (process-put
-             process omnivox--control-capabilities-property
-             '(:type "capabilities"
-               :features ("logical_voice_registration"))))
+          (process-put
+           speaker omnivox--control-capabilities-property
+           '(:type "capabilities"
+             :features ("engine_inventory" "logical_voice_registration")))
+          (process-put
+           speaker omnivox--control-inventory-property
+           '(:type "inventory" :preferred_engine_id "winrt"))
+          (process-put
+           notifier omnivox--control-capabilities-property
+           '(:type "capabilities"
+             :features ("engine_inventory" "logical_voice_registration")))
+          (process-put
+           notifier omnivox--control-inventory-property
+           '(:type "inventory" :preferred_engine_id "espeak"))
           (cl-letf
               (((symbol-function 'process-send-string)
                 (lambda (process command)
                   (push (cons process command) writes))))
             (should (= (omnivox-register-logical-voices) 2)))
           (should (= (length writes) 2))
-          (let ((requests
-                 (mapcar
-                  (lambda (entry)
+          (dolist (entry writes)
+            (let* ((request
                     (emacsvox-test--omnivox-decode-command (cdr entry)))
-                  writes)))
-            (should
-             (cl-every
-              (lambda (request)
-                (and
-                 (equal (plist-get request :type)
-                        "register_logical_voices")
-                 (= (plist-get request :registry_generation) 1)
-                 (= (length (plist-get request :definitions)) 1)))
-              requests))))
+                   (definition (car (plist-get request :definitions)))
+                   (selector (car (plist-get definition :preferences)))
+                   (expected
+                    (if (eq (car entry) speaker) "winrt" "espeak")))
+              (should (equal (plist-get request :type)
+                             "register_logical_voices"))
+              (should (= (plist-get request :registry_generation) 1))
+              (should (= (length (plist-get request :definitions)) 1))
+              (should (equal (plist-get selector :engine_id) expected)))))
       (delete-process speaker)
       (delete-process notifier))))
 

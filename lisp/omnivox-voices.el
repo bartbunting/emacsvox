@@ -52,9 +52,11 @@ list of selectors with one of these forms:
   (engine-default ENGINE-ID)
   (properties :engine ENGINE-ID :language LANGUAGE :gender GENDER)
 
-Properties may omit any key.  A voice without an entry late-binds to any
-available engine and voice.  Exact selectors retain separate engine and native
-voice IDs, so a native ID may safely contain colons or backslashes."
+Properties may omit any key.  A voice without an entry late-binds to the
+preferred engine reported by each Omnivox process, or to any available engine
+when an older server does not report a preference.  Exact selectors retain
+separate engine and native voice IDs, so a native ID may safely contain colons
+or backslashes."
   :group 'omnivox
   :type '(alist :key-type (choice symbol string) :value-type sexp))
 
@@ -339,12 +341,16 @@ Symbol and string keys with the same printed name are equivalent."
       (push (omnivox--logical-voice-id (car entry)) ids))
     (sort (delete-dups ids) #'string-lessp)))
 
-(defun omnivox--logical-definition-json (id)
-  "Return the protocol definition for logical voice ID."
+(defun omnivox--logical-definition-json (id &optional preferred-engine-id)
+  "Return the protocol definition for logical voice ID.
+Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
   (let* ((configured
           (omnivox--logical-setting id omnivox-logical-voice-preferences))
          (selectors
-          (or configured '((properties))))
+          (or configured
+              (if preferred-engine-id
+                  `((engine-default ,preferred-engine-id))
+                '((properties)))))
          (language
           (omnivox--logical-setting id omnivox-logical-voice-languages)))
     (when (and language (not (stringp language)))
@@ -368,21 +374,33 @@ Symbol and string keys with the same printed name are equivalent."
      :null)
    :fallback_engines (vconcat omnivox-fallback-engine-ids)))
 
-(defun omnivox--logical-registry-snapshot ()
-  "Return the current generation and complete logical registry content."
+(defun omnivox--logical-registry-content (&optional preferred-engine-id)
+  "Return complete logical registry content for PREFERRED-ENGINE-ID."
   (let* ((definitions
           (vconcat
-           (mapcar #'omnivox--logical-definition-json
+           (mapcar (lambda (id)
+                     (omnivox--logical-definition-json
+                      id preferred-engine-id))
                    (omnivox--logical-voice-ids))))
-         (fallback-policy (omnivox--fallback-policy-json))
-         (signature (list definitions fallback-policy)))
-    (unless (equal signature omnivox--logical-registry-signature)
-      (setq omnivox--logical-registry-signature (copy-tree signature))
-      (cl-incf omnivox--logical-registry-generation))
+         (fallback-policy (omnivox--fallback-policy-json)))
     (list
-     :registry_generation omnivox--logical-registry-generation
      :definitions definitions
      :fallback_policy fallback-policy)))
+
+(defun omnivox--update-logical-registry-generation (signature)
+  "Advance the logical registry generation when SIGNATURE changed."
+  (unless (equal signature omnivox--logical-registry-signature)
+    (setq omnivox--logical-registry-signature (copy-tree signature))
+    (cl-incf omnivox--logical-registry-generation)))
+
+(defun omnivox--logical-registry-snapshot (&optional preferred-engine-id)
+  "Return the current logical registry for PREFERRED-ENGINE-ID."
+  (let ((content
+         (omnivox--logical-registry-content preferred-engine-id)))
+    (omnivox--update-logical-registry-generation (list content))
+    (append
+     (list :registry_generation omnivox--logical-registry-generation)
+     content)))
 
 (defun omnivox--process-supports-p (process feature)
   "Return non-nil when Omnivox PROCESS advertises FEATURE."
@@ -402,24 +420,47 @@ Symbol and string keys with the same printed name are equivalent."
     (omnivox--record-control-error process response)))
 
 (defun omnivox--registration-processes ()
-  "Return distinct live processes supporting logical voice registration."
+  "Return live processes ready for logical voice registration."
   (cl-remove-if-not
    (lambda (process)
      (and (process-live-p process)
           (omnivox--process-supports-p
-           process "logical_voice_registration")))
+           process "logical_voice_registration")
+          (or (not (omnivox--process-supports-p process "engine_inventory"))
+              (process-get process omnivox--control-inventory-property))))
    (delete-dups (list tts-speaker-process tts-notify-process))))
+
+(defun omnivox--process-logical-registry-content (process)
+  "Return logical registry content late-bound for Omnivox PROCESS."
+  (let* ((inventory
+          (process-get process omnivox--control-inventory-property))
+         (preferred-engine-id
+          (plist-get inventory :preferred_engine_id)))
+    (omnivox--logical-registry-content
+     (and (stringp preferred-engine-id)
+          (not (string-empty-p preferred-engine-id))
+          preferred-engine-id))))
 
 (defun omnivox-register-logical-voices ()
   "Register all Emacsvox logical voices with live Omnivox processes.
 Return the number of processes sent the atomic registry replacement."
   (interactive)
-  (let ((processes (omnivox--registration-processes))
-        (snapshot (omnivox--logical-registry-snapshot)))
-    (dolist (process processes)
+  (let* ((processes (omnivox--registration-processes))
+         (registrations
+          (mapcar
+           (lambda (process)
+             (cons process
+                   (omnivox--process-logical-registry-content process)))
+           processes)))
+    (omnivox--update-logical-registry-generation
+     (mapcar #'cdr registrations))
+    (dolist (registration registrations)
       (omnivox--send-control-request
-       process
-       (append '(:type "register_logical_voices") snapshot)
+       (car registration)
+       (append
+        (list :type "register_logical_voices"
+              :registry_generation omnivox--logical-registry-generation)
+        (cdr registration))
        #'omnivox--handle-registration-response))
     (when (and (called-interactively-p 'interactive) (null processes))
       (user-error "No live Omnivox process supports logical voice registration"))
@@ -453,7 +494,10 @@ Return the number of processes sent the atomic registry replacement."
       (progn
         (process-put process omnivox--control-inventory-property response)
         (when (eq process tts-speaker-process)
-          (setq omnivox-engine-inventory response)))
+          (setq omnivox-engine-inventory response))
+        (when (omnivox--process-supports-p
+               process "logical_voice_registration")
+          (omnivox-register-logical-voices)))
     (omnivox--record-control-error process response)))
 
 (defun omnivox--handle-capabilities-response (process response)
@@ -463,12 +507,12 @@ Return the number of processes sent the atomic registry replacement."
     (process-put process omnivox--control-capabilities-property response)
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
-    (when (member "engine_inventory" (plist-get response :features))
-      (omnivox--send-control-request
-       process '(:type "inventory") #'omnivox--handle-inventory-response))
-    (when (member "logical_voice_registration"
-                  (plist-get response :features))
-      (omnivox-register-logical-voices))))
+    (if (member "engine_inventory" (plist-get response :features))
+        (omnivox--send-control-request
+         process '(:type "inventory") #'omnivox--handle-inventory-response)
+      (when (member "logical_voice_registration"
+                    (plist-get response :features))
+        (omnivox-register-logical-voices)))))
 
 (defun omnivox--negotiate-process (process)
   "Start capability negotiation for one live Omnivox PROCESS."
