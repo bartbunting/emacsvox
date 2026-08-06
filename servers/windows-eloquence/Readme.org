@@ -62,8 +62,17 @@ make
 #+end_src
 
 The build uses the 64-bit .NET Framework C# compiler included with Windows;
-it produces both executables under =servers/windows-eloquence/bin=.  No ECI
-headers, libraries, or additional .NET SDK are required at build time.
+it produces the two standalone-server bridge executables and the 32-bit
+=OmnivoxEloquenceHelper32.exe= capture helper under
+=servers/windows-eloquence/bin=.  No ECI headers, libraries, or additional
+.NET SDK are required at build time.
+
+The capture helper can be rebuilt without replacing either bridge used by a
+running Emacsvox session:
+
+#+begin_src sh
+make -C servers/windows-eloquence omnivox-helper
+#+end_src
 
 Windows prevents replacement of a bridge executable while it is running.
 Before rebuilding, select a different speech server with
@@ -131,6 +140,25 @@ request has a separate 10-minute limit.  Set
 =EMACSVOX_WINDOWS_SPEECH_SYNC_TIMEOUT_MS= before starting Emacsvox to override
 these millisecond limits.  A timeout terminates the failed server; Emacsvox
 will start a fresh one on the next speech request.
+
+** Omnivox capture helper
+
+=OmnivoxEloquenceHelper32.exe= hosts ECI out of process for Omnivox and writes
+captured 11.025 kHz mono signed 16-bit PCM to the versioned Omnivox helper
+protocol.  It does not play that audio itself and does not alter the existing
+=windows-outloud= playback bridge.  Its inventory keeps the engine ID
+=eloquence= separate from native voice IDs =v1= through =v8=, with =v1= as the
+default.  Version 1 applies normalized speech rate; pitch, range, stress,
+richness, volume, and marker support are reported as unavailable rather than
+silently claimed.  Omnivox remains responsible for fallback, effects, mixing,
+playback, and playback completion.
+
+The helper accepts the ECI DLL path as its first argument.  Otherwise it checks
+=OMNIVOX_ECI_DLL=, then =EMACSVOX_ECI_DLL=, then the normal Freedom Scientific
+installation path.  Standard output is reserved for protocol JSON and errors
+go to standard error.  Synthesis runs on a separate worker so =cancel=, =ping=,
+and =shutdown= remain responsive while ECI is synchronizing.  Captured audio
+is bounded to 128 MiB and emitted in chunks no larger than 256 KiB.
 
 Replaceable aural submissions use one =emacsvox_tx= line containing a
 generation and a Base64-encoded UTF-8 server packet.  The Tcl front-end
