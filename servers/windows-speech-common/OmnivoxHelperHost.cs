@@ -45,6 +45,38 @@ internal sealed class OmnivoxHelperCapabilities
     internal bool LanguageSwitching { get; set; }
 }
 
+internal sealed class OmnivoxHelperMarker
+{
+    internal string Kind;
+    internal ulong FrameOffset;
+    internal uint? TextStart;
+    internal uint? TextLength;
+    internal string Value;
+
+    internal OmnivoxHelperMarker(string kind, ulong frameOffset,
+        uint? textStart, uint? textLength, string value)
+    {
+        Kind = kind;
+        FrameOffset = frameOffset;
+        TextStart = textStart;
+        TextLength = textLength;
+        Value = value;
+    }
+}
+
+internal sealed class OmnivoxCaptureResult
+{
+    internal byte[] Audio;
+    internal OmnivoxHelperMarker[] Markers;
+
+    internal OmnivoxCaptureResult(byte[] audio,
+        OmnivoxHelperMarker[] markers)
+    {
+        Audio = audio;
+        Markers = markers;
+    }
+}
+
 internal interface IOmnivoxCaptureEngine : IDisposable
 {
     string EngineId { get; }
@@ -56,7 +88,7 @@ internal interface IOmnivoxCaptureEngine : IDisposable
     int Channels { get; }
     OmnivoxHelperVoice[] Voices { get; }
     OmnivoxHelperCapabilities Capabilities { get; }
-    byte[] Synthesize(string text, string voiceId, double rate,
+    OmnivoxCaptureResult Synthesize(string text, string voiceId, double rate,
         double pitch, double volume);
     void Stop();
 }
@@ -72,6 +104,7 @@ internal sealed class OmnivoxHelperHost
     private const int MaximumTextBytes = 256 * 1024;
     private const int MaximumAudioChunkBytes = 256 * 1024;
     private const int MaximumAudioBytes = 128 * 1024 * 1024;
+    private const int MaximumMarkers = 4096;
     private const int MaximumStringLength = 16 * 1024;
 
     private sealed class ProtocolException : Exception
@@ -417,9 +450,16 @@ internal sealed class OmnivoxHelperHost
     {
         try
         {
-            byte[] audio = engine.Synthesize(synthesis.Text,
+            OmnivoxCaptureResult result = engine.Synthesize(synthesis.Text,
                 synthesis.VoiceId, synthesis.Rate, synthesis.Pitch,
                 synthesis.Volume);
+            if (result == null)
+            {
+                throw new InvalidOperationException(
+                    "native engine returned no synthesis result");
+            }
+            byte[] audio = result.Audio;
+            OmnivoxHelperMarker[] markers = result.Markers;
             int frameBytes = checked(engine.Channels * 2);
             if (audio == null || audio.Length > MaximumAudioBytes ||
                 audio.Length % frameBytes != 0)
@@ -427,6 +467,8 @@ internal sealed class OmnivoxHelperHost
                 throw new InvalidOperationException(
                     "native engine returned invalid or oversized PCM");
             }
+            ulong frameCount = (ulong)(audio.Length / frameBytes);
+            ValidateMarkers(markers, frameCount, synthesis.Text);
             if (synthesis.Cancelled)
             {
                 WriteSimple(synthesis.RequestId, "synthesis_cancelled");
@@ -449,9 +491,13 @@ internal sealed class OmnivoxHelperHost
                 response["chunk"] = chunk;
                 WriteFrame(response);
             }
+            if (markers.Length > 0)
+            {
+                WriteMarkers(synthesis.RequestId, markers);
+            }
             Dictionary<string, object> completed = Response(
                 synthesis.RequestId, "synthesis_completed");
-            completed["frame_count"] = (ulong)(audio.Length / frameBytes);
+            completed["frame_count"] = frameCount;
             WriteFrame(completed);
         }
         catch (Exception error)
@@ -476,6 +522,65 @@ internal sealed class OmnivoxHelperHost
                 }
             }
         }
+    }
+
+    private static void ValidateMarkers(OmnivoxHelperMarker[] markers,
+        ulong frameCount, string text)
+    {
+        if (markers == null || markers.Length > MaximumMarkers)
+        {
+            throw new InvalidOperationException(
+                "native engine returned invalid or too many markers");
+        }
+        ulong textBytes = (ulong)Encoding.UTF8.GetByteCount(text);
+        foreach (OmnivoxHelperMarker marker in markers)
+        {
+            if (marker == null || marker.FrameOffset > frameCount ||
+                (marker.Kind != "word" && marker.Kind != "sentence" &&
+                 marker.Kind != "phoneme" && marker.Kind != "native_index") ||
+                marker.TextStart.HasValue != marker.TextLength.HasValue ||
+                (marker.Value != null &&
+                 Encoding.UTF8.GetByteCount(marker.Value) >
+                    MaximumStringLength))
+            {
+                throw new InvalidOperationException(
+                    "native engine returned an invalid marker");
+            }
+            if (marker.TextStart.HasValue &&
+                (ulong)marker.TextStart.Value + marker.TextLength.Value >
+                    textBytes)
+            {
+                throw new InvalidOperationException(
+                    "native engine marker exceeds the synthesis text");
+            }
+        }
+    }
+
+    private void WriteMarkers(ulong requestId,
+        OmnivoxHelperMarker[] markers)
+    {
+        object[] values = new object[markers.Length];
+        for (int index = 0; index < markers.Length; ++index)
+        {
+            OmnivoxHelperMarker marker = markers[index];
+            Dictionary<string, object> value =
+                new Dictionary<string, object>();
+            value["kind"] = marker.Kind;
+            value["frame_offset"] = marker.FrameOffset;
+            if (marker.TextStart.HasValue)
+            {
+                value["text_start"] = marker.TextStart.Value;
+                value["text_length"] = marker.TextLength.Value;
+            }
+            if (marker.Value != null)
+            {
+                value["value"] = marker.Value;
+            }
+            values[index] = value;
+        }
+        Dictionary<string, object> response = Response(requestId, "markers");
+        response["markers"] = values;
+        WriteFrame(response);
     }
 
     private void HandleCancel(ulong requestId,

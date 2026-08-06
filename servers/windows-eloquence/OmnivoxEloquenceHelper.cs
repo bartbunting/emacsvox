@@ -47,14 +47,16 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         get { return EngineCapabilities; }
     }
 
-    public byte[] Synthesize(string text, string voiceId, double rate,
-        double pitch, double volume)
+    public OmnivoxCaptureResult Synthesize(string text, string voiceId,
+        double rate, double pitch, double volume)
     {
         // Existing Emacsvox Eloquence operation treats 75 as its normal
         // speed. Preserve that midpoint while providing a bounded range.
         int nativeRate = (int)Math.Round(20.0 + rate * 110.0,
             MidpointRounding.AwayFromZero);
-        return capture.Synthesize(text, voiceId, nativeRate);
+        return new OmnivoxCaptureResult(
+            capture.Synthesize(text, voiceId, nativeRate),
+            new OmnivoxHelperMarker[0]);
     }
 
     public void Stop()

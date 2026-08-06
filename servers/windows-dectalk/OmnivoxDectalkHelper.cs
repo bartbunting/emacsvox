@@ -64,8 +64,8 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
         get { return EngineCapabilities; }
     }
 
-    public byte[] Synthesize(string text, string voiceId, double rate,
-        double pitch, double volume)
+    public OmnivoxCaptureResult Synthesize(string text, string voiceId,
+        double rate, double pitch, double volume)
     {
         string voiceCode;
         if (!VoiceCodes.TryGetValue(voiceId, out voiceCode))
@@ -79,7 +79,9 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             225.0 + (rate - 0.5) * 750.0;
         int nativeRate = (int)Math.Round(mapped,
             MidpointRounding.AwayFromZero);
-        return capture.Synthesize(text, voiceCode, nativeRate);
+        return new OmnivoxCaptureResult(
+            capture.Synthesize(text, voiceCode, nativeRate),
+            new OmnivoxHelperMarker[0]);
     }
 
     public void Stop()
