@@ -45,10 +45,12 @@ runtime from this checkout with:
 make windows-omnivox
 #+END_SRC
 
-This builds the Windows executable and a native copy of the platform-neutral
-eSpeak voice data, then stages both with the required MinGW runtime DLLs under
-=servers/omnivox-bin=.  The voice data is required for the Windows eSpeak
-fallback to initialize.
+This builds the Windows executable, the separate 32-bit Eloquence capture
+helper, and a native copy of the platform-neutral eSpeak voice data, then
+stages them with the required MinGW runtime DLLs under =servers/omnivox-bin=.
+The voice data is required for the Windows eSpeak fallback to initialize.  The
+helper uses a user-installed 32-bit ECI runtime; no proprietary DLL is copied
+or distributed.
 
 Select it with =M-x omnivox=.  On startup the adapter negotiates the versioned
 control protocol, discovers the live engine inventory, and atomically
@@ -56,14 +58,19 @@ registers Emacsvox's logical voices with both the main and notification
 servers.  Older servers continue to use the legacy speech protocol.
 
 On Windows, current Omnivox servers initialize both WinRT and eSpeak when they
-are available.  WinRT is the preferred engine by default;
+are available.  When the staged Eloquence helper can load ECI, its =v1= through
+=v8= voices also appear in inventory for per-span logical routing.  A missing
+helper, DLL, or native voice degrades through the configured alternatives.
+WinRT is the preferred engine by default;
 =OMNIVOX_ENGINE=espeak= makes eSpeak preferred while retaining WinRT in the
 inventory.  A logical voice without an explicit preference binds to the
 preferred engine reported by each speech process.  Registration waits for that
 process's inventory, so differing main, notification, or machine voice lists do
 not need to be copied into portable Emacs configuration.
-The WSL launcher forwards =OMNIVOX_ENGINE= and =OMNIVOX_AUDIO_TARGET= to the
-Windows process.
+The WSL launcher forwards =OMNIVOX_ENGINE=, =OMNIVOX_AUDIO_TARGET=,
+=OMNIVOX_ELOQUENCE_HELPER=, and =OMNIVOX_ECI_DLL= to the Windows process.  The
+last two are optional overrides; the staged helper and normal Freedom
+Scientific ECI path need no configuration.
 
 Portable preferences do not copy a machine's discovered voice list into user
 configuration.  Instead, each logical voice has ordered exact, engine-default,

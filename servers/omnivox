@@ -24,7 +24,8 @@ resolved_program=$(readlink -f -- "$program")
 # WSL passes selected Linux variables to Windows programs through WSLENV.
 # Preserve the caller's entries and add Omnivox's non-path compatibility
 # settings once, including when an existing entry has WSLENV flags.
-for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET; do
+for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET \
+    OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL; do
     case ":${WSLENV-}:" in
         *":$variable:"*|*":$variable/"*) ;;
         *) WSLENV="${WSLENV:+$WSLENV:}$variable" ;;

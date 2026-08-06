@@ -142,6 +142,7 @@ OMNIVOX_RUNTIME_DIR = $(CURDIR)/servers/omnivox-bin
 MINGW_CXX ?= x86_64-w64-mingw32-g++
 
 windows-omnivox:
+	$(MAKE) -C servers/windows-eloquence omnivox-helper
 	cd "$(OMNIVOX_DIR)" && cargo build --locked --release -p omnivox-cli
 	cd "$(OMNIVOX_DIR)" && \
 		CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc \
@@ -152,6 +153,7 @@ windows-omnivox:
 			--target $(OMNIVOX_TARGET)
 	@set -eu; \
 		executable="$(OMNIVOX_DIR)/target/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
+		eloquence_helper="$(CURDIR)/servers/windows-eloquence/bin/OmnivoxEloquenceHelper32.exe"; \
 		stdlib="$$($(MINGW_CXX) -print-file-name=libstdc++-6.dll)"; \
 		gcc_runtime="$$($(MINGW_CXX) -print-file-name=libgcc_s_seh-1.dll)"; \
 		espeak_phontab="$$(find \
@@ -167,7 +169,7 @@ windows-omnivox:
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
 		build_id="$$( { \
-			sha256sum "$$executable" "$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
+			sha256sum "$$executable" "$$eloquence_helper" "$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
 			printf '%s\n' "$$data_digest"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
@@ -186,6 +188,13 @@ windows-omnivox:
 			cp "$$gcc_runtime" "$$version_dir/libgcc_s_seh-1.dll.new"; \
 			mv -f "$$version_dir/libgcc_s_seh-1.dll.new" \
 				"$$version_dir/libgcc_s_seh-1.dll"; \
+		fi; \
+		if [ ! -x "$$version_dir/OmnivoxEloquenceHelper32.exe" ]; then \
+			cp "$$eloquence_helper" \
+				"$$version_dir/OmnivoxEloquenceHelper32.exe.new"; \
+			chmod +x "$$version_dir/OmnivoxEloquenceHelper32.exe.new"; \
+			mv -f "$$version_dir/OmnivoxEloquenceHelper32.exe.new" \
+				"$$version_dir/OmnivoxEloquenceHelper32.exe"; \
 		fi; \
 		if [ ! -f "$$version_dir/espeak-ng-data/phontab" ]; then \
 			rm -rf "$$version_dir/espeak-ng-data.new"; \
