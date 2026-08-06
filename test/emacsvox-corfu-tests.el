@@ -68,6 +68,31 @@
            actions)
           '(open-object)))))))
 
+(ert-deftest emacsvox-corfu-update-formats-changed-candidate-once ()
+  "Candidate change detection and speech share one formatted snapshot."
+  (with-temp-buffer
+    (setq-local emacsvox-corfu--prev-candidate "previous")
+    (setq-local emacsvox-corfu--prev-index 0)
+    (setq-local emacsvox-corfu--prev-total 2)
+    (setq-local emacsvox-corfu--session-active-p t)
+    (let ((corfu-mode t)
+          (corfu--candidates '("first" "second"))
+          (corfu--index 1)
+          (corfu--total 2)
+          (format-calls 0)
+          spoken)
+      (cl-letf
+          (((symbol-function 'emacsvox-corfu--candidate-with-annotation)
+            (lambda (&rest _arguments)
+              (format "snapshot %d" (cl-incf format-calls))))
+           ((symbol-function 'emacsvox-aural-submit)
+            (lambda (content &rest _arguments)
+              (setq spoken content))))
+        (emacsvox--advice-corfu--update-after))
+      (should (= format-calls 1))
+      (should (equal spoken "snapshot 1"))
+      (should (equal emacsvox-corfu--prev-candidate spoken)))))
+
 (ert-deftest emacsvox-corfu-navigation-speaks-position-and-voices ()
   "Candidate navigation distinguishes selection, annotation, and position."
   (with-temp-buffer

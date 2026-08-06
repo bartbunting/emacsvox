@@ -226,15 +226,16 @@ INDEX snapshots a selection that Corfu may clear while completing."
       'large-movement
     'select-object))
 
-(defun emacsvox-corfu--speak-candidate (&optional icon force)
+(defun emacsvox-corfu--speak-candidate (&optional icon force snapshot)
   "Speak the current Corfu selection.
 
 ICON overrides the position-derived cue.  FORCE presents feedback even when
 the selection has not changed, which makes repeated boundary navigation
-audible."
+audible.  SNAPSHOT, when non-nil, is the already formatted candidate text."
   (let* ((index (if (boundp 'corfu--index) corfu--index -1))
          (text
-          (or (emacsvox-corfu--candidate-with-annotation)
+          (or snapshot
+              (emacsvox-corfu--candidate-with-annotation)
               (emacsvox-corfu--candidate-with-annotation 0 t)
               (emacsvox-corfu--count-text "Completion prompt, "))))
     (when (or force
@@ -428,18 +429,19 @@ CHANGED-P is non-nil when common-prefix expansion changed the input."
   "Present candidate availability after Corfu updates."
   (when (bound-and-true-p corfu-mode)
     (if (bound-and-true-p corfu--candidates)
-        (let ((opening-p (not emacsvox-corfu--session-active-p))
-              (total-changed-p
-               (/= (emacsvox-corfu--total)
-                   emacsvox-corfu--prev-total)))
+        (let* ((opening-p (not emacsvox-corfu--session-active-p))
+               (total-changed-p
+                (/= (emacsvox-corfu--total)
+                    emacsvox-corfu--prev-total))
+               (snapshot
+                (or (emacsvox-corfu--candidate-with-annotation)
+                    (emacsvox-corfu--candidate-with-annotation 0 t)
+                    (emacsvox-corfu--count-text "Completion prompt, "))))
           (setq emacsvox-corfu--session-active-p t)
           (when (or opening-p total-changed-p
-                    (not
-                     (equal
-                      (emacsvox-corfu--candidate-with-annotation)
-                      emacsvox-corfu--prev-candidate)))
+                    (not (equal snapshot emacsvox-corfu--prev-candidate)))
             (emacsvox-corfu--speak-candidate
-             (if opening-p 'open-object 'item)))
+             (if opening-p 'open-object 'item) nil snapshot))
           (setq emacsvox-corfu--prev-total
                 (emacsvox-corfu--total)))
       (unless (equal emacsvox-corfu--prev-candidate "No completions")
