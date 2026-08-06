@@ -1,0 +1,23 @@
+#!/bin/sh
+# Keywords: Emacsvox, Omnivox, Windows, WSL
+
+# Copyright (C) 2026 Bart Bunting
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This file is not part of GNU Emacs, but the same permissions apply.
+# See the file COPYING in this distribution.
+
+set -eu
+
+server_directory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+program="$server_directory/omnivox-bin/current/omnivox.exe"
+
+if [ ! -x "$program" ]; then
+    echo "Omnivox Windows binary not found: $program; run 'make windows-omnivox' from the repository root" >&2
+    exit 127
+fi
+
+# Resolve the content-addressed target before invoking WSL interop. Windows may
+# otherwise reuse an older image while a process at the same path is running.
+resolved_program=$(readlink -f -- "$program")
+exec "$resolved_program" "$@"

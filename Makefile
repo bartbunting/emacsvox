@@ -45,8 +45,8 @@ TRACE_GOLDEN=test/golden/emacsvox-core.eld
 EMACSPEAK_TRACE_GOLDEN=test/golden/emacspeak-core.eld
 
 .PHONY: test unit-test compiled-aural-test build-aural-test trace trace-test reference-test advice-audit name-audit tts-audit
-.PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk
-.PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk
+.PHONY: aural-audit aural-reference windows-speech windows-audio windows-outloud windows-dtk windows-omnivox
+.PHONY: clean-windows-speech clean-windows-audio clean-windows-outloud clean-windows-dtk clean-windows-omnivox
 test: unit-test compiled-aural-test build-aural-test trace-test
 
 unit-test:
@@ -136,6 +136,48 @@ windows-outloud:
 windows-dtk:
 	$(MAKE) -C servers/windows-dectalk
 
+OMNIVOX_DIR ?= $(abspath ../omnivox)
+OMNIVOX_TARGET ?= x86_64-pc-windows-gnu
+OMNIVOX_RUNTIME_DIR = $(CURDIR)/servers/omnivox-bin
+MINGW_CXX ?= x86_64-w64-mingw32-g++
+
+windows-omnivox:
+	cd "$(OMNIVOX_DIR)" && \
+		CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc \
+		CXX_x86_64_pc_windows_gnu=$(MINGW_CXX) \
+		AR_x86_64_pc_windows_gnu=x86_64-w64-mingw32-ar \
+		CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc \
+		cargo build --locked --release -p omnivox-cli \
+			--target $(OMNIVOX_TARGET)
+	@set -eu; \
+		executable="$(OMNIVOX_DIR)/target/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
+		stdlib="$$($(MINGW_CXX) -print-file-name=libstdc++-6.dll)"; \
+		gcc_runtime="$$($(MINGW_CXX) -print-file-name=libgcc_s_seh-1.dll)"; \
+		build_id="$$(sha256sum "$$executable" "$$stdlib" "$$gcc_runtime" \
+			| cut -d ' ' -f1 | sha256sum | cut -c1-16)"; \
+		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
+		mkdir -p "$$version_dir"; \
+		if [ ! -x "$$version_dir/omnivox.exe" ]; then \
+			cp "$$executable" "$$version_dir/omnivox.exe.new"; \
+			chmod +x "$$version_dir/omnivox.exe.new"; \
+			mv -f "$$version_dir/omnivox.exe.new" "$$version_dir/omnivox.exe"; \
+		fi; \
+		if [ ! -f "$$version_dir/libstdc++-6.dll" ]; then \
+			cp "$$stdlib" "$$version_dir/libstdc++-6.dll.new"; \
+			mv -f "$$version_dir/libstdc++-6.dll.new" \
+				"$$version_dir/libstdc++-6.dll"; \
+		fi; \
+		if [ ! -f "$$version_dir/libgcc_s_seh-1.dll" ]; then \
+			cp "$$gcc_runtime" "$$version_dir/libgcc_s_seh-1.dll.new"; \
+			mv -f "$$version_dir/libgcc_s_seh-1.dll.new" \
+				"$$version_dir/libgcc_s_seh-1.dll"; \
+		fi; \
+		ln -sfn "versions/$$build_id" "$(OMNIVOX_RUNTIME_DIR)/current.new"; \
+		mv -Tf "$(OMNIVOX_RUNTIME_DIR)/current.new" \
+			"$(OMNIVOX_RUNTIME_DIR)/current"; \
+		chmod +x servers/omnivox; \
+		echo "Staged Omnivox runtime $$build_id"
+
 clean-windows-speech: clean-windows-audio clean-windows-outloud clean-windows-dtk
 
 clean-windows-audio:
@@ -146,6 +188,9 @@ clean-windows-outloud:
 
 clean-windows-dtk:
 	$(MAKE) -C servers/windows-dectalk clean
+
+clean-windows-omnivox:
+	rm -rf "$(OMNIVOX_RUNTIME_DIR)"
 
 ###   Maintenance targets:   dist
 
