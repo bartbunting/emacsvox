@@ -5462,6 +5462,47 @@ Return speech events plus the target character.  DIRECTION is `forward' or
       (should (equal (substring-no-properties rendered)
                      "… ordinary …")))))
 
+(ert-deftest emacsvox-agent-shell-transforms-before-native-preparation ()
+  "Native Agent Shell text is transformed once before plans are frozen."
+  (with-temp-buffer
+    (setq major-mode 'agent-shell-mode)
+    (setq-local
+     emacsvox-aural-source-transform-function
+     #'emacsvox-agent-shell--prepare-speech-text)
+    (let* ((emacsvox-agent-shell--chat-label-context
+            '(:category agent-shell-chat-me :text "Me"))
+           (context
+            '(:module agent-shell
+              :mode agent-shell-mode
+              :mode-lineage (agent-shell-mode comint-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled nil
+              :icons-enabled nil))
+           spoken
+           submission)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text))))
+        (setq
+         submission
+         (emacsvox-aural-submit
+          "hello" :facts '(:role agent-response) :context context)))
+      (should
+       (equal
+        (substring-no-properties
+         (emacsvox-aural-submission-content submission))
+        "Me. hello"))
+      (should (emacsvox-aural-prepared-text-p spoken))
+      (should (equal (substring-no-properties spoken) "Me. hello"))
+      (let (adapted)
+        (emacsvox-agent-shell--tts-speak-around
+         (lambda (text) (setq adapted text)) spoken)
+        (should (eq adapted spoken))
+        (should (emacsvox-aural-prepared-text-p adapted))
+        (should
+         (equal (substring-no-properties adapted) "Me. hello"))))))
+
 (ert-deftest emacsvox-agent-shell-markdown-face-inventory-is-current ()
   "Every current agent-shell Markdown face should be classified."
   (let ((configured
@@ -5600,6 +5641,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (should (= 4 (length (map-elt
                                   agent-shell--state
                                   :event-subscriptions))))
+            (should
+             (eq emacsvox-aural-source-transform-function
+                 #'emacsvox-agent-shell--prepare-speech-text))
             (should (memq #'emacsvox-agent-shell--buffer-cleanup
                           kill-buffer-hook))
             (should (memq #'emacsvox-agent-shell--buffer-cleanup
@@ -5615,6 +5659,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (sit-for 0.15)
           (should-not fired)
           (with-current-buffer buffer
+            (should-not
+             (local-variable-p
+              'emacsvox-aural-source-transform-function))
             (should-not emacsvox-agent-shell--pending-speech-timer)
             (should-not emacsvox-agent-shell--pending-speech-qualified-ids)
             (should-not emacsvox-agent-shell--pending-bodies)
@@ -5668,6 +5715,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
             (puthash "pending" "text"
                      emacsvox-agent-shell--pending-bodies)
             (should
+             (eq emacsvox-aural-source-transform-function
+                 #'emacsvox-agent-shell--prepare-speech-text))
+            (should
              (memq #'emacsvox-agent-shell--record-response-section
                    agent-shell-section-functions))
             (fundamental-mode))
@@ -5675,6 +5725,9 @@ Return speech events plus the target character.  DIRECTION is `forward' or
           (should-not fired)
           (should-not (map-elt state :event-subscriptions))
           (with-current-buffer buffer
+            (should-not
+             (local-variable-p
+              'emacsvox-aural-source-transform-function))
             (should-not emacsvox-agent-shell--pending-speech-timer)
             (should-not emacsvox-agent-shell--pending-speech-qualified-ids)
             (should-not emacsvox-agent-shell--pending-bodies)

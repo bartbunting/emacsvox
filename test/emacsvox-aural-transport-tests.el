@@ -976,6 +976,40 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-aural-concrete-plan-before (cadr plans))
           :key #'emacsvox-aural-concrete-action-cue))))))
 
+(ert-deftest emacsvox-aural-submission-transforms-source-before-preparation ()
+  "A source transformation and its concrete plans remain one snapshot."
+  (emacsvox-test--with-transport-scheme
+    (let* ((emacsvox-aural--submission-sequence 0)
+           (emacsvox-aural-source-transform-function
+            (lambda (text) (concat "label. " text)))
+           (context
+            '(:module test
+              :mode text-mode
+              :mode-lineage (text-mode)
+              :occasion navigation
+              :face-presentation-enabled t
+              :voice-lock-enabled nil
+              :icons-enabled nil))
+           spoken
+           submission)
+      (cl-letf
+          (((symbol-function 'tts-speak)
+            (lambda (text) (setq spoken text))))
+        (setq
+         submission
+         (emacsvox-aural-submit
+          "content" :facts '(:role heading) :context context)))
+      (should
+       (equal
+        (emacsvox-aural-submission-content submission)
+        "label. content"))
+      (should
+       (eq
+        spoken
+        (emacsvox-aural-submission-prepared-content submission)))
+      (should (emacsvox-aural-prepared-text-p spoken))
+      (should (equal (substring-no-properties spoken) "label. content")))))
+
 (ert-deftest emacsvox-aural-submission-records-one-exact-history-transaction ()
   "Clause and formatting runs remain exact inside one history transaction."
   (emacsvox-test--with-transport-scheme

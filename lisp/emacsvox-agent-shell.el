@@ -2020,10 +2020,13 @@ Core visual-line presentation owns blank-line semantics and interruption."
 (defun emacsvox-agent-shell--tts-speak-around
     (original-function text &rest arguments)
   "Preserve rendered Markdown properties while speaking agent-shell content.
-This changes only the temporary speech string; agent-shell's clipboard handler
-and the source buffer remain untouched."
+Native submissions have already transformed and prepared their immutable text,
+so this adapter leaves them untouched.  Bare legacy TTS calls are transformed
+once without changing agent-shell's clipboard handler or source buffer."
   (apply original-function
-         (emacsvox-agent-shell--prepare-speech-text text)
+         (if (emacsvox-aural-prepared-text-p text)
+             text
+           (emacsvox-agent-shell--prepare-speech-text text))
          arguments))
 
 (defun emacsvox-agent-shell--speak-mode-line-around
@@ -4793,6 +4796,9 @@ Return nil when the configured verbosity requests status cues only."
 (defun emacsvox-agent-shell--buffer-setup ()
   "Install event support and centralized cleanup in this shell buffer."
   (setq-local emacsvox-aural-module 'agent-shell)
+  (setq-local
+   emacsvox-aural-source-transform-function
+   #'emacsvox-agent-shell--prepare-speech-text)
   (add-hook 'kill-buffer-hook
             #'emacsvox-agent-shell--buffer-cleanup nil t)
   (add-hook 'change-major-mode-hook
@@ -4812,6 +4818,7 @@ Return nil when the configured verbosity requests status cues only."
   (emacsvox-agent-shell--lifecycle-event-cleanup)
   (emacsvox-agent-shell--tool-call-event-cleanup)
   (emacsvox-agent-shell--table-navigation-cleanup)
+  (kill-local-variable 'emacsvox-aural-source-transform-function)
   (remove-hook 'kill-buffer-hook
                #'emacsvox-agent-shell--buffer-cleanup t)
   (remove-hook 'change-major-mode-hook

@@ -53,6 +53,13 @@ their complete transactions are delivered.  Compatibility callers and bare
 `tts-speak' calls leave it nil and retain legacy stop-before-speaking
 behaviour.")
 
+(defvar-local emacsvox-aural-source-transform-function nil
+  "Optional function that transforms source text before aural preparation.
+
+The function receives one nonempty source string and must return a string.
+It is intended for mode-specific, presentation-only transformations that must
+remain synchronized with the concrete plans frozen by a native submission.")
+
 (defvar emacsvox-aural-ui-interface-buffer)
 
 (defconst emacsvox-aural-facts-property
@@ -87,6 +94,16 @@ occasion, or a new queued icon changes.")
 The value is non-nil only when `invisible-p' was non-nil in the source buffer.
 It lets later TTS cleanup preserve that decision without depending on another
 buffer's `buffer-invisibility-spec'.")
+
+(defun emacsvox-aural-transform-source-text (text)
+  "Apply the current mode-specific source transformation to TEXT."
+  (let ((result
+         (if emacsvox-aural-source-transform-function
+             (funcall emacsvox-aural-source-transform-function text)
+           text)))
+    (unless (stringp result)
+      (error "Aural source transformation returned non-string: %S" result))
+    result))
 
 (defun emacsvox-aural-source-text-property (position property &optional object)
   "Return the actual PROPERTY at POSITION in OBJECT.

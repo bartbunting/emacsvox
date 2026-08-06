@@ -145,6 +145,10 @@ PHASE is `before' by default and may alternatively be `after'."
     (emacsvox-aural--submission-error
      "Native aural submission content must be a nonempty string: %S"
      content))
+  (setq content (emacsvox-aural-transform-source-text content))
+  (when (string-empty-p content)
+    (emacsvox-aural--submission-error
+     "Aural source transformation returned empty content"))
   (let* ((id (cl-incf emacsvox-aural--submission-sequence))
          (actions
           (emacsvox-aural--normalized-compatibility-actions
