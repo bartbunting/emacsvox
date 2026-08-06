@@ -510,10 +510,10 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox--advice-comint-delete-output-after (&rest _)
   "Cue and speak after interactively deleting Comint output."
   (when (ems-interactive-p 'comint-delete-output)
-    (emacsvox-comint--present-feedback
+    (emacsvox-comint--present-line-feedback
      (emacsvox-comint-facts
       'command-output 'object-changed 'delete-output)
-     'state-change 'delete-object #'emacsvox-speak-line)))
+     'state-change 'delete-object 'before)))
 
 (advice-add
  'comint-delete-output :after
@@ -545,10 +545,10 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox--advice-comint-clear-buffer-after (&rest _)
   "Cue and speak after interactively clearing a Comint buffer."
   (when (ems-interactive-p 'comint-clear-buffer)
-    (emacsvox-comint--present-feedback
+    (emacsvox-comint--present-line-feedback
      (emacsvox-comint-facts
       'command-interaction 'object-changed 'clear-buffer)
-     'state-change 'delete-object #'emacsvox-speak-line)))
+     'state-change 'delete-object 'before)))
 
 (advice-add
  'comint-clear-buffer :after
@@ -688,11 +688,11 @@ events.  Carriage-return chunks replace pending progress output."
   (when (ems-interactive-p 'comint-accumulate)
     (save-excursion
       (comint-bol)
-      (emacsvox-comint--present-feedback
+      (emacsvox-comint--present-line-feedback
        (emacsvox-comint-facts
         'command-input 'focus-entered 'accumulate
         '(:command-input-origin accumulated))
-       'edit 'select-object #'emacsvox-speak-line 1))))
+       'edit 'select-object 'before 1))))
 
 (advice-add
  'comint-accumulate :before
@@ -788,11 +788,11 @@ events.  Carriage-return chunks replace pending progress output."
 (defun emacsvox--advice-comint-copy-old-input-after (&rest _)
   "Cue and speak input copied interactively from Comint history."
   (when (ems-interactive-p 'comint-copy-old-input)
-    (emacsvox-comint--present-feedback
+    (emacsvox-comint--present-line-feedback
      (emacsvox-comint-facts
       'command-input 'object-changed 'copy-input
       '(:command-input-origin copied))
-     'edit 'yank-object #'emacsvox-speak-line)))
+     'edit 'yank-object 'before)))
 
 (advice-add
  'comint-copy-old-input :after

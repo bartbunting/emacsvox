@@ -242,6 +242,39 @@
             (plist-get (car observed) :command-operation)
             operation)))))))
 
+(ert-deftest emacsvox-comint-editing-keeps-line-cues-atomic ()
+  "Editing and state-change cues precede speech in one line submission."
+  (dolist
+      (case
+       '((comint-delete-output state-change delete-object nil delete-output)
+         (comint-clear-buffer state-change delete-object nil clear-buffer)
+         (comint-accumulate edit select-object 1 accumulate)
+         (comint-copy-old-input edit yank-object nil copy-input)))
+    (pcase-let ((`(,target ,occasion ,icon ,argument ,operation) case))
+      (let ((ems--interactive-fn-name target)
+            observed)
+        (cl-letf
+            (((symbol-function 'comint-bol) #'ignore)
+             ((symbol-function 'emacsvox-comint--present-line-feedback)
+              (lambda (facts value action action-phase &optional line-arg)
+                (setq
+                 observed
+                 (list facts value action action-phase line-arg)))))
+          (funcall
+           (intern
+            (format
+             "emacsvox--advice-%s-%s"
+             target
+             (if (eq target 'comint-accumulate) "before" "after")))))
+        (should (eq (nth 1 observed) occasion))
+        (should (eq (nth 2 observed) icon))
+        (should (eq (nth 3 observed) 'before))
+        (should (equal (nth 4 observed) argument))
+        (should
+         (eq
+          (plist-get (car observed) :command-operation)
+          operation))))))
+
 (ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
   "Comint output and subprocess advice uses native advice directly."
   (dolist
