@@ -88,6 +88,11 @@ value preserves the server-selected preferred-engine behavior."
   :group 'omnivox
   :type '(repeat string))
 
+(defcustom omnivox-disabled-engine-ids nil
+  "Engine IDs retained in routing order but administratively disabled."
+  :group 'omnivox
+  :type '(repeat string))
+
 (defcustom omnivox-global-default-selector nil
   "Optional final default selector for every logical Omnivox voice.
 The value is nil or one selector in the format documented by
@@ -158,6 +163,10 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
   'omnivox--control-registration
   "Process property holding the latest logical-voice registration result.")
 
+(defconst omnivox--control-routing-policy-property
+  'omnivox--control-routing-policy
+  "Process property holding the latest applied routing policy.")
+
 (defconst omnivox--control-negotiated-property 'omnivox--control-negotiated
   "Process property preventing duplicate capability negotiation.")
 
@@ -175,6 +184,9 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 
 (defvar omnivox-logical-voice-registration nil
   "Logical-voice result most recently reported by the main Omnivox process.")
+
+(defvar omnivox-routing-policy-registration nil
+  "Routing policy most recently reported by the main Omnivox process.")
 
 (defvar omnivox-control-last-error nil
   "Most recent Omnivox control error or malformed event.")
@@ -585,14 +597,19 @@ Symbol and string keys with the same printed name are equivalent."
         (push engine-id used)))
     result))
 
-(defun omnivox--logical-definition-json (id &optional preferred-engine-id)
+(defun omnivox--logical-definition-json
+    (id &optional preferred-engine-id runtime-routing-policy)
   "Return the protocol definition for logical voice ID.
-Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
+Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice.
+When RUNTIME-ROUTING-POLICY is non-nil, do not duplicate global engine order
+inside this logical definition."
   (let* ((configured
           (omnivox--logical-setting id omnivox-logical-voice-preferences))
          (selectors
           (or
-           (omnivox--selectors-with-engine-priority configured)
+           (if runtime-routing-policy
+               (copy-tree configured)
+             (omnivox--selectors-with-engine-priority configured))
            (if preferred-engine-id
                `((engine-default ,preferred-engine-id))
              '((properties)))))
@@ -606,7 +623,7 @@ Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
      :preferences (vconcat (mapcar #'omnivox--selector-json selectors))
      :acss (copy-tree (gethash id omnivox--logical-acss-table)))))
 
-(defun omnivox--fallback-policy-json ()
+(defun omnivox--fallback-policy-json (&optional runtime-routing-policy)
   "Return the configured logical voice fallback policy as JSON data."
   (dolist (engine-id omnivox-fallback-engine-ids)
     (omnivox--required-selector-id engine-id "fallback engine ID"))
@@ -617,17 +634,21 @@ Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
    (if omnivox-global-default-selector
        (omnivox--selector-json omnivox-global-default-selector)
      :null)
-   :fallback_engines (vconcat omnivox-fallback-engine-ids)))
+   :fallback_engines
+   (if runtime-routing-policy [] (vconcat omnivox-fallback-engine-ids))))
 
-(defun omnivox--logical-registry-content (&optional preferred-engine-id)
-  "Return complete logical registry content for PREFERRED-ENGINE-ID."
+(defun omnivox--logical-registry-content
+    (&optional preferred-engine-id runtime-routing-policy)
+  "Return complete logical registry content for PREFERRED-ENGINE-ID.
+RUNTIME-ROUTING-POLICY keeps global order out of logical definitions."
   (let* ((definitions
           (vconcat
            (mapcar (lambda (id)
                      (omnivox--logical-definition-json
-                      id preferred-engine-id))
+                      id preferred-engine-id runtime-routing-policy))
                    (omnivox--logical-voice-ids))))
-         (fallback-policy (omnivox--fallback-policy-json)))
+         (fallback-policy
+          (omnivox--fallback-policy-json runtime-routing-policy)))
     (list
      :definitions definitions
      :fallback_policy fallback-policy)))
@@ -655,6 +676,163 @@ Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
     (process-get process omnivox--control-capabilities-property)
     :features)))
 
+(defun omnivox--routing-engine-list (values description)
+  "Validate and copy ordered engine VALUES described by DESCRIPTION."
+  (unless (proper-list-p values)
+    (error "Omnivox %s must be a list" description))
+  (let (seen result)
+    (dolist (engine-id values)
+      (omnivox--required-selector-id engine-id description)
+      (when (member engine-id seen)
+        (error "Omnivox %s contains duplicate engine %s"
+               description engine-id))
+      (push engine-id seen)
+      (push engine-id result))
+    (nreverse result)))
+
+(defun omnivox--routing-policy-content (process)
+  "Return desired global routing policy for Omnivox PROCESS."
+  (let* ((inventory
+          (process-get process omnivox--control-inventory-property))
+         (startup-preferred (plist-get inventory :preferred_engine_id))
+         (preferred
+          (or omnivox-engine-priority-ids
+              (and (stringp startup-preferred)
+                   (not (string-empty-p startup-preferred))
+                   (list startup-preferred)))))
+    (list
+     :preferred_engine_ids
+     (vconcat
+      (omnivox--routing-engine-list preferred "preferred engine order"))
+     :fallback_engine_ids
+     (vconcat
+      (omnivox--routing-engine-list
+       omnivox-fallback-engine-ids "fallback engine order"))
+     :disabled_engine_ids
+     (vconcat
+      (omnivox--routing-engine-list
+       omnivox-disabled-engine-ids "disabled engine list")))))
+
+(defun omnivox--routing-policy-lists (policy)
+  "Return comparable ordered lists from wire POLICY."
+  (list
+   (append (plist-get policy :preferred_engine_ids) nil)
+   (append (plist-get policy :fallback_engine_ids) nil)
+   (append (plist-get policy :disabled_engine_ids) nil)))
+
+(defun omnivox--routing-registration-policy (registration)
+  "Return policy content nested in REGISTRATION, or nil."
+  (and (listp registration) (plist-get registration :policy)))
+
+(defun omnivox--process-routing-registration (process)
+  "Return the newest routing registration known for PROCESS."
+  (or
+   (process-get process omnivox--control-routing-policy-property)
+   (plist-get
+    (process-get process omnivox--control-inventory-property)
+    :routing_policy)))
+
+(defun omnivox--process-routing-policy-current-p (process)
+  "Return non-nil when PROCESS has the desired global routing policy."
+  (let ((registered
+         (omnivox--routing-registration-policy
+          (omnivox--process-routing-registration process)))
+        (desired (omnivox--routing-policy-content process)))
+    (and registered
+         (equal (omnivox--routing-policy-lists registered)
+                (omnivox--routing-policy-lists desired)))))
+
+(defun omnivox--routing-policy-generation (process)
+  "Return the last routing-policy generation reported by PROCESS."
+  (or
+   (plist-get
+    (omnivox--process-routing-registration process)
+    :routing_policy_generation)
+   0))
+
+(defun omnivox--store-routing-policy-response (process response)
+  "Store successful routing-policy RESPONSE for PROCESS."
+  (let ((registration (plist-get response :routing_policy))
+        (inventory
+         (copy-tree
+          (process-get process omnivox--control-inventory-property))))
+    (process-put process omnivox--control-routing-policy-property registration)
+    (when inventory
+      (setq inventory
+            (plist-put inventory :routing_policy (copy-tree registration)))
+      (when (plist-member response :inventory_generation)
+        (setq inventory
+              (plist-put
+               inventory :inventory_generation
+               (plist-get response :inventory_generation))))
+      (process-put process omnivox--control-inventory-property inventory))
+    (when-let* ((logical (plist-get response :logical_voices)))
+      (process-put process omnivox--control-registration-property logical)
+      (when (eq process tts-speaker-process)
+        (setq omnivox-logical-voice-registration (copy-tree logical))))
+    (when (eq process tts-speaker-process)
+      (setq omnivox-routing-policy-registration (copy-tree registration)
+            omnivox-engine-inventory inventory
+            omnivox-engine-inventory-time (current-time)))))
+
+(defun omnivox--handle-routing-policy-response (process response)
+  "Store routing policy RESPONSE and continue logical registration."
+  (if (equal (plist-get response :type) "routing_policy_applied")
+      (progn
+        (omnivox--store-routing-policy-response process response)
+        (if (omnivox--process-routing-policy-current-p process)
+            (omnivox-register-logical-voices)
+          (omnivox--set-process-routing-policy process)))
+    (omnivox--record-control-error process response)
+    (when (and
+           (member (plist-get response :code)
+                   '("stale_generation" "generation_conflict"))
+           (omnivox--process-supports-p process "engine_inventory"))
+      (omnivox--send-control-request
+       process '(:type "inventory") #'omnivox--handle-inventory-response))))
+
+(defun omnivox--set-process-routing-policy (process)
+  "Apply desired routing policy to one negotiated Omnivox PROCESS."
+  (let ((content (omnivox--routing-policy-content process)))
+    (if (omnivox--process-routing-policy-current-p process)
+        (progn
+          (process-put
+           process omnivox--control-routing-policy-property
+           (omnivox--process-routing-registration process))
+          nil)
+      (omnivox--send-control-request
+       process
+       (append
+        (list
+         :type "set_routing_policy"
+         :routing_policy_generation
+         (1+ (omnivox--routing-policy-generation process)))
+        content)
+       #'omnivox--handle-routing-policy-response))))
+
+(defun omnivox-set-routing-policy ()
+  "Apply global engine order and disablement to live Omnivox processes.
+Return the number of processes sent a generation-safe policy replacement."
+  (interactive)
+  (let ((processes
+         (cl-remove-if-not
+          (lambda (process)
+            (and
+             (process-live-p process)
+             (omnivox--process-supports-p process "runtime_routing_policy")
+             (process-get process omnivox--control-inventory-property)))
+          (delete-dups (list tts-speaker-process tts-notify-process))))
+        (sent 0))
+    (dolist (process processes)
+      (when (omnivox--set-process-routing-policy process)
+        (cl-incf sent)))
+    (when (called-interactively-p 'interactive)
+      (if processes
+          (message "Sent Omnivox routing policy to %d process%s"
+                   sent (if (= sent 1) "" "es"))
+        (user-error "No live Omnivox process supports runtime routing policy")))
+    sent))
+
 (defun omnivox--handle-registration-response (process response)
   "Store logical voice registration RESPONSE received from PROCESS."
   (if (equal (plist-get response :type) "logical_voices_registered")
@@ -672,19 +850,27 @@ Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
           (omnivox--process-supports-p
            process "logical_voice_registration")
           (or (not (omnivox--process-supports-p process "engine_inventory"))
-              (process-get process omnivox--control-inventory-property))))
+              (process-get process omnivox--control-inventory-property))
+          (or
+           (not (omnivox--process-supports-p
+                 process "runtime_routing_policy"))
+           (omnivox--process-routing-policy-current-p process))))
    (delete-dups (list tts-speaker-process tts-notify-process))))
 
 (defun omnivox--process-logical-registry-content (process)
   "Return logical registry content late-bound for Omnivox PROCESS."
   (let* ((inventory
           (process-get process omnivox--control-inventory-property))
+         (runtime-routing-policy
+          (omnivox--process-supports-p process "runtime_routing_policy"))
          (preferred-engine-id
           (plist-get inventory :preferred_engine_id)))
     (omnivox--logical-registry-content
-     (and (stringp preferred-engine-id)
+     (and (not runtime-routing-policy)
+          (stringp preferred-engine-id)
           (not (string-empty-p preferred-engine-id))
-          preferred-engine-id))))
+          preferred-engine-id)
+     runtime-routing-policy)))
 
 (defun omnivox-register-logical-voices ()
   "Register all Emacsvox logical voices with live Omnivox processes.
@@ -740,10 +926,16 @@ Return the number of processes sent the atomic registry replacement."
         (process-put process omnivox--control-inventory-property response)
         (when (eq process tts-speaker-process)
           (setq omnivox-engine-inventory response
-                omnivox-engine-inventory-time (current-time)))
-        (when (omnivox--process-supports-p
-               process "logical_voice_registration")
-          (omnivox-register-logical-voices)))
+                omnivox-engine-inventory-time (current-time)
+                omnivox-routing-policy-registration
+                (copy-tree (plist-get response :routing_policy))))
+        (if (omnivox--process-supports-p process "runtime_routing_policy")
+            (if (omnivox--set-process-routing-policy process)
+                nil
+              (omnivox-register-logical-voices))
+          (when (omnivox--process-supports-p
+                 process "logical_voice_registration")
+            (omnivox-register-logical-voices))))
     (omnivox--record-control-error process response)))
 
 (defun omnivox--handle-capabilities-response (process response)
@@ -939,7 +1131,8 @@ Return the number of distinct processes that received the command."
                         process omnivox--control-inventory-property)))
                   (list
                    (plist-get inventory :inventory_generation)
-                   (plist-get inventory :preferred_engine_id))))
+                   (plist-get inventory :preferred_engine_id)
+                   (plist-get inventory :routing_policy))))
               processes)))
         (if (cl-every (lambda (signature)
                         (equal signature (car signatures)))
@@ -963,11 +1156,20 @@ Return the number of distinct processes that received the command."
      :availability-reason
      (omnivox--status-reason (plist-get voice :availability)))))
 
-(defun omnivox--inventory-engine (engine &optional inventory-kind)
-  "Normalize one engine descriptor from Omnivox INVENTORY-KIND."
+(defun omnivox--inventory-runtime (engine-id)
+  "Return live runtime status for ENGINE-ID from the main inventory."
+  (cl-find-if
+   (lambda (status)
+     (equal engine-id (plist-get status :engine_id)))
+   (append (plist-get omnivox-engine-inventory :engine_runtime) nil)))
+
+(defun omnivox--inventory-engine
+    (engine &optional inventory-kind runtime-status)
+  "Normalize one engine descriptor and optional RUNTIME-STATUS."
   (let* ((engine-id (plist-get engine :id))
          (capabilities (plist-get engine :capabilities))
-         (acss (plist-get capabilities :acss)))
+         (acss (plist-get capabilities :acss))
+         (markers (plist-get capabilities :markers)))
     (list
      :engine-id engine-id
      :display-name (plist-get engine :display_name)
@@ -978,8 +1180,27 @@ Return the number of distinct processes that received the command."
      (omnivox--status-reason (plist-get engine :availability))
      :health (omnivox--status-value (plist-get engine :health) "unknown")
      :health-reason (omnivox--status-reason (plist-get engine :health))
+     :circuit (or (plist-get runtime-status :circuit) "unknown")
+     :last-failure (plist-get runtime-status :last_failure)
+     :cooldown-remaining-ms
+     (plist-get runtime-status :cooldown_remaining_ms)
+     :disabled-by-policy
+     (and (plist-get runtime-status :disabled_by_policy) t)
      :default-voice-id (plist-get engine :default_voice_id)
      :inventory-kind (or inventory-kind "live")
+     :audio-output (plist-get capabilities :audio_output)
+     :marker-support
+     (delq
+      nil
+      (mapcar
+       (lambda (entry) (and (plist-get markers (car entry)) (cdr entry)))
+       '((:word . word) (:sentence . sentence) (:phoneme . phoneme)
+         (:native_index . native-index))))
+     :anchor-support
+     (cond
+      ((plist-get markers :native_index) "exact/native-index")
+      ((plist-get markers :word) "word-boundary")
+      (t "none"))
      :acss-dimensions
      (delq
       nil
@@ -995,8 +1216,8 @@ Return the number of distinct processes that received the command."
          "exact"
        "logical-route")
      :routing-policy-support
-     (if (omnivox--control-feature-p "logical_voice_routing")
-         "logical-voice"
+     (if (omnivox--control-feature-p "runtime_routing_policy")
+         "runtime"
        "unsupported")
      :capabilities (copy-tree capabilities)
      :voices
@@ -1011,13 +1232,18 @@ Return the number of distinct processes that received the command."
        :adapter "omnivox" :source "live" :status "pending"
        :generation nil :received-at nil :stale nil
        :preferred-engine-id nil
+       :preferred-engine-order nil
+       :fallback-engine-order nil
+       :disabled-engine-ids nil
        :process-agreement (omnivox--inventory-process-agreement)
        :preview-support "pending"
        :routing-policy-support "pending"
        :engines nil)
     (let* ((live (process-live-p tts-speaker-process))
            (received omnivox-engine-inventory-time)
-           (age (and received (float-time (time-subtract nil received)))))
+           (age (and received (float-time (time-subtract nil received))))
+           (registration (plist-get omnivox-engine-inventory :routing_policy))
+           (policy (plist-get registration :policy)))
       (list
        :adapter "omnivox"
        :source (if live "live" "cached")
@@ -1029,19 +1255,29 @@ Return the number of distinct processes that received the command."
        :stale (not live)
        :preferred-engine-id
        (plist-get omnivox-engine-inventory :preferred_engine_id)
+       :routing-policy-generation
+       (plist-get registration :routing_policy_generation)
+       :preferred-engine-order
+       (append (plist-get policy :preferred_engine_ids) nil)
+       :fallback-engine-order
+       (append (plist-get policy :fallback_engine_ids) nil)
+       :disabled-engine-ids
+       (append (plist-get policy :disabled_engine_ids) nil)
        :process-agreement (omnivox--inventory-process-agreement)
        :preview-support
        (if (omnivox--control-feature-p "exact_voice_preview")
            "exact"
          "logical-route")
        :routing-policy-support
-       (if (omnivox--control-feature-p "logical_voice_routing")
-           "logical-voice"
+       (if (omnivox--control-feature-p "runtime_routing_policy")
+           "runtime"
          "unsupported")
        :engines
        (mapcar
         (lambda (engine)
-          (omnivox--inventory-engine engine (if live "live" "cached")))
+          (omnivox--inventory-engine
+           engine (if live "live" "cached")
+           (omnivox--inventory-runtime (plist-get engine :id))))
         (append (plist-get omnivox-engine-inventory :engines) nil))))))
 
 (defun omnivox-refresh-voice-inventory ()
@@ -1052,6 +1288,34 @@ Return the number of distinct processes that received the command."
       (omnivox--send-control-request
        process '(:type "inventory") #'omnivox--handle-inventory-response)))
   (omnivox-voice-inventory))
+
+(defun omnivox--handle-recovery-probe-response (callback process response)
+  "Handle engine recovery probe RESPONSE and invoke CALLBACK."
+  (if (equal (plist-get response :type) "engine_recovery_probe_requested")
+      (progn
+        (when (omnivox--process-supports-p process "engine_inventory")
+          (omnivox--send-control-request
+           process '(:type "inventory") #'omnivox--handle-inventory-response))
+        (when (functionp callback)
+          (funcall callback (copy-tree response))))
+    (omnivox--record-control-error process response)
+    (when (functionp callback)
+      (funcall callback (copy-tree response)))))
+
+(defun omnivox-request-engine-recovery-probe (engine-id &optional callback)
+  "Arm failed ENGINE-ID for a recovery probe on the main Omnivox process."
+  (unless
+      (and
+       (process-live-p tts-speaker-process)
+       (omnivox--process-supports-p
+        tts-speaker-process "engine_recovery_probe"))
+    (user-error "The live Omnivox server does not support recovery probes"))
+  (omnivox--required-selector-id engine-id "recovery probe engine ID")
+  (omnivox--send-control-request
+   tts-speaker-process
+   (list :type "request_engine_recovery_probe" :engine_id engine-id)
+   (lambda (process response)
+     (omnivox--handle-recovery-probe-response callback process response))))
 
 (defun omnivox--discovered-acss-dimensions ()
   "Return the union of normalized ACSS dimensions advertised by Omnivox."
@@ -1182,6 +1446,8 @@ Return the number of distinct processes that received the command."
   (setq tts-voice-inventory-function #'omnivox-voice-inventory)
   (setq tts-voice-inventory-refresh-function
         #'omnivox-refresh-voice-inventory)
+  (setq tts-engine-recovery-probe-function
+        #'omnivox-request-engine-recovery-probe)
   (setq tts-voice-preview-function #'omnivox-preview-voice-sequence)
   (setq tts-voice-preview-code-function #'tts-default-voice-preview-code)
   (setq tts-default-speech-rate omnivox-default-speech-rate)

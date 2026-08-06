@@ -1939,6 +1939,12 @@ and normalized voices whose engine and voice IDs remain separate fields.")
   #'tts-default-refresh-voice-inventory
   "Function refreshing and returning the active adapter's voice inventory.")
 
+(defvar tts-engine-recovery-probe-function nil
+  "Optional function requesting recovery of one speech engine.
+
+The function receives an engine ID and optional callback.  Adapters without
+runtime engine health leave this nil.")
+
 (defun tts-voice-inventory ()
   "Return an isolated snapshot of the active adapter's voice inventory."
   (let ((inventory
@@ -1958,6 +1964,13 @@ until the server response is received."
   (if (functionp tts-voice-inventory-refresh-function)
       (funcall tts-voice-inventory-refresh-function)
     (tts-voice-inventory)))
+
+(defun tts-request-engine-recovery-probe (engine-id &optional callback)
+  "Ask the active adapter to probe failed ENGINE-ID.
+Call CALLBACK with the adapter result when it completes."
+  (unless (functionp tts-engine-recovery-probe-function)
+    (user-error "The active speech adapter does not support recovery probes"))
+  (funcall tts-engine-recovery-probe-function engine-id callback))
 
 (defun tts--voice-preview-callback (callback result)
   "Call voice preview CALLBACK safely with RESULT and return RESULT."

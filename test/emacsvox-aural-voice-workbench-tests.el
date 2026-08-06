@@ -14,10 +14,15 @@
   '(:adapter "omnivox" :source "live" :status "available"
     :generation 12 :received-at nil :stale nil
     :preferred-engine-id "eloquence" :process-agreement "agree"
-    :preview-support "logical-route" :routing-policy-support "logical-voice"
+    :preferred-engine-order ("eloquence" "winrt")
+    :fallback-engine-order ("winrt") :disabled-engine-ids nil
+    :preview-support "logical-route" :routing-policy-support "runtime"
     :engines
     ((:engine-id "eloquence" :display-name "Eloquence"
       :availability "available" :health "healthy"
+      :circuit "closed" :last-failure nil :cooldown-remaining-ms nil
+      :audio-output "buffered_pcm" :marker-support (word native-index)
+      :anchor-support "exact/native-index"
       :default-voice-id "eci:Reed" :inventory-kind "live"
       :acss-dimensions (rate average-pitch pitch-range stress richness volume)
       :post-synthesis-dimensions (reverb echo)
@@ -29,6 +34,9 @@
         :quality "standard" :availability "available")))
      (:engine-id "winrt" :display-name "Windows Speech"
       :availability "available" :health "degraded"
+      :circuit "cooldown" :last-failure "helper exited"
+      :cooldown-remaining-ms 750 :audio-output "buffered_pcm"
+      :marker-support (word sentence) :anchor-support "word-boundary"
       :default-voice-id "David" :inventory-kind "live"
       :acss-dimensions (rate average-pitch volume)
       :post-synthesis-dimensions nil
@@ -41,10 +49,11 @@
   "Representative normalized Workbench inventory.")
 
 (defconst emacsvox-test--workbench-routing-profile
-  '(:schema-version 1 :id workstation :summary "Workbench profile"
+  '(:schema-version 2 :id workstation :summary "Workbench profile"
     :engine-order ("eloquence" "winrt")
+    :disabled-engines nil
     :fallback
-    (:allow-same-language t :global-default nil :engines nil)
+    (:allow-same-language t :global-default nil :engines ("winrt"))
     :bindings
     ((:logical-voice voice-bolden :language "en-AU"
       :selectors
@@ -90,6 +99,42 @@
     (should (= (length tabulated-list-entries) 2))
     (emacsvox-aural-voice-workbench-style-view)
     (should tabulated-list-entries)))
+
+(ert-deftest emacsvox-aural-voice-workbench-stages-distinct-engine-orders ()
+  "Preferred, fallback, and disabled policy lists remain independent."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'engines)
+    (emacsvox-aural-voice-workbench-refresh "eloquence")
+    (emacsvox-aural-voice-workbench-move-selector-down)
+    (should
+     (equal
+      (plist-get emacsvox-aural-voice-workbench-staged-profile :engine-order)
+      '("winrt" "eloquence")))
+    (emacsvox-aural-voice-workbench-toggle-fallback-engine)
+    (emacsvox-aural-voice-workbench-move-fallback-engine-up)
+    (should
+     (equal
+      (plist-get
+       (plist-get emacsvox-aural-voice-workbench-staged-profile :fallback)
+       :engines)
+      '("eloquence" "winrt")))
+    (emacsvox-aural-voice-workbench-toggle-disabled-engine)
+    (should
+     (equal
+      (plist-get emacsvox-aural-voice-workbench-staged-profile
+                 :disabled-engines)
+      '("eloquence")))))
+
+(ert-deftest emacsvox-aural-voice-workbench-shows-engine-runtime-detail ()
+  "Engine rows expose audio, markers, failure, cooldown, and circuit state."
+  (emacsvox-test--with-voice-workbench
+    (setq emacsvox-aural-voice-workbench-view 'engines)
+    (emacsvox-aural-voice-workbench-refresh "winrt")
+    (let ((spoken (emacsvox-aural-voice-workbench-speak-current)))
+      (should (string-match-p "buffered_pcm" spoken))
+      (should (string-match-p "helper exited" spoken))
+      (should (string-match-p "750 ms" spoken))
+      (should (string-match-p "word-boundary" spoken)))))
 
 (ert-deftest emacsvox-aural-voice-workbench-reports-status-without-speaking ()
   "Quiet refresh updates inventory, process, and staged-state header status."
@@ -345,6 +390,12 @@
          ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
          ("[" . emacsvox-aural-voice-workbench-move-selector-up)
          ("]" . emacsvox-aural-voice-workbench-move-selector-down)
+         ("O" . emacsvox-aural-voice-workbench-toggle-preferred-engine)
+         ("f" . emacsvox-aural-voice-workbench-toggle-fallback-engine)
+         ("{" . emacsvox-aural-voice-workbench-move-fallback-engine-up)
+         ("}" . emacsvox-aural-voice-workbench-move-fallback-engine-down)
+         ("D" . emacsvox-aural-voice-workbench-toggle-disabled-engine)
+         ("K" . emacsvox-aural-voice-workbench-request-recovery-probe)
          ("d" . emacsvox-aural-voice-workbench-delete-selector)
          ("y" . emacsvox-aural-voice-workbench-copy-route)
          ("M" . emacsvox-aural-voice-workbench-bind-unmapped)

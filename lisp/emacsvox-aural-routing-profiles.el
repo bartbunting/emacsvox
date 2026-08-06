@@ -22,10 +22,12 @@
 (defvar omnivox-logical-voice-languages nil)
 (defvar omnivox-engine-priority-ids nil)
 (defvar omnivox-fallback-engine-ids '("espeak"))
+(defvar omnivox-disabled-engine-ids nil)
 (defvar omnivox-global-default-selector nil)
 (defvar omnivox-allow-same-language-fallback t)
 
 (declare-function omnivox-register-logical-voices "omnivox-voices" ())
+(declare-function omnivox-set-routing-policy "omnivox-voices" ())
 (declare-function emacsvox-aural-voice "emacsvox-aural-resources"
                   (name &optional palette-id))
 
@@ -33,7 +35,7 @@
   'emacsvox-aural-routing-profile-error
   "Invalid Emacsvox voice routing profile")
 
-(defconst emacsvox-aural-routing-profile-schema-version 1
+(defconst emacsvox-aural-routing-profile-schema-version 2
   "Current data schema for one routing profile.")
 
 (defconst emacsvox-aural-routing-user-data-schema-version 1
@@ -219,16 +221,18 @@ voice IDs require local or session scope and can never be portable."
   (emacsvox-aural-routing--require-plist data "Routing profile")
   (emacsvox-aural-routing--reject-unknown-keys
    data
-   '(:schema-version :id :summary :engine-order :fallback :bindings)
+   '(:schema-version :id :summary :engine-order :disabled-engines
+     :fallback :bindings)
    "Routing profile")
   (let ((version (plist-get data :schema-version))
         (id (plist-get data :id))
         (summary (or (plist-get data :summary) ""))
         (engine-order (plist-get data :engine-order))
+        (disabled-engines (plist-get data :disabled-engines))
         (fallback (or (plist-get data :fallback) '()))
         (bindings (plist-get data :bindings))
         seen)
-    (unless (eq version emacsvox-aural-routing-profile-schema-version)
+    (unless (memq version '(1 2))
       (emacsvox-aural-routing--error
        "Unsupported routing profile version: %S" version))
     (unless (and id (symbolp id))
@@ -238,6 +242,9 @@ voice IDs require local or session scope and can never be portable."
     (setq engine-order
           (emacsvox-aural-routing--validate-engine-list
            engine-order "Engine order"))
+    (setq disabled-engines
+          (emacsvox-aural-routing--validate-engine-list
+           disabled-engines "Disabled engines"))
     (emacsvox-aural-routing--require-plist fallback "Fallback policy")
     (emacsvox-aural-routing--reject-unknown-keys
      fallback
@@ -271,8 +278,10 @@ voice IDs require local or session scope and can never be portable."
            "Duplicate logical voice binding: %s" name))
         (push name seen)))
     (list
-     :schema-version version :id id :summary summary
-     :engine-order engine-order :fallback fallback :bindings bindings)))
+     :schema-version emacsvox-aural-routing-profile-schema-version
+     :id id :summary summary
+     :engine-order engine-order :disabled-engines disabled-engines
+     :fallback fallback :bindings bindings)))
 
 (defun emacsvox-aural-routing-profile (id)
   "Return the registered routing profile entry named ID."
@@ -307,13 +316,12 @@ When REPLACE is nil, reject an existing profile with the same identifier."
          (plist-get binding :logical-voice))))
      bindings)))
 
-(defun emacsvox-aural-routing-selectors-from-data
+(defun emacsvox-aural-routing-explicit-selectors-from-data
     (logical-voice data &optional include-session)
-  "Return effective ordered selectors for LOGICAL-VOICE in profile DATA.
+  "Return explicit selectors for LOGICAL-VOICE in profile DATA.
 
 A session binding replaces saved selectors when INCLUDE-SESSION is non-nil.
-Otherwise saved selectors are followed by distinct engine defaults from the
-profile's global engine order."
+Global engine order is deliberately excluded from this projection."
   (let* ((logical-name
           (emacsvox-aural-routing--logical-name logical-voice))
          (session
@@ -329,9 +337,31 @@ profile's global engine order."
           (and data
                (emacsvox-aural-routing--binding
                 logical-voice (plist-get data :bindings))))
+         (selectors (if session (cdr session) (plist-get binding :selectors))))
+    (copy-tree selectors)))
+
+(defun emacsvox-aural-routing-selectors-from-data
+    (logical-voice data &optional include-session)
+  "Return effective ordered selectors for LOGICAL-VOICE in profile DATA.
+
+A session binding replaces saved selectors when INCLUDE-SESSION is non-nil.
+Otherwise saved selectors are followed by distinct engine defaults from the
+profile's global engine order.  This effective projection is for display and
+legacy adapters; current Omnivox receives the global order separately."
+  (let* ((logical-name
+          (emacsvox-aural-routing--logical-name logical-voice))
+         (session
+          (and
+           include-session
+           (cl-find-if
+            (lambda (entry)
+              (equal
+               logical-name
+               (emacsvox-aural-routing--logical-name (car entry))))
+            emacsvox-aural-session-routing-bindings)))
          (selectors
-          (copy-tree
-           (if session (cdr session) (plist-get binding :selectors))))
+          (emacsvox-aural-routing-explicit-selectors-from-data
+           logical-voice data include-session))
          (used-engines
           (delq nil (mapcar (lambda (selector)
                               (plist-get selector :engine-id))
@@ -507,6 +537,7 @@ silently changing either saved layer."
       :schema-version emacsvox-aural-routing-profile-schema-version
       :id id :summary (or summary "Imported Omnivox routing")
       :engine-order (copy-sequence omnivox-engine-priority-ids)
+      :disabled-engines (copy-sequence omnivox-disabled-engine-ids)
       :fallback
       (list
        :allow-same-language omnivox-allow-same-language-fallback
@@ -540,7 +571,9 @@ silently changing either saved layer."
           (push (car session) voices)))
       (dolist (voice (nreverse voices))
         (let* ((binding (emacsvox-aural-routing--binding voice bindings))
-               (selectors (emacsvox-aural-routing-selectors voice id))
+               (selectors
+                (emacsvox-aural-routing-explicit-selectors-from-data
+                 voice data t))
                (language (plist-get binding :language)))
           (when selectors
             (push
@@ -555,6 +588,8 @@ silently changing either saved layer."
             (copy-sequence (plist-get data :engine-order))
             omnivox-fallback-engine-ids
             (copy-sequence (plist-get fallback :engines))
+            omnivox-disabled-engine-ids
+            (copy-sequence (plist-get data :disabled-engines))
             omnivox-global-default-selector
             (and (plist-get fallback :global-default)
                  (emacsvox-aural-routing--selector-to-omnivox
@@ -562,6 +597,8 @@ silently changing either saved layer."
             omnivox-allow-same-language-fallback
             (plist-get fallback :allow-same-language)
             emacsvox-aural-active-routing-profile id)
+      (when (fboundp 'omnivox-set-routing-policy)
+        (omnivox-set-routing-policy))
       (when (fboundp 'omnivox-register-logical-voices)
         (omnivox-register-logical-voices))
       (run-hooks 'emacsvox-aural-routing-profile-changed-hook)

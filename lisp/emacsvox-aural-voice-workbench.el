@@ -463,33 +463,57 @@
 (defun emacsvox-aural-voice-workbench--engine-row (engine)
   "Return one speech ENGINE row."
   (let* ((id (plist-get engine :engine-id))
-         (order
+         (preferred-order
           (cl-position
            id
            (plist-get emacsvox-aural-voice-workbench-staged-profile
                       :engine-order)
-           :test #'equal)))
+           :test #'equal))
+         (fallback-order
+          (cl-position
+           id
+           (plist-get
+            (plist-get emacsvox-aural-voice-workbench-staged-profile
+                       :fallback)
+            :engines)
+           :test #'equal))
+         (disabled
+          (member
+           id
+           (plist-get emacsvox-aural-voice-workbench-staged-profile
+                      :disabled-engines)))
+         (live-disabled (plist-get engine :disabled-by-policy)))
     (list
      id
      (vector
       id
       (or (plist-get engine :display-name) id)
-      (if order (number-to-string (1+ order))
+      (if preferred-order (number-to-string (1+ preferred-order))
         (if (equal id
                    (plist-get emacsvox-aural-voice-workbench-inventory
                               :preferred-engine-id))
-            "preferred" ""))
+            "server default" "unlisted"))
+      (if fallback-order (number-to-string (1+ fallback-order)) "unlisted")
+      (cond (disabled "disabled staged")
+            (live-disabled "disabled live")
+            (t "enabled"))
       (or (plist-get engine :availability) "unknown")
-      (or (plist-get engine :health) "unknown")
+      (format "%s/%s"
+              (or (plist-get engine :health) "unknown")
+              (or (plist-get engine :circuit) "unknown"))
+      (or (plist-get engine :last-failure)
+          (plist-get engine :health-reason) "none")
+      (if-let* ((milliseconds
+                 (plist-get engine :cooldown-remaining-ms)))
+          (format "%d ms" milliseconds)
+        "none")
+      (or (plist-get engine :audio-output) "unknown")
       (number-to-string (length (plist-get engine :voices)))
       (emacsvox-aural-voice-workbench--join-symbols
-       (plist-get engine :acss-dimensions))
-      (string-trim
-       (replace-regexp-in-string
-        "[\n\t ]+" " "
-        (format "%S" (plist-get (plist-get engine :capabilities) :markers))))
-      (or (plist-get engine :preview-support) "unknown")
-      (or (plist-get engine :routing-policy-support) "unknown")))))
+       (plist-get engine :marker-support))
+      (or (plist-get engine :anchor-support) "none")
+      (emacsvox-aural-voice-workbench--join-symbols
+       (plist-get engine :post-synthesis-dimensions))))))
 
 (defun emacsvox-aural-voice-workbench--post-effects ()
   "Return union of advertised post-synthesis effect dimensions."
@@ -536,10 +560,11 @@
       ("Gender" 10 t) ("Quality" 12 t) ("Availability" 14 t)
       ("Health" 12 t) ("Selected by" 28 t) ("Native ID" 0 t)])
     ('engines
-     [("Engine ID" 16 t) ("Engine" 20 t) ("Priority" 10 t)
-      ("Availability" 14 t) ("Health" 12 t) ("Voices" 8 t)
-      ("ACSS" 32 t) ("Markers" 24 t) ("Preview" 14 t)
-      ("Routing" 0 t)])
+     [("Engine ID" 16 t) ("Engine" 20 t) ("Preferred" 12 t)
+      ("Fallback" 10 t) ("Policy" 10 t) ("Availability" 14 t)
+      ("Health/circuit" 18 t) ("Last failure" 28 t) ("Cooldown" 12 t)
+      ("Audio" 18 t) ("Voices" 8 t) ("Markers" 24 t)
+      ("Anchors" 18 t) ("Effects" 0 t)])
     ('styles
      [("Palette voice" 22 t) ("Logical voice" 26 t)
       ("Portable definition" 38 t) ("Staged route" 42 t)
@@ -810,15 +835,155 @@
      (lambda ()
        (emacsvox-aural-voice-workbench--replace-binding logical selectors)))))
 
+(defun emacsvox-aural-voice-workbench--current-engine-id ()
+  "Return the engine ID on the current engine row."
+  (unless (eq emacsvox-aural-voice-workbench-view 'engines)
+    (user-error "Switch to the engine view first"))
+  (or (tabulated-list-get-id)
+      (user-error "Move to an engine row first")))
+
+(defun emacsvox-aural-voice-workbench--policy-engine-list (field)
+  "Return a copy of staged routing-policy engine FIELD."
+  (copy-sequence
+   (pcase field
+     ('preferred
+      (plist-get emacsvox-aural-voice-workbench-staged-profile
+                 :engine-order))
+     ('fallback
+      (plist-get
+       (plist-get emacsvox-aural-voice-workbench-staged-profile :fallback)
+       :engines))
+     ('disabled
+      (plist-get emacsvox-aural-voice-workbench-staged-profile
+                 :disabled-engines))
+     (_ (error "Unknown routing-policy list: %S" field)))))
+
+(defun emacsvox-aural-voice-workbench--set-policy-engine-list (field engines)
+  "Set staged routing-policy FIELD to ordered ENGINES."
+  (pcase field
+    ('preferred
+     (setf (plist-get emacsvox-aural-voice-workbench-staged-profile
+                      :engine-order)
+           engines))
+    ('fallback
+     (let ((fallback
+            (copy-tree
+             (plist-get emacsvox-aural-voice-workbench-staged-profile
+                        :fallback))))
+       (setf (plist-get fallback :engines) engines)
+       (setf (plist-get emacsvox-aural-voice-workbench-staged-profile
+                        :fallback)
+             fallback)))
+    ('disabled
+     (setf (plist-get emacsvox-aural-voice-workbench-staged-profile
+                      :disabled-engines)
+           engines))))
+
+(defun emacsvox-aural-voice-workbench--move-policy-engine
+    (field direction label)
+  "Move current engine in policy FIELD by DIRECTION, described by LABEL."
+  (let* ((engine-id
+          (emacsvox-aural-voice-workbench--current-engine-id))
+         (engines
+          (emacsvox-aural-voice-workbench--policy-engine-list field))
+         (index (cl-position engine-id engines :test #'equal)))
+    (unless index
+      (user-error "%s is not in the %s; use its toggle command first"
+                  engine-id label))
+    (let ((destination (+ index direction)))
+      (unless (<= 0 destination (1- (length engines)))
+        (user-error "%s is already at the %s boundary" engine-id label))
+      (cl-rotatef (nth index engines) (nth destination engines))
+      (emacsvox-aural-voice-workbench--stage
+       (format "Moved %s in global %s" engine-id label)
+       (lambda ()
+         (emacsvox-aural-voice-workbench--set-policy-engine-list
+          field engines))))))
+
+(defun emacsvox-aural-voice-workbench--toggle-policy-engine
+    (field label)
+  "Toggle current engine membership in policy FIELD described by LABEL."
+  (let* ((engine-id
+          (emacsvox-aural-voice-workbench--current-engine-id))
+         (engines
+          (emacsvox-aural-voice-workbench--policy-engine-list field))
+         (present (member engine-id engines)))
+    (emacsvox-aural-voice-workbench--stage
+     (format "%s %s in %s"
+             (if present "Removed" "Added") engine-id label)
+     (lambda ()
+       (emacsvox-aural-voice-workbench--set-policy-engine-list
+        field
+        (if present
+            (delete engine-id engines)
+          (append engines (list engine-id))))))))
+
 (defun emacsvox-aural-voice-workbench-move-selector-up ()
-  "Move one explicit selector earlier in the current logical route."
+  "Move the current selector or preferred engine earlier."
   (interactive)
-  (emacsvox-aural-voice-workbench--move-selector -1))
+  (if (eq emacsvox-aural-voice-workbench-view 'engines)
+      (emacsvox-aural-voice-workbench--move-policy-engine
+       'preferred -1 "preferred order")
+    (emacsvox-aural-voice-workbench--move-selector -1)))
 
 (defun emacsvox-aural-voice-workbench-move-selector-down ()
-  "Move one explicit selector later in the current logical route."
+  "Move the current selector or preferred engine later."
   (interactive)
-  (emacsvox-aural-voice-workbench--move-selector 1))
+  (if (eq emacsvox-aural-voice-workbench-view 'engines)
+      (emacsvox-aural-voice-workbench--move-policy-engine
+       'preferred 1 "preferred order")
+    (emacsvox-aural-voice-workbench--move-selector 1)))
+
+(defun emacsvox-aural-voice-workbench-toggle-preferred-engine ()
+  "Add or remove the current engine from global preferred order."
+  (interactive)
+  (emacsvox-aural-voice-workbench--toggle-policy-engine
+   'preferred "global preferred order"))
+
+(defun emacsvox-aural-voice-workbench-toggle-fallback-engine ()
+  "Add or remove the current engine from global fallback order."
+  (interactive)
+  (emacsvox-aural-voice-workbench--toggle-policy-engine
+   'fallback "global fallback order"))
+
+(defun emacsvox-aural-voice-workbench-move-fallback-engine-up ()
+  "Move the current engine earlier in global fallback order."
+  (interactive)
+  (emacsvox-aural-voice-workbench--move-policy-engine
+   'fallback -1 "fallback order"))
+
+(defun emacsvox-aural-voice-workbench-move-fallback-engine-down ()
+  "Move the current engine later in global fallback order."
+  (interactive)
+  (emacsvox-aural-voice-workbench--move-policy-engine
+   'fallback 1 "fallback order"))
+
+(defun emacsvox-aural-voice-workbench-toggle-disabled-engine ()
+  "Disable or restore the current engine in the staged policy."
+  (interactive)
+  (emacsvox-aural-voice-workbench--toggle-policy-engine
+   'disabled "disabled engine list"))
+
+(defun emacsvox-aural-voice-workbench-request-recovery-probe ()
+  "Request a live recovery probe for the current failed engine."
+  (interactive)
+  (let ((engine-id
+         (emacsvox-aural-voice-workbench--current-engine-id))
+        (buffer (current-buffer)))
+    (tts-request-engine-recovery-probe
+     engine-id
+     (lambda (result)
+       (when (buffer-live-p buffer)
+         (with-current-buffer buffer
+           (emacsvox-aural-voice-workbench-refresh engine-id)
+           (emacsvox-aural-voice-workbench--announce
+            "%s recovery probe for %s"
+            (if (equal (plist-get result :type)
+                       "engine_recovery_probe_requested")
+                "Armed" "Could not arm")
+            engine-id)))))
+    (emacsvox-aural-voice-workbench--announce
+     "Requested recovery probe for %s" engine-id)))
 
 (defun emacsvox-aural-voice-workbench-delete-selector ()
   "Delete one explicit selector from the current logical route."
@@ -1364,6 +1529,9 @@
       "c cancel assignment   [/] move selector earlier/later\n"
       "d delete selector     y copy another logical route\n"
       "M map all unmapped    X replace engine in selected routes\n"
+      "Engine view: O toggle preferred; [/] reorder preferred\n"
+      "f toggle fallback     {/} reorder fallback\n"
+      "D disable/restore     K request failed-engine recovery probe\n"
       "u undo staged edit    x cancel all staged edits\n"
       "g redraw quietly      h aural home\n"
       "q hide, keep staged   ? help\n")))
@@ -1419,12 +1587,19 @@
        ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
        ("[" . emacsvox-aural-voice-workbench-move-selector-up)
        ("]" . emacsvox-aural-voice-workbench-move-selector-down)
+       ("O" . emacsvox-aural-voice-workbench-toggle-preferred-engine)
+       ("f" . emacsvox-aural-voice-workbench-toggle-fallback-engine)
+       ("{" . emacsvox-aural-voice-workbench-move-fallback-engine-up)
+       ("}" . emacsvox-aural-voice-workbench-move-fallback-engine-down)
+       ("D" . emacsvox-aural-voice-workbench-toggle-disabled-engine)
+       ("K" . emacsvox-aural-voice-workbench-request-recovery-probe)
        ("d" . emacsvox-aural-voice-workbench-delete-selector)
        ("y" . emacsvox-aural-voice-workbench-copy-route)
        ("M" . emacsvox-aural-voice-workbench-bind-unmapped)
        ("X" . emacsvox-aural-voice-workbench-replace-engine)
        ("u" . emacsvox-aural-voice-workbench-undo)
        ("x" . emacsvox-aural-voice-workbench-cancel-staged)
+       ("q" . emacsvox-aural-quit)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-voice-workbench-help)))
   (define-key emacsvox-aural-voice-workbench-mode-map

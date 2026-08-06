@@ -135,6 +135,7 @@
   (setq tts-voice-inventory-function #'tts-default-voice-inventory)
   (setq tts-voice-inventory-refresh-function
         #'tts-default-refresh-voice-inventory)
+  (setq tts-engine-recovery-probe-function nil)
   (setq tts-voice-preview-function #'tts-default-voice-preview-sequence)
   (setq tts-voice-preview-code-function #'tts-default-voice-preview-code)
   (cond

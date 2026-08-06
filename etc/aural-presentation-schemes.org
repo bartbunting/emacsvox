@@ -3500,7 +3500,8 @@ bulk replacement, undo, and cancel.  The complete Emacs 31 source suite has
 parity, normal build-tree startup, warning-checked compilation, the TTS audit,
 and whitespace validation pass.
 
-** TODO Slice 54: Omnivox Engine-Priority Policy
+** DONE Slice 54: Omnivox Engine-Priority Policy
+CLOSED: [2026-08-07 Fri]
 
 - Distinguish Omnivox's global preferred engine order, global fallback order,
   and per-logical-voice selector order in both the model and spoken UI.
@@ -3516,6 +3517,32 @@ and whitespace validation pass.
 
 Deliverable: engine priority is visible, editable, persistent, and distinct
 from a single voice's fallback list.
+
+Implemented: routing-profile schema 2 adds an independent
+=:disabled-engines= list while accepting and normalizing schema-1 data.  The
+adapter retains only explicit selectors per logical voice.  After Omnivox
+advertises =runtime_routing_policy=, Emacsvox sends preferred, fallback, and
+disabled engine lists once as a generation-safe process policy before it
+registers selector-only logical definitions.  Older servers still receive the
+previous compatibility projection with global engine defaults expanded into
+logical routes.
+
+The engine view separately displays preferred and fallback positions, staged
+or live disablement, buffered/streaming/external audio mode, physical voice
+count, marker and anchor support, post-synthesis effects, health/circuit
+state, last failure, and cooldown.  =O= toggles preferred membership, =[/]=
+reorders preferred engines, =f= toggles fallback membership, ={/}= reorders
+fallback engines, and =D= disables or restores an engine without losing its
+configured positions.  =K= uses the adapter-neutral recovery operation to arm
+a supported failed engine for its next synthesis probe.  Refresh preserves
+the selected engine, and all policy edits remain in the workbench's validated
+undoable staged profile until the atomic-save slice.
+
+Checks: the complete Emacs 31 source suite has 2,233 tests: 2,232 pass and the
+optional Mu4e test is skipped.  Focused adapter/profile/workbench tests,
+compiled Aural parity, normal build-tree startup, warning-checked compilation
+of the changed routing modules, Aural and TTS audits, and whitespace
+validation pass.
 
 ** TODO Slice 55: Route-Aware Style and Effect Tuning
 

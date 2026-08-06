@@ -473,6 +473,106 @@
                      0)))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-omnivox-negotiates-independent-routing-policy ()
+  "Modern Omnivox receives global policy before selector-only registration."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-routing-policy-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-notify-process nil)
+         (omnivox-control-capabilities nil)
+         (omnivox-engine-inventory nil)
+         (omnivox-routing-policy-registration nil)
+         (omnivox-logical-voice-preferences nil)
+         (omnivox-logical-voice-languages nil)
+         (omnivox-engine-priority-ids '("eloquence" "dectalk"))
+         (omnivox-fallback-engine-ids '("espeak"))
+         (omnivox-disabled-engine-ids '("dectalk"))
+         (omnivox-global-default-selector nil)
+         (omnivox-allow-same-language-fallback t)
+         (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (omnivox--logical-registry-generation 0)
+         (omnivox--logical-registry-signature nil)
+         (omnivox--control-request-sequence 100)
+         writes)
+    (puthash "voice-bolden" '(:average_pitch 0.4)
+             omnivox--logical-acss-table)
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'process-send-string)
+              (lambda (_process command) (push command writes))))
+          (omnivox--negotiate-process process)
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id)))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier
+               :type "capabilities" :server_version "1.3.0"
+               :supported_protocol_versions [1]
+               :features
+               ["control_v1" "engine_inventory" "engine_recovery_probe"
+                "logical_voice_registration" "runtime_routing_policy"]))))
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id)))
+            (should (equal (plist-get request :type) "inventory"))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier :type "inventory"
+               :inventory_generation 3 :preferred_engine_id "winrt"
+               :routing_policy
+               '(:routing_policy_generation 0
+                 :policy
+                 (:preferred_engine_ids ["winrt"]
+                  :fallback_engine_ids [] :disabled_engine_ids []))
+               :engine_runtime [] :engines []))))
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id)))
+            (should (equal (plist-get request :type) "set_routing_policy"))
+            (should (= (plist-get request :routing_policy_generation) 1))
+            (should
+             (equal (append (plist-get request :preferred_engine_ids) nil)
+                    '("eloquence" "dectalk")))
+            (should
+             (equal (append (plist-get request :fallback_engine_ids) nil)
+                    '("espeak")))
+            (should
+             (equal (append (plist-get request :disabled_engine_ids) nil)
+                    '("dectalk")))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier
+               :type "routing_policy_applied" :inventory_generation 4
+               :routing_policy
+               '(:routing_policy_generation 1
+                 :policy
+                 (:preferred_engine_ids ["eloquence" "dectalk"]
+                  :fallback_engine_ids ["espeak"]
+                  :disabled_engine_ids ["dectalk"]))
+               :logical_voices
+               '(:registry_generation 0 :bindings [])))))
+          (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
+                 (definition (car (plist-get request :definitions)))
+                 (selector (car (plist-get definition :preferences)))
+                 (fallback (plist-get request :fallback_policy)))
+            (should (equal (plist-get request :type)
+                           "register_logical_voices"))
+            (should (equal (plist-get selector :kind) "properties"))
+            (should-not (append (plist-get fallback :fallback_engines) nil)))
+          (should
+           (equal
+            (plist-get
+             (plist-get omnivox-routing-policy-registration :policy)
+             :disabled_engine_ids)
+            '("dectalk"))))
+      (when (process-live-p process) (delete-process process)))))
+
 (ert-deftest emacsvox-tts-omnivox-bounds-control-responses ()
   "The adapter rejects oversized responses before Base64 decoding."
   (should-error
@@ -656,6 +756,90 @@
     (should (equal (plist-get engine :health) "healthy"))
     (should (equal (plist-get voice :engine-id) "eloquence"))
     (should (equal (plist-get voice :voice-id) "eci:v1"))))
+
+(ert-deftest emacsvox-tts-omnivox-projects-runtime-engine-status ()
+  "Normalized inventory keeps dynamic circuit state separate from capability."
+  (let* ((omnivox-control-capabilities
+          '(:features ("runtime_routing_policy" "engine_recovery_probe")))
+         (omnivox-engine-inventory
+          '(:type "inventory" :inventory_generation 9
+            :preferred_engine_id "eloquence"
+            :routing_policy
+            (:routing_policy_generation 2
+             :policy
+             (:preferred_engine_ids ("eloquence" "dectalk")
+              :fallback_engine_ids ("espeak")
+              :disabled_engine_ids ("dectalk")))
+            :engine_runtime
+            ((:engine_id "eloquence" :circuit "cooldown"
+              :last_failure "helper exited" :cooldown_remaining_ms 900
+              :disabled_by_policy nil))
+            :engines
+            ((:id "eloquence" :display_name "Eloquence"
+              :availability (:status "available")
+              :health (:status "degraded" :reason "recovering")
+              :capabilities
+              (:audio_output "buffered_pcm"
+               :acss (:rate t) :markers (:word t :native_index t))
+              :voices nil))))
+         (omnivox-engine-inventory-time '(0 0 0 0))
+         (inventory (omnivox-voice-inventory))
+         (engine (car (plist-get inventory :engines))))
+    (should (equal (plist-get inventory :preferred-engine-order)
+                   '("eloquence" "dectalk")))
+    (should (equal (plist-get inventory :disabled-engine-ids) '("dectalk")))
+    (should (equal (plist-get engine :audio-output) "buffered_pcm"))
+    (should (equal (plist-get engine :circuit) "cooldown"))
+    (should (equal (plist-get engine :last-failure) "helper exited"))
+    (should (= (plist-get engine :cooldown-remaining-ms) 900))
+    (should (equal (plist-get engine :marker-support)
+                   '(word native-index)))
+    (should (equal (plist-get engine :anchor-support)
+                   "exact/native-index"))))
+
+(ert-deftest emacsvox-tts-omnivox-requests-explicit-recovery-probe ()
+  "The adapter sends one bounded probe request and refreshes its inventory."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-recovery-probe-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-notify-process nil)
+         (omnivox--control-request-sequence 500)
+         writes result)
+    (unwind-protect
+        (progn
+          (process-put
+           process omnivox--control-capabilities-property
+           '(:features ("engine_recovery_probe" "engine_inventory")))
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (_process command) (push command writes))))
+            (omnivox-request-engine-recovery-probe
+             "eloquence" (lambda (value) (setq result value)))
+            (let* ((request
+                    (emacsvox-test--omnivox-decode-command (car writes)))
+                   (identifier (plist-get request :request_id)))
+              (should
+               (equal (plist-get request :type)
+                      "request_engine_recovery_probe"))
+              (should (equal (plist-get request :engine_id) "eloquence"))
+              (omnivox--control-process-filter
+               process
+               (emacsvox-test--omnivox-event
+                (list
+                 :protocol_version 1 :request_id identifier
+                 :type "engine_recovery_probe_requested"
+                 :inventory_generation 10 :engine_id "eloquence"))))
+            (should
+             (equal (plist-get result :type)
+                    "engine_recovery_probe_requested"))
+            (should
+             (equal
+              (plist-get
+               (emacsvox-test--omnivox-decode-command (car writes)) :type)
+              "inventory"))))
+      (when (process-live-p process) (delete-process process)))))
 
 (ert-deftest emacsvox-tts-omnivox-reports-process-inventory-agreement ()
   "Normalized inventory diagnoses main and notification process divergence."

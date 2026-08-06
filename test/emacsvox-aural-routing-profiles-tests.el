@@ -12,10 +12,11 @@
 (require 'emacsvox-aural-routing-profiles)
 
 (defconst emacsvox-test--routing-profile
-  '(:schema-version 1
+  '(:schema-version 2
     :id workstation
     :summary "Local workstation routing"
     :engine-order ("eloquence" "dectalk" "winrt" "espeak")
+    :disabled-engines ("dectalk")
     :fallback
     (:allow-same-language t
      :global-default
@@ -42,9 +43,22 @@
          (omnivox-logical-voice-languages nil)
          (omnivox-engine-priority-ids nil)
          (omnivox-fallback-engine-ids '("espeak"))
+         (omnivox-disabled-engine-ids nil)
          (omnivox-global-default-selector nil)
          (omnivox-allow-same-language-fallback t))
      ,@body))
+
+(ert-deftest emacsvox-aural-routing-migrates-schema-one-disablement ()
+  "Schema-one profiles gain an empty, independent disabled-engine list."
+  (let ((profile
+         (emacsvox-aural-validate-routing-profile-data
+          '(:schema-version 1 :id old :summary "Old"
+            :engine-order ("winrt")
+            :fallback
+            (:allow-same-language t :global-default nil :engines nil)
+            :bindings nil))))
+    (should (= (plist-get profile :schema-version) 2))
+    (should-not (plist-get profile :disabled-engines))))
 
 (ert-deftest emacsvox-aural-routing-requires-local-exact-identities ()
   "Exact native IDs cannot enter portable or temporary persisted data."
@@ -118,6 +132,7 @@
           omnivox-logical-voice-languages '((voice-bolden . "en-AU"))
           omnivox-engine-priority-ids '("eloquence" "winrt")
           omnivox-fallback-engine-ids '("espeak")
+          omnivox-disabled-engine-ids '("dectalk")
           omnivox-global-default-selector
           '(properties :language "en-AU")
           omnivox-allow-same-language-fallback nil)
@@ -130,6 +145,7 @@
         (emacsvox-aural-apply-routing-profile 'imported))
       (should (equal (omnivox--logical-registry-content "dectalk") before))
       (should-not omnivox-allow-same-language-fallback)
+      (should (equal omnivox-disabled-engine-ids '("dectalk")))
       (should
        (equal omnivox-global-default-selector
               '(properties :language "en-AU"))))))
