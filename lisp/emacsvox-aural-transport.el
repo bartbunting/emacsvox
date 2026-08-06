@@ -328,6 +328,19 @@ Return non-nil when every entry was sent to a live process."
 (defun emacsvox-aural--submit-delivery-entries (owner entries effects)
   "Submit protocol ENTRIES and commit EFFECTS under current source policy."
   (when entries
+    (when-let* ((foreign
+                 (cl-find-if
+                  (lambda (entry)
+                    (not
+                     (eq
+                      owner
+                      (emacsvox-aural--delivery-entry-process entry))))
+                  entries)))
+      (error
+       "Aural transaction for %s contains a command for %s"
+       (emacsvox-aural--delivery-process-name owner)
+       (emacsvox-aural--delivery-process-name
+        (emacsvox-aural--delivery-entry-process foreign))))
     (pcase (or emacsvox-aural-submission-delivery-policy 'ordered)
       ('replaceable
        (emacsvox-aural-cancel-pending-deliveries
@@ -357,7 +370,8 @@ Return non-nil when every entry was sent to a live process."
 
 Nested calls join the enclosing transaction.  The outer source submission's
 delivery policy determines whether the complete captured payload is sent now
-or supersedes an older pending payload."
+or supersedes an older pending payload.  Every captured command must target
+OWNER so a logical transaction cannot be partially delivered across streams."
   (if emacsvox-aural--delivery-transaction-active-p
       (apply function arguments)
     (let ((emacsvox-aural--delivery-transaction-active-p t)

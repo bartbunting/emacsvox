@@ -425,9 +425,6 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
   (let ((first
          (make-pipe-process
           :name "emacsvox-send-failure-owner" :buffer nil :noquery t))
-        (second
-         (make-pipe-process
-          :name "emacsvox-send-failure-second" :buffer nil :noquery t))
         (emacsvox-aural-last-delivery-failure nil)
         (emacsvox-aural-submission-delivery-policy 'replaceable)
         (emacsvox-aural-submission-replacement-key 'navigation)
@@ -452,7 +449,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
                  first
                  (lambda ()
                    (emacsvox-aural-delivery-send first "first")
-                   (emacsvox-aural-delivery-send second "second")
+                   (emacsvox-aural-delivery-send first "second")
                    (emacsvox-aural--defer-delivery-effect
                     (lambda () (setq effect-committed t))))))
               (should
@@ -495,8 +492,28 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
            (=
             (plist-get emacsvox-aural-last-delivery-failure :generation)
             1)))
-      (delete-process first)
-      (delete-process second))))
+      (delete-process first))))
+
+(ert-deftest emacsvox-aural-delivery-rejects-mixed-process-transaction ()
+  "One logical transaction cannot partially write to several processes."
+  (let ((emacsvox-aural-submission-delivery-policy 'ordered)
+        writes
+        effect-committed)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes))))
+      (should-error
+       (emacsvox-aural-call-with-delivery-transaction
+        'speech
+        (lambda ()
+          (emacsvox-aural-delivery-send 'speech "first")
+          (emacsvox-aural-delivery-send 'notification "second")
+          (emacsvox-aural--defer-delivery-effect
+           (lambda () (setq effect-committed t)))))
+       :type 'error))
+    (should-not writes)
+    (should-not effect-committed)))
 
 (ert-deftest emacsvox-aural-history-rejects-failed-immediate-delivery ()
   "Ordered and urgent history is retained only after a successful write."
