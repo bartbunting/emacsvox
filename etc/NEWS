@@ -35,6 +35,13 @@ The Omnivox adapter now negotiates its bounded, versioned control channel and
 discovers structured engine, capability, and physical-voice inventory without
 injecting server events into speech.  It registers Emacsvox logical voices and
 normalized ACSS styles atomically with both main and notification processes.
+Registration waits for each inventory response.  An unconfigured logical voice
+uses that process's advertised preferred engine, while explicit portable
+selectors continue to resolve against its own installed voices.
+
+On Windows, Omnivox now initializes WinRT and eSpeak together when available.
+WinRT remains the default preferred engine; ~OMNIVOX_ENGINE=espeak~ changes the
+preference without hiding WinRT from discovery or fallback.
 
 Customize ~omnivox-logical-voice-preferences~ to give a logical voice ordered
 exact, engine-default, or property selectors.  Exact selectors retain separate

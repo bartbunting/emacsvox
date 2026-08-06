@@ -50,6 +50,14 @@ control protocol, discovers the live engine inventory, and atomically
 registers Emacsvox's logical voices with both the main and notification
 servers.  Older servers continue to use the legacy speech protocol.
 
+On Windows, current Omnivox servers initialize both WinRT and eSpeak when they
+are available.  WinRT is the preferred engine by default;
+=OMNIVOX_ENGINE=espeak= makes eSpeak preferred while retaining WinRT in the
+inventory.  A logical voice without an explicit preference binds to the
+preferred engine reported by each speech process.  Registration waits for that
+process's inventory, so differing main, notification, or machine voice lists do
+not need to be copied into portable Emacs configuration.
+
 Portable preferences do not copy a machine's discovered voice list into user
 configuration.  Instead, each logical voice has ordered exact, engine-default,
 or property selectors that are resolved against the inventory of the machine
