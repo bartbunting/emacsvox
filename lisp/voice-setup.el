@@ -99,6 +99,10 @@
 (eval-when-compile (require 'easy-mmode))
 
 (declare-function omnivox-configure-tts "omnivox-voices" ())
+(declare-function
+ emacsvox-aural-routing-static-family
+ "emacsvox-aural-routing-profiles" (logical-voice requested-family
+                                    &optional capabilities inventory))
 
 (declare-function
  emacsvox-aural-capture-source-faces
@@ -108,6 +112,9 @@
  "emacsvox-aural-source" (position property &optional object))
 
 (defvar emacsvox-aural-suppressed-personalities)
+
+(defvar voice-setup-defined-voices nil
+  "Logical personality variables declared through `defvoice'.")
 
 ;;;  customization group
 
@@ -164,16 +171,35 @@
    (t
     (require 'plain-voices)
     (plain-configure-tts)))
+  (when (eq tts-voice-configuration-apply-function
+            #'tts-default-apply-voice-configuration)
+    (setq tts-voice-configuration-apply-function
+          #'voice-setup-apply-voice-configuration))
   (ems--fastload "voice-defs"))
 
-(defun voice-from-acss (style)
+(defun voice-from-acss (style &optional logical-voice)
   "Compute a  name for this STYLE.
-Define a voice for it if needed, then return the symbol."
-  (let ((f (acss-family style))
+Define a voice for it if needed, then return the symbol.
+
+When LOGICAL-VOICE is supplied, a standalone adapter may replace only the
+physical family through the active routing profile.  Every other ACSS
+dimension remains portable and unchanged."
+  (let* ((requested-family (acss-family style))
+         (f
+          (if (and logical-voice
+                   (fboundp 'emacsvox-aural-routing-static-family))
+              (emacsvox-aural-routing-static-family
+               logical-voice requested-family)
+            requested-family))
         (a (acss-average-pitch style))
         (p (acss-pitch-range style))
         (s (acss-stress style))
         (r (acss-richness style))
+        (effective-style
+         (if (eq f requested-family)
+             style
+           (make-acss :family f :average-pitch a :pitch-range p
+                      :stress s :richness r)))
         (name nil))
     (setq name
           (intern
@@ -184,8 +210,29 @@ Define a voice for it if needed, then return the symbol."
                    (if s (format "-s%s" s) "")
                    (if r (format "-r%s" r) ""))))
     (unless (tts-voice-defined-p name)
-      (tts-define-voice-from-acss name style))
+      (tts-define-voice-from-acss name effective-style))
     name))
+
+(defun voice-setup-recompile-defined-voices ()
+  "Recompile every `defvoice' personality against current static routing."
+  (dolist (voice voice-setup-defined-voices)
+    (let ((settings (intern-soft (format "%s-settings" voice))))
+      (when (and settings (boundp settings))
+        (set voice
+             (voice-setup-acss-from-style (symbol-value settings) voice)))))
+  (length voice-setup-defined-voices))
+
+(defun voice-setup-apply-voice-configuration (&optional callback)
+  "Apply routing locally by recompiling all declared personalities.
+CALLBACK receives a synchronous terminal result."
+  (let ((count (voice-setup-recompile-defined-voices))
+        (adapter (plist-get (tts-voice-capabilities) :adapter)))
+    (let ((result
+           (list :status 'applied :adapter adapter
+                 :completion-guarantee 'local :processes nil
+                 :recompiled-personalities count :time (current-time))))
+      (when (functionp callback) (funcall callback (copy-tree result)))
+      result)))
 
 ;;;  map faces to voices
 
@@ -331,7 +378,7 @@ last-registration-wins behavior."
 
 ;;;   special form defvoice
 
-(defun voice-setup-acss-from-style (style-list)
+(defun voice-setup-acss-from-style (style-list &optional logical-voice)
   "Define an ACSS-voice  from   speech style."
   (let ((voice
          (voice-from-acss
@@ -340,7 +387,8 @@ last-registration-wins behavior."
            :average-pitch (nth 1 style-list)
            :pitch-range (nth 2 style-list)
            :stress (nth 3 style-list)
-           :richness (nth 4  style-list)))))
+           :richness (nth 4  style-list))
+          logical-voice)))
     voice))
 
 (defmacro defvoice (voice settings)
@@ -350,8 +398,9 @@ last-registration-wins behavior."
  <voice>-settings. "
   (declare (indent 1) (debug t))
   `(progn
+     (cl-pushnew ',voice voice-setup-defined-voices)
      (defvar  ,voice
-       (voice-setup-acss-from-style ,settings)
+       (voice-setup-acss-from-style ,settings ',voice)
        ,(format "Customize  via %s-settings." voice))
      (defcustom ,(intern (format "%s-settings"  voice))
        ,settings
@@ -374,7 +423,7 @@ last-registration-wins behavior."
        :group 'voice-fonts
        :set
        #'(lambda  (sym val)
-           (setq ,voice (voice-setup-acss-from-style val))
+           (setq ,voice (voice-setup-acss-from-style val ',voice))
            (set-default sym val)))))
 
 (require 'emacsvox-aural-compatibility-voice)

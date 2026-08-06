@@ -2474,6 +2474,25 @@ is the default inherited by a newly created TTS scratch buffer."
       (nreverse events)
       `((acss ,style) (adapter generated-voice))))))
 
+(ert-deftest emacsvox-aural-transport-routes-explicit-palette-family-locally ()
+  "A static route changes only a copied explicit palette family."
+  (let ((definition
+         '(:family paul :average-pitch 4 :pitch-range nil
+           :stress 7 :richness nil)))
+    (cl-letf
+        (((symbol-function 'emacsvox-aural-routing-static-family)
+          (lambda (logical requested)
+            (should (eq logical 'aside))
+            (should (eq requested 'paul))
+            'outloud-v2)))
+      (let ((routed
+             (emacsvox-aural--route-palette-voice-definition
+              'aside definition)))
+        (should (eq (plist-get routed :family) 'outloud-v2))
+        (should (= (plist-get routed :average-pitch) 4))
+        (should (= (plist-get routed :stress) 7))
+        (should (eq (plist-get definition :family) 'paul))))))
+
 (ert-deftest emacsvox-aural-transport-compiles-named-base-and-partial-style ()
   "A named base and explicit overlay compile once with effective ACSS data."
   (let (generated adapter-calls)

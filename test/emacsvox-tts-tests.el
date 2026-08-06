@@ -2685,6 +2685,9 @@ variables; nil removes the variable."
         (voice-setup))
       (should (memq (nth 1 case) required))
       (should (eq configured (nth 2 case)))
+      (should
+       (eq tts-voice-configuration-apply-function
+           #'voice-setup-apply-voice-configuration))
       (should (equal fastloaded "voice-defs")))))
 
 (provide 'emacsvox-tts-tests)

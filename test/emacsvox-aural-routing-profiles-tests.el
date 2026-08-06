@@ -9,6 +9,8 @@
 (require 'cl-lib)
 (require 'ert)
 (require 'omnivox-voices)
+(require 'outloud-voices)
+(require 'dectalk-voices)
 (require 'emacsvox-aural-routing-profiles)
 
 (defconst emacsvox-test--routing-profile
@@ -106,6 +108,60 @@
     (should-not
      (string-match-p
      "David" (prin1-to-string (emacsvox-aural-routing-user-data))))))
+
+(ert-deftest emacsvox-aural-routing-resolves-static-engine-family-alias ()
+  "An Omnivox Eloquence ID maps to the equivalent standalone family."
+  (emacsvox-test--with-routing-profiles
+    (let ((profile
+           '(:schema-version 2 :id static :summary "Static"
+             :engine-order nil :disabled-engines nil
+             :fallback
+             (:allow-same-language t :global-default nil :engines nil)
+             :bindings
+             ((:logical-voice voice-bolden
+               :selectors
+               ((:kind exact :scope local :engine-id "eloquence"
+                 :voice-id "v2")))))))
+      (emacsvox-aural-register-routing-profile-data profile "test")
+      (setq emacsvox-aural-active-routing-profile 'static)
+      (should
+       (eq
+        (emacsvox-aural-routing-static-family
+         'voice-bolden 'paul
+         (outloud-voice-capabilities)
+         (let ((tts-voice-capabilities-function #'outloud-voice-capabilities))
+           (tts-default-voice-inventory)))
+        'outloud-v2)))))
+
+(ert-deftest emacsvox-aural-routing-static-properties-degrade-safely ()
+  "Static property routes resolve traits and missing routes retain ACSS."
+  (emacsvox-test--with-routing-profiles
+    (let ((profile
+           '(:schema-version 2 :id static :summary "Static"
+             :engine-order nil :disabled-engines nil
+             :fallback
+             (:allow-same-language t :global-default nil :engines nil)
+             :bindings
+             ((:logical-voice voice-bolden
+               :selectors
+               ((:kind properties :scope portable :engine-id "dectalk"
+                 :gender female)))))))
+      (emacsvox-aural-register-routing-profile-data profile "test")
+      (setq emacsvox-aural-active-routing-profile 'static)
+      (let* ((capabilities (dectalk-voice-capabilities))
+             (tts-voice-capabilities-function
+              (lambda () (copy-tree capabilities)))
+             (inventory (tts-default-voice-inventory)))
+        (should
+         (eq
+          (emacsvox-aural-routing-static-family
+           'voice-bolden 'paul capabilities inventory)
+          'betty))
+        (should
+         (eq
+          (emacsvox-aural-routing-static-family
+           'voice-animate 'harry capabilities inventory)
+          'harry))))))
 
 (ert-deftest emacsvox-aural-routing-diagnoses-exact-family-ownership ()
   "An exact route owns physical selection while ACSS family stays portable."

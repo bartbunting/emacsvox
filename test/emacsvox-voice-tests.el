@@ -303,6 +303,50 @@
         'acss-a4-r6))
       (should-not defined))))
 
+(ert-deftest emacsvox-voice-acss-can-route-only-the-physical-family ()
+  "A logical route changes family while retaining every other ACSS value."
+  (let (defined)
+    (cl-letf
+        (((symbol-function 'tts-voice-defined-p) #'ignore)
+         ((symbol-function 'emacsvox-aural-routing-static-family)
+          (lambda (logical requested)
+            (should (eq logical 'voice-test))
+            (should (eq requested 'paul))
+            'outloud-v2))
+         ((symbol-function 'tts-define-voice-from-acss)
+          (lambda (name style) (setq defined (list name style)))))
+      (should
+       (eq
+        (voice-from-acss
+         (make-acss :family 'paul :average-pitch 4 :stress 7)
+         'voice-test)
+        'acss-outloud-v2-a4-s7))
+      (should (eq (acss-family (cadr defined)) 'outloud-v2))
+      (should (= (acss-average-pitch (cadr defined)) 4))
+      (should (= (acss-stress (cadr defined)) 7)))))
+
+(ert-deftest emacsvox-voice-static-apply-recompiles-logical-personalities ()
+  "Standalone apply atomically republishes every declared personality."
+  (let ((voice-setup-defined-voices '(voice-test-route))
+        callback)
+    (cl-progv '(voice-test-route voice-test-route-settings)
+        '(old (paul 4 nil 7 nil))
+      (cl-letf
+          (((symbol-function 'voice-setup-acss-from-style)
+            (lambda (settings logical)
+              (should (equal settings '(paul 4 nil 7 nil)))
+              (should (eq logical 'voice-test-route))
+              'new))
+           ((symbol-function 'tts-voice-capabilities)
+            (lambda () '(:adapter outloud))))
+        (let ((result
+               (voice-setup-apply-voice-configuration
+                (lambda (value) (setq callback value)))))
+          (should (eq (symbol-value 'voice-test-route) 'new))
+          (should (eq (plist-get result :status) 'applied))
+          (should (= (plist-get result :recompiled-personalities) 1))
+          (should (equal result callback)))))))
+
 (ert-deftest emacsvox-voice-audio-format-preserves-style-runs ()
   "Audio formatting speaks each personality run with its selected voice."
   (with-temp-buffer

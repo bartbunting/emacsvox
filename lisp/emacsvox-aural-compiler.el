@@ -23,7 +23,11 @@
 (declare-function tts-voice-capabilities "tts-speak" ())
 (declare-function tts-voice-family-id
                   "tts-speak" (family &optional capabilities))
-(declare-function voice-from-acss "voice-setup" (style))
+(declare-function voice-from-acss "voice-setup" (style &optional logical-voice))
+(declare-function
+ emacsvox-aural-routing-static-family
+ "emacsvox-aural-routing-profiles" (logical-voice requested-family
+                                    &optional capabilities inventory))
 (declare-function make-acss "voice-setup" (&rest slots))
 
 (defcustom emacsvox-aural-unsupported-volume-policy 'degrade
@@ -310,6 +314,23 @@ and are not reconstructed or rejected here."
      "The selected TTS adapter has no voice compiler"))
   (tts-get-voice-command personality))
 
+(defun emacsvox-aural--route-palette-voice-definition
+    (logical-voice definition)
+  "Apply standalone physical routing to portable style DEFINITION.
+
+LOGICAL-VOICE remains the profile identity.  Only `:family' may change; the
+portable palette object and every other dimension remain untouched."
+  (if (and
+       (emacsvox-aural-voice-style-p definition)
+       (fboundp 'emacsvox-aural-routing-static-family))
+      (let* ((copy (copy-tree definition))
+             (requested (plist-get copy :family))
+             (family
+              (emacsvox-aural-routing-static-family
+               logical-voice requested)))
+        (plist-put copy :family family))
+    definition))
+
 (defun emacsvox-aural--compile-explicit-voice-style
     (style palette provenance)
   "Compile explicit STYLE through PALETTE with PROVENANCE."
@@ -466,7 +487,9 @@ and ACSS dimensions to the rules that supplied them."
         (if palette-definition
             (let ((compiled
                    (emacsvox-aural-compile-voice-style
-                    palette-definition palette provenance)))
+                    (emacsvox-aural--route-palette-voice-definition
+                     voice palette-definition)
+                    palette provenance)))
               (setf
                (emacsvox-aural-compiled-voice-request compiled) voice
                (emacsvox-aural-compiled-voice-preset compiled) voice)

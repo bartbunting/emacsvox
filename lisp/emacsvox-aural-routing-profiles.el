@@ -30,6 +30,9 @@
 (declare-function omnivox-set-routing-policy "omnivox-voices" ())
 (declare-function tts-apply-voice-configuration "tts-speak"
                   (&optional callback))
+(declare-function tts-voice-capabilities "tts-speak" ())
+(declare-function tts-voice-family-id "tts-speak" (family &optional capabilities))
+(declare-function tts-voice-inventory "tts-speak" ())
 (declare-function emacsvox-aural-voice "emacsvox-aural-resources"
                   (name &optional palette-id))
 
@@ -51,6 +54,11 @@
      :label "DECtalk, Eloquence, Windows, eSpeak"
      :engines ("dectalk" "eloquence" "winrt" "espeak")))
   "Named portable engine-order presets offered by the Voice Workbench.")
+
+(defconst emacsvox-aural-routing-static-engine-aliases
+  '(("outloud" "eloquence")
+    ("dectalk" "dtk"))
+  "Equivalent profile and standalone adapter engine identifiers.")
 
 (defcustom emacsvox-aural-routing-profiles-file
   (expand-file-name "aural-routing-profiles.el" emacsvox-user-directory)
@@ -418,6 +426,85 @@ legacy adapters; current Omnivox receives the global order separately."
            (or profile-id emacsvox-aural-active-routing-profile)))
          (data (and entry (emacsvox-aural-routing-profile-entry-data entry))))
     (emacsvox-aural-routing-selectors-from-data logical-voice data t)))
+
+(defun emacsvox-aural-routing--engine-equivalent-p (left right)
+  "Return non-nil when engine identifiers LEFT and RIGHT are equivalent."
+  (let ((left (and left (downcase (format "%s" left))))
+        (right (and right (downcase (format "%s" right)))))
+    (or
+     (equal left right)
+     (cl-some
+      (lambda (group) (and (member left group) (member right group)))
+      emacsvox-aural-routing-static-engine-aliases))))
+
+(defun emacsvox-aural-routing--static-family-default (capabilities)
+  "Return default enumerated family in CAPABILITIES, or its first family."
+  (let ((families (plist-get capabilities :families)))
+    (car-safe
+     (or
+      (cl-find-if (lambda (entry) (plist-get (cdr entry) :default)) families)
+      (car families)))))
+
+(defun emacsvox-aural-routing--static-property-match-p (selector voice)
+  "Return non-nil when property SELECTOR accepts normalized static VOICE."
+  (cl-every
+   (lambda (property)
+     (let ((wanted (plist-get selector property))
+           (actual (plist-get voice property)))
+       (or
+        (null wanted)
+        (and actual
+             (string-equal
+              (downcase (format "%s" wanted))
+              (downcase (format "%s" actual)))))))
+   '(:language :gender)))
+
+(defun emacsvox-aural-routing--static-selector-family
+    (selector adapter capabilities inventory)
+  "Resolve SELECTOR for standalone ADAPTER through CAPABILITIES and INVENTORY."
+  (let ((engine-id (plist-get selector :engine-id)))
+    (when
+        (or (null engine-id)
+            (emacsvox-aural-routing--engine-equivalent-p engine-id adapter))
+      (pcase (plist-get selector :kind)
+        ('exact
+         (tts-voice-family-id (plist-get selector :voice-id) capabilities))
+        ('engine-default
+         (emacsvox-aural-routing--static-family-default capabilities))
+        ('properties
+         (when-let* ((engine
+                      (cl-find-if
+                       (lambda (entry)
+                         (emacsvox-aural-routing--engine-equivalent-p
+                          (plist-get entry :engine-id) adapter))
+                       (plist-get inventory :engines)))
+                     (voice
+                      (cl-find-if
+                       (lambda (entry)
+                         (emacsvox-aural-routing--static-property-match-p
+                          selector entry))
+                       (plist-get engine :voices))))
+           (tts-voice-family-id (plist-get voice :voice-id) capabilities)))))))
+
+(defun emacsvox-aural-routing-static-family
+    (logical-voice requested-family &optional capabilities inventory)
+  "Resolve LOGICAL-VOICE to a standalone family or REQUESTED-FAMILY.
+
+Only enumerated static adapters use this compatibility projection.  Omnivox
+and other routed adapters keep logical selection at their native boundary.
+Missing engines, voices, or traits degrade to the portable ACSS request."
+  (let* ((capabilities (or capabilities (tts-voice-capabilities)))
+         (adapter (plist-get capabilities :adapter)))
+    (if (not (eq (plist-get capabilities :family-selection) 'enumerated))
+        requested-family
+      (let ((selectors (emacsvox-aural-routing-selectors logical-voice))
+            (inventory (or inventory (tts-voice-inventory)))
+            family)
+        (while (and selectors (null family))
+          (setq family
+                (emacsvox-aural-routing--static-selector-family
+                 (pop selectors) adapter capabilities inventory)))
+        (or family requested-family)))))
 
 (defun emacsvox-aural-set-session-routing-binding
     (logical-voice selectors)
