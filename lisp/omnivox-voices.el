@@ -17,6 +17,8 @@
 
 (declare-function emacsvox-aural-enable-framed-delivery
                   "emacsvox-aural-transport" (process))
+(declare-function tts--dispatch-playback-marker-event
+                  "tts-speak" (process event))
 
 (defvar emacsvox-servers-directory)
 (defvar emacsvox-play-program)
@@ -102,6 +104,23 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defconst omnivox-control-max-encoded-bytes 349532
   "Maximum encoded Omnivox control payload accepted by Emacsvox.")
 
+(defconst omnivox-marker-event-protocol-version 1
+  "Marker event protocol version supported by this adapter.")
+
+(defconst omnivox-marker-event-prefix "__EMACSVOX_MARKER__ "
+  "Prefix of Base64-JSON playback marker events emitted by Omnivox.")
+
+(defconst omnivox-marker-max-payload-bytes (* 2 1024 1024)
+  "Maximum decoded Omnivox marker event accepted by Emacsvox.")
+
+(defconst omnivox-marker-max-encoded-bytes 2796208
+  "Maximum encoded Omnivox marker event accepted by Emacsvox.")
+
+(defconst omnivox--maximum-event-line-bytes
+  (+ (length omnivox-marker-event-prefix)
+     omnivox-marker-max-encoded-bytes)
+  "Maximum incomplete machine-readable output line retained per process.")
+
 (defconst omnivox--control-filter-installed-property
   'omnivox--control-filter-installed
   "Process property recording installation of the control filter.")
@@ -145,6 +164,9 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defvar omnivox-control-last-error nil
   "Most recent Omnivox control error or malformed event.")
 
+(defvar omnivox-marker-last-error nil
+  "Most recent malformed Omnivox playback marker event.")
+
 (defvar omnivox--logical-acss-table (make-hash-table :test #'equal)
   "Normalized ACSS styles indexed by logical voice ID.")
 
@@ -173,6 +195,18 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
   (let ((decoded (base64-decode-string payload)))
     (when (> (string-bytes decoded) omnivox-control-max-payload-bytes)
       (error "Decoded Omnivox control response exceeds its size limit"))
+    (json-parse-string
+     (decode-coding-string decoded 'utf-8 t)
+     :object-type 'plist :array-type 'list
+     :null-object nil :false-object nil)))
+
+(defun omnivox--decode-marker-event (payload)
+  "Decode and validate one bounded Base64-JSON marker event PAYLOAD."
+  (when (> (string-bytes payload) omnivox-marker-max-encoded-bytes)
+    (error "Encoded Omnivox marker event exceeds its size limit"))
+  (let ((decoded (base64-decode-string payload)))
+    (when (> (string-bytes decoded) omnivox-marker-max-payload-bytes)
+      (error "Decoded Omnivox marker event exceeds its size limit"))
     (json-parse-string
      (decode-coding-string decoded 'utf-8 t)
      :object-type 'plist :array-type 'list
@@ -246,6 +280,34 @@ Return non-nil when LINE is a control event, including a malformed one."
                 (error-message-string error-data))))
     t))
 
+(defun omnivox--handle-marker-line (process line)
+  "Handle an Omnivox playback marker LINE from PROCESS.
+Return non-nil for every marker-prefixed line, including malformed records."
+  (when (string-prefix-p omnivox-marker-event-prefix line)
+    (condition-case error-data
+        (let* ((event
+                (omnivox--decode-marker-event
+                 (substring line (length omnivox-marker-event-prefix))))
+               (version (plist-get event :protocol_version))
+               (identifier (plist-get event :dispatch_id))
+               (sequence (plist-get event :sequence))
+               (type (plist-get event :type)))
+          (unless
+              (and
+               (= (or version -1) omnivox-marker-event-protocol-version)
+               (integerp identifier) (> identifier 0)
+               (integerp sequence) (> sequence 0)
+               (stringp type))
+            (error "Invalid Omnivox marker event envelope"))
+          (when (member type '("utterance_started" "marker_reached"))
+            (tts--dispatch-playback-marker-event process event)))
+      (error
+       (setq omnivox-marker-last-error
+             (list :process process :error error-data :time (current-time)))
+       (message "Invalid Omnivox marker event: %s"
+                (error-message-string error-data))))
+    t))
+
 (defun omnivox--forward-process-output (process output)
   "Forward ordinary PROCESS OUTPUT to the filter wrapped by Omnivox."
   (when-let* ((filter
@@ -263,10 +325,21 @@ Return non-nil when LINE is a control event, including a malformed one."
         line-end)
     (while (setq line-end (string-search "\n" pending))
       (let ((line (string-trim-right (substring pending 0 line-end) "\r")))
-        (unless (omnivox--handle-control-line process line)
+        (unless
+            (or
+             (omnivox--handle-control-line process line)
+             (omnivox--handle-marker-line process line))
           (omnivox--forward-process-output process (concat line "\n"))))
       (setq pending (substring pending (1+ line-end))))
-    (process-put process omnivox--control-fragment-property pending)))
+    (if (> (string-bytes pending) omnivox--maximum-event-line-bytes)
+        (progn
+          (setq omnivox-marker-last-error
+                (list
+                 :process process :error 'oversized-fragment
+                 :time (current-time)))
+          (process-put process omnivox--control-fragment-property "")
+          (message "Discarded oversized Omnivox output fragment"))
+      (process-put process omnivox--control-fragment-property pending))))
 
 (defun omnivox--install-control-filter (process)
   "Install bounded control-event filtering on Omnivox PROCESS once."
@@ -531,6 +604,12 @@ Return the number of processes sent the atomic registry replacement."
      process tts--tracked-playback-completion-property
      (and
       (member "tracked_playback_completion"
+              (plist-get response :features))
+      t))
+    (process-put
+     process tts--marker-playback-events-property
+     (and
+      (member "playback_marker_events_v1"
               (plist-get response :features))
       t))
     (when (member "emacsvox_tx" (plist-get response :features))

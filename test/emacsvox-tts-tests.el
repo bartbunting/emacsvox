@@ -225,6 +225,12 @@
           omnivox-control-event-prefix
           (omnivox--encode-control-request response)))
 
+(defun emacsvox-test--omnivox-marker-event (event)
+  "Encode EVENT as one Omnivox playback marker record."
+  (format "%s%s\n"
+          omnivox-marker-event-prefix
+          (omnivox--encode-control-request event)))
+
 (ert-deftest emacsvox-tts-omnivox-encodes-versioned-control-requests ()
   "Control requests are UTF-8 JSON in a newline-free Base64 field."
   (let* ((encoded
@@ -308,6 +314,7 @@
                :supported_protocol_versions [1]
                :features ["control_v1" "emacsvox_tx" "engine_inventory"
                           "logical_voice_registration"
+                          "playback_marker_events_v1"
                           "preferred_engine"
                           "tracked_playback_completion"]))))
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
@@ -345,6 +352,8 @@
           (should
            (process-get
             process tts--tracked-playback-completion-property))
+          (should
+           (process-get process tts--marker-playback-events-property))
           (should (= (plist-get omnivox-engine-inventory
                                 :inventory_generation)
                      3))
@@ -359,6 +368,13 @@
   (should-error
    (omnivox--decode-control-response
     (make-string (1+ omnivox-control-max-encoded-bytes) ?A))
+   :type 'error))
+
+(ert-deftest emacsvox-tts-omnivox-bounds-marker-events ()
+  "The adapter rejects oversized marker events before Base64 decoding."
+  (should-error
+   (omnivox--decode-marker-event
+    (make-string (1+ omnivox-marker-max-encoded-bytes) ?A))
    :type 'error))
 
 (ert-deftest emacsvox-tts-omnivox-gates-framing-on-capability ()
@@ -635,6 +651,102 @@
             '((speaker
                "emacsvox_tracked_dispatch 41\n")))))
       (tts-cancel-tracked-dispatch identifier))))
+
+(ert-deftest emacsvox-tts-protocol-dispatches-marker-aware-speech ()
+  "Marker-aware speech uses its negotiated command and owns both callbacks."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-marker-dispatch-test" :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (tts-program "/tmp/emacsvox/servers/omnivox")
+         (tts--tracked-dispatch-sequence 40)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         identifier
+         writes)
+    (unwind-protect
+        (progn
+          (process-put process tts--tracked-playback-completion-property t)
+          (process-put process tts--marker-playback-events-property t)
+          (cl-letf
+              (((symbol-function 'tts--ensure-tracked-process-filter)
+                #'ignore)
+               ((symbol-function 'emacsvox-aural-delivery-send)
+                (lambda (_process command &optional _kind)
+                  (push command writes))))
+            (setq
+             identifier
+             (tts--protocol-dispatch-marked #'ignore #'ignore)))
+          (should (= identifier 41))
+          (should (equal writes '("emacsvox_marker_dispatch 41\n")))
+          (should (gethash identifier tts--tracked-dispatches))
+          (should (gethash identifier tts--marker-dispatches)))
+      (tts-cancel-tracked-dispatch identifier)
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-omnivox-delivers-bounded-marker-events-in-order ()
+  "The nested process filters decode markers and retire them before terminal status."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-marker-filter-test" :buffer nil :noquery t))
+         (identifier 73)
+         (tts--tracked-dispatches (make-hash-table :test #'eql))
+         (tts--marker-dispatches (make-hash-table :test #'eql))
+         marker-events
+         terminal-events
+         forwarded)
+    (unwind-protect
+        (progn
+          (set-process-filter
+           process
+           (lambda (_process output) (push output forwarded)))
+          (omnivox--install-control-filter process)
+          (tts--ensure-tracked-process-filter process)
+          (puthash
+           identifier
+           (cons
+            process
+            (lambda (value status)
+              (push (list value status) terminal-events)))
+           tts--tracked-dispatches)
+          (puthash
+           identifier
+           (tts--marker-dispatch-create
+            :process process
+            :callback
+            (lambda (value event)
+              (push (list value (plist-get event :type)) marker-events)))
+           tts--marker-dispatches)
+          (let* ((record
+                  (emacsvox-test--omnivox-marker-event
+                   (list
+                    :protocol_version 1 :dispatch_id identifier :sequence 1
+                    :type "utterance_started" :utterance_id 1 :text "hello"
+                    :engine_id "winrt" :actual_voice nil
+                    :logical_voice_id nil :sample_rate 44100 :frame_count 5)))
+                 (split (/ (length record) 2)))
+            (tts--speaker-process-filter process (substring record 0 split))
+            (should-not marker-events)
+            (tts--speaker-process-filter process (substring record split)))
+          (should
+           (equal marker-events '((73 "utterance_started"))))
+          (tts--speaker-process-filter
+           process "__EMACSVOX_TRACKED__ 73 completed\n")
+          (should (equal terminal-events '((73 completed))))
+          (should-not (gethash identifier tts--tracked-dispatches))
+          (should-not (gethash identifier tts--marker-dispatches))
+          (should-not forwarded))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-marker-speech-rejects-unsupported-server ()
+  "Marker-aware speech fails before submitting text to an older server."
+  (let ((tts-program "espeak") called)
+    (cl-letf (((symbol-function 'tts-speak)
+               (lambda (_text) (setq called t))))
+      (should-error
+       (tts-speak-marked "hello" #'ignore #'ignore)
+       :type 'user-error)
+      (should-not called))))
 
 (ert-deftest emacsvox-tts-tracked-speech-rejects-unsupported-server ()
   "Tracked speech fails clearly when its server cannot report completion."

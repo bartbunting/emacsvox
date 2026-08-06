@@ -128,6 +128,30 @@ frames to the newest generation, rejects stale frames, and keeps stop outside
 the frame as a barrier.  Emacsvox automatically retains ordinary legacy
 delivery when the capability is absent.
 
+Servers advertising =playback_marker_events_v1= also enable
+=tts-speak-marked=.  It accepts one callback for playback events and one for
+the terminal status:
+
+#+BEGIN_SRC elisp
+(tts-speak-marked
+ "hello from Omnivox"
+ (lambda (dispatch-id event)
+   (push (list dispatch-id event) my-marker-events))
+ (lambda (dispatch-id status)
+   (setq my-marker-terminal (list dispatch-id status))))
+#+END_SRC
+
+The first event for each nonempty synthesized chunk is an
+=utterance_started= plist containing its exact processed text and realized
+engine, physical voice, and logical voice.  Engines with native synchronization
+support then produce =marker_reached= events for word, sentence, phoneme, or
+native-index boundaries.  Event offsets have already followed resampling and
+silence trimming.  They track mixer source consumption and can lead acoustic
+output by device-buffer latency.  Stop and process retirement discard
+unreached events and retire both callbacks.  Older servers reject
+=tts-speak-marked= before text is submitted and continue using ordinary or
+tracked speech unchanged.
+
 For queued logical voices, current Omnivox servers re-resolve a missing voice
 or failed engine against the dispatched registry snapshot and retry the same
 text chunk on the selected fallback.  Retries are limited to four total

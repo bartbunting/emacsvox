@@ -156,11 +156,22 @@ a `cancelled' record when pending input interrupts that wait.")
   'tts--tracked-playback-completion
   "Process property recording negotiated tracked playback support.")
 
+(defconst tts--marker-playback-events-property
+  'tts--marker-playback-events
+  "Process property recording negotiated marker playback support.")
+
 (defvar tts--tracked-dispatch-sequence 0
   "Sequence used to identify tracked speech dispatches.")
 
 (defvar tts--tracked-dispatches (make-hash-table :test #'eql)
   "Tracked speech callbacks indexed by dispatch identifier.")
+
+(cl-defstruct (tts--marker-dispatch
+               (:constructor tts--marker-dispatch-create))
+  process callback (last-sequence 0))
+
+(defvar tts--marker-dispatches (make-hash-table :test #'eql)
+  "Marker callback state indexed by tracked dispatch identifier.")
 
 (defvar tts--speech-process-generation 0
   "Sequence distinguishing speech-server process instances.")
@@ -215,6 +226,19 @@ not proof that audio reached a physical output device."
      "Speech server `%s' cannot report playback completion; tracked reading is unavailable"
      (file-name-nondirectory (or tts-program "unset")))))
 
+(defun tts-marker-playback-events-p ()
+  "Return non-nil when the active speech process supports marker events."
+  (and
+   (process-live-p tts-speaker-process)
+   (process-get tts-speaker-process tts--marker-playback-events-property)))
+
+(defun tts--require-marker-playback-events ()
+  "Signal a clear error unless the active server supports marker events."
+  (unless (tts-marker-playback-events-p)
+    (user-error
+     "Speech server `%s' does not support marker-aware playback"
+     (file-name-nondirectory (or tts-program "unset")))))
+
 (defun tts--complete-tracked-dispatch (process line)
   "Handle tracked status LINE from PROCESS.
 Return non-nil when LINE is a tracked status record."
@@ -226,7 +250,11 @@ Return non-nil when LINE is a tracked status record."
        line)
     (let* ((identifier (string-to-number (match-string 1 line)))
            (status (intern (match-string 2 line)))
-           (entry (gethash identifier tts--tracked-dispatches)))
+           (entry (gethash identifier tts--tracked-dispatches))
+           (marker-entry (gethash identifier tts--marker-dispatches)))
+      (when (and marker-entry
+                 (eq process (tts--marker-dispatch-process marker-entry)))
+        (remhash identifier tts--marker-dispatches))
       (when (and entry (eq process (car entry)))
         (remhash identifier tts--tracked-dispatches)
         (tts--call-tracked-dispatch-callback
@@ -240,6 +268,36 @@ Return non-nil when LINE is a tracked status record."
     (error
      (message "Tracked speech callback failed: %s"
               (error-message-string error-data)))))
+
+(defun tts--dispatch-playback-marker-event (process event)
+  "Deliver decoded marker EVENT owned by PROCESS.
+Return non-nil when EVENT belongs to a live marker dispatch."
+  (let* ((identifier (plist-get event :dispatch_id))
+         (sequence (plist-get event :sequence))
+         (entry
+          (and (integerp identifier)
+               (gethash identifier tts--marker-dispatches))))
+    (when
+        (and
+         entry
+         (eq process (tts--marker-dispatch-process entry))
+         (integerp sequence)
+         (> sequence (tts--marker-dispatch-last-sequence entry)))
+      (when
+          (/= sequence (1+ (tts--marker-dispatch-last-sequence entry)))
+        (message
+         "Marker dispatch %d skipped from sequence %d to %d"
+         identifier
+         (tts--marker-dispatch-last-sequence entry)
+         sequence))
+      (setf (tts--marker-dispatch-last-sequence entry) sequence)
+      (condition-case error-data
+          (funcall
+           (tts--marker-dispatch-callback entry) identifier event)
+        (error
+         (message "Marker speech callback failed: %s"
+                  (error-message-string error-data))))
+      t)))
 
 (defun tts--speaker-process-filter (process output)
   "Recognize tracked completion records in PROCESS OUTPUT."
@@ -264,19 +322,28 @@ Return non-nil when LINE is a tracked status record."
 
 (defun tts-cancel-tracked-dispatch (identifier)
   "Forget tracked speech dispatch IDENTIFIER."
-  (remhash identifier tts--tracked-dispatches))
+  (remhash identifier tts--tracked-dispatches)
+  (remhash identifier tts--marker-dispatches))
 
 (defun tts--cancel-process-tracked-dispatches (process &optional status)
   "Forget every tracked dispatch owned by PROCESS.
 When STATUS is non-nil, notify each callback after removing its entry."
-  (let (entries)
+  (let (entries marker-identifiers)
     (maphash
      (lambda (identifier entry)
        (when (eq process (car entry))
          (push (cons identifier (cdr entry)) entries)))
      tts--tracked-dispatches)
     (dolist (entry entries)
-      (remhash (car entry) tts--tracked-dispatches))
+      (remhash (car entry) tts--tracked-dispatches)
+      (remhash (car entry) tts--marker-dispatches))
+    (maphash
+     (lambda (identifier entry)
+       (when (eq process (tts--marker-dispatch-process entry))
+         (push identifier marker-identifiers)))
+     tts--marker-dispatches)
+    (dolist (identifier marker-identifiers)
+      (remhash identifier tts--marker-dispatches))
     (when status
       (dolist (entry (nreverse entries))
         (tts--call-tracked-dispatch-callback
@@ -390,6 +457,35 @@ or `failed'.  Return the identifier allocated to this dispatch."
     (emacsvox-aural-delivery-send
      tts-speaker-process
      (format "emacsvox_tracked_dispatch %d\n" identifier))
+    identifier))
+
+(defun tts--protocol-dispatch-marked (marker-callback completion-callback)
+  "Dispatch queued speech with marker and terminal callbacks.
+MARKER-CALLBACK receives the dispatch identifier and a decoded event plist.
+COMPLETION-CALLBACK receives the identifier and terminal status."
+  (unless (functionp marker-callback)
+    (signal 'wrong-type-argument (list 'functionp marker-callback)))
+  (unless (functionp completion-callback)
+    (signal 'wrong-type-argument (list 'functionp completion-callback)))
+  (tts--require-marker-playback-events)
+  (tts--require-tracked-playback-completion)
+  (tts--ensure-tracked-process-filter tts-speaker-process)
+  (let ((identifier (cl-incf tts--tracked-dispatch-sequence)))
+    (puthash
+     identifier (cons tts-speaker-process completion-callback)
+     tts--tracked-dispatches)
+    (puthash
+     identifier
+     (tts--marker-dispatch-create
+      :process tts-speaker-process :callback marker-callback)
+     tts--marker-dispatches)
+    (condition-case error-data
+        (emacsvox-aural-delivery-send
+         tts-speaker-process
+         (format "emacsvox_marker_dispatch %d\n" identifier))
+      (error
+       (tts-cancel-tracked-dispatch identifier)
+       (signal (car error-data) (cdr error-data))))
     identifier))
 
 ;;;;  say
@@ -2043,6 +2139,9 @@ unless   `tts-quiet' is set to t. "
 (defvar tts--tracked-completion-function nil
   "Completion callback for the dynamically current speech submission.")
 
+(defvar tts--marker-event-function nil
+  "Marker callback for the dynamically current speech submission.")
+
 (defvar tts--scratch-buffers-in-use nil
   "Dynamically active TTS preparation buffers.
 
@@ -2058,6 +2157,25 @@ audio queues; it does not prove that a physical audio device was heard."
          (identifier (tts-speak text)))
     (unless (integerp identifier)
       (error "Tracked speech was not submitted"))
+    identifier))
+
+(defun tts-speak-marked (text marker-callback completion-callback)
+  "Speak TEXT with playback marker and terminal callbacks.
+MARKER-CALLBACK receives a dispatch identifier and decoded event plist.
+COMPLETION-CALLBACK receives the identifier and `completed', `cancelled', or
+`failed'.  Events follow mixer source consumption and may lead acoustic output
+by the audio device's buffering latency."
+  (unless (functionp marker-callback)
+    (signal 'wrong-type-argument (list 'functionp marker-callback)))
+  (unless (functionp completion-callback)
+    (signal 'wrong-type-argument (list 'functionp completion-callback)))
+  (tts--require-marker-playback-events)
+  (tts--require-tracked-playback-completion)
+  (let* ((tts--marker-event-function marker-callback)
+         (tts--tracked-completion-function completion-callback)
+         (identifier (tts-speak text)))
+    (unless (integerp identifier)
+      (error "Marker-aware speech was not submitted"))
     identifier))
 
 (defun tts--speak (text)
@@ -2186,10 +2304,15 @@ audio queues; it does not prove that a physical audio device was heard."
               (unless (= start (point-max))
                 (skip-syntax-forward " ")       ;skip leading whitespace
                 (unless (eobp) (tts-audio-format (point) (point-max)))))
-            (if tts--tracked-completion-function
-                (tts--protocol-dispatch-tracked
-                 tts--tracked-completion-function)
-              (tts--protocol-dispatch)))
+            (cond
+             (tts--marker-event-function
+              (tts--protocol-dispatch-marked
+               tts--marker-event-function
+               tts--tracked-completion-function))
+             (tts--tracked-completion-function
+              (tts--protocol-dispatch-tracked
+               tts--tracked-completion-function))
+             (t (tts--protocol-dispatch))))
         (when (and nested-scratch-p (buffer-live-p tts-scratch-buffer))
           (kill-buffer tts-scratch-buffer))))))
 
