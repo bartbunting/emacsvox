@@ -183,7 +183,7 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     }
 
     internal OmnivoxCaptureResult Synthesize(string text, string voiceId,
-        int rate, OmnivoxHelperAnchor[] anchors)
+        int rate, int pitch, int volume, OmnivoxHelperAnchor[] anchors)
     {
         lock (synthesisLock)
         {
@@ -198,7 +198,10 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 OmnivoxNativeEci.Stop(handle);
                 Check(OmnivoxNativeEci.ClearInput(handle), "eciClearInput");
                 Configure();
-                AddText(" `" + voiceId + " `vs" + rate + " ");
+                AddText(" `" + voiceId + " `vs" +
+                    rate.ToString(CultureInfo.InvariantCulture) + " `vb" +
+                    pitch.ToString(CultureInfo.InvariantCulture) + " `vv" +
+                    volume.ToString(CultureInfo.InvariantCulture) + " ");
                 AddTextWithIndexes(text, anchors);
                 Check(OmnivoxNativeEci.Synthesize(handle), "eciSynthesize");
                 Check(OmnivoxNativeEci.Synchronize(handle), "eciSynchronize");
@@ -253,10 +256,31 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
             insertions.Add(new MarkerInsertion
             {
                 Position = Utf8OffsetToCharPosition(text, anchor.TextOffset),
-                Priority = anchor.Affinity == "before" ? 0 : 2,
+                Priority = anchor.Affinity == "before" ? 0 : 3,
                 Sequence = sequence++,
                 Marker = new OmnivoxHelperMarker("requested_anchor", 0,
                     anchor.TextOffset, 0, anchor.Id)
+            });
+        }
+
+        foreach (OmnivoxTextSpan sentence in
+            OmnivoxTextBoundaries.Sentences(text))
+        {
+            if (insertions.Count >= MaximumMarkers)
+            {
+                break;
+            }
+            uint textStart = checked((uint)Encoding.UTF8.GetByteCount(
+                text.Substring(0, sentence.Start)));
+            uint textLength = checked((uint)Encoding.UTF8.GetByteCount(
+                text.Substring(sentence.Start, sentence.Length)));
+            insertions.Add(new MarkerInsertion
+            {
+                Position = sentence.Start,
+                Priority = 1,
+                Sequence = sequence++,
+                Marker = new OmnivoxHelperMarker("sentence", 0,
+                    textStart, textLength, null)
             });
         }
 
@@ -306,7 +330,7 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
             insertions.Add(new MarkerInsertion
             {
                 Position = wordStart,
-                Priority = 1,
+                Priority = 2,
                 Sequence = sequence++,
                 Marker = new OmnivoxHelperMarker("word", 0, textStart,
                     textLength, value)

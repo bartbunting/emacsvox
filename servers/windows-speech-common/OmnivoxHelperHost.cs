@@ -79,6 +79,101 @@ internal sealed class OmnivoxHelperMarker
     }
 }
 
+internal sealed class OmnivoxTextSpan
+{
+    internal int Start;
+    internal int Length;
+
+    internal OmnivoxTextSpan(int start, int length)
+    {
+        Start = start;
+        Length = length;
+    }
+}
+
+/// <summary>
+/// Conservative source-text boundaries shared by capture adapters whose
+/// native APIs can time inserted indexes but do not report sentence ranges.
+/// </summary>
+internal static class OmnivoxTextBoundaries
+{
+    internal static OmnivoxTextSpan[] Sentences(string text)
+    {
+        List<OmnivoxTextSpan> spans = new List<OmnivoxTextSpan>();
+        int position = 0;
+        while (position < text.Length)
+        {
+            while (position < text.Length && Char.IsWhiteSpace(text, position))
+            {
+                ++position;
+            }
+            if (position >= text.Length)
+            {
+                break;
+            }
+
+            int start = position;
+            bool completed = false;
+            while (position < text.Length)
+            {
+                char value = text[position];
+                if (value == '\r' || value == '\n')
+                {
+                    AddNonempty(spans, start, position);
+                    completed = true;
+                    break;
+                }
+                ++position;
+                if (!IsSentenceTerminator(value))
+                {
+                    continue;
+                }
+                while (position < text.Length &&
+                    IsSentenceCloser(text[position]))
+                {
+                    ++position;
+                }
+                if (position == text.Length ||
+                    Char.IsWhiteSpace(text, position))
+                {
+                    AddNonempty(spans, start, position);
+                    completed = true;
+                    break;
+                }
+            }
+            if (!completed)
+            {
+                AddNonempty(spans, start, text.Length);
+                position = text.Length;
+            }
+        }
+        return spans.ToArray();
+    }
+
+    private static void AddNonempty(List<OmnivoxTextSpan> spans,
+        int start, int end)
+    {
+        if (end > start)
+        {
+            spans.Add(new OmnivoxTextSpan(start, end - start));
+        }
+    }
+
+    private static bool IsSentenceTerminator(char value)
+    {
+        return value == '.' || value == '!' || value == '?' ||
+            value == '\u2026' || value == '\u3002' ||
+            value == '\uff01' || value == '\uff1f';
+    }
+
+    private static bool IsSentenceCloser(char value)
+    {
+        return value == '\'' || value == '"' || value == '\u2019' ||
+            value == '\u201d' || value == ')' || value == ']' ||
+            value == '}';
+    }
+}
+
 internal sealed class OmnivoxCaptureResult
 {
     internal byte[] Audio;

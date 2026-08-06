@@ -176,13 +176,17 @@ Omnivox.  It does not own playback and does not change the existing
 =wendy=, with =paul= as the default.
 
 Both helper protocol versions map normalized rate across DECtalk's
-75-through-600 WPM range while
-preserving 225 WPM at the normal midpoint.  The helper also captures DECtalk's
-native phoneme changes and explicitly inserted =[:index mark N]= records.  It
-reports their utterance-relative sample numbers as =phoneme= and =native_index=
-marker frames; the marker value is DECtalk's numeric phoneme or index value.
-Those native records do not identify a source-text span, so their optional UTF-8
-source ranges are left absent rather than guessed.
+75-through-600 WPM range while preserving 225 WPM at the normal midpoint.
+Average pitch is mapped from each DECtalk personality's documented baseline to
+the native =ap= voice parameter.  Normalized volume is applied as gain to the
+captured PCM because DECtalk's volume commands do not affect speech written to
+memory.  Pitch range, stress, and richness remain unavailable.  The helper also
+captures DECtalk's native phoneme changes and explicitly inserted
+=[:index mark N]= records.  It reports their utterance-relative sample numbers
+as =phoneme= and =native_index= marker frames; the marker value is DECtalk's
+numeric phoneme or index value.  Those native records do not identify a
+source-text span, so their optional UTF-8 source ranges are left absent rather
+than guessed.
 
 The helper creates word markers by inserting private DECtalk indexes immediately
 before bounded Unicode words and translating only those callbacks back to the
@@ -191,10 +195,11 @@ inside a word when surrounded by word characters.  Balanced DECtalk command and
 phonetic spans are copied without internal indexes; a word crossing such a span
 is conservatively left unmarked.  Private values are selected from 28672 through
 32767 after excluding numbers already present in native spans, so caller-supplied
-indexes retain their =native_index= identity.  A real-helper regression produced
-identical PCM with and without the generated indexes.  Combined marker storage
-is bounded to 4096 records per utterance.  Sentence markers and the other ACSS
-dimensions remain advertised as unavailable.
+indexes retain their =native_index= identity.  The same mechanism inserts
+sentence indexes at conservative line-break and common-terminator boundaries;
+it deliberately avoids language-specific sentence analysis.  A real-helper
+regression produced identical PCM with and without the generated indexes.
+Combined marker storage is bounded to 4096 records per utterance.
 
 Protocol version 2 advertises requested anchors at word-boundary precision.
 Omnivox resolves them from the returned word markers; it does not claim exact

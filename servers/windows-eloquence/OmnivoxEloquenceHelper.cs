@@ -5,6 +5,7 @@
 // See the file COPYING in this distribution.
 
 using System;
+using System.Collections.Generic;
 
 internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
 {
@@ -25,8 +26,24 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         new OmnivoxHelperCapabilities
         {
             Rate = true,
+            AveragePitch = true,
+            Volume = true,
             WordMarkers = true,
+            SentenceMarkers = true,
             RequestedAnchors = "exact"
+        };
+
+    private static readonly Dictionary<string, int> VoicePitchBaselines =
+        new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            { "v1", 65 },
+            { "v2", 81 },
+            { "v3", 93 },
+            { "v4", 56 },
+            { "v5", 69 },
+            { "v6", 89 },
+            { "v7", 68 },
+            { "v8", 61 }
         };
 
     private readonly OmnivoxEloquenceCapture capture;
@@ -60,7 +77,14 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         // speed. Preserve that midpoint while providing a bounded range.
         int nativeRate = (int)Math.Round(20.0 + rate * 110.0,
             MidpointRounding.AwayFromZero);
-        return capture.Synthesize(text, voiceId, nativeRate, anchors);
+        int nativePitch = (int)Math.Round(
+            VoicePitchBaselines[voiceId] * pitch,
+            MidpointRounding.AwayFromZero);
+        nativePitch = Math.Max(0, Math.Min(100, nativePitch));
+        int nativeVolume = (int)Math.Round(volume * 100.0,
+            MidpointRounding.AwayFromZero);
+        return capture.Synthesize(text, voiceId, nativeRate, nativePitch,
+            nativeVolume, anchors);
     }
 
     public void Stop()

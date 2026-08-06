@@ -38,11 +38,28 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             { "wendy", ":nw" }
         };
 
+    private static readonly Dictionary<string, int> VoiceAveragePitch =
+        new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            { "paul", 122 },
+            { "betty", 208 },
+            { "harry", 89 },
+            { "frank", 155 },
+            { "kit", 306 },
+            { "rita", 106 },
+            { "ursula", 240 },
+            { "dennis", 110 },
+            { "wendy", 200 }
+        };
+
     private static readonly OmnivoxHelperCapabilities EngineCapabilities =
         new OmnivoxHelperCapabilities
         {
             Rate = true,
+            AveragePitch = true,
+            Volume = true,
             WordMarkers = true,
+            SentenceMarkers = true,
             PhonemeMarkers = true,
             NativeIndexMarkers = true,
             RequestedAnchors = "word_boundary"
@@ -87,7 +104,12 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             225.0 + (rate - 0.5) * 750.0;
         int nativeRate = (int)Math.Round(mapped,
             MidpointRounding.AwayFromZero);
-        return capture.Synthesize(text, voiceCode, nativeRate);
+        int nativePitch = (int)Math.Round(
+            VoiceAveragePitch[voiceId] * pitch,
+            MidpointRounding.AwayFromZero);
+        nativePitch = Math.Max(50, Math.Min(500, nativePitch));
+        return capture.Synthesize(text, voiceCode, nativeRate, nativePitch,
+            volume);
     }
 
     public void Stop()

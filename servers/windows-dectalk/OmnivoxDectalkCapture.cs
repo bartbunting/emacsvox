@@ -107,6 +107,15 @@ internal struct OmnivoxDectalkIndex
 /// </summary>
 internal sealed class OmnivoxDectalkCapture : IDisposable
 {
+    private sealed class MarkerInsertion
+    {
+        internal int Position;
+        internal int Priority;
+        internal int Sequence;
+        internal uint IndexValue;
+        internal OmnivoxHelperMarker Marker;
+    }
+
     private sealed class BufferSlot
     {
         internal IntPtr Data;
@@ -124,8 +133,8 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private const int BufferCount = 4;
     private const int MarkerRecordsPerBuffer = 512;
     private const int MaximumMarkers = 4096;
-    private const int FirstPrivateWordIndex = 28672;
-    private const int LastPrivateWordIndex = 32767;
+    private const int FirstPrivateMarkerIndex = 28672;
+    private const int LastPrivateMarkerIndex = 32767;
     private const int MaximumMarkerValueBytes = 16 * 1024;
     private const int MaximumAudioBytes = 128 * 1024 * 1024;
     internal const int SpeechSampleRate = 11025;
@@ -139,7 +148,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private uint bufferMessage;
     private MemoryStream capture;
     private List<OmnivoxHelperMarker> markers;
-    private Dictionary<uint, OmnivoxHelperMarker> pendingWordMarkers;
+    private Dictionary<uint, OmnivoxHelperMarker> pendingTextMarkers;
     private Exception callbackError;
     private bool discardAudio;
     private bool shuttingDown;
@@ -221,7 +230,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     }
 
     internal OmnivoxCaptureResult Synthesize(string text, string voiceCode,
-        int rate)
+        int rate, int pitch, double volume)
     {
         lock (synthesisLock)
         {
@@ -230,16 +239,18 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             {
                 Check(OmnivoxNativeDectalk.TextToSpeechSetRate(handle,
                     (uint)rate), "TextToSpeechSetRate");
-                Speak("[" + voiceCode + "] " +
-                    BuildTextWithWordIndexes(text));
+                Speak("[" + voiceCode + " :dv ap " +
+                    pitch.ToString(CultureInfo.InvariantCulture) + "] " +
+                    BuildTextWithIndexes(text));
                 Check(OmnivoxNativeDectalk.TextToSpeechSync(handle),
                     "TextToSpeechSync");
                 ThrowCallbackError();
                 lock (stateLock)
                 {
                     markers.Sort(CompareMarkers);
-                    return new OmnivoxCaptureResult(capture.ToArray(),
-                        markers.ToArray());
+                    byte[] audio = capture.ToArray();
+                    ApplyPcmGain(audio, volume);
+                    return new OmnivoxCaptureResult(audio, markers.ToArray());
                 }
             }
             finally
@@ -252,7 +263,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                         capture = null;
                     }
                     markers = null;
-                    pendingWordMarkers = null;
+                    pendingTextMarkers = null;
                 }
             }
         }
@@ -298,7 +309,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             }
             capture = new MemoryStream();
             markers = new List<OmnivoxHelperMarker>();
-            pendingWordMarkers =
+            pendingTextMarkers =
                 new Dictionary<uint, OmnivoxHelperMarker>();
             discardAudio = false;
         }
@@ -319,17 +330,42 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
         }
     }
 
-    private string BuildTextWithWordIndexes(string text)
+    private string BuildTextWithIndexes(string text)
     {
         HashSet<uint> reservedIndexes = CollectNativeNumbers(text);
         uint[] utf8Offsets = BuildUtf8Offsets(text);
-        StringBuilder result = new StringBuilder(text.Length + 256);
-        int copiedThrough = 0;
+        List<MarkerInsertion> insertions = new List<MarkerInsertion>();
+        int sequence = 0;
         int position = 0;
-        int candidate = LastPrivateWordIndex;
+        int candidate = LastPrivateMarkerIndex;
+
+        foreach (OmnivoxTextSpan sentence in
+            OmnivoxTextBoundaries.Sentences(text))
+        {
+            uint indexValue;
+            if (insertions.Count >= MaximumMarkers ||
+                !TakePrivateMarkerIndex(reservedIndexes, ref candidate,
+                    out indexValue))
+            {
+                break;
+            }
+            uint textStart = utf8Offsets[sentence.Start];
+            uint textLength = checked(
+                utf8Offsets[sentence.Start + sentence.Length] - textStart);
+            insertions.Add(new MarkerInsertion
+            {
+                Position = sentence.Start,
+                Priority = 0,
+                Sequence = sequence++,
+                IndexValue = indexValue,
+                Marker = new OmnivoxHelperMarker("sentence", 0,
+                    textStart, textLength, null)
+            });
+            reservedIndexes.Add(indexValue);
+        }
 
         while (position < text.Length &&
-            pendingWordMarkers.Count < MaximumMarkers)
+            insertions.Count < MaximumMarkers)
         {
             int nativeEnd;
             if (TryGetNativeSpanEnd(text, position, out nativeEnd))
@@ -390,16 +426,11 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             }
 
             uint indexValue;
-            if (!TakePrivateWordIndex(reservedIndexes, ref candidate,
+            if (!TakePrivateMarkerIndex(reservedIndexes, ref candidate,
                 out indexValue))
             {
                 break;
             }
-
-            result.Append(text, copiedThrough, wordStart - copiedThrough);
-            result.Append("[:index mark ");
-            result.Append(indexValue.ToString(CultureInfo.InvariantCulture));
-            result.Append("]");
 
             int wordLength = position - wordStart;
             uint textStart = utf8Offsets[wordStart];
@@ -409,12 +440,44 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             {
                 value = null;
             }
-            pendingWordMarkers.Add(indexValue, new OmnivoxHelperMarker(
-                "word", 0, textStart, textLength, value));
+            insertions.Add(new MarkerInsertion
+            {
+                Position = wordStart,
+                Priority = 1,
+                Sequence = sequence++,
+                IndexValue = indexValue,
+                Marker = new OmnivoxHelperMarker("word", 0,
+                    textStart, textLength, value)
+            });
             reservedIndexes.Add(indexValue);
-            copiedThrough = wordStart;
         }
 
+        insertions.Sort(delegate(MarkerInsertion left,
+            MarkerInsertion right)
+        {
+            int order = left.Position.CompareTo(right.Position);
+            if (order == 0)
+            {
+                order = left.Priority.CompareTo(right.Priority);
+            }
+            return order == 0 ? left.Sequence.CompareTo(right.Sequence) :
+                order;
+        });
+
+        StringBuilder result = new StringBuilder(text.Length +
+            insertions.Count * 24);
+        int copiedThrough = 0;
+        foreach (MarkerInsertion insertion in insertions)
+        {
+            result.Append(text, copiedThrough,
+                insertion.Position - copiedThrough);
+            result.Append("[:index mark ");
+            result.Append(insertion.IndexValue.ToString(
+                CultureInfo.InvariantCulture));
+            result.Append("]");
+            pendingTextMarkers.Add(insertion.IndexValue, insertion.Marker);
+            copiedThrough = insertion.Position;
+        }
         result.Append(text, copiedThrough, text.Length - copiedThrough);
         return result.ToString();
     }
@@ -490,10 +553,27 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
         return offsets;
     }
 
-    private static bool TakePrivateWordIndex(HashSet<uint> reserved,
+    private static void ApplyPcmGain(byte[] audio, double volume)
+    {
+        if (volume >= 1.0)
+        {
+            return;
+        }
+        for (int offset = 0; offset + 1 < audio.Length; offset += 2)
+        {
+            short sample = (short)(audio[offset] | audio[offset + 1] << 8);
+            int scaled = (int)Math.Round(sample * volume,
+                MidpointRounding.AwayFromZero);
+            scaled = Math.Max(Int16.MinValue, Math.Min(Int16.MaxValue, scaled));
+            audio[offset] = (byte)(scaled & 0xff);
+            audio[offset + 1] = (byte)((scaled >> 8) & 0xff);
+        }
+    }
+
+    private static bool TakePrivateMarkerIndex(HashSet<uint> reserved,
         ref int candidate, out uint value)
     {
-        while (candidate >= FirstPrivateWordIndex)
+        while (candidate >= FirstPrivateMarkerIndex)
         {
             value = (uint)candidate--;
             if (!reserved.Contains(value))
@@ -713,13 +793,13 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             OmnivoxDectalkIndex marker =
                 (OmnivoxDectalkIndex)Marshal.PtrToStructure(address,
                     typeof(OmnivoxDectalkIndex));
-            OmnivoxHelperMarker wordMarker;
-            if (pendingWordMarkers != null &&
-                pendingWordMarkers.TryGetValue(marker.Value, out wordMarker))
+            OmnivoxHelperMarker textMarker;
+            if (pendingTextMarkers != null &&
+                pendingTextMarkers.TryGetValue(marker.Value, out textMarker))
             {
-                pendingWordMarkers.Remove(marker.Value);
-                wordMarker.FrameOffset = marker.SampleNumber;
-                markers.Add(wordMarker);
+                pendingTextMarkers.Remove(marker.Value);
+                textMarker.FrameOffset = marker.SampleNumber;
+                markers.Add(textMarker);
             }
             else
             {
@@ -832,7 +912,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 capture = null;
             }
             markers = null;
-            pendingWordMarkers = null;
+            pendingTextMarkers = null;
         }
     }
 }
