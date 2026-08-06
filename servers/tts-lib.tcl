@@ -131,10 +131,24 @@ proc queue_remove {} {
 #}}}
 #{{{sounds:
 
+# Start a cue player before returning, but do not wait for playback to finish.
+# This provides launch ordering for a following speech event without adding the
+# duration of the cue to speech latency.  It does not claim audible-onset or
+# playback-completion acknowledgement from the player.
+proc tts_start_cue {sound} {
+    global tts
+    if {[catch {exec $tts(play) $sound > /dev/null &} error]} {
+        if {[info exists tts(debug)] && $tts(debug)} {
+            puts stderr "Could not start auditory cue: $error"
+        }
+        return 0
+    }
+    return 1
+}
+
 #play a sound over the server
 proc p {sound} {
-    global tts
-    catch {exec $tts(play) $sound &} errcode
+    tts_start_cue $sound
     speech_task
 }
 

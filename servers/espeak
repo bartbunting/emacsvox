@@ -442,7 +442,7 @@ proc speech_task {} {
             a {
 
                 set sound [lindex $event 1]
-                exec $tts(play) $sound >/dev/null   &
+                tts_start_cue $sound
             }
             b {
 

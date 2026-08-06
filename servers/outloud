@@ -354,7 +354,7 @@ synth "`vs$rate "
             }
             a {
                 set sound [lindex $event 1]
-                catch {exec $tts(play) $sound > /dev/null &} errCode
+                tts_start_cue $sound
             }
             b {
                 if {$tts(beep)} {

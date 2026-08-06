@@ -384,7 +384,7 @@
           (make-list 3 expected)))))))
 
 (ert-deftest emacsvox-sounds-server-playback-does-not-reevaluate-paths ()
-  "Server-side playback should pass decoded paths directly to exec."
+  "Server-side playback should launch decoded paths directly and asynchronously."
   (let* ((resource "/tmp/cue;set ::injected 1;#")
          (emacsvox-play-program nil)
          (tts-speaker-process 'speaker)
@@ -402,13 +402,15 @@
        "rename exec emacsvox_test_exec\n"
        "proc exec args {set ::exec_arguments $args; return {}}\n"
        "proc speech_task {} {}\n"
-       "array set tts {play player}\n"
+       "array set tts {play player debug 0}\n"
        "set ::injected 0\n"
        command
        "puts $::injected\n"
        (concat
         "puts [binary encode hex [encoding convertto utf-8 "
-        "[lindex $::exec_arguments 1]]]\n"))
+        "[lindex $::exec_arguments 1]]]\n")
+       "puts [lindex $::exec_arguments 0]\n"
+       "puts [lindex $::exec_arguments end]\n")
       (should
        (zerop
         (call-process-region
@@ -421,14 +423,18 @@
           (mapconcat
            (lambda (byte) (format "%02x" byte))
            (encode-coding-string resource 'utf-8-unix)
-           ""))))))
-  (dolist (relative '("servers/tts-lib.tcl" "servers/outloud"
-                      "servers/dtk-soft" "servers/dtk-exp"))
+           "")))
+        (should (equal (nth 2 lines) "player"))
+        (should (equal (nth 3 lines) "&")))))
+  (dolist (relative '("servers/outloud" "servers/dtk-soft"
+                      "servers/dtk-exp" "servers/espeak"))
     (with-temp-buffer
       (insert-file-contents (expand-file-name relative emacsvox-directory))
+      (should (re-search-forward "tts_start_cue \\$sound" nil t))
+      (goto-char (point-min))
       (should-not
        (re-search-forward
-        "catch[ \t]+\"exec[ \t]+\\$tts(play)" nil t)))))
+        "exec[ \t]+\\$tts(play).*\\$sound" nil t)))))
 
 (ert-deftest emacsvox-sounds-sox-applies-normalized-cue-balance ()
   "Local SoX playback turns normalized balance into a two-channel remix."
