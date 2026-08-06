@@ -2042,6 +2042,28 @@
   (force-mode-line-update)
   (emacsvox-aural-preview-message "Voice preview stopped"))
 
+(defun emacsvox-aural-voice-workbench--editable-palette
+    (palette logical-voice)
+  "Return an editable PALETTE for tuning LOGICAL-VOICE.
+
+When PALETTE is built in, offer to create and activate a personal copy before
+refreshing the Workbench at LOGICAL-VOICE."
+  (if (not
+       (emacsvox-aural-voice-palette-built-in
+        (emacsvox-aural-voice-palette palette)))
+      palette
+    (unless
+        (y-or-n-p
+         (format
+          "Palette %s is built in; create and activate an editable copy? "
+          palette))
+      (user-error "Voice tuning cancelled"))
+    (let ((copy (emacsvox-aural-voice-palettes--copy palette)))
+      (emacsvox-aural-select-voice-palette copy)
+      (emacsvox-aural-voice-workbench-refresh
+       (format "%s" logical-voice))
+      copy)))
+
 (defun emacsvox-aural-voice-workbench-tune ()
   "Tune the current logical voice against its first staged physical route."
   (interactive)
@@ -2066,9 +2088,12 @@
                :key (lambda (item) (plist-get item :engine-id))
                :test #'equal)))
          (binding
-          (emacsvox-aural-voice-workbench--profile-binding logical)))
+          (emacsvox-aural-voice-workbench--profile-binding logical))
+         (palette
+          (emacsvox-aural-voice-workbench--editable-palette
+           (emacsvox-aural-voice-workbench--active-palette) logical)))
     (emacsvox-aural-voice-tuner-open
-     (emacsvox-aural-voice-workbench--active-palette)
+     palette
      (car entry) (current-buffer)
      emacsvox-aural-voice-workbench-preview-text
      :selector selector

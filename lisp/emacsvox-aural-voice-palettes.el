@@ -519,11 +519,9 @@ replaces live state.  Return the value of MUTATION."
     (emacsvox-aural-voice-palettes-speak-current)
     id))
 
-(defun emacsvox-aural-voice-palettes-copy ()
-  "Copy the voice palette at point to a personal palette."
-  (interactive)
-  (let* ((source (emacsvox-aural-voice-palettes--at-point-or-read))
-         (source-palette (emacsvox-aural-voice-palette source))
+(defun emacsvox-aural-voice-palettes--copy (source)
+  "Copy voice palette SOURCE to a prompted personal palette."
+  (let* ((source-palette (emacsvox-aural-voice-palette source))
          (id
           (emacsvox-aural-voice-palettes--read-new-id
            (format "%s-copy" source)))
@@ -538,6 +536,14 @@ replaces live state.  Return the value of MUTATION."
        "Copied palette purpose: "
        (format "Editable copy of %s" source))))
     (emacsvox-aural-voice-palettes--install-data data)
+    id))
+
+(defun emacsvox-aural-voice-palettes-copy ()
+  "Copy the voice palette at point to a personal palette."
+  (interactive)
+  (let ((id
+         (emacsvox-aural-voice-palettes--copy
+          (emacsvox-aural-voice-palettes--at-point-or-read))))
     (emacsvox-aural-voice-palettes-refresh id)
     (emacsvox-aural-voice-palettes-speak-current)
     id))

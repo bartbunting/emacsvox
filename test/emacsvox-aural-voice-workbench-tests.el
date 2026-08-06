@@ -546,7 +546,10 @@
     (should (emacsvox-aural-ui-goto-row "voice-bolden"))
     (let (arguments)
       (cl-letf
-          (((symbol-function 'emacsvox-aural-voice-tuner-open)
+          (((symbol-function
+             'emacsvox-aural-voice-workbench--editable-palette)
+            (lambda (palette _logical) palette))
+           ((symbol-function 'emacsvox-aural-voice-tuner-open)
             (lambda (&rest values) (setq arguments values))))
         (emacsvox-aural-voice-workbench-tune))
       (should (eq (nth 0 arguments) 'acss-default))
@@ -560,6 +563,49 @@
         (should
          (equal realized
                 '(:engine-id "eloquence" :voice-id "eci:Reed")))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-copies-built-in-before-tuning ()
+  "Logical tuning can create and activate an editable palette in place."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-bolden"))
+    (let (copied selected refreshed arguments)
+      (cl-letf
+          (((symbol-function 'y-or-n-p) (lambda (&rest _) t))
+           ((symbol-function 'emacsvox-aural-voice-palettes--copy)
+            (lambda (source)
+              (setq copied source)
+              'acss-personal))
+           ((symbol-function 'emacsvox-aural-select-voice-palette)
+            (lambda (palette)
+              (setq selected palette)
+              palette))
+           ((symbol-function 'emacsvox-aural-voice-workbench-refresh)
+            (lambda (&optional id) (setq refreshed id)))
+           ((symbol-function 'emacsvox-aural-voice-tuner-open)
+            (lambda (&rest values) (setq arguments values))))
+        (emacsvox-aural-voice-workbench-tune))
+      (should (eq copied 'acss-default))
+      (should (eq selected 'acss-personal))
+      (should (equal refreshed "voice-bolden"))
+      (should (eq (nth 0 arguments) 'acss-personal))
+      (should (eq (nth 1 arguments) 'bolden)))))
+
+(ert-deftest emacsvox-aural-voice-workbench-can-decline-palette-copy ()
+  "Declining the editable-copy offer leaves palette and tuner unchanged."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-bolden"))
+    (let (copied opened)
+      (cl-letf
+          (((symbol-function 'y-or-n-p) (lambda (&rest _) nil))
+           ((symbol-function 'emacsvox-aural-voice-palettes--copy)
+            (lambda (&rest _) (setq copied t)))
+           ((symbol-function 'emacsvox-aural-voice-tuner-open)
+            (lambda (&rest _) (setq opened t))))
+        (should-error
+         (emacsvox-aural-voice-workbench-tune)
+         :type 'user-error))
+      (should-not copied)
+      (should-not opened))))
 
 (ert-deftest emacsvox-aural-voice-workbench-bindings-are-complete ()
   "Workbench view, filter, detail, refresh, home, and help keys are present."

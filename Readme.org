@@ -90,12 +90,14 @@ engine, and style views use =l=, =v=, =e=, and =s=.  Use =F= to filter voice
 traits or engine health, =C= to clear filters, and =R= to refresh inventory.
 =P= previews one row, =A= previews all visible voices, =B= compares selected
 voices, =T= changes the common sample text, =S= stops preview, and =t= opens
-the route-aware tuner.  None of these saves configuration.  Use =a= to assign
-an installed voice and =j= to review a portable route suggestion.  Exact
-native IDs are machine-local; language, gender, and engine default selectors
-re-resolve on each machine.  Use =m= to stage migration from existing Omnivox
-settings or the current palette, =N= for routing presets, and =E= or =I= to
-exchange one data-only profile.  No inferred route is saved without review.
+the route-aware tuner.  None of these saves configuration.  When the active
+voice palette is built in, =t= offers to create and activate an editable
+personal copy before tuning.  Use =a= to assign an installed voice and =j= to
+review a portable route suggestion.  Exact native IDs are machine-local;
+language, gender, and engine default selectors re-resolve on each machine.
+Use =m= to stage migration from existing Omnivox settings or the current
+palette, =N= for routing presets, and =E= or =I= to exchange one data-only
+profile.  No inferred route is saved without review.
 
 Use =w= to atomically save and apply the complete profile to every live speech
 stream.  A partial apply remains visible and can be retried with =r=; =U=
