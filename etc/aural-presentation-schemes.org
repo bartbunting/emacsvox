@@ -3454,7 +3454,7 @@ optional Mu4e test is skipped.  Compiled Aural parity, normal build-tree
 startup, warning-checked compilation, the TTS audit, and whitespace validation
 pass.
 
-** TODO Slice 53: Quick Logical-Voice Assignment
+** DONE Slice 53: Quick Logical-Voice Assignment
 
 - From a logical-voice row, open the filtered physical-voice browser, audition
   candidates, and add an exact voice, engine default, or portable property
@@ -3469,6 +3469,36 @@ pass.
 
 Deliverable: mapping an existing Emacsvox voice to installed synth voices no
 longer requires editing Lisp or raw selector lists.
+
+Implemented: =a= on a logical voice opens the physical inventory with its
+known language pre-filtered.  Candidates remain previewable; =a= on a physical
+row stages either its local exact identity, a portable engine default, or a
+portable property selector after one confirmation, then returns to the logical
+row.  The logical view places the active palette, compatibility aliases,
+effective logical ID, requested style, ordered effective route, predicted
+installed realization, language, scope, and family diagnostic together.
+
+Explicit selectors can be moved earlier or later, deleted, or copied from
+another logical voice.  Bulk commands bind every explicitly unmapped voice to
+an engine default and replace an engine across a user-selected set of mappings.
+Because native voice IDs are engine-specific, bulk replacement explicitly asks
+whether exact selectors should remain unchanged or become the destination
+engine default; it never transfers an invalid native ID silently.
+
+Every mutation validates and changes only the workbench's private profile
+copy.  Staged undo restores the exact preceding snapshot, cancel restores the
+opening committed snapshot, and assignment cancellation restores the previous
+filter.  Shared dismissal hides the workbench without discarding its staged
+copy, and reopening a live workbench preserves that copy instead of
+reinitializing it.  Persistence and activation remain reserved for the
+atomic-apply slice.
+
+Checks: all 13 focused Voice Workbench tests pass, including exact and portable
+assignment, filtered browsing, identity/realization display, fallback editing,
+bulk replacement, undo, and cancel.  The complete Emacs 31 source suite has
+2,227 tests: 2,226 pass and the optional Mu4e test is skipped.  Compiled Aural
+parity, normal build-tree startup, warning-checked compilation, the TTS audit,
+and whitespace validation pass.
 
 ** TODO Slice 54: Omnivox Engine-Priority Policy
 

@@ -131,6 +131,146 @@
     (let ((entry (tabulated-list-get-entry)))
       (should (string-match-p "\\bvoice-bolden\\b" (aref entry 7))))))
 
+(ert-deftest emacsvox-aural-voice-workbench-shows-portable-and-realized-identity ()
+  "Logical rows put palette aliases, requested style, route, and result together."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-bolden"))
+    (let ((entry (tabulated-list-get-entry)))
+      (should (equal (aref entry 0) "acss-default"))
+      (should (string-match-p "bolden" (aref entry 1)))
+      (should (equal (aref entry 2) "voice-bolden"))
+      (should (string-match-p "eci:Reed" (aref entry 4)))
+      (should (equal (aref entry 5) "eloquence/eci:Reed")))))
+
+(ert-deftest emacsvox-aural-voice-workbench-stages-exact-assignment-and-undo ()
+  "Filtered browsing adds a local exact selector and undo restores its snapshot."
+  (emacsvox-test--with-voice-workbench
+    (should (emacsvox-aural-ui-goto-row "voice-annotate"))
+    (emacsvox-aural-voice-workbench-begin-assignment)
+    (should (eq emacsvox-aural-voice-workbench-view 'physical))
+    (should (equal emacsvox-aural-voice-workbench-assignment-target
+                   "voice-annotate"))
+    (emacsvox-aural-voice-workbench-refresh '("winrt" "David"))
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (&rest _) "exact installed voice, local to this machine"))
+              ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (emacsvox-aural-voice-workbench-complete-assignment))
+    (should (eq emacsvox-aural-voice-workbench-view 'logical))
+    (let* ((binding
+            (emacsvox-aural-voice-workbench--profile-binding "voice-annotate"))
+           (selector (car (plist-get binding :selectors))))
+      (should (equal (plist-get binding :language) "en-US"))
+      (should (eq (plist-get selector :kind) 'exact))
+      (should (eq (plist-get selector :scope) 'local))
+      (should (equal (plist-get selector :engine-id) "winrt"))
+      (should (equal (plist-get selector :voice-id) "David")))
+    (emacsvox-aural-voice-workbench-undo)
+    (should-not
+     (emacsvox-aural-voice-workbench--profile-binding "voice-annotate"))
+    (should-not (emacsvox-aural-voice-workbench--dirty-p))))
+
+(ert-deftest emacsvox-aural-voice-workbench-builds-portable-assignment-selectors ()
+  "Physical candidates can become engine defaults or portable properties."
+  (emacsvox-test--with-voice-workbench
+    (let ((pair
+           (emacsvox-aural-voice-workbench--physical-pair
+            '("eloquence" "eci:Reed"))))
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) "portable engine default")))
+        (should
+         (equal
+          (emacsvox-aural-voice-workbench--assignment-selector pair)
+          '(:kind engine-default :scope portable :engine-id "eloquence"))))
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) "portable language and gender")))
+        (should
+         (equal
+          (emacsvox-aural-voice-workbench--assignment-selector pair)
+          '(:kind properties :scope portable :language "en-AU"
+            :gender "male")))))))
+
+(ert-deftest emacsvox-aural-voice-workbench-reorders-copies-and-deletes-routes ()
+  "Fallback editing changes only the staged profile and remains undoable."
+  (emacsvox-test--with-voice-workbench
+    (emacsvox-aural-voice-workbench--replace-binding
+     "voice-bolden"
+     '((:kind exact :scope local :engine-id "eloquence"
+        :voice-id "eci:Reed")
+       (:kind engine-default :scope portable :engine-id "winrt")))
+    (emacsvox-aural-voice-workbench-refresh "voice-bolden")
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (&rest _)
+                 "1. eloquence/eci:Reed [local]")))
+      (emacsvox-aural-voice-workbench-move-selector-down))
+    (should
+     (equal
+      (plist-get
+       (car (emacsvox-aural-voice-workbench--explicit-selectors "voice-bolden"))
+       :engine-id)
+      "winrt"))
+    (should (emacsvox-aural-ui-goto-row "voice-annotate"))
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (&rest _) "voice-bolden"))
+              ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (emacsvox-aural-voice-workbench-copy-route))
+    (should
+     (equal
+      (emacsvox-aural-voice-workbench--explicit-selectors "voice-annotate")
+      (emacsvox-aural-voice-workbench--explicit-selectors "voice-bolden")))
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (&rest _) "1. winrt default [portable]"))
+              ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (emacsvox-aural-voice-workbench-delete-selector))
+    (should
+     (= (length
+         (emacsvox-aural-voice-workbench--explicit-selectors "voice-annotate"))
+        1))))
+
+(ert-deftest emacsvox-aural-voice-workbench-bulk-routing-is-explicit ()
+  "Bulk mapping and engine replacement use one confirmed staged transaction."
+  (emacsvox-test--with-voice-workbench
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (&rest _) "winrt"))
+              ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (emacsvox-aural-voice-workbench-bind-unmapped))
+    (should
+     (equal
+      (plist-get
+       (car (emacsvox-aural-voice-workbench--explicit-selectors
+             "voice-annotate"))
+       :engine-id)
+      "winrt"))
+    (let ((answers
+           '("eloquence" "winrt"
+             "convert exact voices to destination engine default")))
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) (pop answers)))
+                ((symbol-function 'completing-read-multiple)
+                 (lambda (&rest _) '("voice-bolden")))
+                ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+        (emacsvox-aural-voice-workbench-replace-engine)))
+    (should
+     (equal
+      (car (emacsvox-aural-voice-workbench--explicit-selectors "voice-bolden"))
+      '(:kind engine-default :scope portable :engine-id "winrt")))))
+
+(ert-deftest emacsvox-aural-voice-workbench-cancel-restores-opening-copy ()
+  "Cancelling staged work restores the exact committed profile and clears undo."
+  (emacsvox-test--with-voice-workbench
+    (let ((opening
+           (copy-tree emacsvox-aural-voice-workbench-committed-profile)))
+      (emacsvox-aural-voice-workbench--stage
+       "Test edit"
+       (lambda ()
+         (setf (plist-get emacsvox-aural-voice-workbench-staged-profile
+                          :summary)
+               "changed")))
+      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+        (emacsvox-aural-voice-workbench-cancel-staged))
+      (should
+       (equal emacsvox-aural-voice-workbench-staged-profile opening))
+      (should-not emacsvox-aural-voice-workbench-undo-stack))))
+
 (ert-deftest emacsvox-aural-voice-workbench-previews-exact-row-transactionally ()
   "Physical preview uses an exact session selector without staging edits."
   (emacsvox-test--with-voice-workbench
@@ -201,6 +341,17 @@
          ("B" . emacsvox-aural-voice-workbench-compare)
          ("T" . emacsvox-aural-voice-workbench-edit-preview-text)
          ("S" . emacsvox-aural-voice-workbench-stop-preview)
+         ("a" . emacsvox-aural-voice-workbench-assign)
+         ("c" . emacsvox-aural-voice-workbench-cancel-assignment)
+         ("[" . emacsvox-aural-voice-workbench-move-selector-up)
+         ("]" . emacsvox-aural-voice-workbench-move-selector-down)
+         ("d" . emacsvox-aural-voice-workbench-delete-selector)
+         ("y" . emacsvox-aural-voice-workbench-copy-route)
+         ("M" . emacsvox-aural-voice-workbench-bind-unmapped)
+         ("X" . emacsvox-aural-voice-workbench-replace-engine)
+         ("u" . emacsvox-aural-voice-workbench-undo)
+         ("x" . emacsvox-aural-voice-workbench-cancel-staged)
+         ("q" . emacsvox-aural-quit)
          ("h" . emacsvox-aural)
          ("?" . emacsvox-aural-voice-workbench-help)))
     (should
