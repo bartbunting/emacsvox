@@ -386,6 +386,10 @@ when the distinction is relevant to compatibility presentation."
            (footnote 'markdown-footnote)
            ((emacsvox-markdown--at-horizontal-rule-p)
             'markdown-separator)
+           ((emacsvox-markdown--at-table-separator-p)
+            'markdown-separator)
+           ((emacsvox-markdown--at-reference-link-def-p)
+            'markdown-link)
            ((emacsvox-markdown--at-table-row-p) 'markdown-table-row)
            ((emacsvox-markdown--at-link-p) 'markdown-link)
            (list-kind 'markdown-list-item)
@@ -473,14 +477,17 @@ but you won't hear the literal markup characters."
          (task (emacsvox-markdown--at-task-list-p))
          (fence (emacsvox-markdown--at-code-fence-p))
          (footnote (emacsvox-markdown--at-footnote-def-p))
+         (table-separator (emacsvox-markdown--at-table-separator-p))
+         (reference-definition
+          (emacsvox-markdown--at-reference-link-def-p))
          (facts
           (emacsvox-markdown-facts-at-point 'focus-entered 'line))
          (content
           (cond
            ((emacsvox-markdown--at-horizontal-rule-p)
             "section separator")
-           ((emacsvox-markdown--at-table-separator-p) nil)
-           ((emacsvox-markdown--at-reference-link-def-p) nil)
+           (table-separator nil)
+           (reference-definition nil)
            (fence (format "code block: %s" fence))
            (footnote (format "footnote %s: %s" footnote clean))
            ((emacsvox-markdown--at-table-row-p) clean)
@@ -489,13 +496,29 @@ but you won't hear the literal markup characters."
            ((emacsvox-markdown--at-list-item-p)
             (concat "item " clean))
            (t (or clean "")))))
-    (when content
-      (if (string-match-p "\\`[[:space:]]*\\'" content)
-          (emacsvox-markdown--submit-actions
-           (emacsvox-markdown--merge-facts
-            facts '(:line-condition empty))
-           'navigation)
-        (emacsvox-markdown--submit-text content facts 'navigation)))))
+    (cond
+     (table-separator
+      (emacsvox-markdown--submit-actions
+       (emacsvox-markdown--merge-facts
+        facts '(:line-condition separator))
+       'navigation))
+     (reference-definition
+      (emacsvox-markdown--submit-actions
+       (emacsvox-markdown--merge-facts
+        facts
+        (list
+         :events
+         (delete-dups
+          (append
+           (copy-sequence (plist-get facts :events))
+           '(markdown-link-navigated)))))
+       'navigation))
+     ((string-match-p "\\`[[:space:]]*\\'" content)
+      (emacsvox-markdown--submit-actions
+       (emacsvox-markdown--merge-facts
+        facts '(:line-condition empty))
+       'navigation))
+     (t (emacsvox-markdown--submit-text content facts 'navigation)))))
 
 (defun emacsvox-markdown--speak-table-row ()
   "Speak table row with column info."

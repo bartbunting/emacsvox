@@ -146,6 +146,8 @@
          ("```elisp" markdown-code-block
           (:markdown-language "elisp"))
          ("| one | two |" markdown-table-row nil)
+         ("|---|---|" markdown-separator nil)
+         ("[ref]: https://example.test" markdown-link nil)
          ("read [the guide](guide.md)" markdown-link nil)
          ("[^1]: detail" markdown-footnote nil)
          ("2. ordered" markdown-list-item
@@ -307,6 +309,62 @@
           :markdown-navigation-kind line :line-condition empty)))
       (should (eq (plist-get submission :module) 'markdown))
       (should (eq (plist-get submission :occasion) 'navigation)))))
+
+(ert-deftest emacsvox-markdown-structural-lines-submit-action-feedback ()
+  "Table separators and reference definitions cannot leave stale speech."
+  (dolist
+      (case
+       '(("|---|---|"
+          (:role markdown-separator :events (focus-entered)
+           :markdown-navigation-kind line :line-condition separator))
+         ("[ref]: https://example.test"
+          (:role markdown-link
+           :events (focus-entered markdown-link-navigated)
+           :markdown-navigation-kind line))))
+    (with-temp-buffer
+      (insert (car case))
+      (setq major-mode 'markdown-mode)
+      (let (submission)
+        (cl-letf
+            (((symbol-function 'emacsvox-aural-submit)
+              (lambda (&rest _)
+                (ert-fail "Structural Markdown line submitted speech")))
+             ((symbol-function 'emacsvox-aural-submit-actions)
+              (lambda (&rest arguments)
+                (setq submission arguments))))
+          (emacsvox-markdown--speak-line-clean))
+        (should (equal (plist-get submission :facts) (cadr case)))
+        (should (eq (plist-get submission :module) 'markdown))
+        (should (eq (plist-get submission :occasion) 'navigation))))))
+
+(ert-deftest emacsvox-markdown-structural-line-plans-are-audible ()
+  "Default structural-line plans contain a tone or auditory cue."
+  (dolist
+      (case
+       '(((:role markdown-separator :events (focus-entered)
+           :markdown-navigation-kind line :line-condition separator)
+          tone line-separator)
+         ((:role markdown-link
+           :events (focus-entered markdown-link-navigated)
+           :markdown-navigation-kind line)
+          cue button)))
+    (pcase-let ((`(,facts ,kind ,value) case))
+      (let* ((context
+              '(:module markdown :mode markdown-mode
+                :mode-lineage (markdown-mode text-mode)
+                :occasion navigation :icons-enabled t))
+             (plan (emacsvox-aural-resolve-active facts context))
+             (action
+              (cl-find
+               kind (emacsvox-aural-render-plan-before plan)
+               :key #'emacsvox-aural-action-kind)))
+        (should action)
+        (should
+         (eq
+          (if (eq kind 'tone)
+              (emacsvox-aural-action-tone action)
+            (emacsvox-aural-action-cue action))
+          value))))))
 
 (ert-deftest emacsvox-markdown-reading-mode-toggle-is-native ()
   "The user-facing reading-mode state is displayed and submitted once."
