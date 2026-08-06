@@ -341,6 +341,56 @@
            (emacsvox-aural-content-style-provenance content))
           'buffer-heading))))))
 
+(ert-deftest emacsvox-aural-schemes-freeze-buffer-rules-at-source ()
+  "Deferred resolution uses source rules, not the then-current buffer's rules."
+  (emacsvox-test--with-isolated-schemes
+    (let ((source (generate-new-buffer " *aural-rule-source*"))
+          (destination (generate-new-buffer " *aural-rule-destination*")))
+      (unwind-protect
+          (let (context)
+            (with-current-buffer source
+              (setq-local
+               emacsvox-aural-buffer-rules
+               (list
+                (emacsvox-test--voice-rule
+                 'source-heading 'voice-bolden)))
+              (setq context (emacsvox-aural-current-context nil 'navigation))
+              ;; Captured rules must also survive later source-buffer mutation.
+              (setq-local
+               emacsvox-aural-buffer-rules
+               (list
+               (emacsvox-test--voice-rule
+                'mutated-source-heading 'voice-smoothen))))
+            (with-current-buffer destination
+              (setq-local
+               emacsvox-aural-buffer-rules
+               (list
+                (emacsvox-test--voice-rule
+                 'destination-heading 'voice-lighten)))
+              (let* ((plan
+                      (emacsvox-aural-resolve-active
+                       '(:role heading) context))
+                     (content (emacsvox-aural-render-plan-content plan)))
+                (should
+                 (memq
+                  'source-heading
+                  (emacsvox-aural-render-plan-matched-rules plan)))
+                (should-not
+                 (memq
+                  'destination-heading
+                  (emacsvox-aural-render-plan-matched-rules plan)))
+                (should
+                 (eq
+                  (emacsvox-aural-content-style-voice content)
+                  'voice-bolden))
+                (should
+                 (equal
+                  (emacsvox-aural-rule-source
+                   (car (last (emacsvox-aural-current-rules context))))
+                  (format "buffer:%s" (buffer-name source)))))))
+        (kill-buffer source)
+        (kill-buffer destination)))))
+
 (ert-deftest emacsvox-aural-schemes-compose-ordered-feature-fragments ()
   "Enabled fragments add to a scheme before stronger personal overrides."
   (emacsvox-test--with-isolated-schemes

@@ -1670,6 +1670,11 @@ is the default inherited by a newly created TTS scratch buffer."
      major-mode 'emacs-lisp-mode
      emacsvox-aural-module 'elisp
      voice-lock-mode t)
+    (setq-local
+     emacsvox-aural-buffer-rules
+     '((:id source-rule
+        :match (:role heading)
+        :render (:content (:voice voice-bolden)))))
     (let ((context (emacsvox-aural-capture-context nil 'navigation)))
       (should (eq (plist-get context :source-buffer) (current-buffer)))
       (should
@@ -1681,7 +1686,15 @@ is the default inherited by a newly created TTS scratch buffer."
       (should (eq (plist-get context :occasion) 'navigation))
       (should (plist-get context :face-presentation-enabled))
       (should (plist-get context :voice-lock-enabled))
-      (should (plist-get context :icons-enabled)))))
+      (should (plist-get context :icons-enabled))
+      (should
+       (equal
+        (plist-get context :buffer-rules)
+        emacsvox-aural-buffer-rules))
+      (should-not
+       (eq
+        (plist-get context :buffer-rules)
+        emacsvox-aural-buffer-rules)))))
 
 (ert-deftest emacsvox-aural-transport-marks-interface-history-at-source ()
   "Aural UI capture policy is frozen before speech enters its scratch buffer."

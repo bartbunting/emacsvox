@@ -852,6 +852,19 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
         (puthash id rule seen)))
     rules))
 
+(defun emacsvox-aural--context-buffer-rules (context)
+  "Return buffer-local rules frozen in CONTEXT, or the current value.
+
+The fallback preserves compatibility with callers that construct a minimal
+context rather than capturing one at the source boundary."
+  (if (plist-member context :buffer-rules)
+      (plist-get context :buffer-rules)
+    emacsvox-aural-buffer-rules))
+
+(defun emacsvox-aural--context-buffer-name (context)
+  "Return the source buffer name frozen in CONTEXT, or the current name."
+  (or (plist-get context :source-buffer-name) (buffer-name)))
+
 (defun emacsvox-aural--compute-current-rules (context)
   "Compile every validated rule layer relevant to CONTEXT."
   (cl-remove-if-not
@@ -868,9 +881,9 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
      (emacsvox-aural--compile-rule-list
       emacsvox-aural-session-rules 'session "session" t)
      (emacsvox-aural--compile-rule-list
-      emacsvox-aural-buffer-rules
+      (emacsvox-aural--context-buffer-rules context)
       'buffer
-      (format "buffer:%s" (buffer-name))
+      (format "buffer:%s" (emacsvox-aural--context-buffer-name context))
       t)))))
 
 (defun emacsvox-aural--current-rules-cache-key (context)
@@ -885,8 +898,8 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
    emacsvox-aural-enabled-feature-fragments
    emacsvox-aural-user-rules
    emacsvox-aural-session-rules
-   emacsvox-aural-buffer-rules
-   (buffer-name)))
+   (emacsvox-aural--context-buffer-rules context)
+   (emacsvox-aural--context-buffer-name context)))
 
 (defun emacsvox-aural-current-rules (&optional context)
   "Return the validated immutable rule snapshot relevant to CONTEXT."
@@ -918,6 +931,7 @@ When INCLUDE-DISABLED is non-nil, retain disabled rules."
    (emacsvox-aural-icons-enabled-p)
    :legacy-personality legacy-personality
    :legacy-source legacy-source
+   :buffer-rules (copy-tree emacsvox-aural-buffer-rules)
    :source-buffer (current-buffer)
    :source-buffer-name (buffer-name)
    :source-position (point)))
