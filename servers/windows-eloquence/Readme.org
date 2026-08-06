@@ -153,6 +153,12 @@ richness, volume, and marker support are reported as unavailable rather than
 silently claimed.  Omnivox remains responsible for fallback, effects, mixing,
 playback, and playback completion.
 
+The bounded JSON loop, negotiation, inventory framing, PCM chunking, request
+validation, and cancellation coordination live in the engine-neutral
+=servers/windows-speech-common/OmnivoxHelperHost.cs=.  The Eloquence-specific
+adapter supplies ECI inventory, rate mapping, PCM capture, and stop behavior;
+the DECtalk capture helper uses the same host contract.
+
 The helper accepts the ECI DLL path as its first argument.  Otherwise it checks
 =OMNIVOX_ECI_DLL=, then =EMACSVOX_ECI_DLL=, then the normal Freedom Scientific
 installation path.  Standard output is reserved for protocol JSON and errors

@@ -28,7 +28,8 @@ New-Item -ItemType Directory -Force $Bin | Out-Null
     /reference:System.Web.Extensions.dll `
     "/out:$Bin\OmnivoxEloquenceHelper32.exe" `
     (Join-Path $Root "OmnivoxEloquenceCapture.cs") `
-    (Join-Path $Root "OmnivoxEloquenceHelper.cs")
+    (Join-Path $Root "OmnivoxEloquenceHelper.cs") `
+    (Join-Path $Common "OmnivoxHelperHost.cs")
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to build OmnivoxEloquenceHelper32.exe"
 }
