@@ -371,33 +371,41 @@ properties while copying TEXT into its private scratch buffer."
 (defvar emacsvox-agent-shell--chat-label-context nil
   "Dynamically bound visible chat label for the current line speech.")
 
+(defun emacsvox-agent-shell--prompt-face-spec-p (spec)
+  "Return non-nil when face SPEC denotes an Agent Shell prompt."
+  (or
+   (emacsvox-agent-shell--face-spec-includes-p spec 'agent-shell-prompt)
+   (emacsvox-agent-shell--face-spec-includes-p
+    spec 'comint-highlight-prompt)))
+
+(defun emacsvox-agent-shell--prompt-face-between-p (start end)
+  "Return non-nil when prompt face text occurs between START and END."
+  (let ((position start)
+        found)
+    (while (and (< position end) (not found))
+      (setq
+       found
+       (or
+        (emacsvox-agent-shell--prompt-face-spec-p
+         (get-text-property position 'face))
+        (emacsvox-agent-shell--prompt-face-spec-p
+         (get-text-property position 'font-lock-face))))
+      (unless found
+        (setq
+         position
+         (min
+          (or (next-single-property-change position 'face nil end) end)
+          (or
+           (next-single-property-change position 'font-lock-face nil end)
+           end)))))
+    found))
+
 (defun emacsvox-agent-shell--chat-label-context-at-point ()
   "Return the visible agent-shell chat label context on the current line.
 The optional chat mode renders labels as overlays, so this adapter captures
 their semantic text without changing the underlying shell buffer."
   (let* ((line-start (line-beginning-position))
          (source-end (line-end-position))
-         (preferred-category
-          (cond
-           ((cl-loop
-             for position from line-start below source-end
-             thereis
-             (or
-              (emacsvox-agent-shell--face-spec-includes-p
-               (get-text-property position 'face) 'agent-shell-prompt)
-              (emacsvox-agent-shell--face-spec-includes-p
-               (get-text-property position 'face) 'comint-highlight-prompt)
-              (emacsvox-agent-shell--face-spec-includes-p
-               (get-text-property position 'font-lock-face)
-               'agent-shell-prompt)
-              (emacsvox-agent-shell--face-spec-includes-p
-               (get-text-property position 'font-lock-face)
-               'comint-highlight-prompt)))
-            'agent-shell-chat-me)
-           ((save-excursion
-              (goto-char line-start)
-              (search-forward "<shell-maker-end-of-prompt>" source-end t))
-            'agent-shell-chat-agent)))
          (overlays
           (delete-dups
            (append
@@ -412,6 +420,24 @@ their semantic text without changing the underlying shell buffer."
                   (overlays-in (1- line-start) line-start)))
             (and (< line-start source-end)
                  (overlays-in line-start source-end)))))
+         (chat-overlays
+          (seq-filter
+           (lambda (candidate)
+             (memq (overlay-get candidate 'category)
+                   '(agent-shell-chat-me agent-shell-chat-agent)))
+           overlays))
+         (preferred-category
+          (and
+           (cdr chat-overlays)
+           (cond
+            ((emacsvox-agent-shell--prompt-face-between-p
+              line-start source-end)
+             'agent-shell-chat-me)
+            ((save-excursion
+               (goto-char line-start)
+               (search-forward
+                "<shell-maker-end-of-prompt>" source-end t))
+             'agent-shell-chat-agent))))
          (overlay
           (or
            (and preferred-category
@@ -419,12 +445,8 @@ their semantic text without changing the underlying shell buffer."
                  (lambda (candidate)
                    (eq (overlay-get candidate 'category)
                        preferred-category))
-                 overlays))
-           (seq-find
-            (lambda (candidate)
-              (memq (overlay-get candidate 'category)
-                    '(agent-shell-chat-me agent-shell-chat-agent)))
-            overlays))))
+                 chat-overlays))
+           (car chat-overlays))))
     (when overlay
       (let* ((category (overlay-get overlay 'category))
              (rendered
@@ -440,15 +462,10 @@ their semantic text without changing the underlying shell buffer."
 (defun emacsvox-agent-shell--prompt-face-at-p (text position)
   "Return non-nil when TEXT at POSITION carries an agent-shell prompt face."
   (or
-   (emacsvox-agent-shell--face-spec-includes-p
-    (get-text-property position 'face text) 'agent-shell-prompt)
-   (emacsvox-agent-shell--face-spec-includes-p
-    (get-text-property position 'face text) 'comint-highlight-prompt)
-   (emacsvox-agent-shell--face-spec-includes-p
-    (get-text-property position 'font-lock-face text) 'agent-shell-prompt)
-   (emacsvox-agent-shell--face-spec-includes-p
-    (get-text-property position 'font-lock-face text)
-    'comint-highlight-prompt)))
+   (emacsvox-agent-shell--prompt-face-spec-p
+    (get-text-property position 'face text))
+   (emacsvox-agent-shell--prompt-face-spec-p
+    (get-text-property position 'font-lock-face text))))
 
 (defun emacsvox-agent-shell--without-leading-chat-prompt (text)
   "Return TEXT without a leading prompt replaced by a visible chat label."

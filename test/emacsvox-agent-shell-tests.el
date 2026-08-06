@@ -5392,6 +5392,41 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (should (eq (get-text-property 0 'face spoken)
                     'agent-shell-chat-agent-label))))))
 
+(ert-deftest emacsvox-agent-shell-chat-label-lookup-scales-by-property-run ()
+  "Chat label discovery should not inspect every character on long lines."
+  (with-temp-buffer
+    (insert (make-string 10000 ?x))
+    (let ((original-get-text-property
+           (symbol-function 'get-text-property))
+          (property-reads 0))
+      (cl-letf
+          (((symbol-function 'get-text-property)
+            (lambda (&rest arguments)
+              (cl-incf property-reads)
+              (apply original-get-text-property arguments))))
+        (should-not (emacsvox-agent-shell--chat-label-context-at-point)))
+      (should (= property-reads 0)))
+    (add-text-properties
+     (1- (point-max)) (point-max) '(face agent-shell-prompt))
+    (let ((me-overlay (make-overlay (point-min) (point-max)))
+          (agent-overlay (make-overlay (point-min) (point-max)))
+          (original-get-text-property
+           (symbol-function 'get-text-property))
+          (property-reads 0))
+      (overlay-put me-overlay 'category 'agent-shell-chat-me)
+      (overlay-put me-overlay 'display "Me> ")
+      (overlay-put agent-overlay 'category 'agent-shell-chat-agent)
+      (overlay-put agent-overlay 'before-string "Claude> ")
+      (cl-letf
+          (((symbol-function 'get-text-property)
+            (lambda (&rest arguments)
+              (cl-incf property-reads)
+              (apply original-get-text-property arguments))))
+        (should
+         (equal (emacsvox-agent-shell--chat-label-context-at-point)
+                '(:category agent-shell-chat-me :text "Me>"))))
+      (should (<= property-reads 4)))))
+
 (ert-deftest emacsvox-agent-shell-ui-face-voices-are-explicit ()
   "Configured faces should resolve to their declared voice personalities."
   (dolist (entry emacsvox-agent-shell--ui-face-voice-map)
