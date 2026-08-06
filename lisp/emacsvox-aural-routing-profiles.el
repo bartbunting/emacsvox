@@ -43,6 +43,15 @@
 (defconst emacsvox-aural-routing-user-data-schema-version 1
   "Current data schema for the machine-local routing file.")
 
+(defconst emacsvox-aural-routing-engine-order-presets
+  '((eloquence-first
+     :label "Eloquence, DECtalk, Windows, eSpeak"
+     :engines ("eloquence" "dectalk" "winrt" "espeak"))
+    (dectalk-first
+     :label "DECtalk, Eloquence, Windows, eSpeak"
+     :engines ("dectalk" "eloquence" "winrt" "espeak")))
+  "Named portable engine-order presets offered by the Voice Workbench.")
+
 (defcustom emacsvox-aural-routing-profiles-file
   (expand-file-name "aural-routing-profiles.el" emacsvox-user-directory)
   "Data-only file containing machine-local voice routing profiles.
@@ -572,6 +581,167 @@ silently changing either saved layer."
        :engines (copy-sequence omnivox-fallback-engine-ids))
       :bindings (nreverse bindings)))))
 
+(defun emacsvox-aural-routing--inventory-voice
+    (inventory engine-id voice-id)
+  "Return VOICE-ID in ENGINE-ID from normalized INVENTORY, or nil."
+  (when-let* ((engine
+               (cl-find
+                engine-id (plist-get inventory :engines)
+                :key (lambda (entry) (plist-get entry :engine-id))
+                :test #'equal)))
+    (cl-find
+     voice-id (plist-get engine :voices)
+     :key (lambda (voice) (plist-get voice :voice-id))
+     :test #'equal)))
+
+(defun emacsvox-aural-routing--portable-selector
+    (selector &optional inventory)
+  "Return a portable replacement for SELECTOR using INVENTORY.
+
+Non-exact selectors are retained with portable scope.  An exact selector is
+converted to properties advertised by the matching installed voice, or to an
+engine default when no portable traits are known."
+  (if (not (eq (plist-get selector :kind) 'exact))
+      (plist-put (copy-tree selector) :scope 'portable)
+    (let* ((engine-id (plist-get selector :engine-id))
+           (voice
+            (and inventory
+                 (emacsvox-aural-routing--inventory-voice
+                  inventory engine-id (plist-get selector :voice-id))))
+           (language (plist-get voice :language))
+           (gender (plist-get voice :gender)))
+      (if (or language gender)
+          (append
+           (list :kind 'properties :scope 'portable :engine-id engine-id)
+           (and language (list :language language))
+           (and gender (list :gender gender)))
+        (list :kind 'engine-default :scope 'portable
+              :engine-id engine-id)))))
+
+(defun emacsvox-aural-routing-portable-profile-data
+    (data &optional inventory)
+  "Return profile DATA without exact native IDs.
+
+INVENTORY supplies portable language and gender traits when an exact selector
+is converted.  Without them, the same engine's default is the safe fallback."
+  (let* ((profile (copy-tree
+                   (emacsvox-aural-validate-routing-profile-data data)))
+         (fallback (copy-tree (plist-get profile :fallback))))
+    (when-let* ((global (plist-get fallback :global-default)))
+      (setq fallback
+            (plist-put
+             fallback :global-default
+             (emacsvox-aural-routing--portable-selector global inventory))))
+    (setq profile (plist-put profile :fallback fallback))
+    (setq profile
+          (plist-put
+           profile :bindings
+           (mapcar
+            (lambda (binding)
+              (plist-put
+               (copy-tree binding) :selectors
+               (mapcar
+                (lambda (selector)
+                  (emacsvox-aural-routing--portable-selector
+                   selector inventory))
+                (plist-get binding :selectors))))
+            (plist-get profile :bindings))))
+    (emacsvox-aural-validate-routing-profile-data profile)))
+
+(defun emacsvox-aural-routing-apply-preset-to-data
+    (data preset &optional inventory)
+  "Return staged profile DATA transformed by PRESET.
+
+INVENTORY is used only by `fully-portable'.  Presets never register, save, or
+activate their result."
+  (let ((profile
+         (copy-tree (emacsvox-aural-validate-routing-profile-data data))))
+    (pcase preset
+      ((or 'eloquence-first 'dectalk-first)
+       (let* ((definition
+               (assq preset emacsvox-aural-routing-engine-order-presets))
+              (engines (copy-sequence (plist-get (cdr definition) :engines)))
+              (fallback (copy-tree (plist-get profile :fallback))))
+         (setq profile (plist-put profile :engine-order engines))
+         (setq fallback (plist-put fallback :engines (copy-sequence engines)))
+         (setq profile (plist-put profile :fallback fallback))))
+      ('native-language
+       (setq profile
+             (plist-put
+              profile :bindings
+              (mapcar
+               (lambda (binding)
+                 (let ((language (plist-get binding :language))
+                       (selectors (copy-tree (plist-get binding :selectors))))
+                   (when language
+                     (let ((selector
+                            (list :kind 'properties :scope 'portable
+                                  :language language)))
+                       (setq selectors
+                             (cons selector (delete selector selectors)))))
+                   (plist-put (copy-tree binding) :selectors selectors)))
+               (plist-get profile :bindings)))))
+      ('fully-portable
+       (setq profile
+             (emacsvox-aural-routing-portable-profile-data
+              profile inventory)))
+      (_ (emacsvox-aural-routing--error
+          "Unknown routing preset: %S" preset)))
+    (emacsvox-aural-validate-routing-profile-data profile)))
+
+(defun emacsvox-aural-routing--read-one-form (file description)
+  "Read one non-evaluated form from FILE described by DESCRIPTION."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (emacs-lisp-mode)
+    (goto-char (point-min))
+    (let ((read-eval nil)
+          (data (read (current-buffer))))
+      (forward-comment (point-max))
+      (unless (eobp)
+        (emacsvox-aural-routing--error
+         "Trailing data in %s %s" description file))
+      data)))
+
+(defun emacsvox-aural-read-routing-profile (file)
+  "Read one data-only routing profile from FILE without evaluating it."
+  (emacsvox-aural-validate-routing-profile-data
+   (emacsvox-aural-routing--read-one-form file "routing profile")))
+
+(defun emacsvox-aural-export-routing-profile
+    (data file &optional portable-only inventory)
+  "Atomically export routing profile DATA to FILE.
+
+When PORTABLE-ONLY is non-nil, convert exact local identities using INVENTORY
+and guarantee that no native voice ID remains.  The exported profile is not
+registered or activated."
+  (let* ((profile
+          (if portable-only
+              (emacsvox-aural-routing-portable-profile-data data inventory)
+            (emacsvox-aural-validate-routing-profile-data data)))
+         (file (expand-file-name file))
+         (directory (file-name-directory file))
+         temporary)
+    (make-directory directory t)
+    (setq temporary
+          (make-temp-file (expand-file-name ".aural-routing-export-" directory)))
+    (unwind-protect
+        (progn
+          (with-temp-buffer
+            (insert ";;; Emacsvox voice routing profile -*- mode: emacs-lisp; -*-\n")
+            (insert ";;; This file is read as data and is not evaluated.\n\n")
+            (let ((print-length nil) (print-level nil))
+              (pp profile (current-buffer)))
+            (write-region (point-min) (point-max) temporary nil 'silent))
+          (set-file-modes temporary #o600)
+          (when (file-exists-p file)
+            (copy-file file (concat file "~") t t t))
+          (rename-file temporary file t)
+          (setq temporary nil))
+      (when (and temporary (file-exists-p temporary))
+        (delete-file temporary)))
+    file))
+
 (defun emacsvox-aural-apply-routing-profile (&optional id callback)
   "Apply routing profile ID to adapter settings and live speech processes.
 
@@ -759,16 +929,8 @@ the previous known-good profile."
   "Read and validate routing data from FILE without evaluating it."
   (let ((file (or file emacsvox-aural-routing-profiles-file)))
     (when (file-exists-p file)
-      (with-temp-buffer
-        (insert-file-contents file)
-        (emacs-lisp-mode)
-        (goto-char (point-min))
-        (let ((read-eval nil)
-              (data (read (current-buffer))))
-          (forward-comment (point-max))
-          (unless (eobp)
-            (emacsvox-aural-routing--error "Trailing data in %s" file))
-          (emacsvox-aural-validate-routing-user-data data))))))
+      (emacsvox-aural-validate-routing-user-data
+       (emacsvox-aural-routing--read-one-form file "routing data")))))
 
 (defun emacsvox-aural-load-routing-profiles (&optional file apply-active)
   "Atomically load routing profiles from FILE.

@@ -206,5 +206,66 @@
            :type 'emacsvox-aural-routing-profile-error))
       (delete-file file))))
 
+(ert-deftest emacsvox-aural-routing-portable-copy-removes-native-ids ()
+  "Portable profile conversion uses voice traits and retains fallback order."
+  (let* ((inventory
+          '(:engines
+            ((:engine-id "eloquence"
+              :voices
+              ((:voice-id "eci:Reed" :language "en-AU" :gender male))))))
+         (portable
+          (emacsvox-aural-routing-portable-profile-data
+           emacsvox-test--routing-profile inventory))
+         (selector
+          (car (plist-get (car (plist-get portable :bindings)) :selectors))))
+    (should (eq (plist-get selector :kind) 'properties))
+    (should (eq (plist-get selector :scope) 'portable))
+    (should (equal (plist-get selector :engine-id) "eloquence"))
+    (should (equal (plist-get selector :language) "en-AU"))
+    (should-not (string-match-p "eci:Reed" (prin1-to-string portable)))
+    (should
+     (equal (plist-get portable :engine-order)
+            (plist-get emacsvox-test--routing-profile :engine-order)))))
+
+(ert-deftest emacsvox-aural-routing-presets-are-staged-pure-transformations ()
+  "Engine and language presets do not mutate their input profile."
+  (let* ((input (copy-tree emacsvox-test--routing-profile))
+         (ordered
+          (emacsvox-aural-routing-apply-preset-to-data
+           input 'dectalk-first))
+         (language
+          (emacsvox-aural-routing-apply-preset-to-data
+           input 'native-language))
+         (selector
+          (car
+           (plist-get (car (plist-get language :bindings)) :selectors))))
+    (should (equal (plist-get ordered :engine-order)
+                   '("dectalk" "eloquence" "winrt" "espeak")))
+    (should (equal
+             (plist-get (plist-get ordered :fallback) :engines)
+             '("dectalk" "eloquence" "winrt" "espeak")))
+    (should (eq (plist-get selector :kind) 'properties))
+    (should (equal (plist-get selector :language) "en-AU"))
+    (should (equal input emacsvox-test--routing-profile))))
+
+(ert-deftest emacsvox-aural-routing-exports-one-non-evaluated-profile ()
+  "Routing exchange round trips one profile and rejects trailing forms."
+  (let* ((directory (make-temp-file "emacsvox-routing-export-" t))
+         (file (expand-file-name "profile.el" directory)))
+    (unwind-protect
+        (progn
+          (emacsvox-aural-export-routing-profile
+           emacsvox-test--routing-profile file)
+          (should
+           (equal
+            (emacsvox-aural-read-routing-profile file)
+            (emacsvox-aural-validate-routing-profile-data
+             emacsvox-test--routing-profile)))
+          (write-region "\n(:another form)" nil file t 'silent)
+          (should-error
+           (emacsvox-aural-read-routing-profile file)
+           :type 'emacsvox-aural-routing-profile-error))
+      (delete-directory directory t))))
+
 (provide 'emacsvox-aural-routing-profiles-tests)
 ;;; emacsvox-aural-routing-profiles-tests.el ends here
