@@ -88,6 +88,12 @@ selectors late-bind without requiring identical voice catalogues on every
 computer.  Valid definitions that cannot currently resolve remain registered
 with diagnostic attempts instead of being discarded.
 
+Preference keys may be either generated ACSS voice IDs or semantic Emacs voice
+symbols such as =voice-bolden=.  Emacsvox follows the semantic symbol's current
+single-step voice binding when it builds the Omnivox registry, so a preference
+for =voice-bolden= applies to the generated voice that actually appears in
+speech output.
+
 After changing these variables interactively, run
 =M-x omnivox-register-logical-voices=.  The latest structured results are in
 =omnivox-control-capabilities=, =omnivox-engine-inventory=,
@@ -101,10 +107,16 @@ Missing or unresolved routes fall back to the process's preferred legacy
 engine; older servers ignore the routing directive and continue to honor the
 existing pitch code.
 
+Servers that also advertise =emacsvox_tx= receive each replaceable aural
+presentation as one bounded, generation-numbered UTF-8 frame.  Omnivox
+validates the whole presentation before executing it, coalesces consecutive
+frames to the newest generation, rejects stale frames, and keeps stop outside
+the frame as a barrier.  Emacsvox automatically retains ordinary legacy
+delivery when the capability is absent.
+
 The current routing slice does not retry a different engine after a backend
 fails during synthesis, and immediate =tts_say= and letter commands still use
-the preferred legacy engine.  Bounded runtime-failure retry and framed
-=emacsvox_tx= delivery remain planned.
+the preferred legacy engine.  Bounded runtime-failure retry remains planned.
 
 ** Aural Presentation Schemes
 

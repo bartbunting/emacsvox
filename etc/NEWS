@@ -29,7 +29,7 @@ waiting, and adjacent formatting runs are now batched into one native
 utterance per auditory-icon-delimited segment.  This prevents rapid movement
 from leaving obsolete synthesis work queued after the user stops.
 
-** Omnivox Logical Voice Discovery And Registration
+** Omnivox Logical Voices And Replaceable Presentations
 
 The Omnivox adapter now negotiates its bounded, versioned control channel and
 discovers structured engine, capability, and physical-voice inventory without
@@ -50,13 +50,21 @@ actual inventory.  Missing engines and voices degrade through configured
 alternatives, and unresolved definitions remain visible in
 ~omnivox-logical-voice-registration~.  Run
 ~omnivox-register-logical-voices~ after changing preferences at runtime.
+Semantic preference keys such as ~voice-bolden~ follow their current generated
+ACSS voice binding, so users do not need to discover or hard-code generated
+voice symbols.
 
 Omnivox voice changes now carry their logical voice ID into the legacy queue.
 Servers advertising ~logical_voice_routing~ use the registered engine and
 physical voice for following queued spans, while missing bindings fall back to
 the preferred engine.  Older servers ignore the additive directive and retain
-their existing pitch behavior.  Runtime engine-failure retry and framed
-transaction delivery remain future work.
+their existing pitch behavior.
+
+When a server advertises ~emacsvox_tx~, replaceable aural output is sent as one
+bounded, generation-numbered frame.  The server validates it atomically,
+coalesces consecutive frames to the newest generation, rejects stale frames,
+and treats stop as an external barrier.  Older Omnivox servers retain ordinary
+legacy delivery.  Runtime engine-failure retry remains future work.
 
 ** TTS Prefix Map Rename
 
