@@ -146,6 +146,9 @@
    ((string-match "espeak\\'" tts-program)
     (require 'espeak-voices)
     (espeak-configure-tts))
+   ((string-match "omnivox\\'" tts-program)
+    (require 'omnivox-voices)
+    (omnivox-configure-tts))
    (t
     (require 'plain-voices)
     (plain-configure-tts)))

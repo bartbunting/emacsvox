@@ -14,6 +14,7 @@
 (require 'emacsvox-sounds)
 (require 'espeak-voices)
 (require 'mac-voices)
+(require 'omnivox-voices)
 (require 'outloud-voices)
 (require 'plain-voices)
 (require 'swiftmac-voices)
@@ -152,6 +153,59 @@
     dtk-make-process
     dtk-initialize)
   "Removed DECtalk-era names for generic server lifecycle operations.")
+
+(ert-deftest emacsvox-tts-omnivox-discovers-physical-voice-identifiers ()
+  "Omnivox discovery invokes the server safely and preserves backend IDs."
+  (let (invocation)
+    (cl-letf
+        (((symbol-function 'omnivox--server-program)
+          (lambda () "/tmp/server path/omnivox"))
+         ((symbol-function 'process-file)
+          (lambda (program input destination display &rest arguments)
+            (setq invocation
+                  (list program input destination display arguments))
+            (insert
+             "((\"winrt:HKEY\\\\Voice\" \"Microsoft David\" \"en-US\" \"Enhanced\"))")
+            0)))
+      (should
+       (equal
+        (omnivox-query-voices)
+        '(("winrt:HKEY\\Voice" "Microsoft David" "en-US" "Enhanced"))))
+      (should
+       (equal
+        invocation
+        '("/tmp/server path/omnivox" nil t nil ("--list-voices-alist")))))))
+
+(ert-deftest emacsvox-tts-omnivox-rejects-malformed-voice-discovery ()
+  "Malformed discovery data cannot become selectable Omnivox voices."
+  (should-error
+   (omnivox--parse-voices "((\"id\" \"name\" \"language\"))")
+   :type 'error)
+  (should-error
+   (omnivox--parse-voices "((\"id\" \"name\" \"language\" \"quality\")) trailing")
+   :type 'error))
+
+(ert-deftest emacsvox-tts-omnivox-selects-voice-on-both-streams ()
+  "Physical voice selection updates speaker and notification processes."
+  (let ((tts-speaker-process 'speaker)
+        (tts-notify-process 'notifier)
+        (omnivox-default-voice-id "")
+        writes)
+    (cl-letf
+        (((symbol-function 'process-live-p) (lambda (_process) t))
+         ((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes))))
+      (should
+       (equal
+        (omnivox-set-voice "winrt:HKEY\\Voice")
+        "winrt:HKEY\\Voice")))
+    (should (equal omnivox-default-voice-id "winrt:HKEY\\Voice"))
+    (should
+     (equal
+      (nreverse writes)
+      '((speaker "tts_set_voice winrt:HKEY\\Voice\n")
+        (notifier "tts_set_voice winrt:HKEY\\Voice\n"))))))
 
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
