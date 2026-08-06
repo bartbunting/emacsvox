@@ -346,6 +346,134 @@ Return the server's standard output."
          "| /tmp/Bridge.exe --stdio\n")
         (buffer-string))))))
 
+(ert-deftest emacsvox-windows-speech-fatal-rpc-terminates-server ()
+  "A fatal bridge response terminates instead of leaving a silent server."
+  (let* ((directory (make-temp-file "emacsvox-windows-fatal-" t))
+         (bridge (expand-file-name "fatal-bridge.tcl" directory))
+         (common
+          (expand-file-name
+           "windows-speech-common.tcl"
+           emacsvox-servers-directory))
+         (message "TimeoutException: simulated bridge timeout")
+         (payload
+          (base64-encode-string
+           (encode-coding-string message 'utf-8 t) t)))
+    (unwind-protect
+        (progn
+          (with-temp-file bridge
+            (insert
+             "gets stdin\n"
+             (format "puts {FATAL %s}\n" payload)
+             "flush stdout\n"))
+          (with-temp-buffer
+            (insert
+             (format
+              (concat
+               "source {%s}\n"
+               "set test(description) {Test bridge}\n"
+               "set test(channel) "
+               "[open [list | [info nameofexecutable] {%s}] r+]\n"
+               "fconfigure $test(channel) -buffering line\n"
+               "windows_speech_rpc test PING\n"
+               "puts {continued after fatal response}\n")
+              common bridge))
+            (let ((status
+                   (call-process-region
+                    (point-min) (point-max) "tclsh" t t nil)))
+              (should (= status 1))
+              (should (string-match-p (regexp-quote message) (buffer-string)))
+              (should-not
+               (string-match-p
+                "continued after fatal response" (buffer-string))))))
+      (delete-directory directory t))))
+
+(ert-deftest emacsvox-windows-speech-bounds-launcher-round-trips ()
+  "The real Windows launcher bounds ordinary and synchronizing requests."
+  (unless (and (executable-find "powershell.exe")
+               (executable-find "wslpath"))
+    (ert-skip "Native Windows build tools require WSL interop"))
+  (let* ((directory (make-temp-file "emacsvox-windows-timeout-" t))
+         (fixture-directory
+          (expand-file-name
+           "../test/fixtures/windows-speech"
+           emacsvox-servers-directory))
+         (build-script
+          (expand-file-name "build-timeout-launcher.ps1" fixture-directory))
+         (common-source
+          (expand-file-name
+           "windows-speech-common/BridgeLauncher.cs"
+           emacsvox-servers-directory))
+         (launcher-source
+          (expand-file-name "TimeoutLauncher.cs" fixture-directory))
+         (hanging-source
+          (expand-file-name "HangingBridge.cs" fixture-directory))
+         (windows-path
+          (lambda (path)
+            (string-trim
+             (with-temp-buffer
+               (should
+                (zerop
+                 (call-process
+                  "wslpath" nil t nil "-w" (expand-file-name path))))
+               (buffer-string))))))
+    (unwind-protect
+        (let ((status
+               (with-temp-buffer
+                 (call-process
+                  "powershell.exe" nil t nil
+                  "-NoProfile" "-ExecutionPolicy" "Bypass"
+                  "-File" (funcall windows-path build-script)
+                  "-OutputDirectory" (funcall windows-path directory)
+                  "-CommonSource" (funcall windows-path common-source)
+                  "-LauncherSource" (funcall windows-path launcher-source)
+                  "-HangingSource" (funcall windows-path hanging-source)))))
+          (when (= status 77)
+            (ert-skip "The .NET Framework C# compiler is unavailable"))
+          (should (zerop status))
+          (let ((launcher (expand-file-name "TimeoutLauncher.exe" directory))
+                (child (expand-file-name "HangingBridge.exe" directory)))
+            (set-file-modes launcher #o755)
+            (set-file-modes child #o755)
+            (dolist
+                (case
+                 '(("PING" "EMACSVOX_WINDOWS_SPEECH_RPC_TIMEOUT_MS")
+                   ("SYNC" "EMACSVOX_WINDOWS_SPEECH_SYNC_TIMEOUT_MS")))
+              (let* ((process-environment (copy-sequence process-environment))
+                     (variable (cadr case))
+                     (other
+                      (if (string-suffix-p "SYNC_TIMEOUT_MS" variable)
+                          "EMACSVOX_WINDOWS_SPEECH_RPC_TIMEOUT_MS"
+                        "EMACSVOX_WINDOWS_SPEECH_SYNC_TIMEOUT_MS"))
+                     (wslenv
+                      (string-join
+                       (delq nil
+                             (list
+                              (concat variable "/w")
+                              (concat other "/w")
+                              (getenv "WSLENV")))
+                       ":"))
+                     (started (float-time))
+                     status output)
+                (setenv variable "100")
+                (setenv other "5000")
+                (setenv "WSLENV" wslenv)
+                (with-temp-buffer
+                  (insert (car case) "\n")
+                  (setq status
+                        (call-process-region
+                         (point-min) (point-max) launcher t t nil)
+                        output (buffer-string)))
+                (should (= status 1))
+                (should (< (- (float-time) started) 3.0))
+                (should (string-match "FATAL \\([^\r\n]+\\)" output))
+                (should
+                 (string-match-p
+                  "timed out after 100 milliseconds"
+                  (decode-coding-string
+                   (base64-decode-string (match-string 1 output))
+                   'utf-8 t)))))))
+      (delete-directory directory t))))
+
 (ert-deftest emacsvox-windows-speech-skips-obsolete-framed-transaction ()
   "The Tcl server evaluates only the latest consecutive buffered packet."
   (let* ((directory (make-temp-file "emacsvox-windows-transaction-" t))

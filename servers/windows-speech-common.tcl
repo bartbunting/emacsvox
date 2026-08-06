@@ -60,9 +60,14 @@ proc windows_speech_pipe_command {program arguments {wsl_init auto}} {
 proc windows_speech_start {state_name description program arguments} {
     global env
     upvar #0 $state_name state
-    if {[info exists env(EMACSVOX_WINDOWS_SPEECH_PAN)] &&
-        $env(EMACSVOX_WINDOWS_SPEECH_PAN) ne ""} {
-        windows_speech_export_to_windows EMACSVOX_WINDOWS_SPEECH_PAN
+    foreach name {
+        EMACSVOX_WINDOWS_SPEECH_PAN
+        EMACSVOX_WINDOWS_SPEECH_RPC_TIMEOUT_MS
+        EMACSVOX_WINDOWS_SPEECH_SYNC_TIMEOUT_MS
+    } {
+        if {[info exists env($name)] && $env($name) ne ""} {
+            windows_speech_export_to_windows $name
+        }
     }
     set command [windows_speech_pipe_command $program $arguments]
     set state(description) $description
@@ -84,7 +89,11 @@ proc windows_speech_rpc {state_name request} {
     puts $channel $request
     flush $channel
     if {[gets $channel response] < 0} {
-        error "$state(description) closed unexpectedly"
+        puts stderr "$state(description) closed unexpectedly"
+        flush stderr
+        catch {close $channel}
+        unset -nocomplain state(channel)
+        exit 1
     }
     if {$response eq "OK"} {
         return ""
@@ -95,6 +104,15 @@ proc windows_speech_rpc {state_name request} {
     if {[string match "ERR *" $response]} {
         error [windows_speech_decode_error \
                    [string range $response 4 end] $state(description)]
+    }
+    if {[string match "FATAL *" $response]} {
+        set error [windows_speech_decode_error \
+                       [string range $response 6 end] $state(description)]
+        puts stderr $error
+        flush stderr
+        catch {close $channel}
+        unset -nocomplain state(channel)
+        exit 1
     }
     error "Invalid response from $state(description): $response"
 }

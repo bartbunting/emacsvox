@@ -124,6 +124,14 @@ evaluate the following form, or use the same path as =tts-program=:
 Because the server name contains =outloud=, Emacsvox automatically uses the
 existing Eloquence personality and ACSS voice mappings.
 
+Bridge requests time out after 10 seconds so a hung native engine cannot leave
+a live but permanently silent server.  The intentionally blocking =SYNC=
+request has a separate 10-minute limit.  Set
+=EMACSVOX_WINDOWS_SPEECH_RPC_TIMEOUT_MS= or
+=EMACSVOX_WINDOWS_SPEECH_SYNC_TIMEOUT_MS= before starting Emacsvox to override
+these millisecond limits.  A timeout terminates the failed server; Emacsvox
+will start a fresh one on the next speech request.
+
 Replaceable aural submissions use one =emacsvox_tx= line containing a
 generation and a Base64-encoded UTF-8 server packet.  The Tcl front-end
 coalesces consecutive buffered transactions to their newest generation before
@@ -134,8 +142,9 @@ line format.
 
 ** Internal bridge protocol
 
-The bridge accepts one ASCII request per line and returns exactly one =OK= or
-=ERR= response.  Text for =ADD= is UTF-8 encoded and then Base64 wrapped.
+The bridge accepts one ASCII request per line and returns exactly one =OK=,
+=ERR=, or fatal =FATAL= response.  Text for =ADD= is UTF-8 encoded and then
+Base64 wrapped.
 Supported commands are =PING=, =VERSION=, =ADD=, =SYNTH=, =SPEAKING=,
 =STOP=, =STOP_SPEECH=, =PAUSE=, =SYNC=, =RESET=, =INDEX=, =TONE=, =INDEX_TONE=,
 =GET_RATE=, =SET_RATE=, and =QUIT=.
