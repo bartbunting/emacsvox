@@ -3544,7 +3544,8 @@ compiled Aural parity, normal build-tree startup, warning-checked compilation
 of the changed routing modules, Aural and TTS audits, and whitespace
 validation pass.
 
-** TODO Slice 55: Route-Aware Style and Effect Tuning
+** DONE Slice 55: Route-Aware Style and Effect Tuning
+CLOSED: [2026-08-07 Fri]
 
 - Extend the existing transactional voice tuner with the selected physical
   route, rate, and discovered engine capabilities while retaining average
@@ -3585,8 +3586,25 @@ editor values only at preview time, and reports Omnivox-rendered effect
 degradation separately from engine-rendered ACSS degradation.  Transactional
 Omnivox preview applies these values through the common buffered PCM effect
 processor; older and standalone adapters retain the values and truthfully
-report them as omitted.  Carrying the same rich style through ordinary Aural
-presentation remains the structured timeline transport work.
+report them as omitted.
+
+Ordinary Aural presentation now negotiates Omnivox's versioned structured
+timeline and sends complete frozen spans with logical voices, normalized ACSS,
+persistent gain/filter/pan/reverb/echo state, overlaid cues and tones, silence,
+lifecycle metadata, and opaque semantic-event bindings.  Concrete speech and
+cue balance are retained as normalized stereo positioning.  The server
+prevalidates the complete frame and every audio resource before playback,
+reports realized placement and style degradation through marker protocol 2,
+and cancels unreached actions and effect tails with the dispatch.  The client
+uses this transport only when every captured operation is representable; an
+unmodelled command keeps the complete transaction on the legacy path so a
+presentation cannot be duplicated, split, or reordered.  Frozen disabled-icon
+policy is also retained.
+
+Checks: all 92 focused Aural transport tests and all 97 TTS integration tests
+pass.  The complete Emacs 31 source suite has 2,239 passing tests.  Omnivox's
+timeline protocol, normalized action-pan test, and production clippy checks
+also pass.
 
 ** TODO Slice 56: Atomic Apply and Realized Diagnostics
 
@@ -3635,6 +3653,28 @@ Deliverable: from Aural Home a user can select an existing logical voice,
 audition installed physical voices, assign ordered portable or exact routes,
 tune supported style/effects, choose engine priority, inspect the realized
 result, and atomically save or cancel without editing Lisp.
+
+** Deferred Cross-Repository Work Retained by the Plan
+
+Voice Workbench completion does not imply that the remaining Omnivox engine
+and transport backlog is complete.  In particular:
+
+- Speech Dispatcher remains a future Linux external-playback engine.  Its
+  descriptor must truthfully advertise reduced centralized mixing, exact
+  marker, post-synthesis effect, and completion capabilities rather than
+  pretending to be a buffered PCM engine.
+- authenticated TCP/network mode remains future work.  The existing port
+  concept must not expose a non-loopback listener until authentication,
+  framing bounds, cancellation ownership, and exposure risks are specified
+  and tested.
+- language switching, smart/configurable chunking, multi-device routing,
+  remaining engine enrichment, packaging, diagnostics, and long-session
+  hardening remain in the canonical Omnivox roadmap.
+
+These items are intentionally not folded into portable palettes or routing
+profiles.  When a future engine appears in normalized inventory, existing
+portable selectors can re-resolve to it and the workbench can expose its
+truthful capabilities without changing the persistence boundary.
 
 * Test Gates
 
