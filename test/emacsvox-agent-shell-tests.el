@@ -774,8 +774,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                      for index from 1
                      collect (format "Choice %d: %s."
                                      index (map-elt action :option)))))
-              (list (list 'stop nil)
-                    (list 'icon 'warn-user)
+              (list (list 'icon 'warn-user)
                     (list 'speak
                           (string-join
                            (append (list (format "Permission request. %s."
@@ -2405,7 +2404,7 @@ Return speech events plus the target character.  DIRECTION is `forward' or
            post-command-hook))))
 
 (ert-deftest emacsvox-agent-shell-permission-fixture-is-urgent ()
-  "A fixture permission should interrupt and be spoken in full."
+  "A fixture permission should use native urgency and be spoken in full."
   (let* ((requests
           (emacsvox-agent-shell-test--permission-requests
            "gemini-permission.traffic"))
@@ -2418,6 +2417,40 @@ Return speech events plus the target character.  DIRECTION is `forward' or
         (dolist (event events)
           (emacsvox-agent-shell--handle-permission-request event)))
       (emacsvox-agent-shell-test--expected-permission-events events)))))
+
+(ert-deftest emacsvox-agent-shell-permission-urgency-reaches-every-stream ()
+  "Focused and background permission requests should both remain urgent."
+  (let* ((request
+          (car (emacsvox-agent-shell-test--permission-requests
+                "gemini-permission.traffic")))
+         (event (emacsvox-agent-shell-test--permission-event request)))
+    (dolist
+        (scenario
+         '((t notification-stream nil)
+           (nil notification-stream t)
+           (nil primary-stream nil)))
+      (pcase-let ((`(,focused ,notification-stream ,expected-stop) scenario))
+        (let ((tts-speaker-process 'primary-stream)
+              delivery-policies primary-stop)
+          (cl-letf
+              (((symbol-function 'emacsvox-agent-shell--session-focused-p)
+                (lambda (&optional _) focused))
+               ((symbol-function 'tts-notify-process)
+                (lambda () notification-stream))
+               ((symbol-function 'emacsvox-aural-submit)
+                (lambda (&rest _)
+                  (push emacsvox-aural-submission-delivery-policy
+                        delivery-policies)))
+               ((symbol-function 'tts-notify-icon) #'ignore)
+               ((symbol-function 'tts-notify)
+                (lambda (&rest _)
+                  (push emacsvox-aural-submission-delivery-policy
+                        delivery-policies)))
+               ((symbol-function 'tts-stop)
+                (lambda () (setq primary-stop t))))
+            (emacsvox-agent-shell--handle-permission-request event))
+          (should (equal delivery-policies '(urgent)))
+          (should (eq primary-stop expected-stop)))))))
 
 (ert-deftest emacsvox-agent-shell-multiple-permission-fixture-is-complete ()
   "Each permission in a fixture should get a complete announcement."
@@ -3079,7 +3112,6 @@ Return speech events plus the target character.  DIRECTION is `forward' or
                               ((:option . "Allow"))))))))))
             '((notify-icon warn-user)
               (notify "Codex Agent @ quiet-test. Agent error: Connection lost")
-              (stop nil)
               (notify-icon warn-user)
               (notify "Codex Agent @ quiet-test. Permission request. Run command. Choice 1: Allow.")))))
       (when (buffer-live-p buffer)

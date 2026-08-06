@@ -838,13 +838,35 @@ SEPARATOR defaults to a sentence boundary between the session label and TEXT."
    :occasion occasion))
 
 (defun emacsvox-agent-shell--deliver-announcement
-    (facts occasion icon text)
-  "Deliver ICON and TEXT under FACTS and OCCASION for the current session."
-  (if (emacsvox-agent-shell--session-focused-p)
-      (emacsvox-agent-shell--submit-text-feedback
-       text facts occasion icon)
-    (emacsvox-agent-shell--notify-background
-     facts occasion icon text)))
+    (facts occasion icon text &optional delivery-policy)
+  "Deliver ICON and TEXT under FACTS and OCCASION for the current session.
+When DELIVERY-POLICY is non-nil, it governs the complete foreground or
+background transaction."
+  (let* ((focused (emacsvox-agent-shell--session-focused-p))
+         (deliver
+          (lambda ()
+            (if focused
+                (emacsvox-agent-shell--submit-text-feedback
+                 text facts occasion icon)
+              (emacsvox-agent-shell--notify-background
+               facts occasion icon text)))))
+    ;; A distinct notification stream cannot interrupt or cancel pending work
+    ;; owned by the primary speaker.  Stop that owner separately, while a
+    ;; single-stream notification lets the urgent transaction own interruption.
+    (when
+        (and
+         (eq delivery-policy 'urgent)
+         (not focused)
+         (not (eq (tts-notify-process) tts-speaker-process)))
+      (tts-stop))
+    (if delivery-policy
+        (emacsvox-aural-call-with-submission
+         deliver
+         :facts facts
+         :module 'agent-shell
+         :occasion occasion
+         :delivery-policy delivery-policy)
+      (funcall deliver))))
 
 (defconst emacsvox-agent-shell--speech-level-cycle
   '(full response notify quiet)
@@ -1608,16 +1630,17 @@ copied once, when the turn completes or the out-of-turn debounce timer fires."
         (setq emacsvox-agent-shell--permission-action-cache
               (make-hash-table :test #'equal)))
       (puthash key actions emacsvox-agent-shell--permission-action-cache)))
-  ;; Rendered turn-content capture ignores permission fragments, so an urgent
-  ;; request interrupts current speech without discarding turn content collected
-  ;; so far.  A later section update refreshes the complete body snapshot.
+  ;; Rendered turn-content capture ignores permission fragments, so the urgent
+  ;; transaction interrupts current speech without discarding turn content
+  ;; collected so far.  A later section update refreshes the complete body
+  ;; snapshot.
   (when emacsvox-agent-shell-speak-permissions
-    (tts-stop)
     (emacsvox-agent-shell--deliver-announcement
      (emacsvox-agent-shell--presentation-facts
       'permission-request 'agent-permission-requested)
      'notification 'warn-user
-     (emacsvox-agent-shell--permission-announcement event))))
+     (emacsvox-agent-shell--permission-announcement event)
+     'urgent)))
 
 (defun emacsvox-agent-shell--handle-permission-response (event)
   "Announce the semantic result of permission response EVENT."

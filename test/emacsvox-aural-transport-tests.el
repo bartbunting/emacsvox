@@ -660,6 +660,7 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (emacsvox-use-icons nil)
           (emacsvox-pronounce-table nil)
           (emacsvox-pronounce-personality nil)
+          cancelled-timer
           (context
            '(:module test
              :mode text-mode
@@ -675,10 +676,22 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
            ((symbol-function 'process-send-string)
             (lambda (process command)
               (push (list process command) writes)))
+           ((symbol-function 'run-with-idle-timer)
+            (lambda (&rest _arguments) 'pending-navigation-timer))
+           ((symbol-function 'cancel-timer)
+            (lambda (timer) (setq cancelled-timer timer)))
            ((symbol-function 'tts-voice-reset-code)
             (lambda () "RESET")))
         (emacsvox-aural-submit
+         "pending navigation"
+         :context context
+         :delivery-policy 'replaceable)
+        (should (= (hash-table-count emacsvox-aural--pending-deliveries) 1))
+        (setq writes nil)
+        (emacsvox-aural-submit
          "urgent content" :context context :delivery-policy 'urgent))
+      (should (= (hash-table-count emacsvox-aural--pending-deliveries) 0))
+      (should (eq cancelled-timer 'pending-navigation-timer))
       (setq writes (nreverse writes))
       (should (equal (cadar writes) "s\n"))
       (should
