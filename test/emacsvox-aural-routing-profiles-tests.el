@@ -172,6 +172,27 @@
              (emacsvox-aural-routing-profile 'workstation)))
         (delete-directory directory t)))))
 
+(ert-deftest emacsvox-aural-routing-commit-rolls-back-on-save-failure ()
+  "A failed atomic write restores the prior registry and active profile."
+  (emacsvox-test--with-routing-profiles
+    (emacsvox-aural-register-routing-profile-data
+     emacsvox-test--routing-profile "old")
+    (setq emacsvox-aural-active-routing-profile 'workstation)
+    (let ((changed (copy-tree emacsvox-test--routing-profile)))
+      (setf (plist-get changed :summary) "changed")
+      (cl-letf (((symbol-function 'emacsvox-aural-save-routing-profiles)
+                 (lambda (&rest _) (error "simulated save failure"))))
+        (should-error
+         (emacsvox-aural-commit-routing-profile-data changed "/tmp/unused")))
+      (should (eq emacsvox-aural-active-routing-profile 'workstation))
+      (should
+       (equal
+        (plist-get
+         (emacsvox-aural-routing-profile-entry-data
+          (emacsvox-aural-routing-profile 'workstation))
+         :summary)
+        "Local workstation routing")))))
+
 (ert-deftest emacsvox-aural-routing-rejects-data-after-valid-form ()
   "The local routing reader accepts exactly one non-evaluated form."
   (let ((file (make-temp-file "emacsvox-routing-invalid-" nil ".el")))

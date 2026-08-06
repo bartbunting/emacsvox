@@ -33,6 +33,9 @@
 (defvar tts-voice-capabilities-function)
 (defvar tts-voice-inventory-function)
 (defvar tts-voice-inventory-refresh-function)
+(defvar tts-voice-configuration-apply-function)
+(defvar tts-last-realized-voice-function)
+(defvar tts-realized-voice-changed-hook)
 
 (defgroup omnivox nil
   "Omnivox speech server."
@@ -200,6 +203,26 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defvar omnivox-timeline-event-hook nil
   "Hook run with one validated version 2 timeline event argument.")
 
+(defvar omnivox-last-realized-routes (make-hash-table :test #'equal)
+  "Last playback-observed route indexed by logical voice ID.")
+
+(defvar omnivox-realized-route-changed-hook nil
+  "Hook run with one updated playback-observed logical route.")
+
+(defvar omnivox--utterance-logical-voices (make-hash-table :test #'equal)
+  "Bounded diagnostic map from playback utterances to logical voice IDs.")
+
+(defvar omnivox-voice-configuration-last-result nil
+  "Most recent terminal complete-configuration apply result.")
+
+(defvar omnivox-voice-configuration-applied-hook nil
+  "Hook run with a terminal complete-configuration apply result.")
+
+(defcustom omnivox-voice-configuration-timeout 5
+  "Seconds allowed for a complete multi-process configuration apply."
+  :group 'omnivox
+  :type 'number)
+
 (defvar omnivox--logical-acss-table (make-hash-table :test #'equal)
   "Normalized ACSS styles indexed by logical voice ID.")
 
@@ -313,6 +336,78 @@ Return non-nil when LINE is a control event, including a malformed one."
                 (error-message-string error-data))))
     t))
 
+(defun omnivox--logical-voice-name (value)
+  "Return VALUE as a stable logical voice string, or nil."
+  (cond
+   ((stringp value) value)
+   ((symbolp value) (symbol-name value))))
+
+(defun omnivox-last-realized-voice (logical-voice)
+  "Return the last playback-observed route for LOGICAL-VOICE."
+  (copy-tree
+   (gethash
+    (omnivox--logical-voice-name logical-voice)
+    omnivox-last-realized-routes)))
+
+(defun omnivox--utterance-key (process event)
+  "Return a diagnostic playback key for PROCESS and marker EVENT."
+  (list process
+        (plist-get event :dispatch_id)
+        (plist-get event :utterance_id)))
+
+(defun omnivox--record-realized-route (process event)
+  "Record route or degradation from playback marker EVENT on PROCESS."
+  (pcase (plist-get event :type)
+    ("utterance_started"
+     (when-let* ((logical
+                  (omnivox--logical-voice-name
+                   (plist-get event :logical_voice_id)))
+                 (engine (plist-get event :engine_id)))
+       (when (> (hash-table-count omnivox--utterance-logical-voices) 1024)
+         (clrhash omnivox--utterance-logical-voices))
+       (puthash
+        (omnivox--utterance-key process event) logical
+        omnivox--utterance-logical-voices)
+       (let* ((actual (plist-get event :actual_voice))
+              (route
+              (list
+               :logical-voice logical
+               :engine-id (or (and (listp actual)
+                                   (plist-get actual :engine_id))
+                              engine)
+               :voice-id (if (listp actual)
+                             (plist-get actual :voice_id)
+                           actual)
+               :dispatch-id (plist-get event :dispatch_id)
+               :utterance-id (plist-get event :utterance_id)
+               :process process :time (current-time)
+               :degraded-acss nil :degraded-effects nil)))
+         (puthash logical route omnivox-last-realized-routes)
+         (run-hook-with-args 'omnivox-realized-route-changed-hook
+                             (copy-tree route))
+         (run-hook-with-args 'tts-realized-voice-changed-hook
+                             (copy-tree route)))))
+    ("timeline_style_degraded"
+     (when-let* ((logical
+                  (gethash
+                   (omnivox--utterance-key process event)
+                   omnivox--utterance-logical-voices))
+                 (route (copy-tree
+                         (gethash logical omnivox-last-realized-routes))))
+       (setq route
+             (plist-put route :degraded-acss
+                        (copy-sequence
+                         (plist-get event :degraded_acss))))
+       (setq route
+             (plist-put route :degraded-effects
+                        (copy-sequence
+                         (plist-get event :degraded_effects))))
+       (puthash logical route omnivox-last-realized-routes)
+       (run-hook-with-args 'omnivox-realized-route-changed-hook
+                           (copy-tree route))
+       (run-hook-with-args 'tts-realized-voice-changed-hook
+                           (copy-tree route))))))
+
 (defun omnivox--handle-marker-line (process line)
   "Handle an Omnivox playback marker LINE from PROCESS.
 Return non-nil for every marker-prefixed line, including malformed records."
@@ -332,6 +427,9 @@ Return non-nil for every marker-prefixed line, including malformed records."
                (integerp sequence) (> sequence 0)
                (stringp type))
             (error "Invalid Omnivox marker event envelope"))
+          (when (member type '("utterance_started"
+                               "timeline_style_degraded"))
+            (omnivox--record-realized-route process event))
           (when
               (member
                type
@@ -953,6 +1051,206 @@ Return the number of processes sent the atomic registry replacement."
                (length processes) (if (= (length processes) 1) "" "es")))
     (length processes)))
 
+(defun omnivox--voice-configuration-processes ()
+  "Return every distinct live process targeted by voice configuration."
+  (cl-remove-if-not
+   (lambda (process)
+     (process-live-p process))
+   (delete-dups (list tts-speaker-process tts-notify-process))))
+
+(defun omnivox--voice-configuration-process-role (process)
+  "Return the speech-stream role owned by PROCESS."
+  (cond
+   ((and (eq process tts-speaker-process)
+         (eq process tts-notify-process))
+    'speaker-and-notification)
+   ((eq process tts-speaker-process) 'speaker)
+   ((eq process tts-notify-process) 'notification)
+   (t 'speech)))
+
+(defun omnivox--voice-configuration-result
+    (process status &rest properties)
+  "Return one terminal configuration STATUS for PROCESS and PROPERTIES."
+  (append
+   (list :process process
+         :process-name (and (processp process) (process-name process))
+         :role (omnivox--voice-configuration-process-role process)
+         :status status)
+   properties))
+
+(defun omnivox--publish-voice-configuration-result (result callback)
+  "Publish terminal configuration RESULT and safely call CALLBACK."
+  (setq omnivox-voice-configuration-last-result (copy-tree result))
+  (run-hook-with-args 'omnivox-voice-configuration-applied-hook
+                      (copy-tree result))
+  (when (functionp callback)
+    (condition-case error-data
+        (funcall callback (copy-tree result))
+      (error
+       (message "Omnivox configuration callback failed: %s"
+                (error-message-string error-data)))))
+  result)
+
+(defun omnivox-apply-voice-configuration (&optional callback)
+  "Apply routing policy and one logical registry generation to every stream.
+
+CALLBACK receives one terminal aggregate with a result for each distinct live
+speaker or notification process.  A process policy is acknowledged before its
+logical registry is replaced, so partial failure is explicit and retryable."
+  (let* ((processes (omnivox--voice-configuration-processes))
+         (registrations
+          (mapcar
+           (lambda (process)
+             (cons process
+                   (omnivox--process-logical-registry-content process)))
+           processes)))
+    (omnivox--update-logical-registry-generation
+     (mapcar #'cdr registrations))
+    (if (null processes)
+        (omnivox--publish-voice-configuration-result
+         (list :status 'failed :adapter 'omnivox
+               :registry-generation omnivox--logical-registry-generation
+               :code 'no-supported-process :processes nil
+               :time (current-time))
+         callback)
+      (let ((pending (make-hash-table :test #'eq))
+            results timer done)
+        (dolist (process processes) (puthash process t pending))
+        (cl-labels
+            ((complete
+              ()
+              (unless done
+                (setq done t)
+                (when (timerp timer) (cancel-timer timer))
+                (let* ((ordered (nreverse results))
+                       (applied
+                        (cl-count 'applied ordered
+                                  :key (lambda (result)
+                                         (plist-get result :status))))
+                       (status
+                        (cond
+                         ((= applied (length ordered)) 'applied)
+                         ((zerop applied) 'failed)
+                         (t 'partial))))
+                  (omnivox--publish-voice-configuration-result
+                   (list
+                    :status status :adapter 'omnivox
+                    :registry-generation omnivox--logical-registry-generation
+                    :processes ordered :time (current-time))
+                   callback))))
+             (finish
+              (process result)
+              (when (gethash process pending)
+                (remhash process pending)
+                (push result results)
+                (when (zerop (hash-table-count pending)) (complete))))
+             (registration-response
+              (process response)
+              (if (equal (plist-get response :type)
+                         "logical_voices_registered")
+                  (progn
+                    (omnivox--handle-registration-response process response)
+                    (finish
+                     process
+                     (omnivox--voice-configuration-result
+                      process 'applied
+                      :routing-policy
+                      (copy-tree
+                       (omnivox--process-routing-registration process))
+                      :registration
+                      (copy-tree (plist-get response :registration)))))
+                (omnivox--record-control-error process response)
+                (finish
+                 process
+                 (omnivox--voice-configuration-result
+                  process 'failed :phase 'logical-registration
+                  :response (copy-tree response)))))
+             (register
+              (process)
+              (omnivox--send-control-request
+               process
+               (append
+                (list :type "register_logical_voices"
+                      :registry_generation
+                      omnivox--logical-registry-generation)
+                (cdr (assq process registrations)))
+               #'registration-response))
+             (policy-response
+              (process response)
+              (if (equal (plist-get response :type)
+                         "routing_policy_applied")
+                  (progn
+                    (omnivox--store-routing-policy-response process response)
+                    (if (omnivox--process-routing-policy-current-p process)
+                        (register process)
+                      (finish
+                       process
+                       (omnivox--voice-configuration-result
+                        process 'failed :phase 'routing-policy
+                        :code 'policy-mismatch
+                        :response (copy-tree response)))))
+                (omnivox--record-control-error process response)
+                (finish
+                 process
+                 (omnivox--voice-configuration-result
+                  process 'failed :phase 'routing-policy
+                  :response (copy-tree response)))))
+             (start
+              (process)
+              (condition-case error-data
+                  (cond
+                   ((not
+                     (omnivox--process-supports-p
+                      process "logical_voice_registration"))
+                    (finish
+                     process
+                     (omnivox--voice-configuration-result
+                      process 'failed :phase 'negotiation
+                      :code 'logical-registration-unsupported)))
+                   ((and
+                     (omnivox--process-supports-p process "engine_inventory")
+                     (not
+                      (process-get
+                       process omnivox--control-inventory-property)))
+                    (finish
+                     process
+                     (omnivox--voice-configuration-result
+                      process 'failed :phase 'inventory
+                      :code 'inventory-not-ready)))
+                   ((and
+                     (omnivox--process-supports-p
+                      process "runtime_routing_policy")
+                     (not
+                      (omnivox--process-routing-policy-current-p process)))
+                    (omnivox--send-control-request
+                     process
+                     (append
+                      (list
+                       :type "set_routing_policy"
+                       :routing_policy_generation
+                       (1+ (omnivox--routing-policy-generation process)))
+                      (omnivox--routing-policy-content process))
+                     #'policy-response))
+                   (t (register process)))
+                (error
+                 (finish
+                  process
+                  (omnivox--voice-configuration-result
+                   process 'failed :phase 'submission :condition error-data)))))
+             (timeout
+              ()
+              (let (expired)
+                (maphash (lambda (process _) (push process expired)) pending)
+                (dolist (process expired)
+                  (finish
+                   process
+                   (omnivox--voice-configuration-result
+                    process 'failed :phase 'timeout :code 'timeout))))))
+          (setq timer
+                (run-at-time omnivox-voice-configuration-timeout nil #'timeout))
+          (dolist (process processes) (start process)))
+        (length processes)))))
+
 (defun omnivox--run-scheduled-registration ()
   "Send a coalesced logical voice registry update."
   (setq omnivox--logical-registration-timer nil)
@@ -1503,6 +1801,10 @@ Return the number of distinct processes that received the command."
   (setq tts-voice-inventory-function #'omnivox-voice-inventory)
   (setq tts-voice-inventory-refresh-function
         #'omnivox-refresh-voice-inventory)
+  (setq tts-voice-configuration-apply-function
+        #'omnivox-apply-voice-configuration)
+  (setq tts-last-realized-voice-function
+        #'omnivox-last-realized-voice)
   (setq tts-engine-recovery-probe-function
         #'omnivox-request-engine-recovery-probe)
   (setq tts-voice-preview-function #'omnivox-preview-voice-sequence)

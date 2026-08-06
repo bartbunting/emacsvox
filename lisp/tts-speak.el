@@ -1990,6 +1990,50 @@ and normalized voices whose engine and voice IDs remain separate fields.")
 The function receives an engine ID and optional callback.  Adapters without
 runtime engine health leave this nil.")
 
+(defun tts-default-apply-voice-configuration (&optional callback)
+  "Apply configuration for a standalone adapter and call CALLBACK.
+
+Standalone adapters read the active Emacs variables when compiling speech, so
+there is no remote process registry to replace."
+  (let ((result
+         (list :status 'applied :adapter 'standalone
+               :completion-guarantee 'local :processes nil
+               :time (current-time))))
+    (when (functionp callback) (funcall callback (copy-tree result)))
+    result))
+
+(defvar tts-voice-configuration-apply-function
+  #'tts-default-apply-voice-configuration
+  "Function atomically applying the active adapter's complete voice state.
+
+The function receives an optional callback.  Server-backed adapters call it
+once with an overall result containing a terminal result for every targeted
+speech process.")
+
+(defun tts-apply-voice-configuration (&optional callback)
+  "Apply the active adapter's complete voice configuration.
+Call CALLBACK once with the adapter's terminal result when supplied."
+  (unless (functionp tts-voice-configuration-apply-function)
+    (error "The active speech adapter cannot apply voice configuration"))
+  (funcall tts-voice-configuration-apply-function callback))
+
+(defun tts-default-last-realized-voice (_logical-voice)
+  "Return no realized route for an adapter without playback route events."
+  nil)
+
+(defvar tts-last-realized-voice-function
+  #'tts-default-last-realized-voice
+  "Function returning the last observed route for one logical voice.")
+
+(defvar tts-realized-voice-changed-hook nil
+  "Hook run with one updated playback-observed logical voice route.")
+
+(defun tts-last-realized-voice (logical-voice)
+  "Return an isolated last-played route for LOGICAL-VOICE, or nil."
+  (copy-tree
+   (and (functionp tts-last-realized-voice-function)
+        (funcall tts-last-realized-voice-function logical-voice))))
+
 (defun tts-voice-inventory ()
   "Return an isolated snapshot of the active adapter's voice inventory."
   (let ((inventory

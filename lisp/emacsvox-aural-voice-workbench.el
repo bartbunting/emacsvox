@@ -75,6 +75,12 @@
 (defvar-local emacsvox-aural-voice-workbench-last-edit nil
   "Description of the most recent staged routing edit.")
 
+(defvar-local emacsvox-aural-voice-workbench-applied-undo nil
+  "Previous known-good profile available after one successful save.")
+
+(defvar-local emacsvox-aural-voice-workbench-diagnostics nil
+  "Current inventory and apply diagnostics for the staged profile.")
+
 (defun emacsvox-aural-voice-workbench--active-palette ()
   "Return the currently effective portable voice palette."
   (or
@@ -96,6 +102,23 @@
   (not
    (equal emacsvox-aural-voice-workbench-staged-profile
           emacsvox-aural-voice-workbench-committed-profile)))
+
+(defun emacsvox-aural-voice-workbench--apply-status-description ()
+  "Return concise apply status for the staged profile."
+  (let* ((status emacsvox-aural-routing-apply-status)
+         (profile-id
+          (plist-get emacsvox-aural-voice-workbench-staged-profile :id)))
+    (if (not (eq profile-id (plist-get status :profile-id)))
+        "not applied here"
+      (let* ((state (or (plist-get status :status) 'unknown))
+             (processes (plist-get status :processes))
+             (applied
+              (cl-count
+               'applied processes
+               :key (lambda (process) (plist-get process :status)))))
+        (if processes
+            (format "%s %d/%d" state applied (length processes))
+          (format "%s" state))))))
 
 (defun emacsvox-aural-voice-workbench--inventory-counts ()
   "Return the engine and physical voice counts in the current inventory."
@@ -138,7 +161,7 @@
     (format
      (concat
       " %s | adapter %s | inventory %s%s, generation %s, age %s | "
-      "%d engines, %d voices | processes %s | routing %s, %s | filter %s | "
+      "%d engines, %d voices | processes %s | routing %s, %s, apply %s | filter %s | "
       "assignment %s | preview %s ")
      (alist-get emacsvox-aural-voice-workbench-view
                 emacsvox-aural-voice-workbench--views)
@@ -151,6 +174,7 @@
      (or (plist-get inventory :process-agreement) "unknown")
      profile
      (if (emacsvox-aural-voice-workbench--dirty-p) "staged" "committed")
+     (emacsvox-aural-voice-workbench--apply-status-description)
      (emacsvox-aural-voice-workbench--filter-description)
      (or emacsvox-aural-voice-workbench-assignment-target "none")
      (or (plist-get emacsvox-aural-voice-workbench-last-preview :status)
@@ -322,6 +346,8 @@
       (emacsvox-aural-voice-workbench--style-description logical-voice)
       route
       (emacsvox-aural-voice-workbench--realization-description logical-voice)
+      (emacsvox-aural-voice-workbench--last-played-description logical-voice)
+      (emacsvox-aural-voice-workbench--registration-description logical-voice)
       (or (plist-get binding :language) "")
       (emacsvox-aural-voice-workbench--scope-description logical-voice)
       (if (equal route "adapter default") "unmapped" "routed")
@@ -395,6 +421,72 @@
       (if (emacsvox-aural-voice-workbench--selectors logical-voice)
           "unavailable"
         "adapter default"))))
+
+(defun emacsvox-aural-voice-workbench--last-played-description
+    (logical-voice)
+  "Return the last route observed during playback for LOGICAL-VOICE."
+  (if-let* ((route (tts-last-realized-voice logical-voice)))
+      (let ((base
+             (format "%s/%s"
+                     (or (plist-get route :engine-id) "unknown")
+                     (or (plist-get route :voice-id) "default")))
+            (acss (plist-get route :degraded-acss))
+            (effects (plist-get route :degraded-effects)))
+        (concat
+         base
+         (when (or acss effects)
+           (format " omitted %s"
+                   (mapconcat
+                    (lambda (value) (format "%s" value))
+                    (append acss effects) ",")))))
+    "not observed"))
+
+(defun emacsvox-aural-voice-workbench--registration-binding-name (binding)
+  "Return logical voice name carried by registration BINDING."
+  (let ((status (plist-get binding :status)))
+    (cond
+     ((equal status "resolved")
+      (plist-get (plist-get binding :resolution) :logical_voice_id))
+     ((equal status "unresolved")
+      (plist-get (plist-get binding :error) :logical_voice_id)))))
+
+(defun emacsvox-aural-voice-workbench--registration-description
+    (logical-voice)
+  "Return per-process registration result for LOGICAL-VOICE."
+  (let ((name (format "%s" logical-voice)) parts)
+    (dolist (process (plist-get emacsvox-aural-routing-apply-status :processes))
+      (let ((role (or (plist-get process :role) 'speech)))
+        (if (not (eq (plist-get process :status) 'applied))
+            (push
+             (format "%s failed %s"
+                     role (or (plist-get process :phase) "apply"))
+             parts)
+          (let* ((registration (plist-get process :registration))
+                 (binding
+                  (cl-find-if
+                   (lambda (entry)
+                     (equal name
+                            (emacsvox-aural-voice-workbench--registration-binding-name
+                             entry)))
+                   (append (plist-get registration :bindings) nil))))
+            (cond
+             ((null binding)
+              (push (format "%s adapter default" role) parts))
+             ((equal (plist-get binding :status) "resolved")
+              (let* ((resolution (plist-get binding :resolution))
+                     (realized (plist-get resolution :realized)))
+                (push
+                 (format "%s %s/%s"
+                         role
+                         (plist-get realized :engine_id)
+                         (plist-get realized :voice_id))
+                 parts)))
+             (t (push (format "%s unresolved" role) parts)))))))
+    (if parts (mapconcat #'identity (nreverse parts) "; ")
+      (pcase (plist-get emacsvox-aural-routing-apply-status :status)
+        ('applying "applying")
+        ('failed "apply failed")
+        (_ "not registered")))))
 
 (defun emacsvox-aural-voice-workbench--voice-users (engine voice)
   "Return logical voices whose staged selectors can match ENGINE and VOICE."
@@ -542,6 +634,7 @@
       logical
       (emacsvox-aural-voice-workbench--style-description logical)
       (emacsvox-aural-voice-workbench--route-description logical)
+      (emacsvox-aural-voice-workbench--last-played-description logical)
       (emacsvox-aural-voice-workbench--join-symbols dimensions)
       (if effects
           (emacsvox-aural-voice-workbench--join-symbols effects)
@@ -554,7 +647,8 @@
     ('logical
      [("Palette" 16 t) ("Aliases" 24 t) ("Logical voice" 28 t)
       ("Requested style" 34 t) ("Selector order" 48 t)
-      ("Current realization" 30 t) ("Language" 12 t) ("Scope" 16 t)
+      ("Predicted route" 24 t) ("Last played" 30 t)
+      ("Registration" 36 t) ("Language" 12 t) ("Scope" 16 t)
       ("Status" 12 t) ("Diagnostic" 0 t)])
     ('physical
      [("Physical voice" 28 t) ("Engine" 14 t) ("Language" 12 t)
@@ -569,6 +663,7 @@
     ('styles
      [("Palette voice" 22 t) ("Logical voice" 26 t)
       ("Portable definition" 38 t) ("Staged route" 42 t)
+      ("Last played" 30 t)
       ("Adapter ACSS" 30 t) ("Post effects" 24 t)
       ("Diagnostic" 0 t)])))
 
@@ -1163,6 +1258,172 @@
     (emacsvox-aural-voice-workbench-refresh)
     (emacsvox-aural-voice-workbench--announce "Staged routing edits cancelled")))
 
+(defun emacsvox-aural-voice-workbench--inventory-engine (engine-id)
+  "Return staged inventory engine ENGINE-ID, or nil."
+  (cl-find
+   engine-id
+   (plist-get emacsvox-aural-voice-workbench-inventory :engines)
+   :key (lambda (engine) (plist-get engine :engine-id))
+   :test #'equal))
+
+(defun emacsvox-aural-voice-workbench--profile-diagnostics (profile)
+  "Return non-blocking current-inventory diagnostics for PROFILE."
+  (let (diagnostics checked-engines)
+    (when (plist-get emacsvox-aural-voice-workbench-inventory :stale)
+      (push
+       '(:kind stale-inventory
+         :message "Inventory is stale; routes will re-resolve when refreshed")
+       diagnostics))
+    (cl-labels
+        ((check-engine
+          (engine-id context)
+          (when (and engine-id (not (member engine-id checked-engines)))
+            (push engine-id checked-engines)
+            (if-let* ((engine
+                       (emacsvox-aural-voice-workbench--inventory-engine
+                        engine-id)))
+                (when
+                    (member (format "%s" (plist-get engine :health))
+                            '("failed" "unavailable"))
+                  (push
+                   (list :kind 'engine-unhealthy :engine-id engine-id
+                         :context context
+                         :message
+                         (format "Engine %s is currently %s"
+                                 engine-id (plist-get engine :health)))
+                   diagnostics))
+              (push
+               (list :kind 'engine-missing :engine-id engine-id
+                     :context context
+                     :message
+                     (format "Engine %s is not in current inventory" engine-id))
+               diagnostics))))
+         (check-selector
+          (selector logical)
+          (let* ((engine-id (plist-get selector :engine-id))
+                 (engine (and engine-id
+                              (emacsvox-aural-voice-workbench--inventory-engine
+                               engine-id))))
+            (check-engine engine-id logical)
+            (when (and engine
+                       (eq (plist-get selector :kind) 'exact)
+                       (not
+                        (cl-find
+                         (plist-get selector :voice-id)
+                         (plist-get engine :voices)
+                         :key (lambda (voice) (plist-get voice :voice-id))
+                         :test #'equal)))
+              (push
+               (list
+                :kind 'voice-missing :logical-voice logical
+                :engine-id engine-id
+                :voice-id (plist-get selector :voice-id)
+                :message
+                (format "Exact voice %s/%s for %s is not installed"
+                        engine-id (plist-get selector :voice-id) logical))
+               diagnostics)))))
+      (dolist (engine-id (append (plist-get profile :engine-order)
+                                 (plist-get profile :disabled-engines)
+                                 (plist-get (plist-get profile :fallback)
+                                            :engines)))
+        (check-engine engine-id 'global-policy))
+      (when-let* ((global
+                   (plist-get (plist-get profile :fallback) :global-default)))
+        (check-selector global 'global-default))
+      (dolist (binding (plist-get profile :bindings))
+        (dolist (selector (plist-get binding :selectors))
+          (check-selector selector (plist-get binding :logical-voice))))
+      (nreverse diagnostics))))
+
+(defun emacsvox-aural-voice-workbench--apply-complete (buffer status)
+  "Update live workbench BUFFER with terminal apply STATUS."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (derived-mode-p 'emacsvox-aural-voice-workbench-mode)
+        (setq emacsvox-aural-voice-workbench-diagnostics
+              (emacsvox-aural-voice-workbench--profile-diagnostics
+               emacsvox-aural-voice-workbench-staged-profile))
+        (emacsvox-aural-voice-workbench-refresh)
+        (emacsvox-aural-voice-workbench--announce
+         "Voice configuration apply %s"
+         (plist-get status :status))))))
+
+(defun emacsvox-aural-voice-workbench--apply-callback ()
+  "Return a callback targeting the current workbench buffer."
+  (let ((buffer (current-buffer)))
+    (lambda (status)
+      (emacsvox-aural-voice-workbench--apply-complete buffer status))))
+
+(defun emacsvox-aural-voice-workbench-save-and-apply ()
+  "Atomically save the staged profile and apply it to every speech stream."
+  (interactive)
+  (let* ((validated
+          (emacsvox-aural-validate-routing-profile-data
+           emacsvox-aural-voice-workbench-staged-profile))
+         (previous
+          (copy-tree emacsvox-aural-voice-workbench-committed-profile))
+         (diagnostics
+          (emacsvox-aural-voice-workbench--profile-diagnostics validated))
+         (callback (emacsvox-aural-voice-workbench--apply-callback)))
+    (setq emacsvox-aural-voice-workbench-diagnostics diagnostics)
+    (if (not (emacsvox-aural-voice-workbench--dirty-p))
+        (progn
+          (emacsvox-aural-apply-routing-profile
+           (plist-get validated :id) callback)
+          (emacsvox-aural-voice-workbench--announce
+           "Committed routing is being reapplied"))
+      (emacsvox-aural-commit-routing-profile-data
+       validated emacsvox-aural-routing-profiles-file callback)
+      (setq emacsvox-aural-voice-workbench-applied-undo previous
+            emacsvox-aural-voice-workbench-committed-profile
+            (copy-tree validated)
+            emacsvox-aural-voice-workbench-staged-profile
+            (copy-tree validated)
+            emacsvox-aural-voice-workbench-undo-stack nil
+            emacsvox-aural-voice-workbench-last-edit
+            "Saved and submitted complete routing profile")
+      (emacsvox-aural-voice-workbench-refresh)
+      (emacsvox-aural-voice-workbench--announce
+       "Routing profile saved atomically; apply pending%s"
+       (if diagnostics
+           (format ", %d current inventory warning%s"
+                   (length diagnostics)
+                   (if (= (length diagnostics) 1) "" "s"))
+         "")))))
+
+(defun emacsvox-aural-voice-workbench-retry-apply ()
+  "Idempotently retry the committed profile on all live speech streams."
+  (interactive)
+  (when (emacsvox-aural-voice-workbench--dirty-p)
+    (user-error "Save or cancel staged edits before retrying live apply"))
+  (emacsvox-aural-apply-routing-profile
+   (plist-get emacsvox-aural-voice-workbench-committed-profile :id)
+   (emacsvox-aural-voice-workbench--apply-callback))
+  (emacsvox-aural-voice-workbench--announce
+   "Committed voice configuration apply retried"))
+
+(defun emacsvox-aural-voice-workbench-undo-applied ()
+  "Restore and apply the previous known-good profile revision."
+  (interactive)
+  (unless emacsvox-aural-voice-workbench-applied-undo
+    (user-error "No saved Voice Workbench revision is available to restore"))
+  (when (y-or-n-p "Restore the previous saved routing revision? ")
+    (let ((restored (copy-tree emacsvox-aural-voice-workbench-applied-undo)))
+      (emacsvox-aural-commit-routing-profile-data
+       restored emacsvox-aural-routing-profiles-file
+       (emacsvox-aural-voice-workbench--apply-callback))
+      (setq emacsvox-aural-voice-workbench-committed-profile
+            (copy-tree restored)
+            emacsvox-aural-voice-workbench-staged-profile
+            (copy-tree restored)
+            emacsvox-aural-voice-workbench-applied-undo nil
+            emacsvox-aural-voice-workbench-undo-stack nil
+            emacsvox-aural-voice-workbench-last-edit
+            "Restored previous saved routing revision")
+      (emacsvox-aural-voice-workbench-refresh)
+      (emacsvox-aural-voice-workbench--announce
+       "Previous routing revision restored and apply pending"))))
+
 (defun emacsvox-aural-voice-workbench--normalized-acss-value (value)
   "Normalize zero-to-nine ACSS VALUE for transactional preview."
   (and (numberp value) (/ (float (max 0 (min 9 value))) 9.0)))
@@ -1542,7 +1803,13 @@
                emacsvox-aural-voice-workbench-inventory))
       (princ
        (format "Staged routing profile:\n%S\n"
-               emacsvox-aural-voice-workbench-staged-profile)))
+               emacsvox-aural-voice-workbench-staged-profile))
+      (princ
+       (format "\nApply status:\n%S\n"
+               emacsvox-aural-routing-apply-status))
+      (princ
+       (format "\nCurrent diagnostics:\n%S\n"
+               emacsvox-aural-voice-workbench-diagnostics)))
     summary))
 
 (defun emacsvox-aural-voice-workbench-help ()
@@ -1572,6 +1839,8 @@
       "f toggle fallback     {/} reorder fallback\n"
       "D disable/restore     K request failed-engine recovery probe\n"
       "u undo staged edit    x cancel all staged edits\n"
+      "w save and apply      r retry committed apply\n"
+      "U restore previous saved revision\n"
       "g redraw quietly      h aural home\n"
       "q hide, keep staged   ? help\n")))
   (when (fboundp 'emacsvox-speak-help)
@@ -1596,6 +1865,10 @@
   (setq-local emacsvox-aural-voice-workbench-assignment-return-filter nil)
   (setq-local emacsvox-aural-voice-workbench-undo-stack nil)
   (setq-local emacsvox-aural-voice-workbench-last-edit nil)
+  (setq-local emacsvox-aural-voice-workbench-applied-undo nil)
+  (setq-local emacsvox-aural-voice-workbench-diagnostics
+              (emacsvox-aural-voice-workbench--profile-diagnostics
+               emacsvox-aural-voice-workbench-staged-profile))
   (emacsvox-aural-ui-configure-tabulated
    "voice workbench"
    #'emacsvox-aural-voice-workbench-speak-current
@@ -1639,6 +1912,9 @@
        ("X" . emacsvox-aural-voice-workbench-replace-engine)
        ("u" . emacsvox-aural-voice-workbench-undo)
        ("x" . emacsvox-aural-voice-workbench-cancel-staged)
+       ("w" . emacsvox-aural-voice-workbench-save-and-apply)
+       ("r" . emacsvox-aural-voice-workbench-retry-apply)
+       ("U" . emacsvox-aural-voice-workbench-undo-applied)
        ("q" . emacsvox-aural-quit)
        ("h" . emacsvox-aural)
        ("?" . emacsvox-aural-voice-workbench-help)))
@@ -1674,6 +1950,10 @@
 (add-hook 'emacsvox-aural-routing-profile-changed-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
 (add-hook 'emacsvox-aural-voice-palette-changed-hook
+          #'emacsvox-aural-voice-workbench-refresh-if-live)
+(add-hook 'emacsvox-aural-routing-apply-status-hook
+          #'emacsvox-aural-voice-workbench-refresh-if-live)
+(add-hook 'tts-realized-voice-changed-hook
           #'emacsvox-aural-voice-workbench-refresh-if-live)
 
 (provide 'emacsvox-aural-voice-workbench)

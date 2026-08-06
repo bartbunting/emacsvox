@@ -28,6 +28,8 @@
 
 (declare-function omnivox-register-logical-voices "omnivox-voices" ())
 (declare-function omnivox-set-routing-policy "omnivox-voices" ())
+(declare-function tts-apply-voice-configuration "tts-speak"
+                  (&optional callback))
 (declare-function emacsvox-aural-voice "emacsvox-aural-resources"
                   (name &optional palette-id))
 
@@ -72,6 +74,28 @@ active profile's selectors for that logical voice and are never saved.")
 
 (defvar emacsvox-aural-routing-profile-changed-hook nil
   "Hook run after routing profiles or their active selection change.")
+
+(defvar emacsvox-aural-routing-apply-status nil
+  "Latest complete routing-profile apply status.")
+
+(defvar emacsvox-aural-routing-apply-status-hook nil
+  "Hook run with each new routing-profile apply status.")
+
+(defun emacsvox-aural-routing--publish-apply-status (status)
+  "Publish routing-profile apply STATUS and return it."
+  (setq emacsvox-aural-routing-apply-status (copy-tree status))
+  (run-hook-with-args 'emacsvox-aural-routing-apply-status-hook
+                      (copy-tree status))
+  status)
+
+(defun emacsvox-aural-routing--call-apply-callback (callback status)
+  "Call routing apply CALLBACK safely with STATUS."
+  (when (functionp callback)
+    (condition-case error-data
+        (funcall callback (copy-tree status))
+      (error
+       (message "Routing apply callback failed: %s"
+                (error-message-string error-data))))))
 
 (defun emacsvox-aural-routing--error (format-string &rest arguments)
   "Signal a routing error described by FORMAT-STRING and ARGUMENTS."
@@ -548,8 +572,12 @@ silently changing either saved layer."
        :engines (copy-sequence omnivox-fallback-engine-ids))
       :bindings (nreverse bindings)))))
 
-(defun emacsvox-aural-apply-routing-profile (&optional id)
-  "Atomically apply routing profile ID to Omnivox adapter settings."
+(defun emacsvox-aural-apply-routing-profile (&optional id callback)
+  "Apply routing profile ID to adapter settings and live speech processes.
+
+CALLBACK receives the terminal adapter result.  The desired Emacs state is
+changed as one validated set before a server-backed adapter begins its
+generation-safe asynchronous apply."
   (let* ((id (or id emacsvox-aural-active-routing-profile))
          (entry (emacsvox-aural-routing-profile id)))
     (unless entry
@@ -597,12 +625,80 @@ silently changing either saved layer."
             omnivox-allow-same-language-fallback
             (plist-get fallback :allow-same-language)
             emacsvox-aural-active-routing-profile id)
-      (when (fboundp 'omnivox-set-routing-policy)
-        (omnivox-set-routing-policy))
-      (when (fboundp 'omnivox-register-logical-voices)
-        (omnivox-register-logical-voices))
+      (emacsvox-aural-routing--publish-apply-status
+       (list :status 'applying :profile-id id :started (current-time)))
+      (condition-case error-data
+          (if (fboundp 'tts-apply-voice-configuration)
+              (tts-apply-voice-configuration
+               (lambda (result)
+                 (let ((status
+                        (append
+                         (list :profile-id id :finished (current-time))
+                         (copy-tree result))))
+                   (emacsvox-aural-routing--publish-apply-status status)
+                   (emacsvox-aural-routing--call-apply-callback
+                    callback status))))
+            (progn
+              (when (fboundp 'omnivox-set-routing-policy)
+                (omnivox-set-routing-policy))
+              (when (fboundp 'omnivox-register-logical-voices)
+                (omnivox-register-logical-voices))
+              (let ((status
+                     (list :status 'applied :profile-id id
+                           :completion-guarantee 'submitted
+                           :finished (current-time))))
+                (emacsvox-aural-routing--publish-apply-status status)
+                (emacsvox-aural-routing--call-apply-callback
+                 callback status))))
+        (error
+         (let ((status
+                (list :status 'failed :profile-id id
+                      :phase 'submission :condition error-data
+                      :finished (current-time))))
+           (emacsvox-aural-routing--publish-apply-status status)
+           (emacsvox-aural-routing--call-apply-callback callback status))))
       (run-hooks 'emacsvox-aural-routing-profile-changed-hook)
       id)))
+
+(defun emacsvox-aural-commit-routing-profile-data
+    (data &optional file callback)
+  "Validate, atomically persist, activate, and apply routing profile DATA.
+
+FILE defaults to `emacsvox-aural-routing-profiles-file'.  If persistence
+fails, the previous in-memory registry and active selection are restored.
+Runtime process failure is reported through CALLBACK and
+`emacsvox-aural-routing-apply-status'; the saved desired configuration remains
+available for an idempotent retry.  Return a transaction description retaining
+the previous known-good profile."
+  (let* ((validated (emacsvox-aural-validate-routing-profile-data data))
+         (id (plist-get validated :id))
+         (old-entry (emacsvox-aural-routing-profile id))
+         (old-data
+          (and old-entry
+               (copy-tree
+                (emacsvox-aural-routing-profile-entry-data old-entry))))
+         (old-active emacsvox-aural-active-routing-profile)
+         (source (expand-file-name
+                  (or file emacsvox-aural-routing-profiles-file)))
+         (entry
+          (emacsvox-aural-routing--make-entry
+           :id id :data (copy-tree validated) :source source)))
+    (puthash id entry emacsvox-aural-routing-profile-registry)
+    (setq emacsvox-aural-active-routing-profile id)
+    (condition-case error-data
+        (emacsvox-aural-save-routing-profiles source)
+      (error
+       (if old-entry
+           (puthash id old-entry emacsvox-aural-routing-profile-registry)
+         (remhash id emacsvox-aural-routing-profile-registry))
+       (setq emacsvox-aural-active-routing-profile old-active)
+       (run-hooks 'emacsvox-aural-routing-profile-changed-hook)
+       (signal (car error-data) (cdr error-data))))
+    (run-hooks 'emacsvox-aural-routing-profile-changed-hook)
+    (emacsvox-aural-apply-routing-profile id callback)
+    (list :profile-id id :file source
+          :profile (copy-tree validated)
+          :previous-profile old-data :previous-active-profile old-active)))
 
 (defun emacsvox-aural-routing-user-data ()
   "Return sorted machine-local routing profile data."

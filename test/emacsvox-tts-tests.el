@@ -1245,6 +1245,165 @@
             "semantic_event_reached")))
       (delete-process process))))
 
+(ert-deftest emacsvox-tts-omnivox-records-actual-route-and-degradation ()
+  "Ordinary playback records realized engine, voice, and omitted dimensions."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-realized-route-test" :buffer nil :noquery t))
+         (omnivox-last-realized-routes (make-hash-table :test #'equal))
+         (omnivox--utterance-logical-voices
+          (make-hash-table :test #'equal))
+         changes)
+    (unwind-protect
+        (let ((omnivox-realized-route-changed-hook
+               (list (lambda (route) (push route changes)))))
+          (omnivox--handle-marker-line
+           process
+           (string-trim-right
+            (emacsvox-test--omnivox-marker-event
+             '(:protocol_version 2 :dispatch_id 75 :sequence 1
+               :type "utterance_started" :utterance_id 3 :text "hello"
+               :engine_id "eloquence"
+               :actual_voice (:engine_id "eloquence" :voice_id "v1")
+               :logical_voice_id "voice-bolden"
+               :sample_rate 44100 :frame_count 20))))
+          (omnivox--handle-marker-line
+           process
+           (string-trim-right
+            (emacsvox-test--omnivox-marker-event
+             '(:protocol_version 2 :dispatch_id 75 :sequence 2
+               :type "timeline_style_degraded" :utterance_id 3
+               :degraded_acss ["richness"]
+               :degraded_effects ["reverb"]))))
+          (let ((route (omnivox-last-realized-voice 'voice-bolden)))
+            (should (equal (plist-get route :engine-id) "eloquence"))
+            (should (equal (plist-get route :voice-id) "v1"))
+            (should (equal (plist-get route :degraded-acss) '("richness")))
+            (should (equal (plist-get route :degraded-effects) '("reverb"))))
+          (should (= (length changes) 2)))
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-omnivox-reports-partial-configuration-apply ()
+  "Complete configuration apply returns one terminal result per speech stream."
+  (let* ((speaker
+          (make-pipe-process
+           :name "emacsvox-config-speaker-test" :buffer nil :noquery t))
+         (notification
+          (make-pipe-process
+           :name "emacsvox-config-notification-test" :buffer nil :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notification)
+         (omnivox-logical-voice-preferences nil)
+         (omnivox-logical-voice-languages nil)
+         (omnivox-fallback-engine-ids nil)
+         (omnivox-global-default-selector nil)
+         (omnivox-allow-same-language-fallback t)
+         (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (omnivox--logical-registry-generation 0)
+         (omnivox--logical-registry-signature nil)
+         (omnivox-voice-configuration-last-result nil)
+         writes terminal)
+    (unwind-protect
+        (progn
+          (dolist (process (list speaker notification))
+            (process-put
+             process omnivox--control-capabilities-property
+             '(:features ("logical_voice_registration"))))
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (process command)
+                  (push (list process command) writes))))
+            (should
+             (= (omnivox-apply-voice-configuration
+                 (lambda (result) (setq terminal result)))
+                2)))
+          (should (= (length writes) 2))
+          (dolist (write writes)
+            (let* ((process (car write))
+                   (request
+                    (emacsvox-test--omnivox-decode-command (cadr write)))
+                   (identifier (plist-get request :request_id)))
+              (should
+               (equal (plist-get request :type) "register_logical_voices"))
+              (omnivox--dispatch-control-response
+               process
+               (if (eq process speaker)
+                   (list
+                    :protocol_version 1 :request_id identifier
+                    :type "logical_voices_registered"
+                    :registration
+                    '(:registry_generation 0 :bindings []))
+                 (list
+                  :protocol_version 1 :request_id identifier :type "error"
+                  :code "engine_unavailable" :message "notification failed")))))
+          (should (eq (plist-get terminal :status) 'partial))
+          (should (= (length (plist-get terminal :processes)) 2))
+          (should
+           (= (cl-count 'applied (plist-get terminal :processes)
+                        :key (lambda (result) (plist-get result :status)))
+              1))
+          (should (equal terminal omnivox-voice-configuration-last-result)))
+      (delete-process speaker)
+      (delete-process notification))))
+
+(ert-deftest emacsvox-tts-omnivox-reports-unsupported-live-stream ()
+  "A live older stream cannot be omitted from complete apply diagnostics."
+  (let* ((speaker
+          (make-pipe-process
+           :name "emacsvox-config-supported-test" :buffer nil :noquery t))
+         (notification
+          (make-pipe-process
+           :name "emacsvox-config-unsupported-test" :buffer nil :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notification)
+         (omnivox-logical-voice-preferences nil)
+         (omnivox-logical-voice-languages nil)
+         (omnivox-fallback-engine-ids nil)
+         (omnivox-global-default-selector nil)
+         (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (omnivox--logical-registry-generation 0)
+         (omnivox--logical-registry-signature nil)
+         writes terminal)
+    (unwind-protect
+        (progn
+          (process-put
+           speaker omnivox--control-capabilities-property
+           '(:features ("logical_voice_registration")))
+          (process-put
+           notification omnivox--control-capabilities-property
+           '(:features ()))
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (process command)
+                  (push (list process command) writes))))
+            (should
+             (= (omnivox-apply-voice-configuration
+                 (lambda (result) (setq terminal result)))
+                2)))
+          (should (= (length writes) 1))
+          (let* ((request
+                  (emacsvox-test--omnivox-decode-command
+                   (cadar writes)))
+                 (identifier (plist-get request :request_id)))
+            (omnivox--dispatch-control-response
+             speaker
+             (list
+              :protocol_version 1 :request_id identifier
+              :type "logical_voices_registered"
+              :registration '(:registry_generation 0 :bindings []))))
+          (should (eq (plist-get terminal :status) 'partial))
+          (let ((failure
+                 (cl-find
+                  'failed (plist-get terminal :processes)
+                  :key (lambda (result) (plist-get result :status)))))
+            (should (eq (plist-get failure :role) 'notification))
+            (should (eq (plist-get failure :phase) 'negotiation))
+            (should
+             (eq (plist-get failure :code)
+                 'logical-registration-unsupported))))
+      (delete-process speaker)
+      (delete-process notification))))
+
 (ert-deftest emacsvox-tts-marker-speech-rejects-unsupported-server ()
   "Marker-aware speech fails before submitting text to an older server."
   (let ((tts-program "espeak") called)

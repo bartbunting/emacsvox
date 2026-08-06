@@ -69,6 +69,8 @@
          (emacsvox-aural-active-routing-profile 'workstation)
          (emacsvox-aural-session-routing-bindings nil)
          (emacsvox-aural-routing-profile-changed-hook nil)
+         (emacsvox-aural-routing-apply-status nil)
+         (emacsvox-aural-routing-apply-status-hook nil)
          (tts-voice-inventory-function
           (lambda () (copy-tree emacsvox-test--workbench-inventory)))
          (tts-voice-capabilities-function
@@ -76,6 +78,10 @@
             '(:adapter omnivox :source discovered
               :family-selection routed
               :dimensions (average-pitch pitch-range stress richness volume))))
+         (tts-voice-configuration-apply-function
+          #'tts-default-apply-voice-configuration)
+         (tts-last-realized-voice-function
+          #'tts-default-last-realized-voice)
          (emacsvox-aural-ui-source-buffer nil))
      (emacsvox-aural-register-routing-profile-data
       emacsvox-test--workbench-routing-profile "test")
@@ -186,6 +192,19 @@
       (should (equal (aref entry 2) "voice-bolden"))
       (should (string-match-p "eci:Reed" (aref entry 4)))
       (should (equal (aref entry 5) "eloquence/eci:Reed")))))
+
+(ert-deftest emacsvox-aural-voice-workbench-shows-last-played-route ()
+  "Logical rows distinguish predicted routing from playback observation."
+  (emacsvox-test--with-voice-workbench
+    (let ((tts-last-realized-voice-function
+           (lambda (_logical)
+             '(:engine-id "dectalk" :voice-id "paul"
+               :degraded-acss ("richness") :degraded-effects nil))))
+      (emacsvox-aural-voice-workbench-refresh "voice-bolden")
+      (let ((entry (tabulated-list-get-entry)))
+        (should (equal (aref entry 5) "eloquence/eci:Reed"))
+        (should
+         (equal (aref entry 6) "dectalk/paul omitted richness"))))))
 
 (ert-deftest emacsvox-aural-voice-workbench-stages-exact-assignment-and-undo ()
   "Filtered browsing adds a local exact selector and undo restores its snapshot."
@@ -316,6 +335,38 @@
        (equal emacsvox-aural-voice-workbench-staged-profile opening))
       (should-not emacsvox-aural-voice-workbench-undo-stack))))
 
+(ert-deftest emacsvox-aural-voice-workbench-saves-and-applies-atomically ()
+  "Save commits one staged profile and retains its prior revision for undo."
+  (emacsvox-test--with-voice-workbench
+    (let* ((directory (make-temp-file "emacsvox-workbench-save-" t))
+           (emacsvox-aural-routing-profiles-file
+            (expand-file-name "routing.el" directory))
+           (opening
+            (copy-tree emacsvox-aural-voice-workbench-committed-profile)))
+      (unwind-protect
+          (progn
+            (emacsvox-aural-voice-workbench--stage
+             "Test saved edit"
+             (lambda ()
+               (setf
+                (plist-get emacsvox-aural-voice-workbench-staged-profile
+                           :summary)
+                "saved")))
+            (emacsvox-aural-voice-workbench-save-and-apply)
+            (should
+             (equal
+              (plist-get emacsvox-aural-voice-workbench-committed-profile
+                         :summary)
+              "saved"))
+            (should-not (emacsvox-aural-voice-workbench--dirty-p))
+            (should
+             (equal emacsvox-aural-voice-workbench-applied-undo opening))
+            (should (file-exists-p emacsvox-aural-routing-profiles-file))
+            (should
+             (eq (plist-get emacsvox-aural-routing-apply-status :status)
+                 'applied)))
+        (delete-directory directory t)))))
+
 (ert-deftest emacsvox-aural-voice-workbench-previews-exact-row-transactionally ()
   "Physical preview uses an exact session selector without staging edits."
   (emacsvox-test--with-voice-workbench
@@ -424,6 +475,9 @@
          ("X" . emacsvox-aural-voice-workbench-replace-engine)
          ("u" . emacsvox-aural-voice-workbench-undo)
          ("x" . emacsvox-aural-voice-workbench-cancel-staged)
+         ("w" . emacsvox-aural-voice-workbench-save-and-apply)
+         ("r" . emacsvox-aural-voice-workbench-retry-apply)
+         ("U" . emacsvox-aural-voice-workbench-undo-applied)
          ("q" . emacsvox-aural-quit)
          ("h" . emacsvox-aural)
          ("?" . emacsvox-aural-voice-workbench-help)))
