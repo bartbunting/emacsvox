@@ -322,6 +322,42 @@
       (when (process-live-p process)
         (delete-process process)))))
 
+(ert-deftest emacsvox-tts-interrupt-deduplicates-notification-owner ()
+  "Interrupting notifications stops each distinct process exactly once."
+  (let ((speaker
+         (make-pipe-process
+          :name "emacsvox-interrupt-speaker-test" :buffer nil :noquery t))
+        (notifier
+         (make-pipe-process
+          :name "emacsvox-interrupt-notifier-test" :buffer nil :noquery t))
+        (tts--tracked-dispatches (make-hash-table :test #'eql)))
+    (unwind-protect
+        (dolist (case `((,notifier ,notifier 1) (,speaker ,notifier 2)))
+          (let ((owner (nth 0 case))
+                (tts-notify-process (nth 1 case))
+                (expected (nth 2 case))
+                writes
+                stopped)
+            (let ((tts-stopped-hook
+                   (list (lambda (process) (push process stopped)))))
+              (cl-letf
+                  (((symbol-function 'emacsvox-aural-delivery-send)
+                    (lambda (process command kind)
+                      (push (list process command kind) writes)))
+                   ((symbol-function
+                     'emacsvox-aural-cancel-pending-deliveries)
+                    #'ignore))
+                (tts--interrupt-process owner t)))
+            (should (= (length writes) expected))
+            (should (= (length stopped) expected))
+            (should (= (cl-count owner stopped :test #'eq) 1))
+            (should
+             (=
+              (cl-count owner writes :key #'car :test #'eq)
+              1))))
+      (delete-process speaker)
+      (delete-process notifier))))
+
 (ert-deftest emacsvox-tts-unexpected-process-exit-retires-owned-state ()
   "An unexpected server exit fails callbacks and clears its runtime state."
   (let* ((process

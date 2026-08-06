@@ -344,7 +344,8 @@ Pending aural deliveries are owned by the caller because replacement and
 urgent policies cancel different scopes."
   (when
       (and notifications
-           (process-live-p tts-notify-process))
+           (process-live-p tts-notify-process)
+           (not (eq process tts-notify-process)))
     (tts-notify-stop))
   (tts--cancel-process-tracked-dispatches process)
   (when (process-live-p process)
