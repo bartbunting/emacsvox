@@ -29,6 +29,9 @@ Project: https://github.com/robertmeta/swiftmac
 
 ** See long names for voices
  - swift show-voices.swift - will list them all
+ - swift show-voices.swift --json - returns the same installed inventory as
+   bounded JSON without speaking samples; Emacsvox uses this form in its voice
+   inventory provider.
 
 ** Cloud Development
  - Just launch swiftmac directly with the -p parameter and specify a port

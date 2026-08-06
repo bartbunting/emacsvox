@@ -98,6 +98,8 @@
 (require 'tts-speak)
 (eval-when-compile (require 'easy-mmode))
 
+(declare-function omnivox-configure-tts "omnivox-voices" ())
+
 (declare-function
  emacsvox-aural-capture-source-faces
  "emacsvox-aural-source" (&optional position buffer))
@@ -130,6 +132,9 @@
 
 (defun voice-setup ()
   "Setup voices for selected TTS engine."
+  (setq tts-voice-inventory-function #'tts-default-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'tts-default-refresh-voice-inventory)
   (cond
    ((string-match "outloud" tts-program)
     (require 'outloud-voices)

@@ -54,6 +54,8 @@
 (defvar tts-speech-rate-base)
 (defvar tts-speech-rate-step)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
 
 ;;;  Customizations:
 
@@ -454,6 +456,9 @@
   (fset
    'tts-define-voice-from-acss 'outloud-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'outloud-voice-capabilities)
+  (setq tts-voice-inventory-function #'tts-default-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'tts-default-refresh-voice-inventory)
   (setq tts-default-voice 'paul)
   (setq tts-default-speech-rate outloud-default-speech-rate)
   (set-default 'tts-default-speech-rate outloud-default-speech-rate)

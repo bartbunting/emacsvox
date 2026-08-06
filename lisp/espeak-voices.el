@@ -43,6 +43,8 @@
 (defvar tts-character-to-speech-table)
 (defvar tts-default-speech-rate)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
 
 (defun espeak-voice-capabilities ()
   "Return the normalized ACSS capabilities of the eSpeak adapter.
@@ -308,6 +310,9 @@ and TABLE gives the values along that dimension."
   (fset
    'tts-define-voice-from-acss 'espeak-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'espeak-voice-capabilities)
+  (setq tts-voice-inventory-function #'tts-default-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'tts-default-refresh-voice-inventory)
   (setq tts-default-voice nil)
   (setq tts-default-speech-rate espeak-default-speech-rate)
   (set-default 'tts-default-speech-rate espeak-default-speech-rate)

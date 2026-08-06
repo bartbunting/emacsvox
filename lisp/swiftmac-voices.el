@@ -47,10 +47,23 @@
 
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)           ;For `ems--fastload'.
+(require 'json)
+(require 'subr-x)
 
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
+
+(defvar swiftmac-voice-inventory-cache nil
+  "Most recently discovered installed SwiftMac voices.")
+
+(defvar swiftmac-voice-inventory-time nil
+  "Time at which `swiftmac-voice-inventory-cache' was refreshed.")
+
+(defvar swiftmac-voice-inventory-error nil
+  "Most recent SwiftMac inventory discovery error, or nil.")
 
 (defun swiftmac-voice-capabilities ()
   "Return SwiftMac voice and normalized ACSS capabilities.
@@ -67,6 +80,110 @@ enumerate them back to Emacs."
     ((family :type string)
      (average-pitch :type integer :minimum 0 :maximum 9 :default 5)
      (pitch-range :type integer :minimum 0 :maximum 9 :default 5))))
+
+(defun swiftmac--voice-discovery-program ()
+  "Return the Swift executable and discovery script, or nil."
+  (let ((swift (and (eq system-type 'darwin) (executable-find "swift")))
+        (script
+         (expand-file-name
+          "mac-swiftmac/show-voices.swift" emacsvox-servers-directory)))
+    (and swift (file-readable-p script) (list swift script))))
+
+(defun swiftmac--quality-name (quality)
+  "Return a stable name for AVFoundation voice QUALITY."
+  (pcase quality
+    (1 "default")
+    (2 "enhanced")
+    (3 "premium")
+    (_ (format "%s" quality))))
+
+(defun swiftmac--normalize-installed-voice (voice)
+  "Normalize one installed SwiftMac VOICE returned by the enumerator."
+  (let ((identifier (plist-get voice :identifier)))
+    (list
+     :engine-id "swiftmac"
+     :voice-id identifier
+     :display-name (or (plist-get voice :name) identifier)
+     :language (plist-get voice :language)
+     :gender (plist-get voice :gender)
+     :quality (swiftmac--quality-name (plist-get voice :quality))
+     :availability "available")))
+
+(defun swiftmac--voice-inventory-snapshot ()
+  "Return the current normalized SwiftMac inventory snapshot."
+  (let* ((cached swiftmac-voice-inventory-cache)
+         (source
+          (cond (swiftmac-voice-inventory-error "cached")
+                (cached "live")
+                (t "free-form")))
+         (stale (and cached swiftmac-voice-inventory-error t))
+         (capabilities (swiftmac-voice-capabilities)))
+    (list
+     :adapter "swiftmac"
+     :source source
+     :status "available"
+     :generation (and cached 1)
+     :received-at swiftmac-voice-inventory-time
+     :age-seconds
+     (and swiftmac-voice-inventory-time
+          (float-time (time-subtract nil swiftmac-voice-inventory-time)))
+     :stale stale
+     :preferred-engine-id "swiftmac"
+     :preview-support (if cached "exact" "free-form")
+     :routing-policy-support "unsupported"
+     :error (and swiftmac-voice-inventory-error
+                 (error-message-string swiftmac-voice-inventory-error))
+     :engines
+     (list
+      (list
+       :engine-id "swiftmac"
+       :display-name "SwiftMac"
+       :availability "available"
+       :health (if swiftmac-voice-inventory-error "degraded" "healthy")
+       :health-reason
+       (and swiftmac-voice-inventory-error
+            (error-message-string swiftmac-voice-inventory-error))
+       :inventory-kind source
+       :acss-dimensions '(family average-pitch pitch-range)
+       :post-synthesis-dimensions nil
+       :preview-support (if cached "exact" "free-form")
+       :routing-policy-support "unsupported"
+       :capabilities capabilities
+       :voices (copy-tree cached))))))
+
+(defun swiftmac-refresh-voice-inventory ()
+  "Refresh installed SwiftMac voices and return the resulting snapshot."
+  (let ((program (swiftmac--voice-discovery-program)))
+    (if (not program)
+        (setq swiftmac-voice-inventory-error
+              '(error "Swift voice discovery is unavailable on this host"))
+      (condition-case error-data
+          (with-temp-buffer
+            (let ((status
+                   (process-file
+                    (car program) nil t nil (cadr program) "--json")))
+              (unless (zerop status)
+                (error "Swift voice discovery exited with status %s" status))
+              (goto-char (point-min))
+              (let ((voices
+                     (json-parse-buffer
+                      :object-type 'plist :array-type 'list
+                      :null-object nil :false-object nil)))
+                (unless (listp voices)
+                  (error "Swift voice discovery returned invalid JSON"))
+                (setq swiftmac-voice-inventory-cache
+                      (mapcar #'swiftmac--normalize-installed-voice voices)
+                      swiftmac-voice-inventory-time (current-time)
+                      swiftmac-voice-inventory-error nil))))
+        (error (setq swiftmac-voice-inventory-error error-data))))
+    (swiftmac--voice-inventory-snapshot)))
+
+(defun swiftmac-voice-inventory ()
+  "Return installed SwiftMac voices, refreshing once when possible."
+  (if (and (null swiftmac-voice-inventory-cache)
+           (swiftmac--voice-discovery-program))
+      (swiftmac-refresh-voice-inventory)
+    (swiftmac--voice-inventory-snapshot)))
 
 ;;; swiftmac:
 ;;;###autoload
@@ -318,6 +435,9 @@ and TABLE gives the values along that dimension."
   (fset 'tts-get-voice-command 'swiftmac-get-voice-command)
   (fset 'tts-define-voice-from-acss 'swiftmac-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'swiftmac-voice-capabilities)
+  (setq tts-voice-inventory-function #'swiftmac-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'swiftmac-refresh-voice-inventory)
   (setq tts-default-speech-rate swiftmac-default-speech-rate)
   (set-default 'tts-default-speech-rate swiftmac-default-speech-rate)
   (tts-unicode-update-untouched-charsets

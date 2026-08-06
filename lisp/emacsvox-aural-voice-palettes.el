@@ -1395,6 +1395,10 @@ ANNOUNCEMENT overrides the normal setting description."
                 "Base voice; choose a portable family or exact voice: "
                 choices nil t nil nil (car-safe initial-entry))))
          (cdr (assoc-string answer choices))))
+      ('routed
+       (user-error
+        "The %s adapter selects physical voices through routing profiles"
+        (plist-get capability :adapter)))
       (_
        (let ((answer
               (string-trim

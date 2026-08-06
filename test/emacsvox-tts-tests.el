@@ -491,6 +491,82 @@
       '(:average_pitch 1.0 :pitch_range 0.0
         :stress 0.5555555555555556)))))
 
+(ert-deftest emacsvox-tts-static-voice-inventory-preserves-identities ()
+  "Static adapter families become structured engine/voice inventory."
+  (let* ((tts-voice-capabilities-function #'outloud-voice-capabilities)
+         (tts-voice-inventory-function #'tts-default-voice-inventory)
+         (inventory (tts-voice-inventory))
+         (engine (car (plist-get inventory :engines)))
+         (voice (car (plist-get engine :voices))))
+    (should (equal (plist-get inventory :adapter) "outloud"))
+    (should (equal (plist-get inventory :source) "static"))
+    (should (equal (plist-get inventory :preview-support) "family"))
+    (should (equal (plist-get inventory :routing-policy-support)
+                   "unsupported"))
+    (should (equal (plist-get engine :engine-id) "outloud"))
+    (should (equal (plist-get voice :engine-id) "outloud"))
+    (should (stringp (plist-get voice :voice-id)))
+    (should (stringp (plist-get voice :display-name)))
+    (setf (plist-get voice :display-name) "changed")
+    (should-not
+     (equal
+      (plist-get
+       (car
+        (plist-get
+         (car (plist-get (tts-voice-inventory) :engines)) :voices))
+       :display-name)
+      "changed"))))
+
+(ert-deftest emacsvox-tts-omnivox-projects-live-inventory ()
+  "Omnivox inventory keeps engine and native voice IDs separate."
+  (let* ((omnivox-engine-inventory
+          '(:type "inventory" :inventory_generation 7
+            :preferred_engine_id "eloquence"
+            :engines
+            ((:id "eloquence" :display_name "Eloquence" :version "6.1"
+              :availability (:status "available")
+              :health (:status "healthy")
+              :default_voice_id "v1"
+              :capabilities
+              (:acss (:rate t :average_pitch nil)
+               :markers (:word t))
+              :voices
+              ((:id (:engine_id "eloquence" :voice_id "eci:v1")
+                :display_name "Adult male" :language "en-US"
+                :gender "male" :quality "standard"
+                :availability (:status "available")))))))
+         (omnivox-engine-inventory-time '(0 0 0 0))
+         (inventory (omnivox-voice-inventory))
+         (engine (car (plist-get inventory :engines)))
+         (voice (car (plist-get engine :voices))))
+    (should (= (plist-get inventory :generation) 7))
+    (should (equal (plist-get inventory :source) "cached"))
+    (should (plist-get inventory :stale))
+    (should (equal (plist-get inventory :preferred-engine-id) "eloquence"))
+    (should (equal (plist-get engine :health) "healthy"))
+    (should (equal (plist-get voice :engine-id) "eloquence"))
+    (should (equal (plist-get voice :voice-id) "eci:v1"))))
+
+(ert-deftest emacsvox-tts-swiftmac-projects-enumerated-voice-cache ()
+  "SwiftMac exposes installed native IDs without parsing them into engine IDs."
+  (let* ((swiftmac-voice-inventory-cache
+          '((:engine-id "swiftmac"
+             :voice-id "com.apple.voice.compact.en-AU.Karen"
+             :display-name "Karen" :language "en-AU"
+             :gender "female" :quality "default"
+             :availability "available")))
+         (swiftmac-voice-inventory-time (current-time))
+         (swiftmac-voice-inventory-error nil)
+         (inventory (swiftmac-voice-inventory))
+         (engine (car (plist-get inventory :engines)))
+         (voice (car (plist-get engine :voices))))
+    (should (equal (plist-get inventory :source) "live"))
+    (should (equal (plist-get inventory :preview-support) "exact"))
+    (should (equal (plist-get voice :engine-id) "swiftmac"))
+    (should
+     (equal (plist-get voice :voice-id)
+            "com.apple.voice.compact.en-AU.Karen"))))
+
 (ert-deftest emacsvox-tts-omnivox-registers-both-processes-atomically ()
   "Both servers share a generation but use their own preferred engine."
   (let* ((speaker

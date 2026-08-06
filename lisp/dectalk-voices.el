@@ -51,6 +51,8 @@
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
 
 ;;;  Customizations:
 
@@ -511,6 +513,9 @@ and TABLE gives the values along that dimension."
   (fset
    'tts-define-voice-from-acss 'dectalk-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'dectalk-voice-capabilities)
+  (setq tts-voice-inventory-function #'tts-default-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'tts-default-refresh-voice-inventory)
   (setq tts-default-speech-rate dectalk-default-speech-rate)
   (set-default 'tts-default-speech-rate dectalk-default-speech-rate)
   (setq tts-speech-rate-step 50

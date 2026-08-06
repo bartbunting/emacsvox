@@ -51,6 +51,8 @@
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
 
 (defun plain-voice-capabilities ()
   "Return the no-op Plain adapter's voice capabilities."
@@ -343,6 +345,9 @@ and TABLE gives the values along that dimension."
   (fset 'tts-define-voice-from-acss
         'plain-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'plain-voice-capabilities)
+  (setq tts-voice-inventory-function #'tts-default-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'tts-default-refresh-voice-inventory)
   (setq tts-default-speech-rate plain-default-speech-rate)
   (set-default 'tts-default-speech-rate plain-default-speech-rate))
 

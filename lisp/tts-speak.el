@@ -1842,6 +1842,122 @@ dimensions; and `:parameters' describes their accepted values.")
          capabilities
        (tts-default-voice-capabilities)))))
 
+(defun tts--inventory-name (value)
+  "Return VALUE as a stable display and comparison string."
+  (cond
+   ((stringp value) value)
+   ((symbolp value) (symbol-name value))
+   (t (format "%s" value))))
+
+(defun tts--static-inventory-voice (engine-id entry)
+  "Return a normalized static voice for ENGINE-ID from capability ENTRY."
+  (let ((properties (cdr entry)))
+    (list
+     :engine-id engine-id
+     :voice-id (tts--inventory-name (car entry))
+     :display-name
+     (or (plist-get properties :label)
+         (tts--inventory-name (car entry)))
+     :language (plist-get properties :language)
+     :gender (plist-get properties :gender)
+     :quality (plist-get properties :quality)
+     :availability "available"
+     :aliases (copy-sequence (plist-get properties :aliases))
+     :generic (copy-sequence (plist-get properties :generic))
+     :native-id (plist-get properties :native-id))))
+
+(defun tts-default-voice-inventory ()
+  "Derive a normalized inventory from the active adapter capabilities.
+
+This is the fallback for adapters with static families, free-form selection,
+or no discovery.  Server-backed adapters should install their own inventory
+function."
+  (let* ((capabilities (tts-voice-capabilities))
+         (adapter (plist-get capabilities :adapter))
+         (engine-id (tts--inventory-name adapter))
+         (selection
+          (or (plist-get capabilities :family-selection) 'unsupported))
+         (source
+          (pcase selection
+            ('enumerated "static")
+            ('free-form "free-form")
+            (_ "unavailable")))
+         (available (not (eq selection 'unsupported)))
+         (families (plist-get capabilities :families))
+         (voices
+          (mapcar
+           (lambda (entry)
+             (tts--static-inventory-voice engine-id entry))
+           families)))
+    (list
+     :adapter engine-id
+     :source source
+     :status (if available "available" "unavailable")
+     :generation 0
+     :received-at nil
+     :stale nil
+     :preferred-engine-id engine-id
+     :preview-support
+     (pcase selection
+       ('enumerated "family")
+       ('free-form "free-form")
+       (_ "unsupported"))
+     :routing-policy-support "unsupported"
+     :engines
+     (list
+      (list
+       :engine-id engine-id
+       :display-name (capitalize engine-id)
+       :availability (if available "available" "unavailable")
+       :health (if available "healthy" "unavailable")
+       :inventory-kind source
+       :acss-dimensions (copy-sequence
+                         (plist-get capabilities :dimensions))
+       :post-synthesis-dimensions nil
+       :preview-support
+       (pcase selection
+         ('enumerated "family")
+         ('free-form "free-form")
+         (_ "unsupported"))
+       :routing-policy-support "unsupported"
+       :capabilities (copy-tree capabilities)
+       :voices voices)))))
+
+(defvar tts-voice-inventory-function #'tts-default-voice-inventory
+  "Function returning the active speech adapter's normalized inventory.
+
+The result is a plist containing adapter/source/status metadata and an
+`:engines' list.  Every engine contains a stable `:engine-id', capabilities,
+and normalized voices whose engine and voice IDs remain separate fields.")
+
+(defun tts-default-refresh-voice-inventory ()
+  "Return the static inventory of the active speech adapter."
+  (tts-default-voice-inventory))
+
+(defvar tts-voice-inventory-refresh-function
+  #'tts-default-refresh-voice-inventory
+  "Function refreshing and returning the active adapter's voice inventory.")
+
+(defun tts-voice-inventory ()
+  "Return an isolated snapshot of the active adapter's voice inventory."
+  (let ((inventory
+         (and
+          (functionp tts-voice-inventory-function)
+          (funcall tts-voice-inventory-function))))
+    (copy-tree
+     (if (and (listp inventory) (plist-member inventory :engines))
+         inventory
+       (tts-default-voice-inventory)))))
+
+(defun tts-refresh-voice-inventory ()
+  "Refresh and return the active speech adapter's voice inventory.
+
+For asynchronous server adapters, the returned snapshot may remain pending
+until the server response is received."
+  (if (functionp tts-voice-inventory-refresh-function)
+      (funcall tts-voice-inventory-refresh-function)
+    (tts-voice-inventory)))
+
 (defun tts--voice-family-name (value)
   "Return a comparison name for voice-family VALUE."
   (cond

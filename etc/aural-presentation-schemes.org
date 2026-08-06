@@ -3326,7 +3326,8 @@ aural parity, normal build-tree startup, all 27 semantic traces,
 warning-as-error compilation of the changed runtime, the generated reference,
 and the Aural audit pass.
 
-** TODO Slice 49: Generic Speech-Adapter Inventory
+** DONE Slice 49: Generic Speech-Adapter Inventory
+CLOSED: [2026-08-07 Fri]
 
 - Extend the adapter capability interface with a normalized inventory provider
   that reports engines, physical voices, languages, gender, quality,
@@ -3343,6 +3344,12 @@ and the Aural audit pass.
 
 Deliverable: every voice-management UI consumes one adapter-neutral inventory
 without knowing the Omnivox control protocol or an individual synth's tables.
+
+Checks: the complete Emacs 31 source suite has 2,203 tests: 2,202 pass and the
+optional Mu4e test is skipped.  Compiled Aural parity, normal build-tree
+startup, warning-checked compilation of the changed adapters, the TTS audit,
+and whitespace validation pass.  The generated-reference check requires the
+separately pinned Emacspeak checkout and was not available in this workspace.
 
 ** TODO Slice 50: Separate Routing Profiles
 

@@ -30,6 +30,8 @@
 (defvar tts-speech-rate-base)
 (defvar tts-speech-rate-step)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
 
 (defgroup omnivox nil
   "Omnivox speech server."
@@ -157,6 +159,9 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 
 (defvar omnivox-engine-inventory nil
   "Engine inventory most recently reported by the main Omnivox process.")
+
+(defvar omnivox-engine-inventory-time nil
+  "Time at which the main Omnivox inventory was most recently received.")
 
 (defvar omnivox-logical-voice-registration nil
   "Logical-voice result most recently reported by the main Omnivox process.")
@@ -589,7 +594,8 @@ Return the number of processes sent the atomic registry replacement."
       (progn
         (process-put process omnivox--control-inventory-property response)
         (when (eq process tts-speaker-process)
-          (setq omnivox-engine-inventory response))
+          (setq omnivox-engine-inventory response
+                omnivox-engine-inventory-time (current-time)))
         (when (omnivox--process-supports-p
                process "logical_voice_registration")
           (omnivox-register-logical-voices)))
@@ -754,16 +760,159 @@ Return the number of distinct processes that received the command."
         (princ (format "%s\n  ID: %s\n  Language: %s\n  Quality: %s\n\n"
                        name id language quality))))))
 
+(defun omnivox--status-value (record fallback)
+  "Return status string from RECORD, or FALLBACK."
+  (let ((status (and (listp record) (plist-get record :status))))
+    (if (stringp status) status fallback)))
+
+(defun omnivox--status-reason (record)
+  "Return the optional reason from availability or health RECORD."
+  (and (listp record) (plist-get record :reason)))
+
+(defun omnivox--control-feature-p (feature)
+  "Return non-nil when the main Omnivox process advertised FEATURE."
+  (and omnivox-control-capabilities
+       (member feature (plist-get omnivox-control-capabilities :features))))
+
+(defun omnivox--inventory-voice (engine-id voice)
+  "Normalize Omnivox VOICE belonging to ENGINE-ID."
+  (let ((id (plist-get voice :id)))
+    (list
+     :engine-id (or (plist-get id :engine_id) engine-id)
+     :voice-id (plist-get id :voice_id)
+     :display-name (plist-get voice :display_name)
+     :language (plist-get voice :language)
+     :gender (plist-get voice :gender)
+     :quality (plist-get voice :quality)
+     :availability
+     (omnivox--status-value (plist-get voice :availability) "unknown")
+     :availability-reason
+     (omnivox--status-reason (plist-get voice :availability)))))
+
+(defun omnivox--inventory-engine (engine &optional inventory-kind)
+  "Normalize one engine descriptor from Omnivox INVENTORY-KIND."
+  (let* ((engine-id (plist-get engine :id))
+         (capabilities (plist-get engine :capabilities))
+         (acss (plist-get capabilities :acss)))
+    (list
+     :engine-id engine-id
+     :display-name (plist-get engine :display_name)
+     :version (plist-get engine :version)
+     :availability
+     (omnivox--status-value (plist-get engine :availability) "unknown")
+     :availability-reason
+     (omnivox--status-reason (plist-get engine :availability))
+     :health (omnivox--status-value (plist-get engine :health) "unknown")
+     :health-reason (omnivox--status-reason (plist-get engine :health))
+     :default-voice-id (plist-get engine :default_voice_id)
+     :inventory-kind (or inventory-kind "live")
+     :acss-dimensions
+     (delq
+      nil
+      (mapcar
+       (lambda (entry) (and (plist-get acss (car entry)) (cdr entry)))
+       '((:rate . rate) (:average_pitch . average-pitch)
+         (:pitch_range . pitch-range) (:stress . stress)
+         (:richness . richness) (:volume . volume))))
+     :post-synthesis-dimensions
+     (copy-sequence (plist-get capabilities :post_synthesis_dimensions))
+     :preview-support
+     (if (omnivox--control-feature-p "exact_voice_preview")
+         "exact"
+       "logical-route")
+     :routing-policy-support
+     (if (omnivox--control-feature-p "logical_voice_routing")
+         "logical-voice"
+       "unsupported")
+     :capabilities (copy-tree capabilities)
+     :voices
+     (mapcar
+      (lambda (voice) (omnivox--inventory-voice engine-id voice))
+      (append (plist-get engine :voices) nil)))))
+
+(defun omnivox-voice-inventory ()
+  "Return the normalized live Omnivox engine and voice inventory."
+  (if (not omnivox-engine-inventory)
+      (list
+       :adapter "omnivox" :source "live" :status "pending"
+       :generation nil :received-at nil :stale nil
+       :preferred-engine-id nil
+       :preview-support "pending"
+       :routing-policy-support "pending"
+       :engines nil)
+    (let* ((live (process-live-p tts-speaker-process))
+           (received omnivox-engine-inventory-time)
+           (age (and received (float-time (time-subtract nil received)))))
+      (list
+       :adapter "omnivox"
+       :source (if live "live" "cached")
+       :status "available"
+       :generation
+       (plist-get omnivox-engine-inventory :inventory_generation)
+       :received-at received
+       :age-seconds age
+       :stale (not live)
+       :preferred-engine-id
+       (plist-get omnivox-engine-inventory :preferred_engine_id)
+       :preview-support
+       (if (omnivox--control-feature-p "exact_voice_preview")
+           "exact"
+         "logical-route")
+       :routing-policy-support
+       (if (omnivox--control-feature-p "logical_voice_routing")
+           "logical-voice"
+         "unsupported")
+       :engines
+       (mapcar
+        (lambda (engine)
+          (omnivox--inventory-engine engine (if live "live" "cached")))
+        (append (plist-get omnivox-engine-inventory :engines) nil))))))
+
+(defun omnivox-refresh-voice-inventory ()
+  "Request fresh inventories from live Omnivox processes and return a snapshot."
+  (dolist (process (delete-dups (list tts-speaker-process tts-notify-process)))
+    (when (and (process-live-p process)
+               (omnivox--process-supports-p process "engine_inventory"))
+      (omnivox--send-control-request
+       process '(:type "inventory") #'omnivox--handle-inventory-response)))
+  (omnivox-voice-inventory))
+
+(defun omnivox--discovered-acss-dimensions ()
+  "Return the union of normalized ACSS dimensions advertised by Omnivox."
+  (let ((mapping
+         '((:rate . rate)
+           (:average_pitch . average-pitch)
+           (:pitch_range . pitch-range)
+           (:stress . stress)
+           (:richness . richness)
+           (:volume . volume)))
+        dimensions)
+    (dolist (engine (append (plist-get omnivox-engine-inventory :engines) nil))
+      (let ((acss
+             (plist-get (plist-get engine :capabilities) :acss)))
+        (dolist (entry mapping)
+          (when (plist-get acss (car entry))
+            (push (cdr entry) dimensions)))))
+    (sort (delete-dups dimensions)
+          (lambda (left right)
+            (string-lessp (symbol-name left) (symbol-name right))))))
+
 (defun omnivox-voice-capabilities ()
-  "Return normalized ACSS capabilities for Omnivox."
-  '(:adapter omnivox
-    :source static
-    :family-selection unsupported
-    :families nil
-    :generic-families nil
-    :dimensions (average-pitch)
-    :parameters
-    ((average-pitch :type integer :minimum 0 :maximum 9 :default 5))))
+  "Return discovered ACSS and routed-family capabilities for Omnivox."
+  (let ((dimensions (omnivox--discovered-acss-dimensions)))
+    (list
+     :adapter 'omnivox
+     :source (if omnivox-engine-inventory 'discovered 'pending)
+     :family-selection 'routed
+     :families nil
+     :generic-families '(male female child)
+     :dimensions dimensions
+     :parameters
+     (mapcar
+      (lambda (dimension)
+        (list dimension :type 'integer :minimum 0 :maximum 9 :default 5))
+      dimensions)
+     :inventory (omnivox-voice-inventory))))
 
 ;;;###autoload
 (defun omnivox ()
@@ -854,6 +1003,9 @@ Return the number of distinct processes that received the command."
   (fset 'tts-get-voice-command #'omnivox-get-voice-command)
   (fset 'tts-define-voice-from-acss #'omnivox-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'omnivox-voice-capabilities)
+  (setq tts-voice-inventory-function #'omnivox-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'omnivox-refresh-voice-inventory)
   (setq tts-default-speech-rate omnivox-default-speech-rate)
   (set-default 'tts-default-speech-rate omnivox-default-speech-rate)
   (setq tts-speech-rate omnivox-default-speech-rate)

@@ -51,6 +51,8 @@
 (defvar tts-default-speech-rate)
 (defvar tts-default-voice)
 (defvar tts-voice-capabilities-function)
+(defvar tts-voice-inventory-function)
+(defvar tts-voice-inventory-refresh-function)
 
 (defun mac-voice-capabilities ()
   "Return macOS voice and normalized ACSS capabilities.
@@ -319,6 +321,9 @@ and TABLE gives the values along that dimension."
   (fset 'tts-get-voice-command 'mac-get-voice-command)
   (fset 'tts-define-voice-from-acss 'mac-define-voice-from-acss)
   (setq tts-voice-capabilities-function #'mac-voice-capabilities)
+  (setq tts-voice-inventory-function #'tts-default-voice-inventory)
+  (setq tts-voice-inventory-refresh-function
+        #'tts-default-refresh-voice-inventory)
   (setq tts-default-speech-rate mac-default-speech-rate)
   (set-default 'tts-default-speech-rate mac-default-speech-rate)
   (tts-unicode-update-untouched-charsets
