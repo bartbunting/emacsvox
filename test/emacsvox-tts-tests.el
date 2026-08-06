@@ -363,7 +363,9 @@
              (engine-default "winrt"))))
          (omnivox-logical-voice-languages '((voice-annotate . "en-US")))
          (omnivox--logical-acss-table (make-hash-table :test #'equal))
-         (definition (omnivox--logical-definition-json "voice-annotate"))
+         (definition
+          (omnivox--logical-definition-json
+           (omnivox--effective-logical-voice-id 'voice-annotate)))
          (selectors (plist-get definition :preferences)))
     (should (equal (plist-get definition :language) "en-US"))
     (should (equal (plist-get (aref selectors 0) :engine_id) "dectalk"))
@@ -388,6 +390,29 @@
             '(:average_pitch 0.7)))
     (should-error
      (omnivox--logical-voice-directive "invalid voice") :type 'error)))
+
+(ert-deftest emacsvox-tts-omnivox-canonicalizes-semantic-voice-settings ()
+  "Portable settings follow the personality indirection used for speech."
+  (let ((semantic-name 'emacsvox-test-semantic-voice)
+        (omnivox-logical-voice-preferences
+         '((emacsvox-test-semantic-voice
+            (engine-default "espeak"))))
+        (omnivox-logical-voice-languages
+         '((emacsvox-test-semantic-voice . "en-US")))
+        (omnivox--logical-acss-table (make-hash-table :test #'equal)))
+    (set semantic-name 'acss-a4-s6)
+    (unwind-protect
+        (progn
+          (puthash "acss-a4-s6" '(:average_pitch 0.4)
+                   omnivox--logical-acss-table)
+          (should (equal (omnivox--logical-voice-ids) '("acss-a4-s6")))
+          (let* ((definition
+                  (omnivox--logical-definition-json "acss-a4-s6"))
+                 (selector (aref (plist-get definition :preferences) 0)))
+            (should (equal (plist-get definition :language) "en-US"))
+            (should (equal (plist-get selector :kind) "engine_default"))
+            (should (equal (plist-get selector :engine_id) "espeak"))))
+      (makunbound semantic-name))))
 
 (ert-deftest emacsvox-tts-omnivox-logical-generations-are-content-based ()
   "Identical registry retries retain a generation and changes advance it."

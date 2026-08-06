@@ -281,6 +281,17 @@ Return non-nil when LINE is a control event, including a malformed one."
    ((stringp name) name)
    (t (error "Invalid logical Omnivox voice name: %S" name))))
 
+(defun omnivox--effective-logical-voice-id (name)
+  "Return the logical ID emitted when Emacs personality NAME is spoken.
+Follow the same single symbol indirection as `tts-speak-using-voice'."
+  (omnivox--logical-voice-id
+   (if (and (symbolp name)
+            (boundp name)
+            (let ((value (symbol-value name)))
+              (or (symbolp value) (stringp value))))
+       (symbol-value name)
+     name)))
+
 (defun omnivox--logical-voice-directive (name)
   "Return the queued routing directive for logical voice NAME."
   (let ((id (omnivox--logical-voice-id name)))
@@ -294,7 +305,7 @@ Return non-nil when LINE is a control event, including a malformed one."
 Symbol and string keys with the same printed name are equivalent."
   (cl-loop
    for (name . value) in settings
-   when (equal id (omnivox--logical-voice-id name))
+   when (equal id (omnivox--effective-logical-voice-id name))
    return value))
 
 (defun omnivox--required-selector-id (value kind)
@@ -344,9 +355,9 @@ Symbol and string keys with the same printed name are equivalent."
     (maphash (lambda (id _style) (push id ids))
              omnivox--logical-acss-table)
     (dolist (entry omnivox-logical-voice-preferences)
-      (push (omnivox--logical-voice-id (car entry)) ids))
+      (push (omnivox--effective-logical-voice-id (car entry)) ids))
     (dolist (entry omnivox-logical-voice-languages)
-      (push (omnivox--logical-voice-id (car entry)) ids))
+      (push (omnivox--effective-logical-voice-id (car entry)) ids))
     (sort (delete-dups ids) #'string-lessp)))
 
 (defun omnivox--logical-definition-json (id &optional preferred-engine-id)
