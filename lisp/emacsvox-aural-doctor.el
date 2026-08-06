@@ -18,6 +18,7 @@
 (require 'emacsvox-aural-ui)
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-profile-service)
+(require 'emacsvox-sounds)
 
 (defvar emacsvox-keymap)
 (defvar emacsvox-prefix)
@@ -233,6 +234,39 @@
     (if emacsvox-aural-spatial-cue-enabled "on" "off")
     (emacsvox-aural-spatial-capabilities))))
 
+(defun emacsvox-aural-doctor--cue-delivery-finding ()
+  "Report the configured queued-cue delivery guarantees."
+  (let* ((capabilities (emacsvox-sounds-queued-cue-capabilities))
+         (server (plist-get capabilities :server))
+         (player (plist-get capabilities :player))
+         (ordering (plist-get capabilities :ordering)))
+    (emacsvox-aural-doctor--finding
+     'cue-delivery 'info "Queued cue delivery"
+     (pcase ordering
+       ('accepted-before-speech "accepted; scoped cancellation")
+       ('launch-before-speech "launch ordered; not cancellable")
+       (_ "unknown"))
+     (pcase ordering
+       ('accepted-before-speech
+        (format
+         (concat
+          "Server %s using %s waits for native player acceptance before "
+          "following speech; playback may overlap; speech stop cancels cues "
+          "for this stream; cue completion is unobserved")
+         server player))
+       ('launch-before-speech
+        (format
+         (concat
+          "Server %s launches %s before following speech; playback may "
+          "overlap; speech stop does not cancel the cue; cue completion is "
+          "unobserved")
+         server player))
+       (_
+        (format
+         "Server %s using %s declares no queued-cue lifecycle guarantees"
+         (if (string-empty-p server) "unset" server)
+         player))))))
+
 (defun emacsvox-aural-doctor--speech-server-finding ()
   "Report live speech-server state without starting it."
   (let ((live (and tts-speaker-process
@@ -342,6 +376,7 @@
     (emacsvox-aural-doctor--sound-finding)
     (emacsvox-aural-doctor--personal-data-finding)
     (emacsvox-aural-doctor--spatial-finding)
+    (emacsvox-aural-doctor--cue-delivery-finding)
     (emacsvox-aural-doctor--face-presentation-finding)
     (emacsvox-aural-doctor--compatibility-voice-finding)
     (emacsvox-aural-doctor--face-mapping-finding)

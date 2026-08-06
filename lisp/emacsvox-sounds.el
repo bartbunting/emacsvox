@@ -124,6 +124,7 @@ sound library load independently during native compilation.")
 (require 'emacsvox-aural-transport)
 
 (defvar tts-speaker-process)
+(defvar tts-program)
 
 ;;;   Auditory Icons:
 
@@ -525,6 +526,51 @@ None: For systems that rely on the speech server playing the icon."
        (equal emacsvox-play-program sox-play))
       'stereo
     'centered))
+
+(defconst emacsvox-sounds--launch-ordered-cue-servers
+  '("dtk-exp" "dtk-soft" "espeak" "outloud"
+    "windows-dtk" "windows-outloud")
+  "Servers whose queued cue player starts before following speech.")
+
+(defun emacsvox-sounds-queued-cue-capabilities (&optional server player)
+  "Return declared queued-cue capabilities for SERVER and PLAYER.
+
+SERVER defaults to `tts-program'.  PLAYER defaults to `EMACSVOX_PLAY', or
+the generic server default, paplay.  The descriptor concerns cues inside a
+speech-server transaction, not standalone cues played directly by Emacs.
+
+An unobserved completion means that dispatch does not report when audio ends;
+it must not be treated as successful playback completion."
+  (let* ((server
+          (file-name-nondirectory
+           (or server (and (boundp 'tts-program) tts-program) "")))
+         (player (or player (getenv "EMACSVOX_PLAY") "/usr/bin/paplay"))
+         (native-windows-player
+          (and
+           (member server '("windows-dtk" "windows-outloud"))
+           (string= (file-name-nondirectory player) "windows-play"))))
+    (cond
+     (native-windows-player
+      (list
+       :server server :player player
+       :ordering 'accepted-before-speech
+       :overlap t
+       :cancellation 'scoped
+       :completion 'unobserved))
+     ((member server emacsvox-sounds--launch-ordered-cue-servers)
+      (list
+       :server server :player player
+       :ordering 'launch-before-speech
+       :overlap t
+       :cancellation 'unsupported
+       :completion 'unobserved))
+     (t
+      (list
+       :server server :player player
+       :ordering 'unknown
+       :overlap 'unknown
+       :cancellation 'unknown
+       :completion 'unknown)))))
 
 (defun emacsvox-sounds--sox-balance-arguments (balance)
   "Return SoX effects implementing normalized stereo BALANCE.

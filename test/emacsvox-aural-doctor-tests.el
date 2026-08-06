@@ -147,6 +147,10 @@
          (face-mappings
           (cl-find
            'face-mapping-conflicts findings
+           :key #'emacsvox-aural-doctor-finding-id))
+         (cue-delivery
+          (cl-find
+           'cue-delivery findings
            :key #'emacsvox-aural-doctor-finding-id)))
     (unwind-protect
         (progn
@@ -162,6 +166,7 @@
           (should face-policy)
           (should compatibility-voice)
           (should face-mappings)
+          (should cue-delivery)
           (should
            (string-match-p
             "explicit :legacy-face"
@@ -172,6 +177,39 @@
             (emacsvox-aural-doctor-finding-detail
              compatibility-voice))))
       (delete-directory directory t))))
+
+(ert-deftest emacsvox-aural-doctor-exposes-linux-cue-lifecycle-limits ()
+  "Doctor says that Linux cue playback overlaps and cannot be cancelled."
+  (let ((tts-program "outloud")
+        (process-environment (copy-sequence process-environment)))
+    (setenv "EMACSVOX_PLAY" "/usr/bin/paplay")
+    (let ((finding (emacsvox-aural-doctor--cue-delivery-finding)))
+      (should
+       (equal
+        (emacsvox-aural-doctor-finding-status finding)
+        "launch ordered; not cancellable"))
+      (should
+       (equal
+        (emacsvox-aural-doctor-finding-detail finding)
+        (concat
+         "Server outloud launches /usr/bin/paplay before following speech; "
+         "playback may overlap; speech stop does not cancel the cue; cue "
+         "completion is unobserved"))))))
+
+(ert-deftest emacsvox-aural-doctor-exposes-native-windows-cue-cancellation ()
+  "Doctor distinguishes native Windows cue acknowledgement and cancellation."
+  (let ((tts-program "/servers/windows-dtk")
+        (process-environment (copy-sequence process-environment)))
+    (setenv "EMACSVOX_PLAY" "/servers/windows-play")
+    (let ((finding (emacsvox-aural-doctor--cue-delivery-finding)))
+      (should
+       (equal
+        (emacsvox-aural-doctor-finding-status finding)
+        "accepted; scoped cancellation"))
+      (should
+       (string-match-p
+        "speech stop cancels cues for this stream"
+        (emacsvox-aural-doctor-finding-detail finding))))))
 
 (ert-deftest emacsvox-aural-doctor-manager-is-spoken-and-refreshable ()
   "The doctor uses the shared titled-cell and boundary navigation contract."

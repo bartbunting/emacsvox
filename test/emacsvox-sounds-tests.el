@@ -343,6 +343,36 @@
       '((server speaker "p \"/sounds/item.ogg\"\n")
         (local "/usr/bin/play" ("-q" "/sounds/open.ogg")))))))
 
+(ert-deftest emacsvox-sounds-declares-linux-cue-lifecycle-limits ()
+  "Linux server cues are launch ordered but not cancellable or completed."
+  (let ((process-environment (copy-sequence process-environment)))
+    (setenv "EMACSVOX_PLAY" "/usr/bin/paplay")
+    (should
+     (equal
+      (emacsvox-sounds-queued-cue-capabilities "outloud")
+      '(:server "outloud" :player "/usr/bin/paplay"
+        :ordering launch-before-speech :overlap t
+        :cancellation unsupported :completion unobserved)))))
+
+(ert-deftest emacsvox-sounds-declares-native-windows-cue-lifecycle ()
+  "The native Windows player acknowledges and scope-cancels queued cues."
+  (should
+   (equal
+    (emacsvox-sounds-queued-cue-capabilities
+     "/servers/windows-outloud" "/servers/windows-play")
+    '(:server "windows-outloud" :player "/servers/windows-play"
+      :ordering accepted-before-speech :overlap t
+      :cancellation scoped :completion unobserved))))
+
+(ert-deftest emacsvox-sounds-does-not-invent-unknown-cue-capabilities ()
+  "Unknown server adapters do not inherit the Linux cue contract."
+  (should
+   (equal
+    (emacsvox-sounds-queued-cue-capabilities "remote" "/bin/player")
+    '(:server "remote" :player "/bin/player"
+      :ordering unknown :overlap unknown
+      :cancellation unknown :completion unknown))))
+
 (ert-deftest emacsvox-sounds-server-commands-quote-resource-paths ()
   "Every server cue command should preserve one hostile resource word."
   (let* ((resource
