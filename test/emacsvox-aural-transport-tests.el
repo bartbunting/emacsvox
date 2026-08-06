@@ -420,6 +420,76 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
       (plist-get observed :process-name)
       "emacsvox-dead-delivery-test"))))
 
+(ert-deftest emacsvox-aural-history-rejects-failed-immediate-delivery ()
+  "Ordered and urgent history is retained only after a successful write."
+  (dolist (policy '(ordered urgent))
+    (let* ((process
+            (make-pipe-process
+             :name (format "emacsvox-dead-%s-history-test" policy)
+             :buffer nil :noquery t))
+           (transaction-id 77)
+           (emacsvox-aural-presentation-history nil)
+           (emacsvox-aural--presentation-sequence 0)
+           (emacsvox-aural-submission-delivery-policy policy)
+           (emacsvox-aural-last-delivery-failure nil)
+           (plan
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "lost" :speak t)
+             :context
+             (list :presentation-transaction-id transaction-id))))
+      (delete-process process)
+      (cl-letf (((symbol-function 'message) #'ignore))
+        (emacsvox-aural-call-with-presentation-transaction
+         transaction-id
+         #'emacsvox-aural-call-with-delivery-transaction
+         process
+         (lambda ()
+           (emacsvox-aural-record-presentation plan)
+           (emacsvox-aural-delivery-send
+            process "q {lost }\nd\n"))))
+      (should-not emacsvox-aural-presentation-history)
+      (should
+       (eq
+        (plist-get emacsvox-aural-last-delivery-failure :reason)
+        'process-not-live)))))
+
+(ert-deftest emacsvox-aural-history-retains-successful-immediate-delivery ()
+  "Ordered and urgent history commits after the corresponding packet write."
+  (dolist (policy '(ordered urgent))
+    (let* ((transaction-id 78)
+           (emacsvox-aural-presentation-history nil)
+           (emacsvox-aural--presentation-sequence 0)
+           (emacsvox-aural-submission-delivery-policy policy)
+           (plan
+            (emacsvox-aural--make-concrete-plan
+             :content
+             (emacsvox-aural--make-concrete-content
+              :text "sent" :speak t)
+             :context
+             (list :presentation-transaction-id transaction-id)))
+           writes)
+      (cl-letf
+          (((symbol-function 'process-send-string)
+            (lambda (process command)
+              (push (list process command) writes))))
+        (emacsvox-aural-call-with-presentation-transaction
+         transaction-id
+         #'emacsvox-aural-call-with-delivery-transaction
+         'speaker
+         (lambda ()
+           (emacsvox-aural-record-presentation plan)
+           (emacsvox-aural-delivery-send
+            'speaker "q {sent }\nd\n"))))
+      (should (equal writes '((speaker "q {sent }\nd\n"))))
+      (should (= (length emacsvox-aural-presentation-history) 1))
+      (should
+       (=
+        (emacsvox-aural-presentation-record-effective-transaction-id
+         (car emacsvox-aural-presentation-history))
+        transaction-id)))))
+
 (ert-deftest emacsvox-aural-delivery-orders-pending-before-fifo-output ()
   "Ordered output flushes older replaceable work before its own packet."
   (let ((emacsvox-aural--pending-deliveries

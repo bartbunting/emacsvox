@@ -70,9 +70,9 @@ Enable it temporarily when diagnosing presentation inside the Aural UI."
 (defvar emacsvox-aural--delivery-history-registrar nil
   "Dynamically bound function registering deferred history delivery.
 
-The delivery transport calls this function while capturing a replaceable
-packet.  It returns a no-argument effect that commits the transaction's frozen
-history record only if that packet is actually sent.")
+The delivery transport calls this function while capturing a packet.  It
+returns a no-argument effect that commits the transaction's frozen history
+record only if that packet is actually sent.")
 
 (defun emacsvox-aural--history-value (value)
   "Return a data-only copy of VALUE that cannot retain a source buffer."
@@ -229,16 +229,14 @@ presentations keep independent history records."
          (emacsvox-aural--history-transaction-runs nil)
          (deferred-state (list :registered nil :delivered nil :record nil))
          (emacsvox-aural--delivery-history-registrar
-          (and
-           (eq emacsvox-aural-submission-delivery-policy 'replaceable)
-           (lambda ()
-             (setq deferred-state
-                   (plist-put deferred-state :registered t))
-             (lambda ()
-               (if-let* ((record (plist-get deferred-state :record)))
-                   (emacsvox-aural--retain-presentation-record record)
-                 (setq deferred-state
-                       (plist-put deferred-state :delivered t)))))))
+          (lambda ()
+            (setq deferred-state
+                  (plist-put deferred-state :registered t))
+            (lambda ()
+              (if-let* ((record (plist-get deferred-state :record)))
+                  (emacsvox-aural--retain-presentation-record record)
+                (setq deferred-state
+                      (plist-put deferred-state :delivered t))))))
          result)
     (unwind-protect
         (setq result (apply function arguments))
