@@ -227,6 +227,51 @@ Return the server's standard output."
         'native-process))
       (should (eq marked 'native-process)))))
 
+(ert-deftest emacsvox-windows-speech-enables-framing-on-existing-processes ()
+  "Enabling integration configures compatible processes that started first."
+  (let ((tts-speaker-process 'existing-speaker)
+        (tts-notify-process 'existing-notifier)
+        (emacsvox-windows-speech--enabled nil)
+        marked)
+    (cl-letf
+        (((symbol-function 'processp)
+          (lambda (process)
+            (memq process '(existing-speaker existing-notifier))))
+         ((symbol-function 'process-live-p) (lambda (_process) t))
+         ((symbol-function 'process-command)
+          (lambda (process)
+            (list
+             (if (eq process 'existing-speaker)
+                 "/repo/servers/windows-outloud"
+               "/repo/servers/windows-dtk"))))
+         ((symbol-function 'emacsvox-aural-enable-framed-delivery)
+          (lambda (process) (push process marked)))
+         ((symbol-function 'emacsvox-windows-speech--register-server-names)
+          #'ignore)
+         ((symbol-function 'advice-member-p) (lambda (&rest _) t)))
+      (emacsvox-windows-speech-enable))
+    (should emacsvox-windows-speech--enabled)
+    (should
+     (equal
+      (sort marked :key #'symbol-name)
+      '(existing-notifier existing-speaker)))))
+
+(ert-deftest emacsvox-windows-speech-does-not-frame-existing-other-server ()
+  "Late integration does not apply its protocol to an unrelated process."
+  (let ((tts-speaker-process 'existing-speaker)
+        (tts-notify-process nil)
+        marked)
+    (cl-letf
+        (((symbol-function 'processp)
+          (lambda (process) (eq process 'existing-speaker)))
+         ((symbol-function 'process-live-p) (lambda (_process) t))
+         ((symbol-function 'process-command)
+          (lambda (_process) '("/repo/servers/espeak")))
+         ((symbol-function 'emacsvox-aural-enable-framed-delivery)
+          (lambda (process) (push process marked))))
+      (emacsvox-windows-speech--enable-existing-process-framing))
+    (should-not marked)))
+
 (ert-deftest emacsvox-windows-speech-isolates-main-and-notification-cues ()
   "Native speech streams receive distinct stable auditory-icon scopes."
   (let ((tts-program "/tmp/servers/windows-outloud")

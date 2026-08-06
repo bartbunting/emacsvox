@@ -122,6 +122,22 @@ Changes take effect when the speech server is selected or restarted."
     (file-name-nondirectory program)
     (mapcar #'cdr emacsvox-windows-speech--server-files))))
 
+(defun emacsvox-windows-speech--compatible-process-p (process)
+  "Return non-nil when live PROCESS runs a Windows speech server."
+  (and
+   (processp process)
+   (process-live-p process)
+   (emacsvox-windows-speech--server-p
+    (car-safe (process-command process)))))
+
+(defun emacsvox-windows-speech--enable-existing-process-framing ()
+  "Enable transaction framing on compatible processes already running."
+  (dolist
+      (process
+       (delete-dups (list tts-speaker-process tts-notify-process)))
+    (when (emacsvox-windows-speech--compatible-process-p process)
+      (emacsvox-aural-enable-framed-delivery process))))
+
 (defun emacsvox-windows-speech--with-notification-stream
     (original &rest arguments)
   "Call ORIGINAL with Windows notification-stream support enabled.
@@ -216,6 +232,7 @@ ARGUMENTS are any remaining arguments to `tts-make-process'."
      'tts-make-process :around
      #'emacsvox-windows-speech--with-stereo-position))
   (setq emacsvox-windows-speech--enabled t)
+  (emacsvox-windows-speech--enable-existing-process-framing)
   (when (called-interactively-p 'interactive)
     (emacsvox-icon 'on)
     (message "Enabled native Windows speech server selection")))
