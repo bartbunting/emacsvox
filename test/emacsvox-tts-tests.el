@@ -372,6 +372,23 @@
     (should (equal (plist-get (aref selectors 1) :voice_id) "eci:v1"))
     (should (equal (plist-get (aref selectors 2) :kind) "engine_default"))))
 
+(ert-deftest emacsvox-tts-omnivox-voices-emit-logical-routing-directives ()
+  "Defined voices select their logical route before legacy style codes."
+  (let ((omnivox-voice-table (make-hash-table))
+        (omnivox--logical-acss-table (make-hash-table :test #'equal)))
+    (cl-letf (((symbol-function 'omnivox--schedule-logical-registration)
+               #'ignore))
+      (omnivox-define-voice
+       'voice-annotate "[[pitch 1.4]]" '(:average_pitch 0.7)))
+    (should
+     (equal (omnivox-get-voice-command 'voice-annotate)
+            "[[logical_voice voice-annotate]] [[pitch 1.4]]"))
+    (should
+     (equal (gethash "voice-annotate" omnivox--logical-acss-table)
+            '(:average_pitch 0.7)))
+    (should-error
+     (omnivox--logical-voice-directive "invalid voice") :type 'error)))
+
 (ert-deftest emacsvox-tts-omnivox-logical-generations-are-content-based ()
   "Identical registry retries retain a generation and changes advance it."
   (let ((omnivox-logical-voice-preferences nil)

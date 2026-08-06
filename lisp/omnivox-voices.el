@@ -281,6 +281,14 @@ Return non-nil when LINE is a control event, including a malformed one."
    ((stringp name) name)
    (t (error "Invalid logical Omnivox voice name: %S" name))))
 
+(defun omnivox--logical-voice-directive (name)
+  "Return the queued routing directive for logical voice NAME."
+  (let ((id (omnivox--logical-voice-id name)))
+    (unless (and (<= (string-bytes id) 128)
+                 (string-match-p "\\`[A-Za-z0-9_.-]+\\'" id))
+      (error "Invalid logical Omnivox voice ID: %S" id))
+    (format "[[logical_voice %s]]" id)))
+
 (defun omnivox--logical-setting (id settings)
   "Return logical voice ID's value from SETTINGS.
 Symbol and string keys with the same printed name are equivalent."
@@ -683,7 +691,9 @@ Return the number of distinct processes that received the command."
 
 (defun omnivox-define-voice (name command &optional normalized-acss)
   "Define Omnivox voice NAME using inline COMMAND and NORMALIZED-ACSS."
-  (puthash name command omnivox-voice-table)
+  (puthash
+   name (concat (omnivox--logical-voice-directive name) " " command)
+   omnivox-voice-table)
   (puthash
    (omnivox--logical-voice-id name) normalized-acss
    omnivox--logical-acss-table)
