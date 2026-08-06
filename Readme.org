@@ -62,6 +62,8 @@ inventory.  A logical voice without an explicit preference binds to the
 preferred engine reported by each speech process.  Registration waits for that
 process's inventory, so differing main, notification, or machine voice lists do
 not need to be copied into portable Emacs configuration.
+The WSL launcher forwards =OMNIVOX_ENGINE= and =OMNIVOX_AUDIO_TARGET= to the
+Windows process.
 
 Portable preferences do not copy a machine's discovered voice list into user
 configuration.  Instead, each logical voice has ordered exact, engine-default,
