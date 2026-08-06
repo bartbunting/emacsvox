@@ -148,14 +148,20 @@ captured 11.025 kHz mono signed 16-bit PCM to the versioned Omnivox helper
 protocol.  It does not play that audio itself and does not alter the existing
 =windows-outloud= playback bridge.  Its inventory keeps the engine ID
 =eloquence= separate from native voice IDs =v1= through =v8=, with =v1= as the
-default.  Version 1 applies normalized speech rate; pitch, range, stress,
-richness, and volume are reported as unavailable rather than silently claimed.
+default.  Both protocol versions apply normalized speech rate; pitch, range,
+stress, richness, and volume are reported as unavailable rather than silently claimed.
 It advertises word markers, inserts bounded ECI indexes at Unicode word starts,
 and records each index reply at the current captured PCM frame.  Marker source
 ranges are UTF-8 byte ranges into the exact helper request; apostrophes and
 hyphens inside a word stay attached.  Sentence, phoneme, and caller-defined
 native indexes remain unavailable.  Omnivox remains responsible for fallback,
 effects, mixing, playback, and playback completion.
+
+Helper protocol version 2 also advertises exact requested anchors.  Each
+bounded opaque ID and UTF-8 source boundary is merged with the automatic word
+indexes and inserted through ECI's index API, so Eloquence returns its exact PCM
+frame without splitting the utterance.  Version 1 remains available unchanged
+for an older Omnivox host and truthfully omits anchor support.
 
 The bounded JSON loop, negotiation, inventory framing, PCM chunking, request
 validation, marker framing, and cancellation coordination live in the engine-neutral

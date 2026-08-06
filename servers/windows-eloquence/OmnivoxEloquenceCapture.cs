@@ -92,6 +92,14 @@ internal static class OmnivoxNativeEci
 /// </summary>
 internal sealed class OmnivoxEloquenceCapture : IDisposable
 {
+    private sealed class MarkerInsertion
+    {
+        internal int Position;
+        internal int Priority;
+        internal int Sequence;
+        internal OmnivoxHelperMarker Marker;
+    }
+
     private const int GeneralAmericanEnglish = 0x00010000;
     private const int SynthMode = 0;
     private const int InputType = 1;
@@ -175,7 +183,7 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
     }
 
     internal OmnivoxCaptureResult Synthesize(string text, string voiceId,
-        int rate)
+        int rate, OmnivoxHelperAnchor[] anchors)
     {
         lock (synthesisLock)
         {
@@ -191,7 +199,7 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 Check(OmnivoxNativeEci.ClearInput(handle), "eciClearInput");
                 Configure();
                 AddText(" `" + voiceId + " `vs" + rate + " ");
-                AddTextWithWordIndexes(text);
+                AddTextWithIndexes(text, anchors);
                 Check(OmnivoxNativeEci.Synthesize(handle), "eciSynthesize");
                 Check(OmnivoxNativeEci.Synchronize(handle), "eciSynchronize");
                 ThrowCallbackError();
@@ -235,14 +243,25 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
         }
     }
 
-    private void AddTextWithWordIndexes(string text)
+    private void AddTextWithIndexes(string text,
+        OmnivoxHelperAnchor[] anchors)
     {
-        int cursor = 0;
-        uint cursorBytes = 0;
+        List<MarkerInsertion> insertions = new List<MarkerInsertion>();
+        int sequence = 0;
+        foreach (OmnivoxHelperAnchor anchor in anchors)
+        {
+            insertions.Add(new MarkerInsertion
+            {
+                Position = Utf8OffsetToCharPosition(text, anchor.TextOffset),
+                Priority = anchor.Affinity == "before" ? 0 : 2,
+                Sequence = sequence++,
+                Marker = new OmnivoxHelperMarker("requested_anchor", 0,
+                    anchor.TextOffset, 0, anchor.Id)
+            });
+        }
+
         int position = 0;
-        int markerIndex = FirstMarkerIndex;
-        while (position < text.Length &&
-            markerIndex < FirstMarkerIndex + MaximumMarkers)
+        while (position < text.Length && insertions.Count < MaximumMarkers)
         {
             int scalarLength;
             if (!IsWordCore(text, position, out scalarLength))
@@ -274,11 +293,9 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
                 break;
             }
 
-            AddTextSegment(text, cursor, wordStart - cursor);
             int wordLength = position - wordStart;
-            uint textStart = checked(cursorBytes +
-                (uint)Encoding.UTF8.GetByteCount(
-                    text.Substring(cursor, wordStart - cursor)));
+            uint textStart = checked((uint)Encoding.UTF8.GetByteCount(
+                text.Substring(0, wordStart)));
             uint textLength = checked((uint)Encoding.UTF8.GetByteCount(
                 text.Substring(wordStart, wordLength)));
             string value = text.Substring(wordStart, wordLength);
@@ -286,16 +303,66 @@ internal sealed class OmnivoxEloquenceCapture : IDisposable
             {
                 value = null;
             }
-            OmnivoxHelperMarker marker = new OmnivoxHelperMarker(
-                "word", 0, textStart, textLength, value);
+            insertions.Add(new MarkerInsertion
+            {
+                Position = wordStart,
+                Priority = 1,
+                Sequence = sequence++,
+                Marker = new OmnivoxHelperMarker("word", 0, textStart,
+                    textLength, value)
+            });
+        }
+
+        insertions.Sort(delegate(MarkerInsertion left,
+            MarkerInsertion right)
+        {
+            int order = left.Position.CompareTo(right.Position);
+            if (order == 0)
+            {
+                order = left.Priority.CompareTo(right.Priority);
+            }
+            return order == 0 ? left.Sequence.CompareTo(right.Sequence) :
+                order;
+        });
+
+        int cursor = 0;
+        int markerIndex = FirstMarkerIndex;
+        foreach (MarkerInsertion insertion in insertions)
+        {
+            AddTextSegment(text, cursor, insertion.Position - cursor);
             Check(OmnivoxNativeEci.InsertIndex(handle, markerIndex),
                 "eciInsertIndex");
-            pendingMarkers.Add(markerIndex++, marker);
-            AddTextSegment(text, wordStart, wordLength);
-            cursor = position;
-            cursorBytes = checked(textStart + textLength);
+            pendingMarkers.Add(markerIndex++, insertion.Marker);
+            cursor = insertion.Position;
         }
         AddTextSegment(text, cursor, text.Length - cursor);
+    }
+
+    private static int Utf8OffsetToCharPosition(string text,
+        uint targetOffset)
+    {
+        uint byteOffset = 0;
+        int position = 0;
+        while (position < text.Length)
+        {
+            if (byteOffset == targetOffset)
+            {
+                return position;
+            }
+            int length = Char.IsHighSurrogate(text[position]) &&
+                position + 1 < text.Length &&
+                Char.IsLowSurrogate(text[position + 1]) ? 2 : 1;
+            byteOffset = checked(byteOffset +
+                (uint)Encoding.UTF8.GetByteCount(
+                    text.Substring(position, length)));
+            position += length;
+        }
+        if (byteOffset == targetOffset)
+        {
+            return position;
+        }
+        throw new ArgumentException("anchor is not on a UTF-8 boundary",
+            "targetOffset");
     }
 
     private void AddTextSegment(string text, int start, int length)

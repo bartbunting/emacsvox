@@ -42,7 +42,22 @@ internal sealed class OmnivoxHelperCapabilities
     internal bool SentenceMarkers { get; set; }
     internal bool PhonemeMarkers { get; set; }
     internal bool NativeIndexMarkers { get; set; }
+    internal string RequestedAnchors { get; set; }
     internal bool LanguageSwitching { get; set; }
+}
+
+internal sealed class OmnivoxHelperAnchor
+{
+    internal string Id;
+    internal uint TextOffset;
+    internal string Affinity;
+
+    internal OmnivoxHelperAnchor(string id, uint textOffset, string affinity)
+    {
+        Id = id;
+        TextOffset = textOffset;
+        Affinity = affinity;
+    }
 }
 
 internal sealed class OmnivoxHelperMarker
@@ -89,23 +104,25 @@ internal interface IOmnivoxCaptureEngine : IDisposable
     OmnivoxHelperVoice[] Voices { get; }
     OmnivoxHelperCapabilities Capabilities { get; }
     OmnivoxCaptureResult Synthesize(string text, string voiceId, double rate,
-        double pitch, double volume);
+        double pitch, double volume, OmnivoxHelperAnchor[] anchors);
     void Stop();
 }
 
 /// <summary>
-/// Engine-neutral implementation of Omnivox helper protocol version 1.
+/// Engine-neutral implementation of Omnivox helper protocol versions 1 and 2.
 /// Native adapters provide inventory, captured PCM, and interruption only.
 /// </summary>
 internal sealed class OmnivoxHelperHost
 {
-    private const int ProtocolVersion = 1;
+    private const int LatestProtocolVersion = 2;
+    private const int LegacyProtocolVersion = 1;
     private const int MaximumFrameBytes = 1024 * 1024;
     private const int MaximumTextBytes = 256 * 1024;
     private const int MaximumAudioChunkBytes = 256 * 1024;
     private const int MaximumAudioBytes = 128 * 1024 * 1024;
     private const int MaximumMarkers = 4096;
     private const int MaximumStringLength = 16 * 1024;
+    private const int MaximumAnchorIdBytes = 128;
 
     private sealed class ProtocolException : Exception
     {
@@ -129,6 +146,7 @@ internal sealed class OmnivoxHelperHost
         internal double Rate;
         internal double Pitch;
         internal double Volume;
+        internal OmnivoxHelperAnchor[] Anchors;
         internal volatile bool Cancelled;
         internal Thread Worker;
     }
@@ -141,6 +159,7 @@ internal sealed class OmnivoxHelperHost
     private readonly object stateLock = new object();
     private ActiveSynthesis active;
     private bool negotiated;
+    private int selectedProtocolVersion;
     private bool shuttingDown;
 
     internal OmnivoxHelperHost(IOmnivoxCaptureEngine engine)
@@ -264,7 +283,8 @@ internal sealed class OmnivoxHelperHost
 
             requestId = ReadUnsigned(request, "request_id");
             int version = ReadInteger(request, "protocol_version");
-            if (version != ProtocolVersion)
+            if (version != LatestProtocolVersion &&
+                version != LegacyProtocolVersion)
             {
                 throw Fault("unsupported_version",
                     "unsupported helper protocol version " + version, false);
@@ -275,11 +295,16 @@ internal sealed class OmnivoxHelperHost
                 throw Fault("invalid_request",
                     "hello must be the first helper request", false);
             }
+            if (negotiated && version != selectedProtocolVersion)
+            {
+                throw Fault("unsupported_version",
+                    "request does not use the negotiated helper protocol", false);
+            }
 
             switch (type)
             {
                 case "hello":
-                    HandleHello(requestId.Value, request);
+                    HandleHello(requestId.Value, version, request);
                     break;
                 case "describe":
                     RequireFields(request, "protocol_version", "request_id",
@@ -319,7 +344,7 @@ internal sealed class OmnivoxHelperHost
         }
     }
 
-    private void HandleHello(ulong requestId,
+    private void HandleHello(ulong requestId, int requestVersion,
         IDictionary<string, object> request)
     {
         RequireFields(request, "protocol_version", "request_id", "type",
@@ -337,7 +362,8 @@ internal sealed class OmnivoxHelperHost
                 "supported_protocol_versions must be an array", false);
         }
         int count = 0;
-        bool supported = false;
+        bool supportsLatest = false;
+        bool supportsLegacy = false;
         HashSet<int> seen = new HashSet<int>();
         foreach (object item in versions)
         {
@@ -349,17 +375,22 @@ internal sealed class OmnivoxHelperHost
                 throw Fault("invalid_request",
                     "supported_protocol_versions is invalid", false);
             }
-            supported |= version == ProtocolVersion;
+            supportsLatest |= version == LatestProtocolVersion;
+            supportsLegacy |= version == LegacyProtocolVersion;
         }
-        if (count == 0 || !supported)
+        if (count == 0 ||
+            (!supportsLatest && !supportsLegacy) ||
+            !seen.Contains(requestVersion))
         {
             throw Fault("unsupported_version",
                 "no supported helper protocol version was offered", false);
         }
 
+        selectedProtocolVersion = supportsLatest ? LatestProtocolVersion :
+            LegacyProtocolVersion;
         negotiated = true;
         Dictionary<string, object> response = Response(requestId, "hello");
-        response["selected_protocol_version"] = ProtocolVersion;
+        response["selected_protocol_version"] = selectedProtocolVersion;
         response["helper_name"] = engine.HelperName;
         response["helper_version"] = "0.1.0";
         WriteFrame(response);
@@ -368,8 +399,16 @@ internal sealed class OmnivoxHelperHost
     private void HandleSynthesize(ulong requestId,
         IDictionary<string, object> request)
     {
-        RequireFields(request, "protocol_version", "request_id", "type",
-            "text", "settings");
+        if (selectedProtocolVersion >= LatestProtocolVersion)
+        {
+            RequireFields(request, "protocol_version", "request_id", "type",
+                "text", "settings", "anchors");
+        }
+        else
+        {
+            RequireFields(request, "protocol_version", "request_id", "type",
+                "text", "settings");
+        }
         string text = ReadText(request);
         if (Encoding.UTF8.GetByteCount(text) > MaximumTextBytes)
         {
@@ -406,6 +445,8 @@ internal sealed class OmnivoxHelperHost
         synthesis.Rate = ReadNumber(settings, "rate", 0.0, 1.0);
         synthesis.Pitch = ReadNumber(settings, "pitch", 0.5, 2.0);
         synthesis.Volume = ReadNumber(settings, "volume", 0.0, 1.0);
+        synthesis.Anchors = selectedProtocolVersion >= LatestProtocolVersion ?
+            ReadAnchors(request, text) : new OmnivoxHelperAnchor[0];
         synthesis.Worker = new Thread(delegate() { SynthesisWorker(synthesis); });
         synthesis.Worker.Name = "omnivox-" + engine.EngineId + "-synthesis";
         synthesis.Worker.IsBackground = true;
@@ -452,7 +493,7 @@ internal sealed class OmnivoxHelperHost
         {
             OmnivoxCaptureResult result = engine.Synthesize(synthesis.Text,
                 synthesis.VoiceId, synthesis.Rate, synthesis.Pitch,
-                synthesis.Volume);
+                synthesis.Volume, synthesis.Anchors);
             if (result == null)
             {
                 throw new InvalidOperationException(
@@ -468,7 +509,8 @@ internal sealed class OmnivoxHelperHost
                     "native engine returned invalid or oversized PCM");
             }
             ulong frameCount = (ulong)(audio.Length / frameBytes);
-            ValidateMarkers(markers, frameCount, synthesis.Text);
+            ValidateMarkers(markers, frameCount, synthesis.Text,
+                synthesis.Anchors);
             if (synthesis.Cancelled)
             {
                 WriteSimple(synthesis.RequestId, "synthesis_cancelled");
@@ -525,7 +567,7 @@ internal sealed class OmnivoxHelperHost
     }
 
     private static void ValidateMarkers(OmnivoxHelperMarker[] markers,
-        ulong frameCount, string text)
+        ulong frameCount, string text, OmnivoxHelperAnchor[] anchors)
     {
         if (markers == null || markers.Length > MaximumMarkers)
         {
@@ -533,11 +575,20 @@ internal sealed class OmnivoxHelperHost
                 "native engine returned invalid or too many markers");
         }
         ulong textBytes = (ulong)Encoding.UTF8.GetByteCount(text);
+        HashSet<string> requestedAnchors = new HashSet<string>(
+            StringComparer.Ordinal);
+        foreach (OmnivoxHelperAnchor anchor in anchors)
+        {
+            requestedAnchors.Add(anchor.Id);
+        }
+        HashSet<string> resolvedAnchors = new HashSet<string>(
+            StringComparer.Ordinal);
         foreach (OmnivoxHelperMarker marker in markers)
         {
             if (marker == null || marker.FrameOffset > frameCount ||
                 (marker.Kind != "word" && marker.Kind != "sentence" &&
-                 marker.Kind != "phoneme" && marker.Kind != "native_index") ||
+                 marker.Kind != "phoneme" && marker.Kind != "native_index" &&
+                 marker.Kind != "requested_anchor") ||
                 marker.TextStart.HasValue != marker.TextLength.HasValue ||
                 (marker.Value != null &&
                  Encoding.UTF8.GetByteCount(marker.Value) >
@@ -545,6 +596,14 @@ internal sealed class OmnivoxHelperHost
             {
                 throw new InvalidOperationException(
                     "native engine returned an invalid marker");
+            }
+            if (marker.Kind == "requested_anchor" &&
+                (marker.Value == null ||
+                 !requestedAnchors.Contains(marker.Value) ||
+                 !resolvedAnchors.Add(marker.Value)))
+            {
+                throw new InvalidOperationException(
+                    "native engine returned an unknown or duplicate anchor");
             }
             if (marker.TextStart.HasValue &&
                 (ulong)marker.TextStart.Value + marker.TextLength.Value >
@@ -581,6 +640,65 @@ internal sealed class OmnivoxHelperHost
         Dictionary<string, object> response = Response(requestId, "markers");
         response["markers"] = values;
         WriteFrame(response);
+    }
+
+    private static OmnivoxHelperAnchor[] ReadAnchors(
+        IDictionary<string, object> request, string text)
+    {
+        object raw = Required(request, "anchors");
+        IEnumerable values = raw as IEnumerable;
+        if (values == null || raw is string)
+        {
+            throw Fault("invalid_parameter", "anchors must be an array", false);
+        }
+
+        HashSet<uint> boundaries = new HashSet<uint>();
+        uint byteOffset = 0;
+        boundaries.Add(byteOffset);
+        for (int position = 0; position < text.Length;)
+        {
+            int length = Char.IsHighSurrogate(text[position]) &&
+                position + 1 < text.Length &&
+                Char.IsLowSurrogate(text[position + 1]) ? 2 : 1;
+            byteOffset = checked(byteOffset +
+                (uint)Encoding.UTF8.GetByteCount(
+                    text.Substring(position, length)));
+            boundaries.Add(byteOffset);
+            position += length;
+        }
+
+        List<OmnivoxHelperAnchor> anchors =
+            new List<OmnivoxHelperAnchor>();
+        HashSet<string> identifiers = new HashSet<string>(
+            StringComparer.Ordinal);
+        foreach (object rawAnchor in values)
+        {
+            IDictionary<string, object> value = rawAnchor as
+                IDictionary<string, object>;
+            if (value == null)
+            {
+                throw Fault("invalid_parameter",
+                    "each anchor must be an object", false);
+            }
+            RequireFields(value, "id", "text_offset", "affinity");
+            string id = ReadString(value, "id", false);
+            uint textOffset = ReadNonnegativeUInt(value, "text_offset");
+            string affinity = ReadString(value, "affinity", false);
+            if (Encoding.UTF8.GetByteCount(id) > MaximumAnchorIdBytes ||
+                !identifiers.Add(id) || !boundaries.Contains(textOffset) ||
+                (affinity != "before" && affinity != "after"))
+            {
+                throw Fault("invalid_parameter",
+                    "anchor ID, text offset, or affinity is invalid", false);
+            }
+            anchors.Add(new OmnivoxHelperAnchor(id, textOffset, affinity));
+            if (anchors.Count > MaximumMarkers)
+            {
+                throw Fault("payload_too_large",
+                    "too many requested anchors", false);
+            }
+        }
+        return anchors.ToArray();
     }
 
     private void HandleCancel(ulong requestId,
@@ -666,6 +784,12 @@ internal sealed class OmnivoxHelperHost
         markers["sentence"] = advertised.SentenceMarkers;
         markers["phoneme"] = advertised.PhonemeMarkers;
         markers["native_index"] = advertised.NativeIndexMarkers;
+        if (selectedProtocolVersion >= LatestProtocolVersion)
+        {
+            markers["requested_anchors"] =
+                !String.IsNullOrEmpty(advertised.RequestedAnchors) ?
+                advertised.RequestedAnchors : "none";
+        }
         capabilities["markers"] = markers;
         capabilities["language_switching"] = advertised.LanguageSwitching;
         capabilities["native_extensions"] = new object[0];
@@ -716,12 +840,13 @@ internal sealed class OmnivoxHelperHost
         return value;
     }
 
-    private static Dictionary<string, object> Response(ulong requestId,
+    private Dictionary<string, object> Response(ulong requestId,
         string type)
     {
         Dictionary<string, object> response =
             new Dictionary<string, object>();
-        response["protocol_version"] = ProtocolVersion;
+        response["protocol_version"] = selectedProtocolVersion == 0 ?
+            LatestProtocolVersion : selectedProtocolVersion;
         response["request_id"] = requestId;
         response["type"] = type;
         return response;
@@ -737,7 +862,8 @@ internal sealed class OmnivoxHelperHost
     {
         Dictionary<string, object> response =
             new Dictionary<string, object>();
-        response["protocol_version"] = ProtocolVersion;
+        response["protocol_version"] = selectedProtocolVersion == 0 ?
+            LatestProtocolVersion : selectedProtocolVersion;
         response["request_id"] = requestId.HasValue ?
             (object)requestId.Value : null;
         response["type"] = "error";
@@ -842,6 +968,28 @@ internal sealed class OmnivoxHelperHost
         {
             throw Fault("invalid_request",
                 "invalid positive integer field: " + field, false);
+        }
+    }
+
+    private static uint ReadNonnegativeUInt(
+        IDictionary<string, object> values, string field)
+    {
+        object value = Required(values, field);
+        try
+        {
+            decimal number = Convert.ToDecimal(value,
+                CultureInfo.InvariantCulture);
+            if (Decimal.Truncate(number) != number || number < 0 ||
+                number > UInt32.MaxValue)
+            {
+                throw new OverflowException();
+            }
+            return Decimal.ToUInt32(number);
+        }
+        catch
+        {
+            throw Fault("invalid_request",
+                "invalid nonnegative integer field: " + field, false);
         }
     }
 

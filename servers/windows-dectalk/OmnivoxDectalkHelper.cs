@@ -44,7 +44,8 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
             Rate = true,
             WordMarkers = true,
             PhonemeMarkers = true,
-            NativeIndexMarkers = true
+            NativeIndexMarkers = true,
+            RequestedAnchors = "word_boundary"
         };
 
     private readonly OmnivoxDectalkCapture capture;
@@ -71,7 +72,8 @@ internal sealed class OmnivoxDectalkAdapter : IOmnivoxCaptureEngine
     }
 
     public OmnivoxCaptureResult Synthesize(string text, string voiceId,
-        double rate, double pitch, double volume)
+        double rate, double pitch, double volume,
+        OmnivoxHelperAnchor[] anchors)
     {
         string voiceCode;
         if (!VoiceCodes.TryGetValue(voiceId, out voiceCode))

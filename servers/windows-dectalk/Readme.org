@@ -175,7 +175,8 @@ Omnivox.  It does not own playback and does not change the existing
 =paul=, =betty=, =harry=, =frank=, =kit=, =rita=, =ursula=, =dennis=, and
 =wendy=, with =paul= as the default.
 
-Version 1 maps normalized rate across DECtalk's 75-through-600 WPM range while
+Both helper protocol versions map normalized rate across DECtalk's
+75-through-600 WPM range while
 preserving 225 WPM at the normal midpoint.  The helper also captures DECtalk's
 native phoneme changes and explicitly inserted =[:index mark N]= records.  It
 reports their utterance-relative sample numbers as =phoneme= and =native_index=
@@ -194,6 +195,10 @@ indexes retain their =native_index= identity.  A real-helper regression produced
 identical PCM with and without the generated indexes.  Combined marker storage
 is bounded to 4096 records per utterance.  Sentence markers and the other ACSS
 dimensions remain advertised as unavailable.
+
+Protocol version 2 advertises requested anchors at word-boundary precision.
+Omnivox resolves them from the returned word markers; it does not claim exact
+in-word placement.  Version 1 remains available without an anchor field.
 
 The helper accepts a DLL path as its first argument.  Otherwise it checks
 =OMNIVOX_DECTALK_DLL=, then =EMACSVOX_DECTALK_DLL=, then =DECtalk.dll= beside

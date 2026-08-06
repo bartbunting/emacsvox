@@ -25,7 +25,8 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
         new OmnivoxHelperCapabilities
         {
             Rate = true,
-            WordMarkers = true
+            WordMarkers = true,
+            RequestedAnchors = "exact"
         };
 
     private readonly OmnivoxEloquenceCapture capture;
@@ -52,13 +53,14 @@ internal sealed class OmnivoxEloquenceAdapter : IOmnivoxCaptureEngine
     }
 
     public OmnivoxCaptureResult Synthesize(string text, string voiceId,
-        double rate, double pitch, double volume)
+        double rate, double pitch, double volume,
+        OmnivoxHelperAnchor[] anchors)
     {
         // Existing Emacsvox Eloquence operation treats 75 as its normal
         // speed. Preserve that midpoint while providing a bounded range.
         int nativeRate = (int)Math.Round(20.0 + rate * 110.0,
             MidpointRounding.AwayFromZero);
-        return capture.Synthesize(text, voiceId, nativeRate);
+        return capture.Synthesize(text, voiceId, nativeRate, anchors);
     }
 
     public void Stop()
