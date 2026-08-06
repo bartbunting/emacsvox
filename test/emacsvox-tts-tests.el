@@ -306,7 +306,7 @@
                :protocol_version 1 :request_id identifier
                :type "capabilities" :server_version "1.3.0"
                :supported_protocol_versions [1]
-               :features ["control_v1" "engine_inventory"
+               :features ["control_v1" "emacsvox_tx" "engine_inventory"
                           "logical_voice_registration"
                           "preferred_engine"]))))
           (let* ((request (emacsvox-test--omnivox-decode-command (car writes)))
@@ -338,6 +338,9 @@
                '(:registry_generation 1 :bindings [])))))
           (should (equal (plist-get omnivox-control-capabilities :type)
                          "capabilities"))
+          (should
+           (process-get
+            process emacsvox-aural--framed-delivery-process-property))
           (should (= (plist-get omnivox-engine-inventory
                                 :inventory_generation)
                      3))
@@ -353,6 +356,25 @@
    (omnivox--decode-control-response
     (make-string (1+ omnivox-control-max-encoded-bytes) ?A))
    :type 'error))
+
+(ert-deftest emacsvox-tts-omnivox-gates-framing-on-capability ()
+  "Legacy Omnivox processes are not sent framed presentations."
+  (let ((process
+         (make-pipe-process
+          :name "emacsvox-omnivox-legacy-capability-test"
+          :buffer nil :noquery t))
+        (tts-speaker-process nil))
+    (unwind-protect
+        (progn
+          (omnivox--handle-capabilities-response
+           process
+           '(:type "capabilities" :server_version "1.3.0"
+             :supported_protocol_versions (1)
+             :features ("legacy_commands")))
+          (should-not
+           (process-get
+            process emacsvox-aural--framed-delivery-process-property)))
+      (delete-process process))))
 
 (ert-deftest emacsvox-tts-omnivox-preserves-structured-voice-selectors ()
   "Logical preferences keep engine IDs separate from native voice IDs."

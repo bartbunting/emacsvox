@@ -15,6 +15,9 @@
 (require 'json)
 (require 'subr-x)
 
+(declare-function emacsvox-aural-enable-framed-delivery
+                  "emacsvox-aural-transport" (process))
+
 (defvar emacsvox-servers-directory)
 (defvar emacsvox-play-program)
 (defvar tts-default-speech-rate)
@@ -524,6 +527,8 @@ Return the number of processes sent the atomic registry replacement."
   (if (not (equal (plist-get response :type) "capabilities"))
       (omnivox--record-control-error process response)
     (process-put process omnivox--control-capabilities-property response)
+    (when (member "emacsvox_tx" (plist-get response :features))
+      (emacsvox-aural-enable-framed-delivery process))
     (when (eq process tts-speaker-process)
       (setq omnivox-control-capabilities response))
     (if (member "engine_inventory" (plist-get response :features))
