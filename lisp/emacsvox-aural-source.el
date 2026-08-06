@@ -80,6 +80,14 @@ occasion, or a new queued icon changes.")
   'emacsvox-aural-source-faces
   "Text property holding an authoritative named source-face snapshot.")
 
+(defconst emacsvox-aural-source-invisible-property
+  'emacsvox-aural-source-invisible
+  "Text property recording effective source invisibility.
+
+The value is non-nil only when `invisible-p' was non-nil in the source buffer.
+It lets later TTS cleanup preserve that decision without depending on another
+buffer's `buffer-invisibility-spec'.")
+
 (defun emacsvox-aural-source-text-property (position property &optional object)
   "Return the actual PROPERTY at POSITION in OBJECT.
 
@@ -261,24 +269,38 @@ current buffer."
       (emacsvox-aural--normalize-source-face-records records))))
 
 (defun emacsvox-aural-source-substring (start end &optional buffer)
-  "Copy START through END from BUFFER with source-face snapshots.
+  "Copy START through END from BUFFER with source presentation snapshots.
 
 This is the source-boundary counterpart of `buffer-substring'.  It preserves
 ordinary text properties and annotates the returned string with ordered,
-data-only overlay and text-property face provenance without changing BUFFER."
+data-only face provenance, effective invisibility, and effective auditory icons
+without changing BUFFER."
   (with-current-buffer (or buffer (current-buffer))
     (let ((text (buffer-substring start end))
           (position start))
       (while (< position end)
         (let* ((next (next-char-property-change position end))
                (snapshot
-                (emacsvox-aural-capture-source-faces position)))
-          (when snapshot
+                (emacsvox-aural-capture-source-faces position))
+               (invisible (get-char-property position 'invisible))
+               (effectively-invisible (invisible-p position))
+               (icon (get-char-property position 'auditory-icon))
+               (properties
+                (append
+                 (when snapshot
+                   (list
+                    emacsvox-aural-source-faces-property
+                    (copy-tree snapshot)))
+                 (when invisible
+                   (list 'invisible (copy-tree invisible)))
+                 (when effectively-invisible
+                   (list emacsvox-aural-source-invisible-property t))
+                 (when icon
+                   (list 'auditory-icon (copy-tree icon))))))
+          (when properties
             (add-text-properties
              (- position start) (- next start)
-             (list
-              emacsvox-aural-source-faces-property
-              (copy-tree snapshot))
+             properties
              text))
           (setq position next)))
       text)))

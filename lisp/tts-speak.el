@@ -61,6 +61,7 @@
 (defvar tts-split-caps)
 (defvar tts-caps)
 (defvar tts-speech-rate)
+(defvar emacsvox-aural-source-invisible-property)
 
 (declare-function ems--fastload "emacsvox-preamble" (file))
 (declare-function voice-setup-get-voice-for-face "voice-setup" (face))
@@ -542,21 +543,43 @@ start of the source match."
 
 ;;;   Helpers to handle invisible text:
 
+(defun tts--invisible-at-p (position)
+  "Return non-nil when text at POSITION must be omitted from speech."
+  (or
+   (get-char-property position emacsvox-aural-source-invisible-property)
+   (invisible-p position)))
+
+(defun tts--next-invisibility-change (position)
+  "Return the next speech-invisibility boundary after POSITION."
+  (let ((limit (point-max)))
+    (min
+     (next-single-property-change
+      position 'invisible (current-buffer) limit)
+     (next-single-property-change
+      position emacsvox-aural-source-invisible-property
+      (current-buffer) limit))))
+
+(defun tts--previous-invisibility-change (position)
+  "Return the previous speech-invisibility boundary before POSITION."
+  (let ((limit (point-min)))
+    (max
+     (previous-single-property-change
+      position 'invisible (current-buffer) limit)
+     (previous-single-property-change
+      position emacsvox-aural-source-invisible-property
+      (current-buffer) limit))))
+
 (defun tts--skip-invisible-forward ()
   "Move across invisible text."
   (while (and (not (eobp))
-              (invisible-p (point)))
-    (goto-char
-     (next-single-property-change (point) 'invisible
-                                  (current-buffer) (point-max)))))
+              (tts--invisible-at-p (point)))
+    (goto-char (tts--next-invisibility-change (point)))))
 
 (defun tts--skip-invisible-backward ()
   "Move backwards over invisible text."
   (while (and (not (bobp))
-              (invisible-p (point)))
-    (goto-char
-     (previous-single-property-change (point) 'invisible
-                                      (current-buffer) (point-min)))))
+              (tts--invisible-at-p (point)))
+    (goto-char (tts--previous-invisibility-change (point)))))
 
 (defun tts--delete-invisible-text ()
   "Delete invisible text."
@@ -564,7 +587,7 @@ start of the source match."
   (let ((start (point)))
     (while (not (eobp))
       (cond
-       ((invisible-p (point))
+       ((tts--invisible-at-p (point))
         (tts--skip-invisible-forward)
         (delete-region start (point))
         (setq start (point)))

@@ -2522,6 +2522,88 @@ is the default inherited by a newly created TTS scratch buffer."
             (text-property face)
             (text-property font-lock-face))))))))
 
+(ert-deftest emacsvox-aural-source-preserves-effective-overlay-properties ()
+  "The frozen source retains overlay invisibility and auditory icons."
+  (with-temp-buffer
+    (insert "visible secret")
+    (setq-local buffer-invisibility-spec t)
+    (let ((overlay (make-overlay 9 (point-max))))
+      (overlay-put overlay 'priority 7)
+      (overlay-put overlay 'invisible t)
+      (overlay-put overlay 'auditory-icon 'warn-user)
+      (let ((copy
+             (emacsvox-aural-source-substring
+              (point-min) (point-max))))
+        (should (equal copy "visible secret"))
+        (should (eq (get-text-property 8 'invisible copy) t))
+        (should
+         (get-text-property
+          8 emacsvox-aural-source-invisible-property copy))
+        (should
+         (eq (get-text-property 8 'auditory-icon copy) 'warn-user))
+        (should-not
+         (get-text-property
+          9 emacsvox-aural-source-invisible-property))
+        (should-not (get-text-property 9 'auditory-icon))))))
+
+(ert-deftest emacsvox-aural-source-freezes-effective-invisibility-decision ()
+  "TTS removes source-hidden text despite a different destination spec."
+  (let (copy)
+    (with-temp-buffer
+      (insert "visible secret")
+      (setq-local buffer-invisibility-spec '((fold . t)))
+      (let ((overlay (make-overlay 9 (point-max))))
+        (overlay-put overlay 'invisible 'fold)
+        (setq
+         copy
+         (emacsvox-aural-source-substring
+          (point-min) (point-max)))))
+    (with-temp-buffer
+      (setq-local buffer-invisibility-spec nil)
+      (insert copy)
+      (tts--delete-invisible-text)
+      (should (equal (buffer-string) "visible ")))))
+
+(ert-deftest emacsvox-aural-source-keeps-source-visible-property-visible ()
+  "An inactive source invisibility value is not treated as hidden later."
+  (let (copy)
+    (with-temp-buffer
+      (insert "visible text")
+      (setq-local buffer-invisibility-spec nil)
+      (let ((overlay (make-overlay 9 (point-max))))
+        (overlay-put overlay 'invisible 'fold)
+        (setq
+         copy
+         (emacsvox-aural-source-substring
+          (point-min) (point-max)))))
+    (should (eq (get-text-property 8 'invisible copy) 'fold))
+    (should-not
+     (get-text-property
+      8 emacsvox-aural-source-invisible-property copy))
+    (with-temp-buffer
+      (setq-local buffer-invisibility-spec nil)
+      (insert copy)
+      (tts--delete-invisible-text)
+      (should (equal (buffer-string) "visible text")))))
+
+(ert-deftest emacsvox-aural-source-captures-effective-overlay-icon ()
+  "The strongest overlay icon replaces a copied text-property icon."
+  (with-temp-buffer
+    (insert (propertize "item" 'auditory-icon 'item))
+    (let ((weak (make-overlay (point-min) (point-max)))
+          (strong (make-overlay (point-min) (point-max))))
+      (overlay-put weak 'priority 2)
+      (overlay-put weak 'auditory-icon 'button)
+      (overlay-put strong 'priority 9)
+      (overlay-put strong 'auditory-icon 'warn-user)
+      (let ((copy
+             (emacsvox-aural-source-substring
+              (point-min) (point-max))))
+        (should
+         (eq (get-text-property 0 'auditory-icon copy) 'warn-user))
+        (should
+         (eq (get-text-property (point-min) 'auditory-icon) 'item))))))
+
 (ert-deftest emacsvox-aural-transport-source-and-frozen-faces-agree ()
   "Frozen speech uses the same overlay snapshot captured at its source."
   (emacsvox-test--with-transport-scheme
