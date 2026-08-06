@@ -294,24 +294,74 @@ ICON defaults to `select-object'.  FAILED marks unsuccessful inspection."
       :events (list event))
      (when state (list :states (list state))))))
 
+(defun emacsvox-dired--present-marking-result (facts context icon)
+  "Present a marking result and its destination as one transaction.
+
+FACTS and ICON describe the entry changed by the marking command.  CONTEXT is
+captured before that command moves point.  The first, inaudible object owns the
+state change and its cue; the second object owns destination-row navigation."
+  (let* ((destination-facts
+          (emacsvox-dired-entry-facts 'focus-entered))
+         (entry-content (emacsvox-dired--current-entry-content))
+         (line-content
+          (unless entry-content (emacsvox-dired--line-content)))
+         (line-condition
+          (and
+           line-content
+           (emacsvox-speak--line-condition
+            (substring-no-properties line-content))))
+         ;; A non-whitespace sentinel ensures TTS visits the action plan;
+         ;; leading whitespace is skipped before concrete plans are queued.
+         (action-content (propertize "x" 'personality 'inaudible))
+         (destination-content
+          (copy-sequence
+           (if line-condition
+               (propertize "x" 'personality 'inaudible)
+             (or entry-content line-content
+                 (propertize "x" 'personality 'inaudible))))))
+    (when line-condition
+      (setq
+       destination-facts
+       (plist-put destination-facts :line-condition line-condition)))
+    (add-text-properties
+     0 (length action-content)
+     (list
+      emacsvox-aural-object-property 'dired-marking-action
+      emacsvox-aural-facts-property facts
+      emacsvox-aural-occasion-property 'state-change)
+     action-content)
+    (add-text-properties
+     0 (length destination-content)
+     (list
+      emacsvox-aural-object-property 'dired-marking-destination
+      emacsvox-aural-facts-property destination-facts
+      emacsvox-aural-occasion-property 'navigation)
+     destination-content)
+    (prog1
+        (emacsvox-aural-submit
+         (concat action-content destination-content)
+         :context context
+         :module 'dired
+         :occasion 'navigation
+         :delivery-policy 'replaceable
+         :replacement-key 'dired-marking
+         :compatibility-actions
+         (list (emacsvox-aural-compatibility-icon icon)))
+      (setq emacsvox-speak-last-spoken-word-position (point)))))
+
 (defun emacsvox-dired--marking-around
     (orig-fun arguments target icon event &optional state)
   "Call ORIG-FUN with ARGUMENTS and present a Dired marking action.
 
 TARGET controls interactive feedback.  ICON, EVENT, and resulting STATE
 describe the entry at point before the command advances to the next row.
-The next row is spoken before the action cue so its speech cannot cancel the
-cue on single-stream speech servers."
+The action cue precedes destination speech in one replaceable transaction."
   (if (ems-interactive-p target)
       (let* ((facts (emacsvox-dired-action-facts event state))
              (context
               (emacsvox-aural-capture-context 'dired 'state-change))
              (result (apply orig-fun arguments)))
-        (emacsvox-dired-present-current
-         nil 'navigation 'focus-entered)
-        (let ((emacsvox-aural-submission-context context))
-          (emacsvox-dired--present-feedback
-           facts 'state-change icon #'ignore))
+        (emacsvox-dired--present-marking-result facts context icon)
         result)
     (apply orig-fun arguments)))
 

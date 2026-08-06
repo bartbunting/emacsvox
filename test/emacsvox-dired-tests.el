@@ -1186,6 +1186,143 @@
            :icons-enabled)
           icons-enabled))))))
 
+(ert-deftest emacsvox-dired-marking-submits-two-semantic-objects ()
+  "A marking cue and destination retain distinct facts in one submission."
+  (let* ((action-facts
+          '(:role filesystem-entry :entry-kind file
+            :events (entry-marked) :states (marked)))
+         (destination-facts
+          '(:role filesystem-entry :entry-kind directory
+            :events (focus-entered)))
+         (context
+          '(:module dired :mode dired-mode :occasion state-change
+            :icons-enabled t))
+         submission)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-entry-facts)
+          (lambda (&rest _) destination-facts))
+         ((symbol-function 'emacsvox-dired--current-entry-content)
+          (lambda () (propertize "next" 'personality 'voice-bolden)))
+         ((symbol-function 'emacsvox-aural-submit)
+          (lambda (content &rest arguments)
+            (setq submission (cons content arguments)))))
+      (emacsvox-dired--present-marking-result
+       action-facts context 'mark-object))
+    (pcase-let* ((`(,content . ,arguments) submission)
+                 (actions (plist-get arguments :compatibility-actions)))
+      (should (equal (substring-no-properties content) "xnext"))
+      (should
+       (eq
+        (get-text-property 0 emacsvox-aural-object-property content)
+        'dired-marking-action))
+      (should
+       (eq
+        (get-text-property 1 emacsvox-aural-object-property content)
+        'dired-marking-destination))
+      (should
+       (equal
+        (get-text-property 0 emacsvox-aural-facts-property content)
+        action-facts))
+      (should
+       (equal
+        (get-text-property 1 emacsvox-aural-facts-property content)
+        destination-facts))
+      (should (eq (get-text-property 0 'personality content) 'inaudible))
+      (should (eq (get-text-property 1 'personality content) 'voice-bolden))
+      (should
+       (eq
+        (get-text-property 0 emacsvox-aural-occasion-property content)
+        'state-change))
+      (should
+       (eq
+        (get-text-property 1 emacsvox-aural-occasion-property content)
+        'navigation))
+      (should (equal (plist-get arguments :context) context))
+      (should (eq (plist-get arguments :occasion) 'navigation))
+      (should (eq (plist-get arguments :delivery-policy) 'replaceable))
+      (should (eq (plist-get arguments :replacement-key) 'dired-marking))
+      (should (= (length actions) 1))
+      (should
+       (eq
+        (emacsvox-aural-compatibility-action-value (car actions))
+        'mark-object)))))
+
+(ert-deftest emacsvox-dired-marking-replaces-one-complete-packet ()
+  "Rapid marking retains only the latest cue-then-destination transaction."
+  (let ((emacsvox-aural-active-scheme 'default)
+        (emacsvox-aural-enabled-feature-fragments nil)
+        (emacsvox-aural-user-rules nil)
+        (emacsvox-aural-session-rules nil)
+        (emacsvox-aural-buffer-rules nil)
+        (emacsvox-aural--pending-deliveries
+         (make-hash-table :test #'equal))
+        (emacsvox-aural--delivery-sequence 0)
+        (emacsvox-aural--submission-sequence 0)
+        (emacsvox-aural-presentation-history nil)
+        (emacsvox-aural-plan-presented-hook nil)
+        (emacsvox-play-program nil)
+        (emacsvox-use-icons t)
+        (emacsvox-pronounce-table nil)
+        (emacsvox-pronounce-personality nil)
+        (tts-speaker-process 'speech)
+        (tts-notify-process nil)
+        (tts-stop-immediately t)
+        (tts-stopped-hook nil)
+        (tts-punctuation-mode 'all)
+        (tts-quiet nil)
+        (voice-lock-mode nil)
+        (context
+         '(:module dired
+           :mode dired-mode
+           :mode-lineage (dired-mode special-mode)
+           :occasion state-change
+           :face-presentation-enabled t
+           :voice-lock-enabled nil
+           :icons-enabled t))
+        (contents '("obsolete destination" "latest destination"))
+        writes)
+    (cl-letf
+        (((symbol-function 'emacsvox-dired-entry-facts)
+          (lambda (&rest _)
+            '(:role filesystem-entry :entry-kind file
+              :events (focus-entered))))
+         ((symbol-function 'emacsvox-dired--current-entry-content)
+          (lambda () (pop contents)))
+         ((symbol-function 'process-live-p)
+          (lambda (process) (eq process 'speech)))
+         ((symbol-function 'process-send-string)
+          (lambda (process command)
+            (push (list process command) writes)))
+         ((symbol-function 'run-with-idle-timer)
+          (lambda (&rest _arguments) 'timer))
+         ((symbol-function 'cancel-timer) #'ignore)
+         ((symbol-function 'tts-voice-reset-code)
+          (lambda () "RESET")))
+      (emacsvox-dired--present-marking-result
+       '(:role filesystem-entry :entry-kind file
+         :events (entry-marked) :states (marked))
+       context 'mark-object)
+      (emacsvox-dired--present-marking-result
+       '(:role filesystem-entry :entry-kind file
+         :events (entry-unmarked))
+       context 'deselect-object)
+      (should
+       (equal
+        (nreverse (copy-sequence writes))
+        '((speech "s\n") (speech "s\n"))))
+      (emacsvox-aural-flush-pending-deliveries 'speech))
+    (let* ((writes (nreverse writes))
+           (wire (mapconcat #'cadr writes ""))
+           (cue-position (string-match "deselect-object\\.ogg" wire))
+           (speech-position (string-match "latest destination" wire)))
+      (should (= (length writes) 3))
+      (should-not (string-match-p "obsolete destination" wire))
+      (should-not (string-match-p "mark-object\\.ogg" wire))
+      (should cue-position)
+      (should speech-position)
+      (should (< cue-position speech-position))
+      (should (string-match-p "\nd\n\\'" wire)))))
+
 (ert-deftest emacsvox-dired-marking-feedback-is-target-aware ()
   "Only the matching command emits action cue then next-row speech."
   (let ((ems--interactive-fn-name 'dired-flag-file-deletion)
@@ -1193,10 +1330,9 @@
     (cl-letf
         (((symbol-function 'emacsvox-dired-action-facts)
           (lambda (&rest _) '(:role filesystem-entry)))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (icon) (push (list 'icon icon) events)))
-         ((symbol-function 'emacsvox-dired-present-current)
-          (lambda (&rest _) (push 'line events))))
+         ((symbol-function 'emacsvox-dired--present-marking-result)
+          (lambda (facts _context icon)
+            (push (list 'presentation facts icon) events))))
       (emacsvox--advice-dired-mark-around
        (lambda () (push 'mark events)))
       (emacsvox--advice-dired-flag-file-deletion-around
@@ -1206,7 +1342,10 @@
     (should
      (equal
       (nreverse events)
-      '(mark original line (icon delete-object) unmark)))))
+      '(mark
+        original
+        (presentation (:role filesystem-entry) delete-object)
+        unmark)))))
 
 (ert-deftest emacsvox-dired-marking-freezes-the-action-target ()
   "The action cue keeps pre-command facts while next-row speech is navigation."
@@ -1217,27 +1356,22 @@
           (lambda (&rest _)
             '(:role filesystem-entry :entry-kind file
               :events (entry-marked) :states (marked))))
-         ((symbol-function 'emacsvox-icon)
-          (lambda (_)
-            (push
-             (list 'action emacsvox-aural-submission-facts)
-             events)))
-         ((symbol-function 'emacsvox-dired-present-current)
-          (lambda (&rest _)
-            (push 'next-row events))))
+         ((symbol-function 'emacsvox-dired--present-marking-result)
+          (lambda (facts _context icon)
+            (push (list 'presentation facts icon) events))))
       (emacsvox--advice-dired-mark-around
        (lambda () (push 'original events) 'result)))
     (should
      (equal
       (nreverse events)
       '(original
-        next-row
-        (action
+        (presentation
          (:role filesystem-entry :entry-kind file
-          :events (entry-marked) :states (marked))))))))
+          :events (entry-marked) :states (marked))
+         mark-object))))))
 
-(ert-deftest emacsvox-dired-interactive-mark-actions-confirm-after-navigation ()
-  "Real interactive mark and unmark commands leave their cues audible."
+(ert-deftest emacsvox-dired-interactive-mark-actions-preserve-destination ()
+  "Real mark and unmark commands capture their destination row."
   (let* ((directory (make-temp-file "emacsvox-dired-actions-" t))
          (first (expand-file-name "first.txt" directory))
          (second (expand-file-name "second.txt" directory))
@@ -1250,10 +1384,15 @@
           (setq buffer (dired-noselect directory))
           (with-current-buffer buffer
             (cl-letf
-                (((symbol-function 'emacsvox-dired-present-current)
-                  (lambda (&rest _) (push 'next-row events)))
-                 ((symbol-function 'emacsvox-icon)
-                  (lambda (icon) (push (list 'icon icon) events))))
+                (((symbol-function 'emacsvox-dired--present-marking-result)
+                  (lambda (facts _context icon)
+                    (push
+                     (list
+                      icon
+                      (plist-get facts :events)
+                      (file-name-nondirectory
+                       (dired-get-filename nil t)))
+                     events))))
               (dired-goto-file first)
               (funcall-interactively #'dired-mark nil t)
               (dired-goto-file first)
@@ -1264,10 +1403,8 @@
     (should
      (equal
       (nreverse events)
-      '(next-row
-        (icon mark-object)
-        next-row
-        (icon deselect-object))))))
+      '((mark-object (entry-marked) "second.txt")
+        (deselect-object (entry-unmarked) "second.txt"))))))
 
 (ert-deftest emacsvox-dired-quit-feedback-is-mode-scoped ()
   "Only an interactive quit originating in Dired gets Dired feedback."
