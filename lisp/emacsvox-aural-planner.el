@@ -385,65 +385,19 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
      :rule-scores (plist-get provenance :scores)
      :semantic-matches (plist-get provenance :semantic-matches))))
 
-(defun emacsvox-aural--combine-concrete-run
-    (source-plan object-plan run-plan transition-plan previous-transition
-     next-transition object-id run-id first-p last-p)
-  "Return one concrete run nested in OBJECT-ID."
-  (let ((transition-before
-         (emacsvox-aural--actions-not-in
-          (emacsvox-aural-concrete-plan-before transition-plan)
-          (and
-           previous-transition
-           (emacsvox-aural-concrete-plan-before previous-transition))
-          #'emacsvox-aural-concrete-action-id))
-        (transition-after
-         (emacsvox-aural--actions-not-in
-          (emacsvox-aural-concrete-plan-after transition-plan)
-          (and
-           next-transition
-           (emacsvox-aural-concrete-plan-after next-transition))
-          #'emacsvox-aural-concrete-action-id)))
-    (emacsvox-aural--make-concrete-plan
-     :before
-     (append
-      (and first-p (emacsvox-aural-concrete-plan-before object-plan))
-      transition-before
-      (emacsvox-aural-concrete-plan-before run-plan))
-     :content (emacsvox-aural-concrete-plan-content run-plan)
-     :after
-     (append
-      (emacsvox-aural-concrete-plan-after run-plan)
-      transition-after
-      (and last-p (emacsvox-aural-concrete-plan-after object-plan)))
-     :facts (copy-tree (emacsvox-aural-concrete-plan-facts run-plan))
-     :context (copy-tree (emacsvox-aural-concrete-plan-context run-plan))
-     :resource-pack (emacsvox-aural-concrete-plan-resource-pack run-plan)
-     :voice-palette (emacsvox-aural-concrete-plan-voice-palette run-plan)
-     :scheme (emacsvox-aural-concrete-plan-scheme run-plan)
-     :configuration-generation
-     (emacsvox-aural-concrete-plan-configuration-generation run-plan)
-     :rule-provenance
-     (mapcar
-      (lambda (id)
-        (cl-find
-         id
-         (append
-          (emacsvox-aural-concrete-plan-rule-provenance object-plan)
-          (emacsvox-aural-concrete-plan-rule-provenance transition-plan)
-          (emacsvox-aural-concrete-plan-rule-provenance run-plan))
-         :key (lambda (entry) (plist-get entry :id))
-         :test #'eq))
-      (emacsvox-aural-render-plan-matched-rules source-plan))
-     :source-plan source-plan
-     :degradations
-     (append
-      (and first-p (emacsvox-aural-concrete-plan-degradations object-plan))
-      (emacsvox-aural-concrete-plan-degradations transition-plan)
-      (emacsvox-aural-concrete-plan-degradations run-plan))
-     :object-id object-id
-     :run-id run-id
-     :object-start-p first-p
-     :object-end-p last-p)))
+(defun emacsvox-aural--compile-run-plan
+    (source-plan run object-id run-id first-p last-p)
+  "Compile SOURCE-PLAN once for RUN nested in OBJECT-ID."
+  (let ((concrete
+         (emacsvox-aural-compile-plan
+          source-plan
+          (emacsvox-aural-source-run-facts run)
+          (emacsvox-aural-source-run-context run))))
+    (setf (emacsvox-aural-concrete-plan-object-id concrete) object-id
+          (emacsvox-aural-concrete-plan-run-id concrete) run-id
+          (emacsvox-aural-concrete-plan-object-start-p concrete) first-p
+          (emacsvox-aural-concrete-plan-object-end-p concrete) last-p)
+    concrete))
 
 (defun emacsvox-aural--prepare-object
     (text start end base-facts base-context object-id
@@ -466,11 +420,6 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
              compatibility-actions
              (emacsvox-aural-source-run-facts (car runs))
              (emacsvox-aural-source-run-context (car runs))))
-           (object-concrete
-            (emacsvox-aural-compile-plan
-             object-render
-             (emacsvox-aural-source-run-facts (car runs))
-             (emacsvox-aural-source-run-context (car runs))))
            (run-renders
             (mapcar
              (lambda (run)
@@ -481,34 +430,14 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
              (lambda (run)
                (emacsvox-aural--resolve-source-run run 'transition))
              runs))
-           (run-concretes
-            (cl-mapcar
-             (lambda (render run)
-               (emacsvox-aural-compile-plan
-                render
-                (emacsvox-aural-source-run-facts run)
-                (emacsvox-aural-source-run-context run)))
-             run-renders runs))
-           (transition-concretes
-            (cl-mapcar
-             (lambda (render run)
-               (emacsvox-aural-compile-plan
-                render
-                (emacsvox-aural-source-run-facts run)
-                (emacsvox-aural-source-run-context run)))
-             transition-renders runs))
            (count (length runs)))
       (cl-loop
        for run in runs
        for run-render in run-renders
        for transition-render in transition-renders
-       for run-concrete in run-concretes
-       for transition-concrete in transition-concretes
        for index from 0
        for previous-render = nil then transition-render
-       for previous-concrete = nil then transition-concrete
        for next-render = (nth (1+ index) transition-renders)
-       for next-concrete = (nth (1+ index) transition-concretes)
        for first-p = (zerop index)
        for last-p = (= index (1- count))
        do
@@ -517,10 +446,8 @@ Return LIMIT when PROPERTY has no later non-nil value in TEXT."
                 object-render run-render transition-render
                 previous-render next-render first-p last-p))
               (concrete
-               (emacsvox-aural--combine-concrete-run
-                source-plan object-concrete run-concrete transition-concrete
-                previous-concrete next-concrete object-id index
-                first-p last-p)))
+               (emacsvox-aural--compile-run-plan
+                source-plan run object-id index first-p last-p)))
          (add-text-properties
           (emacsvox-aural-source-run-start run)
           (emacsvox-aural-source-run-end run)

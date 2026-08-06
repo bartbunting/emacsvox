@@ -2763,6 +2763,25 @@ is the default inherited by a newly created TTS scratch buffer."
         (should (< (- (nth 2 after) (nth 2 before)) 5000000))
         (should (< (- (nth 4 after) (nth 4 before)) 1000000))))))
 
+(ert-deftest emacsvox-aural-transport-compiles-each-source-run-once ()
+  "Combined lifetime plans are compiled once for each formatting run."
+  (emacsvox-test--with-transport-scheme
+    (let* ((text (copy-sequence "abcdef"))
+           (context (emacsvox-test--transport-context))
+           (original (symbol-function 'emacsvox-aural-compile-plan))
+           (compilations 0))
+      (add-text-properties 0 2 '(face bold) text)
+      (add-text-properties 2 4 '(face italic) text)
+      (let ((prepared
+             (cl-letf
+                 (((symbol-function 'emacsvox-aural-compile-plan)
+                   (lambda (&rest arguments)
+                     (cl-incf compilations)
+                     (apply original arguments))))
+               (emacsvox-aural-prepare-text text nil context))))
+        (should (= (length (emacsvox-test--concrete-plans-in prepared)) 3))
+        (should (= compilations 3))))))
+
 (ert-deftest emacsvox-aural-transport-queue-never-reresolves ()
   "Queueing a compiled plan performs no semantic, resource, or voice lookup."
   (emacsvox-test--with-transport-scheme
