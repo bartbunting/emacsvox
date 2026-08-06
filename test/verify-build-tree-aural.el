@@ -35,6 +35,7 @@
           emacsvox-aural-rules
           emacsvox-aural-resources
           emacsvox-aural-schemes
+          emacsvox-aural-routing-profiles
           emacsvox-aural-profile-service
           emacsvox-aural-providers
           emacsvox-aural-compiler

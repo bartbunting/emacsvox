@@ -126,6 +126,7 @@
          "emacsvox-aural-recent-feedback"
          "emacsvox-aural-feature-fragments"
          "emacsvox-aural-home"
+         "emacsvox-aural-routing-profiles"
          "emacsvox-aural-editor"
          "emacsvox-aural-overrides"
          "emacsvox-aural-simple-editor"

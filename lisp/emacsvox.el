@@ -57,6 +57,7 @@
 (eval-when-compile (require 'cl-lib))
 (require 'emacsvox-preamble)
 (require 'emacsvox-aural-scheme-manager)
+(require 'emacsvox-aural-routing-profiles)
 (require 'emacsvox-aural-semantics)
 (require 'emacsvox-aural-explanation)
 (require 'emacsvox-aural-tools)
@@ -418,6 +419,7 @@ commands and options."
    -10)
   (tts-initialize)
   (emacsvox-aural-load-user-data)
+  (emacsvox-aural-load-routing-profiles nil t)
   (emacsvox-aural-validate-scheme-registry)
   (emacsvox-sounds-select-theme
    (or

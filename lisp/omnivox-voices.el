@@ -73,6 +73,15 @@ Each entry maps a logical voice symbol or string to a BCP 47 language string."
   :group 'omnivox
   :type '(alist :key-type (choice symbol string) :value-type string))
 
+(defcustom omnivox-engine-priority-ids nil
+  "Default ordered engine IDs for logical voices without stronger routes.
+
+Per-logical-voice selectors remain first.  Distinct engines from this list are
+then tried before the process's preferred engine and fallback policy.  A nil
+value preserves the server-selected preferred-engine behavior."
+  :group 'omnivox
+  :type '(repeat string))
+
 (defcustom omnivox-fallback-engine-ids '("espeak")
   "Ordered engine IDs used after a logical voice's explicit selectors fail."
   :group 'omnivox
@@ -441,16 +450,35 @@ Symbol and string keys with the same printed name are equivalent."
       (push (omnivox--effective-logical-voice-id (car entry)) ids))
     (sort (delete-dups ids) #'string-lessp)))
 
+(defun omnivox--selector-engine-id (selector)
+  "Return the requested engine ID from Omnivox SELECTOR, or nil."
+  (pcase selector
+    (`(exact ,engine-id ,_) engine-id)
+    (`(engine-default ,engine-id) engine-id)
+    (`(properties . ,properties) (plist-get properties :engine))))
+
+(defun omnivox--selectors-with-engine-priority (selectors)
+  "Append distinct configured engine priorities to SELECTORS."
+  (let ((result (copy-tree selectors))
+        (used (delq nil (mapcar #'omnivox--selector-engine-id selectors))))
+    (dolist (engine-id omnivox-engine-priority-ids)
+      (omnivox--required-selector-id engine-id "priority engine ID")
+      (unless (member engine-id used)
+        (setq result (append result `((engine-default ,engine-id))))
+        (push engine-id used)))
+    result))
+
 (defun omnivox--logical-definition-json (id &optional preferred-engine-id)
   "Return the protocol definition for logical voice ID.
 Use PREFERRED-ENGINE-ID for an otherwise unconfigured voice."
   (let* ((configured
           (omnivox--logical-setting id omnivox-logical-voice-preferences))
          (selectors
-          (or configured
-              (if preferred-engine-id
-                  `((engine-default ,preferred-engine-id))
-                '((properties)))))
+          (or
+           (omnivox--selectors-with-engine-priority configured)
+           (if preferred-engine-id
+               `((engine-default ,preferred-engine-id))
+             '((properties)))))
          (language
           (omnivox--logical-setting id omnivox-logical-voice-languages)))
     (when (and language (not (stringp language)))
