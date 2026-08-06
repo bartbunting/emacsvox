@@ -1377,6 +1377,63 @@ Loaded `defvoice' personalities resolve through their ACSS-backed value."
           (should-not (string-match-p "obsolete line" wire))
           (should (string-match-p "\nd\n\\'" wire)))))))
 
+(ert-deftest emacsvox-speak-physical-line-keeps-after-cue-replaceable ()
+  "An after cue follows only the physical line that survives replacement."
+  (emacsvox-test--with-transport-scheme
+    (with-temp-buffer
+      (insert "obsolete history\nlatest history")
+      (goto-char (point-min))
+      (let ((emacsvox-aural--pending-deliveries
+             (make-hash-table :test #'equal))
+            (emacsvox-aural--delivery-sequence 0)
+            (emacsvox-aural--submission-sequence 0)
+            (emacsvox-show-point nil)
+            (emacsvox-audio-indentation nil)
+            (emacsvox-play-program nil)
+            (emacsvox-use-icons t)
+            (emacsvox-pronounce-table nil)
+            (emacsvox-pronounce-personality nil)
+            (tts-speaker-process 'speech)
+            (tts-notify-process nil)
+            (tts-stop-immediately t)
+            (tts-stopped-hook nil)
+            (tts-punctuation-mode 'all)
+            (tts-quiet nil)
+            (voice-lock-mode nil)
+            writes)
+        (cl-letf
+            (((symbol-function 'process-live-p)
+              (lambda (process) (eq process 'speech)))
+             ((symbol-function 'process-send-string)
+              (lambda (process command)
+                (push (list process command) writes)))
+             ((symbol-function 'run-with-idle-timer)
+              (lambda (&rest _arguments) 'timer))
+             ((symbol-function 'cancel-timer) #'ignore)
+             ((symbol-function 'tts-voice-reset-code)
+              (lambda () "RESET")))
+          (dolist (position (list (point-min) (point-max)))
+            (goto-char position)
+            (emacsvox-speak--present-physical-line
+             nil
+             (list
+              (emacsvox-aural-compatibility-icon 'item 'after))))
+          (should
+           (equal
+            (nreverse (copy-sequence writes))
+            '((speech "s\n") (speech "s\n"))))
+          (emacsvox-aural-flush-pending-deliveries 'speech))
+        (let* ((writes (nreverse writes))
+               (wire (mapconcat #'cadr writes ""))
+               (speech-position (string-match "latest history" wire))
+               (cue-position (string-match "a .*item\\.ogg" wire)))
+          (should (= (length writes) 3))
+          (should-not (string-match-p "obsolete history" wire))
+          (should speech-position)
+          (should cue-position)
+          (should (< speech-position cue-position))
+          (should (string-match-p "\nd\n\\'" wire)))))))
+
 (ert-deftest emacsvox-speak-visual-line-detects-blank-conditions ()
   "Visual-line classification distinguishes blank segments from wrap edges."
   (dolist

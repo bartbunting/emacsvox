@@ -943,12 +943,14 @@ interruption so native submissions can apply their complete delivery policy."
             (setq line (concat linenum line)))
           (funcall speaker line))))))
 
-(defun emacsvox-speak--present-physical-line (&optional arg)
+(defun emacsvox-speak--present-physical-line
+    (&optional arg compatibility-actions)
   "Present the current physical line as one native transaction.
 
 ARG has the same selection meaning as in `emacsvox-speak-line'.  Cues emitted
 while extracting the line become ordered compatibility actions, and semantic
-line conditions remain action-only submissions."
+line conditions remain action-only submissions.  COMPATIBILITY-ACTIONS are
+placed around the same content without escaping replaceable delivery."
   (when (listp arg) (setq arg (car arg)))
   (let* ((source-start
           (if (and arg (> arg 0))
@@ -994,7 +996,9 @@ line conditions remain action-only submissions."
          (lambda (text) (setq content text))
          arg))
       (let ((compatibility-actions
-             (mapcar #'emacsvox-aural-compatibility-icon icons)))
+             (append
+              compatibility-actions
+              (mapcar #'emacsvox-aural-compatibility-icon icons))))
         (cond
          (content
           (emacsvox-aural-submit

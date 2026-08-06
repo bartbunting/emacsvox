@@ -193,6 +193,20 @@ When ICON is non-nil, preserve it in ICON-PHASE, which defaults to `before'."
      (list
       (emacsvox-aural-compatibility-icon icon icon-phase)))))
 
+(defun emacsvox-comint--present-line-feedback
+    (facts occasion icon icon-phase &optional argument)
+  "Present one physical line with ICON in ICON-PHASE.
+
+FACTS, OCCASION, and ARGUMENT have their usual Comint presentation meanings.
+The cue and line share one native delivery transaction."
+  (emacsvox-comint--call-with-aural-presentation
+   facts occasion
+   #'emacsvox-speak--present-physical-line
+   argument
+   (when icon
+     (list
+      (emacsvox-aural-compatibility-icon icon icon-phase)))))
+
 ;;;###autoload
 (defun emacsvox-toggle-comint-output-monitor (&optional prefix)
   "Toggle whether autospeech follows this Comint buffer in the background.
@@ -719,11 +733,11 @@ events.  Carriage-return chunks replace pending progress output."
        "Cue and speak after interactive shell command movement."
        (when (ems-interactive-p ',target)
          (let ((emacsvox-show-point t))
-           (emacsvox-comint--present-feedback-after
+           (emacsvox-comint--present-line-feedback
             (emacsvox-comint-facts
              'command-input 'focus-entered 'command-navigation
              '(:command-input-origin current))
-            'navigation 'item #'emacsvox-speak-line))))
+            'navigation 'item 'after))))
      (advice-add
       ',target :after #',function '((name . emacsvox))))))
 

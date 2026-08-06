@@ -121,16 +121,16 @@
   "Only matching interactive Comint navigation speaks and cues."
   (let ((ems--interactive-fn-name 'shell-forward-command)
         events)
-    (cl-letf (((symbol-function 'emacsvox-speak-line)
-               (lambda (&rest _) (push 'line events)))
-              ((symbol-function 'emacsvox-icon)
-               (lambda (icon) (push (list 'icon icon) events))))
+    (cl-letf
+        (((symbol-function 'emacsvox-comint--present-line-feedback)
+          (lambda (_facts _occasion icon phase &optional _argument)
+            (push (list 'line icon phase) events))))
       (emacsvox--advice-shell-backward-command-after)
       (emacsvox--advice-shell-forward-command-after))
     (should
      (equal
       (nreverse events)
-      '(line (icon item))))))
+      '((line item after))))))
 
 (ert-deftest emacsvox-comint-navigation-has-one-semantic-boundary ()
   "Shell command navigation preserves speech-first order in one transaction."
@@ -149,10 +149,21 @@
                 (plist-get arguments :occasion))
                boundaries)
               (apply function (plist-get arguments :arguments))))
-           ((symbol-function 'emacsvox-speak-line)
-            (lambda (&rest _) (push 'line events)))
+           ((symbol-function 'emacsvox-speak--present-physical-line)
+            (lambda (argument actions)
+              (push
+               (list
+                'line argument
+                (mapcar
+                 (lambda (action)
+                   (list
+                    (emacsvox-aural-compatibility-action-value action)
+                    (emacsvox-aural-compatibility-action-phase action)))
+                 actions))
+               events)))
            ((symbol-function 'emacsvox-icon)
-            (lambda (icon) (push (list 'icon icon) events))))
+            (lambda (icon)
+              (ert-fail (format "Escaped Comint icon: %S" icon)))))
         (emacsvox--advice-shell-forward-command-after))
       (should
        (equal
@@ -163,7 +174,10 @@
             :command-operation command-navigation
             :command-input-origin current)
            shell navigation))))
-      (should (equal (nreverse events) '(line (icon item)))))))
+      (should
+       (equal
+        (nreverse events)
+        '((line nil ((item after)))))))))
 
 (ert-deftest emacsvox-comint-output-process-advice-is-directly-registered ()
   "Comint output and subprocess advice uses native advice directly."
