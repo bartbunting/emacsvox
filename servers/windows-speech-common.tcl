@@ -155,6 +155,13 @@ proc windows_speech_transaction_fields {line} {
     return [lrange $fields 1 2]
 }
 
+proc windows_speech_stop_barrier_p {line} {
+    if {[catch {set fields [lrange $line 0 end]}]} {
+        return 0
+    }
+    expr {[llength $fields] == 1 && [lindex $fields 0] eq "s"}
+}
+
 proc windows_speech_evaluate_transaction {generation payload} {
     global windows_speech_transaction
     set script [encoding convertfrom utf-8 [binary decode base64 $payload]]
@@ -189,9 +196,14 @@ proc emacsvox_tx {generation payload} {
         }
         set fields [windows_speech_transaction_fields $line]
         if {$fields eq ""} {
-            windows_speech_evaluate_transaction \
-                $selected_generation $selected_payload
-            uplevel #0 $line
+            if {[windows_speech_stop_barrier_p $line]} {
+                uplevel #0 $line
+                set windows_speech_transaction(latest) $selected_generation
+            } else {
+                windows_speech_evaluate_transaction \
+                    $selected_generation $selected_payload
+                uplevel #0 $line
+            }
             return ""
         }
         lassign $fields next_generation next_payload

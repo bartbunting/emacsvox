@@ -546,6 +546,33 @@ Return the server's standard output."
         (buffer-string)
         "latest 日本|ordinary barrier\n")))))
 
+(ert-deftest emacsvox-windows-speech-stop-barrier-cancels-pending-frame ()
+  "An urgent stop drops a buffered replaceable frame before evaluation."
+  (let* ((common
+          (expand-file-name
+           "windows-speech-common.tcl"
+           emacsvox-servers-directory))
+         (payload
+          (base64-encode-string
+           (encode-coding-string "record {stale speech}\n" 'utf-8 t) t)))
+    (with-temp-buffer
+      (insert
+       (format
+        (concat
+         "source {%s}\n"
+         "set log {}\n"
+         "proc record {value} {lappend ::log $value}\n"
+         "proc s {} {lappend ::log stop}\n"
+         "emacsvox_tx 1 {%s}\n"
+         "s\n"
+         "puts [list $log $windows_speech_transaction(latest)]\n")
+        common payload))
+      (should
+       (zerop
+        (call-process-region
+         (point-min) (point-max) "tclsh" t t nil)))
+      (should (equal (buffer-string) "stop 1\n")))))
+
 (ert-deftest emacsvox-windows-speech-retries-failed-frame-generation ()
   "A failed framed payload does not make its generation unretryable."
   (let* ((common
