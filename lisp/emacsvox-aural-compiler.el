@@ -367,6 +367,17 @@ and are not reconstructed or rejected here."
                 :dimension dimension
                 :requested value)
                degradations)))))))
+    ;; Rate and post-synthesis values are transported independently of the
+    ;; legacy inline ACSS command.  Preserve their composed portable state for
+    ;; the structured adapter boundary without claiming legacy application.
+    (dolist
+        (dimension
+         (append emacsvox-aural-voice-rate-dimensions
+                 emacsvox-aural-post-synthesis-dimensions))
+      (let ((key (emacsvox-aural--voice-dimension-key dimension)))
+        (when (plist-member style key)
+          (setq effective
+                (plist-put effective key (plist-get style key))))))
     (let ((style-command
            (when command-style
              (unless (fboundp 'voice-from-acss)

@@ -3577,8 +3577,16 @@ Route-aware tuner foundation:
   their existing compiled ACSS audition path.  Unsupported data is retained;
   changing routes does not rewrite the portable palette.
 
-Rate and post-synthesis effect controls remain part of this slice, after the
-corresponding rich-style schema and Omnivox timeline implementations exist.
+The portable rich-style schema now also accepts rate, gain, low-pass,
+high-pass, pan, reverb, and echo values without moving physical routing into
+the palette.  The tuner exposes all twelve style dimensions, uses the selected
+engine's ACSS and post-synthesis capability sets, normalizes zero-to-nine
+editor values only at preview time, and reports Omnivox-rendered effect
+degradation separately from engine-rendered ACSS degradation.  Transactional
+Omnivox preview applies these values through the common buffered PCM effect
+processor; older and standalone adapters retain the values and truthfully
+report them as omitted.  Carrying the same rich style through ordinary Aural
+presentation remains the structured timeline transport work.
 
 ** TODO Slice 56: Atomic Apply and Realized Diagnostics
 

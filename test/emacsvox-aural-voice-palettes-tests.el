@@ -345,7 +345,7 @@
                 (should (derived-mode-p 'emacsvox-aural-voice-tuner-mode))
                 (should
                  (derived-mode-p 'emacsvox-aural-tabulated-mode))
-                (should (= (length tabulated-list-entries) 5))
+                (should (= (length tabulated-list-entries) 12))
                 (should-not emacsvox-aural-voice-tuner-dirty)
                 (should
                  (equal
@@ -424,7 +424,7 @@
      emacsvox-aural-voice-tuner-voice 'aside
      emacsvox-aural-voice-tuner-working-style
      '(:family paul :average-pitch 4 :pitch-range 3
-       :stress nil :richness 6)
+       :stress nil :richness 6 :rate 7 :gain 5 :reverb 4)
      emacsvox-aural-voice-tuner-preview-text "Shared sample."
      emacsvox-aural-voice-tuner-route-selector
      '(:kind exact :scope local :engine-id "eloquence"
@@ -432,7 +432,8 @@
      emacsvox-aural-voice-tuner-route-language "en-AU"
      emacsvox-aural-voice-tuner-route-engine
      '(:engine-id "eloquence"
-       :acss-dimensions (average-pitch pitch-range richness)))
+       :acss-dimensions (rate average-pitch pitch-range richness)
+       :post-synthesis-dimensions ("gain" "reverb" "echo")))
     (emacsvox-aural-voice-tuner-refresh 'average-pitch)
     (should
      (equal
@@ -456,7 +457,8 @@
                '(:status completed
                  :realized
                  (:engine-id "eloquence" :voice-id "eci:Reed")
-                 :degraded-acss (stress))))))
+                 :degraded-acss (stress)
+                 :degraded-effects (reverb))))))
         (emacsvox-aural-voice-tuner-audition "Average Pitch 4."))
       (should (string-match-p "Average Pitch 4" (car request)))
       (should
@@ -467,14 +469,44 @@
         (should (= (plist-get acss :average-pitch) (/ 4.0 9.0)))
         (should (= (plist-get acss :pitch-range) (/ 3.0 9.0)))
         (should (= (plist-get acss :richness) (/ 6.0 9.0)))
+        (should (= (plist-get acss :rate) (/ 7.0 9.0)))
         (should-not (plist-member acss :family)))
+      (let ((effects (plist-get (nth 2 request) :effects)))
+        (should (= (plist-get effects :gain) (/ 5.0 9.0)))
+        (should (= (plist-get effects :reverb) (/ 4.0 9.0))))
       (should
        (equal emacsvox-aural-voice-tuner-route-realized
               '(:engine-id "eloquence" :voice-id "eci:Reed")))
       (should
        (equal
         (emacsvox-aural-voice-tuner--support-description 'stress)
+        "omitted by eloquence"))
+      (should
+       (equal
+        (emacsvox-aural-voice-tuner--support-description 'gain)
+        "Omnivox-rendered by eloquence"))
+      (should
+       (equal
+        (emacsvox-aural-voice-tuner--support-description 'reverb)
         "omitted by eloquence")))))
+
+(ert-deftest emacsvox-aural-rich-voice-style-validates-and-persists-effects ()
+  "Portable palette styles retain rate and post-synthesis dimensions."
+  (emacsvox-test--with-voice-palettes
+    (let ((data
+           (copy-tree emacsvox-test--voice-palette-data)))
+      (setcdr
+       (assq 'aside (plist-get data :entries))
+       '(:style
+         (:family nil :average-pitch 4 :pitch-range 3
+          :stress nil :richness 6 :rate 7 :gain 5
+          :low-pass 8 :high-pass nil :pan 2 :reverb 4 :echo 1)))
+      (emacsvox-aural-register-voice-palette-data data)
+      (let ((style (emacsvox-aural-voice 'aside 'reading)))
+        (should (= (plist-get style :rate) 7))
+        (should (= (plist-get style :gain) 5))
+        (should (= (plist-get style :reverb) 4))
+        (should (= (plist-get style :echo) 1))))))
 
 (ert-deftest emacsvox-aural-voice-tuner-adjusts-auditions-and-undoes ()
   "Adjustments remain temporary, audition immediately, and can be undone."

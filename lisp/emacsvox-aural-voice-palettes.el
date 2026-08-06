@@ -55,7 +55,14 @@
     (average-pitch . "Overall pitch from zero through nine")
     (pitch-range . "Pitch variation from zero through nine")
     (stress . "Word emphasis from zero through nine")
-    (richness . "Spectral richness from zero through nine"))
+    (richness . "Spectral richness from zero through nine")
+    (rate . "Speech rate from zero through nine")
+    (gain . "Post-synthesis gain; five is neutral")
+    (low-pass . "Low-pass cutoff; higher values retain more high frequencies")
+    (high-pass . "High-pass cutoff; higher values remove more low frequencies")
+    (pan . "Stereo position; zero is left, five centre, and nine right")
+    (reverb . "Post-synthesis reverberation from zero through nine")
+    (echo . "Post-synthesis echo from zero through nine"))
   "Spoken descriptions of tunable voice dimensions.")
 
 (defvar-local emacsvox-aural-voice-tuner-palette nil
@@ -1055,7 +1062,7 @@ Return the compiled voice without dispatching the speech queue."
             (copy-tree
              (emacsvox-aural-compiled-voice-style compiled)))))
          style)
-    (dolist (dimension emacsvox-aural-voice-dimensions)
+    (dolist (dimension emacsvox-aural-rich-voice-dimensions)
       (let ((key (emacsvox-aural--voice-dimension-key dimension)))
         (setq
          style
@@ -1075,13 +1082,35 @@ Return the compiled voice without dispatching the speech queue."
       (plist-get emacsvox-aural-voice-tuner-route-engine :acss-dimensions)
     (plist-get (emacsvox-aural-active-voice-capabilities) :dimensions)))
 
+(defun emacsvox-aural-voice-tuner--effect-dimension-p (dimension)
+  "Return non-nil when DIMENSION is a post-synthesis effect."
+  (memq dimension emacsvox-aural-post-synthesis-dimensions))
+
+(defun emacsvox-aural-voice-tuner--normalized-dimensions (values)
+  "Normalize adapter dimension VALUES to Lisp symbols."
+  (mapcar
+   (lambda (value)
+     (intern
+      (replace-regexp-in-string
+       "_" "-" (if (symbolp value) (symbol-name value) value))))
+   values))
+
 (defun emacsvox-aural-voice-tuner--supported-p (dimension)
   "Return non-nil when the selected route supports DIMENSION."
   (and
    (not (and emacsvox-aural-voice-tuner-route-selector
              (eq dimension 'family)))
-   (memq dimension
-         (emacsvox-aural-voice-tuner--capability-dimensions))))
+   (if (emacsvox-aural-voice-tuner--effect-dimension-p dimension)
+       (memq
+        dimension
+        (emacsvox-aural-voice-tuner--normalized-dimensions
+         (if emacsvox-aural-voice-tuner-route-engine
+             (plist-get emacsvox-aural-voice-tuner-route-engine
+                        :post-synthesis-dimensions)
+           (plist-get (emacsvox-aural-active-voice-capabilities)
+                      :post-synthesis-dimensions))))
+     (memq dimension
+           (emacsvox-aural-voice-tuner--capability-dimensions)))))
 
 (defun emacsvox-aural-voice-tuner--value (dimension)
   "Return the current requested value for DIMENSION."
@@ -1141,12 +1170,19 @@ Return the compiled voice without dispatching the speech queue."
      ((and emacsvox-aural-voice-tuner-route-selector
            (eq dimension 'family))
       "portable fallback; physical route owns the base voice")
-     ((memq dimension
-            (plist-get emacsvox-aural-voice-tuner-preview-result
-                       :degraded-acss))
+     ((memq
+       dimension
+       (plist-get
+        emacsvox-aural-voice-tuner-preview-result
+        (if (emacsvox-aural-voice-tuner--effect-dimension-p dimension)
+            :degraded-effects
+          :degraded-acss)))
       (format "omitted by %s" (emacsvox-aural-voice-tuner--adapter)))
      ((emacsvox-aural-voice-tuner--supported-p dimension)
-      (format "engine-rendered by %s"
+      (format "%s by %s"
+              (if (emacsvox-aural-voice-tuner--effect-dimension-p dimension)
+                  "Omnivox-rendered"
+                "engine-rendered")
               (emacsvox-aural-voice-tuner--adapter)))
      (t
       (format "omitted by %s" (emacsvox-aural-voice-tuner--adapter))))))
@@ -1211,7 +1247,7 @@ Return the compiled voice without dispatching the speech queue."
    tabulated-list-entries
    (mapcar
     #'emacsvox-aural-voice-tuner--row
-    emacsvox-aural-voice-dimensions)))
+    emacsvox-aural-rich-voice-dimensions)))
 
 (defun emacsvox-aural-voice-tuner--goto (dimension)
   "Move to tuner DIMENSION and its first column."
@@ -1235,7 +1271,7 @@ Return the compiled voice without dispatching the speech queue."
   (emacsvox-aural-ui-refresh-tabulated
    #'emacsvox-aural-voice-tuner--set-entries
    dimension
-   (car emacsvox-aural-voice-dimensions)
+   (car emacsvox-aural-rich-voice-dimensions)
    #'emacsvox-aural-voice-tuner--update-header))
 
 (defun emacsvox-aural-voice-tuner--current-dimension ()
@@ -1314,8 +1350,8 @@ Return the compiled voice without dispatching the speech queue."
               (emacsvox-aural-voice-palettes--preview-sample
                emacsvox-aural-voice-tuner-voice
                emacsvox-aural-voice-tuner-preview-text)))
-            acss)
-        (dolist (dimension '(average-pitch pitch-range stress richness))
+            acss effects)
+        (dolist (dimension '(rate average-pitch pitch-range stress richness))
           (let* ((key (emacsvox-aural--voice-dimension-key dimension))
                  (value
                   (plist-get emacsvox-aural-voice-tuner-working-style key)))
@@ -1323,10 +1359,18 @@ Return the compiled voice without dispatching the speech queue."
               (setq acss
                     (plist-put
                      acss key (/ (float (max 0 (min 9 value))) 9.0))))))
+        (dolist (dimension emacsvox-aural-post-synthesis-dimensions)
+          (let* ((key (emacsvox-aural--voice-dimension-key dimension))
+                 (value
+                  (plist-get emacsvox-aural-voice-tuner-working-style key)))
+            (when (numberp value)
+              (setq effects
+                    (plist-put
+                     effects key (/ (float (max 0 (min 9 value))) 9.0))))))
         (setq emacsvox-aural-voice-tuner-preview-result '(:status running))
         (tts-preview-voice
          text emacsvox-aural-voice-tuner-route-selector
-         :acss acss :effects nil
+         :acss acss :effects effects
          :language emacsvox-aural-voice-tuner-route-language
          :callback
          (lambda (result)

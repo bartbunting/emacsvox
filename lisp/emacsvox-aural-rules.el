@@ -47,8 +47,22 @@
   '(family average-pitch pitch-range stress richness)
   "Device-independent dimensions supported by aural voice styles.")
 
+(defconst emacsvox-aural-voice-rate-dimensions '(rate)
+  "Portable speech-rate dimensions carried with aural voice styles.")
+
+(defconst emacsvox-aural-post-synthesis-dimensions
+  '(gain low-pass high-pass pan reverb echo)
+  "Portable post-synthesis dimensions carried with aural voice styles.")
+
+(defconst emacsvox-aural-rich-voice-dimensions
+  (append emacsvox-aural-voice-dimensions
+          emacsvox-aural-voice-rate-dimensions
+          emacsvox-aural-post-synthesis-dimensions)
+  "All dimensions editable as one portable rich voice style.")
+
 (defconst emacsvox-aural--voice-style-keys
-  '(:preset :family :average-pitch :pitch-range :stress :richness)
+  '(:preset :family :average-pitch :pitch-range :stress :richness :rate
+    :gain :low-pass :high-pass :pan :reverb :echo)
   "Properties accepted in an explicit aural voice style.")
 
 (defconst emacsvox-aural--selector-keys
@@ -190,8 +204,8 @@
 (defun emacsvox-aural-voice-style-p (value)
   "Return non-nil when VALUE is an explicit aural voice style plist.
 
-An explicit style may name a complete base with `:preset' and override any
-subset of the five device-independent ACSS dimensions."
+An explicit style may name a complete base with `:preset' and override ACSS,
+rate, or post-synthesis dimensions."
   (and
    (emacsvox-aural--plist-p value)
    (cl-loop
@@ -230,7 +244,11 @@ subset of the five device-independent ACSS dimensions."
       (unless (or (null family) (symbolp family) (stringp family))
         (emacsvox-aural--rule-error
          "%s :family must be a symbol, string, or nil: %S" label family))))
-  (dolist (dimension '(average-pitch pitch-range stress richness))
+  (dolist (dimension
+           (append
+            '(average-pitch pitch-range stress richness)
+            emacsvox-aural-voice-rate-dimensions
+            emacsvox-aural-post-synthesis-dimensions))
     (let ((key (emacsvox-aural--voice-dimension-key dimension)))
       (when (plist-member style key)
         (let ((value (plist-get style key)))
