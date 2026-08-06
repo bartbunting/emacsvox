@@ -943,8 +943,8 @@ variables; nil removes the variable."
     (should
      (equal
       (nreverse writes)
-      '((canonical "a /sounds/queued.ogg\n")
-        (canonical "p /sounds/served.ogg\n"))))))
+      '((canonical "a \"/sounds/queued.ogg\"\n")
+        (canonical "p \"/sounds/served.ogg\"\n"))))))
 
 (ert-deftest emacsvox-tts-dectalk-soft-uses-canonical-runtime ()
   "The software DECtalk selector uses the generic TTS runtime API."

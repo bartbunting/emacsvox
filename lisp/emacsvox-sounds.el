@@ -486,11 +486,35 @@ None: For systems that rely on the speech server playing the icon."
 
 ;;; Implementation: emacsvox-icon methods
 
+(defun emacsvox-sounds--tcl-word (value)
+  "Return string VALUE encoded as one double-quoted Tcl word."
+  (unless (stringp value)
+    (error "Tcl resource argument must be a string: %S" value))
+  (when (string-match-p "\0" value)
+    (error "Tcl resource argument cannot contain NUL"))
+  (concat
+   "\""
+   (mapconcat
+    (lambda (character)
+      (pcase character
+        (?\\ "\\\\")
+        (?\" "\\\"")
+        (?$ "\\$")
+        (?\[ "\\[")
+        (?\n "\\n")
+        (?\r "\\r")
+        (?\t "\\t")
+        ((pred (lambda (value) (< value 32)))
+         (format "\\u%04x" character))
+        (_ (char-to-string character))))
+    value "")
+   "\""))
+
 (defun emacsvox-queue-resource (resource)
   "Queue concrete auditory RESOURCE on the ordered speech stream."
   (emacsvox-aural-delivery-send
    tts-speaker-process
-   (format "a %s\n" resource)))
+   (format "a %s\n" (emacsvox-sounds--tcl-word resource))))
 
 (defun emacsvox-sounds-spatial-capability ()
   "Return the selected local cue player's spatial capability."
@@ -526,7 +550,7 @@ Apply normalized stereo BALANCE when the selected local player supports it."
      ((null emacsvox-play-program)
       (emacsvox-aural-delivery-send
        tts-speaker-process
-       (format "p %s\n" resource)))
+       (format "p %s\n" (emacsvox-sounds--tcl-word resource))))
      ((and
        emacsvox-pactl
        (string= emacsvox-play-program emacsvox-pactl))
@@ -561,7 +585,9 @@ This is a private function and  might go away."
   
   (emacsvox-aural-delivery-send
    tts-speaker-process
-   (format "p %s\n" (emacsvox-sounds-cache-get icon))))
+   (format
+    "p %s\n"
+    (emacsvox-sounds--tcl-word (emacsvox-sounds-cache-get icon)))))
 
 ;;;;   Play an icon
 

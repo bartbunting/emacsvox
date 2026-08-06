@@ -134,7 +134,7 @@ proc queue_remove {} {
 #play a sound over the server
 proc p {sound} {
     global tts
-    catch "exec $tts(play)  $sound &" errcode
+    catch {exec $tts(play) $sound &} errcode
     speech_task
 }
 

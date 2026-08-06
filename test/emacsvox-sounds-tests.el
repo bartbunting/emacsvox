@@ -340,8 +340,95 @@
     (should
      (equal
       (nreverse events)
-      '((server speaker "p /sounds/item.ogg\n")
+      '((server speaker "p \"/sounds/item.ogg\"\n")
         (local "/usr/bin/play" ("-q" "/sounds/open.ogg")))))))
+
+(ert-deftest emacsvox-sounds-server-commands-quote-resource-paths ()
+  "Every server cue command should preserve one hostile resource word."
+  (let* ((resource
+          "/tmp/cue space {brace} unmatched} quote\" back\\slash; dollar$ [command] λ\n.ogg")
+         (emacsvox-play-program nil)
+         (emacsvox-sounds-cache (make-hash-table))
+         (tts-speaker-process 'speaker)
+         commands)
+    (puthash 'served resource emacsvox-sounds-cache)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (_process command) (push command commands))))
+      (emacsvox-queue-resource resource)
+      (emacsvox-sounds-play-concrete-cue resource "sample")
+      (emacsvox-serve-icon 'served))
+    (setq commands (nreverse commands))
+    (should (= (length commands) 3))
+    (let ((expected
+           (mapconcat
+            (lambda (byte) (format "%02x" byte))
+            (encode-coding-string resource 'utf-8-unix)
+            "")))
+      (with-temp-buffer
+        (insert
+         "set values {}\n"
+         "proc a {value} {lappend ::values $value}\n"
+         "proc p {value} {lappend ::values $value}\n"
+         (apply #'concat commands)
+         (concat
+          "foreach value $values {puts [binary encode hex "
+          "[encoding convertto utf-8 $value]]}\n"))
+        (should
+         (zerop
+          (call-process-region
+           (point-min) (point-max) "tclsh" t t nil)))
+        (should
+         (equal
+          (split-string (string-trim (buffer-string)) "\n")
+          (make-list 3 expected)))))))
+
+(ert-deftest emacsvox-sounds-server-playback-does-not-reevaluate-paths ()
+  "Server-side playback should pass decoded paths directly to exec."
+  (let* ((resource "/tmp/cue;set ::injected 1;#")
+         (emacsvox-play-program nil)
+         (tts-speaker-process 'speaker)
+         command)
+    (cl-letf
+        (((symbol-function 'process-send-string)
+          (lambda (_process value) (setq command value))))
+      (emacsvox-sounds-play-concrete-cue resource "sample"))
+    (with-temp-buffer
+      (insert
+       (format
+        "catch {source %s} source_error\n"
+        (emacsvox-sounds--tcl-word
+         (expand-file-name "servers/tts-lib.tcl" emacsvox-directory)))
+       "rename exec emacsvox_test_exec\n"
+       "proc exec args {set ::exec_arguments $args; return {}}\n"
+       "proc speech_task {} {}\n"
+       "array set tts {play player}\n"
+       "set ::injected 0\n"
+       command
+       "puts $::injected\n"
+       (concat
+        "puts [binary encode hex [encoding convertto utf-8 "
+        "[lindex $::exec_arguments 1]]]\n"))
+      (should
+       (zerop
+        (call-process-region
+         (point-min) (point-max) "tclsh" t t nil)))
+      (let ((lines (split-string (string-trim (buffer-string)) "\n")))
+        (should (equal (car lines) "0"))
+        (should
+         (equal
+          (cadr lines)
+          (mapconcat
+           (lambda (byte) (format "%02x" byte))
+           (encode-coding-string resource 'utf-8-unix)
+           ""))))))
+  (dolist (relative '("servers/tts-lib.tcl" "servers/outloud"
+                      "servers/dtk-soft" "servers/dtk-exp"))
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name relative emacsvox-directory))
+      (should-not
+       (re-search-forward
+        "catch[ \t]+\"exec[ \t]+\\$tts(play)" nil t)))))
 
 (ert-deftest emacsvox-sounds-sox-applies-normalized-cue-balance ()
   "Local SoX playback turns normalized balance into a two-channel remix."
@@ -375,7 +462,7 @@
      (eq (caar writes) 'speaker))
     (should
      (string-suffix-p
-      "/packs/chimes/item.ogg\n"
+      "/packs/chimes/item.ogg\"\n"
       (cadar writes)))))
 
 (ert-deftest emacsvox-sounds-auditory-property-precedes-text ()
