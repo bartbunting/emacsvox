@@ -67,6 +67,13 @@ Third-party binaries are not stored in the =emacsvox= repository.
 The bridge itself is compiled with the .NET Framework C# compiler included
 with Windows; Visual Studio and DECtalk headers are not required.
 
+The Omnivox capture helper can be rebuilt without replacing either executable
+used by a running standalone server:
+
+#+begin_src sh
+make -C servers/windows-dectalk omnivox-helper
+#+end_src
+
 Windows prevents replacement of a bridge executable while it is running.
 Before rebuilding, select a different speech server with
 =M-x tts-select-server=.  Build =windows-dtk=, then select it again.  Do not
@@ -158,3 +165,26 @@ and =QUIT=.
 The runtime source and build instructions are maintained at
 [[https://github.com/dectalk/dectalk][github.com/dectalk/dectalk]].  Review the runtime's licensing terms before
 redistributing it.
+
+** Omnivox capture helper
+
+=OmnivoxDectalkHelper32.exe= uses the same bounded, versioned helper host as
+Eloquence and returns DECtalk's 11.025 kHz mono signed 16-bit in-memory PCM to
+Omnivox.  It does not own playback and does not change the existing
+=windows-dtk= bridge.  The engine ID is =dectalk=; its stable voice IDs are
+=paul=, =betty=, =harry=, =frank=, =kit=, =rita=, =ursula=, =dennis=, and
+=wendy=, with =paul= as the default.
+
+Version 1 maps normalized rate across DECtalk's 75-through-600 WPM range while
+preserving 225 WPM at the normal midpoint.  Other ACSS dimensions and markers
+are advertised as unavailable.  DECtalk's memory-buffer structure can carry
+phoneme changes and native indexes, but the helper leaves those arrays disabled
+until their native record layouts and text/audio offsets can be represented
+truthfully in the common marker contract.
+
+The helper accepts a DLL path as its first argument.  Otherwise it checks
+=OMNIVOX_DECTALK_DLL=, then =EMACSVOX_DECTALK_DLL=, then =DECtalk.dll= beside
+the helper, and finally the repository =runtime= directory.  =dtalk_us.dic=
+must be beside the DLL.  Cancellation calls the native reset API from the
+protocol thread while synthesis waits on its worker, then reports a distinct
+=synthesis_cancelled= terminal result.

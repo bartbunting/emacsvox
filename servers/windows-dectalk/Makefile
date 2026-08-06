@@ -7,7 +7,13 @@ RUNTIME_SHA256 = 4a778056c109b37f95ade4b3d3e308b9396b22a4b0629f9756ec0e5051b9636
 
 all: runtime
 	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)"
-	chmod +x bin/DectalkBridge.exe bin/DectalkBridge32.exe
+	chmod +x bin/DectalkBridge.exe bin/DectalkBridge32.exe \
+		bin/OmnivoxDectalkHelper32.exe
+
+omnivox-helper: runtime
+	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)" \
+		-HelperOnly
+	chmod +x bin/OmnivoxDectalkHelper32.exe
 
 $(RUNTIME_ARCHIVE):
 	mkdir -p $(RUNTIME_DIR)
@@ -25,4 +31,4 @@ clean:
 clean-runtime:
 	rm -rf $(RUNTIME_DIR)
 
-.PHONY: all runtime clean clean-runtime
+.PHONY: all omnivox-helper runtime clean clean-runtime
