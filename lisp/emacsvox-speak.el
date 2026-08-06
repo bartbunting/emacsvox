@@ -1582,8 +1582,8 @@ position retained after interruption reasonably close to audible playback."
         (emacsvox--tracked-reading-set-point session (marker-position limit)))
       (emacsvox--tracked-reading-cancel))))
 
-(defun emacsvox--tracked-reading-complete (generation identifier)
-  "Advance tracked reading GENERATION after dispatch IDENTIFIER completes."
+(defun emacsvox--tracked-reading-complete (generation identifier status)
+  "Handle tracked reading IDENTIFIER with STATUS for GENERATION."
   (when-let* ((session emacsvox--tracked-reading-session))
     (when
         (and
@@ -1593,14 +1593,19 @@ position retained after interruption reasonably close to audible playback."
           identifier
           (emacsvox--tracked-reading-session-identifier session)))
       (setf (emacsvox--tracked-reading-session-identifier session) nil)
-      (let ((end
-             (marker-position
-              (emacsvox--tracked-reading-session-current-end session))))
-        (when end
-          (set-marker
-           (emacsvox--tracked-reading-session-next session) end)
-          (emacsvox--tracked-reading-set-point session end)))
-      (emacsvox--tracked-reading-next generation))))
+      (if (eq status 'completed)
+          (progn
+            (let ((end
+                   (marker-position
+                    (emacsvox--tracked-reading-session-current-end session))))
+              (when end
+                (set-marker
+                 (emacsvox--tracked-reading-session-next session) end)
+                (emacsvox--tracked-reading-set-point session end)))
+            (emacsvox--tracked-reading-next generation))
+        (emacsvox--tracked-reading-cancel)
+        (when (eq status 'failed)
+          (message "Tracked speech playback failed"))))))
 
 (defun emacsvox--tracked-reading-next (generation)
   "Speak the next source chunk for tracked reading GENERATION."
@@ -1642,9 +1647,9 @@ position retained after interruption reasonably close to audible playback."
                        identifier
                        (tts-speak-tracked
                         text
-                        (lambda (completed-identifier)
+                        (lambda (completed-identifier status)
                           (emacsvox--tracked-reading-complete
-                           generation completed-identifier)))))
+                           generation completed-identifier status)))))
                     (if (integerp identifier)
                         (setf
                          (emacsvox--tracked-reading-session-identifier session)
@@ -1656,6 +1661,10 @@ position retained after interruption reasonably close to audible playback."
 Any subsequent user command interrupts speech.  Point remains at the start of
 the sentence-oriented chunk that was audible when interruption occurred."
   (interactive)
+  (unless (tts-tracked-playback-completion-p)
+    (user-error
+     "Speech server `%s' does not support tracked rest-of-buffer reading"
+     (file-name-nondirectory (or tts-program "unset"))))
   (if emacsvox--tracked-reading-session
       (emacsvox--tracked-reading-cancel t)
     (tts-stop 'all))

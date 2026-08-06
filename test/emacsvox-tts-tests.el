@@ -193,8 +193,9 @@
       (speaker "version\n")))))
 
 (ert-deftest emacsvox-tts-protocol-dispatches-tracked-speech ()
-  "Tracked speech uses one interruptible Tcl command and returns its token."
+  "Tracked speech uses the supported playback command and returns its token."
   (let ((tts--tracked-dispatch-sequence 40)
+        (tts-program "windows-outloud")
         identifier
         writes)
     (unwind-protect
@@ -213,8 +214,25 @@
            (equal
             writes
             '((speaker
-               "d; puts stdout {__EMACSVOX_TRACKED_DONE__ 41}; flush stdout\n")))))
+               "emacsvox_tracked_dispatch 41\n")))))
       (tts-cancel-tracked-dispatch identifier))))
+
+(ert-deftest emacsvox-tts-tracked-speech-rejects-unsupported-server ()
+  "Tracked speech fails clearly when its server cannot report completion."
+  (let ((tts-program "espeak") called)
+    (cl-letf (((symbol-function 'tts-speak)
+               (lambda (_text) (setq called t))))
+      (should-error
+       (tts-speak-tracked "hello" #'ignore)
+       :type 'user-error)
+      (should-not called))))
+
+(ert-deftest emacsvox-tts-recognizes-tracked-server-by-basename ()
+  "An absolute Windows Outloud path retains its completion capability."
+  (should
+   (tts-tracked-playback-completion-p
+    "/tmp/emacsvox/servers/windows-outloud"))
+  (should-not (tts-tracked-playback-completion-p "windows-dtk")))
 
 (ert-deftest emacsvox-tts-tracked-filter-handles-fragments-and-forwards-output ()
   "Tracked process output tolerates fragments and preserves other output."
@@ -222,7 +240,7 @@
           (make-pipe-process
            :name "emacsvox-tracked-filter-test" :buffer nil :noquery t))
          (identifier 73)
-         completed
+         statuses
          forwarded)
     (unwind-protect
         (progn
@@ -235,19 +253,41 @@
            identifier
            (cons
             process
-            (lambda (value)
-              (setq completed value)))
+            (lambda (value status)
+              (push (list value status) statuses)))
            tts--tracked-dispatches)
           (tts--speaker-process-filter
            process
            "server notice\n__EMACSVOX_TRACKED_")
-          (should-not completed)
+          (should-not statuses)
           (tts--speaker-process-filter
-           process "DONE__ 73\r\n")
-          (should (= completed identifier))
+           process "_ 73 completed\r\n")
+          (should (equal statuses '((73 completed))))
           (should-not (gethash identifier tts--tracked-dispatches))
           (should (equal (nreverse forwarded) '("server notice\n"))))
       (remhash identifier tts--tracked-dispatches)
+      (delete-process process))))
+
+(ert-deftest emacsvox-tts-tracked-filter-reports-cancellation ()
+  "Tracked cancellation retires its callback without claiming completion."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-tracked-cancel-test" :buffer nil :noquery t))
+         status)
+    (unwind-protect
+        (progn
+          (puthash
+           74
+           (cons
+            process
+            (lambda (identifier outcome)
+              (setq status (list identifier outcome))))
+           tts--tracked-dispatches)
+          (tts--speaker-process-filter
+           process "__EMACSVOX_TRACKED__ 74 cancelled\n")
+          (should (equal status '(74 cancelled)))
+          (should-not (gethash 74 tts--tracked-dispatches)))
+      (remhash 74 tts--tracked-dispatches)
       (delete-process process))))
 
 (ert-deftest emacsvox-tts-retiring-process-cleans-owned-runtime-state ()

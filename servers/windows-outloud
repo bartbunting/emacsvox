@@ -501,17 +501,19 @@ proc trackIndex {index} {
 proc service {} {
     global tts
     set talking [speakingP]
+    set completed 1
     while {$talking == 1} {
         set status   [lsearch [select [list  stdin]  {} {} 0.0025] stdin]
         if { $status >= 0} {
             set tts(talking?) 0
             set talking 0
+            set completed 0
             break
         } else {
             set talking [speakingP]
         }
     }
-    return $talking
+    return $completed
 }
 
 proc speech_task {} {
@@ -550,7 +552,21 @@ proc speech_task {} {
     }
     windows_eci_flush
     set tts(talking?) 0
-    service
+    return [service]
+}
+
+proc emacsvox_tracked_dispatch {identifier} {
+    if {![string is integer -strict $identifier]} {
+        error "invalid tracked dispatch identifier: $identifier"
+    }
+    if {[catch {d} completed options]} {
+        puts stdout "__EMACSVOX_TRACKED__ $identifier failed"
+        flush stdout
+        return -options $options $completed
+    }
+    set status [expr {$completed ? "completed" : "cancelled"}]
+    puts stdout "__EMACSVOX_TRACKED__ $identifier $status"
+    flush stdout
     return ""
 }
 

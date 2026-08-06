@@ -141,8 +141,15 @@ mac for MAC TTS (default on Mac)")
   
   (emacsvox-aural-delivery-send tts-speaker-process "d\n"))
 
-(defconst tts--tracked-completion-prefix "__EMACSVOX_TRACKED_DONE__"
-  "Speech-server output prefix for tracked dispatch completion.")
+(defconst tts--tracked-status-prefix "__EMACSVOX_TRACKED__"
+  "Speech-server output prefix for tracked dispatch status records.")
+
+(defconst tts--tracked-playback-completion-programs '("windows-outloud")
+  "Speech servers that report interruptible playback completion.
+
+Entries are executable basenames.  A server belongs here only when it emits a
+tracked `completed' record after its synthesis and audio queues are empty, and
+a `cancelled' record when pending input interrupts that wait.")
 
 (defvar tts--tracked-dispatch-sequence 0
   "Sequence used to identify tracked speech dispatches.")
@@ -162,20 +169,37 @@ mac for MAC TTS (default on Mac)")
     (unless (eq filter #'tts--speaker-process-filter)
       (funcall filter process output))))
 
+(defun tts-tracked-playback-completion-p (&optional program)
+  "Return non-nil when speech-server PROGRAM reports playback completion.
+PROGRAM defaults to `tts-program'.  The result describes the server protocol,
+not proof that audio reached a physical output device."
+  (member
+   (file-name-nondirectory (or program tts-program ""))
+   tts--tracked-playback-completion-programs))
+
+(defun tts--require-tracked-playback-completion ()
+  "Signal a clear error unless the active server supports tracked playback."
+  (unless (tts-tracked-playback-completion-p)
+    (user-error
+     "Speech server `%s' cannot report playback completion; tracked reading is unavailable"
+     (file-name-nondirectory (or tts-program "unset")))))
+
 (defun tts--complete-tracked-dispatch (process line)
-  "Handle tracked completion LINE from PROCESS.
-Return non-nil when LINE is a tracked completion record."
+  "Handle tracked status LINE from PROCESS.
+Return non-nil when LINE is a tracked status record."
   (when
       (string-match
-       (format "\\`%s \\([[:digit:]]+\\)\\'"
-               (regexp-quote tts--tracked-completion-prefix))
+       (format
+        "\\`%s \\([[:digit:]]+\\) \\(completed\\|cancelled\\|failed\\)\\'"
+        (regexp-quote tts--tracked-status-prefix))
        line)
     (let* ((identifier (string-to-number (match-string 1 line)))
+           (status (intern (match-string 2 line)))
            (entry (gethash identifier tts--tracked-dispatches)))
       (when (and entry (eq process (car entry)))
         (remhash identifier tts--tracked-dispatches)
         (condition-case error-data
-            (funcall (cdr entry) identifier)
+            (funcall (cdr entry) identifier status)
           (error
            (message "Tracked speech callback failed: %s"
                     (error-message-string error-data))))))
@@ -244,22 +268,20 @@ retired before PROCESS can become an unreachable dead owner."
     (delete-process process)))
 
 (defun tts--protocol-dispatch-tracked (callback)
-  "Dispatch queued speech and call CALLBACK after playback completes.
-Return the identifier allocated to this dispatch."
+  "Dispatch queued speech and call CALLBACK with its terminal server status.
+CALLBACK receives the dispatch identifier and either `completed', `cancelled',
+or `failed'.  Return the identifier allocated to this dispatch."
   (unless (functionp callback)
     (signal 'wrong-type-argument (list 'functionp callback)))
+  (tts--require-tracked-playback-completion)
   (tts--ensure-tracked-process-filter tts-speaker-process)
   (let ((identifier (cl-incf tts--tracked-dispatch-sequence)))
     (puthash
      identifier (cons tts-speaker-process callback)
      tts--tracked-dispatches)
-    ;; Keep dispatch and notification on one Tcl command line.  The server's
-    ;; `d' command waits for playback, but remains interruptible by new input.
     (emacsvox-aural-delivery-send
      tts-speaker-process
-     (format
-      "d; puts stdout {%s %d}; flush stdout\n"
-      tts--tracked-completion-prefix identifier))
+     (format "emacsvox_tracked_dispatch %d\n" identifier))
     identifier))
 
 ;;;;  say
@@ -1874,10 +1896,16 @@ unless   `tts-quiet' is set to t. "
   "Completion callback for the dynamically current speech submission.")
 
 (defun tts-speak-tracked (text callback)
-  "Speak TEXT and call CALLBACK after audible playback completes.
-CALLBACK receives the tracked dispatch identifier."
-  (let ((tts--tracked-completion-function callback))
-    (tts-speak text)))
+  "Speak TEXT and call CALLBACK after server playback completes.
+CALLBACK receives the tracked dispatch identifier and terminal status.  A
+`completed' status means the supporting server reports empty synthesis and
+audio queues; it does not prove that a physical audio device was heard."
+  (tts--require-tracked-playback-completion)
+  (let* ((tts--tracked-completion-function callback)
+         (identifier (tts-speak text)))
+    (unless (integerp identifier)
+      (error "Tracked speech was not submitted"))
+    identifier))
 
 (defun tts--speak (text)
   "Implement `tts-speak' for TEXT with source context already captured."

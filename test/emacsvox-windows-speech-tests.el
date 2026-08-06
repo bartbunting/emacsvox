@@ -413,6 +413,43 @@ Return the server's standard output."
      "RPC SYNTH\n"
      "RPC SPEAKING\n"))))
 
+(ert-deftest emacsvox-windows-eloquence-reports-tracked-terminal-status ()
+  "The Eloquence server distinguishes completed and interrupted playback."
+  (should
+   (equal
+    (emacsvox-windows-speech-tests--run-server-library
+     "windows-outloud"
+     (concat
+      "rename d emacsvox_test_real_d\n"
+      "proc d {} {return 1}\n"
+      "emacsvox_tracked_dispatch 41\n"
+      "rename d {}\n"
+      "proc d {} {return 0}\n"
+      "emacsvox_tracked_dispatch 42\n"))
+    (concat
+     "__EMACSVOX_TRACKED__ 41 completed\n"
+     "__EMACSVOX_TRACKED__ 42 cancelled\n"))))
+
+(ert-deftest emacsvox-windows-eloquence-service-reports-interruption ()
+  "The Eloquence playback wait distinguishes drain from pending input."
+  (should
+   (equal
+    (emacsvox-windows-speech-tests--run-server-library
+     "windows-outloud"
+     (concat
+      "set speaking_values {1 0}\n"
+      "proc speakingP {} {\n"
+      "  set value [lindex $::speaking_values 0]\n"
+      "  set ::speaking_values [lrange $::speaking_values 1 end]\n"
+      "  return $value\n"
+      "}\n"
+      "proc select args {return {}}\n"
+      "puts [service]\n"
+      "proc speakingP {} {return 1}\n"
+      "proc select args {return {stdin}}\n"
+      "puts [service]\n"))
+    "1\n0\n")))
+
 (ert-deftest emacsvox-windows-dectalk-batches-native-speech ()
   "DECtalk should submit one string per cue-delimited speech segment."
   (should
