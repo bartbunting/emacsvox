@@ -143,6 +143,7 @@ MINGW_CXX ?= x86_64-w64-mingw32-g++
 
 windows-omnivox:
 	$(MAKE) -C servers/windows-eloquence omnivox-helper
+	$(MAKE) -C servers/windows-dectalk omnivox-helper
 	cd "$(OMNIVOX_DIR)" && cargo build --locked --release -p omnivox-cli
 	cd "$(OMNIVOX_DIR)" && \
 		CC_x86_64_pc_windows_gnu=x86_64-w64-mingw32-gcc \
@@ -154,6 +155,9 @@ windows-omnivox:
 	@set -eu; \
 		executable="$(OMNIVOX_DIR)/target/$(OMNIVOX_TARGET)/release/omnivox.exe"; \
 		eloquence_helper="$(CURDIR)/servers/windows-eloquence/bin/OmnivoxEloquenceHelper32.exe"; \
+		dectalk_helper="$(CURDIR)/servers/windows-dectalk/bin/OmnivoxDectalkHelper32.exe"; \
+		dectalk_dll="$(CURDIR)/servers/windows-dectalk/runtime/DECtalk.dll"; \
+		dectalk_dictionary="$(CURDIR)/servers/windows-dectalk/runtime/dtalk_us.dic"; \
 		stdlib="$$($(MINGW_CXX) -print-file-name=libstdc++-6.dll)"; \
 		gcc_runtime="$$($(MINGW_CXX) -print-file-name=libgcc_s_seh-1.dll)"; \
 		espeak_phontab="$$(find \
@@ -169,7 +173,13 @@ windows-omnivox:
 			find . -type f -print0 | LC_ALL=C sort -z | \
 			xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"; \
 		build_id="$$( { \
-			sha256sum "$$executable" "$$eloquence_helper" "$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
+			sha256sum "$$executable" "$$eloquence_helper" "$$dectalk_helper" \
+				"$$stdlib" "$$gcc_runtime" | cut -d ' ' -f1; \
+			if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
+				sha256sum "$$dectalk_dll" "$$dectalk_dictionary" | cut -d ' ' -f1; \
+			else \
+				printf '%s\n' no-dectalk-runtime; \
+			fi; \
 			printf '%s\n' "$$data_digest"; \
 		} | sha256sum | cut -c1-16)"; \
 		version_dir="$(OMNIVOX_RUNTIME_DIR)/versions/$$build_id"; \
@@ -195,6 +205,26 @@ windows-omnivox:
 			chmod +x "$$version_dir/OmnivoxEloquenceHelper32.exe.new"; \
 			mv -f "$$version_dir/OmnivoxEloquenceHelper32.exe.new" \
 				"$$version_dir/OmnivoxEloquenceHelper32.exe"; \
+		fi; \
+		if [ ! -x "$$version_dir/OmnivoxDectalkHelper32.exe" ]; then \
+			cp "$$dectalk_helper" \
+				"$$version_dir/OmnivoxDectalkHelper32.exe.new"; \
+			chmod +x "$$version_dir/OmnivoxDectalkHelper32.exe.new"; \
+			mv -f "$$version_dir/OmnivoxDectalkHelper32.exe.new" \
+				"$$version_dir/OmnivoxDectalkHelper32.exe"; \
+		fi; \
+		if [ -f "$$dectalk_dll" ] && [ -f "$$dectalk_dictionary" ]; then \
+			if [ ! -f "$$version_dir/DECtalk.dll" ]; then \
+				cp "$$dectalk_dll" "$$version_dir/DECtalk.dll.new"; \
+				mv -f "$$version_dir/DECtalk.dll.new" \
+					"$$version_dir/DECtalk.dll"; \
+			fi; \
+			if [ ! -f "$$version_dir/dtalk_us.dic" ]; then \
+				cp "$$dectalk_dictionary" \
+					"$$version_dir/dtalk_us.dic.new"; \
+				mv -f "$$version_dir/dtalk_us.dic.new" \
+					"$$version_dir/dtalk_us.dic"; \
+			fi; \
 		fi; \
 		if [ ! -f "$$version_dir/espeak-ng-data/phontab" ]; then \
 			rm -rf "$$version_dir/espeak-ng-data.new"; \

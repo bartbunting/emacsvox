@@ -25,7 +25,8 @@ resolved_program=$(readlink -f -- "$program")
 # Preserve the caller's entries and add Omnivox's non-path compatibility
 # settings once, including when an existing entry has WSLENV flags.
 for variable in OMNIVOX_ENGINE OMNIVOX_AUDIO_TARGET \
-    OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL; do
+    OMNIVOX_ELOQUENCE_HELPER OMNIVOX_ECI_DLL \
+    OMNIVOX_DECTALK_HELPER OMNIVOX_DECTALK_DLL; do
     case ":${WSLENV-}:" in
         *":$variable:"*|*":$variable/"*) ;;
         *) WSLENV="${WSLENV:+$WSLENV:}$variable" ;;

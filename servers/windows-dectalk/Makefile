@@ -10,7 +10,7 @@ all: runtime
 	chmod +x bin/DectalkBridge.exe bin/DectalkBridge32.exe \
 		bin/OmnivoxDectalkHelper32.exe
 
-omnivox-helper: runtime
+omnivox-helper:
 	$(POWERSHELL) -NoProfile -ExecutionPolicy Bypass -File "$(BUILD_SCRIPT)" \
 		-HelperOnly
 	chmod +x bin/OmnivoxDectalkHelper32.exe
