@@ -35,6 +35,54 @@ recognized.  This is an intentional breaking change; update user configuration
 to the Emacsvox names.  References to Emacspeak remain where they identify the
 upstream project, historical material, or the pinned comparison test checkout.
 
+** Omnivox And Portable Logical Voices
+
+Omnivox is the native Windows server that is being extended into Emacsvox's
+multi-engine speech host.  Build and stage its content-addressed Windows
+runtime from this checkout with:
+
+#+BEGIN_SRC sh
+make windows-omnivox
+#+END_SRC
+
+Select it with =M-x omnivox=.  On startup the adapter negotiates the versioned
+control protocol, discovers the live engine inventory, and atomically
+registers Emacsvox's logical voices with both the main and notification
+servers.  Older servers continue to use the legacy speech protocol.
+
+Portable preferences do not copy a machine's discovered voice list into user
+configuration.  Instead, each logical voice has ordered exact, engine-default,
+or property selectors that are resolved against the inventory of the machine
+where Omnivox is running.  For example:
+
+#+BEGIN_SRC elisp
+(setq omnivox-logical-voice-preferences
+      '((voice-annotate
+         (exact "dectalk" "paul")
+         (exact "eloquence" "v1")
+         (engine-default "winrt"))
+        (voice-monotone
+         (properties :language "en-US" :gender male))))
+
+(setq omnivox-fallback-engine-ids '("espeak"))
+#+END_SRC
+
+An exact selector always keeps the engine ID and native voice ID separate.
+Missing engines and voices fall through the configured alternatives; property
+selectors late-bind without requiring identical voice catalogues on every
+computer.  Valid definitions that cannot currently resolve remain registered
+with diagnostic attempts instead of being discarded.
+
+After changing these variables interactively, run
+=M-x omnivox-register-logical-voices=.  The latest structured results are in
+=omnivox-control-capabilities=, =omnivox-engine-inventory=,
+=omnivox-logical-voice-registration=, and =omnivox-control-last-error=.
+
+This is currently a configuration and diagnostics foundation.  The legacy
+speech queue still supplies the spoken voice; per-span engine routing will make
+the registered engine-and-voice assignments control synthesis in the next
+Omnivox phase.
+
 ** Aural Presentation Schemes
 
 Emacsvox can present registered meaning with speech, voices, auditory cues,

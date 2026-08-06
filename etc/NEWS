@@ -29,6 +29,25 @@ waiting, and adjacent formatting runs are now batched into one native
 utterance per auditory-icon-delimited segment.  This prevents rapid movement
 from leaving obsolete synthesis work queued after the user stops.
 
+** Omnivox Logical Voice Discovery And Registration
+
+The Omnivox adapter now negotiates its bounded, versioned control channel and
+discovers structured engine, capability, and physical-voice inventory without
+injecting server events into speech.  It registers Emacsvox logical voices and
+normalized ACSS styles atomically with both main and notification processes.
+
+Customize ~omnivox-logical-voice-preferences~ to give a logical voice ordered
+exact, engine-default, or property selectors.  Exact selectors retain separate
+engine and native voice IDs; property selectors resolve against each machine's
+actual inventory.  Missing engines and voices degrade through configured
+alternatives, and unresolved definitions remain visible in
+~omnivox-logical-voice-registration~.  Run
+~omnivox-register-logical-voices~ after changing preferences at runtime.
+
+Registration does not yet route speech between engines.  The existing speech
+path remains compatible while Omnivox's engine registry and per-span routing
+are implemented.
+
 ** TTS Prefix Map Rename
 
 The generic speech prefix map is now ~emacsvox-tts-submap~.  The former
