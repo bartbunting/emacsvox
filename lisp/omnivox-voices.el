@@ -43,6 +43,44 @@ An empty string leaves voice selection to the engine.  Use
   :group 'omnivox
   :type 'string)
 
+(defcustom omnivox-logical-voice-preferences nil
+  "Ordered physical selectors for portable Emacs voice names.
+Each alist key is a logical voice symbol or string.  Its value is an ordered
+list of selectors with one of these forms:
+
+  (exact ENGINE-ID VOICE-ID)
+  (engine-default ENGINE-ID)
+  (properties :engine ENGINE-ID :language LANGUAGE :gender GENDER)
+
+Properties may omit any key.  A voice without an entry late-binds to any
+available engine and voice.  Exact selectors retain separate engine and native
+voice IDs, so a native ID may safely contain colons or backslashes."
+  :group 'omnivox
+  :type '(alist :key-type (choice symbol string) :value-type sexp))
+
+(defcustom omnivox-logical-voice-languages nil
+  "Language tags for logical Omnivox voices.
+Each entry maps a logical voice symbol or string to a BCP 47 language string."
+  :group 'omnivox
+  :type '(alist :key-type (choice symbol string) :value-type string))
+
+(defcustom omnivox-fallback-engine-ids '("espeak")
+  "Ordered engine IDs used after a logical voice's explicit selectors fail."
+  :group 'omnivox
+  :type '(repeat string))
+
+(defcustom omnivox-global-default-selector nil
+  "Optional final default selector for every logical Omnivox voice.
+The value is nil or one selector in the format documented by
+`omnivox-logical-voice-preferences'."
+  :group 'omnivox
+  :type '(choice (const :tag "None" nil) sexp))
+
+(defcustom omnivox-allow-same-language-fallback t
+  "Whether Omnivox may try another same-language voice on an engine."
+  :group 'omnivox
+  :type 'boolean)
+
 (defvar omnivox-available-voices nil
   "Physical voices most recently discovered from Omnivox.
 Each entry has the form (ID NAME LANGUAGE QUALITY).")
@@ -80,6 +118,10 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defconst omnivox--control-inventory-property 'omnivox--control-inventory
   "Process property holding the latest Omnivox engine inventory.")
 
+(defconst omnivox--control-registration-property
+  'omnivox--control-registration
+  "Process property holding the latest logical-voice registration result.")
+
 (defconst omnivox--control-negotiated-property 'omnivox--control-negotiated
   "Process property preventing duplicate capability negotiation.")
 
@@ -92,8 +134,23 @@ Each entry has the form (ID NAME LANGUAGE QUALITY).")
 (defvar omnivox-engine-inventory nil
   "Engine inventory most recently reported by the main Omnivox process.")
 
+(defvar omnivox-logical-voice-registration nil
+  "Logical-voice result most recently reported by the main Omnivox process.")
+
 (defvar omnivox-control-last-error nil
   "Most recent Omnivox control error or malformed event.")
+
+(defvar omnivox--logical-acss-table (make-hash-table :test #'equal)
+  "Normalized ACSS styles indexed by logical voice ID.")
+
+(defvar omnivox--logical-registry-generation 0
+  "Generation of the current Emacsvox-owned logical voice registry.")
+
+(defvar omnivox--logical-registry-signature nil
+  "Last logical voice registry content assigned a generation.")
+
+(defvar omnivox--logical-registration-timer nil
+  "Timer coalescing logical voice definitions created in one operation.")
 
 (defun omnivox--encode-control-request (request)
   "Encode control REQUEST as bounded, unwrapped Base64 JSON."
@@ -215,6 +272,181 @@ Return non-nil when LINE is a control event, including a malformed one."
     (process-put process omnivox--control-fragment-property "")
     (set-process-filter process #'omnivox--control-process-filter)))
 
+(defun omnivox--logical-voice-id (name)
+  "Return the stable logical voice ID for symbol or string NAME."
+  (cond
+   ((symbolp name) (symbol-name name))
+   ((stringp name) name)
+   (t (error "Invalid logical Omnivox voice name: %S" name))))
+
+(defun omnivox--logical-setting (id settings)
+  "Return logical voice ID's value from SETTINGS.
+Symbol and string keys with the same printed name are equivalent."
+  (cl-loop
+   for (name . value) in settings
+   when (equal id (omnivox--logical-voice-id name))
+   return value))
+
+(defun omnivox--required-selector-id (value kind)
+  "Validate and return selector ID VALUE described by KIND."
+  (unless (and (stringp value) (not (string-empty-p value)))
+    (error "Omnivox %s must be a nonempty string" kind))
+  value)
+
+(defun omnivox--selector-json (selector)
+  "Convert one portable SELECTOR form to its JSON plist representation."
+  (pcase selector
+    (`(exact ,engine-id ,voice-id)
+     (list
+      :kind "exact"
+      :engine_id (omnivox--required-selector-id engine-id "engine ID")
+      :voice_id (omnivox--required-selector-id voice-id "voice ID")))
+    (`(engine-default ,engine-id)
+     (list
+      :kind "engine_default"
+      :engine_id (omnivox--required-selector-id engine-id "engine ID")))
+    (`(properties . ,properties)
+     (unless (proper-list-p properties)
+       (error "Invalid Omnivox property selector: %S" selector))
+     (let ((engine-id (plist-get properties :engine))
+           (language (plist-get properties :language))
+           (gender (plist-get properties :gender)))
+       (when engine-id
+         (omnivox--required-selector-id engine-id "engine ID"))
+       (when (and language (not (stringp language)))
+         (error "Omnivox selector language must be a string"))
+       (when (and gender (not (or (symbolp gender) (stringp gender))))
+         (error "Omnivox selector gender must be a symbol or string"))
+       (list
+        :kind "properties"
+        :engine_id (or engine-id :null)
+        :language (or language :null)
+        :gender
+        (if gender
+            (downcase
+             (if (symbolp gender) (symbol-name gender) gender))
+          :null))))
+    (_ (error "Invalid Omnivox voice selector: %S" selector))))
+
+(defun omnivox--logical-voice-ids ()
+  "Return every defined or explicitly configured logical voice ID."
+  (let (ids)
+    (maphash (lambda (id _style) (push id ids))
+             omnivox--logical-acss-table)
+    (dolist (entry omnivox-logical-voice-preferences)
+      (push (omnivox--logical-voice-id (car entry)) ids))
+    (dolist (entry omnivox-logical-voice-languages)
+      (push (omnivox--logical-voice-id (car entry)) ids))
+    (sort (delete-dups ids) #'string-lessp)))
+
+(defun omnivox--logical-definition-json (id)
+  "Return the protocol definition for logical voice ID."
+  (let* ((configured
+          (omnivox--logical-setting id omnivox-logical-voice-preferences))
+         (selectors
+          (or configured '((properties))))
+         (language
+          (omnivox--logical-setting id omnivox-logical-voice-languages)))
+    (when (and language (not (stringp language)))
+      (error "Language for logical Omnivox voice %s must be a string" id))
+    (list
+     :id id
+     :language (or language :null)
+     :preferences (vconcat (mapcar #'omnivox--selector-json selectors))
+     :acss (copy-tree (gethash id omnivox--logical-acss-table)))))
+
+(defun omnivox--fallback-policy-json ()
+  "Return the configured logical voice fallback policy as JSON data."
+  (dolist (engine-id omnivox-fallback-engine-ids)
+    (omnivox--required-selector-id engine-id "fallback engine ID"))
+  (list
+   :allow_same_language_on_requested_engine
+   (if omnivox-allow-same-language-fallback t :false)
+   :global_default
+   (if omnivox-global-default-selector
+       (omnivox--selector-json omnivox-global-default-selector)
+     :null)
+   :fallback_engines (vconcat omnivox-fallback-engine-ids)))
+
+(defun omnivox--logical-registry-snapshot ()
+  "Return the current generation and complete logical registry content."
+  (let* ((definitions
+          (vconcat
+           (mapcar #'omnivox--logical-definition-json
+                   (omnivox--logical-voice-ids))))
+         (fallback-policy (omnivox--fallback-policy-json))
+         (signature (list definitions fallback-policy)))
+    (unless (equal signature omnivox--logical-registry-signature)
+      (setq omnivox--logical-registry-signature (copy-tree signature))
+      (cl-incf omnivox--logical-registry-generation))
+    (list
+     :registry_generation omnivox--logical-registry-generation
+     :definitions definitions
+     :fallback_policy fallback-policy)))
+
+(defun omnivox--process-supports-p (process feature)
+  "Return non-nil when Omnivox PROCESS advertises FEATURE."
+  (member
+   feature
+   (plist-get
+    (process-get process omnivox--control-capabilities-property)
+    :features)))
+
+(defun omnivox--handle-registration-response (process response)
+  "Store logical voice registration RESPONSE received from PROCESS."
+  (if (equal (plist-get response :type) "logical_voices_registered")
+      (progn
+        (process-put process omnivox--control-registration-property response)
+        (when (eq process tts-speaker-process)
+          (setq omnivox-logical-voice-registration response)))
+    (omnivox--record-control-error process response)))
+
+(defun omnivox--registration-processes ()
+  "Return distinct live processes supporting logical voice registration."
+  (cl-remove-if-not
+   (lambda (process)
+     (and (process-live-p process)
+          (omnivox--process-supports-p
+           process "logical_voice_registration")))
+   (delete-dups (list tts-speaker-process tts-notify-process))))
+
+(defun omnivox-register-logical-voices ()
+  "Register all Emacsvox logical voices with live Omnivox processes.
+Return the number of processes sent the atomic registry replacement."
+  (interactive)
+  (let ((processes (omnivox--registration-processes))
+        (snapshot (omnivox--logical-registry-snapshot)))
+    (dolist (process processes)
+      (omnivox--send-control-request
+       process
+       (append '(:type "register_logical_voices") snapshot)
+       #'omnivox--handle-registration-response))
+    (when (and (called-interactively-p 'interactive) (null processes))
+      (user-error "No live Omnivox process supports logical voice registration"))
+    (when (called-interactively-p 'interactive)
+      (message "Sent logical voice generation %d to %d Omnivox process%s"
+               omnivox--logical-registry-generation
+               (length processes) (if (= (length processes) 1) "" "es")))
+    (length processes)))
+
+(defun omnivox--run-scheduled-registration ()
+  "Send a coalesced logical voice registry update."
+  (setq omnivox--logical-registration-timer nil)
+  (condition-case error-data
+      (omnivox-register-logical-voices)
+    (error
+     (setq omnivox-control-last-error
+           (list :error error-data :time (current-time)))
+     (message "Could not register Omnivox logical voices: %s"
+              (error-message-string error-data)))))
+
+(defun omnivox--schedule-logical-registration ()
+  "Coalesce logical voice changes into one registry replacement."
+  (when (and (omnivox--registration-processes)
+             (not (timerp omnivox--logical-registration-timer)))
+    (setq omnivox--logical-registration-timer
+          (run-at-time 0 nil #'omnivox--run-scheduled-registration))))
+
 (defun omnivox--handle-inventory-response (process response)
   "Store an inventory RESPONSE received from PROCESS."
   (if (equal (plist-get response :type) "inventory")
@@ -233,7 +465,10 @@ Return non-nil when LINE is a control event, including a malformed one."
       (setq omnivox-control-capabilities response))
     (when (member "engine_inventory" (plist-get response :features))
       (omnivox--send-control-request
-       process '(:type "inventory") #'omnivox--handle-inventory-response))))
+       process '(:type "inventory") #'omnivox--handle-inventory-response))
+    (when (member "logical_voice_registration"
+                  (plist-get response :features))
+      (omnivox-register-logical-voices))))
 
 (defun omnivox--negotiate-process (process)
   "Start capability negotiation for one live Omnivox PROCESS."
@@ -402,9 +637,13 @@ Return the number of distinct processes that received the command."
    "[[pitch 2.0]]"]
   "Map normalized ACSS average pitch to Omnivox pitch multipliers.")
 
-(defun omnivox-define-voice (name command)
-  "Define Omnivox voice NAME using inline COMMAND."
-  (puthash name command omnivox-voice-table))
+(defun omnivox-define-voice (name command &optional normalized-acss)
+  "Define Omnivox voice NAME using inline COMMAND and NORMALIZED-ACSS."
+  (puthash name command omnivox-voice-table)
+  (puthash
+   (omnivox--logical-voice-id name) normalized-acss
+   omnivox--logical-acss-table)
+  (omnivox--schedule-logical-registration))
 
 (defun omnivox-get-voice-command (name)
   "Return the Omnivox inline command for voice NAME."
@@ -421,6 +660,27 @@ Return the number of distinct processes that received the command."
 
 (omnivox-define-voice 'paul omnivox-default-voice-string)
 
+(defun omnivox--normalize-acss-value (value)
+  "Convert ACSS VALUE from zero-to-nine into the zero-to-one range."
+  (when (numberp value)
+    (/ (float (max 0 (min 9 value))) 9.0)))
+
+(defun omnivox--normalized-acss-json (style)
+  "Return the supported normalized ACSS dimensions from STYLE."
+  (let (result)
+    (dolist
+        (entry
+         `((:average_pitch ,(acss-average-pitch style))
+           (:pitch_range ,(acss-pitch-range style))
+           (:stress ,(acss-stress style))
+           (:richness ,(acss-richness style))))
+      (when (numberp (cadr entry))
+        (setq result
+              (plist-put
+               result (car entry)
+               (omnivox--normalize-acss-value (cadr entry))))))
+    result))
+
 (defun omnivox-define-voice-from-acss (name style)
   "Define Omnivox voice NAME from ACSS STYLE."
   (let ((pitch (acss-average-pitch style)))
@@ -428,7 +688,8 @@ Return the number of distinct processes that received the command."
      name
      (if pitch
          (aref omnivox-average-pitch-table pitch)
-       omnivox-default-voice-string))))
+       omnivox-default-voice-string)
+     (omnivox--normalized-acss-json style))))
 
 ;;;###autoload
 (defun omnivox-configure-tts ()

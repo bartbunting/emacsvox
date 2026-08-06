@@ -323,6 +323,109 @@
     (make-string (1+ omnivox-control-max-encoded-bytes) ?A))
    :type 'error))
 
+(ert-deftest emacsvox-tts-omnivox-preserves-structured-voice-selectors ()
+  "Logical preferences keep engine IDs separate from native voice IDs."
+  (let* ((omnivox-logical-voice-preferences
+          '((voice-annotate
+             (exact "dectalk" "paul")
+             (exact "eloquence" "eci:v1")
+             (engine-default "winrt"))))
+         (omnivox-logical-voice-languages '((voice-annotate . "en-US")))
+         (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (definition (omnivox--logical-definition-json "voice-annotate"))
+         (selectors (plist-get definition :preferences)))
+    (should (equal (plist-get definition :language) "en-US"))
+    (should (equal (plist-get (aref selectors 0) :engine_id) "dectalk"))
+    (should (equal (plist-get (aref selectors 0) :voice_id) "paul"))
+    (should (equal (plist-get (aref selectors 1) :engine_id) "eloquence"))
+    (should (equal (plist-get (aref selectors 1) :voice_id) "eci:v1"))
+    (should (equal (plist-get (aref selectors 2) :kind) "engine_default"))))
+
+(ert-deftest emacsvox-tts-omnivox-logical-generations-are-content-based ()
+  "Identical registry retries retain a generation and changes advance it."
+  (let ((omnivox-logical-voice-preferences nil)
+        (omnivox-logical-voice-languages nil)
+        (omnivox-fallback-engine-ids '("espeak"))
+        (omnivox-global-default-selector nil)
+        (omnivox-allow-same-language-fallback t)
+        (omnivox--logical-acss-table (make-hash-table :test #'equal))
+        (omnivox--logical-registry-generation 0)
+        (omnivox--logical-registry-signature nil))
+    (puthash "voice-bolden" '(:average_pitch 0.4)
+             omnivox--logical-acss-table)
+    (let ((first (omnivox--logical-registry-snapshot))
+          (retry (omnivox--logical-registry-snapshot)))
+      (should (= (plist-get first :registry_generation) 1))
+      (should (= (plist-get retry :registry_generation) 1)))
+    (puthash "voice-annotate" '(:stress 0.0)
+             omnivox--logical-acss-table)
+    (should (= (plist-get (omnivox--logical-registry-snapshot)
+                          :registry_generation)
+               2))))
+
+(ert-deftest emacsvox-tts-omnivox-normalizes-logical-acss ()
+  "Emacs ACSS values become clamped zero-to-one logical voice styles."
+  (let ((style (make-acss :average-pitch 9 :pitch-range -2
+                          :stress 5 :richness nil)))
+    (should
+     (equal
+      (omnivox--normalized-acss-json style)
+      '(:average_pitch 1.0 :pitch_range 0.0
+        :stress 0.5555555555555556)))))
+
+(ert-deftest emacsvox-tts-omnivox-registers-both-processes-atomically ()
+  "Main and notification servers receive one identical registry generation."
+  (let* ((speaker
+          (make-pipe-process
+           :name "emacsvox-omnivox-registration-speaker"
+           :buffer nil :noquery t))
+         (notifier
+          (make-pipe-process
+           :name "emacsvox-omnivox-registration-notifier"
+           :buffer nil :noquery t))
+         (tts-speaker-process speaker)
+         (tts-notify-process notifier)
+         (omnivox-logical-voice-preferences
+          '((voice-annotate (exact "dectalk" "paul"))))
+         (omnivox-logical-voice-languages nil)
+         (omnivox-fallback-engine-ids '("espeak"))
+         (omnivox-global-default-selector nil)
+         (omnivox-allow-same-language-fallback t)
+         (omnivox--logical-acss-table (make-hash-table :test #'equal))
+         (omnivox--logical-registry-generation 0)
+         (omnivox--logical-registry-signature nil)
+         (omnivox--control-request-sequence 200)
+         writes)
+    (unwind-protect
+        (progn
+          (dolist (process (list speaker notifier))
+            (process-put
+             process omnivox--control-capabilities-property
+             '(:type "capabilities"
+               :features ("logical_voice_registration"))))
+          (cl-letf
+              (((symbol-function 'process-send-string)
+                (lambda (process command)
+                  (push (cons process command) writes))))
+            (should (= (omnivox-register-logical-voices) 2)))
+          (should (= (length writes) 2))
+          (let ((requests
+                 (mapcar
+                  (lambda (entry)
+                    (emacsvox-test--omnivox-decode-command (cdr entry)))
+                  writes)))
+            (should
+             (cl-every
+              (lambda (request)
+                (and
+                 (equal (plist-get request :type)
+                        "register_logical_voices")
+                 (= (plist-get request :registry_generation) 1)
+                 (= (length (plist-get request :definitions)) 1)))
+              requests))))
+      (delete-process speaker)
+      (delete-process notifier))))
+
 (defun emacsvox-test--tts-capture-protocol (thunk)
   "Call THUNK and return chronological speech protocol writes."
   (let ((tts-speaker-process 'speaker)
