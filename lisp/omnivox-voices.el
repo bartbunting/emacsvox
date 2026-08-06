@@ -490,12 +490,30 @@ Symbol and string keys with the same printed name are equivalent."
                          (plist-get acss (car mapping))))))
     (or result (make-hash-table :test #'equal))))
 
+(defun omnivox--preview-effects-json (effects)
+  "Convert normalized generic EFFECTS plist to Omnivox JSON fields."
+  (let (result)
+    (dolist
+        (mapping
+         '((:gain . :gain)
+           (:low-pass . :low_pass)
+           (:high-pass . :high_pass)
+           (:pan . :pan)
+           (:reverb . :reverb)
+           (:echo . :echo)))
+      (when (plist-member effects (car mapping))
+        (setq result
+              (plist-put result (cdr mapping)
+                         (plist-get effects (car mapping))))))
+    (or result (make-hash-table :test #'equal))))
+
 (defun omnivox--preview-dimension-symbol (value)
   "Return generic dimension symbol for Omnivox wire VALUE."
   (intern (replace-regexp-in-string "_" "-" (format "%s" value))))
 
-(defun omnivox--normalize-preview-response (entry response)
-  "Normalize Omnivox preview RESPONSE associated with ENTRY."
+(defun omnivox--normalize-preview-response
+    (entry response effects-supported)
+  "Normalize preview RESPONSE for ENTRY and EFFECTS-SUPPORTED status."
   (if (not (equal (plist-get response :type) "preview_completed"))
       (list
        :status 'failed :completion-guarantee 'playback
@@ -518,7 +536,10 @@ Symbol and string keys with the same printed name are equivalent."
        (mapcar #'omnivox--preview-dimension-symbol
                (plist-get response :degraded_acss))
        :degraded-effects
-       (tts--voice-preview-dimensions (plist-get entry :effects))
+       (if effects-supported
+           (mapcar #'omnivox--preview-dimension-symbol
+                   (plist-get response :degraded_effects))
+         (tts--voice-preview-dimensions (plist-get entry :effects)))
        :message (plist-get response :message)))))
 
 (defun omnivox--preview-one (entry callback)
@@ -528,19 +549,28 @@ Symbol and string keys with the same printed name are equivalent."
            (omnivox--process-supports-p
             tts-speaker-process "exact_voice_preview"))
     (error "The live Omnivox server does not support transactional preview"))
-  (tts-stop)
-  (omnivox--send-control-request
-   tts-speaker-process
-   (list
-    :type "preview"
-    :text (plist-get entry :text)
-    :selector
-    (omnivox--preview-selector-json (plist-get entry :selector))
-    :language (or (plist-get entry :language) :null)
-    :acss (omnivox--preview-acss-json (plist-get entry :acss)))
-   (lambda (_process response)
-     (funcall callback
-              (omnivox--normalize-preview-response entry response)))))
+  (let ((effects-supported
+         (omnivox--process-supports-p
+          tts-speaker-process "post_synthesis_effects_v1")))
+    (tts-stop)
+    (omnivox--send-control-request
+     tts-speaker-process
+     (append
+      (list
+       :type "preview"
+       :text (plist-get entry :text)
+       :selector
+       (omnivox--preview-selector-json (plist-get entry :selector))
+       :language (or (plist-get entry :language) :null)
+       :acss (omnivox--preview-acss-json (plist-get entry :acss)))
+      (when effects-supported
+        (list :effects
+              (omnivox--preview-effects-json
+               (plist-get entry :effects)))))
+     (lambda (_process response)
+       (funcall callback
+                (omnivox--normalize-preview-response
+                 entry response effects-supported))))))
 
 (defun omnivox-preview-voice-sequence (entries callback)
   "Preview Omnivox ENTRIES in order and call CALLBACK after playback."

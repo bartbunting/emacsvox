@@ -385,6 +385,54 @@
           (should-not (gethash 301 (omnivox--pending-requests process))))
       (when (process-live-p process) (delete-process process)))))
 
+(ert-deftest emacsvox-tts-omnivox-preview-transports-supported-effects ()
+  "Omnivox sends supported post-synthesis effects and reports degradation."
+  (let* ((process
+          (make-pipe-process
+           :name "emacsvox-omnivox-effect-preview-test"
+           :buffer nil :noquery t))
+         (tts-speaker-process process)
+         (omnivox--control-request-sequence 350)
+         result writes)
+    (process-put
+     process omnivox--control-capabilities-property
+     '(:features ("exact_voice_preview" "post_synthesis_effects_v1")))
+    (unwind-protect
+        (cl-letf
+            (((symbol-function 'process-send-string)
+              (lambda (_process command) (push command writes)))
+             ((symbol-function 'tts-stop) #'ignore))
+          (omnivox-preview-voice-sequence
+           (list
+            '(:text "effect preview"
+              :selector
+              (:kind exact :scope session
+               :engine-id "dectalk" :voice-id "Paul")
+              :acss nil
+              :effects (:gain 0.5 :low-pass 0.75 :reverb 0.4)))
+           (lambda (value) (setq result value)))
+          (let* ((request
+                  (emacsvox-test--omnivox-decode-command (car writes)))
+                 (identifier (plist-get request :request_id))
+                 (effects (plist-get request :effects)))
+            (should (= (plist-get effects :gain) 0.5))
+            (should (= (plist-get effects :low_pass) 0.75))
+            (should (= (plist-get effects :reverb) 0.4))
+            (omnivox--control-process-filter
+             process
+             (emacsvox-test--omnivox-event
+              (list
+               :protocol_version 1 :request_id identifier
+               :type "preview_completed" :status "completed"
+               :requested (plist-get request :selector)
+               :realized '(:engine_id "dectalk" :voice_id "Paul")
+               :degraded_acss [] :degraded_effects ["low_pass"]
+               :message :null))))
+          (let ((preview (car (plist-get result :results))))
+            (should (equal (plist-get preview :degraded-effects)
+                           '(low-pass)))))
+      (when (process-live-p process) (delete-process process)))))
+
 (ert-deftest emacsvox-tts-omnivox-negotiates-capabilities-and-inventory ()
   "Registration waits for inventory and uses the preferred engine."
   (let* ((process
