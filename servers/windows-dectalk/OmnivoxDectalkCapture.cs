@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -82,16 +83,35 @@ internal struct OmnivoxDectalkBuffer
     internal uint Reserved;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+internal struct OmnivoxDectalkPhoneme
+{
+    internal uint Phoneme;
+    internal uint SampleNumber;
+    internal uint Duration;
+    internal uint Reserved;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct OmnivoxDectalkIndex
+{
+    internal uint Value;
+    internal uint SampleNumber;
+    internal uint Reserved;
+}
+
 /// <summary>
 /// Owns one 32-bit DECtalk instance and captures its in-memory PCM buffers.
-/// Phoneme and index arrays are intentionally left disabled until their native
-/// structures can be mapped to the versioned marker contract.
+/// Native phoneme and index records use DECtalk's utterance-relative sample
+/// counter and are returned with the captured PCM.
 /// </summary>
 internal sealed class OmnivoxDectalkCapture : IDisposable
 {
     private sealed class BufferSlot
     {
         internal IntPtr Data;
+        internal IntPtr Phonemes;
+        internal IntPtr Indexes;
         internal IntPtr Buffer;
     }
 
@@ -102,6 +122,8 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private const int BufferSamples = 512;
     private const int BufferBytes = BufferSamples * 2;
     private const int BufferCount = 4;
+    private const int MarkerRecordsPerBuffer = 512;
+    private const int MaximumMarkers = 4096;
     private const int MaximumAudioBytes = 128 * 1024 * 1024;
     internal const int SpeechSampleRate = 11025;
 
@@ -113,6 +135,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private OmnivoxNativeDectalk.Callback callback;
     private uint bufferMessage;
     private MemoryStream capture;
+    private List<OmnivoxHelperMarker> markers;
     private Exception callbackError;
     private bool discardAudio;
     private bool shuttingDown;
@@ -193,7 +216,8 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
         }
     }
 
-    internal byte[] Synthesize(string text, string voiceCode, int rate)
+    internal OmnivoxCaptureResult Synthesize(string text, string voiceCode,
+        int rate)
     {
         lock (synthesisLock)
         {
@@ -208,7 +232,9 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 ThrowCallbackError();
                 lock (stateLock)
                 {
-                    return capture.ToArray();
+                    markers.Sort(CompareMarkers);
+                    return new OmnivoxCaptureResult(capture.ToArray(),
+                        markers.ToArray());
                 }
             }
             finally
@@ -220,6 +246,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                         capture.Dispose();
                         capture = null;
                     }
+                    markers = null;
                 }
             }
         }
@@ -264,6 +291,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 capture.Dispose();
             }
             capture = new MemoryStream();
+            markers = new List<OmnivoxHelperMarker>();
             discardAudio = false;
         }
     }
@@ -286,14 +314,24 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
     private void AllocateBuffers()
     {
         int structureSize = Marshal.SizeOf(typeof(OmnivoxDectalkBuffer));
+        int phonemeSize = Marshal.SizeOf(typeof(OmnivoxDectalkPhoneme));
+        int indexSize = Marshal.SizeOf(typeof(OmnivoxDectalkIndex));
         for (int index = 0; index < BufferCount; ++index)
         {
             BufferSlot slot = new BufferSlot();
             slot.Data = Marshal.AllocHGlobal(BufferBytes);
+            slot.Phonemes = Marshal.AllocHGlobal(
+                MarkerRecordsPerBuffer * phonemeSize);
+            slot.Indexes = Marshal.AllocHGlobal(
+                MarkerRecordsPerBuffer * indexSize);
             slot.Buffer = Marshal.AllocHGlobal(structureSize);
             OmnivoxDectalkBuffer buffer = new OmnivoxDectalkBuffer();
             buffer.Data = slot.Data;
+            buffer.PhonemeArray = slot.Phonemes;
+            buffer.IndexArray = slot.Indexes;
             buffer.MaximumBufferLength = BufferBytes;
+            buffer.MaximumPhonemeChanges = MarkerRecordsPerBuffer;
+            buffer.MaximumIndexMarks = MarkerRecordsPerBuffer;
             Marshal.StructureToPtr(buffer, slot.Buffer, false);
             buffers.Add(slot);
             Check(OmnivoxNativeDectalk.TextToSpeechAddBuffer(handle,
@@ -316,27 +354,32 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 (OmnivoxDectalkBuffer)Marshal.PtrToStructure(bufferPointer,
                     typeof(OmnivoxDectalkBuffer));
             if (buffer.BufferLength > BufferBytes ||
-                (buffer.BufferLength & 1) != 0)
+                (buffer.BufferLength & 1) != 0 ||
+                buffer.NumberOfPhonemeChanges > MarkerRecordsPerBuffer ||
+                buffer.NumberOfIndexMarks > MarkerRecordsPerBuffer)
             {
                 throw new InvalidOperationException(
-                    "DECtalk returned an invalid PCM buffer length");
+                    "DECtalk returned invalid buffer metadata");
             }
 
             lock (stateLock)
             {
-                if (buffer.BufferLength > 0 && !discardAudio &&
-                    !shuttingDown)
+                if (!discardAudio && !shuttingDown)
                 {
-                    int count = checked((int)buffer.BufferLength);
-                    if (capture == null ||
-                        capture.Length + count > MaximumAudioBytes)
+                    CaptureMarkers(buffer);
+                    if (buffer.BufferLength > 0)
                     {
-                        throw new InvalidOperationException(
-                            "DECtalk synthesis exceeded the 128 MiB audio limit");
+                        int count = checked((int)buffer.BufferLength);
+                        if (capture == null ||
+                            capture.Length + count > MaximumAudioBytes)
+                        {
+                            throw new InvalidOperationException(
+                                "DECtalk synthesis exceeded the 128 MiB audio limit");
+                        }
+                        byte[] bytes = new byte[count];
+                        Marshal.Copy(buffer.Data, bytes, 0, count);
+                        capture.Write(bytes, 0, count);
                     }
-                    byte[] bytes = new byte[count];
-                    Marshal.Copy(buffer.Data, bytes, 0, count);
-                    capture.Write(bytes, 0, count);
                 }
             }
         }
@@ -366,6 +409,54 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 SetCallbackError(error);
             }
         }
+    }
+
+    private void CaptureMarkers(OmnivoxDectalkBuffer buffer)
+    {
+        if (markers == null || markers.Count >= MaximumMarkers)
+        {
+            return;
+        }
+        int phonemeSize = Marshal.SizeOf(typeof(OmnivoxDectalkPhoneme));
+        for (uint index = 0; index < buffer.NumberOfPhonemeChanges &&
+            markers.Count < MaximumMarkers; ++index)
+        {
+            IntPtr address = new IntPtr(buffer.PhonemeArray.ToInt64() +
+                checked((long)index * phonemeSize));
+            OmnivoxDectalkPhoneme phoneme =
+                (OmnivoxDectalkPhoneme)Marshal.PtrToStructure(address,
+                    typeof(OmnivoxDectalkPhoneme));
+            markers.Add(new OmnivoxHelperMarker("phoneme",
+                phoneme.SampleNumber, null, null,
+                phoneme.Phoneme.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        int indexSize = Marshal.SizeOf(typeof(OmnivoxDectalkIndex));
+        for (uint index = 0; index < buffer.NumberOfIndexMarks &&
+            markers.Count < MaximumMarkers; ++index)
+        {
+            IntPtr address = new IntPtr(buffer.IndexArray.ToInt64() +
+                checked((long)index * indexSize));
+            OmnivoxDectalkIndex marker =
+                (OmnivoxDectalkIndex)Marshal.PtrToStructure(address,
+                    typeof(OmnivoxDectalkIndex));
+            markers.Add(new OmnivoxHelperMarker("native_index",
+                marker.SampleNumber, null, null,
+                marker.Value.ToString(CultureInfo.InvariantCulture)));
+        }
+    }
+
+    private static int CompareMarkers(OmnivoxHelperMarker left,
+        OmnivoxHelperMarker right)
+    {
+        int order = left.FrameOffset.CompareTo(right.FrameOffset);
+        if (order != 0)
+        {
+            return order;
+        }
+        order = String.CompareOrdinal(left.Kind, right.Kind);
+        return order != 0 ? order : String.CompareOrdinal(
+            left.Value, right.Value);
     }
 
     private bool IsShuttingDown()
@@ -439,6 +530,14 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
             {
                 Marshal.FreeHGlobal(buffers[index].Data);
             }
+            if (buffers[index].Phonemes != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(buffers[index].Phonemes);
+            }
+            if (buffers[index].Indexes != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(buffers[index].Indexes);
+            }
         }
         buffers.Clear();
         lock (stateLock)
@@ -448,6 +547,7 @@ internal sealed class OmnivoxDectalkCapture : IDisposable
                 capture.Dispose();
                 capture = null;
             }
+            markers = null;
         }
     }
 }
